@@ -42,12 +42,98 @@ aiv_cmd_run() {
   seed="$(printf '%s' "${stdin_json}" | jq -r '.seed // empty')"
   ref_first="$(printf '%s' "${stdin_json}" | jq -r '.ref_images[0] // empty')"
 
-  # Live mode is implementation-scaffolded: we do NOT yet POST to the
-  # OpenAI Images API from inside this adapter. The cost-floor gate
-  # (Phase 5 Step 6) refuses live mode unless the operator explicitly
-  # confirms in-turn; this branch surfaces a clear stub error so the
-  # contract surface stays stable while the live path is wired later.
-  aiv_die 9 "${ADAPTER_ID}: live mode not yet wired (prompt=${#prompt} chars, seed=${seed:-unset}, ref=${ref_first:-none})"
+  [ -n "${prompt}" ] || aiv_die 7 "${ADAPTER_ID}: empty prompt (prompt.* blocks required)"
+
+  # Images-generations API has no negative-prompt field — fold the
+  # negative list into the prompt as an explicit "Avoid:" clause.
+  local negative
+  negative="$(printf '%s' "${stdin_json}" | jq -r '(.negative // []) | join(", ")')"
+  [ -n "${negative}" ] && prompt="${prompt} Avoid: ${negative}."
+
+  # gpt-image-1 has no seed param. Log if present.
+  [ -n "${seed}" ] && printf '%s: seed=%s ignored (gpt-image-1 has no seed)\n' "${ADAPTER_ID}" "${seed}" >&2
+  : "${ref_first:=}"
+
+  # Resolve size from requested aspect (stdin .aspect overrides XML tuning).
+  local aspect quality size out
+  aspect="$(printf '%s' "${stdin_json}" | jq -r --arg a "${AIV_TUNING_ASPECT:-16:9}" '.aspect // $a')"
+  quality="${AIV_TUNING_QUALITY:-high}"
+  case "${aspect}" in
+    16:9|3:2|landscape) size="1536x1024" ;;
+    9:16|2:3|portrait)  size="1024x1536" ;;
+    1:1|square)         size="1024x1024" ;;
+    *)                  size="1536x1024" ;;
+  esac
+
+  # Output path: caller-set AIV_OUT wins; else a temp PNG.
+  out="${AIV_OUT:-}"
+  [ -n "${out}" ] || out="$(mktemp -t aiv-openai-XXXXXX).png"
+
+  # Collect reference image files. When present → /v1/images/edits
+  # (reference-conditioned, so the model adheres to the supplied
+  # character); otherwise plain text-to-image /v1/images/generations.
+  local -a ref_files=() tmp_files=()
+  local r tmp
+  while IFS= read -r r; do
+    [ -n "${r}" ] || continue
+    case "${r}" in
+      http://*|https://*)
+        tmp="$(mktemp -t aiv-ref-XXXXXX).png"
+        curl -sS -L -o "${tmp}" "${r}" || aiv_die 8 "${ADAPTER_ID}: failed to download ref image: ${r}"
+        ref_files+=("${tmp}"); tmp_files+=("${tmp}") ;;
+      *)
+        case "${r}" in /*) : ;; *) r="$(pwd)/${r}" ;; esac
+        [ -f "${r}" ] || aiv_die 7 "${ADAPTER_ID}: ref image not found: ${r}"
+        ref_files+=("${r}") ;;
+    esac
+  done < <(printf '%s' "${stdin_json}" | jq -r '.ref_images[]? // empty')
+
+  local req resp http_code body b64
+  if [ "${#ref_files[@]}" -gt 0 ]; then
+    # Reference-conditioned edit. gpt-image-1 accepts multiple image[] refs.
+    local -a fargs=(-F "model=${AIV_MODEL:-gpt-image-1}" -F "prompt=${prompt}" \
+      -F "size=${size}" -F "quality=${quality}" -F "n=1")
+    for r in "${ref_files[@]}"; do fargs+=(-F "image[]=@${r};type=image/png"); done
+    printf '%s: edits endpoint with %d reference image(s)\n' "${ADAPTER_ID}" "${#ref_files[@]}" >&2
+    resp="$(curl -sS -w '\n%{http_code}' \
+      -X POST "${AIV_ENDPOINT%/}/images/edits" \
+      -H "Authorization: Bearer ${AIV_KEY}" \
+      "${fargs[@]}")" \
+      || aiv_die 8 "${ADAPTER_ID}: curl to ${AIV_ENDPOINT%/}/images/edits failed"
+  else
+    req="$(jq -n \
+      --arg m "${AIV_MODEL:-gpt-image-1}" --arg p "${prompt}" \
+      --arg s "${size}" --arg q "${quality}" \
+      '{model: $m, prompt: $p, size: $s, quality: $q, n: 1}')"
+    resp="$(curl -sS -w '\n%{http_code}' \
+      -X POST "${AIV_ENDPOINT%/}/images/generations" \
+      -H "Authorization: Bearer ${AIV_KEY}" \
+      -H "Content-Type: application/json" \
+      --data-binary "${req}")" \
+      || aiv_die 8 "${ADAPTER_ID}: curl to ${AIV_ENDPOINT%/}/images/generations failed"
+  fi
+  # Clean up any downloaded temp refs (set -u safe on empty arrays).
+  for tmp in ${tmp_files[@]+"${tmp_files[@]}"}; do rm -f "${tmp}"; done
+
+  http_code="$(printf '%s' "${resp}" | tail -n1)"
+  body="$(printf '%s' "${resp}" | sed '$d')"
+  case "${http_code}" in
+    2*) : ;;
+    *) aiv_die 8 "${ADAPTER_ID}: HTTP ${http_code}: $(printf '%s' "${body}" | jq -r '.error.message // .error // "unknown error"' 2>/dev/null | head -c 300)" ;;
+  esac
+
+  # gpt-image-1 always returns base64 (no url).
+  b64="$(printf '%s' "${body}" | jq -r '.data[0].b64_json // empty')"
+  [ -n "${b64}" ] || aiv_die 8 "${ADAPTER_ID}: no image data in response (got: $(printf '%s' "${body}" | head -c 200))"
+
+  # Portable base64 decode (GNU -d / BSD -D).
+  local b64dec
+  if printf '' | base64 -d >/dev/null 2>&1; then b64dec='base64 -d'; else b64dec='base64 -D'; fi
+  printf '%s' "${b64}" | ${b64dec} > "${out}" \
+    || aiv_die 8 "${ADAPTER_ID}: base64 decode to ${out} failed"
+
+  case "${out}" in /*) : ;; *) out="$(pwd)/${out}" ;; esac
+  jq -n --arg p "${out}" '{video_path: $p, audio_embedded: false}'
 }
 
 aiv_cmd_submit() { aiv_cmd_run "$@"; }

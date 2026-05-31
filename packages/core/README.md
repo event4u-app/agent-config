@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `5.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 374
+- **artefacts**: 379
 
-## Commands (140)
+## Commands (144)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -77,6 +77,10 @@ Core framework-neutral artefacts.
 - **`ghostwriter:show`** — Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only.
 - **`ghostwriter:write`** — Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
 - **`grill-me`** — Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
+- **`image`** — Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.
+- **`image:analyse`** — Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
+- **`image:create`** — Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
+- **`image:verify`** — Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
 - **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 - **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
@@ -197,7 +201,7 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Rules (72)
+## Rules (73)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -235,6 +239,7 @@ Core framework-neutral artefacts.
 - **`low-impact-corpus-privacy-floor`** — Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus
 - **`markdown-safe-codeblocks`** — Generating markdown with code blocks — prevent broken nesting
 - **`media-governance-routing`** — Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)
+- **`media-sync-ground-truth`** — Audio-synced video (lip-sync, beat-cuts, music video) — derive timing + singer from the transcribed real audio, never a planning doc; sign off the vocal map before any paid render
 - **`minimal-safe-diff`** — Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits, opportunistic refactors, or reformatting
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
 - **`model-recommendation`** — Starting a task, switching type, or invoking a skill/command that declares a model_tier — switch (Claude) or suggest (any agent) the right capability tier

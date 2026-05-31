@@ -1,0 +1,1 @@
+../../../.agent-src/commands/image/verify.md

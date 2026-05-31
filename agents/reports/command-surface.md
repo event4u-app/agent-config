@@ -4,9 +4,9 @@
 
 ## Summary
 
-- **Total commands:** 141
-- **Top-level commands (directory `.`):** 58
-- **Sub-cluster directories:** 26
+- **Total commands:** 145
+- **Top-level commands (directory `.`):** 59
+- **Sub-cluster directories:** 27
 - **Low-signal (≤2 commits AND ≤30d old):** 6
 - **Overlap pairs (cosine ≥ 0.6):** 7
 
@@ -14,7 +14,7 @@
 
 | Directory | Count |
 |---|---:|
-| `.` | 58 |
+| `.` | 59 |
 | `agents` | 4 |
 | `agents/user` | 5 |
 | `analytics` | 2 |
@@ -27,6 +27,7 @@
 | `feature` | 5 |
 | `fix` | 7 |
 | `ghostwriter` | 5 |
+| `image` | 3 |
 | `judge` | 3 |
 | `knowledge` | 4 |
 | `memory` | 6 |
@@ -59,7 +60,7 @@
 Per-command invocation telemetry is **not** available. Two surrogate signals were considered:
 
 - **Filesystem mtime** — useless: `task sync` rewrites every file when the   condensed and uncondensed trees are regenerated.
-- **Git history (`--follow`)** — uninformative here: the `.agent-src.uncondensed/`   directory is the result of a recent rename (`.augment.uncondensed/` →   `.agent-src.uncondensed/`), so almost every file shows a single recent commit   on the current branch. 6 of 141 commands fall into the   ≤2-commits / ≤30d-old bucket purely as a   rename artefact, not as a real cold-tail signal.
+- **Git history (`--follow`)** — uninformative here: the `.agent-src.uncondensed/`   directory is the result of a recent rename (`.augment.uncondensed/` →   `.agent-src.uncondensed/`), so almost every file shows a single recent commit   on the current branch. 6 of 145 commands fall into the   ≤2-commits / ≤30d-old bucket purely as a   rename artefact, not as a real cold-tail signal.
 
 **Implication for Phase 1 categorisation:** keep / merge / retire decisions must be made on **intent** (description content, overlap with sibling commands, tier placement, cluster fit) rather than usage data. The cosine-≥0.6 overlap pairs above are the primary structural lever.
 
@@ -73,144 +74,148 @@ Column `bucket` is left blank — the categorisation lives in [`command-surface-
 
 | Name | Path | Tier | Cluster | Aliases | Lines | Commits | Age (d) | Bucket |
 |---|---|---:|---|---|---:|---:|---:|---|
-| `agent-handoff` | `packages/core/.agent-src.uncondensed/commands/agent-handoff.md` | 0 | — | — | 120 | 11 | 12 | |
-| `agent-status` | `packages/core/.agent-src.uncondensed/commands/agent-status.md` | 0 | — | — | 137 | 8 | 12 | |
-| `agents` | `packages/core/.agent-src.uncondensed/commands/agents.md` | 1 | agents | — | 61 | 7 | 12 | |
-| `agents:audit` | `packages/core/.agent-src.uncondensed/commands/agents/audit.md` | 2 | agents | — | 157 | 7 | 12 | |
-| `agents:init` | `packages/core/.agent-src.uncondensed/commands/agents/init.md` | 2 | agents | — | 193 | 8 | 12 | |
-| `agents:optimize` | `packages/core/.agent-src.uncondensed/commands/agents/optimize.md` | 2 | agents | — | 186 | 7 | 12 | |
-| `agents:user` | `packages/core/.agent-src.uncondensed/commands/agents/user.md` | 2 | agents | — | 70 | 7 | 12 | |
-| `agents:user-accept` | `packages/core/.agent-src.uncondensed/commands/agents/user/accept.md` | 2 | agents | — | 122 | 8 | 12 | |
-| `agents:user-init` | `packages/core/.agent-src.uncondensed/commands/agents/user/init.md` | 2 | agents | — | 162 | 9 | 12 | |
-| `agents:user-review` | `packages/core/.agent-src.uncondensed/commands/agents/user/review.md` | 2 | agents | — | 112 | 8 | 12 | |
-| `agents:user-show` | `packages/core/.agent-src.uncondensed/commands/agents/user/show.md` | 2 | agents | — | 114 | 9 | 12 | |
-| `agents:user-update` | `packages/core/.agent-src.uncondensed/commands/agents/user/update.md` | 2 | agents | — | 102 | 7 | 12 | |
+| `agent-handoff` | `packages/core/.agent-src.uncondensed/commands/agent-handoff.md` | 0 | — | — | 120 | 11 | 13 | |
+| `agent-status` | `packages/core/.agent-src.uncondensed/commands/agent-status.md` | 0 | — | — | 137 | 8 | 13 | |
+| `agents` | `packages/core/.agent-src.uncondensed/commands/agents.md` | 1 | agents | — | 61 | 7 | 13 | |
+| `agents:audit` | `packages/core/.agent-src.uncondensed/commands/agents/audit.md` | 2 | agents | — | 157 | 7 | 13 | |
+| `agents:init` | `packages/core/.agent-src.uncondensed/commands/agents/init.md` | 2 | agents | — | 193 | 8 | 13 | |
+| `agents:optimize` | `packages/core/.agent-src.uncondensed/commands/agents/optimize.md` | 2 | agents | — | 186 | 7 | 13 | |
+| `agents:user` | `packages/core/.agent-src.uncondensed/commands/agents/user.md` | 2 | agents | — | 70 | 7 | 13 | |
+| `agents:user-accept` | `packages/core/.agent-src.uncondensed/commands/agents/user/accept.md` | 2 | agents | — | 122 | 8 | 13 | |
+| `agents:user-init` | `packages/core/.agent-src.uncondensed/commands/agents/user/init.md` | 2 | agents | — | 162 | 9 | 13 | |
+| `agents:user-review` | `packages/core/.agent-src.uncondensed/commands/agents/user/review.md` | 2 | agents | — | 112 | 8 | 13 | |
+| `agents:user-show` | `packages/core/.agent-src.uncondensed/commands/agents/user/show.md` | 2 | agents | — | 114 | 9 | 13 | |
+| `agents:user-update` | `packages/core/.agent-src.uncondensed/commands/agents/user/update.md` | 2 | agents | — | 102 | 7 | 13 | |
 | `analytics` | `packages/core/.agent-src.uncondensed/commands/analytics.md` | 2 | analytics | — | 56 | 5 | 6 | |
 | `analytics:prune` | `packages/core/.agent-src.uncondensed/commands/analytics/prune.md` | 2 | analytics | — | 70 | 5 | 6 | |
 | `analytics:show` | `packages/core/.agent-src.uncondensed/commands/analytics/show.md` | 2 | analytics | — | 99 | 5 | 6 | |
-| `analyze-reference-repo` | `packages/core/.agent-src.uncondensed/commands/analyze-reference-repo.md` | 2 | — | — | 203 | 8 | 12 | |
-| `bug-fix` | `packages/core/.agent-src.uncondensed/commands/bug-fix.md` | 1 | — | — | 192 | 8 | 12 | |
-| `bug-investigate` | `packages/core/.agent-src.uncondensed/commands/bug-investigate.md` | 1 | — | — | 185 | 8 | 12 | |
-| `challenge-me` | `packages/core/.agent-src.uncondensed/commands/challenge-me.md` | 2 | challenge-me | — | 88 | 7 | 12 | |
-| `challenge-me:vision` | `packages/core/.agent-src.uncondensed/commands/challenge-me/vision.md` | 2 | challenge-me | — | 442 | 8 | 12 | |
-| `challenge-me:with-docs` | `packages/core/.agent-src.uncondensed/commands/challenge-me/with-docs.md` | 2 | challenge-me | — | 351 | 7 | 12 | |
-| `chat-history` | `packages/core/.agent-src.uncondensed/commands/chat-history.md` | 2 | chat-history | — | 58 | 8 | 12 | |
-| `chat-history:import` | `packages/core/.agent-src.uncondensed/commands/chat-history/import.md` | 2 | chat-history | — | 171 | 9 | 12 | |
-| `chat-history:learn` | `packages/core/.agent-src.uncondensed/commands/chat-history/learn.md` | 2 | chat-history | — | 183 | 8 | 12 | |
-| `chat-history:show` | `packages/core/.agent-src.uncondensed/commands/chat-history/show.md` | 2 | chat-history | — | 112 | 10 | 12 | |
-| `check-current-md` | `packages/core/.agent-src.uncondensed/commands/check-current-md.md` | 2 | — | — | 142 | 7 | 12 | |
-| `commit` | `packages/core/.agent-src.uncondensed/commands/commit.md` | 0 | commit | — | 190 | 7 | 12 | |
-| `commit:in-chunks` | `packages/core/.agent-src.uncondensed/commands/commit/in-chunks.md` | 1 | commit | — | 145 | 7 | 12 | |
-| `condense` | `packages/core/.agent-src.uncondensed/commands/condense.md` | 1 | — | — | 237 | 8 | 12 | |
-| `context` | `packages/core/.agent-src.uncondensed/commands/context.md` | 2 | context | — | 50 | 7 | 12 | |
-| `context:create` | `packages/core/.agent-src.uncondensed/commands/context/create.md` | 2 | context | — | 180 | 9 | 12 | |
-| `context:refactor` | `packages/core/.agent-src.uncondensed/commands/context/refactor.md` | 2 | context | — | 182 | 9 | 12 | |
-| `cost-report` | `packages/core/.agent-src.uncondensed/commands/cost-report.md` | 2 | — | — | 125 | 7 | 12 | |
-| `council` | `packages/core/.agent-src.uncondensed/commands/council.md` | 1 | council | — | 106 | 8 | 12 | |
-| `council:analysis` | `packages/core/.agent-src.uncondensed/commands/council/analysis.md` | 2 | council | — | 146 | 8 | 12 | |
-| `council:debate` | `packages/core/.agent-src.uncondensed/commands/council/debate.md` | 2 | council | — | 133 | 8 | 12 | |
-| `council:default` | `packages/core/.agent-src.uncondensed/commands/council/default.md` | 2 | council | — | 288 | 8 | 12 | |
-| `council:design` | `packages/core/.agent-src.uncondensed/commands/council/design.md` | 2 | council | — | 106 | 7 | 12 | |
-| `council:optimize` | `packages/core/.agent-src.uncondensed/commands/council/optimize.md` | 2 | council | — | 122 | 7 | 12 | |
-| `council:pr` | `packages/core/.agent-src.uncondensed/commands/council/pr.md` | 2 | council | — | 129 | 7 | 12 | |
-| `create-pr` | `packages/core/.agent-src.uncondensed/commands/create-pr.md` | 1 | create-pr | — | 249 | 8 | 12 | |
-| `create-pr:description-only` | `packages/core/.agent-src.uncondensed/commands/create-pr/description-only.md` | 1 | create-pr | — | 159 | 7 | 12 | |
-| `e2e-heal` | `packages/core/.agent-src.uncondensed/commands/e2e-heal.md` | 2 | — | — | 109 | 7 | 12 | |
-| `e2e-plan` | `packages/core/.agent-src.uncondensed/commands/e2e-plan.md` | 2 | — | — | 96 | 7 | 12 | |
-| `estimate-ticket` | `packages/core/.agent-src.uncondensed/commands/estimate-ticket.md` | 1 | — | — | 88 | 7 | 12 | |
-| `feature` | `packages/core/.agent-src.uncondensed/commands/feature.md` | 1 | feature | — | 58 | 7 | 12 | |
-| `feature:dev` | `packages/core/.agent-src.uncondensed/commands/feature/dev.md` | 2 | feature | — | 123 | 9 | 12 | |
-| `feature:explore` | `packages/core/.agent-src.uncondensed/commands/feature/explore.md` | 2 | feature | — | 190 | 8 | 12 | |
-| `feature:plan` | `packages/core/.agent-src.uncondensed/commands/feature/plan.md` | 2 | feature | — | 332 | 9 | 12 | |
-| `feature:refactor` | `packages/core/.agent-src.uncondensed/commands/feature/refactor.md` | 2 | feature | — | 193 | 8 | 12 | |
-| `feature:roadmap` | `packages/core/.agent-src.uncondensed/commands/feature/roadmap.md` | 2 | feature | — | 221 | 9 | 12 | |
-| `fix` | `packages/core/.agent-src.uncondensed/commands/fix.md` | 1 | fix | — | 60 | 7 | 12 | |
-| `fix:ci` | `packages/core/.agent-src.uncondensed/commands/fix/ci.md` | 2 | fix | — | 58 | 7 | 12 | |
-| `fix:portability` | `packages/core/.agent-src.uncondensed/commands/fix/portability.md` | 2 | fix | — | 107 | 8 | 12 | |
-| `fix:pr-bot-comments` | `packages/core/.agent-src.uncondensed/commands/fix/pr-bot-comments.md` | 2 | fix | — | 156 | 7 | 12 | |
-| `fix:pr-comments` | `packages/core/.agent-src.uncondensed/commands/fix/pr-comments.md` | 2 | fix | — | 68 | 7 | 12 | |
-| `fix:pr-developer-comments` | `packages/core/.agent-src.uncondensed/commands/fix/pr-developer-comments.md` | 2 | fix | — | 162 | 7 | 12 | |
-| `fix:refs` | `packages/core/.agent-src.uncondensed/commands/fix/refs.md` | 2 | fix | — | 104 | 8 | 12 | |
-| `fix:seeder` | `packages/core/.agent-src.uncondensed/commands/fix/seeder.md` | 2 | fix | — | 157 | 8 | 12 | |
-| `ghostwriter` | `packages/core/.agent-src.uncondensed/commands/ghostwriter.md` | 2 | ghostwriter | — | 100 | 8 | 12 | |
-| `ghostwriter:delete` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/delete.md` | 2 | ghostwriter | — | 123 | 9 | 12 | |
-| `ghostwriter:fetch` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/fetch.md` | 2 | ghostwriter | — | 189 | 9 | 12 | |
-| `ghostwriter:list` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/list.md` | 2 | ghostwriter | — | 107 | 9 | 12 | |
-| `ghostwriter:show` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/show.md` | 2 | ghostwriter | — | 118 | 9 | 12 | |
-| `ghostwriter:write` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/write.md` | 2 | ghostwriter | — | 164 | 8 | 12 | |
-| `grill-me` | `packages/core/.agent-src.uncondensed/commands/grill-me.md` | 2 | challenge-me | — | 48 | 7 | 12 | |
-| `implement-ticket` | `packages/core/.agent-src.uncondensed/commands/implement-ticket.md` | 0 | — | — | 166 | 8 | 12 | |
-| `jira-ticket` | `packages/core/.agent-src.uncondensed/commands/jira-ticket.md` | 1 | — | — | 80 | 7 | 12 | |
-| `judge` | `packages/core/.agent-src.uncondensed/commands/judge.md` | 1 | judge | — | 60 | 7 | 12 | |
-| `judge:on-diff` | `packages/core/.agent-src.uncondensed/commands/judge/on-diff.md` | 2 | judge | — | 123 | 7 | 12 | |
-| `judge:solo` | `packages/core/.agent-src.uncondensed/commands/judge/solo.md` | 2 | judge | — | 95 | 7 | 12 | |
-| `judge:steps` | `packages/core/.agent-src.uncondensed/commands/judge/steps.md` | 2 | judge | — | 93 | 7 | 12 | |
+| `analyze-reference-repo` | `packages/core/.agent-src.uncondensed/commands/analyze-reference-repo.md` | 2 | — | — | 203 | 8 | 13 | |
+| `bug-fix` | `packages/core/.agent-src.uncondensed/commands/bug-fix.md` | 1 | — | — | 192 | 8 | 13 | |
+| `bug-investigate` | `packages/core/.agent-src.uncondensed/commands/bug-investigate.md` | 1 | — | — | 185 | 8 | 13 | |
+| `challenge-me` | `packages/core/.agent-src.uncondensed/commands/challenge-me.md` | 2 | challenge-me | — | 88 | 7 | 13 | |
+| `challenge-me:vision` | `packages/core/.agent-src.uncondensed/commands/challenge-me/vision.md` | 2 | challenge-me | — | 442 | 8 | 13 | |
+| `challenge-me:with-docs` | `packages/core/.agent-src.uncondensed/commands/challenge-me/with-docs.md` | 2 | challenge-me | — | 351 | 7 | 13 | |
+| `chat-history` | `packages/core/.agent-src.uncondensed/commands/chat-history.md` | 2 | chat-history | — | 58 | 8 | 13 | |
+| `chat-history:import` | `packages/core/.agent-src.uncondensed/commands/chat-history/import.md` | 2 | chat-history | — | 171 | 9 | 13 | |
+| `chat-history:learn` | `packages/core/.agent-src.uncondensed/commands/chat-history/learn.md` | 2 | chat-history | — | 183 | 8 | 13 | |
+| `chat-history:show` | `packages/core/.agent-src.uncondensed/commands/chat-history/show.md` | 2 | chat-history | — | 112 | 10 | 13 | |
+| `check-current-md` | `packages/core/.agent-src.uncondensed/commands/check-current-md.md` | 2 | — | — | 142 | 7 | 13 | |
+| `commit` | `packages/core/.agent-src.uncondensed/commands/commit.md` | 0 | commit | — | 190 | 7 | 13 | |
+| `commit:in-chunks` | `packages/core/.agent-src.uncondensed/commands/commit/in-chunks.md` | 1 | commit | — | 145 | 7 | 13 | |
+| `condense` | `packages/core/.agent-src.uncondensed/commands/condense.md` | 1 | — | — | 237 | 8 | 13 | |
+| `context` | `packages/core/.agent-src.uncondensed/commands/context.md` | 2 | context | — | 50 | 7 | 13 | |
+| `context:create` | `packages/core/.agent-src.uncondensed/commands/context/create.md` | 2 | context | — | 180 | 9 | 13 | |
+| `context:refactor` | `packages/core/.agent-src.uncondensed/commands/context/refactor.md` | 2 | context | — | 182 | 9 | 13 | |
+| `cost-report` | `packages/core/.agent-src.uncondensed/commands/cost-report.md` | 2 | — | — | 125 | 7 | 13 | |
+| `council` | `packages/core/.agent-src.uncondensed/commands/council.md` | 1 | council | — | 106 | 8 | 13 | |
+| `council:analysis` | `packages/core/.agent-src.uncondensed/commands/council/analysis.md` | 2 | council | — | 146 | 8 | 13 | |
+| `council:debate` | `packages/core/.agent-src.uncondensed/commands/council/debate.md` | 2 | council | — | 133 | 8 | 13 | |
+| `council:default` | `packages/core/.agent-src.uncondensed/commands/council/default.md` | 2 | council | — | 288 | 8 | 13 | |
+| `council:design` | `packages/core/.agent-src.uncondensed/commands/council/design.md` | 2 | council | — | 106 | 7 | 13 | |
+| `council:optimize` | `packages/core/.agent-src.uncondensed/commands/council/optimize.md` | 2 | council | — | 122 | 7 | 13 | |
+| `council:pr` | `packages/core/.agent-src.uncondensed/commands/council/pr.md` | 2 | council | — | 129 | 7 | 13 | |
+| `create-pr` | `packages/core/.agent-src.uncondensed/commands/create-pr.md` | 1 | create-pr | — | 249 | 8 | 13 | |
+| `create-pr:description-only` | `packages/core/.agent-src.uncondensed/commands/create-pr/description-only.md` | 1 | create-pr | — | 159 | 7 | 13 | |
+| `e2e-heal` | `packages/core/.agent-src.uncondensed/commands/e2e-heal.md` | 2 | — | — | 109 | 7 | 13 | |
+| `e2e-plan` | `packages/core/.agent-src.uncondensed/commands/e2e-plan.md` | 2 | — | — | 96 | 7 | 13 | |
+| `estimate-ticket` | `packages/core/.agent-src.uncondensed/commands/estimate-ticket.md` | 1 | — | — | 88 | 7 | 13 | |
+| `feature` | `packages/core/.agent-src.uncondensed/commands/feature.md` | 1 | feature | — | 58 | 7 | 13 | |
+| `feature:dev` | `packages/core/.agent-src.uncondensed/commands/feature/dev.md` | 2 | feature | — | 123 | 9 | 13 | |
+| `feature:explore` | `packages/core/.agent-src.uncondensed/commands/feature/explore.md` | 2 | feature | — | 190 | 8 | 13 | |
+| `feature:plan` | `packages/core/.agent-src.uncondensed/commands/feature/plan.md` | 2 | feature | — | 332 | 9 | 13 | |
+| `feature:refactor` | `packages/core/.agent-src.uncondensed/commands/feature/refactor.md` | 2 | feature | — | 193 | 8 | 13 | |
+| `feature:roadmap` | `packages/core/.agent-src.uncondensed/commands/feature/roadmap.md` | 2 | feature | — | 221 | 9 | 13 | |
+| `fix` | `packages/core/.agent-src.uncondensed/commands/fix.md` | 1 | fix | — | 60 | 7 | 13 | |
+| `fix:ci` | `packages/core/.agent-src.uncondensed/commands/fix/ci.md` | 2 | fix | — | 58 | 7 | 13 | |
+| `fix:portability` | `packages/core/.agent-src.uncondensed/commands/fix/portability.md` | 2 | fix | — | 107 | 8 | 13 | |
+| `fix:pr-bot-comments` | `packages/core/.agent-src.uncondensed/commands/fix/pr-bot-comments.md` | 2 | fix | — | 156 | 7 | 13 | |
+| `fix:pr-comments` | `packages/core/.agent-src.uncondensed/commands/fix/pr-comments.md` | 2 | fix | — | 68 | 7 | 13 | |
+| `fix:pr-developer-comments` | `packages/core/.agent-src.uncondensed/commands/fix/pr-developer-comments.md` | 2 | fix | — | 162 | 7 | 13 | |
+| `fix:refs` | `packages/core/.agent-src.uncondensed/commands/fix/refs.md` | 2 | fix | — | 104 | 8 | 13 | |
+| `fix:seeder` | `packages/core/.agent-src.uncondensed/commands/fix/seeder.md` | 2 | fix | — | 157 | 8 | 13 | |
+| `ghostwriter` | `packages/core/.agent-src.uncondensed/commands/ghostwriter.md` | 2 | ghostwriter | — | 100 | 8 | 13 | |
+| `ghostwriter:delete` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/delete.md` | 2 | ghostwriter | — | 123 | 9 | 13 | |
+| `ghostwriter:fetch` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/fetch.md` | 2 | ghostwriter | — | 189 | 9 | 13 | |
+| `ghostwriter:list` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/list.md` | 2 | ghostwriter | — | 107 | 9 | 13 | |
+| `ghostwriter:show` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/show.md` | 2 | ghostwriter | — | 118 | 9 | 13 | |
+| `ghostwriter:write` | `packages/core/.agent-src.uncondensed/commands/ghostwriter/write.md` | 2 | ghostwriter | — | 164 | 8 | 13 | |
+| `grill-me` | `packages/core/.agent-src.uncondensed/commands/grill-me.md` | 2 | challenge-me | — | 48 | 7 | 13 | |
+| `image` | `packages/core/.agent-src.uncondensed/commands/image.md` | 2 | image | — | 72 | 0 | — | |
+| `image:analyse` | `packages/core/.agent-src.uncondensed/commands/image/analyse.md` | 2 | image | — | 51 | 0 | — | |
+| `image:create` | `packages/core/.agent-src.uncondensed/commands/image/create.md` | 2 | image | — | 53 | 0 | — | |
+| `image:verify` | `packages/core/.agent-src.uncondensed/commands/image/verify.md` | 2 | image | — | 48 | 0 | — | |
+| `implement-ticket` | `packages/core/.agent-src.uncondensed/commands/implement-ticket.md` | 0 | — | — | 166 | 8 | 13 | |
+| `jira-ticket` | `packages/core/.agent-src.uncondensed/commands/jira-ticket.md` | 1 | — | — | 80 | 7 | 13 | |
+| `judge` | `packages/core/.agent-src.uncondensed/commands/judge.md` | 1 | judge | — | 60 | 7 | 13 | |
+| `judge:on-diff` | `packages/core/.agent-src.uncondensed/commands/judge/on-diff.md` | 2 | judge | — | 123 | 7 | 13 | |
+| `judge:solo` | `packages/core/.agent-src.uncondensed/commands/judge/solo.md` | 2 | judge | — | 95 | 7 | 13 | |
+| `judge:steps` | `packages/core/.agent-src.uncondensed/commands/judge/steps.md` | 2 | judge | — | 93 | 7 | 13 | |
 | `knowledge` | `packages/core/.agent-src.uncondensed/commands/knowledge.md` | 2 | knowledge | — | 69 | 7 | 6 | |
-| `knowledge:cross-repo` | `packages/core/.agent-src.uncondensed/commands/knowledge/cross-repo.md` | 2 | knowledge | — | 71 | 1 | 0 | |
+| `knowledge:cross-repo` | `packages/core/.agent-src.uncondensed/commands/knowledge/cross-repo.md` | 2 | knowledge | — | 71 | 1 | 1 | |
 | `knowledge:forget` | `packages/core/.agent-src.uncondensed/commands/knowledge/forget.md` | 2 | knowledge | — | 96 | 6 | 6 | |
 | `knowledge:ingest` | `packages/core/.agent-src.uncondensed/commands/knowledge/ingest.md` | 2 | knowledge | — | 114 | 6 | 6 | |
 | `knowledge:list` | `packages/core/.agent-src.uncondensed/commands/knowledge/list.md` | 2 | knowledge | — | 94 | 6 | 6 | |
-| `memory` | `packages/core/.agent-src.uncondensed/commands/memory.md` | 1 | memory | — | 56 | 7 | 12 | |
-| `memory:add` | `packages/core/.agent-src.uncondensed/commands/memory/add.md` | 2 | memory | — | 146 | 8 | 12 | |
-| `memory:learn-low-impact` | `packages/core/.agent-src.uncondensed/commands/memory/learn-low-impact.md` | 2 | memory | — | 147 | 8 | 12 | |
-| `memory:load` | `packages/core/.agent-src.uncondensed/commands/memory/load.md` | 2 | memory | — | 175 | 7 | 12 | |
-| `memory:mine-session` | `packages/core/.agent-src.uncondensed/commands/memory/mine-session.md` | 2 | memory | — | 156 | 7 | 12 | |
-| `memory:promote` | `packages/core/.agent-src.uncondensed/commands/memory/promote.md` | 2 | memory | — | 194 | 7 | 12 | |
-| `memory:propose` | `packages/core/.agent-src.uncondensed/commands/memory/propose.md` | 2 | memory | — | 121 | 7 | 12 | |
-| `mode` | `packages/core/.agent-src.uncondensed/commands/mode.md` | 1 | — | — | 129 | 7 | 12 | |
-| `module` | `packages/core/.agent-src.uncondensed/commands/module.md` | 2 | module | — | 50 | 7 | 12 | |
-| `module:create` | `packages/core/.agent-src.uncondensed/commands/module/create.md` | 2 | module | — | 143 | 8 | 12 | |
-| `module:explore` | `packages/core/.agent-src.uncondensed/commands/module/explore.md` | 2 | module | — | 201 | 11 | 12 | |
-| `optimize-prompt` | `packages/core/.agent-src.uncondensed/commands/optimize-prompt.md` | 2 | optimize | — | 66 | 7 | 12 | |
-| `optimize` | `packages/core/.agent-src.uncondensed/commands/optimize.md` | 1 | optimize | — | 56 | 7 | 12 | |
-| `optimize:agents-dir` | `packages/core/.agent-src.uncondensed/commands/optimize/agents-dir.md` | 2 | optimize | — | 118 | 9 | 12 | |
-| `optimize:augmentignore` | `packages/core/.agent-src.uncondensed/commands/optimize/augmentignore.md` | 2 | optimize | — | 311 | 9 | 12 | |
-| `optimize:rtk` | `packages/core/.agent-src.uncondensed/commands/optimize/rtk.md` | 2 | optimize | — | 160 | 8 | 12 | |
-| `optimize:skills` | `packages/core/.agent-src.uncondensed/commands/optimize/skills.md` | 2 | optimize | — | 131 | 7 | 12 | |
-| `orchestrate` | `packages/core/.agent-src.uncondensed/commands/orchestrate.md` | 2 | orchestrate | — | 128 | 8 | 12 | |
-| `override` | `packages/core/.agent-src.uncondensed/commands/override.md` | 2 | override | — | 50 | 7 | 12 | |
-| `override:create` | `packages/core/.agent-src.uncondensed/commands/override/create.md` | 2 | override | — | 107 | 7 | 12 | |
-| `override:manage` | `packages/core/.agent-src.uncondensed/commands/override/manage.md` | 2 | override | — | 106 | 7 | 12 | |
-| `package-reset` | `packages/core/.agent-src.uncondensed/commands/package-reset.md` | 2 | — | — | 162 | 7 | 12 | |
-| `package-test` | `packages/core/.agent-src.uncondensed/commands/package-test.md` | 2 | — | — | 238 | 8 | 12 | |
-| `post-as` | `packages/core/.agent-src.uncondensed/commands/post-as.md` | 2 | post-as | — | 62 | 7 | 12 | |
-| `post-as:ghostwriter` | `packages/core/.agent-src.uncondensed/commands/post-as/ghostwriter.md` | 2 | post-as | — | 71 | 8 | 12 | |
-| `post-as:me` | `packages/core/.agent-src.uncondensed/commands/post-as/me.md` | 2 | post-as | — | 129 | 10 | 12 | |
-| `prepare-for-review` | `packages/core/.agent-src.uncondensed/commands/prepare-for-review.md` | 1 | — | — | 106 | 7 | 12 | |
-| `project-analyze` | `packages/core/.agent-src.uncondensed/commands/project-analyze.md` | 1 | — | — | 320 | 10 | 12 | |
-| `project-health` | `packages/core/.agent-src.uncondensed/commands/project-health.md` | 1 | — | — | 105 | 9 | 12 | |
-| `quality-fix` | `packages/core/.agent-src.uncondensed/commands/quality-fix.md` | 1 | — | — | 137 | 9 | 12 | |
-| `refine-ticket` | `packages/core/.agent-src.uncondensed/commands/refine-ticket.md` | 1 | — | — | 100 | 7 | 12 | |
-| `research` | `packages/core/.agent-src.uncondensed/commands/research.md` | 2 | research | — | 177 | 7 | 12 | |
-| `research:deep` | `packages/core/.agent-src.uncondensed/commands/research/deep.md` | 2 | research | — | 154 | 7 | 12 | |
-| `research:report` | `packages/core/.agent-src.uncondensed/commands/research/report.md` | 2 | research | — | 139 | 7 | 12 | |
-| `review-changes` | `packages/core/.agent-src.uncondensed/commands/review-changes.md` | 1 | — | — | 205 | 7 | 12 | |
-| `review-routing` | `packages/core/.agent-src.uncondensed/commands/review-routing.md` | 2 | — | — | 117 | 7 | 12 | |
-| `roadmap` | `packages/core/.agent-src.uncondensed/commands/roadmap.md` | 1 | roadmap | — | 78 | 7 | 12 | |
-| `roadmap:ai-council` | `packages/core/.agent-src.uncondensed/commands/roadmap/ai-council.md` | 2 | roadmap | — | 188 | 8 | 12 | |
-| `roadmap:create` | `packages/core/.agent-src.uncondensed/commands/roadmap/create.md` | 2 | roadmap | — | 239 | 10 | 12 | |
-| `roadmap:process-full` | `packages/core/.agent-src.uncondensed/commands/roadmap/process-full.md` | 2 | roadmap | — | 108 | 7 | 12 | |
-| `roadmap:process-phase` | `packages/core/.agent-src.uncondensed/commands/roadmap/process-phase.md` | 2 | roadmap | — | 74 | 7 | 12 | |
-| `roadmap:process-step` | `packages/core/.agent-src.uncondensed/commands/roadmap/process-step.md` | 2 | roadmap | — | 62 | 7 | 12 | |
-| `rule-compliance-audit` | `packages/core/.agent-src.uncondensed/commands/rule-compliance-audit.md` | 1 | — | — | 149 | 8 | 12 | |
-| `set-cost-profile` | `packages/core/.agent-src.uncondensed/commands/set-cost-profile.md` | 1 | — | — | 117 | 7 | 12 | |
-| `skill` | `packages/core/.agent-src.uncondensed/commands/skill.md` | 2 | skill | — | 48 | 1 | 0 | |
-| `skill:preview` | `packages/core/.agent-src.uncondensed/commands/skill/preview.md` | 2 | skill | — | 67 | 2 | 0 | |
-| `skills` | `packages/core/.agent-src.uncondensed/commands/skills.md` | 2 | skills | — | 56 | 1 | 0 | |
-| `skills:discover` | `packages/core/.agent-src.uncondensed/commands/skills/discover.md` | 2 | skills | — | 76 | 1 | 0 | |
-| `sync-agent-settings` | `packages/core/.agent-src.uncondensed/commands/sync-agent-settings.md` | 1 | — | — | 140 | 8 | 12 | |
-| `sync-gitignore` | `packages/core/.agent-src.uncondensed/commands/sync-gitignore.md` | 1 | sync-gitignore | — | 139 | 9 | 12 | |
-| `sync-gitignore:fix` | `packages/core/.agent-src.uncondensed/commands/sync-gitignore/fix.md` | 2 | sync-gitignore | — | 148 | 10 | 12 | |
-| `tests` | `packages/core/.agent-src.uncondensed/commands/tests.md` | 2 | tests | — | 50 | 7 | 12 | |
-| `tests:create` | `packages/core/.agent-src.uncondensed/commands/tests/create.md` | 2 | tests | — | 83 | 7 | 12 | |
-| `tests:execute` | `packages/core/.agent-src.uncondensed/commands/tests/execute.md` | 2 | tests | — | 67 | 7 | 12 | |
-| `threat-model` | `packages/core/.agent-src.uncondensed/commands/threat-model.md` | 1 | — | — | 125 | 7 | 12 | |
-| `update-form-request-messages` | `packages/core/.agent-src.uncondensed/commands/update-form-request-messages.md` | 2 | — | — | 199 | 9 | 12 | |
-| `upstream-contribute` | `packages/core/.agent-src.uncondensed/commands/upstream-contribute.md` | 1 | — | — | 181 | 7 | 12 | |
-| `video` | `packages/core/.agent-src.uncondensed/commands/video.md` | 2 | video | — | 73 | 9 | 12 | |
-| `video:from-script` | `packages/core/.agent-src.uncondensed/commands/video/from-script.md` | 2 | video | — | 127 | 8 | 12 | |
-| `video:from-song` | `packages/core/.agent-src.uncondensed/commands/video/from-song.md` | 2 | video | — | 317 | 2 | 0 | |
-| `video:scene` | `packages/core/.agent-src.uncondensed/commands/video/scene.md` | 2 | video | — | 96 | 7 | 12 | |
-| `video:stitch` | `packages/core/.agent-src.uncondensed/commands/video/stitch.md` | 2 | video | — | 87 | 8 | 12 | |
-| `video:storyboard` | `packages/core/.agent-src.uncondensed/commands/video/storyboard.md` | 2 | video | — | 99 | 7 | 12 | |
-| `work` | `packages/core/.agent-src.uncondensed/commands/work.md` | 0 | — | — | 166 | 7 | 12 | |
+| `memory` | `packages/core/.agent-src.uncondensed/commands/memory.md` | 1 | memory | — | 56 | 7 | 13 | |
+| `memory:add` | `packages/core/.agent-src.uncondensed/commands/memory/add.md` | 2 | memory | — | 146 | 8 | 13 | |
+| `memory:learn-low-impact` | `packages/core/.agent-src.uncondensed/commands/memory/learn-low-impact.md` | 2 | memory | — | 147 | 8 | 13 | |
+| `memory:load` | `packages/core/.agent-src.uncondensed/commands/memory/load.md` | 2 | memory | — | 175 | 7 | 13 | |
+| `memory:mine-session` | `packages/core/.agent-src.uncondensed/commands/memory/mine-session.md` | 2 | memory | — | 156 | 7 | 13 | |
+| `memory:promote` | `packages/core/.agent-src.uncondensed/commands/memory/promote.md` | 2 | memory | — | 194 | 7 | 13 | |
+| `memory:propose` | `packages/core/.agent-src.uncondensed/commands/memory/propose.md` | 2 | memory | — | 121 | 7 | 13 | |
+| `mode` | `packages/core/.agent-src.uncondensed/commands/mode.md` | 1 | — | — | 129 | 7 | 13 | |
+| `module` | `packages/core/.agent-src.uncondensed/commands/module.md` | 2 | module | — | 50 | 7 | 13 | |
+| `module:create` | `packages/core/.agent-src.uncondensed/commands/module/create.md` | 2 | module | — | 143 | 8 | 13 | |
+| `module:explore` | `packages/core/.agent-src.uncondensed/commands/module/explore.md` | 2 | module | — | 201 | 11 | 13 | |
+| `optimize-prompt` | `packages/core/.agent-src.uncondensed/commands/optimize-prompt.md` | 2 | optimize | — | 66 | 7 | 13 | |
+| `optimize` | `packages/core/.agent-src.uncondensed/commands/optimize.md` | 1 | optimize | — | 56 | 7 | 13 | |
+| `optimize:agents-dir` | `packages/core/.agent-src.uncondensed/commands/optimize/agents-dir.md` | 2 | optimize | — | 118 | 9 | 13 | |
+| `optimize:augmentignore` | `packages/core/.agent-src.uncondensed/commands/optimize/augmentignore.md` | 2 | optimize | — | 311 | 9 | 13 | |
+| `optimize:rtk` | `packages/core/.agent-src.uncondensed/commands/optimize/rtk.md` | 2 | optimize | — | 160 | 8 | 13 | |
+| `optimize:skills` | `packages/core/.agent-src.uncondensed/commands/optimize/skills.md` | 2 | optimize | — | 131 | 7 | 13 | |
+| `orchestrate` | `packages/core/.agent-src.uncondensed/commands/orchestrate.md` | 2 | orchestrate | — | 128 | 8 | 13 | |
+| `override` | `packages/core/.agent-src.uncondensed/commands/override.md` | 2 | override | — | 50 | 7 | 13 | |
+| `override:create` | `packages/core/.agent-src.uncondensed/commands/override/create.md` | 2 | override | — | 107 | 7 | 13 | |
+| `override:manage` | `packages/core/.agent-src.uncondensed/commands/override/manage.md` | 2 | override | — | 106 | 7 | 13 | |
+| `package-reset` | `packages/core/.agent-src.uncondensed/commands/package-reset.md` | 2 | — | — | 162 | 7 | 13 | |
+| `package-test` | `packages/core/.agent-src.uncondensed/commands/package-test.md` | 2 | — | — | 238 | 8 | 13 | |
+| `post-as` | `packages/core/.agent-src.uncondensed/commands/post-as.md` | 2 | post-as | — | 62 | 7 | 13 | |
+| `post-as:ghostwriter` | `packages/core/.agent-src.uncondensed/commands/post-as/ghostwriter.md` | 2 | post-as | — | 71 | 8 | 13 | |
+| `post-as:me` | `packages/core/.agent-src.uncondensed/commands/post-as/me.md` | 2 | post-as | — | 129 | 10 | 13 | |
+| `prepare-for-review` | `packages/core/.agent-src.uncondensed/commands/prepare-for-review.md` | 1 | — | — | 106 | 7 | 13 | |
+| `project-analyze` | `packages/core/.agent-src.uncondensed/commands/project-analyze.md` | 1 | — | — | 320 | 10 | 13 | |
+| `project-health` | `packages/core/.agent-src.uncondensed/commands/project-health.md` | 1 | — | — | 105 | 9 | 13 | |
+| `quality-fix` | `packages/core/.agent-src.uncondensed/commands/quality-fix.md` | 1 | — | — | 137 | 9 | 13 | |
+| `refine-ticket` | `packages/core/.agent-src.uncondensed/commands/refine-ticket.md` | 1 | — | — | 100 | 7 | 13 | |
+| `research` | `packages/core/.agent-src.uncondensed/commands/research.md` | 2 | research | — | 177 | 7 | 13 | |
+| `research:deep` | `packages/core/.agent-src.uncondensed/commands/research/deep.md` | 2 | research | — | 154 | 7 | 13 | |
+| `research:report` | `packages/core/.agent-src.uncondensed/commands/research/report.md` | 2 | research | — | 139 | 7 | 13 | |
+| `review-changes` | `packages/core/.agent-src.uncondensed/commands/review-changes.md` | 1 | — | — | 205 | 7 | 13 | |
+| `review-routing` | `packages/core/.agent-src.uncondensed/commands/review-routing.md` | 2 | — | — | 117 | 7 | 13 | |
+| `roadmap` | `packages/core/.agent-src.uncondensed/commands/roadmap.md` | 1 | roadmap | — | 78 | 7 | 13 | |
+| `roadmap:ai-council` | `packages/core/.agent-src.uncondensed/commands/roadmap/ai-council.md` | 2 | roadmap | — | 188 | 8 | 13 | |
+| `roadmap:create` | `packages/core/.agent-src.uncondensed/commands/roadmap/create.md` | 2 | roadmap | — | 239 | 10 | 13 | |
+| `roadmap:process-full` | `packages/core/.agent-src.uncondensed/commands/roadmap/process-full.md` | 2 | roadmap | — | 108 | 7 | 13 | |
+| `roadmap:process-phase` | `packages/core/.agent-src.uncondensed/commands/roadmap/process-phase.md` | 2 | roadmap | — | 74 | 7 | 13 | |
+| `roadmap:process-step` | `packages/core/.agent-src.uncondensed/commands/roadmap/process-step.md` | 2 | roadmap | — | 62 | 7 | 13 | |
+| `rule-compliance-audit` | `packages/core/.agent-src.uncondensed/commands/rule-compliance-audit.md` | 1 | — | — | 149 | 8 | 13 | |
+| `set-cost-profile` | `packages/core/.agent-src.uncondensed/commands/set-cost-profile.md` | 1 | — | — | 117 | 7 | 13 | |
+| `skill` | `packages/core/.agent-src.uncondensed/commands/skill.md` | 2 | skill | — | 48 | 1 | 1 | |
+| `skill:preview` | `packages/core/.agent-src.uncondensed/commands/skill/preview.md` | 2 | skill | — | 67 | 2 | 1 | |
+| `skills` | `packages/core/.agent-src.uncondensed/commands/skills.md` | 2 | skills | — | 56 | 1 | 1 | |
+| `skills:discover` | `packages/core/.agent-src.uncondensed/commands/skills/discover.md` | 2 | skills | — | 76 | 1 | 1 | |
+| `sync-agent-settings` | `packages/core/.agent-src.uncondensed/commands/sync-agent-settings.md` | 1 | — | — | 140 | 8 | 13 | |
+| `sync-gitignore` | `packages/core/.agent-src.uncondensed/commands/sync-gitignore.md` | 1 | sync-gitignore | — | 139 | 9 | 13 | |
+| `sync-gitignore:fix` | `packages/core/.agent-src.uncondensed/commands/sync-gitignore/fix.md` | 2 | sync-gitignore | — | 148 | 10 | 13 | |
+| `tests` | `packages/core/.agent-src.uncondensed/commands/tests.md` | 2 | tests | — | 50 | 7 | 13 | |
+| `tests:create` | `packages/core/.agent-src.uncondensed/commands/tests/create.md` | 2 | tests | — | 83 | 7 | 13 | |
+| `tests:execute` | `packages/core/.agent-src.uncondensed/commands/tests/execute.md` | 2 | tests | — | 67 | 7 | 13 | |
+| `threat-model` | `packages/core/.agent-src.uncondensed/commands/threat-model.md` | 1 | — | — | 125 | 7 | 13 | |
+| `update-form-request-messages` | `packages/core/.agent-src.uncondensed/commands/update-form-request-messages.md` | 2 | — | — | 199 | 9 | 13 | |
+| `upstream-contribute` | `packages/core/.agent-src.uncondensed/commands/upstream-contribute.md` | 1 | — | — | 181 | 7 | 13 | |
+| `video` | `packages/core/.agent-src.uncondensed/commands/video.md` | 2 | video | — | 73 | 9 | 13 | |
+| `video:from-script` | `packages/core/.agent-src.uncondensed/commands/video/from-script.md` | 2 | video | — | 127 | 8 | 13 | |
+| `video:from-song` | `packages/core/.agent-src.uncondensed/commands/video/from-song.md` | 2 | video | — | 351 | 2 | 1 | |
+| `video:scene` | `packages/core/.agent-src.uncondensed/commands/video/scene.md` | 2 | video | — | 96 | 7 | 13 | |
+| `video:stitch` | `packages/core/.agent-src.uncondensed/commands/video/stitch.md` | 2 | video | — | 87 | 8 | 13 | |
+| `video:storyboard` | `packages/core/.agent-src.uncondensed/commands/video/storyboard.md` | 2 | video | — | 99 | 7 | 13 | |
+| `work` | `packages/core/.agent-src.uncondensed/commands/work.md` | 0 | — | — | 166 | 7 | 13 | |

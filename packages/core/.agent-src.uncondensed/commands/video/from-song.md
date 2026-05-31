@@ -165,13 +165,36 @@ with the Step 2 probe result:
 - **Brief mode** — the operator brief is the creative source; the audio
   sections drive only the **cut timing**.
 - **Auto mode** — the skill infers mood/energy per section and writes
-  both action and timing; vocal sections with lyrics populate
-  `dialogue:` for lip-sync.
+  both action and timing; vocal sections populate `dialogue:` for
+  lip-sync **from the transcribed vocal map**, not from the brief.
 - `--scene-durations` (if passed) overrides probe timing verbatim.
 
 Output: `<project>/script.md` summing to the song length (reconciled in
 Step 8). Present the script, the section→scene map, **and the probe
 `method`**, then continue.
+
+#### 6a. Vocal map + sign-off gate (lip-sync / singer-assigned runs)
+
+```
+TIMING AND SINGER COME FROM THE TRANSCRIBED AUDIO, NEVER A SKELETON OR
+A GUESSED STRETCH. NO PAID RENDER UNTIL THE OPERATOR SIGNS OFF THE MAP.
+```
+
+Governed by [`media-sync-ground-truth`](../../rules/media-sync-ground-truth.md).
+When the track has vocals **and** the run assigns singers / lip-sync:
+
+1. `song-to-script` emits `<project>/vocal-map.json`
+   (`[{start, end, text, singer}]`) built by **transcribing the real
+   audio** (OpenAI `/v1/audio/transcriptions` or whisper). The probe gives
+   duration; the transcript gives lyric timing + structure. Never derive
+   lyric timing from the brief or a stretched story skeleton.
+2. **Each vocal line maps to its OWN singer.** Never put one character's
+   line on another character's scene. Ambiguous singer → mark `?` and ask.
+3. **Sign-off gate (mandatory).** Surface the map — `timestamp → line →
+   singer → assigned shot/character` — and **wait for explicit operator
+   approval before any render**. This precedes the Step 8 cost gate; a
+   wrong map wastes the whole batch.
+4. Pure-instrumental / style-mode runs skip 6a (no singers, no lip-sync).
 
 ### 7. Character lock — optional, auto-detected
 
@@ -200,6 +223,17 @@ For each scene in `<project>/script.md`, run Steps 3–7 of
 [`/video:from-script`](from-script.md) verbatim: `scene-expander` →
 blueprint → `video-director` eight-block image prompt → operator pick →
 `motion-choreographer` → video adapter.
+
+**Lip-sync sub-step (scenes with a `dialogue:` line + a singer).** A scene
+whose approved vocal-map entry assigns a singer routes to the
+audio-driven path instead of plain motion: cut that line's WAV from the
+song at the map's `[start,end]`, host it, and call the video adapter's
+`speak` capability (e.g. Higgsfield `/v1/speak/higgsfield`) with the
+**correct singer's** still + that WAV so the right character lip-syncs
+their own line. Place the clip at its real song position so the muxed
+master track stays aligned to the lips. Non-vocal / non-assigned scenes
+use the standard motion (dop) path. Never lip-sync a singer onto a line
+the vocal map attributes to someone else.
 
 **Single batch COST confirmation (not per-step).** `AIV_DRYRUN=true` is
 the default. Before the *first* live call, print the whole plan in one

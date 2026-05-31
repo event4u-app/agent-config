@@ -1,0 +1,1 @@
+../../.agent-src/rules/media-sync-ground-truth.md

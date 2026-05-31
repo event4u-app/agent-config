@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **504 public artefacts** shipped by
+Consumer-facing catalog of all **518 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (219)
+## Skills (222)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -92,6 +92,8 @@ are excluded.
 | skill | [`gtm-launch`](../.agent-src/skills/gtm-launch/SKILL.md) |  | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | skill | [`guideline-writing`](../.agent-src/skills/guideline-writing/SKILL.md) |  | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../.agent-src/skills/hiring-loop-design/SKILL.md) |  | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
+| skill | [`image-analyser`](../.agent-src/skills/image-analyser/SKILL.md) |  | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
+| skill | [`image-creator`](../.agent-src/skills/image-creator/SKILL.md) |  | Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'. |
 | skill | [`incident-commander`](../.agent-src/skills/incident-commander/SKILL.md) |  | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../.agent-src/skills/jira-integration/SKILL.md) |  | Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../.agent-src/skills/jobs-events/SKILL.md) |  | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
@@ -202,6 +204,7 @@ are excluded.
 | skill | [`skill-management`](../.agent-src/skills/skill-management/SKILL.md) |  | Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained. |
 | skill | [`skill-reviewer`](../.agent-src/skills/skill-reviewer/SKILL.md) |  | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
 | skill | [`skill-writing`](../.agent-src/skills/skill-writing/SKILL.md) |  | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
+| skill | [`song-to-script`](../.agent-src/skills/song-to-script/SKILL.md) |  | Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'. |
 | skill | [`sql-writing`](../.agent-src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | skill | [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`subagent-orchestration`](../.agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
@@ -231,7 +234,7 @@ are excluded.
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (77)
+## Rules (78)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -273,9 +276,10 @@ are excluded.
 | rule | [`low-impact-corpus-privacy-floor`](../.agent-src/rules/low-impact-corpus-privacy-floor.md) | auto | Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown with code blocks — prevent broken nesting |
 | rule | [`media-governance-routing`](../.agent-src/rules/media-governance-routing.md) | auto | Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure) |
+| rule | [`media-sync-ground-truth`](../.agent-src/rules/media-sync-ground-truth.md) | auto | Audio-synced video (lip-sync, beat-cuts, music video) — derive timing + singer from the transcribed real audio, never a planning doc; sign off the vocal map before any paid render |
 | rule | [`minimal-safe-diff`](../.agent-src/rules/minimal-safe-diff.md) | auto | Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src/rules/missing-tool-handling.md) | auto | CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
-| rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT) |
+| rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a task, switching type, or invoking a skill/command that declares a model_tier — switch (Claude) or suggest (any agent) the right capability tier |
 | rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
 | rule | [`no-decorative-emojis-in-git-surfaces`](../.agent-src/rules/no-decorative-emojis-in-git-surfaces.md) | auto | Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend |
@@ -313,7 +317,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../.agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (135)
+## Commands (145)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -383,6 +387,10 @@ are excluded.
 | command | [`ghostwriter:show`](../.agent-src/commands/ghostwriter/show.md) | cluster: ghostwriter | Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only. |
 | command | [`ghostwriter:write`](../.agent-src/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
 | command | [`grill-me`](../.agent-src/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
+| command | [`image`](../.agent-src/commands/image.md) | cluster: image | Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify. |
+| command | [`image:analyse`](../.agent-src/commands/image/analyse.md) | cluster: image | Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report. |
+| command | [`image:create`](../.agent-src/commands/image/create.md) | cluster: image | Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default. |
+| command | [`image:verify`](../.agent-src/commands/image/verify.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
 | command | [`implement-ticket`](../.agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../.agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge`](../.agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
@@ -390,6 +398,7 @@ are excluded.
 | command | [`judge:solo`](../.agent-src/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge:steps`](../.agent-src/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`knowledge`](../.agent-src/commands/knowledge.md) | cluster: knowledge | Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace. |
+| command | [`knowledge:cross-repo`](../.agent-src/commands/knowledge/cross-repo.md) | cluster: knowledge | Targeted, read-only retrieval over opted-in linked-project siblings (ADR-032 Option A). Pulls a shared type / API contract / config without bulk-including sibling files. |
 | command | [`knowledge:forget`](../.agent-src/commands/knowledge/forget.md) | cluster: knowledge | Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same. |
 | command | [`knowledge:ingest`](../.agent-src/commands/knowledge/ingest.md) | cluster: knowledge | Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`. |
 | command | [`knowledge:list`](../.agent-src/commands/knowledge/list.md) | cluster: knowledge | List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction. |
@@ -437,6 +446,10 @@ are excluded.
 | command | [`roadmap:process-step`](../.agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
 | command | [`rule-compliance-audit`](../.agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`set-cost-profile`](../.agent-src/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
+| command | [`skill`](../.agent-src/commands/skill.md) | cluster: skill | Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it. |
+| command | [`skill:preview`](../.agent-src/commands/skill/preview.md) | cluster: skill | Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution. |
+| command | [`skills`](../.agent-src/commands/skills.md) | cluster: skills | Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics. |
+| command | [`skills:discover`](../.agent-src/commands/skills/discover.md) | cluster: skills | Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why. |
 | command | [`sync-agent-settings`](../.agent-src/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
 | command | [`sync-gitignore`](../.agent-src/commands/sync-gitignore.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
 | command | [`sync-gitignore:fix`](../.agent-src/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
@@ -446,8 +459,9 @@ are excluded.
 | command | [`threat-model`](../.agent-src/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../.agent-src/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones. |
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
-| command | [`video`](../.agent-src/commands/video.md) | cluster: video | Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch. |
+| command | [`video`](../.agent-src/commands/video.md) | cluster: video | Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch. |
 | command | [`video:from-script`](../.agent-src/commands/video/from-script.md) | cluster: video | Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation. |
+| command | [`video:from-song`](../.agent-src/commands/video/from-song.md) | cluster: video | Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Dry-run default; one batch gate for live calls. |
 | command | [`video:scene`](../.agent-src/commands/video/scene.md) | cluster: video | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation. |
 | command | [`video:stitch`](../.agent-src/commands/video/stitch.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video:storyboard`](../.agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
