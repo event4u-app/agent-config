@@ -15,8 +15,8 @@
     "description": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 300,
-      "description": "Trigger phrase; ≤ 200 chars recommended, 300 is the hard ceiling."
+      "maxLength": 220,
+      "description": "Trigger phrase; ≤ 200 chars recommended, 220 is the ceiling (lean-initial-context: descriptions load eagerly via progressive disclosure). Over-cap is a soft warning, not a hard fail — a warning window so authors adapt."
     },
     "source": {
       "type": "string",

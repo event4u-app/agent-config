@@ -6,10 +6,10 @@
 
 ## Overall
 
-**94 / 150 steps done · 63%**
+**95 / 149 steps done · 64%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 2 | [road-to-lean-initial-context-buildout.md](roadmaps/road-to-lean-initial-context-buildout.md) | 3 | 18 | 16 | 2 | 0 | 0 | █░░░░░░░░░ 11% |
+| 2 | [road-to-lean-initial-context-buildout.md](roadmaps/road-to-lean-initial-context-buildout.md) | 3 | 18 | 14 | 3 | 1 | 0 | ██░░░░░░░░ 18% |
 | 3 | [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md) | 3 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 5 | 24 | 4 | 20 | 0 | 0 | ████████░░ 83% |
 | 5 | [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md) | 6 | 33 | 3 | 30 | 0 | 0 | █████████░ 91% |
@@ -45,13 +45,13 @@
 
 ### [road-to-lean-initial-context-buildout.md](roadmaps/road-to-lean-initial-context-buildout.md)
 
-**Road to Lean Initial Context — Build-out** — 2 / 18 done (11%)
+**Road to Lean Initial Context — Build-out** — 3 / 17 done (18%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Kernel budget soak track (own PRs, ≥24h soak) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Phase-1 certain wins (secondary lever) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 3 | Make the projection thin (dominant lever) | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
+| 2 | Phase-1 certain wins (secondary lever) | 🟡 in progress | 6 | 1 | 0 | 0 | 14% |
+| 3 | Make the projection thin (dominant lever) | 🟡 in progress | 4 | 2 | 1 | 0 | 33% |
 
 ### [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md)
 
