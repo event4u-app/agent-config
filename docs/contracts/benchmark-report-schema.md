@@ -82,25 +82,27 @@ verdict:
 Headers in order:
 
 1. `# Benchmark Report — <corpus_id> · <generated_at>`
-2. `## Headline` — three-line summary (selection · cost · quality).
+2. `## Headline` — three-line summary (selection · tokens · quality).
 3. `## Selection accuracy` — table per prompt with hit/miss + expected/got.
-4. `## Cost capture` — per-tier table + total; "unavailable" block if no
-   session jsonl was found.
+4. `## Token usage` — per-tier message counts + token totals; "unavailable"
+   block if no session jsonl was found. The monetary (USD) comparison is
+   **intentionally not rendered** — per-call API pricing misleads
+   subscription users; tokens are the currency-neutral metric that matters.
 5. `## Quality probe` — per-prompt assertion pass/fail; `not_collected`
    block when no agent-output path was passed.
-6. `## Notes` — pointer to `pricing.yaml`, `corpus path`, and the
-   versioned filename for citation.
+6. `## Notes` — `corpus path` and the versioned filename for citation.
 
 ## Invariants
 
-- **No silent drops.** Missing cost source → emit `source: unavailable`
-  and `total_cost_usd: 0.0` with a marker; never omit the section.
+- **No silent drops.** Missing token source → emit `source: unavailable`
+  with a marker; never omit the section.
 - **Quality stub honesty.** When agent outputs are not provided, set
   `quality.source: not_collected` and `verdict.overall: partial`. Score
   stays `0.0`; never inflate by assuming pass.
-- **Pricing dated.** Every cost row reads `sourced_on` from
-  `internal/bench/pricing.yaml`. Stale price (> 90 days) → warning line in the
-  Markdown footer.
+- **Tokens, not money.** The rendered report shows token counts only. The
+  JSON still carries the `cost` block (`total_cost_usd`, per-tier `cost_usd`)
+  for back-compat with downstream consumers, but no USD figure is rendered in
+  the Markdown headline, sections, or footer.
 
 ## Cross-references
 

@@ -104,8 +104,7 @@ def render_telegraph_markdown(report: dict[str, Any]) -> str:
         f"(p10 {_fmt_pct(agg['savings_vs_terse']['p10'])} · p90 {_fmt_pct(agg['savings_vs_terse']['p90'])})",
         f"- median realised carve-out share (condensed arm): **{_fmt_pct(agg['realised_carve_out_pct']['median'])}** "
         f"(expected median {_fmt_pct(agg['expected_carve_out_pct']['median'])})",
-        f"- total cost: **${cost['totals']['total_cost_usd']:.6f}** "
-        f"(calls {cost['totals']['calls']} · errors {cost['totals']['errors']})",
+        f"- calls: **{cost['totals']['calls']}** · errors: **{cost['totals']['errors']}**",
         f"- verdict: **{report['verdict']['overall']}**",
         "",
     ]

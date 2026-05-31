@@ -150,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
     headline = (
         f"bench {report['corpus']['id']} · "
         f"selection {sel['selection_accuracy']:.2%} ({verdict['selection']}) · "
-        f"cost ${cost['totals']['total_cost_usd']:.6f} ({cost.get('source', 'n/a')}) · "
+        f"tokens {cost.get('source', 'n/a')} · "
         f"quality {qual['quality_score']:.2%} ({verdict['quality']}) · "
         f"overall {verdict['overall']}"
     )
@@ -252,8 +252,7 @@ def _run_telegraph(args: argparse.Namespace) -> int:
         f"telegraph · prompts {report['corpus']['prompt_count']} · "
         f"calls {cost['totals']['calls']} · errors {cost['totals']['errors']} · "
         f"vs_raw med {report['telegraph']['aggregate']['savings_vs_raw']['median']:.2%} · "
-        f"vs_terse med {report['telegraph']['aggregate']['savings_vs_terse']['median']:.2%} · "
-        f"cost ${cost['totals']['total_cost_usd']:.6f}"
+        f"vs_terse med {report['telegraph']['aggregate']['savings_vs_terse']['median']:.2%}"
     )
     if args.quiet:
         print(headline)

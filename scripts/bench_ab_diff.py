@@ -10,7 +10,7 @@ Inputs: two report JSON paths. Output: a JSON artefact under
 The diff content depends on the corpus:
 
 - `ab-tracka` — trigger-accuracy %, false-positive count, per-rule lift.
-- `ab-trackb` — completion-rate per category, wall-time, tokens, cost,
+- `ab-trackb` — completion-rate per category, wall-time, tokens,
   ask-vs-act ratio, tool-call count.
 
 Phase 2 only writes the structural skeleton (delta object with `with`,
@@ -74,7 +74,7 @@ def compute_track_a_diff(with_results: dict, without_results: dict) -> dict:
 
 
 def compute_track_b_diff(with_results: dict, without_results: dict) -> dict:
-    """Track B: completion rate per category + wall-time + tokens + cost + ask-vs-act."""
+    """Track B: completion rate per category + wall-time + tokens + ask-vs-act."""
     def mean(d: dict, key: str) -> float:
         try:
             return float(d.get(key, 0.0))
@@ -111,15 +111,8 @@ def compute_track_b_diff(with_results: dict, without_results: dict) -> dict:
                 3,
             ),
         },
-        "cost_usd": {
-            "with": mean(with_results, "mean_cost_usd"),
-            "without": mean(without_results, "mean_cost_usd"),
-            "delta": round(
-                mean(with_results, "mean_cost_usd")
-                - mean(without_results, "mean_cost_usd"),
-                4,
-            ),
-        },
+        # cost_usd comparison intentionally omitted — API pricing misleads
+        # subscription users; tokens are the currency-neutral metric.
         "ask_vs_act_ratio": {
             "with": mean(with_results, "ask_vs_act_ratio"),
             "without": mean(without_results, "ask_vs_act_ratio"),
