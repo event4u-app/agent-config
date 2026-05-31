@@ -248,7 +248,7 @@
   "rules/low-impact-corpus-privacy-floor.md": "1c04d1c0e2277564fa7c3db1aa7ecd8649b90c1d4a5a70ed2689bda15e65c2a5",
   "rules/markdown-safe-codeblocks.md": "654a33104ee8fc9e402e5f673b07c9c40491667b3d1377a3292f0d1894954f33",
   "rules/media-governance-routing.md": "ed03903105ce3400e963c3390c93c944cb45a4f826698472b2627c7f46465940",
-  "rules/media-sync-ground-truth.md": "2deb9561fd2982f5ddb1278df447c41760fa955d1b20c9f1d712a8759f2392b5",
+  "rules/media-sync-ground-truth.md": "a33a61ce049f9778f98f5a715b75166910239579dd072b6cf563c890d91a8bc0",
   "rules/minimal-safe-diff.md": "92cec6be123f204dcfb4d0223afd8b2c61c4fe7b2d262af92b857e1a7fa784aa",
   "rules/missing-tool-handling.md": "7a3500f10f19511f77a00bc845339291d6fbced8b0cf259743a2e97031d17749",
   "rules/model-recommendation.md": "5b42491353f965712d5935b72e49ceb95b6c623e26265d35efac572c11001532",
