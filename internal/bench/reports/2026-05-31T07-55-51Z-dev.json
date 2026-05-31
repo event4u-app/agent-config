@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-31T07:55:51Z",
+  "corpus": {
+    "id": "dev",
+    "path": "tests/eval/corpus-dev.yaml",
+    "prompt_count": 10
+  },
+  "runner": {
+    "bench_run_version": "0.2.0",
+    "baseline_collector": "scripts/bench_runner.py",
+    "baseline_collector_sha": "mtime:1780214140"
+  },
+  "selection": {
+    "corpus_id": "dev",
+    "target": 0.6,
+    "top_k": 3,
+    "prompts_total": 10,
+    "prompts_hit": 5,
+    "selection_accuracy": 0.5,
+    "passed": false,
+    "per_prompt": [
+      {
+        "id": "canonical-01",
+        "category": "canonical",
+        "expected_skills": [
+          "php-coder"
+        ],
+        "top_k_ranked": [
+          "php-service",
+          "laravel-dto",
+          "laravel"
+        ],
+        "hit": false
+      },
+      {
+        "id": "canonical-02",
+        "category": "canonical",
+        "expected_skills": [
+          "laravel"
+        ],
+        "top_k_ranked": [
+          "laravel-api-endpoint",
+          "laravel-mail",
+          "composer-packages"
+        ],
+        "hit": false
+      },
+      {
+        "id": "canonical-03",
+        "category": "canonical",
+        "expected_skills": [
+          "pest-testing"
+        ],
+        "top_k_ranked": [
+          "pest-testing",
+          "testing-anti-patterns",
+          "traefik"
+        ],
+        "hit": true
+      },
+      {
+        "id": "canonical-04",
+        "category": "canonical",
+        "expected_skills": [
+          "quality-tools"
+        ],
+        "top_k_ranked": [
+          "quality-tools",
+          "test-driven-development",
+          "data-flow-mapper"
+        ],
+        "hit": true
+      },
+      {
+        "id": "canonical-05",
+        "category": "canonical",
+        "expected_skills": [
+          "systematic-debugging"
+        ],
+        "top_k_ranked": [
+          "character-consistency",
+          "test-performance",
+          "security-audit"
+        ],
+        "hit": false
+      },
+      {
+        "id": "canonical-06",
+        "category": "canonical",
+        "expected_skills": [
+          "code-review"
+        ],
+        "top_k_ranked": [
+          "voice-and-tone-design",
+          "judge-code-quality",
+          "judge-bug-hunter"
+        ],
+        "hit": false
+      },
+      {
+        "id": "canonical-07",
+        "category": "canonical",
+        "expected_skills": [
+          "adr-create"
+        ],
+        "top_k_ranked": [
+          "adr-create",
+          "decision-record",
+          "doc-coauthoring"
+        ],
+        "hit": true
+      },
+      {
+        "id": "canonical-08",
+        "category": "canonical",
+        "expected_skills": [
+          "terraform"
+        ],
+        "top_k_ranked": [
+          "terraform",
+          "skill-management",
+          "copilot-config"
+        ],
+        "hit": true
+      },
+      {
+        "id": "canonical-09",
+        "category": "canonical",
+        "expected_skills": [
+          "conventional-commits-writing"
+        ],
+        "top_k_ranked": [
+          "skill-reviewer",
+          "validate-feature-fit",
+          "one-on-one-cadence"
+        ],
+        "hit": false
+      },
+      {
+        "id": "canonical-10",
+        "category": "canonical",
+        "expected_skills": [
+          "bug-analyzer"
+        ],
+        "top_k_ranked": [
+          "bug-analyzer",
+          "voc-extract",
+          "react-shadcn-ui"
+        ],
+        "hit": true
+      }
+    ]
+  },
+  "cost": {
+    "source": "unavailable",
+    "reason": "sessions_jsonl_missing",
+    "scanned_path": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/agents/cost-tracking/sessions.jsonl",
+    "sessions_scanned": 0,
+    "totals": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "total_cost_usd": 0.0
+    },
+    "per_tier": {
+      "haiku": {
+        "messages": 0,
+        "cost_usd": 0.0
+      },
+      "sonnet": {
+        "messages": 0,
+        "cost_usd": 0.0
+      },
+      "opus": {
+        "messages": 0,
+        "cost_usd": 0.0
+      },
+      "unknown": {
+        "messages": 0,
+        "cost_usd": 0.0
+      }
+    },
+    "pricing_sourced_on": "2026-05-14"
+  },
+  "quality": {
+    "source": "not_collected",
+    "prompts_with_assertion": 10,
+    "prompts_passing": 0,
+    "quality_score": 0.0,
+    "per_prompt": [
+      {
+        "id": "canonical-01",
+        "assertion": "must_include=['int', 'string']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-02",
+        "assertion": "must_include=['policy', 'paginate']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-03",
+        "assertion": "must_include=['it(', 'expect']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-04",
+        "assertion": "must_include=['type', 'narrow']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-05",
+        "assertion": "must_include=['reproduce', 'isolate']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-06",
+        "assertion": "must_include=['concern', 'review']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-07",
+        "assertion": "must_include=['ADR', 'consequences']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-08",
+        "assertion": "must_include=['resource', 'lifecycle']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-09",
+        "assertion": "must_include=['fix', 'api']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      },
+      {
+        "id": "canonical-10",
+        "assertion": "must_include=['root cause', 'stack']",
+        "assertion_kind": "rubric",
+        "passed": "not_collected"
+      }
+    ]
+  },
+  "verdict": {
+    "selection": "fail",
+    "quality": "not_collected",
+    "overall": "partial"
+  }
+}

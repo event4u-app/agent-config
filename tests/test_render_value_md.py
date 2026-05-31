@@ -281,4 +281,6 @@ def test_render_includes_reference_scale(monkeypatch, tmp_path):
     text = out.read_text()
     assert "1,000" in text or "1.000" in text
     assert "sonnet" in text
-    assert "2026-05-14" in text
+    # pricing_sourced_on date is intentionally NOT rendered — the dashboard
+    # is token-only (no € figure ⇒ no pricing-provenance line).
+    assert "2026-05-14" not in text

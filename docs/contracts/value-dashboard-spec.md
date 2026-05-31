@@ -267,9 +267,13 @@ copies it verbatim into the dashboard.
   Saves output tokens — when the corpus rewards it.
 - **Ohne Paket / Mit Paket** — "without the package" /
   "with the package" — the two arms of the A/B comparison.
-- **€-per-1k-requests** — token cost at the reference scale
-  (1,000 requests of the average shape, priced at the current
-  Sonnet rates in `internal/bench/pricing.yaml`).
+- **Δ Tokens** — input-token difference per request vs. the baseline.
+  The rendered dashboard reports cost in **tokens only** — no € figure.
+  A €/USD comparison would assume per-call API pricing, which the many
+  users on subscriptions do not pay; tokens are the currency-neutral
+  metric. The `eur_delta` fields remain in the JSON for back-compat but
+  are not rendered. (Historical € figures elsewhere in this spec are
+  dated examples, kept as record.)
 
 ## Honest baseline appendix
 

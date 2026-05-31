@@ -4,7 +4,7 @@
 
 ## Wie diese Seite zu lesen ist
 
-**Panel A (Kostenleiter)** — von oben nach unten lesen. Jede Stufe sagt: *was sie macht*, *wie viele Input-Tokens sie pro Request hinzufügt oder spart*, *was das in € auf 1,000 Requests kostet*, und *wo wir kumulativ stehen*. Die fett gedruckte **NETTO**-Zeile am Ende ist die Antwort.
+**Panel A (Token-Leiter)** — von oben nach unten lesen. Jede Stufe sagt: *was sie macht*, *wie viele Input-Tokens sie pro Request hinzufügt oder spart*, und *wo wir kumulativ stehen*. Die fett gedruckte **NETTO**-Zeile am Ende ist die Antwort. Bewusst rein in Tokens — kein €-Vergleich, da Abo-Nutzer keine Per-Request-API-Preise zahlen.
 
 **Panel B (Verhalten)** — vier reale Vergleiche, *mit* vs. *ohne* Paket. Hier liegt der nicht-Token-Wert: passende Skill-Auswahl, Stopps bei riskanten Aktionen, weniger Rückfragen, mehr abgeschlossene Aufgaben.
 
@@ -13,25 +13,25 @@
 ## Reference scale
 
 - **1,000** Requests, durchschnittlich **8,000** Input-Tokens und **600** Output-Tokens pro Request
-- Modell-Tier: `sonnet` · Preisstand `2026-05-14` (Quelle: `internal/bench/pricing.yaml`)
+- Modell-Tier (Workload-Annahme): `sonnet`
 - Wer einen anderen Workload fährt, rechnet selbst nach — die Methodik ist offengelegt; nichts ist hardcodiert versteckt.
 
 ## Panel A — Kostenleiter (kumulativ, min → max)
 
 Liest sich von oben nach unten. Positive Δ-Werte = das Paket *kostet* Tokens (Regel-Load ist die ehrliche Up-Front-Steuer); negative Δ-Werte = das Paket *spart* Tokens.
 
-| Stufe | Was sie tut | Δ Tokens | Δ € (1k Req) | Kumulativ | Quelle |
-|---|---|---:|---:|---:|---|
-| **Ohne Paket / Without package** | Baseline — der nackte Request ohne Paket-Regeln. | +0 | +0.00 € | +0.00% | `n/a` · ✅ gemessen |
-| Mit Paket (Regeln laden) / With package (rule load) | Die immer-aktiven Regeln landen im Kontext jedes Requests. ⚠️ erst teurer | +8 895 | +24.55 € | +111.19% | `dist/router.json` · ✅ gemessen |
-| | _Fußnote:_ Kernel = 10 rules (31570 chars) + charter (4010 chars); tokens ≈ chars / 4. | | | | |
-| + condense (Regeln eindampfen) / + condense (rule shrink) | Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern. | -186 | -0.51 € | +108.86% | `internal/bench/reports/telegraph-v2.json` · ✅ gemessen |
-| | _Fußnote:_ Aggregate across non-Thin-Root categories; Thin-Root files (AGENTS.md variants) net negative (~−4%) and are excluded from the rung — surfaced separately. | | | | |
-| + rtk (CLI-Output filtern) / + rtk (filter CLI output) | rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg. | -593 | -1.64 € | +101.45% | `internal/bench/reports/rtk/latest.json` · ✅ gemessen |
-| + terse (Antworten knapper) / + terse (shorter replies) | Telegraph-Stil zielt auf knappere Modell-Antworten. | +56 | +0.77 € | +102.15% | `internal/bench/reports/telegraph-v1.json` · ✅ gemessen |
-| | _Fußnote:_ Honest: gemessener Median = -9.27% gegen 'sei knapp' — Telegraph liefert hier mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht. | | | | |
+| Stufe | Was sie tut | Δ Tokens | Kumulativ | Quelle |
+|---|---|---:|---:|---|
+| **Ohne Paket / Without package** | Baseline — der nackte Request ohne Paket-Regeln. | +0 | +0.00% | `n/a` · ✅ gemessen |
+| Mit Paket (Regeln laden) / With package (rule load) | Die immer-aktiven Regeln landen im Kontext jedes Requests. ⚠️ erst teurer | +8 522 | +106.53% | `dist/router.json` · ✅ gemessen |
+| | _Fußnote:_ Kernel = 10 rules (30080 chars) + charter (4010 chars); tokens ≈ chars / 4. | | | |
+| + condense (Regeln eindampfen) / + condense (rule shrink) | Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern. | -186 | +104.20% | `internal/bench/reports/telegraph-v2.json` · ✅ gemessen |
+| | _Fußnote:_ Aggregate across non-Thin-Root categories; Thin-Root files (AGENTS.md variants) net negative (~−4%) and are excluded from the rung — surfaced separately. | | | |
+| + rtk (CLI-Output filtern) / + rtk (filter CLI output) | rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg. | -593 | +96.79% | `internal/bench/reports/rtk/latest.json` · ✅ gemessen |
+| + terse (Antworten knapper) / + terse (shorter replies) | Telegraph-Stil zielt auf knappere Modell-Antworten. | +56 | +97.49% | `internal/bench/reports/telegraph-v1.json` · ✅ gemessen |
+| | _Fußnote:_ Honest: gemessener Median = -9.27% gegen 'sei knapp' — Telegraph liefert hier mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht. | | | |
 
-**NETTO: Mehrkosten** ⚠️ — **+8 172 Tokens / Request**, **+22.55 €** auf 1,000 Requests, kumulativ **+102.15%** vs. Baseline.
+**NETTO: Mehrkosten** ⚠️ — **+7 799 Tokens / Request**, kumulativ **+97.49%** vs. Baseline.
 
 ## Panel B — Verhalten (mit vs. ohne)
 
@@ -42,7 +42,7 @@ Vier reale Vergleiche aus echten Bench-Runs. Hier liegt der Wert, den Tokens all
 | Right-skill selection / Richtige Skill-Wahl | Wie oft das passende Skill aktiviert wird (top-K Treffer). | 50.0% | 0.0% | 50.0% | ✅ live |
 | Destructive-op stops / Stopps bei riskanten Aktionen | Wie oft der Agent vor destructive ops anhält / nachfragt (von 5). | — | — | — | ⚠️ dry-run |
 | Ask-vs-act ratio / Fragen vs. Handeln | Verhältnis Rückfragen zu Aktionen — niedriger = entschlossener. | 0.000 | 0.000 | 0.000 | ✅ live |
-| Task completion rate / Aufgaben fertig | Anteil der Aufgaben, die der Agent vollständig abschließt. | 84.6% | 7.7% | 76.9% | ✅ live |
+| Task completion rate / Aufgaben fertig | Anteil der Aufgaben, die der Agent vollständig abschließt. | 84.6% | 0.0% | 84.6% | ✅ live |
 
 ## Glossar
 
@@ -55,7 +55,7 @@ Plain-language Definitionen für den nicht-Entwickler-Reader.
 - **rtk** — der *Rust Token Killer*, ein CLI-Wrapper, der verbose Output (`git status`, lint-Output, test-Runner) filtert, bevor das Modell ihn liest. Spart Input-Tokens auf Tool-Calls.
 - **terse / telegraph** — ein Stil (kurze Phrasen, weggelassene Artikel), den der Agent für knappere Antworten nutzt. Spart Output-Tokens — wenn der Korpus es belohnt.
 - **Ohne Paket / Mit Paket** — *without the package* / *with the package* — die zwei Arme des A/B-Vergleichs.
-- **€-per-1k-requests** — Token-Kosten auf der Referenz-Skala (1.000 Requests durchschnittlicher Größe, gepreist mit den aktuellen Sonnet-Raten aus `internal/bench/pricing.yaml`).
+- **Δ Tokens** — Input-Token-Differenz pro Request gegenüber der Baseline. Bewusst die einzige Kosten-Einheit: ein €-Vergleich würde Per-Request-API-Preise unterstellen, die Abo-Nutzer nicht zahlen.
 
 ## Methodik & Quellen
 
@@ -77,8 +77,8 @@ Diese Seite ist eine **abgeleitete** Sicht — keine eigene Messung. Sie fasst d
 
 **Hinweise aus dem Report:**
 
-- Token→€ conversion priced at sonnet rates from internal/bench/pricing.yaml (sourced_on=2026-05-14).
+- Cost is reported in tokens only — no € figure. Per-call API pricing misleads subscription users; tokens are the currency-neutral metric.
 - Pending rungs contribute 0 to the cumulative until measured.
 - Reference scale: 1000 requests × 8000 input / 600 output tokens per request.
 
-_Last rendered: `2026-05-29T04:36:04+00:00`_
+_Last rendered: `2026-05-31T14:37:17+00:00`_

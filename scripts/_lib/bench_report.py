@@ -52,31 +52,32 @@ def _selection_section(selection: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _cost_section(cost: dict[str, Any]) -> str:
+def _token_usage_section(cost: dict[str, Any]) -> str:
+    # Token-only — the monetary (USD) comparison is intentionally omitted:
+    # it assumes per-call API pricing, which misleads subscription users.
+    # Tokens are the currency-neutral metric that matters. JSON keeps the
+    # raw cost field for back-compat; it is simply not rendered.
     if cost.get("source") == "unavailable":
         return (
-            "## Cost capture\n\n"
+            "## Token usage\n\n"
             f"- **source:** `unavailable` ({cost.get('reason', 'unknown')})\n"
-            f"- **scanned:** `{cost.get('scanned_path', '—')}`\n"
-            f"- **pricing sourced on:** {cost.get('pricing_sourced_on') or '—'}\n\n"
+            f"- **scanned:** `{cost.get('scanned_path', '—')}`\n\n"
             "_No session jsonl available. Run `node scripts/cost/track.mjs` "
             "from a real Claude Code session to populate agents/cost-tracking/sessions.jsonl._\n"
         )
     totals = cost["totals"]
     lines = [
-        "## Cost capture",
+        "## Token usage",
         "",
         f"- **source:** `{cost['source']}` · sessions scanned: **{cost['sessions_scanned']}**",
-        f"- **pricing sourced on:** {cost.get('pricing_sourced_on') or '—'}",
-        f"- **total cost:** **${totals['total_cost_usd']:.6f}**",
         "",
-        "| tier | messages | cost (USD) |",
-        "|---|---:|---:|",
+        "| tier | messages |",
+        "|---|---:|",
     ]
     for tier, slot in cost["per_tier"].items():
         if slot["messages"] == 0 and slot["cost_usd"] == 0.0:
             continue
-        lines.append(f"| {tier} | {slot['messages']} | ${slot['cost_usd']:.6f} |")
+        lines.append(f"| {tier} | {slot['messages']} |")
     lines += [
         "",
         "| metric | value |",
@@ -125,21 +126,19 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"# Benchmark Report — `{corpus['id']}` · {report['generated_at']}\n\n"
         "## Headline\n\n"
         f"- **selection** {sel['selection_accuracy']:.2%} (target {sel['target']:.2%}) → **{verdict['selection']}**\n"
-        f"- **cost** ${cost['totals']['total_cost_usd']:.6f} "
-        f"({'sessions=' + str(cost['sessions_scanned']) if cost['source'] != 'unavailable' else cost['source']})\n"
+        f"- **tokens** {'sessions=' + str(cost['sessions_scanned']) if cost['source'] != 'unavailable' else cost['source']}\n"
         f"- **quality** {qual['quality_score']:.2%} → **{verdict['quality']}**\n"
         f"- **overall** → **{verdict['overall']}**\n"
     )
     notes = (
         "## Notes\n\n"
         f"- corpus path: `{corpus['path']}` · prompts: **{corpus['prompt_count']}**\n"
-        f"- pricing: `internal/bench/pricing.yaml`\n"
         f"- baseline collector: `{report['runner']['baseline_collector']}`\n"
     )
     return "\n\n".join([
         headline,
         _selection_section(sel),
-        _cost_section(cost),
+        _token_usage_section(cost),
         _quality_section(qual),
         notes,
     ]) + "\n"

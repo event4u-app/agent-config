@@ -80,9 +80,14 @@ totals:
   cumulative_pct: <signed float>         # net % of baseline
   net_verdict: net-saving | net-cost | break-even   # by sign of cumulative_pct
 notes:
-  - "Token→€ conversion priced at <model_tier> rates from <pricing source>."
+  - "Cost is reported in tokens only — no € figure (API pricing misleads subscription users)."
   - "<other invariants surfaced as plain prose>"
 ```
+
+> **Rendering note.** The `eur_delta` / `cumulative_eur_delta` /
+> `pricing_sourced_on` fields stay in the JSON for back-compat, but the
+> rendered dashboard (`docs/value.md`) shows **tokens only** — no € column,
+> no €-per-1k figure, no NETTO € line. See `scripts/render_value_md.py`.
 
 ## Invariants
 

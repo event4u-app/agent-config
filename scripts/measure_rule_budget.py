@@ -28,6 +28,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib import token_count  # noqa: E402
 
 OVERRIDES_FILE = REPO_ROOT / "docs" / "contracts" / "iron-law-overrides.txt"
 TREND_FILE = REPO_ROOT / "agents" / "runtime" / ".rule-budget-history.jsonl"
@@ -91,6 +92,9 @@ def measure_rule(path: Path) -> dict[str, object]:
         "tier": fields.get("tier", ""),
         "chars": len(body),
         "lines": body.count("\n"),
+        # Real-tokenizer truth alongside the char proxy (roadmap 0B.1).
+        "tokens_gpt": token_count.gpt_tokens(body).tokens,
+        "tokens_claude": token_count.claude_tokens(body).tokens,
     }
 
 
@@ -141,6 +145,11 @@ def aggregate(rules: list[dict[str, object]]) -> dict[str, object]:
         "auto_chars": sum(int(r["chars"]) for r in auto),
         "kernel_chars": sum(int(r["chars"]) for r in kernel),
         "total_chars": total_chars,
+        "kernel_tokens_gpt": sum(int(r.get("tokens_gpt", 0)) for r in kernel),
+        "kernel_tokens_claude": sum(int(r.get("tokens_claude", 0)) for r in kernel),
+        "total_tokens_gpt": sum(int(r.get("tokens_gpt", 0)) for r in rules),
+        "total_tokens_claude": sum(int(r.get("tokens_claude", 0)) for r in rules),
+        "token_method": token_count.method_note(),
         "kernel_hard": KERNEL_HARD,
         "kernel_target": KERNEL_TARGET,
         "per_rule_hard": PER_RULE_HARD,
@@ -180,6 +189,12 @@ def render_table(rules: list[dict[str, object]], agg: dict[str, object]) -> str:
         f"  auto-bucket: {agg['auto_chars']:>6} chars across {agg['auto_count']} rules"
     )
     lines.append(f"        total: {agg['total_chars']:>6} chars across {agg['rule_count']} rules")
+    lines.append("")
+    lines.append(
+        f"kernel-tokens: {agg['kernel_tokens_gpt']:>6} GPT · {agg['kernel_tokens_claude']:>6} Claude  "
+        f"(total {agg['total_tokens_gpt']} GPT · {agg['total_tokens_claude']} Claude)"
+    )
+    lines.append(f"  token method: {agg['token_method']}")
     lines.append("")
     lines.append(f"top-5 largest:")
     for r in agg["top5_largest"]:  # type: ignore[index]

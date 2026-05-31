@@ -57,10 +57,6 @@ def fmt_signed_int(value: int) -> str:
     return f"{value:+,}".replace(",", " ")
 
 
-def fmt_eur(value: float) -> str:
-    return f"{value:+.2f} €"
-
-
 def fmt_pct(value: float) -> str:
     return f"{value:+.2f}%"
 
@@ -89,7 +85,6 @@ def render_intro(report: Dict[str, Any]) -> str:
     avg_in = ref.get("avg_input_tokens", 8000)
     avg_out = ref.get("avg_output_tokens", 600)
     tier = ref.get("model_tier", "sonnet")
-    sourced = ref.get("pricing_sourced_on", "—")
     return (
         f"# Value Dashboard — was kostet das Paket, was bringt es?\n"
         "\n"
@@ -101,11 +96,12 @@ def render_intro(report: Dict[str, Any]) -> str:
         "\n"
         "## Wie diese Seite zu lesen ist\n"
         "\n"
-        "**Panel A (Kostenleiter)** — von oben nach unten lesen. Jede "
+        "**Panel A (Token-Leiter)** — von oben nach unten lesen. Jede "
         "Stufe sagt: *was sie macht*, *wie viele Input-Tokens sie pro "
-        "Request hinzufügt oder spart*, *was das in € auf "
-        f"{requests:,} Requests kostet*, und *wo wir kumulativ stehen*. "
-        "Die fett gedruckte **NETTO**-Zeile am Ende ist die Antwort.\n"
+        "Request hinzufügt oder spart*, und *wo wir kumulativ stehen*. "
+        "Die fett gedruckte **NETTO**-Zeile am Ende ist die Antwort. "
+        "Bewusst rein in Tokens — kein €-Vergleich, da Abo-Nutzer keine "
+        "Per-Request-API-Preise zahlen.\n"
         "\n"
         "**Panel B (Verhalten)** — vier reale Vergleiche, *mit* vs. "
         "*ohne* Paket. Hier liegt der nicht-Token-Wert: passende Skill-"
@@ -122,8 +118,7 @@ def render_intro(report: Dict[str, Any]) -> str:
         f"- **{requests:,}** Requests, durchschnittlich "
         f"**{avg_in:,}** Input-Tokens und **{avg_out:,}** Output-Tokens "
         "pro Request\n"
-        f"- Modell-Tier: `{tier}` · "
-        f"Preisstand `{sourced}` (Quelle: `internal/bench/pricing.yaml`)\n"
+        f"- Modell-Tier (Workload-Annahme): `{tier}`\n"
         "- Wer einen anderen Workload fährt, rechnet selbst nach — die "
         "Methodik ist offengelegt; nichts ist hardcodiert versteckt.\n"
     )
@@ -135,8 +130,8 @@ def render_panel_a(report: Dict[str, Any]) -> str:
         "Liest sich von oben nach unten. Positive Δ-Werte = das Paket "
         "*kostet* Tokens (Regel-Load ist die ehrliche Up-Front-Steuer); "
         "negative Δ-Werte = das Paket *spart* Tokens.\n",
-        "| Stufe | Was sie tut | Δ Tokens | Δ € (1k Req) | Kumulativ | Quelle |",
-        "|---|---|---:|---:|---:|---|",
+        "| Stufe | Was sie tut | Δ Tokens | Kumulativ | Quelle |",
+        "|---|---|---:|---:|---|",
     ]
     for rung in report.get("cost_ladder", []):
         if rung["id"] == "baseline":
@@ -145,7 +140,6 @@ def render_panel_a(report: Dict[str, Any]) -> str:
             label_cell = rung["label"]
         what = rung.get("what_it_does", "")
         token_delta = int(rung.get("token_delta", 0))
-        eur_delta = float(rung.get("eur_delta", 0.0))
         cum = float(rung.get("cumulative_pct", 0.0))
         conf = confidence_badge(rung.get("confidence", "pending"))
         source = rung.get("source_report", "")
@@ -154,17 +148,16 @@ def render_panel_a(report: Dict[str, Any]) -> str:
             what = f"{what} ⚠️ erst teurer"
         lines.append(
             f"| {label_cell} | {what} | "
-            f"{fmt_signed_int(token_delta)} | {fmt_eur(eur_delta)} | "
+            f"{fmt_signed_int(token_delta)} | "
             f"{fmt_pct(cum)} | `{source}` · {conf} |"
         )
         if rung.get("footnote"):
             lines.append(
-                f"| | _Fußnote:_ {rung['footnote']} | | | | |"
+                f"| | _Fußnote:_ {rung['footnote']} | | | |"
             )
 
     totals = report.get("totals", {})
     cum_tokens = int(totals.get("cumulative_token_delta", 0))
-    cum_eur = float(totals.get("cumulative_eur_delta", 0.0))
     cum_pct = float(totals.get("cumulative_pct", 0.0))
     verdict = totals.get("net_verdict", "—")
     verdict_label = {
@@ -177,8 +170,6 @@ def render_panel_a(report: Dict[str, Any]) -> str:
             "",
             f"{verdict_label} — "
             f"**{fmt_signed_int(cum_tokens)} Tokens / Request**, "
-            f"**{fmt_eur(cum_eur)}** auf "
-            f"{report.get('reference_scale', {}).get('requests', 1000):,} Requests, "
             f"kumulativ **{fmt_pct(cum_pct)}** vs. Baseline.\n",
         ]
     )
@@ -250,10 +241,10 @@ def render_glossary() -> str:
         "nutzt. Spart Output-Tokens — wenn der Korpus es belohnt.\n"
         "- **Ohne Paket / Mit Paket** — *without the package* / *with "
         "the package* — die zwei Arme des A/B-Vergleichs.\n"
-        "- **€-per-1k-requests** — Token-Kosten auf der "
-        "Referenz-Skala (1.000 Requests durchschnittlicher Größe, "
-        "gepreist mit den aktuellen Sonnet-Raten aus "
-        "`internal/bench/pricing.yaml`).\n"
+        "- **Δ Tokens** — Input-Token-Differenz pro Request gegenüber der "
+        "Baseline. Bewusst die einzige Kosten-Einheit: ein €-Vergleich "
+        "würde Per-Request-API-Preise unterstellen, die Abo-Nutzer nicht "
+        "zahlen.\n"
     )
 
 
