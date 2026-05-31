@@ -124,6 +124,7 @@ tasks:
       - task: check-one-off-location
       - task: validate-schema
       - task: lint-rule-budget
+      - task: audit-tokens-budget
       - task: lint-skills
       - task: lint-role-experiences
       - task: lint-namespace
@@ -228,6 +229,7 @@ tasks:
       - task: check-one-off-location
       - task: validate-schema
       - task: lint-rule-budget
+      - task: audit-tokens-budget
       - task: lint-skills-strict
       - task: lint-role-experiences
       - task: lint-namespace
