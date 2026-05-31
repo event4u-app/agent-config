@@ -56,25 +56,42 @@ def _description(fm: str) -> str:
     return m.group(1).strip() if m else ""
 
 
-def thin_entry(rule_id: str, text: str) -> str:
-    """Build the progressive-disclosure pointer for a non-kernel rule.
+# How many trigger keywords/phrases to surface as the always-on match hint.
+# The full trigger set lives in dist/router.json (compiled from source) — the
+# projected entry only needs enough signal for the agent to recognise a match
+# and load the body. The router, not this list, drives actual selection.
+_TRIGGER_HINT_LIMIT = 6
 
-    Keeps the frontmatter verbatim (its `triggers:` are the match signal the
-    router compiles from, and the `description` is the always-on hint) and
-    replaces the rule body with a one-line pointer to the full source.
+
+def _trigger_hint(fm: str) -> str:
+    """A short, comma-joined sample of the rule's trigger keywords/phrases."""
+    hits: list[str] = []
+    for m in re.finditer(r'^\s*-\s*(?:keyword|phrase|intent):\s*"?(.+?)"?\s*$', fm, re.MULTILINE):
+        hits.append(m.group(1).strip())
+        if len(hits) >= _TRIGGER_HINT_LIMIT:
+            break
+    return ", ".join(hits)
+
+
+def thin_entry(rule_id: str, text: str) -> str:
+    """Build the minimal progressive-disclosure pointer for a non-kernel rule.
+
+    The always-on layer keeps only the match signal (description + a short
+    trigger hint) and a pointer to the full body — NOT the full frontmatter.
+    The router (dist/router.json, compiled from source) holds the complete
+    `triggers:` / `routes_to:`; selection is unchanged. Dropping the inlined
+    frontmatter is where the bulk of the token saving comes from.
     """
     fm, _body = split_frontmatter(text)
     desc = _description(fm)
+    hint = _trigger_hint(fm)
     title = rule_id.replace("-", " ").title()
-    pointer = (
-        f"# {title}\n\n"
-        f"> **Routed rule — body loaded on trigger-match.** "
-        f"{desc}\n\n"
-        f"Full rule text: [`{rule_id}`](../../.agent-src.uncondensed/rules/{rule_id}.md). "
-        f"The router fires this rule on its `triggers:` (above); load the body then.\n"
+    fires = f" Fires on: {hint}." if hint else ""
+    return (
+        f"## {title}\n"
+        f"> Routed rule — load the body on trigger-match.{fires} {desc} "
+        f"Body: [`{rule_id}`](../../.agent-src.uncondensed/rules/{rule_id}.md)\n"
     )
-    # Frontmatter stays so the matching signal and router compile are intact.
-    return (fm + pointer) if fm else pointer
 
 
 def build_thin(rules_dir: Path = RULES_SOURCE) -> dict[str, str]:
