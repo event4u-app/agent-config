@@ -26,7 +26,15 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR = REPO_ROOT / ".agent-src.uncondensed" / "rules"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+# Pre-monorepo this was REPO_ROOT/.agent-src.uncondensed/rules. Post-move
+# (ADR-017) the source rules live under packages/*/.agent-src.uncondensed/rules.
+# Resolve the same way measure_rule_budget does (multi-root aware) so the
+# Iron-Law SHA gate keeps working against the current layout.
+def _rules_dirs() -> list[Path]:
+    return [root / "rules" for root in artefact_roots() if (root / "rules").is_dir()]
 
 # Locked kernel set — kept in sync with measure_rule_budget.KERNEL_RULES.
 KERNEL_RULES = (
@@ -58,10 +66,11 @@ def iron_law_sha(text: str) -> str:
 
 
 def rule_sha(rule_id: str) -> str:
-    path = RULES_DIR / f"{rule_id}.md"
-    if not path.exists():
-        raise FileNotFoundError(path)
-    return iron_law_sha(path.read_text(encoding="utf-8"))
+    for rules_dir in _rules_dirs():
+        path = rules_dir / f"{rule_id}.md"
+        if path.exists():
+            return iron_law_sha(path.read_text(encoding="utf-8"))
+    raise FileNotFoundError(f"{rule_id}.md not found under any artefact root's rules/")
 
 
 def main(argv: list[str] | None = None) -> int:
