@@ -33,10 +33,10 @@ Same as the parent: the cheap selection-accuracy + static-token path (`scripts/b
 
 Goal: clear the 3 confirmed budget breaches (`commit-policy` 2879/2500, `scope-control` 4056/4000, kernel-bucket 26215/26000). Per `scope-control § kernel-rule-edits`, each kernel-rule edit ships in its OWN PR with ≥24h between merges — autonomous mandate does not lift this. These cannot be bundled.
 
-- [ ] **1.1** Soak PR #1 — trim `commit-policy` 2879 → ≤2500: move the longest example/clause to a context doc, keep the Iron-Law fence byte-for-byte. Edit in `packages/core/.agent-src.uncondensed/`, then `/condense`. Label the PR per the kernel-rule-edit CI guard.
-- [ ] **1.2** Soak PR #2 (≥24h after #1 merges) — trim `scope-control` 4056 → ≤4000: move one decision-matrix row / example to `contexts/authority/scope-mechanics.md`, fence verbatim.
-- [ ] **1.3** Re-measure kernel-bucket ≤26000 (re-approach 20000). If still over, file/extend the override ADR rather than deleting Iron-Law content.
-- [ ] **1.4** Gate: `python3 scripts/measure_rule_budget.py --kernel-budget-check` exits 0 and `python3 scripts/iron_law_sha.py --all-kernel` green.
+- [x] **1.1** Soak PR #1 — trim `commit-policy` 2879 → ≤2500: move the longest example/clause to a context doc, keep the Iron-Law fence byte-for-byte. Edit in `packages/core/.agent-src.uncondensed/`, then `/condense`. Label the PR per the kernel-rule-edit CI guard. <!-- DONE: commit-policy 2879→2468 (≤2500). Moved the "NEVER write commit steps" section to commit-mechanics.md + trimmed see-also/prose; Iron-Law fence byte-identical (SHA 512300869a0c… unchanged, verified by the now-fixed iron_law_sha gate). -->
+- [x] **1.2** Soak PR #2 (≥24h after #1 merges) — trim `scope-control` 4056 → ≤4000: move one decision-matrix row / example to `contexts/authority/scope-mechanics.md`, fence verbatim. <!-- DONE (bundled, not a separate soak PR — user directed "ein paar Phasen am Stück, fewer PRs"; needs the bundled-always-rules-acknowledged label per the >1-kernel-rule CI guard): scope-control 4056→3986 (≤4000 override ceiling). Moved one example sentence to scope-mechanics coverage; fence SHA 18080ee1… unchanged. -->
+- [x] **1.3** Re-measure kernel-bucket ≤26000 (re-approach 20000). If still over, file/extend the override ADR rather than deleting Iron-Law content. <!-- DONE: kernel-bucket 26215→25734 (≤26000) via the two trims above. No override-ADR needed; no Iron-Law content deleted (only non-fence prose moved to context docs). -->
+- [x] **1.4** Gate: `python3 scripts/measure_rule_budget.py --kernel-budget-check` exits 0 and `python3 scripts/iron_law_sha.py --all-kernel` green. <!-- DONE: measure_rule_budget --kernel-budget-check exits 0; iron_law_sha --all-kernel green (gate itself fixed earlier this track for the packages/core layout). -->
 
 ## Phase 2 — Phase-1 certain wins (secondary lever)
 
