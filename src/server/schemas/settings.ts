@@ -39,7 +39,7 @@ export const settingsSchema = z.object({
     ),
     lean_projection: z.object({
         mode: leanProjectionMode.default('eager-all').describe(
-            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (default, safe). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~36k GPT-tok lighter per session). EXPERIMENTAL: validate with the live A/B before flipping; one-flip revert to eager-all.',
+            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (default, safe). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session). EXPERIMENTAL: validate with the live A/B before flipping; one-flip revert to eager-all.',
         ),
     }).default({ mode: 'eager-all' }),
     cost: z.object({

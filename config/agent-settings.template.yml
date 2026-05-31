@@ -39,8 +39,8 @@ cost_profile: __COST_PROFILE__
 #             today's behaviour). Safe — bodies are always in context.
 # thin      = kernel rules full-bodied + non-kernel rules as
 #             router-resolved pointers (the agent loads the body on
-#             trigger-match). Measured ~36k GPT-tok lighter per session
-#             (61% of the rule layer). EXPERIMENTAL: a thin projection
+#             trigger-match). Measured ~45k GPT-tok lighter per session
+#             (77% of the rule layer). EXPERIMENTAL: a thin projection
 #             only holds behaviour if the pointer is resolved on match —
 #             validate with `task bench:ab:live` before flipping, and
 #             keep `task trigger-coverage` at 100%. One-flip revert:
