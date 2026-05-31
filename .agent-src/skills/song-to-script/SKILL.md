@@ -99,23 +99,46 @@ Then assign per scene:
   | breakdown / dip | close-up / detail, quiet, single light source |
   | outro / fade | pull-back, resolve, hold |
 
-### Step 3: Lyric / lip-sync lines (auto mode, vocal tracks)
+### Step 3: Vocal map — transcribe, never guess (vocal tracks)
 
-If the probe flags vocal energy in a section and the operator provided
-lyrics (or asked to lip-sync), place the matching lines in that scene's
-`dialogue:` block so the video adapter can drive mouth motion. No
-lyrics → leave `dialogue:` empty; the scene is performance/B-roll, not
-lip-sync. **Never fabricate lyrics** — absent text means no dialogue.
-Lip-sync requires a character subject; in style mode, `dialogue:` stays
-empty.
+```
+LYRIC TIMING AND SINGER COME FROM THE TRANSCRIBED AUDIO, NEVER FROM A
+BRIEF / STORY SKELETON OR A GUESSED STRETCH. NEVER PUT ONE SINGER'S
+LINE ON ANOTHER SINGER'S SCENE.
+```
+
+Track has vocals and the run intends lip-sync → build a **vocal map**
+from the real audio before assigning any `dialogue:`:
+
+1. **Transcribe** audio to timestamped lines — OpenAI
+   `/v1/audio/transcriptions` (`response_format=verbose_json` →
+   `segments[].{start,end,text}`) or local whisper. Only source of lyric
+   timing.
+2. **Label the singer** per line. Operator who-sings reference (roster, a
+   brief naming who sings which line, or a character cast) → match each
+   line to its singer. Genuinely ambiguous → mark `singer: "?"` and
+   surface; never guess a singer to fill the slot.
+3. **Emit** `<project>/vocal-map.json`: `[{start, end, text, singer}]`,
+   timing verbatim from the transcript.
+4. **Place lines into the matching scene's** `dialogue:` block using
+   transcript timing, tagged with the singer (`singer: "<line>"`). A
+   scene's lip-sync subject MUST be the line's labelled singer.
+
+No vocals / no transcript / no lip-sync intent → leave `dialogue:` empty;
+scene is performance / B-roll. **Never fabricate lyrics**, **never
+re-time a line off the brief**, and in style mode `dialogue:` stays empty
+(lip-sync needs a character subject). The `/video:from-song` sign-off
+gate (its Step 6) shows this map for approval before any render.
 
 ### Step 4: Emit + reconcile
 
-Write `<project>/script.md`. Report the delta, the section→scene map,
-**and the probe `method`** (so the operator sees whether cuts are
-silence-derived, energy-derived, or interval-fallback). If the sum cannot
-be reconciled (e.g. provider max-duration forces more time than the song
-has), **halt and surface the conflict** — do not pad silently.
+Write `<project>/script.md` (and `<project>/vocal-map.json` when the
+track has vocals). Report the delta, the section→scene map, **the probe
+`method`** (silence-derived, energy-derived, or interval-fallback), **and
+whether lyric timing is transcript-derived** (it must be — never
+brief-derived). If the sum cannot be reconciled (e.g. provider
+max-duration forces more time than the song has), **halt and surface the
+conflict** — do not pad silently.
 
 ### Step 5: Validate before handoff
 
