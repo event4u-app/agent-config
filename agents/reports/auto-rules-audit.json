@@ -764,7 +764,7 @@
       "body_chars": 2727,
       "description": "Audio-synced video (lip-sync, beat-cuts, music video) \u2014 derive timing + singer from the transcribed real audio, never a planning doc; sign off the vocal map before any paid render",
       "description_chars": 179,
-      "file_chars": 3255,
+      "file_chars": 3311,
       "name": "media-sync-ground-truth",
       "routes_to": [],
       "src_path": "packages/core/.agent-src.uncondensed/rules/media-sync-ground-truth.md",
