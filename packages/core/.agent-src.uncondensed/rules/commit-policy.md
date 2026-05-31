@@ -47,18 +47,13 @@ NEVER ASK "ONE COMMIT OR MULTIPLE?", "HOW SHOULD I SPLIT?",
 "WHICH CHUNK FIRST?". THE AGENT PICKS THE SPLIT.
 ```
 
-One chunk per concern (scope / refactor / rules / config / cleanup), foundation-first. Generated files ride with their source chunk. State the split inline, execute. Full mechanics + carve-outs: [`commit-mechanics § Always split into logical chunks`](../contexts/authority/commit-mechanics.md).
+One chunk per concern, foundation-first; generated files ride with their source. Full mechanics + carve-outs: [`commit-mechanics § Always split into logical chunks`](../contexts/authority/commit-mechanics.md).
 
 ## NEVER write commit steps into roadmaps unsolicited
 
-When **creating** a roadmap (`/roadmap-create`, `/feature-roadmap`, any roadmap-producing flow) — do **not** include commit steps unless the user explicitly requested them. Commits are a delivery decision; roadmaps plan **work**.
-
-If the user explicitly wants commit steps, write them clearly (e.g. "Commit phase X: chore: …").
+Roadmaps plan **work**, not commits — when creating a roadmap, never add commit steps unless the user explicitly asked. Detail: [`commit-mechanics § roadmap commit steps`](../contexts/authority/commit-mechanics.md).
 
 ## See also
 
-- [`autonomous-execution`](autonomous-execution.md) — trivial-question suppression; this rule survives the suppression.
-- [`no-cheap-questions`](no-cheap-questions.md) — commit asks are cheap by construction; this rule is the canonical Iron Law.
 - [`scope-control`](scope-control.md) — git-ops permission gate (push, merge, branch, PR, tag).
-- [`/commit`](../commands/commit.md) — split and commit with confirmation.
-- [`/commit:in-chunks`](../commands/commit/in-chunks.md) — auto-split, no confirmation.
+- [`no-cheap-questions`](no-cheap-questions.md) · [`autonomous-execution`](autonomous-execution.md) · [`/commit`](../commands/commit.md) · [`/commit:in-chunks`](../commands/commit/in-chunks.md).
