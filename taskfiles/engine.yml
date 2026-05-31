@@ -134,6 +134,11 @@ tasks:
     desc: "Token-budget gate (Phase 1.4): fail if a measured initial-context surface exceeds its configured budget. Budgets are advisory (None) until Phase 3 sets them — passes today."
     cmd: python3 scripts/audit_initial_context.py --fail-if-over-budget
 
+  lean-projection-measure:
+    silent: true
+    desc: "Measure the thin-projection token delta (Phase 3.1): eager vs (kernel full + non-kernel pointers). Read-only — never writes the live projections. Set lean_projection.mode=thin + `task generate-tools` to actually thin (validate with bench:ab:live first)."
+    cmd: python3 scripts/project_thin_rules.py --measure
+
   setup-evals:
     desc: "Bootstrap .venv/ with the pinned anthropic SDK for live trigger evals (idempotent)."
     cmd: bash scripts/setup_eval_venv.sh

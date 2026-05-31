@@ -144,6 +144,31 @@ def _read_augment_rules_use_symlinks() -> bool:
     return False
 
 
+def _lean_projection_mode() -> str:
+    """Read lean_projection.mode from .agent-settings.yml.
+
+    `eager-all` (default) → every rule body inlined into every projection
+    (today's behaviour). `thin` → kernel full-bodied + non-kernel rules as
+    router-resolved pointers (lean-initial-context Phase 3.1; ~36k GPT tok
+    lighter, measured). Missing / malformed → `eager-all`, so the thin path
+    is strictly opt-in and one-flip-revertible (see docs/contracts/rule-router.md
+    § Kill-switch). The flip MUST be live-A/B-validated before it ships as the
+    default — a thin projection only holds behaviour if the agent resolves the
+    pointer on trigger-match.
+    """
+    try:
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    data = load_agent_settings(project_path=SETTINGS_FILE)
+    lean = data.get("lean_projection")
+    if isinstance(lean, dict) and str(lean.get("mode", "")).strip().lower() == "thin":
+        return "thin"
+    return "eager-all"
 
 
 def file_hash(filepath: Path) -> str:
@@ -654,6 +679,18 @@ def generate_rule_symlinks() -> int:
     # All .md files in .agent-src/rules/ — not just universal ones
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
     tool_dirs = _filter_tool_dirs(TOOL_DIRS)
+
+    # Thin-projection opt-in (lean-initial-context Phase 3.1). Default
+    # `eager-all` keeps the symlink behaviour below untouched; `thin` writes
+    # kernel rules full + non-kernel rules as router-resolved pointers.
+    thin_files: dict[str, str] | None = None
+    if _lean_projection_mode() == "thin":
+        try:
+            from scripts.project_thin_rules import build_thin
+        except ImportError:  # pragma: no cover — script-style invocation
+            from project_thin_rules import build_thin  # type: ignore[import-not-found]
+        thin_files = build_thin(RULES_SOURCE)
+
     total = 0
     for tool_dir, rel_prefix in tool_dirs.items():
         target_dir = PROJECT_ROOT / tool_dir
@@ -666,17 +703,21 @@ def generate_rule_symlinks() -> int:
 
         for rule in rules:
             link = target_dir / rule
-            target = Path(rel_prefix) / rule
             if link.exists() or link.is_symlink():
                 link.unlink()
-            link.symlink_to(target)
+            if thin_files is not None:
+                # Thin mode: write a real file (kernel full / non-kernel pointer),
+                # not a symlink to the full source body.
+                link.write_text(thin_files[rule], encoding="utf-8")
+            else:
+                link.symlink_to(Path(rel_prefix) / rule)
             total += 1
 
     # Verify counts match across all tool directories
     source_count = len(rules)
     for tool_dir in tool_dirs:
         target_dir = PROJECT_ROOT / tool_dir
-        tool_count = len([f for f in target_dir.iterdir() if f.is_symlink() and f.suffix == ".md"])
+        tool_count = len([f for f in target_dir.iterdir() if f.suffix == ".md"])
         if tool_count != source_count:
             print(f"  ⚠️  {tool_dir}: {tool_count} rules (expected {source_count})")
 

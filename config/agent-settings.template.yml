@@ -30,6 +30,24 @@ agent_config_version: ""
 # custom   = ignore profile — every matrix value must be set explicitly.
 cost_profile: __COST_PROFILE__
 
+# --- Lean projection (experimental, opt-in) ---
+#
+# How the per-tool projector emits the rule layer. See
+# docs/contracts/rule-router.md § Kill-switch.
+#
+# eager-all = every rule body inlined into every projection (DEFAULT,
+#             today's behaviour). Safe — bodies are always in context.
+# thin      = kernel rules full-bodied + non-kernel rules as
+#             router-resolved pointers (the agent loads the body on
+#             trigger-match). Measured ~36k GPT-tok lighter per session
+#             (61% of the rule layer). EXPERIMENTAL: a thin projection
+#             only holds behaviour if the pointer is resolved on match —
+#             validate with `task bench:ab:live` before flipping, and
+#             keep `task trigger-coverage` at 100%. One-flip revert:
+#             set eager-all + `task generate-tools`.
+lean_projection:
+  mode: eager-all
+
 # --- Cost tracking + budget enforcement ---
 #
 # USD budgets evaluated against `agents/cost-tracking/sessions.jsonl` by

@@ -28,6 +28,7 @@ const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
 const onBlockFallback = z.enum(['stop', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
+const leanProjectionMode = z.enum(['eager-all', 'thin']);
 
 export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
@@ -36,6 +37,11 @@ export const settingsSchema = z.object({
     cost_profile: costProfile.default('balanced').describe(
         'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/.',
     ),
+    lean_projection: z.object({
+        mode: leanProjectionMode.default('eager-all').describe(
+            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (default, safe). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~36k GPT-tok lighter per session). EXPERIMENTAL: validate with the live A/B before flipping; one-flip revert to eager-all.',
+        ),
+    }).default({ mode: 'eager-all' }),
     cost: z.object({
         budgets: z.object({
             daily: z.number().min(0).default(0).describe(
