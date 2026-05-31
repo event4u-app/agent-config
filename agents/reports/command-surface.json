@@ -1,5 +1,5 @@
 {
-  "total": 141,
+  "total": 145,
   "thresholds": {
     "overlap_cosine": 0.6,
     "low_signal_commit_count": 2,
@@ -20,7 +20,7 @@
       "days_since_modified": 1,
       "commit_count": 11,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agent-status",
@@ -36,7 +36,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:audit",
@@ -52,7 +52,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:init",
@@ -68,7 +68,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:optimize",
@@ -84,7 +84,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:user-accept",
@@ -100,7 +100,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:user-init",
@@ -116,7 +116,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:user-review",
@@ -132,7 +132,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:user-show",
@@ -148,7 +148,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:user-update",
@@ -164,7 +164,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents:user",
@@ -180,7 +180,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "agents",
@@ -196,7 +196,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "analytics:prune",
@@ -260,7 +260,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "bug-fix",
@@ -276,7 +276,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "bug-investigate",
@@ -292,7 +292,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "challenge-me:vision",
@@ -308,7 +308,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "challenge-me:with-docs",
@@ -324,7 +324,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "challenge-me",
@@ -340,7 +340,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "chat-history:import",
@@ -356,7 +356,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "chat-history:learn",
@@ -372,7 +372,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "chat-history:show",
@@ -388,7 +388,7 @@
       "days_since_modified": 1,
       "commit_count": 10,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "chat-history",
@@ -404,7 +404,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "check-current-md",
@@ -420,7 +420,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "commit:in-chunks",
@@ -436,7 +436,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "commit",
@@ -452,7 +452,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "condense",
@@ -468,7 +468,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "context:create",
@@ -484,7 +484,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "context:refactor",
@@ -500,7 +500,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "context",
@@ -516,7 +516,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "cost-report",
@@ -532,7 +532,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council:analysis",
@@ -548,7 +548,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council:debate",
@@ -564,7 +564,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council:default",
@@ -580,7 +580,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council:design",
@@ -596,7 +596,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council:optimize",
@@ -612,7 +612,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council:pr",
@@ -628,7 +628,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "council",
@@ -644,7 +644,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "create-pr:description-only",
@@ -660,7 +660,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "create-pr",
@@ -676,7 +676,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "e2e-heal",
@@ -692,7 +692,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "e2e-plan",
@@ -708,7 +708,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "estimate-ticket",
@@ -724,7 +724,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "feature:dev",
@@ -740,7 +740,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "feature:explore",
@@ -756,7 +756,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "feature:plan",
@@ -772,7 +772,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "feature:refactor",
@@ -788,7 +788,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "feature:roadmap",
@@ -804,7 +804,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "feature",
@@ -820,7 +820,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:ci",
@@ -836,7 +836,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:portability",
@@ -852,7 +852,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:pr-bot-comments",
@@ -868,7 +868,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:pr-comments",
@@ -884,7 +884,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:pr-developer-comments",
@@ -900,7 +900,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:refs",
@@ -916,7 +916,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix:seeder",
@@ -932,7 +932,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "fix",
@@ -948,7 +948,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "ghostwriter:delete",
@@ -964,7 +964,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "ghostwriter:fetch",
@@ -980,7 +980,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "ghostwriter:list",
@@ -996,7 +996,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "ghostwriter:show",
@@ -1012,7 +1012,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "ghostwriter:write",
@@ -1028,7 +1028,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "ghostwriter",
@@ -1044,7 +1044,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "grill-me",
@@ -1060,7 +1060,71 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
+    },
+    {
+      "name": "image:analyse",
+      "path": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/packages/core/.agent-src.uncondensed/commands/image/analyse.md",
+      "relpath": "packages/core/.agent-src.uncondensed/commands/image/analyse.md",
+      "directory": "image",
+      "description": "Analyse a character image down to the smallest mole and diff it against a canon \u2014 per-feature spec, OCR tattoo text, severity-ranked drift report.",
+      "aliases": [],
+      "tier": 2,
+      "cluster": "image",
+      "line_count": 51,
+      "last_modified_iso": "",
+      "days_since_modified": null,
+      "commit_count": 0,
+      "first_commit_iso": "",
+      "days_since_first_commit": null
+    },
+    {
+      "name": "image:create",
+      "path": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/packages/core/.agent-src.uncondensed/commands/image/create.md",
+      "relpath": "packages/core/.agent-src.uncondensed/commands/image/create.md",
+      "directory": "image",
+      "description": "Generate a character image to spec \u2014 assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.",
+      "aliases": [],
+      "tier": 2,
+      "cluster": "image",
+      "line_count": 53,
+      "last_modified_iso": "",
+      "days_since_modified": null,
+      "commit_count": 0,
+      "first_commit_iso": "",
+      "days_since_first_commit": null
+    },
+    {
+      "name": "image:verify",
+      "path": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/packages/core/.agent-src.uncondensed/commands/image/verify.md",
+      "relpath": "packages/core/.agent-src.uncondensed/commands/image/verify.md",
+      "directory": "image",
+      "description": "Verify a candidate render against its canon \u2014 run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.",
+      "aliases": [],
+      "tier": 2,
+      "cluster": "image",
+      "line_count": 48,
+      "last_modified_iso": "",
+      "days_since_modified": null,
+      "commit_count": 0,
+      "first_commit_iso": "",
+      "days_since_first_commit": null
+    },
+    {
+      "name": "image",
+      "path": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/packages/core/.agent-src.uncondensed/commands/image.md",
+      "relpath": "packages/core/.agent-src.uncondensed/commands/image.md",
+      "directory": ".",
+      "description": "Character-image fidelity orchestrator \u2014 analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.",
+      "aliases": [],
+      "tier": 2,
+      "cluster": "image",
+      "line_count": 72,
+      "last_modified_iso": "",
+      "days_since_modified": null,
+      "commit_count": 0,
+      "first_commit_iso": "",
+      "days_since_first_commit": null
     },
     {
       "name": "implement-ticket",
@@ -1076,7 +1140,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "jira-ticket",
@@ -1092,7 +1156,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "judge:on-diff",
@@ -1108,7 +1172,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "judge:solo",
@@ -1124,7 +1188,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "judge:steps",
@@ -1140,7 +1204,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "judge",
@@ -1156,7 +1220,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "knowledge:cross-repo",
@@ -1169,10 +1233,10 @@
       "cluster": "knowledge",
       "line_count": 71,
       "last_modified_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 1,
       "first_commit_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_first_commit": 0
+      "days_since_first_commit": 1
     },
     {
       "name": "knowledge:forget",
@@ -1233,7 +1297,7 @@
       "cluster": "knowledge",
       "line_count": 69,
       "last_modified_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-25T04:29:35+02:00",
       "days_since_first_commit": 6
@@ -1252,7 +1316,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "memory:learn-low-impact",
@@ -1268,7 +1332,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "memory:load",
@@ -1284,7 +1348,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "memory:mine-session",
@@ -1300,7 +1364,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "memory:promote",
@@ -1316,7 +1380,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "memory:propose",
@@ -1332,7 +1396,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "memory",
@@ -1348,7 +1412,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "mode",
@@ -1364,7 +1428,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "module:create",
@@ -1380,7 +1444,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "module:explore",
@@ -1396,7 +1460,7 @@
       "days_since_modified": 1,
       "commit_count": 11,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "module",
@@ -1412,7 +1476,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "optimize:agents-dir",
@@ -1428,7 +1492,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "optimize:augmentignore",
@@ -1444,7 +1508,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "optimize:rtk",
@@ -1460,7 +1524,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "optimize:skills",
@@ -1476,7 +1540,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "optimize-prompt",
@@ -1492,7 +1556,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "optimize",
@@ -1508,7 +1572,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "orchestrate",
@@ -1524,7 +1588,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "override:create",
@@ -1540,7 +1604,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "override:manage",
@@ -1556,7 +1620,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "override",
@@ -1572,7 +1636,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "package-reset",
@@ -1588,7 +1652,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "package-test",
@@ -1604,7 +1668,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "post-as:ghostwriter",
@@ -1620,7 +1684,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "post-as:me",
@@ -1636,7 +1700,7 @@
       "days_since_modified": 1,
       "commit_count": 10,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "post-as",
@@ -1652,7 +1716,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "prepare-for-review",
@@ -1668,7 +1732,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "project-analyze",
@@ -1684,7 +1748,7 @@
       "days_since_modified": 1,
       "commit_count": 10,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "project-health",
@@ -1700,7 +1764,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "quality-fix",
@@ -1716,7 +1780,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "refine-ticket",
@@ -1732,7 +1796,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "research:deep",
@@ -1748,7 +1812,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "research:report",
@@ -1764,7 +1828,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "research",
@@ -1780,7 +1844,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "review-changes",
@@ -1796,7 +1860,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "review-routing",
@@ -1812,7 +1876,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "roadmap:ai-council",
@@ -1828,7 +1892,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "roadmap:create",
@@ -1844,7 +1908,7 @@
       "days_since_modified": 1,
       "commit_count": 10,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "roadmap:process-full",
@@ -1860,7 +1924,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "roadmap:process-phase",
@@ -1876,7 +1940,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "roadmap:process-step",
@@ -1892,7 +1956,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "roadmap",
@@ -1908,7 +1972,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "rule-compliance-audit",
@@ -1924,7 +1988,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "set-cost-profile",
@@ -1940,7 +2004,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "skill:preview",
@@ -1953,10 +2017,10 @@
       "cluster": "skill",
       "line_count": 67,
       "last_modified_iso": "2026-05-30T22:04:13+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 2,
       "first_commit_iso": "2026-05-30T21:56:06+02:00",
-      "days_since_first_commit": 0
+      "days_since_first_commit": 1
     },
     {
       "name": "skill",
@@ -1969,10 +2033,10 @@
       "cluster": "skill",
       "line_count": 48,
       "last_modified_iso": "2026-05-30T21:56:06+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 1,
       "first_commit_iso": "2026-05-30T21:56:06+02:00",
-      "days_since_first_commit": 0
+      "days_since_first_commit": 1
     },
     {
       "name": "skills:discover",
@@ -1985,10 +2049,10 @@
       "cluster": "skills",
       "line_count": 76,
       "last_modified_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 1,
       "first_commit_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_first_commit": 0
+      "days_since_first_commit": 1
     },
     {
       "name": "skills",
@@ -2001,10 +2065,10 @@
       "cluster": "skills",
       "line_count": 56,
       "last_modified_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 1,
       "first_commit_iso": "2026-05-30T21:56:05+02:00",
-      "days_since_first_commit": 0
+      "days_since_first_commit": 1
     },
     {
       "name": "sync-agent-settings",
@@ -2020,7 +2084,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "sync-gitignore:fix",
@@ -2036,7 +2100,7 @@
       "days_since_modified": 1,
       "commit_count": 10,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "sync-gitignore",
@@ -2052,7 +2116,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "tests:create",
@@ -2068,7 +2132,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "tests:execute",
@@ -2084,7 +2148,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "tests",
@@ -2100,7 +2164,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "threat-model",
@@ -2116,7 +2180,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "update-form-request-messages",
@@ -2132,7 +2196,7 @@
       "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "upstream-contribute",
@@ -2148,7 +2212,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "video:from-script",
@@ -2164,7 +2228,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "video:from-song",
@@ -2175,12 +2239,12 @@
       "aliases": [],
       "tier": 2,
       "cluster": "video",
-      "line_count": 317,
+      "line_count": 351,
       "last_modified_iso": "2026-05-30T17:50:22+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 2,
       "first_commit_iso": "2026-05-30T17:39:22+02:00",
-      "days_since_first_commit": 0
+      "days_since_first_commit": 1
     },
     {
       "name": "video:scene",
@@ -2196,7 +2260,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "video:stitch",
@@ -2212,7 +2276,7 @@
       "days_since_modified": 1,
       "commit_count": 8,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "video:storyboard",
@@ -2228,7 +2292,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "video",
@@ -2241,10 +2305,10 @@
       "cluster": "video",
       "line_count": 73,
       "last_modified_iso": "2026-05-30T17:39:22+02:00",
-      "days_since_modified": 0,
+      "days_since_modified": 1,
       "commit_count": 9,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     },
     {
       "name": "work",
@@ -2260,7 +2324,7 @@
       "days_since_modified": 1,
       "commit_count": 7,
       "first_commit_iso": "2026-05-18T11:01:53+02:00",
-      "days_since_first_commit": 12
+      "days_since_first_commit": 13
     }
   ],
   "overlap_pairs": [
