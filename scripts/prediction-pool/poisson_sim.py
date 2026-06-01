@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Poisson tournament simulator for tippspiel-optimizer.
+"""Poisson tournament simulator for prediction-pool-optimizer.
 
 Honest replacement for "I simulated 10,000 runs" — this actually runs them.
 Goals per match are drawn from a Poisson whose rate comes from each team's
@@ -24,7 +24,7 @@ Input JSON shape:
 }
 
 Usage:
-  python3 scripts/tippspiel/poisson_sim.py teams.json --runs 20000 [--seed 1]
+  python3 scripts/prediction-pool/poisson_sim.py teams.json --runs 20000 [--seed 1]
 """
 from __future__ import annotations
 

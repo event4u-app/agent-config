@@ -1,6 +1,6 @@
 # EV fixtures — known-good rules + odds → tip
 
-Sanity-check fixtures for `tippspiel-optimizer` Step "Self-check". Each
+Sanity-check fixtures for `prediction-pool-optimizer` Step "Self-check". Each
 fixture states a scoring rule, the (de-vigged) market probabilities, and
 the expected-points-maximizing tip. If your method disagrees with a
 fixture, your method is wrong — find the error before shipping a tip.

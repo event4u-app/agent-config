@@ -1,12 +1,12 @@
 ---
 model_tier: inherit
-name: tippspiel
+name: prediction-pool
 tier: 2
-description: "Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright (you submit). Triggers 'fill my Tippspiel', 'kicktipp tips'."
-skills: [tippspiel-optimizer]
+description: "Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'."
+skills: [prediction-pool-optimizer]
 suggestion:
   eligible: true
-  trigger_description: "fill my Tippspiel, kicktipp tips, betting/prediction pool predictions, optimize my pool tips for an event"
+  trigger_description: "fill my Tippspiel, kicktipp tips, predict the pool, betting/prediction pool predictions, optimize my pool tips for an event"
   trigger_context: "user wants tips for a prediction pool (kicktipp etc.) for an upcoming sports event and wants them computed and/or entered into the pool's web UI"
 workspaces:
   - small-business
@@ -20,9 +20,9 @@ install:
   removable: true
 ---
 
-# /tippspiel
+# /prediction-pool
 
-`/tippspiel [<event>] [--pool-url <url>] [--council off|event|match] [--submit] [--fresh|--continue]`
+`/prediction-pool [<event>] [--pool-url <url>] [--council off|event|match] [--submit] [--fresh|--continue]`
 
 Fills out a **prediction pool** (kicktipp-style company pools: football
 WM, basketball WM, …) by optimizing for the **maximum expected points
@@ -30,7 +30,7 @@ under the pool's actual scoring rules** — not for the most likely match
 outcome. Researches market odds, computes expected-value tips, presents a
 table for approval, then enters them into the pool's web UI via Playwright.
 
-The cognition lives in the [`tippspiel-optimizer`](../skills/tippspiel-optimizer/SKILL.md)
+The cognition lives in the [`prediction-pool-optimizer`](../skills/prediction-pool-optimizer/SKILL.md)
 skill (rules → market odds → expected value → participant field → tip).
 This command is the orchestrator: event selection, the persisted analysis,
 the optional AI-council pass, the Playwright entry, and the human gates.
@@ -77,7 +77,7 @@ no silent best-guess.
 
 ### 2. Resolve the per-event analysis (state ground-truth)
 
-Look for `agents/tmp/tippspiel/<slug>.md`.
+Look for `agents/tmp/prediction-pool/<slug>.md`.
 
 - **None →** start a new analysis (created at Step 9, never before).
 - **Exists →** read it. Then:
@@ -100,7 +100,7 @@ before the rules are understood** — the whole strategy depends on them.
 
 ### 4. Run the optimizer + offer the AI-council pass
 
-Run [`tippspiel-optimizer`](../skills/tippspiel-optimizer/SKILL.md),
+Run [`prediction-pool-optimizer`](../skills/prediction-pool-optimizer/SKILL.md),
 adapted to the event's sport (football / basketball / …): market odds as
 the primary signal → expected value under the Step-3 rules → participant
 field → tip. Tournament/outright probabilities come from real outright
@@ -142,7 +142,7 @@ Open the pool page **headful**. **You log in yourself** — the agent waits
 and never touches credentials. Resolve the platform adapter:
 
 - **Known platform** (e.g. kicktipp) → load the declarative selector map
-  `scripts/tippspiel/adapters/<platform>.yml` (field → CSS selector). The
+  `scripts/prediction-pool/adapters/<platform>.yml` (field → CSS selector). The
   generic, trusted driver fills the inputs from the map — the adapter is
   **data, not code**.
 - **Unknown platform → vision-assisted synthesis.** Screenshot the page,
@@ -163,7 +163,7 @@ pool / site. If yes, loop Steps 3–7 for that pool.
 
 ### 9. Persist / extend the analysis (only now)
 
-Append a run-stamped section to `agents/tmp/tippspiel/<slug>.md`: pool
+Append a run-stamped section to `agents/tmp/prediction-pool/<slug>.md`: pool
 URL(s), parsed rules, the entered tips with state `entered, not submitted`
 (or `submitted` if Step 7 submitted), council verdicts if any, and
 standing notes. Append-only — earlier runs stay as history. This is the
@@ -172,7 +172,7 @@ base the next run reads (Step 2).
 ### 10. New-platform adapter — offer to contribute (gated)
 
 If Step 6 synthesized a new selector map, offer to (a) save it locally and
-(b) open a **PR** adding `scripts/tippspiel/adapters/<platform>.yml` so
+(b) open a **PR** adding `scripts/prediction-pool/adapters/<platform>.yml` so
 coverage grows for everyone. The PR carries **declarative selector data
 only** — never executable code — and only on explicit permission (no
 auto-commit, no auto-push).
@@ -200,14 +200,14 @@ file path. No commit. No push.
 - **No commit, no push, no PR** without explicit permission (the adapter
   PR offer is gated).
 - **Kill-switch.** Ships `lifecycle: experimental` · `install.default:
-  false`. Disable = remove the command + `tippspiel-optimizer` skill, then
+  false`. Disable = remove the command + `prediction-pool-optimizer` skill, then
   regenerate the projected tool trees.
 
 ## See also
 
-- [`tippspiel-optimizer`](../skills/tippspiel-optimizer/SKILL.md) — the
+- [`prediction-pool-optimizer`](../skills/prediction-pool-optimizer/SKILL.md) — the
   rules → odds → EV → field → tip cognition.
-- [`scripts/tippspiel/adapters/_schema.md`](../../../scripts/tippspiel/adapters/_schema.md) —
+- [`scripts/prediction-pool/adapters/_schema.md`](../../../scripts/prediction-pool/adapters/_schema.md) —
   the declarative adapter data contract (for PR contributions).
 - [`ai-council`](../../../core/.agent-src.uncondensed/skills/ai-council/SKILL.md) —
   the optional second-opinion pass (Step 4).

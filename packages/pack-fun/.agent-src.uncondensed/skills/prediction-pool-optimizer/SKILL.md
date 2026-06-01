@@ -1,7 +1,7 @@
 ---
 model_tier: high
-name: tippspiel-optimizer
-description: "Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks'."
+name: prediction-pool-optimizer
+description: "Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'."
 domain: product
 personas: []
 workspaces:
@@ -16,12 +16,12 @@ install:
   removable: true
 ---
 
-# tippspiel-optimizer
+# prediction-pool-optimizer
 
 > Turn a prediction pool's **scoring rules** plus **market odds** into the
 > tip that maximizes **expected points** — not the most likely outcome.
 > Sport-agnostic core with per-sport probability blocks. Consumed by
-> [`/tippspiel`](../../commands/tippspiel.md). The optimization target is
+> [`/prediction-pool`](../../commands/prediction-pool.md). The optimization target is
 > the pool's score, so the chain is always **rules → odds → expected value
 > → participant field → tip**, never "who wins this match?".
 
@@ -30,7 +30,7 @@ install:
 Use when someone wants the best tips for a prediction / betting pool
 (kicktipp-style company pools — football WM, basketball WM, …) and the
 target is **pool points**, not match truth. Triggered by the
-[`/tippspiel`](../../commands/tippspiel.md) command (Steps 3–5) or directly
+[`/prediction-pool`](../../commands/prediction-pool.md) command (Steps 3–5) or directly
 when a user asks to optimize / maximize their pool picks.
 
 **The one idea that makes this skill correct:** the highest-probability
@@ -134,7 +134,7 @@ For group winners, KO rounds, champion, and bonus questions, use **either**:
 - the executed Poisson tournament simulator:
 
   ```bash
-  python3 scripts/tippspiel/poisson_sim.py <teams-xg.json> --runs 20000
+  python3 scripts/prediction-pool/poisson_sim.py <teams-xg.json> --runs 20000
   ```
 
   It plays the bracket from per-team expected goals and prints empirical
@@ -162,7 +162,7 @@ constraint.
    fixture, your method is wrong — find the error (usually a forgotten
    partial-points term or un-de-vigged odds), don't ship the tip.
 
-Handed back to [`/tippspiel`](../../commands/tippspiel.md) for the approval
+Handed back to [`/prediction-pool`](../../commands/prediction-pool.md) for the approval
 gate — the skill never enters or submits anything.
 
 ## Gotcha
@@ -188,9 +188,9 @@ gate — the skill never enters or submits anything.
 
 ## See also
 
-- [`/tippspiel`](../../commands/tippspiel.md) — the orchestrator (event,
+- [`/prediction-pool`](../../commands/prediction-pool.md) — the orchestrator (event,
   persistence, Playwright entry, gates).
 - [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
   rules+odds → EV examples.
-- [`scripts/tippspiel/poisson_sim.py`](../../../../scripts/tippspiel/poisson_sim.py) —
+- [`scripts/prediction-pool/poisson_sim.py`](../../../../scripts/prediction-pool/poisson_sim.py) —
   the executed tournament simulator.

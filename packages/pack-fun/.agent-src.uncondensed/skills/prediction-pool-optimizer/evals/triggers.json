@@ -1,12 +1,14 @@
 {
-  "skill": "tippspiel-optimizer",
-  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings and the core intent (pool tips, kicktipp, expected-points optimization across sports). Should-not-trigger covers near-miss neighbours: regulated financial advice (finance pack), plain match-result prediction with no pool, generic web research, AI video, and real-money sportsbook betting (out of scope / refuse).",
+  "skill": "prediction-pool-optimizer",
+  "description": "7 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings and the core intent (pool tips, kicktipp, expected-points optimization across sports). Should-not-trigger covers near-miss neighbours: regulated financial advice (finance pack), plain match-result prediction with no pool, generic web research, AI video, and real-money sportsbook betting (out of scope / refuse).",
   "queries": [
     {"q": "optimize my kicktipp tips for the football WM 2026", "trigger": true},
     {"q": "fill my company Tippspiel for the basketball world cup", "trigger": true},
     {"q": "welche Tipps maximieren meine Punkte im kicktipp-Tippspiel?", "trigger": true},
     {"q": "best picks for our office prediction pool given the scoring rules", "trigger": true},
     {"q": "maximiere meine erwarteten Punkte im Tippspiel, nicht nur wer gewinnt", "trigger": true},
+    {"q": "predict our office kicktipp pool for the WM", "trigger": true},
+    {"q": "mach mein Tippspiel für die WM", "trigger": true},
     {"q": "should we invest in this startup based on a DCF?", "trigger": false, "note": "regulated financial valuation → dcf-modeling / finance pack"},
     {"q": "who will win tonight's match?", "trigger": false, "note": "plain result prediction, no pool / no scoring rules to optimize"},
     {"q": "research the best running shoes for me", "trigger": false, "note": "generic web research → research / deep-research"},

@@ -14,8 +14,8 @@ Playwright (you log in; the agent never submits unless you say so).
 ## The one workflow
 
 ```text
-1. /tippspiel "Football WM 2026"
-2. → agent reads the pool rules first, then runs `tippspiel-optimizer`
+1. /prediction-pool "Football WM 2026"
+2. → agent reads the pool rules first, then runs `prediction-pool-optimizer`
      (rules → market odds → expected value → participant field → tip)
 3. → optional AI-council pass for a sharper second opinion (default off)
 4. → approval table; you say whether & where to enter
@@ -44,5 +44,5 @@ Playwright (you log in; the agent never submits unless you say so).
 
 ## Next step
 
-Re-run `/tippspiel <event> --continue` close to the deadline — the agent
+Re-run `/prediction-pool <event> --continue` close to the deadline — the agent
 rebuilds on the saved analysis with fresh lineups and odds.

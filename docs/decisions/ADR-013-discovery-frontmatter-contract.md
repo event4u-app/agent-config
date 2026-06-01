@@ -256,7 +256,7 @@ workflows — prediction-pool tip optimization, etc.). Mirrored in
 [`scripts/lint_discovery_vocabulary.py`](../../scripts/lint_discovery_vocabulary.py).
 Optional under the `small-business` workspace (alongside `ai-video`);
 `trust_level_default: experimental`, `install.default: false`. First
-artefacts: the `/tippspiel` command + `tippspiel-optimizer` skill in
+artefacts: the `/prediction-pool` command + `prediction-pool-optimizer` skill in
 `packages/pack-fun/`. Additive, no rename; non-overlap with cost-profile
 and `profile.id` reservations holds.
 

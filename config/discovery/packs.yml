@@ -170,7 +170,7 @@
   trust_level_default: experimental
   onboarding:
     first_win_doc: FIRST_WIN.md
-    example_workflow: tippspiel-optimizer
+    example_workflow: prediction-pool-optimizer
     time_to_first_value_minutes: 6
 
 - id: meta

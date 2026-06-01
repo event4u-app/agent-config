@@ -6,7 +6,7 @@ driver reads it and fills the inputs. Because adapters carry no executable
 code, contributing one via PR is safe — there is no supply-chain surface to
 audit beyond the selectors themselves.
 
-One file per platform: `scripts/tippspiel/adapters/<platform>.yml`.
+One file per platform: `scripts/prediction-pool/adapters/<platform>.yml`.
 
 ## Required keys
 
