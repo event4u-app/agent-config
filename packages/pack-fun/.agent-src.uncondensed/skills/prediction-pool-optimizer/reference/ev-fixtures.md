@@ -15,17 +15,26 @@ shape you encounter so future runs catch the same class of drift.
 **Rule:** exact result = 4, goal-difference = 3, tendency = 2, else 0.
 No quote rule. No strategy limit. Goal: place well.
 
-**Match (football):** de-vigged market — Home 62% / Draw 24% / Away 14%.
-Most plausible exact results (Poisson on market xG ≈ 1.7 : 0.8):
-2:1 ≈ 9%, 1:0 ≈ 9%, 2:0 ≈ 8%, 1:1 ≈ 8%, 3:1 ≈ 6%.
+**Match (football):** Poisson on market xG ≈ 1.7 : 0.8.
 
-**Reasoning:** the single most likely *result* (2:1) and 1:0 both bank the
-tendency (2) on a home win plus goal-difference (3) on many neighbours.
-Expected points of "2:1" beats "tip the favourite to win 3:0" (lower hit
-rate on diff/exact) and beats any draw/away tip (tendency rarely banks).
+**Script-verified** (`score_ev.py --lh 1.7 --la 0.8 --exact 4 --diff 3 --tendency 2`):
 
-**Known-good tip:** **2:1 home.** (Risk: low.) **Not** contrarian — under
-fixed points only your own tip scores, so deviating costs EV.
+```
+EV-max tip : 1:0  (EV 1.574)
+  1:0  1.574  <- EV-max
+  2:1  1.530
+  2:0  1.477
+```
+
+**Reasoning:** the top of the EV surface is **flat** — 1:0, 2:1 and 2:0 all
+bank the tendency (2) plus goal-difference (3) on many neighbours and sit
+within hundredths of each other. The grid puts **1:0 narrowly first**;
+eyeballing the modal *result* (2:1) lands a near-tie, not the optimum. Run the
+grid — do not assert the favourite's "obvious" score.
+
+**Known-good tip:** **1:0 home** (2:1 essentially tied; with the real
+de-vigged λ either can lead — the grid decides). (Risk: low.) **Not**
+contrarian — under fixed points only your own tip scores, so deviating costs EV.
 
 ---
 
@@ -54,15 +63,17 @@ the multiplier; take the max.
 **Match (football):** a near-coin-flip favourite, Home 52% / Draw 26% /
 Away 22%.
 
-**Reasoning:** with N ≥ 100 and you behind, pure EV converges with the
-field and cannot create the gap you need. Add field-relative variance on a
-*subset*: take a plausible underdog/draw where the consensus is heavy on
-the favourite, sized by a rough Kelly fraction. On safe matches, still
-tip EV-max.
+**Reasoning:** with N ≥ 100 and you behind, pure EV converges with the field
+and cannot create the gap you need — the target is **P(finish 1st)**, not
+E(points). Don't guess the variance: run `pool_winsim.py` with the pool's `N`
+and your `my_lead`. It shows P(win) collapsing under EV-max-everywhere and
+returns the **specific flips** (higher-variance scorelines on high-consensus
+matches) that raise P(win) most per unit of EV given up.
 
-**Known-good tip:** EV-max on the safe matches; **calculated underdog**
-(e.g. 1:1 or away) on 2–4 high-consensus matches to manufacture upside.
-(Risk: high — intentional.)
+**Known-good tip:** EV-max on the safe matches; the **simulator's suggested
+flips** on the 2–4 matches it names, to manufacture upside. (Risk: high —
+intentional.) Verify the sim shows a P(win) gain — if flips don't move it
+(small N), don't add variance you don't need.
 
 ---
 
@@ -114,3 +125,52 @@ but the question asks for the **team** — sum each squad's players. Team A's
 
 **Known-good answer:** **Team A.** (Source: market, aggregated by team.
 Risk: medium.) **Not** team B — that is the modal-player trap.
+
+---
+
+## Fixture 7 — high-scoreline trap (the "EV-optimized" model that wasn't)
+
+**Rule:** kicktipp 2 / 3 / 5 — tendency = 2, goal-difference = 3, exact = 5.
+
+**Matches (script-verified, `score_ev.py … --tendency 2 --diff 3 --exact 5`):**
+
+| Match (λ) | EV-max | a high tip's EV | verdict |
+|---|---|---|---|
+| Senegal–Iraq (2.0:0.7) | **1:0** (1.881) | 4:1 ≈ 1.55 | high tip leaks ~0.33 |
+| Qatar–Switzerland (0.6:2.1) | **0:1** (1.981) | 1:4 ≈ 1.65 | tipping the underdog's goals is the costliest move on the board |
+| Spain–CapeVerde (2.3:0.6) | **2:0** (2.033) | 3:1 ≈ 1.88 | only at λ ≳ 2.3 does 2:0 edge past 1:0; never higher |
+
+**Reasoning:** under partial points the value sits in the tendency and
+goal-difference tiers, not the exact high score. **1:0 is the optimum
+astonishingly often** (even for clear favourites at λ ≈ 2.0); 2:0 takes over
+only near λ ≈ 2.3–2.4; above that, never. **3:2 / 4:1 / 4:2 / 1:4 are never
+EV-max.** Adding goals — especially the underdog's — only shrinks the hit
+probability without protecting the diff/tendency points.
+
+**Known-good behaviour:** if the run emits any 3:2 / 4:x / x:4 tip, the grid
+was not run — `score_ev.py` is the gate. (Risk: low; this is a correctness
+fixture, not a strategy one.)
+
+---
+
+## Fixture 8 — draws are under-tipped
+
+**Rule:** kicktipp 2 / 3 / 5 (as Fixture 7).
+
+**Matches (script-verified, `score_ev.py … --tendency 2 --diff 3 --exact 5`):**
+
+```
+λ 1.0:1.0  ->  EV-max 0:0 (1.196), 1:1 tied (1.196)   # a draw IS the optimum
+λ 0.9:0.9  ->  EV-max 0:0 (1.317), 1:1 second
+λ 1.2:1.2  ->  EV-max 1:0 (1.150), draw third (1.091)  # 1-goal win edges it
+```
+
+**Reasoning:** people tip too few draws. A correct draw banks the
+goal-difference tier (3) on *every* draw scoreline, so in a **low-scoring even
+match (λ ≲ 1.0/side) the draw — usually 0:0 — is the EV-max**, tied with 1:1.
+As λ rises past ~1.1 a one-goal win edges ahead, but the draw stays in the top
+tips. The grid surfaces this; intuition suppresses it.
+
+**Known-good behaviour:** a tip set with **near-zero draws across many
+low-scoring even matches** is a red flag — re-run `score_ev.py` and let the
+grid decide, don't default every close game to 1:0.

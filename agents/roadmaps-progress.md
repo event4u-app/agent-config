@@ -6,7 +6,7 @@
 
 ## Overall
 
-**98 / 154 steps done · 64%**
+**98 / 153 steps done · 64%**
 
 ```text
 ██████████████████████████░░░░░░░░░░░░░░   64%
@@ -17,9 +17,9 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 2 | [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md) | 3 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 6 | 30 | 4 | 26 | 0 | 0 | █████████░ 87% |
-| 4 | [road-to-session-profile-activation.md](roadmaps/road-to-session-profile-activation.md) | 4 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 6 | 30 | 4 | 26 | 0 | 0 | █████████░ 87% |
+| 3 | [road-to-session-profile-activation.md](roadmaps/road-to-session-profile-activation.md) | 4 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-test-and-gate-integrity.md](roadmaps/road-to-test-and-gate-integrity.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md) | 6 | 33 | 3 | 30 | 0 | 0 | █████████░ 91% |
 
 ---
@@ -42,16 +42,6 @@
 | 7 | Analytics surface — turn the inert telemetry into a question | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
 | 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
-
-### [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md)
-
-**Linter-Debt Paydown + Meta-System Subtraction** — 0 / 15 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Kill the check-references false-positive treadmill | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Reconciliation pass — prove or disprove the "already covered" claim | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Meta-system justification + subtraction audit | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ### [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md)
 
@@ -76,6 +66,16 @@
 | 1 | Recommendation-bias MVP (no host changes required) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 2 | Hard execution gating (CONDITIONAL on Phase 0.2) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Deferred (recorded, not built unless re-opened) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
+### [road-to-test-and-gate-integrity.md](roadmaps/road-to-test-and-gate-integrity.md)
+
+**Road to Test-and-Gate Integrity** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Gate path resolution + integrity check (R2, highest-leverage first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Backfill the missing regression tests (R1) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Coverage forcing-function so +0 cannot recur (R3, warn-only, calibrated) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
 ### [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md)
 

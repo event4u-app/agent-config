@@ -133,6 +133,53 @@ EXAMPLE_PATH_PATTERNS = [
 ]
 
 
+@dataclass(frozen=True)
+class AllowlistPattern:
+    """A token-class allowlist entry. `reason` is mandatory and auditable."""
+    pattern: "re.Pattern[str]"
+    reason: str
+
+
+# Content-class allowlist for known NON-reference token shapes.
+#
+# The skill/rule prose patterns (`X` skill / `X` rule) occasionally match
+# a backtick token that is not an artifact id — an execution-type enum
+# value, a pack identifier, or a bare meta-qualifier keyword. Historically
+# each such false positive was dodged by *rewording the prose per file*
+# (e.g. dc84ed01 "reword execution-type mentions to dodge check-refs
+# false positive", bd02ef0b "avoid check-refs false-positive on pack
+# name"), a treadmill that distorts natural wording release after release.
+# This layer matches the token *class* centrally instead, so the natural
+# wording passes without per-file edits. It is distinct from:
+#   - SKIP_DIRS          (path-level, whole-directory)
+#   - FILE_SKIP_MARKER   (file-level opt-out)
+#   - LINE_IGNORE_MARKER (per-line opt-out)
+# Every entry carries a mandatory `reason` so the allowlist stays
+# auditable and a future reader can tell why a class is exempt.
+ALLOWLIST_PATTERNS: List[AllowlistPattern] = [
+    AllowlistPattern(
+        re.compile(r"^(?:manual|assisted|automated)$"),
+        "execution-type enum value (runtime-safety frontmatter), e.g. a "
+        "`manual` skill — not a skill/rule id (dc84ed01)",
+    ),
+    AllowlistPattern(
+        re.compile(r"^pack-[\w-]+$"),
+        "pack / workspace identifier, e.g. `pack-ai-video` skills — not a "
+        "skill/rule id (bd02ef0b)",
+    ),
+    AllowlistPattern(
+        re.compile(r"^(?:skill|rule|command|guideline|persona|context|pack|workspace)$"),
+        "bare meta-qualifier keyword used in prose (the `command` vs "
+        "`skill` distinction, etc.) — not an artifact id",
+    ),
+]
+
+
+def _is_allowlisted(name: str) -> bool:
+    """True when `name` matches a known non-reference token class."""
+    return any(entry.pattern.match(name) for entry in ALLOWLIST_PATTERNS)
+
+
 def collect_artifacts(root: Path) -> dict[str, set[str]]:
     """Build lookup sets for skills, rules, commands, guidelines, personas."""
     arts: dict[str, set[str]] = {
@@ -345,7 +392,8 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
         # Skill name references
         for m in SKILL_REF_PATTERN.finditer(line):
             name = m.group(1)
-            if name not in artifacts["skills"] and name not in _SKIP_NAMES:
+            if name not in artifacts["skills"] and name not in _SKIP_NAMES \
+                    and not _is_allowlisted(name):
                 broken.append(BrokenRef(
                     file=str(filepath), line=i, ref=name,
                     ref_type="skill", severity="warning",
@@ -355,7 +403,8 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
         # Rule name references
         for m in RULE_REF_PATTERN.finditer(line):
             name = m.group(1)
-            if name not in artifacts["rules"] and name not in _SKIP_NAMES:
+            if name not in artifacts["rules"] and name not in _SKIP_NAMES \
+                    and not _is_allowlisted(name):
                 broken.append(BrokenRef(
                     file=str(filepath), line=i, ref=name,
                     ref_type="rule", severity="warning",

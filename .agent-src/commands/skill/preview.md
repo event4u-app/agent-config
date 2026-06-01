@@ -46,8 +46,8 @@ plain-language summary. `--format json` is machine-readable.
 
 ### 3. Present the summary
 
-Show the plain-language preview: the skill's execution type (a manual-execution skill
-renders **"instructional only — no automatic execution"**; an assisted-execution skill
+Show the plain-language preview: the skill's execution type (a `manual` skill
+renders **"instructional only — no automatic execution"**; an `assisted` skill
 renders its proposed actions), declared steps, tools, and any file/command
 targets. End on the contract reminder that preview shows *declared intent*, not
 a guarantee of side-effect-freeness.
