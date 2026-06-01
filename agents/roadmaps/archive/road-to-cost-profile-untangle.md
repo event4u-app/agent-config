@@ -58,11 +58,11 @@ complexity: structural
 
 - [x] Rename the key in `config/agent-settings.template.yml` + `agent-settings.md` (condensed copy re-synced + hash marked).
 - [x] `dist/router.json` regenerated. <!-- decision: the `profiles` driver KEY is kept — it names the tier-list structure, not the setting; renaming it would break consumers parsing it. The SETTING that selects a profile is what was renamed. -->
-- [x] Audit `custom`. <!-- decision: left UNCHANGED in the enum. It is absent from router.json profiles (documented but not router-dispatched) — a pre-existing state, not introduced by this rename. Implementing/removing it is a separate follow-up, recorded in ADR-036. -->
+- [x] Audit `custom`. <!-- decision: left UNCHANGED in the enum. It is absent from router.json profiles (documented but not router-dispatched) — a pre-existing state, not introduced by this rename. Implementing/removing it is a separate follow-up, recorded in ADR-037. -->
 - [x] ADR-010 boundary wording updated (`cost_profile` → `rule_loading_tier`) via the mechanical rename. <!-- decision: `cost-profile-defaults.md` file NAME kept (internal path); content uses rule_loading_tier. File rename deferred — see Phase-2 command-name note. -->
 - [x] Default consolidated: the `minimal` drift artifact + `standard` code default are gone (the latter moved to `memory.cadence` in Phase 1); `install.py`, `settings.ts`, `explain_last` all default to `balanced`.
 - [x] `MERGEABLE_KEYS` in `_lib/agent_settings.py` (+ byte-parity mirror) → `rule_loading_tier`.
-- [-] Rename `/set-cost-profile` command. <!-- decision: command + file NAME kept; renaming cascades through ownership-matrix, command-surface, discovery manifest, marketplace (all CI-enforced/generated) — disproportionate. Content uses rule_loading_tier. Recorded in ADR-036 as accepted trade-off + follow-up. -->
+- [-] Rename `/set-cost-profile` command. <!-- decision: command + file NAME kept; renaming cascades through ownership-matrix, command-surface, discovery manifest, marketplace (all CI-enforced/generated) — disproportionate. Content uses rule_loading_tier. Recorded in ADR-037 as accepted trade-off + follow-up. -->
 - [x] Cross-references updated — `grep cost_profile` is zero in living stable artefacts (only intentional legacy-alias reads remain).
 
 ## Phase 3: Migration + grace period
@@ -88,7 +88,7 @@ complexity: structural
 ## Phase 6: Documentation + disambiguation
 
 - [x] `docs/customization.md` — "Four cost concepts" disambiguation block added.
-- [x] ADR-036 written (rename + keep self-optimization decoupled, council-cited).
+- [x] ADR-037 written (rename + keep self-optimization decoupled, council-cited).
 - [-] `agent-settings.md` — remove the second divergent profile description (Dispatcher / Tool-Adapters). <!-- deferred: the key was renamed in agent-settings.md, but the divergent prose description was not yet unified to the router semantics. Doc-only polish, non-blocking. -->
 
 ## Phase 7: Regenerate + verify
@@ -102,7 +102,7 @@ complexity: structural
 
 - `cmd_settings_migrate --dry-run` preview for the rename (Phase 3).
 - Unify the divergent profile description in `agent-settings.md` (Phase 6).
-- Decide `custom`'s fate — implement an explicit per-tier matrix or drop it from the enum (Phase 2 / ADR-036).
+- Decide `custom`'s fate — implement an explicit per-tier matrix or drop it from the enum (Phase 2 / ADR-037).
 - Optional: rename the `/set-cost-profile` command + `cost-profile-defaults.md` file once the manifest-cascade cost is acceptable.
 - Pre-existing `task ci` debt (NOT this PR): 8 contracts missing `stability:` frontmatter (`check-public-links`); already red on main.
 

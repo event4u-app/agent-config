@@ -1,5 +1,5 @@
 ---
-adr: 036
+adr: 037
 status: accepted
 date: 2026-06-01
 decision: cost-profile-untangle
@@ -10,7 +10,7 @@ type: structural
 review_date: 2026-09-01
 ---
 
-# ADR-036 — Untangle `cost_profile` into single-purpose settings
+# ADR-037 — Untangle `cost_profile` into single-purpose settings
 
 ## Status
 
