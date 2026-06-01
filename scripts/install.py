@@ -14,11 +14,13 @@ exactly once; subsequent runs are idempotent.
 Usage:
   python3 scripts/install.py                     # defaults: cost_profile=balanced
   python3 scripts/install.py --profile=minimal   # set cost_profile=minimal (kernel only)
-  python3 scripts/install.py --force             # overwrite existing files
+  python3 scripts/install.py --force             # accepted (no-op): installs always overwrite
   python3 scripts/install.py --skip-bridges      # only create .agent-settings.yml
   python3 scripts/install.py --project <dir>     # override project root
 
-Idempotent — safe to run multiple times. Never overwrites files without --force.
+Idempotent — safe to run multiple times. A run always refreshes every
+deployed file with the current package content; user configuration
+(.agent-settings.yml) is merged by the settings layer, never clobbered.
 Zero dependencies — standard library only.
 """
 
@@ -51,12 +53,6 @@ SUPPORTED_PROFILES = ("minimal", "balanced", "full")
 COST_PROFILE_PLACEHOLDER = "__COST_PROFILE__"
 USER_TYPE_PLACEHOLDER = "__USER_TYPE__"
 USER_TYPES_DIR = "user-types"
-
-# Env-var equivalent of --force for CI / scripted installs (P3.4).
-# When set to "1" the install run treats every conflict as
-# force-overwrite; never enabled by default to keep destructive writes
-# explicit.
-ALLOW_OVERWRITE_ENV = "AGENT_CONFIG_ALLOW_OVERWRITE"
 
 SETTINGS_FILE = ".agent-settings.yml"
 LEGACY_SETTINGS_FILE = ".agent-settings"
@@ -190,222 +186,38 @@ def detect_package_type_for_project(project_root: Path, package_root: Path) -> s
     return detect_package_type(package_root)
 
 
-# --- Conflict detection (P3.1 / P3.3) ---
-
-class ConflictAbort(SystemExit):
-    """Raised when a conflict resolution chose 'abort'.
-
-    Inherits ``SystemExit`` so an unhandled abort terminates the
-    install with a non-zero exit code without an opaque traceback.
-    """
-
-    def __init__(self, message: str):
-        super().__init__(1)
-        self.message = message
-
-
-class ConflictPolicy:
-    """Per-install conflict resolution policy (P3.1).
-
-    Aggregates the inputs the resolver needs to decide whether to
-    overwrite a target that exists on disk:
-
-    * ``force``         — true when ``--force`` was passed OR the
-      ``AGENT_CONFIG_ALLOW_OVERWRITE=1`` env-var is set (P3.4).
-    * ``interactive``   — true when stdin AND stdout are TTYs; the
-      only context where the 3-option prompt is meaningful.
-    * ``known_paths``   — absolute path strings recorded as ours by
-      the project-scope manifest (``files[]`` entries). A target at a
-      known path is **not** a foreign collision — we own it and the
-      existing skip/force behaviour applies.
-    * ``known_pointers``— ``(file_label, json_pointer)`` pairs we
-      previously merged into shared JSON files (P3.3). A pointer in
-      this set is ours; one not in it that exists in the target is a
-      foreign merge collision.
-    """
-
-    __slots__ = ("force", "interactive", "known_paths", "known_pointers")
-
-    def __init__(
-        self,
-        *,
-        force: bool,
-        interactive: bool,
-        known_paths: set[str],
-        known_pointers: set[tuple[str, str]],
-    ) -> None:
-        self.force = force
-        self.interactive = interactive
-        self.known_paths = known_paths
-        self.known_pointers = known_pointers
-
-
-# Module-level singleton: configured once in main() (after --force +
-# env-var resolution), consulted by every writer. When ``None`` the
-# install runs in **legacy mode**: writers honor their local ``force``
-# flag and skip-otherwise, no foreign-pointer detection. Set only by
-# :func:`main` after loading the manifest so test callers that exercise
-# writers directly keep the pre-P3 contract.
-_CONFLICT_POLICY: Optional[ConflictPolicy] = None
-
-
-def _conflict_policy_active() -> bool:
-    return _CONFLICT_POLICY is not None
-
-
-def _get_conflict_policy() -> ConflictPolicy:
-    if _CONFLICT_POLICY is None:
-        # Legacy-mode fallback: no manifest loaded, no foreign detection
-        # surface. ``force=False`` here so the local ``force_hint`` from
-        # the caller is the only signal; ``known_*`` stay empty.
-        return ConflictPolicy(
-            force=False, interactive=False,
-            known_paths=set(), known_pointers=set(),
-        )
-    return _CONFLICT_POLICY
-
-
-def _set_conflict_policy(policy: Optional[ConflictPolicy]) -> None:
-    global _CONFLICT_POLICY
-    _CONFLICT_POLICY = policy
-
-
-def _allow_overwrite_env() -> bool:
-    return os.environ.get(ALLOW_OVERWRITE_ENV) == "1"
+# --- Conflict resolution ---
+#
+# A setup deploys our own files into our own layout. Every path the
+# installer writes comes from our source tree, so a deliberate run
+# always lays down the current package content — there is no "foreign"
+# file to protect (a path missing from the manifest is simply our own
+# file from an older install). User configuration (.agent-settings.yml)
+# is merged by the settings layer, never clobbered here.
 
 
 def _is_interactive() -> bool:
+    """True when stdin AND stdout are TTYs (interactive prompts are safe)."""
     try:
         return sys.stdin.isatty() and sys.stdout.isatty()
     except (AttributeError, ValueError):  # pragma: no cover — closed streams
         return False
 
 
-def _load_conflict_policy(project_root: Path, force: bool) -> ConflictPolicy:
-    """Build a :class:`ConflictPolicy` from the on-disk manifest.
-
-    Reads ``agents/installed-tools.lock`` once and folds every recorded
-    ``files[].path`` into ``known_paths`` and every
-    ``merged_keys[].{file, json_pointer}`` into ``known_pointers``. The
-    manifest is the only source of truth for "this is ours"; if it's
-    missing both sets stay empty and every existing target is treated
-    as foreign.
-    """
-    known_paths: set[str] = set()
-    known_pointers: set[tuple[str, str]] = set()
-    try:
-        tools_mod = _load_installed_tools_module()
-        target = tools_mod.manifest_path(project_root)
-        existing = tools_mod.read_manifest(target) or {}
-        for tool in existing.get("tools", []) or []:
-            for entry in tool.get("files", []) or []:
-                path_val = entry.get("path")
-                if isinstance(path_val, str) and path_val:
-                    # Manifest paths may be absolute (production writers
-                    # use ``str(Path)`` for ``files[].path``) or relative
-                    # (portable manifests). Writers always pass absolute
-                    # ``Path`` objects to ``_resolve_file_conflict``, so
-                    # normalise here against ``project_root`` to keep the
-                    # known-path silent-skip branch reachable.
-                    p = Path(path_val)
-                    if not p.is_absolute():
-                        p = (project_root / p).resolve()
-                    known_paths.add(str(p))
-            for entry in tool.get("merged_keys", []) or []:
-                file_label = entry.get("file")
-                pointer = entry.get("json_pointer")
-                if isinstance(file_label, str) and isinstance(pointer, str):
-                    known_pointers.add((file_label, pointer))
-    except Exception:  # pragma: no cover — fail-open on corrupt manifest
-        # Don't block the install if the manifest is malformed; just
-        # report nothing as ours so foreign-file detection stays strict.
-        pass
-    return ConflictPolicy(
-        force=force or _allow_overwrite_env(),
-        interactive=_is_interactive(),
-        known_paths=known_paths,
-        known_pointers=known_pointers,
-    )
-
-
-def prompt_file_conflict_choice(path: Path) -> str:
-    """3-option resolution prompt for a foreign file at ``path``.
-
-    Returns ``"force"`` / ``"skip"`` / ``"abort"``. Mirrors
-    :func:`prompt_collision_choice` (loops on invalid input, aborts on
-    EOF or 3 invalid replies). Only called when the policy is
-    interactive AND ``--force`` was not specified.
-    """
-    print()
-    warn(f"Foreign file at {path}")
-    info("This path exists but is not recorded as ours in the manifest.")
-    info("Choose how to handle the conflict:")
-    print("  1) Force   — overwrite the file with our content")
-    print("  2) Skip    — leave the file untouched, continue install")
-    print("  3) Abort   — stop the install, exit non-zero")
-    print()
-    attempts = 0
-    while attempts < 3:
-        try:
-            reply = _read_line("Choose [1/2/3]: ")
-        except EOFError:
-            fail(f"File-conflict prompt aborted (EOF on stdin) for {path}")
-        if reply in ("1", "force", "f"):
-            return "force"
-        if reply in ("2", "skip", "s"):
-            return "skip"
-        if reply in ("3", "abort", "a"):
-            return "abort"
-        attempts += 1
-        warn(f"Invalid choice '{reply}'. Enter 1, 2, or 3.")
-    fail(f"File-conflict prompt aborted (3 invalid replies) for {path}")
-    return "abort"  # unreachable
-
-
 def _resolve_file_conflict(target: Path, *, force_hint: bool) -> str:
-    """Decide what to do when ``target`` already exists on disk.
+    """Whole-file deploy is always an overwrite of OUR own content.
 
-    Returns ``"write"`` (proceed with overwrite), ``"skip"`` (leave the
-    target alone), or raises :class:`ConflictAbort`. ``force_hint`` is
-    the caller's local ``force`` flag — typically the install-level
-    ``--force``; we OR it with the global policy's ``force`` to honor
-    ``AGENT_CONFIG_ALLOW_OVERWRITE=1`` in callers that have not yet
-    been refactored to read the policy directly.
-
-    Decision matrix:
-
-    * target does not exist          → ``"write"``
-    * target IS in ``known_paths``   → ``"write"`` if force else ``"skip"``
-      (legacy behaviour — we own it, skip silently without --force)
-    * target NOT in ``known_paths`` (foreign):
-        * force                       → ``"write"`` (overwrite)
-        * interactive                 → prompt → translate to write/skip/abort
-        * non-interactive             → raise ``ConflictAbort``
+    Every ``target`` reaching this function comes from
+    :func:`_copy_dir_dereferencing_symlinks` — a file we ship being
+    written into our own layout. A setup the user deliberately ran
+    applies the latest package content unconditionally, so there is no
+    "skip" or "abort": the user runs the installer because they want it
+    applied. ``force_hint`` is retained for call-site stability but no
+    longer gates the write.
     """
-    if not target.exists():
-        return "write"
-    if not _conflict_policy_active():
-        # Legacy mode (no manifest loaded): preserve the pre-P3 contract
-        # — force overwrites, otherwise skip. No prompt, no abort.
-        return "write" if force_hint else "skip"
-    policy = _get_conflict_policy()
-    effective_force = force_hint or policy.force
-    if str(target) in policy.known_paths:
-        return "write" if effective_force else "skip"
-    if effective_force:
-        return "write"
-    if policy.interactive:
-        choice = prompt_file_conflict_choice(target)
-        if choice == "force":
-            return "write"
-        if choice == "skip":
-            return "skip"
-        raise ConflictAbort(f"User aborted on foreign file at {target}")
-    raise ConflictAbort(
-        f"Foreign file at {target}: refusing to overwrite. "
-        f"Re-run with --force or set {ALLOW_OVERWRITE_ENV}=1 to allow. "
-        f"Run `agent-config doctor` to inspect orphaned files first."
-    )
+    del force_hint  # deploys always overwrite; the flag never gates a write
+    del target  # existence no longer changes the decision
+    return "write"
 
 
 # --- File utilities ---
@@ -447,143 +259,24 @@ def deep_merge(base: dict, overlay: dict) -> dict:
     return result
 
 
-def _pointer_target_exists(doc: dict, pointer: str) -> bool:
-    """Return True when ``pointer`` resolves to an existing key in ``doc``.
-
-    Walks the RFC-6901 segments without descending into lists (per the
-    array-index ban in :mod:`scripts._lib.json_pointers`). Missing
-    intermediate segments short-circuit to False.
-    """
-    if not pointer.startswith("/"):
-        return False
-    cursor: Any = doc
-    segments = pointer.split("/")[1:]
-    segments = [s.replace("~1", "/").replace("~0", "~") for s in segments]
-    for seg in segments[:-1]:
-        if not isinstance(cursor, dict) or seg not in cursor:
-            return False
-        cursor = cursor[seg]
-    if not isinstance(cursor, dict):
-        return False
-    return segments[-1] in cursor
-
-
-def _detect_foreign_pointers(
-    existing: dict,
-    overlay_entries: list[dict[str, Any]],
-    label: str,
-    policy: ConflictPolicy,
-) -> list[str]:
-    """Return overlay pointers that exist in ``existing`` but aren't ours.
-
-    P3.3 — pointer-level foreign-merge detection. A pointer is foreign
-    when it would overwrite a value already on disk that the manifest
-    does NOT record as ours (``(label, pointer) not in known_pointers``).
-    Returns the list of foreign pointer strings (sorted, deduped) for
-    use in the conflict-resolution prompt. In legacy mode (no manifest
-    loaded) the function returns an empty list so callers fall back to
-    the pre-P3 update flow.
-    """
-    if not _conflict_policy_active():
-        return []
-    foreign: list[str] = []
-    seen: set[str] = set()
-    for entry in overlay_entries:
-        pointer = entry.get("json_pointer")
-        if not isinstance(pointer, str) or pointer in seen:
-            continue
-        seen.add(pointer)
-        if not _pointer_target_exists(existing, pointer):
-            continue
-        if (label, pointer) in policy.known_pointers:
-            continue
-        foreign.append(pointer)
-    foreign.sort()
-    return foreign
-
-
-def prompt_json_conflict_choice(path: Path, foreign: list[str]) -> str:
-    """3-option resolution prompt for foreign JSON pointers at ``path``.
-
-    Returns ``"force"`` / ``"skip"`` / ``"abort"``. Shows the foreign
-    pointer list so the user knows what will be overwritten.
-    """
-    print()
-    warn(f"Foreign JSON keys at {path}")
-    info("The following pointers exist in the file but are not recorded as ours:")
-    for pointer in foreign[:10]:
-        print(f"      {pointer}")
-    if len(foreign) > 10:
-        print(f"      ... and {len(foreign) - 10} more")
-    info("Choose how to handle the conflict:")
-    print("  1) Force   — overwrite the listed pointers with our values")
-    print("  2) Skip    — leave the file untouched, continue install")
-    print("  3) Abort   — stop the install, exit non-zero")
-    print()
-    attempts = 0
-    while attempts < 3:
-        try:
-            reply = _read_line("Choose [1/2/3]: ")
-        except EOFError:
-            fail(f"JSON-conflict prompt aborted (EOF on stdin) for {path}")
-        if reply in ("1", "force", "f"):
-            return "force"
-        if reply in ("2", "skip", "s"):
-            return "skip"
-        if reply in ("3", "abort", "a"):
-            return "abort"
-        attempts += 1
-        warn(f"Invalid choice '{reply}'. Enter 1, 2, or 3.")
-    fail(f"JSON-conflict prompt aborted (3 invalid replies) for {path}")
-    return "abort"  # unreachable
-
-
-def _resolve_json_conflict(
-    path: Path, label: str, foreign: list[str], *, force_hint: bool,
-) -> str:
-    """Decide what to do when ``label`` has foreign pointers (P3.3).
-
-    Returns ``"write"`` or ``"skip"``; raises :class:`ConflictAbort`.
-    Same resolution matrix as :func:`_resolve_file_conflict` but with a
-    pointer-aware prompt.
-    """
-    policy = _get_conflict_policy()
-    effective_force = force_hint or policy.force
-    if effective_force:
-        return "write"
-    if policy.interactive:
-        choice = prompt_json_conflict_choice(path, foreign)
-        if choice == "force":
-            return "write"
-        if choice == "skip":
-            return "skip"
-        raise ConflictAbort(f"User aborted on foreign JSON pointers at {path}")
-    raise ConflictAbort(
-        f"Foreign JSON pointers at {path}: refusing to overwrite "
-        f"({len(foreign)} key(s)). Re-run with --force or set "
-        f"{ALLOW_OVERWRITE_ENV}=1 to allow. "
-        f"Run `agent-config doctor` to inspect orphaned pointers first."
-    )
-
-
 def merge_json_file(
     path: Path, new_data: dict, force: bool, label: str,
 ) -> list[dict[str, Any]]:
     """Merge ``new_data`` into ``path``; return v2 ``merged_keys[]`` entries.
 
-    P1.5 + P3.2 + P3.3 of road-to-multi-package-coexistence: every JSON
-    pointer the install writes lands in the manifest so uninstall can
-    subtract it cleanly. The merge uses leaf-level pointer-replace
-    semantics (``deep_merge`` recurses into dicts, replaces at leaves)
-    so sibling keys owned by neighbour packages survive. Before any
-    write that would overwrite a pre-existing pointer NOT recorded as
-    ours, the conflict policy is consulted (force / interactive prompt
-    / non-interactive abort).
+    P1.5 of road-to-multi-package-coexistence: every JSON pointer the
+    install writes lands in the manifest so uninstall can subtract it
+    cleanly. The merge uses leaf-level pointer-replace semantics
+    (``deep_merge`` recurses into dicts, replaces at leaves) so sibling
+    keys owned by neighbour packages survive untouched — our overlay
+    only ever carries our own keys. A deliberate setup always applies
+    those keys (no ``--force`` gate, no abort); ``force`` is retained
+    for call-site compatibility only.
 
-    Returns the v2 entries on a successful create / update; returns
-    ``[]`` when the file was already in sync or the update was
-    suppressed without ``--force`` / on a skip choice.
+    Returns the v2 entries on a create / update; ``[]`` when the file
+    was already in sync.
     """
+    del force  # our keys are always applied; the flag never gates a write
     new_entries = build_merge_entries(label, new_data)
 
     if not path.exists():
@@ -597,24 +290,6 @@ def merge_json_file(
     if merged == existing:
         skip(f"{label} already configured")
         return new_entries
-
-    policy = _get_conflict_policy()
-    foreign = _detect_foreign_pointers(existing, new_entries, label, policy)
-
-    if foreign:
-        # Foreign-pointer collision: ask the policy. On "write" we fall
-        # through and let deep_merge produce the leaf-level pointer-
-        # replace; on "skip" we bail without changing the file.
-        decision = _resolve_json_conflict(path, label, foreign, force_hint=force)
-        if decision == "skip":
-            skip(f"{label} has foreign keys, skipped")
-            return []
-    elif not (force or policy.force):
-        # No foreign collision but file needs an update — preserve the
-        # legacy "needs --force" contract so existing test expectations
-        # and the project-bridge flow stay intact.
-        skip(f"{label} exists, needs update (use --force)")
-        return []
 
     write_json_file(path, merged)
     success(f"{label} updated")
@@ -3840,8 +3515,6 @@ def install_global(
                 print(f"      {tool_id:<15} → no user-scope convention; use `agent-config export --tool={tool_id}`")
             else:
                 print(f"      {tool_id:<15} → no global-scope content yet (project-scope install supported)")
-        if not force and any(s > 0 for _, s, _, _ in deploy_results.values()):
-            info("  Re-run with --force to overwrite existing files.")
 
     # Refresh the project-scope manifest when running inside a project tree
     # (ADR-008 Phase 3.2). Outside a project (e.g. plain `~/`) there is no
@@ -3947,7 +3620,7 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "surfaces). Written to personal.user_type in .agent-settings.yml."
         ),
     )
-    parser.add_argument("--force", action="store_true", help="overwrite existing files")
+    parser.add_argument("--force", action="store_true", help="accepted for back-compat (no-op): installs always overwrite deployed files")
     parser.add_argument("--skip-bridges", action="store_true", help="only create .agent-settings.yml")
     parser.add_argument(
         "--augment-user-hooks",
@@ -4968,48 +4641,32 @@ def main(argv: list[str]) -> int:
     tools_was_all = _tools_was_all(opts.tools)
     parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all)
 
-    # Conflict policy: load known paths/pointers from the manifest once
-    # so every writer can ask "is this ours?" before clobbering (P3.1 /
-    # P3.3). Built from the project-scope manifest because that's the
-    # only on-disk source of truth across both install scopes.
-    policy_root = detect_root if scope == "global" else (
-        custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
-    )
-    _set_conflict_policy(_load_conflict_policy(policy_root, opts.force))
-
-    try:
-        if scope == "global":
-            # First-run hook: when legacy artefacts live in the project tree,
-            # prompt before laying down the global surface so the user is
-            # not left with a dual-stack install. Delegates to the unified
-            # `agent-config migrate` (see docs/contracts/migrate-command.md).
-            artefacts = _detect_legacy_for_migration(detect_root)
-            if artefacts and _prompt_migrate_to_global(detect_root, artefacts):
-                rc = _run_migrate_to_global(detect_root)
-                if rc != 0:
-                    return rc
-            # Pass detect_root so the manifest refresh runs when --global is
-            # invoked from within a project tree (ADR-008 Phase 3.2).
-            rc = install_global(parsed_tools, opts.force, project_root=detect_root)
-            _emit_progress_terminal(rc)
-            return rc
-
-        project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
-        is_first_run = not (project_root / SETTINGS_FILE).exists()
-        rc = _main_project_install(opts, project_root, parsed_tools, is_first_run)
-        # Interactive post-install prompt (step-12 Phase 3, forward-compatible
-        # stub). Runs only after a successful install so the local config
-        # never ships ahead of the bridge files it parameterizes.
-        if rc == 0 and getattr(opts, "interactive", False):
-            run_interactive_init(project_root, opts.force)
+    if scope == "global":
+        # First-run hook: when legacy artefacts live in the project tree,
+        # prompt before laying down the global surface so the user is
+        # not left with a dual-stack install. Delegates to the unified
+        # `agent-config migrate` (see docs/contracts/migrate-command.md).
+        artefacts = _detect_legacy_for_migration(detect_root)
+        if artefacts and _prompt_migrate_to_global(detect_root, artefacts):
+            rc = _run_migrate_to_global(detect_root)
+            if rc != 0:
+                return rc
+        # Pass detect_root so the manifest refresh runs when --global is
+        # invoked from within a project tree (ADR-008 Phase 3.2).
+        rc = install_global(parsed_tools, opts.force, project_root=detect_root)
         _emit_progress_terminal(rc)
         return rc
-    except ConflictAbort as exc:
-        warn(exc.message)
-        _emit_progress({"type": "error", "code": "E_CONFLICT_UNRESOLVED", "message": exc.message})
-        return 1
-    finally:
-        _set_conflict_policy(None)
+
+    project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
+    is_first_run = not (project_root / SETTINGS_FILE).exists()
+    rc = _main_project_install(opts, project_root, parsed_tools, is_first_run)
+    # Interactive post-install prompt (step-12 Phase 3, forward-compatible
+    # stub). Runs only after a successful install so the local config
+    # never ships ahead of the bridge files it parameterizes.
+    if rc == 0 and getattr(opts, "interactive", False):
+        run_interactive_init(project_root, opts.force)
+    _emit_progress_terminal(rc)
+    return rc
 
 
 def _propose_modules_config(project_root: Path, is_first_run: bool) -> None:
@@ -5079,8 +4736,7 @@ def _main_project_install(
 ) -> int:
     """Project-scope install body extracted from :func:`main`.
 
-    Kept as a private helper so ``main()`` can wrap the entire install
-    in a ``try/except ConflictAbort`` without rewriting indentation.
+    Kept as a private helper so ``main()`` stays a thin scope dispatcher.
     """
     if opts.package:
         package_root = Path(opts.package).resolve()
