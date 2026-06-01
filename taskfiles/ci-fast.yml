@@ -398,6 +398,11 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  check-skill-requires:
+    silent: true
+    desc: Validate the skill-composition graph (requires_skills) — every sub-skill ships wherever its parent ships (roadmap 3.4)
+    cmd: python3 scripts/check_skill_requires.py
+
   lint-model-tier-coverage:
     silent: true
     desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-model-capability-tiers.md — explicit lite/medium/high or inherit required (ADR-035))

@@ -79,6 +79,7 @@
   label: Product Basic
   description: Core PO/PM artefacts (ticket refinement, AC, estimation).
   workspaces: [product]
+  requires_hint: [engineering-base]
   trust_level_default: professional
 
 - id: product-discovery

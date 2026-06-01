@@ -11,6 +11,8 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
+requires_skills:
+  - learning-to-rule-or-skill
 ---
 
 # skill-improvement-pipeline
