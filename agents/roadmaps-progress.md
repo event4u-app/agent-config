@@ -6,10 +6,10 @@
 
 ## Overall
 
-**92 / 132 steps done · 70%**
+**98 / 138 steps done · 71%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+████████████████████████████░░░░░░░░░░░░   71%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 2 | [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md) | 3 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 5 | 24 | 4 | 20 | 0 | 0 | ████████░░ 83% |
+| 3 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 6 | 30 | 4 | 26 | 0 | 0 | █████████░ 87% |
 | 4 | [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md) | 6 | 33 | 3 | 30 | 0 | 0 | █████████░ 91% |
 
 ---
@@ -54,7 +54,7 @@
 
 ### [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md)
 
-**Road to Self-Update + Global Hook Resolution** — 20 / 24 done (83%)
+**Road to Self-Update + Global Hook Resolution** — 26 / 30 done (87%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -63,6 +63,7 @@
 | 3 | `refresh --global` / `refresh --project` + reconcile legacy | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 4 | ADR-020 amendment + docs sweep | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | End-to-end validation on `agent-ide-plugin` | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Install/upgrade hands off to the browser wizard (zero terminal prompts) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 
 ### [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md)
 

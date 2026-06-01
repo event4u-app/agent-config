@@ -232,7 +232,20 @@ prompt_tools() {
     echo "  ✅  Selected: $TOOLS"
 }
 
-if ! $MINIMAL && ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS && [[ -t 0 && -t 1 ]]; then
+# When an interactive global install will hand off to the browser wizard,
+# the wizard is the single tool-selection surface — skip the terminal
+# picker so it does not pre-empt (and, via TOOLS_EXPLICIT, suppress) the
+# GUI. Mirrors install.py::_wizard_should_launch minus the --no-ui flag,
+# which the bash orchestrator never receives (it errors on unknown args).
+# Headless paths (no TTY / CI / AGENT_CONFIG_NO_UI) still get the picker.
+wizard_will_handle_tools=false
+if $GLOBAL && [[ -t 0 && -t 1 && -z "${CI:-}" ]] \
+   && { [[ -z "${AGENT_CONFIG_NO_UI:-}" ]] || [[ "${AGENT_CONFIG_NO_UI:-}" == "0" ]]; }; then
+    wizard_will_handle_tools=true
+fi
+
+if ! $MINIMAL && ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS \
+   && [[ -t 0 && -t 1 ]] && ! $wizard_will_handle_tools; then
     prompt_tools
     TOOLS_EXPLICIT=true
 fi
