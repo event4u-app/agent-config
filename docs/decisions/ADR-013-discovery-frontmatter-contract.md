@@ -121,6 +121,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `small-business` | SMB-shaped owner workflows. |
 | `construction` | Trade-business workflows. |
 | `ai-video` | AI video pipeline (per ADR-011, the only heavyweight domain). |
+| `fun` | Non-essential social/fun workflows (prediction-pool tips, etc.). Optional under the `small-business` workspace; `experimental` trust. |
 | `meta` | Artefacts that maintain *this* package (`agent-config` itself). |
 
 Amendments to the pack list require an ADR-013 amendment and the
@@ -245,6 +246,19 @@ acts on the strings beyond display. Emitted into the discovery manifest;
 allowed by [`discovery-manifest.schema.json`](../contracts/discovery-manifest.schema.json).
 Additive, no vocabulary rename. (Same change cleaned the `finance` label from
 "Finance / CFO" to "Finance".)
+
+### 2026-06-01 — New `fun` pack
+
+Added pack id `fun` to the closed vocabulary (Non-essential social/fun
+workflows — prediction-pool tip optimization, etc.). Mirrored in
+[`config/discovery/packs.yml`](../../config/discovery/packs.yml) and the
+`ADR_PACKS` frozenset in
+[`scripts/lint_discovery_vocabulary.py`](../../scripts/lint_discovery_vocabulary.py).
+Optional under the `small-business` workspace (alongside `ai-video`);
+`trust_level_default: experimental`, `install.default: false`. First
+artefacts: the `/prediction-pool` command + `prediction-pool-optimizer` skill in
+`packages/pack-fun/`. Additive, no rename; non-overlap with cost-profile
+and `profile.id` reservations holds.
 
 ## Cross-references
 

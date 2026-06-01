@@ -1,0 +1,23 @@
+# kicktipp — declarative selector map (see _schema.md)
+#
+# Selectors are a STARTING POINT and may drift if kicktipp changes its DOM.
+# They have not been re-verified against the live site in this commit — if a
+# selector no longer matches at run time, the driver falls back to the
+# vision-assisted synthesis path. Update `notes.verified` when you confirm.
+platform: kicktipp
+match: kicktipp.de
+login_required: true
+tip_page_hint: "/<pool>/tippabgabe"
+selectors:
+  row: "form#tippabgabeSpiele tbody tr"
+  home_team: "td.col1 .nfooball, td.col1"
+  away_team: "td.col3 .nfooball, td.col3"
+  home_input: "input.kicktipp-heimtipp"
+  away_input: "input.kicktipp-gasttipp"
+  # submit is located, never auto-clicked unless the user authorizes it this turn
+  submit: "input[type=submit][value*='Tipps speichern'], button[type=submit]"
+notes: |
+  verified: unverified (DOM not inspected in this commit)
+  kicktipp renders one <tr> per match inside the tip form; each row carries a
+  home and away number input. Bonus questions live on separate pages per pool.
+  If the row/input selectors miss, use the vision path — do not guess.
