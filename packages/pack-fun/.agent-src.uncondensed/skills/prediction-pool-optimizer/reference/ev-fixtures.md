@@ -78,3 +78,39 @@ Margin modelled Gaussian, mean ≈ 6.5, sd ≈ 11.
 spread). Tip the winner plus the modal margin bucket.
 
 **Known-good tip:** **Home win, margin ~5–9.** (Risk: low on winner.)
+
+---
+
+## Fixture 5 — multi-book consensus (de-vig per book, sharp-weighted)
+
+**Rule:** any — this fixture checks the **odds base**, not the EV map.
+
+**Market (football, 1X2):** two books.
+- Book S (sharp, weight 3): 1.80 / 3.60 / 4.50 → de-vig 0.526 / 0.263 / 0.210.
+- Book R (recreational, weight 1): 1.75 / 3.50 / 4.20 → de-vig 0.522 / 0.261 / 0.217.
+
+**Reasoning:** de-vig **each book** first (raw `1/o` sums to >1; normalise),
+then take the sharp-weighted mean per outcome and renormalise. Aggregating
+the raw odds, or using one book, is wrong.
+
+**Known-good base:** **Home 0.525 / Draw 0.262 / Away 0.212.** A run that
+fed the EV grid one book's raw odds has the wrong base — fix it before the tip.
+
+---
+
+## Fixture 6 — "team of the top scorer" (aggregate player market by team)
+
+**Rule:** bonus question = 6 points: "which team supplies the tournament top
+scorer?"
+
+**Market (top-goalscorer outright, de-vigged player probabilities):**
+- Team A: player A1 14%, player A2 5% → team A total **19%**.
+- Team B: player B1 16% → team B total **16%**.
+- Team C: player C1 9%, player C2 4% → team C total **13%**.
+
+**Reasoning:** the single most-likely *player* (B1 at 16%) belongs to team B,
+but the question asks for the **team** — sum each squad's players. Team A's
+19% beats team B's 16%. Answer the asked question, not the adjacent one.
+
+**Known-good answer:** **Team A.** (Source: market, aggregated by team.
+Risk: medium.) **Not** team B — that is the modal-player trap.

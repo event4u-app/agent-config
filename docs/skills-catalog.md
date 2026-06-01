@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **219 skills** available in this package, in alphabetical order.
+All **223 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -89,6 +89,8 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`gtm-launch`](../.agent-src/skills/gtm-launch/SKILL.md) | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | [`guideline-writing`](../.agent-src/skills/guideline-writing/SKILL.md) | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | [`hiring-loop-design`](../.agent-src/skills/hiring-loop-design/SKILL.md) | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
+| [`image-analyser`](../.agent-src/skills/image-analyser/SKILL.md) | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
+| [`image-creator`](../.agent-src/skills/image-creator/SKILL.md) | Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'. |
 | [`incident-commander`](../.agent-src/skills/incident-commander/SKILL.md) | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | [`jira-integration`](../.agent-src/skills/jira-integration/SKILL.md) | Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | [`jobs-events`](../.agent-src/skills/jobs-events/SKILL.md) | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
@@ -152,6 +154,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`playwright-testing`](../.agent-src/skills/playwright-testing/SKILL.md) | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | [`po-discovery`](../.agent-src/skills/po-discovery/SKILL.md) | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | [`positioning-strategy`](../.agent-src/skills/positioning-strategy/SKILL.md) | Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'. |
+| [`prediction-pool-optimizer`](../.agent-src/skills/prediction-pool-optimizer/SKILL.md) | Optimize prediction-pool tips (kicktipp etc.): rules + multi-book consensus odds → expected-points-max answer for every question, scores AND bonus. Triggers 'optimize my pool tips', 'predict'. |
 | [`privacy-review`](../.agent-src/skills/privacy-review/SKILL.md) | Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'. |
 | [`project-analysis-core`](../.agent-src/skills/project-analysis-core/SKILL.md) | Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`. |
 | [`project-analysis-hypothesis-driven`](../.agent-src/skills/project-analysis-hypothesis-driven/SKILL.md) | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
@@ -199,6 +202,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`skill-management`](../.agent-src/skills/skill-management/SKILL.md) | Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained. |
 | [`skill-reviewer`](../.agent-src/skills/skill-reviewer/SKILL.md) | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
 | [`skill-writing`](../.agent-src/skills/skill-writing/SKILL.md) | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
+| [`song-to-script`](../.agent-src/skills/song-to-script/SKILL.md) | Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'. |
 | [`sql-writing`](../.agent-src/skills/sql-writing/SKILL.md) | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | [`subagent-orchestration`](../.agent-src/skills/subagent-orchestration/SKILL.md) | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |

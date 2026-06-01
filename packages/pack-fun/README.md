@@ -16,4 +16,4 @@ Non-essential social/fun workflows (prediction-pool tips, etc.).
 
 ## Skills (1)
 
-- **`prediction-pool-optimizer`** — Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'.
+- **`prediction-pool-optimizer`** — Optimize prediction-pool tips (kicktipp etc.): rules + multi-book consensus odds → expected-points-max answer for every question, scores AND bonus. Triggers 'optimize my pool tips', 'predict'.
