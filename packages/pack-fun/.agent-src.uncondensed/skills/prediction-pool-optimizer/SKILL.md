@@ -61,6 +61,9 @@ more. **Always optimize the pool's points, never the truth of the match.**
   odds or from **actually executed** code. Tournament/outright/award numbers
   come from real markets **or** the executed Poisson helper — never a claimed
   "I ran 10,000 simulations".
+- **Scorelines are computed, not guessed.** The EV-max tip per match comes
+  from the executed grid optimiser (`score_ev.py`, step 4a), never the eye. A
+  3:2 / 4:1 / 1:4 in the output is the signature of a skipped computation.
 - **One-sentence justification** per answer. Short.
 
 ## Procedure
@@ -138,22 +141,61 @@ the data and explain the cause before trusting it.
 Map probabilities to the tip with the **highest expected points under the
 step-1 rules** — not the prettiest match.
 
-- **Standard fixed-point scoring + goal "place well"** → tip the EV-maximal
-  result per match. Favourites with modest scorelines dominate. **No
-  contrarian** — only your tip matters for your score, so deliberately
-  tipping "different" just burns EV.
-- **Quote / rarity scoring** → weigh rarer-but-plausible results against
-  their higher payout; take rarity when `payout × probability` wins.
-- **Goal = win a large pool** → on a *subset* of matches, take calculated
-  variance (plausible underdogs) to create upside, poker-tournament style.
+#### 4a. The EV-max scoreline is computed, never eyeballed
 
-**Participant-field thresholds** (when two tips are close, prefer the one
-with the higher edge over the typical participant):
+Do **not** hand-pick a scoreline. Run the executed grid optimiser — it builds
+the full Poisson score grid and returns the expected-points-max tip under the
+step-1 point tiers:
 
-- Pool **N < 20** → maximize EV, ignore the field.
+```bash
+python3 scripts/prediction-pool/score_ev.py --lh <home-xg> --la <away-xg> \
+    --tendency <t> --diff <d> --exact <e>          # one match
+python3 scripts/prediction-pool/score_ev.py matches.json \
+    --tendency <t> --diff <d> --exact <e>          # batch, prints a ranked table
+```
+
+Two facts the grid makes unavoidable — and intuition gets wrong:
+
+- **High scorelines are almost never EV-max.** Under any partial-points rule a
+  moderate favourite peaks at **1:0 / 2:0 / 2:1**; **1:0 wins surprisingly
+  often**, and the top of the EV surface is *flat* (1:0 vs 2:1 vs 2:0 separated
+  by hundredths). A 3:2 / 4:1 / 1:4 tip is never the optimum — if a tip like
+  that appears, the grid was not run.
+- **Draws are under-tipped.** A correctly-tipped draw banks the goal-difference
+  tier on every draw scoreline, so in a close match (xG within ~0.4) a 1:1 can
+  out-score a 1:0. The grid surfaces this; the eye does not. People tip too few
+  draws — let the computation, not the gut, decide.
+
+- **Standard fixed-point scoring + goal "place well"** → tip the grid's
+  EV-max per match. **No contrarian** — only your tip matters for your score,
+  so deliberately tipping "different" just burns EV.
+- **Quote / rarity scoring** → weigh rarer-but-plausible results against their
+  higher payout; take rarity when `payout × probability` wins (raise `--exact`
+  weight or post-process the ranked table by the multiplier).
+
+#### 4b. Large pool, goal "win it" — measure P(finish 1st), don't guess
+
+When the goal is to **win** a large pool (not place), the target flips from
+E(points) to **P(finish ahead of the whole field)** — and pure EV-max converges
+with the crowd, so it cannot open a gap. Measure it with the executed field
+simulator instead of a "rough Kelly" hand-wave:
+
+```bash
+python3 scripts/prediction-pool/pool_winsim.py pool.json --runs 4000 --max-flips 4
+```
+
+It models the field as softmax-EV tippers, reports `P(win)` for the
+EV-max-everywhere baseline, then greedily reports **which few tips to flip**
+off EV-max (and the EV cost + P(win) gain of each). Read the output as the
+field threshold, empirically:
+
+- Pool **N < 20** → the sim shows flips barely move P(win); maximize EV, ignore
+  the field.
 - **20 ≤ N < 100 and you are in the prize positions** → maximize EV.
-- **N ≥ 100, or you are outside the top ~20%** → add field-relative
-  variance (move off the consensus on a subset; rough Kelly-fraction sizing).
+- **N ≥ 100, or you are outside the top ~20%** → take the simulator's
+  suggested flips: a handful of higher-variance scorelines on high-consensus
+  matches lift P(win) most per unit of EV given up. Flip only what the sim says
+  pays — variance you don't need is wasted EV.
 
 Respect all strategy limits from step 1 (max identical tips, etc.).
 
@@ -231,8 +273,17 @@ gate — the skill never enters or submits anything.
   base from a sharp-weighted consensus across several and treat an outlier as
   a flag to investigate, not a number to copy.
 - **Tipping the modal result, not the EV-maximal one.** The single most
-  likely scoreline rarely maximizes partial points — compute EV across the
-  result grid, don't eyeball the favourite.
+  likely scoreline rarely maximizes partial points — run `score_ev.py` across
+  the result grid, don't eyeball the favourite.
+- **Hand-picking a high scoreline.** 3:2 / 4:1 / 1:4 are never EV-max under
+  partial-points rules — moderate favourites peak at 1:0 / 2:0 / 2:1. A high
+  tip in the output means the grid was skipped; run `score_ev.py`.
+- **Under-tipping draws.** A correct draw banks the goal-difference tier on
+  every draw scoreline, so in a close match a 1:1 can beat a 1:0. Let the grid
+  decide; the eye tips too few draws.
+- **"Rough Kelly" variance for a large pool.** Don't guess how much to deviate
+  — run `pool_winsim.py`; it returns the exact flips that raise P(finish 1st)
+  most per unit of EV given up.
 - **Forgetting to de-vig.** Raw bookmaker odds sum to >100%; treating them
   as probabilities inflates the favourite. Remove the margin **per book**
   before aggregating.
@@ -247,8 +298,11 @@ gate — the skill never enters or submits anything.
 - Leave any open pool question (bonus / award / special) unanswered.
 - Build the base from a single bookmaker, or skip de-vigging before aggregating.
 - Tip the most likely result instead of the EV-maximal one.
+- Hand-pick a scoreline instead of running `score_ev.py` — and never emit a
+  3:2 / 4:1 / 1:4 tip, which is never EV-max under partial points.
 - Go contrarian under standard fixed-point scoring with a "place well" goal.
-- Report Monte-Carlo numbers without running `poisson_sim.py`.
+- Guess large-pool variance ("rough Kelly") instead of running `pool_winsim.py`.
+- Report Monte-Carlo numbers without running `poisson_sim.py` / `pool_winsim.py`.
 - Treat raw odds as probabilities without removing the vig.
 - Give betting or financial advice — this optimizes a game; the human submits.
 
@@ -261,5 +315,9 @@ gate — the skill never enters or submits anything.
   question taxonomy with a per-type method.
 - [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
   rules+odds → EV examples.
+- [`scripts/prediction-pool/score_ev.py`](../../../../scripts/prediction-pool/score_ev.py) —
+  the executed exact-score EV optimiser (step 4a; λ + rule → EV-max scoreline).
+- [`scripts/prediction-pool/pool_winsim.py`](../../../../scripts/prediction-pool/pool_winsim.py) —
+  the executed field model + P(finish 1st) simulator and flip-finder (step 4b).
 - [`scripts/prediction-pool/poisson_sim.py`](../../../../scripts/prediction-pool/poisson_sim.py) —
-  the executed tournament simulator.
+  the executed tournament simulator (step 5).
