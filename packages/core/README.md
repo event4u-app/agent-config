@@ -248,7 +248,7 @@ Core framework-neutral artefacts.
 - **`no-decorative-emojis-in-git-surfaces`** — Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend
 - **`no-pr-progress-comments`** — Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true
 - **`no-roadmap-references`** — Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings
-- **`non-destructive-by-default`** — Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass
+- **`non-destructive-by-default`** — Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass
 - **`onboarding-gate`** — First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
