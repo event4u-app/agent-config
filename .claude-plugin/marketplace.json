@@ -378,6 +378,8 @@
         "./.claude/skills/threat-model",
         "./.claude/skills/threat-modeling",
         "./.claude/skills/throughput-vs-morale-tradeoff",
+        "./.claude/skills/tippspiel",
+        "./.claude/skills/tippspiel-optimizer",
         "./.claude/skills/token-optimizer",
         "./.claude/skills/traefik",
         "./.claude/skills/ui-component-architect",
