@@ -408,6 +408,16 @@ tasks:
     desc: Validate the skill-composition graph (requires_skills) — every sub-skill ships wherever its parent ships (roadmap 3.4)
     cmd: python3 scripts/check_skill_requires.py
 
+  check-gate-paths:
+    silent: true
+    desc: Assert every gate that enforces a fixed packages/core/ target still resolves it (R2 of road-to-test-and-gate-integrity — guards the aab5755 silent-no-op class)
+    cmd: python3 scripts/check_gate_paths.py
+
+  check-test-coverage-diff:
+    silent: true
+    desc: WARN-only — flag a new scripts/check_*|lint_* gate added with no matching test (R3 of road-to-test-and-gate-integrity — calibrated nudge, exit 0; never blocks)
+    cmd: python3 scripts/check_test_coverage_diff.py
+
   lint-model-tier-coverage:
     silent: true
     desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-model-capability-tiers.md — explicit lite/medium/high or inherit required (ADR-035))
