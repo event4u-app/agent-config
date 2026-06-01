@@ -55,7 +55,7 @@
   description: Self-employed / SMB-shaped owner workflows.
   example_roles: [Owner, Freelancer]
   default_packs: [small-business]
-  optional_packs: [ai-video]
+  optional_packs: [ai-video, fun]
 
 - id: construction
   label: Construction
