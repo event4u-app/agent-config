@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agent-settings schema validator (cost_profile untangle, 2026-06-01).
+"""Agent-settings schema validator (rule_loading_tier untangle, 2026-06-01).
 
 Validates ``config/agent-settings.template.yml`` and any local
 ``.agent-settings.yml`` against
@@ -7,10 +7,10 @@ Validates ``config/agent-settings.template.yml`` and any local
 deliberately permissive (``additionalProperties: true`` everywhere) and
 only enum-constrains the value-bearing keys that have historically been
 overloaded with a foreign vocabulary — the root cause of the
-``cost_profile`` / memory-cadence collision. Its job is to make a
+``rule_loading_tier`` / memory-cadence collision. Its job is to make a
 value-vocabulary collision a hard CI failure.
 
-Template placeholders (``__COST_PROFILE__``, ``__USER_TYPE__``) are
+Template placeholders (``__RULE_LOADING_TIER__``, ``__USER_TYPE__``) are
 substituted with their installer defaults before validation, mirroring
 ``scripts/install.py``.
 
@@ -50,7 +50,7 @@ LOCAL_PATHS = [REPO_ROOT / ".agent-settings.yml"]
 # Installer-default substitutions, mirroring scripts/install.py so the
 # template validates as it would after a fresh `balanced` install.
 PLACEHOLDERS = {
-    "__COST_PROFILE__": "balanced",
+    "__RULE_LOADING_TIER__": "balanced",
     "__USER_TYPE__": "",
 }
 

@@ -33,7 +33,7 @@ selects which surface renders.
 |---|---|---|
 | 1 | Identity | `personal.user_name`, `personal.ide` |
 | 2 | Personality | `personal.minimal_output`, `personal.play_by_play`, `personal.open_edited_files` |
-| 3 | Cost profile | `cost_profile` (minimal · balanced · full) |
+| 3 | Cost profile | `rule_loading_tier` (minimal · balanced · full) |
 | 4 | Roadmap quality | `roadmap.quality_floor`, `roadmap.run_tests_inline` |
 | 5 | Memory | `memory.enabled`, MCP server presence |
 | 6 | `.agent-user.md` | Optional long-form persona / preferences |

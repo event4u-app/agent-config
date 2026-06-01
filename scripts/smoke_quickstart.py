@@ -4,7 +4,7 @@
 Verifies the 3-step Quickstart from a fresh-project perspective:
 
   1. `scripts/install.py --project <tmpdir>` produces a usable
-     `.agent-settings.yml` with the documented default `cost_profile`.
+     `.agent-settings.yml` with the documented default `rule_loading_tier`.
   2. The decision_engine block (P2.x of road-to-productization) parses
      cleanly through the same engine parser the runtime uses.
   3. The work-engine state-file format (`agents/runtime/state/<id>.json`) is
@@ -68,16 +68,16 @@ def _check_installer_runs(tmpdir: Path) -> tuple[int, Path | None]:
 
 
 def _check_default_profile(settings: Path) -> int:
-    """Step 2 — assert default cost_profile matches the contract."""
+    """Step 2 — assert default rule_loading_tier matches the contract."""
     import yaml
 
     parsed = yaml.safe_load(settings.read_text(encoding="utf-8"))
     if not isinstance(parsed, dict):
         return _fail(f"{settings.name}: top-level is not a YAML mapping")
-    profile = parsed.get("cost_profile")
+    profile = parsed.get("rule_loading_tier")
     if profile != EXPECTED_DEFAULT_PROFILE:
         return _fail(
-            f"cost_profile drift: docs/contracts/cost-profile-defaults.md "
+            f"rule_loading_tier drift: docs/contracts/rule-loading-tier-defaults.md "
             f"declares '{EXPECTED_DEFAULT_PROFILE}', settings has '{profile!r}'"
         )
     return 0

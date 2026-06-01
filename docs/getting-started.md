@@ -146,7 +146,7 @@ The system supports four configuration profiles:
 Set your profile in `.agent-settings.yml`:
 
 ```yaml
-cost_profile: balanced
+rule_loading_tier: balanced
 ```
 
 `balanced` is the default — kernel + tier-1 auto-rules. Rationale:

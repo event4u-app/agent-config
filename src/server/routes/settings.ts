@@ -33,7 +33,7 @@ import { PACKAGE_ROOT } from '../../cli/paths.js';
 // added there must get its default here, or `settingsSchema.safeParse` on
 // the merged defaults will reject the first save.
 const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
-    __COST_PROFILE__: 'balanced',
+    __RULE_LOADING_TIER__: 'balanced',
     __USER_TYPE__: '',
     __CHAT_HISTORY_FREQUENCY__: 'per_turn',
     __CHAT_HISTORY_MAX_SIZE_KB__: '2048',
@@ -117,7 +117,7 @@ interface LayeredState {
 }
 
 /**
- * Parse the package settings template with `__COST_PROFILE__` /
+ * Parse the package settings template with `__RULE_LOADING_TIER__` /
  * `__USER_TYPE__` substituted for their permissive defaults. Returns
  * `{}` if the template is missing or YAML-invalid — callers treat this
  * as "no defaults available" rather than erroring, matching the Python

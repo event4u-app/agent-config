@@ -10,7 +10,7 @@ every pack listed as a workspace's default/optional MUST list that
 workspace in its own `workspaces:` array (and vice versa).
 
 Non-overlap (ADR-010 alignment): no pack id may collide with a
-`cost_profile` value (minimal/balanced/full/custom) or a `profile.id`
+`rule_loading_tier` value (minimal/balanced/full/custom) or a `profile.id`
 value (founder/developer/content_creator/agency/finance/ops).
 
 Cap: ≤ 150 LOC, stdlib + PyYAML. Exit 0 clean, 1 on failure.
@@ -45,7 +45,7 @@ ADR_PACKS: frozenset[str] = frozenset({
 })
 
 # ADR-010 non-overlap reservations.
-COST_PROFILE_RESERVED: frozenset[str] = frozenset({
+RULE_LOADING_TIER_RESERVED: frozenset[str] = frozenset({
     "minimal", "balanced", "full", "custom",
 })
 PROFILE_ID_RESERVED: frozenset[str] = frozenset({
@@ -136,9 +136,9 @@ def lint(quiet: bool) -> int:
                     )
 
     # 5. Non-overlap (ADR-010).
-    overlap_cost = pack_ids & COST_PROFILE_RESERVED
+    overlap_cost = pack_ids & RULE_LOADING_TIER_RESERVED
     if overlap_cost:
-        errors.append(f"pack ids collide with cost_profile values: {sorted(overlap_cost)}")
+        errors.append(f"pack ids collide with rule_loading_tier values: {sorted(overlap_cost)}")
     overlap_profile = pack_ids & PROFILE_ID_RESERVED
     if overlap_profile:
         errors.append(f"pack ids collide with profile.id values: {sorted(overlap_profile)}")

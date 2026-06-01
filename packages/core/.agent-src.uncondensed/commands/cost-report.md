@@ -60,7 +60,7 @@ profile recommendation per the table:
 | 🔴 CRITICAL | ≥ 90% | recommend model downgrades, consider [`/set-cost-profile minimal`](set-cost-profile.md) |
 | 🛑 HARD_STOP | ≥ 100% | halt non-essential work; review before continuing (`budget.mjs check` exits 1) |
 
-If `level` ≥ WARNING and the current `cost_profile` in `.agent-settings.yml`
+If `level` ≥ WARNING and the current `rule_loading_tier` in `.agent-settings.yml`
 is not already `minimal`, add an explicit suggestion sentence:
 
 > Run [`/set-cost-profile`](set-cost-profile.md) to switch from your
@@ -109,7 +109,7 @@ Allowed values: `today`, `week`, `month`, `all` (default).
 
 ## See also
 
-- [`/set-cost-profile`](set-cost-profile.md) — change `cost_profile` in
+- [`/set-cost-profile`](set-cost-profile.md) — change `rule_loading_tier` in
   `.agent-settings.yml`.
 - [`/agent-status`](agent-status.md) — per-conversation token estimate
   (different scope: in-flight estimate, not historical actuals).

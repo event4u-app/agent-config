@@ -15,7 +15,7 @@
 # --- Cost profile ---
 # Master switch for which rule tiers load. Options: minimal | balanced | full.
 # `balanced` is the recommended default; flip to `minimal` for kernel-only.
-cost_profile: balanced
+rule_loading_tier: balanced
 
 # --- Version pin (opt-in) ---
 # Leave commented out to follow whatever `agent-config` is on $PATH (per D4).

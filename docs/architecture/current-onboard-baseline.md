@@ -27,7 +27,7 @@ inert — no settings file, no flow.
 | 4 | `personal.ide` (+ auto-detect via `ps aux`) and `personal.open_edited_files` | IDE id, auto-open flag | unset |
 | 5 | `personal.pr_comment_bot_icon` | bool | always (no detection possible) |
 | 6 | `personal.rtk_installed` (via `which rtk`) | bool + install action | rtk not found |
-| 7 | `cost_profile` and `pipelines.skill_improvement` | profile id, learning bool | always (one summary screen) |
+| 7 | `rule_loading_tier` and `pipelines.skill_improvement` | profile id, learning bool | always (one summary screen) |
 | 8 | Mark `onboarding.onboarded: true` | — | always |
 | 9 | Write user-global `~/.event4u/agent-config/agent-settings.yml` | six whitelisted keys | step 2 captured "yes" |
 | 10 | Summary block | — | always |
@@ -65,7 +65,7 @@ personal:
   open_edited_files: true|false     # step 4
   pr_comment_bot_icon: true|false   # step 5
   rtk_installed: true|false         # step 6
-cost_profile: "balanced"             # step 7 (default unchanged)
+rule_loading_tier: "balanced"             # step 7 (default unchanged)
 pipelines:
   skill_improvement: true            # step 7 (default unchanged)
 onboarding:
@@ -74,7 +74,7 @@ onboarding:
 
 User-global file (step 9, opt-in): the six whitelisted keys in
 [`scripts/_lib/agent_settings.py`](../../scripts/_lib/agent_settings.py)
-— `name`, `ide`, `cost_profile`, `personal.bot_icon`,
+— `name`, `ide`, `rule_loading_tier`, `personal.bot_icon`,
 `personal.autonomy`, `telegraph.speak_scope`.
 
 ## Iron Laws today

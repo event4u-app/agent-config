@@ -331,7 +331,7 @@ class TestDetectScope(unittest.TestCase):
     def test_existing_settings_yml_returns_project(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             cwd = Path(tmp)
-            (cwd / install.SETTINGS_FILE).write_text("cost_profile: minimal\n")
+            (cwd / install.SETTINGS_FILE).write_text("rule_loading_tier: minimal\n")
             scope, reason = install.detect_scope(cwd)
             self.assertEqual(scope, "project")
             self.assertIn(install.SETTINGS_FILE, reason)
@@ -381,7 +381,7 @@ class TestDetectScope(unittest.TestCase):
         # before manifest+AI even gets evaluated.
         with tempfile.TemporaryDirectory() as tmp:
             cwd = Path(tmp)
-            (cwd / install.SETTINGS_FILE).write_text("cost_profile: minimal\n")
+            (cwd / install.SETTINGS_FILE).write_text("rule_loading_tier: minimal\n")
             (cwd / "package.json").write_text("{}")
             (cwd / ".claude").mkdir()
             scope, _ = install.detect_scope(cwd)
@@ -609,7 +609,7 @@ class TestDetectPackageRoot(SilentTest):
 
     def test_local_dev_mode(self) -> None:
         (self.tmpdir / "config" / "profiles").mkdir(parents=True)
-        (self.tmpdir / "config" / "profiles" / "minimal.ini").write_text("cost_profile=minimal\n", encoding="utf-8")
+        (self.tmpdir / "config" / "profiles" / "minimal.ini").write_text("rule_loading_tier=minimal\n", encoding="utf-8")
         self.assertEqual(install.detect_package_root(self.tmpdir), self.tmpdir)
 
     def test_no_package_fails(self) -> None:
@@ -678,8 +678,8 @@ class TestEnsureAgentSettings(SilentTest):
     def test_renders_placeholder(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
         content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
-        self.assertIn("cost_profile: balanced", content)
-        self.assertNotIn(install.COST_PROFILE_PLACEHOLDER, content)
+        self.assertIn("rule_loading_tier: balanced", content)
+        self.assertNotIn(install.RULE_LOADING_TIER_PLACEHOLDER, content)
 
     def test_seeds_subagent_keys(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
@@ -691,15 +691,15 @@ class TestEnsureAgentSettings(SilentTest):
 
     def test_skip_when_exists_without_force(self) -> None:
         target = self.project / ".agent-settings.yml"
-        target.write_text("cost_profile: custom\n", encoding="utf-8")
+        target.write_text("rule_loading_tier: custom\n", encoding="utf-8")
         install.ensure_agent_settings(self.project, self.package, "full", force=False)
-        self.assertEqual(target.read_text(encoding="utf-8"), "cost_profile: custom\n")
+        self.assertEqual(target.read_text(encoding="utf-8"), "rule_loading_tier: custom\n")
 
     def test_force_overwrites(self) -> None:
         target = self.project / ".agent-settings.yml"
-        target.write_text("cost_profile: custom\n", encoding="utf-8")
+        target.write_text("rule_loading_tier: custom\n", encoding="utf-8")
         install.ensure_agent_settings(self.project, self.package, "full", force=True)
-        self.assertIn("cost_profile: full", target.read_text(encoding="utf-8"))
+        self.assertIn("rule_loading_tier: full", target.read_text(encoding="utf-8"))
 
     def test_missing_profile_fails(self) -> None:
         with redirect_stderr(io.StringIO()):
@@ -738,10 +738,10 @@ class TestEnsureAgentSettings(SilentTest):
             self.assertEqual(leftover, [], f"{profile}: leftover placeholders {leftover}")
 
     def test_profile_mismatch_fails(self) -> None:
-        # Corrupt a profile ini so cost_profile doesn't match --profile
+        # Corrupt a profile ini so rule_loading_tier doesn't match --profile
         bad = self.package / "config" / "profiles" / "minimal.ini"
         bad.write_text(
-            "cost_profile=balanced\n"
+            "rule_loading_tier=balanced\n"
             "chat_history_frequency=per_turn\n"
             "chat_history_max_size_kb=128\n"
             "chat_history_on_overflow=rotate\n",
@@ -1239,7 +1239,7 @@ class TestMainIntegration(unittest.TestCase):
     def test_profile_is_rendered_into_settings(self) -> None:
         self.assertEqual(self._run("--profile=full"), 0)
         content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
-        self.assertIn("cost_profile: full", content)
+        self.assertIn("rule_loading_tier: full", content)
 
 
 class TestPostInstallSmoke(unittest.TestCase):

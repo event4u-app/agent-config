@@ -135,7 +135,7 @@ Core framework-neutral artefacts.
 - **`roadmap:process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
 - **`roadmap:process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
-- **`set-cost-profile`** — Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
+- **`set-cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`skill`** — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
 - **`skill:preview`** — Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.
 - **`skills`** — Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.

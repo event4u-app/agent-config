@@ -17,7 +17,7 @@ Resolution precedence — first non-empty wins:
     3. Global setting       ``ai_council.mode``
     4. Built-in default     ``manual``
 
-This mirrors how ``cost_profile`` resolves in
+This mirrors how ``rule_loading_tier`` resolves in
 ``.augment/guidelines/agent-infra/layered-settings.md``.
 
 The resolver is pure — it never touches the filesystem or environment.

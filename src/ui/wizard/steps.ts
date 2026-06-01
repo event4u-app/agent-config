@@ -111,7 +111,7 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         subtitle: 'Master switch for which rule tiers load, optional spending ceilings, and per-skill model auto-switch.',
         kind: 'form',
         paths: [
-            'cost_profile',
+            'rule_loading_tier',
             'cost.budgets.daily',
             'cost.budgets.weekly',
             'cost.budgets.monthly',

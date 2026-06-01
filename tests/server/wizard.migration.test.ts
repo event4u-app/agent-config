@@ -86,13 +86,13 @@ describe('wizard auto-migration', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), identity: fixtureUserIdentity() },
+            payload: { settings: fixtureSettings({ rule_loading_tier: 'balanced' }), identity: fixtureUserIdentity() },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
         expect(body.writtenPaths).toHaveLength(2);
         // New files live under writeRoot/settings/.
-        expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/cost_profile:\s*balanced/m);
+        expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/rule_loading_tier:\s*balanced/m);
         expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-user.yml'), 'utf8')).toMatch(/name:\s*Matze/);
         // Legacy files removed; migratedFrom lists both.
         expect(existsSync(join(ctx.legacyReadRoot, '.agent-settings.yml'))).toBe(false);
@@ -109,7 +109,7 @@ describe('wizard auto-migration', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'minimal' }) },
+            payload: { settings: fixtureSettings({ rule_loading_tier: 'minimal' }) },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
@@ -123,7 +123,7 @@ describe('wizard auto-migration', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }) },
+            payload: { settings: fixtureSettings({ rule_loading_tier: 'balanced' }) },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
@@ -136,7 +136,7 @@ describe('wizard auto-migration', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), identity: fixtureUserIdentity() },
+            payload: { settings: fixtureSettings({ rule_loading_tier: 'balanced' }), identity: fixtureUserIdentity() },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as { ok: boolean; dryRun: boolean; preview: unknown; migratedFrom?: string[] };

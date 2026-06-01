@@ -42,7 +42,7 @@ Use when:
 
 ## When NOT to use
 
-- To change a value (`ide`, `cost_profile`, `max_parallel`) → edit the
+- To change a value (`ide`, `rule_loading_tier`, `max_parallel`) → edit the
   file directly or ask the agent; the sync only reconciles structure.
 - To create `.agent-project-settings.yml` (team file) → that is a
   separate concern; this command only touches the developer file.
@@ -96,7 +96,7 @@ Free-text replies (`"nö"`, `"leave it"`, unrecognized input) count as
 
 ### 4. Profile override
 
-The script auto-detects the profile from the target's `cost_profile`
+The script auto-detects the profile from the target's `rule_loading_tier`
 key and falls back to `minimal`. To sync against a different profile
 (e.g. during a profile change), pass `--profile balanced` or
 `--profile full` — but ask the user first; changing the profile is a

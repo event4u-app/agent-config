@@ -14,7 +14,7 @@ import sync_agent_settings as sas  # noqa: E402
 
 MINIMAL_TEMPLATE = """\
 # Header
-cost_profile: __COST_PROFILE__
+rule_loading_tier: __RULE_LOADING_TIER__
 
 # --- Personal preferences ---
 personal:
@@ -36,7 +36,7 @@ onboarding:
 """
 
 MINIMAL_INI = """\
-cost_profile=minimal
+rule_loading_tier=minimal
 chat_history_frequency=per_turn
 chat_history_max_size_kb=128
 chat_history_on_overflow=rotate
@@ -70,7 +70,7 @@ def test_creates_file_from_template_when_missing(workspace: Path):
     assert not target.exists()
     assert _run(workspace) == 0
     data = yaml.safe_load(target.read_text(encoding="utf-8"))
-    assert data["cost_profile"] == "minimal"
+    assert data["rule_loading_tier"] == "minimal"
     assert data["chat_history"]["frequency"] == "per_turn"
     assert data["chat_history"]["max_size_kb"] == 128
     assert data["onboarding"]["onboarded"] is False
@@ -79,7 +79,7 @@ def test_creates_file_from_template_when_missing(workspace: Path):
 def test_preserves_user_values_and_adds_missing_sections(workspace: Path):
     target = workspace / ".agent-settings.yml"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "personal:\n"
         "  ide: phpstorm\n"
         "  user_name: Matze\n",
@@ -105,10 +105,10 @@ def test_idempotent_second_run_is_noop(workspace: Path, capsys):
 
 def test_check_exits_2_on_drift(workspace: Path):
     target = workspace / ".agent-settings.yml"
-    target.write_text("cost_profile: minimal\n", encoding="utf-8")
+    target.write_text("rule_loading_tier: minimal\n", encoding="utf-8")
     assert _run(workspace, ["--check"]) == 2
     # File must not be modified under --check
-    assert target.read_text(encoding="utf-8") == "cost_profile: minimal\n"
+    assert target.read_text(encoding="utf-8") == "rule_loading_tier: minimal\n"
 
 
 def test_check_exits_0_when_in_sync(workspace: Path):
@@ -118,7 +118,7 @@ def test_check_exits_0_when_in_sync(workspace: Path):
 
 def test_dry_run_does_not_write(workspace: Path):
     target = workspace / ".agent-settings.yml"
-    target.write_text("cost_profile: minimal\n", encoding="utf-8")
+    target.write_text("rule_loading_tier: minimal\n", encoding="utf-8")
     before = target.read_text(encoding="utf-8")
     assert _run(workspace, ["--dry-run"]) == 0
     assert target.read_text(encoding="utf-8") == before
@@ -134,7 +134,7 @@ def test_unknown_user_keys_preserved_verbatim(workspace: Path):
     """
     target = workspace / ".agent-settings.yml"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "legacy_thing:\n"
         "  flag: custom_value\n",
         encoding="utf-8",
@@ -156,7 +156,7 @@ def test_user_block_round_trip_is_idempotent(workspace: Path):
     """
     target = workspace / ".agent-settings.yml"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "legacy_thing:\n"
         "  flag: custom_value\n"
         "  nested:\n"
@@ -184,7 +184,7 @@ def test_user_block_repairs_legacy_corruption(workspace: Path):
     # many leading `_user.` segments accumulated over many sync runs.
     corrupted_key = "_user." * 50 + "legacy_thing.flag"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "_user:\n"
         f"  {corrupted_key}: custom_value\n",
         encoding="utf-8",
@@ -212,7 +212,7 @@ def test_bare_identifier_not_requoted(workspace: Path):
 # --- 3-level nesting + list values (regression for commands.suggestion.*) ---
 
 NESTED_TEMPLATE = """\
-cost_profile: __COST_PROFILE__
+rule_loading_tier: __RULE_LOADING_TIER__
 
 commands:
   suggestion:
@@ -231,7 +231,7 @@ def nested_workspace(tmp_path: Path) -> Path:
         NESTED_TEMPLATE, encoding="utf-8"
     )
     (tmp_path / "config" / "profiles" / "minimal.ini").write_text(
-        "cost_profile=minimal\n", encoding="utf-8"
+        "rule_loading_tier=minimal\n", encoding="utf-8"
     )
     return tmp_path
 
@@ -240,7 +240,7 @@ def test_three_level_user_values_preserved(nested_workspace: Path):
     """Regression: commands.suggestion.* (3-level) must round-trip cleanly."""
     target = nested_workspace / ".agent-settings.yml"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "commands:\n"
         "  suggestion:\n"
         "    enabled: false\n"
@@ -265,7 +265,7 @@ def test_three_level_user_values_preserved(nested_workspace: Path):
 def test_three_level_idempotent(nested_workspace: Path):
     target = nested_workspace / ".agent-settings.yml"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "commands:\n"
         "  suggestion:\n"
         "    enabled: false\n"
@@ -283,22 +283,22 @@ def test_three_level_idempotent(nested_workspace: Path):
 
 
 def test_profile_cli_override_wins_over_inferred(workspace: Path):
-    """``--profile balanced`` overrides the cost_profile inferred from file."""
+    """``--profile balanced`` overrides the rule_loading_tier inferred from file."""
     # Seed a balanced.ini so the override has a target to load.
     (workspace / "config" / "profiles" / "balanced.ini").write_text(
-        "cost_profile=balanced\n"
+        "rule_loading_tier=balanced\n"
         "chat_history_frequency=per_phase\n"
         "chat_history_max_size_kb=256\n"
         "chat_history_on_overflow=rotate\n",
         encoding="utf-8",
     )
     target = workspace / ".agent-settings.yml"
-    # File declares cost_profile: minimal — the CLI override must win.
-    target.write_text("cost_profile: minimal\n", encoding="utf-8")
+    # File declares rule_loading_tier: minimal — the CLI override must win.
+    target.write_text("rule_loading_tier: minimal\n", encoding="utf-8")
     assert _run(workspace, ["--profile", "balanced"]) == 0
     body = target.read_text(encoding="utf-8")
     # User's existing scalar is preserved verbatim (additive contract).
-    assert "cost_profile: minimal\n" in body
+    assert "rule_loading_tier: minimal\n" in body
     # But the template-rendered values reflect the overriding profile.
     data = yaml.safe_load(body)
     assert data["chat_history"]["frequency"] == "per_phase"
@@ -323,7 +323,7 @@ def test_list_values_round_trip(nested_workspace: Path):
     """Non-empty list values must serialize back as flow-style YAML."""
     target = nested_workspace / ".agent-settings.yml"
     target.write_text(
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "commands:\n"
         "  suggestion:\n"
         "    enabled: true\n"

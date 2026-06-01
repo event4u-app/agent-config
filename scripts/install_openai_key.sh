@@ -104,5 +104,5 @@ echo "    Remove:  rm ${TARGET_FILE}"
 echo
 echo "ℹ️   Key install ≠ enable. To use this provider in /council:"
 echo "    set ai_council.enabled: true and ai_council.members.openai.enabled: true"
-echo "    in .agent-settings.yml. Council is a 'full' cost_profile feature; under"
+echo "    in .agent-settings.yml. Council is a 'full' rule_loading_tier feature; under"
 echo "    'minimal' / 'balanced' the runtime hooks stay inactive."

@@ -43,7 +43,7 @@ def test_empty_file_returns_default(tmp_path: Path) -> None:
 def test_missing_hooks_block_returns_default(tmp_path: Path) -> None:
     cfg = _write(
         tmp_path / "settings.yml",
-        "cost_profile: minimal\nchat_history:\n  enabled: true\n",
+        "rule_loading_tier: minimal\nchat_history:\n  enabled: true\n",
     )
     assert load_hook_settings(cfg) == HookSettings()
 

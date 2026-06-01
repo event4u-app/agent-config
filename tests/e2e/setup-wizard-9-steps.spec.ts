@@ -116,7 +116,7 @@ test('walks 9-step dry-run, payload matches WizardPayloadV2, zero writes under w
                 partial: {
                     tools: ['claude-code', 'cursor'],
                     packs: ['core'],
-                    settings: { cost_profile: 'balanced' },
+                    settings: { rule_loading_tier: 'balanced' },
                     scope_to_project_only: false,
                 },
             },
@@ -132,7 +132,7 @@ test('walks 9-step dry-run, payload matches WizardPayloadV2, zero writes under w
             schema_version: 'wizard-v2',
             tools: ['claude-code', 'cursor'],
             packs: ['core'],
-            settings: { cost_profile: 'balanced' },
+            settings: { rule_loading_tier: 'balanced' },
             scope_to_project_only: false,
             dry_run: true,
         },

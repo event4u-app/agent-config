@@ -28,7 +28,7 @@ agent_config_version: ""
 # balanced = kernel + tier-1 auto-rules (default — current behaviour superset).
 # full     = kernel + tier-1 + tier-2 (everything, highest token cost).
 # custom   = ignore profile — every matrix value must be set explicitly.
-cost_profile: __COST_PROFILE__
+rule_loading_tier: __RULE_LOADING_TIER__
 
 # --- Lean projection (experimental, opt-in) ---
 #
@@ -220,7 +220,7 @@ pipelines:
   # Skill improvement pipeline (true, false)
   # true  = after meaningful tasks, propose learning capture and improvements (default)
   # false = silent, no post-task analysis
-  # Included by every cost_profile except `custom`. Flip to false here if you
+  # Included by every rule_loading_tier except `custom`. Flip to false here if you
   # want a silent agent; `custom` profile ignores this default entirely.
   skill_improvement: true
 

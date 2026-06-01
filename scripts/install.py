@@ -12,8 +12,8 @@ format in `.agent-settings.yml`, leaves a one-shot backup as
 exactly once; subsequent runs are idempotent.
 
 Usage:
-  python3 scripts/install.py                     # defaults: cost_profile=balanced
-  python3 scripts/install.py --profile=minimal   # set cost_profile=minimal (kernel only)
+  python3 scripts/install.py                     # defaults: rule_loading_tier=balanced
+  python3 scripts/install.py --profile=minimal   # set rule_loading_tier=minimal (kernel only)
   python3 scripts/install.py --force             # overwrite existing files
   python3 scripts/install.py --skip-bridges      # only create .agent-settings.yml
   python3 scripts/install.py --project <dir>     # override project root
@@ -48,7 +48,7 @@ except ImportError:  # pragma: no cover — alt sys.path layout
 
 DEFAULT_PROFILE = "balanced"
 SUPPORTED_PROFILES = ("minimal", "balanced", "full")
-COST_PROFILE_PLACEHOLDER = "__COST_PROFILE__"
+RULE_LOADING_TIER_PLACEHOLDER = "__RULE_LOADING_TIER__"
 USER_TYPE_PLACEHOLDER = "__USER_TYPE__"
 USER_TYPES_DIR = "user-types"
 
@@ -65,7 +65,7 @@ LEGACY_BACKUP_FILE = ".agent-settings.backup.key-value"
 # Maps legacy flat keys (.agent-settings, key=value) to the new dotted YAML
 # paths in .agent-settings.yml. Applied once during auto-migration.
 LEGACY_RENAME_MAP = {
-    "cost_profile": "cost_profile",
+    "cost_profile": "rule_loading_tier",
     "ide": "personal.ide",
     "open_edited_files": "personal.open_edited_files",
     "user_name": "personal.user_name",
@@ -858,7 +858,7 @@ def _validate_user_type(package_root: Path, value: str) -> str:
 def _inject_packs(body: str, packs: "list[str]") -> str:
     """Insert a top-level ``packs:`` block into a rendered settings body.
 
-    Inserted directly after the ``cost_profile:`` line so the active pack
+    Inserted directly after the ``rule_loading_tier:`` line so the active pack
     selection sits beside the other install-time knobs. No-op when ``packs``
     is empty — non-pack installs stay byte-identical to the template render.
     """
@@ -870,13 +870,13 @@ def _inject_packs(body: str, packs: "list[str]") -> str:
     inserted = False
     for line in lines:
         out.append(line)
-        if not inserted and line.startswith("cost_profile:"):
+        if not inserted and line.startswith("rule_loading_tier:"):
             if not line.endswith("\n"):
                 out[-1] = line + "\n"
             out.append(block)
             inserted = True
     if not inserted:
-        # No cost_profile anchor (unexpected) — append at the end so the
+        # No rule_loading_tier anchor (unexpected) — append at the end so the
         # selection is still recorded rather than silently dropped.
         if out and not out[-1].endswith("\n"):
             out[-1] = out[-1] + "\n"
@@ -902,15 +902,15 @@ def ensure_agent_settings(
         fail(f"Missing settings template: {template_source}")
 
     template = template_source.read_text(encoding="utf-8")
-    if COST_PROFILE_PLACEHOLDER not in template:
-        fail(f"Template is missing placeholder {COST_PROFILE_PLACEHOLDER}")
+    if RULE_LOADING_TIER_PLACEHOLDER not in template:
+        fail(f"Template is missing placeholder {RULE_LOADING_TIER_PLACEHOLDER}")
     if USER_TYPE_PLACEHOLDER not in template:
         fail(f"Template is missing placeholder {USER_TYPE_PLACEHOLDER}")
     profile_values = _parse_profile_ini(profile_source)
-    if profile_values.get("cost_profile") != profile:
+    if profile_values.get("rule_loading_tier") != profile:
         fail(
-            f"Profile preset {profile_source.name} has cost_profile="
-            f"{profile_values.get('cost_profile')!r} but --profile={profile}"
+            f"Profile preset {profile_source.name} has rule_loading_tier="
+            f"{profile_values.get('rule_loading_tier')!r} but --profile={profile}"
         )
     # Inject runtime-only values (not part of the .ini profile presets).
     profile_values["user_type"] = _validate_user_type(package_root, user_type)
@@ -939,7 +939,7 @@ def ensure_agent_settings(
     write_file(target, template_body)
     user_type_value = profile_values.get("user_type", "")
     suffix = f", user_type={user_type_value}" if user_type_value else ""
-    success(f"{SETTINGS_FILE} created (cost_profile={profile}{suffix})")
+    success(f"{SETTINGS_FILE} created (rule_loading_tier={profile}{suffix})")
 
 
 def ensure_vscode_bridge(project_root: Path, package_type: str, force: bool) -> None:
@@ -2499,11 +2499,11 @@ def _load_yaml_doc(path: Path) -> dict:
 def _load_default_settings(package_root: Path) -> dict:
     """Parse the rendered settings template into a defaults dict.
 
-    The template carries ``__COST_PROFILE__`` / ``__USER_TYPE__``
+    The template carries ``__RULE_LOADING_TIER__`` / ``__USER_TYPE__``
     placeholders that PyYAML cannot parse as scalars. We substitute the
     most permissive defaults (``balanced`` + empty user_type) before
     parsing — the resulting tree is the *defaults* layer of the merge,
-    and downstream layers overwrite cost_profile / user_type as needed.
+    and downstream layers overwrite rule_loading_tier / user_type as needed.
     """
     template_source = package_root / "config" / "agent-settings.template.yml"
     if not template_source.exists():
@@ -2512,7 +2512,7 @@ def _load_default_settings(package_root: Path) -> dict:
         text = template_source.read_text(encoding="utf-8")
     except OSError:
         return {}
-    rendered = text.replace(COST_PROFILE_PLACEHOLDER, DEFAULT_PROFILE).replace(
+    rendered = text.replace(RULE_LOADING_TIER_PLACEHOLDER, DEFAULT_PROFILE).replace(
         USER_TYPE_PLACEHOLDER, ""
     )
     try:
@@ -3934,7 +3934,7 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--profile",
         default=DEFAULT_PROFILE,
-        help=f"cost_profile value ({'|'.join(SUPPORTED_PROFILES)}, default: {DEFAULT_PROFILE})",
+        help=f"rule_loading_tier value ({'|'.join(SUPPORTED_PROFILES)}, default: {DEFAULT_PROFILE})",
     )
     parser.add_argument(
         "--user-type",
@@ -4862,9 +4862,10 @@ def main(argv: list[str]) -> int:
             # commit, not by install.py.
             settings = payload.get("settings") or {}
             if isinstance(settings, dict):
-                cost_profile = settings.get("cost_profile")
-                if isinstance(cost_profile, str) and cost_profile:
-                    opts.profile = cost_profile
+                # Legacy fallback: pre-untangle installs carry cost_profile.
+                rule_loading_tier = settings.get("rule_loading_tier") or settings.get("cost_profile")
+                if isinstance(rule_loading_tier, str) and rule_loading_tier:
+                    opts.profile = rule_loading_tier
                 personal = settings.get("personal")
                 if isinstance(personal, dict):
                     user_type = personal.get("user_type")

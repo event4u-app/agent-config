@@ -11,7 +11,7 @@ keep-beta-until: 2026-08-14
 > Phase 1 item 1. Profile answers *who is the user?* — audience
 > taxonomy that selects the default skill/command surface, README
 > entry-paragraph, and persona pre-selection. Boundary against
-> `preset.id`, `pack.id`, and `cost_profile`:
+> `preset.id`, `pack.id`, and `rule_loading_tier`:
 > [`ADR-010`](../decisions/ADR-010-profile-pack-preset-boundary.md).
 
 ## Decision
@@ -128,7 +128,7 @@ Only changes to the **seed set** require an ADR.
 - This contract does **not** define preset knobs. See
   [`config-presets.md`](config-presets.md).
 - It does **not** define packs. See `workflow-packs.md` (Phase 2 item 7).
-- It does **not** override `cost_profile`. The rule-tier loader keeps
+- It does **not** override `rule_loading_tier`. The rule-tier loader keeps
   its independent axis per
   [`cost-profile-defaults.md`](cost-profile-defaults.md).
 - It does **not** ship a UI. Profile selection happens in `/onboard`

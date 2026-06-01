@@ -16,7 +16,7 @@ from scripts._cli.explain_last.scrubber import scrub_string
 from scripts._lib.agent_settings import DEFAULT_PROJECT_FILE, load_agent_settings
 from scripts.config import presets, profiles
 
-_DEFAULT_COST_PROFILE = "balanced"
+_DEFAULT_RULE_LOADING_TIER = "balanced"
 _SILENCED_LOGGERS = ("scripts.config.profiles", "scripts.config.presets")
 
 
@@ -65,19 +65,22 @@ def build(project_root: Path) -> dict[str, Any] | None:
             )
     except (profiles.ProfileError, presets.PresetError, OSError):
         return None
-    cost_profile = settings.get("cost_profile") if isinstance(settings, dict) else None
-    cost_profile_source = "user" if cost_profile else "default"
-    if not cost_profile or cost_profile == "__COST_PROFILE__":
-        cost_profile = _DEFAULT_COST_PROFILE
-        cost_profile_source = "default"
+    rule_loading_tier = (
+        (settings.get("rule_loading_tier") or settings.get("cost_profile"))
+        if isinstance(settings, dict) else None
+    )
+    rule_loading_tier_source = "user" if rule_loading_tier else "default"
+    if not rule_loading_tier or rule_loading_tier == "__RULE_LOADING_TIER__":
+        rule_loading_tier = _DEFAULT_RULE_LOADING_TIER
+        rule_loading_tier_source = "default"
     return {
         "profile": scrub_string(resolved_profile.id),
         "preset": scrub_string(resolved_preset.id),
-        "cost_profile": scrub_string(str(cost_profile)),
+        "rule_loading_tier": scrub_string(str(rule_loading_tier)),
         "source_per_knob": {
             "profile": resolved_profile.source,
             "preset": resolved_preset.source,
-            "cost_profile": cost_profile_source,
+            "rule_loading_tier": rule_loading_tier_source,
         },
     }
 

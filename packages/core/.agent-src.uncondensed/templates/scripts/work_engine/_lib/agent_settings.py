@@ -100,7 +100,7 @@ def _resolve_user_global_file() -> Path:
 MERGEABLE_KEYS: tuple[str, ...] = (
     "name",
     "ide",
-    "cost_profile",
+    "rule_loading_tier",
     "memory.cadence",
     "personal.bot_icon",
     "personal.autonomy",

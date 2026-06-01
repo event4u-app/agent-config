@@ -1,7 +1,7 @@
 # Personal Agent Settings — hand-tweaked
 # Last reviewed: 2026-04-15
 
-cost_profile: balanced  # I run balanced locally
+rule_loading_tier: balanced  # I run balanced locally
 
 # --- Personal preferences (custom order: user_name first) ---
 personal:

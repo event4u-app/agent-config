@@ -6,7 +6,7 @@
  *
  * Path ownership: exact match against `step.paths` for form steps,
  * plus the cost step owns the `telegraph.*` / `verbosity.*` bundles
- * because `cost_profile` selection mutates those keys server-side.
+ * because `rule_loading_tier` selection mutates those keys server-side.
  * The `userMd` step uses `userMdChanged` directly.
  */
 

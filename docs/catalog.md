@@ -445,7 +445,7 @@ are excluded.
 | command | [`roadmap:process-phase`](../.agent-src/commands/roadmap/process-phase.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap:process-step`](../.agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
 | command | [`rule-compliance-audit`](../.agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
-| command | [`set-cost-profile`](../.agent-src/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
+| command | [`set-cost-profile`](../.agent-src/commands/set-cost-profile.md) |  | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`skill`](../.agent-src/commands/skill.md) | cluster: skill | Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it. |
 | command | [`skill:preview`](../.agent-src/commands/skill/preview.md) | cluster: skill | Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution. |
 | command | [`skills`](../.agent-src/commands/skills.md) | cluster: skills | Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics. |

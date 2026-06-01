@@ -336,7 +336,7 @@ tasks:
 
   validate-agent-settings:
     silent: true
-    desc: Enum-validate value-bearing settings keys (cost_profile, memory.cadence, model.auto_switch, …) in agent-settings.template.yml + any local .agent-settings.yml against scripts/schemas/agent-settings.schema.json — prevents the value-vocabulary collision the 2026-06-01 cost_profile untangle fixed
+    desc: Enum-validate value-bearing settings keys (rule_loading_tier, memory.cadence, model.auto_switch, …) in agent-settings.template.yml + any local .agent-settings.yml against scripts/schemas/agent-settings.schema.json — prevents the value-vocabulary collision the 2026-06-01 rule_loading_tier untangle fixed
     cmd: python3 scripts/validate_agent_settings.py
 
   check-token-optimizer-freshness:

@@ -44,7 +44,7 @@ describe('wizard state + finish', () => {
         mkdirSync(stateDir, { recursive: true });
         writeFileSync(
             join(stateDir, 'wizard-state.json'),
-            JSON.stringify({ step: 5, totalSteps: 7, partial: { cost_profile: 'balanced' }, startedAt: new Date().toISOString() }),
+            JSON.stringify({ step: 5, totalSteps: 7, partial: { rule_loading_tier: 'balanced' }, startedAt: new Date().toISOString() }),
         );
         // This app booted with empty in-memory session state; the disk file
         // must be ignored.
@@ -61,7 +61,7 @@ describe('wizard state + finish', () => {
             method: 'POST',
             url: '/api/v1/wizard/state',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { step: 3, partial: { 'personal.user_name': 'Matze', 'cost_profile': 'balanced' } },
+            payload: { step: 3, partial: { 'personal.user_name': 'Matze', 'rule_loading_tier': 'balanced' } },
         });
         expect(post.statusCode).toBe(200);
         expect((post.json() as { ok: boolean }).ok).toBe(true);
@@ -73,7 +73,7 @@ describe('wizard state + finish', () => {
         });
         const body = get.json() as StateBody;
         expect(body.step).toBe(3);
-        expect(body.partial).toEqual({ 'personal.user_name': 'Matze', 'cost_profile': 'balanced' });
+        expect(body.partial).toEqual({ 'personal.user_name': 'Matze', 'rule_loading_tier': 'balanced' });
         expect(body.startedAt).not.toBeNull();
     });
 
@@ -104,7 +104,7 @@ describe('wizard state + finish', () => {
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: {
-                settings: fixtureSettings({ cost_profile: 'minimal' }),
+                settings: fixtureSettings({ rule_loading_tier: 'minimal' }),
                 identity,
             },
         });
@@ -113,7 +113,7 @@ describe('wizard state + finish', () => {
         expect(body.writtenPaths).toHaveLength(2);
         expect(body.txnId.length).toBeGreaterThan(0);
         // Both files exist and hold the expected scalars.
-        expect(readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/^cost_profile:\s*minimal\b/m);
+        expect(readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/^rule_loading_tier:\s*minimal\b/m);
         expect(readFileSync(join(ctx.projectRoot, 'settings', '.agent-user.yml'), 'utf8')).toMatch(/name:\s*Matze/);
         // Marker cleaned up.
         expect(existsSync(join(ctx.projectRoot, 'state', `wizard-intent-${body.txnId}.json`))).toBe(false);
@@ -126,7 +126,7 @@ describe('wizard state + finish', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }) },
+            payload: { settings: fixtureSettings({ rule_loading_tier: 'balanced' }) },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
@@ -139,12 +139,12 @@ describe('wizard state + finish', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: { cost_profile: 'bogus' } },
+            payload: { settings: { rule_loading_tier: 'bogus' } },
         });
         expect(res.statusCode).toBe(422);
         const body = res.json() as ErrorBody;
         expect(body.error.code).toBe('VALIDATION');
-        expect(body.error.fields?.some((f) => f.path === 'cost_profile')).toBe(true);
+        expect(body.error.fields?.some((f) => f.path === 'rule_loading_tier')).toBe(true);
     });
 
     it('POST /finish returns 422 when identity fails schema validation', async () => {
@@ -153,7 +153,7 @@ describe('wizard state + finish', () => {
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: {
-                settings: fixtureSettings({ cost_profile: 'balanced' }),
+                settings: fixtureSettings({ rule_loading_tier: 'balanced' }),
                 identity: { ...fixtureUserIdentity(), identity: { name: '' } },
             },
         });

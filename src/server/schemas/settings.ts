@@ -13,7 +13,7 @@
 
 import { z } from 'zod';
 
-const costProfile = z.enum(['minimal', 'balanced', 'full', 'custom']);
+const ruleLoadingTier = z.enum(['minimal', 'balanced', 'full', 'custom']);
 const enforcementMode = z.enum(['advisory', 'hard-stop']);
 const autonomyMode = z.enum(['on', 'off', 'auto']);
 const userType = z.enum(['', 'consultant', 'creator', 'developer', 'finance', 'founder', 'gtm', 'ops']);
@@ -35,7 +35,7 @@ export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
         'Pin the package to an exact semver (e.g. "1.4.2") so all teammates load the same skill / rule set. Leave empty to track whatever is installed locally — useful for the maintainers of this package, risky for production projects.',
     ),
-    cost_profile: costProfile.default('balanced').describe(
+    rule_loading_tier: ruleLoadingTier.default('balanced').describe(
         'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/.',
     ),
     lean_projection: z.object({
@@ -221,7 +221,7 @@ export const settingsSchema = z.object({
     }),
     memory: z.object({
         cadence: memoryCadence.default('always').describe(
-            'Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from cost_profile — owns its own key since the 2026-06-01 untangle.',
+            'Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier — owns its own key since the 2026-06-01 untangle.',
         ),
         review_threshold: z.number().int().min(0).default(10).describe(
             'Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight.',
