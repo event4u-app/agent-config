@@ -91,7 +91,7 @@ class TestLayeredSettingsReader(unittest.TestCase):
         (self.package_root / "config" / "agent-settings.template.yml").write_text(
             textwrap.dedent(
                 """\
-                cost_profile: __COST_PROFILE__
+                rule_loading_tier: __RULE_LOADING_TIER__
                 personal:
                   user_type: "__USER_TYPE__"
                   ide: vscode
@@ -108,50 +108,50 @@ class TestLayeredSettingsReader(unittest.TestCase):
 
     def test_defaults_only_when_no_global_no_project(self) -> None:
         merged = install.read_layered_settings(self.package_root, project_root=None)
-        self.assertEqual(merged["cost_profile"], install.DEFAULT_PROFILE)
+        self.assertEqual(merged["rule_loading_tier"], install.DEFAULT_PROFILE)
         self.assertEqual(merged["personal"]["ide"], "vscode")
 
     def test_global_overrides_defaults(self) -> None:
         self.fake_global.write_text(
-            "cost_profile: full\npersonal:\n  ide: cursor\n",
+            "rule_loading_tier: full\npersonal:\n  ide: cursor\n",
             encoding="utf-8",
         )
         merged = install.read_layered_settings(self.package_root, project_root=None)
-        self.assertEqual(merged["cost_profile"], "full")
+        self.assertEqual(merged["rule_loading_tier"], "full")
         self.assertEqual(merged["personal"]["ide"], "cursor")
         # Untouched defaults still surface.
         self.assertEqual(merged["project"]["pr_template"], "short")
 
     def test_project_overrides_global_and_defaults(self) -> None:
         self.fake_global.write_text(
-            "cost_profile: full\npersonal:\n  ide: cursor\n",
+            "rule_loading_tier: full\npersonal:\n  ide: cursor\n",
             encoding="utf-8",
         )
         project_root = self.tmpdir / "proj"
         project_root.mkdir()
         (project_root / install.SETTINGS_FILE).write_text(
-            "cost_profile: minimal\nproject:\n  pr_template: detailed\n",
+            "rule_loading_tier: minimal\nproject:\n  pr_template: detailed\n",
             encoding="utf-8",
         )
         merged = install.read_layered_settings(self.package_root, project_root=project_root)
         # Project wins over global wins over defaults.
-        self.assertEqual(merged["cost_profile"], "minimal")
+        self.assertEqual(merged["rule_loading_tier"], "minimal")
         self.assertEqual(merged["project"]["pr_template"], "detailed")
         # Global-only keys still leak through the merge.
         self.assertEqual(merged["personal"]["ide"], "cursor")
 
     def test_missing_project_layer_collapses_to_two_layer_merge(self) -> None:
-        self.fake_global.write_text("cost_profile: full\n", encoding="utf-8")
+        self.fake_global.write_text("rule_loading_tier: full\n", encoding="utf-8")
         project_root = self.tmpdir / "proj-without-file"
         project_root.mkdir()
         merged = install.read_layered_settings(self.package_root, project_root=project_root)
-        self.assertEqual(merged["cost_profile"], "full")
+        self.assertEqual(merged["rule_loading_tier"], "full")
         self.assertEqual(merged["personal"]["ide"], "vscode")
 
     def test_unparseable_global_falls_back_silently(self) -> None:
         self.fake_global.write_text("::: not yaml :::\n", encoding="utf-8")
         merged = install.read_layered_settings(self.package_root, project_root=None)
-        self.assertEqual(merged["cost_profile"], install.DEFAULT_PROFILE)
+        self.assertEqual(merged["rule_loading_tier"], install.DEFAULT_PROFILE)
 
 
 class TestBashOrchestratorScopeGate(unittest.TestCase):

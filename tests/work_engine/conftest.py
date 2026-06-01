@@ -43,7 +43,7 @@ def _isolate_user_global_settings(
     ``~/.event4u/agent-config/agent-settings.yml`` (or legacy
     ``~/.config/agent-config/agent-settings.yml``) would see test
     assertions flip whenever their global config sets e.g.
-    ``cost_profile``. Pointing the default at an empty tmp_path keeps
+    ``rule_loading_tier``. Pointing the default at an empty tmp_path keeps
     every test deterministic and machine-portable.
     """
     sandbox = tmp_path_factory.mktemp("user-global-isolation") / "missing.yml"

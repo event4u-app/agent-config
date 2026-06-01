@@ -42,13 +42,13 @@
     },
     "inputs": {
       "type": ["object", "null"],
-      "description": "Profile / preset / cost_profile resolution chain. Null when the loader could not resolve any of them (broken settings).",
-      "required": ["profile", "preset", "cost_profile", "source_per_knob"],
+      "description": "Profile / preset / rule_loading_tier resolution chain. Null when the loader could not resolve any of them (broken settings).",
+      "required": ["profile", "preset", "rule_loading_tier", "source_per_knob"],
       "additionalProperties": false,
       "properties": {
         "profile": {"type": ["string", "null"]},
         "preset": {"type": ["string", "null"]},
-        "cost_profile": {"type": ["string", "null"]},
+        "rule_loading_tier": {"type": ["string", "null"]},
         "source_per_knob": {
           "type": "object",
           "description": "Map<knob, source>; source ∈ pack | profile | preset | user | env | runtime | default.",

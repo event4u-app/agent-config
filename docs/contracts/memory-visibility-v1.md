@@ -88,14 +88,22 @@ counts and ids for downstream metrics.
 
 ## Cadence interaction
 
-| Cost profile | Visibility line |
+| `memory.cadence` | Visibility line |
 |---|---|
-| `lean` | suppress unless `asks ≥ 3` |
-| `standard` | always when `asks ≥ 1` |
-| `verbose` | always when `asks ≥ 1` |
+| `auto` | suppress unless `asks ≥ 3` |
+| `always` | always when `asks ≥ 1` |
+| `never` | suppress entirely |
 
-Cost-profile lookup respects `.agent-settings.yml`'s `cost_profile`
-key. Default is `standard`.
+Cadence lookup respects `.agent-settings.yml`'s `memory.cadence` key.
+Default is `always`. The legacy `memory.visibility: off` master switch
+(above) still wins over any `memory.cadence` value.
+
+> **History.** Before the 2026-06-01 `cost_profile` untangle this
+> cadence was keyed off `cost_profile` with the values
+> `lean | standard | verbose` — a collision with the rule-loading
+> `cost_profile` (`minimal | balanced | full`) that made the `lean`
+> branch unreachable on every real install. The cadence now owns its
+> own `memory.cadence` key.
 
 ## End-of-run "Memory changed decisions" block
 

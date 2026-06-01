@@ -92,10 +92,10 @@ export async function renderSettingsTemplate(opts: SubstituteOptions): Promise<s
     ]);
 
     const profileValues = parseProfileIni(iniBody);
-    if (profileValues.cost_profile !== opts.profile) {
+    if (profileValues.rule_loading_tier !== opts.profile) {
         throw new Error(
-            `Profile preset ${opts.profile}.ini has cost_profile=` +
-                `${JSON.stringify(profileValues.cost_profile)} but caller asked for ${opts.profile}`,
+            `Profile preset ${opts.profile}.ini has rule_loading_tier=` +
+                `${JSON.stringify(profileValues.rule_loading_tier)} but caller asked for ${opts.profile}`,
         );
     }
 

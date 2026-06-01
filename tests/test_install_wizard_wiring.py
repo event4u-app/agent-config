@@ -246,7 +246,7 @@ class ApplyPayloadParityTests(unittest.TestCase):
             payload = Path(a_proj) / "payload.json"
             payload.write_text(
                 '{"schema_version":"wizard-v2","tools":["claude-code","cursor"],'
-                '"packs":[],"settings":{"cost_profile":"balanced"},'
+                '"packs":[],"settings":{"rule_loading_tier":"balanced"},'
                 '"scope_to_project_only":false,"dry_run":false}',
                 encoding="utf-8",
             )

@@ -134,7 +134,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
             method: 'POST',
             url: '/api/v1/wizard/state',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { step: 5, partial: { 'cost_profile': 'balanced' } },
+            payload: { step: 5, partial: { 'rule_loading_tier': 'balanced' } },
         });
         expect(post.statusCode).toBe(200);
 
@@ -145,7 +145,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
         });
         const body = get.json() as StateBody;
         expect(body.step).toBe(5);
-        expect(body.partial).toEqual({ 'cost_profile': 'balanced' });
+        expect(body.partial).toEqual({ 'rule_loading_tier': 'balanced' });
     });
 
 });

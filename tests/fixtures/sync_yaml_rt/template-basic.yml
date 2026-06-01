@@ -1,5 +1,5 @@
 # Basic template fixture used by Phase 3 merge tests.
-cost_profile: minimal
+rule_loading_tier: minimal
 
 personal:
   ide: ""

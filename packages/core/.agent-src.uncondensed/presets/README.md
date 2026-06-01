@@ -4,7 +4,7 @@ Seed presets for the [preset system](../../docs/contracts/config-presets.md).
 Each preset bundles governance knobs (autonomy / confidence / risk /
 council / mcp / cost / notifications) so the user picks a stance, not
 a dozen individual values. Boundary against `profile.id`, `pack.id`,
-and `cost_profile` lives in
+and `rule_loading_tier` lives in
 [ADR-010](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md).
 
 ## Seed set (v2.x — fixed)

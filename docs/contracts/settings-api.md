@@ -58,7 +58,7 @@ defaults (config/agent-settings.template.yml)
     < project (<projectRoot>/settings/.agent-settings.yml, optional)
 ```
 
-Defaults come from the package template with `__COST_PROFILE__` /
+Defaults come from the package template with `__RULE_LOADING_TIER__` /
 `__USER_TYPE__` placeholders substituted for their permissive defaults
 (`balanced` / `""`). Global and project layers are read with the typed
 subdir preferred over the legacy flat path. The route mirrors
@@ -69,7 +69,7 @@ Response (200):
 
 ```json
 {
-    "values":       { "cost_profile": "balanced", "...": "..." },
+    "values":       { "rule_loading_tier": "balanced", "...": "..." },
     "lastModified": 1747749791842,
     "path":         "settings/.agent-settings.yml",
     "legacyHints":  { "user_name": "Matze" }
@@ -106,7 +106,7 @@ changes** modal. Request:
 }
 ```
 
-Response (200): `{ "changes": [{ "path": "cost_profile", "from": "minimal", "to": "balanced" }, ...] }`.
+Response (200): `{ "changes": [{ "path": "rule_loading_tier", "from": "minimal", "to": "balanced" }, ...] }`.
 
 Errors: **409** on mtime drift; **422** on validation failure (`fields`
 populated).

@@ -14,7 +14,7 @@
 # balanced = + runtime dispatcher for skills that declare a shell command
 # full     = + tool adapters (GitHub / Jira, read-only, opt-in)
 # custom   = ignore profile — every matrix value must be set explicitly
-cost_profile: minimal
+rule_loading_tier: minimal
 
 # --- Personal preferences ---
 personal:
@@ -110,7 +110,7 @@ pipelines:
   # Skill improvement pipeline (true, false)
   # true  = after meaningful tasks, propose learning capture and improvements (default)
   # false = silent, no post-task analysis
-  # Included by every cost_profile except `custom`. Flip to false here if you
+  # Included by every rule_loading_tier except `custom`. Flip to false here if you
   # want a silent agent; `custom` profile ignores this default entirely.
   skill_improvement: true
 

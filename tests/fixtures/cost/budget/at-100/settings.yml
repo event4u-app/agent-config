@@ -1,4 +1,4 @@
-cost_profile: minimal
+rule_loading_tier: minimal
 cost:
   budgets:
     daily: 0

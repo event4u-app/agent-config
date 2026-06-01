@@ -90,7 +90,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--template", default=str(DEFAULT_TEMPLATE),
                     help="path to the settings template")
     ap.add_argument("--profile", default=None,
-                    help="cost_profile preset (minimal|balanced|full). "
+                    help="rule_loading_tier preset (minimal|balanced|full). "
                          "Default: inferred from target, else 'minimal'")
     ap.add_argument("--profile-dir", default=str(DEFAULT_PROFILE_DIR),
                     help="directory containing profile .ini files")
@@ -108,7 +108,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         user_data = load_user(target)
-        profile = args.profile or str(user_data.get("cost_profile") or "minimal")
+        profile = args.profile or str(
+            user_data.get("rule_loading_tier") or user_data.get("cost_profile") or "minimal"
+        )
         if profile not in _install.SUPPORTED_PROFILES:
             print(f"error: unsupported profile {profile!r}", file=sys.stderr)
             return 2

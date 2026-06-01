@@ -94,7 +94,7 @@ describe('GET /api/v1/settings — three-layer merge', () => {
 
     it('global-only — defaults < global; defaults still leak through unset keys', async () => {
         ctx = await bootLayered({
-            seedGlobal: 'cost_profile: full\npersonal:\n  ide: cursor\n',
+            seedGlobal: 'rule_loading_tier: full\npersonal:\n  ide: cursor\n',
         });
         const res = await ctx.app.inject({
             method: 'GET',
@@ -103,7 +103,7 @@ describe('GET /api/v1/settings — three-layer merge', () => {
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as { values: Record<string, unknown> };
-        expect(body.values.cost_profile).toBe('full');
+        expect(body.values.rule_loading_tier).toBe('full');
         const personal = body.values.personal as Record<string, unknown>;
         expect(personal.ide).toBe('cursor');
         // Defaults from the template survive — pull a stable scalar.
@@ -112,7 +112,7 @@ describe('GET /api/v1/settings — three-layer merge', () => {
 
     it('project-only — defaults < project (legacy fallback when global is absent)', async () => {
         ctx = await bootLayered({
-            seedProject: 'cost_profile: minimal\npersonal:\n  ide: vscode\n',
+            seedProject: 'rule_loading_tier: minimal\npersonal:\n  ide: vscode\n',
         });
         const res = await ctx.app.inject({
             method: 'GET',
@@ -121,15 +121,15 @@ describe('GET /api/v1/settings — three-layer merge', () => {
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as { values: Record<string, unknown> };
-        expect(body.values.cost_profile).toBe('minimal');
+        expect(body.values.rule_loading_tier).toBe('minimal');
         const personal = body.values.personal as Record<string, unknown>;
         expect(personal.ide).toBe('vscode');
     });
 
     it('both layers — project wins over global wins over defaults', async () => {
         ctx = await bootLayered({
-            seedGlobal: 'cost_profile: full\npersonal:\n  ide: cursor\n  pace: thorough\n',
-            seedProject: 'cost_profile: minimal\npersonal:\n  ide: phpstorm\n',
+            seedGlobal: 'rule_loading_tier: full\npersonal:\n  ide: cursor\n  pace: thorough\n',
+            seedProject: 'rule_loading_tier: minimal\npersonal:\n  ide: phpstorm\n',
         });
         const res = await ctx.app.inject({
             method: 'GET',
@@ -139,7 +139,7 @@ describe('GET /api/v1/settings — three-layer merge', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as { values: Record<string, unknown> };
         // Project wins.
-        expect(body.values.cost_profile).toBe('minimal');
+        expect(body.values.rule_loading_tier).toBe('minimal');
         const personal = body.values.personal as Record<string, unknown>;
         expect(personal.ide).toBe('phpstorm');
         // Global key untouched by project still leaks through.

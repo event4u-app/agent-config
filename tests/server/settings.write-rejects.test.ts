@@ -51,7 +51,7 @@ describe('PUT /api/v1/settings — rejection paths', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': String(ius + 5),
             },
-            payload: { values: { cost_profile: 'nope', cost: { budgets: { daily: -10 } } } },
+            payload: { values: { rule_loading_tier: 'nope', cost: { budgets: { daily: -10 } } } },
         });
         expect(res.statusCode).toBe(422);
         const body = res.json() as ErrorBody;
@@ -68,13 +68,13 @@ describe('PUT /api/v1/settings — rejection paths', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': '1', // ancient → stale
             },
-            payload: { values: fixtureSettings({ cost_profile: 'balanced' }) },
+            payload: { values: fixtureSettings({ rule_loading_tier: 'balanced' }) },
         });
         expect(res.statusCode).toBe(409);
         const body = res.json() as ConflictBody;
         expect(body.error.code).toBe('CONFLICT');
         expect(body.current.lastModified).toBeGreaterThan(1);
-        expect(body.current.values).toHaveProperty('cost_profile');
+        expect(body.current.values).toHaveProperty('rule_loading_tier');
     });
 
     it('returns 401 when the bearer token is missing', async () => {

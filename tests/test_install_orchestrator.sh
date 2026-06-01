@@ -86,7 +86,7 @@ test_profile_forwarded_to_bridges() {
     setup
     bash "$INSTALL" --target "$TMPDIR" --profile=balanced --quiet
     assert_true "profile=balanced written to .agent-settings.yml" \
-        grep -q "^cost_profile: balanced" "$TMPDIR/.agent-settings.yml"
+        grep -q "^rule_loading_tier: balanced" "$TMPDIR/.agent-settings.yml"
     teardown
 }
 

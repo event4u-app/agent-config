@@ -89,7 +89,7 @@ class TestInstallMinimalPayload(_Silent):
             settings = target / ".agent-settings.yml"
             self.assertTrue(settings.is_file())
             body = settings.read_text(encoding="utf-8")
-            self.assertIn("cost_profile", body)
+            self.assertIn("rule_loading_tier", body)
             self.assertIn("user_type: developer", body)
             # D4 — version pin commented out by default.
             self.assertNotRegex(body, r"^agent_config_version:")

@@ -18,7 +18,7 @@ on user request.
 | File | Git | Scope | Owner | Example values |
 |---|---|---|---|---|
 | `.agent-project-settings.yml` | **committed** | team / repo | lead maintainer | `project.stack`, `quality.php.tools`, `memory.dogfood` |
-| `~/.event4u/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `cost_profile`, `personal.bot_icon`, `personal.autonomy`, `telegraph.speak_scope` (legacy `~/.config/agent-config/agent-settings.yml` read as fallback) |
+| `~/.event4u/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `rule_loading_tier`, `personal.bot_icon`, `personal.autonomy`, `telegraph.speak_scope` (legacy `~/.config/agent-config/agent-settings.yml` read as fallback) |
 | `.agent-settings.yml` | **gitignored** | individual developer · this project | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel`, `onboarding.onboarded` |
 
 All three are YAML. Schemas:
@@ -52,7 +52,7 @@ intentionally tiny — adding a key requires an ADR.
 ```
 name
 ide
-cost_profile
+rule_loading_tier
 personal.bot_icon
 personal.autonomy
 telegraph.speak_scope

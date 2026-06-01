@@ -242,17 +242,30 @@ def format_changed_decisions_block(
 def should_emit(
     summary: dict[str, Any],
     *,
-    cost_profile: str = "standard",
+    memory_cadence: str = "always",
     visibility_off: bool = False,
 ) -> bool:
-    """Apply the cadence + opt-out gates from the contract."""
+    """Apply the cadence + opt-out gates from the contract.
+
+    ``memory_cadence`` is the ``memory.cadence`` cadence key:
+
+    * ``always`` (default) — emit whenever ``asks >= 1``.
+    * ``auto`` — emit only when ``asks >= 3`` (reduces noise on
+      shallow-retrieval steps).
+    * ``never`` — suppress the line entirely.
+
+    ``visibility_off`` is the legacy ``memory.visibility: off`` master
+    switch and still wins over any ``memory_cadence`` value.
+    """
     if visibility_off:
         return False
     asks = int(summary.get("asks", 0) or 0)
     if asks <= 0:
         return False
-    profile = (cost_profile or "standard").strip().lower()
-    if profile == "lean":
+    status = (memory_cadence or "always").strip().lower()
+    if status == "never":
+        return False
+    if status == "auto":
         return asks >= 3
     return True
 

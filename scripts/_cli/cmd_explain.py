@@ -262,7 +262,7 @@ makes network calls. Output is the ExplainTrace v1 contract:
 
 why-slots answered (Markdown sections; JSON keys in parens):
 
-  inputs       — profile / preset / cost_profile with per-knob source
+  inputs       — profile / preset / rule_loading_tier with per-knob source
                  (pack | profile | preset | user | env | runtime |
                   default)
   route        — matched tier-1 rules · kernel rules · active persona

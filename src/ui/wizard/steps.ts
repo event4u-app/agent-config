@@ -106,12 +106,12 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
     },
     {
         id: 'cost',
-        title: 'Cost profile and budgets',
-        navLabel: 'Cost',
-        subtitle: 'Master switch for which rule tiers load, optional spending ceilings, and per-skill model auto-switch.',
+        title: 'Rule loading, budgets & model tier',
+        navLabel: 'Cost & rules',
+        subtitle: 'Three distinct levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD spending ceilings), and model.auto_switch (per-skill model tier). They are independent — the rule tier is not a spend lever and the model tier is not a rule lever.',
         kind: 'form',
         paths: [
-            'cost_profile',
+            'rule_loading_tier',
             'cost.budgets.daily',
             'cost.budgets.weekly',
             'cost.budgets.monthly',

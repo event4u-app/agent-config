@@ -28,7 +28,7 @@ describe('POST /api/v1/settings/diff', () => {
             method: 'POST',
             url: '/api/v1/settings/diff',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            // The template carries `__COST_PROFILE__` placeholders, so we
+            // The template carries `__RULE_LOADING_TIER__` placeholders, so we
             // can't round-trip it through the strict schema. Send the
             // schema-valid baseline instead and expect a non-empty diff
             // (see next test). This case proves an identical payload
@@ -41,7 +41,7 @@ describe('POST /api/v1/settings/diff', () => {
     });
 
     it('returns the exact set of leaf changes for a schema-valid candidate', async () => {
-        const candidate = fixtureSettings({ cost_profile: 'balanced' });
+        const candidate = fixtureSettings({ rule_loading_tier: 'balanced' });
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/settings/diff',
@@ -58,12 +58,12 @@ describe('POST /api/v1/settings/diff', () => {
             expect(c).toHaveProperty('from');
             expect(c).toHaveProperty('to');
         }
-        // `cost_profile` MUST be in the changes — the template ships the
-        // literal `__COST_PROFILE__` placeholder, the candidate carries
+        // `rule_loading_tier` MUST be in the changes — the template ships the
+        // literal `__RULE_LOADING_TIER__` placeholder, the candidate carries
         // the typed `'balanced'`.
-        const profileChange = body.changes.find((c) => c.path === 'cost_profile');
+        const profileChange = body.changes.find((c) => c.path === 'rule_loading_tier');
         expect(profileChange).toBeDefined();
-        expect(profileChange?.from).toBe('__COST_PROFILE__');
+        expect(profileChange?.from).toBe('__RULE_LOADING_TIER__');
         expect(profileChange?.to).toBe('balanced');
     });
 
@@ -72,16 +72,16 @@ describe('POST /api/v1/settings/diff', () => {
             method: 'POST',
             url: '/api/v1/settings/diff',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { values: { cost_profile: 'bogus' } },
+            payload: { values: { rule_loading_tier: 'bogus' } },
         });
         expect(res.statusCode).toBe(422);
         const body = res.json() as { error: { code: string; fields?: Array<{ path: string }> } };
         expect(body.error.code).toBe('VALIDATION');
-        expect(body.error.fields?.some((f) => f.path === 'cost_profile')).toBe(true);
+        expect(body.error.fields?.some((f) => f.path === 'rule_loading_tier')).toBe(true);
     });
 
     it('returns 409 with current state when ifUnmodifiedSince is stale', async () => {
-        const candidate = fixtureSettings({ cost_profile: 'balanced' });
+        const candidate = fixtureSettings({ rule_loading_tier: 'balanced' });
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/settings/diff',
@@ -95,6 +95,6 @@ describe('POST /api/v1/settings/diff', () => {
         };
         expect(body.error.code).toBe('CONFLICT');
         expect(body.current.lastModified).toBeGreaterThan(1);
-        expect(body.current.values).toHaveProperty('cost_profile');
+        expect(body.current.values).toHaveProperty('rule_loading_tier');
     });
 });
