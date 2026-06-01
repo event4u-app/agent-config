@@ -50,7 +50,7 @@ class TestInstallMinimalPayload(_Silent):
             # Bridge marker — Phase 4.2 anchor to the user-global install.
             self.assertTrue((target / "agents" / ".event4u-bridge.yml").is_file())
             # No project-local settings file in the default minimal payload.
-            self.assertFalse((target / ".agent-settings.yml").exists())
+            self.assertFalse((install._canonical_settings_target(target)).exists())
             # Legacy artifacts must not appear in the new scaffold.
             self.assertFalse((target / "agents" / ".gitkeep").exists())
             # install_minimal itself does not write the wrapper — that
@@ -86,7 +86,7 @@ class TestInstallMinimalPayload(_Silent):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "fresh"
             install.install_minimal(target, force=False, user_type="developer")
-            settings = target / ".agent-settings.yml"
+            settings = install._canonical_settings_target(target)
             self.assertTrue(settings.is_file())
             body = settings.read_text(encoding="utf-8")
             self.assertIn("rule_loading_tier", body)
@@ -182,7 +182,7 @@ class TestBashOrchestratorMinimal(unittest.TestCase):
             self.assertTrue((target / "agent-config").is_file())
             self.assertTrue(os.access(target / "agent-config", os.X_OK))
             # No project-local settings file in the default minimal payload.
-            self.assertFalse((target / ".agent-settings.yml").exists())
+            self.assertFalse((install._canonical_settings_target(target)).exists())
             # No payload.
             self.assertFalse((target / ".augment").exists())
 

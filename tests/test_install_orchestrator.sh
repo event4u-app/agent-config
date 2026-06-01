@@ -48,7 +48,7 @@ test_full_run_creates_payload_and_bridges() {
     assert_true "payload: .augment/skills/ has symlinks" test -L "$TMPDIR/.augment/skills/php-coder/SKILL.md"
     assert_true "payload: .windsurfrules generated" test -f "$TMPDIR/.windsurfrules"
     assert_true "payload: GEMINI.md symlink" test -L "$TMPDIR/GEMINI.md"
-    assert_true "bridges: .agent-settings.yml rendered" test -f "$TMPDIR/.agent-settings.yml"
+    assert_true "bridges: .agent-settings.yml rendered" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
     assert_true "bridges: .vscode/settings.json created" test -f "$TMPDIR/.vscode/settings.json"
     assert_true "bridges: .augment/settings.json created" test -f "$TMPDIR/.augment/settings.json"
     teardown
@@ -59,7 +59,7 @@ test_skip_sync_runs_bridges_only() {
     bash "$INSTALL" --target "$TMPDIR" --skip-sync --quiet
     assert_true "exit 0 with --skip-sync" test $? -eq 0
     assert_false "payload skipped: no .augment/rules/" test -d "$TMPDIR/.augment/rules"
-    assert_true "bridges still ran: .agent-settings.yml exists" test -f "$TMPDIR/.agent-settings.yml"
+    assert_true "bridges still ran: .agent-settings.yml exists" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -68,7 +68,7 @@ test_skip_bridges_runs_sync_only() {
     bash "$INSTALL" --target "$TMPDIR" --skip-bridges --quiet
     assert_true "exit 0 with --skip-bridges" test $? -eq 0
     assert_true "payload ran: rules copied" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_false "bridges skipped: no .agent-settings.yml" test -f "$TMPDIR/.agent-settings.yml"
+    assert_false "bridges skipped: no .agent-settings.yml" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
     assert_false "bridges skipped: no .vscode/settings.json" test -f "$TMPDIR/.vscode/settings.json"
     teardown
 }
@@ -86,7 +86,7 @@ test_profile_forwarded_to_bridges() {
     setup
     bash "$INSTALL" --target "$TMPDIR" --profile=balanced --quiet
     assert_true "profile=balanced written to .agent-settings.yml" \
-        grep -q "^rule_loading_tier: balanced" "$TMPDIR/.agent-settings.yml"
+        grep -q "^rule_loading_tier: balanced" "$TMPDIR/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -97,11 +97,11 @@ test_subagent_keys_seeded() {
     setup
     bash "$INSTALL" --target "$TMPDIR" --quiet
     assert_true "subagents.implementer_model seeded" \
-        grep -q "^  implementer_model:" "$TMPDIR/.agent-settings.yml"
+        grep -q "^  implementer_model:" "$TMPDIR/agents/settings/.agent-settings.yml"
     assert_true "subagents.judge_model seeded" \
-        grep -q "^  judge_model:" "$TMPDIR/.agent-settings.yml"
+        grep -q "^  judge_model:" "$TMPDIR/agents/settings/.agent-settings.yml"
     assert_true "subagents.max_parallel: 3 seeded" \
-        grep -q "^  max_parallel: 3" "$TMPDIR/.agent-settings.yml"
+        grep -q "^  max_parallel: 3" "$TMPDIR/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -111,7 +111,7 @@ test_idempotent() {
     bash "$INSTALL" --target "$TMPDIR" --quiet
     assert_true "second run exits 0 (idempotent)" test $? -eq 0
     assert_true "rules still present" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_true ".agent-settings.yml still present" test -f "$TMPDIR/.agent-settings.yml"
+    assert_true ".agent-settings.yml still present" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -140,7 +140,7 @@ test_bin_install_php_routes_through_orchestrator() {
     local rc=$?
     assert_true "bin/install.php exit 0" test $rc -eq 0
     assert_true "bin/install.php: payload synced" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_true "bin/install.php: bridges rendered" test -f "$TMPDIR/.agent-settings.yml"
+    assert_true "bin/install.php: bridges rendered" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
     teardown
 }
 
