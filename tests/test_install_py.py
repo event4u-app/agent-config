@@ -641,10 +641,12 @@ class TestMergeJsonFile(SilentTest):
         install.merge_json_file(self.target, {"a": 1}, force=False, label="test")
         self.assertEqual(json.loads(self.target.read_text()), {"a": 1, "b": 2})
 
-    def test_skips_update_without_force(self) -> None:
+    def test_updates_our_key_without_force(self) -> None:
+        # A deliberate setup applies our keys with no --force gate: the
+        # second merge overwrites our own pointer.
         install.merge_json_file(self.target, {"a": 1}, force=False, label="test")
         install.merge_json_file(self.target, {"a": 2}, force=False, label="test")
-        self.assertEqual(json.loads(self.target.read_text()), {"a": 1})
+        self.assertEqual(json.loads(self.target.read_text()), {"a": 2})
 
     def test_updates_with_force(self) -> None:
         install.merge_json_file(self.target, {"a": 1}, force=False, label="test")
