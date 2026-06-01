@@ -12,6 +12,10 @@
  */
 
 const BASE_URL = process.env.MCP_WORKER_URL ?? "http://127.0.0.1:8787";
+// Optional bearer token — when the deployed Worker has the `MCP-Token`
+// secret set, every POST must carry `Authorization: Bearer <token>`.
+// Provided to CI via the `MCP_SMOKE_TOKEN` repo secret; unset locally → no auth.
+const AUTH_TOKEN = process.env.MCP_SMOKE_TOKEN;
 
 type Probe = { name: string; method: string; params?: unknown };
 
@@ -33,7 +37,10 @@ type JsonRpcResp = {
 async function rpc(probe: Probe, id: number): Promise<JsonRpcResp> {
   const res = await fetch(BASE_URL, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(AUTH_TOKEN ? { authorization: `Bearer ${AUTH_TOKEN}` } : {}),
+    },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id,

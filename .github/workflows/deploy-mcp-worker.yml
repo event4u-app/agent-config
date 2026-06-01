@@ -112,6 +112,7 @@ jobs:
       - name: Post-deploy smoke
         env:
           MCP_WORKER_URL: https://agent-config-mcp.${{ secrets.CLOUDFLARE_WORKER_SUBDOMAIN }}.workers.dev
+          MCP_SMOKE_TOKEN: ${{ secrets.MCP_SMOKE_TOKEN }}
         run: npx tsx test/dev-smoke.ts
         working-directory: internal/workers/mcp
 
