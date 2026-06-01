@@ -5,7 +5,6 @@ on:
     paths:
       - ".agent-src.uncondensed/**"
       - ".augment/**"
-      - ".claude/**"
       - "scripts/skill_linter.py"
       - "tests/**"
       - "Taskfile.yml"
@@ -17,7 +16,6 @@ on:
     paths:
       - ".agent-src.uncondensed/**"
       - ".augment/**"
-      - ".claude/**"
       - "scripts/skill_linter.py"
       - "tests/**"
       - "Taskfile.yml"
