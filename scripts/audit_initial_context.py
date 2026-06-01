@@ -35,6 +35,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from _lib import token_count  # noqa: E402
+from _lib.agent_src import resolve_package_core_path  # noqa: E402
+
+_CORE_SRC = resolve_package_core_path(".agent-src.uncondensed")
+# Enforced packages/core targets — the skills + commands dirs the
+# description-catalog globs scan. Read by scripts/check_gate_paths.py so a
+# future move that desyncs them fails CI instead of silently no-opping.
+GATE_CORE_PATHS = (_CORE_SRC / "skills", _CORE_SRC / "commands")
 
 try:
     import yaml
@@ -111,10 +118,11 @@ def _catalog(glob_pat: str) -> dict:
 
 def description_catalog() -> dict:
     """0B.4 — description-catalog cost (eager progressive-disclosure surface)."""
+    core_rel = _CORE_SRC.relative_to(REPO_ROOT).as_posix()
     return {
         "skills_projected": _catalog(".claude/skills/*/SKILL.md"),
-        "skills_core_source": _catalog("packages/core/.agent-src.uncondensed/skills/*/SKILL.md"),
-        "commands_core_source": _catalog("packages/core/.agent-src.uncondensed/commands/**/*.md"),
+        "skills_core_source": _catalog(f"{core_rel}/skills/*/SKILL.md"),
+        "commands_core_source": _catalog(f"{core_rel}/commands/**/*.md"),
     }
 
 
