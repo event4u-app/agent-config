@@ -101,7 +101,7 @@ test_setup_local_install() {
     fi
     pass "setup.sh local install exit 0"
     assert_dir  "setup.sh: .claude/ populated"      "$target/.claude"
-    assert_file "setup.sh: .agent-settings.yml rendered" "$target/.agent-settings.yml"
+    assert_file "setup.sh: .agent-settings.yml rendered" "$target/agents/settings/.agent-settings.yml"
 }
 
 # --- Test 3: `agent-config init --help` (npm bin entry) ---
@@ -129,7 +129,7 @@ test_npx_local_install() {
     fi
     pass "agent-config init local install exit 0"
     assert_dir  "agent-config init: .claude/ populated"           "$target/.claude"
-    assert_file "agent-config init: .agent-settings.yml rendered" "$target/.agent-settings.yml"
+    assert_file "agent-config init: .agent-settings.yml rendered" "$target/agents/settings/.agent-settings.yml"
 }
 
 # --- Test 5: setup.sh dry-run-style (--help only, no network) ---
