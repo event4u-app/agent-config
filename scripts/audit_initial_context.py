@@ -132,11 +132,27 @@ def longest_rules(top: int = 10) -> list[dict]:
     return rows[:top]
 
 
+def thin_projection() -> dict:
+    """Eager-vs-thin rule-layer footprint (Phase 3.1 lever).
+
+    Reuses `scripts/project_thin_rules.py::measure` so the value dashboard can
+    cite a single persisted source for both the eager always-on cost and the
+    thin-projection saving. Returns an empty dict if the measurer is
+    unavailable, so the audit never hard-fails on it.
+    """
+    try:
+        from project_thin_rules import measure as _measure  # noqa: E402
+        return _measure()
+    except Exception:  # pragma: no cover — best-effort enrichment
+        return {}
+
+
 def build() -> dict:
     return {
         "generated": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "token_method": token_count.method_note(),
         "rule_footprint": rule_footprint(),
+        "thin_projection": thin_projection(),
         "description_catalog": description_catalog(),
         "longest_rules": longest_rules(),
     }

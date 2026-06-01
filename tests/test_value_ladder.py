@@ -423,9 +423,10 @@ def test_assemble_value_v1_returns_valid_shape(report_mod):
     assert isinstance(report["cost_ladder"], list)
     assert isinstance(report["behaviour"], list)
     assert "totals" in report
-    # Must always carry the five canonical rungs.
+    # Must always carry the six canonical rungs (thin added in roadmap 3.1
+    # honesty fix: eager load + the kill-switch-gated thin lever).
     rung_ids = [r["id"] for r in report["cost_ladder"]]
-    assert rung_ids == ["baseline", "load", "condense", "rtk", "terse"]
+    assert rung_ids == ["baseline", "load", "thin", "condense", "rtk", "terse"]
     # And the four canonical behaviour metrics.
     behaviour_ids = [m["id"] for m in report["behaviour"]]
     assert behaviour_ids == [
@@ -469,3 +470,70 @@ def test_write_value_report_creates_files(report_mod, tmp_path):
     assert _json.loads(out.read_text()) == _json.loads(
         (tmp_path / "latest.json").read_text()
     )
+
+
+# ── Thin-projection lever (roadmap 3.1 honesty fix) ──────────────────────
+
+
+def _projection_fixture():
+    return {
+        "rule_footprint": {
+            ".claude": {"files": 79, "chars": 237436, "tokens_gpt": 59359},
+            ".windsurfrules": {"files": 1, "chars": 198676, "tokens_gpt": 49669},
+        },
+        "thin_projection": {
+            "eager_gpt": 59359,
+            "thin_gpt": 13502,
+            "saved_gpt": 45857,
+            "saved_pct": 77.3,
+        },
+    }
+
+
+def test_load_rung_from_projection_uses_eager_footprint(ladder_mod):
+    """The load rung reflects the REAL eager always-on cost, not kernel-only."""
+    rung = ladder_mod.load_rung_from_projection(
+        _projection_fixture(), ladder_mod.DEFAULT_REFERENCE_SCALE, {}
+    )
+    assert rung is not None
+    assert rung["id"] == "load"
+    assert rung["token_delta"] == 59359  # eager .claude footprint, not ~8.5k kernel
+    assert rung["confidence"] == "measured"
+    assert "projection-cost.json" in rung["source_report"]
+
+
+def test_load_rung_from_projection_none_without_footprint(ladder_mod):
+    assert ladder_mod.load_rung_from_projection({}, ladder_mod.DEFAULT_REFERENCE_SCALE, {}) is None
+
+
+def test_thin_rung_is_available_and_negative(ladder_mod):
+    rung = ladder_mod.thin_rung_from_projection(
+        _projection_fixture(), ladder_mod.DEFAULT_REFERENCE_SCALE, {}
+    )
+    assert rung["id"] == "thin"
+    assert rung["token_delta"] == -45857
+    assert rung["confidence"] == "available"  # behind the kill-switch, not default
+    assert "lean_projection.mode" in rung["footnote"]
+    assert "13502" in rung["footnote"]
+
+
+def test_thin_rung_pending_without_measurement(ladder_mod):
+    rung = ladder_mod.thin_rung_from_projection({}, ladder_mod.DEFAULT_REFERENCE_SCALE, {})
+    assert rung["id"] == "thin"
+    assert rung["confidence"] == "pending"
+
+
+def test_available_rung_excluded_from_cumulative(ladder_mod):
+    """An `available` rung shows its delta but must NOT move the default cumulative."""
+    rungs = [
+        ladder_mod.baseline_rung(ladder_mod.DEFAULT_REFERENCE_SCALE),
+        {"id": "load", "token_delta": 59359, "confidence": "measured"},
+        {"id": "thin", "token_delta": -45857, "confidence": "available"},
+    ]
+    assembled = ladder_mod.assemble_ladder(rungs, 8000)
+    # load moved the cumulative; thin did not.
+    assert assembled[1]["cumulative_pct"] == round(100.0 * 59359 / 8000, 3)
+    assert assembled[2]["cumulative_pct"] == assembled[1]["cumulative_pct"]
+    totals = ladder_mod.compute_totals(rungs, 8000, ladder_mod.DEFAULT_REFERENCE_SCALE, {})
+    assert totals["cumulative_token_delta"] == 59359  # thin's -45857 excluded
+    assert totals["net_verdict"] == "net-cost"

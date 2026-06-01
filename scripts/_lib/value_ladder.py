@@ -35,6 +35,13 @@ DEFAULT_REFERENCE_SCALE = {
     "model_tier": "sonnet",
 }
 
+# Confidence levels that contribute to the cumulative / NETTO headline.
+# `pending` (not yet measured) and `available` (measured but behind a
+# default-off kill-switch, e.g. the thin projection) are shown with their
+# token_delta but excluded from the default cumulative — the headline must
+# reflect what actually ships by default.
+_COUNTING_CONFIDENCES = ("measured", "estimated", "vendor-claim")
+
 # ── Pricing ─────────────────────────────────────────────────────────────
 
 
@@ -224,6 +231,96 @@ def load_rung_from_frugality(
         "footnote": (
             "Always-loaded footprint = kernel + tier_1 + tier_2 + charter; "
             "tokens ≈ chars / 4."
+        ),
+    }
+
+
+def load_rung_from_projection(
+    projection: Optional[Dict[str, Any]],
+    reference_scale: Dict[str, Any],
+    pricing_row: Dict[str, Any],
+    tool: str = ".claude",
+) -> Optional[Dict[str, Any]]:
+    """Build the load rung from the REAL eager always-on footprint.
+
+    Phase 3.1 honesty fix: the older `load_rung_from_router` counts only the
+    kernel + charter (~8.5k tok), modelling non-kernel rules as on-demand.
+    But 0B.6 confirmed the primary tool **eager-loads every rule body**
+    (~59k tok always-on). This rung reads that measured footprint from
+    `internal/bench/reports/projection-cost.json::rule_footprint[<tool>]`
+    so Panel A reflects what actually lands in context per request.
+
+    Returns None when the projection report lacks the footprint, so the
+    caller can fall back to the router/frugality rung.
+    """
+    rf = (projection or {}).get("rule_footprint", {})
+    entry = rf.get(tool) or next(iter(rf.values()), None)
+    if not entry or "tokens_gpt" not in entry:
+        return None
+    token_delta = int(entry["tokens_gpt"])
+    files = int(entry.get("files", 0))
+    return {
+        "id": "load",
+        "label": "Mit Paket (Regeln laden) / With package (rule load)",
+        "what_it_does": "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+        "token_delta": token_delta,
+        "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
+        "cumulative_pct": 0.0,
+        "confidence": "measured",
+        "source_report": "internal/bench/reports/projection-cost.json",
+        "footnote": (
+            f"Eager-Default: alle {files} Rule-Files always-on im "
+            f"`{tool}`-Projektionspfad (0B.6-bestätigt fürs primäre Tool). "
+            "Nicht nur der Kernel — das ist die ehrliche Up-Front-Last; "
+            "tokens ≈ chars / 4."
+        ),
+    }
+
+
+def thin_rung_from_projection(
+    projection: Optional[Dict[str, Any]],
+    reference_scale: Dict[str, Any],
+    pricing_row: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Build the thin-projection rung (Phase 3.1 lever).
+
+    The thin projection keeps the kernel full-bodied and demotes every
+    non-kernel rule body to a router-resolved pointer, measured at
+    −`saved_gpt` tokens. It ships **behind a kill-switch**
+    (`lean_projection.mode`, default `eager-all`), so this rung is
+    `confidence: available` — its measured delta is shown but does NOT
+    enter the default cumulative (the default reality is eager). The
+    footnote states the would-be always-on total and the validation state.
+    """
+    tp = (projection or {}).get("thin_projection", {})
+    if not tp or "saved_gpt" not in tp:
+        return pending_rung(
+            "thin",
+            "+ thin (Regeln als Pointer) / + thin (rules as pointers)",
+            "Nicht-Kernel-Regel-Bodies werden zu router-aufgelösten Pointern.",
+            "internal/bench/reports/projection-cost.json",
+            footnote="Run scripts/project_thin_rules.py --measure to populate.",
+        )
+    saved = int(tp["saved_gpt"])
+    thin_total = int(tp.get("thin_gpt", 0))
+    eager_total = int(tp.get("eager_gpt", 0))
+    pct = tp.get("saved_pct", 0)
+    return {
+        "id": "thin",
+        "label": "+ thin (Regeln als Pointer) / + thin (rules as pointers)",
+        "what_it_does": "Nicht-Kernel-Regel-Bodies werden zu router-aufgelösten Pointern.",
+        "token_delta": -saved,
+        "eur_delta": price_input_delta_eur(-saved, reference_scale, pricing_row),
+        "cumulative_pct": 0.0,
+        "confidence": "available",
+        "source_report": "internal/bench/reports/projection-cost.json",
+        "footnote": (
+            f"Verfügbar hinter `lean_projection.mode=thin` (Default `eager-all` "
+            f"— deshalb NICHT im Default-NETTO). Mit Thin aktiv: Rule-Layer "
+            f"{eager_total} → {thin_total} GPT tok (−{saved}, −{pct}%). "
+            "MUST-LOAD-Floor `task trigger-coverage` 26/26 grün; "
+            "Live-A/B-Validierung ausstehend (Harness abgelehnt). "
+            "Rollback = ein Flip."
         ),
     }
 
@@ -551,7 +648,7 @@ def assemble_ladder(
         rung_copy = dict(rung)
         delta = (
             int(rung_copy.get("token_delta", 0))
-            if rung_copy.get("confidence") != "pending"
+            if rung_copy.get("confidence") in _COUNTING_CONFIDENCES
             else 0
         )
         running += delta
@@ -575,7 +672,7 @@ def compute_totals(
     cumulative_token_delta = sum(
         int(r.get("token_delta", 0))
         for r in rungs
-        if r.get("confidence") != "pending"
+        if r.get("confidence") in _COUNTING_CONFIDENCES
     )
     cumulative_pct = 0.0
     if baseline_input_tokens > 0:

@@ -67,6 +67,7 @@ def confidence_badge(level: str) -> str:
         "estimated": "≈ geschätzt",
         "vendor-claim": "⚠️ vendor-claim",
         "pending": "⏳ pending",
+        "available": "🔁 verfügbar (Default aus)",
     }
     return badges.get(level, level)
 

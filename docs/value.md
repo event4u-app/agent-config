@@ -23,15 +23,17 @@ Liest sich von oben nach unten. Positive Δ-Werte = das Paket *kostet* Tokens (R
 | Stufe | Was sie tut | Δ Tokens | Kumulativ | Quelle |
 |---|---|---:|---:|---|
 | **Ohne Paket / Without package** | Baseline — der nackte Request ohne Paket-Regeln. | +0 | +0.00% | `n/a` · ✅ gemessen |
-| Mit Paket (Regeln laden) / With package (rule load) | Die immer-aktiven Regeln landen im Kontext jedes Requests. ⚠️ erst teurer | +8 522 | +106.53% | `dist/router.json` · ✅ gemessen |
-| | _Fußnote:_ Kernel = 10 rules (30080 chars) + charter (4010 chars); tokens ≈ chars / 4. | | | |
-| + condense (Regeln eindampfen) / + condense (rule shrink) | Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern. | -186 | +104.20% | `internal/bench/reports/telegraph-v2.json` · ✅ gemessen |
+| Mit Paket (Regeln laden) / With package (rule load) | Die immer-aktiven Regeln landen im Kontext jedes Requests. ⚠️ erst teurer | +59 359 | +741.99% | `internal/bench/reports/projection-cost.json` · ✅ gemessen |
+| | _Fußnote:_ Eager-Default: alle 79 Rule-Files always-on im `.claude`-Projektionspfad (0B.6-bestätigt fürs primäre Tool). Nicht nur der Kernel — das ist die ehrliche Up-Front-Last; tokens ≈ chars / 4. | | | |
+| + thin (Regeln als Pointer) / + thin (rules as pointers) | Nicht-Kernel-Regel-Bodies werden zu router-aufgelösten Pointern. | -45 857 | +741.99% | `internal/bench/reports/projection-cost.json` · 🔁 verfügbar (Default aus) |
+| | _Fußnote:_ Verfügbar hinter `lean_projection.mode=thin` (Default `eager-all` — deshalb NICHT im Default-NETTO). Mit Thin aktiv: Rule-Layer 59359 → 13502 GPT tok (−45857, −77.3%). MUST-LOAD-Floor `task trigger-coverage` 26/26 grün; Live-A/B-Validierung ausstehend (Harness abgelehnt). Rollback = ein Flip. | | | |
+| + condense (Regeln eindampfen) / + condense (rule shrink) | Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern. | -186 | +739.66% | `internal/bench/reports/telegraph-v2.json` · ✅ gemessen |
 | | _Fußnote:_ Aggregate across non-Thin-Root categories; Thin-Root files (AGENTS.md variants) net negative (~−4%) and are excluded from the rung — surfaced separately. | | | |
-| + rtk (CLI-Output filtern) / + rtk (filter CLI output) | rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg. | -593 | +96.79% | `internal/bench/reports/rtk/latest.json` · ✅ gemessen |
-| + terse (Antworten knapper) / + terse (shorter replies) | Telegraph-Stil zielt auf knappere Modell-Antworten. | +56 | +97.49% | `internal/bench/reports/telegraph-v1.json` · ✅ gemessen |
+| + rtk (CLI-Output filtern) / + rtk (filter CLI output) | rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg. | -593 | +732.25% | `internal/bench/reports/rtk/latest.json` · ✅ gemessen |
+| + terse (Antworten knapper) / + terse (shorter replies) | Telegraph-Stil zielt auf knappere Modell-Antworten. | +56 | +732.95% | `internal/bench/reports/telegraph-v1.json` · ✅ gemessen |
 | | _Fußnote:_ Honest: gemessener Median = -9.27% gegen 'sei knapp' — Telegraph liefert hier mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht. | | | |
 
-**NETTO: Mehrkosten** ⚠️ — **+7 799 Tokens / Request**, kumulativ **+97.49%** vs. Baseline.
+**NETTO: Mehrkosten** ⚠️ — **+58 636 Tokens / Request**, kumulativ **+732.95%** vs. Baseline.
 
 ## Panel B — Verhalten (mit vs. ohne)
 
@@ -81,4 +83,4 @@ Diese Seite ist eine **abgeleitete** Sicht — keine eigene Messung. Sie fasst d
 - Pending rungs contribute 0 to the cumulative until measured.
 - Reference scale: 1000 requests × 8000 input / 600 output tokens per request.
 
-_Last rendered: `2026-05-31T14:37:17+00:00`_
+_Last rendered: `2026-06-01T08:49:42+00:00`_

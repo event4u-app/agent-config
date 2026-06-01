@@ -49,9 +49,13 @@ cost_ladder:
     token_delta: <signed int>       # per-request input token delta
     eur_delta: <float>              # priced at reference_scale
     cumulative_pct: <signed float>  # % of baseline.input_tokens_per_request
-    confidence: measured | estimated | vendor-claim | pending
+    confidence: measured | estimated | vendor-claim | pending | available
     source_report: <relative path>  # raw report this was derived from
     footnote: "<optional caveat>"   # e.g. "Thin-Root files excluded"
+  - id: thin
+    ...                             # the thin-projection lever; ships behind
+    ...                             # the lean_projection.mode kill-switch
+    ...                             # (default eager-all) → confidence: available
   - id: condense
     ...
   - id: rtk
@@ -126,6 +130,15 @@ A rung with `confidence: pending` contributes `token_delta: 0` to
 the cumulative (its raw value is the renderer's best guess from the
 raw report; it MUST NOT influence the headline until it flips to
 `measured`).
+
+A rung with `confidence: available` is **measured** but ships behind a
+default-off kill-switch (e.g. the `thin` rung gated on
+`lean_projection.mode`, default `eager-all`). Its measured `token_delta`
+is displayed, but — like `pending` — it contributes `0` to the default
+cumulative / NETTO: the headline reflects what actually ships by default,
+not the best achievable after an opt-in flip. The footnote states the
+would-be total and the validation state. Only `measured`, `estimated`,
+and `vendor-claim` rungs count toward the cumulative.
 
 ## Markdown shape (informational human dump)
 

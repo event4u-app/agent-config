@@ -48,7 +48,7 @@ REQUIRED_SECTIONS = (
     "**NETTO",
 )
 
-CANONICAL_RUNG_IDS = ("baseline", "load", "condense", "rtk", "terse")
+CANONICAL_RUNG_IDS = ("baseline", "load", "thin", "condense", "rtk", "terse")
 
 
 def _log(msg: str, quiet: bool, *, err: bool = False) -> None:
