@@ -18,7 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts._lib.agent_settings import resolve_project_root
+from scripts._lib.agent_settings import project_settings_path, resolve_project_root
 
 PACKAGE_NAME = "@event4u/agent-config"
 
@@ -51,7 +51,7 @@ def _local_package_version() -> str:
 
 def _pinned_version() -> str:
     """Return the ``agent_config_version`` pin from ``.agent-settings.yml``."""
-    settings = _project_root() / ".agent-settings.yml"
+    settings = project_settings_path(_project_root())
     if not settings.exists():
         return ""
     try:

@@ -76,6 +76,45 @@ def _local_settings_path(project_root: Path) -> Path:
     return project_root.joinpath(*LOCAL_PROJECT_SUBDIR, LOCAL_PROJECT_FILE)
 
 
+def _canonical_settings_path(project_root: Path) -> Path:
+    """Canonical project settings file: ``<root>/agents/settings/.agent-settings.yml``.
+
+    The project settings file lives in the project's settings layer
+    (``agents/settings/``, alongside ``contexts/`` and ``policies/`` and
+    the ``.agent-settings.local.yml`` override), NOT at the repo root.
+    The repo-root ``.agent-settings.yml`` is a legacy location read only
+    as a back-compat fallback (see :func:`project_settings_path`).
+    """
+    return project_root.joinpath(*LOCAL_PROJECT_SUBDIR, DEFAULT_PROJECT_FILE)
+
+
+def project_settings_path(project_root: Path) -> Path:
+    """Resolve the project settings file for **reading**.
+
+    Returns the canonical ``agents/settings/.agent-settings.yml`` when it
+    exists; otherwise the legacy repo-root ``.agent-settings.yml`` when
+    that exists (back-compat for installs predating the relocation);
+    otherwise the canonical path (so the caller still names the right
+    target on a fresh repo). Existence-checked, never writes.
+    """
+    canonical = _canonical_settings_path(project_root)
+    if canonical.exists():
+        return canonical
+    legacy = project_root / DEFAULT_PROJECT_FILE
+    if legacy.exists():
+        return legacy
+    return canonical
+
+
+def canonical_settings_write_path(project_root: Path) -> Path:
+    """Always the canonical **write** target: ``agents/settings/.agent-settings.yml``.
+
+    Writers (install, sync, migrate) target this unconditionally; the
+    legacy root file is migrated into it, never written afresh.
+    """
+    return _canonical_settings_path(project_root)
+
+
 DEFAULT_TEAM_FILE = ".agent-project-settings.yml"
 USER_GLOBAL_FILENAME = "agent-settings.yml"
 
@@ -431,12 +470,14 @@ def _resolve_cascade_paths(
     """
     if cwd is None:
         legacy = Path(project_path) if project_path else Path(DEFAULT_PROJECT_FILE)
-        return [legacy, _local_settings_path(legacy.parent)]
+        return [legacy, _canonical_settings_path(legacy.parent),
+                _local_settings_path(legacy.parent)]
 
     root = find_project_root(cwd)
     if root is None:
         legacy = Path(project_path) if project_path else Path(DEFAULT_PROJECT_FILE)
-        return [legacy, _local_settings_path(legacy.parent)]
+        return [legacy, _canonical_settings_path(legacy.parent),
+                _local_settings_path(legacy.parent)]
 
     cwd_resolved = cwd.resolve()
     # Build the chain root → … → cwd (shallowest first, deepest last).
@@ -451,9 +492,15 @@ def _resolve_cascade_paths(
             break
         cursor = parent
     chain.reverse()
-    # Committed cascade root → cwd, then the single project-level local override
-    # under agents/settings/ as the deepest (winning) layer.
-    return [d / DEFAULT_PROJECT_FILE for d in chain] + [_local_settings_path(root)]
+    # Legacy per-dir cascade root → cwd (repo-root .agent-settings.yml is the
+    # shallowest, back-compat), then the canonical project settings file under
+    # agents/settings/ (wins over the legacy root location), then the
+    # per-machine local override under agents/settings/ as the deepest (winning)
+    # layer.
+    return (
+        [d / DEFAULT_PROJECT_FILE for d in chain]
+        + [_canonical_settings_path(root), _local_settings_path(root)]
+    )
 
 
 def load_agent_settings(

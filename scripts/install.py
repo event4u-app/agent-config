@@ -58,6 +58,28 @@ SETTINGS_FILE = ".agent-settings.yml"
 LEGACY_SETTINGS_FILE = ".agent-settings"
 LEGACY_BACKUP_FILE = ".agent-settings.backup.key-value"
 
+# Canonical project settings live in the settings layer (agents/settings/),
+# not at the repo root (ADR-038). The repo-root .agent-settings.yml is a
+# back-compat read-fallback that install migrates into the canonical
+# location. Kept inline (no package import) — install.py runs standalone.
+SETTINGS_SUBDIR = ("agents", "settings")
+
+
+def _canonical_settings_target(project_root: Path) -> Path:
+    """Canonical write target: <root>/agents/settings/.agent-settings.yml."""
+    return project_root.joinpath(*SETTINGS_SUBDIR, SETTINGS_FILE)
+
+
+def _resolve_settings_read(project_root: Path) -> Path:
+    """Canonical if present, else legacy repo-root file if present, else canonical."""
+    canonical = _canonical_settings_target(project_root)
+    if canonical.exists():
+        return canonical
+    legacy = project_root / SETTINGS_FILE
+    if legacy.exists():
+        return legacy
+    return canonical
+
 # Maps legacy flat keys (.agent-settings, key=value) to the new dotted YAML
 # paths in .agent-settings.yml. Applied once during auto-migration.
 LEGACY_RENAME_MAP = {
@@ -567,7 +589,7 @@ def ensure_agent_settings(
     user_type: str = "",
     packs: "list[str] | None" = None,
 ) -> None:
-    target = project_root / SETTINGS_FILE
+    target = _canonical_settings_target(project_root)
     profile_source = package_root / "config" / "profiles" / f"{profile}.ini"
     template_source = package_root / "config" / "agent-settings.template.yml"
 
@@ -592,6 +614,17 @@ def ensure_agent_settings(
     template_body = _render_template(template, profile_values)
     template_body = _inject_packs(template_body, packs or [])
 
+    # ADR-038: relocate an existing repo-root .agent-settings.yml into the
+    # canonical agents/settings/ location, preserving the developer's content
+    # (never clobber an already-canonical file).
+    legacy_root = project_root / SETTINGS_FILE
+    if legacy_root.is_file() and not target.exists():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(legacy_root.read_text(encoding="utf-8"), encoding="utf-8")
+        legacy_root.unlink()
+        success(f"Migrated {SETTINGS_FILE} → agents/settings/{SETTINGS_FILE} (ADR-038)")
+        return
+
     legacy_target = project_root / LEGACY_SETTINGS_FILE
     if legacy_target.is_file() and target.exists():
         warn(
@@ -611,6 +644,7 @@ def ensure_agent_settings(
         skip(f"{SETTINGS_FILE} already exists")
         return
 
+    target.parent.mkdir(parents=True, exist_ok=True)
     write_file(target, template_body)
     user_type_value = profile_values.get("user_type", "")
     suffix = f", user_type={user_type_value}" if user_type_value else ""
@@ -2219,7 +2253,7 @@ def read_layered_settings(
     merged = _load_default_settings(package_root)
     merged = deep_merge(merged, _load_yaml_doc(GLOBAL_AGENT_SETTINGS_PATH))
     if project_root is not None:
-        project_file = project_root / SETTINGS_FILE
+        project_file = _resolve_settings_read(project_root)
         merged = deep_merge(merged, _load_yaml_doc(project_file))
     return merged
 
@@ -2354,7 +2388,7 @@ def detect_scope(cwd: Path) -> tuple[str, str]:
     ``.git/`` is explicitly NOT a signal — monorepos, dotfile managers,
     and non-Git workspaces all break it. Pure function; no side effects.
     """
-    if (cwd / SETTINGS_FILE).exists():
+    if _resolve_settings_read(cwd).exists():
         return "project", f"existing {SETTINGS_FILE}"
 
     has_manifest = next(
@@ -3524,7 +3558,7 @@ def install_global(
     # `.agent-settings.yml` and the manifest would be untracked noise.
     if (
         project_root is not None
-        and (project_root / SETTINGS_FILE).exists()
+        and _resolve_settings_read(project_root).exists()
         and not (project_root / ".agent-src.uncondensed").is_dir()
     ):
         # Collect deployed/marker paths per tool so the manifest records
@@ -3989,7 +4023,7 @@ def install_minimal(target_root: Path, force: bool, user_type: str = "") -> int:
     # the source of truth per ADR-020 § D2; a fresh `--minimal` run
     # without user_type does not write a project-local settings file.
     if user_type:
-        settings_dst = target_root / SETTINGS_FILE
+        settings_dst = _canonical_settings_target(target_root)
         if settings_dst.exists() and not force:
             skip(f"{SETTINGS_FILE} already exists (use --force to overwrite)")
         else:
@@ -3998,6 +4032,7 @@ def install_minimal(target_root: Path, force: bool, user_type: str = "") -> int:
                 "personal:\n"
                 f"  user_type: {user_type}\n"
             )
+            settings_dst.parent.mkdir(parents=True, exist_ok=True)
             settings_dst.write_text(body, encoding="utf-8")
             success(f"Wrote {SETTINGS_FILE} (user_type={user_type})")
 

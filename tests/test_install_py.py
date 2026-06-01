@@ -679,26 +679,28 @@ class TestEnsureAgentSettings(SilentTest):
 
     def test_renders_placeholder(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
-        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertIn("rule_loading_tier: balanced", content)
         self.assertNotIn(install.RULE_LOADING_TIER_PLACEHOLDER, content)
 
     def test_seeds_subagent_keys(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
-        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertIn("subagents:", content)
         self.assertIn("implementer_model:", content)
         self.assertIn("judge_model:", content)
         self.assertIn("max_parallel: 3", content)
 
     def test_skip_when_exists_without_force(self) -> None:
-        target = self.project / ".agent-settings.yml"
+        target = install._canonical_settings_target(self.project)
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("rule_loading_tier: custom\n", encoding="utf-8")
         install.ensure_agent_settings(self.project, self.package, "full", force=False)
         self.assertEqual(target.read_text(encoding="utf-8"), "rule_loading_tier: custom\n")
 
     def test_force_overwrites(self) -> None:
-        target = self.project / ".agent-settings.yml"
+        target = install._canonical_settings_target(self.project)
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("rule_loading_tier: custom\n", encoding="utf-8")
         install.ensure_agent_settings(self.project, self.package, "full", force=True)
         self.assertIn("rule_loading_tier: full", target.read_text(encoding="utf-8"))
@@ -710,28 +712,28 @@ class TestEnsureAgentSettings(SilentTest):
 
     def test_chat_history_rendered_per_profile_minimal(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "minimal", force=False)
-        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertIn("frequency: per_turn", content)
         self.assertIn("max_size_kb: 128", content)
         self.assertIn("on_overflow: rotate", content)
 
     def test_chat_history_rendered_per_profile_balanced(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
-        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertIn("frequency: per_phase", content)
         self.assertIn("max_size_kb: 256", content)
         self.assertIn("on_overflow: rotate", content)
 
     def test_chat_history_rendered_per_profile_full(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "full", force=False)
-        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertIn("frequency: per_tool", content)
         self.assertIn("max_size_kb: 512", content)
         self.assertIn("on_overflow: condense", content)
 
     def test_no_placeholder_left_in_output(self) -> None:
         for profile in install.SUPPORTED_PROFILES:
-            target = self.project / ".agent-settings.yml"
+            target = install._canonical_settings_target(self.project)
             if target.exists():
                 target.unlink()
             install.ensure_agent_settings(self.project, self.package, profile, force=False)
@@ -830,7 +832,7 @@ class TestEnsureAgentSettingsUserType(SilentTest):
         super().tearDown()
 
     def _settings(self) -> str:
-        return (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        return (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
 
     def test_default_renders_empty_user_type(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
@@ -856,7 +858,7 @@ class TestEnsureAgentSettingsUserType(SilentTest):
 
     def test_no_placeholder_left_for_any_seed_slug(self) -> None:
         for slug in install._load_valid_user_types(self.package):
-            target = self.project / ".agent-settings.yml"
+            target = install._canonical_settings_target(self.project)
             if target.exists():
                 target.unlink()
             install.ensure_agent_settings(
@@ -1206,7 +1208,7 @@ class TestMainIntegration(unittest.TestCase):
     def test_full_run_creates_all_files(self) -> None:
         exit_code = self._run()
         self.assertEqual(exit_code, 0)
-        self.assertTrue((self.project / ".agent-settings.yml").exists())
+        self.assertTrue((install._canonical_settings_target(self.project)).exists())
         self.assertTrue((self.project / ".vscode" / "settings.json").exists())
         self.assertTrue((self.project / ".augment" / "settings.json").exists())
         self.assertTrue((self.project / ".cursor" / "hooks.json").exists())
@@ -1217,7 +1219,7 @@ class TestMainIntegration(unittest.TestCase):
 
     def test_skip_bridges_only_creates_settings(self) -> None:
         self.assertEqual(self._run("--skip-bridges"), 0)
-        self.assertTrue((self.project / ".agent-settings.yml").exists())
+        self.assertTrue((install._canonical_settings_target(self.project)).exists())
         self.assertFalse((self.project / ".vscode").exists())
         self.assertFalse((self.project / ".augment").exists())
         self.assertFalse((self.project / ".cursor").exists())
@@ -1233,14 +1235,14 @@ class TestMainIntegration(unittest.TestCase):
 
     def test_idempotent(self) -> None:
         self.assertEqual(self._run(), 0)
-        content_first = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content_first = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertEqual(self._run(), 0)
-        content_second = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content_second = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertEqual(content_first, content_second)
 
     def test_profile_is_rendered_into_settings(self) -> None:
         self.assertEqual(self._run("--profile=full"), 0)
-        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        content = (install._canonical_settings_target(self.project)).read_text(encoding="utf-8")
         self.assertIn("rule_loading_tier: full", content)
 
 

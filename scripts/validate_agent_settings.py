@@ -29,6 +29,10 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 
 try:
     import yaml
@@ -45,7 +49,7 @@ except ImportError:  # pragma: no cover — bootstrap guard
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = REPO_ROOT / "scripts" / "schemas" / "agent-settings.schema.json"
 TEMPLATE_PATH = REPO_ROOT / "config" / "agent-settings.template.yml"
-LOCAL_PATHS = [REPO_ROOT / ".agent-settings.yml"]
+LOCAL_PATHS = [project_settings_path(REPO_ROOT)]
 
 # Installer-default substitutions, mirroring scripts/install.py so the
 # template validates as it would after a fresh `balanced` install.

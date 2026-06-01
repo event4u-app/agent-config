@@ -49,10 +49,14 @@ import argparse
 import re
 import sys
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_MANIFEST = REPO_ROOT / "scripts" / "hook_manifest.yaml"
-DEFAULT_SETTINGS = REPO_ROOT / ".agent-settings.yml"
+DEFAULT_SETTINGS = project_settings_path(REPO_ROOT)
 
 DEFAULT_MAX_PER_EVENT = 8
 DEFAULT_TIER1: list[str] = []

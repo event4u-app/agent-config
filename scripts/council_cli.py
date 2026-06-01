@@ -18,12 +18,16 @@ import json
 import sys
 from dataclasses import asdict
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 from typing import Any
 
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
+SETTINGS_FILE = project_settings_path(REPO_ROOT)
 AI_COUNCIL_FILE = REPO_ROOT / "agents" / "settings" / ".ai-council.yml"
 
 # Canonical output dirs per ai-council § "Output path convention".

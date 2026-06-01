@@ -13,6 +13,10 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 
 ROOT = Path(__file__).resolve().parent.parent
 # ADR-017: rules now live across multiple source roots. Legacy
@@ -20,7 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # pure-condensed consumer projection.
 RULES_DIR = ROOT / ".agent-src.uncondensed" / "rules"
 OUT_PATH = ROOT / "dist" / "router.json"
-SETTINGS_PATH = ROOT / ".agent-settings.yml"
+SETTINGS_PATH = project_settings_path(ROOT)
 SCHEMA_VERSION = 1
 
 # Compile-time rule toggles. Maps rule-id → settings predicate.

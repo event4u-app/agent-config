@@ -61,9 +61,10 @@ def _check_installer_runs(tmpdir: Path) -> tuple[int, Path | None]:
             _fail(f"installer exited {result.returncode}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"),
             None,
         )
-    settings = tmpdir / ".agent-settings.yml"
+    # ADR-038: installer writes the canonical settings file under agents/settings/.
+    settings = tmpdir / "agents" / "settings" / ".agent-settings.yml"
     if not settings.exists():
-        return _fail(".agent-settings.yml not written by installer"), None
+        return _fail("agents/settings/.agent-settings.yml not written by installer"), None
     return 0, settings
 
 

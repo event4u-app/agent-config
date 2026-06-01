@@ -27,6 +27,10 @@ import re
 import shutil
 import sys
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 
 import yaml
 
@@ -46,7 +50,7 @@ SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncondensed"
 TARGET_DIR = PROJECT_ROOT / ".agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / "internal" / ".condensation-hashes.json"
-SETTINGS_FILE = PROJECT_ROOT / ".agent-settings.yml"
+SETTINGS_FILE = project_settings_path(PROJECT_ROOT)
 
 
 def _iter_sources():

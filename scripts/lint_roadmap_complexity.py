@@ -23,6 +23,10 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 
 QUIET = "--quiet" in sys.argv
 
@@ -30,7 +34,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ROADMAP_GLOB = "agents/roadmaps/*.md"
 LIGHTWEIGHT_LINE_CAP = 600
 LIGHTWEIGHT_PHASE_CAP = 6
-SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
+SETTINGS_FILE = project_settings_path(REPO_ROOT)
 HORIZON_WEEKS_PAT = re.compile(
     r"^\s*horizon_weeks:\s*(\d+)\s*(?:#.*)?$", re.MULTILINE
 )
