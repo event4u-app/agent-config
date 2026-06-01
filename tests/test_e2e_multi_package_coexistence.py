@@ -241,83 +241,35 @@ def test_uninstalling_last_owner_of_shared_json_deletes_file(
 
 
 # ---------------------------------------------------------------------------
-# Foreign-file conflict integration (P3.1 — manifest → policy → resolver)
+# Deployed-file overwrite (a setup always applies our own content)
 # ---------------------------------------------------------------------------
 
 
-def test_load_conflict_policy_from_manifest_then_resolver_aborts_on_foreign(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+def test_deployed_file_always_overwrites_regardless_of_manifest(
+    tmp_path: Path,
 ) -> None:
-    """End-to-end conflict-detection chain.
+    """A deliberate setup overwrites our own deployed files, always.
 
-    Builds a real manifest, calls the live ``_load_conflict_policy`` to
-    derive the runtime policy, then proves that ``_resolve_file_conflict``
-    raises ``ConflictAbort`` with a remediation hint when a writer hits
-    a foreign file. The env-var escape hatch (``AGENT_CONFIG_ALLOW_OVERWRITE``)
-    is exercised in the same chain to verify it lifts the abort.
-
-    Path-keying: ``_load_conflict_policy`` normalises every manifest path
-    against ``project_root`` so writers passing absolute ``Path`` objects
-    hit the known-path silent-skip branch. The known-path assertion below
-    is the live regression test for that resolution.
+    Regression for the wizard-apply abort: every file the installer
+    writes comes from our own source tree, so whether the manifest
+    records it is irrelevant — the resolver always returns ``"write"``.
+    There is no foreign-file gate, no ``--force`` requirement, and the
+    ``AGENT_CONFIG_ALLOW_OVERWRITE`` escape hatch (plus ``ConflictAbort``)
+    no longer exist.
     """
     sys.path.insert(0, str(ROOT / "scripts"))
     import install  # type: ignore
 
     proj = tmp_path / "proj"
     proj.mkdir()
-    known_rel = ".augment/rules/a1.md"
-    foreign_rel = ".augment/rules/squatter.md"
+    # An existing file the manifest never recorded ("foreign" under the
+    # old gate) and a brand-new path both resolve to a write.
+    untracked_path, _ = _write_file(proj, ".augment/rules/squatter.md", b"older copy of ours\n")
+    fresh_path = proj / ".augment/rules/new.md"
 
-    known_path, known_meta = _write_file(proj, known_rel, b"ours\n")
-    foreign_path, _ = _write_file(proj, foreign_rel, b"someone else wrote this\n")
+    assert install._resolve_file_conflict(untracked_path, force_hint=False) == "write"
+    assert install._resolve_file_conflict(fresh_path, force_hint=False) == "write"
 
-    it.write_manifest(
-        it.manifest_path(proj),
-        "2.1.0",
-        [_entry("pkg-a", [known_meta])],
-        deploy_roots=[".augment"],
-    )
-
-    # Non-interactive: env clean, no policy carried over from a sibling
-    # test. The unconditional reset in ``finally`` protects subsequent
-    # tests if any assertion below blows up mid-chain.
-    monkeypatch.delenv(install.ALLOW_OVERWRITE_ENV, raising=False)
-    policy = install._load_conflict_policy(proj, force=False)
-    known_abs = str((proj / known_rel).resolve())
-    assert known_abs in policy.known_paths, (
-        "relative manifest path must be resolved against project_root so "
-        "writers passing absolute paths match the known-path branch"
-    )
-    assert not policy.force, "fresh load with no env should not be forced"
-
-    install._set_conflict_policy(policy)
-    try:
-        # Known path: legacy silent-skip semantics — we own it, no abort,
-        # no overwrite without --force. Proves the path-keying normalisation
-        # makes the branch reachable from the manifest → resolver chain.
-        assert (
-            install._resolve_file_conflict(known_path, force_hint=False) == "skip"
-        ), "known path must skip silently without --force"
-
-        # Foreign existing path: raise ConflictAbort with all remediation
-        # hooks (--force flag, env-var escape, doctor) surfaced in the message.
-        with pytest.raises(install.ConflictAbort) as excinfo:
-            install._resolve_file_conflict(foreign_path, force_hint=False)
-        # ConflictAbort is a SystemExit(1) subclass; the human-readable
-        # text lives on the ``message`` attribute, not ``.code``.
-        msg = excinfo.value.message
-        assert "--force" in msg, "abort message must point users at --force"
-        assert install.ALLOW_OVERWRITE_ENV in msg, (
-            "abort message must surface the env-var escape hatch"
-        )
-        assert "agent-config doctor" in msg, (
-            "abort message must point users at the doctor remediation path"
-        )
-
-        # Env-var override flips foreign → write through the same chain.
-        monkeypatch.setenv(install.ALLOW_OVERWRITE_ENV, "1")
-        install._set_conflict_policy(install._load_conflict_policy(proj, force=False))
-        assert install._resolve_file_conflict(foreign_path, force_hint=False) == "write"
-    finally:
-        install._set_conflict_policy(None)
+    # The removed escape hatch and abort exception are gone for good.
+    assert not hasattr(install, "ALLOW_OVERWRITE_ENV")
+    assert not hasattr(install, "ConflictAbort")

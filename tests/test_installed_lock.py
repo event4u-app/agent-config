@@ -307,17 +307,21 @@ def test_install_global_writes_claude_desktop_marker(
     assert "ADR-007" in body
 
 
-def test_install_global_skips_existing_files_without_force(
+def test_install_global_overwrites_existing_files_without_force(
     isolated_lock: Path, tmp_path: Path
 ) -> None:
+    # Deployed rule files are OUR content, not user config — a re-run
+    # refreshes them with the current package content even without
+    # --force. (User configuration like .agent-settings.yml is protected
+    # by the settings layer, not by this deploy path.)
     rc = _silent_install_global(["claude-code"])
     assert rc == 0
     home = tmp_path / "home"
     sample = next((home / ".claude" / "rules").glob("*.md"))
-    sample.write_text("USER_OVERRIDE\n", encoding="utf-8")
+    sample.write_text("STALE_LOCAL_EDIT\n", encoding="utf-8")
     rc = _silent_install_global(["claude-code"])
     assert rc == 0
-    assert sample.read_text(encoding="utf-8") == "USER_OVERRIDE\n"
+    assert sample.read_text(encoding="utf-8") != "STALE_LOCAL_EDIT\n"
 
 
 def test_install_global_force_overwrites_existing_files(
