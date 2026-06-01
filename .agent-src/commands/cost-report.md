@@ -56,15 +56,20 @@ profile recommendation per the table:
 |---|---|---|
 | 🟢 OK | < 50% | within budget — no action |
 | 🟡 INFO | ≥ 50% | log notification, no UX disruption |
-| 🟠 WARNING | ≥ 75% | suggest [`/set-cost-profile balanced→minimal`](set-cost-profile.md) |
-| 🔴 CRITICAL | ≥ 90% | recommend model downgrades, consider [`/set-cost-profile minimal`](set-cost-profile.md) |
+| 🟠 WARNING | ≥ 75% | suggest dropping the **model tier** — `model.auto_switch: auto`, or pick a lighter `model_tier` for routine work (the dominant spend lever) |
+| 🔴 CRITICAL | ≥ 90% | recommend a lighter model tier first; only as a last resort suggest [`/set-cost-profile minimal`](set-cost-profile.md) **with a capability-loss warning** |
 | 🛑 HARD_STOP | ≥ 100% | halt non-essential work; review before continuing (`budget.mjs check` exits 1) |
 
-If `level` ≥ WARNING and the current `rule_loading_tier` in `.agent-settings.yml`
-is not already `minimal`, add an explicit suggestion sentence:
+**Lever order matters.** Per-turn spend is dominated by the **model** (a high→lite
+tier swap is roughly a 10× cost delta) and by query/response volume — not by how many
+rules load. `rule_loading_tier` loads its rule bodies roughly once per session (a small,
+fixed cost), so lowering it saves little and *reduces the agent's guardrail coverage*.
+Recommend the model lever first:
 
-> Run [`/set-cost-profile`](set-cost-profile.md) to switch from your
-> current profile to a leaner one.
+> Budget ≥ {level}. The biggest lever is the **model tier** — set
+> `model.auto_switch: auto` (or pick a lighter `model_tier` for routine turns).
+> Lowering `rule_loading_tier` saves far less and drops behavioural guardrails —
+> use [`/set-cost-profile minimal`](set-cost-profile.md) only as a last resort.
 
 ### 4. First-run: prompt to set a budget
 
