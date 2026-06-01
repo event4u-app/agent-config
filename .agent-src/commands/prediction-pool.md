@@ -95,17 +95,24 @@ and standing notes — so re-tuning later is fast.
 Resolve the pool URL (`--pool-url` → saved analysis → ask). Then run the
 optimizer skill's **rules pass** against the pool's rule page: exact result
 vs. goal-difference vs. tendency points, bonus questions, joker rules,
-quote/rarity scoring, special rules, deadlines, strategy limits. **No tips
-before the rules are understood** — the whole strategy depends on them.
+quote/rarity scoring, special rules, deadlines, strategy limits. **Enumerate
+every open question as an explicit checklist** (scores AND every bonus /
+award / special question) — that list is the run's contract; each entry must
+reach an answer. **No tips before the rules are understood** — the whole
+strategy depends on them.
 
 ### 4. Run the optimizer + offer the AI-council pass
 
 Run [`prediction-pool-optimizer`](../skills/prediction-pool-optimizer/SKILL.md),
-adapted to the event's sport (football / basketball / …): market odds as
-the primary signal → expected value under the Step-3 rules → participant
-field → tip. Tournament/outright probabilities come from real outright
-odds **or** the skill's executed Poisson helper — **never** a hallucinated
-"I simulated 10,000 runs".
+adapted to the event's sport (football / basketball / …): a **de-vigged
+consensus across the 5–10 biggest publicly-viewable bookmakers**
+(sharp-weighted, never one portal) as the primary signal → expected value
+under the Step-3 rules → participant field → tip. **Answer every entry on the
+Step-3 checklist** — scores AND every bonus / award / special question (top
+scorer, "team of the top scorer", group winners, most cards …); none blank.
+Tournament/outright/award probabilities come from real markets **or** the
+skill's executed Poisson helper — **never** a hallucinated "I simulated
+10,000 runs".
 
 **Offer the AI-council pass (default off).** Unless `--council` is set,
 ask once:
@@ -128,13 +135,19 @@ first per [`ai-council`](../../../core/.agent-src.uncondensed/skills/ai-council/
 
 Present the tips exactly as they would be entered, then **wait**:
 
-| Match | Tip | Prob / EV | Risk | 1-line reason | Odds used |
+| Match | Tip | Prob / EV | Risk | 1-line reason | Books used |
 |---|---|---|---|---|---|
 
-Follow with group standings, the full bracket, and bonus-question answers
-where the event has them. Then ask **whether to enter** and **into which
-pool** (the saved URL, a different one, or none). Do **not** write the
-analysis yet (Step 9) — tips are not yet confirmed.
+Follow with group standings, the full bracket, **and a bonus/special-answer
+table with one row per open question from the Step-3 checklist — every entry
+answered, none blank**:
+
+| Question | Answer | Prob / EV | Risk | 1-line reason | Source (market / model) |
+|---|---|---|---|---|---|
+
+Then ask **whether to enter** and **into which pool** (the saved URL, a
+different one, or none). Do **not** write the analysis yet (Step 9) — tips
+are not yet confirmed.
 
 ### 6. Enter via Playwright (you log in)
 
@@ -189,6 +202,12 @@ file path. No commit. No push.
 - **You log in; the agent never handles credentials.** Headful only.
 - **The agent never submits** unless `--submit` or this-turn authorization.
 - **Rules first.** No tips before the pool's scoring is parsed.
+- **Answer every open question.** Scores AND every bonus / award / special
+  question; a run that ships scorelines only and leaves bonus questions blank
+  is incomplete.
+- **Consensus odds, not one portal.** Build the base from a de-vigged,
+  sharp-weighted consensus across the 5–10 biggest viewable books — never
+  mirror a single bookmaker.
 - **No hallucinated simulation.** Outright odds or executed Poisson code —
   never a claimed-but-unrun Monte-Carlo.
 - **Analysis is written only after tips are confirmed** (Step 9), never

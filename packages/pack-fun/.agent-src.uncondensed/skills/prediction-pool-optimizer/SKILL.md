@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: prediction-pool-optimizer
-description: "Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'."
+description: "Optimize prediction-pool tips (kicktipp etc.): rules + multi-book consensus odds → expected-points-max answer for every question, scores AND bonus. Triggers 'optimize my pool tips', 'predict'."
 domain: product
 personas: []
 workspaces:
@@ -18,12 +18,15 @@ install:
 
 # prediction-pool-optimizer
 
-> Turn a prediction pool's **scoring rules** plus **market odds** into the
-> tip that maximizes **expected points** — not the most likely outcome.
-> Sport-agnostic core with per-sport probability blocks. Consumed by
-> [`/prediction-pool`](../../commands/prediction-pool.md). The optimization target is
-> the pool's score, so the chain is always **rules → odds → expected value
-> → participant field → tip**, never "who wins this match?".
+> Turn a prediction pool's **scoring rules** plus a **consensus of the major
+> bookmakers' odds** into the answer that maximizes **expected points** — not
+> the most likely outcome — for **every open question in the pool**: match
+> scores AND every bonus / award / special question (top scorer, group
+> winners, champion, most cards …). Sport-agnostic core with per-sport
+> probability blocks. Consumed by [`/prediction-pool`](../../commands/prediction-pool.md).
+> The optimization target is the pool's score, so the chain is always
+> **rules → odds → expected value → participant field → answer**, never
+> "who wins this match?".
 
 ## When to use
 
@@ -43,39 +46,68 @@ more. **Always optimize the pool's points, never the truth of the match.**
 
 - **Rules before tips.** Never produce a tip before the pool's scoring is
   parsed (Procedure step 1). Strategy is a function of the rules.
-- **Odds are the primary signal.** Bookmaker / market probabilities already
-  fold in form, squad, injuries, travel, climate. Use them as the
-  calibration base; only override with *current* information (confirmed
+- **Answer EVERY open question.** A pool has scores *and* bonus / award /
+  special questions ("which team supplies the top scorer?", "most yellow
+  cards?", "champion?"). Producing scorelines only and leaving the bonus
+  questions blank is a **failed run** — enumerate every open question in
+  step 1 and carry each to an answer (steps 5–6). No silent skips.
+- **Odds are the primary signal — as a multi-book consensus, not one book.**
+  Bookmaker / market probabilities already fold in form, squad, injuries,
+  travel, climate. Build the base from a **consensus across the 5–10 biggest
+  publicly-viewable books** (step 2), de-vigged, **sharpness-weighted** — never
+  mirror a single portal. Only override with *current* information (confirmed
   lineups, late injuries, suspensions, manager change).
-- **No invented numbers.** Emit no probability you cannot derive from odds
-  or from **actually executed** code. Tournament/outright numbers come from
-  real outright odds **or** the executed Poisson helper — never a claimed
+- **No invented numbers.** Emit no probability you cannot derive from real
+  odds or from **actually executed** code. Tournament/outright/award numbers
+  come from real markets **or** the executed Poisson helper — never a claimed
   "I ran 10,000 simulations".
-- **One-sentence justification** per tip. Short.
+- **One-sentence justification** per answer. Short.
 
 ## Procedure
 
-### 1. Parse the pool rules
+### 1. Parse the pool rules AND enumerate every open question
 
 From the pool's rule page, extract and document:
 
 - Points for **exact result** / **goal (point) difference** / **tendency**.
-- **Bonus questions** (champion, top scorer, group winners …).
-- **Joker / multiplier** rules.
+- **Every bonus / award / special question** the pool asks (champion, top
+  scorer, "team of the top scorer", group winners, most cards, longest
+  unbeaten, will-there-be-a-red-card, over/under totals …). **Write them all
+  down as an explicit checklist** — this list is the run's contract; every
+  entry must reach an answer.
+- **Joker / multiplier** rules, per-question point weights.
 - **Quote / rarity** scoring (rare correct tips score more)? — flips the
   whole strategy toward contrarian (step 4).
-- Special scorings, **deadlines**, and **strategy limits** (e.g. max N
-  identical tips).
+- Special scorings, **per-question deadlines**, and **strategy limits**
+  (e.g. max N identical tips).
 - **The goal**: place well, or *win* a large pool? (changes variance — step 4.)
 
-### 2. Build the data base
+### 2. Build the data base — a consensus across the major books
 
-Primary: current bookmaker odds, aggregated market probabilities, model
-forecasts (e.g. Opta), Elo/SPI ratings. Secondary (only when it adds signal
-the odds have not yet absorbed): confirmed lineups, injuries, suspensions,
-manager change, recent form, home advantage, head-to-head, rest/travel,
-weather. De-vig the odds (remove the bookmaker margin) before treating them
-as probabilities.
+Primary signal: current bookmaker odds, but **aggregated across the 5–10
+biggest publicly-viewable books**, not a single portal:
+
+1. **Collect** the odds for each market (1X2, exact-score, outrights, and
+   each special/award market a bonus question needs) from several books.
+   Odds-comparison aggregators (Oddschecker, Oddsportal / Betexplorer) show
+   many books at once; supplement with named books. Concrete book list and
+   the weighting recipe live in [`reference/odds-and-bonus.md`](reference/odds-and-bonus.md).
+2. **De-vig each book** independently (remove its margin) → per-book implied
+   probabilities. Raw odds sum to >100%; never treat them as probabilities.
+3. **Aggregate with a healthy weighting**, not a blind average: weight
+   **sharp, low-margin books higher** (Pinnacle, Betfair Exchange) and
+   recreational books lower; use a weighted mean or a trimmed median so one
+   outlier book cannot swing the base. The result is the **consensus
+   probability** — the calibration base.
+4. **Treat a single book's outlier as a flag, not a truth** — investigate
+   *why* (a known injury already priced? a stale line?) before moving off
+   consensus. Cross-portal agreement is signal; one portal disagreeing is a
+   prompt to check, not to follow.
+
+Secondary (only when it adds signal the consensus has not yet absorbed):
+confirmed lineups, injuries, suspensions, manager change, recent form, home
+advantage, head-to-head, rest/travel, weather, model forecasts (Opta),
+Elo/SPI ratings.
 
 ### 3. Per-match probabilities (sport block)
 
@@ -98,7 +130,7 @@ results. Pick the block for the event's sport:
 - Derive the outcome split straight from de-vigged moneyline odds; estimate
   a plausible score from the market total. State the model used.
 
-Cross-check the model against the market; on a large divergence, re-check
+Cross-check the model against the consensus; on a large divergence, re-check
 the data and explain the cause before trusting it.
 
 ### 4. Convert to the EV-maximizing tip
@@ -125,13 +157,16 @@ with the higher edge over the typical participant):
 
 Respect all strategy limits from step 1 (max identical tips, etc.).
 
-### 5. Tournament & bonus questions (no hallucination)
+### 5. Tournament, bonus & special questions — answer every one (no hallucination)
 
-For group winners, KO rounds, champion, and bonus questions, use **either**:
+Walk the **step-1 checklist** and answer **each** entry. Pick the method by
+question type — full taxonomy + per-type method in
+[`reference/odds-and-bonus.md`](reference/odds-and-bonus.md):
 
-- real **outright market odds** ("to win group", "to reach final",
-  "outright winner"), **or**
-- the executed Poisson tournament simulator:
+- **Tournament structure** (group winners, KO rounds, finalists, champion):
+  use real **outright market odds** ("to win group", "to reach final",
+  "outright winner") aggregated per step 2, **or** the executed Poisson
+  tournament simulator:
 
   ```bash
   python3 scripts/prediction-pool/poisson_sim.py <teams-xg.json> --runs 20000
@@ -141,37 +176,66 @@ For group winners, KO rounds, champion, and bonus questions, use **either**:
   advancement / title probabilities. **Run it — never report simulated
   numbers you did not actually compute.**
 
-Optimize bonus answers on the same expected-points basis. Re-run as late as
-the deadline allows: re-check confirmed lineups, injuries, suspensions, and
-odds movement, then adjust. The pool's per-match deadline is the only hard
-constraint.
+- **Award / player markets** (top scorer, most assists, "which team supplies
+  the top scorer", golden boot, most cards): use the matching **special
+  market** — e.g. aggregate per-player "top goalscorer" odds **by team** to
+  answer "which team has the top scorer". Where no clean market exists, derive
+  from a stated model (e.g. squad strength × games-expected) and **label it
+  as a model estimate**, not a market number.
+
+- **Binary / over-under specials** (will there be a red card, over/under total
+  goals/cards): take the de-vigged consensus probability for the line and pick
+  the EV-max side under the question's point weight.
+
+Optimize every answer on the same expected-points basis as the scores. Re-run
+as late as each question's deadline allows: re-check confirmed lineups,
+injuries, suspensions, and odds movement, then adjust. The per-question
+deadline is the only hard constraint.
 
 ## Output format
 
 1. **Approval table** — one row per match:
 
    ```
-   Match | Tip | Prob / EV | Risk (low/med/high) | 1-line reason | Odds used
+   Match | Tip | Prob / EV | Risk (low/med/high) | 1-line reason | Books used
    ```
 
-2. **Group standings, the full bracket, and bonus-question answers** where
-   the event has them.
-3. **Self-check note** — confirm the tips reconcile with
+   `Books used` names the consensus base (e.g. "consensus of 7 books, sharp-weighted").
+
+2. **Bonus & special answers** — one row per open question from the step-1
+   checklist, **every entry answered** (none left blank):
+
+   ```
+   Question | Answer | Prob / EV | Risk | 1-line reason | Source (market / model)
+   ```
+
+3. **Group standings and the full bracket** where the event has them.
+4. **Self-check note** — (a) confirm the tips reconcile with
    [`reference/ev-fixtures.md`](reference/ev-fixtures.md) (known pool rules +
-   market odds → a known-good EV tip). If your method disagrees with a
-   fixture, your method is wrong — find the error (usually a forgotten
-   partial-points term or un-de-vigged odds), don't ship the tip.
+   market odds → a known-good EV tip); (b) confirm the bonus table has the
+   **same number of rows as the step-1 checklist** — a shorter table means a
+   question was dropped. If your method disagrees with a fixture, your method
+   is wrong — find the error (usually a forgotten partial-points term,
+   un-de-vigged odds, or following one book instead of the consensus), don't
+   ship the tip.
 
 Handed back to [`/prediction-pool`](../../commands/prediction-pool.md) for the approval
 gate — the skill never enters or submits anything.
 
 ## Gotcha
 
+- **Answering only the scores.** A pool's bonus / award questions carry real
+  points; leaving them blank because they are "not a scoreline" silently
+  forfeits them. The step-1 checklist exists so every question is answered.
+- **Following one portal.** A single book can be stale or shaded; build the
+  base from a sharp-weighted consensus across several and treat an outlier as
+  a flag to investigate, not a number to copy.
 - **Tipping the modal result, not the EV-maximal one.** The single most
   likely scoreline rarely maximizes partial points — compute EV across the
   result grid, don't eyeball the favourite.
 - **Forgetting to de-vig.** Raw bookmaker odds sum to >100%; treating them
-  as probabilities inflates the favourite. Remove the margin first.
+  as probabilities inflates the favourite. Remove the margin **per book**
+  before aggregating.
 - **Contrarian under fixed points.** Deviating "to stand out" only helps
   under quote/rarity rules or a win-a-large-pool goal — otherwise it burns EV.
 - **Claimed-but-unrun simulation.** Numbers like "I ran 10,000 tournaments"
@@ -180,6 +244,8 @@ gate — the skill never enters or submits anything.
 
 ## Do NOT
 
+- Leave any open pool question (bonus / award / special) unanswered.
+- Build the base from a single bookmaker, or skip de-vigging before aggregating.
 - Tip the most likely result instead of the EV-maximal one.
 - Go contrarian under standard fixed-point scoring with a "place well" goal.
 - Report Monte-Carlo numbers without running `poisson_sim.py`.
@@ -190,6 +256,9 @@ gate — the skill never enters or submits anything.
 
 - [`/prediction-pool`](../../commands/prediction-pool.md) — the orchestrator (event,
   persistence, Playwright entry, gates).
+- [`reference/odds-and-bonus.md`](reference/odds-and-bonus.md) — the major-book
+  list + sharpness-weighted consensus recipe, and the bonus / award / special
+  question taxonomy with a per-type method.
 - [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
   rules+odds → EV examples.
 - [`scripts/prediction-pool/poisson_sim.py`](../../../../scripts/prediction-pool/poisson_sim.py) —
