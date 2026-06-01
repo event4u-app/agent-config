@@ -29,6 +29,7 @@ const onBlock = z.enum(['stop', 'ask', 'warn']);
 const onBlockFallback = z.enum(['stop', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
 const leanProjectionMode = z.enum(['eager-all', 'thin']);
+const memoryCadence = z.enum(['auto', 'always', 'never']);
 
 export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
@@ -219,6 +220,9 @@ export const settingsSchema = z.object({
         }),
     }),
     memory: z.object({
+        cadence: memoryCadence.default('always').describe(
+            'Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from cost_profile — owns its own key since the 2026-06-01 untangle.',
+        ),
         review_threshold: z.number().int().min(0).default(10).describe(
             'Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight.',
         ),
