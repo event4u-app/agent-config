@@ -258,7 +258,7 @@
   "rules/no-decorative-emojis-in-git-surfaces.md": "3a4ab41703d085c1005eca56b170b2806bfe71a610a337d6392d5d4fc407a14d",
   "rules/no-pr-progress-comments.md": "bbee2f8dc467fa6585b8532f1ae8137fe23bf97b870cece21f19cda4a4d19710",
   "rules/no-roadmap-references.md": "0437e7a3c0ae1dac97123c4cb68e4294f229335086c3d6326b442411141f497c",
-  "rules/non-destructive-by-default.md": "fdadd4fee8250469f71dc10591b9c0944717f2300893f4033c41eaaacf70819e",
+  "rules/non-destructive-by-default.md": "821b304719f9af40bc88aa7e9401b8ef1167132410404649acf895152c266ebc",
   "rules/onboarding-gate.md": "7a9bc16eca723333ef94be6eb14939bfbe88060d0c412b45f9924d554ba73527",
   "rules/package-ci-checks.md": "84136bd72c75b0af93fa05067d9b3b232ea879e971bc3de8e6219774c65c54c7",
   "rules/persona-governance.md": "71bc204364e028ac6c29b5d7fe77dbc18a631b3934187ef06951244b46b3872b",
