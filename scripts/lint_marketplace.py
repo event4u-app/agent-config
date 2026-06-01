@@ -25,7 +25,14 @@ from pathlib import Path
 ROOT = Path(".")
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 PACKAGE_JSON = ROOT / "package.json"
-CLAUDE_SKILLS_DIR = ROOT / ".claude" / "skills"
+# Committed marketplace skill sources (git-consumed): real skills resolve to
+# .agent-src/skills/<name>; command-as-skill entries to the committed
+# .claude-plugin/skills/<slug> projection. .claude/skills/ is a gitignored
+# local channel and is intentionally NOT a marketplace source.
+SKILL_SOURCE_DIRS = (
+    ROOT / ".agent-src" / "skills",
+    ROOT / ".claude-plugin" / "skills",
+)
 
 
 def fail(errors: list[str]) -> int:
@@ -124,9 +131,10 @@ def main() -> int:
             if not skill_md.exists():
                 errors.append(f"{entry} has no SKILL.md: `{path}`")
 
-    # Reverse-completeness: every SKILL.md on disk under .claude/skills/
-    # must appear in some plugin's skills[]. Catches the drift where new
-    # skills are generated but never added to the marketplace manifest.
+    # Reverse-completeness: every SKILL.md on disk under the committed skill
+    # sources (.agent-src/skills/ + .claude-plugin/skills/) must appear in some
+    # plugin's skills[]. Catches the drift where new skills/commands are
+    # generated but never added to the marketplace manifest.
     listed: set[str] = set()
     for plugin in plugins:
         if not isinstance(plugin, dict):
@@ -135,13 +143,16 @@ def main() -> int:
             if isinstance(path, str):
                 listed.add(path.removeprefix("./"))
 
-    if CLAUDE_SKILLS_DIR.exists():
-        for skill_dir in sorted(CLAUDE_SKILLS_DIR.iterdir()):
+    for source_dir in SKILL_SOURCE_DIRS:
+        if not source_dir.exists():
+            continue
+        prefix = source_dir.relative_to(ROOT).as_posix()
+        for skill_dir in sorted(source_dir.iterdir()):
             if not skill_dir.is_dir():
                 continue
             if not (skill_dir / "SKILL.md").exists():
                 continue
-            rel = f".claude/skills/{skill_dir.name}"
+            rel = f"{prefix}/{skill_dir.name}"
             if rel not in listed:
                 errors.append(
                     f"skill exists on disk but is not listed in marketplace.json: "

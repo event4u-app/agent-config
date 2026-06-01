@@ -27,7 +27,7 @@ def valid_repo(tmp_path: Path) -> Path:
         "name": "@event4u/agent-config",
         "version": "1.4.0",
     }))
-    skill_dir = tmp_path / ".claude" / "skills" / "demo-skill"
+    skill_dir = tmp_path / ".agent-src" / "skills" / "demo-skill"
     skill_dir.mkdir(parents=True)
     (skill_dir / "SKILL.md").write_text("---\nname: demo-skill\ndescription: Demo.\n---\n")
 
@@ -42,7 +42,7 @@ def valid_repo(tmp_path: Path) -> Path:
             "description": "Test bundle.",
             "source": "./",
             "strict": False,
-            "skills": ["./.claude/skills/demo-skill"],
+            "skills": ["./.agent-src/skills/demo-skill"],
         }],
     }))
     return tmp_path
@@ -94,7 +94,7 @@ def test_version_mismatch_with_package_json(valid_repo: Path) -> None:
 
 def test_nonexistent_skill_path_fails(valid_repo: Path) -> None:
     payload = json.loads((valid_repo / ".claude-plugin" / "marketplace.json").read_text())
-    payload["plugins"][0]["skills"].append("./.claude/skills/nope")
+    payload["plugins"][0]["skills"].append("./.agent-src/skills/nope")
     write_marketplace(valid_repo, payload)
     result = run_linter(valid_repo)
     assert result.returncode == 1
@@ -102,10 +102,10 @@ def test_nonexistent_skill_path_fails(valid_repo: Path) -> None:
 
 
 def test_skill_dir_without_skill_md_fails(valid_repo: Path) -> None:
-    broken = valid_repo / ".claude" / "skills" / "broken-skill"
+    broken = valid_repo / ".agent-src" / "skills" / "broken-skill"
     broken.mkdir()
     payload = json.loads((valid_repo / ".claude-plugin" / "marketplace.json").read_text())
-    payload["plugins"][0]["skills"].append("./.claude/skills/broken-skill")
+    payload["plugins"][0]["skills"].append("./.agent-src/skills/broken-skill")
     write_marketplace(valid_repo, payload)
     result = run_linter(valid_repo)
     assert result.returncode == 1
@@ -114,7 +114,7 @@ def test_skill_dir_without_skill_md_fails(valid_repo: Path) -> None:
 
 def test_duplicate_skill_path_fails(valid_repo: Path) -> None:
     payload = json.loads((valid_repo / ".claude-plugin" / "marketplace.json").read_text())
-    payload["plugins"][0]["skills"].append("./.claude/skills/demo-skill")
+    payload["plugins"][0]["skills"].append("./.agent-src/skills/demo-skill")
     write_marketplace(valid_repo, payload)
     result = run_linter(valid_repo)
     assert result.returncode == 1
@@ -141,7 +141,7 @@ def test_owner_missing_email_fails(valid_repo: Path) -> None:
 
 def test_skill_on_disk_not_listed_in_marketplace_fails(valid_repo: Path) -> None:
     """Reverse drift detection: skill exists on disk but is missing from manifest."""
-    drifted = valid_repo / ".claude" / "skills" / "drifted-skill"
+    drifted = valid_repo / ".agent-src" / "skills" / "drifted-skill"
     drifted.mkdir()
     (drifted / "SKILL.md").write_text("---\nname: drifted-skill\ndescription: Drift.\n---\n")
     # marketplace.json is unchanged (still lists only demo-skill)
@@ -153,7 +153,7 @@ def test_skill_on_disk_not_listed_in_marketplace_fails(valid_repo: Path) -> None
 
 def test_completeness_check_ignores_dirs_without_skill_md(valid_repo: Path) -> None:
     """A directory without SKILL.md is not a skill — must not trigger drift."""
-    (valid_repo / ".claude" / "skills" / "_template").mkdir()
+    (valid_repo / ".agent-src" / "skills" / "_template").mkdir()
     # No SKILL.md inside; should be ignored by the reverse-check
     result = run_linter(valid_repo)
     assert result.returncode == 0, result.stdout
@@ -161,7 +161,7 @@ def test_completeness_check_ignores_dirs_without_skill_md(valid_repo: Path) -> N
 
 
 def test_completeness_check_ignores_loose_files(valid_repo: Path) -> None:
-    """Files (not dirs) under .claude/skills/ must not trigger drift."""
-    (valid_repo / ".claude" / "skills" / "README.md").write_text("# index")
+    """Files (not dirs) under .agent-src/skills/ must not trigger drift."""
+    (valid_repo / ".agent-src" / "skills" / "README.md").write_text("# index")
     result = run_linter(valid_repo)
     assert result.returncode == 0, result.stdout
