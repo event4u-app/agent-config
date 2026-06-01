@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **518 public artefacts** shipped by
+Consumer-facing catalog of all **520 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (222)
+## Skills (223)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -157,6 +157,7 @@ are excluded.
 | skill | [`playwright-testing`](../.agent-src/skills/playwright-testing/SKILL.md) |  | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../.agent-src/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | skill | [`positioning-strategy`](../.agent-src/skills/positioning-strategy/SKILL.md) |  | Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'. |
+| skill | [`prediction-pool-optimizer`](../.agent-src/skills/prediction-pool-optimizer/SKILL.md) |  | Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'. |
 | skill | [`privacy-review`](../.agent-src/skills/privacy-review/SKILL.md) |  | Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'. |
 | skill | [`project-analysis-core`](../.agent-src/skills/project-analysis-core/SKILL.md) |  | Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`. |
 | skill | [`project-analysis-hypothesis-driven`](../.agent-src/skills/project-analysis-hypothesis-driven/SKILL.md) |  | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
@@ -285,7 +286,7 @@ are excluded.
 | rule | [`no-decorative-emojis-in-git-surfaces`](../.agent-src/rules/no-decorative-emojis-in-git-surfaces.md) | auto | Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend |
 | rule | [`no-pr-progress-comments`](../.agent-src/rules/no-pr-progress-comments.md) | auto | Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true |
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings |
-| rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
+| rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request |
 | rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../.agent-src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
@@ -317,7 +318,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../.agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (145)
+## Commands (146)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -428,6 +429,7 @@ are excluded.
 | command | [`post-as`](../.agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as:ghostwriter`](../.agent-src/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as:me`](../.agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+| command | [`prediction-pool`](../.agent-src/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
 | command | [`prepare-for-review`](../.agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../.agent-src/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../.agent-src/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
