@@ -1,1 +1,0 @@
-../../.agent-src/user-types/galabau-field-crew.md

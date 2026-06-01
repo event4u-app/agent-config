@@ -1,1 +1,0 @@
-../../.agent-src/rules/framework-neutrality-in-generic-skills.md

@@ -1,1 +1,0 @@
-../../.agent-src/rules/user-interrupt-priority.md

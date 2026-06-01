@@ -1,1 +1,0 @@
-../../.agent-src/rules/missing-tool-handling.md

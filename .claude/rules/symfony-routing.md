@@ -1,1 +1,0 @@
-../../.agent-src/rules/symfony-routing.md

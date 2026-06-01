@@ -1,1 +1,0 @@
-../../.agent-src/rules/language-and-tone.md

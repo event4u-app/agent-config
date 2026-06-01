@@ -1,1 +1,0 @@
-../../.agent-src/rules/autonomous-execution.md

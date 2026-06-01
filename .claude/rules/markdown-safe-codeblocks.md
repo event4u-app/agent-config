@@ -1,1 +1,0 @@
-../../.agent-src/rules/markdown-safe-codeblocks.md

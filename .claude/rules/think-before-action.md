@@ -1,1 +1,0 @@
-../../.agent-src/rules/think-before-action.md

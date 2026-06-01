@@ -1,1 +1,0 @@
-../../.agent-src/rules/no-attribution-footers.md

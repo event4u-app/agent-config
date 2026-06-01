@@ -1,1 +1,0 @@
-../../.agent-src/rules/finance-safety-floor.md
