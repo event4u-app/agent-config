@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **519 artefacts** in this package.
+Maintainer-facing index of all **521 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (222)
+## Skills (223)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -157,6 +157,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`playwright-testing`](../packages/core/.agent-src.uncondensed/skills/playwright-testing/SKILL.md) |  | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../packages/pack-product-basic/.agent-src.uncondensed/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | skill | [`positioning-strategy`](../packages/pack-gtm-marketing/.agent-src.uncondensed/skills/positioning-strategy/SKILL.md) |  | Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'. |
+| skill | [`prediction-pool-optimizer`](../packages/pack-fun/.agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md) |  | Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'. |
 | skill | [`privacy-review`](../packages/core/.agent-src.uncondensed/skills/privacy-review/SKILL.md) |  | Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'. |
 | skill | [`project-analysis-core`](../packages/core/.agent-src.uncondensed/skills/project-analysis-core/SKILL.md) |  | Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`. |
 | skill | [`project-analysis-hypothesis-driven`](../packages/core/.agent-src.uncondensed/skills/project-analysis-hypothesis-driven/SKILL.md) |  | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
@@ -286,7 +287,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`no-decorative-emojis-in-git-surfaces`](../packages/core/.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md) | auto | Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend |
 | rule | [`no-pr-progress-comments`](../packages/core/.agent-src.uncondensed/rules/no-pr-progress-comments.md) | auto | Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true |
 | rule | [`no-roadmap-references`](../packages/core/.agent-src.uncondensed/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings |
-| rule | [`non-destructive-by-default`](../packages/core/.agent-src.uncondensed/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
+| rule | [`non-destructive-by-default`](../packages/core/.agent-src.uncondensed/rules/non-destructive-by-default.md) | always | Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../packages/core/.agent-src.uncondensed/rules/onboarding-gate.md) | auto | First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request |
 | rule | [`package-ci-checks`](../packages/core/.agent-src.uncondensed/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../packages/core/.agent-src.uncondensed/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
@@ -318,7 +319,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../packages/core/.agent-src.uncondensed/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../packages/core/.agent-src.uncondensed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (145)
+## Commands (146)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -429,6 +430,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`post-as`](../packages/core/.agent-src.uncondensed/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as:ghostwriter`](../packages/core/.agent-src.uncondensed/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as:me`](../packages/core/.agent-src.uncondensed/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+| command | [`prediction-pool`](../packages/pack-fun/.agent-src.uncondensed/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
 | command | [`prepare-for-review`](../packages/core/.agent-src.uncondensed/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../packages/core/.agent-src.uncondensed/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../packages/core/.agent-src.uncondensed/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
@@ -446,7 +448,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`roadmap:process-phase`](../packages/core/.agent-src.uncondensed/commands/roadmap/process-phase.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap:process-step`](../packages/core/.agent-src.uncondensed/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
 | command | [`rule-compliance-audit`](../packages/core/.agent-src.uncondensed/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
-| command | [`set-cost-profile`](../packages/core/.agent-src.uncondensed/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
+| command | [`set-cost-profile`](../packages/core/.agent-src.uncondensed/commands/set-cost-profile.md) |  | Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`skill`](../packages/core/.agent-src.uncondensed/commands/skill.md) | cluster: skill | Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it. |
 | command | [`skill:preview`](../packages/core/.agent-src.uncondensed/commands/skill/preview.md) | cluster: skill | Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution. |
 | command | [`skills`](../packages/core/.agent-src.uncondensed/commands/skills.md) | cluster: skills | Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics. |

@@ -185,9 +185,9 @@ def test_scalar_value_not_overwritten_by_section_template() -> None:
     inserting children under a scalar header and producing invalid YAML
     such as ``personal: null\\n  ide: …``.
     """
-    user_text = "personal: null\ncost_profile: minimal\n"
+    user_text = "personal: null\nrule_loading_tier: minimal\n"
     template_text = (
-        "cost_profile: minimal\n"
+        "rule_loading_tier: minimal\n"
         "personal:\n"
         "  ide: ''\n"
         "  user_name: ''\n"
@@ -198,7 +198,7 @@ def test_scalar_value_not_overwritten_by_section_template() -> None:
     assert "personal: null\n  ide" not in out
     assert "personal: null\n  user_name" not in out
     # Sibling top-level keys still merge normally (sanity).
-    assert "cost_profile: minimal" in out
+    assert "rule_loading_tier: minimal" in out
 
 
 def test_scalar_value_with_quoted_string_not_overwritten() -> None:
@@ -265,7 +265,7 @@ def test_synthetic_header_no_value_with_comment_no_double_space() -> None:
 # --- Phase 4: _user healer -------------------------------------------
 
 def test_healer_strips_multi_prefix() -> None:
-    """``_user._user._user.cost_profile`` collapses to a known top-level key."""
+    """``_user._user._user.rule_loading_tier`` collapses to a known top-level key."""
     user_text = _read("with-legacy-_user.yml")
     template_text = _read("template-basic.yml")
     out = sync(user_text, template_text)
@@ -279,13 +279,13 @@ def test_healer_rehomes_known_keys() -> None:
     user_text = (
         "_user:\n"
         "  _user:\n"
-        "    cost_profile: balanced\n"
+        "    rule_loading_tier: balanced\n"
         "  custom_orphan_key: keep\n"
     )
-    template_text = "cost_profile: minimal\n"
+    template_text = "rule_loading_tier: minimal\n"
     out = sync(user_text, template_text)
-    # cost_profile re-homed to top level, value preserved
-    assert "cost_profile: balanced" in out
+    # rule_loading_tier re-homed to top level, value preserved
+    assert "rule_loading_tier: balanced" in out
     # Orphan stays at single-level under _user
     assert "custom_orphan_key: keep" in out
     # No multi-prefix remains

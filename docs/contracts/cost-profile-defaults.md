@@ -7,9 +7,9 @@ keep-beta-until: 2026-08-13
 
 > **Status:** beta · **Owner:** package maintainer · **Last reviewed:** 2026-05-14
 >
-> Normative contract for the **default `cost_profile`** new installs receive.
+> Normative contract for the **default `rule_loading_tier`** new installs receive.
 > Profile semantics themselves are documented in
-> [`docs/customization.md` § cost_profile](../customization.md) and
+> [`docs/customization.md` § rule_loading_tier](../customization.md) and
 > [`docs/contracts/rule-router.md`](rule-router.md); this file owns only the
 > **default-selection decision** and the rationale behind it.
 
@@ -20,7 +20,7 @@ DEFAULT_PROFILE = "balanced"
 ```
 
 `scripts/install.py` and `npx @event4u/agent-config init` write
-`cost_profile: balanced` into `.agent-settings.yml` for fresh installs
+`rule_loading_tier: balanced` into `.agent-settings.yml` for fresh installs
 unless the user passes `--profile=minimal` or `--profile=full`.
 
 ## Profile table
@@ -64,7 +64,7 @@ at `balanced`:
 Token-budget pressure → flip in `.agent-settings.yml`:
 
 ```yaml
-cost_profile: minimal
+rule_loading_tier: minimal
 ```
 
 …or pass `--profile=minimal` to `npx @event4u/agent-config init`.
@@ -77,7 +77,7 @@ CI must keep three surfaces in sync:
 
 - `scripts/install.py` — `DEFAULT_PROFILE` constant.
 - `config/agent-settings.template.yml` — comment block on the
-  `cost_profile:` key.
+  `rule_loading_tier:` key.
 - `docs/customization.md` — cost-profile table default column.
 
 Reviewer guidance: a PR that changes any one of these must touch the

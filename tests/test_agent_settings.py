@@ -134,9 +134,9 @@ def test_project_wins_over_user_global_on_overlap(tmp_path: Path) -> None:
 
 def test_user_global_fills_gaps_where_project_silent(tmp_path: Path) -> None:
     project = _write(tmp_path / "project.yml", "name: ProjectMatze\n")
-    user = _write(tmp_path / "user.yml", "ide: vscode\ncost_profile: lean\n")
+    user = _write(tmp_path / "user.yml", "ide: vscode\nrule_loading_tier: lean\n")
     result = ags.load_agent_settings(project_path=project, user_global_path=user)
-    assert result == {"name": "ProjectMatze", "ide": "vscode", "cost_profile": "lean"}
+    assert result == {"name": "ProjectMatze", "ide": "vscode", "rule_loading_tier": "lean"}
 
 
 def test_nested_dicts_merge_per_key(tmp_path: Path) -> None:
@@ -157,12 +157,12 @@ def test_value_types_preserved_through_merge(tmp_path: Path) -> None:
         tmp_path / "project.yml",
         "pipelines:\n  ci: true\n  retries: 3\n  channels:\n    - slack\n    - email\n",
     )
-    user = _write(tmp_path / "user.yml", "cost_profile: lean\n")
+    user = _write(tmp_path / "user.yml", "rule_loading_tier: lean\n")
     result = ags.load_agent_settings(project_path=project, user_global_path=user)
     assert result["pipelines"]["ci"] is True
     assert result["pipelines"]["retries"] == 3
     assert result["pipelines"]["channels"] == ["slack", "email"]
-    assert result["cost_profile"] == "lean"
+    assert result["rule_loading_tier"] == "lean"
 
 
 # --- read-only invariant ----------------------------------------------------
@@ -207,7 +207,8 @@ def test_mergeable_keys_are_documented_exact_paths() -> None:
     assert ags.MERGEABLE_KEYS == (
         "name",
         "ide",
-        "cost_profile",
+        "rule_loading_tier",
+        "memory.cadence",
         "personal.bot_icon",
         "personal.autonomy",
         "telegraph.speak_scope",
@@ -325,17 +326,17 @@ def test_cascade_non_root_layer_not_whitelist_filtered(tmp_path: Path) -> None:
 def test_cascade_full_chain_deepest_wins(tmp_path: Path) -> None:
     _init_git_dir(tmp_path)
     user = _write(tmp_path / "user.yml", "name: UserName\nide: vscode\n")
-    _write(tmp_path / ".agent-settings.yml", "name: RootName\ncost_profile: lean\n")
+    _write(tmp_path / ".agent-settings.yml", "name: RootName\nrule_loading_tier: lean\n")
     mid = tmp_path / "mid"
     mid.mkdir()
-    _write(mid / ".agent-settings.yml", "cost_profile: balanced\n")
+    _write(mid / ".agent-settings.yml", "rule_loading_tier: balanced\n")
     deep = mid / "deep"
     deep.mkdir()
     _write(deep / ".agent-settings.yml", "ide: nvim\n")
     result = ags.load_agent_settings(user_global_path=user, cwd=deep)
-    # name: root wins over user-global; cost_profile: mid wins over root;
+    # name: root wins over user-global; rule_loading_tier: mid wins over root;
     # ide: deep wins over user-global.
-    assert result == {"name": "RootName", "cost_profile": "balanced", "ide": "nvim"}
+    assert result == {"name": "RootName", "rule_loading_tier": "balanced", "ide": "nvim"}
 
 
 def test_cascade_submodule_git_file_works(tmp_path: Path) -> None:

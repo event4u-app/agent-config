@@ -74,7 +74,7 @@ size budgets.
 | `balanced` *(default)* | kernel + tier-1 | Day-to-day engineering work; matches pre-roadmap behaviour superset |
 | `full` | kernel + tier-1 + tier-2 | Architectural / cross-wing / governance sessions |
 
-Consumer projects opt in via `personal.cost_profile` in
+Consumer projects opt in via `personal.rule_loading_tier` in
 `.agent-settings.yml`. The install script keeps user-set values; only
 the template default is `balanced`.
 

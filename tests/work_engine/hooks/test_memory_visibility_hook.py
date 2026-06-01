@@ -74,17 +74,17 @@ def test_silent_when_visibility_off() -> None:
     assert work.report == ""
 
 
-def test_lean_profile_suppresses_below_threshold() -> None:
+def test_auto_cadence_suppresses_below_threshold() -> None:
     runner, work = _runner(
-        MemoryVisibilityHook(cost_profile="lean", asked_types=("domain-invariants",))
+        MemoryVisibilityHook(memory_cadence="auto", asked_types=("domain-invariants",))
     )
     work.memory = [{"id": "mem_1", "type": "domain-invariants"}]
     runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
     assert work.report == ""
 
 
-def test_lean_profile_emits_at_threshold() -> None:
-    runner, work = _runner(MemoryVisibilityHook(cost_profile="lean"))
+def test_auto_cadence_emits_at_threshold() -> None:
+    runner, work = _runner(MemoryVisibilityHook(memory_cadence="auto"))
     work.memory = [{"id": "mem_1", "type": "domain-invariants"}]
     runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
     assert "\U0001F9E0 Memory: 1/4 \u00b7 ids=[mem_1]" in work.report

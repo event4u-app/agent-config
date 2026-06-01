@@ -38,7 +38,7 @@ stability: stable
 - README "Quickstart" block — install → `/onboard` → `/work "first
   real task"`, contributor detail moved below the `## For contributors`
   fold.
-- Default `cost_profile` flipped from `minimal` to `balanced`;
+- Default `rule_loading_tier` flipped from `minimal` to `balanced`;
   rationale in [`cost-profile-defaults.md`](cost-profile-defaults.md).
 - `/onboard` step 11 prints the Quickstart command list inline.
 - CI gate: `task smoke-quickstart` runs the installer into a tmpdir

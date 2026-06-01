@@ -770,6 +770,17 @@ def _parse_frontmatter(content: str) -> tuple[dict, str]:
     return meta if isinstance(meta, dict) else {}, body
 
 
+def _yaml_scalar(value: str) -> str:
+    """Return a YAML-safe single-line scalar for a frontmatter value.
+
+    Descriptions can contain ``:``, ``#``, or quotes — characters that break
+    an unquoted YAML scalar (e.g. ``description: Hard Floor: ...`` is invalid
+    YAML). A JSON string is itself a valid YAML double-quoted scalar, so
+    ``json.dumps`` gives correct escaping for free.
+    """
+    return json.dumps(value, ensure_ascii=False)
+
+
 def _emit_cursor_mdc(source: Path, target: Path) -> None:
     """Write a Cursor `.mdc` file with Cursor-shaped frontmatter."""
     meta, body = _parse_frontmatter(source.read_text())
@@ -777,7 +788,7 @@ def _emit_cursor_mdc(source: Path, target: Path) -> None:
     always_apply = bool(meta.get("alwaysApply") or meta.get("type") == "always")
     lines = [
         "---",
-        f"description: {description}",
+        f"description: {_yaml_scalar(description)}",
         "globs: ",
         f"alwaysApply: {'true' if always_apply else 'false'}",
         "---",
@@ -797,7 +808,7 @@ def _emit_windsurf_rule(source: Path, target: Path) -> None:
     lines = [
         "---",
         f"trigger: {trigger}",
-        f"description: {description}",
+        f"description: {_yaml_scalar(description)}",
         "globs: ",
         "---",
         "",

@@ -97,14 +97,14 @@ describe('wizard scope routing (Phase 2.3)', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), identity: fixtureUserIdentity() },
+            payload: { settings: fixtureSettings({ rule_loading_tier: 'balanced' }), identity: fixtureUserIdentity() },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
         expect(existsSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'))).toBe(true);
         expect(existsSync(join(ctx.projectScopeRoot, 'settings', '.agent-settings.yml'))).toBe(false);
         expect(body.scope).toBe('global');
-        expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/cost_profile:\s*balanced/m);
+        expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/rule_loading_tier:\s*balanced/m);
     });
 
     it("POST /finish with scope='project' writes under projectScopeRoot", async () => {
@@ -113,14 +113,14 @@ describe('wizard scope routing (Phase 2.3)', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { scope: 'project', settings: fixtureSettings({ cost_profile: 'minimal' }), identity: fixtureUserIdentity() },
+            payload: { scope: 'project', settings: fixtureSettings({ rule_loading_tier: 'minimal' }), identity: fixtureUserIdentity() },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
         expect(body.scope).toBe('project');
         expect(existsSync(join(ctx.projectScopeRoot, 'settings', '.agent-settings.yml'))).toBe(true);
         expect(existsSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'))).toBe(false);
-        expect(readFileSync(join(ctx.projectScopeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/cost_profile:\s*minimal/m);
+        expect(readFileSync(join(ctx.projectScopeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/rule_loading_tier:\s*minimal/m);
     });
 
     it("POST /finish with scope='project' is rejected (422) when no projectScopeRoot is set", async () => {
@@ -129,7 +129,7 @@ describe('wizard scope routing (Phase 2.3)', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { scope: 'project', settings: fixtureSettings({ cost_profile: 'balanced' }) },
+            payload: { scope: 'project', settings: fixtureSettings({ rule_loading_tier: 'balanced' }) },
         });
         expect(res.statusCode).toBe(422);
         const body = res.json() as { error: { code: string; fields?: Array<{ path: string }> } };
@@ -143,7 +143,7 @@ describe('wizard scope routing (Phase 2.3)', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { scope: 'nope', settings: fixtureSettings({ cost_profile: 'balanced' }) },
+            payload: { scope: 'nope', settings: fixtureSettings({ rule_loading_tier: 'balanced' }) },
         });
         expect(res.statusCode).toBe(422);
         const body = res.json() as { error: { code: string; fields?: Array<{ path: string }> } };

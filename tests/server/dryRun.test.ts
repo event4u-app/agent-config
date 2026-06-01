@@ -51,13 +51,13 @@ describe('dry-run mode', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': String(lastModified),
             },
-            payload: { values: fixtureSettings({ cost_profile: 'minimal' }) },
+            payload: { values: fixtureSettings({ rule_loading_tier: 'minimal' }) },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as SettingsPutBody;
         expect(body.dryRun).toBe(true);
         expect(body.preview.path).toBe(SETTINGS_REL);
-        expect(body.preview.body).toMatch(/^cost_profile:\s*minimal\b/m);
+        expect(body.preview.body).toMatch(/^rule_loading_tier:\s*minimal\b/m);
 
         // Disk untouched — byte content + mtime preserved.
         expect(readFileSync(settingsFile, 'utf8')).toBe(before);
@@ -117,14 +117,14 @@ describe('dry-run mode', () => {
             method: 'POST', url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: {
-                settings: fixtureSettings({ cost_profile: 'minimal' }),
+                settings: fixtureSettings({ rule_loading_tier: 'minimal' }),
                 identity,
             },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as WizardFinishBody;
         expect(body.dryRun).toBe(true);
-        expect(body.preview.settingsYaml).toMatch(/^cost_profile:\s*minimal\b/m);
+        expect(body.preview.settingsYaml).toMatch(/^rule_loading_tier:\s*minimal\b/m);
         expect(body.preview.identity).toEqual(identity);
         expect(body.preview.userIdentityYaml).toMatch(/name:\s*Matze/);
 

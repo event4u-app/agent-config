@@ -6,7 +6,7 @@ settings.
 
 ## File format
 
-**YAML**, with a single top-level scalar (`cost_profile`) plus one level of
+**YAML**, with a single top-level scalar (`rule_loading_tier`) plus one level of
 grouped sections (`personal`, `project`, `github`, `eloquent`, `pipelines`,
 `subagents`). Comments with `#`.
 
@@ -57,7 +57,7 @@ made by the user directly or by the agent on request, following the
 #            highest token cost. Pick this when working on agent-config
 #            itself or when you need every behavioural rule active.
 # custom   = ignore profile — every matrix value must be set explicitly.
-cost_profile: balanced
+rule_loading_tier: balanced
 
 # --- Per-skill model auto-switch (ADR-035) ---
 # Skills declare a vendor-neutral `model_tier` (lite|medium|high); the generator
@@ -146,7 +146,7 @@ eloquent:
 # agent session can be resumed. See scripts/chat_history.py for the API.
 #
 # Defaults below are placeholders — scripts/install.py substitutes them
-# per cost_profile (see config/profiles/*.ini).
+# per rule_loading_tier (see config/profiles/*.ini).
 chat_history:
   # Log chat events to disk (true, false)
   enabled: true
@@ -213,7 +213,7 @@ pipelines:
   # Skill improvement pipeline (true, false)
   # true  = after meaningful tasks, propose learning capture and improvements (default)
   # false = silent, no post-task analysis
-  # Included by every cost_profile except `custom`.
+  # Included by every rule_loading_tier except `custom`.
   skill_improvement: true
 
 # --- Roadmap execution ---
@@ -488,7 +488,7 @@ the canonical narrative lives in
 
 | Key path | Values | Default | Description |
 |---|---|---|---|
-| `cost_profile` | `minimal`, `balanced`, `full`, `custom` | `minimal` | Selects which agent surfaces are active. See [Cost profiles](#cost-profiles). |
+| `rule_loading_tier` | `minimal`, `balanced`, `full`, `custom` | `minimal` | Selects which agent surfaces are active. See [Cost profiles](#cost-profiles). |
 | `personal.ide` | `code`, `phpstorm`, `cursor` | _(empty)_ | CLI command to open files in the IDE |
 | `personal.open_edited_files` | `true`, `false` | `false` | Auto-open edited files in the IDE after edits |
 | `personal.user_name` | first name | _(empty)_ | User's first name, used to address the user personally. Captured by `/onboard`. |
@@ -555,7 +555,7 @@ Applied automatically when `scripts/install` finds a legacy `.agent-settings`
 
 | Legacy flat key | New YAML path |
 |---|---|
-| `cost_profile` | `cost_profile` |
+| `rule_loading_tier` | `rule_loading_tier` |
 | `ide` | `personal.ide` |
 | `open_edited_files` | `personal.open_edited_files` |
 | `user_name` | `personal.user_name` |
@@ -578,7 +578,7 @@ so nothing is silently dropped; the migration log points them out.
 
 ## Cost profiles
 
-The `cost_profile` setting selects which agent surfaces are active. See
+The `rule_loading_tier` setting selects which agent surfaces are active. See
 `docs/customization.md` for the authoritative description.
 
 | Profile | Description |

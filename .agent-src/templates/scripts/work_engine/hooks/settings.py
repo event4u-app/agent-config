@@ -16,7 +16,7 @@ settings.py``):
 
 Per road-to-portable-dev-preferences P3, the YAML read goes through
 :func:`work_engine._lib.agent_settings.load_agent_settings`, which
-cascades the whitelisted ``cost_profile`` (and other DX-comfort keys)
+cascades the whitelisted ``rule_loading_tier`` (and other DX-comfort keys)
 from ``~/.event4u/agent-config/agent-settings.yml`` (legacy
 ``~/.config/agent-config/agent-settings.yml`` read as fallback) when
 the project file omits them. Project values always win.
@@ -61,7 +61,7 @@ class HookSettings:
     decision_trace: bool = False
     memory_visibility: bool = False
     memory_visibility_off: bool = False
-    cost_profile: str = "standard"
+    memory_cadence: str = "always"
     chat_history_enabled: bool = False
     chat_history_script: str = DEFAULT_CHAT_HISTORY_SCRIPT
     decision_engine: DecisionEngineSettings = DecisionEngineSettings()
@@ -82,8 +82,8 @@ def load_hook_settings(
     ``~/.event4u/agent-config/agent-settings.yml`` (with a read fallback
     to the legacy ``~/.config/agent-config/agent-settings.yml``) and
     only cascades the whitelisted DX-comfort keys (currently
-    ``cost_profile``) when the project file omits them. See
-    road-to-portable-dev-preferences P3.
+    ``rule_loading_tier`` and ``memory.cadence``) when the project file
+    omits them. See road-to-portable-dev-preferences P3.
     """
     path = Path(settings_path) if settings_path else Path(DEFAULT_SETTINGS_FILE)
     raw = load_agent_settings(
@@ -133,12 +133,16 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
 
     memory_section = data.get("memory")
     visibility_off = False
+    memory_cadence = "always"
     if isinstance(memory_section, dict):
         raw = memory_section.get("visibility")
         if isinstance(raw, str) and raw.strip().lower() == "off":
             visibility_off = True
         elif isinstance(raw, bool) and raw is False:
             visibility_off = True
+        cadence_raw = memory_section.get("cadence")
+        if cadence_raw is not None:
+            memory_cadence = str(cadence_raw).strip().lower() or "always"
 
     memory_hooks = hooks.get("memory_visibility")
     if isinstance(memory_hooks, dict):
@@ -147,11 +151,6 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
         )
     else:
         memory_visibility_on = True
-
-    cost_profile_raw = data.get("cost_profile") or "standard"
-    cost_profile = (
-        str(cost_profile_raw).strip().lower() or "standard"
-    )
 
     return HookSettings(
         enabled=True,
@@ -168,7 +167,7 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
         decision_trace=decision_trace_on,
         memory_visibility=memory_visibility_on,
         memory_visibility_off=visibility_off,
-        cost_profile=cost_profile,
+        memory_cadence=memory_cadence,
         chat_history_enabled=chat_block_enabled and global_chat_on,
         chat_history_script=chat_script,
         decision_engine=decision_engine_settings,

@@ -36,13 +36,13 @@ describe('2PC commit + crash recovery', () => {
         const userMdPath = join(projectRoot, '.agent-user.md');
         const { txnId } = await commitMulti(
             [
-                { target: settingsPath, contents: 'cost_profile: balanced\n', mode: 0o600 },
+                { target: settingsPath, contents: 'rule_loading_tier: balanced\n', mode: 0o600 },
                 { target: userMdPath, contents: '# user md\n', mode: 0o600 },
             ],
             { writeRoot: projectRoot },
         );
         expect(txnId.length).toBeGreaterThan(0);
-        expect(readFileSync(settingsPath, 'utf8')).toBe('cost_profile: balanced\n');
+        expect(readFileSync(settingsPath, 'utf8')).toBe('rule_loading_tier: balanced\n');
         expect(readFileSync(userMdPath, 'utf8')).toBe('# user md\n');
         // Marker must be gone after a clean commit.
         expect(existsSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`))).toBe(false);
@@ -56,7 +56,7 @@ describe('2PC commit + crash recovery', () => {
         const userMdTmp = tempPathFor(userMdPath, txnId);
 
         // Seed both tmps + the marker, but DO NOT perform the rename.
-        writeFileSync(settingsTmp, 'cost_profile: minimal\n', { mode: 0o600 });
+        writeFileSync(settingsTmp, 'rule_loading_tier: minimal\n', { mode: 0o600 });
         writeFileSync(userMdTmp, '# replayed user md\n', { mode: 0o600 });
         const marker = {
             version: 1,
@@ -72,7 +72,7 @@ describe('2PC commit + crash recovery', () => {
         const result = await replayPendingCommits(projectRoot);
         expect(result.completed).toContain(txnId);
         expect(result.aborted).toHaveLength(0);
-        expect(readFileSync(settingsPath, 'utf8')).toBe('cost_profile: minimal\n');
+        expect(readFileSync(settingsPath, 'utf8')).toBe('rule_loading_tier: minimal\n');
         expect(readFileSync(userMdPath, 'utf8')).toBe('# replayed user md\n');
         // Marker must be cleaned up.
         expect(existsSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`))).toBe(false);
@@ -87,7 +87,7 @@ describe('2PC commit + crash recovery', () => {
 
         // Seed ONLY the marker — one tmp is missing → replay must abort,
         // not invent contents, not touch the targets.
-        writeFileSync(settingsTmp, 'cost_profile: minimal\n', { mode: 0o600 });
+        writeFileSync(settingsTmp, 'rule_loading_tier: minimal\n', { mode: 0o600 });
         const marker = {
             version: 1,
             txnId,

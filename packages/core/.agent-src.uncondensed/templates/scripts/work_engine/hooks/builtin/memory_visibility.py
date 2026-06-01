@@ -43,10 +43,12 @@ class MemoryVisibilityHook:
 
     Parameters
     ----------
-    cost_profile:
-        Cadence profile from ``.agent-settings.yml`` (``lean`` /
-        ``standard`` / ``verbose``). ``lean`` suppresses the line
-        unless ``asks ≥ 3`` per the contract's cadence table.
+    memory_cadence:
+        Cadence from ``memory.cadence`` in ``.agent-settings.yml``
+        (``auto`` / ``always`` / ``never``). ``auto`` suppresses the
+        line unless ``asks ≥ 3``; ``never`` suppresses it entirely;
+        ``always`` (default) emits whenever ``asks ≥ 1`` per the
+        contract's cadence table.
     visibility_off:
         When ``True``, the hook stays silent — used to mirror
         ``memory.visibility: off`` in the consumer settings.
@@ -59,11 +61,11 @@ class MemoryVisibilityHook:
     def __init__(
         self,
         *,
-        cost_profile: str = "standard",
+        memory_cadence: str = "always",
         visibility_off: bool = False,
         asked_types: Iterable[str] | None = None,
     ) -> None:
-        self._cost_profile = cost_profile
+        self._memory_cadence = memory_cadence
         self._visibility_off = visibility_off
         self._asked_types = (
             tuple(asked_types) if asked_types is not None else DEFAULT_ASKED_TYPES
@@ -81,7 +83,7 @@ class MemoryVisibilityHook:
         summary = summarise_visibility(memory, asked_types=self._asked_types)
         if not should_emit(
             summary,
-            cost_profile=self._cost_profile,
+            memory_cadence=self._memory_cadence,
             visibility_off=self._visibility_off,
         ):
             return

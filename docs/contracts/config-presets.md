@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-14
 > Schema and semantics for the **Config Preset** axis introduced in
 > step-15 Phase 1 item 4. Records the **Cost Enforcement** model
 > (Council v3 action #3 prerequisite) so the preset loader can ship.
-> Boundary against `profile.id`, `pack.id`, and `cost_profile`:
+> Boundary against `profile.id`, `pack.id`, and `rule_loading_tier`:
 > [`ADR-010`](../decisions/ADR-010-profile-pack-preset-boundary.md).
 
 ## Decision
@@ -136,7 +136,7 @@ no other axis may write preset-owned knobs.
 
 ## Non-goals
 
-- This contract does **not** define profiles, packs, or `cost_profile`.
+- This contract does **not** define profiles, packs, or `rule_loading_tier`.
   See the corresponding contracts.
 - It does **not** ship a UI. CLI-first (`agent-config cost`,
   `agent-config preset set <id>`).

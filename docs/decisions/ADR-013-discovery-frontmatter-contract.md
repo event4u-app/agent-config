@@ -34,7 +34,7 @@ truth. The scan emits a single `dist/discovery/discovery-manifest.json`
 shipped inside the npm tarball; every downstream surface reads from that
 file and from nothing else. This ADR locks the **frontmatter shape**, the
 **closed vocabularies**, and the **non-overlap rule** that keeps the new
-keys from colliding with the existing `cost_profile` / `profile.id` axes
+keys from colliding with the existing `rule_loading_tier` / `profile.id` axes
 (ADR-010).
 
 ### Why a closed vocabulary
@@ -129,7 +129,7 @@ matching `config/discovery/packs.yml` row in the same PR.
 
 ### Non-overlap rule (ADR-010 alignment)
 
-- `cost_profile` values (`minimal`, `balanced`, `full`, `custom`) are
+- `rule_loading_tier` values (`minimal`, `balanced`, `full`, `custom`) are
   **not** pack ids. The scanner hard-fails on overlap.
 - `profile.id` values (`founder`, `developer`, `content_creator`,
   `agency`, `finance`, `ops`) are **not** pack ids. The scanner

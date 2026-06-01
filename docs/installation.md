@@ -303,7 +303,7 @@ explicitly by adding `agent_config_version: <semver>` to
 The orchestrator chains payload sync and bridge generation:
 
 ```bash
-bash scripts/install                  # defaults to cost_profile=balanced
+bash scripts/install                  # defaults to rule_loading_tier=balanced
 bash scripts/install --profile=minimal
 bash scripts/install --force          # overwrite existing bridges
 bash scripts/install --skip-bridges   # payload only
@@ -359,7 +359,7 @@ regardless of which AI tool they use.** No per-developer plugin installation nee
 After initial setup, commit these files:
 
 ```
-.agent-settings.yml                ← shared profile (e.g., cost_profile: balanced)
+.agent-settings.yml                ← shared profile (e.g., rule_loading_tier: balanced)
 agents/installed-tools.lock        ← AI bill of materials (ADR-008, Phase 3)
 .augment/                          ← rules, skills, commands (symlinks)
 .cursor/rules/                     ← Cursor rules (symlinks)
@@ -589,7 +589,7 @@ The system works immediately with sensible defaults. Optionally, create `.agent-
 to choose a profile:
 
 ```yaml
-cost_profile: balanced
+rule_loading_tier: balanced
 ```
 
 | Profile | What's active | For whom |

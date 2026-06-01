@@ -4,7 +4,7 @@ Seed profiles for the [profile system](../../docs/contracts/profile-system.md).
 Each profile answers *who is the user?* — audience identity that
 selects the default skill/command surface, README entry-paragraph,
 and persona pre-selection. Boundary against `preset.id`, `pack.id`,
-and `cost_profile` lives in
+and `rule_loading_tier` lives in
 [ADR-010](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md).
 
 ## Seed set (v2.x — fixed)

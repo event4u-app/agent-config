@@ -9,14 +9,14 @@ echo "Agent Config — First Run"
 echo ""
 
 # --- Profile detection ---
-# The YAML format stores `cost_profile` as a top-level scalar:
-#   cost_profile: minimal
+# The YAML format stores `rule_loading_tier` as a top-level scalar:
+#   rule_loading_tier: minimal
 # It may be unquoted or double-quoted after migration. We strip both.
-read_cost_profile() {
+read_rule_loading_tier() {
   local file="$1"
-  grep -E '^cost_profile:' "$file" 2>/dev/null \
+  grep -E '^rule_loading_tier:' "$file" 2>/dev/null \
     | head -n1 \
-    | sed -E 's/^cost_profile:[[:space:]]*//' \
+    | sed -E 's/^rule_loading_tier:[[:space:]]*//' \
     | sed -E 's/^"(.*)"$/\1/' \
     | sed -E "s/^'(.*)'\$/\\1/" \
     | tr -d '[:space:]'
@@ -25,16 +25,16 @@ read_cost_profile() {
 if [ -f "$SETTINGS_FILE" ]; then
   echo "✅  Found $SETTINGS_FILE"
   echo ""
-  CURRENT_PROFILE=$(read_cost_profile "$SETTINGS_FILE" || true)
+  CURRENT_PROFILE=$(read_rule_loading_tier "$SETTINGS_FILE" || true)
 
   if [ -n "${CURRENT_PROFILE:-}" ]; then
-    echo "Active cost_profile: $CURRENT_PROFILE"
+    echo "Active rule_loading_tier: $CURRENT_PROFILE"
   else
-    echo "No cost_profile configured yet."
+    echo "No rule_loading_tier configured yet."
     echo ""
     echo "Recommended: add this to $SETTINGS_FILE:"
     echo ""
-    echo "  cost_profile: minimal"
+    echo "  rule_loading_tier: minimal"
   fi
 elif [ -f "$LEGACY_SETTINGS_FILE" ]; then
   echo "⚠️  Found legacy $LEGACY_SETTINGS_FILE (key=value format)."
@@ -47,7 +47,7 @@ else
   echo ""
   echo "Create one with:"
   echo ""
-  echo "  cost_profile: minimal"
+  echo "  rule_loading_tier: minimal"
   echo ""
 fi
 
@@ -97,7 +97,7 @@ echo "  minimal   rules, skills, commands only"
 echo "  balanced  + runtime dispatcher"
 echo "  full      + experimental read-only tool adapters"
 echo ""
-echo "Change profile: edit cost_profile: <name> in $SETTINGS_FILE"
+echo "Change profile: edit rule_loading_tier: <name> in $SETTINGS_FILE"
 echo "Profile details: docs/customization.md"
 echo "Getting started: docs/getting-started.md"
 echo ""

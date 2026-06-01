@@ -63,7 +63,7 @@ mergeable from the user-global file; every other key is silently ignored:
 ```
 name
 ide
-cost_profile
+rule_loading_tier
 personal.bot_icon
 personal.autonomy
 telegraph.speak_scope
@@ -95,7 +95,7 @@ user-global layer. Non-root in-project layers (intermediate +
 ``<CWD>``) carry arbitrary keys — they live inside the project
 boundary, are tracked in git, and reviewed in PRs like any other
 config. Use a subdirectory `.agent-settings.yml` to scope a single
-field (e.g. a `cost_profile` override for `services/heavy-ml/`) without
+field (e.g. a `rule_loading_tier` override for `services/heavy-ml/`) without
 duplicating the root file.
 
 The user-global file is created **only on explicit opt-in via the
@@ -169,7 +169,7 @@ is recovered on the next server boot.
 | Setting | Default | Description |
 |---|---|---|
 | `agent_config_version` | *(empty)* | Exact semver pin of the agent-config release (see above). Empty = unpinned. |
-| `cost_profile` | `balanced` | Token budget (`minimal`, `balanced`, `full`, `custom`) — rationale: [`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md) |
+| `rule_loading_tier` | `balanced` | Token budget (`minimal`, `balanced`, `full`, `custom`) — rationale: [`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md) |
 | `personal.user_name` | *(empty)* | User's first name for personalized responses |
 | `personal.minimal_output` | `true` | Suppress intermediate output |
 | `personal.play_by_play` | `false` | Share intermediate findings during analysis |
@@ -202,7 +202,23 @@ if the key file's permissions drift.
 
 ### Cost profiles
 
-`cost_profile` is the master switch for rule-tier loading. The kernel
+> **Four "cost" concepts — don't confuse them.** Several settings sound like
+> they steer spend; only one is the rule-loading footprint:
+>
+> | Concept | What it controls | What it's a lever for |
+> |---|---|---|
+> | `rule_loading_tier` *(this setting)* | How many behavioural rule tiers load each session | Token footprint of the rule layer (small, ~once per session) |
+> | `memory.cadence` | Whether the `🧠 Memory: …` visibility line renders (`auto`/`always`/`never`) | Output noise — **not** spend |
+> | `model.auto_switch` + a skill's `model_tier` | Which Claude model runs a skill (lite/medium/high → haiku/sonnet/opus) | The **dominant** per-turn spend lever (~10× delta) |
+> | `/cost:report` + `cost.budgets` | Tracking actual token/USD spend + optional ceilings | Budget enforcement |
+>
+> Before the 2026-06-01 untangle, `rule_loading_tier` was named `cost_profile`
+> **and** the same key also carried the `memory.cadence` values — one key, two
+> colliding meanings. The rename split them so each lever owns its name. When
+> a budget is tight, reach for the **model** lever first — lowering the rule
+> tier saves little and drops guardrails.
+
+`rule_loading_tier` is the master switch for rule-tier loading. The kernel
 (always-loaded Iron-Law floor, ≤ 26k chars across 9 rules) ships in every
 profile. Tier-1 and tier-2 rules are gated by profile and resolved at
 session start from `dist/router.json` (compiled by `scripts/compile_router.py`).
@@ -497,7 +513,7 @@ Sample Markdown output:
 - [x] api-rate-limit-is-100rpm — accepted in step `refine`
 ```
 
-Disable for `cost_profile: minimal` CI runs by setting `explain.enable_last: false`
+Disable for `rule_loading_tier: minimal` CI runs by setting `explain.enable_last: false`
 in `.agent-settings.yml`; the command then exits 0 with a one-line
 notice instead of producing a trace. Exit codes: `0` rendered or
 disabled · `1` no recent run found · `2` invocation error.

@@ -86,6 +86,7 @@ tasks:
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: validate-decision-engine
+      - task: validate-agent-settings
       - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity
@@ -192,6 +193,7 @@ tasks:
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: validate-decision-engine
+      - task: validate-agent-settings
       - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity

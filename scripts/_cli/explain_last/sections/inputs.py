@@ -15,7 +15,7 @@ def render(trace: dict[str, Any]) -> str:
     rows = [
         ("profile.id", inputs.get("profile"), sources.get("profile")),
         ("preset.id", inputs.get("preset"), sources.get("preset")),
-        ("cost_profile", inputs.get("cost_profile"), sources.get("cost_profile")),
+        ("rule_loading_tier", inputs.get("rule_loading_tier"), sources.get("rule_loading_tier")),
     ]
     out.append("| knob | value | source |")
     out.append("|---|---|---|")

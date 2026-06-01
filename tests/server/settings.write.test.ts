@@ -33,7 +33,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
 
     it('writes the merged payload, returns the new lastModified and writtenPaths', async () => {
         const ius = await currentMtime();
-        const payload = fixtureSettings({ cost_profile: 'minimal' });
+        const payload = fixtureSettings({ rule_loading_tier: 'minimal' });
         const res = await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/settings',
@@ -52,7 +52,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
 
         const onDisk = readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8');
         // Scalar made it onto the line.
-        expect(onDisk).toMatch(/^cost_profile:\s*minimal\b/m);
+        expect(onDisk).toMatch(/^rule_loading_tier:\s*minimal\b/m);
     });
 
     it('preserves template comments through the round-trip', async () => {
@@ -61,7 +61,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
             .filter((l) => l.trimStart().startsWith('#'))
             .length;
         const ius = await currentMtime();
-        const payload = fixtureSettings({ cost_profile: 'balanced' });
+        const payload = fixtureSettings({ rule_loading_tier: 'balanced' });
         const res = await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/settings',
@@ -91,7 +91,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': String(ius + 5),
             },
-            payload: { values: fixtureSettings({ cost_profile: 'balanced' }) },
+            payload: { values: fixtureSettings({ rule_loading_tier: 'balanced' }) },
         });
         const stat = statSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'));
         // Mask off the file-type bits — we only care about the low 9 bits.
@@ -106,7 +106,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
 
     it('produces a non-empty diff for the same payload right after the write', async () => {
         const ius = await currentMtime();
-        const payload = fixtureSettings({ cost_profile: 'minimal' });
+        const payload = fixtureSettings({ rule_loading_tier: 'minimal' });
         await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/settings',

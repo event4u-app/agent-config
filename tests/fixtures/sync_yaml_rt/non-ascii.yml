@@ -1,5 +1,5 @@
 # Konfiguration mit Umlauten — ä ö ü ß
-cost_profile: minimal
+rule_loading_tier: minimal
 
 personal:
   # Benutzername — wird vom Agenten verwendet
