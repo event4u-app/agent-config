@@ -58,6 +58,52 @@ class TestEnforceConsumerGlobalOnly(unittest.TestCase):
                     install._enforce_consumer_global_only("project")
 
 
+class TestEnforceNotSourceRepo(unittest.TestCase):
+    """`_enforce_not_source_repo` — refuse non-global install into the source repo.
+
+    Python-side mirror of the bash orchestrator's source-repo guard. Unlike
+    the consumer-floor above, dev-mode does NOT lift it; the dedicated
+    ``AGENT_CONFIG_ALLOW_SELF_INSTALL=1`` override does.
+    """
+
+    DUMMY_ROOT = Path("/tmp/agent-config-fake-root")
+
+    def _clean_env(self) -> Dict[str, str]:
+        drop = {"AGENT_CONFIG_DEV_MODE", "AGENT_CONFIG_ALLOW_SELF_INSTALL"}
+        return {k: v for k, v in install.os.environ.items() if k not in drop}
+
+    def test_global_scope_allowed_even_in_source_repo(self) -> None:
+        with mock.patch.object(install, "_is_agent_config_source_repo", return_value=(True, "package.json:name")):
+            with mock.patch.dict("os.environ", self._clean_env(), clear=True):
+                install._enforce_not_source_repo("global", self.DUMMY_ROOT)
+
+    def test_project_scope_in_consumer_dir_allowed(self) -> None:
+        with mock.patch.object(install, "_is_agent_config_source_repo", return_value=(False, "")):
+            with mock.patch.dict("os.environ", self._clean_env(), clear=True):
+                install._enforce_not_source_repo("project", self.DUMMY_ROOT)
+
+    def test_project_scope_in_source_repo_is_rejected(self) -> None:
+        with mock.patch.object(install, "_is_agent_config_source_repo", return_value=(True, "package.json:name")):
+            with mock.patch.dict("os.environ", self._clean_env(), clear=True):
+                with redirect_stderr(io.StringIO()) as buf:
+                    with self.assertRaises(SystemExit):
+                        install._enforce_not_source_repo("project", self.DUMMY_ROOT)
+                self.assertIn("source checkout", buf.getvalue())
+
+    def test_dev_mode_does_not_lift_source_repo_guard(self) -> None:
+        with mock.patch.object(install, "_is_agent_config_source_repo", return_value=(True, "package.json:name")):
+            with mock.patch.dict("os.environ", {"AGENT_CONFIG_DEV_MODE": "1"}):
+                install.os.environ.pop("AGENT_CONFIG_ALLOW_SELF_INSTALL", None)
+                with redirect_stderr(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        install._enforce_not_source_repo("project", self.DUMMY_ROOT)
+
+    def test_allow_self_install_override_lifts_guard(self) -> None:
+        with mock.patch.object(install, "_is_agent_config_source_repo", return_value=(True, "package.json:name")):
+            with mock.patch.dict("os.environ", {"AGENT_CONFIG_ALLOW_SELF_INSTALL": "1"}):
+                install._enforce_not_source_repo("project", self.DUMMY_ROOT)
+
+
 class TestGlobalPathConstants(unittest.TestCase):
     """Phase 2.1 — canonical global path constants."""
 

@@ -2162,6 +2162,41 @@ def _enforce_consumer_global_only(scope: str) -> None:
     )
 
 
+def _enforce_not_source_repo(scope: str, project_root: Path) -> None:
+    """Refuse a non-global install into the agent-config source repo.
+
+    Python-side mirror of the bash orchestrator's "Source-repo guard"
+    (``scripts/install``). The bash guard only covers the headless
+    ``init`` front door; the wizard reaches the apply engine directly via
+    ``install.py --apply-payload`` (and maintainers can call
+    ``python3 scripts/install.py``), so without this the GUI path could
+    write the ``.augment/`` / ``.claude/`` / ``.cursor/`` projection trees
+    back into the checkout. Both front doors converge on ``main()`` here, so
+    this is the single chokepoint that makes the floor uniform.
+
+    ``--global`` only writes user-scope paths and never the source tree, so
+    it is exempt. Unlike :func:`_enforce_consumer_global_only`, dev-mode does
+    NOT lift this guard — dogfooding bridges into the source tree is an
+    explicit action gated by its own ``AGENT_CONFIG_ALLOW_SELF_INSTALL=1``
+    override (same flag the bash guard honours).
+    """
+    if scope == "global":
+        return
+    if os.environ.get("AGENT_CONFIG_ALLOW_SELF_INSTALL") == "1":
+        return
+    is_source, signature = _is_agent_config_source_repo(project_root)
+    if not is_source:
+        return
+    fail(
+        "Refusing to install agent-config into its own source checkout "
+        f"(detected: {signature}). The source repo is global-only — a "
+        "project-scope install would recreate the .augment/ .claude/ .cursor/ "
+        "projection trees in the repo (double token cost). Run `task sync` to "
+        "regenerate them from .agent-src.uncondensed/ instead, or set "
+        "AGENT_CONFIG_ALLOW_SELF_INSTALL=1 to force."
+    )
+
+
 # --- road-to-global-only-install § Phase 2.2 — three-layer settings reader ---
 #
 # Merge order (per ADR-020 / D9):
@@ -4692,6 +4727,7 @@ def main(argv: list[str]) -> int:
     custom_path: Path | None = Path(opts.custom_path).resolve() if opts.custom_path else None
     scope = _resolve_scope(opts, detected, detect_reason, custom_path)
     _enforce_consumer_global_only(scope)
+    _enforce_not_source_repo(scope, detect_root)
 
     # Scope validation runs before filesystem / package detection so
     # --tools=X / --scope conflicts fail fast with a directive error
