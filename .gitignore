@@ -103,6 +103,17 @@ __pycache__/
 /.ai/
 /GEMINI.md
 
+# Claude Code projection — `.claude/skills/` (symlinks) and
+# `.claude/settings.json` stay TRACKED: the plugin marketplace
+# (`.claude-plugin/marketplace.json`) references `./.claude/skills/<name>`
+# and Claude Code's filesystem channel expects that layout (ADR-030).
+# The dirs below are NOT a Claude Code concept (no marketplace / loader
+# reference) — they are pure projections rebuilt by `task generate-tools`,
+# so they stay ignored like the other tool trees above.
+/.claude/rules/
+/.claude/personas/
+/.claude/user-types/
+
 # Trigger-eval run outputs (produced by `scripts/skill_trigger_eval.py`;
 # triggers.json is tracked, last-run.json is per-run output)
 .agent-src.uncondensed/skills/*/evals/last-run.json

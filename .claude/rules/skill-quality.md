@@ -1,1 +1,0 @@
-../../.agent-src/rules/skill-quality.md

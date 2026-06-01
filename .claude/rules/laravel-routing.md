@@ -1,1 +1,0 @@
-../../.agent-src/rules/laravel-routing.md

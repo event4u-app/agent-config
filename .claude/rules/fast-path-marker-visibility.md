@@ -1,1 +1,0 @@
-../../.agent-src/rules/fast-path-marker-visibility.md

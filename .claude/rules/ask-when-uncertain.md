@@ -1,1 +1,0 @@
-../../.agent-src/rules/ask-when-uncertain.md

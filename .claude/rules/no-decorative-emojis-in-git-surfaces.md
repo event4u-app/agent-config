@@ -1,1 +1,0 @@
-../../.agent-src/rules/no-decorative-emojis-in-git-surfaces.md

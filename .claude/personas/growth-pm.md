@@ -1,1 +1,0 @@
-../../.agent-src/personas/growth-pm.md

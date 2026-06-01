@@ -1,1 +1,0 @@
-../../.agent-src/user-types/metalworking-shop.md

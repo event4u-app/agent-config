@@ -1,1 +1,0 @@
-../../.agent-src/personas/hollywood-director.md

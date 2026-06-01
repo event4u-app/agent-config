@@ -1,1 +1,0 @@
-../../.agent-src/rules/provider-lifecycle-discipline.md

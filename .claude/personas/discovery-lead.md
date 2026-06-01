@@ -1,1 +1,0 @@
-../../.agent-src/personas/discovery-lead.md

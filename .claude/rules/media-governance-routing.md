@@ -1,1 +1,0 @@
-../../.agent-src/rules/media-governance-routing.md
