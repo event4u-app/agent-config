@@ -2,7 +2,7 @@
 model_tier: inherit
 name: set-cost-profile
 tier: 1
-description: Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
+description: Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 skills: [file-editor]
 suggestion:
   eligible: false
@@ -17,7 +17,7 @@ packs:
 
 # /set-cost-profile
 
-Changes `cost_profile` in `.agent-settings.yml`. Four profiles are defined in
+Changes `rule_loading_tier` in `.agent-settings.yml`. Four profiles are defined in
 the [`agent-settings` template](../templates/agent-settings.md#cost-profiles):
 
 - `minimal` · `balanced` · `full` · `custom`
@@ -32,7 +32,7 @@ the [`agent-settings` template](../templates/agent-settings.md#cost-profiles):
   directly or ask the agent — the merge rules live in
   [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 - For role modes use [`/mode`](mode.md) — different concept (sets
-  `roles.active_role`, not `cost_profile`).
+  `roles.active_role`, not `rule_loading_tier`).
 
 ## Steps
 
@@ -49,7 +49,7 @@ Profile names are case-insensitive on input; the file value stays lowercase.
 Read `.agent-settings.yml`. If missing, tell the user to run
 `scripts/install` first and stop — do not create the file here.
 
-Extract the current `cost_profile` value.
+Extract the current `rule_loading_tier` value.
 
 ### 3. Load profile descriptions
 
@@ -63,7 +63,7 @@ Render the current value and present numbered choices with the hint text
 extracted in step 3:
 
 ```
-> Current: cost_profile = {current}
+> Current: rule_loading_tier = {current}
 >
 > 1. minimal — {hint from template}
 > 2. balanced — {hint from template}
@@ -77,7 +77,7 @@ value directly — still echo the old → new line in step 6.
 
 ### 5. Write the value
 
-Update `cost_profile` in `.agent-settings.yml` using the
+Update `rule_loading_tier` in `.agent-settings.yml` using the
 [section-aware merge rules](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, preserve key order, touch only the changed field).
 
@@ -86,7 +86,7 @@ If the user picked "Keep current", do nothing and stop.
 ### 6. Confirm
 
 ```
-> cost_profile: {old} → {new}
+> rule_loading_tier: {old} → {new}
 ```
 
 If the new profile activates a surface the user hasn't used before
@@ -106,7 +106,7 @@ steps here, that's the docs' job.
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
-there is no `.agent-settings.yml` to write and no `cost_profile` toggle to
+there is no `.agent-settings.yml` to write and no `rule_loading_tier` toggle to
 flip. Cost behaviour on those surfaces is governed by the platform itself.
 
 ## See also
