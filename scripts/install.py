@@ -4617,13 +4617,23 @@ def _kill_stale_wizard_server() -> None:
     print("(Stopped the previous wizard server.)")
 
 
-def _wizard_spawn(project_root: Path) -> int:
+def _wizard_spawn(project_root: Path, *, pass_project_root: bool = True) -> int:
     """Spawn the wizard, await readiness, hand off to the child.
 
     Returns the child's exit code on clean shutdown, 0 on
     readiness-timeout (install itself succeeded; wizard is best-effort).
     Never raises into the parent — every error surfaces as a printed
     fallback line and a 0 return.
+
+    ``pass_project_root`` forwards ``--project-root`` to the child so the
+    wizard's write root is the consumer project. Set it ``False`` on the
+    global install path: ``--project-root`` would override the write root
+    to the project (project mode), so the wizard would neither read nor
+    write the **global** ``~/.event4u/agent-config/settings/.agent-user.yml``
+    (the saved identity) — and writing global content into the project
+    tree violates ADR-020. Omitting it lets ``resolveWriteRoot`` pick the
+    global root, so a returning user's name/language pre-fill from the
+    saved identity instead of the OS account.
     """
     # Always start fresh: stop any server left running by a prior init.
     _kill_stale_wizard_server()
@@ -4641,7 +4651,9 @@ def _wizard_spawn(project_root: Path) -> int:
     # charge of the user-facing URL print (Tier 2 § 8 ordering) — the dead
     # `gui` subcommand + AGENT_CONFIG_GUI_NO_OPEN env were retired in
     # road-to-single-install-source-of-truth § Phase 4.
-    cmd = ["node", str(cli), "install", "--no-open", "--project-root", str(project_root)]
+    cmd = ["node", str(cli), "install", "--no-open"]
+    if pass_project_root:
+        cmd += ["--project-root", str(project_root)]
     env = os.environ.copy()
 
     try:
@@ -4733,6 +4745,17 @@ def _wizard_await_ready(
 
     print()
     print(f"Setup wizard ready: {matched_url}")
+    # Actually open the browser. The child is spawned with --no-open so the
+    # Python parent owns the URL print (ordering); it must also own the
+    # open, or the wizard never surfaces and the user is left staring at a
+    # URL. Best-effort: webbrowser.open returns False on a headless host
+    # (no DISPLAY / no default handler) — we keep the printed URL as the
+    # fallback and never raise into the install flow.
+    try:
+        import webbrowser
+        webbrowser.open(matched_url)
+    except Exception:  # noqa: BLE001 - opening is best-effort, never fatal
+        pass
     print("(Wizard runs in the background; close the tab or press Ctrl-C to stop.)")
     try:
         return child.wait()
@@ -4975,16 +4998,24 @@ def main(argv: list[str]) -> int:
     policy_root = detect_root if scope == "global" else (
         custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
     )
-    _set_conflict_policy(_load_conflict_policy(policy_root, opts.force))
+    # When the install hands off to the browser wizard, the run is
+    # zero-terminal-interaction by contract ("run the command, it installs,
+    # then the wizard opens for packages + settings" — no --force, no
+    # prompts). Foreign-file conflicts auto-resolve to overwrite and the
+    # legacy migration runs without the [Y/n] gate; the wizard is the
+    # settings surface that recreates fresh config afterwards.
+    wizard_handoff = _wizard_should_launch(opts)[0]
+    _set_conflict_policy(_load_conflict_policy(policy_root, opts.force or wizard_handoff))
 
     try:
         if scope == "global":
-            # First-run hook: when legacy artefacts live in the project tree,
-            # prompt before laying down the global surface so the user is
-            # not left with a dual-stack install. Delegates to the unified
-            # `agent-config migrate` (see docs/contracts/migrate-command.md).
+            # First-run hook: sweep legacy project-local artefacts via the
+            # unified `agent-config migrate` before laying down the global
+            # surface (see docs/contracts/migrate-command.md). On the
+            # wizard-handoff path this runs without the [Y/n] gate; the
+            # terminal prompt only fires when no wizard will launch.
             artefacts = _detect_legacy_for_migration(detect_root)
-            if artefacts and _prompt_migrate_to_global(detect_root, artefacts):
+            if artefacts and (wizard_handoff or _prompt_migrate_to_global(detect_root, artefacts)):
                 rc = _run_migrate_to_global(detect_root)
                 if rc != 0:
                     return rc
@@ -4992,6 +5023,19 @@ def main(argv: list[str]) -> int:
             # invoked from within a project tree (ADR-008 Phase 3.2).
             rc = install_global(parsed_tools, opts.force, project_root=detect_root)
             _emit_progress_terminal(rc)
+            # Browser-wizard parity with the project path: an interactive
+            # global install (agent-config global / upgrade / refresh
+            # --global) hands off to the GUI instead of the terminal — the
+            # wizard is the single tool-selection + identity surface. The
+            # gate (`_wizard_should_launch`) is the one source of truth
+            # (TTY / CI / --no-ui / explicit --tools). Best-effort: the
+            # install already succeeded, so a wizard boot failure returns 0.
+            if rc == 0 and wizard_handoff:
+                # No --project-root: the wizard resolves the GLOBAL write
+                # root so it reads/writes ~/.event4u/agent-config (the saved
+                # identity → name/language pre-fill) and never lands global
+                # content in the project tree (ADR-020).
+                return _wizard_spawn(detect_root, pass_project_root=False)
             return rc
 
         project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
