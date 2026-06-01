@@ -164,6 +164,16 @@
     example_workflow: scene-expander
     time_to_first_value_minutes: 12
 
+- id: fun
+  label: Fun
+  description: Non-essential social/fun workflows (prediction-pool tips, etc.).
+  workspaces: [small-business]
+  trust_level_default: experimental
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: prediction-pool-optimizer
+    time_to_first_value_minutes: 6
+
 - id: meta
   label: Meta
   description: Artefacts that maintain this package (agent-config itself).

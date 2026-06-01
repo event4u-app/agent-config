@@ -169,7 +169,7 @@ Your agent now understands slash commands:
 | `/quality-fix` | Run and fix all quality checks |
 | `/chat-history` | Inspect the persistent chat-history log (read-only `show`) |
 
-→ [Browse all 145 active commands](../.agent-src/commands/)
+→ [Browse all 146 active commands](../.agent-src/commands/)
 
 ---
 

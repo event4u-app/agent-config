@@ -292,6 +292,8 @@
         "./.claude/skills/post-as",
         "./.claude/skills/post-as-ghostwriter",
         "./.claude/skills/post-as-me",
+        "./.claude/skills/prediction-pool",
+        "./.claude/skills/prediction-pool-optimizer",
         "./.claude/skills/prepare-for-review",
         "./.claude/skills/privacy-review",
         "./.claude/skills/project-analysis-core",
