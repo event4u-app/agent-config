@@ -5,7 +5,7 @@
 Cashflow, runway, basic forecasting.
 
 - **id**: `finance-basic`
-- **version**: `5.6.1`
+- **version**: `5.7.0`
 - **owner**: finance, founder
 - **requires**: —
 - **artefacts**: 4

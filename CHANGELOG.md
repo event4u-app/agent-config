@@ -811,6 +811,54 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.7.0](https://github.com/event4u-app/agent-config/compare/5.6.1...5.7.0) (2026-06-01)
+
+### Features
+
+* **settings:** enum-validate value-bearing settings keys in CI ([b6c56d0](https://github.com/event4u-app/agent-config/commit/b6c56d088b1b8cfa549374e864bb3dcc203972fb))
+* **value:** honest eager-vs-thin cost ladder in the value dashboard ([9a806c4](https://github.com/event4u-app/agent-config/commit/9a806c466e171f8a83e743990bc9350192745da5))
+* **fun:** add /tippspiel command + tippspiel-optimizer skill in new pack-fun ([4c8fc65](https://github.com/event4u-app/agent-config/commit/4c8fc65473556ce3635a6fdcad67096c0c15886f))
+* **skills:** add skill-composition graph + co-availability gate (roadmap 3.4) ([6db3afa](https://github.com/event4u-app/agent-config/commit/6db3afa8738331c2e85fb1f75dceb9943b2a2599))
+
+### Bug Fixes
+
+* **install:** hand off global install to the browser wizard with zero terminal prompts ([0fc46e3](https://github.com/event4u-app/agent-config/commit/0fc46e3e29220bcebfe6c97316309502ee2b7ee4))
+* **wizard:** disambiguate the rule-loading / budget / model step ([122244c](https://github.com/event4u-app/agent-config/commit/122244c859b0c9da61e60a58fa220fb6c8f699d1))
+* **cost-report:** recommend the model tier before rule loading ([2545c27](https://github.com/event4u-app/agent-config/commit/2545c277e5cc930a1e493dbf78e3ef3fe11933aa))
+* **condense:** quote frontmatter descriptions in cursor/windsurf rules ([c69c9bb](https://github.com/event4u-app/agent-config/commit/c69c9bbb56bce9c01284db90936fd7b432278ffb))
+* **install:** always overwrite our own deployed files, drop foreign-file gate ([25b593d](https://github.com/event4u-app/agent-config/commit/25b593d96da87e61f29844db088b01a346d07d81))
+* **ci:** mirror memory.cadence into the source loader + TS settings schema ([2a74eff](https://github.com/event4u-app/agent-config/commit/2a74eff244c76830745c9d1e319d6abd5fe1d80b))
+* **memory:** give the visibility-line cadence its own memory.cadence key ([e792390](https://github.com/event4u-app/agent-config/commit/e792390f59b01190769cba1f369bb574c83847bd))
+* **rules:** trim non-destructive description to the 190-char schema cap ([b2a489e](https://github.com/event4u-app/agent-config/commit/b2a489ecf9fcbadf5232417f2503fddbab657fdb))
+* **rules:** make production-branch commits a Hard-Floor opt-in (kernel) ([31f49a9](https://github.com/event4u-app/agent-config/commit/31f49a9af7fc0fb495556e8570e0adbfcb031416))
+* **discovery:** register 'fun' in discovery-manifest schema enum ([7b91f12](https://github.com/event4u-app/agent-config/commit/7b91f12fa4e1e805a121a0fd7c9adb2760f5f122))
+
+### Documentation
+
+* **install:** record ADR-036 + roadmap Phase 6 for the browser-wizard handoff ([f3cc886](https://github.com/event4u-app/agent-config/commit/f3cc886618526b1c705a2a25c1ee98eb4063a188))
+* **roadmap:** close + archive cost_profile untangle (phases 0-7; 4 items cancelled-with-follow-up) ([296b0da](https://github.com/event4u-app/agent-config/commit/296b0da47fc0ceed399438e4c5cb5801df0ea1b7))
+* record cost_profile untangle (ADR-036 + BREAKING_CHANGES + disambiguation) ([efa658a](https://github.com/event4u-app/agent-config/commit/efa658acaef31bb1d1a9ddb565b5093b03f7d62e))
+* **roadmap:** add cost_profile untangle roadmap ([708033c](https://github.com/event4u-app/agent-config/commit/708033cb5649c1d9583ea42a397795cf198b3493))
+
+### Refactoring
+
+* **settings:** rename cost_profile to rule_loading_tier across the suite ([21a31cb](https://github.com/event4u-app/agent-config/commit/21a31cb9746996324e9a49d82ad87084fb605c87))
+* **fun:** English command name + expanded triggers ([62c960e](https://github.com/event4u-app/agent-config/commit/62c960eac79cdbc2883ac4727fe05d651f9497b8))
+
+### Chores
+
+* update agent work ([7ed0cbb](https://github.com/event4u-app/agent-config/commit/7ed0cbbe45e33757f8fa59048d6f9212110da8c1))
+* sync agent-project-settings example pin to package.json (5.6.1) ([194a040](https://github.com/event4u-app/agent-config/commit/194a040628b21c2f61b1096f956f350eed131ec6))
+* regenerate index + catalog after rename ([1c6dc68](https://github.com/event4u-app/agent-config/commit/1c6dc68416570f47bf8578d60c508f0acd185993))
+* regenerate derived trees after merging main ([1f0ad58](https://github.com/event4u-app/agent-config/commit/1f0ad582d9a757acafd470d1fdd32adc362a2a49))
+* regenerate derived trees for the prediction-pool rename ([bb3225f](https://github.com/event4u-app/agent-config/commit/bb3225fa91e78bfa640d33d501175b586cbd7de7))
+* regenerate derived trees for pack-fun ([4125ba5](https://github.com/event4u-app/agent-config/commit/4125ba583cadd25ec29c23999287fc42fcc3d991))
+* update condensation hashes after requires_skills frontmatter ([baf60e5](https://github.com/event4u-app/agent-config/commit/baf60e58328051176a519628dd56f879a5c4dd86))
+* **roadmap:** re-examine lean-buildout disposition — 3.4 built, rest confirmed ([d88b633](https://github.com/event4u-app/agent-config/commit/d88b6332181013dc1757c317453519cadee3f63a))
+* **roadmap:** close + archive lean-buildout roadmap (council-resolved) ([303ca6b](https://github.com/event4u-app/agent-config/commit/303ca6b6346298601fb789d08d003e023ab26ac4))
+
+Tests: 5375 (+0 since 5.6.1)
+
 ## [5.6.1](https://github.com/event4u-app/agent-config/compare/5.6.0...5.6.1) (2026-06-01)
 
 ### Bug Fixes
