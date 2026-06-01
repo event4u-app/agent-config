@@ -56,7 +56,8 @@ echo "✅  Pre-push hook installed."
 cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 #!/usr/bin/env bash
 # Pre-commit hook: verify .claude-plugin/marketplace.json lists every skill
-# that exists on disk under .claude/skills/, AND verify
+# that exists on disk under the committed skill sources (.agent-src/skills/
+# + .claude-plugin/skills/), AND verify
 # agents/roadmaps-progress.md is in sync with the current state of
 # agents/roadmaps/ (roadmap-progress-sync Iron Law).
 

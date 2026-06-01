@@ -419,6 +419,13 @@ COMMANDS_SOURCE = PROJECT_ROOT / ".agent-src" / "commands"
 PERSONAS_SOURCE = PROJECT_ROOT / ".agent-src" / "personas"
 USER_TYPES_SOURCE = PROJECT_ROOT / ".agent-src" / "user-types"
 CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
+# Committed plugin-marketplace projection for command-as-skill entries.
+# The marketplace is consumed as a git repo, so every skills[] path must be
+# committed. Real skills resolve to .agent-src/skills/<name> (already
+# committed); commands have no <slug>/SKILL.md shape in source, so their
+# committed projection lives here. .claude/skills/ stays a gitignored,
+# generate-tools-rebuilt local auto-discovery channel.
+PLUGIN_SKILLS_DIR = PROJECT_ROOT / ".claude-plugin" / "skills"
 
 PERSONA_TOOL_DIRS = {
     ".claude/personas": "../../.agent-src/personas",
@@ -1160,6 +1167,70 @@ def generate_claude_commands() -> int:
     return count
 
 
+def generate_plugin_command_skills() -> int:
+    """Mirror command-as-skill entries into the committed .claude-plugin/skills/.
+
+    The plugin marketplace references each command entry as a <slug>/SKILL.md
+    path that must be committed (git-consumed marketplace). Commands have no
+    such shape in source, so this projects them as symlinks:
+    .claude-plugin/skills/<slug>/SKILL.md → ../../../.agent-src/commands/<rel>.
+
+    Symlink-only by design: the committed .claude/skills/ shape was always
+    symlinks (ADR-034 model-rendered copies are local-only, never committed),
+    so the distributed marketplace behaviour is preserved exactly. The local
+    auto-discovery channel (.claude/skills/, gitignored) keeps model rendering
+    for the dev loop.
+    """
+    if not COMMANDS_SOURCE.exists():
+        return 0
+
+    PLUGIN_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
+
+    skill_names: set[str] = set()
+    if SKILLS_SOURCE.exists():
+        skill_names = {d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()}
+
+    current_slugs: set[str] = set()
+    count = 0
+    for source_file, slug in _iter_commands():
+        # A real skill of the same name takes priority — skip the command.
+        if slug in skill_names:
+            continue
+        current_slugs.add(slug)
+
+        skill_dir = PLUGIN_SKILLS_DIR / slug
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        skill_file = skill_dir / "SKILL.md"
+        if skill_file.exists() or skill_file.is_symlink():
+            skill_file.unlink()
+
+        rel_path = source_file.relative_to(COMMANDS_SOURCE)
+        rel_target = Path("../../../.agent-src/commands") / rel_path
+        skill_file.symlink_to(rel_target)
+        count += 1
+
+    # Reap stale command dirs from removed commands (exactly one SKILL.md).
+    removed_dirs = 0
+    for item in PLUGIN_SKILLS_DIR.iterdir():
+        if not item.is_dir() or item.is_symlink():
+            continue
+        if item.name in current_slugs:
+            continue
+        skill_md = item / "SKILL.md"
+        if skill_md.is_symlink() or skill_md.is_file():
+            entries = list(item.iterdir())
+            if len(entries) == 1 and entries[0].name == "SKILL.md":
+                skill_md.unlink()
+                item.rmdir()
+                removed_dirs += 1
+
+    msg = f"  ✅  Created {count} command entries in .claude-plugin/skills/"
+    if removed_dirs:
+        msg += f" ({removed_dirs} stale dirs removed)"
+    info(msg)
+    return count
+
+
 def generate_persona_symlinks() -> int:
     """Create symlink directories for personas (.claude/personas/, .cursor/personas/).
 
@@ -1313,6 +1384,7 @@ def generate_tools() -> None:
         generate_gemini_md()
     skills = generate_claude_skills() if _tool_active("claude-code") else 0
     commands = generate_claude_commands() if _tool_active("claude-code") else 0
+    plugin_cmd_skills = generate_plugin_command_skills() if _tool_active("claude-code") else 0
     plugin_hooks = generate_plugin_hooks() if _tool_active("claude-code") else 0
     personas = generate_persona_symlinks()
     user_types = generate_user_type_symlinks()
@@ -1322,7 +1394,8 @@ def generate_tools() -> None:
     windsurf_wf = generate_windsurf_workflows() if _tool_active("windsurf") else 0
     summary = (
         f"✅  generate-tools — rules={rules} skills={skills} "
-        f"commands={commands} plugin_hooks={plugin_hooks} "
+        f"commands={commands} plugin_cmd_skills={plugin_cmd_skills} "
+        f"plugin_hooks={plugin_hooks} "
         f"personas={personas} user_types={user_types} "
         f"cursor_mdc={cursor_mdc} windsurf_rules={windsurf_modern} "
         f"cursor_commands={cursor_cmds} windsurf_workflows={windsurf_wf} "
