@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "value-v1",
-  "generated_at": "2026-06-01T08:49:42+00:00",
+  "generated_at": "2026-06-01T12:10:59+00:00",
   "reference_scale": {
     "requests": 1000,
     "avg_input_tokens": 8000,
@@ -61,9 +61,9 @@
       "id": "rtk",
       "label": "+ rtk (CLI-Output filtern) / + rtk (filter CLI output)",
       "what_it_does": "rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg.",
-      "token_delta": -593,
-      "eur_delta": -1.63668,
-      "cumulative_pct": 732.25,
+      "token_delta": -585,
+      "eur_delta": -1.6146,
+      "cumulative_pct": 732.35,
       "confidence": "measured",
       "source_report": "internal/bench/reports/rtk/latest.json"
     },
@@ -73,7 +73,7 @@
       "what_it_does": "Telegraph-Stil zielt auf knappere Modell-Antworten.",
       "token_delta": 56,
       "eur_delta": 0.7728,
-      "cumulative_pct": 732.95,
+      "cumulative_pct": 733.05,
       "confidence": "measured",
       "source_report": "internal/bench/reports/telegraph-v1.json",
       "footnote": "Honest: gemessener Median = -9.27% gegen 'sei knapp' — Telegraph liefert hier mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht."
@@ -126,9 +126,9 @@
     }
   ],
   "totals": {
-    "cumulative_token_delta": 58636,
-    "cumulative_eur_delta": 161.8354,
-    "cumulative_pct": 732.95,
+    "cumulative_token_delta": 58644,
+    "cumulative_eur_delta": 161.8574,
+    "cumulative_pct": 733.05,
     "net_verdict": "net-cost"
   },
   "notes": [

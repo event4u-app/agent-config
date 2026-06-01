@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "rtk-v1",
-  "generated_at": "2026-05-28T13:43:23+00:00",
+  "generated_at": "2026-06-01T12:10:59+00:00",
   "corpus": {
     "id": "rtk-commands",
     "path": "internal/bench/corpora/rtk/commands.yaml",
@@ -14,24 +14,24 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 741,
+        "stdout_bytes": 297,
         "stderr_bytes": 0,
-        "chars": 741,
-        "tokens_approx": 185,
+        "chars": 297,
+        "tokens_approx": 74,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 421,
+        "stdout_bytes": 119,
         "stderr_bytes": 0,
-        "chars": 421,
-        "tokens_approx": 105,
+        "chars": 119,
+        "tokens_approx": 29,
         "returncode": 0
       },
       "delta": {
-        "chars_saved": 320,
-        "tokens_saved": 80,
-        "pct_saved": 43.185
+        "chars_saved": 178,
+        "tokens_saved": 44,
+        "pct_saved": 59.933
       }
     },
     {
@@ -40,24 +40,24 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 198,
+        "stdout_bytes": 0,
         "stderr_bytes": 0,
-        "chars": 198,
-        "tokens_approx": 49,
+        "chars": 0,
+        "tokens_approx": 0,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 197,
+        "stdout_bytes": 1,
         "stderr_bytes": 0,
-        "chars": 197,
-        "tokens_approx": 49,
+        "chars": 1,
+        "tokens_approx": 0,
         "returncode": 0
       },
       "delta": {
-        "chars_saved": 1,
-        "tokens_saved": 0,
-        "pct_saved": 0.505
+        "chars_saved": -1,
+        "tokens_saved": -1,
+        "pct_saved": 0.0
       }
     },
     {
@@ -66,24 +66,24 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 6124,
+        "stdout_bytes": 5523,
         "stderr_bytes": 0,
-        "chars": 6124,
-        "tokens_approx": 1531,
+        "chars": 5523,
+        "tokens_approx": 1380,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 2587,
+        "stdout_bytes": 2942,
         "stderr_bytes": 0,
-        "chars": 2587,
-        "tokens_approx": 646,
+        "chars": 2942,
+        "tokens_approx": 735,
         "returncode": 0
       },
       "delta": {
-        "chars_saved": 3537,
-        "tokens_saved": 884,
-        "pct_saved": 57.756
+        "chars_saved": 2581,
+        "tokens_saved": 645,
+        "pct_saved": 46.732
       }
     },
     {
@@ -92,18 +92,18 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 2311,
+        "stdout_bytes": 677,
         "stderr_bytes": 0,
-        "chars": 2311,
-        "tokens_approx": 577,
+        "chars": 677,
+        "tokens_approx": 169,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 2311,
+        "stdout_bytes": 677,
         "stderr_bytes": 0,
-        "chars": 2311,
-        "tokens_approx": 577,
+        "chars": 677,
+        "tokens_approx": 169,
         "returncode": 0
       },
       "delta": {
@@ -118,24 +118,24 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 4329,
+        "stdout_bytes": 4542,
         "stderr_bytes": 0,
-        "chars": 4329,
-        "tokens_approx": 1082,
+        "chars": 4542,
+        "tokens_approx": 1135,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 936,
+        "stdout_bytes": 996,
         "stderr_bytes": 0,
-        "chars": 936,
-        "tokens_approx": 234,
+        "chars": 996,
+        "tokens_approx": 249,
         "returncode": 0
       },
       "delta": {
-        "chars_saved": 3393,
-        "tokens_saved": 848,
-        "pct_saved": 78.378
+        "chars_saved": 3546,
+        "tokens_saved": 886,
+        "pct_saved": 78.071
       }
     },
     {
@@ -144,24 +144,24 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 12830,
+        "stdout_bytes": 13506,
         "stderr_bytes": 0,
-        "chars": 12830,
-        "tokens_approx": 3207,
+        "chars": 13506,
+        "tokens_approx": 3376,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 1095,
+        "stdout_bytes": 1071,
         "stderr_bytes": 0,
-        "chars": 1095,
-        "tokens_approx": 273,
+        "chars": 1071,
+        "tokens_approx": 267,
         "returncode": 0
       },
       "delta": {
-        "chars_saved": 11735,
-        "tokens_saved": 2933,
-        "pct_saved": 91.465
+        "chars_saved": 12435,
+        "tokens_saved": 3108,
+        "pct_saved": 92.07
       }
     },
     {
@@ -170,18 +170,18 @@
       "skipped": null,
       "raw": {
         "error": null,
-        "stdout_bytes": 13228,
+        "stdout_bytes": 14062,
         "stderr_bytes": 0,
-        "chars": 13228,
-        "tokens_approx": 3307,
+        "chars": 14062,
+        "tokens_approx": 3515,
         "returncode": 0
       },
       "rtk": {
         "error": null,
-        "stdout_bytes": 13228,
+        "stdout_bytes": 14062,
         "stderr_bytes": 0,
-        "chars": 13228,
-        "tokens_approx": 3307,
+        "chars": 14062,
+        "tokens_approx": 3515,
         "returncode": 0
       },
       "delta": {
@@ -220,10 +220,10 @@
   "aggregate": {
     "commands_measured": 8,
     "commands_skipped": 0,
-    "total_chars_saved": 19003,
-    "total_tokens_saved": 4749,
+    "total_chars_saved": 18756,
+    "total_tokens_saved": 4686,
     "median_pct_saved": 48.571,
-    "tokens_saved_per_request": 593
+    "tokens_saved_per_request": 585
   },
   "notes": [
     "Tokens approximated at 4 chars / token.",
