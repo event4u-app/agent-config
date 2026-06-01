@@ -356,5 +356,100 @@ class KillStaleWizardServerTests(unittest.TestCase):
                 proc.wait(timeout=10)
 
 
+class WizardZeroTerminalContractTests(unittest.TestCase):
+    """Zero-terminal contract (R1 — road-to-test-and-gate-integrity).
+
+    `init` / global install hands off to the browser wizard WITHOUT a
+    blocking terminal prompt: when the wizard launches, the legacy
+    migration [Y/n] gate is bypassed and the run ends in `_wizard_spawn`
+    (the browser handoff), never `input()`. install.py § main documents
+    this as "zero-terminal-interaction by contract"; this backfills the
+    assertion that was shipped with +0 coverage.
+    """
+
+    def _eligible_opts(self, **overrides):
+        ns = argparse.Namespace(no_ui=False, dry_run=False, tools="all")
+        for k, v in overrides.items():
+            setattr(ns, k, v)
+        return ns
+
+    def test_eligible_install_plans_browser_launch_not_prompt(self):
+        """The launch-eligible dry-run plan surfaces the browser
+        auto-launch — and reaching it never touches the terminal-prompt
+        chokepoint (`_read_line`)."""
+        import contextlib
+        import io
+        from unittest import mock
+
+        buf = io.StringIO()
+        opts = self._eligible_opts(
+            profile="balanced", user_type="", scope=None,
+            global_install=True, custom_path=None, project=None,
+            minimal=False, force=False, offline=False,
+        )
+        # The gate itself is exercised in test_wizard_launch_decision_is_prompt_free;
+        # here force eligibility and assert the plan surfaces the browser handoff
+        # while the terminal-prompt chokepoint (`_read_line`) is never reached.
+        with mock.patch.object(install, "_wizard_should_launch", return_value=(True, "")), \
+             mock.patch.object(
+                 install, "_read_line",
+                 side_effect=AssertionError("terminal prompt fired on wizard path"),
+             ):
+            with contextlib.redirect_stdout(buf):
+                rc = install._dry_run_summary(opts)
+        self.assertEqual(rc, 0)
+        self.assertIn("Would auto-launch", buf.getvalue())
+
+    def test_wizard_launch_decision_is_prompt_free(self):
+        """Computing the launch verdict never blocks on a terminal prompt,
+        in either the eligible or suppressed branch."""
+        from unittest import mock
+        prev_ci = os.environ.pop("CI", None)
+        orig_isatty = install.sys.stdout.isatty
+        try:
+            with mock.patch.object(
+                install, "_read_line",
+                side_effect=AssertionError("decision must not prompt"),
+            ):
+                install.sys.stdout.isatty = lambda: True  # type: ignore[assignment]
+                self.assertTrue(install._wizard_should_launch(self._eligible_opts())[0])
+                self.assertFalse(install._wizard_should_launch(self._eligible_opts(no_ui=True))[0])
+                os.environ["CI"] = "true"
+                self.assertFalse(install._wizard_should_launch(self._eligible_opts())[0])
+        finally:
+            install.sys.stdout.isatty = orig_isatty  # type: ignore[assignment]
+            os.environ.pop("CI", None)
+            if prev_ci is not None:
+                os.environ["CI"] = prev_ci
+
+    def test_global_handoff_bypasses_migration_prompt_and_spawns_wizard(self):
+        """When the wizard will launch, the global install path skips the
+        [Y/n] migration prompt and ends in the browser handoff
+        (`_wizard_spawn`) — even with legacy artefacts present."""
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as td:
+            spawned: list[bool] = []
+            with mock.patch.object(install, "_wizard_should_launch", return_value=(True, "")), \
+                 mock.patch.object(install, "_detect_legacy_for_migration", return_value=["legacy-x"]), \
+                 mock.patch.object(
+                     install, "_prompt_migrate_to_global",
+                     side_effect=AssertionError("migration [Y/n] prompt fired on wizard handoff"),
+                 ), \
+                 mock.patch.object(install, "_run_migrate_to_global", return_value=0), \
+                 mock.patch.object(install, "install_global", return_value=0), \
+                 mock.patch.object(install, "_emit_progress_terminal", lambda *a, **k: None), \
+                 mock.patch.object(
+                     install, "_read_line",
+                     side_effect=AssertionError("terminal prompt fired on wizard handoff"),
+                 ), \
+                 mock.patch.object(
+                     install, "_wizard_spawn",
+                     side_effect=lambda *a, **k: (spawned.append(True) or 0),
+                 ):
+                rc = install.main(["--global", "--tools", "cursor", "--project", td])
+        self.assertEqual(rc, 0)
+        self.assertEqual(spawned, [True], "global handoff must end in _wizard_spawn (browser)")
+
+
 if __name__ == "__main__":
     unittest.main()

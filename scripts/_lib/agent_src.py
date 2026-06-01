@@ -30,6 +30,7 @@ from typing import Iterator
 ROOT = Path(__file__).resolve().parents[2]
 LEGACY_SRC = ROOT / ".agent-src.uncondensed"
 PACKAGES = ROOT / "packages"
+PACKAGE_CORE = PACKAGES / "core"
 
 # Repo-relative POSIX path prefixes that anchor an artefact source tree.
 # Order: legacy first (kept until the move lands), then packages/*. Each
@@ -155,3 +156,32 @@ def strip_source_prefix(rel: str) -> str | None:
 def is_artefact_path(rel: str) -> bool:
     """``True`` if a repo-relative POSIX path sits under any source root."""
     return strip_source_prefix(rel) is not None
+
+
+def resolve_package_core_path(relative_target: str) -> Path:
+    """Return the canonical ``packages/core/<relative_target>`` path.
+
+    The single resolution point for every gate that enforces something
+    against a fixed ``packages/core/`` target. A future move of the
+    ``packages/core/`` tree updates :data:`PACKAGE_CORE` here — one
+    resolver — instead of N hard-coded ``REPO_ROOT / "packages" / "core"``
+    constants scattered across gate scripts (the ``aab5755`` silent-no-op
+    class this eliminates).
+
+    Pure resolver: deterministic, **no filesystem I/O**. ``agent_src`` is
+    imported by scanners that must stay usable in the legacy-only and
+    pack-only layouts (see :func:`artefact_roots`), so this MUST NOT
+    assert existence at import or call time — a packages/core existence
+    check here would break those layouts. Callers that need existence
+    check it themselves; ``scripts/check_gate_paths.py`` is the single
+    gate that asserts the enforced targets resolve under ``packages/core/``.
+
+    Examples:
+        ``resolve_package_core_path(".agent-src.uncondensed")``
+            → ``<repo>/packages/core/.agent-src.uncondensed``
+        ``resolve_package_core_path(".agent-src.uncondensed/commands")``
+            → ``<repo>/packages/core/.agent-src.uncondensed/commands``
+        ``resolve_package_core_path("")`` → ``<repo>/packages/core``
+    """
+    rel = relative_target.replace("\\", "/").lstrip("/")
+    return PACKAGE_CORE / rel if rel else PACKAGE_CORE

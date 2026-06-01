@@ -23,7 +23,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import resolve_package_core_path  # noqa: E402
+
 QUIET = "--quiet" in sys.argv
+
+_CONSUMER_TEMPLATE = resolve_package_core_path(".agent-src.uncondensed/templates/AGENTS.md")
+# Enforced packages/core target — read by scripts/check_gate_paths.py so a
+# future move that desyncs this path fails CI instead of silently no-opping.
+# Only the consumer-template lives under packages/core; the package-root
+# AGENTS.md sits at the repo root and is intentionally excluded.
+GATE_CORE_PATHS = (_CONSUMER_TEMPLATE,)
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 PATH_BACKTICK_RE = re.compile(r"`[^`]*/[^`]*`")
@@ -64,10 +74,7 @@ class Target:
 
 TARGETS = [
     Target(ROOT / "AGENTS.md", "package-root", 3000, 2800, template=False),
-    Target(
-        ROOT / "packages" / "core" / ".agent-src.uncondensed" / "templates" / "AGENTS.md",
-        "consumer-template", 2500, 2300, template=True,
-    ),
+    Target(_CONSUMER_TEMPLATE, "consumer-template", 2500, 2300, template=True),
 ]
 
 

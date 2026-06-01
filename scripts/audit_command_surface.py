@@ -37,12 +37,18 @@ from pathlib import Path
 from typing import List
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_package_core_path  # noqa: E402
+
 # Pre-monorepo: REPO_ROOT/.agent-src.uncondensed/commands. Post-move (ADR-017)
 # the core command surface lives under packages/core/.agent-src.uncondensed.
 # Fall back to the legacy path only if the packages layout is absent.
-_CORE_COMMANDS = REPO_ROOT / "packages" / "core" / ".agent-src.uncondensed" / "commands"
+_CORE_COMMANDS = resolve_package_core_path(".agent-src.uncondensed/commands")
 _LEGACY_COMMANDS = REPO_ROOT / ".agent-src.uncondensed" / "commands"
 DEFAULT_ROOT = _CORE_COMMANDS if _CORE_COMMANDS.is_dir() else _LEGACY_COMMANDS
+# Enforced packages/core target — read by scripts/check_gate_paths.py so a
+# future move that desyncs this path fails CI instead of silently no-opping.
+GATE_CORE_PATHS = (_CORE_COMMANDS,)
 REPORT_DIR = REPO_ROOT / "agents" / "reports"
 OUT_JSON = REPORT_DIR / "command-surface.json"
 OUT_MD = REPORT_DIR / "command-surface.md"
