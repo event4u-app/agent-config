@@ -1,7 +1,7 @@
 ---
 type: "always"
 tier: "safety-floor"
-description: "Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass"
+description: "Agent is never destructive — Hard Floor always asks for prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; verify the branch before every commit; no autonomy or roadmap bypass"
 alwaysApply: true
 load_context:
   - contexts/authority/destructive-mechanics.md
@@ -28,6 +28,7 @@ Triggers below require explicit user confirmation **on this turn** — not from 
 | Trigger | Examples |
 |---|---|
 | **Production-branch merge** | `main`, `master`, `prod`, `production`, `release/*`, or any branch the project marks as deployment trunk |
+| **Commit on a production branch** | any `git commit` while `HEAD` is on a prod trunk (set above). **Verify branch before every commit** — `main` is opt-in only, never inferred from a prior turn or a merged PR that left the repo on `main` |
 | **Deploy / release** | `terraform apply` on prod, `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment |
 | **Push to remote** | any `git push` (also covered by [`scope-control`](scope-control.md), restated so the floor never weakens) |
 | **Production data / infra** | prod DB writes / migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
