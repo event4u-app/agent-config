@@ -1,7 +1,7 @@
 ---
 type: "always"
 tier: "safety-floor"
-description: "Agent is never destructive — Hard Floor always asks for prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; verify the branch before every commit; no autonomy or roadmap bypass"
+description: "Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass"
 alwaysApply: true
 load_context:
   - contexts/authority/destructive-mechanics.md
