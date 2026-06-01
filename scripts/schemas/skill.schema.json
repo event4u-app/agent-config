@@ -154,6 +154,13 @@
       "default": "active",
       "description": "ADR-013 lifecycle state."
     },
+    "requires_skills": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "Skill-composition graph (roadmap 3.4): names of sub-skills this skill's body invokes/assumes. Distinct from ADR-015 `requires` (artefact→pack edges). scripts/check_skill_requires.py enforces (a) each target exists and (b) the required skill is co-available wherever this skill ships (same pack, a requires_hint-reachable pack, or always-on)."
+    },
     "trust": {
       "type": "object",
       "additionalProperties": false,

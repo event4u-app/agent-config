@@ -18,6 +18,9 @@ workspaces:
   - product
 packs:
   - product-basic
+requires_skills:
+  - validate-feature-fit
+  - threat-modeling
 trust:
   level: professional
 install:

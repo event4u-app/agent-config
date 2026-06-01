@@ -94,6 +94,7 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
+      - task: check-skill-requires
       - task: lint-frontmatter-boilerplate
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
@@ -199,6 +200,7 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
+      - task: check-skill-requires
       - task: lint-frontmatter-boilerplate
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
