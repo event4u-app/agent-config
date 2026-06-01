@@ -130,6 +130,21 @@ Exit criteria: a roadmap edit in `agent-ide-plugin` regenerates its dashboard wi
 
 Rollback: n/a — validation phase; findings feed back into earlier phases if a gap surfaces.
 
+## Phase 6 — Install/upgrade hands off to the browser wizard (zero terminal prompts)
+
+The install-UX half: `init` / `upgrade` / `global` install, then the browser wizard opens for packages + settings — no terminal picker, no `[Y/n]`, no `--force`. Decision locked in [`ADR-036`](../../docs/decisions/ADR-036-global-install-browser-wizard-handoff.md).
+
+- [x] `scripts/install` — skip the interactive `prompt_tools()` terminal picker on the `--global` path when the wizard will launch (TTY · not `CI` · not `AGENT_CONFIG_NO_UI`); headless paths keep the picker.
+- [x] `install.py` — launch the wizard after `install_global()` on the `--global` path (parity with the project path), gated by `_wizard_should_launch`.
+- [x] `install.py` — spawn the global-path wizard **without** `--project-root` so `resolveWriteRoot` picks the global root: the saved `~/.event4u/agent-config/settings/.agent-user.yml` drives the name/language pre-fill and no global content lands in the project tree (ADR-020).
+- [x] `install.py` — `_wizard_await_ready` opens the browser (`webbrowser.open`) after printing the URL; printed URL stays the headless fallback.
+- [x] `install.py` — on the wizard-handoff path, foreign-file conflicts auto-resolve to overwrite and the legacy migration runs without the `[Y/n]` gate (zero prompts, no `--force`).
+- [x] Verify: `py_compile scripts/install.py` + `bash -n scripts/install` green; Playwright drive of the global-write-root wizard confirms the welcome step pre-fills `name=Matze` / `lang=de` from the saved identity and the tool/work steps render. <!-- carve-out: new-gate-verification -->
+
+Exit criteria: a single `npx @event4u/agent-config init` (or `upgrade`) on a consumer installs and opens the browser wizard with no terminal interaction; a returning user's identity pre-fills from the saved `.agent-user.yml`.
+
+Rollback: revert the `scripts/install` + `install.py` diff; the terminal-prompt path is unchanged underneath.
+
 ## Acceptance criteria
 
 - A Claude PostToolUse roadmap edit in a global-only consumer repo regenerates `agents/roadmaps-progress.md` with no project-local `agent-config` wrapper and no `.augment/` / `.claude/` footprint.
