@@ -85,8 +85,10 @@ def render_diff(old_text: str, new_text: str, path: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--path", default=DEFAULT_SETTINGS,
-                    help=f"target settings file (default: ./{DEFAULT_SETTINGS})")
+    ap.add_argument("--path", default=None,
+                    help="target settings file (default: canonical "
+                         "agents/settings/.agent-settings.yml, falling back to "
+                         "a legacy repo-root .agent-settings.yml — ADR-038)")
     ap.add_argument("--template", default=str(DEFAULT_TEMPLATE),
                     help="path to the settings template")
     ap.add_argument("--profile", default=None,
@@ -102,7 +104,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="suppress summary on success")
     args = ap.parse_args(argv)
 
-    target = Path(args.path)
+    target = (
+        Path(args.path) if args.path is not None
+        else _install._resolve_settings_read(Path.cwd())
+    )
     template_path = Path(args.template)
     profile_dir = Path(args.profile_dir)
 
