@@ -429,6 +429,15 @@ commands:
 # docs/contracts/agent-memory-contract.md for the on-disk shape and
 # .augment/skills/memory-consolidation/ for the four-phase loop.
 memory:
+  # Cadence for the "🧠 Memory: <hits>/<asks>" visibility line emitted
+  # after a memory-consulting step (see docs/contracts/memory-visibility-v1.md).
+  #   always = (default) emit whenever at least one memory type was asked.
+  #   auto   = emit only when ≥ 3 memory types were consulted (less noise
+  #            on shallow-retrieval steps).
+  #   never  = suppress the line entirely.
+  # The legacy `memory.visibility: off` master switch still wins over this.
+  cadence: always
+
   # Inline-review threshold for /memory load.
   # When the unreviewed intake stream contains more than this many
   # entries, /memory load surfaces a top-3 preview block before the

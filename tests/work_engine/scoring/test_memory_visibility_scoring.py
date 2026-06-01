@@ -98,28 +98,30 @@ def test_format_line_overflow_only_when_above_cap() -> None:
 
 
 @pytest.mark.parametrize(
-    "profile, asks, expected",
+    "cadence, asks, expected",
     [
-        ("standard", 1, True),
-        ("standard", 0, False),
-        ("verbose", 1, True),
-        ("lean", 1, False),
-        ("lean", 2, False),
-        ("lean", 3, True),
-        ("lean", 5, True),
+        ("always", 1, True),
+        ("always", 0, False),
+        ("auto", 1, False),
+        ("auto", 2, False),
+        ("auto", 3, True),
+        ("auto", 5, True),
+        ("never", 1, False),
+        ("never", 5, False),
     ],
 )
-def test_should_emit_cadence_table(profile: str, asks: int, expected: bool) -> None:
+def test_should_emit_cadence_table(cadence: str, asks: int, expected: bool) -> None:
     summary = {"asks": asks, "hits": 0, "ids": []}
-    assert should_emit(summary, cost_profile=profile) is expected
+    assert should_emit(summary, memory_cadence=cadence) is expected
 
 
 def test_should_emit_respects_visibility_off() -> None:
     summary = {"asks": 4, "hits": 2, "ids": ["a", "b"]}
-    assert should_emit(summary, visibility_off=True) is False
+    # visibility_off wins even over an emitting cadence.
+    assert should_emit(summary, memory_cadence="always", visibility_off=True) is False
 
 
-def test_should_emit_default_profile_is_standard() -> None:
+def test_should_emit_default_cadence_is_always() -> None:
     summary = {"asks": 1, "hits": 1, "ids": ["a"]}
     assert should_emit(summary) is True
 

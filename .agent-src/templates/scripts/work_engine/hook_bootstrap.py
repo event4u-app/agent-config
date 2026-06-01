@@ -64,7 +64,7 @@ def _build_hook_registry(args: argparse.Namespace) -> HookRegistry:
         gate_hook.register(registry)
     if settings.memory_visibility:
         MemoryVisibilityHook(
-            cost_profile=settings.cost_profile,
+            memory_cadence=settings.memory_cadence,
             visibility_off=settings.memory_visibility_off,
         ).register(registry)
     if settings.chat_history_enabled:

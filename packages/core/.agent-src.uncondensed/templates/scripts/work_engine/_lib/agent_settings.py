@@ -101,6 +101,7 @@ MERGEABLE_KEYS: tuple[str, ...] = (
     "name",
     "ide",
     "cost_profile",
+    "memory.cadence",
     "personal.bot_icon",
     "personal.autonomy",
     "telegraph.speak_scope",
