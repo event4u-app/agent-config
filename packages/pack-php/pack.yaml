@@ -8,4 +8,4 @@ owner:
 requires:
 - engineering-base
 trust_level_default: professional
-version: 5.6.0
+version: 5.6.1

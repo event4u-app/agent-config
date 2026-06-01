@@ -811,6 +811,15 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.6.1](https://github.com/event4u-app/agent-config/compare/5.6.0...5.6.1) (2026-06-01)
+
+### Bug Fixes
+
+* **mcp:** send bearer auth in post-deploy smoke probe ([9d12489](https://github.com/event4u-app/agent-config/commit/9d124894b03e5e962e8014171f965ce9367de58d))
+* correct gzip kwarg in pack_mcp_content (condenselevel -> compresslevel) ([6d27677](https://github.com/event4u-app/agent-config/commit/6d2767736d6d20327a5853875fd4e9cb172babcc))
+
+Tests: 5375 (+0 since 5.6.0)
+
 ## [5.6.0](https://github.com/event4u-app/agent-config/compare/5.5.0...5.6.0) (2026-05-31)
 
 ### Features
