@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/agent-settings.schema.json",
+  "title": "Agent settings (.agent-settings.yml)",
+  "$comment": "Collision-prevention schema added by the 2026-06-01 cost_profile untangle. It enum-constrains the value-bearing keys that have historically been overloaded with a foreign vocabulary (the root cause of the cost_profile/memory-cadence collision: the same key carrying two value sets). It is deliberately PERMISSIVE elsewhere (additionalProperties: true at every level) — exhaustive per-key validation is out of scope and would be brittle. The job of this schema is to make a value-vocabulary collision a hard CI failure, not to type every setting.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "cost_profile": {
+      "type": "string",
+      "enum": ["minimal", "balanced", "full", "custom"],
+      "description": "Rule-tier loading footprint. See docs/contracts/cost-profile-defaults.md and docs/contracts/rule-router.md. NOT a memory or model lever."
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cadence": {
+          "type": "string",
+          "enum": ["auto", "always", "never"],
+          "description": "Cadence of the 🧠 memory-visibility line. See docs/contracts/memory-visibility-v1.md. Owns its own key since the 2026-06-01 untangle; previously collided with cost_profile."
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "auto_switch": {
+          "type": "string",
+          "enum": ["suggest", "auto", "off"],
+          "description": "Per-skill model-tier routing (ADR-035). Distinct from cost_profile — picks WHICH model runs, not how many rules load."
+        }
+      }
+    },
+    "lean_projection": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["eager-all", "thin"]
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enforcement": {
+          "type": "string",
+          "enum": ["advisory", "hard-stop"]
+        }
+      }
+    },
+    "personal": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "autonomy": {
+          "type": "string",
+          "enum": ["on", "off", "auto"]
+        }
+      }
+    },
+    "worktrees": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["off", "on", "ask"]
+        }
+      }
+    }
+  }
+}

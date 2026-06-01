@@ -334,6 +334,11 @@ tasks:
     desc: Validate decision_engine block schema in agent-settings.template.yml and any local .agent-settings.yml (P2 of road-to-productization, contract docs/contracts/decision-engine-gates.md)
     cmd: python3 scripts/validate_decision_engine.py
 
+  validate-agent-settings:
+    silent: true
+    desc: Enum-validate value-bearing settings keys (cost_profile, memory.cadence, model.auto_switch, …) in agent-settings.template.yml + any local .agent-settings.yml against scripts/schemas/agent-settings.schema.json — prevents the value-vocabulary collision the 2026-06-01 cost_profile untangle fixed
+    cmd: python3 scripts/validate_agent_settings.py
+
   check-token-optimizer-freshness:
     silent: true
     desc: Verify token-optimizer catalog rows still match their cited assets (P1.3 of road-to-token-optimization)
