@@ -19,7 +19,7 @@ Three shipped behaviours (`check_skill_requires` co-availability gate, `rule_loa
 - [x] Confirm `scripts/validate_agent_settings.py` + `scripts/schemas/agent-settings.schema.json` validate settings; `tests/test_agent_settings.py` references `rule_loading_tier`; `tests/test_cmd_settings_migrate.py` covers the `cost_profile → rule_loading_tier` migration — but the **negative enum case** (legacy `cost_profile` key rejected with a clear error) is not asserted by a dedicated test.
 - [x] Confirm `scripts/iron_law_sha.py` is the SHA gate that broke post-monorepo-migration (`aab5755`); `test_iron_law_config.py` + `test_check_iron_law_prominence.py` exist but **none** asserts the gate's target path resolves under `packages/core/`.
 - [x] Confirm `tests/test_install_wizard_wiring.py` exists but does not assert the zero-terminal contract (`init` launches the browser with no blocking terminal prompt).
-- [x] Read `quality.local_auto_run` in `agents/settings/.agent-settings.yml` before authoring CI-shaped steps (roadmap-ci-steps-policy). New gates introduced here run once locally under the `new-gate-verification` carve-out.
+- [x] Read `quality.local_auto_run` in `agents/settings/.agent-settings.yml` before authoring CI-shaped steps (roadmap-ci-steps-policy). New gates introduced here run once locally under the `new-gate-verification` carve-out. <!-- ref-ignore --> <!-- .agent-settings.yml is a per-machine, gitignored file — present locally, absent in CI's clean checkout. -->
 
 ## Context
 
