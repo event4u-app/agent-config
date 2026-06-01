@@ -1,7 +1,7 @@
 ---
 model_tier: high
-name: tippspiel-optimizer
-description: "Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks'."
+name: prediction-pool-optimizer
+description: "Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'."
 domain: product
 personas: []
 workspaces:
@@ -16,40 +16,40 @@ install:
   removable: true
 ---
 
-# tippspiel-optimizer
+# prediction-pool-optimizer
 
-> Turn a prediction pool's **scoring rules** + **market odds** into the tip
-> that maximizes **expected points** — not the most likely outcome.
+> Turn a prediction pool's **scoring rules** plus **market odds** into the
+> tip that maximizes **expected points** — not the most likely outcome.
 > Sport-agnostic core with per-sport probability blocks. Consumed by
-> [`/tippspiel`](../../commands/tippspiel.md). Optimization target is the
-> pool's score, so the chain is always **rules → odds → expected value →
-> participant field → tip**, never "who wins this match?".
+> [`/prediction-pool`](../../commands/prediction-pool.md). The optimization target is
+> the pool's score, so the chain is always **rules → odds → expected value
+> → participant field → tip**, never "who wins this match?".
 
 ## When to use
 
-When someone wants the best tips for a prediction / betting pool
+Use when someone wants the best tips for a prediction / betting pool
 (kicktipp-style company pools — football WM, basketball WM, …) and the
-target is **pool points**, not match truth. Triggered by
-[`/tippspiel`](../../commands/tippspiel.md) (Steps 3–5) or directly when a
-user asks to optimize / maximize their pool picks.
+target is **pool points**, not match truth. Triggered by the
+[`/prediction-pool`](../../commands/prediction-pool.md) command (Steps 3–5) or directly
+when a user asks to optimize / maximize their pool picks.
 
-**The one idea that makes this skill correct:** highest-probability result ≠
-highest-expected-value tip. Under most rules a 2:1 or 1:0 scores the same
-partial points as the "obvious" pick but hits more often; under quote/rarity
-rules a rare-but-plausible result is worth more. **Always optimize the
-pool's points, never the truth of the match.**
+**The one idea that makes this skill correct:** the highest-probability
+result is **not** the highest-expected-value tip. Under most pool rules a
+2:1 or 1:0 scores the same partial points as the "obvious" pick but hits
+more often; under quote/rarity rules a rare-but-plausible result is worth
+more. **Always optimize the pool's points, never the truth of the match.**
 
 ## Hard rules
 
-- **Rules before tips.** Never produce a tip before the scoring is parsed
-  (Procedure step 1). Strategy is a function of the rules.
+- **Rules before tips.** Never produce a tip before the pool's scoring is
+  parsed (Procedure step 1). Strategy is a function of the rules.
 - **Odds are the primary signal.** Bookmaker / market probabilities already
-  fold in form, squad, injuries, travel, climate. Use as calibration base;
-  override only with *current* info (confirmed lineups, late injuries,
-  suspensions, manager change).
-- **No invented numbers.** Emit no probability not derived from odds or
-  **actually executed** code. Tournament/outright numbers come from real
-  outright odds **or** the executed Poisson helper — never a claimed
+  fold in form, squad, injuries, travel, climate. Use them as the
+  calibration base; only override with *current* information (confirmed
+  lineups, late injuries, suspensions, manager change).
+- **No invented numbers.** Emit no probability you cannot derive from odds
+  or from **actually executed** code. Tournament/outright numbers come from
+  real outright odds **or** the executed Poisson helper — never a claimed
   "I ran 10,000 simulations".
 - **One-sentence justification** per tip. Short.
 
@@ -57,30 +57,30 @@ pool's points, never the truth of the match.**
 
 ### 1. Parse the pool rules
 
-From the rule page, extract and document:
+From the pool's rule page, extract and document:
 
 - Points for **exact result** / **goal (point) difference** / **tendency**.
 - **Bonus questions** (champion, top scorer, group winners …).
 - **Joker / multiplier** rules.
 - **Quote / rarity** scoring (rare correct tips score more)? — flips the
   whole strategy toward contrarian (step 4).
-- Special scorings, **deadlines**, **strategy limits** (e.g. max N identical
-  tips).
+- Special scorings, **deadlines**, and **strategy limits** (e.g. max N
+  identical tips).
 - **The goal**: place well, or *win* a large pool? (changes variance — step 4.)
 
 ### 2. Build the data base
 
 Primary: current bookmaker odds, aggregated market probabilities, model
 forecasts (e.g. Opta), Elo/SPI ratings. Secondary (only when it adds signal
-the odds haven't absorbed): confirmed lineups, injuries, suspensions,
+the odds have not yet absorbed): confirmed lineups, injuries, suspensions,
 manager change, recent form, home advantage, head-to-head, rest/travel,
 weather. De-vig the odds (remove the bookmaker margin) before treating them
 as probabilities.
 
 ### 3. Per-match probabilities (sport block)
 
-Compute, per match, the outcome distribution + most plausible exact results.
-Pick the block for the event's sport:
+Compute, per match, the outcome distribution and the most plausible exact
+results. Pick the block for the event's sport:
 
 **Football / soccer**
 - Model goals as **Poisson** per side from each team's expected goals;
@@ -90,8 +90,8 @@ Pick the block for the event's sport:
 
 **Basketball**
 - **No draws.** Model the points margin as roughly **Gaussian** around the
-  market spread; pair with the moneyline for win probability and the total
-  (over/under) for the score level.
+  market spread; pair with the moneyline for win probability and the
+  total (over/under) for the score level.
 - Tendency = sign of (margin); "exact result" rules are rare — read step 1.
 
 **Generic fallback (other sports)**
@@ -113,28 +113,28 @@ step-1 rules** — not the prettiest match.
 - **Quote / rarity scoring** → weigh rarer-but-plausible results against
   their higher payout; take rarity when `payout × probability` wins.
 - **Goal = win a large pool** → on a *subset* of matches, take calculated
-  variance (plausible underdogs) for upside, poker-tournament style.
+  variance (plausible underdogs) to create upside, poker-tournament style.
 
-**Participant-field thresholds** (close tips → prefer higher edge over the
-typical participant):
+**Participant-field thresholds** (when two tips are close, prefer the one
+with the higher edge over the typical participant):
 
 - Pool **N < 20** → maximize EV, ignore the field.
-- **20 ≤ N < 100 and you're in the prize positions** → maximize EV.
-- **N ≥ 100, or you're outside the top ~20%** → add field-relative variance
-  (move off the consensus on a subset; rough Kelly-fraction sizing).
+- **20 ≤ N < 100 and you are in the prize positions** → maximize EV.
+- **N ≥ 100, or you are outside the top ~20%** → add field-relative
+  variance (move off the consensus on a subset; rough Kelly-fraction sizing).
 
 Respect all strategy limits from step 1 (max identical tips, etc.).
 
 ### 5. Tournament & bonus questions (no hallucination)
 
-For group winners, KO rounds, champion, bonus questions, use **either**:
+For group winners, KO rounds, champion, and bonus questions, use **either**:
 
-- real **outright market odds** ("to win group", "to reach final", "outright
-  winner"), **or**
+- real **outright market odds** ("to win group", "to reach final",
+  "outright winner"), **or**
 - the executed Poisson tournament simulator:
 
   ```bash
-  python3 scripts/tippspiel/poisson_sim.py <teams-xg.json> --runs 20000
+  python3 scripts/prediction-pool/poisson_sim.py <teams-xg.json> --runs 20000
   ```
 
   It plays the bracket from per-team expected goals and prints empirical
@@ -142,8 +142,8 @@ For group winners, KO rounds, champion, bonus questions, use **either**:
   numbers you did not actually compute.**
 
 Optimize bonus answers on the same expected-points basis. Re-run as late as
-the deadline allows: re-check confirmed lineups, injuries, suspensions, odds
-movement, then adjust. The pool's per-match deadline is the only hard
+the deadline allows: re-check confirmed lineups, injuries, suspensions, and
+odds movement, then adjust. The pool's per-match deadline is the only hard
 constraint.
 
 ## Output format
@@ -162,7 +162,7 @@ constraint.
    fixture, your method is wrong — find the error (usually a forgotten
    partial-points term or un-de-vigged odds), don't ship the tip.
 
-Handed back to [`/tippspiel`](../../commands/tippspiel.md) for the approval
+Handed back to [`/prediction-pool`](../../commands/prediction-pool.md) for the approval
 gate — the skill never enters or submits anything.
 
 ## Gotcha
@@ -188,9 +188,9 @@ gate — the skill never enters or submits anything.
 
 ## See also
 
-- [`/tippspiel`](../../commands/tippspiel.md) — the orchestrator (event,
+- [`/prediction-pool`](../../commands/prediction-pool.md) — the orchestrator (event,
   persistence, Playwright entry, gates).
 - [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
   rules+odds → EV examples.
-- [`scripts/tippspiel/poisson_sim.py`](../../../../scripts/tippspiel/poisson_sim.py) —
+- [`scripts/prediction-pool/poisson_sim.py`](../../../../scripts/prediction-pool/poisson_sim.py) —
   the executed tournament simulator.

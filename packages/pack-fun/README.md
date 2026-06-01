@@ -12,8 +12,8 @@ Non-essential social/fun workflows (prediction-pool tips, etc.).
 
 ## Commands (1)
 
-- **`tippspiel`** — Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright (you submit). Triggers 'fill my Tippspiel', 'kicktipp tips'.
+- **`prediction-pool`** — Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'.
 
 ## Skills (1)
 
-- **`tippspiel-optimizer`** — Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks'.
+- **`prediction-pool-optimizer`** — Optimize prediction-pool tips (kicktipp etc.): pool rules + market odds → the expected-points-maximizing tip per match. Triggers 'optimize my pool tips', 'best kicktipp picks', 'predict'.
