@@ -1,0 +1,74 @@
+---
+status: ready
+complexity: structural
+parent_roadmap: null
+---
+
+# Road to Test-and-Gate Integrity
+
+> Close the two genuine gaps left after eight external reviews (5.1.0 → 5.7.0): backfill the missing tests for behaviours that shipped with +0 test coverage, and add a structural CI check that every security/quality gate resolves its target path under `packages/core/` — so a future move can never again silently disable a gate. Plus a forcing function so the +0-tests pattern cannot recur. Theme: **harden, don't add** — no new product surface, no new meta-system; this hardens existing contracts.
+
+## Goal
+
+Three shipped behaviours (`check_skill_requires` co-availability gate, `rule_loading_tier` settings-enum validation, the wizard zero-terminal init handoff) get dedicated regression tests; the kernel/security gate scripts get a one-time path-integrity check wired into CI so a `packages/core/` path drift fails the build instead of silently no-opping (the `aab5755` class of failure); and a coverage forcing-function makes a future skill/CLI change that ships with +0 tests visible at PR time.
+
+## Prerequisites
+
+- [x] Confirm the residue is exactly R1 (test-coverage debt), R2 (gate path-integrity), R3 (coverage forcing-function); everything else from the 8 reviews is shipped, already planned in `road-to-employee-product-and-external-proof`, or rejected per `domain-adoption-policy`. (Verified 2026-06-01 against the repo + active/archived roadmaps.)
+- [x] Confirm `scripts/check_skill_requires.py` exists and is wired into CI (`check-skill-requires` in `Taskfile.yml`), but has **no** dedicated test (`tests/test_check_skill_requires.py` absent).
+- [x] Confirm `scripts/validate_agent_settings.py` + `scripts/schemas/agent-settings.schema.json` validate settings; `tests/test_agent_settings.py` references `rule_loading_tier`; `tests/test_cmd_settings_migrate.py` covers the `cost_profile → rule_loading_tier` migration — but the **negative enum case** (legacy `cost_profile` key rejected with a clear error) is not asserted by a dedicated test.
+- [x] Confirm `scripts/iron_law_sha.py` is the SHA gate that broke post-monorepo-migration (`aab5755`); `test_iron_law_config.py` + `test_check_iron_law_prominence.py` exist but **none** asserts the gate's target path resolves under `packages/core/`.
+- [x] Confirm `tests/test_install_wizard_wiring.py` exists but does not assert the zero-terminal contract (`init` launches the browser with no blocking terminal prompt).
+- [x] Read `quality.local_auto_run` in `agents/settings/.agent-settings.yml` before authoring CI-shaped steps (roadmap-ci-steps-policy). New gates introduced here run once locally under the `new-gate-verification` carve-out.
+
+## Context
+
+Why now:
+
+- Three consecutive releases (5.6.0, 5.6.1, 5.7.0) shipped behaviours with +0 tests. The reviews flagged this as the one metric regressing against the package's own standard.
+- The Iron-Law SHA gate (`iron_law_sha.py`) silently pointed at the pre-monorepo path and was non-functional for an unknown span until a manual fix (`aab5755`). No structural check prevents a recurrence — any future `packages/core/` refactor can disable a gate while CI stays green.
+- This roadmap is deliberately narrow. It adds **no** product surface and **no** new governance abstraction. R2 and R3 are hardening of *existing* gates, not new meta-systems — the distinction the reviews' "self-reference / governance-theater" warning turns on.
+
+Council convergence — AI council, members anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-06-01 (analysis + roadmap-critique lenses, two passes):
+
+- **R1 and R2 are both real gaps**; nothing in the "already covered" set is being wrongly dropped.
+- **R3 (coverage forcing-function) surfaced as the framing's blind spot** — without it, R1-class gaps recur. Adopted as Phase 3.
+- **R2 is the highest-leverage first cut** — one small script, prevents an entire class of silent gate-failure across any future move.
+
+Roadmap-critique pass folded in (anthropic dissent, openai endorsement):
+
+- **R2 — eliminate the class, don't just police it.** A path-check is a backstop; the structural fix is a single `resolve_package_core_path()` helper the gates call, so a move can't desync a hard-coded constant. Phase 1 ships the helper first, the check second.
+- **R3 — honest reframe.** R3 *is* a lightweight coverage-governance layer; the "no new meta-system" claim is dropped **for R3 specifically** (it still holds for R1/R2). To avoid pragma-abuse / signal-to-noise failure: R3 ships **warn-only**, its trigger surface is **calibrated from Phase 2's backfill experience** (not guessed up front), and it carries an explicit success metric + sunset clause. The hard-fail flip is a separate, later decision gated on the warn-phase data.
+- The +0-tests pattern is partly a **social** problem; R3 is a nudge, not a cure — Phase 3 makes that explicit rather than overclaiming.
+
+## Phase 1 — Gate path resolution + integrity check (R2, highest-leverage first)
+
+- [ ] **Step 1:** Enumerate the security/quality gate scripts whose enforcement depends on a hard-coded target path under `packages/core/` — at minimum `scripts/iron_law_sha.py`, `scripts/check_kernel_rule_bundle.py`, and any gate that reads a fixed `packages/core/...` path. Note for each whether it hard-codes the path or already resolves it via a helper.
+- [ ] **Step 2:** Eliminate the class first — add (or reuse) a single `resolve_package_core_path(relative_target)` helper in `scripts/_lib/` that returns the canonical `packages/core/...` path, and migrate the enumerated gates that hard-code the path to call it. A future `packages/core/` move then updates one resolver, not N constants. (This is the structural fix the critique flagged; the check below is the backstop.)
+- [ ] **Step 3:** Write `scripts/check_gate_paths.py` (≤ 120 LOC): for each enumerated gate, assert its resolved target exists under `packages/core/`; exit non-zero with the offending gate + path on any miss. The input set lives in the script (no new config file).
+- [ ] **Step 4:** Add `tests/test_check_gate_paths.py` — a passing fixture (all gates resolve) and a failing fixture (a gate pointing outside `packages/core/` exits non-zero with a clear message).
+- [ ] **Step 5:** Wire `check-gate-paths` into `Taskfile.yml` alongside the other `check-*` tasks in `task ci`. Run it once locally to confirm green. <!-- carve-out: new-gate-verification -->
+
+## Phase 2 — Backfill the missing regression tests (R1)
+
+- [ ] **Step 1:** Add `tests/test_check_skill_requires.py` — assert the co-availability gate accepts a skill whose `requires_skills` all resolve, rejects a reference to a missing skill (non-zero + named missing skill), and handles a skill with no `requires_skills`. Run `python3 -m pytest tests/test_check_skill_requires.py` green.
+- [ ] **Step 2:** Add the settings-enum negative case to the settings test suite — `rule_loading_tier` accepts `minimal|balanced|full` and the legacy `cost_profile` key is rejected with a clear, actionable error (point the user at the migration command). Extend `tests/test_agent_settings.py` rather than adding a new file if it already owns the positive case. Run the targeted suite green.
+- [ ] **Step 3:** Assert the wizard zero-terminal contract — extend `tests/test_install_wizard_wiring.py` (or add `tests/server/wizard.zero-terminal.test.ts` if the contract lives in the TS server) so `init` is shown to launch the browser handoff without a blocking terminal prompt. Run the targeted suite green.
+- [ ] **Step 4:** Confirm the backfill moves the count — run the project test suite once and record the delta so the next release changelog shows a non-zero `Tests: N (+M …)` line (the `release.py` automation already emits it; this proves the content gap is closed).
+
+## Phase 3 — Coverage forcing-function so +0 cannot recur (R3, warn-only, calibrated)
+
+> Honest framing (per critique): R3 *is* a lightweight coverage-governance layer, not pure hardening. It ships **warn-only**, is **calibrated from Phase 2's actual backfill experience** (not guessed), and carries a sunset clause. A nudge against the +0 pattern, not a cure for what is partly a social problem.
+
+- [ ] **Step 1:** Using the concrete legitimate-vs-missing cases observed while backfilling Phase 2, define the trigger surface (numbered options to the maintainer, per user-interaction): which source changes must carry a test diff — start with the **cleanest signal** (a new skill with `requires_skills`, a new gate script under `scripts/check_*`/`lint_*`), and explicitly exclude the low-signal cases the critique named (help-text edits, pure wiring, path-constant updates, logging). Record the decision + rationale inline in the script header. Keep it narrow — over-broad triggers train people to bypass it.
+- [ ] **Step 2:** Write `scripts/check_test_coverage_diff.py` (≤ 150 LOC): given the PR diff (or `git diff` against the merge base), **warn** (non-blocking, exit 0 with a visible notice) when a triggering source file changed with no matching `tests/test_*` change. A documented one-line opt-out pragma suppresses the warning for a legitimate no-test change (mirrors the `check-refs` allowlist pattern). No hard-fail in this phase.
+- [ ] **Step 3:** Add `tests/test_check_test_coverage_diff.py` — passing fixture (source + test changed together), warn fixture (source changed alone, no pragma → warning emitted, exit 0), opt-out fixture (pragma present → silent).
+- [ ] **Step 4:** Wire `check-test-coverage-diff` into `task ci` as a **warn** step. Run once locally on the current tree. <!-- carve-out: new-gate-verification -->
+- [ ] **Step 5:** Record the success metric + sunset clause inline in the script header and in this roadmap's acceptance criteria: track warn-rate and pragma-rate over the next release cycle; **the hard-fail flip is a separate later decision** gated on warn-phase data (target: ≥ 3 legitimate catches per cycle and pragma-rate < 10% before considering fail-mode); if precision is poor after one cycle, remove the check rather than escalate it.
+
+## Acceptance criteria
+
+- The enumerated gates resolve their `packages/core/` target via the shared helper; a gate pointed outside `packages/core/` fails `check-gate-paths` (proven by the failing fixture); the live tree passes.
+- `check_skill_requires`, the `rule_loading_tier` enum (incl. legacy-key rejection), and the wizard zero-terminal handoff each have a dedicated passing test; the project test count moves by a non-zero delta.
+- `check-test-coverage-diff` runs **warn-only** in CI; a triggering source change with no test diff and no pragma emits a visible warning (not a failure). The fail-mode flip is explicitly deferred to a data-gated follow-up decision.
+- No new product surface and no new always-loaded rule. R1 + R2 add no consumer-visible concept (test + path hardening). R3 adds one CI **warn** step, honestly accounted for as lightweight coverage governance — with a sunset clause if it does not earn its keep.
