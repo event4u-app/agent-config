@@ -6,4 +6,4 @@ label: cloud
 owner: []
 requires: []
 trust_level_default: core
-version: 5.6.1
+version: 5.7.0
