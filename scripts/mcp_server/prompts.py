@@ -21,6 +21,10 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 from typing import Any, Literal
 
 # Phase 1 hand-picked skills — kept for the Phase-1 entrypoint
@@ -128,7 +132,7 @@ def _load_active_user_type(root: Path) -> str:
     the loader (consistent with `_strip_frontmatter`). Only matches
     `user_type:` directly under the top-level `personal:` block.
     """
-    settings = root / ".agent-settings.yml"
+    settings = project_settings_path(root)
     if not settings.is_file():
         return ""
     try:

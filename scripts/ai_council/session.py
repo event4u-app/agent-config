@@ -28,6 +28,10 @@ import shutil
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
+    from scripts._lib.agent_settings import project_settings_path
+except ModuleNotFoundError:  # pragma: no cover
+    from _lib.agent_settings import project_settings_path
 from typing import Iterable
 
 from scripts.ai_council.clients import CouncilResponse
@@ -37,7 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SESSIONS_DIR = REPO_ROOT / "agents" / "runtime" / "council" / "sessions"
 QUESTIONS_DIR = REPO_ROOT / "agents" / "runtime" / "council" / "questions"
 RESPONSES_DIR = REPO_ROOT / "agents" / "runtime" / "council" / "responses"
-SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
+SETTINGS_FILE = project_settings_path(REPO_ROOT)
 
 # Default retention for all council artefacts (questions, responses,
 # sessions). Overridden by `ai_council.session_retention_days`

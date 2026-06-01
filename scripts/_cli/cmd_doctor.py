@@ -55,6 +55,7 @@ from scripts._lib.agent_settings import (
     ROOT_OVERRIDE_ENV,
     ProjectRootError,
     find_project_root_with_trace,
+    project_settings_path,
     resolve_project_root,
 )
 
@@ -131,7 +132,7 @@ def _settings_layer_chain(project_root: Path) -> list[str]:
     user_global = user_global_paths.resolve_with_fallback("agent-settings.yml")
     if user_global is not None and user_global.is_file():
         layers.append(str(user_global))
-    project_settings = project_root / ".agent-settings.yml"
+    project_settings = project_settings_path(project_root)
     if project_settings.is_file():
         layers.append(str(project_settings))
     return layers
@@ -778,7 +779,7 @@ def _check_tier_usage_readiness(project_root: Path) -> dict[str, Any]:
 
     Contract: ``docs/contracts/command-clusters.md`` § tier-usage signal.
     """
-    settings_file = project_root / ".agent-settings.yml"
+    settings_file = project_settings_path(project_root)
     log_path = project_root / ".agent-tier-usage.jsonl"
     enabled = False
     if settings_file.is_file():
