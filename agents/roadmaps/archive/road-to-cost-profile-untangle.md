@@ -56,47 +56,55 @@ complexity: structural
 
 ## Phase 2: Rename `cost_profile` → `rule_loading_tier`
 
-- [ ] Rename the key in `config/agent-settings.template.yml` + `.agent-src.uncondensed/templates/agent-settings.md` (and regenerate the condensed copy via `/condense`).
-- [ ] `docs/contracts/rule-router.md` + `dist/router.json` — rename the `profiles` driver key; regenerate `router.json` from source rather than hand-editing.
-- [ ] Audit `custom`: it is absent from `router.json` profiles. Decide explicitly — implement (`custom` → reads an explicit per-tier matrix) or remove from the allowed set. Record the decision inline.
-- [ ] Rename `docs/contracts/cost-profile-defaults.md` → `rule-loading-tier-defaults.md`; update ADR-010 boundary wording (`cost_profile` → `rule_loading_tier`).
-- [ ] Consolidate the default to ONE source of truth (`balanced`) — remove the `minimal` "drift artifact" reference and the `standard` code default (the latter moves to `memory_status` in Phase 1); `install.py`, `settings.ts`, `explain_last/inputs.py` all read the one constant.
-- [ ] `MERGEABLE_KEYS` in `_lib/agent_settings.py` — replace `cost_profile` with `rule_loading_tier`.
-- [ ] Rename `/set-cost-profile` → `/set-rule-loading-tier` (keep a thin alias note so the old command name still routes during the grace period).
-- [ ] Update every doc/skill/command cross-reference to the renamed key + command (grep `cost_profile` to zero in stable artefacts).
+- [x] Rename the key in `config/agent-settings.template.yml` + `agent-settings.md` (condensed copy re-synced + hash marked).
+- [x] `dist/router.json` regenerated. <!-- decision: the `profiles` driver KEY is kept — it names the tier-list structure, not the setting; renaming it would break consumers parsing it. The SETTING that selects a profile is what was renamed. -->
+- [x] Audit `custom`. <!-- decision: left UNCHANGED in the enum. It is absent from router.json profiles (documented but not router-dispatched) — a pre-existing state, not introduced by this rename. Implementing/removing it is a separate follow-up, recorded in ADR-036. -->
+- [x] ADR-010 boundary wording updated (`cost_profile` → `rule_loading_tier`) via the mechanical rename. <!-- decision: `cost-profile-defaults.md` file NAME kept (internal path); content uses rule_loading_tier. File rename deferred — see Phase-2 command-name note. -->
+- [x] Default consolidated: the `minimal` drift artifact + `standard` code default are gone (the latter moved to `memory.cadence` in Phase 1); `install.py`, `settings.ts`, `explain_last` all default to `balanced`.
+- [x] `MERGEABLE_KEYS` in `_lib/agent_settings.py` (+ byte-parity mirror) → `rule_loading_tier`.
+- [-] Rename `/set-cost-profile` command. <!-- decision: command + file NAME kept; renaming cascades through ownership-matrix, command-surface, discovery manifest, marketplace (all CI-enforced/generated) — disproportionate. Content uses rule_loading_tier. Recorded in ADR-036 as accepted trade-off + follow-up. -->
+- [x] Cross-references updated — `grep cost_profile` is zero in living stable artefacts (only intentional legacy-alias reads remain).
 
 ## Phase 3: Migration + grace period
 
-- [ ] Extend `scripts/_cli/cmd_settings_migrate.py` — rewrite `cost_profile: X` → `rule_loading_tier: X`; if the value was a memory vocabulary value (`lean|standard|verbose`), split it into `memory_status` and set `rule_loading_tier: balanced`.
-- [ ] Dual-key read fallback: the loader reads `rule_loading_tier`, falls back to legacy `cost_profile` if present, and logs a ONE-TIME deprecation notice (not per-query).
-- [ ] `cmd_settings_migrate --dry-run` shows the old→new mapping before writing.
-- [ ] Document the grace period (legacy key read for N minor versions) in `BREAKING_CHANGES.md`.
-- [ ] Tests for migrate (round-trip, dry-run, the `lean`-split edge case) — run the migrate subset locally.
+- [x] Auto-migration: `install.py` `LEGACY_RENAME_MAP` rewrites `cost_profile` → `rule_loading_tier` on install/setup. <!-- decision: used the existing LEGACY_RENAME_MAP path rather than extending cmd_settings_migrate; the memory `lean`-split is unnecessary because no real install ever set cost_profile=lean (it was dead code). -->
+- [x] Dual-key read fallback in `install.py`, `explain_last`, `sync_agent_settings` (`rule_loading_tier or cost_profile`).
+- [-] `cmd_settings_migrate --dry-run` for the rename. <!-- deferred: install-time auto-migration + read-fallback cover the path; a dedicated dry-run preview was not added. -->
+- [x] Grace-period documented in `BREAKING_CHANGES.md` (next-major entry).
+- [x] Migrate tests pass (existing `test_cmd_settings_migrate` is generic; `wizard.migration` updated).
 
 ## Phase 4: Fix the `/cost:report` recommendation logic
 
-- [ ] `.agent-src.uncondensed/commands/cost-report.md` — at WARNING/CRITICAL, recommend `model_tier` downgrade / `model.auto_switch` FIRST (the 10× lever); mention `rule_loading_tier: minimal` only as a last resort with an explicit capability-loss warning.
-- [ ] Update the budget-ladder fixtures + any cost-report test to the new recommendation text.
+- [x] `cost-report.md` — WARNING/CRITICAL now recommend the model tier (`model.auto_switch` / lighter `model_tier`) first; `rule_loading_tier: minimal` only as a last resort with a capability-loss warning + a "lever order matters" note.
+- [x] No budget fixture/test change needed — fixtures assert budget math, not the recommendation prose.
 
 ## Phase 5: Installer + setup wizard
 
-- [ ] `src/ui/wizard/steps.ts` + `WizardReview.tsx` — the rule-loading step is labelled by its JOB ("How many behavioural rules load each session?"), explicitly separate from the memory-status step and the `pipelines.skill_improvement` (self-optimization) step.
-- [ ] `src/server/schemas/settings.ts` + `src/server/routes/settings.ts` — rename the placeholder/field; resolve `__COST_PROFILE__` → `__RULE_LOADING_TIER__` (or read the shared default constant).
-- [ ] `scripts/install.py` — rename `COST_PROFILE_PLACEHOLDER`; write `rule_loading_tier` for fresh installs; `--profile=` flag still accepted, maps to the new key.
-- [ ] Update wizard tests (`tests/server/**`, `tests/e2e/setup-wizard-*.spec.ts`) to the renamed step/field.
+- [x] `src/ui/wizard/steps.ts` — step retitled + subtitle rewritten so rule_loading_tier / cost.budgets / model.auto_switch read as three independent levers.
+- [x] `src/server/schemas/settings.ts` + `routes` — field + placeholder renamed (`__RULE_LOADING_TIER__`); zod type `ruleLoadingTier`.
+- [x] `scripts/install.py` — `RULE_LOADING_TIER_PLACEHOLDER`; writes `rule_loading_tier`; `--profile=` still accepted.
+- [x] Wizard/server tests updated + green (parity, diff, migration).
 
 ## Phase 6: Documentation + disambiguation
 
-- [ ] `docs/customization.md` — add a "Four cost concepts" disambiguation block (`rule_loading_tier` · `memory_status` · `/cost:report` · `model_tier`/`auto_switch`) so the naming confusion cannot re-form.
-- [ ] Write an ADR recording the decision (rename + keep self-optimization decoupled), citing the 2026-06-01 council convergence inline.
-- [ ] `agent-settings.md` — remove the second, divergent profile description (Dispatcher / Tool-Adapters); keep only the router semantics (kernel / +tier-1 / +tier-2).
+- [x] `docs/customization.md` — "Four cost concepts" disambiguation block added.
+- [x] ADR-036 written (rename + keep self-optimization decoupled, council-cited).
+- [-] `agent-settings.md` — remove the second divergent profile description (Dispatcher / Tool-Adapters). <!-- deferred: the key was renamed in agent-settings.md, but the divergent prose description was not yet unified to the router semantics. Doc-only polish, non-blocking. -->
 
 ## Phase 7: Regenerate + verify
 
-- [ ] `task sync` + `task generate-tools` — regenerate `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` from source.
-- [ ] `/condense` any touched `.agent-src.uncondensed/` files.
-- [ ] Grep `cost_profile` across stable artefacts — confirm only the deprecated-alias references in the migration path remain.
-- [ ] `task ci` — full pipeline green before review. <!-- carve-out: new-gate-verification -->
+- [x] `task sync` + `task generate-tools` — derived trees regenerated.
+- [x] Touched commands recondensed + hashes marked.
+- [x] `grep cost_profile` — only intentional legacy-alias reads remain in living artefacts.
+- [-] `task ci` fully green. <!-- carve-out: new-gate-verification --> <!-- status: all cost_profile-scope checks + every remote PR-CI check green (parity, schema, settings/work-engine/server tests, skill-lint, refs, sync-consistency). Local `task ci` blocks only on TWO pre-existing release gates that are NOT in any GitHub workflow and are already red on origin/main: check-template-pin-drift (fixed here) and check-public-links (8 unrelated contracts missing `stability:` frontmatter — out of cost_profile scope). -->
+
+## Follow-ups (deferred, not lost)
+
+- `cmd_settings_migrate --dry-run` preview for the rename (Phase 3).
+- Unify the divergent profile description in `agent-settings.md` (Phase 6).
+- Decide `custom`'s fate — implement an explicit per-tier matrix or drop it from the enum (Phase 2 / ADR-036).
+- Optional: rename the `/set-cost-profile` command + `cost-profile-defaults.md` file once the manifest-cascade cost is acceptable.
+- Pre-existing `task ci` debt (NOT this PR): 8 contracts missing `stability:` frontmatter (`check-public-links`); already red on main.
 
 ## Acceptance criteria
 
