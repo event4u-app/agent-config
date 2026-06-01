@@ -87,4 +87,38 @@ tasks:
       - npm run build
       - node dist/cli/agent-config.js install --dry-run
 
+  install:use-dev:
+    desc: |
+      Switch the GLOBAL agent-config to THIS working tree (the dev package).
+      Points the `agent-config` bin on PATH at this repo (npm link) and
+      refreshes user-scope content (~/.claude, ~/.cursor, ~/.event4u, …) from
+      the freshly-built dev tree. Content comes from THIS repo's package root
+      (node dist/...). Switch back with `task install:use-release`.
+      Usage:
+      task install:use-dev
+    cmds:
+      - task: dev:link
+      - task: dev:install-global
+      - 'echo "→ GLOBAL agent-config now = DEV working tree ($(pwd))"'
+      - 'echo "  switch back to the published release: task install:use-release"'
+
+  install:use-release:
+    desc: |
+      Switch the GLOBAL agent-config to the latest published npm release.
+      Drops the dev symlink (npm unlink -g), installs
+      @event4u/agent-config@latest globally, and refreshes user-scope content
+      from it. Content comes from the GLOBAL release package (the `agent-config`
+      bin resolves to ~/ node_modules, not this repo). Switch back to the
+      working tree with `task install:use-dev`.
+      Usage:
+      task install:use-release
+    cmds:
+      - npm unlink -g @event4u/agent-config 2>/dev/null || true
+      - npm install -g @event4u/agent-config@latest
+      # `agent-config` now resolves to the global release bin → installs the
+      # RELEASE content (not this repo's). --allow-headless keeps it global.
+      - agent-config install --allow-headless
+      - 'echo "→ GLOBAL agent-config now = RELEASE @event4u/agent-config@$(npm view @event4u/agent-config version 2>/dev/null)"'
+      - 'echo "  switch back to the working tree: task install:use-dev"'
+
 

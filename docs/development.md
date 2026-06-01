@@ -127,6 +127,18 @@ task dev:link                  # Symlink this repo as the global @event4u/agent-
 task dev:unlink                # Remove the global symlink
 ```
 
+**Switch the global install between dev and release** — one-shot toggles
+that flip BOTH the `agent-config` bin on PATH and the user-scope content:
+
+```bash
+task install:use-dev           # global = THIS working tree (npm link + dev-build content)
+task install:use-release       # global = latest npm release (npm i -g @latest + release content)
+```
+
+Run `install:use-dev` to test the working tree as the live global install,
+then `install:use-release` to switch back to the published version. They are
+symmetric — whichever you run last is the active global `agent-config`.
+
 **Typical flow:**
 
 1. In this repo: `task dev:link` — once. The `agent-config` bin on PATH
