@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **521 artefacts** in this package.
+Maintainer-facing index of all **525 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -319,7 +319,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../packages/core/.agent-src.uncondensed/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../packages/core/.agent-src.uncondensed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (146)
+## Commands (150)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -432,6 +432,10 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`post-as:me`](../packages/core/.agent-src.uncondensed/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
 | command | [`prediction-pool`](../packages/pack-fun/.agent-src.uncondensed/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
 | command | [`prepare-for-review`](../packages/core/.agent-src.uncondensed/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
+| command | [`profile`](../packages/core/.agent-src.uncondensed/commands/profile.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |
+| command | [`profile:activate`](../packages/core/.agent-src.uncondensed/commands/profile/activate.md) | cluster: profile | Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence |
+| command | [`profile:deactivate`](../packages/core/.agent-src.uncondensed/commands/profile/deactivate.md) | cluster: profile | Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns |
+| command | [`profile:show`](../packages/core/.agent-src.uncondensed/commands/profile/show.md) | cluster: profile | Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface) |
 | command | [`project-analyze`](../packages/core/.agent-src.uncondensed/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../packages/core/.agent-src.uncondensed/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
 | command | [`quality-fix`](../packages/core/.agent-src.uncondensed/commands/quality-fix.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
