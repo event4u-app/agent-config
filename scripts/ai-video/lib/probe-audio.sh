@@ -36,6 +36,14 @@
 #   2  usage / file missing
 #   3  required tool missing (ffprobe / ffmpeg)
 #   4  no audio stream in the file
+#
+# Runtime requirements (trust boundary — AI-council note 2026-06-02):
+#   - ffmpeg + ffprobe on PATH (enforced, exit 3).
+#   - POSIX awk. Both GNU awk (CI/Linux) and BSD awk (macOS) are supported;
+#     the window arrays are passed via ENVIRON, not -v, because BSD awk
+#     rejects literal newlines in a -v value. The honesty invariant
+#     (interval <=> warning) is regression-guarded by
+#     tests/test_probe_audio.py::test_corpus_sweep_honesty_invariant.
 
 set -euo pipefail
 
@@ -99,7 +107,9 @@ sil_bounds="$(ffmpeg -hide_banner -nostats -i "${song}" \
       /silence_start/ { for(i=1;i<=NF;i++) if($i=="silence_start:") s=$(i+1) }
       /silence_end/   { for(i=1;i<=NF;i++) if($i=="silence_end:")   { e=$(i+1); printf "%.3f\n", (s+e)/2 } }
     ' 2>/dev/null || true)"
-n_sil="$(printf '%s' "${sil_bounds}" | sed '/^$/d' | wc -l | tr -d ' ')"
+# Trailing \n so `wc -l` counts the last line: command substitution strips
+# the trailing newline, and two boundaries without it count as one.
+n_sil="$(printf '%s\n' "${sil_bounds}" | sed '/^$/d' | wc -l | tr -d ' ')"
 
 # --- 4. choose method + build section boundaries ------------------------
 # A method needs >= 3 sections (>= 2 internal boundaries) to count as
@@ -125,7 +135,7 @@ if [ -z "${method}" ]; then
             prev=en[k]
           }
         }')"
-  n_rms="$(printf '%s' "${rms_bounds}" | sed '/^$/d' | wc -l | tr -d ' ')"
+  n_rms="$(printf '%s\n' "${rms_bounds}" | sed '/^$/d' | wc -l | tr -d ' ')"
   if [ "${n_rms}" -ge 2 ]; then
     method="rms"
     boundaries="$(printf '%s\n' "${rms_bounds}" | sed '/^$/d' | sort -n | uniq)"
@@ -145,10 +155,15 @@ fi
 # = mean of the RMS windows whose start falls inside it.
 printf '%s' "${boundaries}" \
   | sed '/^$/d' \
-  | awk -v d="${duration}" -v method="${method}" -v warning="${warning}" \
-        -v wins="$(printf '%b' "${win_starts}")" -v ens="$(printf '%b' "${win_energy}")" '
+  | _PROBE_WINS="$(printf '%b' "${win_starts}")" _PROBE_ENS="$(printf '%b' "${win_energy}")" \
+    awk -v d="${duration}" -v method="${method}" -v warning="${warning}" '
     BEGIN {
-      nw=split(wins, ws, "\n"); split(ens, es, "\n")
+      # Read the window arrays from the environment, not -v: BSD awk (macOS)
+      # rejects literal newlines inside a -v value ("newline in string"),
+      # while GNU awk (CI/Linux) tolerates them. ENVIRON is POSIX and
+      # portable across both. (Surfaced 2026-06-02 once ffmpeg landed on a
+      # macOS authoring host — CI on gawk never hit it.)
+      nw=split(ENVIRON["_PROBE_WINS"], ws, "\n"); split(ENVIRON["_PROBE_ENS"], es, "\n")
       # build edges
       ne=0; edges[ne++]=0
     }
