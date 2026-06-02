@@ -9,6 +9,14 @@ and the exact commands and skills wired into the profile YAML at
 The summary table at the top of [`README.md`](../README.md) is the
 one-page index; the prose below is the deep version.
 
+**Switching experience.** `agent-config setup` writes `profile.id` on first run
+(it is the wizard's first question). To switch later, run
+`agent-config use --profile=<id>` (one of `developer` · `content_creator` ·
+`founder` · `agency` · `finance` · `ops`). In 6.0.0-A this records the choice
+only; pack-scoped surfacing (projection-time filtering,
+[`ADR-040`](decisions/ADR-040-execution-model-projection-time-filtering.md))
+activates in 6.0.0-B behind a staged, opt-in rollout.
+
 <a id="profile-developer"></a>
 ## 👩‍💻 `developer` — IC engineer
 

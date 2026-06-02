@@ -50,6 +50,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'mcp:check', disposition: 'delegate' },
     { name: 'mcp:setup', disposition: 'delegate' },
     { name: 'mcp:run', disposition: 'delegate' },
+    { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
     { name: 'roadmap:progress', disposition: 'delegate' },
     { name: 'roadmap:progress-check', disposition: 'delegate' },
     { name: 'hooks:install', disposition: 'delegate' },
