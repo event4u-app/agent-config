@@ -67,45 +67,80 @@ feedback's assumptions):
 
 ## Phase 1: Registry capture — Glama + sweep
 
-- [ ] **Step 1:** Add a Glama (`glama.ai`) row to the submission-status table in
+- [x] **Step 1:** Add a Glama (`glama.ai`) row to the submission-status table in
   [`docs/distribution/registries.md`](../../docs/distribution/registries.md)
   § MCP registries, with the same one-line entry template the three existing
   MCP registries use (repo URL `https://github.com/event4u-app/agent-config`,
   description, tags `agent-governance`, `mcp`, `skills`). Mark status
   `⬜ open (human-owner: maintainer submits via the Glama claim flow)`.
-- [ ] **Step 2:** Sweep the three existing MCP-registry rows (punkpeye, mcp.so,
+- [x] **Step 2:** Sweep the three existing MCP-registry rows (punkpeye, mcp.so,
   mcpservers.org) for stale status text; if any submission timestamp landed
   since the rows were written, capture it. No new submissions (those stay
   human-owner per the existing roadmap).
+  <!-- swept 2026-06-02: all three rows still ⬜ open / pending across registries.md,
+  registry-submissions.md, and dist/mcp/registry-manifest.json — no PR URLs, no
+  submission timestamps landed. No stale status, nothing to backfill. -->
 
 ## Phase 2: Verify the two flagged-but-likely-fine risks
 
-- [ ] **Step 3:** Confirm the automated release path populates the GitHub
+- [~] **Step 3:** Confirm the automated release path populates the GitHub
   release body. Read the github-actions tag/release path (`.github/workflows/`
   publish/release + `scripts/release.py` `--notes` wiring). If the historical
   5.8.0 GitHub release body is still the bare merge-commit text, backfill it
   from `CHANGELOG.md` via `gh release edit 5.8.0 --notes-file …`. If the path
   already populates correctly, record "verified — non-issue" inline and close
   the step. <!-- carve-out: new-gate-verification -->
-- [ ] **Step 4:** Confirm `docs/contracts/branch-protection-policy.md` matches
+  <!-- verified 2026-06-02: regular path is correct — scripts/release.py step 9
+  runs `gh release create <tag> --notes plan.changelog_body`; publish-npm.yml only
+  publishes npm, cloud-release.yml (softprops/action-gh-release) only attaches
+  artefacts to the pre-existing release and sets no body, so it never blanks it.
+  The 5.8.0 body IS still empty (one-off). Byte-accurate backfill notes prepared
+  from docs/archive/CHANGELOG-pre-5.9.0.md → /tmp/release-5.8.0-notes.md, but the
+  `gh release edit 5.8.0` external write was denied by the harness auto-mode
+  classifier (external collaboration artifact). deferred: needs maintainer to run
+  `gh release edit 5.8.0 --notes-file <body>` or grant the permission. -->
+- [x] **Step 4:** Confirm `docs/contracts/branch-protection-policy.md` matches
   the live GitHub ruleset for `main` (require status checks + restrict force
   pushes). This is a maintainer UI check; record the verification outcome
   inline. If the doc and the UI drift, note the drift — do **not** change the
   ruleset autonomously (Hard Floor on repo settings).
+  <!-- verified 2026-06-02: DRIFT FOUND. main is NOT protected.
+  `gh api repos/event4u-app/agent-config/rulesets` → [] (no repo rulesets);
+  `.../branches/main/protection` → 404 "Branch not protected";
+  `.../branches/main` → {"protected": false}. The policy doc is "active" with the
+  full required-check matrix, but the live GitHub UI mirrors nothing — exactly the
+  feedback25 flag. Remediation is maintainer-owned (Settings → Rules UI): create a
+  ruleset for `main` requiring the feature-PR status-check floor + restrict force
+  pushes, per the matrix in branch-protection-policy.md. NOT changed autonomously
+  (Hard Floor on repo settings). Step objective (note the drift) is complete. -->
 
 ## Phase 3: Profile-complexity gate coverage
 
-- [ ] **Step 5:** Read `scripts/check_overlay_cascade_subdirs.py` and confirm it
+- [x] **Step 5:** Read `scripts/check_overlay_cascade_subdirs.py` and confirm it
   covers feedback26's P0 ask — "no overlapping profile overlays without an
   explicit precedence doc". If it already enforces precedence on overlapping
   overlays, record "covered" inline and close. If there is a real gap (e.g. two
   overlays touching the same key with no documented precedence), extend the
   existing check with the minimal rule + a test; do **not** add a new script.
   <!-- carve-out: new-gate-verification -->
+  <!-- verified 2026-06-02: COVERED — no gap, no extension. The session-profile
+  overlay (docs/contracts/session-profile-overlay.md) writes a SINGLE key
+  `runtime.active_packs` to ONE layer (agents/settings/.agent-settings.local.yml,
+  deepest-winning); `/profile activate A B C` unions closures deterministically —
+  no two overlays touch the same key with undocumented precedence. The config-
+  cascade layer precedence is documented in docs/customization.md and code↔docs
+  parity is guarded by this very script (CASCADE_ELIGIBLE_KINDS / USER_GLOBAL_
+  OVERLAY_KINDS). Extending this script would be wrong — it audits layer
+  participation, not writer exclusivity. AI council (claude-sonnet-4-5 + gpt-4o,
+  2026-06-02) converged on "covered, present-tense"; the only optional belts-and-
+  suspenders item is a `runtime.active_packs` key-exclusivity test in the session-
+  profile suite, which the council flagged as NOT required for coverage. Per the
+  step's own gate (extend only on a real gap) + minimal-safe-diff: closed as
+  covered, no code change. -->
 
 ## Phase 4: Forward-routing record (no code)
 
-- [ ] **Step 6:** Add a short "feedback 24–26 disposition" note to
+- [x] **Step 6:** Add a short "feedback 24–26 disposition" note to
   `agents/settings/contexts/` recording, per item, where each feedback ask
   landed: done (doctor, knowledge connectors, branch-protection), tracked
   (employee workflows + profile dashboard → `road-to-employee-product`;

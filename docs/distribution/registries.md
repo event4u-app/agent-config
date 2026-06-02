@@ -40,6 +40,7 @@ No bespoke `BREAKING_CHANGES.md` is maintained — the changelog is the authorit
 | 1 | `punkpeye/awesome-mcp-servers` | <https://github.com/punkpeye/awesome-mcp-servers> | One-line entry under the agent-tooling section, links to `README.md` hero anchor | ⬜ open | — |
 | 2 | `mcp.so` | <https://mcp.so/> | Submit via the directory form; same one-line shape | ⬜ open | — |
 | 3 | `mcpservers.org` | <https://mcpservers.org/> | Submit via the directory form; same one-line shape (verify URL current at submission time) | ⬜ open | — |
+| 4 | `glama.ai` | <https://glama.ai/> | Submit via the Glama claim flow; same one-line shape — repo `https://github.com/event4u-app/agent-config`, tags `agent-governance`, `mcp`, `skills` | ⬜ open (human-owner: maintainer submits via the Glama claim flow) | — |
 
 ## Submission template
 
