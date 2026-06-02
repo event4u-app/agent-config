@@ -23,8 +23,16 @@ mcp-mode · mcp-beta-readiness · offline-readiness · python-runtime ·
 tier-usage-readiness · council-cli · unsupported-combos ·
 wizard-state.
 Each emits a structured ``{id, status, message, remedy}`` record with
-``status`` ∈ ``ok`` / ``warn`` / ``fail`` (rendered ``✅`` / ``⚠️`` /
-``❌``). ``--check <id>`` runs a single check.
+``status`` ∈ ``ok`` / ``warn`` / ``fail`` / ``skipped`` (rendered
+``✅`` / ``⚠️`` / ``❌`` / ``⏭️``). ``--check <id>`` runs a single check.
+
+Checks are split by scope (:data:`GLOBAL_CHECK_IDS` vs
+:data:`MANIFEST_REQUIRED_CHECK_IDS`) so an ADR-020 global-only consumer
+(bridge marker present, no ``agents/installed-tools.lock``) gets a
+green-capable report instead of a hard bail: the global checks run, the
+manifest-required checks report ``skipped``, and ``bridge-drift`` returns
+a scope-aware "drift not applicable" verdict. See :func:`main` for the
+no-manifest branch and exit-code contract.
 
 Repair affordances: ``--repair wizard-state`` resets a malformed or
 orphaned ``state/wizard-state.json`` under the user-global root (the
@@ -455,6 +463,41 @@ CHECK_IDS = (
     "wizard-state",
 )
 
+#: Checks that need only the project root (or no input at all) and run
+#: regardless of whether a project lockfile exists. Under ADR-020
+#: global-only (bridge marker present, no ``installed-tools.lock``) these
+#: still produce a real verdict. ``scope`` lives here because
+#: :func:`_check_scope` reads only ``project_root`` — the roadmap prose
+#: that grouped it with the manifest checks predates this code reality
+#: (AI council, claude-sonnet-4-5 + gpt-4o, design lens, 2026-06-02).
+GLOBAL_CHECK_IDS: frozenset[str] = frozenset({
+    "scope",
+    "global-binary",
+    "mcp-mode",
+    "mcp-beta-readiness",
+    "offline-readiness",
+    "python-runtime",
+    "tier-usage-readiness",
+    "council-cli",
+    "wizard-state",
+})
+
+#: Checks that genuinely cannot run without the project manifest. Without
+#: a lockfile they report ``skipped`` rather than a misleading verdict.
+#: ``bridge-drift`` is deliberately **not** here: it is scope-aware —
+#: a manifest-derived drift roll-up when the lockfile exists, and a
+#: "drift not applicable (global-only consumer)" verdict when it does
+#: not (computed in :func:`_check_bridge_drift_no_manifest`, keeping
+#: :func:`_check_bridge_drift` a pure roll-up per the council's SRP point).
+MANIFEST_REQUIRED_CHECK_IDS: frozenset[str] = frozenset({
+    "manifest-integrity",
+    "lockfile-freshness",
+    "unsupported-combos",
+})
+
+#: Project-root-relative path of the ADR-020 global-only consumer marker.
+BRIDGE_MARKER_RELATIVE = "agents/.event4u-bridge.yml"
+
 #: Repair targets that ``--repair <id>`` accepts. Each id maps to a
 #: function in :func:`_run_repair` that resets the named artefact and
 #: returns an exit code. Additive set: introduce by adding a new id
@@ -476,7 +519,7 @@ MCP_BETA_GATES: tuple[tuple[str, str], ...] = (
 
 #: Visible status → glyph map. ``warn`` keeps a trailing space so the
 #: rendered output stays in a single visual column with the other glyphs.
-STATUS_SYMBOLS = {"ok": "✅", "warn": "⚠️ ", "fail": "❌"}
+STATUS_SYMBOLS = {"ok": "✅", "warn": "⚠️ ", "fail": "❌", "skipped": "⏭️ "}
 
 #: Minimum Python interpreter the CLI targets. Bumped in lockstep with
 #: ``from __future__ import annotations`` + PEP-604 syntax usage.
@@ -1159,6 +1202,131 @@ def _run_checks(
     return out
 
 
+def _skipped_manifest_check(check_id: str) -> dict[str, Any]:
+    """A ``skipped`` verdict for a manifest-required check with no lockfile.
+
+    Explicit machine-readable record (not omitted, not ``null``) so the
+    ``--json`` ``checks`` array keeps a stable shape for a global-only
+    consumer — a council convergence point (2026-06-02).
+    """
+    return {
+        "id": check_id, "status": "skipped",
+        "message": "requires a project lockfile (agents/installed-tools.lock)",
+        "remedy": "run `agent-config init` to create a project lockfile, "
+                  "then re-run this check",
+    }
+
+
+def _check_bridge_drift_no_manifest(bridge_present: bool) -> dict[str, Any]:
+    """Scope-aware ``bridge-drift`` verdict when no project manifest exists.
+
+    Kept out of :func:`_check_bridge_drift` (which stays a pure
+    manifest-derived roll-up) per the council's single-responsibility
+    point. A global-only consumer has no distributed tools to drift, so
+    a bridge-present repo reports ``ok`` ("not applicable"); a repo with
+    neither lockfile nor bridge marker reports ``skipped``.
+    """
+    if bridge_present:
+        return {
+            "id": "bridge-drift", "status": "ok",
+            "message": "no project lockfile → distributed-tool drift not "
+                       "applicable (global-only consumer)",
+            "remedy": "",
+        }
+    return {
+        "id": "bridge-drift", "status": "skipped",
+        "message": "no project lockfile and no bridge marker → drift check "
+                   "not applicable",
+        "remedy": "run `agent-config init` (project install) or "
+                  "`agent-config refresh --project` (global-only consumer)",
+    }
+
+
+def _run_checks_no_manifest(
+    project_root: Path,
+    bridge_present: bool,
+    only: str | None = None,
+) -> list[dict[str, Any]]:
+    """Run the registry with no project manifest available.
+
+    Mirrors :func:`_run_checks` and preserves :data:`CHECK_IDS` order.
+    Global checks (:data:`GLOBAL_CHECK_IDS`) run unchanged; manifest-required
+    checks (:data:`MANIFEST_REQUIRED_CHECK_IDS`) report ``skipped``;
+    ``bridge-drift`` gets the scope-aware no-manifest verdict.
+    """
+    runners: dict[str, Any] = {
+        "scope": lambda: _check_scope(project_root),
+        "global-binary": lambda: _check_global_binary(project_root),
+        "manifest-integrity": lambda: _skipped_manifest_check("manifest-integrity"),
+        "lockfile-freshness": lambda: _skipped_manifest_check("lockfile-freshness"),
+        "bridge-drift": lambda: _check_bridge_drift_no_manifest(bridge_present),
+        "mcp-mode": lambda: _check_mcp_mode(project_root),
+        "mcp-beta-readiness": lambda: _check_mcp_beta_readiness(project_root),
+        "offline-readiness": lambda: _check_offline_readiness(),
+        "python-runtime": lambda: _check_python_runtime(),
+        "tier-usage-readiness": lambda: _check_tier_usage_readiness(project_root),
+        "council-cli": lambda: _check_council_cli(project_root),
+        "unsupported-combos": lambda: _skipped_manifest_check("unsupported-combos"),
+        "wizard-state": _check_wizard_state,
+    }
+    out: list[dict[str, Any]] = []
+    for cid in CHECK_IDS:
+        if only is not None and cid != only:
+            continue
+        out.append(runners[cid]())
+    return out
+
+
+def _run_no_manifest(
+    opts: argparse.Namespace,
+    project_root: Path,
+    origin: str,
+    bridge_present: bool,
+) -> int:
+    """Handle the no-project-lockfile path without the old hard bail.
+
+    Exit-code contract (council-defined, 2026-06-02):
+
+    * ``0`` — bare report for a recognised global-only consumer
+      (bridge marker present), or a single global ``--check`` that passed.
+    * ``1`` — a runnable health check requested via ``--check`` failed.
+    * ``2`` — a requested ``--check`` cannot run (manifest-required check
+      with no lockfile, or ``bridge-drift`` with neither lockfile nor
+      bridge marker), or a bare report in an **uninitialised** repo
+      (neither lockfile nor bridge marker) — preserves the spirit of the
+      pre-existing "run init" signal while still printing a real report.
+    """
+    checks = _run_checks_no_manifest(project_root, bridge_present, only=opts.check)
+    fail_check = any(c["status"] == "fail" for c in checks)
+    skipped_requested = opts.check is not None and any(
+        c["id"] == opts.check and c["status"] == "skipped" for c in checks
+    )
+
+    if opts.json:
+        _emit_json(project_root, [], [], [], [], checks=checks, origin=origin)
+    elif opts.check is None:
+        print(f"  📍  project_root: {project_root} (origin: {origin})")
+        if bridge_present:
+            print("  ℹ️   global-only consumer: bridge marker present, no "
+                  "project lockfile (expected under ADR-020)")
+            print("      project-manifest checks are skipped — they apply only "
+                  "to project-local distributed tools")
+        else:
+            print("  ⚠️   no project lockfile and no bridge marker at "
+                  f"{project_root}", file=sys.stderr)
+            print("      run `agent-config init` (project install) or "
+                  "`agent-config refresh --project` (global-only consumer)",
+                  file=sys.stderr)
+        _emit_checks_text(checks)
+    else:
+        _emit_checks_text(checks)
+
+    if opts.check is not None:
+        if skipped_requested:
+            return 2
+        return 1 if fail_check else 0
+    return 0 if bridge_present else 2
+
 
 def _emit_json(
     project_root: Path,
@@ -1371,17 +1539,12 @@ def main(argv: list[str] | None = None) -> int:
     manifest_pth = installed_tools.manifest_path(project_root)
     manifest = installed_tools.read_manifest(manifest_pth)
     if manifest is None:
-        print(
-            f"❌  doctor: no project lockfile at {manifest_pth}",
-            file=sys.stderr,
-        )
-        print(
-            f"    project_root: {project_root} (origin: {origin})",
-            file=sys.stderr,
-        )
-        print("    run `./agent-config init` to create one",
-              file=sys.stderr)
-        return 2
+        # No project lockfile. Under ADR-020 global-only this is a
+        # legitimate state, not an error — run the lockfile-independent
+        # checks and report consumer state instead of a hard bail. The
+        # per-scope split + exit-code contract live in _run_no_manifest.
+        bridge_present = (project_root / BRIDGE_MARKER_RELATIVE).is_file()
+        return _run_no_manifest(opts, project_root, origin, bridge_present)
 
     records, known = _collect_manifest_entries(project_root, manifest)
     missing, modified, tag_drift = _classify(records)
