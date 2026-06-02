@@ -6,10 +6,10 @@
 
 ## Overall
 
-**43 / 116 steps done · 37%**
+**48 / 115 steps done · 42%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md) | 4 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md) | 5 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
-| 5 | [road-to-feedback-24-26-cleanup.md](roadmaps/road-to-feedback-24-26-cleanup.md) | 4 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-feedback-24-26-cleanup.md](roadmaps/road-to-feedback-24-26-cleanup.md) | 4 | 11 | 5 | 5 | 1 | 0 | █████░░░░░ 50% |
 
 ---
 
@@ -78,12 +78,12 @@
 
 ### [road-to-feedback-24-26-cleanup.md](roadmaps/road-to-feedback-24-26-cleanup.md)
 
-**Road to Feedback 24–26 Cleanup — the genuinely-new, non-blocked items** — 0 / 11 done (0%)
+**Road to Feedback 24–26 Cleanup — the genuinely-new, non-blocked items** — 5 / 10 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Registry capture — Glama + sweep | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Verify the two flagged-but-likely-fine risks | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Profile-complexity gate coverage | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | Forward-routing record (no code) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Registry capture — Glama + sweep | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Verify the two flagged-but-likely-fine risks | ✅ done | 0 | 1 | 1 | 0 | 100% |
+| 3 | Profile-complexity gate coverage | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 4 | Forward-routing record (no code) | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 
