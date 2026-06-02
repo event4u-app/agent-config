@@ -47,6 +47,12 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Iterable
 
+# Sibling import: running this file as a script puts its directory on
+# sys.path[0]; the test loader (importlib spec_from_file_location) does not,
+# so add it explicitly to keep ``import workspace_secrets`` robust either way.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import workspace_secrets  # noqa: E402
+
 # --- Bounds (contract §Bounds) ---------------------------------------------
 
 KNOWLEDGE_ROOT = Path("agents/memory/knowledge")
@@ -131,14 +137,8 @@ _RE_IBAN = re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b")
 _RE_CC = re.compile(r"\b(?:\d[ \-]?){13,19}\b")
 _RE_SSN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 
-# Secret patterns (gitleaks-equivalent subset)
-_RE_AWS = re.compile(r"AKIA[0-9A-Z]{16}")
-_RE_GH = re.compile(r"gh[pousr]_[A-Za-z0-9]{36,}")
-_RE_OPENAI = re.compile(r"sk-[A-Za-z0-9]{20,}")
-_RE_KV_SECRET = re.compile(
-    r"(?i)(?:api[_-]?key|secret|token|password|passwd|bearer)\s*[:=]\s*['\"]?[A-Za-z0-9_\-+/=]{12,}['\"]?"
-)
-_RE_PRIVATE_KEY = re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+PRIVATE KEY-----")
+# Secret patterns live in the shared leaf module ``workspace_secrets`` so the
+# ingestion redactor and the per-store pre-write guard stay in lock-step.
 
 
 def redact(text: str, counters: dict) -> tuple[str, int]:
@@ -147,16 +147,13 @@ def redact(text: str, counters: dict) -> tuple[str, int]:
     Returns ``(redacted_text, secrets_count)``. Counter keys are the
     placeholder names without brackets so the manifest can sum them.
     """
-    secrets_count = 0
 
     def _bump(name: str, n: int = 1) -> None:
         counters[name] = counters.get(name, 0) + n
 
-    # Secrets first — never stored, manifest counter incremented.
-    for pat in (_RE_PRIVATE_KEY, _RE_AWS, _RE_GH, _RE_OPENAI, _RE_KV_SECRET):
-        text, n = pat.subn("[SECRET]", text)
-        if n:
-            secrets_count += n
+    # Secrets first — never stored, manifest counter incremented. The shared
+    # module replaces every match with ``[SECRET]`` (both tiers).
+    text, secrets_count = workspace_secrets.scrub(text)
     # PII placeholders.
     for pat, tag in (
         (_RE_IBAN, "IBAN"),
