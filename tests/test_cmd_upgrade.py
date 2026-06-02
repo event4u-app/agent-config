@@ -69,3 +69,44 @@ def test_upgrade_aborts_on_failed_step() -> None:
     assert rc == 1
     assert len(rec.calls) == 1  # stopped after the first (failing) step
     assert "step failed" in err.getvalue()
+
+
+_STALE_WRAPPER = "#!/usr/bin/env bash\n# old fallback-less wrapper\nexit 127\n"
+
+
+def test_upgrade_refreshes_stale_project_wrapper(tmp_path: Path) -> None:
+    """Run from a consumer root with an old wrapper → it gets re-stamped."""
+    (tmp_path / "package.json").write_text('{"name": "some-app"}')
+    wrapper = tmp_path / "agent-config"
+    wrapper.write_text(_STALE_WRAPPER)
+    out = io.StringIO()
+    rc = cmd_upgrade.main([], runner=_Recorder(), fetcher=lambda: "5.4.0",
+                          installed="5.3.0", project_root=tmp_path, out=out)
+    assert rc == 0
+    refreshed = wrapper.read_text(encoding="utf-8")
+    assert "globally-installed" in refreshed  # canonical template content
+    assert "npx --yes" in refreshed           # global/npx fallback present
+    assert "old fallback-less wrapper" not in refreshed  # stale body replaced
+    assert "refreshed stale project wrapper" in out.getvalue()
+
+
+def test_upgrade_does_not_create_wrapper_where_none_exists(tmp_path: Path) -> None:
+    """No existing wrapper → upgrade never creates one (install-only action)."""
+    (tmp_path / "package.json").write_text('{"name": "some-app"}')
+    out = io.StringIO()
+    rc = cmd_upgrade.main([], runner=_Recorder(), fetcher=lambda: "5.4.0",
+                          installed="5.3.0", project_root=tmp_path, out=out)
+    assert rc == 0
+    assert not (tmp_path / "agent-config").exists()
+
+
+def test_upgrade_leaves_source_repo_wrapper_untouched(tmp_path: Path) -> None:
+    """The agent-config checkout itself is never re-stamped by upgrade."""
+    (tmp_path / ".agent-src").mkdir()  # source-repo signal
+    wrapper = tmp_path / "agent-config"
+    wrapper.write_text(_STALE_WRAPPER)
+    out = io.StringIO()
+    rc = cmd_upgrade.main([], runner=_Recorder(), fetcher=lambda: "5.4.0",
+                          installed="5.3.0", project_root=tmp_path, out=out)
+    assert rc == 0
+    assert wrapper.read_text(encoding="utf-8") == _STALE_WRAPPER

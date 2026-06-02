@@ -84,7 +84,7 @@ def _is_source_repo(project_root: Path) -> bool:
 def _refresh_project(project_root: Path, out, err) -> int:
     # Imported lazily: scripts.install is large and only needed for --project.
     from scripts import install as installer
-    from scripts._lib import installed_lock
+    from scripts._lib import cli_wrapper, installed_lock
 
     if _is_source_repo(project_root):
         print("ℹ️  refresh --project skipped: this is the agent-config package "
@@ -113,6 +113,12 @@ def _refresh_project(project_root: Path, out, err) -> int:
             "besides the bridge marker. See the `override-management` skill.\n",
             encoding="utf-8")
     print(f"✅  overrides scaffold: {overrides}", file=out)
+
+    # Re-stamp the ``./agent-config`` wrapper from the canonical template so
+    # an older, fallback-less wrapper cannot linger and break the hooks.
+    wrapper = cli_wrapper.install_cli_wrapper(project_root)
+    if wrapper is not None:
+        print(f"✅  ./agent-config wrapper refreshed: {wrapper}", file=out)
 
     rc = _sync_gitignore(project_root, out, err)
     if rc != 0:
