@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: check-refs
 description: "Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions."
 domain: process

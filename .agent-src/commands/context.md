@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: context
 tier: 2
 description: Context orchestrator — routes to create, refactor

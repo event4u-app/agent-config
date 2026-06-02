@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: roadmap
 tier: 1
 description: Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).

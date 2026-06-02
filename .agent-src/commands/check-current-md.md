@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: check-current-md
 tier: 2
 description: Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.

@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: optimize
 tier: 1
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters

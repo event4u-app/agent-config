@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: memory:propose
 tier: 2
 cluster: memory

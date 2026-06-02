@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: skills
 tier: 2
 description: Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.

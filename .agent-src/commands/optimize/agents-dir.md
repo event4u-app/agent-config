@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: optimize:agents-dir
 tier: 2
 cluster: optimize

@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: skill
 tier: 2
 description: Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.

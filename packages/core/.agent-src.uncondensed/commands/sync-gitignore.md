@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: sync-gitignore
 tier: 1
 cluster: sync-gitignore

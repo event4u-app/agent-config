@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: knowledge:forget
 tier: 2
 cluster: knowledge
