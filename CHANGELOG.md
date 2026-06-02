@@ -811,6 +811,66 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.8.0](https://github.com/event4u-app/agent-config/compare/5.7.0...5.8.0) (2026-06-02)
+
+### Features
+
+* **profile:** /profile command cluster + overlay contract ([1b7720a](https://github.com/event4u-app/agent-config/commit/1b7720a3ead769056cf7499f7d4951e77fc07823))
+* **profile:** session-profile overlay engine + staleness hook ([cca6ac1](https://github.com/event4u-app/agent-config/commit/cca6ac112d1479e807621c9c846279d949aecc99))
+* **scripts:** add warn-only coverage-diff forcing-function ([dc45926](https://github.com/event4u-app/agent-config/commit/dc4592639f052457099e7ad1857b20b867657ce9))
+* **scripts:** add packages/core path resolver + gate path-integrity check ([c7eddab](https://github.com/event4u-app/agent-config/commit/c7eddabe74c9c34d18f1c545b60b1738cffa4b6c))
+* **dev:** add install:use-dev / install:use-release global switch tasks ([e8a1e23](https://github.com/event4u-app/agent-config/commit/e8a1e23ec85ff0d7c358218130ae8ebe8e95c075))
+* **install:** refuse project-scope self-install into the source repo ([2ad502b](https://github.com/event4u-app/agent-config/commit/2ad502be83236b2c2fa653a10670e518fb80ace7))
+* **pack-fun:** wire EV-grid + P(win) helpers into prediction-pool-optimizer ([001eb1d](https://github.com/event4u-app/agent-config/commit/001eb1de4ba2ceb58a02382f449a59da9334b895))
+* **pack-fun:** add score_ev + pool_winsim helpers for prediction-pool ([06d296b](https://github.com/event4u-app/agent-config/commit/06d296b4355048d82ca969fb5c369cd73dc8d44e))
+* **settings:** install/sync write canonical agents/settings/ + migrate root (ADR-038) ([b4b589e](https://github.com/event4u-app/agent-config/commit/b4b589e77fde1c6d8c07ad2f32b1824bfbfea893))
+* **settings:** canonical settings path → agents/settings/.agent-settings.yml (resolver + readers) ([dc8c96a](https://github.com/event4u-app/agent-config/commit/dc8c96a5f9ca5f56c6e68e8f8771bf62a580afd2))
+* **pack-fun:** answer every pool question + multi-book consensus odds in prediction-pool-optimizer ([8f0e124](https://github.com/event4u-app/agent-config/commit/8f0e1241c1962ef3fe1b818bee4b2db735d099da))
+
+### Bug Fixes
+
+* **hooks:** resolve roadmap-progress regenerator from the package root for global-only consumers ([8539403](https://github.com/event4u-app/agent-config/commit/853940322166cf47d3e055487f6eb884950a3396))
+* **templates:** bump agent_config_version pin to 5.7.0 ([e2a5ae2](https://github.com/event4u-app/agent-config/commit/e2a5ae277c4c3b24d9f1ed42172f8d24f2eae21c))
+* **check-refs:** ref-ignore gitignored .agent-settings.yml in new roadmap ([73a7deb](https://github.com/event4u-app/agent-config/commit/73a7deb56ed9b2da570c5214816f1f4b639c4da1))
+* **templates:** bump agent_config_version pin to 5.7.0 ([411060d](https://github.com/event4u-app/agent-config/commit/411060d15ab1d2720f13af5482a7dc535dfb4fac))
+* **check-refs:** add content-class allowlist to end the reword treadmill ([f6a3b7f](https://github.com/event4u-app/agent-config/commit/f6a3b7f2904c53f6ceb84d6339a1bb7cf75ea8e5))
+
+### Documentation
+
+* **roadmap:** close road-to-self-update Phase 5; spawn doctor global-only follow-up ([307aa87](https://github.com/event4u-app/agent-config/commit/307aa87f75270124f298dba80369061c3367a42c))
+* **profile:** document session profiles + sync command counts ([afa7db1](https://github.com/event4u-app/agent-config/commit/afa7db16b5e55c849eaabcc314051c55685881e7))
+* **adr:** record session-profile overlay decisions (ADR-010 addendum + host audit) ([90838b9](https://github.com/event4u-app/agent-config/commit/90838b9e21f18d5e1f62c7c29550ea1fb7a8cd9f))
+* **adr:** record ADR-039 — .claude/skills/ untracked ([ae00011](https://github.com/event4u-app/agent-config/commit/ae00011a9786632808c8f74f86d68062c12b7b49))
+* **roadmap:** add follow-up for untracking .claude/skills/ ([14855f8](https://github.com/event4u-app/agent-config/commit/14855f8da5c2465cb3391f5659558fe3a22c006d))
+* **roadmap:** complete + archive linter-debt-and-meta-subtraction ([3f1c742](https://github.com/event4u-app/agent-config/commit/3f1c74207f33025b0aaa2f48d421bec396610222))
+
+### Tests
+
+* **profile:** make surface tests independent of the gitignored manifest ([db35420](https://github.com/event4u-app/agent-config/commit/db35420df35d41e83c9d4b02b04f0af24a0fbd76))
+* **profile:** contract tests for the session-profile overlay ([1def905](https://github.com/event4u-app/agent-config/commit/1def9056a1a7bd9a42ecfa7fd53fab6f18c20f87))
+* backfill regression tests for check_skill_requires, settings enum, wizard zero-terminal ([f581f9d](https://github.com/event4u-app/agent-config/commit/f581f9d985b296b7643536e99a7530f46b2afa8e))
+* **settings:** one-liner entrypoint smoke asserts canonical settings path ([21eaf06](https://github.com/event4u-app/agent-config/commit/21eaf062ad230ac09590db9f088f4316f384e4f0))
+* **settings:** update install assertions to canonical agents/settings/ path ([ad2c432](https://github.com/event4u-app/agent-config/commit/ad2c4324ff7ea8eceb1056d96e0810aa4de86835))
+
+### CI
+
+* wire check-gate-paths and check-test-coverage-diff into the pipeline ([d971efb](https://github.com/event4u-app/agent-config/commit/d971efbe1416d4d12ad76724b9bb9504f2bed698))
+* **skill-lint:** drop .claude/** from workflow trigger paths ([b640079](https://github.com/event4u-app/agent-config/commit/b6400794debdf34ca113f67bcb661042dadf7f3b))
+
+### Chores
+
+* **index:** regenerate index + catalog for the profile command cluster ([92ccc91](https://github.com/event4u-app/agent-config/commit/92ccc91157c2781014acba03fdd3ad24c8c05393))
+* **model-tier:** route routine commands and skills to the medium tier ([b0cbd55](https://github.com/event4u-app/agent-config/commit/b0cbd5523652dbeeeb5f5d3fd4e2fbb0ed1c5ed7))
+* **roadmap:** close + archive road-to-session-profile-activation ([d647404](https://github.com/event4u-app/agent-config/commit/d64740461bb61fbaf80eb5f5bcc800fc770e3df0))
+* **roadmap:** close + archive road-to-test-and-gate-integrity ([16f7f8b](https://github.com/event4u-app/agent-config/commit/16f7f8b896d060519cc1624178d38b9691af4bee))
+* **roadmap:** close + archive road-to-claude-skills-untrack ([4010ca7](https://github.com/event4u-app/agent-config/commit/4010ca788621f409395b37b5d48cb2146919d0a2))
+* **claude:** move marketplace skill sources out of .claude/skills ([c0e2d89](https://github.com/event4u-app/agent-config/commit/c0e2d8972b41cc85b44757d7c3b4df8f2b3d3551))
+* **claude:** untrack generated rules/personas/user-types projections ([d03424b](https://github.com/event4u-app/agent-config/commit/d03424b2e43cae9978c7d0fc9a938fe0f1b6e2a8))
+* add a new roadmap for test-and-gate-integrity ([486e7dd](https://github.com/event4u-app/agent-config/commit/486e7ddf07d79ec2a295b726a546567381037356))
+* **meta:** remove dead one-shot roadmap-audit scripts (KC3) ([e0b40a2](https://github.com/event4u-app/agent-config/commit/e0b40a20519e89166db3ab06e70f15e601441dd5))
+
+Tests: 5455 (+80 since 5.7.0)
+
 ## [5.7.0](https://github.com/event4u-app/agent-config/compare/5.6.1...5.7.0) (2026-06-01)
 
 ### Features
