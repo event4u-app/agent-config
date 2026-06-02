@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `5.7.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 379
+- **artefacts**: 383
 
-## Commands (144)
+## Commands (148)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -119,6 +119,10 @@ Core framework-neutral artefacts.
 - **`post-as:ghostwriter`** — Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer.
 - **`post-as:me`** — Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
 - **`prepare-for-review`** — Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date
+- **`profile`** — Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence)
+- **`profile:activate`** — Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence
+- **`profile:deactivate`** — Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns
+- **`profile:show`** — Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface)
 - **`project-analyze`** — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 - **`project-health`** — Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 - **`quality-fix`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files

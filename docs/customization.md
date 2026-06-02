@@ -429,6 +429,32 @@ packs at install time via `npx @event4u/agent-config install` and the
 resulting `.agent-settings.yml` records which packs the project opted
 into.
 
+### Session profiles — surface one audience for the current session
+
+Install every pack once, then **activate a profile per session** so only
+the matching packs' commands/skills are the surfaced set:
+
+- `/profile activate laravel` — surface the Laravel closure
+  (`laravel` + `php` + `engineering-base`) + core artefacts; everything
+  else is hidden from `/help` and the skill surface.
+- `/profile activate po` — switch to the product-owner surface.
+- `/profile show` — active packs + surfaced/hidden counts.
+- `/profile deactivate` — full surface returns.
+
+The activatable name is a session-profile alias
+(`config/discovery/session-profiles.yml`: `developer`, `po`, `finance`,
+`gtm`, `content`) or a raw pack id. It is **recommendation-bias only** —
+an inactive-pack command still runs (with a one-line notice); execution is
+never blocked. The choice is **ephemeral**: it writes
+`runtime.active_packs` to the gitignored `agents/settings/.agent-settings.local.yml`,
+never the committed config, and is cleared with `/profile deactivate`.
+A new session emits a staleness reminder if a profile is still active.
+
+This is a runtime view over the existing **pack** axis, not a new axis,
+and is unrelated to the install `--profile=<minimal|balanced|full>` flag
+(which sets `rule_loading_tier`). Full contract:
+[`session-profile-overlay`](contracts/session-profile-overlay.md).
+
 ---
 
 ## Update check
