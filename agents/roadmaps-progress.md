@@ -6,18 +6,18 @@
 
 ## Overall
 
-**43 / 92 steps done · 47%**
+**43 / 101 steps done · 43%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md) | 4 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md) | 5 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md) | 5 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md) | 5 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 
 ---
@@ -26,26 +26,27 @@
 
 ### [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md)
 
-**Road to 6.0.0-B — Pack-scoped projection (the breaking change)** — 0 / 16 done (0%)
+**Road to 6.0.0-B — Pack-scoped projection (the breaking change)** — 0 / 20 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
+| 0 | Capability-pack formalization (precondition — pure metadata) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 1 | Command pack-ownership metadata (no behaviour change) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Budget audit + migration decisions (maintainer-gated) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Projection-time filtering (the breaking change, opt-in) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Staged-rollout scaffolding (the flip is a later release) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Staged-rollout scaffolding (the flip is a later release) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md)
 
-**Road to 6.0.0-C — Governance, evals, and evidence-based pruning** — 0 / 16 done (0%)
+**Road to 6.0.0-C — Governance, evals, and evidence-based pruning** — 0 / 21 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Per-pack command budget governance | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Verb discipline + routing evals | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Verb discipline + routing evals | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Telemetry for evidence-based pruning | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Skill-family overlap analysis (measured, not arbitrary) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | [CONDITIONAL] Runtime resolver — gated on evidence | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 4 | Skill-family overlap analysis (measured, not arbitrary) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | [CONDITIONAL] Runtime resolver — gated on evidence | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 

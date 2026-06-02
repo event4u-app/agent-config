@@ -15,6 +15,17 @@ parent_roadmap: road-to-6.0.0-b-pack-scoped-projection
 > Governance ships AFTER user-facing value, per the council ("governance before
 > value is theater").
 
+## Branching strategy
+
+> **Integration branch — `refactor/6.0.0`.** Shared with the other
+> `road-to-6.0.0-*` roadmaps (see
+> [`road-to-6.0.0-b-pack-scoped-projection.md`](road-to-6.0.0-b-pack-scoped-projection.md)
+> § Branching strategy). Cut `refactor/6.0.0` off `main` once; every phase/PR
+> branches off it and opens its PR **against `refactor/6.0.0`**, never directly
+> against `main`. The full 6.0.0 refactor (all three roadmaps) is assembled and
+> tested on the integration branch first; only when it is complete and green
+> does `refactor/6.0.0` merge to `main` in one final integration PR.
+
 ## Goal
 
 A new visible command cannot be added without a pack, a budget slot, a
@@ -33,7 +44,10 @@ governance the part1 feedback overlooked: `lint_no_new_atomic_commands.py`
 `lint_persona_governance.py` (≤2 specialists/domain, ≥1 skill citation, CI-gated),
 `artifact-drafting-protocol` + `preservation-guard` + `skill_linter.py`. What's
 **missing**: a per-pack command BUDGET lint, a controlled VERB list, routing
-EVALS per visible command, and TELEMETRY to drive evidence-based pruning.
+EVALS per visible command, and TELEMETRY to drive evidence-based pruning. Plus
+three surfacing gaps closed in this revision (2026-06-02): mandatory routing
+FRONTMATTER (`intent`/`routes_to`/`replaces`, Step 4b), a CLI DISCOVERY surface
+(Step 5b), and a forward GATE for new skills (Step 8b).
 
 **Why the feedback's reduction targets are rejected as written.** The council
 was decisive on all three of my pushbacks:
@@ -67,7 +81,8 @@ was decisive on all three of my pushbacks:
   command-surface tooling, do NOT add a parallel script) enforcing **visible**
   budgets only: core ≤8, small ≤2, medium ≤5, large ≤8, platform ≤10. Count
   `visibility: visible` (+ `advanced`) commands per pack; `internal` is
-  uncapped (composition layer). Pack size class comes from the pack manifest.
+  uncapped (composition layer). Pack size class comes from the capability-pack
+  manifest formalized in 6.0.0-B Phase 0 (no pack is classified by guess).
 - [ ] **Step 2:** Add the **explicit exemption process** (not a dynamic cap):
   a pack over budget requires an ADR documenting the user need + the
   alternatives considered (merge / relocate / internalize); the exemption is
@@ -87,12 +102,27 @@ was decisive on all three of my pushbacks:
   **no `create-*` commands** (the agent decides which files to create in-flow);
   no new verb without an ADR. Enforce via the existing cluster/command lint
   surface.
+- [ ] **Step 4b:** Make the routing-metadata frontmatter **required** on every
+  `visibility: visible` command — `intent`, `routes_to`, `replaces` — extending
+  `command.schema.json` beyond the `pack` + `visibility` that 6.0.0-B added
+  (closes the part1.5 §2 gap). `routes_to` is the data backbone the routing-eval
+  lint (Step 5) checks against; `intent` is the one-line existence justification;
+  `replaces` carries the alias/deprecation link. Internal commands keep these
+  optional.
+  <!-- carve-out: new-gate-verification -->
 - [ ] **Step 5:** Require a routing eval per **visible** command:
   `evals/triggers.json` with 5–10 example prompts mapping intent → command
   (e.g. "implement PROJ-123" → `ticket:implement`; "fix phpstan" →
   `laravel:quality`). Add a lint that every `visibility: visible` command has a
   non-empty eval. Internal commands are exempt.
   <!-- carve-out: new-gate-verification -->
+- [ ] **Step 5b:** Ship the **CLI discovery surface** (closes part1.5 §5):
+  `agent-config commands [--pack <id>] [--visible]` lists the scoped/visible
+  command set, and `agent-config explain <pack>:<verb>` prints a command's
+  `intent` + `routes_to` + owning pack. Extend the existing CLI surface
+  (`src/cli/commands/`), reusing the discovery manifest as the data source — do
+  NOT add a parallel catalog. This is what makes the "fewer visible commands"
+  promise navigable instead of merely hidden.
 
 ## Phase 3: Telemetry for evidence-based pruning
 
@@ -116,6 +146,15 @@ was decisive on all three of my pushbacks:
   `agents/reports/` candidate list of >70%-overlap same-domain pairs. This
   feeds a *future* consolidation roadmap; nothing merges here. Surfacing the
   measured candidates replaces the feedback's arbitrary "223→120".
+- [ ] **Step 8b:** Add a **forward gate for new skills** (closes part1.1 §7,
+  "slow artefact growth"): a newly added skill must ship with an
+  `evals/triggers.json` stub (≥5 should-trigger + ≥5 should-not-trigger, per
+  `skill-writing`) AND clear a dedupe check — >70% content overlap with an
+  existing same-domain skill blocks the add and routes to the merge decision.
+  Wire into `task ci` for **new skills only**; existing skills are grandfathered
+  (Step 8's overlap report handles the back catalogue). This is the skill-side
+  analogue of the command budget + eval gate — growth governance, forward-looking.
+  <!-- carve-out: new-gate-verification -->
 
 ## Phase 5: [CONDITIONAL] Runtime resolver — gated on evidence
 
@@ -138,6 +177,10 @@ was decisive on all three of my pushbacks:
   exemption process documented; gaming-detection note in place.
 - [ ] Controlled verb list ADR + lint; no `create-*` visible commands; every
   visible command has a routing eval.
+- [ ] Visible commands carry required `intent`/`routes_to`/`replaces`
+  frontmatter; CLI discovery (`agent-config commands` / `explain`) ships.
+- [ ] New-skill forward gate (triggers stub + dedupe) wired for new skills;
+  back catalogue grandfathered.
 - [ ] Local tier-2/persona/skill usage telemetry recording via the existing
   analytics surface (opt-out, local-only); evidence-based pruning contract
   shipped with the council thresholds.
