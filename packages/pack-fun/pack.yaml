@@ -11,4 +11,4 @@ owner:
 - small-business
 requires: []
 trust_level_default: experimental
-version: 5.7.0
+version: 5.8.0
