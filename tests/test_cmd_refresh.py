@@ -66,6 +66,11 @@ def test_refresh_project_scaffolds_consumer_surface(tmp_path: Path) -> None:
     assert (tmp_path / "agents" / ".event4u-bridge.yml").is_file()
     assert (tmp_path / "agents" / "overrides" / "README.md").is_file()
     assert (tmp_path / ".gitignore").is_file()
+    # The consumer-facing wrapper is re-stamped from the canonical template
+    # so an older, fallback-less wrapper cannot linger and break the hooks.
+    wrapper = tmp_path / "agent-config"
+    assert wrapper.is_file()
+    assert "globally-installed" in wrapper.read_text(encoding="utf-8")
     # ADR-020: no distributed content written into the repo.
     assert not (tmp_path / ".augment").exists()
     assert not (tmp_path / ".claude").exists()

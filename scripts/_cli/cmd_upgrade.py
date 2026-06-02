@@ -8,12 +8,16 @@ goal: it installs the latest published package globally and re-runs the
 global install so new skills / rules / hooks reach every consumer at
 once.
 
-Two side effects, in order:
+Side effects, in order:
 
 1. ``npm install -g @event4u/agent-config@latest`` — refresh the global
    binary on PATH (the binary the Claude plugin hook resolves).
 2. ``agent-config global`` (→ ``install.py --global``) — refresh the
    global root (``~/.event4u/agent-config/``) + regenerate plugin hooks.
+3. If run from inside a consumer project that already has a
+   ``./agent-config`` wrapper, re-stamp that wrapper from the canonical
+   template so an older, fallback-less copy cannot linger and break the
+   hooks. Skipped in the source repo and never creates a wrapper.
 
 The **Claude marketplace plugin** updates on Claude Code's own cadence,
 independent of npm; ``upgrade`` cannot drive it. ``agent-config doctor``
@@ -72,12 +76,36 @@ def _agent_config_bin() -> str:
         Path(__file__).resolve().parents[2] / "agent-config")
 
 
+def _maybe_refresh_project_wrapper(project_root: Path, out, err) -> None:
+    """Re-stamp the project-local ``./agent-config`` wrapper after a global
+    upgrade — but only when the upgrade was run from inside a consumer
+    project that *already* has a wrapper. Never creates one (that is an
+    install action, out of scope), never touches the source repo.
+
+    This closes the gap where ``upgrade`` refreshed the global binary while
+    an older, fallback-less project wrapper kept breaking the Claude hooks.
+    """
+    from scripts._lib import cli_wrapper
+    from scripts._cli.cmd_refresh import _is_source_repo
+
+    if _is_source_repo(project_root):
+        return
+    if not (project_root / "agent-config").is_file():
+        return  # not a consumer project root (or never installed) — leave it
+    if not cli_wrapper.needs_refresh(project_root):
+        return
+    wrapper = cli_wrapper.install_cli_wrapper(project_root)
+    if wrapper is not None:
+        print(f"✅  refreshed stale project wrapper: {wrapper}", file=out)
+
+
 def main(
     argv: Optional[list[str]] = None,
     *,
     runner: Runner = _default_runner,
     fetcher=update_check.fetch_latest_from_npm,
     installed: Optional[str] = None,
+    project_root: Optional[Path] = None,
     out=sys.stdout,
     err=sys.stderr,
 ) -> int:
@@ -127,6 +155,8 @@ def main(
             print(f"❌  agent-config upgrade: step failed (exit {rc}): "
                   f"{' '.join(cmd)}", file=err)
             return 1
+
+    _maybe_refresh_project_wrapper(project_root or Path.cwd(), out, err)
 
     print("✅  agent-config upgraded. Run `agent-config doctor` to verify "
           "PATH + plugin parity.", file=out)
