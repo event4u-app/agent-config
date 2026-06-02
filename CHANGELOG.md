@@ -820,6 +820,44 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.10.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.10.0](https://github.com/event4u-app/agent-config/compare/5.9.0...5.10.0) (2026-06-02)
+
+### Features
+
+* **profile:** profile-first wizard step + `agent-config use --profile` ([13d2f33](https://github.com/event4u-app/agent-config/commit/13d2f33085d57a5ff40ca1b9c07060055de21c5d))
+* **workspace:** scrub secrets at rest across all three stores ([74f50d6](https://github.com/event4u-app/agent-config/commit/74f50d6ee1beb0b41d0fab75fa7c40bcd30c7dde))
+
+### Bug Fixes
+
+* **ai-video:** make probe-audio.sh portable across awk flavors ([6376e55](https://github.com/event4u-app/agent-config/commit/6376e55436af74fb4899fd91a86f1b2056b8aba2))
+
+### Documentation
+
+* **roadmap:** close + archive road-to-6.0.0-a-positioning-and-validation ([e12ff63](https://github.com/event4u-app/agent-config/commit/e12ff634a65d032bab2ea07972d165fced4f4752))
+* **readme:** experience-first hero, AI-video to Creative-Pack callout ([25d5639](https://github.com/event4u-app/agent-config/commit/25d5639dee7973197dec291a937979a065fbe479))
+* **adr:** ADR-040 execution model is projection-time filtering ([e688b21](https://github.com/event4u-app/agent-config/commit/e688b2191d6b7e44f90d6c8a8bdaca9605c485bc))
+* **roadmap:** close + archive road-to-feedback-24-26-cleanup ([f33d0b1](https://github.com/event4u-app/agent-config/commit/f33d0b1a9009bdf1b99f7d216071bcd25d47e29a))
+* **roadmap:** process feedback-24-26-cleanup (5/6 closed, 1 deferred) ([4611cfd](https://github.com/event4u-app/agent-config/commit/4611cfdea98998d7f9c72de5682590b07145f001))
+* **contexts:** record feedback 24-26 disposition + surfaced risks ([f98e9f5](https://github.com/event4u-app/agent-config/commit/f98e9f5bf02aef3f9b7aa3caebe5993f15317c15))
+* **distribution:** add Glama registry row + note MCP-registry sweep ([e278b9d](https://github.com/event4u-app/agent-config/commit/e278b9dce0ebac8a0017df98b972c9a299dcd147))
+* **roadmap:** add 6.0.0 experience-first rebuild roadmaps (A/B/C) ([d7c9ba0](https://github.com/event4u-app/agent-config/commit/d7c9ba03692a8694fcc262536b847e8fc6dbf023))
+* **roadmap:** add feedback 24-26 cleanup roadmap ([e4e032b](https://github.com/event4u-app/agent-config/commit/e4e032bfcb522924bdb7623a44909d77f16aefeb))
+* **roadmap:** close Phase 8 Step 5 secret-hygiene sweep ([5b751cb](https://github.com/event4u-app/agent-config/commit/5b751cb1545b30960076f8a449dcb06ceccfef47))
+
+### Tests
+
+* **wizard:** shift roles/packs step indices for the new profile step ([2c51db1](https://github.com/event4u-app/agent-config/commit/2c51db1923ae0845f5a250e7201b617c15641a88))
+* **ai-video:** guard probe-audio honesty invariant with a corpus sweep ([99839a5](https://github.com/event4u-app/agent-config/commit/99839a5344bf6ffd1baa8e260fbea925b611f89a))
+
+### Chores
+
+* **gitignore:** ignore /agents/state/ in the synced template ([bc55288](https://github.com/event4u-app/agent-config/commit/bc552887977b2adc21243c3f67257e6dc1697e41))
+* **changelog:** split era 5.4.x → pre-5.9.0 ([88603ca](https://github.com/event4u-app/agent-config/commit/88603caef4da60910e37933c658d9f8e738ab626))
+* **changelog:** split era 5.4.x → pre-5.9.0 ([b187a01](https://github.com/event4u-app/agent-config/commit/b187a012d6e68b264a5401e406bc4f26da6d7d1d))
+* **roadmap:** close + archive road-to-video-from-song ([c02b298](https://github.com/event4u-app/agent-config/commit/c02b298d66cb5f48283a2d4834308e72392e591e))
+
+Tests: 5500
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
