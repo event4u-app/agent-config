@@ -75,6 +75,13 @@
 # decision records in agents/decisions/.
 /agents/runtime/
 
+# Agent config — Tier 1 hook + wizard runtime state (machine-generated,
+# regenerated on demand, never committed). Holds the dispatcher lock,
+# per-rule hook state (context-hygiene, verify-before-complete,
+# minimal-safe-diff, onboarding-gate), and the GUI wizard resume snapshot.
+# Local-only per the Volatile Runtime policy.
+/agents/state/
+
 # Agent config — unified-setup wizard partial state (Roadmap R2 Phase 1).
 # Written by POST /api/v1/wizard/state between step transitions, deleted
 # on POST /api/v1/wizard/finish. Local-only crash-recovery aid.
