@@ -115,20 +115,48 @@ Prove the original failure is fixed against the real consumer repo.
 > generated Claude plugin PostToolUse command (binary resolution → `dispatch:hook`
 > → roadmap-progress concern → regen), fed a real Claude envelope with an
 > **absolute** `file_path` and `--project-dir` — regenerated the dashboard
-> (chain exit 0). The four steps below remain **open as post-merge validation**:
-> they require this PR merged + `npm publish` + the global install / Claude
-> marketplace plugin updated, because the *installed* plugin still carries the
-> pre-fix command. They cannot run pre-publish and are intentionally left
-> unchecked rather than marked done against an unpublished build.
+> (chain exit 0).
+>
+> **Validated against the real consumer `agent-ide-plugin` (2026-06-02).** With
+> v5.7.0 published + globally installed (`/opt/homebrew/bin/agent-config`,
+> binary == package version) and the marketplace plugin's `hooks.json` carrying
+> the fixed PostToolUse command, the four steps below were exercised against the
+> real repo. Validation surfaced **two findings** (Phase 5 "findings feed back"
+> clause):
+>
+> 1. **Regenerator-resolution gap (FIXED this branch).** In a global-only
+>    consumer (ADR-020) the hook fired, the absolute-path matcher matched, and
+>    the dispatcher routed to the `roadmap-progress` concern — but the dashboard
+>    did **not** regenerate. Root cause: `roadmap_progress_hook._resolve_regenerator`
+>    searched only the consumer's project-local `.augment/` / `.agent-src/` trees,
+>    which a global-only consumer never has; the regenerator ships in the
+>    globally-installed package. Fix: the dispatcher now exports
+>    `AGENT_CONFIG_PACKAGE_ROOT` (its own resolved `REPO_ROOT`) and the concern
+>    falls back to the package's shipped regenerator (plus a `__file__`
+>    last-resort for standalone use). Council (claude-sonnet-4-5 + gpt-4o,
+>    2026-06-02) converged: do not use a raw `__file__` walk — resolve via the
+>    dispatcher's authoritative root. Regression test:
+>    `tests/test_roadmap_progress_hook.py::test_run_regenerates_from_package_root_for_global_only_consumer`.
+> 2. **`doctor` lockfile-precondition gap (FOLLOW-UP, not fixed here).**
+>    `agent-config doctor` short-circuits on a missing
+>    `agents/installed-tools.lock` before any check runs, even with
+>    `--check global-binary`. A global-only consumer onboarded via
+>    `refresh --project` has no such lockfile (only `init` writes one), so the
+>    `doctor`-green sub-points of steps 1 & 3 are not literally satisfiable via
+>    the aggregate command. The underlying conditions (binary on PATH, no
+>    version drift, bridge present, plugin installed) were each verified
+>    directly. Deferred to a follow-up to keep this PR minimal-safe (council
+>    flagged scope-creep risk); the roadmap's headline e2e promise (finding 1)
+>    is the load-bearing claim and is now true.
 
-- [ ] Ensure global `agent-config` is on PATH (`agent-config upgrade` or the documented global install); confirm via `agent-config doctor`.
-- [ ] Run `agent-config init --project` (or `refresh --project`) inside `agent-ide-plugin` → creates `agents/.event4u-bridge.yml`, scaffolds `agents/overrides/`, updates `.gitignore`.
-- [ ] Confirm the Claude plugin is installed/enabled and `doctor` is green (PATH, no version drift, bridge present).
-- [ ] Edit a roadmap under `agent-ide-plugin/agents/roadmaps/` and confirm `agents/roadmaps-progress.md` auto-regenerates via the PostToolUse hook.
+- [x] Ensure global `agent-config` is on PATH (`agent-config upgrade` or the documented global install); confirm via `agent-config doctor`. <!-- 2026-06-02: PATH ✅ /opt/homebrew/bin/agent-config v5.7.0 (== package version) via which + --version. doctor aggregate blocked by the lockfile-precondition finding (#2 above); PATH/version confirmed directly. -->
+- [x] Run `agent-config init --project` (or `refresh --project`) inside `agent-ide-plugin` → creates `agents/.event4u-bridge.yml`, scaffolds `agents/overrides/`, updates `.gitignore`. <!-- 2026-06-02: refresh --project (non-interactive) created the bridge marker + overrides scaffold + .gitignore block (31 entries), exit 0. Note: refresh --project bootstraps the bridge itself — it does not require a pre-existing one as the Phase 3 note implied. -->
+- [x] Confirm the Claude plugin is installed/enabled and `doctor` is green (PATH, no version drift, bridge present). <!-- 2026-06-02: plugin installed (marketplace cache hooks.json carries the fixed PostToolUse command: project-local-first → PATH fallback, --project-dir, --min-version 1); bridge present ✅; no binary↔package drift ✅. doctor-aggregate-green blocked by finding #2 (lockfile precondition) → follow-up; the hook itself fires correctly (proven in the next step). -->
+- [x] Edit a roadmap under `agent-ide-plugin/agents/roadmaps/` and confirm `agents/roadmaps-progress.md` auto-regenerates via the PostToolUse hook. <!-- 2026-06-02: conclusive reversible test with the fixed code — flip one open box → replay the exact PostToolUse command → dashboard 141/291 → 142/291; git restore the roadmap → replay → dashboard back to 141/291. Global-only consumer, zero project-local distributed content. -->
 
-Exit criteria: a roadmap edit in `agent-ide-plugin` regenerates its dashboard with zero manual steps and zero project-local distributed content.
+Exit criteria: a roadmap edit in `agent-ide-plugin` regenerates its dashboard with zero manual steps and zero project-local distributed content. **Met (2026-06-02)** — after the finding-1 fix.
 
-Rollback: n/a — validation phase; findings feed back into earlier phases if a gap surfaces.
+Rollback: n/a — validation phase; findings feed back into earlier phases if a gap surfaces. Finding 1 fixed here; finding 2 routed to the follow-up roadmap [`road-to-doctor-global-only-readiness.md`](road-to-doctor-global-only-readiness.md).
 
 ## Phase 6 — Install/upgrade hands off to the browser wizard (zero terminal prompts)
 

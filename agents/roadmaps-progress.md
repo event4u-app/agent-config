@@ -6,23 +6,31 @@
 
 ## Overall
 
-**98 / 123 steps done · 80%**
+**72 / 97 steps done · 74%**
 
 ```text
-████████████████████████████████░░░░░░░░   80%
+██████████████████████████████░░░░░░░░░░   74%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 2 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 6 | 30 | 4 | 26 | 0 | 0 | █████████░ 87% |
+| 1 | [road-to-doctor-global-only-readiness.md](roadmaps/road-to-doctor-global-only-readiness.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 3 | [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md) | 6 | 33 | 3 | 30 | 0 | 0 | █████████░ 91% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-doctor-global-only-readiness.md](roadmaps/road-to-doctor-global-only-readiness.md)
+
+**Road to `doctor` Global-Only Readiness** — 0 / 4 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Run lockfile-independent checks without a lockfile | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
@@ -40,19 +48,6 @@
 | 7 | Analytics surface — turn the inert telemetry into a question | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
 | 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
-
-### [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md)
-
-**Road to Self-Update + Global Hook Resolution** — 26 / 30 done (87%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Minimal dashboard fix (ships independently) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Global binary availability + `upgrade` | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | `refresh --global` / `refresh --project` + reconcile legacy | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 4 | ADR-020 amendment + docs sweep | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | End-to-end validation on `agent-ide-plugin` | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | Install/upgrade hands off to the browser wizard (zero terminal prompts) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 
 ### [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md)
 
