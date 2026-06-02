@@ -1,0 +1,52 @@
+name: Release Drift Check
+
+# READ-ONLY backstop for the "release merged but never tagged/published"
+# failure mode. On main + daily schedule + manual dispatch, it asserts:
+#   1. main's package.json version has a matching git tag, AND
+#   2. npm dist-tags.latest equals that version.
+# Fails (red) when npm lags main — the signal that a release crashed
+# after merge but before the tag-push that triggers publish-npm.yml.
+# NEVER mutates anything. Recovery: `python3 scripts/release.py --resume`
+# (now package.json-anchored, ADR-safe) or a manual tag-push.
+#
+# NOTE: deliberately no path-filtered `push:` trigger (avoids the
+# phantom 0-job "failure" runs that path-filtered pushes create). The
+# `task ci` gate already enforces the tag invariant on every main build;
+# this workflow adds the network (npm) invariant on a cadence.
+
+on:
+  schedule:
+    # Daily sweep — catches a stuck release within 24h.
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-drift
+  cancel-in-progress: true
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Node (npm registry read)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Detect release-published drift (read-only)
+        run: python3 scripts/check_release_published.py --strict --check-npm --require-main

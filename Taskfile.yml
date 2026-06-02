@@ -85,6 +85,7 @@ tasks:
       - task: check-portability
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
+      - task: check-release-published
       - task: validate-decision-engine
       - task: validate-agent-settings
       - task: smoke-quickstart
@@ -194,6 +195,7 @@ tasks:
       - task: check-portability
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
+      - task: check-release-published
       - task: validate-decision-engine
       - task: validate-agent-settings
       - task: smoke-quickstart
