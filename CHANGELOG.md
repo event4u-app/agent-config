@@ -820,6 +820,19 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.10.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.10.1](https://github.com/event4u-app/agent-config/compare/5.10.0...5.10.1) (2026-06-02)
+
+### Bug Fixes
+
+* **hooks:** self-heal stale ./agent-config wrapper on session_start ([c36ad4d](https://github.com/event4u-app/agent-config/commit/c36ad4dbfbccfcaac017a4f8e2cb526223cbf5fa))
+* **cli:** refresh project ./agent-config wrapper on upgrade and refresh --project ([abf2936](https://github.com/event4u-app/agent-config/commit/abf293657cc6630aca548d5afa9385d8c7690522))
+
+### Chores
+
+* **git:** untrack agents/runtime council artifacts ([b58705d](https://github.com/event4u-app/agent-config/commit/b58705d96bd4ee813f2565ee73e4f9f484fa720d))
+
+Tests: 5512 (+12 since 5.10.0)
+
 ## [5.10.0](https://github.com/event4u-app/agent-config/compare/5.9.0...5.10.0) (2026-06-02)
 
 ### Features
