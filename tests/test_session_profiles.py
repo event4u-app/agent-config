@@ -133,23 +133,47 @@ def test_set_overlay_preserves_other_local_keys(fake_repo: Path) -> None:
 
 # --- surface filter (recommendation-bias) ----------------------------------
 
-def test_surface_hides_inactive_pack_skills() -> None:
-    # Read-only against the real discovery manifest.
-    surf = sp.compute_surface(REPO_ROOT, category="skill", active=["laravel", "php", "engineering-base"])
-    hidden_names = {a["name"] for a in surf.hidden}
+def _write_manifest(repo: Path, artefacts: list[dict]) -> None:
+    """Write a synthetic discovery manifest into ``repo`` (CI-safe: the real
+    ``dist/discovery/discovery-manifest.json`` is gitignored, so tests must
+    never depend on it)."""
+    import json
+    path = repo / sp.DISCOVERY_MANIFEST_REL
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"artefacts": artefacts}), encoding="utf-8")
+
+
+_SYNTH_ARTEFACTS = [
+    {"name": "laravel", "category": "skill", "packs": ["laravel"], "trust": {"level": "professional"}},
+    {"name": "eloquent", "category": "skill", "packs": ["laravel"], "trust": {"level": "professional"}},
+    {"name": "po-discovery", "category": "skill", "packs": ["product-basic"], "trust": {"level": "professional"}},
+    {"name": "video-director", "category": "skill", "packs": ["ai-video"], "trust": {"level": "professional"}},
+    {"name": "git-workflow", "category": "skill", "packs": ["engineering-base"], "trust": {"level": "core"}},
+    {"name": "commit", "category": "command", "packs": ["meta"], "trust": {"level": "core"}},
+]
+
+
+def test_surface_hides_inactive_pack_skills(fake_repo: Path) -> None:
+    _write_manifest(fake_repo, _SYNTH_ARTEFACTS)
+    surf = sp.compute_surface(fake_repo, category="skill", active=["laravel", "php", "engineering-base"])
     shown_names = {a["name"] for a in surf.shown}
-    # A laravel-pack skill is shown; a product/ai-video skill is hidden.
+    hidden_names = {a["name"] for a in surf.hidden}
+    # laravel-pack + core skills shown; product / ai-video skills hidden.
+    assert "laravel" in shown_names and "git-workflow" in shown_names
+    assert "po-discovery" in hidden_names and "video-director" in hidden_names
     assert surf.hidden, "some non-active-pack skills should be hidden"
-    # Every shown artefact is either core/unscoped or intersects active.
-    active = {"laravel", "php", "engineering-base"}
-    for a in surf.shown:
-        ok = (not a["packs"]) or (set(a["packs"]) & active) or True  # core allowed
-        assert ok
 
 
-def test_no_overlay_shows_everything() -> None:
-    surf = sp.compute_surface(REPO_ROOT, active=[])
+def test_no_overlay_shows_everything(fake_repo: Path) -> None:
+    _write_manifest(fake_repo, _SYNTH_ARTEFACTS)
+    surf = sp.compute_surface(fake_repo, active=[])
     assert surf.hidden == []  # empty overlay → nothing hidden
+
+
+def test_missing_manifest_is_safe(fake_repo: Path) -> None:
+    # No manifest on disk (the CI shape) → empty surface, no crash.
+    surf = sp.compute_surface(fake_repo, active=["laravel"])
+    assert surf.shown == [] and surf.hidden == []
 
 
 def test_core_trust_always_shown() -> None:
