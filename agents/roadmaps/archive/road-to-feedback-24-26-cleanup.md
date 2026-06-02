@@ -83,7 +83,7 @@ feedback's assumptions):
 
 ## Phase 2: Verify the two flagged-but-likely-fine risks
 
-- [~] **Step 3:** Confirm the automated release path populates the GitHub
+- [x] **Step 3:** Confirm the automated release path populates the GitHub
   release body. Read the github-actions tag/release path (`.github/workflows/`
   publish/release + `scripts/release.py` `--notes` wiring). If the historical
   5.8.0 GitHub release body is still the bare merge-commit text, backfill it
@@ -97,8 +97,9 @@ feedback's assumptions):
   The 5.8.0 body IS still empty (one-off). Byte-accurate backfill notes prepared
   from docs/archive/CHANGELOG-pre-5.9.0.md → /tmp/release-5.8.0-notes.md, but the
   `gh release edit 5.8.0` external write was denied by the harness auto-mode
-  classifier (external collaboration artifact). deferred: needs maintainer to run
-  `gh release edit 5.8.0 --notes-file <body>` or grant the permission. -->
+  classifier (external collaboration artifact). RESOLVED 2026-06-02: backfill
+  executed with user authorization — `gh release edit 5.8.0 --notes-file` ran;
+  5.8.0 GitHub release body now carries the byte-accurate changelog. Step closed. -->
 - [x] **Step 4:** Confirm `docs/contracts/branch-protection-policy.md` matches
   the live GitHub ruleset for `main` (require status checks + restrict force
   pushes). This is a maintainer UI check; record the verification outcome
