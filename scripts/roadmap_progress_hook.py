@@ -55,6 +55,21 @@ ROADMAP_PREFIX = "agents/roadmaps/"
 ROADMAP_EXCLUDED_PARTS = frozenset({"archive", "skipped"})
 DASHBOARD_PATH = "agents/roadmaps-progress.md"
 
+REGEN_NAME = "update_roadmap_progress.py"
+# Distributed-content script subtrees that may ship the regenerator,
+# in priority order. Project-scoped installs land it under .augment/ or
+# .agent-src/; the package itself carries the same projection.
+DIST_SCRIPT_SUBDIRS = (
+    Path(".augment") / "scripts",
+    Path(".agent-src") / "scripts",
+    Path(".agent-src.uncondensed") / "scripts",
+)
+# Set by the dispatcher (scripts/hooks/dispatch_hook.py) to its own
+# resolved package root, so a globally-installed binary (ADR-020
+# global-only) can locate the shipped regenerator even when the consumer
+# repo carries no project-local distributed content.
+PACKAGE_ROOT_ENV_VAR = "AGENT_CONFIG_PACKAGE_ROOT"
+
 
 def _candidate_paths(payload: dict) -> list[str]:
     """Pull every plausible file path out of a PostToolUse payload."""
@@ -115,15 +130,50 @@ def _is_roadmap_touch(path: str) -> bool:
     return True
 
 
+def _package_roots() -> list[Path]:
+    """Package roots to search for the shipped regenerator, in priority
+    order, when the consumer carries no project-local copy.
+
+    A global-only consumer (ADR-020) never has `.augment/` / `.agent-src/`
+    in its repo — those trees are *distributed content*, which global-only
+    installs keep in the globally-installed package, not the project. The
+    regenerator therefore lives next to the running code, not next to the
+    edited roadmap.
+
+    1. ``AGENT_CONFIG_PACKAGE_ROOT`` — the dispatcher passes its own
+       resolved package root (``dispatch_hook.REPO_ROOT``). This is the
+       same root the dispatcher already trusts to locate this concern, so
+       it survives editable installs, plugin-cache moves, and symlinks
+       that a naive ``__file__`` walk would mis-resolve.
+    2. This hook's own location (``<pkg>/scripts/roadmap_progress_hook.py``
+       → ``<pkg>``) — last-resort fallback for standalone invocation
+       outside the dispatcher.
+    """
+    roots: list[Path] = []
+    env_root = os.environ.get(PACKAGE_ROOT_ENV_VAR, "").strip()
+    if env_root:
+        roots.append(Path(env_root).expanduser())
+    roots.append(Path(__file__).resolve().parent.parent)
+    return roots
+
+
 def _resolve_regenerator(consumer_root: Path) -> Path | None:
-    """Find the regenerator script — package-shipped or installed copy."""
-    for candidate in (
-        consumer_root / ".augment" / "scripts" / "update_roadmap_progress.py",
-        consumer_root / ".agent-src" / "scripts" / "update_roadmap_progress.py",
-        consumer_root / ".agent-src.uncondensed" / "scripts" / "update_roadmap_progress.py",
-    ):
+    """Find the regenerator script.
+
+    Project-local copy first (project-scoped installs), then the package
+    the hook itself ships in (global-only consumers, per ADR-020 — the
+    repo has no project-local distributed content). Returns ``None`` only
+    when no copy exists in either place.
+    """
+    for subdir in DIST_SCRIPT_SUBDIRS:
+        candidate = consumer_root / subdir / REGEN_NAME
         if candidate.is_file():
             return candidate
+    for root in _package_roots():
+        for subdir in DIST_SCRIPT_SUBDIRS:
+            candidate = root / subdir / REGEN_NAME
+            if candidate.is_file():
+                return candidate
     return None
 
 

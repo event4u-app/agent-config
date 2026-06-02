@@ -131,10 +131,60 @@ def test_run_handles_malformed_stdin(consumer_root: Path) -> None:
     assert not _marker(consumer_root).exists()
 
 
-def test_run_handles_missing_regenerator(tmp_path: Path) -> None:
-    """No regenerator installed → silent no-op, exit 0."""
+def test_run_handles_missing_regenerator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """No regenerator anywhere → silent no-op, exit 0.
+
+    The package-root fallback (added for global-only consumers) is pointed
+    at an empty dir so this exercises the true "nothing installed" path
+    rather than silently resolving the real package copy.
+    """
+    empty_pkg = tmp_path / "empty-pkg"
+    empty_pkg.mkdir()
+    monkeypatch.setattr(rph, "_package_roots", lambda: [empty_pkg])
     stdin = _payload("save-file", paths=["agents/roadmaps/x.md"])
     assert rph.run(stdin, consumer_root=tmp_path) == 0
+
+
+def test_run_regenerates_from_package_root_for_global_only_consumer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression (road-to-self-update Phase 5): an ADR-020 global-only
+    consumer has NO project-local .augment/ or .agent-src/ tree — the
+    regenerator ships only in the globally-installed package. The hook
+    must resolve it from the package root (passed by the dispatcher via
+    AGENT_CONFIG_PACKAGE_ROOT) and still regenerate the dashboard.
+
+    Before the fix, _resolve_regenerator searched only the consumer root,
+    so the hook fired, matched, and then silently no-opped — the exact
+    failure this roadmap's Phase 5 surfaced against agent-ide-plugin.
+    """
+    # Consumer repo carries no distributed content (global-only).
+    consumer = tmp_path / "consumer"
+    (consumer / "agents" / "roadmaps").mkdir(parents=True)
+
+    # Globally-installed package ships the regenerator under .agent-src/.
+    pkg = tmp_path / "global-pkg"
+    pkg_scripts = pkg / ".agent-src" / "scripts"
+    pkg_scripts.mkdir(parents=True)
+    marker = tmp_path / "pkg-regen.marker"
+    (pkg_scripts / "update_roadmap_progress.py").write_text(
+        "import pathlib, sys\n"
+        f"pathlib.Path({str(marker)!r}).write_text('ok')\n"
+        "sys.exit(0)\n"
+    )
+    # The dispatcher exports this; simulate it here.
+    monkeypatch.setenv("AGENT_CONFIG_PACKAGE_ROOT", str(pkg))
+
+    abs_path = str(consumer / "agents" / "roadmaps" / "my-feature.md")
+    stdin = json.dumps({
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Edit",
+        "tool_input": {"file_path": abs_path},
+    })
+    assert rph.run(stdin, consumer_root=consumer) == 0
+    assert marker.exists(), "global-only consumer must regen from package root"
 
 
 def test_run_remote_path_variants(consumer_root: Path) -> None:

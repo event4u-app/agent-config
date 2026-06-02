@@ -252,6 +252,13 @@ def _run_concern(concern: dict, envelope: dict) -> tuple[int, str, str, int]:
         # dispatcher handles downstream.
         return (3, f"{concern.get('name')}: script missing: {script}", "", 0)
 
+    # Pass the package root so concerns can locate package-shipped
+    # distributed content (e.g. the roadmap-progress regenerator) when a
+    # global-only consumer repo (ADR-020) carries no project-local copy.
+    # REPO_ROOT is the dispatcher's own resolved package root — the same
+    # anchor it used to find this concern script above.
+    concern_env = {**os.environ, "AGENT_CONFIG_PACKAGE_ROOT": str(REPO_ROOT)}
+
     started = time.monotonic()
     try:
         proc = subprocess.run(
@@ -260,6 +267,7 @@ def _run_concern(concern: dict, envelope: dict) -> tuple[int, str, str, int]:
             capture_output=True,
             text=True,
             cwd=workspace,
+            env=concern_env,
             timeout=30,
             check=False,
         )
