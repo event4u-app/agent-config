@@ -1,0 +1,37 @@
+# Session-profile aliases — convenience names for `/profile activate <name>`
+#
+# Each alias maps to a SEED set of pack ids. Activation expands the seed
+# set's transitive `requires_hint` closure from `config/discovery/packs.yml`
+# (so `laravel` pulls in `php` + `engineering-base` automatically).
+#
+# The activatable token for `/profile activate` is EITHER:
+#   - an alias name below (expands to its seed packs + closure), OR
+#   - a raw pack id from packs.yml (expands to its own closure).
+#
+# Multiple tokens union their closures: `/profile activate laravel po`.
+# Only INSTALLED packs are activatable — see scripts/config/session_profiles.py
+# (installed set = the `packs:` block in .agent-settings.yml, or the full
+# vocabulary when no block is present, e.g. the maintainer repo).
+#
+# This file is a runtime modulation of the EXISTING `pack` axis, NOT a new
+# axis — see the ADR-010 addendum (2026-06-02).
+#
+# Lint: scripts/lint_discovery_vocabulary.py treats alias VALUES as pack-id
+# references; every value must be a known pack id.
+
+aliases:
+  # Engineering — the base hygiene surface. Activate a language/framework
+  # pack alongside it (e.g. `/profile activate developer laravel`).
+  developer: [engineering-base]
+
+  # Product owner / PM surface.
+  po: [product-basic, product-discovery]
+
+  # Finance / FP&A surface.
+  finance: [finance-basic]
+
+  # Go-to-market surface.
+  gtm: [gtm-sales, gtm-marketing]
+
+  # Content / marketing creator surface.
+  content: [gtm-marketing]
