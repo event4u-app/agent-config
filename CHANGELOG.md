@@ -811,6 +811,23 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.9.0](https://github.com/event4u-app/agent-config/compare/5.8.0...5.9.0) (2026-06-02)
+
+### Features
+
+* **doctor:** runnable global-only report without a project lockfile ([4c4f20b](https://github.com/event4u-app/agent-config/commit/4c4f20b82eb472ff6b6d84ebac889832ce1329f0))
+* **ci:** release-published drift gate (catch npm lagging main) ([7f4e125](https://github.com/event4u-app/agent-config/commit/7f4e125dd48d0233d33ce8cbb219731a0b501497))
+
+### Bug Fixes
+
+* **release:** anchor --resume to package.json, auto-delete merged branch ([f2db736](https://github.com/event4u-app/agent-config/commit/f2db736c7259845fe204af1ffd293e7f5341a58d))
+
+### Chores
+
+* **roadmap:** close + archive doctor-global-only-readiness ([3d3aaf7](https://github.com/event4u-app/agent-config/commit/3d3aaf739464b9e6613175f352b09a153bdbec90))
+
+Tests: 5480 (+25 since 5.8.0)
+
 ## [5.8.0](https://github.com/event4u-app/agent-config/compare/5.7.0...5.8.0) (2026-06-02)
 
 ### Features
