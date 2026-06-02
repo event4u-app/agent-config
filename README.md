@@ -4,13 +4,9 @@
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config)
 
-[![Skills](https://img.shields.io/badge/Skills-223-orange?style=flat-square)](.agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-79-orange?style=flat-square)](.agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-150-orange?style=flat-square)](.agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-orange?style=flat-square)](.agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](.agent-src/personas/advisors/)
-
-> **The Universal AI Agent OS for Founders, Content Creators, Consultants, Sales, Finance, and Engineering teams. Bring your own AI provider.**
+> **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
 Six role-shaped entry paths, one shared **skills + rules + commands** layer that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member — without locking you to a single model or vendor.
-
-> **Cinematic AI video** — script → character-locked image → motion+audio prompt → provider render → stitched clip, with `AIV_DRYRUN=true` as the cost-safety default. See [`/video:from-script`](.augment/commands/video/from-script.md).
 
 ### Pick your profile — six entry paths
 
@@ -47,6 +43,16 @@ Beyond software: [`user-types/`](packages/core/.agent-src.uncondensed/user-types
 </p>
 
 ---
+
+> **Creative Pack — cinematic AI video.** script → character-locked image → motion+audio prompt → provider render → stitched clip, with `AIV_DRYRUN=true` as the cost-safety default. A first-class capability inside the **content / creator** experience — no longer the package's headline. See [`/video:from-script`](.augment/commands/video/from-script.md).
+
+<details>
+<summary><b>Catalog at a glance</b> — raw artefact counts (maintainer reference)</summary>
+
+[![Skills](https://img.shields.io/badge/Skills-223-orange?style=flat-square)](.agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-79-orange?style=flat-square)](.agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-150-orange?style=flat-square)](.agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-orange?style=flat-square)](.agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](.agent-src/personas/advisors/)
+
+The headline is the **experience** (profile + packs), not the raw counts. Full catalog: [`docs/catalog.md`](docs/catalog.md).
+</details>
 
 ## Use it in your project
 
@@ -132,7 +138,8 @@ It is **not** an agent runtime. The agent loop, the LLM dispatcher, and tool orc
 | Multi-tool projection + condensation pipeline | Execution engine inside the package |
 | Memory helpers (`memory-add`, `memory-promote`) | Cross-tool observability dashboard |
 | Linters, CI, frontmatter validation against [JSON-Schema](scripts/schemas/) ([contract](agents/reference/docs/frontmatter-contract.md)) | Runtime GUI / web dashboard |
-| Skill orchestration via citations + deterministic helpers | Opinionated skill-resolver algorithm |
+| Skill orchestration via citations + deterministic helpers | Opinionated *automatic* skill-resolver (ML / relevance ranking that decides for you) |
+| User-driven projection-time filtering by profile + packs ([ADR-040](docs/decisions/ADR-040-execution-model-projection-time-filtering.md)) | A *runtime* resolver / daemon (mid-session switching — conditional, post-6.0.0) |
 
 ### What your agent is asked to do
 

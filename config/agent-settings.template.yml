@@ -17,6 +17,23 @@
 # docs/architecture.md § "npx-only distribution + version-pin governance".
 agent_config_version: ""
 
+# --- Profile (experience) ---
+#
+# Which experience you run. This is the FIRST question the setup wizard
+# asks ("which experience?") — it selects your default skill / command
+# surface, README entry-path, and persona pre-selection.
+#   Valid ids: developer | content_creator | founder | agency | finance | ops
+# See docs/contracts/profile-system.md and ADR-010.
+#
+# In 6.0.0-A this records the choice only — it does NOT yet narrow what
+# gets projected into .claude/ .cursor/ .augment/. Pack-scoped surfacing
+# (projection-time filtering, ADR-040) ships in 6.0.0-B behind a staged,
+# opt-in rollout (legacy-all stays the default until evidence confirms
+# the "too many surfaces" hypothesis). Switch experiences later with
+# `agent-config use --profile=<id>`.
+profile:
+  id: developer
+
 # --- Cost profile ---
 #
 # Master switch that controls which rule tiers load each session.

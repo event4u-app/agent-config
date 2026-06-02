@@ -52,6 +52,26 @@ const WELCOME_STEP: WizardStep = {
     kind: 'welcome',
 };
 
+/**
+ * Profile / experience — the first substantive question in both flows
+ * (road-to-6.0.0-a Phase 2 / Step 7). Maps to the six seed profiles
+ * (docs/contracts/profile-system.md) and writes `profile.id` to
+ * `.agent-settings.yml`. Surfacing the experience choice first is the
+ * cheap perception fix; the behavioural change (pack-scoped projection,
+ * ADR-040) is gated behind 6.0.0-B's staged rollout — this step records
+ * the choice only and changes no projection.
+ */
+const PROFILE_STEP: WizardStep = {
+    id: 'profile',
+    title: 'Which experience?',
+    navLabel: 'Experience',
+    subtitle: 'Pick the experience that fits you — developer · content · founder · agency · finance · ops. It selects your default command/skill surface and persona pre-selection. Cost tier is a secondary knob on a later step. You can switch later with `agent-config use --profile=<id>`.',
+    kind: 'form',
+    paths: [
+        'profile.id',
+    ],
+};
+
 const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
     {
         id: 'ai-tools',
@@ -168,8 +188,8 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
  */
 export const WIZARD_STEPS = CORE_WIZARD_STEPS;
 
-/** Non-extended flow length — the welcome step (Step 1) plus the core steps. */
-export const WIZARD_TOTAL_STEPS = CORE_WIZARD_STEPS.length + 1;
+/** Non-extended flow length — welcome (Step 1) + profile (Step 2) + the core steps. */
+export const WIZARD_TOTAL_STEPS = CORE_WIZARD_STEPS.length + 2;
 
 export interface GetWizardStepsOptions {
     /** Prepend the install-only lead + append the project modules step (D9). */
@@ -178,12 +198,14 @@ export interface GetWizardStepsOptions {
 
 export function getWizardSteps(opts: GetWizardStepsOptions = {}): readonly WizardStep[] {
     if (opts.extended === true) {
-        // Welcome + install-only lead (ai-tools / roles / packs), then the
-        // global/user settings. Project-scoped configuration (modules) is not
-        // a wizard step — it lives on its own "Projekt" surface.
-        return [WELCOME_STEP, ...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
+        // Welcome → profile (which experience?) → install-only lead
+        // (ai-tools / roles / packs) → global/user settings. Profile is the
+        // first substantive question (road-to-6.0.0-a Step 7). Project-scoped
+        // configuration (modules) is not a wizard step — it lives on its own
+        // "Projekt" surface.
+        return [WELCOME_STEP, PROFILE_STEP, ...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
     }
-    return [WELCOME_STEP, ...CORE_WIZARD_STEPS];
+    return [WELCOME_STEP, PROFILE_STEP, ...CORE_WIZARD_STEPS];
 }
 
 export function stepAt(index: number, opts: GetWizardStepsOptions = {}): WizardStep {

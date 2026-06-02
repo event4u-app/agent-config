@@ -6,8 +6,8 @@
  *   - Recommendation: selecting a role pre-selects its `default_packs` on the
  *     packs step (seedPacksFromRoles), until the user edits packs manually.
  *
- * Resumes directly on the roles step (index 1 in extended mode) with a small
- * workspaces + packs manifest.
+ * Resumes directly on the roles step (index 3 in extended mode — after
+ * welcome, profile, ai-tools) with a small workspaces + packs manifest.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, fireEvent, cleanup, waitFor } from '@testing-library/preact';
@@ -20,7 +20,7 @@ import {
     userMdExists, userMdInitial, userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 
-const ROLES_STEP_INDEX = 2;
+const ROLES_STEP_INDEX = 3;
 const EXTENDED_TOTAL = 13;
 
 const SETTINGS_SCHEMA = {
@@ -118,9 +118,9 @@ describe('WizardPage roles step', () => {
             fireEvent.click(roleCheckbox(container, 'Founder'));
             await waitFor(() => expect(selectedRoles.value['founder']).toBe(true));
 
-            // Advance to the packs step (index 3) — seedPacksFromRoles runs.
+            // Advance to the packs step (index 4) — seedPacksFromRoles runs.
             fireEvent.click(getByRole('button', { name: 'Next' }));
-            await waitFor(() => expect(stepIndex.value).toBe(3));
+            await waitFor(() => expect(stepIndex.value).toBe(4));
             await waitFor(() => expect(selectedPacks.value['founder-strategy']).toBe(true));
             expect(selectedPacks.value['product-basic']).toBeFalsy();
         } finally {

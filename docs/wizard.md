@@ -27,17 +27,34 @@ agent-config settings
 Both commands share the same SPA and the same backend; the URL hash
 selects which surface renders.
 
-## The seven steps
+## The steps
+
+The **first substantive question is "which experience?"** — profile selection
+leads the flow (the cost / rule tier is a secondary knob further down).
 
 | # | Title | What it asks |
 |---|---|---|
-| 1 | Identity | `personal.user_name`, `personal.ide` |
-| 2 | Personality | `personal.minimal_output`, `personal.play_by_play`, `personal.open_edited_files` |
-| 3 | Cost profile | `rule_loading_tier` (minimal · balanced · full) |
-| 4 | Roadmap quality | `roadmap.quality_floor`, `roadmap.run_tests_inline` |
-| 5 | Memory | `memory.enabled`, MCP server presence |
-| 6 | `.agent-user.md` | Optional long-form persona / preferences |
-| 7 | Review | Read-only diff of every change, plus a `Finish` button |
+| 1 | Welcome | `personal.user_name`, language |
+| 2 | Experience | `profile.id` — which experience (developer · content_creator · founder · agency · finance · ops) |
+| 3 | Identity | `personal.ide`, `personal.open_edited_files` |
+| 4 | Personality | `personal.autonomy`, `personal.minimal_output`, `personal.play_by_play` |
+| 5 | Cost & rules | `rule_loading_tier`, `cost.budgets`, `model.auto_switch` (secondary to the experience choice) |
+| 6 | Roadmap & quality | `roadmap.quality_cadence`, `roadmap.dashboard_regen_cadence`, `quality.*` |
+| 7 | Memory | `memory.review_threshold`, redaction patterns |
+| 8 | `.agent-user.yml` | Optional long-form persona / preferences |
+| 9 | Review | Read-only diff of every change, plus a `Finish` button |
+
+> **Experience selection is perception-only in 6.0.0-A.** It writes `profile.id`
+> to `.agent-settings.yml` and selects the README entry-path / persona
+> pre-selection — it does **not** yet narrow what gets projected into the tool
+> trees. Pack-scoped surfacing (projection-time filtering,
+> [`ADR-040`](decisions/ADR-040-execution-model-projection-time-filtering.md))
+> ships in 6.0.0-B behind a staged, opt-in rollout. Switch experiences any time
+> with `agent-config use --profile=<id>`.
+
+The extended install flow (`agent-config setup` on a fresh global install)
+inserts the **AI tools → roles → packs** lead between Experience and Identity;
+the canonical settings steps above stay in the same order.
 
 Each step posts its partial state to `POST /api/v1/wizard/state` on
 transition, so closing the browser mid-flight is safe — re-opening

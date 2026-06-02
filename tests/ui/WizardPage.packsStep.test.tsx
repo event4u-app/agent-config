@@ -8,8 +8,9 @@
  *   - C:  the packs step blocks Next until at least one effective pack is
  *     selected.
  *
- * Resumes directly on the packs step (index 1 in extended mode) with a small
- * php→{laravel,symfony} manifest and no auto-detect signals.
+ * Resumes directly on the packs step (index 4 in extended mode — after
+ * welcome, profile, ai-tools, roles) with a small php→{laravel,symfony}
+ * manifest and no auto-detect signals.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, fireEvent, cleanup, waitFor } from '@testing-library/preact';
@@ -22,7 +23,7 @@ import {
     userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 
-const PACKS_STEP_INDEX = 3;
+const PACKS_STEP_INDEX = 4;
 const EXTENDED_TOTAL = 13;
 
 const SETTINGS_SCHEMA = {

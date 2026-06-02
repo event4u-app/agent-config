@@ -782,6 +782,16 @@ cmd_council() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 "$script" "$sub" "$@"
 }
 
+# `use --profile=<id>` — switch the active experience/profile. Writes
+# profile.id into the canonical .agent-settings.yml; the explicit
+# profile-switch seam named by ADR-040 (road-to-6.0.0-a Step 8).
+cmd_use() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/profile_use.py")" || return 1
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 "$script" "$@"
+}
+
 # `agent-config update` — flip the agent_config_version pin in
 # .agent-settings.yml. See scripts/_cli/cmd_update.py (P3.1 of
 # road-to-portable-runtime-and-update-check.md).
@@ -928,6 +938,7 @@ main() {
     mcp:check)               cmd_mcp_check "$@" ;;
     mcp:setup)               cmd_mcp_setup "$@" ;;
     mcp:run)                 cmd_mcp_run "$@" ;;
+    use)                     cmd_use "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;

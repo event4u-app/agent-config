@@ -17,6 +17,7 @@ const ruleLoadingTier = z.enum(['minimal', 'balanced', 'full', 'custom']);
 const enforcementMode = z.enum(['advisory', 'hard-stop']);
 const autonomyMode = z.enum(['on', 'off', 'auto']);
 const userType = z.enum(['', 'consultant', 'creator', 'developer', 'finance', 'founder', 'gtm', 'ops']);
+const profileId = z.enum(['developer', 'content_creator', 'founder', 'agency', 'finance', 'ops']);
 const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_properties']);
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
 const chatOverflow = z.enum(['rotate', 'condense']);
@@ -35,6 +36,11 @@ export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
         'Pin the package to an exact semver (e.g. "1.4.2") so all teammates load the same skill / rule set. Leave empty to track whatever is installed locally — useful for the maintainers of this package, risky for production projects.',
     ),
+    profile: z.object({
+        id: profileId.default('developer').describe(
+            'Which experience you run — the audience identity that selects your default skill / command surface, README entry-path, and persona pre-selection (ADR-010, docs/contracts/profile-system.md). Six seed profiles: developer · content_creator · founder · agency · finance · ops. This is the first wizard question. In 6.0.0-A it records the choice only; pack-scoped surfacing (projection-time filtering, ADR-040) activates in 6.0.0-B behind a staged, opt-in rollout. Switch later with `agent-config use --profile=<id>`.',
+        ),
+    }).default({ id: 'developer' }),
     rule_loading_tier: ruleLoadingTier.default('balanced').describe(
         'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/.',
     ),
