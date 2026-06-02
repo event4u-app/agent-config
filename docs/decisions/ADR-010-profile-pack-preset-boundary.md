@@ -125,8 +125,44 @@ DUPLICATION ACROSS AXES IS A CONTRACT VIOLATION.
   (Phase 1 item 4). Pack shape lives in `docs/contracts/workflow-packs.md`
   (Phase 2 item 7).
 
+## Addendum — runtime `active_packs` overlay is not a fifth axis (2026-06-02)
+
+The session-profile-activation work introduces an **ephemeral
+`runtime.active_packs` overlay**: a developer activates a profile for the
+current session and only the matching packs' commands/skills are the
+surfaced set. This addendum records that the overlay does **not** add a
+fifth axis and does **not** violate the no-duplication rule above.
+
+The resolution chain is
+`pack → profile → preset → rule_loading_tier → user/env/runtime overrides`.
+The `active_packs` overlay is an instance of the chain's **existing final
+link** (`… → user/env/runtime overrides`): a runtime override that
+**modulates the `pack` axis** for the duration of a session. It selects
+which already-installed packs are *surfaced*; it does not create a new
+knob, a new vocabulary, or a new ownership boundary.
+
+- **Axis ownership unchanged.** The `pack` axis still owns "which bundle".
+  The overlay narrows the *active subset* of installed packs at runtime —
+  the same way the documented "runtime wins" rule lets a CLI flag
+  shadow-disable a pack-supplied skill (see Consequences § Negative). It
+  is the read-time companion of that write-time precedent.
+- **No knob duplication.** The overlay stores only a list of pack ids
+  (`runtime.active_packs: [...]`), the closure of the activated
+  profile/pack. It never restates a `preset` knob or a `profile` default.
+- **Governance stays on its own axis.** Profile activation **does not**
+  touch `rule_loading_tier`. Rules load by tier + trigger, never by pack
+  (session-profile work Phase 0.4). Letting a profile move the tier would
+  be the very axis-collision this ADR forbids.
+- **Ephemeral + uncommitted.** The overlay lives in
+  `.agent-settings.local.yml` (gitignored, deepest-winning layer), never
+  the committed settings file — so it cannot drift into a persisted axis.
+
+Net: the overlay is a session-scoped *view* over the `pack` axis, not a
+new axis. ADR-010's orthogonality holds.
+
 ## See also
 
+- [`agents/settings/contexts/session-host-capability-audit.md`](../../agents/settings/contexts/session-host-capability-audit.md) — host-capability facts that bound the overlay's lifecycle (addendum input).
 - [`docs/contracts/cost-profile-defaults.md`](../contracts/cost-profile-defaults.md) — the existing `rule_loading_tier` contract this ADR explicitly does **not** touch.
 - [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md) — Phase 1 items 1, 4 and Phase 2 item 7.
 - [`agents/runtime/council/responses/2026-05-16-step-15-product-refinement-v3.json`](../../agents/runtime/council/responses/2026-05-16-step-15-product-refinement-v3.json) — Council v3 action #2 (origin). <!-- council-ref-allowed: ADR decision-trace to originating council response -->
