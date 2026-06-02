@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: agents:user-update
 tier: 2
 cluster: agents

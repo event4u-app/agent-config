@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: e2e-plan
 tier: 2
 skills: [playwright-testing]

@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: analytics:prune
 tier: 2
 cluster: analytics

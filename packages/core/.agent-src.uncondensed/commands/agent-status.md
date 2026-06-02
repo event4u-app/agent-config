@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: agent-status
 tier: 0
 skills: [agent-docs-writing]

@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: chat-history
 tier: 2
 description: Chat-history orchestrator — routes to show, import, learn

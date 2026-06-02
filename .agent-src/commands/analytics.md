@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: analytics
 tier: 2
 description: Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.

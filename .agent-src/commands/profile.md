@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: profile
 tier: 2
 description: Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence)

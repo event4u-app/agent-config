@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: update-form-request-messages
 tier: 2
 framework: laravel

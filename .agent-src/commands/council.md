@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: council
 tier: 1
 description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
@@ -65,7 +65,7 @@ Invariants:
 | `/council debate` | `commands/council/debate.md` | Multi-round debate with progressive cost disclosure — initial positions + rebuttals across N rounds |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Advisor mode (replace-mode personas)
 
@@ -76,7 +76,7 @@ swaps its bound member's plain call for the same provider running the
 advisor persona — **same call count, same budget**. `council:estimate`
 surfaces every active swap on a dedicated line. Full contract: skills
 `ai-council` § "Thinking-style advisors" and
-[`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md).
+[`docs/contracts/ai-council-config.md`](../docs/contracts/ai-council-config.md).
 
 ## Dispatch
 

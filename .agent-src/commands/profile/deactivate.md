@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: profile:deactivate
 tier: 2
 cluster: profile

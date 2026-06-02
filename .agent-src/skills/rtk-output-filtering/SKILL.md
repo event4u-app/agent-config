@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: rtk-output-filtering
 description: "Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns."
 domain: process

@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: chat-history:show
 tier: 2
 cluster: chat-history

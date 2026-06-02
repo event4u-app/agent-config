@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 skills: [agent-docs-writing]
 name: optimize:augmentignore
 tier: 2

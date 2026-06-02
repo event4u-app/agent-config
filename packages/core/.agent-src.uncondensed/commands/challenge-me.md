@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: challenge-me
 tier: 2
 description: Challenge-me orchestrator — routes to vision, with-docs

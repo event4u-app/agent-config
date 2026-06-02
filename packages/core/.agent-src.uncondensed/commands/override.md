@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: override
 tier: 2
 description: Override orchestrator — routes to create, manage

@@ -1,5 +1,5 @@
 ---
-model_tier: inherit
+model_tier: medium
 name: memory
 tier: 1
 description: Memory orchestrator — routes to add, load, mine-session, promote, propose
