@@ -329,6 +329,11 @@ tasks:
     desc: Fail if main is more than one tagged release behind a release/X.Y.Z branch (P1.3 of road-to-productization, contract docs/contracts/release-trunk-sync.md)
     cmd: python3 scripts/check_release_trunk_sync.py
 
+  check-release-published:
+    silent: true
+    desc: "Fail if main's package.json version has no matching tag (release merged but never tagged/published). No-ops off main; tag invariant only — the npm invariant runs in the scheduled release-drift workflow. See scripts/check_release_published.py"
+    cmd: python3 scripts/check_release_published.py --strict --require-main
+
   validate-decision-engine:
     silent: true
     desc: Validate decision_engine block schema in agent-settings.template.yml and any local .agent-settings.yml (P2 of road-to-productization, contract docs/contracts/decision-engine-gates.md)
