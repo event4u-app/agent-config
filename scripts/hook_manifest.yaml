@@ -62,16 +62,25 @@ concerns:
     script: scripts/profile_staleness_hook.py
     args: []
     fail_closed: false
+  # Defense-in-depth twin of the update-command wrapper refresh
+  # (cmd_upgrade / cmd_refresh). On session_start, re-stamps a stale
+  # project-local ./agent-config wrapper from the canonical template so
+  # an outdated, fallback-less copy cannot keep breaking the hooks.
+  # Never creates a wrapper, never touches the source repo, fail-open.
+  wrapper-freshness:
+    script: scripts/wrapper_freshness_hook.py
+    args: []
+    fail_closed: false
 
 platforms:
   augment:
-    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness]
+    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   claude:
-    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness]
+    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -92,7 +101,7 @@ platforms:
   # Decision matrix + upstream blockers tracked in
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
-    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness]
+    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -106,7 +115,7 @@ platforms:
   # IDE-only — CLI-only users fall back to /checkpoint per
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -121,7 +130,7 @@ platforms:
   # both map to session_start. TaskCancel maps to stop because the
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -140,7 +149,7 @@ platforms:
   # surface to record verification commands; documented limitation).
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete]
 
@@ -155,7 +164,7 @@ platforms:
   # turn-check semantics. AfterAgent fires when the agent loop ends
   # — this is our `stop` slot.
   gemini:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
