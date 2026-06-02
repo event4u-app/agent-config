@@ -29,10 +29,57 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Sibling import: robust under both direct script execution and the importlib
+# test loader (see workspace_secrets module docstring).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import workspace_secrets  # noqa: E402
+
 WORKSPACE_HOME = Path.home() / ".event4u" / "agent-config" / "workspace" / "documents"
 SCHEMA = "workspace-document/v0"
 ALLOWED_TYPES = frozenset({"offer", "mail-draft", "memo", "brief", "video-script"})
 SLUG_RE = re.compile(r"[^a-z0-9]+")
+
+
+class SecretLeakError(ValueError):
+    """Raised when a high-confidence secret is found in a document write.
+
+    Carries only the field name and pattern label — never the matched value —
+    so the message is safe to print to a terminal or log.
+    """
+
+    def __init__(self, field: str, pattern: str) -> None:
+        self.field = field
+        self.pattern = pattern
+        super().__init__(
+            f"high-confidence secret ({pattern}) detected in {field}; "
+            f"redact it before saving — the document was NOT written"
+        )
+
+
+def _guard_secrets(fields: dict[str, str | None]) -> None:
+    """Pre-write secret-scan hook for user-authored documents (Phase 8 Step 5).
+
+    Documents round-trip byte-for-byte, so unlike the disposable telemetry
+    stores this guard does **not** silently rewrite the body. High-confidence
+    matches (AWS / GitHub / OpenAI / PEM) refuse the write outright; the fuzzy
+    key/value heuristic only warns, because it fires on legitimate prose
+    ("password reset token: see attached") and silently mutilating a user's
+    memo over a false positive is worse than the residual risk.
+    """
+    for field, value in fields.items():
+        if not value:
+            continue
+        findings = workspace_secrets.scan(value)
+        high = [f.pattern for f in findings if f.confidence == "high"]
+        if high:
+            raise SecretLeakError(field, high[0])
+        fuzzy = sorted({f.pattern for f in findings if f.confidence == "fuzzy"})
+        if fuzzy:
+            print(
+                f"workspace_documents: warning — possible secret "
+                f"({', '.join(fuzzy)}) in {field}; review before sharing",
+                file=sys.stderr,
+            )
 
 
 def _now_iso() -> str:
@@ -95,6 +142,9 @@ def create(*, type: str, title: str, body: str, role: str | None = None,
            root: Path | None = None) -> Document:
     if type not in ALLOWED_TYPES:
         raise ValueError(f"unknown document type: {type!r}")
+    # Refuse high-confidence secrets before any byte is written — neither the
+    # .md body nor the .history.jsonl revision log may carry the credential.
+    _guard_secrets({"body": body, "title": title, "source_prompt": source_prompt})
     base = (root if root is not None else WORKSPACE_HOME) / type
     base.mkdir(parents=True, exist_ok=True)
     slug = _dedupe(base, f"{slugify(title)}-{_today_iso()}", ".md")
@@ -117,6 +167,9 @@ def create(*, type: str, title: str, body: str, role: str | None = None,
 
 def save(type: str, slug: str, body: str, *, actor: str = "user",
          root: Path | None = None) -> dict:
+    # Refuse high-confidence secrets before the edited body overwrites the
+    # file or appends a revision-log entry.
+    _guard_secrets({"body": body})
     base = (root if root is not None else WORKSPACE_HOME) / type
     p = base / f"{slug}.md"
     if not p.exists():
@@ -247,14 +300,22 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     if args.cmd == "create":
         body = Path(args.body_file).read_text(encoding="utf-8")
-        doc = create(type=args.type, title=args.title, body=body,
-                     role=args.role, source_prompt=args.prompt,
-                     source_session=args.session)
+        try:
+            doc = create(type=args.type, title=args.title, body=body,
+                         role=args.role, source_prompt=args.prompt,
+                         source_session=args.session)
+        except SecretLeakError as err:
+            print(f"workspace_documents: refused — {err}", file=sys.stderr)
+            return 3
         print(json.dumps({"slug": doc.slug, "path": str(doc.path)}, sort_keys=True))
         return 0
     if args.cmd == "save":
         body = Path(args.body_file).read_text(encoding="utf-8")
-        entry = save(args.type, args.slug, body, actor=args.actor)
+        try:
+            entry = save(args.type, args.slug, body, actor=args.actor)
+        except SecretLeakError as err:
+            print(f"workspace_documents: refused — {err}", file=sys.stderr)
+            return 3
         print(json.dumps(entry, sort_keys=True))
         return 0
     if args.cmd == "list":

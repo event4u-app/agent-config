@@ -25,6 +25,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+# Sibling import: robust under both direct script execution and the importlib
+# test loader (see workspace_secrets module docstring).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import workspace_secrets  # noqa: E402
+
 WORKSPACE_HOME = Path.home() / ".event4u" / "agent-config" / "workspace" / "sessions"
 
 # Event kinds per contract §Session JSONL schema.
@@ -66,10 +71,13 @@ def start(role: str, task: str, *, root: Path | None = None) -> str:
     sid = _new_session_id()
     p = _session_path(sid, root=root)
     p.parent.mkdir(parents=True, exist_ok=True)
+    # Pre-write secret-scan hook (Phase 8 Step 5): a pasted credential in the
+    # opening task lands at rest. Telemetry is disposable → scrub silently.
+    safe_task, _ = workspace_secrets.scrub(task)
     rec = {
         "ts": _now_iso(),
         "kind": "launcher.input",
-        "data": {"role": role, "task": task},
+        "data": {"role": role, "task": safe_task},
     }
     with p.open("w", encoding="utf-8") as fh:
         fh.write(json.dumps(rec, sort_keys=True) + "\n")
@@ -85,7 +93,11 @@ def append(session_id: str, kind: str, data: dict | None = None, *, root: Path |
     if not p.exists():
         print(f"workspace_sessions: no session {session_id}", file=sys.stderr)
         return False
-    rec = {"ts": _now_iso(), "kind": kind, "data": data or {}}
+    # Pre-write secret-scan hook (Phase 8 Step 5): scrub the event payload —
+    # prompts, tool args, and outputs can carry pasted credentials. Telemetry
+    # is disposable, so scrub silently rather than refuse the append.
+    safe_data, _ = workspace_secrets.scrub_obj(data or {})
+    rec = {"ts": _now_iso(), "kind": kind, "data": safe_data}
     with p.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(rec, sort_keys=True) + "\n")
     return True

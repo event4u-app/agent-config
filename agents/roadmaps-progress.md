@@ -6,17 +6,17 @@
 
 ## Overall
 
-**42 / 60 steps done · 70%**
+**43 / 60 steps done · 72%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+█████████████████████████████░░░░░░░░░░░   72%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
+| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 
 ---
 
@@ -24,7 +24,7 @@
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
-**Employee Product + External Proof — close the two adoption gaps** — 42 / 60 done (70%)
+**Employee Product + External Proof — close the two adoption gaps** — 43 / 60 done (72%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -36,6 +36,6 @@
 | 5 | Document workflows — first-class offers, mails, briefs, memos | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 | 6 | Non-technical explain mode — "what just happened" | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 7 | Analytics surface — turn the inert telemetry into a question | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
+| 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
 

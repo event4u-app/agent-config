@@ -33,6 +33,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 
+# Sibling import: robust under both direct script execution and the importlib
+# test loader (see workspace_secrets module docstring).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import workspace_secrets  # noqa: E402
+
 # --- Storage layout (contract §Storage) ------------------------------------
 
 WORKSPACE_HOME = Path.home() / ".event4u" / "agent-config" / "workspace" / "analytics"
@@ -109,11 +114,20 @@ def emit(event: str, data: dict | None = None, *, settings_path: Path | None = N
         return False
     if is_disabled(settings_path):
         return False
+    # Pre-write secret-scan hook (Phase 8 Step 5). Telemetry is disposable and
+    # machine-generated, so scrub silently. Fail safe: if the scrub itself
+    # errors, DROP the event rather than persist it unscrubbed — the contract
+    # is "never raises / never leaks", not "never loses an event".
+    try:
+        safe_data, _ = workspace_secrets.scrub_obj(data or {})
+    except Exception as err:  # noqa: BLE001 — never let the hot path raise
+        print(f"workspace_analytics: drop event {event!r} (scrub failed: {err})", file=sys.stderr)
+        return False
     record = {
         "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "schema": SCHEMA,
         "event": event,
-        "data": data or {},
+        "data": safe_data,
     }
     try:
         WORKSPACE_HOME.mkdir(parents=True, exist_ok=True)
