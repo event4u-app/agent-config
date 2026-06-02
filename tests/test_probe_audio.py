@@ -104,3 +104,84 @@ def test_missing_file_exits_two(tmp_path: Path) -> None:
         text=True,
     )
     assert proc.returncode == 2
+
+
+# --- the honesty corpus sweep ------------------------------------------------
+# AI-council closure (2026-06-02, claude-sonnet-4-5 + gpt-4o, peer-review round
+# 2, agents/runtime/council/responses/corpus-closure.json): the council's
+# original "real-corpus honesty experiment (≥15 varied tracks)" demand is
+# satisfied by a ≥15-track SYNTHETIC sweep, BECAUSE the experiment exists only
+# to prove the *honesty invariant* — the probe never presents interval cuts as
+# musical structure — which is a binary omission property synthetic inputs
+# verify directly. A commercial corpus could only surface signal-processing
+# accuracy nuances (orthogonal: degrading to interval+warning on a brick-walled
+# master is correct behaviour, not a miss). Both members converged: codify the
+# sweep as a committed regression guard, THEN close. Honesty is a negative
+# capability — without this test it evaporates (it is exactly what the two
+# latent BSD-awk / `wc -l` bugs slipped past on a gawk-only CI).
+
+# 16 varied synthetic builders across the four failure modes the three-tier
+# degrade (silence -> rms -> interval) must handle. Each value is the list of
+# ffmpeg lavfi inputs + the concat/filter that assembles one track.
+_CORPUS = {
+    # A. silence-gapped (clean quiet gaps)
+    "sil_3gap": "sine=f=440:d=4|anull:1|sine=f=330:d=4|anull:1|sine=f=550:d=4",
+    "sil_2gap": "sine=f=440:d=6|anull:1.2|sine=f=300:d=6",
+    "sil_4gap": "sine=f=200:d=3|anull:0.8|sine=f=400:d=3|anull:0.8|sine=f=600:d=3|anull:0.8|sine=f=800:d=3",
+    "sil_long": "sine=f=440:d=10|anull:2|sine=f=220:d=10",
+    # B. dynamic energy, no silence (rms path)
+    "dyn_3": "sine=f=440:d=5,volume=0.2|sine=f=440:d=5,volume=1.0|sine=f=440:d=5,volume=0.3",
+    "dyn_4": "sine=f=330:d=4,volume=0.15|sine=f=330:d=4,volume=0.9|sine=f=330:d=4,volume=0.4|sine=f=330:d=4,volume=1.0",
+    "dyn_2": "sine=f=500:d=6,volume=0.1|sine=f=500:d=6,volume=0.8",
+    "pink": "anoisesrc=d=18:c=pink:a=0.3",
+    # C. flat / brick-walled (interval fallback + warning)
+    "flat": "sine=f=440:d=18",
+    "flat_long": "sine=f=440:d=30",
+    "white": "anoisesrc=d=20:c=white:a=0.8",
+    "flat_loud": "sine=f=440:d=12,volume=0.95",
+    # D. edge cases
+    "tiny": "sine=f=440:d=2",
+    "huge": "sine=f=440:d=45",
+    "short_gap": "sine=f=440:d=8|anull:0.3|sine=f=440:d=8",
+    "mixed": "sine=f=440:d=4,volume=0.5|anull:1|sine=f=440:d=4,volume=1.0|anull:1|sine=f=440:d=4,volume=0.2",
+}
+
+
+def _build_track(spec: str, path: Path) -> None:
+    """Assemble one synthetic track from a `|`-joined lavfi spec."""
+    parts = spec.split("|")
+    args: list[str] = []
+    for p in parts:
+        if p.startswith("anull:"):
+            dur = p.split(":", 1)[1]
+            args += ["-f", "lavfi", "-i", f"anullsrc=r=44100:cl=mono:d={dur}"]
+        else:
+            args += ["-f", "lavfi", "-i", p]
+    n = len(parts)
+    if n > 1:
+        chain = "".join(f"[{i}]" for i in range(n))
+        args += ["-filter_complex", f"{chain}concat=n={n}:v=0:a=1"]
+    _ffmpeg(*args, str(path))
+
+
+def test_corpus_sweep_honesty_invariant(tmp_path: Path) -> None:
+    """interval <=> warning across >=15 varied tracks (council closure 2026-06-02).
+
+    The load-bearing honesty property: the probe sets a ``warning`` if and only
+    if it fell back to the ``interval`` method. A ``silence``/``rms`` result must
+    never carry a warning (no false "this is musical" claim); an ``interval``
+    result must always carry one (no silent over-claim).
+    """
+    assert len(_CORPUS) >= 15, "council demanded a >=15-track sweep"
+    for name, spec in _CORPUS.items():
+        track = tmp_path / f"{name}.wav"
+        _build_track(spec, track)
+        extra = ("--interval", "6") if name in {"flat", "flat_loud", "tiny"} else ()
+        data = _probe(track, *extra)
+        assert data["method"] in {"silence", "rms", "interval"}, name
+        assert data["sections"], f"{name}: expected >=1 section"
+        has_warning = bool(data.get("warning"))
+        if data["method"] == "interval":
+            assert has_warning, f"{name}: interval method MUST set a warning"
+        else:
+            assert not has_warning, f"{name}: {data['method']} must NOT carry a warning"
