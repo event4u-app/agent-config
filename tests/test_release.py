@@ -38,6 +38,50 @@ class TestBumpVersion:
         with pytest.raises(SystemExit):
             rel.bump_version("not-a-version", "patch")
 
+
+class TestDetectInFlightTarget:
+    """`_detect_in_flight_target` derives from package.json + tag existence,
+    NOT from `release/*` branches (which can be merged-but-undeleted and would
+    otherwise resolve to an old, already-published version → downgrade tag).
+    """
+
+    def _stub(self, monkeypatch, tmp_path, *, version, tag_local=False, tag_remote=False, head="main"):
+        pkg = tmp_path / "package.json"
+        pkg.write_text(json.dumps({"version": version}), encoding="utf-8")
+        monkeypatch.setattr(rel, "PACKAGE_JSON", pkg)
+        monkeypatch.setattr(rel, "git", lambda *a, **k: head if "rev-parse" in a else "")
+        monkeypatch.setattr(rel, "_tag_exists_local", lambda t: tag_local)
+        monkeypatch.setattr(rel, "_tag_exists_remote", lambda t: tag_remote)
+
+    def test_untagged_package_version_is_in_flight(self, monkeypatch, tmp_path) -> None:
+        # main claims 5.8.0 but no tag 5.8.0 → that is the in-flight release.
+        self._stub(monkeypatch, tmp_path, version="5.8.0", tag_local=False, tag_remote=False)
+        assert rel._detect_in_flight_target() == "5.8.0"
+
+    def test_tagged_package_version_is_complete(self, monkeypatch, tmp_path) -> None:
+        # 5.8.0 already tagged → release complete → no in-flight target.
+        self._stub(monkeypatch, tmp_path, version="5.8.0", tag_local=True)
+        assert rel._detect_in_flight_target() is None
+
+    def test_remote_tag_also_counts_as_complete(self, monkeypatch, tmp_path) -> None:
+        self._stub(monkeypatch, tmp_path, version="5.8.0", tag_local=False, tag_remote=True)
+        assert rel._detect_in_flight_target() is None
+
+    def test_stale_release_branches_never_picked(self, monkeypatch, tmp_path) -> None:
+        # The regression: even with package.json at 5.8.0 (tagged → complete),
+        # the function must NOT fall back to scanning release/* branches and
+        # return an old 5.4.0. It returns None, not a downgrade version.
+        self._stub(monkeypatch, tmp_path, version="5.8.0", tag_local=True)
+        result = rel._detect_in_flight_target()
+        assert result is None
+        assert result != "5.4.0"
+
+    def test_explicit_release_branch_head_wins(self, monkeypatch, tmp_path) -> None:
+        # If you deliberately `git checkout release/1.15.0`, that explicit
+        # checkout is honored over the package.json path.
+        self._stub(monkeypatch, tmp_path, version="9.9.9", head="release/1.15.0")
+        assert rel._detect_in_flight_target() == "1.15.0"
+
     def test_invalid_kind_exits(self) -> None:
         with pytest.raises(SystemExit):
             rel.bump_version("1.0.0", "mega")

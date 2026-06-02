@@ -665,7 +665,7 @@ def execute(
     resume: bool = False,
 ) -> None:
     branch = f"release/{plan.target}"
-    total = 9
+    total = 10
 
     if dry_run:
         print("(dry-run) no git/gh mutations will be performed.")
@@ -842,6 +842,25 @@ def execute(
             "--notes", notes,
         )
 
+    # ─── 10. delete the merged release branch (local + remote) ───────────────
+    # Branch hygiene: a merged-but-undeleted release/X.Y.Z is what made
+    # `--resume` mis-detect an old version. Delete it now so it can never
+    # accumulate. Idempotent — skips whatever is already gone. Never touches
+    # `main` or any tag.
+    if dry_run:
+        _step(10, total, f"Would delete merged branch {branch} (local + remote)")
+    else:
+        deleted = []
+        if _branch_exists_local(branch) and \
+                git("rev-parse", "--abbrev-ref", "HEAD", capture=True) != branch:
+            run("git", "branch", "-D", branch, check=False)
+            deleted.append("local")
+        if _branch_exists_remote(branch):
+            run("git", "push", REMOTE, "--delete", branch, check=False)
+            deleted.append("remote")
+        where = " + ".join(deleted) if deleted else "already gone"
+        _step(10, total, f"Delete merged branch {branch} ({where})")
+
     print()
     print(f"✅  Released {plan.target}")
     print(f"   https://github.com/{REPO_SLUG}/releases/tag/{plan.target}")
@@ -904,43 +923,47 @@ _RELEASE_BRANCH_RE = re.compile(r"^release/(\d+\.\d+\.\d+)$")
 
 
 def _detect_in_flight_target() -> str | None:
-    """Find the in-flight release target from existing release branches.
+    """Find the in-flight release target — the SOURCE OF TRUTH is package.json.
 
-    Resume mode needs to know which `release/X.Y.Z` is being recovered,
-    not what the next bump would be. The release branch name is the
-    canonical anchor: it was committed by step 1 of an earlier run and
-    is the only state guaranteed to survive a partial pipeline.
+    An "in-flight" release is one whose version was already bumped into
+    ``main``'s ``package.json`` (and possibly merged) but whose tag has not
+    yet been pushed — i.e. the publish step never completed. The canonical
+    anchor is therefore ``package.json`` version `V` **with no matching tag
+    `V`**, NOT the set of ``release/X.Y.Z`` branches.
 
-    Local branches win over remote, current-branch wins over both — if
-    you ran `git checkout release/1.15.0`, that's the target. Returns
-    None if no release branch exists; caller falls back to the regular
-    bump-inference path.
+    Why not the branch set: merged release branches are frequently left
+    undeleted on the remote, so "highest existing release/* branch" can
+    resolve to an OLD, already-published version (e.g. picking 5.4.0 while
+    5.8.0 is the real in-flight target) and tag a downgrade. The package.json
+    version cannot lie that way — it is the version main currently claims to
+    be, and an untagged claim is exactly an incomplete release.
+
+    Resolution order:
+      1. If HEAD is on a ``release/X.Y.Z`` branch, that explicit checkout wins.
+      2. Else: read ``package.json`` version `V`. If tag `V` does not exist
+         (local or remote), `V` is the in-flight target. If it is already
+         tagged, the release is complete → return None (regular bump path).
+
+    Stale ``release/*`` branches are never used for version detection.
     """
     head = git("rev-parse", "--abbrev-ref", "HEAD", capture=True)
     m = _RELEASE_BRANCH_RE.match(head)
     if m:
         return m.group(1)
 
-    local_raw = git("for-each-ref", "--format=%(refname:short)", "refs/heads/release/", capture=True)
-    candidates = [
-        m.group(1)
-        for line in local_raw.splitlines()
-        if (m := _RELEASE_BRANCH_RE.match(line.strip()))
-    ]
-    remote_raw = git(
-        "for-each-ref", "--format=%(refname:short)",
-        f"refs/remotes/{REMOTE}/release/", capture=True,
-    )
-    for line in remote_raw.splitlines():
-        bare = line.strip().removeprefix(f"{REMOTE}/")
-        if (m := _RELEASE_BRANCH_RE.match(bare)):
-            candidates.append(m.group(1))
-
-    if not candidates:
+    try:
+        version = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))["version"]
+    except (OSError, KeyError, json.JSONDecodeError):
         return None
-    # Sort semver-aware so 1.10.0 > 1.9.0 (lexicographic would lose).
-    candidates.sort(key=parse_version)
-    return candidates[-1]
+    try:
+        parse_version(version)
+    except Exception:
+        return None
+
+    # An already-tagged version is a completed release, not in-flight.
+    if _tag_exists_local(version) or _tag_exists_remote(version):
+        return None
+    return version
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -961,7 +984,7 @@ def main(argv: list[str] | None = None) -> int:
         target = args.explicit
     elif in_flight:
         target = in_flight
-        print(f"(resume) detected in-flight release branch release/{in_flight}")
+        print(f"(resume) in-flight target {in_flight} (package.json version with no tag yet)")
     else:
         target = bump_version(current, bump)
     parse_version(target)
