@@ -247,14 +247,16 @@ async function main(argv: readonly string[]): Promise<number> {
         .option('--visible', 'Restrict to visible commands (tier 0/1)')
         .option('--json', 'Emit machine-readable JSON')
         .action((opts: { pack?: string; visible?: boolean; json?: boolean }) => {
-            process.exit(runCommandsLs(opts));
+            // exitCode (not process.exit) — the JSON payload exceeds the
+            // 8 KiB pipe buffer; a hard exit truncates async stdout on macOS.
+            process.exitCode = runCommandsLs(opts);
         });
     commands
         .command('explain <name>')
         .description("Print a command's intent, routes_to, owning pack, and tier")
         .option('--json', 'Emit machine-readable JSON')
         .action((name: string, opts: { json?: boolean }) => {
-            process.exit(runCommandsExplain(name, opts));
+            process.exitCode = runCommandsExplain(name, opts);
         });
 
     program
@@ -292,7 +294,8 @@ async function main(argv: readonly string[]): Promise<number> {
     const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
-        return 0;
+        // Actions that don't hard-exit signal failure via process.exitCode.
+        return typeof process.exitCode === 'number' ? process.exitCode : 0;
     }
 
     // `explain <command-name>` / `explain <cluster:sub>` → native command
@@ -316,7 +319,14 @@ async function main(argv: readonly string[]): Promise<number> {
 }
 
 main(process.argv.slice(2))
-    .then((code) => { process.exit(code); })
+    .then((code) => {
+        // Flush queued async stdout before the hard exit — on macOS a pipe'd
+        // stdout is async and process.exit() truncates anything past the
+        // 8 KiB pipe buffer (e.g. `commands ls --json`). The empty write's
+        // callback fires only after every prior chunk reached the OS.
+        process.exitCode = code;
+        process.stdout.write('', () => process.exit(code));
+    })
     .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(message);
