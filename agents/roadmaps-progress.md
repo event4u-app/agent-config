@@ -6,17 +6,17 @@
 
 ## Overall
 
-**53 / 101 steps done · 52%**
+**57 / 101 steps done · 56%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md) | 5 | 20 | 10 | 10 | 0 | 0 | █████░░░░░ 50% |
+| 1 | [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md) | 5 | 20 | 6 | 14 | 0 | 0 | ███████░░░ 70% |
 | 2 | [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md) | 5 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 
@@ -26,15 +26,15 @@
 
 ### [road-to-6.0.0-b-pack-scoped-projection.md](roadmaps/road-to-6.0.0-b-pack-scoped-projection.md)
 
-**Road to 6.0.0-B — Pack-scoped projection (the breaking change)** — 10 / 20 done (50%)
+**Road to 6.0.0-B — Pack-scoped projection (the breaking change)** — 14 / 20 done (70%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Capability-pack formalization (precondition — pure metadata) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | Command pack-ownership metadata (no behaviour change) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Budget audit + migration decisions (maintainer-gated) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Projection-time filtering (the breaking change, opt-in) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
-| 4 | Staged-rollout scaffolding (the flip is a later release) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 3 | Projection-time filtering (the breaking change, opt-in) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Staged-rollout scaffolding (the flip is a later release) | 🟡 in progress | 6 | 1 | 0 | 0 | 14% |
 
 ### [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md)
 

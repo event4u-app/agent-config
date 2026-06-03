@@ -162,16 +162,16 @@ set.
   router-driven).
   This is the deterministic resolver the Execution-Model ADR scopes as
   build/install-time.
-- [ ] **Step 8:** Wire the projector (install path + `agent-config use
+- [x] **Step 8:** Wire the projector (install path + `agent-config use
   --profile=<id>`) to project only the active set when a profile is selected,
   and **everything** when the profile is `legacy-all`. Default in 6.0.0 =
   `legacy-all` (non-breaking upgrade). Selecting a real profile = scoped
   projection. Atomic write (temp → move) with previous-projection preservation
   on failure, per the ADR rollback mechanism.
-- [ ] **Step 9:** Console notice on `legacy-all`: "Profile mode available —
+- [x] **Step 9:** Console notice on `legacy-all`: "Profile mode available —
   scoped, focused surface. Run `agent-config use --profile=developer`." No hard
   warning, no forced migration in 6.0.0.
-- [ ] **Step 10:** Coverage — golden tests proving: (a) `legacy-all` projects the
+- [x] **Step 10:** Coverage — golden tests proving: (a) `legacy-all` projects the
   full set (byte-identical to 5.x projection for at least one host tool), (b) a
   scoped profile projects only its active set, (c) a profile switch is atomic
   and reversible, (d) an inactive-pack command/skill is absent from the scoped
@@ -179,7 +179,7 @@ set.
 
 ## Phase 4: Staged-rollout scaffolding (the flip is a later release)
 
-- [ ] **Step 11:** Document the staged-rollout plan in the CHANGELOG/release
+- [x] **Step 11:** Document the staged-rollout plan in the CHANGELOG/release
   notes for 6.0.0: 6.0.0 default `legacy-all` (opt-in profiles) → 6.1.0 default
   flips to profile mode with a `--legacy` escape → 7.0.0 removes `legacy-all`
   **only if** evidence shows <10% usage. This roadmap ships 6.0.0 only; the
