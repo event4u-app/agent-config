@@ -182,6 +182,87 @@ def file_hash(filepath: Path) -> str:
     return h.hexdigest()
 
 
+# ---------------------------------------------------------------------------
+# Transitive include hashing (road-to-6.0.0-D Phase 0 Step 1)
+#
+# An artefact declares the skills / rules it includes via its frontmatter
+# `skills:` / `rules:` lists. The condensation gate must treat that artefact
+# as stale when an included skill/rule changes — otherwise a moved or edited
+# dependency slips past the hash check silently (the single biggest risk the
+# 6.0.0-D council named). `effective_hash` folds the content hash of every
+# transitive include into the artefact's own content hash.
+#
+# Leaf artefacts (no declared includes) hash exactly like `file_hash`, so the
+# stored hash table only changes for artefacts that actually declare deps —
+# the migration stays contained.
+# ---------------------------------------------------------------------------
+
+_DEP_FRONTMATTER_KEYS = ("skills", "rules")
+
+
+def _slug_to_logical(slug: str) -> str | None:
+    """Map a skill / rule slug to its logical relative path, if it resolves.
+
+    Skill slug ``foo`` → ``skills/foo/SKILL.md``; rule slug ``bar`` →
+    ``rules/bar.md``. Returns the first candidate that backs a real source
+    file, else ``None`` (a typo'd / external slug contributes no edge).
+    """
+    for cand in (f"skills/{slug}/SKILL.md", f"rules/{slug}.md"):
+        if _resolve_source(cand) is not None:
+            return cand
+    return None
+
+
+def _direct_includes(relative: str) -> list[str]:
+    """Logical relpaths an artefact directly includes via frontmatter.
+
+    Reads the artefact's ``skills:`` / ``rules:`` frontmatter lists and
+    resolves each slug to a logical path. Non-resolving slugs are skipped.
+    """
+    source = _resolve_source(relative)
+    if source is None:
+        return []
+    try:
+        meta, _ = _parse_frontmatter(source.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        return []
+    deps: list[str] = []
+    for key in _DEP_FRONTMATTER_KEYS:
+        value = meta.get(key)
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            if not isinstance(item, str):
+                continue
+            logical = _slug_to_logical(item.strip())
+            if logical is not None and logical != relative:
+                deps.append(logical)
+    return deps
+
+
+def effective_hash(relative: str, _seen: frozenset | None = None) -> str:
+    """Content hash of an artefact folded with its transitive include hashes.
+
+    Changes whenever the artefact's own bytes change OR any skill/rule it
+    transitively includes changes. Cycle-safe: a slug that re-enters the
+    current resolution chain folds only its own content hash, breaking the
+    loop. Leaf artefacts (no includes) return exactly ``file_hash`` so the
+    stored-hash migration is limited to artefacts that declare dependencies.
+    """
+    source = _resolve_source(relative)
+    if source is None:
+        return ""
+    own = file_hash(source)
+    if _seen is not None and relative in _seen:
+        return own  # cycle — fold own content only
+    deps = sorted(set(_direct_includes(relative)))
+    if not deps:
+        return own  # leaf — identical to plain file_hash
+    seen_next = (_seen or frozenset()) | {relative}
+    parts = [own] + [effective_hash(dep, seen_next) for dep in deps]
+    return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
+
+
 def load_hashes() -> dict:
     """Load stored condensation hashes from JSON file."""
     if HASH_FILE.exists():
@@ -212,7 +293,7 @@ def mark_done(relative_path: str) -> None:
         sys.exit(1)
     apply_path_rewriter(relative_path)
     hashes = load_hashes()
-    hashes[relative_path] = file_hash(source_file)
+    hashes[relative_path] = effective_hash(relative_path)
     save_hashes(hashes)
     print(f"✅  Marked as condensed: {relative_path}")
 
@@ -242,7 +323,7 @@ def mark_all_done() -> None:
     for source_file, relative in _iter_sources():
         if not should_condense(source_file):
             continue
-        hashes[relative] = file_hash(source_file)
+        hashes[relative] = effective_hash(relative)
         count += 1
     save_hashes(hashes)
     print(f"✅  Marked {count} files as condensed")
@@ -260,7 +341,7 @@ def list_changed_md(source_dir: Path) -> list:
     for source_file, relative in _iter_sources():
         if not should_condense(source_file):
             continue
-        current_hash = file_hash(source_file)
+        current_hash = effective_hash(relative)
         stored_hash = hashes.get(relative)
         if stored_hash != current_hash:
             changed.append(relative)
@@ -865,11 +946,20 @@ def generate_windsurf_modern_rules() -> int:
     return len(rules)
 
 
-def generate_cursor_commands() -> int:
-    """Symlink `.cursor/commands/<slug>.md` per source command."""
+def generate_cursor_commands(active_command_slugs: set[str] | None = None) -> int:
+    """Symlink `.cursor/commands/<slug>.md` per source command.
+
+    `active_command_slugs` is `None` for legacy-all (every command projected)
+    or a slug allowlist for scoped projection; the `_clean_modern_dir` pass
+    then reaps any command no longer in the active set.
+    """
     if not COMMANDS_SOURCE.exists():
         return 0
-    cmds = list(_iter_commands())
+    cmds = [
+        (sf, slug)
+        for sf, slug in _iter_commands()
+        if active_command_slugs is None or slug in active_command_slugs
+    ]
     valid = {f"{slug}.md" for _, slug in cmds}
     _clean_modern_dir(CURSOR_COMMANDS_DIR, valid)
     CURSOR_COMMANDS_DIR.mkdir(parents=True, exist_ok=True)
@@ -885,11 +975,19 @@ def generate_cursor_commands() -> int:
     return count
 
 
-def generate_windsurf_workflows() -> int:
-    """Symlink `.windsurf/workflows/<slug>.md` per source command."""
+def generate_windsurf_workflows(active_command_slugs: set[str] | None = None) -> int:
+    """Symlink `.windsurf/workflows/<slug>.md` per source command.
+
+    `active_command_slugs` is `None` for legacy-all or a slug allowlist for
+    scoped projection (see `generate_cursor_commands`).
+    """
     if not COMMANDS_SOURCE.exists():
         return 0
-    cmds = list(_iter_commands())
+    cmds = [
+        (sf, slug)
+        for sf, slug in _iter_commands()
+        if active_command_slugs is None or slug in active_command_slugs
+    ]
     valid = {f"{slug}.md" for _, slug in cmds}
     _clean_modern_dir(WINDSURF_WORKFLOWS_DIR, valid)
     WINDSURF_WORKFLOWS_DIR.mkdir(parents=True, exist_ok=True)
@@ -973,6 +1071,86 @@ def _read_model_auto_switch() -> str:
     return "suggest"
 
 
+# --- Pack-scoped projection (ADR-040 / road-to-6.0.0-B Step 8) ---------------
+
+
+def _read_projection_mode() -> str:
+    """Read `projection.mode` from .agent-settings.yml.
+
+    Returns `legacy-all` | `scoped`; default `legacy-all`. Only `scoped`
+    narrows the projected artefact set; `legacy-all` projects the full surface
+    byte-identically to 5.x. Scoping is opt-in by this key alone — never
+    inferred from `profile.id`.
+    """
+    try:
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+    data = load_agent_settings(project_path=SETTINGS_FILE)
+    proj = data.get("projection")
+    value = proj.get("mode") if isinstance(proj, dict) else None
+    if isinstance(value, str) and value.strip().lower() in ("legacy-all", "scoped"):
+        return value.strip().lower()
+    return "legacy-all"
+
+
+def _command_path_to_slug(manifest_path: str) -> str:
+    """Map a manifest command path to the flat generator slug.
+
+    `.../commands/council/analysis.md` → `council-analysis` — identical to
+    `_command_slug()` (which flattens the path relative to COMMANDS_SOURCE),
+    so the predicate matches what the generators emit.
+    """
+    parts = Path(manifest_path).parts
+    i = parts.index("commands")
+    return "-".join(Path(*parts[i + 1:]).with_suffix("").parts)
+
+
+def _skill_path_to_name(manifest_path: str) -> str:
+    """Map a manifest skill path to its directory name.
+
+    `.../skills/accessibility-auditor/SKILL.md` → `accessibility-auditor` —
+    the key the skills generators iterate on.
+    """
+    parts = Path(manifest_path).parts
+    i = parts.index("skills")
+    return parts[i + 1]
+
+
+def _resolve_active_predicates() -> tuple[set[str] | None, set[str] | None]:
+    """Return `(active_command_slugs, active_skill_names)` for the projection.
+
+    `(None, None)` ⇒ legacy-all (no filtering — byte-identical to 5.x). In
+    `scoped` mode the selected packs are the active profile's `packs` UNIONED
+    with the `runtime.active_packs` overlay; the resolver expands that over the
+    `requires` graph and resolves the active command/skill set.
+    """
+    if _read_projection_mode() != "scoped":
+        return None, None
+    try:
+        from scripts.config import packs as packs_mod
+        from scripts.config import session_profiles as sp_mod
+        from scripts.config.profiles import resolve_profile
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        _sys.path.insert(0, str(PROJECT_ROOT))
+        from scripts.config import packs as packs_mod  # type: ignore
+        from scripts.config import session_profiles as sp_mod  # type: ignore
+        from scripts.config.profiles import resolve_profile  # type: ignore
+        from scripts._lib.agent_settings import load_agent_settings  # type: ignore
+    settings = load_agent_settings(project_path=SETTINGS_FILE)
+    profile = resolve_profile(project_root=PROJECT_ROOT, user_settings=settings)
+    selected = sorted(set(profile.packs) | set(sp_mod.read_overlay(PROJECT_ROOT)))
+    active = packs_mod.resolve_active_set(PROJECT_ROOT, selected)
+    cmd_slugs = {_command_path_to_slug(p) for p in active.commands}
+    skill_names = {_skill_path_to_name(p) for p in active.skills}
+    return cmd_slugs, skill_names
+
+
 def _model_tier(skill_md: Path) -> str | None:
     """Return the `model_tier` frontmatter value, or None if absent."""
     if not skill_md.exists():
@@ -996,7 +1174,7 @@ def _render_native_model_md(src_md: Path, tier: str) -> str:
     return _MODEL_TIER_RE.sub(f"model: {model}", text, count=1)
 
 
-def generate_claude_skills() -> int:
+def generate_claude_skills(active_skill_names: set[str] | None = None) -> int:
     """Create .claude/skills/ entries for ALL skills in .agent-src/skills/.
 
     Default: a directory symlink → .agent-src/skills/<name> (verbatim).
@@ -1010,8 +1188,12 @@ def generate_claude_skills() -> int:
         print("  ⚠️  .agent-src/skills/ not found — skipping skills", file=sys.stderr)
         return 0
 
-    # All skill directories in .agent-src/skills/
+    # All skill directories in .agent-src/skills/. Under scoped projection
+    # (active_skill_names not None) keep only the active set; the stale-cleanup
+    # loop below then reaps any now-inactive skill entry.
     skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
+    if active_skill_names is not None:
+        skills = [s for s in skills if s in active_skill_names]
     skill_set = set(skills)
     # All command slugs (to protect from stale cleanup)
     command_slugs = {slug for _, slug in _iter_commands()}
@@ -1078,7 +1260,7 @@ def extract_description_from_md(content: str) -> str:
     return ""
 
 
-def generate_claude_commands() -> int:
+def generate_claude_commands(active_command_slugs: set[str] | None = None) -> int:
     """Create .claude/skills/{slug}/SKILL.md symlinks for ALL Augment commands.
 
     Commands in .agent-src/commands/ are the single source of truth.
@@ -1107,6 +1289,11 @@ def generate_claude_commands() -> int:
     rendered = 0
     auto = _read_model_auto_switch() == "auto"
     for source_file, slug in _iter_commands():
+        # Scoped projection: skip commands outside the active set. They are not
+        # added to current_slugs, so the stale-cleanup pass below reaps any
+        # existing dir for them (switch-down behaviour).
+        if active_command_slugs is not None and slug not in active_command_slugs:
+            continue
         # Skip if a real skill with the same name exists — skill takes priority
         if slug in skill_names:
             skipped += 1
@@ -1370,28 +1557,29 @@ def generate_plugin_hooks() -> int:
     return len(hooks)
 
 
-def generate_tools() -> None:
-    """Generate all tool-specific directories and files.
-
-    `agents/.agent-tools.yml` gates per-tool emission. When the file
-    is missing, every tool is emitted (preserves test fixtures and
-    pre-gating behaviour). See `_active_tools()` and `_tool_active()`.
-    """
+def _generate_tools_inner(
+    cmd_slugs: set[str] | None, skill_names: set[str] | None
+) -> None:
+    """Run every tool generator once. `cmd_slugs` / `skill_names` are `None`
+    for legacy-all (full surface) or allowlists for scoped projection. Only the
+    four consumer-local native generators honour the allowlists; the committed
+    plugin marketplace (`.claude-plugin/`) and the Augment tree always project
+    the full set in 6.0.0 (ADR-040 / road-to-6.0.0-B Step 8, D3)."""
     info("🔧  Generating multi-agent tool directories...\n")
     rules = generate_rule_symlinks()
     windsurfrules = generate_windsurfrules() if _tool_active("windsurf") else 0
     if _tool_active("gemini"):
         generate_gemini_md()
-    skills = generate_claude_skills() if _tool_active("claude-code") else 0
-    commands = generate_claude_commands() if _tool_active("claude-code") else 0
+    skills = generate_claude_skills(skill_names) if _tool_active("claude-code") else 0
+    commands = generate_claude_commands(cmd_slugs) if _tool_active("claude-code") else 0
     plugin_cmd_skills = generate_plugin_command_skills() if _tool_active("claude-code") else 0
     plugin_hooks = generate_plugin_hooks() if _tool_active("claude-code") else 0
     personas = generate_persona_symlinks()
     user_types = generate_user_type_symlinks()
     cursor_mdc = generate_cursor_mdc_rules() if _tool_active("cursor") else 0
     windsurf_modern = generate_windsurf_modern_rules() if _tool_active("windsurf") else 0
-    cursor_cmds = generate_cursor_commands() if _tool_active("cursor") else 0
-    windsurf_wf = generate_windsurf_workflows() if _tool_active("windsurf") else 0
+    cursor_cmds = generate_cursor_commands(cmd_slugs) if _tool_active("cursor") else 0
+    windsurf_wf = generate_windsurf_workflows(cmd_slugs) if _tool_active("windsurf") else 0
     summary = (
         f"✅  generate-tools — rules={rules} skills={skills} "
         f"commands={commands} plugin_cmd_skills={plugin_cmd_skills} "
@@ -1406,6 +1594,34 @@ def generate_tools() -> None:
     else:
         success(summary)
         flush_summary()
+
+
+def generate_tools() -> None:
+    """Generate all tool-specific directories and files.
+
+    `agents/.agent-tools.yml` gates per-tool emission. When the file
+    is missing, every tool is emitted (preserves test fixtures and
+    pre-gating behaviour). See `_active_tools()` and `_tool_active()`.
+
+    Honours `projection.mode` (ADR-040): `legacy-all` (default) projects the
+    full surface; `scoped` projects only the active profile + packs. A failed
+    scoped projection restores the full (legacy-all) tree so the host tool is
+    never left with a partial set, then re-raises.
+    """
+    cmd_slugs, skill_names = _resolve_active_predicates()
+    scoped = cmd_slugs is not None
+    try:
+        _generate_tools_inner(cmd_slugs, skill_names)
+    except Exception:
+        if scoped:
+            info("  ⚠️  scoped projection failed — restoring full (legacy-all) projection")
+            _generate_tools_inner(None, None)
+        raise
+    if not scoped:
+        info(
+            "  ℹ️  Profile mode available — focused surface. "
+            "Run `agent-config use --profile=developer`."
+        )
 
 
 # ── .augment/ projection ──────────────────────────────────────────────

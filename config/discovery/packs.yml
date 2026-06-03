@@ -1,99 +1,134 @@
-# Discovery packs — closed vocabulary
+# Discovery packs — closed vocabulary + capability-pack registry
 #
-# Source of truth: docs/decisions/ADR-013-discovery-frontmatter-contract.md §packs
-# Amendments require an ADR-013 amendment in the same PR.
-# `requires_hint` is advisory metadata only; runtime does NOT act on it.
-# `cluster: <language-id>` is advisory too (road-to-wizard-ux-improvements
-#   § Phase 4): it groups a framework pack under a language tile in the setup
-#   wizard's pack step (e.g. laravel → php, react → typescript). The value must
-#   be a known pack id. Like `requires_hint`, the installer does NOT act on it.
-# Lint: scripts/lint_discovery_vocabulary.py
+# Source of truth (id vocabulary): docs/decisions/ADR-013-discovery-frontmatter-contract.md §packs
+# Amendments to the id set require an ADR-013 amendment in the same PR.
+#
+# Capability-pack fields (`domain`, `size_class`, `requires`, `suggests`) are
+# governed by docs/contracts/capability-packs.md (6.0.0-B Phase 0). They are
+# REQUIRED for every in-use pack (≥1 referencing artefact) and ABSENT on
+# reserved vocabulary ids that no artefact carries yet.
+#
+# `requires` is the hard dependency graph (transitive, acyclic) the resolver
+#   expands. It supersedes the legacy `requires_hint` name; consumers read
+#   `requires` and fall back to `requires_hint`. The manifest emits both during
+#   the deprecation window.
+# `suggests` is the soft companion graph (one-hop, advisory, never auto-installed).
+# `size_class` is the per-pack VISIBLE-command budget input read by the 6.0.0-C
+#   budget lint (core ≤8 · small ≤2 · medium ≤5 · large ≤8 · platform ≤10).
+# `domain` is the single primary vertical (distinct from the `workspaces` list).
+# `cluster: <language-id>` is advisory wizard grouping (road-to-wizard-ux-improvements
+#   § Phase 4); the value must be a known pack id. The installer does NOT act on it.
+# Lint: scripts/lint_discovery_vocabulary.py (vocab + graph) ·
+#       scripts/lint_discovery_manifest.py (size_class ↔ artefact_count determinism)
 
 - id: engineering-base
   label: Engineering Base
   description: Framework-neutral engineering hygiene — git, tests, reviews.
   workspaces: [engineering]
   trust_level_default: core
+  domain: engineering
+  size_class: core
 
 - id: php
   label: PHP
   description: PHP-language patterns (framework-free).
   workspaces: [engineering]
-  requires_hint: [engineering-base]
+  requires: [engineering-base]
   trust_level_default: professional
+  domain: engineering
+  size_class: medium
 
 - id: laravel
   label: Laravel
   description: Laravel framework patterns; depends on PHP at the artefact level.
   workspaces: [engineering]
-  requires_hint: [php, engineering-base]
+  requires: [php, engineering-base]
   cluster: php
   trust_level_default: professional
+  domain: engineering
+  size_class: medium
 
 - id: symfony
   label: Symfony
   description: Symfony framework patterns; depends on PHP at the artefact level.
   workspaces: [engineering]
-  requires_hint: [php, engineering-base]
+  requires: [php, engineering-base]
   cluster: php
   trust_level_default: professional
+  domain: engineering
+  size_class: medium
 
 - id: javascript
   label: JavaScript
   description: JavaScript-language patterns.
   workspaces: [engineering]
-  requires_hint: [engineering-base]
+  requires: [engineering-base]
   trust_level_default: professional
 
 - id: typescript
   label: TypeScript
   description: TypeScript-language patterns.
   workspaces: [engineering]
-  requires_hint: [javascript, engineering-base]
+  requires: [javascript, engineering-base]
   trust_level_default: professional
+  domain: engineering
+  size_class: medium
 
 - id: react
   label: React
   description: React framework patterns.
   workspaces: [engineering]
-  requires_hint: [javascript, engineering-base]
+  requires: [javascript, engineering-base]
   cluster: typescript
   trust_level_default: professional
+  domain: engineering
+  size_class: medium
 
 - id: nextjs
   label: Next.js
   description: Next.js framework patterns.
   workspaces: [engineering]
-  requires_hint: [react, typescript, engineering-base]
+  requires: [react, typescript, engineering-base]
   cluster: typescript
   trust_level_default: professional
+  domain: engineering
+  size_class: medium
 
 - id: python
   label: Python
   description: Python-language patterns.
   workspaces: [engineering]
-  requires_hint: [engineering-base]
+  requires: [engineering-base]
   trust_level_default: professional
+  domain: engineering
+  size_class: small
 
 - id: product-basic
   label: Product Basic
   description: Core PO/PM artefacts (ticket refinement, AC, estimation).
   workspaces: [product]
-  requires_hint: [engineering-base]
+  requires: [engineering-base]
+  suggests: [product-discovery]
   trust_level_default: professional
+  domain: product
+  size_class: medium
 
 - id: product-discovery
   label: Product Discovery
   description: JTBD, interviews, VoC, hypothesis testing.
   workspaces: [product]
-  requires_hint: [product-basic]
+  requires: [product-basic]
   trust_level_default: professional
+  domain: product
+  size_class: medium
 
 - id: finance-basic
   label: Finance Basic
   description: Cashflow, runway, basic forecasting.
   workspaces: [finance, founder]
   trust_level_default: professional
+  domain: finance
+  size_class: medium
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: runway-cognition
@@ -103,14 +138,19 @@
   label: Finance Advanced
   description: DCF, scenario modelling, comp banding.
   workspaces: [finance]
-  requires_hint: [finance-basic]
+  requires: [finance-basic]
   trust_level_default: core
+  domain: finance
+  size_class: medium
 
 - id: gtm-sales
   label: GTM — Sales
   description: Pipeline, MEDDIC, forecast accuracy.
   workspaces: [gtm]
+  suggests: [gtm-marketing]
   trust_level_default: professional
+  domain: gtm
+  size_class: medium
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: deal-qualification-meddic
@@ -120,13 +160,18 @@
   label: GTM — Marketing
   description: Positioning, messaging, editorial, content funnel.
   workspaces: [gtm, founder]
+  suggests: [gtm-sales]
   trust_level_default: professional
+  domain: gtm
+  size_class: medium
 
 - id: ops-people
   label: Operations — People
   description: Hiring loops, onboarding programs, comp banding.
   workspaces: [ops]
   trust_level_default: professional
+  domain: ops
+  size_class: medium
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: one-on-one-cadence
@@ -137,6 +182,8 @@
   description: Vision, fundraising narrative, competitive moat.
   workspaces: [founder]
   trust_level_default: core
+  domain: founder
+  size_class: medium
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: vision-articulation
@@ -159,6 +206,8 @@
   description: AI video pipeline.
   workspaces: [small-business]
   trust_level_default: experimental
+  domain: media
+  size_class: large
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: scene-expander
@@ -169,6 +218,8 @@
   description: Non-essential social/fun workflows (prediction-pool tips, etc.).
   workspaces: [small-business]
   trust_level_default: experimental
+  domain: fun
+  size_class: small
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: prediction-pool-optimizer
@@ -179,3 +230,6 @@
   description: Artefacts that maintain this package (agent-config itself).
   workspaces: [agent-config-maintainer]
   trust_level_default: core
+  domain: meta
+  size_class: core
+  always_on: true   # default pack — resolver includes it in every projection regardless of profile/workspace

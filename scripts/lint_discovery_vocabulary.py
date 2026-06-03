@@ -52,6 +52,44 @@ PROFILE_ID_RESERVED: frozenset[str] = frozenset({
     "founder", "developer", "content_creator", "agency", "finance", "ops",
 })
 
+# Capability-pack size classes (docs/contracts/capability-packs.md).
+SIZE_CLASSES: frozenset[str] = frozenset({
+    "core", "small", "medium", "large", "platform",
+})
+
+
+def _requires_of(pk: dict[str, Any]) -> list[str]:
+    """Canonical ``requires`` edges, falling back to legacy ``requires_hint``."""
+    return list(pk.get("requires") or pk.get("requires_hint") or [])
+
+
+def _detect_requires_cycle(packs: list[dict[str, Any]]) -> list[str] | None:
+    """Return a node cycle in the ``requires`` graph, or None if acyclic."""
+    graph = {pk.get("id"): _requires_of(pk) for pk in packs}
+    WHITE, GREY, BLACK = 0, 1, 2
+    color = {pid: WHITE for pid in graph}
+
+    def visit(node: str, path: list[str]) -> list[str] | None:
+        color[node] = GREY
+        for dep in graph.get(node, []):
+            if dep not in color:  # dangling — reported separately
+                continue
+            if color[dep] == GREY:
+                return path[path.index(dep):] + [dep]
+            if color[dep] == WHITE:
+                cyc = visit(dep, path + [dep])
+                if cyc:
+                    return cyc
+        color[node] = BLACK
+        return None
+
+    for pid in graph:
+        if color[pid] == WHITE:
+            cyc = visit(pid, [pid])
+            if cyc:
+                return cyc
+    return None
+
 
 def _load(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
@@ -98,9 +136,30 @@ def lint(quiet: bool) -> int:
         for wid in pk.get("workspaces", []) or []:
             if wid not in ws_ids:
                 errors.append(f"packs.yml '{pid}'.workspaces → unknown workspace '{wid}'")
-        for hint in pk.get("requires_hint", []) or []:
-            if hint not in pack_ids:
-                errors.append(f"packs.yml '{pid}'.requires_hint → unknown pack '{hint}'")
+        # requires / requires_hint (capability-packs.md): hard dependency edges.
+        for dep in _requires_of(pk):
+            if dep not in pack_ids:
+                errors.append(f"packs.yml '{pid}'.requires → unknown pack '{dep}'")
+        # suggests (capability-packs.md): soft companion edges.
+        for sug in pk.get("suggests", []) or []:
+            if sug not in pack_ids:
+                errors.append(f"packs.yml '{pid}'.suggests → unknown pack '{sug}'")
+            elif sug == pid:
+                errors.append(f"packs.yml '{pid}'.suggests → must not reference itself")
+        # size_class (capability-packs.md): closed enum when present.
+        sc = pk.get("size_class")
+        if sc is not None and sc not in SIZE_CLASSES:
+            errors.append(
+                f"packs.yml '{pid}'.size_class → invalid '{sc}' (allowed: {sorted(SIZE_CLASSES)})"
+            )
+        # domain + size_class are co-required: both present or both absent.
+        has_domain = pk.get("domain") is not None
+        has_size = sc is not None
+        if has_domain != has_size:
+            errors.append(
+                f"packs.yml '{pid}': domain and size_class are co-required — "
+                f"got domain={has_domain}, size_class={has_size}"
+            )
         # cluster (road-to-wizard-ux-improvements § Phase 4): advisory wizard
         # grouping; the value must be a known pack id and not self-referential.
         cluster = pk.get("cluster")
@@ -142,6 +201,11 @@ def lint(quiet: bool) -> int:
     overlap_profile = pack_ids & PROFILE_ID_RESERVED
     if overlap_profile:
         errors.append(f"pack ids collide with profile.id values: {sorted(overlap_profile)}")
+
+    # 6. requires graph must be acyclic (capability-packs.md graph invariant).
+    cycle = _detect_requires_cycle(packs)
+    if cycle:
+        errors.append(f"packs.yml requires graph has a cycle: {' → '.join(cycle)}")
 
     if errors:
         for e in errors:

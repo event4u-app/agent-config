@@ -1,6 +1,10 @@
 ---
 model_tier: high
 name: review-changes
+pack: engineering-base
+intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture"
+routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens]
+replaces: []
 tier: 1
 skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts

@@ -1,6 +1,7 @@
 ---
 model_tier: high
 name: review-routing
+pack: meta
 tier: 2
 skills: [review-routing, reviewer-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml

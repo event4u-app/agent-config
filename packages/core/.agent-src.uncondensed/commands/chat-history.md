@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: chat-history
+pack: meta
 tier: 2
 description: Chat-history orchestrator — routes to show, import, learn
 cluster: chat-history

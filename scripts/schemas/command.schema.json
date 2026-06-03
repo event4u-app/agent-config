@@ -46,7 +46,37 @@
     "cluster": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
-      "description": "Locked verb cluster this command belongs to. See docs/contracts/command-clusters.md."
+      "description": "Locked verb cluster this command belongs to (ADR-003 invocation/colon-syntax namespace). See docs/contracts/command-clusters.md. Distinct from `pack` (ownership/surfacing unit) and `packs` (additive discovery axis)."
+    },
+    "pack": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Canonical OWNER capability pack (docs/contracts/capability-packs.md) — the single ownership/surfacing unit used by the per-pack visible-command budget (6.0.0-C). Orthogonal to `cluster` (invocation namespace) and `packs` (additive discovery tags); the owner need not appear in `packs`. Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/packs.yml."
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "6.0.0-C Phase 2 routing metadata. One-line existence justification: the single user intent this command serves (e.g. 'Implement a ticket end-to-end from its tracker id'). REQUIRED on every visible command (tier 0/1), enforced by scripts/lint_command_routing.py; optional on internal (tier 2) commands. The human-readable answer to 'why does this command exist?'"
+    },
+    "routes_to": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)?$"
+      },
+      "description": "6.0.0-C Phase 2 routing metadata. The data backbone the routing-eval lint checks against: the skill slug(s), cluster sub-command(s), or command(s) this command routes the intent to (e.g. ['refine-ticket', 'feature-planning'] or ['fix:ci']). REQUIRED on every visible command (tier 0/1), enforced by scripts/lint_command_routing.py; optional on internal commands."
+    },
+    "replaces": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)?$"
+      },
+      "description": "6.0.0-C Phase 2 routing metadata. The alias / deprecation link: prior command name(s) or alias(es) this command absorbs or supersedes. Empty array `[]` when the command replaces nothing (the common case). REQUIRED-as-a-key on every visible command (tier 0/1) so the routing surface is explicit, enforced by scripts/lint_command_routing.py; optional on internal commands. Distinct from `superseded_by` (set on the OLD shim pointing forward); `replaces` is set on the NEW canonical command pointing back."
     },
     "type": {
       "type": "string",

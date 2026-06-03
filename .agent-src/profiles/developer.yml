@@ -2,6 +2,11 @@
 # Schema: docs/contracts/profile-system.md
 profile:
   id: developer
+  # Base capability packs for scoped projection (ADR-040 / capability-packs.md).
+  # `meta` is always_on (seeded by the resolver). Language/framework packs
+  # (laravel, php, react, …) are added per session via the runtime overlay.
+  packs:
+    - engineering-base
   audience:
     label: "IC engineer"
     readme_anchor: "developer"

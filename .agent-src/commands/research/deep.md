@@ -1,6 +1,7 @@
 ---
 model_tier: high
 name: research:deep
+pack: product-discovery
 tier: 2
 cluster: research
 sub: deep

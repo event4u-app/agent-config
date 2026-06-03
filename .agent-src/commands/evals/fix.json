@@ -1,0 +1,34 @@
+{
+  "command": "fix",
+  "intent": "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability",
+  "cases": [
+    {
+      "prompt": "fix the failing CI",
+      "expected": "fix"
+    },
+    {
+      "prompt": "fix the broken cross-references",
+      "expected": "fix"
+    },
+    {
+      "prompt": "address the review comments on my PR",
+      "expected": "fix"
+    },
+    {
+      "prompt": "repair the database seeder",
+      "expected": "fix"
+    },
+    {
+      "prompt": "fix the portability lint failures",
+      "expected": "fix"
+    },
+    {
+      "prompt": "the pipeline is red, sort it out",
+      "expected": "fix"
+    },
+    {
+      "prompt": "commit my current changes",
+      "expected": "commit"
+    }
+  ]
+}

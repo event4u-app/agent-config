@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: agents:optimize
+pack: meta
 tier: 2
 cluster: agents
 sub: optimize

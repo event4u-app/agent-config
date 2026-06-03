@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: challenge-me:vision
+pack: meta
 tier: 2
 cluster: challenge-me
 sub: vision

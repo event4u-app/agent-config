@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: orchestrate
+pack: meta
 tier: 2
 cluster: orchestrate
 skills: [subagent-orchestration]

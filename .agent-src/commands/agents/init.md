@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: agents:init
+pack: meta
 tier: 2
 cluster: agents
 sub: init

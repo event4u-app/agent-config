@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: post-as:me
+pack: gtm-marketing
 tier: 2
 cluster: post-as
 sub: me

@@ -1,9 +1,11 @@
 ---
 model_tier: high
 name: agents:user-review
+pack: meta
 tier: 2
 cluster: agents
 sub: user
+skills: [agents]
 description: List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 suggestion:
   eligible: true

@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: context
+pack: meta
 tier: 2
 description: Context orchestrator — routes to create, refactor
 cluster: context

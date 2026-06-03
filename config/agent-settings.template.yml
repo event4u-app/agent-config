@@ -34,6 +34,25 @@ agent_config_version: ""
 profile:
   id: developer
 
+# --- Pack-scoped projection (ADR-040, 6.0.0-B) ---
+#
+# Whether the per-tool projector writes EVERY artefact into the host-tool
+# trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs'
+# artefacts. See docs/decisions/ADR-040 and docs/contracts/capability-packs.md.
+#
+# legacy-all = (DEFAULT, non-breaking) project the full surface, exactly as
+#              5.x did. An `npm update` to 6.0.0 changes nothing here.
+# scoped     = project only the active profile's `packs` unioned with the
+#              runtime.active_packs overlay, expanded over the `requires`
+#              graph. Opt in with `agent-config use --profile=<id>`.
+#
+# Scoping is opt-in by THIS key alone — never inferred from profile.id (every
+# install has `developer` by default). A failed scoped projection restores the
+# full tree. The committed plugin marketplace (.claude-plugin/) and the Augment
+# tree (.augment/) always project the full set in 6.0.0.
+projection:
+  mode: legacy-all
+
 # --- Cost profile ---
 #
 # Master switch that controls which rule tiers load each session.

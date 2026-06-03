@@ -1,7 +1,8 @@
 ---
 model_tier: medium
 name: sync-gitignore
-tier: 1
+pack: engineering-base
+tier: 2
 cluster: sync-gitignore
 skills: [sync-gitignore]
 description: Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing

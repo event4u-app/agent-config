@@ -1,6 +1,10 @@
 ---
 model_tier: medium
 name: feature
+pack: engineering-base
+intent: "Feature-workflow dispatcher — explore, plan, refactor, roadmap, dev"
+routes_to: [feature:explore, feature:plan, feature:refactor, feature:roadmap, feature:dev]
+replaces: []
 tier: 1
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 cluster: feature

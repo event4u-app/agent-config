@@ -1,6 +1,10 @@
 ---
 model_tier: medium
 name: memory
+pack: meta
+intent: "Manage the agent memory layer — add, load, promote, propose"
+routes_to: [memory:add, memory:load, memory:promote, memory:propose]
+replaces: []
 tier: 1
 description: Memory orchestrator — routes to add, load, mine-session, promote, propose
 cluster: memory

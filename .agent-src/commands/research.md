@@ -1,6 +1,7 @@
 ---
 model_tier: high
 name: research
+pack: product-discovery
 tier: 2
 cluster: research
 description: "Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans."

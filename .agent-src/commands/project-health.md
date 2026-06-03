@@ -1,7 +1,8 @@
 ---
 model_tier: medium
 name: project-health
-tier: 1
+pack: engineering-base
+tier: 2
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 suggestion:

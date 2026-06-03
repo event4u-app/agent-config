@@ -1,0 +1,34 @@
+{
+  "command": "agent-status",
+  "intent": "Report the current agent session state, mode, and progress at a glance",
+  "cases": [
+    {
+      "prompt": "how many messages have we exchanged so far",
+      "expected": "agent-status"
+    },
+    {
+      "prompt": "what's my current token cost on this conversation",
+      "expected": "agent-status"
+    },
+    {
+      "prompt": "show the session stats and progress",
+      "expected": "agent-status"
+    },
+    {
+      "prompt": "where are we on the task progress right now",
+      "expected": "agent-status"
+    },
+    {
+      "prompt": "what mode am I in and how far along are we",
+      "expected": "agent-status"
+    },
+    {
+      "prompt": "give me a quick status of this session",
+      "expected": "agent-status"
+    },
+    {
+      "prompt": "summarize this so I can start fresh elsewhere",
+      "expected": "agent-handoff"
+    }
+  ]
+}

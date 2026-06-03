@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: fix:pr-developer-comments
+pack: engineering-base
 tier: 2
 cluster: fix
 sub: pr-developer-comments

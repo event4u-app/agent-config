@@ -1,6 +1,7 @@
 ---
 model_tier: high
 name: judge:on-diff
+pack: engineering-base
 tier: 2
 cluster: judge
 sub: on-diff

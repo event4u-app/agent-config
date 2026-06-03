@@ -1,0 +1,34 @@
+{
+  "command": "commit",
+  "intent": "Stage and commit changes in logical chunks with a Conventional Commits message",
+  "cases": [
+    {
+      "prompt": "commit my changes",
+      "expected": "commit"
+    },
+    {
+      "prompt": "save this work to git",
+      "expected": "commit"
+    },
+    {
+      "prompt": "create commits for everything I changed",
+      "expected": "commit"
+    },
+    {
+      "prompt": "stage and commit these edits with a proper message",
+      "expected": "commit"
+    },
+    {
+      "prompt": "split my working tree into logical commits",
+      "expected": "commit"
+    },
+    {
+      "prompt": "commit das jetzt mit conventional commits",
+      "expected": "commit"
+    },
+    {
+      "prompt": "open a pull request for this branch",
+      "expected": "create-pr"
+    }
+  ]
+}

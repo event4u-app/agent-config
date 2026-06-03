@@ -399,13 +399,31 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncondensed/commands/implement-ticket.md": {
+    ".agent-src.uncondensed/commands/image.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/image/analyse.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncondensed/commands/install-via-agent.md": {
+    ".agent-src.uncondensed/commands/image/create.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/image/verify.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/implement-ticket.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -444,6 +462,12 @@
     ".agent-src.uncondensed/commands/knowledge.md": {
       "kind": "command",
       "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/knowledge/cross-repo.md": {
+      "kind": "command",
+      "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
@@ -621,7 +645,37 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/commands/prediction-pool.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/commands/prepare-for-review.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/profile.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/profile/activate.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/profile/deactivate.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/profile/show.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -729,6 +783,30 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/commands/skill.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/skill/preview.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/skills.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/skills/discover.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/commands/sync-agent-settings.md": {
       "kind": "command",
       "rule_type": null,
@@ -790,6 +868,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/commands/video/from-script.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/commands/video/from-song.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -1265,12 +1349,6 @@
       ],
       "load_context_eager": []
     },
-    ".agent-src.uncondensed/rules/telegraph-speak.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncondensed/rules/cli-output-handling.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -1433,6 +1511,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/linked-projects-onboarding-gate.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/low-impact-corpus-privacy-floor.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -1446,6 +1530,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/media-governance-routing.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/media-sync-ground-truth.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1466,7 +1556,9 @@
     ".agent-src.uncondensed/rules/model-recommendation.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        "../contexts/model-recommendations.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/no-attribution-footers.md": {
@@ -1478,6 +1570,18 @@
     ".agent-src.uncondensed/rules/no-cheap-questions.md": {
       "kind": "rule",
       "rule_type": "always",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/no-pr-progress-comments.md": {
+      "kind": "rule",
+      "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
@@ -1613,6 +1717,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/symfony-routing.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/telegraph-speak.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -2168,6 +2278,24 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/image-analyser/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/image-analyser/canon-spec.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/image-creator/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/incident-commander/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2390,6 +2518,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/module-management/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2535,6 +2669,24 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/positioning-strategy/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/ev-fixtures.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/odds-and-bonus.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2817,6 +2969,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/skill-writing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/song-to-script/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -3462,6 +3620,13 @@
     {
       "source": ".agent-src.uncondensed/commands/challenge-me/vision.md",
       "target": ".agent-src.uncondensed/commands/roadmap/create.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/challenge-me/vision.md",
+      "target": ".agent-src.uncondensed/contexts/authority/scope-mechanics.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -4202,6 +4367,90 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/commands/image.md",
+      "target": ".agent-src.uncondensed/commands/image.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image.md",
+      "target": ".agent-src.uncondensed/rules/media-governance-routing.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image.md",
+      "target": ".agent-src.uncondensed/rules/provider-lifecycle-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/analyse.md",
+      "target": ".agent-src.uncondensed/commands/image/analyse.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/analyse.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/analyse.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/create.md",
+      "target": ".agent-src.uncondensed/commands/image/create.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/create.md",
+      "target": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/verify.md",
+      "target": ".agent-src.uncondensed/commands/image/verify.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/verify.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/image/verify.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/commands/implement-ticket.md",
       "target": ".agent-src.uncondensed/commands/commit.md",
       "type": "READ_ONLY",
@@ -4279,13 +4528,6 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncondensed/commands/install-via-agent.md",
-      "target": ".agent-src.uncondensed/commands/install-via-agent.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
       "source": ".agent-src.uncondensed/commands/jira-ticket.md",
       "target": ".agent-src.uncondensed/commands/jira-ticket.md",
       "type": "WRITE",
@@ -4337,6 +4579,13 @@
     {
       "source": ".agent-src.uncondensed/commands/knowledge.md",
       "target": ".agent-src.uncondensed/commands/knowledge.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/knowledge/cross-repo.md",
+      "target": ".agent-src.uncondensed/commands/knowledge/cross-repo.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -4776,8 +5025,99 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/commands/prediction-pool.md",
+      "target": ".agent-src.uncondensed/commands/prediction-pool.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/prediction-pool.md",
+      "target": ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/commands/prepare-for-review.md",
       "target": ".agent-src.uncondensed/commands/prepare-for-review.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile.md",
+      "target": ".agent-src.uncondensed/commands/mode.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile.md",
+      "target": ".agent-src.uncondensed/commands/profile.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/activate.md",
+      "target": ".agent-src.uncondensed/commands/profile/activate.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/activate.md",
+      "target": ".agent-src.uncondensed/commands/profile/deactivate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/activate.md",
+      "target": ".agent-src.uncondensed/commands/profile/show.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/deactivate.md",
+      "target": ".agent-src.uncondensed/commands/profile/activate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/deactivate.md",
+      "target": ".agent-src.uncondensed/commands/profile/deactivate.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/deactivate.md",
+      "target": ".agent-src.uncondensed/commands/profile/show.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/show.md",
+      "target": ".agent-src.uncondensed/commands/profile/activate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/show.md",
+      "target": ".agent-src.uncondensed/commands/profile/deactivate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/profile/show.md",
+      "target": ".agent-src.uncondensed/commands/profile/show.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -5085,21 +5425,7 @@
     },
     {
       "source": ".agent-src.uncondensed/commands/roadmap/create.md",
-      "target": ".agent-src.uncondensed/commands/roadmap/process-full.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/commands/roadmap/create.md",
-      "target": ".agent-src.uncondensed/commands/roadmap/process-phase.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/commands/roadmap/create.md",
-      "target": ".agent-src.uncondensed/commands/roadmap/process-step.md",
+      "target": ".agent-src.uncondensed/contexts/authority/scope-mechanics.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5268,6 +5594,34 @@
     {
       "source": ".agent-src.uncondensed/commands/set-cost-profile.md",
       "target": ".agent-src.uncondensed/commands/set-cost-profile.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/skill.md",
+      "target": ".agent-src.uncondensed/commands/skill.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/skill/preview.md",
+      "target": ".agent-src.uncondensed/commands/skill/preview.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/skills.md",
+      "target": ".agent-src.uncondensed/commands/skills.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/skills/discover.md",
+      "target": ".agent-src.uncondensed/commands/skills/discover.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -5450,6 +5804,69 @@
     {
       "source": ".agent-src.uncondensed/commands/video/from-script.md",
       "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/commands/video/from-script.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/commands/video/from-song.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/commands/video/scene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/commands/video/stitch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/rules/media-governance-routing.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/rules/provider-lifecycle-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/commands/video/from-song.md",
+      "target": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5680,7 +6097,21 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/authority/scope-mechanics.md",
+      "target": ".agent-src.uncondensed/commands/challenge-me/vision.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/authority/scope-mechanics.md",
       "target": ".agent-src.uncondensed/commands/create-pr.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/authority/scope-mechanics.md",
+      "target": ".agent-src.uncondensed/commands/roadmap/create.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6009,6 +6440,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -6024,6 +6462,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
       "target": ".agent-src.uncondensed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/autonomy-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/no-cheap-questions.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6051,6 +6496,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/authority/commit-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
       "target": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
       "type": "WRITE",
       "via": "self",
@@ -6059,6 +6511,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
       "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6869,27 +7328,6 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncondensed/rules/telegraph-speak.md",
-      "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/telegraph-speak.md",
-      "target": ".agent-src.uncondensed/rules/telegraph-speak.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/telegraph-speak.md",
-      "target": ".agent-src.uncondensed/skills/condense-memory/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncondensed/rules/cli-output-handling.md",
       "target": ".agent-src.uncondensed/rules/cli-output-handling.md",
       "type": "WRITE",
@@ -6951,6 +7389,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/commit-conventions.md",
+      "target": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/commit-policy.md",
@@ -7429,6 +7874,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/linked-projects-onboarding-gate.md",
+      "target": ".agent-src.uncondensed/rules/linked-projects-onboarding-gate.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/rules/low-impact-corpus-privacy-floor.md",
       "target": ".agent-src.uncondensed/rules/low-impact-corpus-privacy-floor.md",
       "type": "WRITE",
@@ -7450,6 +7902,41 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "target": ".agent-src.uncondensed/commands/video/from-song.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "target": ".agent-src.uncondensed/rules/media-governance-routing.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "target": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/media-sync-ground-truth.md",
+      "target": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
       "target": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
       "type": "WRITE",
@@ -7462,6 +7949,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/model-recommendation.md",
+      "target": "../contexts/model-recommendations.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/model-recommendation.md",
+      "target": ".agent-src.uncondensed/contexts/model-recommendations.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/model-recommendation.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/model-recommendation.md",
@@ -7493,6 +8001,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/no-attribution-footers.md",
+      "target": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-attribution-footers.md",
       "target": ".agent-src.uncondensed/rules/scope-control.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -7518,6 +8033,97 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "target": ".agent-src.uncondensed/rules/commit-conventions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "target": ".agent-src.uncondensed/rules/no-attribution-footers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "target": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "target": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/commands/create-pr.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/commands/fix/pr-bot-comments.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/commands/fix/pr-comments.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/commands/fix/pr-developer-comments.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/rules/no-attribution-footers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-pr-progress-comments.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/no-roadmap-references.md",
@@ -7730,6 +8336,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "target": ".agent-src.uncondensed/skills/roadmap-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/role-mode-adherence.md",
       "target": ".agent-src.uncondensed/commands/mode.md",
       "type": "READ_ONLY",
@@ -7889,6 +8509,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/telegraph-speak.md",
+      "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/telegraph-speak.md",
+      "target": ".agent-src.uncondensed/rules/telegraph-speak.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/telegraph-speak.md",
+      "target": ".agent-src.uncondensed/skills/condense-memory/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/think-before-action.md",
@@ -8844,14 +9485,14 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/condense-memory/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/telegraph-speak.md",
+      "target": ".agent-src.uncondensed/rules/role-mode-adherence.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/condense-memory/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/role-mode-adherence.md",
+      "target": ".agent-src.uncondensed/rules/telegraph-speak.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -9893,6 +10534,104 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "target": ".agent-src.uncondensed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "target": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-analyser/canon-spec.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/image-creator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/video-director/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/incident-commander/SKILL.md",
       "target": ".agent-src.uncondensed/skills/incident-commander/SKILL.md",
       "type": "WRITE",
@@ -10586,6 +11325,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/module-management/SKILL.md",
       "target": ".agent-src.uncondensed/commands/agents/init.md",
       "type": "READ_ONLY",
@@ -11074,6 +11820,48 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md",
+      "target": ".agent-src.uncondensed/commands/prediction-pool.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/ev-fixtures.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/odds-and-bonus.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/ev-fixtures.md",
+      "target": ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/ev-fixtures.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/odds-and-bonus.md",
+      "target": ".agent-src.uncondensed/skills/prediction-pool-optimizer/reference/odds-and-bonus.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/privacy-review/SKILL.md",
@@ -12180,6 +12968,41 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "target": ".agent-src.uncondensed/commands/video/from-song.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/scene-expander/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/video-director/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/sql-writing/SKILL.md",

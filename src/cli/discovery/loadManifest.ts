@@ -72,6 +72,12 @@ export interface DiscoveryArtefact {
     readonly lifecycle: string;
     readonly trust: DiscoveryArtefactTrust;
     readonly install: DiscoveryArtefactInstall;
+    // 6.0.0-C command routing metadata (present on `category: 'command'`).
+    readonly pack?: string;
+    readonly tier?: number;
+    readonly intent?: string;
+    readonly routes_to?: readonly string[];
+    readonly replaces?: readonly string[];
 }
 
 export interface DiscoveryUnassigned {

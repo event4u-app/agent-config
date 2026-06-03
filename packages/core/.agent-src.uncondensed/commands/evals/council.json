@@ -1,0 +1,34 @@
+{
+  "command": "council",
+  "intent": "Poll external AIs for a neutral second opinion (pr/design/optimize/analysis lenses)",
+  "cases": [
+    {
+      "prompt": "get a second opinion from another model on this plan",
+      "expected": "council"
+    },
+    {
+      "prompt": "cross-check this roadmap with an external AI",
+      "expected": "council"
+    },
+    {
+      "prompt": "run a devil's advocate review on my design doc",
+      "expected": "council"
+    },
+    {
+      "prompt": "poll openai and anthropic on this diff",
+      "expected": "council"
+    },
+    {
+      "prompt": "I want an outside critique of this architecture proposal",
+      "expected": "council"
+    },
+    {
+      "prompt": "ask other models whether this approach holds up",
+      "expected": "council"
+    },
+    {
+      "prompt": "review my local changes before I open a PR",
+      "expected": "review-changes"
+    }
+  ]
+}

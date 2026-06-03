@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: context:create
+pack: meta
 tier: 2
 cluster: context
 sub: create

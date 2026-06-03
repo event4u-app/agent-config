@@ -1,0 +1,34 @@
+{
+  "command": "agents",
+  "intent": "Manage the AGENTS.md file family — init, optimize, audit, user persona",
+  "cases": [
+    {
+      "prompt": "bootstrap the agent layer for this repo",
+      "expected": "agents"
+    },
+    {
+      "prompt": "optimize my AGENTS.md file",
+      "expected": "agents"
+    },
+    {
+      "prompt": "run a health check on the agent infrastructure",
+      "expected": "agents"
+    },
+    {
+      "prompt": "set up CLAUDE.md and copilot-instructions for this project",
+      "expected": "agents"
+    },
+    {
+      "prompt": "audit the AGENTS.md and tool stubs",
+      "expected": "agents"
+    },
+    {
+      "prompt": "configure my user persona for the agent layer",
+      "expected": "agents"
+    },
+    {
+      "prompt": "trim my installed skills to what this project needs",
+      "expected": "optimize"
+    }
+  ]
+}

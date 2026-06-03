@@ -1,6 +1,7 @@
 ---
 model_tier: high
 name: feature:refactor
+pack: engineering-base
 tier: 2
 cluster: feature
 sub: refactor

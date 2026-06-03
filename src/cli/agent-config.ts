@@ -24,6 +24,7 @@ import { shouldInitLaunchGui, buildInitGuiOptions } from './initRouting.js';
 import { runSettings } from './commands/settings.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
+import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
 import { logger } from './log/logger.js';
 import { REGISTRY } from './registry.js';
 
@@ -236,6 +237,28 @@ async function main(argv: readonly string[]): Promise<number> {
             process.exit(code);
         });
 
+    const commands = program
+        .command('commands')
+        .description('Inspect the command surface from the discovery manifest');
+    commands
+        .command('ls', { isDefault: true })
+        .description('List commands (command, pack, tier, visibility, intent)')
+        .option('--pack <id>', 'Restrict to one owning pack')
+        .option('--visible', 'Restrict to visible commands (tier 0/1)')
+        .option('--json', 'Emit machine-readable JSON')
+        .action((opts: { pack?: string; visible?: boolean; json?: boolean }) => {
+            // exitCode (not process.exit) — the JSON payload exceeds the
+            // 8 KiB pipe buffer; a hard exit truncates async stdout on macOS.
+            process.exitCode = runCommandsLs(opts);
+        });
+    commands
+        .command('explain <name>')
+        .description("Print a command's intent, routes_to, owning pack, and tier")
+        .option('--json', 'Emit machine-readable JSON')
+        .action((name: string, opts: { json?: boolean }) => {
+            process.exitCode = runCommandsExplain(name, opts);
+        });
+
     program
         .command('help')
         .description('Show help (delegates to Bash for --tier=1|all)')
@@ -268,10 +291,18 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'help'];
+    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
-        return 0;
+        // Actions that don't hard-exit signal failure via process.exitCode.
+        return typeof process.exitCode === 'number' ? process.exitCode : 0;
+    }
+
+    // `explain <command-name>` / `explain <cluster:sub>` → native command
+    // explanation (6.0.0-C Step 5b). The legacy decision-trace explain
+    // (`explain config|rule|route`) still delegates to Bash below.
+    if (head === 'explain' && looksLikeCommandTarget(argv[1])) {
+        return runCommandsExplain(argv[1] as string, { json: argv.includes('--json') });
     }
 
     // `init` is the install front-end: when the browser wizard can actually be
@@ -288,7 +319,14 @@ async function main(argv: readonly string[]): Promise<number> {
 }
 
 main(process.argv.slice(2))
-    .then((code) => { process.exit(code); })
+    .then((code) => {
+        // Flush queued async stdout before the hard exit — on macOS a pipe'd
+        // stdout is async and process.exit() truncates anything past the
+        // 8 KiB pipe buffer (e.g. `commands ls --json`). The empty write's
+        // callback fires only after every prior chunk reached the OS.
+        process.exitCode = code;
+        process.stdout.write('', () => process.exit(code));
+    })
     .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(message);

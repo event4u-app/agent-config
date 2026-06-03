@@ -1,9 +1,11 @@
 ---
 model_tier: medium
 name: fix:refs
+pack: engineering-base
 tier: 2
 cluster: fix
 sub: refs
+skills: [check-refs]
 description: Find and fix broken cross-references in .augment/ and agents/ files
 suggestion:
   eligible: false

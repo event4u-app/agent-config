@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: knowledge:list
+pack: product-discovery
 tier: 2
 cluster: knowledge
 sub: list

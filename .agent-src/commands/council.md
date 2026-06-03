@@ -1,6 +1,10 @@
 ---
 model_tier: medium
 name: council
+pack: meta
+intent: "Poll external AIs for a neutral second opinion (pr/design/optimize/analysis lenses)"
+routes_to: [council:default, council:pr, council:design, council:analysis]
+replaces: []
 tier: 1
 description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
 cluster: council

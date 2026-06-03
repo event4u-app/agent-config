@@ -1,0 +1,34 @@
+{
+  "command": "create-pr",
+  "intent": "Open a pull request with a generated description and stripped attribution footers",
+  "cases": [
+    {
+      "prompt": "open a pull request for this branch",
+      "expected": "create-pr"
+    },
+    {
+      "prompt": "make a PR with a good description",
+      "expected": "create-pr"
+    },
+    {
+      "prompt": "create the PR from my current branch",
+      "expected": "create-pr"
+    },
+    {
+      "prompt": "draft a pull request for the work I just pushed",
+      "expected": "create-pr"
+    },
+    {
+      "prompt": "raise a PR against main with a summary",
+      "expected": "create-pr"
+    },
+    {
+      "prompt": "erstelle einen pull request für diesen branch",
+      "expected": "create-pr"
+    },
+    {
+      "prompt": "commit these changes first",
+      "expected": "commit"
+    }
+  ]
+}

@@ -112,6 +112,10 @@ tasks:
       - task: check-public-catalog-links
       - task: check-command-count
       - task: lint-no-new-atomic-commands
+      - task: lint-command-budget
+      - task: lint-command-verbs
+      - task: lint-command-routing
+      - task: lint-new-skill-gate
       - task: check-cluster-patterns
       - task: lint-rule-interactions
       - task: lint-load-context
@@ -154,6 +158,9 @@ tasks:
       - task: lint-projection-fidelity
       - task: generate-pack-manifests-check
       - task: lint-pack-boundaries
+      - task: validate-pack-yaml
+      - task: lint-pack-dependencies
+      - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
@@ -222,6 +229,10 @@ tasks:
       - task: check-public-catalog-links
       - task: check-command-count
       - task: lint-no-new-atomic-commands
+      - task: lint-command-budget
+      - task: lint-command-verbs
+      - task: lint-command-routing
+      - task: lint-new-skill-gate
       - task: check-cluster-patterns
       - task: lint-rule-interactions
       - task: lint-load-context
@@ -264,6 +275,9 @@ tasks:
       - task: lint-projection-fidelity
       - task: generate-pack-manifests-check
       - task: lint-pack-boundaries
+      - task: validate-pack-yaml
+      - task: lint-pack-dependencies
+      - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory

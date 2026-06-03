@@ -118,6 +118,14 @@ def _check_one(
         if bad:
             errs.append(f"{rel}: packs not in packs.yml: {bad}")
 
+    # `pack` (singular, capability-packs.md) — canonical owner. Optional;
+    # when present must be a single known pack id. Orthogonal to `packs`
+    # (the owner need not be among the discovery tags).
+    if "pack" in fm:
+        owner = fm["pack"]
+        if not isinstance(owner, str) or owner not in pack_ids:
+            errs.append(f"{rel}: pack `{owner}` not a known pack id in packs.yml")
+
     lc = fm["lifecycle"]
     if lc not in LIFECYCLES:
         errs.append(f"{rel}: lifecycle `{lc}` not in {sorted(LIFECYCLES)}")
