@@ -242,6 +242,19 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build discovery manifest (gitignored; cli-e2e reads it)
+        # `agent-config commands ls/explain` and the cli-e2e suite read
+        # dist/discovery/discovery-manifest.json — a generated artefact
+        # absent from CI checkouts. Built here with a provisioned Python
+        # (the macOS system python3 lacks pyyaml).
+        run: |
+          pip install --quiet pyyaml
+          python3 scripts/build_discovery_manifest.py --write --quiet
+
       - name: Install dependencies (hoists installer toolchain)
         run: npm ci
 
