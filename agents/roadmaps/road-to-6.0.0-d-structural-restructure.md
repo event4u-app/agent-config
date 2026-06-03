@@ -168,11 +168,11 @@ Phase 0, never after the moves.
 
 ## Phase 1: Laravel prototype + extraction proof
 
-- [ ] **Step 5:** Move ONE pack — `packages/pack-laravel/` → `src/domains/laravel/`
+- [x] **Step 5:** Move ONE pack — `packages/pack-laravel/` → `src/domains/laravel/`
   (commands to `laravel/<verb>/command.md`, its skills/rules to the flat
   `src/skills/` `src/rules/`), author its `pack.yaml` dependencies, update
   references to slugs. Validate the transitive hash gate end-to-end on this pack.
-- [ ] **Step 6:** **Extraction proof** — prove `src/domains/laravel/` + its
+- [x] **Step 6:** **Extraction proof** — prove `src/domains/laravel/` + its
   declared deps can be lifted into a standalone package whose own tests pass.
   This de-risks the monorepo collapse (Phase 3) by proving re-split stays
   possible. If extraction fails (cycles, missing shared code), halt and redesign

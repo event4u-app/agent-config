@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **502**
-- Edges (incl. self-WRITE): **1438**
+- Files indexed: **528**
+- Edges (incl. self-WRITE): **1533**
 
 ## READ_ONLY edges
 
@@ -52,6 +52,7 @@
 | `.agent-src.uncondensed/commands/challenge-me/vision.md` | `.agent-src.uncondensed/commands/optimize-prompt.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/challenge-me/vision.md` | `.agent-src.uncondensed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/challenge-me/vision.md` | `.agent-src.uncondensed/commands/roadmap/create.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/challenge-me/vision.md` | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/challenge-me/vision.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/challenge-me/with-docs.md` | `.agent-src.uncondensed/commands/challenge-me/vision.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/challenge-me/with-docs.md` | `.agent-src.uncondensed/commands/refine-ticket.md` | `body_link` | 1 |
@@ -111,6 +112,14 @@
 | `.agent-src.uncondensed/commands/ghostwriter/write.md` | `.agent-src.uncondensed/commands/post-as/ghostwriter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/ghostwriter/write.md` | `.agent-src.uncondensed/commands/post-as/me.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/grill-me.md` | `.agent-src.uncondensed/commands/challenge-me.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image.md` | `.agent-src.uncondensed/rules/media-governance-routing.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image.md` | `.agent-src.uncondensed/rules/provider-lifecycle-discipline.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image/analyse.md` | `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image/analyse.md` | `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image/create.md` | `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image/verify.md` | `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/image/verify.md` | `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/implement-ticket.md` | `.agent-src.uncondensed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/implement-ticket.md` | `.agent-src.uncondensed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/implement-ticket.md` | `.agent-src.uncondensed/commands/jira-ticket.md` | `body_link` | 1 |
@@ -156,6 +165,14 @@
 | `.agent-src.uncondensed/commands/post-as/me.md` | `.agent-src.uncondensed/commands/ghostwriter/write.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/post-as/me.md` | `.agent-src.uncondensed/commands/post-as.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/post-as/me.md` | `.agent-src.uncondensed/commands/post-as/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/prediction-pool.md` | `.agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile.md` | `.agent-src.uncondensed/commands/mode.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile/activate.md` | `.agent-src.uncondensed/commands/profile/deactivate.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile/activate.md` | `.agent-src.uncondensed/commands/profile/show.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile/deactivate.md` | `.agent-src.uncondensed/commands/profile/activate.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile/deactivate.md` | `.agent-src.uncondensed/commands/profile/show.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile/show.md` | `.agent-src.uncondensed/commands/profile/activate.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/profile/show.md` | `.agent-src.uncondensed/commands/profile/deactivate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/refine-ticket.md` | `.agent-src.uncondensed/commands/estimate-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/refine-ticket.md` | `.agent-src.uncondensed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/refine-ticket.md` | `.agent-src.uncondensed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -187,9 +204,7 @@
 | `.agent-src.uncondensed/commands/roadmap/ai-council.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/roadmap/ai-council.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/roadmap/ai-council.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/commands/roadmap/create.md` | `.agent-src.uncondensed/commands/roadmap/process-full.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/commands/roadmap/create.md` | `.agent-src.uncondensed/commands/roadmap/process-phase.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/commands/roadmap/create.md` | `.agent-src.uncondensed/commands/roadmap/process-step.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/roadmap/create.md` | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/roadmap/process-full.md` | `.agent-src.uncondensed/commands/roadmap.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/roadmap/process-full.md` | `.agent-src.uncondensed/commands/roadmap/process-phase.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/roadmap/process-full.md` | `.agent-src.uncondensed/commands/roadmap/process-step.md` | `body_link` | 1 |
@@ -224,6 +239,14 @@
 | `.agent-src.uncondensed/commands/video/from-script.md` | `.agent-src.uncondensed/commands/video/stitch.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/video/from-script.md` | `.agent-src.uncondensed/commands/video/storyboard.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/video/from-script.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/commands/video/from-script.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/commands/video/scene.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/commands/video/stitch.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/rules/media-governance-routing.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/rules/provider-lifecycle-discipline.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/video/from-song.md` | `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/video/scene.md` | `.agent-src.uncondensed/commands/video/from-script.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/video/scene.md` | `.agent-src.uncondensed/commands/video/stitch.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/video/scene.md` | `.agent-src.uncondensed/commands/video/storyboard.md` | `body_link` | 1 |
@@ -248,7 +271,9 @@
 | `.agent-src.uncondensed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/kernel-rule-edits.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/commands/challenge-me/vision.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/commands/create-pr.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/commands/roadmap/create.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
@@ -276,13 +301,17 @@
 | `.agent-src.uncondensed/contexts/execution/autonomy-examples.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-examples.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/contexts/execution/autonomy-detection.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncondensed/rules/security-sensitive-stop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
@@ -349,14 +378,13 @@
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `contexts/execution/autonomy-detection.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `contexts/execution/autonomy-examples.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `contexts/execution/autonomy-mechanics.md` | `load_context` | 1 |
-| `.agent-src.uncondensed/rules/telegraph-speak.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/telegraph-speak.md` | `.agent-src.uncondensed/skills/condense-memory/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/command-suggestion-policy.md` | `.agent-src.uncondensed/contexts/contracts/command-suggestion-flow.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/command-suggestion-policy.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/command-suggestion-policy.md` | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/command-suggestion-policy.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/command-suggestion-policy.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/command-suggestion-policy.md` | `contexts/contracts/command-suggestion-flow.md` | `load_context` | 1 |
+| `.agent-src.uncondensed/rules/commit-conventions.md` | `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/commit-policy.md` | `.agent-src.uncondensed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/commit-policy.md` | `.agent-src.uncondensed/commands/commit/in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/commit-policy.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
@@ -402,11 +430,30 @@
 | `.agent-src.uncondensed/rules/invite-challenge.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/invite-challenge.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/language-and-tone.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/commands/video/from-song.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/rules/media-governance-routing.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/model-recommendation.md` | `../contexts/model-recommendations.md` | `load_context` | 1 |
+| `.agent-src.uncondensed/rules/model-recommendation.md` | `.agent-src.uncondensed/contexts/model-recommendations.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/model-recommendation.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-attribution-footers.md` | `.agent-src.uncondensed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-attribution-footers.md` | `.agent-src.uncondensed/rules/commit-conventions.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-attribution-footers.md` | `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-attribution-footers.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `.agent-src.uncondensed/contexts/execution/cheap-question-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `.agent-src.uncondensed/rules/commit-conventions.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `.agent-src.uncondensed/rules/no-attribution-footers.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/commands/create-pr.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/commands/fix/pr-bot-comments.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/commands/fix/pr-comments.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/commands/fix/pr-developer-comments.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/rules/no-attribution-footers.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/augment-edit-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
@@ -426,6 +473,8 @@
 | `.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `.agent-src.uncondensed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
@@ -438,6 +487,8 @@
 | `.agent-src.uncondensed/rules/scope-control.md` | `contexts/authority/scope-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/strategy-safety-floor.md` | `.agent-src.uncondensed/skills/competitive-moat-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/strategy-safety-floor.md` | `.agent-src.uncondensed/skills/positioning-strategy/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/telegraph-speak.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/telegraph-speak.md` | `.agent-src.uncondensed/skills/condense-memory/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/think-before-action.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/think-before-action.md` | `contexts/communication/rules-auto/think-before-action-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/token-efficiency.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `body_link` | 1 |
@@ -532,8 +583,8 @@
 | `.agent-src.uncondensed/skills/competitive-positioning/SKILL.md` | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/competitive-positioning/SKILL.md` | `.agent-src.uncondensed/skills/stakeholder-tradeoff/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/competitive-positioning/SKILL.md` | `.agent-src.uncondensed/skills/upstream-contribute/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/condense-memory/SKILL.md` | `.agent-src.uncondensed/rules/telegraph-speak.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/condense-memory/SKILL.md` | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/condense-memory/SKILL.md` | `.agent-src.uncondensed/rules/telegraph-speak.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/condense-memory/SKILL.md` | `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/content-funnel-design/SKILL.md` | `.agent-src.uncondensed/skills/activation-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/content-funnel-design/SKILL.md` | `.agent-src.uncondensed/skills/editorial-calendar/SKILL.md` | `body_link` | 1 |
@@ -634,6 +685,17 @@
 | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/comp-banding/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/onboarding-program/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/perf-feedback-craft/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `.agent-src.uncondensed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `.agent-src.uncondensed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `.agent-src.uncondensed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `.agent-src.uncondensed/skills/image-analyser/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `.agent-src.uncondensed/skills/image-analyser/canon-spec.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `.agent-src.uncondensed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/image-creator/SKILL.md` | `.agent-src.uncondensed/skills/video-director/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/incident-commander/SKILL.md` | `.agent-src.uncondensed/skills/risk-officer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/incident-commander/SKILL.md` | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md` | `.agent-src.uncondensed/commands/review-changes.md` | `body_link` | 1 |
@@ -741,6 +803,9 @@
 | `.agent-src.uncondensed/skills/positioning-strategy/SKILL.md` | `.agent-src.uncondensed/skills/fundraising-narrative/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/positioning-strategy/SKILL.md` | `.agent-src.uncondensed/skills/messaging-architecture/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/positioning-strategy/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md` | `.agent-src.uncondensed/commands/prediction-pool.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md` | `.agent-src.uncondensed/skills/prediction-pool-optimizer/reference/ev-fixtures.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/prediction-pool-optimizer/SKILL.md` | `.agent-src.uncondensed/skills/prediction-pool-optimizer/reference/odds-and-bonus.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/privacy-review/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/privacy-review/SKILL.md` | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncondensed/skills/async-python-patterns/SKILL.md` | `body_link` | 1 |
@@ -852,6 +917,10 @@
 | `.agent-src.uncondensed/skills/skill-writing/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/skill-writing/SKILL.md` | `.agent-src.uncondensed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/skill-writing/SKILL.md` | `.agent-src.uncondensed/skills/description-assist/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `.agent-src.uncondensed/commands/video/from-song.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `.agent-src.uncondensed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `.agent-src.uncondensed/skills/scene-expander/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `.agent-src.uncondensed/skills/video-director/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/stakeholder-tradeoff/SKILL.md` | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/stakeholder-tradeoff/SKILL.md` | `.agent-src.uncondensed/skills/risk-officer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/commands/judge.md` | `body_link` | 1 |
@@ -953,9 +1022,9 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 136 |
+| `command` | 150 |
 | `context` | 33 |
 | `persona` | 31 |
-| `rule` | 75 |
-| `skill` | 227 |
+| `rule` | 79 |
+| `skill` | 235 |
 
