@@ -1,5 +1,5 @@
 ---
-status: ready
+status: active
 complexity: structural
 parent_roadmap: road-to-6.0.0-c-governance-and-evals
 ---
@@ -88,6 +88,12 @@ src/
 │
 ├── rules/                        # FLAT — every rule, one global namespace
 │   ├── commit-policy.md   scope-control.md   …
+│
+├── flows/                        # FIRST-CLASS FLOWS (feedback-5) — `Profile → Pack → Flow → Command → Skill → Rule`
+│   ├── README.md                 # USER-WORK flows only: discovery · implementation · review · delivery
+│   ├── implementation.yaml       # entry_points · default_path · skills (schema lands in 6.1; 6.0-D scaffolds stubs)
+│   ├── discovery.yaml  review.yaml  delivery.yaml
+│   #                              # NOTE: agent-admin is NOT here — it is the platform/system surface, not a user-work flow (feedback-6)
 │
 ├── profiles/                     # PROFILES-AS-VIEWS (commands→profile aggregation)
 │   ├── developer.yaml            # view: [_core:work, review:changes, _core:fix, git:commit, git:pr]
@@ -230,12 +236,25 @@ Phase 0, never after the moves.
   structural rename, NOT a deletion — nothing is removed in 6.0-D. Update
   references + routing evals. (Worksheet lives under `agents/reports/`, not in
   this file, so its 150 checkboxes do not skew the roadmap dashboard.)
-- [ ] **Step 13:** Fold the orchestrator HEADS away (the `[-]`-marked routers
-  like `feature`, `fix`, `judge` — Claude shadows them anyway; their subs are now
-  flat hyphenated commands). The `[-]`-marked **leaf** commands flagged as
-  skill-candidates are recorded in the worksheet but **converted in Phase 8**,
-  not here — 6.0-D moves and renames; it does not shrink the surface by deleting
-  commands.
+- [ ] **Step 13:** Orchestrator HEADS — **structural part only in 6.0.0.** Move
+  the head files into the flat hyphenated layout so the subs (`feature-plan`,
+  `fix-ci`, …) render as standalone commands (Claude shadows bare colon heads
+  anyway). But the actual **folding** — collapsing N routers into one and
+  changing the routing/concurrency model — is **architectural** (council): it
+  ships **staged in 6.0.x** with dual-mode (old head + new flat both resolve),
+  the default flips in the next patch once the new routing is verified green
+  (static + smoke), legacy removed after. NOT a big-bang flip in 6.0.0, and NOT
+  gated on a telemetry window — the staging is for routing safety, not a usage
+  wait. The `[-]` **leaf** skill-conversions and command
+  removals stay in 6.1 (behavioral).
+- [ ] **Step 13b:** *Evidence gate for the interface merges.* `commit-in-chunks`
+  → `commit` and `feature-explore`/`feature-roadmap` → `feature-plan` are
+  **interface** changes (identical functionality, new canonical invocation) — they
+  ship in 6.0.0 **with an alias + a 2-release deprecation grace period**, BUT only
+  after confirming the split is genuinely artificial (the old variants share
+  >95% of their implementation / have no distinct usage). Where that evidence is
+  missing, move both and decide the merge in 6.1 (council: don't merge-then-unmerge
+  on an untested "obviously duplicate" assumption).
 
 ## Phase 5: Profiles-as-views + curated command tree
 
@@ -258,8 +277,18 @@ Phase 0, never after the moves.
   commands so helpful pack commands are not lost, only de-prioritised. Routing
   evals prove both the curated five and the expanded set.
   <!-- carve-out: new-gate-verification -->
-
-## Phase 6: Root→`src/` move + migration
+- [ ] **Step 15b:** **Scaffold `src/flows/` as a first-class artefact**
+  (feedback-5: "make Flows real artefacts, not just worksheet tags — the next big
+  jump after the structural break"). This is **structural prep, NOT wiring**: create
+  `src/flows/` with a `README.md` naming the USER-WORK flow set (discovery ·
+  implementation · review · delivery) and one stub file per flow. **agent-admin
+  is NOT a flow** — it is the platform/system surface (feedback-6: it describes
+  system administration, not user work), so it stays out of `src/flows/`. The
+  flow SCHEMA
+  (`entry_points` / `default_path` / `skills`) and the resolver that renders a
+  flow are defined and built in 6.1 (`road-to-6.1.0` Step 8b/9). Scaffolding the
+  directory now makes Flows part of the tree — it already lives in three docs
+  (worksheet tags, 6.0-D, 6.1), so it is already part of the architecture.
 
 - [ ] **Step 16:** Move every non-essential root tree under `src/`
   (`config/`, `schemas/`, `templates/`, `docs/`, `scripts/`→`src/app` or
@@ -290,6 +319,15 @@ Phase 0, never after the moves.
   decision, not just structure — command = thin orchestration; logic lives in
   skills + scripts) and an ADR for the framework-neutrality / stack-adaptive rule
   for global commands.
+- [ ] **Step 20b:** Author the **command-justification ADR** (feedback-5/7: "the
+  rule that ends every future discussion"). A new top-level command must be a
+  **flow-entry** (daily starting point), a **state-query** (read-only, typed many
+  times/day), or a **product-surface** feature started deliberately (`council`,
+  `challenge-me`, `research`, `roadmap`, …) — nothing else. Destructive ops are
+  skills with a mandatory confirmation gate (destructive ≠ command); agent-admin
+  is the platform surface, not a flow. Sweet spot ~40–50 commands. The rule is
+  captured in [`command-clusters.md`](../../docs/contracts/command-clusters.md)
+  § Command justification; this ADR locks it.
 
 ## Phase 8: Post-move consolidation — NEXT roadmap, not this one
 
@@ -299,21 +337,57 @@ Phase 0, never after the moves.
 > with aliases and shrinks nothing; consolidation is where the surface actually
 > shrinks.
 
-- [ ] **Step 21:** Author the consolidation follow-up roadmap (`road-to-6.1-…`):
-  drop the deprecation aliases introduced in Phase 4b; merge near-duplicate
-  clusters; convert the `[-]`-marked **leaf** skill-candidates from the worksheet
-  to skills; finalize the long-term names (`create-pr` → `git-pr-create`,
-  `review-changes` → `review-changes`, `implement-ticket` → `ticket-implement`,
-  `quality-fix` → `laravel-quality`). This step only **spawns and specs** that
-  roadmap — it does not perform any consolidation in 6.0-D.
+- [ ] **Step 21:** Hand the deferred work to the consolidation roadmap
+  ([`road-to-6.1.0-product-consolidation.md`](road-to-6.1.0-product-consolidation.md),
+  draft only until 6.0.0 ships — no telemetry wait): interactive merges with
+  the non-TTY contract, the stack-adaptive resolver, command→skill conversions,
+  the meta-pack split (evidence-gated), command removals, and the Flows layer.
+  6.0-D performs NO consolidation itself — this step only confirms the handoff is
+  complete and the 6.1 roadmap covers every `[-]`/`future_state` worksheet item.
 
-## Future architecture & consolidation (6.1 — NOT executed in 6.0-D)
+## Scope-line rule — 4 categories, 3 lanes (council, 2026-06-03)
 
-> Recorded so 6.1 is pre-planned. None of this runs in 6.0-D (the move+rename
-> break). The AI council deliberately did NOT rubber-stamp the design — it
-> returned "do not greenlight V6 as-is" with a conditional path and the items
-> below. Capturing them is how 6.0-D stays a clean structural break while the
-> hard product questions get answered next.
+> A critical council pass challenged BOTH "defer everything to 6.1" (the external
+> feedback) AND "pull everything into 6.0" (the maintainer). The defensible line
+> is by change category, not by cost:
+>
+> | Category | What it is | Lane | Safeguard |
+> |---|---|---|---|
+> | **Structural** | file moves / renames | **6.0.0** | static analysis + unit tests |
+> | **Interface** | new canonical invocation, identical behavior | **6.0.0** | alias + 2-release grace |
+> | **Architectural** | new trust boundary / routing-concurrency change | **6.0.x staged** | dual-mode → flip default once routing verifies green |
+> | **Behavioral** | detection / runtime change | **6.1** | engineering validation (CI-safety, detection tests) first |
+>
+> **The rule:** verifiable with static analysis + unit tests → 6.0.0. Needs
+> dual-mode staging or detection/CI-safety work → 6.0.x or 6.1. **No 30-day
+> telemetry wait** — this package's few/team-internal users mean the maintainer
+> knows the usage directly; telemetry corroborates, it never gates. The
+> "we touch the files anyway" argument is valid for structural/interface, **invalid
+> for architectural** — cost savings never justify an unvalidated trust-boundary
+> change. This is how 6.0 takes the MAX safe scope (more than "defer all") without
+> becoming a risky all-at-once rebuild.
+
+## Future architecture & consolidation (6.0.x staged + 6.1)
+
+> Recorded so the next lanes are pre-planned. The AI council deliberately did NOT
+> rubber-stamp the design — it returned "do not greenlight V6 as-is" with this
+> staged path. 6.0.0 is the structural+interface break; the items below are
+> 6.0.x (architectural, dual-mode) or 6.1 (behavioral).
+
+- **6.0.x staged (architectural, dual-mode) — runs in the 6.0 patch line, NOT
+  deferred to 6.1.** It's architecture, not a user feature, so it needs no usage
+  data — only a static green check.
+  - **Meta-pack split** (`meta` → `agent-admin` / `memory` / `analytics` /
+    `governance`). The maintainer's lean: do it **as soon as the dependency gate
+    is green**, in 6.0.x. The gate is exactly the **Phase-0 dependency + pack-graph
+    lint** (already built in this roadmap): once it shows `meta`'s sub-areas have
+    zero cross-pack dependencies, split them into real packs (dual-mode: a virtual
+    `meta` keeps resolving for back-compat, flipped/removed in a later patch). No
+    telemetry, no 6.1 wait — `meta` is already, by our own admission,
+    agent-admin + memory + analytics + governance.
+  - **Orchestrator-head folding completion.** Dual-mode ships in 6.0.0
+    (Step 13); flip the default + remove legacy in 6.0.x once routing verifies
+    green.
 
 - **Interactive-merge contract (gate for every merge in 6.1).** A merged command
   (`fix-pr-comments` ← bot/human, `analytics` ← show/prune, `tests` ← create/run,
