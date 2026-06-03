@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib.agent_src import artefact_roots, iter_commands, strip_source_prefix  # noqa: E402
 
 # Legacy single-root anchor — kept as fallback for pure-condensed
 # consumer projections. Multi-root discovery uses artefact_roots() so
@@ -114,32 +114,33 @@ def _collect_rules() -> list[Entry]:
 
 
 def _collect_commands() -> list[Entry]:
-    """Walk every source root for commands; first root wins per logical id."""
+    """Every command across both layouts; first hit wins per logical id.
+
+    iter_commands() covers packages/*/commands/ AND the 6.0.0-D
+    src/domains/<pack>/<subpath>/command.md homes. The dedup/index key is the
+    logical subpath under ``commands/`` (`strip_source_prefix`)."""
     seen: dict[str, Entry] = {}
-    for src_root in artefact_roots():
-        cmd_dir = src_root / "commands"
-        if not cmd_dir.is_dir():
+    for cmd_md in iter_commands():
+        if cmd_md.name == "AGENTS.md":
             continue
-        for cmd_md in sorted(cmd_dir.rglob("*.md")):
-            if cmd_md.name == "AGENTS.md":
-                continue
-            rel = cmd_md.relative_to(cmd_dir).as_posix()
-            if rel in seen:
-                continue
-            fm = _parse_frontmatter(cmd_md.read_text(encoding="utf-8"))
-            is_shim = bool(fm.get("superseded_by"))
-            extra = ""
-            if is_shim:
-                extra = f"shim → /{fm['superseded_by']}"
-            elif fm.get("cluster"):
-                extra = f"cluster: {fm['cluster']}"
-            seen[rel] = Entry(
-                kind="shim" if is_shim else "command",
-                name=fm.get("name") or cmd_md.stem,
-                description=_truncate(fm.get("description", "")),
-                extra=extra,
-                path=cmd_md.relative_to(ROOT).as_posix(),
-            )
+        logical = strip_source_prefix(cmd_md.relative_to(ROOT).as_posix()) or ""
+        rel = logical[len("commands/"):] if logical.startswith("commands/") else cmd_md.name
+        if rel in seen:
+            continue
+        fm = _parse_frontmatter(cmd_md.read_text(encoding="utf-8"))
+        is_shim = bool(fm.get("superseded_by"))
+        extra = ""
+        if is_shim:
+            extra = f"shim → /{fm['superseded_by']}"
+        elif fm.get("cluster"):
+            extra = f"cluster: {fm['cluster']}"
+        seen[rel] = Entry(
+            kind="shim" if is_shim else "command",
+            name=fm.get("name") or cmd_md.stem,
+            description=_truncate(fm.get("description", "")),
+            extra=extra,
+            path=cmd_md.relative_to(ROOT).as_posix(),
+        )
     return [seen[k] for k in sorted(seen)]
 
 

@@ -39,7 +39,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib.agent_src import iter_commands  # noqa: E402
 
 QUIET = "--quiet" in sys.argv
 
@@ -53,23 +53,17 @@ SUPERSEDED_RE = re.compile(r"^superseded_by:\s*\S", re.MULTILINE)
 
 
 def _command_files() -> list[Path]:
-    """Every command ``*.md`` file across all source roots (legacy + packages/*).
+    """Every command ``*.md`` file across all source layouts.
 
-    Multi-root aware per ADR-017: post-move the commands live under
-    ``packages/<pack>/.agent-src.uncondensed/commands/``, and the
-    canonical count is the union across packs (deduped by logical path).
+    Multi-layout aware: commands live under packages/*/commands/ AND, since
+    6.0.0-D Phase 4, the pack-physical src/domains/<pack>/<subpath>/command.md
+    homes. iter_commands() unions both (deduped on logical path); the
+    category-append ``root / "commands"`` cannot see src/domains.
     """
-    seen: dict[str, Path] = {}
-    for root in artefact_roots():
-        cmd_dir = root / "commands"
-        if not cmd_dir.is_dir():
-            continue
-        for f in cmd_dir.rglob("*.md"):
-            if f.name == "AGENTS.md":
-                continue
-            rel = f.relative_to(cmd_dir).as_posix()
-            seen.setdefault(rel, f)
-    return sorted(seen.values())
+    return sorted(
+        (f for f in iter_commands() if f.name != "AGENTS.md"),
+        key=lambda p: p.as_posix(),
+    )
 
 
 def canonical_counts() -> tuple[int, int, int]:

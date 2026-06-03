@@ -30,7 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_frontmatter import parse_frontmatter  # noqa: E402
-from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib.agent_src import artefact_roots, iter_commands, strip_source_prefix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CONDENSED = ROOT / ".agent-src"
@@ -137,14 +137,16 @@ def _iter():
             for p in sorted(sdir.rglob("SKILL.md")):
                 slug = p.parent.name
                 yield p, CONDENSED / "skills" / slug / "SKILL.md", slug
-        cdir = root / "commands"
-        if cdir.exists():
-            for p in sorted(cdir.rglob("*.md")):
-                if p.name == "AGENTS.md":
-                    continue
-                rel = p.relative_to(cdir)
-                slug = "-".join(rel.with_suffix("").parts)
-                yield p, CONDENSED / "commands" / rel, slug
+    # Commands live under packages/*/commands/ AND the 6.0.0-D
+    # src/domains/<pack>/<subpath>/command.md homes; iter_commands() covers
+    # both. The condensed path + slug derive from the logical command path.
+    for p in iter_commands():
+        if p.name == "AGENTS.md":
+            continue
+        logical = strip_source_prefix(p.relative_to(ROOT).as_posix()) or ""
+        sub = logical[len("commands/"):] if logical.startswith("commands/") else p.name
+        slug = "-".join(Path(sub).with_suffix("").parts)
+        yield p, CONDENSED / "commands" / sub, slug
 
 
 def run(apply: bool) -> int:
