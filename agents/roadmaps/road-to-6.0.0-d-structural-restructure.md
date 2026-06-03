@@ -208,6 +208,31 @@ Phase 0, never after the moves.
   `research`, etc. — capability names, not internal org names. Old pack ids kept
   as aliases for `migrate`.
 
+## Execution-scope note — PR split (AI council, 2026-06-03)
+
+> The AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, design mode,
+> 2026-06-03; session `agents/runtime/council/responses/6.0.0-d-scope.json`)
+> converged on splitting the remaining 6.0-D work across PRs rather than one
+> big-bang change, because **moving the `scripts/` Python package under `src/`
+> (Step 16) is the kill-switch risk** — it is imported repo-wide as `scripts.*`
+> and cannot be bundled with unrelated changes ("the architectural hard line that
+> must not be crossed"). This mirrors the roadmap's own scope-line rule and the
+> per-phase branching strategy.
+>
+> - **PR-1 (decisions + scaffolding) — DONE on `feat/6.0.0-d-phase-4-commands`:**
+>   Step 11 (ADR-044), Step 13b (evidence verdict), Step 15b (`src/flows/`),
+>   Step 20 (ADR-045/046/047), Step 20b (ADR-048), Step 21 (6.1 handoff). These
+>   are static-analysis / authoring changes — green-CI verifiable.
+> - **Staged into follow-up 6.0-D PRs (still `[ ]` open below):** Step 12 + 13
+>   (command rename + head fold — needs a NEW generator alias-emission mechanism,
+>   path-derived slug moves, and 150 routing-eval updates), Step 14 + 15
+>   (profiles-as-views + CLI `--profile`/`--expanded`), **Step 16 in its OWN PR
+>   with an import-compat shim** (install shim → rewrite imports → remove shim),
+>   Step 17 (install contract, after the move), Step 18 (`migrate`, after the
+>   structure is final), Step 19 (final `task ci` audit on the moved tree).
+>
+> Re-run `/roadmap:process-full` to continue with the staged execution PRs.
+
 ## Phase 4b: Command (and skill) naming + skill-conversion
 
 > Better names — **rename + alias only, NO consolidation here** (feedback-2 hard
@@ -222,7 +247,7 @@ Phase 0, never after the moves.
 > clusters, dropping old aliases, and converting surplus leaf commands to skills
 > all wait for Phase 8 (its own roadmap).
 
-- [ ] **Step 11:** Author the naming-scheme ADR: `<pack>-<verb>`, hyphenated,
+- [x] **Step 11:** Author the naming-scheme ADR: `<pack>-<verb>`, hyphenated,
   short + descriptive; cluster heads fold away (no bare orchestrator commands);
   a sub-action is a separate command only if it is a distinct workflow, else a
   flag; the controlled-verb allowlist (ADR-041) still applies. The same
@@ -248,7 +273,7 @@ Phase 0, never after the moves.
   gated on a telemetry window — the staging is for routing safety, not a usage
   wait. The `[-]` **leaf** skill-conversions and command
   removals stay in 6.1 (behavioral).
-- [ ] **Step 13b:** *Evidence gate for the interface merges.* `commit-in-chunks`
+- [x] **Step 13b:** *Evidence gate for the interface merges.* `commit-in-chunks`
   → `commit` and `feature-explore`/`feature-roadmap` → `feature-plan` are
   **interface** changes (identical functionality, new canonical invocation) — they
   ship in 6.0.0 **with an alias + a 2-release deprecation grace period**, BUT only
@@ -278,7 +303,7 @@ Phase 0, never after the moves.
   commands so helpful pack commands are not lost, only de-prioritised. Routing
   evals prove both the curated five and the expanded set.
   <!-- carve-out: new-gate-verification -->
-- [ ] **Step 15b:** **Scaffold `src/flows/` as a first-class artefact**
+- [x] **Step 15b:** **Scaffold `src/flows/` as a first-class artefact**
   (feedback-5: "make Flows real artefacts, not just worksheet tags — the next big
   jump after the structural break"). This is **structural prep, NOT wiring**: create
   `src/flows/` with a `README.md` naming the USER-WORK flow set (discovery ·
@@ -313,14 +338,14 @@ Phase 0, never after the moves.
 
 - [ ] **Step 19:** CI-path audit: every workflow + taskfile + script path
   resolves to the new tree; `task ci` green end-to-end on the restructured repo.
-- [ ] **Step 20:** Record the structural ADRs (supersede ADR-017 monorepo layout
+- [x] **Step 20:** Record the structural ADRs (supersede ADR-017 monorepo layout
   and ADR-028 root-layout as needed; new ADR for `src/domains/` + flat
   skills/rules + profiles-as-views + the hard-break decision). **Plus a dedicated
   ADR for the Thin-Command Principle** (feedback-3: it is an architecture
   decision, not just structure — command = thin orchestration; logic lives in
   skills + scripts) and an ADR for the framework-neutrality / stack-adaptive rule
   for global commands.
-- [ ] **Step 20b:** Author the **command-justification ADR** (feedback-5/7: "the
+- [x] **Step 20b:** Author the **command-justification ADR** (feedback-5/7: "the
   rule that ends every future discussion"). A new top-level command must be a
   **flow-entry** (daily starting point), a **state-query** (read-only, typed many
   times/day), or a **product-surface** feature started deliberately (`council`,
@@ -338,7 +363,7 @@ Phase 0, never after the moves.
 > with aliases and shrinks nothing; consolidation is where the surface actually
 > shrinks.
 
-- [ ] **Step 21:** Hand the deferred work to the consolidation roadmap
+- [x] **Step 21:** Hand the deferred work to the consolidation roadmap
   ([`road-to-6.1.0-product-consolidation.md`](road-to-6.1.0-product-consolidation.md),
   draft only until 6.0.0 ships — no telemetry wait): interactive merges with
   the non-TTY contract, the stack-adaptive resolver, command→skill conversions,

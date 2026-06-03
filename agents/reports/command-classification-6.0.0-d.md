@@ -286,3 +286,28 @@
 The point: ~40–50 commands behind clear flows + features, not 125, and not 29
 (which buried real features). Anything reached "sometimes" as an implementation
 detail is a skill the agent triggers by task.
+
+---
+
+## § Step 13b — interface-merge evidence-gate verdict (2026-06-03)
+
+> Roadmap Step 13b: the `commit-in-chunks → commit` and
+> `feature-explore`/`feature-roadmap → feature-plan` merges are **interface**
+> changes (identical functionality, new canonical invocation). They ship in
+> 6.0.0 with an alias + a 2-release deprecation grace period **only after**
+> confirming the split is genuinely artificial (the old variants share >95% of
+> their implementation / have no distinct usage). Where that evidence is
+> missing, move both as flat commands and decide the merge in 6.1 (council:
+> don't merge-then-unmerge on an untested "obviously duplicate" assumption).
+
+| Merge candidate | Evidence | Verdict | Lane |
+|---|---|---|---|
+| `commit:in-chunks` → `git-commit --in-chunks` | The command file declares itself "Sibling of `/commit`… This command skips the approval step." Both compose the **same** `git-workflow` skill for stage + logical-chunk splitting; the **only** behavioral delta is the confirmation prompt (in-chunks = auto-confirm). >95% shared implementation. Split is artificial. | **MERGE — confirmed artificial.** `--in-chunks` is a flag on `git-commit`, not a second command. | **6.0.0** (alias `commit:in-chunks` + 2-release grace) |
+| `feature:explore` → `feature-plan` | `feature-plan` "runs explore→plan"; `feature:explore` is its **first phase** (a strict subset, not a duplicate). Distinct, smaller scope. | **DEFER merge.** Move as a flat command in 6.0-D; decide the fold in 6.1. | **6.1** (move-only in 6.0-D) |
+| `feature:roadmap` → `feature-plan` | `feature:roadmap` is the "make it a roadmap" **downstream branch** of the plan flow, not a >95% duplicate of the plan body. | **DEFER merge.** Move as a flat command in 6.0-D; decide the fold in 6.1. | **6.1** (move-only in 6.0-D) |
+
+**Consequence for the deferred Step 12/13 execution PR:** when the command-rename
+pass lands, fold `commit:in-chunks` into `git-commit --in-chunks` (alias kept);
+move `feature:explore` / `feature:roadmap` / `feature:plan` as three separate
+flat hyphenated commands and leave the merge decision to the 6.1 consolidation
+roadmap.

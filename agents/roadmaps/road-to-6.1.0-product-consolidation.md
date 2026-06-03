@@ -47,6 +47,14 @@ implicit **Flows** layer explicit.
   an explicit prompt if detection confidence < 90%.
 - [ ] **Step 5:** `tests` create-vs-run disambiguation; `override` create-vs-edit.
   Each merge ships only with the Phase-1 non-interactive escape.
+- [ ] **Step 5b:** `feature-plan` ← `{feature-explore, feature-roadmap}` — merge
+  **decision deferred here from 6.0-D Step 13b**: `feature-explore` is `feature-plan`'s
+  first phase (a subset, not a >95% duplicate) and `feature-roadmap` is its
+  downstream "make it a roadmap" branch, so the council guardrail forbade
+  merge-then-unmerge on an untested assumption. 6.0-D moved all three as flat
+  commands; decide the fold (and whether `--roadmap` becomes a flag on
+  `feature-plan`) here, with aliases kept. Evidence:
+  [`command-classification-6.0.0-d.md` § Step 13b](../reports/command-classification-6.0.0-d.md).
 
 ## Phase 3: Stack-adaptive engineering commands (resolver)
 
