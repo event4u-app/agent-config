@@ -96,6 +96,46 @@ composability (council, 2026-06-02).
 > the class; the lint reads it. No pack is classified by guess — Phase 0 Step
 > 0.2 assigns each in-use pack a class, reviewed at PR time.
 
+## Budget exemption process
+
+The budget is a **hard cap with an explicit exemption path**, not a
+weighted/dynamic cap. The council (2026-06-02) was decisive: dynamic caps are
+"governance-by-algorithm and get gamed at the meta level". A pack that needs to
+exceed its `size_class` budget earns the exemption through a documented
+decision, never through a formula.
+
+A pack over budget MUST carry a **budget-exemption ADR** under `docs/adr/`
+(or legacy `docs/decisions/`) that records:
+
+1. **The user need** — the concrete workflow each over-budget visible command
+   serves, and why a user must reach it by name (not behind a `tier: 2`
+   internal surface or inside a sibling cluster).
+2. **The alternatives considered and rejected** — for each command over the
+   cap: why not **merge** into an existing cluster, why not **relocate** to a
+   pack with headroom, why not **internalize** (`tier: 2`). "All three were
+   considered and rejected because …" is mandatory; an exemption that does not
+   show its work is rejected at review.
+3. **Re-justification cadence** — the exemption is **re-justified at the next
+   major release**. An ADR that is not re-affirmed lapses; the lint then fails
+   the over-budget pack until commands are cut or the ADR is renewed.
+
+The `--check-new` gate (Phase 1) does not parse ADRs — it is forward-looking
+and fails any *newly visible* command that breaches the cap. The exemption ADR
+is the human record that authorises a maintainer to grandfather a pre-existing
+over-budget pack; the gate stays green for it only because no *new* visible
+command is added.
+
+### Gaming-detection — pack-split dodge
+
+The cheapest way to dodge a per-pack cap is to split a pack in two so each half
+stays under budget. To catch this at the meta level: **more than 3 new
+capability packs created in any rolling 6-month window without a user-facing
+launch (a profile, a wizard surface, or a documented consumer use case) triggers
+a governance review.** A burst of pack creation with no corresponding surfacing
+is the signal that the cap is being routed around rather than respected. The
+review asks the same exemption questions above, one level up: does each new pack
+serve a distinct user need, or is it a budget-laundering split?
+
 ## Always-on packs
 
 A pack flagged `always_on: true` is a **default pack**: the resolver includes
