@@ -1,0 +1,18 @@
+# Flow stub — scaffolded in 6.0.0-D (Step 15b). Schema (entry_points /
+# default_path / skills) lands in 6.1 (road-to-6.1.0 Step 8b/9). Inert in 6.0.x:
+# parsed by nothing until the resolver ships. `commands:` is a seed lifted from
+# the command-classification worksheet `·_flow:review_` tags.
+id: review
+title: Review
+summary: >-
+  Check it. Self-review, judge, quality-fix, and threat-model a change before
+  it ships.
+# 6.1 fields (placeholders — not yet active):
+entry_points: []      # commands that START the flow (daily front doors)
+default_path: []      # canonical command sequence
+skills: []            # skills the flow composes
+commands:             # seed from worksheet ·_flow:review_ tags
+  - review-changes
+  - fix-quality
+  - fix-ci
+  - threat-model

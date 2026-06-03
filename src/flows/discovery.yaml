@@ -1,0 +1,20 @@
+# Flow stub — scaffolded in 6.0.0-D (Step 15b). Schema (entry_points /
+# default_path / skills) lands in 6.1 (road-to-6.1.0 Step 8b/9). Inert in 6.0.x:
+# parsed by nothing until the resolver ships. `commands:` is a seed lifted from
+# the command-classification worksheet `·_flow:discovery_` tags.
+id: discovery
+title: Discovery
+summary: >-
+  Explore, plan, estimate, refine, and investigate before building. The "what
+  should we build and how" front of the developer journey.
+# 6.1 fields (placeholders — not yet active):
+entry_points: []      # commands that START the flow (daily front doors)
+default_path: []      # canonical command sequence
+skills: []            # skills the flow composes
+commands:             # seed from worksheet ·_flow:discovery_ tags
+  - feature-plan
+  - bug-investigate
+  - project-analyze
+  - project-health
+  - estimate-ticket
+  - refine-ticket

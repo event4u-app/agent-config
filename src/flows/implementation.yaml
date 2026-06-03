@@ -1,0 +1,20 @@
+# Flow stub — scaffolded in 6.0.0-D (Step 15b). Schema (entry_points /
+# default_path / skills) lands in 6.1 (road-to-6.1.0 Step 8b/9). Inert in 6.0.x:
+# parsed by nothing until the resolver ships. `commands:` is a seed lifted from
+# the command-classification worksheet `·_flow:implementation_` tags.
+id: implementation
+title: Implementation
+summary: >-
+  Build it. The core "make the change" front — drive a prompt, ticket, or
+  feature end-to-end through plan → implement → verify.
+# 6.1 fields (placeholders — not yet active):
+entry_points: []      # commands that START the flow (daily front doors)
+default_path: []      # canonical command sequence
+skills: []            # skills the flow composes
+commands:             # seed from worksheet ·_flow:implementation_ tags
+  - work
+  - ticket-implement
+  - feature-dev
+  - bug-fix
+  - e2e-test-plan
+  - e2e-test-heal

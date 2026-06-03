@@ -1,0 +1,18 @@
+# Flow stub — scaffolded in 6.0.0-D (Step 15b). Schema (entry_points /
+# default_path / skills) lands in 6.1 (road-to-6.1.0 Step 8b/9). Inert in 6.0.x:
+# parsed by nothing until the resolver ships. `commands:` is a seed lifted from
+# the command-classification worksheet `·_flow:delivery_` tags.
+id: delivery
+title: Delivery
+summary: >-
+  Ship it. Commit in logical chunks, open the PR, answer review comments, and
+  prepare the branch for review.
+# 6.1 fields (placeholders — not yet active):
+entry_points: []      # commands that START the flow (daily front doors)
+default_path: []      # canonical command sequence
+skills: []            # skills the flow composes
+commands:             # seed from worksheet ·_flow:delivery_ tags
+  - git-commit
+  - git-pr-create
+  - fix-pr-comments
+  - prepare-for-review
