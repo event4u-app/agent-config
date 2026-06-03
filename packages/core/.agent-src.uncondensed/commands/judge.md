@@ -2,6 +2,9 @@
 model_tier: medium
 name: judge
 pack: engineering-base
+intent: "Adversarial-judging dispatcher — solo, on-diff, steps"
+routes_to: [judge:solo, judge:on-diff, judge:steps]
+replaces: []
 tier: 1
 description: Judge orchestrator — routes to solo, steps, on-diff
 cluster: judge

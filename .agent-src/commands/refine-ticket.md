@@ -2,6 +2,9 @@
 model_tier: inherit
 name: refine-ticket
 pack: product-basic
+intent: "Refine a vague ticket into a clear, implementable spec"
+routes_to: [refine-ticket]
+replaces: []
 tier: 1
 skills: [refine-ticket]
 description: Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt

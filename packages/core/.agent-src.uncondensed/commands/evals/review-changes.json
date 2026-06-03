@@ -1,0 +1,34 @@
+{
+  "command": "review-changes",
+  "intent": "Multi-judge review of the current diff — bugs, security, tests, quality, architecture",
+  "cases": [
+    {
+      "prompt": "self-review my changes before I open a PR",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "run all the judges on my current diff",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "check my changes for bugs, security, and test coverage",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "do a full pre-PR review of the working tree",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "review the diff across architecture and quality lenses",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "vet these changes before committing",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "get an external second opinion from another model",
+      "expected": "council"
+    }
+  ]
+}

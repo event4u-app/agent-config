@@ -1,0 +1,34 @@
+{
+  "command": "judge",
+  "intent": "Adversarial-judging dispatcher — solo, on-diff, steps",
+  "cases": [
+    {
+      "prompt": "judge this diff and give me a verdict",
+      "expected": "judge"
+    },
+    {
+      "prompt": "run a solo adversarial review of this change",
+      "expected": "judge"
+    },
+    {
+      "prompt": "do an implementer-then-judge loop on this",
+      "expected": "judge"
+    },
+    {
+      "prompt": "step-gated judged execution of this task",
+      "expected": "judge"
+    },
+    {
+      "prompt": "give me a pass/fail verdict on the current diff",
+      "expected": "judge"
+    },
+    {
+      "prompt": "be the judge on these changes",
+      "expected": "judge"
+    },
+    {
+      "prompt": "self-review my changes across all five lenses before a PR",
+      "expected": "review-changes"
+    }
+  ]
+}

@@ -2,6 +2,9 @@
 model_tier: medium
 name: create-pr
 pack: engineering-base
+intent: "Open a pull request with a generated description and stripped attribution footers"
+routes_to: [git-workflow]
+replaces: []
 tier: 1
 cluster: create-pr
 skills: [git-workflow]
