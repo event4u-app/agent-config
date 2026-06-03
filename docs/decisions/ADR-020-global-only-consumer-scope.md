@@ -97,6 +97,28 @@ the user-content / metadata surface without violating global-only.
 Forbidden, unchanged: writing any distributed content into the
 consumer repo outside `AGENT_CONFIG_DEV_MODE=1`.
 
+## Amendment — 2026-06-03 · settings-scope correction (ADR-049)
+
+The original Consequences bullet "one source of truth for `personal.*`,
+`agent_council.*`, and `personas:`" overstated the global surface and used a
+key name that never existed in code. [`ADR-049`](ADR-049-configuration-trust-boundary.md)
+(AI-council-converged, anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-06-03)
+corrects this:
+
+- The global surface is **secrets** (provider keys, already global) plus the
+  curated identity **whitelist** (`MERGEABLE_KEYS`) — not all of `personal.*`,
+  not council config, not personas.
+- **Council configuration and personas stay project-local** (version-controlled).
+  The `MERGEABLE_KEYS` whitelist is a **security trust boundary**: an untrusted
+  project repo must not be able to escalate `ai_council` / arbitrary `personal.*`
+  into user scope. Widening the whitelist now requires a threat model.
+- The key name is **`ai_council`** (canonical, in `agents/settings/.ai-council.yml`),
+  never `agent_council`.
+
+This amendment narrows ADR-020's wording; the global-only **consumer install**
+decision (distributed content writes only to `~/.event4u/agent-config/`) is
+unchanged.
+
 ## Alternatives considered
 
 - **Status quo (project default + global opt-in).** Keeps the drift
@@ -113,7 +135,10 @@ consumer repo outside `AGENT_CONFIG_DEV_MODE=1`.
 ## Consequences
 
 **Positive.**
-- One source of truth for `personal.*`, `agent_council.*`, and `personas:`.
+- One source of truth for the curated cross-project identity keys
+  (`MERGEABLE_KEYS`) and provider secrets. _(Amended 2026-06-03 — the original
+  wording named `personal.*`, `agent_council.*`, and `personas:` as global; see
+  the settings-scope correction below and [`ADR-049`](ADR-049-configuration-trust-boundary.md): council config + personas stay project-local; the key is `ai_council`.)_
 - New skills / rules / commands reach every consumer the moment they
   install or run `task dev:install-global` — no per-repo bump.
 - The onboarding wizard becomes the only authoring surface for
