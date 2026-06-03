@@ -35,12 +35,12 @@ def _dependency_drift() -> list[str]:
     errors: list[str] = []
     vocab = gpm._vocab_lookup(gpm._load_yaml(gpm.PACKS_VOCAB) or [])
     version = gpm._package_version()
-    for pkg in sorted(PACKAGES.iterdir()):
-        manifest = pkg / "pack.yaml"
-        if not pkg.is_dir() or not manifest.exists():
+    for pid, home_dir, is_physical in gpm._pack_homes():
+        manifest = home_dir / "pack.yaml"
+        if not manifest.exists():
             continue
-        artefacts = gpm._collect_artefacts(pkg)
-        expected = gpm._build_pack_yaml(pkg, vocab, artefacts, version)["dependencies"]
+        artefacts = gpm._collect_artefacts(pid, home_dir, is_physical)
+        expected = gpm._build_pack_yaml(pid, vocab, artefacts, version)["dependencies"]
         try:
             on_disk = (yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}).get(
                 "dependencies"
@@ -68,15 +68,15 @@ def _dependency_drift() -> list[str]:
 
 def _pack_requires_graph() -> dict[str, set[str]]:
     graph: dict[str, set[str]] = {}
-    for pkg in sorted(PACKAGES.iterdir()):
-        manifest = pkg / "pack.yaml"
-        if not pkg.is_dir() or not manifest.exists():
+    for _pid, home_dir, _is_physical in gpm._pack_homes():
+        manifest = home_dir / "pack.yaml"
+        if not manifest.exists():
             continue
         try:
             data = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError):
             continue
-        pid = data.get("id", pkg.name)
+        pid = data.get("id", home_dir.name)
         edges: set[str] = set(data.get("requires", []) or [])
         deps = data.get("dependencies") or {}
         edges.update(deps.get("packs", []) or [])

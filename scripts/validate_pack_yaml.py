@@ -27,7 +27,20 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = ROOT / "packages"
+SRC_DOMAINS = ROOT / "src" / "domains"
 PACKS_VOCAB = ROOT / "config" / "discovery" / "packs.yml"
+
+
+def _manifest_dirs() -> list[Path]:
+    """Every directory that may own a ``pack.yaml`` — legacy ``packages/*/``
+    plus 6.0.0-D ``src/domains/*/`` homes."""
+    dirs: list[Path] = []
+    if PACKAGES.is_dir():
+        dirs.extend(sorted(p for p in PACKAGES.iterdir() if p.is_dir()))
+    if SRC_DOMAINS.is_dir():
+        dirs.extend(sorted(p for p in SRC_DOMAINS.iterdir()
+                           if p.is_dir() and not p.name.startswith("_")))
+    return dirs
 SCHEMA = ROOT / "scripts" / "schemas" / "pack.schema.json"
 ALLOWLIST = ROOT / "scripts" / "pack_dependency_allowlist.json"
 
@@ -67,6 +80,10 @@ def _known_pack_ids() -> set[str]:
             if pkg.is_dir():
                 # mirror _pack_id_from_dir: strip a leading "pack-"
                 ids.add(pkg.name[5:] if pkg.name.startswith("pack-") else pkg.name)
+    if SRC_DOMAINS.is_dir():
+        for dom in SRC_DOMAINS.iterdir():
+            if dom.is_dir() and not dom.name.startswith("_"):
+                ids.add(dom.name)
     return ids
 
 
@@ -133,14 +150,15 @@ def main() -> int:
         print(f"❌  pack schema not found: {SCHEMA}", file=sys.stderr)
         return 3
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-    if not PACKAGES.is_dir():
-        print("packages/ does not exist — nothing to validate")
+    manifest_dirs = _manifest_dirs()
+    if not manifest_dirs:
+        print("no pack homes (packages/ or src/domains/) — nothing to validate")
         return 0
     known_packs = _known_pack_ids()
     allowlist = _load_allowlist()
     all_errors: list[str] = []
     count = 0
-    for pkg in sorted(PACKAGES.iterdir()):
+    for pkg in manifest_dirs:
         manifest = pkg / "pack.yaml"
         if not manifest.exists():
             continue

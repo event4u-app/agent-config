@@ -32,20 +32,74 @@ LEGACY_SRC = ROOT / ".agent-src.uncondensed"
 PACKAGES = ROOT / "packages"
 PACKAGE_CORE = PACKAGES / "core"
 
+# 6.0.0-D flat shared library (road-to-6.0.0-d-structural-restructure). Skills
+# and rules move out of the per-pack ``packages/*/.agent-src.uncondensed/`` trees
+# into one flat, shared namespace. Unlike a ``.agent-src.uncondensed/`` root —
+# where the logical path equals ``relative_to(root)`` — these roots map onto a
+# fixed logical prefix (``skills/`` / ``rules/``) because the physical directory
+# is already the category. See :func:`_root_specs`.
+SRC = ROOT / "src"
+SRC_SKILLS = SRC / "skills"
+SRC_RULES = SRC / "rules"
+
 # Repo-relative POSIX path prefixes that anchor an artefact source tree.
 # Order: legacy first (kept until the move lands), then packages/*. Each
 # entry is the prefix that gets stripped to obtain the logical path.
 _LEGACY_PREFIX = ".agent-src.uncondensed/"
 _PACKAGE_SUFFIX = "/.agent-src.uncondensed/"
+_SRC_SKILLS_PREFIX = "src/skills/"
+_SRC_RULES_PREFIX = "src/rules/"
+
+
+def _root_specs() -> list[tuple[Path, str]]:
+    """Every active ``(physical_root, logical_prefix)`` artefact source.
+
+    The logical path of a file under ``physical_root`` is
+    ``logical_prefix + file.relative_to(physical_root)``. For the legacy and
+    ``packages/*/`` ``.agent-src.uncondensed/`` roots the prefix is empty —
+    the directory already contains ``skills/`` / ``rules/`` / ``commands/``
+    subtrees. For the 6.0.0-D flat library roots (``src/skills``,
+    ``src/rules``) the prefix is the category (``skills/`` / ``rules/``)
+    because the directory IS the category.
+
+    Order is stable: legacy first, then ``packages/`` entries sorted
+    alphabetically, then the flat library roots. ``resolve_logical`` and
+    ``logical_relpath`` walk this order and return the first hit, so a
+    logical path present in more than one root (the move window) resolves
+    to the earliest — callers ensure no genuine duplicate post-move.
+    """
+    specs: list[tuple[Path, str]] = []
+    if LEGACY_SRC.exists():
+        specs.append((LEGACY_SRC, ""))
+    if PACKAGES.exists():
+        for pkg in sorted(PACKAGES.iterdir()):
+            sub = pkg / ".agent-src.uncondensed"
+            if sub.is_dir():
+                specs.append((sub, ""))
+    if SRC_SKILLS.is_dir():
+        specs.append((SRC_SKILLS, "skills/"))
+    if SRC_RULES.is_dir():
+        specs.append((SRC_RULES, "rules/"))
+    return specs
 
 
 def artefact_roots() -> list[Path]:
-    """Every existing directory that contains source ``.md`` artefacts.
+    """Every existing **container** directory under which the per-category
+    subdirectories (``skills/`` / ``rules/`` / ``commands/`` / …) live.
 
-    Returns at most one ``.agent-src.uncondensed/`` root (legacy) plus
-    one root per ``packages/*/`` subdirectory that exposes its own
-    ``.agent-src.uncondensed/`` tree. Order is stable: legacy first,
-    then ``packages/`` entries sorted alphabetically.
+    This is the "category-append" view used by the many scanners that do
+    ``root / "skills"`` / ``root / "rules"`` etc. It returns at most one
+    ``.agent-src.uncondensed/`` root (legacy), one per ``packages/*/``
+    subdirectory, and — once the 6.0.0-D flat library exists — the ``src/``
+    container (so ``src / "skills"`` → ``src/skills`` resolves for those
+    callers). Order is stable: legacy, ``packages/`` sorted, then ``src``.
+
+    NOTE: ``src`` is the CONTAINER, not a leaf — its logical mapping is the
+    per-category prefix in :func:`_root_specs`, NOT ``relative_to(src)``.
+    Callers that compute logical paths or rglob a whole root must use
+    :func:`iter_all_sources` / :func:`iter_artefacts` / :func:`logical_relpath`,
+    which walk :func:`_root_specs` (the leaf view) and never over-collect
+    ``src/app`` / ``src/domains`` non-artefact subtrees.
     """
     roots: list[Path] = []
     if LEGACY_SRC.exists():
@@ -55,20 +109,30 @@ def artefact_roots() -> list[Path]:
             sub = pkg / ".agent-src.uncondensed"
             if sub.is_dir():
                 roots.append(sub)
+    if SRC_SKILLS.is_dir() or SRC_RULES.is_dir():
+        roots.append(SRC)
     return roots
 
 
 def iter_artefacts(suffix: str = ".md") -> Iterator[Path]:
     """Yield every artefact file under every active source root.
 
-    Files are returned in deterministic order: roots in the order from
-    ``artefact_roots()``, files within each root sorted by path. Symlinks
-    and non-files are skipped.
+    Walks :func:`_root_specs` (the leaf view) so the 6.0.0-D flat library
+    is covered without over-collecting ``src/app`` / ``src/domains``.
+    Deterministic order; deduplicated on logical path so a file present in
+    two roots during the move window is yielded once. Symlinks and
+    non-files are skipped.
     """
-    for root in artefact_roots():
+    seen: set[str] = set()
+    for root, prefix in _root_specs():
         for p in sorted(root.rglob(f"*{suffix}")):
-            if p.is_file():
-                yield p
+            if not p.is_file():
+                continue
+            rel = prefix + p.relative_to(root).as_posix()
+            if rel in seen:
+                continue
+            seen.add(rel)
+            yield p
 
 
 def iter_all_sources() -> Iterator[tuple[Path, str]]:
@@ -81,12 +145,12 @@ def iter_all_sources() -> Iterator[tuple[Path, str]]:
     that does not happen post-move.
     """
     seen: set[str] = set()
-    for root in artefact_roots():
+    for root, prefix in _root_specs():
         for p in sorted(root.rglob("*")):
             if not p.is_file():
                 continue
             try:
-                rel = p.relative_to(root).as_posix()
+                rel = prefix + p.relative_to(root).as_posix()
             except ValueError:
                 continue
             if rel in seen:
@@ -98,11 +162,19 @@ def iter_all_sources() -> Iterator[tuple[Path, str]]:
 def resolve_logical(logical_rel: str) -> Path | None:
     """Return the physical path that backs ``logical_rel``, or ``None``.
 
-    Walks :func:`artefact_roots` in order and returns the first hit.
+    Walks :func:`_root_specs` in order and returns the first hit. A flat
+    library root only matches a logical path under its prefix
+    (``skills/`` / ``rules/``); the suffix after the prefix is the path
+    inside that physical root.
     """
     rel = logical_rel.replace("\\", "/").lstrip("/")
-    for root in artefact_roots():
-        p = root / rel
+    for root, prefix in _root_specs():
+        if prefix:
+            if not rel.startswith(prefix):
+                continue
+            p = root / rel[len(prefix):]
+        else:
+            p = root / rel
         if p.exists():
             return p
     return None
@@ -122,9 +194,9 @@ def logical_relpath(path: Path) -> str:
     Raises ``ValueError`` if ``path`` is not under any known source root.
     """
     p = path.resolve() if path.is_absolute() else (ROOT / path).resolve()
-    for root in artefact_roots():
+    for root, prefix in _root_specs():
         try:
-            return p.relative_to(root.resolve()).as_posix()
+            return prefix + p.relative_to(root.resolve()).as_posix()
         except ValueError:
             continue
     raise ValueError(f"path is not under any artefact root: {path}")
@@ -150,6 +222,12 @@ def strip_source_prefix(rel: str) -> str | None:
         idx = posix.find(_PACKAGE_SUFFIX)
         if idx != -1:
             return posix[idx + len(_PACKAGE_SUFFIX):]
+    # 6.0.0-D flat library: the physical category prefix maps to the logical
+    # category. ``src/skills/x/SKILL.md`` → ``skills/x/SKILL.md``.
+    if posix.startswith(_SRC_SKILLS_PREFIX):
+        return "skills/" + posix[len(_SRC_SKILLS_PREFIX):]
+    if posix.startswith(_SRC_RULES_PREFIX):
+        return "rules/" + posix[len(_SRC_RULES_PREFIX):]
     return None
 
 
