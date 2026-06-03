@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: cost-report
+pack: meta
 tier: 2
 description: Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions.
 skills: [file-editor]

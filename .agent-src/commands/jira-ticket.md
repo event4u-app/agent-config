@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: jira-ticket
+pack: product-basic
 tier: 1
 skills: [laravel]
 description: Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug

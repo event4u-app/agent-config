@@ -1,9 +1,11 @@
 ---
 model_tier: inherit
 name: ghostwriter:list
+pack: gtm-marketing
 tier: 2
 cluster: ghostwriter
 sub: list
+skills: [ghostwriter]
 description: List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
 suggestion:
   eligible: true

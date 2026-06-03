@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: memory:propose
+pack: meta
 tier: 2
 cluster: memory
 sub: propose

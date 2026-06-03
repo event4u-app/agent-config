@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: memory:load
+pack: meta
 tier: 2
 cluster: memory
 sub: load

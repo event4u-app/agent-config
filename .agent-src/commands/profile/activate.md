@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: profile:activate
+pack: meta
 tier: 2
 cluster: profile
 sub: activate

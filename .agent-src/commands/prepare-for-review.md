@@ -1,7 +1,8 @@
 ---
 model_tier: high
 name: prepare-for-review
-tier: 1
+pack: engineering-base
+tier: 2
 skills: [git-workflow, quality-tools]
 description: Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date
 suggestion:

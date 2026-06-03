@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: memory:learn-low-impact
+pack: meta
 tier: 2
 cluster: memory
 sub: learn-low-impact

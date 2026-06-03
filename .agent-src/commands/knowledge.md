@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: knowledge
+pack: product-discovery
 tier: 2
 description: Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace.
 cluster: knowledge

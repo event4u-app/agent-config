@@ -1,9 +1,11 @@
 ---
 model_tier: medium
 name: sync-gitignore:fix
+pack: engineering-base
 tier: 2
 cluster: sync-gitignore
 sub: fix
+skills: [sync-gitignore]
 description: Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 suggestion:
   eligible: true
