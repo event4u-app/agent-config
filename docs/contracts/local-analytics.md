@@ -43,9 +43,17 @@ interactions:
 - `document.created` · `document.edited` · `document.exported`
 - `explain.opened` · `explain.mode_toggled` · `why.invoked`
 - `knowledge.queried` · `knowledge.source_clicked`
+- `rule.tier2_loaded` · `persona.cited` · `skill.activated` — **6.0.0-C
+  evidence-based-pruning measurement.** `rule.tier2_loaded` fires when a
+  router-gated (tier-2) rule is loaded; `persona.cited` when a persona is
+  cited-in-use by a skill/command; `skill.activated` when a skill activates
+  under the active profile. Payload fields: the artefact `id` (or `rule`,
+  `persona`, `skill`) and the active `profile` — nothing else. These feed the
+  thresholds in [`evidence-based-pruning.md`](evidence-based-pruning.md) so a
+  later, data-bearing roadmap cuts on usage, not on a guessed target.
 
 No prompt bodies. No response bodies. No PII. Only counters, role
-labels, task slugs (already public), and durations.
+labels, task slugs (already public), artefact ids, and durations.
 
 ## Storage
 

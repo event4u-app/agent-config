@@ -55,6 +55,15 @@ ALLOWED_EVENTS = frozenset({
     "document.created", "document.edited", "document.exported",
     "explain.opened", "explain.mode_toggled", "why.invoked",
     "knowledge.queried", "knowledge.source_clicked",
+    # 6.0.0-C Phase 3 — evidence-based-pruning measurement events. Local,
+    # anonymized, opt-out and 90-day retention like every other event; these
+    # feed the pruning thresholds in docs/contracts/evidence-based-pruning.md
+    # (tier-2 rule load %, persona citation-in-use, skill activation). Payloads
+    # carry only ids + the active profile, never message bodies — see
+    # docs/contracts/command-clusters.md § Tier-usage signal contract.
+    "rule.tier2_loaded",     # a tier-2 (router-gated) rule was loaded this turn
+    "persona.cited",         # a persona was cited-in-use by a skill/command
+    "skill.activated",       # a skill was activated under the active profile
 })
 
 ENV_OPT_OUT = "AGENT_CONFIG_NO_LOCAL_ANALYTICS"

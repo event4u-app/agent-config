@@ -287,6 +287,16 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         if isinstance(name, str) and name:
             entry["name"] = name
         entry.update(payload or {})
+        # 6.0.0-C: surface command routing metadata so the CLI discovery
+        # surface (`agent-config commands` / `explain`) reads the manifest
+        # rather than a parallel catalog. Does not affect the per-file
+        # checksum (computed over frontmatter, below).
+        if category == "command" and isinstance(fm, dict):
+            if fm.get("tier") is not None:
+                entry["tier"] = fm["tier"]
+            for _k in ("intent", "routes_to", "replaces"):
+                if fm.get(_k) is not None:
+                    entry[_k] = fm[_k]
         entry["checksum"] = _artefact_checksum(path, fm)
         artefacts.append(entry)
         trust_level = (payload.get("trust") or {}).get("level") if payload else None

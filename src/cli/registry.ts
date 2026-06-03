@@ -43,6 +43,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'setup', disposition: 'native', synopsis: 'Open the onboarding wizard (UI server, lands on Identity).' },
     { name: 'workspaces', disposition: 'native', synopsis: 'List workspaces from the discovery manifest (ls subcommand).' },
     { name: 'packs', disposition: 'native', synopsis: 'List packs from the discovery manifest (ls subcommand).' },
+    { name: 'commands', disposition: 'native', synopsis: 'List/explain the command surface from the discovery manifest (ls / explain subcommands).' },
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },
     { name: 'explain', disposition: 'delegate' },
     { name: 'migrate', disposition: 'delegate' },

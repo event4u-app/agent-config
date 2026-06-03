@@ -2239,7 +2239,15 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             )
             if not in_source:
                 continue
-            if path.name == "SKILL.md" or "/rules/" in norm or "/commands/" in norm:
+            # Only .md artefacts are lintable. Skip data sidecars under
+            # `evals/` (e.g. commands/evals/<stem>.json routing evals, 6.0.0-C)
+            # — they are not commands/rules and have no frontmatter/H1.
+            is_md = path.suffix == ".md"
+            in_evals = "/evals/" in norm
+            if not in_evals and (
+                path.name == "SKILL.md"
+                or (is_md and ("/rules/" in norm or "/commands/" in norm))
+            ):
                 files.append(path)
         return sorted(set(files))
     except Exception:

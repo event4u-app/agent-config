@@ -1,0 +1,34 @@
+{
+  "command": "agent-handoff",
+  "intent": "Generate a session-handoff summary to continue work in a fresh chat",
+  "cases": [
+    {
+      "prompt": "summarize where we are so I can paste it into a new chat",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "write me a handoff for a fresh session",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "fasse den stand für einen neuen chat zusammen",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "I want to continue this in a clean conversation, give me the context dump",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "produce a context summary to carry over to another chat",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "this chat is getting long, prep a handoff",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "show me the current message count and token cost",
+      "expected": "agent-status"
+    }
+  ]
+}

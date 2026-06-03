@@ -492,11 +492,123 @@ def render_budget_md(audit: dict) -> str:
     return "\n".join(L) + "\n"
 
 
+# --- Forward-looking budget gate (6.0.0-C Phase 1 Steps 1+3) --------------
+# The budget audit above is report-only. This gate is the CI hard stop: it
+# fails ONLY when a *newly visible* command (added since baseline, or promoted
+# tier 2 → 0/1) lands in a pack that is now over its size_class budget.
+# Pre-existing over-budget packs are grandfathered as long as they do not grow
+# their visible surface — see docs/contracts/capability-packs.md § exemption.
+
+_CMD_PATH_RE = re.compile(r"\.agent-src\.uncondensed/commands/.+\.md$")
+
+
+def _git_lines(args: list[str]) -> list[str]:
+    try:
+        r = subprocess.run(["git", *args], capture_output=True, text=True,
+                           cwd=REPO_ROOT, timeout=15)
+    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        print(f"error: git {' '.join(args)} failed: {exc}", file=sys.stderr)
+        sys.exit(3)
+    if r.returncode != 0:
+        print(f"error: git {' '.join(args)} exit {r.returncode}: {r.stderr}",
+              file=sys.stderr)
+        sys.exit(3)
+    return [ln for ln in r.stdout.splitlines() if ln.strip()]
+
+
+def _tier_at_ref(ref: str, relpath: str) -> int | None:
+    """Tier of a command file at a git ref. None when absent or no tier field."""
+    r = subprocess.run(["git", "show", f"{ref}:{relpath}"],
+                       capture_output=True, text=True, cwd=REPO_ROOT, timeout=15)
+    if r.returncode != 0:
+        return None  # file did not exist at baseline
+    m = TIER_RE.search(r.stdout)
+    return int(m.group(1)) if m else None
+
+
+def _is_visible_tier(tier: int | None) -> bool:
+    return (tier if tier is not None else 2) in VISIBLE_TIERS
+
+
+def grown_packs(baseline: str, commands: List[Command]) -> dict[str, list[str]]:
+    """Packs that gained a visible command since baseline → list of command names.
+
+    A command counts as a *new visible surface* when it is either added since
+    baseline (and is visible now) or promoted from internal/absent to visible.
+    """
+    by_relpath = {c.relpath: c for c in commands}
+    # Added (committed) + modified (committed) command files since baseline.
+    added = set(_git_lines(["diff", "--name-only", "--diff-filter=A",
+                            f"{baseline}...HEAD"]))
+    modified = set(_git_lines(["diff", "--name-only", "--diff-filter=M",
+                              f"{baseline}...HEAD"]))
+    # Untracked / staged-new working-tree additions (uncommitted new commands).
+    for line in _git_lines(["status", "--porcelain", "-uall"]):
+        status, _, path = line[:2], line[2:3], line[3:].strip().split(" -> ")[-1]
+        if status.strip() in ("A", "??", "AM", "M", "MM"):
+            (added if status.strip() in ("A", "??", "AM") else modified).add(path)
+
+    grew: dict[str, list[str]] = {}
+    for relpath in added | modified:
+        if not _CMD_PATH_RE.search(relpath):
+            continue
+        cmd = by_relpath.get(relpath)
+        if cmd is None or not cmd.pack:
+            continue
+        if not _is_visible_tier(cmd.tier):
+            continue  # internal now — never counts toward a visible budget
+        if relpath in modified and relpath not in added:
+            # Modified file: only a *promotion* into visibility grows the surface.
+            if _is_visible_tier(_tier_at_ref(baseline, relpath)):
+                continue  # was already visible — not a new surface
+        grew.setdefault(cmd.pack, []).append(cmd.name)
+    return grew
+
+
+def check_new_budget(baseline: str, quiet: bool) -> int:
+    commands = collect_all()
+    audit = build_budget_audit(commands, load_size_classes())
+    by_pack = {p["pack"]: p for p in audit["packs"]}
+    grew = grown_packs(baseline, commands)
+
+    violations: list[dict] = []
+    for pack, new_names in sorted(grew.items()):
+        entry = by_pack.get(pack)
+        if entry and entry["over_budget"]:
+            violations.append({"pack": pack, "new_commands": sorted(new_names),
+                               "entry": entry})
+
+    if violations:
+        print("❌  Per-pack command budget exceeded by newly visible command(s):")
+        for v in violations:
+            e = v["entry"]
+            print(f"  • pack `{v['pack']}` ({e['size_class']}): "
+                  f"{e['visible_count']} visible / budget {e['budget']} "
+                  f"(+{e['over_by']}) — new: {', '.join(v['new_commands'])}")
+        print("\nResolve by one of: set the command to `tier: 2` (internal, "
+              "uncapped) · merge into a sibling cluster · relocate to a pack "
+              "with budget headroom · file a budget-exemption ADR "
+              "(docs/contracts/capability-packs.md § Budget exemption process).")
+        return 1
+    if not quiet:
+        n = sum(len(v) for v in grew.values())
+        print(f"✅  Budget gate: {n} newly visible command(s) across "
+              f"{len(grew)} pack(s); no pack over its size_class budget "
+              f"(baseline: {baseline}).")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
     parser.add_argument("--budget", action="store_true",
                         help="Write the per-pack command-budget audit (6.0.0-B Phase 2 Step 4).")
+    parser.add_argument("--check-new", action="store_true",
+                        help="CI gate (6.0.0-C Phase 1): fail when a newly visible "
+                             "command pushes its pack over the size_class budget. "
+                             "Existing commands are grandfathered.")
+    parser.add_argument("--baseline", default="main",
+                        help="git ref to diff against for --check-new (default: main).")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
     if not args.root.exists():
@@ -504,6 +616,9 @@ def main() -> int:
         return 2
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.check_new:
+        return check_new_budget(args.baseline, args.quiet)
 
     if args.budget:
         commands = collect_all()
