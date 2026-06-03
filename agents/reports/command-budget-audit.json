@@ -1,0 +1,79 @@
+{
+  "budgets": {
+    "core": 8,
+    "small": 2,
+    "medium": 5,
+    "large": 8,
+    "platform": 10
+  },
+  "visible_tiers": [
+    0,
+    1
+  ],
+  "total_commands": 150,
+  "packs": [
+    {
+      "pack": "ai-video",
+      "size_class": "large",
+      "budget": 8,
+      "visible_count": 0,
+      "internal_count": 10,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "engineering-base",
+      "size_class": "core",
+      "budget": 8,
+      "visible_count": 8,
+      "internal_count": 37,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "fun",
+      "size_class": "small",
+      "budget": 2,
+      "visible_count": 0,
+      "internal_count": 1,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "gtm-marketing",
+      "size_class": "medium",
+      "budget": 5,
+      "visible_count": 0,
+      "internal_count": 9,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "meta",
+      "size_class": "core",
+      "budget": 8,
+      "visible_count": 8,
+      "internal_count": 60,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "product-basic",
+      "size_class": "medium",
+      "budget": 5,
+      "visible_count": 4,
+      "internal_count": 5,
+      "over_budget": false,
+      "over_by": 0
+    },
+    {
+      "pack": "product-discovery",
+      "size_class": "medium",
+      "budget": 5,
+      "visible_count": 0,
+      "internal_count": 8,
+      "over_budget": false,
+      "over_by": 0
+    }
+  ]
+}
