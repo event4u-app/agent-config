@@ -205,3 +205,4 @@ agents/state/
 /agents/.event4u-bridge.yml
 /agents/installed-tools.lock
 /.event4u-agent/chats/2ec070cc-1685-4a6d-9316-4943745e1c8f.jsonl
+/.event4u-agent/
