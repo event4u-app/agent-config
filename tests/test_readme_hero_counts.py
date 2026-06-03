@@ -45,7 +45,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
-from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib.agent_src import artefact_roots, iter_commands  # noqa: E402
 
 ROOTS = artefact_roots()
 
@@ -82,20 +82,17 @@ def _count_rules() -> int:
 def _count_active_commands() -> int:
     total = 0
     deprecated = 0
-    # Commands may be flat (`commands/<name>.md`) or nested under a cluster
-    # directory (`commands/<cluster>/<sub>.md`). Walk recursively and skip the
-    # AGENTS.md reference orchestrator that lives under .agent-src/commands/.
-    for root in ROOTS:
-        cmd_dir = root / "commands"
-        if not cmd_dir.is_dir():
+    # Commands live under packages/*/commands/ AND the 6.0.0-D
+    # src/domains/<pack>/<subpath>/command.md homes; iter_commands() covers
+    # both (root/commands cannot see src/domains). Skip the AGENTS.md
+    # reference orchestrator.
+    for p in iter_commands():
+        if p.name == "AGENTS.md":
             continue
-        for p in cmd_dir.rglob("*.md"):
-            if p.name == "AGENTS.md":
-                continue
-            total += 1
-            text = p.read_text(encoding="utf-8")
-            if re.search(r"^deprecated_in:\s*", text, re.MULTILINE):
-                deprecated += 1
+        total += 1
+        text = p.read_text(encoding="utf-8")
+        if re.search(r"^deprecated_in:\s*", text, re.MULTILINE):
+            deprecated += 1
     return total - deprecated
 
 

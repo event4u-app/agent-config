@@ -42,6 +42,59 @@ SRC = ROOT / "src"
 SRC_SKILLS = SRC / "skills"
 SRC_RULES = SRC / "rules"
 
+# 6.0.0-D Phase 4 (Step 10): commands move out of the per-pack
+# ``packages/*/.agent-src.uncondensed/commands/`` trees into pack-physical
+# ``src/domains/<pack>/<subpath>/command.md``. Unlike skills/rules (whose
+# physical category == logical category), a command's LOGICAL identity is
+# preserved exactly: ``src/domains/<pack>/<subpath>/command.md`` maps to
+# ``commands/<subpath>.md`` — the ``<pack>`` segment is stripped and the
+# always-``command.md`` leaf is replaced by the subpath. This keeps
+# condensation hashes, the ``.agent-src/commands/`` projection, discovery,
+# and every cross-reference byte-stable across the move (council-converged,
+# 2026-06-03: preserve-logical-identity for the structural step; the
+# invocation-name rename is Step 12). The mapping is PATH-based, not
+# frontmatter ``name:``-based, so the 5 ``agents/user/*`` outliers (whose
+# ``name`` hyphenates the last two segments) move losslessly.
+SRC_DOMAINS = SRC / "domains"
+_SRC_DOMAINS_PREFIX = "src/domains/"
+
+
+def _domains_command_logical(p: Path) -> str | None:
+    """Map a physical ``src/domains`` command file to its logical path.
+
+    ``src/domains/<pack>/<subpath...>/command.md`` → ``commands/<subpath...>.md``.
+    Returns ``None`` for anything that is not a ``command.md`` leaf with at
+    least one verb segment after the pack (so a bare ``src/domains/<pack>/``
+    or a ``pack.yaml``/``README.md`` is ignored). The ``command.md`` leaf is
+    the activation gate the council asked for: an empty/command-less domains
+    tree yields nothing.
+    """
+    try:
+        rel = p.relative_to(SRC_DOMAINS).as_posix()
+    except ValueError:
+        return None
+    parts = rel.split("/")
+    if len(parts) < 3 or parts[-1] != "command.md":
+        return None
+    subpath = "/".join(parts[1:-1])  # drop <pack> and the command.md leaf
+    return f"commands/{subpath}.md"
+
+
+def _iter_domains_commands() -> Iterator[tuple[Path, str]]:
+    """Yield ``(physical_path, logical_relpath)`` for every domains command.
+
+    Deterministic order. Naturally inert until ``src/domains/*/**/command.md``
+    files exist (the activation gate).
+    """
+    if not SRC_DOMAINS.is_dir():
+        return
+    for p in sorted(SRC_DOMAINS.rglob("command.md")):
+        if not p.is_file():
+            continue
+        logical = _domains_command_logical(p)
+        if logical is not None:
+            yield p, logical
+
 # Repo-relative POSIX path prefixes that anchor an artefact source tree.
 # Order: legacy first (kept until the move lands), then packages/*. Each
 # entry is the prefix that gets stripped to obtain the logical path.
@@ -133,6 +186,12 @@ def iter_artefacts(suffix: str = ".md") -> Iterator[Path]:
                 continue
             seen.add(rel)
             yield p
+    if suffix == ".md":
+        for p, rel in _iter_domains_commands():
+            if rel in seen:
+                continue
+            seen.add(rel)
+            yield p
 
 
 def iter_all_sources() -> Iterator[tuple[Path, str]]:
@@ -157,6 +216,45 @@ def iter_all_sources() -> Iterator[tuple[Path, str]]:
                 continue
             seen.add(rel)
             yield p, rel
+    for p, rel in _iter_domains_commands():
+        if rel in seen:
+            continue
+        seen.add(rel)
+        yield p, rel
+
+
+def iter_commands() -> Iterator[Path]:
+    """Yield every command source file across all layouts.
+
+    Covers the legacy / ``packages/*/.agent-src.uncondensed/commands/`` trees
+    AND the 6.0.0-D ``src/domains/<pack>/<subpath>/command.md`` homes,
+    deduplicated on the logical command path (``commands/<subpath>.md``) so a
+    command present in two layouts during the move window is yielded once
+    (packages-tree wins, matching the rest of this module's first-win order).
+    The category-append scanners (``root / "commands"``) cannot see the
+    domains homes — ``src/domains`` is not a ``root / "commands"`` container —
+    so any scanner that needs the full command set must use this helper.
+    """
+    seen: set[str] = set()
+    for root, prefix in _root_specs():
+        if prefix:  # flat skills/rules roots carry no commands subtree
+            continue
+        base = root / "commands"
+        if not base.is_dir():
+            continue
+        for p in sorted(base.rglob("*.md")):
+            if not p.is_file():
+                continue
+            rel = "commands/" + p.relative_to(base).as_posix()
+            if rel in seen:
+                continue
+            seen.add(rel)
+            yield p
+    for p, rel in _iter_domains_commands():
+        if rel in seen:
+            continue
+        seen.add(rel)
+        yield p
 
 
 def resolve_logical(logical_rel: str) -> Path | None:
@@ -177,6 +275,15 @@ def resolve_logical(logical_rel: str) -> Path | None:
             p = root / rel
         if p.exists():
             return p
+    # 6.0.0-D domains commands: a logical ``commands/<subpath>.md`` is backed
+    # by ``src/domains/<pack>/<subpath>/command.md``. The pack is not encoded
+    # in the logical path, so glob the domains tree for the matching leaf.
+    if rel.startswith("commands/") and rel.endswith(".md") and SRC_DOMAINS.is_dir():
+        subpath = rel[len("commands/"):-len(".md")]
+        for pack_dir in sorted(SRC_DOMAINS.iterdir()):
+            cand = pack_dir / subpath / "command.md"
+            if cand.is_file():
+                return cand
     return None
 
 
@@ -199,6 +306,10 @@ def logical_relpath(path: Path) -> str:
             return prefix + p.relative_to(root.resolve()).as_posix()
         except ValueError:
             continue
+    # 6.0.0-D domains command (src/domains/<pack>/<subpath>/command.md).
+    domains_logical = _domains_command_logical(p)
+    if domains_logical is not None:
+        return domains_logical
     raise ValueError(f"path is not under any artefact root: {path}")
 
 
@@ -228,6 +339,13 @@ def strip_source_prefix(rel: str) -> str | None:
         return "skills/" + posix[len(_SRC_SKILLS_PREFIX):]
     if posix.startswith(_SRC_RULES_PREFIX):
         return "rules/" + posix[len(_SRC_RULES_PREFIX):]
+    # 6.0.0-D domains command: src/domains/<pack>/<subpath>/command.md
+    # → commands/<subpath>.md (pack stripped, command.md leaf → subpath).
+    if posix.startswith(_SRC_DOMAINS_PREFIX) and posix.endswith("/command.md"):
+        rest = posix[len(_SRC_DOMAINS_PREFIX):]  # <pack>/<subpath>/command.md
+        parts = rest.split("/")
+        if len(parts) >= 3:
+            return "commands/" + "/".join(parts[1:-1]) + ".md"
     return None
 
 

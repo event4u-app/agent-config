@@ -38,15 +38,14 @@ from command_suggester.cooldown import parse_cooldown  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-from _lib.agent_src import artefact_roots, resolve_logical  # noqa: E402
+from _lib.agent_src import resolve_logical  # noqa: E402
 
-# Pick the first package root that has a ``commands/`` subtree. Test
-# fixtures only need *a* command catalogue to load specs against, not
-# every package's catalogue, so the first hit is fine.
-COMMANDS_DIR = next(
-    (r / "commands" for r in artefact_roots() if (r / "commands").is_dir()),
-    REPO_ROOT / ".agent-src.uncondensed" / "commands",
-)
+# The loader expects a flat catalogue where each file is named for its
+# command. Since 6.0.0-D Phase 4 the SOURCE commands live under
+# src/domains/<pack>/<subpath>/command.md (all named `command.md`), so load
+# against the condensed `.agent-src/commands/` projection — the rendered,
+# correctly-named catalogue of all commands.
+COMMANDS_DIR = REPO_ROOT / ".agent-src" / "commands"
 
 
 # ---------------------------------------------------------------------------

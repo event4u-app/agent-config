@@ -6,19 +6,19 @@
 
 ## Overall
 
-**53 / 175 steps done · 30%**
+**60 / 176 steps done · 34%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 35 | 26 | 9 | 0 | 0 | ███░░░░░░░ 26% |
+| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 35 | 19 | 16 | 0 | 0 | █████░░░░░ 46% |
 | 2 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 | 5 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 
@@ -28,7 +28,7 @@
 
 ### [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md)
 
-**Road to 6.0.0-D — Structural restructure (the hard break)** — 9 / 35 done (26%)
+**Road to 6.0.0-D — Structural restructure (the hard break)** — 16 / 35 done (46%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -36,11 +36,11 @@
 | 1 | Laravel prototype + extraction proof | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Flat skills + rules library (before the remaining packs) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | Monorepo-collapse decision (evidence-gated) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 4 | Move the remaining packs | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4b | Command (and skill) naming + skill-conversion | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Profiles-as-views + curated command tree | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 7 | Final verification + ADRs | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 8 | Post-move consolidation — NEXT roadmap, not this one | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 4 | Move the remaining packs | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 4b | Command (and skill) naming + skill-conversion | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 5 | Profiles-as-views + curated command tree | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 7 | Final verification + ADRs | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 8 | Post-move consolidation — NEXT roadmap, not this one | 🟡 in progress | 11 | 1 | 0 | 0 | 8% |
 
 ### [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md)
 
@@ -55,12 +55,12 @@
 
 ### [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md)
 
-**Road to 6.1.0 — Product consolidation (behavioral cuts after the structural break)** — 0 / 15 done (0%)
+**Road to 6.1.0 — Product consolidation (behavioral cuts after the structural break)** — 0 / 16 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Interactive-merge contract (the gate for every merge here) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 2 | Interactive command merges | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Interactive command merges | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Stack-adaptive engineering commands (resolver) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 4 | Command → skill conversions (the [-] leaves) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 5 | Command removals (KILL list — maintainer-decided) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |

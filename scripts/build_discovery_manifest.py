@@ -143,8 +143,18 @@ def _iter_artefacts() -> Iterable[tuple[Path, str]]:
         yield p, "skill"
     for p in _collect("rules", "*.md"):
         yield p, "rule"
+    # Commands: the legacy / packages command trees via the patchable
+    # artefact_roots seam, PLUS the 6.0.0-D src/domains/<pack>/<subpath>/
+    # command.md homes scanned relative to the (patchable) module ROOT — the
+    # category-append _collect cannot see src/domains, and going through
+    # agent_src's real-repo helpers would escape test fixtures that patch ROOT.
     for p in _collect("commands", "*.md"):
         yield p, "command"
+    domains_root = ROOT / "src" / "domains"
+    if domains_root.is_dir():
+        for p in sorted(domains_root.rglob("command.md")):
+            if p.is_file():
+                yield p, "command"
     for p in _collect("templates", "*.md"):
         yield p, "template"
 

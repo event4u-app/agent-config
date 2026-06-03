@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib.agent_src import artefact_roots, iter_commands  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -33,6 +33,16 @@ def count(kind: str) -> int:
         return sum(1 for _ in (REPO_ROOT / "docs" / "guidelines").rglob("*.md"))
     total = 0
     seen: set[str] = set()
+    if kind == "commands":
+        # Commands live under packages/*/commands/ AND the 6.0.0-D
+        # src/domains/<pack>/<subpath>/command.md homes; iter_commands()
+        # covers both (artefact_roots()/commands cannot see src/domains).
+        # Skip the AGENTS.md reference orchestrator.
+        for f in iter_commands():
+            if f.name == "AGENTS.md":
+                continue
+            total += 1
+        return total
     for root in artefact_roots():
         subdir = root / kind
         if not subdir.exists():
@@ -48,17 +58,6 @@ def count(kind: str) -> int:
             # personas live as flat .md files, README excluded
             for f in subdir.glob("*.md"):
                 if f.name == "README.md":
-                    continue
-                rel = f.relative_to(root).as_posix()
-                if rel in seen:
-                    continue
-                seen.add(rel)
-                total += 1
-        elif kind == "commands":
-            # Commands may be flat or nested under a cluster directory.
-            # Skip the AGENTS.md reference orchestrator.
-            for f in subdir.rglob("*.md"):
-                if f.name == "AGENTS.md":
                     continue
                 rel = f.relative_to(root).as_posix()
                 if rel in seen:

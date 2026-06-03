@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_frontmatter import parse_frontmatter  # noqa: E402
-from _lib.agent_src import artefact_roots  # noqa: E402
+from _lib.agent_src import artefact_roots, iter_commands  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,11 +32,11 @@ def _targets():
         if sdir.exists():
             for p in sorted(sdir.rglob("SKILL.md")):
                 yield "skill", p
-        cdir = root / "commands"
-        if cdir.exists():
-            for p in sorted(cdir.rglob("*.md")):
-                if p.name != "AGENTS.md":
-                    yield "command", p
+    # Commands live under packages/*/commands/ AND the 6.0.0-D
+    # src/domains/<pack>/<subpath>/command.md homes; iter_commands() covers both.
+    for p in iter_commands():
+        if p.name != "AGENTS.md":
+            yield "command", p
 
 
 def main(argv=None) -> int:
