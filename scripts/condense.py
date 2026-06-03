@@ -40,6 +40,7 @@ from _lib.agent_src import (  # noqa: E402
     artefact_roots,
     iter_all_sources,
     resolve_logical,
+    strip_source_prefix,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -1103,7 +1104,16 @@ def _command_path_to_slug(manifest_path: str) -> str:
     `.../commands/council/analysis.md` → `council-analysis` — identical to
     `_command_slug()` (which flattens the path relative to COMMANDS_SOURCE),
     so the predicate matches what the generators emit.
+
+    Layout-agnostic: a 6.0.0-D domains command
+    (`src/domains/<pack>/council/analysis/command.md`) carries no literal
+    ``commands`` path segment, so derive the slug from the LOGICAL command
+    path (`commands/<subpath>.md`) via ``strip_source_prefix``. Falls back to
+    the literal-segment scan for already-logical / projection paths.
     """
+    logical = strip_source_prefix(manifest_path)
+    if logical and logical.startswith("commands/"):
+        return "-".join(Path(logical[len("commands/"):]).with_suffix("").parts)
     parts = Path(manifest_path).parts
     i = parts.index("commands")
     return "-".join(Path(*parts[i + 1:]).with_suffix("").parts)

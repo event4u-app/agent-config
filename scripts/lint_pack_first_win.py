@@ -22,6 +22,24 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = REPO_ROOT / "packages"
+SRC_DOMAINS = REPO_ROOT / "src" / "domains"
+
+
+def _pack_home(pid: str) -> Path | None:
+    """Resolve a pack's home dir, packages/ or the 6.0.0-D src/domains/ home.
+
+    A pack whose source has moved into the flat library + src/domains
+    (Step 10) is homed at ``src/domains/<id>/``; a not-yet-moved pack keeps
+    its ``packages/pack-<id>/`` tree. Returns the first that exists, else None.
+    """
+    physical = PACKAGES / f"pack-{pid}"
+    if physical.is_dir():
+        return physical
+    domain = SRC_DOMAINS / pid
+    if domain.is_dir():
+        return domain
+    return None
+
 
 FEATURED_PACK_IDS = {
     "founder-strategy",
@@ -67,9 +85,12 @@ def _has_onboarding_block(pack_yaml: Path) -> tuple[bool, list[str]]:
 def main() -> int:
     errors: list[str] = []
     for pid in sorted(FEATURED_PACK_IDS):
-        pack_dir = PACKAGES / f"pack-{pid}"
-        if not pack_dir.is_dir():
-            errors.append(f"missing pack dir: {pack_dir.relative_to(REPO_ROOT)}")
+        pack_dir = _pack_home(pid)
+        if pack_dir is None:
+            errors.append(
+                f"missing pack home: neither packages/pack-{pid}/ nor "
+                f"src/domains/{pid}/ exists"
+            )
             continue
         first_win = pack_dir / "FIRST_WIN.md"
         if not first_win.exists() or first_win.stat().st_size == 0:
