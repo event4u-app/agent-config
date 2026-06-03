@@ -11,11 +11,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 CORE = REPO / "packages" / "core" / ".agent-src.uncondensed"
-PACK = REPO / "packages" / "pack-ai-video" / ".agent-src.uncondensed"
 
 COMMAND = CORE / "commands" / "video" / "from-song.md"
 ORCHESTRATOR = CORE / "commands" / "video.md"
-SKILL = PACK / "skills" / "song-to-script" / "SKILL.md"
+# Skills live in the flat shared library since 6.0.0-D Phase 2.
+SKILL = REPO / "src" / "skills" / "song-to-script" / "SKILL.md"
 PROBE = REPO / "scripts" / "ai-video" / "lib" / "probe-audio.sh"
 CLUSTERS = REPO / "docs" / "contracts" / "command-clusters.md"
 

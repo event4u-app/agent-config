@@ -94,7 +94,12 @@ def test_upstream_pin_in_body() -> None:
 
 def test_internal_links_resolve() -> None:
     _, body = _load_skill()
-    repo_relative = SKILL_PATH.parent
+    # Internal links are authored against the condensed `.agent-src/`
+    # projection (where skills/, rules/, commands/ are siblings), not the
+    # flat-library source tree (`src/skills/` vs `packages/core/commands/`).
+    # Resolve from the projection dir — the same logical layout
+    # check_references.py validates. See 6.0.0-D Phase 2 (flat library).
+    repo_relative = REPO_ROOT / ".agent-src" / "skills" / "markitdown"
     unresolved: list[str] = []
     for link in LINK_RE.findall(body):
         target = link.split("#", 1)[0].strip()
