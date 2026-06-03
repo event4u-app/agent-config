@@ -1,0 +1,53 @@
+# Controlled command-verb vocabulary (6.0.0-C Phase 2 Step 4; ADR-041).
+#
+# A VISIBLE command (tier 0/1) must have a leading token — the substring before
+# the first `-` in its name, or the cluster sub-name for `cluster:sub` commands —
+# drawn from `approved_verbs`. Enforced FORWARD-ONLY by
+# scripts/lint_command_verbs.py: only commands added or promoted to visible
+# since the `main` baseline are checked; the existing surface is grandfathered.
+#
+# Adding a verb here is a governance change — land it in its own PR with an ADR
+# (or an addendum to ADR-041) justifying the new verb. Do NOT add tokens to dodge
+# the lint for a one-off command; rename the command to an existing verb instead.
+
+# Curated verbs — the intended visible-surface vocabulary.
+approved_verbs:
+  - work
+  - audit
+  - plan
+  - implement
+  - review
+  - fix
+  - test
+  - ship
+  - sync
+  - explain
+  - estimate
+  - refine
+  - publish
+  # Established cluster-head / standalone tokens already in use on the visible
+  # surface as of 6.0.0-C. Seeded so the existing 20 visible commands pass; the
+  # governance teeth come from "a NEW token needs an ADR", not from purging
+  # these. See ADR-041 § Consequences.
+  - agent      # agent-handoff, agent-status
+  - agents     # AGENTS.md file family cluster head
+  - commit
+  - condense
+  - council
+  - feature
+  - jira       # jira-ticket
+  - judge
+  - memory
+  - mode
+  - optimize
+  - roadmap
+
+# Leading tokens banned for NEW visible commands regardless of the allowlist.
+banned_prefixes:
+  - create     # "no create-* commands" — file creation is an in-flow agent
+               # decision, not a command surface to enumerate (ADR-041 § 2).
+
+# Pre-existing commands exempt from `banned_prefixes`, each a documented
+# single-command grandfather (NOT a broad waiver). See ADR-041 § 3.
+grandfathered:
+  - create-pr

@@ -2,6 +2,9 @@
 model_tier: medium
 name: optimize
 pack: meta
+intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir"
+routes_to: [optimize:skills, optimize:rtk, optimize:augmentignore, optimize:agents-dir]
+replaces: []
 tier: 1
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 cluster: optimize

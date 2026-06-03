@@ -2,6 +2,9 @@
 model_tier: medium
 name: commit
 pack: engineering-base
+intent: "Stage and commit changes in logical chunks with a Conventional Commits message"
+routes_to: [git-workflow, conventional-commits-writing]
+replaces: []
 tier: 0
 cluster: commit
 skills: [git-workflow]

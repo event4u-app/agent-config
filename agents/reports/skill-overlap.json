@@ -1,0 +1,37 @@
+{
+  "threshold": 0.7,
+  "skills_scanned": 223,
+  "pairs": [
+    {
+      "a": "scene-expander",
+      "b": "video-director",
+      "a_path": "packages/pack-ai-video/.agent-src.uncondensed/skills/scene-expander/SKILL.md",
+      "b_path": "packages/pack-ai-video/.agent-src.uncondensed/skills/video-director/SKILL.md",
+      "similarity": 0.76,
+      "same_domain": true,
+      "shared_packs": [
+        "ai-video"
+      ]
+    },
+    {
+      "a": "pixar-storyteller",
+      "b": "video-director",
+      "a_path": "packages/pack-ai-video/.agent-src.uncondensed/skills/pixar-storyteller/SKILL.md",
+      "b_path": "packages/pack-ai-video/.agent-src.uncondensed/skills/video-director/SKILL.md",
+      "similarity": 0.707,
+      "same_domain": true,
+      "shared_packs": [
+        "ai-video"
+      ]
+    },
+    {
+      "a": "analysis-skill-router",
+      "b": "universal-project-analysis",
+      "a_path": "packages/core/.agent-src.uncondensed/skills/analysis-skill-router/SKILL.md",
+      "b_path": "packages/core/.agent-src.uncondensed/skills/universal-project-analysis/SKILL.md",
+      "similarity": 0.709,
+      "same_domain": false,
+      "shared_packs": []
+    }
+  ]
+}

@@ -2,6 +2,9 @@
 model_tier: medium
 name: condense
 pack: meta
+intent: "Condense .agent-src.uncondensed sources into the shipped .agent-src trees"
+routes_to: [skill-management]
+replaces: []
 tier: 1
 skills: []
 description: Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/

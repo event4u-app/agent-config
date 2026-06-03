@@ -1,0 +1,34 @@
+{
+  "command": "memory",
+  "intent": "Manage the agent memory layer — add, load, promote, propose",
+  "cases": [
+    {
+      "prompt": "add a memory entry about this decision",
+      "expected": "memory"
+    },
+    {
+      "prompt": "load all my engineering memories",
+      "expected": "memory"
+    },
+    {
+      "prompt": "promote this signal into long-term memory",
+      "expected": "memory"
+    },
+    {
+      "prompt": "propose a finding to the memory layer",
+      "expected": "memory"
+    },
+    {
+      "prompt": "curate what we've learned into memory",
+      "expected": "memory"
+    },
+    {
+      "prompt": "remember this pattern for next time",
+      "expected": "memory"
+    },
+    {
+      "prompt": "generate a handoff summary for a fresh chat",
+      "expected": "agent-handoff"
+    }
+  ]
+}

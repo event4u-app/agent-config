@@ -2,6 +2,9 @@
 model_tier: inherit
 name: jira-ticket
 pack: product-basic
+intent: "Read a Jira ticket from the branch and implement the feature or fix the bug"
+routes_to: [jira-integration, feature-planning]
+replaces: []
 tier: 1
 skills: [laravel]
 description: Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug

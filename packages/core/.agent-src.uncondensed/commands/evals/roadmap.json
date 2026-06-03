@@ -1,0 +1,34 @@
+{
+  "command": "roadmap",
+  "intent": "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council",
+  "cases": [
+    {
+      "prompt": "create a roadmap for this initiative",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "process the next step of the roadmap",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "work through the whole roadmap autonomously",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "scaffold a new roadmap under agents/roadmaps",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "abarbeiten of the current roadmap phase",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "run the roadmap to completion",
+      "expected": "roadmap"
+    },
+    {
+      "prompt": "plan out this feature step by step",
+      "expected": "feature"
+    }
+  ]
+}

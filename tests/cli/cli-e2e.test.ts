@@ -81,4 +81,50 @@ describe('compiled CLI', () => {
         expect(res.stdout).toContain('package_root:');
         expect(res.stdout).toContain('consumer_root:');
     });
+
+    // 6.0.0-C Step 5b — CLI command-discovery surface.
+    it('commands ls --visible --json lists visible commands with routing metadata', async () => {
+        const res = await execa('node', [CLI, 'commands', 'ls', '--visible', '--json'], {
+            reject: false,
+            timeout: 10_000,
+        });
+        expect(res.exitCode).toBe(0);
+        const parsed = JSON.parse(res.stdout) as { commands: Array<{ name: string; tier: number; intent: string }> };
+        expect(parsed.commands.length).toBeGreaterThan(0);
+        // Every listed command is visible (tier 0/1) and carries an intent.
+        for (const c of parsed.commands) {
+            expect([0, 1]).toContain(c.tier);
+            expect(typeof c.intent).toBe('string');
+            expect(c.intent.length).toBeGreaterThan(0);
+        }
+    });
+
+    it('commands explain <name> prints intent + routes_to', async () => {
+        const res = await execa('node', [CLI, 'commands', 'explain', 'implement-ticket'], {
+            reject: false,
+            timeout: 10_000,
+        });
+        expect(res.exitCode).toBe(0);
+        expect(res.stdout).toContain('/implement-ticket');
+        expect(res.stdout).toContain('intent:');
+        expect(res.stdout).toContain('routes_to:');
+    });
+
+    it('explain <command-name> is intercepted as a command explanation', async () => {
+        const res = await execa('node', [CLI, 'explain', 'work'], {
+            reject: false,
+            timeout: 10_000,
+        });
+        expect(res.exitCode).toBe(0);
+        expect(res.stdout).toContain('/work');
+        expect(res.stdout).toContain('routes_to:');
+    });
+
+    it('commands explain <unknown> exits 1', async () => {
+        const res = await execa('node', [CLI, 'commands', 'explain', 'no-such-command-xyz'], {
+            reject: false,
+            timeout: 10_000,
+        });
+        expect(res.exitCode).toBe(1);
+    });
 });
