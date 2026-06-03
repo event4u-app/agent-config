@@ -1391,3 +1391,36 @@ def test_decision_replay_settings_lens_override_redacts() -> None:
     }
     _, include_args = council_cli._decision_replay_settings(ai_cfg, "analysis")
     assert include_args is False
+
+
+def test_repo_root_follows_consumer_cwd_not_package(tmp_path: Path) -> None:
+    """Regression: council_cli must read settings from the project it is
+
+    invoked in, not from the package dir where the script lives. Pinning
+    REPO_ROOT to ``Path(__file__).parents[1]`` made ``council:*`` always
+    refuse with ``ai_council.enabled is false`` when run via the global
+    ``agent-config`` wrapper from a consumer project.
+    """
+    import os
+    import subprocess
+
+    package_root = Path(council_cli.__file__).resolve().parents[1]
+    consumer = tmp_path / "consumer"
+    (consumer / "agents" / "settings").mkdir(parents=True)
+    (consumer / "agents" / "settings" / ".agent-settings.yml").write_text(
+        "ai_council:\n  enabled: true\n", encoding="utf-8",
+    )
+    probe = (
+        "import council_cli as m;"
+        "print(m.REPO_ROOT);print(m.PACKAGE_ROOT)"
+    )
+    env = {**os.environ, "PYTHONPATH": str(package_root / "scripts")}
+    proc = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=consumer, env=env, capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout.splitlines()
+    repo_root, pkg_root = Path(out[0]).resolve(), Path(out[1]).resolve()
+    assert repo_root == consumer.resolve()       # follows the consumer CWD
+    assert pkg_root == package_root.resolve()     # import base stays fixed

@@ -19,14 +19,27 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 try:  # invocation-agnostic import (repo-root-on-path vs scripts-on-path)
-    from scripts._lib.agent_settings import project_settings_path
+    from scripts._lib.agent_settings import (
+        project_settings_path, resolve_project_root,
+    )
 except ModuleNotFoundError:  # pragma: no cover
-    from _lib.agent_settings import project_settings_path
+    from _lib.agent_settings import (
+        project_settings_path, resolve_project_root,
+    )
 from typing import Any
 
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+# `PACKAGE_ROOT` is where `scripts.ai_council.*` lives — fixed relative to
+# this file, used only for the import path below. `REPO_ROOT` is the project
+# the council operates on: when invoked via the global `agent-config`
+# wrapper from a consumer project it is that project (anchor-walked from
+# CWD, or pinned via AGENT_CONFIG_PROJECT_ROOT / --root), NOT the package
+# install dir. Hardcoding the package dir here was the bug — settings and
+# `.ai-council.yml` were then read from the package (which has neither), so
+# `council:*` always refused with `ai_council.enabled is false`.
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT, _ = resolve_project_root(None)
 SETTINGS_FILE = project_settings_path(REPO_ROOT)
 AI_COUNCIL_FILE = REPO_ROOT / "agents" / "settings" / ".ai-council.yml"
 
@@ -64,7 +77,7 @@ def _validate_council_output_path(
         ) from exc
     return p
 
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(PACKAGE_ROOT))
 
 from scripts.ai_council.bundler import (  # noqa: E402
     BundleTooLarge, bundle_prompt, bundle_roadmap,
