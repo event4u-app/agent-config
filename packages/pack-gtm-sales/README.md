@@ -8,11 +8,4 @@ Pipeline, MEDDIC, forecast accuracy.
 - **version**: `5.10.1`
 - **owner**: gtm
 - **requires**: —
-- **artefacts**: 4
-
-## Skills (4)
-
-- **`deal-qualification-meddic`** — Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'.
-- **`expansion-playbook`** — Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'.
-- **`forecast-accuracy`** — Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'.
-- **`pipeline-strategy`** — Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'.
+- **artefacts**: 0

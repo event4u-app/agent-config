@@ -8,8 +8,4 @@ TypeScript-language patterns.
 - **version**: `5.10.1`
 - **owner**: engineering
 - **requires**: javascript, engineering-base
-- **artefacts**: 1
-
-## Skills (1)
-
-- **`project-analysis-node-express`** — Use for deep Node.js / Express project analysis: boot flow, middleware order, async behavior, data layer, auth/security, and Node-specific runtime failure patterns.
+- **artefacts**: 0

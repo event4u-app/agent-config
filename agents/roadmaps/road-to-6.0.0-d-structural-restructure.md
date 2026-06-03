@@ -180,10 +180,10 @@ Phase 0, never after the moves.
 
 ## Phase 2: Flat skills + rules library (before the remaining packs)
 
-- [ ] **Step 7:** Move ALL skills `packages/*/.../skills/` → `src/skills/` (flat)
+- [x] **Step 7:** Move ALL skills `packages/*/.../skills/` → `src/skills/` (flat)
   and ALL rules → `src/rules/` (flat). Resolve any name collisions surfaced by
   the Phase-0 lint. Update every command reference to the shared slug.
-- [ ] **Step 8:** Re-run the transitive hash gate + collision lint over the full
+- [x] **Step 8:** Re-run the transitive hash gate + collision lint over the full
   flat library; confirm green. Skills/rules now live in their final home so the
   remaining packs move into a structure with the shared library already in place.
 
