@@ -219,7 +219,10 @@ knowledge, but the new skill must not *mandate* one stack).
 
 - [x] **Step 0.1:** AI council (deep 3-round debate, 2026-06-03) resolved the
       forks — see **§ Council decision** above. Outcomes: standalone
-      `design-intelligence` skill; `.cjs` token gens → Python; Gemini suite
+      `design-intelligence` skill; `.cjs` token gens → Python; Gemini suite <!-- ref-ignore -->
+      <!-- ^ forward-ref to the planned design-intelligence skill (this [x] step
+           records the council decision to build it; the skill lands later in this
+           roadmap). check-refs only exempts forward-refs under unchecked [ ] items. -->
       deferred (Phase 7); **plus** the generalization mandate — build a reusable
       `corpus-grounding` layer with the four-operation split, not a frontend-only
       corpus.

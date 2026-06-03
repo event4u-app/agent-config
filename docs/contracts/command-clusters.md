@@ -107,6 +107,44 @@ every new sub-command added to an existing cluster.
    semantics: [`slash-command-routing-policy-mechanics.md`](../../.agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md)
    § Routing semantics.
 
+## Command justification — a command must earn a top-level slot
+
+```
+A NEW COMMAND ONLY EARNS A TOP-LEVEL SLOT IN THREE CASES.
+EVERYTHING ELSE IS A SKILL — THE AGENT TRIGGERS IT BY TASK.
+```
+
+Before adding a command, answer: which of these is it?
+
+1. **Flow-entry** — a daily starting point of a flow the user TYPES to begin
+   work (`work`, `git-commit`, `git-pr-create`, `ticket-implement`,
+   `feature-plan`, `review-changes`, `fix-ci`, `test-run`).
+2. **State-query** — a read-only check typed many times a day (`agent-status`,
+   `project-health`, `profile-show`).
+3. **Product-surface** — a FEATURE the user starts deliberately (not daily, but
+   consciously): `council`, `challenge-me`, `research`, `roadmap`,
+   `video-storyboard`. These are products, not implementation helpers — burying
+   them as skills destroys discoverability.
+
+If none of the three, it is a **skill**. Skills already trigger automatically by
+task, so a sub-action, a one-off/setup-once op, a pipeline stage, a destructive
+op (skill + mandatory confirmation gate — destructive ≠ command), or a system /
+admin op (the `agent-admin` platform surface, NOT a flow) does NOT need a
+top-level command. Sibling variants become a flag, never a second command
+(`commit`, not `commit-in-chunks`; `roadmap --step`, not a separate
+`roadmap-process-step` — and `roadmap` with no scope defaults to processing the
+WHOLE roadmap, because that is why you write one). A new verb still needs an ADR
+per [`ADR-041`](../decisions/ADR-041-controlled-command-verbs.md). A genuine
+skill is `code-review` / `git-workflow` / `testing` — never `council` /
+`challenge-me` / `research`.
+
+> The rule that ends "should X be a command?" — a proposed `jira-comment`: not
+> flow-entry, not state-query, not a product-surface feature → skill. Done. The
+> sweet spot is ~40–50 visible commands (workflow + status + product features),
+> not 125 (overwhelms) and not ~29 (buries features). Converged across the
+> 6.0.0-D council passes + feedback (2026-06-03); the dedicated ADR is authored
+> during the 6.0.0-D structural rollout.
+
 ## Frontmatter contract
 
 A new command file under `.agent-src.uncondensed/commands/` MUST

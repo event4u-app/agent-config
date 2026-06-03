@@ -371,6 +371,71 @@ class TestHashTracking(_IsolateMultiRootMixin, unittest.TestCase):
         self.assertEqual(changed, [])
 
 
+class TestTransitiveHash(_IsolateMultiRootMixin, unittest.TestCase):
+    """road-to-6.0.0-D Phase 0 Step 1 — a skill change flips dependent hashes."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.source = Path(self.tmpdir) / "source"
+        self.source.mkdir()
+        self.hash_file = Path(self.tmpdir) / "hashes.json"
+        self._orig_hash_file = condense.HASH_FILE
+        condense.HASH_FILE = self.hash_file
+        self._isolate_multi_root(self.source)
+        (self.source / "skills" / "foo").mkdir(parents=True)
+        self.skill = self.source / "skills" / "foo" / "SKILL.md"
+        self.skill.write_text("---\nname: foo\n---\n\n# Foo skill v1\n")
+        (self.source / "commands").mkdir()
+        self.cmd = self.source / "commands" / "bar.md"
+        self.cmd.write_text("---\nname: bar\nskills: [foo]\n---\n\n# Bar command\n")
+
+    def tearDown(self):
+        self._restore_multi_root()
+        condense.HASH_FILE = self._orig_hash_file
+        shutil.rmtree(self.tmpdir)
+
+    def test_leaf_effective_equals_file_hash(self):
+        # A skill with no declared includes hashes exactly like file_hash —
+        # keeps the stored-hash migration contained to dependency-declaring
+        # artefacts.
+        self.assertEqual(
+            condense.effective_hash("skills/foo/SKILL.md"),
+            condense.file_hash(self.skill),
+        )
+
+    def test_command_folds_skill_hash(self):
+        # The command folds its included skill's hash, so it differs from its
+        # own plain file hash.
+        self.assertNotEqual(
+            condense.effective_hash("commands/bar.md"),
+            condense.file_hash(self.cmd),
+        )
+
+    def test_skill_change_flips_dependent_command_hash(self):
+        before = condense.effective_hash("commands/bar.md")
+        self.skill.write_text("---\nname: foo\n---\n\n# Foo skill v2 (changed)\n")
+        after = condense.effective_hash("commands/bar.md")
+        self.assertNotEqual(before, after)
+
+    def test_skill_change_marks_command_as_changed(self):
+        # The integration the roadmap names: mark everything done, change the
+        # skill, and list_changed_md surfaces the DEPENDENT command.
+        condense.mark_all_done()
+        self.assertEqual(condense.list_changed_md(self.source), [])
+        self.skill.write_text("---\nname: foo\n---\n\n# Foo skill v2 (changed)\n")
+        changed = condense.list_changed_md(self.source)
+        self.assertIn("commands/bar.md", changed)
+        self.assertIn("skills/foo/SKILL.md", changed)
+
+    def test_cycle_is_safe(self):
+        # Two artefacts that include each other resolve without RecursionError.
+        for slug, dep in (("a", "b"), ("b", "a")):
+            (self.source / "skills" / slug).mkdir(parents=True)
+            (self.source / "skills" / slug / "SKILL.md").write_text(
+                f"---\nname: {slug}\nskills: [{dep}]\n---\n\n# {slug}\n")
+        self.assertTrue(condense.effective_hash("skills/a/SKILL.md"))
+
+
 class TestCheckSync(_IsolateMultiRootMixin, unittest.TestCase):
     """Test check_sync() — detects missing and stale files."""
 

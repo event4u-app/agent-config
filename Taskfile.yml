@@ -158,6 +158,9 @@ tasks:
       - task: lint-projection-fidelity
       - task: generate-pack-manifests-check
       - task: lint-pack-boundaries
+      - task: validate-pack-yaml
+      - task: lint-pack-dependencies
+      - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
@@ -272,6 +275,9 @@ tasks:
       - task: lint-projection-fidelity
       - task: generate-pack-manifests-check
       - task: lint-pack-boundaries
+      - task: validate-pack-yaml
+      - task: lint-pack-dependencies
+      - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory

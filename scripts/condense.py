@@ -182,6 +182,87 @@ def file_hash(filepath: Path) -> str:
     return h.hexdigest()
 
 
+# ---------------------------------------------------------------------------
+# Transitive include hashing (road-to-6.0.0-D Phase 0 Step 1)
+#
+# An artefact declares the skills / rules it includes via its frontmatter
+# `skills:` / `rules:` lists. The condensation gate must treat that artefact
+# as stale when an included skill/rule changes — otherwise a moved or edited
+# dependency slips past the hash check silently (the single biggest risk the
+# 6.0.0-D council named). `effective_hash` folds the content hash of every
+# transitive include into the artefact's own content hash.
+#
+# Leaf artefacts (no declared includes) hash exactly like `file_hash`, so the
+# stored hash table only changes for artefacts that actually declare deps —
+# the migration stays contained.
+# ---------------------------------------------------------------------------
+
+_DEP_FRONTMATTER_KEYS = ("skills", "rules")
+
+
+def _slug_to_logical(slug: str) -> str | None:
+    """Map a skill / rule slug to its logical relative path, if it resolves.
+
+    Skill slug ``foo`` → ``skills/foo/SKILL.md``; rule slug ``bar`` →
+    ``rules/bar.md``. Returns the first candidate that backs a real source
+    file, else ``None`` (a typo'd / external slug contributes no edge).
+    """
+    for cand in (f"skills/{slug}/SKILL.md", f"rules/{slug}.md"):
+        if _resolve_source(cand) is not None:
+            return cand
+    return None
+
+
+def _direct_includes(relative: str) -> list[str]:
+    """Logical relpaths an artefact directly includes via frontmatter.
+
+    Reads the artefact's ``skills:`` / ``rules:`` frontmatter lists and
+    resolves each slug to a logical path. Non-resolving slugs are skipped.
+    """
+    source = _resolve_source(relative)
+    if source is None:
+        return []
+    try:
+        meta, _ = _parse_frontmatter(source.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        return []
+    deps: list[str] = []
+    for key in _DEP_FRONTMATTER_KEYS:
+        value = meta.get(key)
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            if not isinstance(item, str):
+                continue
+            logical = _slug_to_logical(item.strip())
+            if logical is not None and logical != relative:
+                deps.append(logical)
+    return deps
+
+
+def effective_hash(relative: str, _seen: frozenset | None = None) -> str:
+    """Content hash of an artefact folded with its transitive include hashes.
+
+    Changes whenever the artefact's own bytes change OR any skill/rule it
+    transitively includes changes. Cycle-safe: a slug that re-enters the
+    current resolution chain folds only its own content hash, breaking the
+    loop. Leaf artefacts (no includes) return exactly ``file_hash`` so the
+    stored-hash migration is limited to artefacts that declare dependencies.
+    """
+    source = _resolve_source(relative)
+    if source is None:
+        return ""
+    own = file_hash(source)
+    if _seen is not None and relative in _seen:
+        return own  # cycle — fold own content only
+    deps = sorted(set(_direct_includes(relative)))
+    if not deps:
+        return own  # leaf — identical to plain file_hash
+    seen_next = (_seen or frozenset()) | {relative}
+    parts = [own] + [effective_hash(dep, seen_next) for dep in deps]
+    return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
+
+
 def load_hashes() -> dict:
     """Load stored condensation hashes from JSON file."""
     if HASH_FILE.exists():
@@ -212,7 +293,7 @@ def mark_done(relative_path: str) -> None:
         sys.exit(1)
     apply_path_rewriter(relative_path)
     hashes = load_hashes()
-    hashes[relative_path] = file_hash(source_file)
+    hashes[relative_path] = effective_hash(relative_path)
     save_hashes(hashes)
     print(f"✅  Marked as condensed: {relative_path}")
 
@@ -242,7 +323,7 @@ def mark_all_done() -> None:
     for source_file, relative in _iter_sources():
         if not should_condense(source_file):
             continue
-        hashes[relative] = file_hash(source_file)
+        hashes[relative] = effective_hash(relative)
         count += 1
     save_hashes(hashes)
     print(f"✅  Marked {count} files as condensed")
@@ -260,7 +341,7 @@ def list_changed_md(source_dir: Path) -> list:
     for source_file, relative in _iter_sources():
         if not should_condense(source_file):
             continue
-        current_hash = file_hash(source_file)
+        current_hash = effective_hash(relative)
         stored_hash = hashes.get(relative)
         if stored_hash != current_hash:
             changed.append(relative)

@@ -88,6 +88,23 @@ if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)';
         exit 1
     fi
 fi
+
+# Phase-0 pack gates (road-to-6.0.0-D) — pack.yaml schema + dependency/DAG +
+# single-namespace collision lints. Only fires when staged changes touch pack
+# sources, the packs vocab, or the gate scripts themselves, so unrelated
+# commits stay fast.
+if git diff --cached --name-only | grep -qE '^(packages/|config/discovery/packs\.yml|scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|scripts/schemas/pack\.schema\.json|scripts/pack_dependency_allowlist\.json)'; then
+    if ! python3 scripts/validate_pack_yaml.py \
+        || ! python3 scripts/lint_pack_dependencies.py \
+        || ! python3 scripts/lint_namespace_collisions.py; then
+        echo ""
+        echo "❌  Commit blocked — Phase-0 pack gate failed (schema / dependency / namespace)."
+        echo "   Run 'task generate-pack-manifests' if manifests drifted, fix the"
+        echo "   reported reference, then re-stage and commit."
+        echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
+        exit 1
+    fi
+fi
 EOF
 
 chmod +x "$HOOKS_DIR/pre-commit"
