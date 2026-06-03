@@ -134,6 +134,10 @@
         "category": { "type": "string", "enum": ["skill", "rule", "command", "template"] },
         "name": { "type": "string" },
         "pack": { "$ref": "#/$defs/pack_id", "description": "capability-packs.md — canonical OWNER pack (ownership/budget unit). Orthogonal to `packs` (discovery tags); the owner need not appear in `packs`." },
+        "tier": { "type": "integer", "enum": [0, 1, 2], "description": "6.0.0-C — command-surface tier surfaced on `category: command` artefacts so the CLI discovery surface reads the manifest, not a parallel catalog." },
+        "intent": { "type": "string", "description": "6.0.0-C — command routing metadata (one-line existence justification). Present on visible command artefacts." },
+        "routes_to": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (skill/cluster-sub/command slugs the intent routes to)." },
+        "replaces": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (prior names/aliases this command absorbs; may be empty)." },
         "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
         "packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" }, "minItems": 1 },
         "requires": {
