@@ -133,7 +133,11 @@ def installed_packs(repo_root: Path, settings: dict[str, Any] | None = None) -> 
 # --- Closure + token resolution -------------------------------------------
 
 def expand_closure(seeds: list[str] | set[str], vocab: dict[str, dict[str, Any]]) -> list[str]:
-    """Transitive ``requires_hint`` closure of ``seeds``, sorted, deduped."""
+    """Transitive ``requires`` closure of ``seeds``, sorted, deduped.
+
+    Reads the canonical ``requires`` graph (capability-packs.md), falling back
+    to the legacy ``requires_hint`` name during the deprecation window.
+    """
     seen: set[str] = set()
     stack = list(seeds)
     while stack:
@@ -142,7 +146,7 @@ def expand_closure(seeds: list[str] | set[str], vocab: dict[str, dict[str, Any]]
             continue
         seen.add(pid)
         entry = vocab.get(pid) or {}
-        for dep in entry.get("requires_hint") or []:
+        for dep in entry.get("requires") or entry.get("requires_hint") or []:
             if dep not in seen:
                 stack.append(str(dep))
     return sorted(seen)
