@@ -13,4 +13,4 @@ requires:
 size_class: medium
 suggests: []
 trust_level_default: core
-version: 5.10.0
+version: 5.10.1
