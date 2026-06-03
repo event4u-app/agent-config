@@ -147,6 +147,23 @@ class ScopedCursorCommands(unittest.TestCase):
 class ScopedResolverIntegration(unittest.TestCase):
     """End-to-end: a profile's resolved set excludes inactive-pack artefacts."""
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        # The resolver reads the generated (gitignored) discovery manifest.
+        # CI checkouts don't carry it — build it once so the integration
+        # test exercises the real artefact instead of an empty fallback.
+        import subprocess
+
+        repo = Path(__file__).resolve().parent.parent
+        manifest = repo / "dist" / "discovery" / "discovery-manifest.json"
+        if not manifest.exists():
+            subprocess.run(
+                [sys.executable, "scripts/build_discovery_manifest.py", "--write", "--quiet"],
+                cwd=repo,
+                check=True,
+                capture_output=True,
+            )
+
     def test_inactive_pack_skill_absent_under_scoped(self) -> None:
         from scripts.config import packs as P
         from scripts.config.profiles import resolve_profile

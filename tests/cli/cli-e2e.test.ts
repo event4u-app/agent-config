@@ -6,12 +6,26 @@
  * delegation is exercised via the `--version`/`--help` paths that the
  * shell handles natively before delegation kicks in.
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { execa } from 'execa';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const CLI = resolve(process.cwd(), 'dist/cli/agent-config.js');
+const MANIFEST = resolve(process.cwd(), 'dist/discovery/discovery-manifest.json');
+
+beforeAll(async () => {
+    // `commands ls/explain` read the generated (gitignored) discovery
+    // manifest. CI checkouts don't carry it — build it once so the e2e
+    // suite exercises the real artefact instead of the missing-manifest
+    // error path.
+    if (!existsSync(MANIFEST)) {
+        await execa('python3', ['scripts/build_discovery_manifest.py', '--write', '--quiet'], {
+            cwd: process.cwd(),
+            timeout: 60_000,
+        });
+    }
+}, 90_000);
 
 function pkgVersion(): string {
     const raw = readFileSync(resolve(process.cwd(), 'package.json'), 'utf8');
