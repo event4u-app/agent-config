@@ -1,6 +1,7 @@
 ---
 model_tier: high
 name: image:verify
+pack: ai-video
 tier: 2
 cluster: image
 sub: verify

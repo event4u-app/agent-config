@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: memory:promote
+pack: meta
 tier: 2
 cluster: memory
 sub: promote

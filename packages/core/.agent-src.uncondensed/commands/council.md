@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: council
+pack: meta
 tier: 1
 description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
 cluster: council

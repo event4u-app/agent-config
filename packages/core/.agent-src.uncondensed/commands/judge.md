@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: judge
+pack: engineering-base
 tier: 1
 description: Judge orchestrator — routes to solo, steps, on-diff
 cluster: judge

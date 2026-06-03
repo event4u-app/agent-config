@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: work
+pack: engineering-base
 tier: 0
 skills: [refine-prompt, command-routing]
 description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.

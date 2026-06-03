@@ -1,7 +1,8 @@
 ---
 model_tier: medium
 name: create-pr:description-only
-tier: 1
+pack: engineering-base
+tier: 2
 cluster: create-pr
 sub: description-only
 skills: [git-workflow]

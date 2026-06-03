@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: feature
+pack: engineering-base
 tier: 1
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 cluster: feature

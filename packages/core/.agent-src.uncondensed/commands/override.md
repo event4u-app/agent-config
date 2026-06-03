@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: override
+pack: meta
 tier: 2
 description: Override orchestrator — routes to create, manage
 cluster: override

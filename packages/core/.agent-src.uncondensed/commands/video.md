@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: video
+pack: ai-video
 tier: 2
 cluster: video
 description: Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch.

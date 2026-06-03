@@ -1,7 +1,8 @@
 ---
 model_tier: high
 name: project-analyze
-tier: 1
+pack: engineering-base
+tier: 2
 skills: [project-analyzer]
 description: Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 suggestion:

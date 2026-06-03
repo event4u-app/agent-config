@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: optimize-prompt
+pack: meta
 tier: 2
 cluster: optimize
 description: "Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt."
