@@ -189,7 +189,7 @@ Phase 0, never after the moves.
 
 ## Phase 3: Monorepo-collapse decision (evidence-gated)
 
-- [ ] **Step 9:** *Decision gate.* Gather the install-pattern evidence: do any
+- [x] **Step 9:** *Decision gate.* Gather the install-pattern evidence: do any
   consumers install pack subsets (vs. the whole package)? Given few/team-internal
   users, the expected answer is "no subset installs" → **collapse** `packages/`
   into `src/domains/`. Record the decision (ADR). If evidence shows subset
