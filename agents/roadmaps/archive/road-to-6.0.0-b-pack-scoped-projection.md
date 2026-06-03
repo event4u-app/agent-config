@@ -188,18 +188,18 @@ set.
 
 ## Acceptance Criteria
 
-- [ ] All ~19 capability-pack tags carry a manifest with `size_class` +
+- [x] All ~19 capability-pack tags carry a manifest with `size_class` +
   `requires`/`suggests`; the dependency graph lint passes (no dangling edge,
   acyclic `requires`); capability-pack contract documented.
-- [ ] All 150 commands carry `pack:`; discovery manifest emits command ownership
+- [x] All 150 commands carry `pack:`; discovery manifest emits command ownership
   deterministically; Phase-1 was a pure metadata commit (no behaviour change).
-- [ ] Budget-audit report exists; over-budget decisions recorded with the
+- [x] Budget-audit report exists; over-budget decisions recorded with the
   reachability check; hidden/relocated commands handled via internal-visibility
   + deprecation shims, zero deletions.
-- [ ] Pack loader (`scripts/config/packs.py`) ships; projector honours the
+- [x] Pack loader (`scripts/config/packs.py`) ships; projector honours the
   active profile/pack set; `legacy-all` reproduces the 5.x full projection.
-- [ ] 6.0.0 ships with `legacy-all` default (non-breaking `npm update`); scoped
+- [x] 6.0.0 ships with `legacy-all` default (non-breaking `npm update`); scoped
   projection is opt-in via profile selection; switch is atomic + reversible.
-- [ ] Golden tests cover legacy-all / scoped / switch-atomicity / inactive-pack
+- [x] Golden tests cover legacy-all / scoped / switch-atomicity / inactive-pack
   absence. Staged-rollout plan documented; default-flip + removal NOT shipped
   here.
