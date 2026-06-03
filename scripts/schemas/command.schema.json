@@ -46,7 +46,12 @@
     "cluster": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
-      "description": "Locked verb cluster this command belongs to. See docs/contracts/command-clusters.md."
+      "description": "Locked verb cluster this command belongs to (ADR-003 invocation/colon-syntax namespace). See docs/contracts/command-clusters.md. Distinct from `pack` (ownership/surfacing unit) and `packs` (additive discovery axis)."
+    },
+    "pack": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Canonical OWNER capability pack (docs/contracts/capability-packs.md) — the single ownership/surfacing unit used by the per-pack visible-command budget (6.0.0-C). Orthogonal to `cluster` (invocation namespace) and `packs` (additive discovery tags); the owner need not appear in `packs`. Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/packs.yml."
     },
     "type": {
       "type": "string",

@@ -84,6 +84,44 @@ def _check_vocab(manifest: dict[str, Any]) -> list[str]:
     return errs
 
 
+def _check_capability_pack_determinism(manifest: dict[str, Any]) -> list[str]:
+    """size_class ↔ artefact_count parity (docs/contracts/capability-packs.md).
+
+    - No orphan tag: a pack with ≥1 referencing artefact MUST carry a
+      formalized manifest (a `size_class`).
+    - No orphan manifest: a pack carrying a `size_class` MUST have ≥1
+      referencing artefact (else it is dead vocabulary).
+    """
+    errs: list[str] = []
+    for p in manifest.get("packs", []):
+        pid = p.get("id")
+        has_size = p.get("size_class") is not None
+        count = p.get("artefact_count", 0)
+        if count > 0 and not has_size:
+            errs.append(
+                f"orphan tag: pack '{pid}' has {count} artefact(s) but no size_class — "
+                f"assign domain + size_class in config/discovery/packs.yml"
+            )
+        if has_size and count == 0:
+            errs.append(
+                f"orphan manifest: pack '{pid}' carries size_class='{p['size_class']}' "
+                f"but no artefact references it — remove the class or cite an artefact"
+            )
+
+    # Command pack-ownership completeness (6.0.0-B Phase 1 Step 3): every
+    # command artefact must carry a canonical `pack` owner from the vocabulary.
+    valid = {p.get("id") for p in manifest.get("packs", [])}
+    for a in manifest.get("artefacts", []):
+        if a.get("category") != "command":
+            continue
+        owner = a.get("pack")
+        if not owner:
+            errs.append(f"command '{a['path']}' has no pack owner — add `pack:` frontmatter")
+        elif owner not in valid:
+            errs.append(f"command '{a['path']}' pack owner '{owner}' not in vocabulary")
+    return errs
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
@@ -115,11 +153,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     vocab_errs = _check_vocab(manifest)
-    if vocab_errs:
-        for e in vocab_errs[:20]:
+    det_errs = _check_capability_pack_determinism(manifest)
+    all_errs = vocab_errs + det_errs
+    if all_errs:
+        for e in all_errs[:20]:
             print(f"error: {e}", file=sys.stderr)
-        if len(vocab_errs) > 20:
-            print(f"  ... and {len(vocab_errs) - 20} more", file=sys.stderr)
+        if len(all_errs) > 20:
+            print(f"  ... and {len(all_errs) - 20} more", file=sys.stderr)
         return 1
 
     if not args.quiet:
