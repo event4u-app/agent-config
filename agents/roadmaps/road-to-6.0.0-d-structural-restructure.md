@@ -198,7 +198,8 @@ Phase 0, never after the moves.
 
 ## Phase 4: Move the remaining packs
 
-- [ ] **Step 10:** Move every remaining `packages/<pack>/` command set →
+- [x] **Step 10:** Move every remaining `packages/<pack>/` command set → <!-- done: 150 commands → src/domains/<pack>/<subpath>/command.md (current pack ids), agent_src.py domains-command resolver + iter_commands, 5 colliding physical shells retired, manifests/discovery/first-win green. DEFERRED to Step 11/12: capability pack-rename + aliases (interface change per scope-line rule) and _internal demotion (no internal marker in this repo yet). -->
+
   `src/domains/<pack>/<verb>/` with `pack.yaml`, per the Phase-3 decision. Demote
   internal commands to `src/domains/_internal/` (uncapped, never surfaced).
   Re-run all Phase-0 gates after each pack (move-one-validate-one cadence).
