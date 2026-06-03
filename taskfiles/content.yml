@@ -255,6 +255,21 @@ tasks:
     desc: "Phase 4.4 (ADR-017) — fail on cross-pack references not declared in pack.yaml requires[]"
     cmd: python3 scripts/lint_pack_boundaries.py --quiet
 
+  validate-pack-yaml:
+    silent: true
+    desc: "road-to-6.0.0-D Phase 0 — validate packages/*/pack.yaml against the schema + resolve every dependency reference"
+    cmd: python3 scripts/validate_pack_yaml.py
+
+  lint-pack-dependencies:
+    silent: true
+    desc: "road-to-6.0.0-D Phase 0 — pack.yaml dependency drift (declared vs actual includes) + pack-graph DAG check"
+    cmd: python3 scripts/lint_pack_dependencies.py
+
+  lint-namespace-collisions:
+    silent: true
+    desc: "road-to-6.0.0-D Phase 0 — every skill/rule/command name unique within its namespace (single flat library)"
+    cmd: python3 scripts/lint_namespace_collisions.py
+
   new-skill:
     desc: "Phase 4.5 (ADR-017) — interactive scaffolder for new skills/rules/commands under packages/. Flags forwarded after `--`."
     cmd: python3 scripts/new_skill.py {{.CLI_ARGS}}

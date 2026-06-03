@@ -1,0 +1,18 @@
+{
+  "_comment": "Baseline of pre-existing pack.yaml dependency references that do NOT resolve to a skill or rule on the 6.0.0-pre layout. road-to-6.0.0-D Phase 0 is move-only / no-behavioral-change (council convergence claude-sonnet-4-5 + gpt-4o, 2026-06-03: Option C — strict validator + tracked baseline). Each entry is a command `skills:` frontmatter reference that is actually a command-routing target (belongs in `routes_to:`) or a non-existent skill. CLEANUP IS A TRACKED 6.1 ITEM (road-to-6.1.0-product-consolidation): move routing targets to `routes_to:`, rename `composer`->`composer-packages`, drop the 4 non-existent package-manager skill refs. Do NOT grow this list — new references must resolve.",
+  "entries": [
+    { "pack": "core", "slug": "composer", "reason": "wrong slug — real skill is `composer-packages` (pack-php); rename deferred to 6.1 (behavioral)" },
+    { "pack": "core", "slug": "npm", "reason": "no such skill — package-test.md references a non-existent npm skill; drop deferred to 6.1" },
+    { "pack": "core", "slug": "python-packages", "reason": "no such skill — drop deferred to 6.1" },
+    { "pack": "core", "slug": "go-modules", "reason": "no such skill — drop deferred to 6.1" },
+    { "pack": "core", "slug": "cargo-packages", "reason": "no such skill — drop deferred to 6.1" },
+    { "pack": "core", "slug": "chat-history", "reason": "command-routing target (commands/chat-history/*) listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "agents", "reason": "command-routing target (commands/agents/*) listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "agents-audit", "reason": "command-routing target (agents:audit) listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "ghostwriter", "reason": "command-routing target (commands/ghostwriter/*) listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "post-as", "reason": "command-routing target (commands/post-as/*) listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "sync-agent-settings", "reason": "command-routing target listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "sync-gitignore", "reason": "command-routing target (commands/sync-gitignore/*) listed under skills: — move to routes_to: in 6.1" },
+    { "pack": "core", "slug": "rule-compliance-audit", "reason": "command-routing target listed under skills: — move to routes_to: in 6.1" }
+  ]
+}

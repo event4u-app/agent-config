@@ -85,6 +85,11 @@ def _collect_artefacts(pkg_dir: Path) -> list[dict[str, Any]]:
             "name": fm.get("name") or (p.parent.name if p.name == "SKILL.md" else p.stem),
             "description": (fm.get("description") or "").strip(),
             "category": _category_for(p, src_root),
+            # Include edges — the skills / rules this artefact references in its
+            # frontmatter. Drives the generated `dependencies` block + the
+            # dependency lint (road-to-6.0.0-D Phase 0 Steps 2-3).
+            "skills": [s for s in (fm.get("skills") or []) if isinstance(s, str)],
+            "rules": [r for r in (fm.get("rules") or []) if isinstance(r, str)],
         })
     return items
 
@@ -115,6 +120,25 @@ def _build_pack_yaml(pkg_dir: Path, vocab: dict[str, dict[str, Any]],
     }
     if isinstance(meta.get("onboarding"), dict):
         out["onboarding"] = meta["onboarding"]
+    # size_class / suggests come from the discovery vocab (config/discovery/packs.yml)
+    # when defined there; the pack.yaml schema (scripts/schemas/pack.schema.json)
+    # treats them as optional so reserved-vocab packs without artefacts still validate.
+    if meta.get("size_class"):
+        out["size_class"] = meta["size_class"]
+    out["suggests"] = meta.get("suggests") or []
+    # dependencies — the artefact-level include graph (skills / rules the pack's
+    # commands reference). Generated from frontmatter so it stays in sync; the
+    # dependency lint re-derives this and fails on drift, validate_pack_yaml.py
+    # fails on a reference that no longer resolves (road-to-6.0.0-D Phase 0).
+    dep_skills: set[str] = set()
+    dep_rules: set[str] = set()
+    for a in artefacts:
+        dep_skills.update(a.get("skills") or [])
+        dep_rules.update(a.get("rules") or [])
+    out["dependencies"] = {
+        "skills": sorted(dep_skills),
+        "rules": sorted(dep_rules),
+    }
     return out
 
 
