@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **525 artefacts** in this package.
+Maintainer-facing index of all **526 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -474,7 +474,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`video:storyboard`](../packages/core/.agent-src.uncondensed/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../packages/core/.agent-src.uncondensed/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (73)
+## Guidelines (74)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -484,6 +484,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md) | agent-infra |  |
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`carve-out-predicates`](../docs/guidelines/agent-infra/carve-out-predicates.md) | agent-infra |  |
+| guideline | [`comparison-matrix`](../docs/guidelines/agent-infra/comparison-matrix.md) | agent-infra |  |
 | guideline | [`critical-thinking`](../docs/guidelines/agent-infra/critical-thinking.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |

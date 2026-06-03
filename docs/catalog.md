@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **524 public artefacts** shipped by
+Consumer-facing catalog of all **525 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -473,7 +473,7 @@ are excluded.
 | command | [`video:storyboard`](../.agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (73)
+## Guidelines (74)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -483,6 +483,7 @@ are excluded.
 | guideline | [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md) | agent-infra |  |
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`carve-out-predicates`](../docs/guidelines/agent-infra/carve-out-predicates.md) | agent-infra |  |
+| guideline | [`comparison-matrix`](../docs/guidelines/agent-infra/comparison-matrix.md) | agent-infra |  |
 | guideline | [`critical-thinking`](../docs/guidelines/agent-infra/critical-thinking.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
