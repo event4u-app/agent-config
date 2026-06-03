@@ -7,15 +7,19 @@ risk, 2026-05-30). Pure-Python; no ffmpeg needed.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-CORE = REPO / "packages" / "core" / ".agent-src.uncondensed"
+sys.path.insert(0, str(REPO / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
 
-COMMAND = CORE / "commands" / "video" / "from-song.md"
-ORCHESTRATOR = CORE / "commands" / "video.md"
-# Skills live in the flat shared library since 6.0.0-D Phase 2.
-SKILL = REPO / "src" / "skills" / "song-to-script" / "SKILL.md"
+# Commands moved into the pack-physical src/domains homes in 6.0.0-D Phase 4;
+# skills into the flat src/ library in Phase 2. Resolve by logical identity so
+# these pins survive the physical move.
+COMMAND = resolve_logical("commands/video/from-song.md")
+ORCHESTRATOR = resolve_logical("commands/video.md")
+SKILL = resolve_logical("skills/song-to-script/SKILL.md")
 PROBE = REPO / "scripts" / "ai-video" / "lib" / "probe-audio.sh"
 CLUSTERS = REPO / "docs" / "contracts" / "command-clusters.md"
 

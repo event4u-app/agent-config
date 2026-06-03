@@ -33,7 +33,7 @@ from command_suggester import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-from _lib.agent_src import artefact_roots, resolve_logical  # noqa: E402
+from _lib.agent_src import resolve_logical  # noqa: E402
 
 _RULE_RESOLVED = resolve_logical("rules/command-suggestion-policy.md")
 assert _RULE_RESOLVED is not None, "command-suggestion-policy.md missing"
@@ -42,12 +42,11 @@ RULE_PATH = _RULE_RESOLVED
 
 @pytest.fixture(scope="module")
 def specs():
-    out = []
-    for pack_root in artefact_roots():
-        cmd_dir = pack_root / "commands"
-        if cmd_dir.is_dir():
-            out.extend(load_commands(cmd_dir))
-    return out
+    # Since 6.0.0-D Phase 4 the SOURCE commands live under
+    # src/domains/<pack>/<subpath>/command.md (all named `command.md`). The
+    # loader expects a flat, command-named catalogue, so load against the
+    # condensed `.agent-src/commands/` projection — the rendered catalogue.
+    return load_commands(REPO_ROOT / ".agent-src" / "commands")
 
 
 @pytest.fixture(scope="module")
