@@ -6,17 +6,17 @@
 
 ## Overall
 
-**44 / 175 steps done · 25%**
+**48 / 175 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   25%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 35 | 31 | 4 | 0 | 0 | █░░░░░░░░░ 11% |
 | 2 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
@@ -28,11 +28,11 @@
 
 ### [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md)
 
-**Road to 6.0.0-D — Structural restructure (the hard break)** — 0 / 35 done (0%)
+**Road to 6.0.0-D — Structural restructure (the hard break)** — 4 / 35 done (11%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Preconditions (foundation — NO files moved yet) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Preconditions (foundation — NO files moved yet) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Laravel prototype + extraction proof | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | Flat skills + rules library (before the remaining packs) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Monorepo-collapse decision (evidence-gated) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |

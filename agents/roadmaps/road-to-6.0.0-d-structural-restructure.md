@@ -149,20 +149,20 @@ Phase 0, never after the moves.
 
 ## Phase 0: Preconditions (foundation — NO files moved yet)
 
-- [ ] **Step 1:** Make `condense.py` hash skill/rule includes **transitively** —
+- [x] **Step 1:** Make `condense.py` hash skill/rule includes **transitively** —
   a change to an included skill invalidates the hash of every command that
   includes it. Ship standalone and validate (test: modify a skill, assert a
   dependent command's hash flips). This is the non-negotiable gate; nothing moves
   until it is green.
-- [ ] **Step 2:** Define the `pack.yaml` schema (under `src/schemas/`): `id`,
+- [x] **Step 2:** Define the `pack.yaml` schema (under `src/schemas/`): `id`,
   `size_class`, `requires`, `suggests`, and explicit `dependencies` (skills /
   rules / packs the pack's commands reference). Validate-on-load with a clear
   fail message on a typo'd / non-existent reference.
-- [ ] **Step 3:** Add the **dependency lint** (`pack.yaml` declared deps vs.
+- [x] **Step 3:** Add the **dependency lint** (`pack.yaml` declared deps vs.
   actual includes), the **pack-graph lint** (`requires`/`dependencies` is a DAG —
   no cycles, so a pack stays extractable), and run both against the CURRENT
   `packages/` layout (expect ~0 violations — packs are physically isolated today).
-- [ ] **Step 4:** Add the **single-namespace collision lint**: every skill / rule
+- [x] **Step 4:** Add the **single-namespace collision lint**: every skill / rule
   / command name is globally unique after normalization (lowercase, `_`→`-`).
   Wire all Phase-0 lints into `task ci` + pre-commit. <!-- carve-out: new-gate-verification -->
 
