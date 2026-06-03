@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: refine-ticket
+pack: product-basic
 tier: 1
 skills: [refine-ticket]
 description: Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt

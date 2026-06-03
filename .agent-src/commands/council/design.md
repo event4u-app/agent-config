@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: council:design
+pack: meta
 tier: 2
 cluster: council
 sub: design

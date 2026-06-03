@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: ghostwriter:fetch
+pack: gtm-marketing
 tier: 2
 cluster: ghostwriter
 sub: fetch

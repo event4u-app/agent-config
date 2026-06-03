@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: create-pr
+pack: engineering-base
 tier: 1
 cluster: create-pr
 skills: [git-workflow]

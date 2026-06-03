@@ -2,6 +2,12 @@
 # Schema: docs/contracts/profile-system.md
 profile:
   id: finance
+  # Base capability packs for scoped projection (ADR-040 / capability-packs.md).
+  # Self-sufficient: dcf-modeling + scenario-modeling are finance-advanced, so
+  # a CFO profile must ship it. AI-council resolved Option A, 2026-06-03.
+  packs:
+    - finance-basic
+    - finance-advanced
   audience:
     label: "CFO / fractional finance / FP&A"
     readme_anchor: "finance"

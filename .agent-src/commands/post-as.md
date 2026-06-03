@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: post-as
+pack: gtm-marketing
 tier: 2
 description: Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer).
 cluster: post-as

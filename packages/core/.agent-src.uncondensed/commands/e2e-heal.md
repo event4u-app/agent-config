@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: e2e-heal
+pack: engineering-base
 tier: 2
 skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests

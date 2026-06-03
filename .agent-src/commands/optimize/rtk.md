@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: optimize:rtk
+pack: meta
 tier: 2
 cluster: optimize
 sub: rtk

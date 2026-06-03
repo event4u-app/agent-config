@@ -1,9 +1,11 @@
 ---
 model_tier: medium
 name: chat-history:show
+pack: meta
 tier: 2
 cluster: chat-history
 sub: show
+skills: [chat-history]
 description: Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
 suggestion:
   eligible: false

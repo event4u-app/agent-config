@@ -38,6 +38,7 @@ an ADR — the contract surface that ships in the wizard
 ```yaml
 profile:
   id: developer
+  packs: [engineering-base]              # base capability packs (scoped projection)
   audience:
     label: "IC engineer"
     readme_anchor: "developer"          # selects README first-screen block
@@ -49,6 +50,26 @@ profile:
     commands_hint: [work, implement-ticket, review-changes, fix]
     docs_first_pointer: "docs/getting-started-by-role.md#developer"
 ```
+
+### `packs` — base capability packs (6.0.0-B)
+
+`profile.packs` is the **base capability-pack set** the projector resolves
+when `projection.mode: scoped` (ADR-040). At projection time the selected set
+is `profile.packs ∪ runtime.active_packs` (the session overlay), expanded over
+the `requires` graph ([`capability-packs.md`](capability-packs.md)); the
+overlay can only **widen**, so `packs` is the floor of the default surface.
+
+**`skills_hint` is a guarantee, not a teaser.** Every skill named in a
+profile's `skills_hint` MUST resolve from that profile's `packs` (the
+self-sufficient contract). A profile must not advertise a skill its base packs
+hide. The six seed profiles satisfy this; the budget lint in 6.0.0-C will
+enforce it in CI.
+
+> Resolved by AI council (claude-sonnet-4-5 + gpt-4o, 2026-06-03): Option A
+> (self-sufficient base packs) for 6.0.0-B — no new mechanism, opt-in, default
+> stays `legacy-all`. Deferred to 6.0.0-C: a `skills_discoverable` field,
+> reactive just-in-time pack activation, the per-pack budget lint, and
+> telemetry.
 
 Per [ADR-010](../decisions/ADR-010-profile-pack-preset-boundary.md), a
 profile **MAY** set `defaults.preset_id` but **MAY NOT** set any
@@ -85,6 +106,7 @@ After the loader runs, the session has:
 ```python
 {
   "id": "developer",
+  "packs": ["engineering-base"],
   "audience": {"label": "IC engineer", "readme_anchor": "developer"},
   "preset_id": "balanced",
   "personas": ["reviewer", "security"],
@@ -127,7 +149,10 @@ Only changes to the **seed set** require an ADR.
 
 - This contract does **not** define preset knobs. See
   [`config-presets.md`](config-presets.md).
-- It does **not** define packs. See `workflow-packs.md` (Phase 2 item 7).
+- It declares **base capability packs** (`profile.packs`, 6.0.0-B) for scoped
+  projection, but does **not** define workflow-pack *bundles*. See
+  [`capability-packs.md`](capability-packs.md) (capability layer) and
+  `workflow-packs.md` (bundle layer).
 - It does **not** override `rule_loading_tier`. The rule-tier loader keeps
   its independent axis per
   [`cost-profile-defaults.md`](cost-profile-defaults.md).

@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: package-reset
+pack: meta
 tier: 2
 skills: [composer, npm]
 description: /package-reset

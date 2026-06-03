@@ -35,12 +35,16 @@ PACKS_YML = ROOT / "config" / "discovery" / "packs.yml"
 
 
 def _load_pack_closure() -> dict[str, set[str]]:
-    """pack_id → transitive set of {self} ∪ requires_hint closure."""
+    """pack_id → transitive set of {self} ∪ requires closure.
+
+    Reads the canonical ``requires`` graph (capability-packs.md), falling back
+    to the legacy ``requires_hint`` name during the deprecation window.
+    """
     raw = yaml.safe_load(PACKS_YML.read_text(encoding="utf-8")) or []
     direct: dict[str, set[str]] = {}
     for entry in raw:
         pid = entry["id"]
-        direct[pid] = set(entry.get("requires_hint") or [])
+        direct[pid] = set(entry.get("requires") or entry.get("requires_hint") or [])
 
     closure: dict[str, set[str]] = {}
 
@@ -117,7 +121,7 @@ def main() -> int:
                 errors.append(
                     f"{info['path']}: skill '{skill_id}' (pack '{p}') requires "
                     f"'{req}' (pack {sorted(req_packs)}), but '{p}' does not reach "
-                    f"it. Add requires_hint: {hint} to pack '{p}' in "
+                    f"it. Add requires: {hint} to pack '{p}' in "
                     f"config/discovery/packs.yml, or move '{req}' into a reachable pack."
                 )
 

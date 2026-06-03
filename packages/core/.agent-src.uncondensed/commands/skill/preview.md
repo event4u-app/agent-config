@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: skill:preview
+pack: meta
 tier: 2
 cluster: skill
 sub: preview

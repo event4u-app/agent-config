@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: agent-status
+pack: meta
 tier: 0
 skills: [agent-docs-writing]
 description: Show current conversation stats — message count, token costs, task progress, next freshness check.

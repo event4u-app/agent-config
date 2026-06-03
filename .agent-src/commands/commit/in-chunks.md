@@ -1,7 +1,8 @@
 ---
 model_tier: medium
 name: commit:in-chunks
-tier: 1
+pack: engineering-base
+tier: 2
 cluster: commit
 sub: in-chunks
 skills: [git-workflow]

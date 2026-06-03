@@ -2,6 +2,10 @@
 # Schema: docs/contracts/profile-system.md
 profile:
   id: content_creator
+  # Base capability packs for scoped projection (ADR-040 / capability-packs.md).
+  packs:
+    - gtm-marketing
+    - ai-video
   audience:
     label: "Writers, ghostwriters, marketers"
     readme_anchor: "content_creator"

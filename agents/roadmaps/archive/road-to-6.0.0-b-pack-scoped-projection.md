@@ -88,14 +88,14 @@ set.
 > none (the tags are bare strings). This phase formalizes that layer. No
 > behaviour change.
 
-- [ ] **Step 0.1:** Author the **capability-pack contract** under
+- [x] **Step 0.1:** Author the **capability-pack contract** under
   `docs/contracts/` (new `capability-packs.md`, sibling to `workflow-packs.md`):
   define the manifest shape — `id`, `domain`, `size_class`
   (core / small / medium / large / platform), `requires`, `suggests` — and state
   explicitly that capability packs (skill/command `packs:` tags) are a distinct
   layer from workflow-pack bundles. The `size_class` is the input the 6.0.0-C
   per-pack budget lint reads.
-- [ ] **Step 0.2:** Derive a capability-pack manifest for every `packs:` tag in
+- [x] **Step 0.2:** Derive a capability-pack manifest for every `packs:` tag in
   use (~19, enumerated from `build_discovery_manifest.py` output, not guessed):
   `engineering-base`, `meta`, `laravel`, `php`, `react`, `symfony`, `nextjs`,
   `typescript`, `python`, `ai-video`, `ops-people`, `gtm-marketing`, `gtm-sales`,
@@ -104,7 +104,7 @@ set.
   independently. Add a determinism check: the manifest set reproduces from the
   discovery taxonomy with no orphan tag (a tag with no manifest) and no orphan
   manifest (a manifest with no referencing artefact).
-- [ ] **Step 0.3:** Add the **pack-dependency graph** (`requires` / `suggests`)
+- [x] **Step 0.3:** Add the **pack-dependency graph** (`requires` / `suggests`)
   to each capability-pack manifest — closes the council / part1.5 §6 gap
   ("install Laravel but the php/testing base is missing"). E.g.
   `laravel.requires = [php, engineering-base]`, `laravel.suggests = [api, ui]`.
@@ -115,38 +115,38 @@ set.
 
 ## Phase 1: Command pack-ownership metadata (no behaviour change)
 
-- [ ] **Step 1:** Add a `pack:` field to the command frontmatter schema
+- [x] **Step 1:** Add a `pack:` field to the command frontmatter schema
   (`scripts/schemas/command.schema.json`) as the canonical owner (distinct from
   the existing `cluster:` which is the naming/colon-syntax owner per ADR-003).
   Document the `cluster:` ↔ `pack:` relationship: cluster = invocation namespace
   (`roadmap:process-full`), pack = ownership/surfacing unit. They may coincide
   (a `git` pack owning the `git` cluster) but need not.
-- [ ] **Step 2:** Assign `pack:` to all 149 unowned core commands (best-guess
+- [x] **Step 2:** Assign `pack:` to all 149 unowned core commands (best-guess
   mapping from cluster → pack, against the capability-pack manifests formalized
   in Phase 0 as the reference vocabulary). **NO budget enforcement, NO
   visibility change** in this step — pure metadata. Commit as a metadata-only
   change so it is independently reviewable and trivially revertible.
-- [ ] **Step 3:** Extend `build_discovery_manifest.py` to emit command
+- [x] **Step 3:** Extend `build_discovery_manifest.py` to emit command
   pack-ownership into the manifest (it already emits skills' packs); add a
   determinism check so the command→pack map is reproducible.
 
 ## Phase 2: Budget audit + migration decisions (maintainer-gated)
 
-- [ ] **Step 4:** Build the budget-audit report (extend
+- [x] **Step 4:** Build the budget-audit report (extend
   `scripts/audit_command_surface.py`, which already does overlap detection):
   for each pack, list its commands and flag packs over the proposed visible
   budget (core ≤8, small ≤2, medium ≤5, large ≤8, platform ≤10). For each
   over-budget command, surface the deciding signals — external citation count
   (`grep docs/`), tier (0/1/2), and any usage data if available. Output to
   `agents/reports/`.
-- [ ] **Step 5:** *Maintainer-gated.* Review the over-budget report and record,
+- [x] **Step 5:** *Maintainer-gated.* Review the over-budget report and record,
   per command, the decision: keep-visible / set `visibility: internal` /
   relocate-to-pack-X. **Reachability check (council Scenario B):** any relocate
   decision must verify the command stays reachable under at least one profile
   that includes the new pack — a relocation that orphans a command from every
   profile is rejected. Capture decisions in a context note; this is a product
   call, not autonomous.
-- [ ] **Step 6:** Apply the Phase-2 decisions: set `visibility: internal` on the
+- [x] **Step 6:** Apply the Phase-2 decisions: set `visibility: internal` on the
   hidden set, relocate the moved set (with deprecation shims via the existing
   `superseded_by` / `deprecated_in` machinery for any renamed invocation), and
   update docs/examples that cite relocated commands. No command is deleted —
@@ -154,22 +154,24 @@ set.
 
 ## Phase 3: Projection-time filtering (the breaking change, opt-in)
 
-- [ ] **Step 7:** Implement the pack loader (`scripts/config/packs.py`, the
-  "Phase 2 — not shipped" piece) — given the active profile + pack set, expand
-  the Phase-0 `requires`/`suggests` graph to the full active pack set, then
-  resolve the active artefact set (commands + skills; rules stay router-driven).
+- [x] **Step 7:** Implement the pack loader (`scripts/config/packs.py`, the
+  "Phase 2 — not shipped" piece) — given the active profile + pack set, seed the
+  active set with all `always_on` packs (e.g. `meta`, per capability-packs.md),
+  then expand the Phase-0 `requires`/`suggests` graph to the full active pack
+  set, then resolve the active artefact set (commands + skills; rules stay
+  router-driven).
   This is the deterministic resolver the Execution-Model ADR scopes as
   build/install-time.
-- [ ] **Step 8:** Wire the projector (install path + `agent-config use
+- [x] **Step 8:** Wire the projector (install path + `agent-config use
   --profile=<id>`) to project only the active set when a profile is selected,
   and **everything** when the profile is `legacy-all`. Default in 6.0.0 =
   `legacy-all` (non-breaking upgrade). Selecting a real profile = scoped
   projection. Atomic write (temp → move) with previous-projection preservation
   on failure, per the ADR rollback mechanism.
-- [ ] **Step 9:** Console notice on `legacy-all`: "Profile mode available —
+- [x] **Step 9:** Console notice on `legacy-all`: "Profile mode available —
   scoped, focused surface. Run `agent-config use --profile=developer`." No hard
   warning, no forced migration in 6.0.0.
-- [ ] **Step 10:** Coverage — golden tests proving: (a) `legacy-all` projects the
+- [x] **Step 10:** Coverage — golden tests proving: (a) `legacy-all` projects the
   full set (byte-identical to 5.x projection for at least one host tool), (b) a
   scoped profile projects only its active set, (c) a profile switch is atomic
   and reversible, (d) an inactive-pack command/skill is absent from the scoped
@@ -177,7 +179,7 @@ set.
 
 ## Phase 4: Staged-rollout scaffolding (the flip is a later release)
 
-- [ ] **Step 11:** Document the staged-rollout plan in the CHANGELOG/release
+- [x] **Step 11:** Document the staged-rollout plan in the CHANGELOG/release
   notes for 6.0.0: 6.0.0 default `legacy-all` (opt-in profiles) → 6.1.0 default
   flips to profile mode with a `--legacy` escape → 7.0.0 removes `legacy-all`
   **only if** evidence shows <10% usage. This roadmap ships 6.0.0 only; the
@@ -186,18 +188,18 @@ set.
 
 ## Acceptance Criteria
 
-- [ ] All ~19 capability-pack tags carry a manifest with `size_class` +
+- [x] All ~19 capability-pack tags carry a manifest with `size_class` +
   `requires`/`suggests`; the dependency graph lint passes (no dangling edge,
   acyclic `requires`); capability-pack contract documented.
-- [ ] All 150 commands carry `pack:`; discovery manifest emits command ownership
+- [x] All 150 commands carry `pack:`; discovery manifest emits command ownership
   deterministically; Phase-1 was a pure metadata commit (no behaviour change).
-- [ ] Budget-audit report exists; over-budget decisions recorded with the
+- [x] Budget-audit report exists; over-budget decisions recorded with the
   reachability check; hidden/relocated commands handled via internal-visibility
   + deprecation shims, zero deletions.
-- [ ] Pack loader (`scripts/config/packs.py`) ships; projector honours the
+- [x] Pack loader (`scripts/config/packs.py`) ships; projector honours the
   active profile/pack set; `legacy-all` reproduces the 5.x full projection.
-- [ ] 6.0.0 ships with `legacy-all` default (non-breaking `npm update`); scoped
+- [x] 6.0.0 ships with `legacy-all` default (non-breaking `npm update`); scoped
   projection is opt-in via profile selection; switch is atomic + reversible.
-- [ ] Golden tests cover legacy-all / scoped / switch-atomicity / inactive-pack
+- [x] Golden tests cover legacy-all / scoped / switch-atomicity / inactive-pack
   absence. Staged-rollout plan documented; default-flip + removal NOT shipped
   here.

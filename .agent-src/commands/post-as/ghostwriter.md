@@ -1,9 +1,11 @@
 ---
 model_tier: inherit
 name: post-as:ghostwriter
+pack: gtm-marketing
 tier: 2
 cluster: post-as
 sub: ghostwriter
+skills: [post-as, ghostwriter]
 description: Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer.
 suggestion:
   eligible: true

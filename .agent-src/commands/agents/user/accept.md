@@ -1,9 +1,11 @@
 ---
 model_tier: medium
 name: agents:user-accept
+pack: meta
 tier: 2
 cluster: agents
 sub: user
+skills: [agents]
 description: Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
 suggestion:
   eligible: false

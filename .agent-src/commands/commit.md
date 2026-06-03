@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: commit
+pack: engineering-base
 tier: 0
 cluster: commit
 skills: [git-workflow]

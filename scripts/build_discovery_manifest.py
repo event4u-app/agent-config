@@ -228,6 +228,12 @@ def _classify(
             return None, f"requires: unknown pack(s) {', '.join(bad)}"
         requires = list(requires_raw)
 
+    # Optional `pack` — capability-packs.md canonical owner. Single id, closed
+    # vocabulary. Orthogonal to `packs` (owner need not be among discovery tags).
+    owner = fm.get("pack")
+    if owner is not None and (not isinstance(owner, str) or owner not in pack_ids):
+        return None, f"pack: unknown owner '{owner}'"
+
     payload: dict[str, Any] = {
         "workspaces": list(ws),
         "packs": list(pk),
@@ -241,6 +247,8 @@ def _classify(
     }
     if requires:
         payload["requires"] = requires
+    if isinstance(owner, str) and owner:
+        payload["pack"] = owner
     return payload, None
 
 
@@ -318,8 +326,21 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
             "trust_summary": dict(pack_trust_counts.get(pid, {lvl: 0 for lvl in _TRUST_VALUES})),
             "human_review_required": pack_hrr_counts.get(pid, 0),
         }
-        if p.get("requires_hint"):
-            item["requires_hint"] = list(p["requires_hint"])
+        # `requires` (capability-packs.md) supersedes the legacy `requires_hint`
+        # name. Read either; emit both during the deprecation window so TS
+        # consumers keyed on `requires_hint` keep working untouched.
+        requires = list(p.get("requires") or p.get("requires_hint") or [])
+        if requires:
+            item["requires"] = requires
+            item["requires_hint"] = requires
+        if p.get("suggests"):
+            item["suggests"] = list(p["suggests"])
+        if p.get("domain"):
+            item["domain"] = p["domain"]
+        if p.get("size_class"):
+            item["size_class"] = p["size_class"]
+        if p.get("always_on"):
+            item["always_on"] = True
         if p.get("cluster"):
             item["cluster"] = p["cluster"]
         pk_out.append(item)
@@ -565,7 +586,12 @@ def _packs_view(manifest: dict[str, Any]) -> dict[str, Any]:
                 "label": p["label"],
                 "description": p["description"],
                 "workspaces": list(p.get("workspaces", [])),
+                "requires": list(p.get("requires") or p.get("requires_hint") or []),
                 "requires_hint": list(p.get("requires_hint", [])),
+                "suggests": list(p.get("suggests", [])),
+                "domain": p.get("domain"),
+                "size_class": p.get("size_class"),
+                "always_on": bool(p.get("always_on")),
                 "cluster": p.get("cluster"),
                 "trust_level_default": p.get("trust_level_default"),
                 "artefact_count": len(ids),

@@ -16,6 +16,38 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Added — pack-scoped projection (opt-in, `road-to-6.0.0-b`)
+
+The projector can now write only the **active profile + packs'** artefacts into
+the host-tool trees instead of all 150 commands / 223 skills (ADR-040 —
+projection-time filtering, not a runtime resolver).
+
+- **Non-breaking by default.** A new `projection.mode` setting defaults to
+  `legacy-all` — `npm update` to 6.0.0 changes nothing. Scoped projection is
+  **opt-in** and never inferred from `profile.id`.
+- **Opt in** with `agent-config use --profile=<id>` (sets `projection.mode:
+  scoped`), then `agent-config refresh` to re-project. Selected packs are the
+  profile's base `packs` unioned with the `runtime.active_packs` session
+  overlay, expanded over the `requires` graph. `agent-config use
+  --profile=legacy-all` restores the full surface.
+- **Profiles are self-sufficient** — every `skills_hint` skill resolves from
+  the profile's base packs (the new `profile.packs` field). Resolved in the AI
+  council, 2026-06-03.
+- **Atomic.** A failed scoped projection restores the full (legacy-all) tree.
+  The committed plugin marketplace (`.claude-plugin/`) and the Augment tree
+  (`.augment/`) always project the full set in 6.0.0.
+
+**Staged rollout (this release ships 6.0.0 only):**
+
+1. **6.0.0** — default `legacy-all` (opt-in profiles). *This release.*
+2. **6.1.0** — default flips to profile/scoped mode with a `--legacy` escape.
+3. **7.0.0** — removes `legacy-all` **only if** telemetry shows <10% usage.
+
+The default flip and removal are explicitly **out of scope** for 6.0.0 and
+gated on the telemetry from 6.0.0-C. Deferred to 6.0.0-C: a
+`skills_discoverable` field, reactive just-in-time pack activation, and the
+per-pack budget lint.
+
 ### Breaking — v4.0.0 unified setup (`road-to-unified-setup`)
 
 `v4.0.0` is a **hard-cut** release. The legacy Python installer at

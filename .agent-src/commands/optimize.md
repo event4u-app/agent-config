@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: optimize
+pack: meta
 tier: 1
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 cluster: optimize

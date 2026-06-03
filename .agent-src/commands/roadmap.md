@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: roadmap
+pack: product-basic
 tier: 1
 description: Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
 cluster: roadmap

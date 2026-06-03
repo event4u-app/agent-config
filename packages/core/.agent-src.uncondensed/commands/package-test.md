@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: package-test
+pack: engineering-base
 tier: 2
 skills: [composer, npm, python-packages, go-modules, cargo-packages]
 description: /package-test

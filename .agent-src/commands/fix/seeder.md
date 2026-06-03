@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: fix:seeder
+pack: engineering-base
 tier: 2
 cluster: fix
 sub: seeder

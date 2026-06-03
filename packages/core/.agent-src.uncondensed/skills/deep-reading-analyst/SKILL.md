@@ -5,16 +5,11 @@ name: deep-reading-analyst
 description: "Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary."
 status: active
 domain: discovery
-external_source: "https://github.com/ginobefun/deep-reading-analyst-skill/tree/26cd7dc9920e025d39751e396e707399022e49ef/src/deep-reading-analyst"
-refresh_trigger: "Upstream `ginobefun/deep-reading-analyst-skill` major rewrite (new framework added, dispatch table reshaped, or SHA pin invalidated by reference rename)."
-sunset_criterion: "Replace with a 50-line pointer skill if (a) all referenced modules are adopted as project-local guidelines (`docs/guidelines/agent-infra/{framework}.md`) AND (b) the dispatch logic moves into a project-native router."
 workspaces:
   - engineering
 packs:
   - engineering-base
 ---
-
-> **Pinned upstream:** `ginobefun/deep-reading-analyst-skill` @ SHA `26cd7dc9` (MIT). Re-verify per upstream major rewrite. Reference modules below link to the same SHA.
 
 # deep-reading-analyst
 
@@ -37,12 +32,12 @@ Do NOT use when:
 
 | Depth | Time | Frameworks | Reference module |
 |---|---|---|---|
-| **L1 — Quick** | ~15 min | SCQA, 5W2H | [`scqa-framework`](../../../docs/guidelines/agent-infra/scqa-framework.md), `5w2h_analysis.md` (upstream) |
-| **L2 — Standard** | ~30 min | L1 + Critical Thinking, Inversion | + [`inversion-thinking`](../../../docs/guidelines/agent-infra/inversion-thinking.md), `critical_thinking.md` (upstream) |
-| **L3 — Deep** | ~60 min | L2 + Mental Models, First Principles, Systems Thinking, Six Hats | + [`mental-models`](../../../docs/guidelines/agent-infra/mental-models.md), `first_principles.md`, `systems_thinking.md`, `six_hats.md` (upstream) |
-| **L4 — Research** | 120 min+ | L3 + Cross-source comparison via web search | + `comparison_matrix.md` (upstream) |
+| **L1 — Quick** | ~15 min | SCQA, 5W2H | [`scqa-framework`](../../../docs/guidelines/agent-infra/scqa-framework.md), [`5w2h-analysis`](../../../docs/guidelines/agent-infra/5w2h-analysis.md) |
+| **L2 — Standard** | ~30 min | L1 + Critical Thinking, Inversion | + [`critical-thinking`](../../../docs/guidelines/agent-infra/critical-thinking.md), [`inversion-thinking`](../../../docs/guidelines/agent-infra/inversion-thinking.md) |
+| **L3 — Deep** | ~60 min | L2 + Mental Models, First Principles, Systems Thinking, Six Hats | + [`mental-models`](../../../docs/guidelines/agent-infra/mental-models.md), [`first-principles`](../../../docs/guidelines/agent-infra/first-principles.md), [`systems-thinking`](../../../docs/guidelines/agent-infra/systems-thinking.md), [`six-hats`](../../../docs/guidelines/agent-infra/six-hats.md) |
+| **L4 — Research** | 120 min+ | L3 + Cross-source comparison via web search | + [`comparison-matrix`](../../../docs/guidelines/agent-infra/comparison-matrix.md) |
 
-Modules tagged `(upstream)` link to SHA-pinned files at the URL in `external_source` above; project-local modules are adopted as guidelines.
+Every framework module is a project-local guideline under `docs/guidelines/agent-infra/`. Nothing is loaded from upstream at runtime.
 
 ## Procedure: deep-reading-analyst
 
@@ -106,19 +101,19 @@ Load only the frameworks the user's depth bought. Each framework follows the sam
 
 **L2 additions:**
 
-- **Critical Thinking** (`critical_thinking.md`, upstream) — argument strength score (X/10), strengths, weaknesses, logical fallacies detected.
+- **Critical Thinking** ([`critical-thinking`](../../../docs/guidelines/agent-infra/critical-thinking.md)) — argument strength score (X/10), strengths, weaknesses, logical fallacies detected.
 - **Inversion** ([`inversion-thinking`](../../../docs/guidelines/agent-infra/inversion-thinking.md)) — pre-mortem on the article's recommendation: "how would this fail?", missing risk factors, mitigations.
 
 **L3 additions:**
 
 - **Mental Models** ([`mental-models`](../../../docs/guidelines/agent-infra/mental-models.md)) — pick 3–5 models from different disciplines (physics, biology, psychology, economics, math), apply each lens, surface cross-model patterns.
-- **First Principles** (`first_principles.md`, upstream) — strip to fundamental truths, validate each core assumption, rebuild from base.
-- **Systems Thinking** (`systems_thinking.md`, upstream) — map relationships, feedback loops, leverage points.
-- **Six Hats** (`six_hats.md`, upstream) — White (facts), Red (feelings), Black (cautions), Yellow (benefits), Green (creativity), Blue (process).
+- **First Principles** ([`first-principles`](../../../docs/guidelines/agent-infra/first-principles.md)) — strip to fundamental truths, validate each core assumption, rebuild from base.
+- **Systems Thinking** ([`systems-thinking`](../../../docs/guidelines/agent-infra/systems-thinking.md)) — map relationships, feedback loops, leverage points.
+- **Six Hats** ([`six-hats`](../../../docs/guidelines/agent-infra/six-hats.md)) — White (facts), Red (feelings), Black (cautions), Yellow (benefits), Green (creativity), Blue (process).
 
 **L4 addition:**
 
-- **Cross-source comparison** (`comparison_matrix.md`, upstream) — web-search 2–3 related sources, compare SCQA across sources, identify consensus vs divergence, synthesize integrated perspective.
+- **Cross-source comparison** ([`comparison-matrix`](../../../docs/guidelines/agent-infra/comparison-matrix.md)) — web-search 2–3 related sources, compare SCQA across sources, identify consensus vs divergence, synthesize integrated perspective.
 
 ### Step 4: Synthesize by Goal
 
@@ -182,17 +177,16 @@ Regardless of goal, close with three fixed blocks:
 
 ## Reference modules
 
-Project-local guidelines (full text adopted under the Reference-Guideline Sunset Policy):
+All 8 framework modules are project-local guidelines under `docs/guidelines/agent-infra/` (full text adopted under the Reference-Guideline Sunset Policy). Each carries an `## ADOPT citation` footer pinning its MIT upstream origin.
 
-- [`scqa-framework`](../../../docs/guidelines/agent-infra/scqa-framework.md) — full 499-line authoritative-link adopt.
-- [`mental-models`](../../../docs/guidelines/agent-infra/mental-models.md) — pure adopt of Munger's multi-discipline toolkit.
+- [`scqa-framework`](../../../docs/guidelines/agent-infra/scqa-framework.md) — situation / complication / question / answer decomposition.
+- [`5w2h-analysis`](../../../docs/guidelines/agent-infra/5w2h-analysis.md) — completeness check (7 questions).
+- [`critical-thinking`](../../../docs/guidelines/agent-infra/critical-thinking.md) — argument quality / fallacy detection.
 - [`inversion-thinking`](../../../docs/guidelines/agent-infra/inversion-thinking.md) — pre-mortem on decisions, distinct from `adversarial-review`.
+- [`mental-models`](../../../docs/guidelines/agent-infra/mental-models.md) — Munger's multi-discipline toolkit.
+- [`first-principles`](../../../docs/guidelines/agent-infra/first-principles.md) — fundamental-truth extraction.
+- [`systems-thinking`](../../../docs/guidelines/agent-infra/systems-thinking.md) — feedback loops + leverage points.
+- [`six-hats`](../../../docs/guidelines/agent-infra/six-hats.md) — White / Red / Black / Yellow / Green / Blue protocol.
+- [`comparison-matrix`](../../../docs/guidelines/agent-infra/comparison-matrix.md) — cross-source synthesis (L4 only).
 
-Upstream modules (loaded on demand from the SHA-pinned URL in `external_source`):
-
-- `5w2h_analysis.md` — completeness check (7 questions).
-- `critical_thinking.md` — argument quality / fallacy detection.
-- `first_principles.md` — fundamental-truth extraction.
-- `systems_thinking.md` — feedback loops + leverage points.
-- `six_hats.md` — White / Red / Black / Yellow / Green / Blue protocol.
-- `comparison_matrix.md` — cross-source synthesis (L4 only).
+> **Deprecated — on-demand upstream loading.** Earlier revisions of this skill described loading some modules "on demand from a SHA-pinned URL", backed by an `external_source` frontmatter pin. That capability was **never wired** (no fetcher ever consumed the pin; it was schema-only metadata), so the pin and its `refresh_trigger` / `sunset_criterion` bundle have been **removed** — every module is local, no runtime fetch is needed. If a future revision genuinely needs live upstream content, build an explicit fetch step; do not reintroduce a non-functional metadata pin.

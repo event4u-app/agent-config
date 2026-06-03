@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: tests
+pack: engineering-base
 tier: 2
 description: Tests orchestrator — routes to create, execute
 cluster: tests

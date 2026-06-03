@@ -1,9 +1,11 @@
 ---
 model_tier: inherit
 name: ghostwriter:delete
+pack: gtm-marketing
 tier: 2
 cluster: ghostwriter
 sub: delete
+skills: [ghostwriter]
 description: Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
 suggestion:
   eligible: true

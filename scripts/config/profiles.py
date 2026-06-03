@@ -57,6 +57,7 @@ class ResolvedProfile:
     id: str
     audience: dict[str, str] = field(default_factory=dict)
     preset_id: str | None = None
+    packs: tuple[str, ...] = ()
     personas: tuple[str, ...] = ()
     skills_hint: tuple[str, ...] = ()
     commands_hint: tuple[str, ...] = ()
@@ -119,6 +120,7 @@ def _build_resolved(
     defaults = block.get("defaults") or {}
     surface = block.get("surface") or {}
     audience = {str(k): str(v) for k, v in audience_raw.items()}
+    packs = tuple(str(p) for p in (block.get("packs") or []))
     personas = tuple(str(p) for p in (defaults.get("personas") or []))
     skills_hint = tuple(str(s) for s in (defaults.get("skills_hint") or []))
     commands_hint = tuple(str(c) for c in (surface.get("commands_hint") or []))
@@ -127,6 +129,7 @@ def _build_resolved(
         id=profile_id,
         audience=audience,
         preset_id=defaults.get("preset_id"),
+        packs=packs,
         personas=personas,
         skills_hint=skills_hint,
         commands_hint=commands_hint,

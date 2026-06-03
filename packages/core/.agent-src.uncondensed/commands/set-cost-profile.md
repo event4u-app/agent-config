@@ -1,7 +1,8 @@
 ---
 model_tier: medium
 name: set-cost-profile
-tier: 1
+pack: meta
+tier: 2
 description: Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 skills: [file-editor]
 suggestion:
