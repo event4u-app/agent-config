@@ -4,7 +4,7 @@ status: accepted
 date: 2026-05-25
 decision: root-layout
 supersedes: —
-superseded_by: —
+superseded_by: ADR-045
 phase: v3.x · root-layout-cleanup Phase 1
 type: structural
 review_date: 2027-05-25
