@@ -38,10 +38,12 @@ from _lib import token_count  # noqa: E402
 from _lib.agent_src import resolve_package_core_path  # noqa: E402
 
 _CORE_SRC = resolve_package_core_path(".agent-src.uncondensed")
-# Enforced packages/core targets — the skills + commands dirs the
-# description-catalog globs scan. Read by scripts/check_gate_paths.py so a
-# future move that desyncs them fails CI instead of silently no-opping.
-GATE_CORE_PATHS = (_CORE_SRC / "skills", _CORE_SRC / "commands")
+# Enforced packages/core target — the commands dir the description-catalog
+# globs scan. Read by scripts/check_gate_paths.py so a future move that
+# desyncs it fails CI instead of silently no-opping. Skills moved to the flat
+# shared library (src/skills/) in 6.0.0-D Phase 2 and are no longer a
+# packages/core target; the skills catalog globs the flat library directly.
+GATE_CORE_PATHS = (_CORE_SRC / "commands",)
 
 try:
     import yaml
@@ -121,7 +123,7 @@ def description_catalog() -> dict:
     core_rel = _CORE_SRC.relative_to(REPO_ROOT).as_posix()
     return {
         "skills_projected": _catalog(".claude/skills/*/SKILL.md"),
-        "skills_core_source": _catalog(f"{core_rel}/skills/*/SKILL.md"),
+        "skills_core_source": _catalog("src/skills/*/SKILL.md"),
         "commands_core_source": _catalog(f"{core_rel}/commands/**/*.md"),
     }
 

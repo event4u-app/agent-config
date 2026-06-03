@@ -8,14 +8,4 @@ Cashflow, runway, basic forecasting.
 - **version**: `5.10.1`
 - **owner**: finance, founder
 - **requires**: —
-- **artefacts**: 4
-
-## Rules (1)
-
-- **`finance-safety-floor`** — Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required
-
-## Skills (3)
-
-- **`forecasting`** — Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'.
-- **`runway-cognition`** — Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'.
-- **`unit-economics-modeling`** — Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'.
+- **artefacts**: 0

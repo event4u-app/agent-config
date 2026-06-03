@@ -6,17 +6,17 @@
 
 ## Overall
 
-**50 / 175 steps done · 29%**
+**53 / 175 steps done · 30%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 35 | 29 | 6 | 0 | 0 | ██░░░░░░░░ 17% |
+| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 35 | 26 | 9 | 0 | 0 | ███░░░░░░░ 26% |
 | 2 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
@@ -28,14 +28,14 @@
 
 ### [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md)
 
-**Road to 6.0.0-D — Structural restructure (the hard break)** — 6 / 35 done (17%)
+**Road to 6.0.0-D — Structural restructure (the hard break)** — 9 / 35 done (26%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Preconditions (foundation — NO files moved yet) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Laravel prototype + extraction proof | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2 | Flat skills + rules library (before the remaining packs) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Monorepo-collapse decision (evidence-gated) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | Flat skills + rules library (before the remaining packs) | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Monorepo-collapse decision (evidence-gated) | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | Move the remaining packs | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 4b | Command (and skill) naming + skill-conversion | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Profiles-as-views + curated command tree | ⬜ not started | 6 | 0 | 0 | 0 | 0% |

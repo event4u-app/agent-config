@@ -8,13 +8,4 @@ Symfony framework patterns; depends on PHP at the artefact level.
 - **version**: `5.10.1`
 - **owner**: engineering
 - **requires**: php, engineering-base
-- **artefacts**: 3
-
-## Rules (1)
-
-- **`symfony-routing`** — Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow
-
-## Skills (2)
-
-- **`project-analysis-symfony`** — Use for deep Symfony project analysis: kernel/bootstrap, container wiring, routing/request flow, Doctrine, security, Messenger, and Symfony-specific failure patterns.
-- **`symfony-workflow`** — Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`.
+- **artefacts**: 0
