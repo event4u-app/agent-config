@@ -6,34 +6,22 @@
 
 ## Overall
 
-**43 / 81 steps done · 53%**
+**44 / 113 steps done · 39%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   39%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md) | 5 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
+| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
+| 2 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 
 ---
 
 ## Per-roadmap phase breakdown
-
-### [road-to-6.0.0-c-governance-and-evals.md](roadmaps/road-to-6.0.0-c-governance-and-evals.md)
-
-**Road to 6.0.0-C — Governance, evals, and evidence-based pruning** — 0 / 21 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Per-pack command budget governance | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Verb discipline + routing evals | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Telemetry for evidence-based pruning | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Skill-family overlap analysis (measured, not arbitrary) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 5 | [CONDITIONAL] Runtime resolver — gated on evidence | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
@@ -51,4 +39,21 @@
 | 7 | Analytics surface — turn the inert telemetry into a question | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
+
+### [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md)
+
+**Road to Frontend Design Intelligence — absorb `ui-ux-pro-max` into our orchestrated UI suite** — 1 / 53 done (2%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Decision gate — council, ADR, licensing, domain gates | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 1 | Build the reusable `corpus-grounding` engine (foundation) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 2 | Adopt the design-knowledge corpus | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Wire into the UI directive orchestration (the core win) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Stack best-practice corpus → stack-aware guidance | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Design-tokens skill + shadcn/Tailwind automation | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 6 | Enrich existing skills + close adjacent gaps | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 7 | (Gated) Generative brand-asset suite — Gemini logo/CIP/icon/banner/social | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 8 | Positioning + "make the combination unnecessary" | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 9 | Cross-domain generalization — "real knowledge + orchestration everywhere" | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 
