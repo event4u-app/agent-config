@@ -87,7 +87,7 @@ fi
 
 # 4. kernel char-budget breach count (advisory: locked at current measured)
 breach_count=0
-if python3 scripts/measure_rule_budget.py --kernel-budget-check >/tmp/kernel-budget.$$ 2>&1; then
+if python3 src/scripts/measure_rule_budget.py --kernel-budget-check >/tmp/kernel-budget.$$ 2>&1; then
   breach_count=0
 else
   breach_count=$(grep -c "^  - " /tmp/kernel-budget.$$ || true)

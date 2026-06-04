@@ -338,20 +338,20 @@ resolve_template_script() {
 cmd_mcp_render() {
   require_python3
   local script
-  script="$(resolve_script "scripts/mcp_render.py")"
+  script="$(resolve_script "src/scripts/mcp_render.py")"
   exec python3 "$script" "$@"
 }
 
 cmd_mcp_check() {
   require_python3
   local script
-  script="$(resolve_script "scripts/mcp_render.py")"
+  script="$(resolve_script "src/scripts/mcp_render.py")"
   exec python3 "$script" --check "$@"
 }
 
 cmd_mcp_setup() {
   local script
-  script="$(resolve_script "scripts/mcp_setup.sh")" || return 1
+  script="$(resolve_script "src/scripts/mcp_setup.sh")" || return 1
   exec bash "$script" "$@"
 }
 
@@ -386,7 +386,7 @@ cmd_roadmap_progress_check() {
 
 cmd_first_run() {
   local script
-  script="$(resolve_script "scripts/first-run.sh")"
+  script="$(resolve_script "src/scripts/first-run.sh")"
   exec bash "$script" "$@"
 }
 
@@ -426,7 +426,7 @@ cmd_memory_lookup() {
 cmd_linked_projects_list() {
   require_python3
   local script
-  script="$(resolve_script "scripts/linked_projects_list.py")" || return 1
+  script="$(resolve_script "src/scripts/linked_projects_list.py")" || return 1
   exec python3 "$script" "$@"
 }
 
@@ -482,77 +482,77 @@ cmd_memory_check_proposal() {
 cmd_proposal_check() {
   require_python3
   local script
-  script="$(resolve_script "scripts/check_proposal.py")" || return 1
+  script="$(resolve_script "src/scripts/check_proposal.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_refine_ticket_detect() {
   require_python3
   local script
-  script="$(resolve_script "scripts/refine_ticket_detect.py")" || return 1
+  script="$(resolve_script "src/scripts/refine_ticket_detect.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_chat_history_hook() {
   require_python3
   local script
-  script="$(resolve_script "scripts/chat_history.py")" || return 1
+  script="$(resolve_script "src/scripts/chat_history.py")" || return 1
   exec python3 "$script" hook-dispatch "$@"
 }
 
 cmd_roadmap_progress_hook() {
   require_python3
   local script
-  script="$(resolve_script "scripts/roadmap_progress_hook.py")" || return 1
+  script="$(resolve_script "src/scripts/roadmap_progress_hook.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_onboarding_gate_hook() {
   require_python3
   local script
-  script="$(resolve_script "scripts/onboarding_gate_hook.py")" || return 1
+  script="$(resolve_script "src/scripts/onboarding_gate_hook.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_context_hygiene_hook() {
   require_python3
   local script
-  script="$(resolve_script "scripts/context_hygiene_hook.py")" || return 1
+  script="$(resolve_script "src/scripts/context_hygiene_hook.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_dispatch_hook() {
   require_python3
   local script
-  script="$(resolve_script "scripts/hooks/dispatch_hook.py")" || return 1
+  script="$(resolve_script "src/scripts/hooks/dispatch_hook.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_hooks_status() {
   require_python3
   local script
-  script="$(resolve_script "scripts/hooks_status.py")" || return 1
+  script="$(resolve_script "src/scripts/hooks_status.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_hooks_doctor() {
   require_python3
   local script
-  script="$(resolve_script "scripts/hooks_doctor.py")" || return 1
+  script="$(resolve_script "src/scripts/hooks_doctor.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_hooks_replay() {
   require_python3
   local script
-  script="$(resolve_script "scripts/hooks/replay_hook.py")" || return 1
+  script="$(resolve_script "src/scripts/hooks/replay_hook.py")" || return 1
   exec python3 "$script" "$@"
 }
 
 cmd_chat_history_checkpoint() {
   require_python3
   local script
-  script="$(resolve_script "scripts/chat_history.py")" || return 1
+  script="$(resolve_script "src/scripts/chat_history.py")" || return 1
   # Default cadence-bearing event when a user/agent invokes /chat-history-checkpoint:
   # "phase" — explicit phase boundary, lands under per_phase / per_turn cadences.
   exec python3 "$script" hook-append --event phase "$@"
@@ -764,13 +764,13 @@ _hooks_install_regenerator() {
 # pure routing so consumers never have to know the package layout.
 cmd_keys_install_anthropic() {
   local script
-  script="$(resolve_script "scripts/install_anthropic_key.sh")" || return 1
+  script="$(resolve_script "src/scripts/install_anthropic_key.sh")" || return 1
   exec bash "$script" "$@"
 }
 
 cmd_keys_install_openai() {
   local script
-  script="$(resolve_script "scripts/install_openai_key.sh")" || return 1
+  script="$(resolve_script "src/scripts/install_openai_key.sh")" || return 1
   exec bash "$script" "$@"
 }
 
@@ -781,7 +781,7 @@ cmd_council() {
   require_python3
   local sub="$1"; shift || true
   local script
-  script="$(resolve_script "scripts/council_cli.py")" || return 1
+  script="$(resolve_script "src/scripts/council_cli.py")" || return 1
   exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 "$script" "$sub" "$@"
 }
 
@@ -791,7 +791,7 @@ cmd_council() {
 cmd_use() {
   require_python3
   local script
-  script="$(resolve_script "scripts/profile_use.py")" || return 1
+  script="$(resolve_script "src/scripts/profile_use.py")" || return 1
   exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 "$script" "$@"
 }
 
@@ -827,7 +827,7 @@ cmd_migrate() {
 # deprecated @event4u/create-agent-config wrapper package).
 cmd_init() {
   local script
-  script="$(resolve_script "scripts/install")" || return 1
+  script="$(resolve_script "src/scripts/install")" || return 1
   exec bash "$script" "$@"
 }
 
@@ -839,7 +839,7 @@ cmd_init() {
 # Concrete writes land in Phase 1.5 (export) and Phase 1.6 (lockfile).
 cmd_global() {
   local script
-  script="$(resolve_script "scripts/install")" || return 1
+  script="$(resolve_script "src/scripts/install")" || return 1
   exec bash "$script" --global "$@"
 }
 

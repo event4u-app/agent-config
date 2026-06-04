@@ -24,7 +24,7 @@ log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 
 result=$(python3 <<'PY'
 import os, sys, time, hashlib, pathlib, glob
-sys.path.insert(0, "scripts")
+sys.path.insert(0, "src/scripts")
 from validate_frontmatter import parse_frontmatter, load_schema, validate, apply_schema_defaults
 from _lib.agent_src import artefact_roots
 

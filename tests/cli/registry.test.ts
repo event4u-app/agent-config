@@ -59,8 +59,8 @@ describe('REGISTRY', () => {
         expect(dedup.size).toBe(names.length);
     });
 
-    it('covers every subcommand declared in scripts/_dispatch.bash', () => {
-        const bashFile = resolve(process.cwd(), 'scripts/_dispatch.bash');
+    it('covers every subcommand declared in src/scripts/_dispatch.bash', () => {
+        const bashFile = resolve(process.cwd(), 'src/scripts/_dispatch.bash');
         const bashCommands = extractBashSubcommands(bashFile);
         const registryCommands = new Set(REGISTRY.map((e) => e.name));
         const missing = bashCommands.filter((name) => !registryCommands.has(name));

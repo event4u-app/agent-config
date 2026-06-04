@@ -32,7 +32,7 @@ quiet="${SMOKE_QUIET:-0}"
 log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 
 # Run the linter and capture summary
-out=$(python3 scripts/skill_linter.py --all --quiet 2>&1 || true)
+out=$(python3 src/scripts/skill_linter.py --all --quiet 2>&1 || true)
 summary=$(printf '%s\n' "$out" | grep -E '^Summary: ' | tail -1)
 
 if [ -z "$summary" ]; then

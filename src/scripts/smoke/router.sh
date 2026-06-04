@@ -26,7 +26,7 @@ import json, os, sys, pathlib
 
 # ADR-017: routes_to resolution walks artefact_roots() across the
 # monorepo. Skills/commands/guidelines may live under any source root.
-sys.path.insert(0, "scripts")
+sys.path.insert(0, "src/scripts")
 from _lib.agent_src import resolve_logical
 
 d = json.load(open("dist/router.json"))

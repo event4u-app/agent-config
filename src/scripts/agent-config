@@ -36,7 +36,7 @@ done
 here="$(cd -- "$(dirname -- "$src")" && pwd)"
 ts_entry="$here/../../dist/cli/agent-config.js"
 legacy_entry="$here/_dispatch.bash"
-source_marker="$here/../src/cli/registry.ts"
+source_marker="$here/../cli/registry.ts"  # src/scripts/ -> src/cli/registry.ts
 
 # Suppress the deprecation warning when invoked from a source checkout
 # (maintainer path) — `src/` is not shipped in the published tarball.

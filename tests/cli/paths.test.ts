@@ -30,13 +30,13 @@ describe('paths', () => {
         expect(existsSync(PACKAGE_JSON)).toBe(true);
     });
 
-    it('BASH_ENTRY resolves to <PACKAGE_ROOT>/scripts/_dispatch.bash', () => {
-        expect(BASH_ENTRY).toBe(resolve(PACKAGE_ROOT, 'scripts', '_dispatch.bash'));
+    it('BASH_ENTRY resolves to <PACKAGE_ROOT>/src/scripts/_dispatch.bash', () => {
+        expect(BASH_ENTRY).toBe(resolve(PACKAGE_ROOT, 'src', 'scripts', '_dispatch.bash'));
         expect(existsSync(BASH_ENTRY)).toBe(true);
     });
 
-    it('BASH_SHIM resolves to <PACKAGE_ROOT>/scripts/agent-config', () => {
-        expect(BASH_SHIM).toBe(resolve(PACKAGE_ROOT, 'scripts', 'agent-config'));
+    it('BASH_SHIM resolves to <PACKAGE_ROOT>/src/scripts/agent-config', () => {
+        expect(BASH_SHIM).toBe(resolve(PACKAGE_ROOT, 'src', 'scripts', 'agent-config'));
         expect(existsSync(BASH_SHIM)).toBe(true);
     });
 
