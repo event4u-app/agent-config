@@ -1,1 +1,1 @@
-../../../.agent-src/commands/sync-gitignore/fix.md
+../../../src/domains/engineering-base/sync-gitignore/fix/command.md

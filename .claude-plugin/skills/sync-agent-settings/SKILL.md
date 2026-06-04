@@ -1,1 +1,1 @@
-../../../.agent-src/commands/sync-agent-settings.md
+../../../src/domains/meta/sync-agent-settings/command.md

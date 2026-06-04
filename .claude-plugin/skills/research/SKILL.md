@@ -1,1 +1,1 @@
-../../../.agent-src/commands/research.md
+../../../src/domains/product-discovery/research/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/judge/on-diff.md
+../../../src/domains/engineering-base/judge/on-diff/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/video/stitch.md
+../../../src/domains/ai-video/video/stitch/command.md

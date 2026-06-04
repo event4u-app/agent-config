@@ -1,1 +1,1 @@
-../../../.agent-src/commands/judge.md
+../../../src/domains/engineering-base/judge/command.md

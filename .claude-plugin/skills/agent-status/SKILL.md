@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agent-status.md
+../../../src/domains/meta/agent-status/command.md

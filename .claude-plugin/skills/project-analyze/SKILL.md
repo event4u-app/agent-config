@@ -1,1 +1,1 @@
-../../../.agent-src/commands/project-analyze.md
+../../../src/domains/engineering-base/project-analyze/command.md

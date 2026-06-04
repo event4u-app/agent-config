@@ -1,1 +1,1 @@
-../../../.agent-src/commands/e2e-plan.md
+../../../src/domains/engineering-base/e2e-plan/command.md

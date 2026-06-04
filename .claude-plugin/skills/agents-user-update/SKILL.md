@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agents/user/update.md
+../../../src/domains/meta/agents/user/update/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/condense.md
+../../../src/domains/meta/condense/command.md

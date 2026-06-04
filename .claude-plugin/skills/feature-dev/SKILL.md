@@ -1,1 +1,1 @@
-../../../.agent-src/commands/feature/dev.md
+../../../src/domains/engineering-base/feature/dev/command.md

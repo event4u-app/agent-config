@@ -1,1 +1,1 @@
-../../../.agent-src/commands/create-pr/description-only.md
+../../../src/domains/engineering-base/create-pr/description-only/command.md

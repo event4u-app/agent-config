@@ -1,1 +1,1 @@
-../../../.agent-src/commands/challenge-me/vision.md
+../../../src/domains/meta/challenge-me/vision/command.md

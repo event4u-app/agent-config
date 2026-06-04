@@ -1,1 +1,1 @@
-../../../.agent-src/commands/prepare-for-review.md
+../../../src/domains/engineering-base/prepare-for-review/command.md

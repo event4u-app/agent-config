@@ -1,1 +1,1 @@
-../../../.agent-src/commands/rule-compliance-audit.md
+../../../src/domains/meta/rule-compliance-audit/command.md

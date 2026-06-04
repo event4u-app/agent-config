@@ -1,1 +1,1 @@
-../../../.agent-src/commands/council.md
+../../../src/domains/meta/council/command.md

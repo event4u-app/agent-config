@@ -1,1 +1,1 @@
-../../../.agent-src/commands/context.md
+../../../src/domains/meta/context/command.md

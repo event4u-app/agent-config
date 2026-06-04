@@ -1,1 +1,1 @@
-../../../.agent-src/commands/skills/discover.md
+../../../src/domains/meta/skills/discover/command.md

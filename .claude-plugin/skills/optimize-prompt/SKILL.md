@@ -1,1 +1,1 @@
-../../../.agent-src/commands/optimize-prompt.md
+../../../src/domains/meta/optimize-prompt/command.md

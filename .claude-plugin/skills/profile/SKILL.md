@@ -1,1 +1,1 @@
-../../../.agent-src/commands/profile.md
+../../../src/domains/meta/profile/command.md

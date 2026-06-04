@@ -1,1 +1,1 @@
-../../../.agent-src/commands/package-reset.md
+../../../src/domains/meta/package-reset/command.md

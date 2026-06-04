@@ -1,1 +1,1 @@
-../../../.agent-src/commands/jira-ticket.md
+../../../src/domains/product-basic/jira-ticket/command.md

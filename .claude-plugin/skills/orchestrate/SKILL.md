@@ -1,1 +1,1 @@
-../../../.agent-src/commands/orchestrate.md
+../../../src/domains/meta/orchestrate/command.md

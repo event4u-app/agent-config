@@ -1,1 +1,1 @@
-../../../.agent-src/commands/profile/deactivate.md
+../../../src/domains/meta/profile/deactivate/command.md

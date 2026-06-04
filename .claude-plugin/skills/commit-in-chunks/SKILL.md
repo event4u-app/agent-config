@@ -1,1 +1,1 @@
-../../../.agent-src/commands/commit/in-chunks.md
+../../../src/domains/engineering-base/commit/in-chunks/command.md

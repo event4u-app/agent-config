@@ -1,1 +1,1 @@
-../../../.agent-src/commands/analytics.md
+../../../src/domains/meta/analytics/command.md

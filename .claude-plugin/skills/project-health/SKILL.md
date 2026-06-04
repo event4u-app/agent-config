@@ -1,1 +1,1 @@
-../../../.agent-src/commands/project-health.md
+../../../src/domains/engineering-base/project-health/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix/pr-developer-comments.md
+../../../src/domains/engineering-base/fix/pr-developer-comments/command.md

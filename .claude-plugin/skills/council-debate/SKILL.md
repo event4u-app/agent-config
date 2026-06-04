@@ -1,1 +1,1 @@
-../../../.agent-src/commands/council/debate.md
+../../../src/domains/meta/council/debate/command.md

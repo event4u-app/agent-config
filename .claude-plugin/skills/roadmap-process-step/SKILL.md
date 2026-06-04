@@ -1,1 +1,1 @@
-../../../.agent-src/commands/roadmap/process-step.md
+../../../src/domains/product-basic/roadmap/process-step/command.md

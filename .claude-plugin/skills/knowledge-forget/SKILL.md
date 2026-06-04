@@ -1,1 +1,1 @@
-../../../.agent-src/commands/knowledge/forget.md
+../../../src/domains/product-discovery/knowledge/forget/command.md

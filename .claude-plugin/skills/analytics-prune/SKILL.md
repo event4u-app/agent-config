@@ -1,1 +1,1 @@
-../../../.agent-src/commands/analytics/prune.md
+../../../src/domains/meta/analytics/prune/command.md

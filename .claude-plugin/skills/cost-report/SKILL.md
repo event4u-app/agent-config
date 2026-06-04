@@ -1,1 +1,1 @@
-../../../.agent-src/commands/cost-report.md
+../../../src/domains/meta/cost-report/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/module/explore.md
+../../../src/domains/engineering-base/module/explore/command.md

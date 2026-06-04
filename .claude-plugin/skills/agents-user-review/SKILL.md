@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agents/user/review.md
+../../../src/domains/meta/agents/user/review/command.md
