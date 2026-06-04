@@ -1112,7 +1112,7 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
                 "Non-kernel rule has no routes_to: — body should migrate to skill / "
                 "guideline in Phase 4"))
     else:
-        repo_root = Path(__file__).resolve().parent.parent
+        repo_root = Path(__file__).resolve().parent.parent.parent
         for idx, item in enumerate(routes_to):
             if not isinstance(item, str) or ":" not in item:
                 issues.append(Issue("error", "route_shape_invalid",

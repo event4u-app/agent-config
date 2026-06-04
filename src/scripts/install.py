@@ -4287,7 +4287,7 @@ def _wizard_cli_dist(project_root: Path) -> Path | None:
     `bin`). The dead `packages/core/installer/dist/cli.js` layout was
     retired in road-to-single-install-source-of-truth § Phase 4.
     """
-    package_root = Path(__file__).resolve().parent.parent
+    package_root = Path(__file__).resolve().parent.parent.parent
     cli = package_root / "dist" / "cli" / "agent-config.js"
     return cli if cli.exists() else None
 

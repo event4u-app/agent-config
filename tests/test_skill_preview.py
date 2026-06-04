@@ -45,7 +45,7 @@ execution:
   allowed_tools: [file-editor, shell-runner]
   command:
     - python3
-    - scripts/do_thing.py
+    - src/scripts/do_thing.py
 ---
 
 # fixture-assisted
@@ -53,7 +53,7 @@ execution:
 ## Steps
 
 ### 1. Propose the change
-Run `python3 scripts/do_thing.py` against `config/thing.yml`.
+Run `python3 src/scripts/do_thing.py` against `config/thing.yml`.
 """
 
 MALFORMED_NO_FM = "# no frontmatter here\n\njust prose.\n"

@@ -139,7 +139,7 @@ def metric_d_redundancy(root: Path) -> dict:
 
 
 def main() -> int:
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parent.parent.parent
     corpus = root / "agents" / "runtime" / ".agent-chat-history"
 
     record = {
