@@ -24,6 +24,7 @@ Contract:
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Iterator
 
@@ -94,6 +95,67 @@ def _iter_domains_commands() -> Iterator[tuple[Path, str]]:
         logical = _domains_command_logical(p)
         if logical is not None:
             yield p, logical
+
+
+# --- Canonical command-slug derivation (ADR-044 amendment, 2026-06-04) --------
+#
+# The slug a command projects to (``.agent-src/commands/<slug>.md``, then the
+# ``.claude`` / ``.cursor`` invocation name) is derived from the SOURCE PATH:
+# the ``<pack>`` segment is stripped and the remaining subpath is hyphenated
+# (A1). A pack MAY opt into a slug prefix via ``slug_prefix:`` in its
+# ``pack.yaml`` (A3) — then every command in that pack projects as
+# ``<prefix>-<subpath>`` (e.g. the ``git`` pack with ``slug_prefix: git`` →
+# ``git/commit`` → ``git-commit``). Default = no prefix; product-surface packs
+# (``meta`` → ``council``/``research``) keep the bare subpath. Frontmatter
+# ``name:`` is display-only and NEVER the slug source. This is the single source
+# of truth every consumer (condense, discovery, collision lint) routes through.
+
+_SLUG_PREFIX_RE = re.compile(
+    r'^slug_prefix:\s*"?([a-z][a-z0-9-]*)"?\s*$', re.MULTILINE
+)
+_slug_prefix_cache: dict[str, str] = {}
+
+
+def pack_slug_prefix(pack_id: str) -> str:
+    """Return the ``slug_prefix`` declared in ``src/domains/<pack>/pack.yaml``.
+
+    Empty string when the pack has no prefix (the default) or no manifest.
+    Cached per pack id. Read with a minimal line scan so this lightweight lib
+    stays YAML-dependency-free (the manifest is generator-written, flat keys).
+    """
+    if pack_id in _slug_prefix_cache:
+        return _slug_prefix_cache[pack_id]
+    prefix = ""
+    manifest = SRC_DOMAINS / pack_id / "pack.yaml"
+    if manifest.is_file():
+        m = _SLUG_PREFIX_RE.search(manifest.read_text(encoding="utf-8"))
+        if m:
+            prefix = m.group(1)
+    _slug_prefix_cache[pack_id] = prefix
+    return prefix
+
+
+def command_slug(physical_path: Path) -> str | None:
+    """Canonical flat slug for a ``src/domains`` command file.
+
+    ``src/domains/<pack>/<subpath>/command.md`` → ``<subpath hyphenated>``,
+    pack-prefixed when the pack declares ``slug_prefix`` (A3). Returns ``None``
+    for anything that is not a domains ``command.md`` leaf.
+    """
+    logical = _domains_command_logical(physical_path)  # commands/<subpath>.md
+    if logical is None:
+        return None
+    base = "-".join(Path(logical[len("commands/"):]).with_suffix("").parts)
+    if not base:
+        return None
+    try:
+        pack_id = physical_path.relative_to(SRC_DOMAINS).parts[0]
+    except ValueError:
+        return base
+    prefix = pack_slug_prefix(pack_id)
+    if prefix and base != prefix and not base.startswith(prefix + "-"):
+        return f"{prefix}-{base}"
+    return base
 
 # Repo-relative POSIX path prefixes that anchor an artefact source tree.
 # Order: legacy first (kept until the move lands), then packages/*. Each

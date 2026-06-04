@@ -187,6 +187,11 @@ def _build_pack_yaml(pid: str, vocab: dict[str, dict[str, Any]],
     }
     if isinstance(meta.get("onboarding"), dict):
         out["onboarding"] = meta["onboarding"]
+    # slug_prefix — opt-in command-slug prefix (ADR-044 amendment A3). Sourced
+    # from the discovery vocab; absent = no prefix (the default). The canonical
+    # slug deriver (scripts/_lib/agent_src.command_slug) reads this manifest.
+    if meta.get("slug_prefix"):
+        out["slug_prefix"] = meta["slug_prefix"]
     # size_class / suggests come from the discovery vocab (config/discovery/packs.yml)
     # when defined there; the pack.yaml schema (scripts/schemas/pack.schema.json)
     # treats them as optional so reserved-vocab packs without artefacts still validate.

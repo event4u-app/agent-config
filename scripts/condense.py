@@ -37,6 +37,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.script_output import info, success, flush_summary, resolve_level  # noqa: E402
 from _lib.agent_src import (  # noqa: E402
+    _SLUG_PREFIX_RE,
     artefact_roots,
     iter_all_sources,
     resolve_logical,
@@ -1047,6 +1048,13 @@ def _iter_commands():
         slug = _command_path_to_slug(rel)
         if not slug:
             continue
+        # ADR-044 amendment A3: a pack may opt into a slug prefix; the path
+        # stays the single source of truth (PROJECT_ROOT-aware for tests that
+        # monkey-patch the root).
+        pack_id = source_file.relative_to(src_domains).parts[0]
+        prefix = _domains_slug_prefix(pack_id)
+        if prefix and slug != prefix and not slug.startswith(prefix + "-"):
+            slug = f"{prefix}-{slug}"
         yield source_file, slug
 
 
@@ -1108,6 +1116,20 @@ def _read_projection_mode() -> str:
     if isinstance(value, str) and value.strip().lower() in ("legacy-all", "scoped"):
         return value.strip().lower()
     return "legacy-all"
+
+
+def _domains_slug_prefix(pack_id: str) -> str:
+    """Return ``slug_prefix`` from ``PROJECT_ROOT/src/domains/<pack>/pack.yaml``.
+
+    PROJECT_ROOT-aware mirror of ``_lib.agent_src.pack_slug_prefix`` so tests
+    that monkey-patch ``condense.PROJECT_ROOT`` see their fixture's manifest.
+    Empty string = no prefix (the default). ADR-044 amendment A3.
+    """
+    manifest = PROJECT_ROOT / "src" / "domains" / pack_id / "pack.yaml"
+    if not manifest.is_file():
+        return ""
+    m = _SLUG_PREFIX_RE.search(manifest.read_text(encoding="utf-8"))
+    return m.group(1) if m else ""
 
 
 def _command_path_to_slug(manifest_path: str) -> str:
