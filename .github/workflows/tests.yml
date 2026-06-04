@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - "scripts/**"
+      - "src/scripts/**"
       - "tests/**"
       - "src/**"
       - "packages/core/installer/**"
@@ -24,7 +24,7 @@ on:
   push:
     branches: [main, master]
     paths:
-      - "scripts/**"
+      - "src/scripts/**"
       - "tests/**"
       - "src/**"
       - "packages/core/installer/**"
@@ -167,7 +167,7 @@ jobs:
         # that step, so without this bootstrap `_copy_dir_dereferencing
         # _symlinks` returns 0 written files (src missing) and the
         # tests fail with "rules dir does not exist".
-        run: python3 scripts/condense.py --sync
+        run: python3 src/scripts/condense.py --sync
 
       - name: Golden Replay — smoke subset (P2.4 PR budget)
         # Replays the smoke-tagged Golden Transcripts (~6 of 25) for
@@ -191,16 +191,16 @@ jobs:
       - name: Runtime E2E (dispatch pilot skills via CLI)
         # Guards the public dispatcher CLI contract for runnable skills.
         # Pytest exercises the handler in-process; this step proves
-        # `python3 scripts/runtime_dispatcher.py run --skill <name>`
+        # `python3 src/scripts/runtime_dispatcher.py run --skill <name>`
         # still exits 0 for the two pilots. Kept narrow on purpose — add
         # a pilot to the matrix below only after it has unit coverage.
         # Each run persists its ExecutionResult so the next step can
         # render a job summary even if an individual skill fails.
         run: |
           mkdir -p agents/reports/runs
-          python3 scripts/runtime_dispatcher.py run --skill lint-skills \
+          python3 src/scripts/runtime_dispatcher.py run --skill lint-skills \
             --output agents/reports/runs/lint-skills.json
-          python3 scripts/runtime_dispatcher.py run --skill check-refs \
+          python3 src/scripts/runtime_dispatcher.py run --skill check-refs \
             --output agents/reports/runs/check-refs.json
 
       - name: CI summary (dispatcher runs)
@@ -208,7 +208,7 @@ jobs:
         # Summary. Runs on success AND failure so failing pilots still
         # show up in the PR UI with their stderr tail.
         if: always()
-        run: python3 scripts/ci_summary.py --runs agents/reports/runs
+        run: python3 src/scripts/ci_summary.py --runs agents/reports/runs
 
   node-tests:
     # Consolidates TypeScript CLI/UI tests (Phase 5.2 of
@@ -253,7 +253,7 @@ jobs:
         # (the macOS system python3 lacks pyyaml).
         run: |
           pip install --quiet pyyaml
-          python3 scripts/build_discovery_manifest.py --write --quiet
+          python3 src/scripts/build_discovery_manifest.py --write --quiet
 
       - name: Install dependencies (hoists installer toolchain)
         run: npm ci
@@ -275,7 +275,7 @@ jobs:
         run: npm run test:ts --silent
 
       - name: prepack-check (compiled bin shape gate)
-        run: node scripts/prepack-check.mjs
+        run: node src/scripts/prepack-check.mjs
 
       # ── Installer package (packages/core/installer) ────────────────
       - name: Typecheck installer (tsc --noEmit)

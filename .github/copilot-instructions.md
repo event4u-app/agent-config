@@ -12,7 +12,7 @@ Next.js, etc.).
 
 ## ✅ What this repo contains
 
-- **Bash** scripts under `scripts/install.sh` and `scripts/condense.sh`.
+- **Bash** scripts under `src/scripts/install.sh` and `src/scripts/condense.sh`.
 - **Python 3.10+** tooling under `scripts/` — condensation driver, linters
   (skills, references, portability, readme), installer bridge.
 - **Markdown** content under `.agent-src.uncondensed/` (authoring layer) and
@@ -38,7 +38,7 @@ suggestions in a PR touching this repo, they are wrong.
   in **any** consumer project.
 - Project-specific behavior belongs in a consumer's own `.agent-settings.yml`,
   `AGENTS.md`, or `agents/` directory — not in this package.
-- The portability checker (`scripts/check_portability.py`) enforces this in CI.
+- The portability checker (`src/scripts/check_portability.py`) enforces this in CI.
 
 ## ✅ Editing `.augment/` — source-of-truth rule
 
@@ -146,7 +146,7 @@ design:
   `.augment/skills/`, `.augment/commands/` via installer-managed
   symlinks. Missing-file reports here are renderer artifacts.
 - **Body-link forms `../docs/guidelines/...`** (single-up). This is
-  the post-rewrite shape produced by `scripts/condense.py`. The
+  the post-rewrite shape produced by `src/scripts/condense.py`. The
   condensed `.agent-src/rules/` tree is one level deeper than the
   source `.agent-src.uncondensed/rules/`, so the rewriter collapses
   `../../docs/...` to `../docs/...`. Both forms are expected — one in

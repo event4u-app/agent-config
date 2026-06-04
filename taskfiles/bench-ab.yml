@@ -25,7 +25,7 @@ tasks:
       Materialise the `with` and `without` clones from the fixture
       under internal/bench/ab/clones/. Idempotent — re-running without
       --refresh leaves existing clones alone.
-    cmd: python3 scripts/bench_ab_clone.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/bench_ab_clone.py {{.CLI_ARGS}}
 
   bench:ab:refresh-baseline:
     silent: true
@@ -34,9 +34,9 @@ tasks:
       Use when the corpus has changed, the claude CLI version has
       changed, or the target-shape hash drifted (per Phase 2 cache key).
     cmds:
-      - python3 scripts/bench_ab_clone.py --variant without --refresh
-      - python3 scripts/bench_ab_tracka_run.py --variant without
-      - python3 scripts/bench_ab_task_runner.py --variant without --mode dry-run
+      - python3 src/scripts/bench_ab_clone.py --variant without --refresh
+      - python3 src/scripts/bench_ab_tracka_run.py --variant without
+      - python3 src/scripts/bench_ab_task_runner.py --variant without --mode dry-run
 
   bench:ab:track-a:
     silent: true
@@ -52,8 +52,8 @@ tasks:
       only the `with` arm re-runs. Use `bench:ab:refresh-baseline`
       to force a `without` rebuild.
     cmds:
-      - python3 scripts/bench_ab_clone.py --variant both
-      - python3 scripts/bench_ab_cache_dispatch.py tracka
+      - python3 src/scripts/bench_ab_clone.py --variant both
+      - python3 src/scripts/bench_ab_cache_dispatch.py tracka
 
   bench:ab:track-b:
     silent: true
@@ -65,8 +65,8 @@ tasks:
 
       Honours the Phase 2 cache for the without-arm (see track-a).
     cmds:
-      - python3 scripts/bench_ab_clone.py --variant both
-      - python3 scripts/bench_ab_cache_dispatch.py trackb {{.CLI_ARGS}}
+      - python3 src/scripts/bench_ab_clone.py --variant both
+      - python3 src/scripts/bench_ab_cache_dispatch.py trackb {{.CLI_ARGS}}
 
   bench:ab:diff:
     silent: true
@@ -74,7 +74,7 @@ tasks:
       Re-render docs/benchmark.md from the latest paired reports
       under internal/bench/reports/ab/. Does NOT re-run any benches.
       Useful for tweaking the renderer without burning a fresh run.
-    cmd: python3 scripts/render_benchmark_md.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/render_benchmark_md.py {{.QUIET_FLAG}}
 
   bench:ab:
     silent: true
@@ -97,8 +97,8 @@ tasks:
       var to override the binary path.
     cmds:
       - task: bench:ab:track-a
-      - python3 scripts/bench_ab_clone.py --variant both
-      - python3 scripts/bench_ab_task_runner.py --variant both --mode live
+      - python3 src/scripts/bench_ab_clone.py --variant both
+      - python3 src/scripts/bench_ab_task_runner.py --variant both --mode live
       - task: bench:ab:diff
 
   lint-bench-ab:
@@ -108,4 +108,4 @@ tasks:
       against their schemas, and verify docs/benchmark.md (if present)
       carries every required section. Wires into the lint-bench
       aggregate. Phase 5 Step 3.
-    cmd: python3 scripts/lint_bench_ab.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_bench_ab.py {{.QUIET_FLAG}}

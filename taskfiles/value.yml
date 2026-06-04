@@ -27,8 +27,8 @@ tasks:
       bench refresh, or as a daily-quick-read.
     cmds:
       - python3 -c "import sys; sys.path.insert(0, 'scripts'); from _lib.value_report import assemble_value_v1, write_value_report, write_md_dump; r = assemble_value_v1(); write_value_report(r); write_md_dump(r); print('value-v1 assembled')"
-      - python3 scripts/render_value_md.py {{.QUIET_FLAG}}
-      - python3 scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
+      - python3 src/scripts/render_value_md.py {{.QUIET_FLAG}}
+      - python3 src/scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
 
   value:refresh:
     silent: true
@@ -37,8 +37,8 @@ tasks:
       assemble + render. No claude API spend (rtk is local; telegraph +
       frugality reuse the existing surfaces).
     cmds:
-      - python3 scripts/measure_frugality_savings.py
-      - python3 scripts/bench_rtk_savings.py {{.QUIET_FLAG}}
+      - python3 src/scripts/measure_frugality_savings.py
+      - python3 src/scripts/bench_rtk_savings.py {{.QUIET_FLAG}}
       - task: value
 
   value:behaviour:
@@ -48,14 +48,14 @@ tasks:
       `claude --print` CLI per task — needs ANTHROPIC_API_KEY), then
       assemble + render. Cost-bearing.
     cmds:
-      - python3 scripts/bench_ab_task_runner.py --variant both --mode live
+      - python3 src/scripts/bench_ab_task_runner.py --variant both --mode live
       - task: value
 
   value:lint:
     silent: true
     desc: |
       Structural lint on docs/value.md and the latest value-v1 JSON.
-    cmd: python3 scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
 
   value:telemetry:replay:
     silent: true
@@ -64,4 +64,4 @@ tasks:
       200 prompts/corpus) through the router-telemetry hook and emit
       per-trigger / per-rule hit counts + the panel_b_untouchable list.
       Pure-local, no API spend. Phase 3 of road-to-value-dashboard-netto-cuts.
-    cmd: python3 scripts/router_telemetry.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/router_telemetry.py {{.QUIET_FLAG}}

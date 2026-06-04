@@ -4,7 +4,7 @@ tasks:
   lint-skills:
     silent: true
     desc: Lint all skills and rules
-    cmd: python3 scripts/skill_linter.py --all {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/skill_linter.py --all {{.QUIET_FLAG}}
 
   lint-namespace:
     silent: true
@@ -13,7 +13,7 @@ tasks:
       `<stem>-<intent>` kebab-case + reserved-names list across
       skills / rules / commands / personas. Contract:
       docs/contracts/namespace.md.
-    cmd: python3 scripts/lint_namespace.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_namespace.py {{.QUIET_FLAG}}
 
   lint-mcp-inventory:
     silent: true
@@ -21,33 +21,33 @@ tasks:
       MCP-tool inventory drift gate (step-11 Phase 5.3). Regenerates
       docs/contracts/mcp-tool-inventory.md from the source-of-truth
       catalog and fails if the on-disk file is stale. Run
-      `python3 scripts/audit_mcp_tools.py --write` to refresh.
-    cmd: python3 scripts/audit_mcp_tools.py --check {{.QUIET_FLAG}}
+      `python3 src/scripts/audit_mcp_tools.py --write` to refresh.
+    cmd: python3 src/scripts/audit_mcp_tools.py --check {{.QUIET_FLAG}}
 
   lint-skills-strict:
     silent: true
     desc: Lint all skills and rules, warnings fail too
-    cmd: python3 scripts/skill_linter.py --all --strict-warnings
+    cmd: python3 src/scripts/skill_linter.py --all --strict-warnings
 
   lint-skills-changed:
     silent: true
     desc: Lint changed skills and rules
-    cmd: python3 scripts/skill_linter.py --changed
+    cmd: python3 src/scripts/skill_linter.py --changed
 
   lint-skills-json:
     silent: true
     desc: Lint all skills and rules with JSON output
-    cmd: python3 scripts/skill_linter.py --all --format json
+    cmd: python3 src/scripts/skill_linter.py --all --format json
 
   lint-skills-report:
     silent: true
     desc: Generate quality report for all skills and rules
-    cmd: python3 scripts/skill_linter.py --all --report
+    cmd: python3 src/scripts/skill_linter.py --all --report
 
   lint-skills-pairs:
     silent: true
     desc: Check condensation quality between uncondensed and condensed pairs
-    cmd: python3 scripts/skill_linter.py --all --pairs --condensation-quality
+    cmd: python3 src/scripts/skill_linter.py --all --pairs --condensation-quality
 
   lint-pack:
     silent: true
@@ -56,7 +56,7 @@ tasks:
       tree. Used by the per-pack CI matrix (.github/workflows/skill-lint.yml).
       Pass the pack id via `-- PACK=<name>` (e.g. `task lint-pack -- PACK=pack-laravel`)
       or set the env var directly. Resolves to `packages/<PACK>/.agent-src.uncondensed/`.
-    cmd: python3 scripts/skill_linter.py "packages/{{.PACK}}/.agent-src.uncondensed/" {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/skill_linter.py "packages/{{.PACK}}/.agent-src.uncondensed/" {{.QUIET_FLAG}}
     requires:
       vars: [PACK]
 
@@ -66,7 +66,7 @@ tasks:
       Append exposure/mention records from Claude Code session jsonl into
       agents/runtime/metrics/skill-usage.jsonl. Feeds step-2-skill-inventory-rationalization
       Phase 1. Privacy-safe (SHA-256 prompt-prefix hashes, no bodies).
-    cmd: python3 scripts/skill_usage_collect.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/skill_usage_collect.py {{.QUIET_FLAG}}
 
   skill-usage:report:
     silent: true
@@ -75,7 +75,7 @@ tasks:
       agents/runtime/metrics/skill-usage-report.md (per-skill 30-day rolling window
       with active / exposed-only / dead status). Baseline only — Phase 2 does
       the rationalization decisions.
-    cmd: python3 scripts/skill_usage_report.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/skill_usage_report.py {{.QUIET_FLAG}}
 
   skill-overlap:
     silent: true
@@ -84,7 +84,7 @@ tasks:
       symbol references; emit agents/runtime/metrics/skill-overlap.md with
       strong (≥ 0.6) and candidate (≥ 0.30 token / ≥ 0.50 symbol) tiers.
       Feeds step-2-skill-inventory-rationalization Phase 2 Step 3.
-    cmd: python3 scripts/skill_overlap.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/skill_overlap.py {{.QUIET_FLAG}}
 
   lint-archived-skills:
     silent: true
@@ -94,7 +94,7 @@ tasks:
       Fails if a note is missing required fields, a replacement slug
       doesn't exist, an archived slug still has a live SKILL.md, or a
       live skill cites an archived slug as replaced_by. Step-2 Phase 3.
-    cmd: python3 scripts/lint_archived_skills.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_archived_skills.py {{.QUIET_FLAG}}
 
   ci:required-checks:
     silent: true
@@ -104,7 +104,7 @@ tasks:
       docs/contracts/branch-protection-policy.md. Pure preview, no
       network, no spend. Useful before pushing to confirm the diff
       stays within the release-PR allowlist.
-    cmd: python3 scripts/print_required_checks.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/print_required_checks.py {{.CLI_ARGS}}
 
   ci:status:
     silent: true
@@ -115,7 +115,7 @@ tasks:
       non-zero on any real red. Pass `--strict` to also fail on missing
       checks (gate-mode for the freeze rule). Phase A Step 6 of
       road-to-adoption-proof-and-ci-green.md.
-    cmd: python3 scripts/ci_status.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/ci_status.py {{.CLI_ARGS}}
 
   adoption:status:
     silent: true
@@ -126,7 +126,7 @@ tasks:
       colour on `main`. Phase C Step 6 of
       road-to-adoption-proof-and-ci-green.md. Pass `--json` for the
       machine-readable shape.
-    cmd: python3 scripts/adoption_status.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/adoption_status.py {{.CLI_ARGS}}
 
   adoption:snapshot:
     silent: true
@@ -137,7 +137,7 @@ tasks:
       of road-to-adoption-proof-and-ci-green.md. Contract:
       docs/contracts/adoption-signal-floor.md (local-only by default;
       no consumer telemetry). Pass `--no-network` for a CI-side dry run.
-    cmd: python3 scripts/adoption_snapshot.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/adoption_snapshot.py {{.CLI_ARGS}}
 
   adoption:report:
     silent: true
@@ -147,7 +147,7 @@ tasks:
       per signal). Phase D Step 3 of
       road-to-adoption-proof-and-ci-green.md. Mirrors the shape of
       `task skill-usage:report`.
-    cmd: python3 scripts/adoption_report.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/adoption_report.py {{.CLI_ARGS}}
 
   lint-bench:
     silent: true
@@ -159,53 +159,53 @@ tasks:
       via scripts/lint_bench_ab.py. Step-4 Phase 1 Step 3 +
       Phase 5 Step 3.
     cmds:
-      - python3 scripts/lint_bench_corpus.py {{.QUIET_FLAG}}
-      - python3 scripts/lint_bench_ab.py {{.QUIET_FLAG}}
+      - python3 src/scripts/lint_bench_corpus.py {{.QUIET_FLAG}}
+      - python3 src/scripts/lint_bench_ab.py {{.QUIET_FLAG}}
 
   lint-skills-regression:
     silent: true
     desc: Compare lint results between current branch and main (detect regressions)
-    cmd: python3 scripts/lint_regression.py --baseline main
+    cmd: python3 src/scripts/lint_regression.py --baseline main
 
   lint-rule-tiers:
     silent: true
     desc: Validate that every rule under .agent-src.uncondensed/rules/ declares a `tier:` frontmatter key with a known value
-    cmd: python3 scripts/lint_rule_tiers.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_rule_tiers.py {{.QUIET_FLAG}}
 
   lint-command-tiers:
     silent: true
     desc: Validate that every slash command under .agent-src.uncondensed/commands/ declares a `tier:` frontmatter key (0/1/2) — see docs/contracts/command-surface-tiers.md
-    cmd: python3 scripts/lint_command_tiers.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_command_tiers.py {{.QUIET_FLAG}}
 
   lint-ghostwriter-source:
     silent: true
     desc: "Enforce ghostwriter storage tiers — package fixtures must be allowlisted + fictional; consumer-tree profiles must not be fictional (see docs/contracts/ghostwriter-schema.md)"
-    cmd: python3 scripts/lint_ghostwriter_source.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_ghostwriter_source.py {{.QUIET_FLAG}}
 
   lint-media-policy-linkage:
     silent: true
     desc: "Enforce structural reachability of media governance policies — every agents/settings/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/settings/policies/media/README.md § Enforcement model)"
-    cmd: python3 scripts/lint_media_policy_linkage.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_media_policy_linkage.py {{.QUIET_FLAG}}
 
   lint-persona-governance:
     silent: true
     desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncondensed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"
-    cmd: python3 scripts/lint_persona_governance.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_persona_governance.py {{.QUIET_FLAG}}
 
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1
-    cmd: python3 scripts/measure_rule_budget.py --kernel-budget-check
+    cmd: python3 src/scripts/measure_rule_budget.py --kernel-budget-check
 
   lint-handoffs:
     silent: true
     desc: Validate cross-wing handoff graph from senior-tier skills' `## Related Skills` blocks (no cycles, no dangling refs, no tier mismatch) — see docs/contracts/cross-wing-handoff.md
-    cmd: python3 scripts/lint_handoffs.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_handoffs.py {{.QUIET_FLAG}}
 
   lint-hook-manifest:
     silent: true
     desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
-    cmd: python3 scripts/lint_hook_manifest.py
+    cmd: python3 src/scripts/lint_hook_manifest.py
 
   lint-marketplace-install:
     silent: true
@@ -214,42 +214,42 @@ tasks:
       Every command in hooks/hooks.json must resolve to a real dispatcher
       subcommand in scripts/_dispatch.bash. Does NOT check consumer-side
       scaffolding — that's the runtime dispatch-issues.jsonl job.
-    cmd: python3 scripts/lint_marketplace_install_completeness.py
+    cmd: python3 src/scripts/lint_marketplace_install_completeness.py
 
   lint-hook-concern-budget:
     silent: true
     desc: P3.3 — concerns-per-event budget + fail_closed Tier-1 gate. Warn-only until hooks.concern_budget.hard_fail flips
-    cmd: python3 scripts/lint_hook_concern_budget.py
+    cmd: python3 src/scripts/lint_hook_concern_budget.py
 
   lint-showcase-sessions:
     silent: true
     desc: Gate docs/showcase.md ↔ docs/showcase/sessions/ — every reference resolves to a file with frontmatter + metrics block
-    cmd: python3 scripts/lint_showcase_sessions.py
+    cmd: python3 src/scripts/lint_showcase_sessions.py
 
   lint-projection-fidelity:
     silent: true
     desc: Probe per-tool projection fidelity (Phase 4.2 of step-1-v2-feedback-followup) — see docs/contracts/multi-tool-projection-fidelity.md
-    cmd: python3 scripts/probe_projection_fidelity.py
+    cmd: python3 src/scripts/probe_projection_fidelity.py
 
   audit-descriptions:
     silent: true
     desc: Audit skill descriptions for pushy-description pattern compliance (worst 15)
-    cmd: python3 scripts/audit_skill_descriptions.py
+    cmd: python3 src/scripts/audit_skill_descriptions.py
 
   audit-descriptions-full:
     silent: true
     desc: Audit skill descriptions (full list of all flagged)
-    cmd: python3 scripts/audit_skill_descriptions.py --full
+    cmd: python3 src/scripts/audit_skill_descriptions.py --full
 
   lint-readme:
     silent: true
     desc: Lint README.md for quality, correctness, and completeness
-    cmd: python3 scripts/readme_linter.py README.md --root .
+    cmd: python3 src/scripts/readme_linter.py README.md --root .
 
   lint-readme-strict:
     silent: true
     desc: Lint README.md with warnings as errors
-    cmd: python3 scripts/readme_linter.py README.md --root . --strict
+    cmd: python3 src/scripts/readme_linter.py README.md --root . --strict
 
   lint-featured-skills:
     silent: true
@@ -257,14 +257,14 @@ tasks:
       Validate every artefact + pack hint in docs/featured-skills.md
       resolves against dist/discovery/discovery-manifest.json
       (road-to-role-first-onboarding Phase 1 Step 3).
-    cmd: python3 scripts/lint_featured_skills.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_featured_skills.py {{.QUIET_FLAG}}
 
   lint-readme-size:
     silent: true
     desc: |
       Freeze README.md at 750 lines — replace, do not grow
       (road-to-role-first-onboarding Phase 2 Step 6).
-    cmd: python3 scripts/lint_readme_size.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_readme_size.py {{.QUIET_FLAG}}
 
   lint-readme-jargon:
     silent: true
@@ -273,7 +273,7 @@ tasks:
       from the kernel/contract/iron-law/projection/manifest/lint/
       ADR/soak/drift/gate/harness watchlist
       (road-to-role-first-onboarding Phase 2 Step 3).
-    cmd: python3 scripts/lint_readme_jargon.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_readme_jargon.py {{.QUIET_FLAG}}
 
   lint-pack-first-win:
     silent: true
@@ -282,105 +282,105 @@ tasks:
       block in pack.yaml (first_win_doc, example_workflow,
       time_to_first_value_minutes)
       (road-to-role-first-onboarding Phase 4 Step 4).
-    cmd: python3 scripts/lint_pack_first_win.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_pack_first_win.py {{.QUIET_FLAG}}
 
   lint-marketplace:
     silent: true
     desc: Lint .claude-plugin/marketplace.json against the Claude Code Plugin schema
-    cmd: python3 scripts/lint_marketplace.py
+    cmd: python3 src/scripts/lint_marketplace.py
 
   lint-user-type-axis:
     silent: true
     desc: Audit recommended_for_user_types frontmatter vs user-types/*.yml stems (step-9 Phase 4)
-    cmd: python3 scripts/audit_user_type_axis.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/audit_user_type_axis.py {{.QUIET_FLAG}}
 
   lint-skill-tools:
     silent: true
     desc: Block D · D1 — meta-lint scripts/skill_tools/*.py (stdlib-only, --json, snake_case_verb_noun, ≤200 LOC, embedded sample)
-    cmd: python3 scripts/lint_skill_tools.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_skill_tools.py {{.QUIET_FLAG}}
 
   lint-agents-md:
     silent: true
     desc: Enforce the Thin-Root contract on AGENTS.md + templates/AGENTS.md (size caps, ≥40% pointer ratio, why-clause length, target resolution, emergency-triage block) — see .agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md
-    cmd: python3 scripts/lint_agents_md.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_agents_md.py {{.QUIET_FLAG}}
 
   check-refs:
     silent: true
     desc: Check for broken cross-references in .md files
-    cmd: python3 scripts/check_references.py
+    cmd: python3 src/scripts/check_references.py
 
   check-refs-json:
     silent: true
     desc: Check for broken cross-references (JSON output)
-    cmd: python3 scripts/check_references.py --format json
+    cmd: python3 src/scripts/check_references.py --format json
 
   check-portability:
     silent: true
     desc: Check package portability (no project-specific references)
-    cmd: python3 scripts/check_portability.py
+    cmd: python3 src/scripts/check_portability.py
 
   check-module-management-neutral:
     silent: true
     desc: Verify module-management SKILL stays framework-neutral (Phase C of road-to-configurable-modules)
-    cmd: python3 scripts/check_module_management_neutral.py
+    cmd: python3 src/scripts/check_module_management_neutral.py
 
   check-release-trunk-sync:
     silent: true
     desc: Fail if main is more than one tagged release behind a release/X.Y.Z branch (P1.3 of road-to-productization, contract docs/contracts/release-trunk-sync.md)
-    cmd: python3 scripts/check_release_trunk_sync.py
+    cmd: python3 src/scripts/check_release_trunk_sync.py
 
   check-release-published:
     silent: true
     desc: "Fail if main's package.json version has no matching tag (release merged but never tagged/published). No-ops off main; tag invariant only — the npm invariant runs in the scheduled release-drift workflow. See scripts/check_release_published.py"
-    cmd: python3 scripts/check_release_published.py --strict --require-main
+    cmd: python3 src/scripts/check_release_published.py --strict --require-main
 
   validate-decision-engine:
     silent: true
     desc: Validate decision_engine block schema in agent-settings.template.yml and any local .agent-settings.yml (P2 of road-to-productization, contract docs/contracts/decision-engine-gates.md)
-    cmd: python3 scripts/validate_decision_engine.py
+    cmd: python3 src/scripts/validate_decision_engine.py
 
   validate-agent-settings:
     silent: true
     desc: Enum-validate value-bearing settings keys (rule_loading_tier, memory.cadence, model.auto_switch, …) in agent-settings.template.yml + any local .agent-settings.yml against scripts/schemas/agent-settings.schema.json — prevents the value-vocabulary collision the 2026-06-01 rule_loading_tier untangle fixed
-    cmd: python3 scripts/validate_agent_settings.py
+    cmd: python3 src/scripts/validate_agent_settings.py
 
   check-token-optimizer-freshness:
     silent: true
     desc: Verify token-optimizer catalog rows still match their cited assets (P1.3 of road-to-token-optimization)
-    cmd: python3 scripts/check_token_optimizer_freshness.py
+    cmd: python3 src/scripts/check_token_optimizer_freshness.py
 
   check-examples-shape:
     silent: true
     desc: Lint docs/guidelines/agent-infra/*-demos.md for wrong/right/why shape (Phase 3.4 of road-to-context-layer-maturity)
-    cmd: python3 scripts/lint_examples.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_examples.py {{.QUIET_FLAG}}
 
   lint-roadmap-complexity:
     silent: true
     desc: Enforce roadmap-complexity-standard contract on agents/roadmaps/*.md (Phase 5.2 of road-to-context-layer-maturity)
-    cmd: python3 scripts/lint_roadmap_complexity.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_roadmap_complexity.py {{.QUIET_FLAG}}
 
   lint-roadmap-ci-steps:
     silent: true
     desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
-    cmd: python3 scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
 
   lint-commit-subjects:
     silent: true
     desc: Reject sloppy commit subjects (< 10 chars after Conventional-Commits prefix, or blocklist tokens wip/leftover/temp/tmp/fixup) feeding the auto-generated changelog (ADR-033 + road-to-distribution-identity Phase 3)
     cmd: |
-      python3 scripts/lint_commit_subjects.py \
+      python3 src/scripts/lint_commit_subjects.py \
         --base "${LINT_BASE:-origin/main}" \
         --head "${LINT_HEAD:-HEAD}" {{.QUIET_FLAG}}
 
   lint-discovery-vocab:
     silent: true
     desc: Validate config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
-    cmd: python3 scripts/lint_discovery_vocabulary.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_discovery_vocabulary.py {{.QUIET_FLAG}}
 
   build-discovery-manifest:
     silent: true
     desc: Run the release-time discovery scanner — writes dist/discovery/discovery-manifest.{json,summary.md} (R3 Phase 2.1)
-    cmd: python3 scripts/build_discovery_manifest.py --write {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/build_discovery_manifest.py --write {{.QUIET_FLAG}}
 
   build-discovery:
     silent: true
@@ -390,69 +390,69 @@ tasks:
   validate-discovery-manifest:
     silent: true
     desc: Re-build the discovery manifest in memory and diff against the committed dist/discovery/discovery-manifest.json (monorepo Phase 2, ADR-015)
-    cmd: python3 scripts/validate_discovery_manifest.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/validate_discovery_manifest.py {{.QUIET_FLAG}}
 
   discovery-stats:
     silent: true
     desc: Pretty-print the stats block from the committed discovery manifest (monorepo Phase 2, ADR-015)
-    cmd: python3 scripts/discovery_stats.py
+    cmd: python3 src/scripts/discovery_stats.py
 
   lint-discovery-manifest:
     silent: true
     desc: Validate dist/discovery/discovery-manifest.json against schema, checksum, and vocabulary cross-refs (R3 Phase 2.2)
     deps: [build-discovery-manifest]
-    cmd: python3 scripts/lint_discovery_manifest.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_discovery_manifest.py {{.QUIET_FLAG}}
 
   lint-artefact-frontmatter:
     silent: true
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
-    cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
   check-skill-requires:
     silent: true
     desc: Validate the skill-composition graph (requires_skills) — every sub-skill ships wherever its parent ships (roadmap 3.4)
-    cmd: python3 scripts/check_skill_requires.py
+    cmd: python3 src/scripts/check_skill_requires.py
 
   check-gate-paths:
     silent: true
     desc: Assert every gate that enforces a fixed packages/core/ target still resolves it (R2 of road-to-test-and-gate-integrity — guards the aab5755 silent-no-op class)
-    cmd: python3 scripts/check_gate_paths.py
+    cmd: python3 src/scripts/check_gate_paths.py
 
   check-test-coverage-diff:
     silent: true
     desc: WARN-only — flag a new scripts/check_*|lint_* gate added with no matching test (R3 of road-to-test-and-gate-integrity — calibrated nudge, exit 0; never blocks)
-    cmd: python3 scripts/check_test_coverage_diff.py
+    cmd: python3 src/scripts/check_test_coverage_diff.py
 
   lint-model-tier-coverage:
     silent: true
     desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-model-capability-tiers.md — explicit lite/medium/high or inherit required (ADR-035))
-    cmd: python3 scripts/lint_model_tier_coverage.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_model_tier_coverage.py {{.QUIET_FLAG}}
 
   lint-frontmatter-boilerplate:
     silent: true
     desc: Fail when an artefact carries a frontmatter field equal to its schema default (road-to-abstraction-reduction.md Phase 3 — omit it, the loader injects the default)
-    cmd: python3 scripts/lint_frontmatter_boilerplate.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_frontmatter_boilerplate.py {{.QUIET_FLAG}}
 
   lint-trust-coherence:
     silent: true
     desc: Enforce safety-floor / HRR-banner / kernel-trust coherence across the manifest (monorepo Phase 5.4, ADR-018)
     deps: [build-discovery-manifest]
-    cmd: python3 scripts/lint_trust_coherence.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_trust_coherence.py {{.QUIET_FLAG}}
 
   lint-explain-trace:
     silent: true
     desc: Validate an ExplainTrace v1 JSON file against docs/contracts/explain-trace.schema.json (explainability v2 Phase 1.2)
-    cmd: python3 scripts/lint_explain_trace.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/lint_explain_trace.py {{.CLI_ARGS}}
 
   check-discovery-determinism:
     silent: true
     desc: Run the discovery scanner twice and assert byte-identical output apart from generated_at (R3 Phase 2.3)
-    cmd: python3 scripts/check_discovery_determinism.py
+    cmd: python3 src/scripts/check_discovery_determinism.py
 
   check-artefact-checksums:
     silent: true
     desc: Re-hash every artefact in dist/discovery/discovery-manifest.json and assert the per-artefact checksum still matches the source bytes (monorepo Phase 2, ADR-015 §Phase 6)
-    cmd: python3 scripts/check_artefact_checksums.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/check_artefact_checksums.py {{.QUIET_FLAG}}
 
   assert-discovery-in-tarball:
     silent: true
@@ -466,32 +466,32 @@ tasks:
   check-release-includes-discovery:
     silent: true
     desc: Assert dist/discovery/discovery-manifest.json exists and is non-empty before `npm publish` (R3 Phase 5.3)
-    cmd: python3 scripts/check_release_includes_discovery.py
+    cmd: python3 src/scripts/check_release_includes_discovery.py
 
   lint-topics-yaml:
     silent: true
     desc: Validate `.github/topics.yml` shape (slug regex, length, duplicates, notes key, equivalents map) — R5 Phase 1.3
-    cmd: python3 scripts/lint_topics_yaml.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_topics_yaml.py {{.QUIET_FLAG}}
 
   sync-github-topics:
     silent: true
     desc: Dry-run diff of `.github/topics.yml` + `.github/about.yml` against the live GitHub repo. Pass `-- --apply` to mutate (requires GITHUB_TOKEN with admin:write) — R5 Phase 1.2
-    cmd: python3 scripts/sync_github_metadata.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/sync_github_metadata.py {{.CLI_ARGS}}
 
   build-mcp-registry-manifest:
     silent: true
     desc: Render dist/mcp/registry-manifest.json + the two payloads (awesome-mcp-servers row, Cloudflare catalogue entry) — R5 Phase 2.2
-    cmd: python3 scripts/build_mcp_registry_manifest.py --write --strict {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/build_mcp_registry_manifest.py --write --strict {{.QUIET_FLAG}}
 
   lint-mcp-registry-manifest:
     silent: true
     desc: Validate dist/mcp/registry-manifest.json against the schema; assert payload shapes — R5 Phase 2 exit gate
-    cmd: python3 scripts/lint_mcp_registry_manifest.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_mcp_registry_manifest.py {{.QUIET_FLAG}}
 
   lint-positioning:
     silent: true
     desc: Assert README tagline ↔ package.json.description ↔ .github/about.yml agree and every topic appears in README — R5 Phase 3
-    cmd: python3 scripts/lint_positioning.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_positioning.py {{.QUIET_FLAG}}
 
   visibility-check:
     silent: true
@@ -504,147 +504,147 @@ tasks:
   lint-framework-leakage:
     silent: true
     desc: "Block PHP/Laravel/etc. leakage in generic skills/rules/commands (framework-neutrality-in-generic-skills rule)"
-    cmd: python3 scripts/lint_framework_leakage.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_framework_leakage.py {{.QUIET_FLAG}}
 
   lint-context-spine-usage:
     silent: true
     desc: Verify every skill that declares context_spine cites each slot in its body (closes lint gap from 1.34.0)
-    cmd: python3 scripts/lint_context_spine_usage.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_context_spine_usage.py {{.QUIET_FLAG}}
 
   check-public-links:
     silent: true
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
-    cmd: python3 scripts/check_public_links.py
+    cmd: python3 src/scripts/check_public_links.py
 
   check-beta-review-markers:
     silent: true
     desc: Verify every stability=beta contract carries promote-to / keep-beta-until / superseded-by (P5.4)
-    cmd: python3 scripts/check_beta_review_markers.py
+    cmd: python3 src/scripts/check_beta_review_markers.py
 
   check-public-catalog-links:
     silent: true
     desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncondensed/, all paths under package.json#files)
-    cmd: python3 scripts/check_public_catalog_links.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/check_public_catalog_links.py {{.QUIET_FLAG}}
 
   check-command-count:
     silent: true
     desc: Verify README/AGENTS.md/docs/getting-started.md command counts match the cluster registry (active vs. shim split)
-    cmd: python3 scripts/check_command_count_messaging.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/check_command_count_messaging.py {{.QUIET_FLAG}}
 
   lint-no-new-atomic-commands:
     silent: true
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
-    cmd: python3 scripts/lint_no_new_atomic_commands.py
+    cmd: python3 src/scripts/lint_no_new_atomic_commands.py
 
   lint-command-budget:
     silent: true
     desc: "Fail when a newly visible command pushes its pack over the size_class budget (6.0.0-C Phase 1; existing commands grandfathered)"
-    cmd: python3 scripts/audit_command_surface.py --check-new {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/audit_command_surface.py --check-new {{.QUIET_FLAG}}
 
   lint-command-verbs:
     silent: true
     desc: "Fail when a new/promoted visible command uses an unapproved verb or a banned create-* prefix (6.0.0-C Phase 2; ADR-041)"
-    cmd: python3 scripts/lint_command_verbs.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_command_verbs.py {{.QUIET_FLAG}}
 
   lint-command-routing:
     silent: true
     desc: "Fail when a visible command is missing required intent/routes_to/replaces frontmatter or a routing eval (6.0.0-C Phase 2 Steps 4b+5)"
-    cmd: python3 scripts/lint_command_routing.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_command_routing.py {{.QUIET_FLAG}}
 
   lint-new-skill-gate:
     silent: true
     desc: "Fail when a NEW skill lacks a triggers stub or >70%-overlaps an existing same-domain skill (6.0.0-C Phase 4 Step 8b; back catalogue grandfathered)"
-    cmd: python3 scripts/lint_new_skill_gate.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_new_skill_gate.py {{.QUIET_FLAG}}
 
   check-cluster-patterns:
     silent: true
     desc: Verify Phase-2 cluster dispatchers match Phase-1 reference structure (Phase 1 § 1.4.1)
-    cmd: python3 scripts/check_cluster_patterns.py
+    cmd: python3 src/scripts/check_cluster_patterns.py
 
   lint-rule-interactions:
     silent: true
     desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
-    cmd: python3 scripts/lint_rule_interactions.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_rule_interactions.py {{.QUIET_FLAG}}
 
   lint-load-context:
     silent: true
     desc: Validate the `load_context:` / `load_context_eager:` frontmatter schema (docs/contracts/load-context-schema.md)
-    cmd: python3 scripts/lint_load_context.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/lint_load_context.py {{.QUIET_FLAG}}
 
   check-context-paths:
     silent: true
     desc: Validate context-file path tree, basename collisions, and orphans (docs/contracts/context-paths.md)
-    cmd: python3 scripts/check_context_paths.py
+    cmd: python3 src/scripts/check_context_paths.py
 
   check-no-roadmap-refs:
     silent: true
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
-    cmd: python3 scripts/check_no_roadmap_refs.py
+    cmd: python3 src/scripts/check_no_roadmap_refs.py
 
   check-no-local-settings:
     silent: true
     desc: .agent-settings.local.yml (per-machine override layer) must never be committed
-    cmd: python3 scripts/check_no_local_settings_committed.py
+    cmd: python3 src/scripts/check_no_local_settings_committed.py
 
   check-council-references:
     silent: true
     desc: Stable artifacts must not link specific files in agents/runtime/council/{questions,responses,sessions}/ (no-transient-references rule, council clause)
-    cmd: python3 scripts/check_council_references.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/check_council_references.py {{.QUIET_FLAG}}
 
   lint-one-off-age:
     silent: true
     desc: Enforce the one-off-script lifecycle (docs/contracts/one-off-script-lifecycle.md)
-    cmd: python3 scripts/lint_one_off_age.py
+    cmd: python3 src/scripts/lint_one_off_age.py
 
   check-reply-consistency:
     silent: true
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
-    cmd: python3 scripts/check_reply_consistency.py {{.QUIET_FLAG}} --scan-dir .agent-src.uncondensed
+    cmd: python3 src/scripts/check_reply_consistency.py {{.QUIET_FLAG}} --scan-dir .agent-src.uncondensed
 
   check-iron-law-prominence:
     silent: true
     desc: Verify Iron Laws sit at the top of every rule file (H2, first 2 positions)
-    cmd: python3 scripts/check_iron_law_prominence.py {{.QUIET_FLAG}}
+    cmd: python3 src/scripts/check_iron_law_prominence.py {{.QUIET_FLAG}}
 
   check-always-budget:
     silent: true
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
-    cmd: python3 scripts/check_always_budget.py {{.QUIET_FLAG}} --quiet
+    cmd: python3 src/scripts/check_always_budget.py {{.QUIET_FLAG}} --quiet
 
   check-kernel-rule-bundle:
     silent: true
     desc: Fail PRs that touch > 1 kernel rule (override label `bundled-always-rules-acknowledged`)
-    cmd: python3 scripts/check_kernel_rule_bundle.py
+    cmd: python3 src/scripts/check_kernel_rule_bundle.py
 
   check-augment-description-cap:
     silent: true
     desc: Auto-rule description-length gate (≤ 150 chars) — see road-to-augment-limit-fit P1.3
-    cmd: python3 scripts/check_augment_description_cap.py
+    cmd: python3 src/scripts/check_augment_description_cap.py
 
   check-augment-budget:
     silent: true
     desc: Augment workspace-guidelines budget meter (cap 49,512; informational, never fails CI yet) — see road-to-augment-limit-fit P1.4
-    cmd: python3 scripts/measure_augment_budget.py
+    cmd: python3 src/scripts/measure_augment_budget.py
 
   check-augment-budget-strict:
     silent: true
     desc: Augment workspace-guidelines budget gate (fails ≥95%) — wired into CI after road-to-augment-limit-fit Phase 4
-    cmd: python3 scripts/measure_augment_budget.py --check
+    cmd: python3 src/scripts/measure_augment_budget.py --check
 
   check-one-off-location:
     silent: true
     desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/
-    cmd: python3 scripts/check_one_off_location.py {{.QUIET_FLAG}} --quiet
+    cmd: python3 src/scripts/check_one_off_location.py {{.QUIET_FLAG}} --quiet
 
   validate-schema:
     silent: true
     desc: Validate artefact frontmatter against JSON-Schema (scripts/schemas/)
-    cmd: python3 scripts/validate_frontmatter.py
+    cmd: python3 src/scripts/validate_frontmatter.py
 
   quality-report:
     silent: true
     desc: Generate quality score report (per artifact type)
-    cmd: python3 scripts/skill_linter.py --report
+    cmd: python3 src/scripts/skill_linter.py --report
 
   # ---------------------------------------------------------------------------
   # TypeScript CLI shell gates — Phase 5.2 of
@@ -660,7 +660,7 @@ tasks:
       docs/contracts/role-experience.md (≥ 5 prompts, ≥ 3 first tasks,
       required frontmatter, every skill `id` resolves). Includes the
       `--plain-language` jargon scan (docs/contracts/plain-language-surface.md).
-    cmd: python3 scripts/lint_role_experiences.py --plain-language
+    cmd: python3 src/scripts/lint_role_experiences.py --plain-language
 
   lint-ts:
     silent: true

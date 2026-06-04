@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Install git hooks for this repository.
-# Run once: bash scripts/install-hooks.sh
+# Run once: bash src/scripts/install-hooks.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# This installer lives at src/scripts/install-hooks.sh, so the repo root
+# (which owns .git/) is two levels up.
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
 
 mkdir -p "$HOOKS_DIR"
@@ -23,13 +25,13 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 fail=0
 
 echo "🔍 Checking .agent-src/ sync..."
-if ! python3 scripts/condense.py --check; then
+if ! python3 src/scripts/condense.py --check; then
     echo "❌  .agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
     fail=1
 fi
 
 echo "🔍 Checking command count messaging..."
-if ! python3 scripts/check_command_count_messaging.py; then
+if ! python3 src/scripts/check_command_count_messaging.py; then
     echo "❌  Command-count drift in README / AGENTS.md / getting-started. Run 'task counts-update', stage the changes, then re-commit."
     fail=1
 fi
@@ -61,7 +63,7 @@ cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 # agents/roadmaps-progress.md is in sync with the current state of
 # agents/roadmaps/ (roadmap-progress-sync Iron Law).
 
-python3 scripts/lint_marketplace.py
+python3 src/scripts/lint_marketplace.py
 status=$?
 
 if [ $status -ne 0 ]; then
@@ -93,10 +95,10 @@ fi
 # single-namespace collision lints. Only fires when staged changes touch pack
 # sources, the packs vocab, or the gate scripts themselves, so unrelated
 # commits stay fast.
-if git diff --cached --name-only | grep -qE '^(packages/|config/discovery/packs\.yml|scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|scripts/schemas/pack\.schema\.json|scripts/pack_dependency_allowlist\.json)'; then
-    if ! python3 scripts/validate_pack_yaml.py \
-        || ! python3 scripts/lint_pack_dependencies.py \
-        || ! python3 scripts/lint_namespace_collisions.py; then
+if git diff --cached --name-only | grep -qE '^(packages/|config/discovery/packs\.yml|src/scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|src/scripts/schemas/pack\.schema\.json|src/scripts/pack_dependency_allowlist\.json)'; then
+    if ! python3 src/scripts/validate_pack_yaml.py \
+        || ! python3 src/scripts/lint_pack_dependencies.py \
+        || ! python3 src/scripts/lint_namespace_collisions.py; then
         echo ""
         echo "❌  Commit blocked — Phase-0 pack gate failed (schema / dependency / namespace)."
         echo "   Run 'task generate-pack-manifests' if manifests drifted, fix the"
@@ -152,7 +154,7 @@ write_chat_history_hook "post-rewrite"  "git:post-rewrite"
 
 # Auto-sync agent-tool projections after pull / branch-switch ---------------
 #
-# When `.agent-src.uncondensed/`, `.agent-src/`, `scripts/condense.py`,
+# When `.agent-src.uncondensed/`, `.agent-src/`, `src/scripts/condense.py`,
 # `agents/.agent-tools.yml`, or `Taskfile.yml` change between the previous and
 # new HEAD, the developer's working tree has stale `.claude/`,
 # `.augment/`, etc. projections until they remember to run `task sync`.
@@ -187,7 +189,7 @@ fi
 
 if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
     if git diff --name-only "\$prev" "\$new" 2>/dev/null | \\
-        grep -qE '^(\\.agent-src(\\.uncondensed)?/|scripts/condense\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
+        grep -qE '^(\\.agent-src(\\.uncondensed)?/|src/scripts/condense\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
         if command -v task >/dev/null 2>&1; then
             task sync >/dev/null 2>&1 || true
             task generate-tools >/dev/null 2>&1 || true

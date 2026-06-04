@@ -15,7 +15,7 @@ tasks:
       task release                     # interactive, auto-detect
       task release -- --dry-run        # preview only
       task release -- --yes --no-wait  # non-interactive
-    cmd: python3 scripts/release.py {{.CLI_ARGS}}
+    cmd: python3 src/scripts/release.py {{.CLI_ARGS}}
 
   release:major:
     desc: |
@@ -23,7 +23,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:major
       task release:major -- --dry-run
-    cmd: python3 scripts/release.py --as major {{.CLI_ARGS}}
+    cmd: python3 src/scripts/release.py --as major {{.CLI_ARGS}}
 
   release:minor:
     desc: |
@@ -31,7 +31,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:minor
       task release:minor -- --dry-run
-    cmd: python3 scripts/release.py --as minor {{.CLI_ARGS}}
+    cmd: python3 src/scripts/release.py --as minor {{.CLI_ARGS}}
 
   release:patch:
     desc: |
@@ -39,7 +39,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:patch
       task release:patch -- --dry-run
-    cmd: python3 scripts/release.py --as patch {{.CLI_ARGS}}
+    cmd: python3 src/scripts/release.py --as patch {{.CLI_ARGS}}
 
   release:version:
     desc: |
@@ -48,7 +48,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:version -- 2.0.0
       task release:version -- 2.0.0 --dry-run
-    cmd: python3 scripts/release.py --version {{.CLI_ARGS}}
+    cmd: python3 src/scripts/release.py --version {{.CLI_ARGS}}
 
   npm:login:
     desc: |

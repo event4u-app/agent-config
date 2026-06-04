@@ -623,7 +623,7 @@ generate_windsurfrules() {
 # verbose mode regardless.
 run_scope_guard() {
     local target="$1"
-    local guard="$SOURCE_DIR/scripts/_lib/scope_guard.sh"
+    local guard="$SOURCE_DIR/src/scripts/_lib/scope_guard.sh"
 
     # Skip when the guard is not present (e.g. trimmed install bundle).
     [[ -f "$guard" ]] || { log_verbose "scope_guard.sh not found — skipping cross-scope drift check"; return 0; }
@@ -706,7 +706,7 @@ run_scope_guard() {
 # probe script is missing (older bundles).
 run_post_install_probe() {
     local target="$1"
-    local probe="$SOURCE_DIR/scripts/probe_skill_registration.py"
+    local probe="$SOURCE_DIR/src/scripts/probe_skill_registration.py"
 
     [[ -f "$probe" ]] || { log_verbose "skip probe_skill_registration.py (not found)"; return 0; }
     if ! command -v python3 >/dev/null 2>&1; then
@@ -950,7 +950,7 @@ migrate_legacy_council_yml() {
 ensure_gitignore() {
     local project_root="$1"
     local gitignore="$project_root/.gitignore"
-    local sync_script="$SOURCE_DIR/scripts/sync_gitignore.py"
+    local sync_script="$SOURCE_DIR/src/scripts/sync_gitignore.py"
     local template="$SOURCE_DIR/config/gitignore-block.txt"
 
     if $SKIP_GITIGNORE; then
@@ -1016,7 +1016,7 @@ emit_deprecation_banner() {
     [[ "${AGENT_CONFIG_SUPPRESS_DEPRECATION:-0}" == "1" ]] && return 0
     echo "  ⚠️  Direct \`bash install.sh\` is deprecated (ADR-016 § Distribution)." >&2
     echo "      Prefer:  npx @event4u/agent-config init" >&2
-    echo "      Or:      bash scripts/install   (orchestrator, suppresses this banner)" >&2
+    echo "      Or:      bash src/scripts/install   (orchestrator, suppresses this banner)" >&2
     echo "" >&2
 }
 
@@ -1120,13 +1120,13 @@ main() {
     if $is_first_run && ! $QUIET; then
         echo ""
         echo "✅  agent-config payload synced."
-        echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings.yml and bridges."
+        echo "    Run src/scripts/install (or python3 src/scripts/install.py) to render .agent-settings.yml and bridges."
         # step-9 P11 · U1 — airgap detection. Probe DNS for provider hosts;
         # on first-run with no reachable backend, surface the banner so the
         # installer caller can flip defaults.member_mode to `api`.
         if command -v python3 >/dev/null 2>&1; then
             local airgap_mode
-            airgap_mode="$(python3 "$SOURCE_DIR/scripts/ai_council/airgap.py" 2>/dev/null || true)"
+            airgap_mode="$(python3 "$SOURCE_DIR/src/scripts/ai_council/airgap.py" 2>/dev/null || true)"
             if [[ "$airgap_mode" == "api" ]]; then
                 echo ""
                 echo "⚠️  airgapped environment detected — defaulting to mode: api"

@@ -33,7 +33,7 @@ labels: bug
 ### Installer output
 
 ```text
-# run: bash scripts/install.sh --verbose --dry-run
+# run: bash src/scripts/install.sh --verbose --dry-run
 # or: php vendor/bin/install.php --verbose
 ```
 

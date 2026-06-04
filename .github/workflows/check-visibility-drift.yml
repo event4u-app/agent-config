@@ -22,8 +22,8 @@ on:
     paths:
       - ".github/topics.yml"
       - ".github/about.yml"
-      - "scripts/sync_github_metadata.py"
-      - "scripts/lint_topics_yaml.py"
+      - "src/scripts/sync_github_metadata.py"
+      - "src/scripts/lint_topics_yaml.py"
       - ".github/workflows/check-visibility-drift.yml"
   schedule:
     # Weekly drift sweep \u2014 catches UI-side edits even when nobody
@@ -56,9 +56,9 @@ jobs:
         run: pip install pyyaml
 
       - name: Lint topics.yml
-        run: python3 scripts/lint_topics_yaml.py
+        run: python3 src/scripts/lint_topics_yaml.py
 
       - name: Detect drift (read-only)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/sync_github_metadata.py --strict
+        run: python3 src/scripts/sync_github_metadata.py --strict

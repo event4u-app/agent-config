@@ -37,13 +37,13 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - 'scripts/install'
-      - 'scripts/install.sh'
-      - 'scripts/install.py'
-      - 'scripts/agent-config'
-      - 'scripts/_dispatch.bash'
-      - 'scripts/_lib/**'
-      - 'scripts/_cli/**'
+      - 'src/scripts/install'
+      - 'src/scripts/install.sh'
+      - 'src/scripts/install.py'
+      - 'src/scripts/agent-config'
+      - 'src/scripts/_dispatch.bash'
+      - 'src/scripts/_lib/**'
+      - 'src/scripts/_cli/**'
       - 'setup.sh'
       - 'tests/test_one_liner_entrypoints.sh'
       - 'package.json'
@@ -130,7 +130,7 @@ jobs:
         run: |
           set -euo pipefail
           TMP="$(mktemp -d -t public-install-dry-XXXXXX)"
-          bash scripts/agent-config init \
+          bash src/scripts/agent-config init \
             --target "$TMP" \
             --tools=claude-code \
             --yes \
