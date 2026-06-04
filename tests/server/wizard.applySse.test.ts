@@ -71,7 +71,7 @@ async function bootSseApp(): Promise<SseBoot> {
     const packageRoot = join(baseTmp, 'pkg');
     const writeRoot = join(baseTmp, 'write');
     const uiDir = join(baseTmp, 'ui');
-    mkdirSync(join(packageRoot, 'scripts'), { recursive: true });
+    mkdirSync(join(packageRoot, 'src', 'scripts'), { recursive: true });
     mkdirSync(writeRoot, { recursive: true });
     mkdirSync(uiDir, { recursive: true });
     writeFileSync(join(uiDir, 'index.html'), '<!doctype html><html><body>ok</body></html>');
@@ -100,7 +100,7 @@ async function bootSseApp(): Promise<SseBoot> {
 
 /** Write the fake `scripts/install.py` body the apply endpoint will spawn. */
 function writeInstaller(packageRoot: string, body: string): void {
-    writeFileSync(join(packageRoot, 'scripts', 'install.py'), body, { mode: 0o755 });
+    writeFileSync(join(packageRoot, 'src', 'scripts', 'install.py'), body, { mode: 0o755 });
 }
 
 function authHeaders(host: string): Record<string, string> {

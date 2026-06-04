@@ -21,14 +21,14 @@ that touch one tier in isolation.
 
 **One smoke script per tier, each ≤ 30 s, each emitting a baseline
 declaration as its last stdout line.** Scripts live under
-[`scripts/smoke/`](../../../scripts/smoke/):
+[`scripts/smoke/`](../../../src/scripts/smoke/):
 
 | Tier | Script | Validates | Path-trigger globs |
 |---|---|---|---|
-| Kernel | [`kernel.sh`](../../../scripts/smoke/kernel.sh) | 9 kernel rules present, char-budget respected | `.agent-src.uncondensed/rules/**`, `docs/contracts/kernel-membership.md` |
-| Router | [`router.sh`](../../../scripts/smoke/router.sh) | `dist/router.json` compiles, all `routes_to:` resolve | `dist/router.json`, `.agent-src.uncondensed/rules/**` |
-| Schema | [`schema.sh`](../../../scripts/smoke/schema.sh) | Random skill / rule sample validates against JSON Schema | `scripts/schemas/**`, `.agent-src.uncondensed/{rules,skills}/**` |
-| Skills | [`skills.sh`](../../../scripts/smoke/skills.sh) | 5 random skills pass frontmatter + `name == dir` | `.agent-src.uncondensed/skills/**` |
+| Kernel | [`kernel.sh`](../../../src/scripts/smoke/kernel.sh) | 9 kernel rules present, char-budget respected | `.agent-src.uncondensed/rules/**`, `docs/contracts/kernel-membership.md` |
+| Router | [`router.sh`](../../../src/scripts/smoke/router.sh) | `dist/router.json` compiles, all `routes_to:` resolve | `dist/router.json`, `.agent-src.uncondensed/rules/**` |
+| Schema | [`schema.sh`](../../../src/scripts/smoke/schema.sh) | Random skill / rule sample validates against JSON Schema | `scripts/schemas/**`, `.agent-src.uncondensed/{rules,skills}/**` |
+| Skills | [`skills.sh`](../../../src/scripts/smoke/skills.sh) | 5 random skills pass frontmatter + `name == dir` | `.agent-src.uncondensed/skills/**` |
 
 ### Runtime contract
 
@@ -92,7 +92,7 @@ baseline, CI-dispatched on path-trigger.
 ## References
 
 - [`docs/contracts/smoke-contracts.md`](../../contracts/smoke-contracts.md) — runtime + path-trigger contract.
-- [`scripts/smoke/`](../../../scripts/smoke/) — four scripts.
+- [`scripts/smoke/`](../../../src/scripts/smoke/) — four scripts.
 - [`.github/workflows/smoke.yml`](../../../.github/workflows/smoke.yml) — CI dispatch.
 - [`taskfiles/engine.yml`](../../../taskfiles/engine.yml) — local aggregator.
 - [`agents/evidence/audits/2026-05-14-north-star/external-findings.md`](../../../agents/evidence/audits/2026-05-14-north-star/external-findings.md) § 5 — origin pattern.

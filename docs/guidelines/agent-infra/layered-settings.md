@@ -9,7 +9,7 @@ project-local choices always win.
 Referenced by `road-to-project-memory.md` Phase 0 and
 `road-to-portable-dev-preferences.md`. Consumed by the centralized
 settings loader at
-[`scripts/_lib/agent_settings.py`](../../../scripts/_lib/agent_settings.py),
+[`scripts/_lib/agent_settings.py`](../../../src/scripts/_lib/agent_settings.py),
 the `/onboard` command, and any agent that edits `.agent-settings.yml`
 on user request.
 
@@ -32,7 +32,7 @@ All three are YAML. Schemas:
 - Developer (project-local): [`agent-settings.md`](../../templates/agent-settings.md).
 - Team: [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml).
 - User-global: six exact dotted paths — whitelist in
-  [`scripts/_lib/agent_settings.py`](../../../scripts/_lib/agent_settings.py).
+  [`scripts/_lib/agent_settings.py`](../../../src/scripts/_lib/agent_settings.py).
 
 ## Merge order
 
@@ -254,7 +254,7 @@ after that.
 The contract is **additive merge with user-line preservation** —
 the user's file is the ground truth, the template only contributes
 keys the user is missing. Round-trip parser and merger live in
-[`scripts/sync_yaml_rt.py`](../../scripts/sync_yaml_rt.py); the
+[`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py); the
 supported YAML subset (block-mappings, scalars, lists, comments,
 CRLF/LF) is documented in its module docstring. The stdlib-only
 choice (vs. `ruamel.yaml`) and its revisit triggers are recorded in

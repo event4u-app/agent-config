@@ -18,3 +18,8 @@
 # See https://docs.pytest.org/en/stable/explanation/pythonpath.html.
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
+# 6.0.0-D Step 16: the Python tooling moved from scripts/ to src/scripts/.
+# Put `src` on the import root so `from scripts.X import …` resolves
+# (`scripts` = `src/scripts` namespace package); `.` keeps repo-root-relative
+# test imports working.
+pythonpath = ["src", "."]

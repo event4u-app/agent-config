@@ -31,7 +31,7 @@ from these alone — **no manual workspace or pack list is ever maintained**.
 Vocabularies are **closed**. New entries require an amendment to
 [`ADR-013`](../decisions/ADR-013-discovery-frontmatter-contract.md) in the
 same PR. The linter
-([`scripts/lint_artefact_frontmatter.py`](../../scripts/lint_artefact_frontmatter.py))
+([`scripts/lint_artefact_frontmatter.py`](../../src/scripts/lint_artefact_frontmatter.py))
 rejects free-text values.
 
 ## Worked examples

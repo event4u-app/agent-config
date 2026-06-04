@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-14
 # Benchmark Report Schema — step-4 Phase 2
 
 Parser-visible contract for the JSON + Markdown reports emitted by
-[`scripts/bench_run.py`](../../scripts/bench_run.py). Every `task bench`
+[`scripts/bench_run.py`](../../src/scripts/bench_run.py). Every `task bench`
 run writes one `internal/bench/reports/<ts>-<corpus_id>.json` + matching `.md`.
 
 ## File layout
@@ -106,8 +106,8 @@ Headers in order:
 
 ## Cross-references
 
-- Runner — [`scripts/bench_run.py`](../../scripts/bench_run.py)
-- Baseline collector — [`scripts/bench_runner.py`](../../scripts/bench_runner.py)
+- Runner — [`scripts/bench_run.py`](../../src/scripts/bench_run.py)
+- Baseline collector — [`scripts/bench_runner.py`](../../src/scripts/bench_runner.py)
 - Corpus contract — [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md)
 - Pricing source — [`internal/bench/pricing.yaml`](../../bench/pricing.yaml)
-- Cost session reader (live sessions) — [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs)
+- Cost session reader (live sessions) — [`scripts/cost/track.mjs`](../../src/scripts/cost/track.mjs)

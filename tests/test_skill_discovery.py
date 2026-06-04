@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 sd = importlib.import_module("skill_discovery")
 
 NOW = datetime(2026, 5, 30, 12, 0, 0, tzinfo=timezone.utc)
@@ -118,7 +118,7 @@ def test_all_four_classes_reachable():
 
 def test_cli_unknown_role_exits_2():
     proc = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "skill_discovery.py"),
+        [sys.executable, str(REPO_ROOT / "src" / "scripts" / "skill_discovery.py"),
          "--role", "not-a-real-role", "--format", "json"],
         capture_output=True, text=True, cwd=REPO_ROOT,
     )
@@ -127,7 +127,7 @@ def test_cli_unknown_role_exits_2():
 
 def test_cli_real_role_smoke():
     proc = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "skill_discovery.py"),
+        [sys.executable, str(REPO_ROOT / "src" / "scripts" / "skill_discovery.py"),
          "--role", "sales", "--format", "json", "--now", "2026-05-30T12:00:00Z"],
         capture_output=True, text=True, cwd=REPO_ROOT,
     )

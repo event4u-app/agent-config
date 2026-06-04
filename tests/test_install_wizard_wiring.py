@@ -17,7 +17,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import install  # type: ignore  # noqa: E402
 
@@ -138,7 +138,7 @@ class DryRunCliTests(unittest.TestCase):
             env.pop("AGENT_CONFIG_NO_UI", None)
             env.pop("CI", None)
             proc = subprocess.run(  # noqa: S603 - args are locally-built
-                [sys.executable, str(REPO_ROOT / "scripts" / "install.py"),
+                [sys.executable, str(REPO_ROOT / "src" / "scripts" / "install.py"),
                  "--dry-run", "--project", td, *extra],
                 capture_output=True, text=True, env=env, timeout=30,
             )
@@ -232,7 +232,7 @@ class ApplyPayloadParityTests(unittest.TestCase):
         env.pop("CI", None)
         env.pop("AGENT_CONFIG_NO_UI", None)
         return subprocess.run(  # noqa: S603 - args are locally-built
-            [sys.executable, str(REPO_ROOT / "scripts" / "install.py"), *args],
+            [sys.executable, str(REPO_ROOT / "src" / "scripts" / "install.py"), *args],
             capture_output=True, text=True, env=env, cwd=str(proj),
             stdin=subprocess.DEVNULL if stdin_devnull else None, timeout=120,
         )
@@ -303,7 +303,7 @@ class ApplyPayloadParityTests(unittest.TestCase):
             env_ci["CI"] = "1"
             env_ci["AGENT_CONFIG_NO_UPDATE_CHECK"] = "1"
             proc = subprocess.run(  # noqa: S603 - args are locally-built
-                [sys.executable, str(REPO_ROOT / "scripts" / "install.py"),
+                [sys.executable, str(REPO_ROOT / "src" / "scripts" / "install.py"),
                  "--global", "--tools", "cursor", "--project", proj],
                 capture_output=True, text=True, env=env_ci, cwd=proj,
                 stdin=subprocess.DEVNULL, timeout=120,

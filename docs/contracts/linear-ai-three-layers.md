@@ -126,5 +126,5 @@ does not maintain `event4u/agent-config`.
 ## Source of truth
 
 - Per-rule decision: [`linear-ai-rules-inclusion.md`](linear-ai-rules-inclusion.md)
-- Builder script: [`scripts/build_linear_digest.py`](../../scripts/build_linear_digest.py)
+- Builder script: [`scripts/build_linear_digest.py`](../../src/scripts/build_linear_digest.py)
 - Generated digests: `dist/linear/{workspace,team,personal}.md` (gitignored)

@@ -114,6 +114,6 @@ diff cleanly in PRs.
 - [`docs/contracts/rule-router.md`](../../contracts/rule-router.md) — frontmatter contract.
 - [`docs/contracts/kernel-membership.md`](../../contracts/kernel-membership.md) — kernel cap.
 - [`dist/router.json`](../../../dist/router.json) — compiled output.
-- [`scripts/compile_router.py`](../../../scripts/compile_router.py) — compiler.
-- [`scripts/schemas/rule.schema.json`](../../../scripts/schemas/rule.schema.json) — schema.
+- [`scripts/compile_router.py`](../../../src/scripts/compile_router.py) — compiler.
+- [`scripts/schemas/rule.schema.json`](../../../src/scripts/schemas/rule.schema.json) — schema.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.

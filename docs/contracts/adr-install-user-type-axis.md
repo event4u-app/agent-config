@@ -25,7 +25,7 @@ The `user-types/` directory holds **seven** YAML configs — `consultant`,
 `creator`, `developer`, `finance`, `founder`, `gtm`, `ops` — matching
 every value already in active use across 32 skills' frontmatter. Adding
 an eighth value requires a new YAML plus a frontmatter audit (Phase 4).
-Schema: [`scripts/schemas/user-type-axis.schema.json`](../../scripts/schemas/user-type-axis.schema.json).
+Schema: [`scripts/schemas/user-type-axis.schema.json`](../../src/scripts/schemas/user-type-axis.schema.json).
 
 ## Why this is distinct from the review-lens axis
 
@@ -80,7 +80,7 @@ Three options were considered:
   `recommended_for_user_types` MUST have a corresponding YAML, and
   every YAML SHOULD be consumed by at least one skill. The audit ships
   as a CI gate (`task lint-user-type-axis` →
-  [`scripts/audit_user_type_axis.py`](../../scripts/audit_user_type_axis.py)).
+  [`scripts/audit_user_type_axis.py`](../../src/scripts/audit_user_type_axis.py)).
   Initial sweep at Phase 4 close: 7 declared / 7 used / 0 orphans / 0
   unused — coverage is clean, no rename or backfill needed. Report:
   [`agents/runtime/reports/user-type-axis-audit.md`](../../agents/runtime/reports/user-type-axis-audit.md).

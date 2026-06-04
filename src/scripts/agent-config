@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Maintainer / source-checkout entry point.
+#
+# Public consumer entry point is `dist/cli/agent-config.js` via
+# `npx @event4u/agent-config` — that's the path documented in README.
+# This shim is the canonical local invocation for maintainers working
+# in a source checkout, where `npx` can't resolve the bin without a
+# prior `npm link` (no `node_modules/.bin/agent-config` symlink).
+#
+# Behaviour:
+#   - If dist/cli/agent-config.js exists  → forward to the TS binary
+#   - Else if scripts/_dispatch.bash exists → fall back to the legacy
+#     Bash dispatcher (preserves maintainer-internal callers — golden
+#     tests, work_engine harness — that pre-date the TS shell).
+#   - Else → error with a one-line build hint
+#
+# Deprecation warning is only emitted when this script is invoked from
+# an installed npm package (i.e. not a source-repo checkout). Source-
+# checkout detection: `$here/../src/cli/registry.ts` exists. Maintainers
+# running `./agent-config` from the repo root see no warning.
+#
+# Set AGENT_CONFIG_QUIET_DEPRECATION=1 to suppress the deprecation
+# warning unconditionally (used by test harnesses that pin the stderr
+# surface).
+set -euo pipefail
+
+# Resolve $0 through symlinks (maintainer repo root has a ./agent-config
+# symlink → scripts/agent-config). Portable across macOS and Linux —
+# avoids GNU-only `readlink -f`.
+src="$0"
+while [[ -L "$src" ]]; do
+  dir="$(cd -- "$(dirname -- "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ "$src" != /* ]] && src="$dir/$src"
+done
+here="$(cd -- "$(dirname -- "$src")" && pwd)"
+ts_entry="$here/../../dist/cli/agent-config.js"
+legacy_entry="$here/_dispatch.bash"
+source_marker="$here/../cli/registry.ts"  # src/scripts/ -> src/cli/registry.ts
+
+# Suppress the deprecation warning when invoked from a source checkout
+# (maintainer path) — `src/` is not shipped in the published tarball.
+if [[ "${AGENT_CONFIG_QUIET_DEPRECATION:-0}" != "1" && ! -f "$source_marker" ]]; then
+  echo "warning: scripts/agent-config is deprecated; use 'npx @event4u/agent-config' instead" >&2
+fi
+
+if [[ -f "$ts_entry" ]]; then
+  exec node "$ts_entry" "$@"
+fi
+
+if [[ -f "$legacy_entry" ]]; then
+  exec bash "$legacy_entry" "$@"
+fi
+
+echo "❌  agent-config: neither dist/cli/agent-config.js nor scripts/_dispatch.bash found" >&2
+echo "    Run 'npm run build' in the package root to produce the TS binary." >&2
+exit 1

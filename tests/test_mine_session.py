@@ -18,7 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests/fixtures/dream-skill/session.jsonl"
-SCRIPT = ROOT / "scripts/mine_session.py"
+SCRIPT = ROOT / "src/scripts/mine_session.py"
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess[str]:

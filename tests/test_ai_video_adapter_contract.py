@@ -29,9 +29,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-ADAPTER_DIR = REPO_ROOT / "scripts" / "ai-video" / "adapters"
-COMMON_LIB = REPO_ROOT / "scripts" / "ai-video" / "lib" / "adapter-common.sh"
-CONTRACT = REPO_ROOT / "scripts" / "ai-video" / "lib" / "adapter-contract.md"
+ADAPTER_DIR = REPO_ROOT / "src" / "scripts" / "ai-video" / "adapters"
+COMMON_LIB = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib" / "adapter-common.sh"
+CONTRACT = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib" / "adapter-contract.md"
 
 ADAPTERS = sorted(p.stem for p in ADAPTER_DIR.glob("*.sh"))
 VALID_AUDIO = {"native", "none", "per-model"}

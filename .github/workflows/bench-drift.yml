@@ -10,11 +10,11 @@ name: Bench Drift
 on:
   pull_request:
     paths:
-      - "scripts/bench_run.py"
-      - "scripts/bench_drift_check.py"
-      - "scripts/bench_baseline_ready.py"
-      - "scripts/bench_runner.py"
-      - "scripts/_lib/bench_*.py"
+      - "src/scripts/bench_run.py"
+      - "src/scripts/bench_drift_check.py"
+      - "src/scripts/bench_baseline_ready.py"
+      - "src/scripts/bench_runner.py"
+      - "src/scripts/_lib/bench_*.py"
       - "tests/eval/**"
       - "internal/bench/**"
       - ".github/workflows/bench-drift.yml"
@@ -58,7 +58,7 @@ jobs:
         id: drift
         continue-on-error: true
         run: |
-          python3 scripts/bench_drift_check.py --corpus dev --json \
+          python3 src/scripts/bench_drift_check.py --corpus dev --json \
             | tee /tmp/drift.json
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
 
@@ -66,7 +66,7 @@ jobs:
         id: baseline
         continue-on-error: true
         run: |
-          python3 scripts/bench_baseline_ready.py --json \
+          python3 src/scripts/bench_baseline_ready.py --json \
             | tee /tmp/baseline.json
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
 

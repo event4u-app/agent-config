@@ -21,7 +21,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import install  # noqa: E402
 
@@ -139,10 +139,10 @@ class BindingCoverageSnapshot(unittest.TestCase):
     side; this layer guards from the install side."""
 
     def test_bindings_cover_manifest_events(self) -> None:
-        sys.path.insert(0, str(REPO_ROOT / "scripts" / "hooks"))
+        sys.path.insert(0, str(REPO_ROOT / "src" / "scripts" / "hooks"))
         import dispatch_hook  # noqa: E402
 
-        manifest = dispatch_hook._load_yaml(REPO_ROOT / "scripts" / "hook_manifest.yaml")
+        manifest = dispatch_hook._load_yaml(REPO_ROOT / "src" / "scripts" / "hook_manifest.yaml")
         platforms = manifest.get("platforms") or {}
 
         def _ac_events(bindings: tuple) -> set[str]:

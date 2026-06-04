@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-15
 # cost-summary schema (`cost-summary/v1`)
 
 Stable JSON contract for inter-tool consumption of cost-tracking data
-emitted by [`scripts/cost_summary.py`](../../scripts/cost_summary.py).
+emitted by [`scripts/cost_summary.py`](../../src/scripts/cost_summary.py).
 Schema-versioned so downstream consumers can pin and migrate explicitly.
 
 Design reference: Ruflo `scripts/summary.mjs` (upstream cite). Our shape
@@ -102,6 +102,6 @@ model-scoped.
 
 - [`telegraph-telemetry.md`](telegraph-telemetry.md) — defines the
   `telegraph_*` fields and the suspended-multiplier contract.
-- [`scripts/cost_summary.py`](../../scripts/cost_summary.py) — implementation.
-- [`scripts/cost_by_conversation.py`](../../scripts/cost_by_conversation.py) — narrower per-conversation lens with the same JSONL source.
-- [`scripts/telegraph_stats.py`](../../scripts/telegraph_stats.py) — telegraph-only delta lens with the same JSONL source.
+- [`scripts/cost_summary.py`](../../src/scripts/cost_summary.py) — implementation.
+- [`scripts/cost_by_conversation.py`](../../src/scripts/cost_by_conversation.py) — narrower per-conversation lens with the same JSONL source.
+- [`scripts/telegraph_stats.py`](../../src/scripts/telegraph_stats.py) — telegraph-only delta lens with the same JSONL source.

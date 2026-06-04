@@ -21,7 +21,7 @@ from typing import Dict, Optional
 from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import install  # type: ignore  # noqa: E402
 
@@ -210,7 +210,7 @@ class TestBashOrchestratorScopeGate(unittest.TestCase):
     leaks past the process boundary).
     """
 
-    SCRIPT = REPO_ROOT / "scripts" / "install"
+    SCRIPT = REPO_ROOT / "src" / "scripts" / "install"
 
     def _run(self, *args: str, env_overrides: Optional[Dict[str, str]] = None,
              cwd: Optional[Path] = None) -> "subprocess.CompletedProcess[str]":

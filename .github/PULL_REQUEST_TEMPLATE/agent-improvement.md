@@ -18,11 +18,11 @@
 
 ## Verification
 
-- [ ] Linter passes (`python3 scripts/skill_linter.py --all`)
+- [ ] Linter passes (`python3 src/scripts/skill_linter.py --all`)
 - [ ] Sync check passes (`task sync-check`)
 - [ ] Hash check passes (`task sync-check-hashes`)
-- [ ] Reference check passes (`python3 scripts/check_references.py`)
-- [ ] Portability check passes (`python3 scripts/check_portability.py`)
+- [ ] Reference check passes (`python3 src/scripts/check_references.py`)
+- [ ] Portability check passes (`python3 src/scripts/check_portability.py`)
 
 ## Context
 

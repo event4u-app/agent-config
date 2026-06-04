@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 sp = importlib.import_module("skill_preview")
 
 MANUAL_SKILL = """---
@@ -45,7 +45,7 @@ execution:
   allowed_tools: [file-editor, shell-runner]
   command:
     - python3
-    - scripts/do_thing.py
+    - src/scripts/do_thing.py
 ---
 
 # fixture-assisted
@@ -53,7 +53,7 @@ execution:
 ## Steps
 
 ### 1. Propose the change
-Run `python3 scripts/do_thing.py` against `config/thing.yml`.
+Run `python3 src/scripts/do_thing.py` against `config/thing.yml`.
 """
 
 MALFORMED_NO_FM = "# no frontmatter here\n\njust prose.\n"
@@ -91,7 +91,7 @@ def test_assisted_skill_renders_proposed_actions(skills_root):
     assert p["execution_type"] == "assisted"
     out = sp.render_plain(p)
     assert "propose" in out.lower()
-    assert "scripts/do_thing.py" in out
+    assert "src/scripts/do_thing.py" in out
 
 
 def test_allowed_tools_are_listed(skills_root):
@@ -131,7 +131,7 @@ def test_technical_render_has_step_list(skills_root):
 
 def test_cli_missing_skill_exits_2_with_structured_error():
     proc = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "skill_preview.py"),
+        [sys.executable, str(REPO_ROOT / "src" / "scripts" / "skill_preview.py"),
          "definitely-not-a-skill", "--format", "json"],
         capture_output=True, text=True, cwd=REPO_ROOT,
     )
@@ -141,7 +141,7 @@ def test_cli_missing_skill_exits_2_with_structured_error():
 
 def test_cli_real_manual_skill_smoke():
     proc = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "skill_preview.py"), "accessibility-auditor"],
+        [sys.executable, str(REPO_ROOT / "src" / "scripts" / "skill_preview.py"), "accessibility-auditor"],
         capture_output=True, text=True, cwd=REPO_ROOT,
     )
     assert proc.returncode == 0, proc.stderr

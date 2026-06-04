@@ -26,7 +26,7 @@ import jsonschema
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-SCHEMA_PATH = ROOT / "scripts" / "schemas" / "agent-settings.schema.json"
+SCHEMA_PATH = ROOT / "src" / "scripts" / "schemas" / "agent-settings.schema.json"
 _SCHEMA = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 _VALIDATOR = jsonschema.Draft7Validator(_SCHEMA)
 

@@ -26,7 +26,7 @@ a point-in-time pin of the interface `agent-config`'s wired code
 
 ### Three expected backend states
 
-Probed by [`scripts/memory_status.py`](../../../scripts/memory_status.py):
+Probed by [`scripts/memory_status.py`](../../../src/scripts/memory_status.py):
 
 | Status | Meaning | Agent-config behaviour |
 |---|---|---|
@@ -50,7 +50,7 @@ Mandatory per entry: `id`, `type`, `source ∈ {repo, operational}`,
 `confidence`, `body`. Optional: `trust`, `last_validated`,
 `shadowed_by`. Envelope: `contract_version`, `status ∈ {ok, partial,
 error}`, `entries`, `slices`, `errors`. Source-of-truth:
-[`scripts/memory_lookup.py`](../../../scripts/memory_lookup.py)
+[`scripts/memory_lookup.py`](../../../src/scripts/memory_lookup.py)
 lines 320–345.
 
 ### Refresh policy
@@ -105,7 +105,7 @@ release, citable from every consumer skill that touches memory.
 ## References
 
 - [`docs/contracts/agent-memory-contract.md`](../../contracts/agent-memory-contract.md) — the consumer-side snapshot.
-- [`scripts/memory_status.py`](../../../scripts/memory_status.py) — three-state probe.
-- [`scripts/memory_lookup.py`](../../../scripts/memory_lookup.py) — retrieval envelope source.
+- [`scripts/memory_status.py`](../../../src/scripts/memory_status.py) — three-state probe.
+- [`scripts/memory_lookup.py`](../../../src/scripts/memory_lookup.py) — retrieval envelope source.
 - [`agents/roadmaps/archive/agent-memory/`](../../../agents/roadmaps/archive/agent-memory/) — sibling-package spec.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.

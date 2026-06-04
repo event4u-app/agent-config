@@ -187,7 +187,7 @@ def test_carveout_does_not_widen_contract_to_non_synthesis(tmp_path: Path) -> No
 
 def test_unscanned_directory_ignored(tmp_path: Path) -> None:
     _write(
-        tmp_path / "scripts/something.py",
+        tmp_path / "src/scripts/something.py",
         '_PATH = "agents/runtime/council/sessions/x.json"',
     )
     assert ccr.main() == 0

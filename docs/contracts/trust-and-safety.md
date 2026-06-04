@@ -135,10 +135,10 @@ Exits 0 clean, 1 on any violation. Tests in
 ## § 7 — References
 
 - ADR: [`ADR-018 — Trust & Safety Layer`](../decisions/ADR-018-trust-and-safety-layer.md)
-- Condenseor implementation: [`scripts/condense.py`](../../scripts/condense.py)
+- Condenseor implementation: [`scripts/condense.py`](../../src/scripts/condense.py)
   (`_inject_hrr_banner`, `_HRR_BANNER_MARKER`)
 - Installer implementation: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
-- Lint implementation: [`scripts/lint_trust_coherence.py`](../../scripts/lint_trust_coherence.py)
+- Lint implementation: [`scripts/lint_trust_coherence.py`](../../src/scripts/lint_trust_coherence.py)
 - Sibling contracts: [`safety-model`](safety-model.md) ·
   [`kernel-membership`](kernel-membership.md) ·
   [`ADR-013` — discovery frontmatter](../decisions/ADR-013-discovery-frontmatter-contract.md)

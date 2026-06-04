@@ -2,7 +2,7 @@
 # setup.sh — One-liner installer for @event4u/agent-config (curl | bash entrypoint).
 #
 # Mirrors agent-os: downloads the latest GitHub tarball into a temp dir,
-# runs scripts/install with the user's tool selection, then cleans up.
+# runs src/scripts/install with the user's tool selection, then cleans up.
 # Use this when Node.js is not available (otherwise prefer
 # `npx @event4u/agent-config init`).
 #
@@ -11,7 +11,7 @@
 #   curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash -s -- --tools=claude-code,cursor --yes
 #   curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash -s -- --ref=v1.39.0 --tools=cursor --yes
 #
-# Options forwarded to scripts/install: --tools, --yes, plus everything else.
+# Options forwarded to src/scripts/install: --tools, --yes, plus everything else.
 # Local-only flags (consumed by setup.sh):
 #   --ref <git-ref>   git ref to install from (default: main)
 #   --target <dir>    target directory (default: cwd)
@@ -34,11 +34,11 @@ Local options (consumed here):
   --target <dir>    Target directory (default: cwd)
   --help, -h        Show this help
 
-Forwarded to scripts/install:
+Forwarded to src/scripts/install:
   --tools <list>    Comma-separated tool IDs (default: all)
   --yes             Non-interactive
   --profile <name>  Cost profile (lite|balanced|heavy)
-  …                 Anything else scripts/install accepts
+  …                 Anything else src/scripts/install accepts
 
 Examples:
   bash setup.sh --tools=claude-code,cursor --yes
@@ -100,12 +100,12 @@ esac
 mkdir -p "$EXTRACT_DIR"
 tar -xzf "$TARBALL" -C "$EXTRACT_DIR" --strip-components=1
 
-INSTALLER="$EXTRACT_DIR/scripts/install"
+INSTALLER="$EXTRACT_DIR/src/scripts/install"
 if [[ ! -f "$INSTALLER" ]]; then
     echo "  ❌  Installer not found at $INSTALLER (tarball layout unexpected)" >&2
     exit 1
 fi
 
-echo "  🚀  Running scripts/install --target $TARGET ${PASSTHROUGH[*]:-}"
+echo "  🚀  Running src/scripts/install --target $TARGET ${PASSTHROUGH[*]:-}"
 bash "$INSTALLER" --target "$TARGET" "${PASSTHROUGH[@]}"
 echo "  ✅  Done."

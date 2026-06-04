@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-12
 
 **Purpose.** Pin the append-only schema that the audit-as-memory
 pipeline writes per `/work` and `/implement-ticket` run, so the
-pattern-extraction script ([`extract_audit_patterns.py`](../../scripts/extract_audit_patterns.py))
+pattern-extraction script ([`extract_audit_patterns.py`](../../src/scripts/extract_audit_patterns.py))
 and the `learning-to-rule-or-skill` skill can mine repeated successful
 patterns without re-reading conversation bodies.
 
@@ -23,7 +23,7 @@ Last refreshed: 2026-05-11.
 | Side | Responsibility | Where |
 |---|---|---|
 | **Producer** | One JSONL line per phase end, derived from the phase's [`decision-trace-v1.md`](decision-trace-v1.md) JSON and the [`memory-visibility-v1.md`](memory-visibility-v1.md) counts. | `work_engine` hook on phase boundary. |
-| **Consumer** | Pattern mining + human review gate. Never edits a written line; corrections are new lines with `type=supersede`. | [`extract_audit_patterns.py`](../../scripts/extract_audit_patterns.py). |
+| **Consumer** | Pattern mining + human review gate. Never edits a written line; corrections are new lines with `type=supersede`. | [`extract_audit_patterns.py`](../../src/scripts/extract_audit_patterns.py). |
 
 ## File location
 
@@ -136,7 +136,7 @@ majors.
 
 - Input feed (counts + ids): [`memory-visibility-v1.md`](memory-visibility-v1.md).
 - Per-phase JSON the producer reads: [`decision-trace-v1.md`](decision-trace-v1.md).
-- Pattern-extraction consumer: [`extract_audit_patterns.py`](../../scripts/extract_audit_patterns.py).
+- Pattern-extraction consumer: [`extract_audit_patterns.py`](../../src/scripts/extract_audit_patterns.py).
 - Skill that consumes promoted patterns:
   [`learning-to-rule-or-skill`](../../.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md).
 - Append-only JSONL precedent:

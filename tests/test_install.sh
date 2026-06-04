@@ -3,7 +3,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALL_SH="$SCRIPT_DIR/scripts/install.sh"
+INSTALL_SH="$SCRIPT_DIR/src/scripts/install.sh"
 TMPDIR=""
 PASS=0
 FAIL=0

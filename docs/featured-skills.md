@@ -90,6 +90,6 @@ task lint-featured-skills
 python3 scripts/lint_featured_skills.py
 ```
 
-CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../scripts/lint_featured_skills.py) for the matcher.
+CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../src/scripts/lint_featured_skills.py) for the matcher.
 
 → Browse all ~218 active skills: [`.agent-src/skills/`](../.agent-src/skills/) · all ~129 commands: [`.agent-src/commands/`](../.agent-src/commands/)

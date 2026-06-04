@@ -10,7 +10,7 @@ set -uo pipefail
 export AGENT_CONFIG_DEV_MODE=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALL="$SCRIPT_DIR/scripts/install"
+INSTALL="$SCRIPT_DIR/src/scripts/install"
 INSTALL_PHP="$SCRIPT_DIR/bin/install.php"
 TMPDIR=""
 PASS=0

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import lint_hook_manifest as linter  # noqa: E402
 
@@ -17,7 +17,7 @@ VALID_BODY = textwrap.dedent("""\
     schema_version: 1
     concerns:
       chat-history:
-        script: scripts/chat_history.py
+        script: src/scripts/chat_history.py
         args: [hook-dispatch]
         fail_closed: false
     platforms:
@@ -63,7 +63,7 @@ def test_unknown_concern_in_platform_block_fails(tmp_path: Path, capsys) -> None
 
 def test_missing_concern_script_fails(tmp_path: Path, capsys) -> None:
     body = VALID_BODY.replace(
-        "scripts/chat_history.py", "scripts/does_not_exist.py")
+        "src/scripts/chat_history.py", "src/scripts/does_not_exist.py")
     rc = linter.lint(_write(tmp_path, body), strict=False)
     assert rc == 1
     err = capsys.readouterr().err
@@ -98,11 +98,11 @@ _BODY_WITH_DEAD_CONCERN = textwrap.dedent("""\
     schema_version: 1
     concerns:
       chat-history:
-        script: scripts/chat_history.py
+        script: src/scripts/chat_history.py
         args: [hook-dispatch]
         fail_closed: false
       orphaned:
-        script: scripts/chat_history.py
+        script: src/scripts/chat_history.py
         args: []
         fail_closed: false
     platforms:

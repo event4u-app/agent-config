@@ -26,7 +26,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 import sys
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 from _lib.agent_src import resolve_logical  # noqa: E402
 
 SKILL_PATH = resolve_logical("skills/markitdown/SKILL.md")

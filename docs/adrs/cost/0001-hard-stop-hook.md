@@ -7,7 +7,7 @@
 
 `step-11-measurement-governance-parity` Phase 2 lands a 5-tier budget
 ladder (`OK / INFO / WARNING / CRITICAL / HARD_STOP`) evaluated by
-[`scripts/cost/budget.mjs`](../../../scripts/cost/budget.mjs). The
+[`scripts/cost/budget.mjs`](../../../src/scripts/cost/budget.mjs). The
 roadmap requires that the `HARD_STOP` tier fail closed when the user
 opts into `cost.enforcement: hard-stop` — without changing the
 default-on advisory experience.
@@ -21,7 +21,7 @@ interceptor — none of those exist in this codebase by design.
 ## Decision
 
 Land a single shell-entry preflight script:
-[`scripts/cost/preflight.mjs`](../../../scripts/cost/preflight.mjs).
+[`scripts/cost/preflight.mjs`](../../../src/scripts/cost/preflight.mjs).
 
 ### Surface
 
@@ -108,7 +108,7 @@ governance-layer charter.
 ## References
 
 - [`docs/contracts/cost-enforcement.md`](../../contracts/cost-enforcement.md) — contract surface.
-- [`scripts/cost/budget.mjs`](../../../scripts/cost/budget.mjs) — evaluator.
-- [`scripts/cost/preflight.mjs`](../../../scripts/cost/preflight.mjs) — this hook.
+- [`scripts/cost/budget.mjs`](../../../src/scripts/cost/budget.mjs) — evaluator.
+- [`scripts/cost/preflight.mjs`](../../../src/scripts/cost/preflight.mjs) — this hook.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 2 Step 3 — origin.
 - [`agents/evidence/audits/2026-05-14-north-star/external-findings.md`](../../../agents/evidence/audits/2026-05-14-north-star/external-findings.md) § 2 row "hard stop" — upstream Ruflo pattern this absorbs.

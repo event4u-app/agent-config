@@ -10,7 +10,7 @@ _Origin: migrated from `.agent-src.uncondensed/rules/roadmap-progress-sync.md` p
 # Roadmap Progress Sync
 
 > **Enforced by (defence in depth):**
-> 1. [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
+> 1. [`scripts/roadmap_progress_hook.py`](../../src/scripts/roadmap_progress_hook.py)
 >    on Augment + Claude Code (`PostToolUse`) — auto-regen on write.
 > 2. `.git/hooks/pre-commit` (installed by `scripts/install-hooks.sh`) —
 >    blocks any commit whose staged set touches `agents/roadmaps/` or

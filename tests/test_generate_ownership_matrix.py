@@ -8,7 +8,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
     "generate_ownership_matrix",
-    REPO_ROOT / "scripts" / "generate_ownership_matrix.py",
+    REPO_ROOT / "src" / "scripts" / "generate_ownership_matrix.py",
 )
 assert SPEC and SPEC.loader
 gom = importlib.util.module_from_spec(SPEC)

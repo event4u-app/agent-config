@@ -10,7 +10,7 @@ execution:
   allowed_tools: []
   command:
     - python3
-    - scripts/skill_linter.py
+    - src/scripts/skill_linter.py
     - "--all"
 workspaces:
   - agent-config-maintainer
@@ -31,7 +31,7 @@ Use this skill when:
 
 Do NOT use when:
 
-- Linting only one file — call `python3 scripts/skill_linter.py <path>` directly
+- Linting only one file — call `python3 src/scripts/skill_linter.py <path>` directly
 - Checking cross-references between files — use `check-refs` instead
 - Checking condensation freshness — use `bash scripts/condense.sh --check` instead
 
@@ -53,7 +53,7 @@ python3 scripts/runtime_dispatcher.py run --skill lint-skills
 ```
 
 The dispatcher resolves the request, the shell handler runs
-`python3 scripts/skill_linter.py --all`, captures stdout/stderr, and returns
+`python3 src/scripts/skill_linter.py --all`, captures stdout/stderr, and returns
 a typed `ExecutionResult`.
 
 ### 3. Verify the result
@@ -86,7 +86,7 @@ Check the returned `ExecutionResult`:
 
 ## Do NOT
 
-- Do NOT invoke `scripts/skill_linter.py` directly when the intent is to test
+- Do NOT invoke `src/scripts/skill_linter.py` directly when the intent is to test
   the runtime path — use the dispatcher so the handler and result object are
   exercised
 - Do NOT raise `timeout_seconds` to hide a genuinely slow linter pass —

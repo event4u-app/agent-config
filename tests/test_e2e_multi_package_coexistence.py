@@ -257,7 +257,7 @@ def test_deployed_file_always_overwrites_regardless_of_manifest(
     ``AGENT_CONFIG_ALLOW_OVERWRITE`` escape hatch (plus ``ConflictAbort``)
     no longer exist.
     """
-    sys.path.insert(0, str(ROOT / "scripts"))
+    sys.path.insert(0, str(ROOT / "src" / "scripts"))
     import install  # type: ignore
 
     proj = tmp_path / "proj"

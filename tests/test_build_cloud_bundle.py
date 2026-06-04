@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import build_cloud_bundle as bcb  # noqa: E402
 
@@ -194,7 +194,7 @@ def test_no_t3h_in_uncondensed_source() -> None:
     Every previously hard-blocked artefact must declare a `cloud_safe: noop`
     or `cloud_safe: degrade` marker so the audit downgrades it.
     """
-    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
     import audit_cloud_compatibility as audit  # noqa: E402
 
     summary = audit.summarize(audit.scan())

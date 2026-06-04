@@ -20,10 +20,10 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 from _lib.agent_src import resolve_logical  # noqa: E402
 
-SOURCE = REPO_ROOT / "scripts" / "_lib" / "agent_settings.py"
+SOURCE = REPO_ROOT / "src" / "scripts" / "_lib" / "agent_settings.py"
 TEMPLATE = resolve_logical(
     "templates/scripts/work_engine/_lib/agent_settings.py"
 )
@@ -35,6 +35,6 @@ def test_template_copy_is_byte_identical_to_source() -> None:
         f"missing template loader at templates/scripts/work_engine/_lib/agent_settings.py"
     )
     assert SOURCE.read_bytes() == TEMPLATE.read_bytes(), (
-        "scripts/_lib/agent_settings.py and the work_engine template copy "
+        "src/scripts/_lib/agent_settings.py and the work_engine template copy "
         "have drifted. Re-mirror the file (see module docstring)."
     )

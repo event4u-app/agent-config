@@ -20,10 +20,10 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 from _lib.agent_src import resolve_logical  # noqa: E402
 
-PARSER = REPO_ROOT / "scripts" / "ai-video" / "lib" / "parse-blueprint.sh"
+PARSER = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib" / "parse-blueprint.sh"
 _SCHEMA_RESOLVED = resolve_logical("skills/scene-expander/scene-blueprint.schema.yaml")
 assert _SCHEMA_RESOLVED is not None, "scene-blueprint.schema.yaml not found in any pack"
 SCHEMA = _SCHEMA_RESOLVED

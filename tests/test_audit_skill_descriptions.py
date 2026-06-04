@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = REPO_ROOT / "scripts" / "audit_skill_descriptions.py"
+SCRIPT = REPO_ROOT / "src" / "scripts" / "audit_skill_descriptions.py"
 
 
 def _write_skill(root: Path, name: str, description: str) -> Path:

@@ -8,7 +8,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
     "check_context_paths",
-    REPO_ROOT / "scripts" / "check_context_paths.py",
+    REPO_ROOT / "src" / "scripts" / "check_context_paths.py",
 )
 assert SPEC and SPEC.loader
 ccp = importlib.util.module_from_spec(SPEC)

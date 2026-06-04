@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 from runtime_registry import SkillRuntime, build_registry
 from runtime_handler import (
@@ -110,7 +110,7 @@ def test_dispatcher_run_lint_skills_pilot() -> None:
     assert isinstance(result, ExecutionResult)
     assert result.skill_name == "lint-skills"
     assert result.handler == "shell"
-    assert result.command == ["python3", "scripts/skill_linter.py", "--all"]
+    assert result.command == ["python3", "src/scripts/skill_linter.py", "--all"]
     assert result.exit_code in (0, 1)  # 1 = warnings only, still a real result
     assert result.duration_ms > 0
     assert "Summary:" in result.stdout

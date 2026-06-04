@@ -73,7 +73,7 @@ onboarding:
 ```
 
 User-global file (step 9, opt-in): the six whitelisted keys in
-[`scripts/_lib/agent_settings.py`](../../scripts/_lib/agent_settings.py)
+[`scripts/_lib/agent_settings.py`](../../src/scripts/_lib/agent_settings.py)
 — `name`, `ide`, `rule_loading_tier`, `personal.bot_icon`,
 `personal.autonomy`, `telegraph.speak_scope`.
 

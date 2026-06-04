@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-14
 # Benchmark Corpus Spec — step-4 Phase 1
 
 Parser-visible contract for the golden corpus consumed by
-[`scripts/bench_runner.py`](../../scripts/bench_runner.py) and the
+[`scripts/bench_runner.py`](../../src/scripts/bench_runner.py) and the
 upcoming `scripts/lint_bench_corpus.py`. Defines composition, schema,
 and validation invariants.
 
@@ -118,7 +118,7 @@ without tripping CI.
 
 ## Cross-references
 
-- Runner — [`scripts/bench_runner.py`](../../scripts/bench_runner.py)
+- Runner — [`scripts/bench_runner.py`](../../src/scripts/bench_runner.py)
 - Linter — `scripts/lint_bench_corpus.py` (Phase 1 Step 3)
 - Existing non-dev corpus — [`tests/eval/corpus-non-dev.yaml`](../../tests/eval/corpus-non-dev.yaml)
 - Language gate — [`language-and-tone`](../../.agent-src.uncondensed/rules/language-and-tone.md)

@@ -64,7 +64,7 @@ imperatives (`NEVER COMMIT.`).
 ## Phase 1 calibration (2026-05-08)
 
 Sweep covered all 310 lintable artifacts via
-[`scripts/measure_density.py`](../../scripts/measure_density.py); raw
+[`scripts/measure_density.py`](../../src/scripts/measure_density.py); raw
 data lives at `agents/runtime/density/snapshot.jsonl` (local-only — re-run
 `python3 scripts/measure_density.py --root .agent-src --jsonl
 agents/runtime/density/snapshot.jsonl` to regenerate).

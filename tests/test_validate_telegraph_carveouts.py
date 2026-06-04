@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = REPO_ROOT / "scripts" / "validate_telegraph_carveouts.py"
+SCRIPT = REPO_ROOT / "src" / "scripts" / "validate_telegraph_carveouts.py"
 
 _SPEC = importlib.util.spec_from_file_location("validate_telegraph_carveouts", SCRIPT)
 assert _SPEC and _SPEC.loader

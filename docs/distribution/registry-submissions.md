@@ -80,6 +80,6 @@ Phase 0 § Adoption surface:
 ## See also
 
 - [`registries.md`](registries.md) — submission template + audit cadence + Discussions setup.
-- [`scripts/mcp_registry_submit.sh`](../../scripts/mcp_registry_submit.sh) — automation for row 1.
+- [`scripts/mcp_registry_submit.sh`](../../src/scripts/mcp_registry_submit.sh) — automation for row 1.
 - [`mcp-submission-checklist.md`](mcp-submission-checklist.md) — MCP-specific pre-submission floor.
 - `task adoption:status` (Phase C Step 6) — one-screen adoption dashboard.

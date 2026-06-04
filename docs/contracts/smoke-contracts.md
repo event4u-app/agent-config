@@ -110,7 +110,7 @@ constant in the script body and the row below.
   `.agent-src.uncondensed/skills/*/SKILL.md` and re-validated via
   `scripts/validate_frontmatter.py`. `agent-config explain skill` is
   **not** invoked — `explain` only supports `{config,rule,route}` today
-  ([`scripts/agent-config/cmd_explain.py`](../../scripts/agent-config/cmd_explain.py));
+  ([`scripts/agent-config/cmd_explain.py`](../../src/scripts/agent-config/cmd_explain.py));
   filesystem-resolution is the contract.
 
 ## § 4 — Local invocation
@@ -132,7 +132,7 @@ the final baseline line) for CI summary parsing.
 |---|---|---|
 | `kernel.sh` reports > 9 missing fences | Kernel rule lost its Iron Law block during edit | Restore the fence; update `EXEMPT_FROM_FENCE` only for new dispatch indexes |
 | `router.sh` reports > 0 broken pointers | `dist/router.json` references an id without a rule file | Add the rule or remove the route — never edit the smoke baseline up |
-| `schema.sh` reports FAILs | A skill / rule lost a required field | Restore via [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json) |
+| `schema.sh` reports FAILs | A skill / rule lost a required field | Restore via [`scripts/schemas/skill.schema.json`](../../src/scripts/schemas/skill.schema.json) |
 | `skills.sh` 5/5 random sample fails | Hand-edit broke frontmatter or renamed directory without updating `name:` | Restore filename ↔ slug coupling |
 
 ## § 6 — See also

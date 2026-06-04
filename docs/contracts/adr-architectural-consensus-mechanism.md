@@ -62,7 +62,7 @@ The final acceptance gate (lint going from warn-only to fail-the-build) is defer
 ## Related
 
 - Origin: [`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md) <!-- council-ref-allowed: ADR decision trace -->
-- Mechanical scripts: [`scripts/skill_collision_clusters.py`](../../scripts/skill_collision_clusters.py), [`scripts/score_skill_selection.py`](../../scripts/score_skill_selection.py)
+- Mechanical scripts: [`scripts/skill_collision_clusters.py`](../../src/scripts/skill_collision_clusters.py), [`scripts/score_skill_selection.py`](../../src/scripts/score_skill_selection.py)
 - Sibling decision: [`docs/contracts/rule-router.md`](rule-router.md) — the routing layer the ADR feeds
 - Sibling decision: [`docs/contracts/multi-tool-projection-fidelity.md`](multi-tool-projection-fidelity.md) — Phase 4 of the same roadmap
 - Standing skill: [`.augment/skills/ai-council/SKILL.md`](../../.augment/skills/ai-council/SKILL.md) — the explicit-opt-in path for the rare moments tier C is invoked

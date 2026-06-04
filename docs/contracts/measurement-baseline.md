@@ -17,10 +17,10 @@ Four axes, all numeric, all reproducible from the same input:
 
 | Axis | Source | Definition | Units |
 |---|---|---|---:|
-| **selection accuracy** | [`scripts/bench_runner.py`](../../scripts/bench_runner.py) | Keyword-overlap ranker hits the expected skill in top-K | % |
-| **cost** | [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) session jsonl | Token+USD per model, captured live | USD |
+| **selection accuracy** | [`scripts/bench_runner.py`](../../src/scripts/bench_runner.py) | Keyword-overlap ranker hits the expected skill in top-K | % |
+| **cost** | [`scripts/cost/track.mjs`](../../src/scripts/cost/track.mjs) session jsonl | Token+USD per model, captured live | USD |
 | **quality** | regex / rubric assertions per prompt | `quality_assertion` matches in agent output | % |
-| **projection fidelity** | [`scripts/bench_per_tool.py`](../../scripts/bench_per_tool.py) | `accuracy(tool) / accuracy(augment)` for skill-projecting tools | ratio |
+| **projection fidelity** | [`scripts/bench_per_tool.py`](../../src/scripts/bench_per_tool.py) | `accuracy(tool) / accuracy(augment)` for skill-projecting tools | ratio |
 
 Schemas: [`benchmark-report-schema.md`](benchmark-report-schema.md) ·
 [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md). Reports land at
@@ -40,7 +40,7 @@ to either YAML restart the 60-day clock per
 
 ## What counts as drift
 
-[`scripts/bench_drift_check.py`](../../scripts/bench_drift_check.py)
+[`scripts/bench_drift_check.py`](../../src/scripts/bench_drift_check.py)
 compares the latest report against a sliding window of the prior N runs
 (default 5) for the same corpus.
 
@@ -64,7 +64,7 @@ TASK bench:baseline-ready EXIT 0 IS THE ONLY AUTHORITY.
 NO ANECDOTE, NO INDIVIDUAL REPORT, NO ROADMAP-SIDE OVERRIDE.
 ```
 
-[`scripts/bench_baseline_ready.py`](../../scripts/bench_baseline_ready.py)
+[`scripts/bench_baseline_ready.py`](../../src/scripts/bench_baseline_ready.py)
 returns exit 0 iff both:
 
 1. **Wall-clock soak:** `today − internal/bench/baseline-start.txt ≥ --min-days` (default 60)

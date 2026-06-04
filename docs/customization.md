@@ -100,7 +100,7 @@ duplicating the root file.
 
 The user-global file is created **only on explicit opt-in via the
 setup wizard** (`agent-config setup`). The loader at
-[`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py)
+[`scripts/_lib/agent_settings.py`](../src/scripts/_lib/agent_settings.py)
 is **read-only** — no script can create or mutate it without explicit
 wizard confirmation. Edit the file by hand for mid-life changes;
 `/sync-agent-settings` stays project-scoped and never touches
@@ -373,7 +373,7 @@ fallback). Files under `~/.event4u/agent-config/agents/settings/contexts/` or
 project-shaped and must not leak across projects.
 
 The resolver lives at
-[`scripts/_lib/agents_overlay.py`](../scripts/_lib/agents_overlay.py)
+[`scripts/_lib/agents_overlay.py`](../src/scripts/_lib/agents_overlay.py)
 and is enforced by `scripts/check_overlay_cascade_subdirs.py` — drift
 between the code constants (`CASCADE_ELIGIBLE_KINDS`,
 `USER_GLOBAL_OVERLAY_KINDS`) and the table above breaks the build.
@@ -495,8 +495,8 @@ Each project decides; the user-global file cannot flip it on or off
 for unrelated projects.
 
 The decision logic lives at
-[`scripts/_lib/update_check.py`](../scripts/_lib/update_check.py); the
-dispatcher integration lives in [`scripts/agent-config`](../scripts/agent-config)
+[`scripts/_lib/update_check.py`](../src/scripts/_lib/update_check.py); the
+dispatcher integration lives in [`scripts/agent-config`](../src/scripts/agent-config)
 (`run_update_check_banner`).
 
 ---

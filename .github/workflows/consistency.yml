@@ -7,13 +7,13 @@ on:
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "scripts/condense.py"
-      - "scripts/condense.sh"
-      - "scripts/check_references.py"
-      - "scripts/build_cloud_bundle.py"
-      - "scripts/build_linear_digest.py"
-      - "scripts/lint_marketplace.py"
-      - "scripts/lint_agents_md.py"
+      - "src/scripts/condense.py"
+      - "src/scripts/condense.sh"
+      - "src/scripts/check_references.py"
+      - "src/scripts/build_cloud_bundle.py"
+      - "src/scripts/build_linear_digest.py"
+      - "src/scripts/lint_marketplace.py"
+      - "src/scripts/lint_agents_md.py"
       - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
@@ -28,13 +28,13 @@ on:
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "scripts/condense.py"
-      - "scripts/condense.sh"
-      - "scripts/check_references.py"
-      - "scripts/build_cloud_bundle.py"
-      - "scripts/build_linear_digest.py"
-      - "scripts/lint_marketplace.py"
-      - "scripts/lint_agents_md.py"
+      - "src/scripts/condense.py"
+      - "src/scripts/condense.sh"
+      - "src/scripts/check_references.py"
+      - "src/scripts/build_cloud_bundle.py"
+      - "src/scripts/build_linear_digest.py"
+      - "src/scripts/lint_marketplace.py"
+      - "src/scripts/lint_agents_md.py"
       - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
@@ -89,16 +89,16 @@ jobs:
         run: task generate-tools
 
       - name: Check cross-references
-        run: python3 scripts/check_references.py
+        run: python3 src/scripts/check_references.py
 
       - name: Check package portability
-        run: python3 scripts/check_portability.py
+        run: python3 src/scripts/check_portability.py
 
       - name: Check condensation quality
-        run: python3 scripts/check_condensation.py
+        run: python3 src/scripts/check_condensation.py
 
       - name: Check Iron Law prominence
-        run: python3 scripts/check_iron_law_prominence.py
+        run: python3 src/scripts/check_iron_law_prominence.py
 
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
@@ -122,7 +122,7 @@ jobs:
             echo "No changed files reported by gh pr view; nothing to gate."
             exit 0
           fi
-          python3 scripts/check_kernel_rule_bundle.py --files "${CHANGED[@]}"
+          python3 src/scripts/check_kernel_rule_bundle.py --files "${CHANGED[@]}"
 
       - name: Lint marketplace.json
         run: task lint-marketplace
@@ -137,16 +137,16 @@ jobs:
         run: task ci-linear-digest
 
       - name: Build discovery manifest (R3 Phase 2.1)
-        run: python3 scripts/build_discovery_manifest.py --write --quiet
+        run: python3 src/scripts/build_discovery_manifest.py --write --quiet
 
       - name: Lint discovery manifest — schema + checksum + vocab (R3 Phase 2.2)
-        run: python3 scripts/lint_discovery_manifest.py --quiet
+        run: python3 src/scripts/lint_discovery_manifest.py --quiet
 
       - name: Discovery scanner determinism (R3 Phase 2.3)
-        run: python3 scripts/check_discovery_determinism.py
+        run: python3 src/scripts/check_discovery_determinism.py
 
       - name: Lint README
-        run: python3 scripts/readme_linter.py README.md --root .
+        run: python3 src/scripts/readme_linter.py README.md --root .
 
       - name: Run README linter tests
         run: python3 -m pytest tests/test_readme_linter.py -v

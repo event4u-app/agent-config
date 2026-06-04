@@ -25,7 +25,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src" / "scripts"))
 
 from scripts._cli import cmd_update  # noqa: E402
 from scripts._lib import installed_lock  # noqa: E402

@@ -5,7 +5,7 @@ on:
     paths:
       - ".agent-src.uncondensed/**"
       - ".augment/**"
-      - "scripts/skill_linter.py"
+      - "src/scripts/skill_linter.py"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -16,7 +16,7 @@ on:
     paths:
       - ".agent-src.uncondensed/**"
       - ".augment/**"
-      - "scripts/skill_linter.py"
+      - "src/scripts/skill_linter.py"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -97,14 +97,14 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run skill linter (changed files only)
-        run: python3 scripts/skill_linter.py --changed
+        run: python3 src/scripts/skill_linter.py --changed
 
       - name: Generate lint reports (full repo, informational)
         if: always()
         run: |
           mkdir -p artifacts
-          python3 scripts/skill_linter.py --all --format json > artifacts/skill-lint-report.json || true
-          python3 scripts/skill_linter.py --all --report > artifacts/skill-quality-report.md || true
+          python3 src/scripts/skill_linter.py --all --format json > artifacts/skill-lint-report.json || true
+          python3 src/scripts/skill_linter.py --all --report > artifacts/skill-quality-report.md || true
 
       - name: Upload lint reports
         if: always()
@@ -118,7 +118,7 @@ jobs:
       - name: Generate PR summary
         if: github.event_name == 'pull_request' && always()
         run: |
-          python3 scripts/skill_linter.py --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
+          python3 src/scripts/skill_linter.py --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
           python3 -c "
           import json, sys
           try:
@@ -159,7 +159,7 @@ jobs:
       - name: Generate regression report
         if: github.event_name == 'pull_request' && always()
         run: |
-          python3 scripts/lint_regression.py --baseline origin/main --format markdown > /tmp/regression-report.md 2>/dev/null || true
+          python3 src/scripts/lint_regression.py --baseline origin/main --format markdown > /tmp/regression-report.md 2>/dev/null || true
           if [ -f /tmp/pr-summary.md ] && [ -f /tmp/regression-report.md ]; then
             cat /tmp/pr-summary.md > /tmp/pr-comment.md
             echo "" >> /tmp/pr-comment.md

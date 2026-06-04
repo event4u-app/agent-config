@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 
 # Add project root to path so we can import the condense module
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 import condense
 
@@ -67,7 +67,7 @@ class TestShouldCondense(unittest.TestCase):
         self.assertFalse(condense.should_condense(Path("README.md")))
 
     def test_php_file_should_not_condense(self):
-        self.assertFalse(condense.should_condense(Path("scripts/scan.php")))
+        self.assertFalse(condense.should_condense(Path("src/scripts/scan.php")))
 
     def test_txt_file_should_not_condense(self):
         self.assertFalse(condense.should_condense(Path("notes.txt")))
@@ -361,7 +361,7 @@ class TestHashTracking(_IsolateMultiRootMixin, unittest.TestCase):
         hashes = condense.load_hashes()
         self.assertIn("rules/a.md", hashes)
         self.assertIn("rules/b.md", hashes)
-        self.assertNotIn("scripts/x.php", hashes)  # non-.md excluded
+        self.assertNotIn("src/scripts/x.php", hashes)  # non-.md excluded
 
     def test_mark_all_done_then_nothing_changed(self):
         (self.source / "rules").mkdir()
@@ -840,8 +840,8 @@ class TestGeneratePluginHooks(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = Path(tempfile.mkdtemp())
-        (self.tmpdir / "scripts").mkdir()
-        (self.tmpdir / "scripts" / "hook_manifest.yaml").write_text(
+        (self.tmpdir / "src" / "scripts").mkdir(parents=True)
+        (self.tmpdir / "src" / "scripts" / "hook_manifest.yaml").write_text(
             "platforms:\n"
             "  claude:\n"
             "    session_start: [chat-history]\n"

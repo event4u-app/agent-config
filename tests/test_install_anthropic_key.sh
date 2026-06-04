@@ -17,7 +17,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPT="$SCRIPT_DIR/scripts/install_anthropic_key.sh"
+SCRIPT="$SCRIPT_DIR/src/scripts/install_anthropic_key.sh"
 PASS=0
 FAIL=0
 

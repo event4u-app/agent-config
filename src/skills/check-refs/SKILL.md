@@ -10,7 +10,7 @@ execution:
   allowed_tools: []
   command:
     - python3
-    - scripts/check_references.py
+    - src/scripts/check_references.py
 workspaces:
   - agent-config-maintainer
 packs:
@@ -52,7 +52,7 @@ python3 scripts/runtime_dispatcher.py run --skill check-refs
 ```
 
 The dispatcher resolves the request, the shell handler runs
-`python3 scripts/check_references.py`, captures stdout/stderr, and returns a
+`python3 src/scripts/check_references.py`, captures stdout/stderr, and returns a
 typed `ExecutionResult`.
 
 ### 3. Verify the result
@@ -64,7 +64,7 @@ Check the returned `ExecutionResult`:
   line, and the offending ref, then fix the source or update the target
 - `status: timeout` → the checker exceeded `timeout_seconds` — investigate
 - `status: error` → interpreter or script missing — confirm `python3` and
-  `scripts/check_references.py` are available at the repository root
+  `src/scripts/check_references.py` are available at the repository root
 
 ## Output format
 
@@ -87,7 +87,7 @@ Check the returned `ExecutionResult`:
 
 ## Do NOT
 
-- Do NOT invoke `scripts/check_references.py` directly when the intent is to
+- Do NOT invoke `src/scripts/check_references.py` directly when the intent is to
   verify the runtime path — always go through the dispatcher so the
   `ExecutionResult` is produced and inspectable
 - Do NOT raise `timeout_seconds` to mask a slowdown — investigate which part

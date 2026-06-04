@@ -213,9 +213,9 @@ before paste because the redacted output goes into a tracked file
 
 ## Sources
 
-- Capture engine: [`scripts/hooks/dispatch_hook.py`](../scripts/hooks/dispatch_hook.py) — `_maybe_capture_payload`
-- Redactor: [`scripts/redact_hook_capture.py`](../scripts/redact_hook_capture.py)
-- Per-platform install logic: [`scripts/install.py`](../scripts/install.py) — search `ensure_<platform>_bridge` / `ensure_<platform>_user_hooks`
+- Capture engine: [`scripts/hooks/dispatch_hook.py`](../src/scripts/hooks/dispatch_hook.py) — `_maybe_capture_payload`
+- Redactor: [`scripts/redact_hook_capture.py`](../src/scripts/redact_hook_capture.py)
+- Per-platform install logic: [`scripts/install.py`](../src/scripts/install.py) — search `ensure_<platform>_bridge` / `ensure_<platform>_user_hooks`
 - Platform matrix + payload schemas: [`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md)
 - Hook architecture: [`docs/contracts/hook-architecture-v1.md`](contracts/hook-architecture-v1.md)
 - Archived roadmap with per-phase paste sections: [`agents/roadmaps/archive/road-to-verified-chat-history-platforms.md`](../agents/roadmaps/archive/road-to-verified-chat-history-platforms.md)

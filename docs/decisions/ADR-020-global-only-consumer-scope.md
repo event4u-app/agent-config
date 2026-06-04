@@ -24,7 +24,7 @@ Companion artefacts:
 - Bridge contract: [`docs/contracts/consumer-bridge.md`](../contracts/consumer-bridge.md)
 - Wizard contract: [`docs/contracts/gui-wizard.md`](../contracts/gui-wizard.md)
 - Predecessor ADR: [`ADR-007`](ADR-007-agent-discovery-scopes.md) — scope precedence, global-default amendment
-- Perms entry-gate: [`scripts/lint_global_paths.py`](../../scripts/lint_global_paths.py)
+- Perms entry-gate: [`scripts/lint_global_paths.py`](../../src/scripts/lint_global_paths.py)
 - Payload schema: [`internal/schemas/wizard-apply-payload.schema.json`](../../internal/schemas/wizard-apply-payload.schema.json)
 
 ## Context

@@ -17,7 +17,7 @@ keep-beta-until: 2026-08-12
 ## Decision
 
 `.agent-settings.yml` synchronization uses a **custom, stdlib-only
-round-trip parser + emitter** in [`scripts/sync_yaml_rt.py`](../../scripts/sync_yaml_rt.py),
+round-trip parser + emitter** in [`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py),
 not `ruamel.yaml` or any other third-party YAML library.
 
 The engine implements a narrow YAML subset (block-mappings, scalars,
@@ -120,7 +120,7 @@ of the following holds:
 
 - [`docs/guidelines/agent-infra/layered-settings.md`](../guidelines/agent-infra/layered-settings.md)
   § Sync rules — the contract this engine implements.
-- [`scripts/sync_yaml_rt.py`](../../scripts/sync_yaml_rt.py) module
+- [`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py) module
   docstring — the supported YAML subset, listed exhaustively.
 - `tests/test_sync_round_trip.py` — verbatim, scalar-guard, healer,
   CRLF, and synthetic-header pinning.

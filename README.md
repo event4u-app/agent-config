@@ -33,6 +33,7 @@ Beyond software: [`user-types/`](packages/core/.agent-src.uncondensed/user-types
 
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
+  <a href="MIGRATION.md">Upgrade to 6.0</a> ·
   <a href="CHANGELOG.md#breaking--v400-unified-setup-road-to-unified-setup">Breaking changes</a> ·
   <a href="https://github.com/event4u-app/agent-config/releases/latest">Latest release</a> ·
   <a href="https://github.com/event4u-app/agent-config/discussions">Discussions</a>

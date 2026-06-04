@@ -11,7 +11,7 @@
 > boundaries (`.augment/`, `.claude/`, `.cursor/`, `.windsurf/`,
 > `.clinerules/`, `.windsurfrules`, `GEMINI.md`) is measured separately
 > — see [`multi-tool-projection.md § Per-tool projection size`](multi-tool-projection.md#per-tool-projection-size)
-> for the table produced by [`scripts/measure_projection_bytes.py`](../../scripts/measure_projection_bytes.py).
+> for the table produced by [`scripts/measure_projection_bytes.py`](../../src/scripts/measure_projection_bytes.py).
 
 > **Historical note.** This pipeline was previously labelled
 > "Condensation". Renamed in the v2.10.0 feedback follow-up after the
@@ -36,12 +36,12 @@
 | Commands | `.agent-src.uncondensed/commands/**` | `.agent-src/commands/**` |
 | Personas, contexts, templates | `.agent-src.uncondensed/<dir>/**` | `.agent-src/<dir>/**` |
 
-The path rewriter ([`scripts/condense.py:157`](../../scripts/condense.py)
+The path rewriter ([`scripts/condense.py:157`](../../src/scripts/condense.py)
 `apply_path_rewriter()`) converts logical names in source frontmatter
 (`contexts/execution/foo.md`) into the relative form expected from
 `.agent-src/rules/` (`../contexts/execution/foo.md`). Hardcoding
 `.agent-src.uncondensed/` in source is a CI failure — caught by
-[`scripts/check_condensed_paths.py`](../../scripts/check_condensed_paths.py).
+[`scripts/check_condensed_paths.py`](../../src/scripts/check_condensed_paths.py).
 
 ## Entry points
 

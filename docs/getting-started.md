@@ -194,7 +194,7 @@ where auto-adopt misfires (corrupted file, hook misconfiguration), run
 `./agent-config chat-history:adopt` as the manual recovery lever.
 
 See [`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md)
-and [`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
+and [`scripts/chat_history.py`](../src/scripts/chat_history.py) for the mechanics.
 
 ---
 

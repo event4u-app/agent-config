@@ -43,7 +43,7 @@ from telemetry.report_renderer import render_json, render_markdown
 @pytest.mark.parametrize(
     "value",
     [
-        "scripts/agent-config",
+        "src/scripts/agent-config",
         "C:\\Users\\me",
         "skills\nphp-coder",
         "skills\rphp-coder",
@@ -112,7 +112,7 @@ def _base_kwargs() -> dict:
 
 def test_event_rejects_path_in_task_id() -> None:
     kw = _base_kwargs()
-    kw["task_id"] = "scripts/agent-config"
+    kw["task_id"] = "src/scripts/agent-config"
     with pytest.raises(EngagementSchemaError, match="task_id"):
         EngagementEvent(**kw).validate()
 
@@ -126,7 +126,7 @@ def test_event_rejects_extension_in_task_id() -> None:
 
 def test_event_rejects_slash_in_consulted_id() -> None:
     kw = _base_kwargs()
-    kw["consulted"] = {"skills": ["scripts/agent-config"]}
+    kw["consulted"] = {"skills": ["src/scripts/agent-config"]}
     with pytest.raises(EngagementSchemaError, match="consulted.skills"):
         EngagementEvent(**kw).validate()
 
@@ -182,7 +182,7 @@ def _aggregate_with_unsafe_id(unsafe_id: str) -> AggregateResult:
 
 @pytest.mark.parametrize(
     "unsafe_id",
-    ["scripts/agent-config", "scope-control.md", " php-coder", "x" * 201],
+    ["src/scripts/agent-config", "scope-control.md", " php-coder", "x" * 201],
 )
 def test_render_json_rejects_unsafe_id(unsafe_id: str) -> None:
     aggregate = _aggregate_with_unsafe_id(unsafe_id)
@@ -191,7 +191,7 @@ def test_render_json_rejects_unsafe_id(unsafe_id: str) -> None:
 
 
 def test_render_markdown_rejects_unsafe_id() -> None:
-    aggregate = _aggregate_with_unsafe_id("scripts/agent-config")
+    aggregate = _aggregate_with_unsafe_id("src/scripts/agent-config")
     with pytest.raises(EngagementSchemaError, match="buckets.skills.id"):
         render_markdown(aggregate)
 
@@ -210,8 +210,8 @@ def test_report_cli_skips_pre_validator_lines(
                 "ts": "2026-04-30T12:00:00Z",
                 "task_id": "ticket-1",
                 "boundary_kind": "task",
-                "consulted": {"skills": ["scripts/agent-config"]},
-                "applied": {"skills": ["scripts/agent-config"]},
+                "consulted": {"skills": ["src/scripts/agent-config"]},
+                "applied": {"skills": ["src/scripts/agent-config"]},
             }
         )
         + "\n",
@@ -231,5 +231,5 @@ def test_report_cli_skips_pre_validator_lines(
     )
     captured = capsys.readouterr()
     assert rc == 0
-    assert "scripts/agent-config" not in captured.out
+    assert "src/scripts/agent-config" not in captured.out
     assert "skipped 1 malformed line" in captured.err

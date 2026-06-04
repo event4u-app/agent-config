@@ -21,7 +21,7 @@ the question this ADR records is **how that contract is enforced**.
 ## Decision
 
 **JSON Schema (Draft-07) files in
-[`scripts/schemas/`](../../../scripts/schemas/) are the
+[`scripts/schemas/`](../../../src/scripts/schemas/) are the
 machine-readable source of truth.** The human contract document
 defers to the schema (`$comment` in each schema file pins
 `agents/reference/docs/frontmatter-contract.md` as the source).
@@ -93,10 +93,10 @@ JetBrains / any JSON-Schema-aware tool tomorrow.
 
 ## References
 
-- [`scripts/schemas/skill.schema.json`](../../../scripts/schemas/skill.schema.json) — skill contract.
-- [`scripts/schemas/rule.schema.json`](../../../scripts/schemas/rule.schema.json) — rule contract.
-- [`scripts/schemas/command.schema.json`](../../../scripts/schemas/command.schema.json) — command contract.
-- [`scripts/schemas/persona.schema.json`](../../../scripts/schemas/persona.schema.json) — persona contract.
+- [`scripts/schemas/skill.schema.json`](../../../src/scripts/schemas/skill.schema.json) — skill contract.
+- [`scripts/schemas/rule.schema.json`](../../../src/scripts/schemas/rule.schema.json) — rule contract.
+- [`scripts/schemas/command.schema.json`](../../../src/scripts/schemas/command.schema.json) — command contract.
+- [`scripts/schemas/persona.schema.json`](../../../src/scripts/schemas/persona.schema.json) — persona contract.
 - [`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md) — human-readable contract.
-- [`scripts/skill_linter.py`](../../../scripts/skill_linter.py) — primary validator.
+- [`scripts/skill_linter.py`](../../../src/scripts/skill_linter.py) — primary validator.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.

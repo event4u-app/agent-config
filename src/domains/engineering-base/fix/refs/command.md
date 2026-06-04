@@ -22,7 +22,7 @@ packs:
 ### 1. Run the reference checker
 
 ```bash
-python3 scripts/check_references.py --format json
+python3 src/scripts/check_references.py --format json
 ```
 
 ### 2. Parse findings
@@ -77,12 +77,12 @@ Present a summary before applying:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncondensed/` (source of truth). Regenerate `.agent-src/` and `.augment/` via `bash scripts/condense.sh --sync`.
+Edit files in `.agent-src.uncondensed/` (source of truth). Regenerate `.agent-src/` and `.augment/` via `bash src/scripts/condense.sh --sync`.
 
 After all fixes:
 
 ```bash
-python3 scripts/check_references.py
+python3 src/scripts/check_references.py
 ```
 
 Show final result.
@@ -92,13 +92,13 @@ Show final result.
 For each modified file:
 
 ```bash
-python3 scripts/condense.py --mark-done "{relative_path}"
+python3 src/scripts/condense.py --mark-done "{relative_path}"
 ```
 
 ## Rules
 
 - **Always fix in `.agent-src.uncondensed/`** — never edit `.agent-src/` or `.augment/` directly.
-- **Run `bash scripts/condense.sh --sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
+- **Run `bash src/scripts/condense.sh --sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
 - **Do NOT commit or push** — the user decides.
 - **Do NOT fix references in code blocks** — they are examples, not live refs.
 - **Do NOT auto-fix without showing the summary first.**

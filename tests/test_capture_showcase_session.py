@@ -15,9 +15,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "capture_showcase_session.py"
+SCRIPT = ROOT / "src" / "scripts" / "capture_showcase_session.py"
 
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src" / "scripts"))
 import capture_showcase_session as css  # noqa: E402
 
 

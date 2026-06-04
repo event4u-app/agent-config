@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = REPO_ROOT / "scripts" / "hermetic-install.sh"
+SCRIPT = REPO_ROOT / "src" / "scripts" / "hermetic-install.sh"
 
 
 def _have(cmd: str) -> bool:

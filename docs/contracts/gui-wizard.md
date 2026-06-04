@@ -27,7 +27,7 @@ retired; the single real installer is `scripts/install.py`.
 - Atomic / 2PC writes: [`src/server/io/atomicWrite.ts`](../../src/server/io/atomicWrite.ts), [`atomicMultiWrite.ts`](../../src/server/io/atomicMultiWrite.ts)
 - SPA: [`src/ui/`](../../src/ui/) (entry `src/ui/pages/WizardPage.tsx`)
 - CLI boot + `WIZARD_READY` contract: [`src/cli/commands/uiServe.ts`](../../src/cli/commands/uiServe.ts)
-- The single installer (all real writes): [`scripts/install.py`](../../scripts/install.py)
+- The single installer (all real writes): [`scripts/install.py`](../../src/scripts/install.py)
 - Tests: [`tests/server/`](../../tests/server/) + [`tests/e2e/`](../../tests/e2e/)
 
 ## Local-only invariant

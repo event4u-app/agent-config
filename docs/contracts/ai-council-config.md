@@ -197,7 +197,7 @@ A heuristic pre-flight that decides whether the request actually
 warrants a full council deliberation. Three verdicts (`necessary`,
 `borderline`, `unnecessary`) drive three exit paths in the dispatcher
 (skip silently, educate + block, or proceed). Implemented in
-[`scripts/ai_council/necessity.py`](../../scripts/ai_council/necessity.py);
+[`scripts/ai_council/necessity.py`](../../src/scripts/ai_council/necessity.py);
 wired into `council_cli.cmd_run` and `cmd_debate` before any member
 is invoked.
 
@@ -259,7 +259,7 @@ Decision table:
 | `== 0` | `== 0` | no | `borderline` |
 
 Trigger word lists live in
-[`scripts/ai_council/necessity.py`](../../scripts/ai_council/necessity.py)
+[`scripts/ai_council/necessity.py`](../../src/scripts/ai_council/necessity.py)
 as `NECESSARY_TRIGGERS` and `UNNECESSARY_TRIGGERS` — extend there with
 a unit test; never edit downstream copies.
 
@@ -271,7 +271,7 @@ final-round per-member texts — no extra model calls. The artefact
 surfaces, per top finding, the verdict band (Strong/Moderate/Weak), the
 evidence-quality bucket (H/M/L), the agree/dissent member split, and one
 key argument per member. Implementation:
-[`scripts/ai_council/replay.py`](../../scripts/ai_council/replay.py).
+[`scripts/ai_council/replay.py`](../../src/scripts/ai_council/replay.py).
 
 **Configuration.**
 

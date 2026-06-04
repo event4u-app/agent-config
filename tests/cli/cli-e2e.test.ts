@@ -20,7 +20,7 @@ beforeAll(async () => {
     // suite exercises the real artefact instead of the missing-manifest
     // error path.
     if (!existsSync(MANIFEST)) {
-        await execa('python3', ['scripts/build_discovery_manifest.py', '--write', '--quiet'], {
+        await execa('python3', ['src/scripts/build_discovery_manifest.py', '--write', '--quiet'], {
             cwd: process.cwd(),
             timeout: 60_000,
         });

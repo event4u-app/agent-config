@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SCRIPT_PATH = REPO_ROOT / "scripts" / "first_run_gate_hook.py"
+SCRIPT_PATH = REPO_ROOT / "src" / "scripts" / "first_run_gate_hook.py"
 
 
 def _load():

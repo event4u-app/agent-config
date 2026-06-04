@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
     "check_skill_requires",
-    ROOT / "scripts" / "check_skill_requires.py",
+    ROOT / "src" / "scripts" / "check_skill_requires.py",
 )
 assert SPEC and SPEC.loader
 mod = importlib.util.module_from_spec(SPEC)

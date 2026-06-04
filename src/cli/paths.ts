@@ -31,14 +31,14 @@ export const CONSUMER_ROOT = process.cwd();
  * dispatcher is invoked directly here to avoid an infinite loop
  * (shim → TS → shim → …).
  */
-export const BASH_ENTRY = resolve(PACKAGE_ROOT, 'scripts', '_dispatch.bash');
+export const BASH_ENTRY = resolve(PACKAGE_ROOT, 'src', 'scripts', '_dispatch.bash');
 
 /**
  * Absolute path to the public-facing Bash deprecation shim.
  * Retained as a path constant for `doctor-shell` and future tooling
  * that needs to detect "is the shim still present?".
  */
-export const BASH_SHIM = resolve(PACKAGE_ROOT, 'scripts', 'agent-config');
+export const BASH_SHIM = resolve(PACKAGE_ROOT, 'src', 'scripts', 'agent-config');
 
 /** Absolute path to the package.json. */
 export const PACKAGE_JSON = resolve(PACKAGE_ROOT, 'package.json');

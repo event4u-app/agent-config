@@ -18,7 +18,7 @@ import textwrap
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts" / "hooks"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts" / "hooks"))
 
 import dispatch_hook  # noqa: E402
 
@@ -31,7 +31,7 @@ def test_fallback_yaml_handles_lists_and_scalars() -> None:
         schema_version: 1
         concerns:
           chat-history:
-            script: scripts/chat_history.py
+            script: src/scripts/chat_history.py
             args: [hook-dispatch]
             fail_closed: false
         platforms:
@@ -43,7 +43,7 @@ def test_fallback_yaml_handles_lists_and_scalars() -> None:
     """)
     parsed = dispatch_hook._fallback_yaml(body)
     assert parsed["schema_version"] == 1
-    assert parsed["concerns"]["chat-history"]["script"] == "scripts/chat_history.py"
+    assert parsed["concerns"]["chat-history"]["script"] == "src/scripts/chat_history.py"
     assert parsed["concerns"]["chat-history"]["args"] == ["hook-dispatch"]
     assert parsed["concerns"]["chat-history"]["fail_closed"] is False
     assert parsed["platforms"]["augment"]["session_start"] == ["chat-history"]
@@ -60,8 +60,8 @@ def test_fallback_yaml_strips_quoted_scalars() -> None:
 
 _MANIFEST = {
     "concerns": {
-        "chat-history": {"script": "scripts/chat_history.py", "args": ["hook-dispatch"]},
-        "roadmap-progress": {"script": "scripts/roadmap_progress_hook.py"},
+        "chat-history": {"script": "src/scripts/chat_history.py", "args": ["hook-dispatch"]},
+        "roadmap-progress": {"script": "src/scripts/roadmap_progress_hook.py"},
     },
     "platforms": {
         "augment": {"session_start": ["chat-history"],
@@ -74,7 +74,7 @@ _MANIFEST = {
 def test_resolve_concerns_returns_ordered_list() -> None:
     out = dispatch_hook._resolve_concerns(_MANIFEST, "augment", "stop")
     assert [c["name"] for c in out] == ["chat-history", "roadmap-progress"]
-    assert out[0]["script"] == "scripts/chat_history.py"
+    assert out[0]["script"] == "src/scripts/chat_history.py"
 
 
 def test_resolve_concerns_unknown_platform_yields_empty() -> None:

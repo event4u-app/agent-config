@@ -111,7 +111,7 @@ def test_rule_preserves_obligation_baseline(
     rule: str, ctx_rel: str, iron_law_phrase: str, baseline: dict[str, tuple[str, int]]
 ) -> None:
     import sys
-    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
     from _lib.agent_src import resolve_logical  # noqa: E402
     rule_path = resolve_logical(f"rules/{rule}.md")
     ctx_path = resolve_logical(f"contexts/{ctx_rel}")

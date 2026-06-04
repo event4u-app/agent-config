@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import check_release_pr_shape as shape  # noqa: E402
 
@@ -54,11 +54,11 @@ def test_stray_install_script_fails(capsys: pytest.CaptureFixture[str]) -> None:
     files = [
         "package.json",
         "CHANGELOG.md",
-        "scripts/install.py",  # ← the stray
+        "src/scripts/install.py",  # ← the stray
     ]
     code, out = _check(files, capsys)
     assert code == 1
-    assert "OUT-OF-SHAPE: scripts/install.py" in out
+    assert "OUT-OF-SHAPE: src/scripts/install.py" in out
     # The shape-clean files do NOT appear in stdout on failure — only the
     # offenders, so CI logs surface the precise reason without noise.
     assert "ok: package.json" not in out
@@ -147,7 +147,7 @@ def test_unrelated_archive_file_fails(capsys: pytest.CaptureFixture[str]) -> Non
 
 def test_matches_helper_rejects_unrelated_paths() -> None:
     """Spot-check the matcher: random project paths must not slip through."""
-    assert not shape._matches("scripts/install.py")
+    assert not shape._matches("src/scripts/install.py")
     assert not shape._matches("tests/test_condense.py")
     assert not shape._matches(".github/workflows/tests.yml")
     assert not shape._matches("packages/core/installer/foo.ts")

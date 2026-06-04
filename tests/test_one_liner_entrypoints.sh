@@ -38,13 +38,20 @@ setup() {
     local stage="$TMPDIR/stage"
     mkdir -p "$stage/agent-config"
     local src
-    for src in scripts templates config .agent-src .agent-src.uncondensed \
+    for src in templates config .agent-src .agent-src.uncondensed \
                AGENTS.md .agent-settings.yml package.json \
                bin docker .augment; do
         if [[ -e "$REPO_ROOT/$src" ]]; then
             cp -R "$REPO_ROOT/$src" "$stage/agent-config/"
         fi
     done
+    # The installer entrypoints (install / install.sh / install.py /
+    # agent-config / _dispatch.bash) live under src/scripts/ since 6.0.0-D, so
+    # stage that subtree at its real nested path (agent-config/src/scripts/).
+    if [[ -d "$REPO_ROOT/src/scripts" ]]; then
+        mkdir -p "$stage/agent-config/src"
+        cp -R "$REPO_ROOT/src/scripts" "$stage/agent-config/src/"
+    fi
     # Stage `dist/router.json` only — the router-kernel compiled artefact
     # the installer reads. The rest of `dist/` (TS-compiled CLI) requires
     # node_modules to run and is not staged here; the bin shim falls back
@@ -106,7 +113,7 @@ test_setup_local_install() {
 
 # --- Test 3: `agent-config init --help` (npm bin entry) ---
 test_npx_help() {
-    local bin="$NPX_EXTRACT/agent-config/scripts/agent-config"
+    local bin="$NPX_EXTRACT/agent-config/src/scripts/agent-config"
     if AGENT_CONFIG_NO_PIN_REEXEC=1 bash "$bin" help >/dev/null 2>&1; then
         pass "agent-config bin help exits 0"
     else
@@ -116,7 +123,7 @@ test_npx_help() {
 
 # --- Test 4: `agent-config init` installs from extracted tarball ---
 test_npx_local_install() {
-    local bin="$NPX_EXTRACT/agent-config/scripts/agent-config"
+    local bin="$NPX_EXTRACT/agent-config/src/scripts/agent-config"
     local target
     target="$TMPDIR/npx-target"
     mkdir -p "$target"

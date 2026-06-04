@@ -68,15 +68,26 @@ def _load_pipeline(path: Path) -> dict[str, Any]:
     import importlib.util
     here = Path(__file__).resolve()
     candidate: Path | None = None
+    # Layout-agnostic: the dispatcher sits at `scripts/hooks/` in a consumer
+    # install + the `.agent-src/` projection, and at `src/scripts/hooks/` in the
+    # maintainer source tree (6.0.0-D moved the tooling under `src/`). Probe both
+    # per parent so the loader resolves regardless of where this template runs.
+    rel_candidates = (
+        Path("scripts") / "hooks" / "dispatch_hook.py",
+        Path("src") / "scripts" / "hooks" / "dispatch_hook.py",
+    )
     for parent in here.parents:
-        probe = parent / "scripts" / "hooks" / "dispatch_hook.py"
-        if probe.is_file():
-            candidate = probe
+        for rel in rel_candidates:
+            probe = parent / rel
+            if probe.is_file():
+                candidate = probe
+                break
+        if candidate is not None:
             break
     if candidate is None:
         raise RuntimeError(
-            "could not locate scripts/hooks/dispatch_hook.py from "
-            f"{here}"
+            "could not locate scripts/hooks/dispatch_hook.py (or "
+            f"src/scripts/hooks/dispatch_hook.py) from {here}"
         )
     spec = importlib.util.spec_from_file_location(
         "_work_engine_dispatch_hook", candidate

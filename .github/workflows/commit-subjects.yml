@@ -41,6 +41,6 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          python3 scripts/lint_commit_subjects.py \
+          python3 src/scripts/lint_commit_subjects.py \
             --base "${BASE_SHA}" \
             --head "${HEAD_SHA}"

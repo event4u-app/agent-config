@@ -40,7 +40,7 @@ as a first-class directory mirroring the persona pipeline:
 
 - Source dir: `.agent-src.uncondensed/user-types/`
 - Schema doc: [`user-type-schema`](user-type-schema.md) — 7-section spine, ≤ 120 lines
-- JSON schema: [`scripts/schemas/user-type.schema.json`](../../scripts/schemas/user-type.schema.json)
+- JSON schema: [`scripts/schemas/user-type.schema.json`](../../src/scripts/schemas/user-type.schema.json)
 - Linter: `scripts/skill_linter.py § lint_usertype`
 - CLI surface: `/refine-ticket --user-type=<id>` (single id in v1)
 - Composition: `--user-type=` and `--personas=` compose orthogonally

@@ -11,7 +11,7 @@ stability: stable
 >
 > **Source:** Step-11 Phase 5 Step 1
 > (`step-11-ruflo-parity.md`).
-> **Enforcer:** [`scripts/lint_namespace.py`](../../scripts/lint_namespace.py),
+> **Enforcer:** [`scripts/lint_namespace.py`](../../src/scripts/lint_namespace.py),
 > wired into `task lint-skills`.
 
 ## 1. Shape

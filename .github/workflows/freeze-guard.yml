@@ -29,7 +29,7 @@ on:
       - ".agent-src/templates/scripts/work_engine/**"
       - ".agent-src.uncondensed/templates/scripts/implement_ticket/**"
       - ".agent-src/templates/scripts/implement_ticket/**"
-      - "scripts/agent-config"
+      - "src/scripts/agent-config"
       - "tests/golden/**"
       - ".github/workflows/freeze-guard.yml"
   push:
@@ -39,7 +39,7 @@ on:
       - ".agent-src/templates/scripts/work_engine/**"
       - ".agent-src.uncondensed/templates/scripts/implement_ticket/**"
       - ".agent-src/templates/scripts/implement_ticket/**"
-      - "scripts/agent-config"
+      - "src/scripts/agent-config"
       - "tests/golden/**"
       - ".github/workflows/freeze-guard.yml"
   # P2.4 \u2014 nightly full replay so the behavioural baseline stays

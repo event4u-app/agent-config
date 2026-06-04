@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-INSTALL_SH = REPO_ROOT / "scripts" / "install.sh"
+INSTALL_SH = REPO_ROOT / "src" / "scripts" / "install.sh"
 
 
 def _run_install(target: Path, extra: list[str]) -> subprocess.CompletedProcess[str]:

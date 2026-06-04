@@ -312,7 +312,7 @@ def test_no_unsafe_imports_in_loader() -> None:
     Phase 1 is read-only. A regression that pulls these modules triggers
     a CHANGELOG note before merge per the `experimental` stability bar.
     """
-    source = (REPO_ROOT / "scripts" / "mcp_server" / "prompts.py").read_text()
+    source = (REPO_ROOT / "src" / "scripts" / "mcp_server" / "prompts.py").read_text()
     forbidden = [
         r"\bimport\s+subprocess\b",
         r"\bfrom\s+subprocess\b",
@@ -694,7 +694,7 @@ def test_server_resources_handler_accepts_cache_callable() -> None:
 
 def test_no_unsafe_imports_in_resource_loader() -> None:
     """A0 contract — resources.py must not import subprocess / HTTP clients."""
-    source = (REPO_ROOT / "scripts" / "mcp_server" / "resources.py").read_text()
+    source = (REPO_ROOT / "src" / "scripts" / "mcp_server" / "resources.py").read_text()
     forbidden = [
         r"\bimport\s+subprocess\b",
         r"\bfrom\s+subprocess\b",
@@ -1094,7 +1094,7 @@ def test_no_direct_subprocess_in_tools_module() -> None:
     that internally use subprocess, but the MCP wire surface itself must
     not spawn shells or HTTP clients.
     """
-    source = (REPO_ROOT / "scripts" / "mcp_server" / "tools.py").read_text()
+    source = (REPO_ROOT / "src" / "scripts" / "mcp_server" / "tools.py").read_text()
     forbidden = [
         r"\bimport\s+subprocess\b",
         r"\bfrom\s+subprocess\b",

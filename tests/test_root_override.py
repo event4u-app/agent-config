@@ -109,7 +109,7 @@ def test_env_pin_invalid_path_raises(tmp_path: Path, monkeypatch: pytest.MonkeyP
 def test_dispatcher_exits_2_on_invalid_root(tmp_path: Path) -> None:
     """End-to-end: the bash wrapper rejects bad ``--root`` with exit 2."""
     repo_root = Path(__file__).resolve().parents[1]
-    dispatcher = repo_root / "scripts" / "agent-config"
+    dispatcher = repo_root / "src" / "scripts" / "agent-config"
     result = subprocess.run(
         [str(dispatcher), "--root", str(tmp_path / "does-not-exist"), "doctor"],
         capture_output=True,

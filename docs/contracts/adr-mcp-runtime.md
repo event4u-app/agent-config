@@ -13,7 +13,7 @@ stability: stable
 
 The MCP server at `scripts/mcp_server/` runs on **Python 3.11+** using the
 official Anthropic **`mcp` Python SDK** (PyPI; pinned to `mcp==1.27.1`
-per [`scripts/mcp_server/requirements.txt`](../../scripts/mcp_server/requirements.txt)).
+per [`scripts/mcp_server/requirements.txt`](../../src/scripts/mcp_server/requirements.txt)).
 **FastMCP** (the higher-level decorator wrapper) and the **MCP TypeScript SDK**
 are explicitly rejected for this surface.
 
@@ -48,14 +48,14 @@ re-litigated every time a contributor read `scripts/mcp_server/server.py`.
 
 Evidence the decision is already realised in code:
 
-- [`scripts/mcp_server/server.py`](../../scripts/mcp_server/server.py) — uses
+- [`scripts/mcp_server/server.py`](../../src/scripts/mcp_server/server.py) — uses
   `mcp.server.Server`, `mcp.server.stdio.stdio_server`, `InitializationOptions`
   directly (no FastMCP decorators).
-- [`scripts/mcp_server/__init__.py`](../../scripts/mcp_server/__init__.py) —
+- [`scripts/mcp_server/__init__.py`](../../src/scripts/mcp_server/__init__.py) —
   pins `__version__` and declares stability/contract pointer.
-- [`scripts/mcp_server/requirements.txt`](../../scripts/mcp_server/requirements.txt)
+- [`scripts/mcp_server/requirements.txt`](../../src/scripts/mcp_server/requirements.txt)
   — `mcp==1.27.1`, no FastMCP, no Node tooling.
-- [`scripts/mcp_setup.sh`](../../scripts/mcp_setup.sh) — onboarding writes
+- [`scripts/mcp_setup.sh`](../../src/scripts/mcp_setup.sh) — onboarding writes
   the Claude Desktop config snippet against `python -m scripts.mcp_server`.
 
 ## Tool surface (Phase 1 scoping)
@@ -63,7 +63,7 @@ Evidence the decision is already realised in code:
 Locked separately by [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) Phase 4
 amendment. The current ALLOWLIST is exactly two tools, registered as a
 hardcoded module-level tuple in
-[`scripts/mcp_server/tools.py`](../../scripts/mcp_server/tools.py):
+[`scripts/mcp_server/tools.py`](../../src/scripts/mcp_server/tools.py):
 
 | Tool | Mode | Source |
 |---|---|---|
@@ -73,7 +73,7 @@ hardcoded module-level tuple in
 No `push`, `merge`, `commit`, or prod-write surface is exposed. The
 unimplemented-tool envelope from
 [`mcp-tool-stub-envelope.md`](mcp-tool-stub-envelope.md) governs the rest of
-the [`consumer_tool_catalog.json`](../../scripts/mcp_server/consumer_tool_catalog.json)
+the [`consumer_tool_catalog.json`](../../src/scripts/mcp_server/consumer_tool_catalog.json)
 entries.
 
 `agent-config init`, `agent-config skills list`, and
@@ -92,7 +92,7 @@ That shape was rejected in favour of two existing entrypoints, both
 already shipped:
 
 - **One-liner onboarding:** `task mcp:setup` runs
-  [`scripts/mcp_setup.sh`](../../scripts/mcp_setup.sh) — creates
+  [`scripts/mcp_setup.sh`](../../src/scripts/mcp_setup.sh) — creates
   `.venv-mcp/`, installs `mcp`, and prints the Claude Desktop JSON snippet
   the operator pastes into
   `~/Library/Application Support/Claude/claude_desktop_config.json`

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**64 / 178 steps done · 36%**
+**68 / 178 steps done · 38%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 37 | 17 | 20 | 0 | 0 | █████░░░░░ 54% |
+| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 37 | 13 | 24 | 0 | 0 | ██████░░░░ 65% |
 | 2 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
@@ -28,7 +28,7 @@
 
 ### [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md)
 
-**Road to 6.0.0-D — Structural restructure (the hard break)** — 20 / 37 done (54%)
+**Road to 6.0.0-D — Structural restructure (the hard break)** — 24 / 37 done (65%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -38,8 +38,8 @@
 | 3 | Monorepo-collapse decision (evidence-gated) | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | Move the remaining packs | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4b | Command (and skill) naming + skill-conversion | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Profiles-as-views + curated command tree | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
-| 7 | Final verification + ADRs | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 5 | Profiles-as-views + curated command tree | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 7 | Final verification + ADRs | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 8 | Post-move consolidation — NEXT roadmap, not this one | 🟡 in progress | 12 | 1 | 0 | 0 | 8% |
 
 ### [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md)

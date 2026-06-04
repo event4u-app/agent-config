@@ -14,16 +14,16 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - 'scripts/install_global*.py'
-      - 'scripts/cmd_export.py'
+      - 'src/scripts/install_global*.py'
+      - 'src/scripts/cmd_export.py'
       - 'tests/test_installed_lock.py'
       - 'tests/test_cmd_export.py'
       - '.github/workflows/windows-lockfile-export.yml'
   push:
     branches: [main, master]
     paths:
-      - 'scripts/install_global*.py'
-      - 'scripts/cmd_export.py'
+      - 'src/scripts/install_global*.py'
+      - 'src/scripts/cmd_export.py'
       - 'tests/test_installed_lock.py'
       - 'tests/test_cmd_export.py'
       - '.github/workflows/windows-lockfile-export.yml'
@@ -61,7 +61,7 @@ jobs:
         # install_global content tests need the projected `.augment/` etc.
         # trees, which are git-ignored and rebuilt from `.agent-src/` by
         # sync.
-        run: python scripts/condense.py --sync
+        run: python src/scripts/condense.py --sync
 
       - name: Run lockfile + export tests
         run: python -m pytest tests/test_installed_lock.py tests/test_cmd_export.py -v

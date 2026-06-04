@@ -44,7 +44,7 @@ A skill earns the universal label when **all three** hold:
 
 ## Exclusion criteria
 
-- **Domain anchor.** `voice-and-tone-design` (creator), `runway-cognition` (founder), `quality-tools` (developer), `pipeline-strategy` (GTM) — strong-fit for one user-type, weak for the other five. These tag via the `recommended_for_user_types:` frontmatter field defined in [`skill.schema.json`](../../scripts/schemas/skill.schema.json).
+- **Domain anchor.** `voice-and-tone-design` (creator), `runway-cognition` (founder), `quality-tools` (developer), `pipeline-strategy` (GTM) — strong-fit for one user-type, weak for the other five. These tag via the `recommended_for_user_types:` frontmatter field defined in [`skill.schema.json`](../../src/scripts/schemas/skill.schema.json).
 - **Tool-specific.** `laravel-horizon`, `nextjs-patterns`, `mcp-builder`, `terraform` — load only when the matching stack flag is set.
 - **Council / role review.** `judge-bug-hunter`, `judge-security-auditor`, `architecture-review-lens` — load via subagent orchestration, not via universal allowlist.
 
