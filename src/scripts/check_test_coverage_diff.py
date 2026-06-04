@@ -64,7 +64,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
-GATE_RE = re.compile(r"^scripts/(?:check_|lint_)[A-Za-z0-9_]+\.py$")
+GATE_RE = re.compile(r"^src/scripts/(?:check_|lint_)[A-Za-z0-9_]+\.py$")
 PRAGMA_RE = re.compile(r"#\s*coverage-diff-ignore:\s*(\S.*?)\s*$")
 _PRAGMA_SCAN_LINES = 60
 

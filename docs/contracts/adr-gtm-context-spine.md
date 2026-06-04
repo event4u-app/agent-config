@@ -18,7 +18,7 @@ keep-beta-until: 2026-08-12
 The context-spine adds **three Wing-3-specific slots** under
 `agents/context-spine/`: `channel-stage`, `funnel-stage`,
 `customer-segment`. The schema enum in
-[`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
+[`scripts/schemas/skill.schema.json`](../../src/scripts/schemas/skill.schema.json)
 extends from `{product, team, repo}` to
 `{product, team, repo, channel-stage, funnel-stage, customer-segment}`.
 
@@ -107,7 +107,7 @@ Three signals that this decision is wrong and the ADR needs revisiting:
 
 - [`context-spine.md`](context-spine.md) § 2 (slot table — extended),
   § 5 (slot-add policy — wing-bounded extension clause).
-- [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
+- [`scripts/schemas/skill.schema.json`](../../src/scripts/schemas/skill.schema.json)
   — `context_spine.items.enum` extended in this ADR.
 - `agents/roadmaps/` § Block G — the authorising roadmap (archived
   after merge; this ADR is the durable record).

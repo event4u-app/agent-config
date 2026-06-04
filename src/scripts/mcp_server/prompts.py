@@ -71,7 +71,7 @@ class SkillPrompt:
 
 def _project_root() -> Path:
     """Walk up from this file to the repo root (parent of `scripts/`)."""
-    return Path(__file__).resolve().parent.parent.parent
+    return Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _strip_frontmatter(text: str) -> tuple[dict[str, str], str]:

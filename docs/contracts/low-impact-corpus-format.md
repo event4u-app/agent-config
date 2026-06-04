@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-13
 
 Parser-visible invariants for `agents/decisions/low-impact-decisions.md` and any
 upstream seed at the same path. The hardened parser lives in
-[`scripts/ai_council/low_impact_corpus.py`](../../scripts/ai_council/low_impact_corpus.py)
+[`scripts/ai_council/low_impact_corpus.py`](../../src/scripts/ai_council/low_impact_corpus.py)
 and ships in two modes:
 
 | Mode | Entry point | Behaviour on drift |

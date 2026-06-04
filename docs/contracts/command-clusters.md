@@ -187,7 +187,7 @@ here so future lens additions follow the same shape.
   to the master (e.g. "cost gate from `/council default` Step 3",
   "render via Step 5/5a/5b of `/council default`"), not the wrapper.
 - **Single source of lens addendums:** lens-specific neutrality
-  addendums live in [`scripts/ai_council/prompts.py:_MODE_TABLE`](../../scripts/ai_council/prompts.py)
+  addendums live in [`scripts/ai_council/prompts.py:_MODE_TABLE`](../../src/scripts/ai_council/prompts.py)
   and are selected by `mode_override`. A new lens = a new `_MODE_TABLE`
   entry **plus** a new wrapper file mirroring the `pr.md` / `design.md` /
   `optimize.md` shape (~100–130 lines). No new master.

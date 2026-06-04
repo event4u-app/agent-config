@@ -18,7 +18,7 @@ keep-beta-until: 2026-08-12
 The context-spine adds **three Wing-4-specific slots** under
 `agents/context-spine/`: `fiscal-period`, `org-stage`,
 `regulatory-regime`. The schema enum in
-[`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
+[`scripts/schemas/skill.schema.json`](../../src/scripts/schemas/skill.schema.json)
 extends from
 `{product, team, repo, channel-stage, funnel-stage, customer-segment}`
 to additionally include
@@ -119,7 +119,7 @@ re-opens the slot-sprawl risk and needs a separate ADR.
   § 5 (slot-add policy — wing-scoped track).
 - [`adr-gtm-context-spine.md`](adr-gtm-context-spine.md) — Wing-3
   reference ADR this one composes against.
-- [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
+- [`scripts/schemas/skill.schema.json`](../../src/scripts/schemas/skill.schema.json)
   — `context_spine.items.enum` extended in this ADR.
 - [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   § Senior-Tier Required Structure — the four blocks every senior

@@ -12,6 +12,7 @@ That command must stay the source of truth — keep it green on purpose.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -24,6 +25,7 @@ def _run_help() -> str:
     proc = subprocess.run(
         [sys.executable, "-m", "scripts._cli.cmd_explain", "last", "--help"],
         cwd=REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")},
         capture_output=True,
         text=True,
         check=True,

@@ -18,7 +18,7 @@
 The default mode is **copy-rules-symlink-everything-else**. The toggle
 `augment.rules_use_symlinks: true` in `.agent-settings.yml` flips
 rules to symlinks once the host supports it. The toggle is honored by
-both [`scripts/install.sh`](../../scripts/install.sh) on the consumer
+both [`scripts/install.sh`](../../src/scripts/install.sh) on the consumer
 side and `project_to_augment()` in the package's own self-projection.
 
 Cross-references inside `.agent-src/rules/*.md` use **relative paths
@@ -63,7 +63,7 @@ After projection, those paths resolve through the symlinks in
   `test_project_to_augment_rules_mode_toggle` and surrounding cases
   — exercises both copy-mode and symlink-mode for rules; verifies
   symlink targets for skills / commands / contexts.
-- [`scripts/smoke_path_resolution.py`](../../scripts/smoke_path_resolution.py)
+- [`scripts/smoke_path_resolution.py`](../../src/scripts/smoke_path_resolution.py)
   — walks `.augment/rules/*.md` and resolves every `load_context:`
   entry; non-zero exit means a consumer would see the same break.
 

@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Optional
 
 
-REGENERATOR_REL = "src/scripts/update_roadmap_progress.py"
+REGENERATOR_REL = "scripts/update_roadmap_progress.py"
 """Path of the script relative to the package's source-of-truth tree."""
 
 CONSUMER_REGENERATOR_REL = ".augment/scripts/update_roadmap_progress.py"

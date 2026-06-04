@@ -204,7 +204,7 @@ discovery-driven action.
 The five required keys (`workspaces`, `packs`, `lifecycle`, `trust`,
 `install`) are now **strictly enforced** across every artefact under
 `.agent-src.uncondensed/{skills,rules,commands,templates}` by
-[`scripts/lint_artefact_frontmatter.py`](../../scripts/lint_artefact_frontmatter.py),
+[`scripts/lint_artefact_frontmatter.py`](../../src/scripts/lint_artefact_frontmatter.py),
 wired into `task lint-artefact-frontmatter`, `task ci`, and the opt-in
 combined pre-commit hook (`./agent-config hooks:install`). The migration
 rule's "Phase 4+" strict flip described above is therefore in effect.
@@ -230,7 +230,7 @@ step (e.g. `laravel: cluster: php`, `react: cluster: typescript`). Like
 `requires_hint`, it is **advisory only** — the installer does not act on it; it
 drives the wizard UI's collapsible language→framework grouping. The value must
 be a known pack id (and not self-referential), enforced by
-[`scripts/lint_discovery_vocabulary.py`](../../scripts/lint_discovery_vocabulary.py)
+[`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.py)
 and emitted into the discovery manifest. Additive, no vocabulary rename.
 
 Driven by [`agents/roadmaps/road-to-wizard-ux-improvements.md`](../../agents/roadmaps/road-to-wizard-ux-improvements.md) § Phase 4 (AI-council-resolved: reuse `packs.yml` as the single source of truth rather than a second mapping file).
@@ -254,7 +254,7 @@ Added pack id `fun` to the closed vocabulary (Non-essential social/fun
 workflows — prediction-pool tip optimization, etc.). Mirrored in
 [`config/discovery/packs.yml`](../../config/discovery/packs.yml) and the
 `ADR_PACKS` frozenset in
-[`scripts/lint_discovery_vocabulary.py`](../../scripts/lint_discovery_vocabulary.py).
+[`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.py).
 Optional under the `small-business` workspace (alongside `ai-video`);
 `trust_level_default: experimental`, `install.default: false`. First
 artefacts: the `/prediction-pool` command + `prediction-pool-optimizer` skill in

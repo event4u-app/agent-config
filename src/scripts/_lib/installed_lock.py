@@ -245,7 +245,7 @@ def classify_mismatch(
 def current_package_version(repo_root: Optional[Path] = None) -> str:
     """Read ``version`` from the package's own ``package.json``."""
     if repo_root is None:
-        repo_root = Path(__file__).resolve().parents[2]
+        repo_root = Path(__file__).resolve().parents[3]
     try:
         data = json.loads((repo_root / "package.json").read_text(encoding="utf-8"))
         version = data.get("version")

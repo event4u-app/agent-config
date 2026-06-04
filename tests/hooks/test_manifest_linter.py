@@ -17,7 +17,7 @@ VALID_BODY = textwrap.dedent("""\
     schema_version: 1
     concerns:
       chat-history:
-        script: scripts/chat_history.py
+        script: src/scripts/chat_history.py
         args: [hook-dispatch]
         fail_closed: false
     platforms:
@@ -98,11 +98,11 @@ _BODY_WITH_DEAD_CONCERN = textwrap.dedent("""\
     schema_version: 1
     concerns:
       chat-history:
-        script: scripts/chat_history.py
+        script: src/scripts/chat_history.py
         args: [hook-dispatch]
         fail_closed: false
       orphaned:
-        script: scripts/chat_history.py
+        script: src/scripts/chat_history.py
         args: []
         fail_closed: false
     platforms:

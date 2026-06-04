@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-13
 
 # Router Blending — Cross-Domain Skill Mix Contract
 
-> **Status:** beta · **Owner:** router governance · **Depends on:** [`universal-skills.md`](universal-skills.md), the user-types axis (axis seeds — schema field defined under [`skill.schema.json`](../../scripts/schemas/skill.schema.json) → `recommended_for_user_types`).
+> **Status:** beta · **Owner:** router governance · **Depends on:** [`universal-skills.md`](universal-skills.md), the user-types axis (axis seeds — schema field defined under [`skill.schema.json`](../../src/scripts/schemas/skill.schema.json) → `recommended_for_user_types`).
 
 ## Purpose
 
@@ -67,5 +67,5 @@ Wired into `task ci` as a non-blocking warning until the user-types axis stabili
 ## Related
 
 - [`universal-skills.md`](universal-skills.md) — the always-loaded floor under the blend.
-- [`skill.schema.json`](../../scripts/schemas/skill.schema.json) — `recommended_for_user_types` field that carries the tags.
+- [`skill.schema.json`](../../src/scripts/schemas/skill.schema.json) — `recommended_for_user_types` field that carries the tags.
 - [`tests/eval/corpus-non-dev.yaml`](../../tests/eval/corpus-non-dev.yaml) — empirical validation of the blends.

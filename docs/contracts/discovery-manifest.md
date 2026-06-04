@@ -14,7 +14,7 @@ keep-beta-until: 2026-08-19
 ## Source of truth
 
 The generator
-[`scripts/build_discovery_manifest.py`](../../scripts/build_discovery_manifest.py)
+[`scripts/build_discovery_manifest.py`](../../src/scripts/build_discovery_manifest.py)
 walks `.agent-src.uncondensed/` and emits the manifest to
 `dist/discovery/discovery-manifest.json` plus a sidecar
 `discovery-manifest.json.sha256` for tamper detection.

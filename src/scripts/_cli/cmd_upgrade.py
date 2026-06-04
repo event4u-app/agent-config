@@ -73,7 +73,7 @@ def _agent_config_bin() -> str:
     (no global install yet) still refreshes."""
     from shutil import which
     return which("agent-config") or str(
-        Path(__file__).resolve().parents[2] / "agent-config")
+        Path(__file__).resolve().parents[3] / "agent-config")
 
 
 def _maybe_refresh_project_wrapper(project_root: Path, out, err) -> None:

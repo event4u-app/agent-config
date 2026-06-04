@@ -38,7 +38,7 @@ last_updated: "2026-05-15" # YYYY-MM-DD — bumped on every accepted change
 
 `role` is an **unordered** YAML block-style list. Order carries no meaning
 (no "primary" role). The seeded enum mirrors `SEED_PROFILE_IDS` in
-[`scripts/config/profiles.py`](../../scripts/config/profiles.py):
+[`scripts/config/profiles.py`](../../src/scripts/config/profiles.py):
 `founder`, `developer`, `content_creator`, `agency`, `finance`, `ops`.
 Free-form additions are accepted (forward-compatibility) — closed
 validation lives in the wizard / settings GUI, not in the loader.

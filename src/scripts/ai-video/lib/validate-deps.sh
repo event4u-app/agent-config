@@ -32,7 +32,7 @@ fi
 
 # Resolve repo root from this script's location (scripts/ai-video/lib/).
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/../../.." && pwd)"
+repo_root="$(cd "${script_dir}/../../../.." && pwd)"
 
 # AIV_PERSONAS_DIR / AIV_SKILLS_DIR allow overrides for tests; defaults
 # point at the generated mirrors (skills+personas live there at runtime).

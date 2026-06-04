@@ -18,7 +18,7 @@ import jsonschema
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    return Path(__file__).resolve().parent.parent.parent
 
 
 def _load_schema() -> dict:

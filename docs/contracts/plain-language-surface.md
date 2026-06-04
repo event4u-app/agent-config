@@ -113,5 +113,5 @@ Re-audit on each of:
 
 - [`docs/getting-started-by-role.md`](../getting-started-by-role.md) — the entry surface.
 - [`docs/contracts/role-experience.md`](role-experience.md) — role artefact shape.
-- [`scripts/lint_role_experiences.py`](../../scripts/lint_role_experiences.py) — lint enforcement.
+- [`scripts/lint_role_experiences.py`](../../src/scripts/lint_role_experiences.py) — lint enforcement.
 - `road-to-frictionless-employee-workspace.md` § Phase C — the roadmap step.

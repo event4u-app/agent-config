@@ -30,7 +30,7 @@ docs/adrs/
 
 `<area>` is a kebab-case stem matching one of:
 
-- An entry in the canonical area inventory (see [`scripts/audit_adr_coverage.py`](../../scripts/audit_adr_coverage.py) `AREAS`).
+- An entry in the canonical area inventory (see [`scripts/audit_adr_coverage.py`](../../src/scripts/audit_adr_coverage.py) `AREAS`).
 - A new area added to that inventory in the same PR.
 
 Reserved areas (bootstrap pass — step-11 Phase 4 Step 3):
@@ -103,6 +103,6 @@ The skill's template, numbering logic, and validation hooks are identical for bo
 
 - [`docs/adrs/cost/0001-hard-stop-hook.md`](../adrs/cost/0001-hard-stop-hook.md) — first per-area ADR (bootstrap).
 - [`docs/decisions/INDEX.md`](../decisions/INDEX.md) — flat surface index.
-- [`scripts/audit_adr_coverage.py`](../../scripts/audit_adr_coverage.py) — coverage gate.
-- [`scripts/adr/regenerate_index.py`](../../scripts/adr/regenerate_index.py) — index regenerator (works on both surfaces; pass `--dir`).
+- [`scripts/audit_adr_coverage.py`](../../src/scripts/audit_adr_coverage.py) — coverage gate.
+- [`scripts/adr/regenerate_index.py`](../../src/scripts/adr/regenerate_index.py) — index regenerator (works on both surfaces; pass `--dir`).
 - `step-11-ruflo-parity` Phase 4 — origin.

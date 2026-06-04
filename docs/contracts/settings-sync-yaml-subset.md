@@ -8,7 +8,7 @@ keep-beta-until: 2026-08-12
 **Purpose.** Pin the YAML feature set that `.agent-settings.yml` and
 `config/agent-settings.template.yml` may use, so contributors can cite a
 contract instead of inferring it from
-[`scripts/sync_yaml_rt.py`](../../scripts/sync_yaml_rt.py) source. The
+[`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py) source. The
 sync engine ([ADR](adr-settings-sync-engine.md)) is a custom stdlib-only
 round-trip parser/emitter; staying inside the subset below is what
 keeps user-line preservation (every byte of every user line round-trips
@@ -135,5 +135,5 @@ document is updated in the same commit.
 
 - [`docs/contracts/adr-settings-sync-engine.md`](adr-settings-sync-engine.md) — decision record for the stdlib-only engine.
 - [`docs/guidelines/agent-infra/layered-settings.md`](../guidelines/agent-infra/layered-settings.md) § Sync rules — the additive-merge-with-user-line-preservation contract this subset implements.
-- [`scripts/sync_yaml_rt.py`](../../scripts/sync_yaml_rt.py) — implementation; module docstring mirrors this file.
-- [`scripts/sync_agent_settings.py`](../../scripts/sync_agent_settings.py) — CLI driver and exit-code contract.
+- [`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py) — implementation; module docstring mirrors this file.
+- [`scripts/sync_agent_settings.py`](../../src/scripts/sync_agent_settings.py) — CLI driver and exit-code contract.

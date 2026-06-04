@@ -28,7 +28,7 @@ from typing import Optional
 
 def _import_install():
     """Lazy import so ``--help`` works without the package on sys.path."""
-    here = Path(__file__).resolve().parents[2]
+    here = Path(__file__).resolve().parents[3]
     if str(here) not in sys.path:
         sys.path.insert(0, str(here))
     from scripts import install as install_mod  # noqa: PLC0415

@@ -47,7 +47,7 @@ _KILL_SWITCH_ENV = "AGENT_CONFIG_NO_EVENTS_LOG"
 #: above ``scripts/ai_council/``). Callers can override via
 #: ``log_path=`` for tests.
 _DEFAULT_LOG_PATH = (
-    Path(__file__).resolve().parents[2]
+    Path(__file__).resolve().parents[3]
     / "agents"
     / "runtime"
     / "council"

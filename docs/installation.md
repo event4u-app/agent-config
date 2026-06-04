@@ -500,8 +500,8 @@ UI. The package builds one ZIP per cloud-eligible skill.
    `cloud_safe: noop` (filesystem-bound, e.g. `chat-history`,
    `file-editor`) are bundled with a stripped no-op variant; T3-H
    skills (hard filesystem dependencies) are excluded by default.
-   See [`scripts/audit_cloud_compatibility.py`](../scripts/audit_cloud_compatibility.py)
-   for per-skill tier and [`scripts/build_cloud_bundle.py`](../scripts/build_cloud_bundle.py)
+   See [`scripts/audit_cloud_compatibility.py`](../src/scripts/audit_cloud_compatibility.py)
+   for per-skill tier and [`scripts/build_cloud_bundle.py`](../src/scripts/build_cloud_bundle.py)
    for the gating logic.
 
 2. **Upload to Claude.ai**

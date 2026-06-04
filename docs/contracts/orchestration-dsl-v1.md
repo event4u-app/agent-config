@@ -128,7 +128,7 @@ no shell-out.
 - `steps[]` length > 32 or < 1
 - `outputs` referencing an unknown step
 
-Exit codes mirror [`lint_hook_manifest.py`](../../scripts/lint_hook_manifest.py): `0` clean, `1` failure, `2` schema-load error.
+Exit codes mirror [`lint_hook_manifest.py`](../../src/scripts/lint_hook_manifest.py): `0` clean, `1` failure, `2` schema-load error.
 
 ## Privacy floor
 
@@ -148,6 +148,6 @@ majors.
 ## Cross-references
 
 - Command surface: [`/orchestrate`](../../.agent-src.uncondensed/commands/orchestrate.md).
-- Linter: [`lint_orchestration_dsl.py`](../../scripts/lint_orchestration_dsl.py).
+- Linter: [`lint_orchestration_dsl.py`](../../src/scripts/lint_orchestration_dsl.py).
 - Runtime dispatcher precedent: [`implement-ticket-flow.md`](implement-ticket-flow.md).
 - Subagent runtime: [`subagent-orchestration`](../../.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md).

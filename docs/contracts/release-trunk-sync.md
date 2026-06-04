@@ -20,7 +20,7 @@ Every tagged release (`X.Y.Z`) **fast-forwards `main` to the tag's
 commit as the final step of the release pipeline**. No exceptions. No
 grace period.
 
-The fast-forward is owned by [`scripts/release.py`](../../scripts/release.py)
+The fast-forward is owned by [`scripts/release.py`](../../src/scripts/release.py)
 and runs after the GitHub Release is published. The release pipeline
 is **not green** until `main == <new-tag>` at the remote.
 
@@ -55,7 +55,7 @@ the release.
 
 ## CI Gate (P1.3)
 
-[`scripts/check_release_trunk_sync.py`](../../scripts/check_release_trunk_sync.py)
+[`scripts/check_release_trunk_sync.py`](../../src/scripts/check_release_trunk_sync.py)
 runs on every `release/X.Y.Z` branch (detected by `git rev-parse
 --abbrev-ref HEAD` matching `^release/\d+\.\d+\.\d+$`).
 
@@ -97,7 +97,7 @@ not orphan the convention.
 
 ## See also
 
-- [`scripts/release.py`](../../scripts/release.py) — release pipeline owner.
+- [`scripts/release.py`](../../src/scripts/release.py) — release pipeline owner.
 - [`.github/workflows/release-guard.yml`](../../.github/workflows/release-guard.yml)
   — tag/version-file integrity gate (orthogonal: this contract handles
   trunk position, release-guard handles version-string integrity).

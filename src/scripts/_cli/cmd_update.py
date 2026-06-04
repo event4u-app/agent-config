@@ -263,7 +263,7 @@ def _refresh_global_lockfile(version: str, *, out=sys.stdout) -> None:
 
 def _detect_installed_version() -> str:
     """Read ``version`` from the package's own ``package.json``."""
-    pkg_json = Path(__file__).resolve().parents[2] / "package.json"
+    pkg_json = Path(__file__).resolve().parents[3] / "package.json"
     try:
         data = json.loads(pkg_json.read_text(encoding="utf-8"))
         version = data.get("version")

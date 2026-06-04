@@ -585,7 +585,7 @@ def _check_manifest_integrity(manifest: dict[str, Any]) -> dict[str, Any]:
 
 def _package_root() -> Path:
     """Resolve the @event4u/agent-config package root (this repo)."""
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[3]
 
 
 def _current_package_version() -> str | None:
@@ -739,7 +739,7 @@ def _check_mcp_mode(project_root: Path) -> dict[str, Any]:
 
 def _check_offline_readiness() -> dict[str, Any]:
     """Verify the verified-offline install entrypoint ships with the package."""
-    script = _package_root() / "scripts" / "hermetic-install.sh"
+    script = _package_root() / "src" / "scripts" / "hermetic-install.sh"
     if not script.exists():
         return {
             "id": "offline-readiness", "status": "warn",

@@ -12,6 +12,7 @@ builder directly:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -31,6 +32,7 @@ def _run_cli(project_root: Path, *extra: str) -> subprocess.CompletedProcess[str
             "last", "--project", str(project_root), *extra,
         ],
         cwd=REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")},
         capture_output=True,
         text=True,
         check=False,
@@ -85,7 +87,8 @@ def test_json_output_validates_against_schema(
         [sys.executable, str(REPO_ROOT / "src" / "scripts" / "lint_explain_trace.py"),
          "--stdin"],
         input=proc.stdout,
-        cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+        cwd=REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")}, capture_output=True, text=True, check=False,
     )
     assert lint.returncode == 0, lint.stderr
 

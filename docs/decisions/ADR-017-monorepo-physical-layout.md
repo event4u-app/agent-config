@@ -25,8 +25,8 @@ Companion artefacts:
 - [`agents/roadmaps/monorepo-phase-4-physical-package-layout.md`](../../agents/roadmaps/monorepo-phase-4-physical-package-layout.md)
 - [`dist/migration/move-plan.json`](../../dist/migration/move-plan.json) (94 moves, 432 core, 0 conflicts)
 - [`dist/migration/pre-move-snapshot.json`](../../dist/migration/pre-move-snapshot.json) (744 files hashed)
-- [`scripts/plan_physical_move.py`](../../scripts/plan_physical_move.py) (plan + apply)
-- [`scripts/verify_physical_move.py`](../../scripts/verify_physical_move.py) (post-move diff vs. snapshot)
+- [`scripts/plan_physical_move.py`](../../src/scripts/plan_physical_move.py) (plan + apply)
+- [`scripts/verify_physical_move.py`](../../src/scripts/verify_physical_move.py) (post-move diff vs. snapshot)
 
 ## Context
 
@@ -77,7 +77,7 @@ and ships. The TS installer needs zero behavioural changes — only the
 
 ### 2. Mapping rules (deterministic, lockfile-stable)
 
-Implemented in [`scripts/plan_physical_move.py`](../../scripts/plan_physical_move.py):
+Implemented in [`scripts/plan_physical_move.py`](../../src/scripts/plan_physical_move.py):
 
 1. **Kernel rules** → `packages/core/` (allowlist, sanity-checked against
    [`docs/contracts/kernel-membership.md`](../contracts/kernel-membership.md) §4).
@@ -116,7 +116,7 @@ point; it refuses if any conflict remains. No human-edited paths.
 `task sync` + `task build-discovery` after the move must produce
 `.agent-src/`, `.augment/`, and `dist/discovery/discovery-manifest.json`
 byte-identical to the pre-move snapshot **except** for
-`artefacts[].path` values. [`scripts/verify_physical_move.py`](../../scripts/verify_physical_move.py)
+`artefacts[].path` values. [`scripts/verify_physical_move.py`](../../src/scripts/verify_physical_move.py)
 captures a post-move snapshot and diffs against
 `dist/migration/pre-move-snapshot.json`; the only allowed delta is the
 `path` field per artefact.

@@ -15,7 +15,7 @@ GEMINI.md                          ← Gemini CLI (symlink → AGENTS.md)
 .github/copilot-instructions.md    ← Copilot Chat + PR review (already shipped)
 ```
 
-Per-tool method ([`scripts/condense.py:_filter_tool_dirs`](../../scripts/condense.py)):
+Per-tool method ([`scripts/condense.py:_filter_tool_dirs`](../../src/scripts/condense.py)):
 
 | Tool | Surface | Method | Coverage |
 |---|---|---|---|
@@ -67,7 +67,7 @@ The previous "0.45 % reduction" headline was a wrong-boundary
 measurement: that figure compares `.agent-src.uncondensed/` to
 `.agent-src/`, but the pipeline's claimed function is *projection*, not
 byte condensation. The table below is produced by
-[`scripts/measure_projection_bytes.py --regenerate`](../../scripts/measure_projection_bytes.py)
+[`scripts/measure_projection_bytes.py --regenerate`](../../src/scripts/measure_projection_bytes.py)
 with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
 
 | Surface | Files | Symlinks | Bytes materialized | Method |
@@ -118,7 +118,7 @@ python3 scripts/measure_projection_bytes.py --json    # CI-friendly
   frontmatter; runs only when `task generate-tools` has been executed.
 - [`tests/test_condense.py`](../../tests/test_condense.py) — covers
   the shared condense / generate-tools entrypoint and `_filter_tool_dirs`.
-- [`scripts/measure_projection_bytes.py`](../../scripts/measure_projection_bytes.py)
+- [`scripts/measure_projection_bytes.py`](../../src/scripts/measure_projection_bytes.py)
   — per-tool byte / file / symlink count; the per-tool-size table above
   is its output.
 

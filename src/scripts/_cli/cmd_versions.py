@@ -37,7 +37,7 @@ def _project_root() -> Path:
 def _local_package_version() -> str:
     """Return ``version`` from the local ``package.json``, or ``""`` if absent."""
     candidates = [
-        Path(__file__).resolve().parents[2] / "package.json",
+        Path(__file__).resolve().parents[3] / "package.json",
         _project_root() / "package.json",
     ]
     for p in candidates:

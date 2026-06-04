@@ -67,7 +67,7 @@ makes, not a command surface to enumerate.
    the YAML — a documented single-command exception, not a broad waiver.
 
 4. **Forward-only enforcement.** The lint
-   ([`scripts/lint_command_verbs.py`](../../scripts/lint_command_verbs.py))
+   ([`scripts/lint_command_verbs.py`](../../src/scripts/lint_command_verbs.py))
    checks only command files **added or promoted to visible since the `main`
    baseline**, mirroring `lint_no_new_atomic_commands.py`. The existing surface
    is grandfathered; no rename wave.
@@ -127,7 +127,7 @@ makes, not a command surface to enumerate.
 ## References
 
 - [`config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml) — the allowlist + banned prefixes + grandfathered exceptions.
-- [`scripts/lint_command_verbs.py`](../../scripts/lint_command_verbs.py) — the forward-only single lint.
+- [`scripts/lint_command_verbs.py`](../../src/scripts/lint_command_verbs.py) — the forward-only single lint.
 - [`command-clusters.md`](../contracts/command-clusters.md) — locked clusters + sub-command naming.
 - [`capability-packs.md`](../contracts/capability-packs.md) — sibling per-pack budget governance (Phase 1).
 - [`ADR-003`](ADR-003-command-invocation-syntax.md) — invocation / colon syntax.

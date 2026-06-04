@@ -14,7 +14,7 @@ dist/cloud/<skill>.zip              ← Anthropic Skills bundle (Claude.ai Web /
 ```
 
 Per-skill tier classification comes from
-[`scripts/audit_cloud_compatibility.py`](../../scripts/audit_cloud_compatibility.py):
+[`scripts/audit_cloud_compatibility.py`](../../src/scripts/audit_cloud_compatibility.py):
 
 | Tier | Bundle action |
 |---|---|

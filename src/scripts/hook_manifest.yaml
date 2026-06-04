@@ -15,19 +15,19 @@ schema_version: 1
 
 concerns:
   chat-history:
-    script: scripts/chat_history.py
+    script: src/scripts/chat_history.py
     args: [hook-dispatch]
     fail_closed: false
   roadmap-progress:
-    script: scripts/roadmap_progress_hook.py
+    script: src/scripts/roadmap_progress_hook.py
     args: []
     fail_closed: false
   onboarding-gate:
-    script: scripts/onboarding_gate_hook.py
+    script: src/scripts/onboarding_gate_hook.py
     args: []
     fail_closed: false
   context-hygiene:
-    script: scripts/context_hygiene_hook.py
+    script: src/scripts/context_hygiene_hook.py
     args: []
     fail_closed: false
   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
@@ -35,14 +35,14 @@ concerns:
   # builds) into agents/runtime/state/verify-before-complete.json. The rule body
   # cites that file as the source of truth for "verified this turn?".
   verify-before-complete:
-    script: scripts/verify_before_complete_hook.py
+    script: src/scripts/verify_before_complete_hook.py
     args: []
     fail_closed: false
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
   # files touched per turn into agents/runtime/state/minimal-safe-diff.json and
   # flips warning=true past hooks.minimal_safe_diff.threshold.
   minimal-safe-diff:
-    script: scripts/minimal_safe_diff_hook.py
+    script: src/scripts/minimal_safe_diff_hook.py
     args: []
     fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
@@ -51,7 +51,7 @@ concerns:
   # both file-browser users and lifecycle-log readers see the issue.
   # Council R3 HIGH: stderr alone is invisible to the average user.
   first-run-gate:
-    script: scripts/first_run_gate_hook.py
+    script: src/scripts/first_run_gate_hook.py
     args: []
     fail_closed: false
   # session-profile-activation Phase 1 — emits a one-line staleness notice
@@ -59,7 +59,7 @@ concerns:
   # over from a previous session. Never resets (option a, explicit
   # /profile deactivate); never blocks.
   profile-staleness:
-    script: scripts/profile_staleness_hook.py
+    script: src/scripts/profile_staleness_hook.py
     args: []
     fail_closed: false
   # Defense-in-depth twin of the update-command wrapper refresh
@@ -68,7 +68,7 @@ concerns:
   # an outdated, fallback-less copy cannot keep breaking the hooks.
   # Never creates a wrapper, never touches the source repo, fail-open.
   wrapper-freshness:
-    script: scripts/wrapper_freshness_hook.py
+    script: src/scripts/wrapper_freshness_hook.py
     args: []
     fail_closed: false
 

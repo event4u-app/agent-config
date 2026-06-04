@@ -71,7 +71,7 @@ The scope guard does **not** make the picking decision; it enforces "one scope p
 ## See also
 
 - [`docs/contracts/skill-distribution-channels.md`](skill-distribution-channels.md) — per-tool canonical channel.
-- [`scripts/_lib/scope_guard.sh`](../../scripts/_lib/scope_guard.sh) — guard implementation.
-- [`scripts/cleanup_other_scope.sh`](../../scripts/cleanup_other_scope.sh) — companion cleanup.
+- [`scripts/_lib/scope_guard.sh`](../../src/scripts/_lib/scope_guard.sh) — guard implementation.
+- [`scripts/cleanup_other_scope.sh`](../../src/scripts/cleanup_other_scope.sh) — companion cleanup.
 - [`tests/test_cleanup_other_scope.py`](../../tests/test_cleanup_other_scope.py) — safety regression.
 - [`README.md` § Installation](../../README.md) — consumer-facing install path.

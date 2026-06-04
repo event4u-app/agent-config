@@ -63,6 +63,6 @@ These deviations are recorded here so a future maintainer reading the roadmap do
 ## See also
 
 - [`tests/test_one_liner_entrypoints.sh`](../../tests/test_one_liner_entrypoints.sh) — the smoke harness invoked per matrix leg.
-- [`scripts/install`](../../scripts/install) — the consumer-facing installer orchestrator.
+- [`scripts/install`](../../src/scripts/install) — the consumer-facing installer orchestrator.
 - [`.github/workflows/tests.yml`](../../.github/workflows/tests.yml) — the broader install integration matrix (Linux + macOS, 35 tests × 4 shards).
 - [`agents/roadmaps/road-to-product-adoption.md`](../../agents/roadmaps/road-to-product-adoption.md) — parent roadmap and acceptance criteria.

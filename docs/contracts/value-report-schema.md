@@ -6,8 +6,8 @@ keep-beta-until: 2026-08-28
 # Value Report Schema (`value-v1`)
 
 Parser-visible contract for the JSON report emitted by
-[`scripts/_lib/value_report.py`](../../scripts/_lib/value_report.py)
-and consumed by [`scripts/render_value_md.py`](../../scripts/render_value_md.py).
+[`scripts/_lib/value_report.py`](../../src/scripts/_lib/value_report.py)
+and consumed by [`scripts/render_value_md.py`](../../src/scripts/render_value_md.py).
 Sibling of [`benchmark-report-schema.md`](benchmark-report-schema.md);
 companion to [`value-dashboard-spec.md`](value-dashboard-spec.md) which
 owns the semantics this contract types.
@@ -102,7 +102,7 @@ notes:
 - **No saving label on negative.** A rung with `token_delta > 0` is a
   *cost* rung; a rung with `token_delta < 0` is a *saving* rung;
   zero is *neutral*. The linter
-  ([`scripts/lint_value_dashboard.py`](../../scripts/lint_value_dashboard.py))
+  ([`scripts/lint_value_dashboard.py`](../../src/scripts/lint_value_dashboard.py))
   rejects any rendered "saving" label on a positive `token_delta`.
 - **No `measured` without a real source.** A rung that carries
   `confidence: measured` MUST have a `source_report` that exists on
@@ -162,7 +162,7 @@ The optional `.md` dump carries:
 - Semantics — [`value-dashboard-spec.md`](value-dashboard-spec.md)
 - Roadmap — [`agents/roadmaps/road-to-readable-value-dashboard.md`](../../agents/roadmaps/road-to-readable-value-dashboard.md)
 - Pricing source — [`internal/bench/pricing.yaml`](../../internal/bench/pricing.yaml)
-- Rung normaliser — [`scripts/_lib/value_ladder.py`](../../scripts/_lib/value_ladder.py)
-- Report assembler — [`scripts/_lib/value_report.py`](../../scripts/_lib/value_report.py)
-- Renderer — [`scripts/render_value_md.py`](../../scripts/render_value_md.py)
-- Linter — [`scripts/lint_value_dashboard.py`](../../scripts/lint_value_dashboard.py)
+- Rung normaliser — [`scripts/_lib/value_ladder.py`](../../src/scripts/_lib/value_ladder.py)
+- Report assembler — [`scripts/_lib/value_report.py`](../../src/scripts/_lib/value_report.py)
+- Renderer — [`scripts/render_value_md.py`](../../src/scripts/render_value_md.py)
+- Linter — [`scripts/lint_value_dashboard.py`](../../src/scripts/lint_value_dashboard.py)

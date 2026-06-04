@@ -20,7 +20,7 @@ ADR-015.
 
 Companion artefacts:
 - Contract: [`docs/contracts/rule-router.md`](../contracts/rule-router.md)
-- Compiler: [`scripts/compile_router.py`](../../scripts/compile_router.py)
+- Compiler: [`scripts/compile_router.py`](../../src/scripts/compile_router.py)
 - ADR-rule-kernel-and-router: [`ADR-rule-kernel-and-router.md`](ADR-rule-kernel-and-router.md)
 - Tier ADR: [`docs/adrs/router/0001-three-tier-routing.md`](../adrs/router/0001-three-tier-routing.md)
 
@@ -119,6 +119,6 @@ external uptake**.
 - [`docs/contracts/rule-router.md`](../contracts/rule-router.md) — frontmatter + read-path contract.
 - [`docs/contracts/kernel-membership.md`](../contracts/kernel-membership.md) — kernel cap.
 - [`dist/router.json`](../../dist/router.json) — compiled output.
-- [`scripts/compile_router.py`](../../scripts/compile_router.py) — compiler.
+- [`scripts/compile_router.py`](../../src/scripts/compile_router.py) — compiler.
 - [`ADR-015-discovery-manifest-contract.md`](ADR-015-discovery-manifest-contract.md) — precedent for `dist/` allowlist.
 - [`ADR-rule-kernel-and-router.md`](ADR-rule-kernel-and-router.md) — original kernel-and-router decision.
