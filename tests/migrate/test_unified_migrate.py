@@ -233,3 +233,54 @@ def test_clean_repo_short_circuits(tmp_path):
     assert "already migrated" in stdout
     # No artefacts created (not even .gitignore).
     assert not (tmp_path / ".gitignore").exists()
+
+
+# ---- Step 18: --check + --from ----
+
+def test_check_on_clean_repo_exits_zero(tmp_path):
+    """`--check` on a 6.0-layout consumer reports clean + exits 0, no writes."""
+    before = _snapshot_tree(tmp_path)
+    rc, stdout = _run(["--check"], tmp_path)
+    assert rc == 0, stdout
+    assert "on the 6.0 layout" in stdout
+    assert _snapshot_tree(tmp_path) == before
+
+
+def test_check_on_legacy_repo_exits_two(tmp_path):
+    """`--check` on a legacy install reports pending actions + exits 2, no writes."""
+    _stage_fixture(tmp_path)
+    before = _snapshot_tree(tmp_path)
+    rc, stdout = _run(["--check"], tmp_path)
+    assert rc == 2, stdout
+    assert "legacy install detected" in stdout
+    assert "pending action(s)" in stdout
+    # Probe must not mutate the filesystem.
+    assert _snapshot_tree(tmp_path) == before, "--check mutated the filesystem"
+
+
+def test_check_and_dry_run_are_mutually_exclusive(tmp_path):
+    """argparse rejects --check + --dry-run together (SystemExit 2)."""
+    with pytest.raises(SystemExit):
+        m.main(["--check", "--dry-run"], cwd=tmp_path, out=io.StringIO())
+
+
+def test_from_major_echoed_and_mismatch_noted(tmp_path):
+    """`--from 5` on a composer-only legacy install echoes the major and notes
+    the missing npm signal, but still migrates from the detected signals."""
+    # composer-only fixture (no package.json agent-config entry).
+    (tmp_path / "composer.json").write_text(
+        json.dumps({"name": "f/c", "require": {"event4u/agent-config": "^1.0"}}, indent=2)
+        + "\n",
+        encoding="utf-8",
+    )
+    rc, stdout = _run(["--dry-run", "--from", "5"], tmp_path)
+    assert rc == 0, stdout
+    assert "declared source major: 5.x" in stdout
+    assert "--from 5 declared but no package.json" in stdout
+    assert "would remove event4u/agent-config from composer.json" in stdout
+
+
+def test_from_rejects_unknown_major(tmp_path):
+    """`--from 3` is not in the {4,5} choice set → argparse SystemExit."""
+    with pytest.raises(SystemExit):
+        m.main(["--from", "3"], cwd=tmp_path, out=io.StringIO())

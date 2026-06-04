@@ -113,8 +113,10 @@ Tier 1 — power-user (release shape, audit, migration):
                              state shape — removes composer / npm package entries,
                              deletes legacy symlinks + project-local config, migrates
                              the v0 work-engine state file, refreshes .gitignore.
-                             Wizard recreates fresh config. Single flag: --dry-run
-                             (preview only). Contract: docs/contracts/migrate-command.md
+                             Wizard recreates fresh config. Flags: --dry-run
+                             (preview), --check (probe: exit 0 clean / 2 pending),
+                             --from 4|5 (declare source major).
+                             Contract: docs/contracts/migrate-command.md
   first-run                  Guided first-run setup — cost profile, settings, tooling
   keys:install-anthropic     Install the Anthropic API key for the AI Council
                              (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)

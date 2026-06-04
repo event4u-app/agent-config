@@ -6,7 +6,10 @@ Contract: ``docs/contracts/migrate-command.md``.
 Source roadmap: ``agents/roadmaps/road-to-one-migrate-command.md``. The
 unified command collapses the legacy ``migrate``, ``migrate-state``,
 and ``migrate-to-global`` triplet into a single, opinionated entry
-point. The only flag is ``--dry-run`` (preview vs. apply).
+point. Flags: ``--dry-run`` (preview, always exit 0), ``--check``
+(read-only probe — exit 0 clean / exit 2 migration pending), and
+``--from {4,5}`` (advisory source-major declaration; 4.x = composer-era,
+5.x = npx-era).
 
 Apply order (fixed; foundation-first):
 
@@ -340,7 +343,8 @@ def _build_plan(project: Path) -> dict:
     }
 
 
-def _format_dry_run(plan: dict, out) -> None:
+def _plan_lines(plan: dict) -> list[str]:
+    """The shared `would …`-voiced action list rendered by --dry-run / --check."""
     lines: list[str] = []
     if plan["npm"]:
         lines.append(f"would remove {PACKAGE_NAME_NPM} from package.json")
@@ -359,9 +363,61 @@ def _format_dry_run(plan: dict, out) -> None:
     if plan["empty_shell"]:
         lines.append(f"would remove empty {LEGACY_AGENT_CONFIG_SHELL}/ shell")
     lines.append("would refresh .gitignore agent-config block")
+    return lines
+
+
+def _format_dry_run(plan: dict, out) -> None:
     print("ℹ️  legacy install detected — re-run without --dry-run to migrate:", file=out)
-    for line in lines:
+    for line in _plan_lines(plan):
         print(f"    - {line}", file=out)
+
+
+def _pending_actions(plan: dict) -> int:
+    """Count the concrete migration actions a non-empty plan would perform.
+
+    The .gitignore refresh is excluded — it is a normalising touch that
+    runs on every apply, not evidence of a legacy install on its own.
+    """
+    return (
+        int(plan["npm"])
+        + int(plan["composer"])
+        + len(plan["symlinks_legacy"])
+        + len(plan["symlinks_user"])
+        + int(plan["state_file"])
+        + len(plan["settings_files"])
+        + int(plan["empty_shell"])
+    )
+
+
+def _format_check(plan: dict, out) -> None:
+    """`--check` report — same signal set as the dry-run plan, framed as a
+    status probe with a pending-count header (exit code carries the verdict)."""
+    n = _pending_actions(plan)
+    print(
+        f"⚠️  legacy install detected — {n} pending action(s) "
+        "(run `agent-config migrate` to apply, `--dry-run` to preview):",
+        file=out,
+    )
+    for line in _plan_lines(plan):
+        print(f"    - {line}", file=out)
+
+
+def _warn_on_major_mismatch(from_major: Optional[str], plan: dict, out) -> None:
+    """Advisory note when the declared --from major does not match the detected
+    install signal (4.x ↔ composer entry, 5.x ↔ npm entry). Never blocks: the
+    signal-based plan is authoritative, the declaration is a documentation hint."""
+    if from_major == "4" and not plan["composer"]:
+        print(
+            "ℹ️  --from 4 declared but no composer.json agent-config entry found; "
+            "proceeding from the detected signals.",
+            file=out,
+        )
+    elif from_major == "5" and not plan["npm"]:
+        print(
+            "ℹ️  --from 5 declared but no package.json agent-config entry found; "
+            "proceeding from the detected signals.",
+            file=out,
+        )
 
 
 def _apply(project: Path, out) -> int:
@@ -413,20 +469,51 @@ def main(
             "refreshes the .gitignore block. The wizard recreates fresh config."
         ),
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--dry-run", action="store_true",
-        help="Detect only; print the plan without writing any files.",
+        help="Detect only; print the plan without writing any files (always exit 0).",
+    )
+    mode.add_argument(
+        "--check", action="store_true",
+        help=(
+            "Report whether this install is on the legacy layout and what would "
+            "change, then exit: 0 = already on the 6.0 layout, 2 = migration "
+            "pending. Writes nothing (CI-friendly probe)."
+        ),
+    )
+    parser.add_argument(
+        "--from", dest="from_major", choices=("4", "5"), default=None,
+        help=(
+            "Declare the source major (4.x = composer-era, 5.x = npx-era). "
+            "Advisory: detection is signal-based, but the declared major is "
+            "echoed and a mismatch with the detected signals is surfaced."
+        ),
     )
     args = parser.parse_args(argv)
 
     project, _ = resolve_project_root(None, cwd=cwd)
 
+    if args.from_major:
+        print(f"ℹ️  declared source major: {args.from_major}.x", file=out)
+
     if _detect_already_migrated(project):
-        print("✅  already migrated — nothing to do.", file=out)
+        # `--check` distinguishes "clean" from "legacy" in its wording; the
+        # other modes share the canonical idempotent no-op message.
+        if args.check:
+            print("✅  on the 6.0 layout — no migration needed.", file=out)
+        else:
+            print("✅  already migrated — nothing to do.", file=out)
         return 0
 
+    plan = _build_plan(project)
+    _warn_on_major_mismatch(args.from_major, plan, out=out)
+
+    if args.check:
+        _format_check(plan, out=out)
+        return 2
+
     if args.dry_run:
-        plan = _build_plan(project)
         _format_dry_run(plan, out=out)
         return 0
 

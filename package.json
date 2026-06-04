@@ -43,6 +43,7 @@
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "LICENSE",
+        "MIGRATION.md",
         "README.md",
         "llms.txt"
     ],

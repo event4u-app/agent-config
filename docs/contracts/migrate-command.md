@@ -1,6 +1,6 @@
 # `agent-config migrate` — Behavior Contract
 
-> **Status:** active · **Owner:** maintainer (`scripts/_cli/cmd_migrate.py`) · **Opened:** 2026-05-29
+> **Status:** active · **Owner:** maintainer (`src/scripts/_cli/cmd_migrate.py`) · **Opened:** 2026-05-29
 >
 > Source: `road-to-one-migrate-command.md` Phase 1. Locks the union of
 > cleanup actions performed by the unified `./agent-config migrate`
@@ -11,10 +11,12 @@
 ## Design intent
 
 One opinionated command runs every cleanup step end-to-end. No flag
-matrix to pick between behaviors, no surprises. The single flag is
-`--dry-run` (preview vs. apply). The legacy three-command surface —
-`migrate`, `migrate-state`, `migrate-to-global` — is collapsed into
-one entry point.
+matrix to pick between behaviors, no surprises. The flags are
+`--dry-run` (preview vs. apply), `--check` (read-only probe with a
+verdict in the exit code), and `--from {4,5}` (advisory source-major
+declaration — 4.x = composer-era, 5.x = npx-era). The legacy
+three-command surface — `migrate`, `migrate-state`, `migrate-to-global`
+— is collapsed into one entry point.
 
 Rationale:
 
@@ -117,6 +119,35 @@ break detection for later ones:
 - The summary is prefixed with `would` instead of past-tense verbs
   so log scraping can distinguish dry-run from real runs.
 
+## `--check` semantics
+
+`--check` is a **read-only probe** for scripts / CI — same detection +
+`would …` action list as `--dry-run`, but the verdict lives in the
+**exit code** instead of requiring output parsing:
+
+- Already on the 6.0 layout (no legacy signal) → prints
+  `✅  on the 6.0 layout — no migration needed.` and exits **0**.
+- Legacy install detected → prints
+  `⚠️  legacy install detected — N pending action(s) …` followed by the
+  `would …` list, and exits **2**.
+- **Zero filesystem mutations**, like `--dry-run`.
+- `--check` and `--dry-run` are **mutually exclusive** (argparse group):
+  they share the read-only detection but differ in exit semantics, so
+  combining them is rejected.
+
+## `--from {4,5}` semantics
+
+`--from` declares the source major for documentation / log purposes —
+**4.x = composer-era**, **5.x = npx-era**. Detection itself stays
+signal-based (the authoritative source), so `--from` never changes
+which actions run:
+
+- The declared major is echoed (`ℹ️  declared source major: N.x`).
+- A mismatch with the detected signal (`--from 4` with no composer
+  entry, `--from 5` with no npm entry) prints an advisory note and the
+  command proceeds from the detected signals.
+- `--from` composes with `--dry-run`, `--check`, and the apply path.
+
 ## Idempotency contract
 
 Re-running on a fully-migrated consumer:
@@ -149,9 +180,9 @@ intentionally **outside** the unified `migrate` command:
 
 | Code | Meaning |
 |---|---|
-| `0` | Migration complete, or nothing to migrate (already migrated), or `--dry-run` plan computed. |
+| `0` | Migration complete, or nothing to migrate (already migrated), or `--dry-run` plan computed, or `--check` found the install already on the 6.0 layout. |
 | `1` | Detection error — unreadable file, invalid JSON in `composer.json` / `package.json`, work-engine v0 → v1 conversion error. |
-| `2` | Unused (reserved). |
+| `2` | `--check` only: a legacy install was detected (migration pending). Never returned by the apply or `--dry-run` paths. |
 
 The apply path never exits non-zero on a partial-migration recovery
 — a step that fires its predicate is allowed to complete cleanly
