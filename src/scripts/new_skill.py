@@ -29,7 +29,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = ROOT / "packages"
-PACKS_VOCAB = ROOT / "config" / "discovery" / "packs.yml"
+PACKS_VOCAB = ROOT / "src" / "config" / "discovery" / "packs.yml"
 
 TEMPLATES = {
     "skill": "skills/{name}/SKILL.md",

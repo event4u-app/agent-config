@@ -5,7 +5,7 @@ Checks:
 1. File parses as JSON.
 2. Validates against `docs/contracts/discovery-manifest.schema.json`.
 3. Recomputes sha256 with the `checksum` field zeroed and compares.
-4. Cross-references workspace / pack IDs against `config/discovery/*.yml`.
+4. Cross-references workspace / pack IDs against `src/config/discovery/*.yml`.
 
 CLI:
   python scripts/lint_discovery_manifest.py [--manifest PATH]
@@ -33,7 +33,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = ROOT / "docs" / "contracts" / "discovery-manifest.schema.json"
-VOCAB_DIR = ROOT / "config" / "discovery"
+VOCAB_DIR = ROOT / "src" / "config" / "discovery"
 DEFAULT_MANIFEST = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 
 
@@ -100,7 +100,7 @@ def _check_capability_pack_determinism(manifest: dict[str, Any]) -> list[str]:
         if count > 0 and not has_size:
             errs.append(
                 f"orphan tag: pack '{pid}' has {count} artefact(s) but no size_class — "
-                f"assign domain + size_class in config/discovery/packs.yml"
+                f"assign domain + size_class in src/config/discovery/packs.yml"
             )
         if has_size and count == 0:
             errs.append(

@@ -32,7 +32,7 @@ def fake_repo(tmp_path: Path) -> Path:
     No ``packs:`` block in settings → installed set = full vocabulary, so
     every pack in packs.yml is activatable in the fixture.
     """
-    (tmp_path / "config" / "discovery").mkdir(parents=True)
+    (tmp_path / "src" / "config" / "discovery").mkdir(parents=True)
     for rel in (sp.PACKS_VOCAB_REL, sp.ALIASES_REL):
         shutil.copy(REPO_ROOT / rel, tmp_path / rel)
     (tmp_path / "agents" / "settings").mkdir(parents=True)

@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Settings-sync YAML subset
 
 **Purpose.** Pin the YAML feature set that `.agent-settings.yml` and
-`config/agent-settings.template.yml` may use, so contributors can cite a
+`src/config/agent-settings.template.yml` may use, so contributors can cite a
 contract instead of inferring it from
 [`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py) source. The
 sync engine ([ADR](adr-settings-sync-engine.md)) is a custom stdlib-only

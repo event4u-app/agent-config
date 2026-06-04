@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-try:  # lazy PyYAML, mirrors scripts/config/profiles.py
+try:  # lazy PyYAML, mirrors scripts/src/config/profiles.py
     import yaml
 except Exception:  # pragma: no cover - yaml is a hard dep in practice
     yaml = None  # type: ignore
@@ -44,8 +44,8 @@ from scripts._lib import agent_settings
 
 # --- Paths -----------------------------------------------------------------
 
-PACKS_VOCAB_REL = "config/discovery/packs.yml"
-ALIASES_REL = "config/discovery/session-profiles.yml"
+PACKS_VOCAB_REL = "src/config/discovery/packs.yml"
+ALIASES_REL = "src/config/discovery/session-profiles.yml"
 DISCOVERY_MANIFEST_REL = "dist/discovery/discovery-manifest.json"
 
 #: Dotted key the overlay lives under in the local settings file.

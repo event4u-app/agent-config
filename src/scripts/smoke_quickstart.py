@@ -29,7 +29,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 INSTALLER = ROOT / "src" / "scripts" / "install.py"
-TEMPLATE = ROOT / "config" / "agent-settings.template.yml"
+TEMPLATE = ROOT / "src" / "config" / "agent-settings.template.yml"
 
 EXPECTED_DEFAULT_PROFILE = "balanced"
 

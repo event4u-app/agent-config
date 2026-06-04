@@ -31,7 +31,7 @@ to bypass it"):
   - New skills with `requires_skills`. Skills are markdown capability docs,
     usually test-less by design → would fire constantly. Dropped for Phase 1
     (council: "no Phase 2 evidence; immediate pragma-spam").
-  - Taskfile wiring, docs/`*.md`, `agents/**`, `config/**`, logging/path-
+  - Taskfile wiring, docs/`*.md`, `agents/**`, `src/config/**`, logging/path-
     constant edits.
 
 PRAGMA — `# coverage-diff-ignore: <reason>` (reason mandatory) in the new

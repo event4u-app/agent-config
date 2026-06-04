@@ -54,7 +54,7 @@ OUT_JSON = REPORT_DIR / "command-surface.json"
 OUT_MD = REPORT_DIR / "command-surface.md"
 OUT_BUDGET_JSON = REPORT_DIR / "command-budget-audit.json"
 OUT_BUDGET_MD = REPORT_DIR / "command-budget-audit.md"
-PACKS_YML = REPO_ROOT / "config" / "discovery" / "packs.yml"
+PACKS_YML = REPO_ROOT / "src" / "config" / "discovery" / "packs.yml"
 DOCS_DIR = REPO_ROOT / "docs"
 
 # Per-size-class VISIBLE-command budgets (docs/contracts/capability-packs.md;

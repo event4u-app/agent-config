@@ -131,10 +131,10 @@ class TestLayeredSettingsReader(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.tmpdir = Path(self._tmp.name)
         self.package_root = self.tmpdir / "pkg"
-        (self.package_root / "config").mkdir(parents=True)
+        (self.package_root / "src" / "config").mkdir(parents=True)
         # Minimal template body — the rendered version must be valid YAML
         # after placeholder substitution.
-        (self.package_root / "config" / "agent-settings.template.yml").write_text(
+        (self.package_root / "src" / "config" / "agent-settings.template.yml").write_text(
             textwrap.dedent(
                 """\
                 rule_loading_tier: __RULE_LOADING_TIER__

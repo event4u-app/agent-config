@@ -26,7 +26,7 @@ import { settingsSchema } from '../../../src/server/schemas/settings.js';
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json };
 
-const TEMPLATE_PATH = resolve(process.cwd(), 'config/agent-settings.template.yml');
+const TEMPLATE_PATH = resolve(process.cwd(), 'src/config/agent-settings.template.yml');
 
 function loadTemplate(): Record<string, Json> {
     const raw = readFileSync(TEMPLATE_PATH, 'utf8');

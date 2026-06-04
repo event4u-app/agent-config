@@ -42,9 +42,9 @@ runtime:
 
 `/profile activate <name…>` accepts, for each name:
 
-1. a **session-profile alias** from `config/discovery/session-profiles.yml`
+1. a **session-profile alias** from `src/config/discovery/session-profiles.yml`
    (`developer`, `po`, `finance`, `gtm`, `content`) → its seed pack list, or
-2. a **raw pack id** from `config/discovery/packs.yml` (`laravel`, `php`, …).
+2. a **raw pack id** from `src/config/discovery/packs.yml` (`laravel`, `php`, …).
 
 Multiple names union their closures. The seed set's transitive
 `requires_hint` closure is expanded before writing. **Only installed packs
@@ -108,7 +108,7 @@ axis (ADR-010 addendum) so it adds no new axis despite sharing the word.
 
 - Library + CLI: `scripts/config/session_profiles.py`
   (`activate` · `deactivate` · `show` · `surface` · `stale-notice`).
-- Aliases: `config/discovery/session-profiles.yml`.
+- Aliases: `src/config/discovery/session-profiles.yml`.
 - Hook: `scripts/profile_staleness_hook.py` (session_start staleness notice).
 - Tests: `tests/test_session_profiles.py`.
 

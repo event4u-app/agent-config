@@ -35,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib import agent_src  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKS_VOCAB = ROOT / "config" / "discovery" / "packs.yml"
+PACKS_VOCAB = ROOT / "src" / "config" / "discovery" / "packs.yml"
 # Always-available foundation packs: every pack may reference these without
 # declaring them in `requires` (the 6.0.0-D council's resolution of the
 # ambiguous "core" in the boundary rule — engineering-base + meta are the

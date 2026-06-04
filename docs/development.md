@@ -200,7 +200,7 @@ tests/
 .github/workflows/
 ├── skill-lint.yml             ← Lint + PR comment workflow
 └── consistency.yml            ← Sync + hash + tool verification
-templates/consumer-settings/   ← Settings templates for consumer projects
+src/templates/consumer-settings/   ← Settings templates for consumer projects
 
 .agent-src.uncondensed/         ← Source of truth (human-readable, verbose)
 ├── rules/                     ← Behavior rules

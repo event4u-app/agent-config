@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vocabulary linter for `config/discovery/{workspaces,packs}.yml`.
+"""Vocabulary linter for `src/config/discovery/{workspaces,packs}.yml`.
 
 Source-of-truth check: the YAML files MUST mirror the closed vocabulary
 in `docs/decisions/ADR-013-discovery-frontmatter-contract.md` exactly.
@@ -28,8 +28,8 @@ except ImportError:  # pragma: no cover
     sys.exit(2)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-WORKSPACES_YML = REPO_ROOT / "config" / "discovery" / "workspaces.yml"
-PACKS_YML = REPO_ROOT / "config" / "discovery" / "packs.yml"
+WORKSPACES_YML = REPO_ROOT / "src" / "config" / "discovery" / "workspaces.yml"
+PACKS_YML = REPO_ROOT / "src" / "config" / "discovery" / "packs.yml"
 
 # Frozen ADR-013 vocabularies. Amendments require an ADR-013 edit + this list.
 ADR_WORKSPACES: frozenset[str] = frozenset({

@@ -38,11 +38,11 @@ per-artefact checksum drift all fail CI (Phase-6 invariants).
   "generated_at": "2026-05-21T00:00:00Z",
   "scanner_version": "a1b2c3d4e5f6",
   "checksum": "sha256:<64 hex>",
-  "workspaces": [ /* one entry per workspace in config/discovery/workspaces.yml */ ],
-  "packs":      [ /* one entry per pack in config/discovery/packs.yml */ ],
+  "workspaces": [ /* one entry per workspace in src/config/discovery/workspaces.yml */ ],
+  "packs":      [ /* one entry per pack in src/config/discovery/packs.yml */ ],
   "artefacts":  [ /* sorted by path, ADR-013 frontmatter projected here */ ],
   "unassigned": [ /* artefacts that failed assignment; reason required */ ],
-  "documented_unassigned": [ /* explicit skips from config/discovery/unassigned-artefacts.yml */ ],
+  "documented_unassigned": [ /* explicit skips from src/config/discovery/unassigned-artefacts.yml */ ],
   "stats": { /* see below */ }
 }
 ```
@@ -98,7 +98,7 @@ per-artefact checksum drift all fail CI (Phase-6 invariants).
 ```
 
 `requires_hint` is a vocabulary-side hint (lives in
-`config/discovery/packs.yml`); the canonical dependency edges sit on
+`src/config/discovery/packs.yml`); the canonical dependency edges sit on
 the artefact-level `requires` field, which the installer aggregates.
 
 ## Stats block

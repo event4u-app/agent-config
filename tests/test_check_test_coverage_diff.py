@@ -70,7 +70,7 @@ def test_non_gate_additions_ignored():
         ("A", "src/scripts/helper_thing.py"),  # not check_/lint_
         ("A", "Taskfile.yml"),
         ("A", "docs/guide.md"),
-        ("M", "config/discovery/packs.yml"),
+        ("M", "src/config/discovery/packs.yml"),
     ]
     warnings, suppressed = mod.evaluate(changed, NO_PRAGMA)
     assert warnings == [] and suppressed == []

@@ -182,7 +182,7 @@ def detect_package_root(project_root: Path) -> Path:
         return npm_path.resolve()
 
     # Running from within the package itself (development mode)
-    if (project_root / "config" / "profiles" / "minimal.ini").exists():
+    if (project_root / "src" / "config" / "profiles" / "minimal.ini").exists():
         return project_root
 
     fail(
@@ -590,8 +590,8 @@ def ensure_agent_settings(
     packs: "list[str] | None" = None,
 ) -> None:
     target = _canonical_settings_target(project_root)
-    profile_source = package_root / "config" / "profiles" / f"{profile}.ini"
-    template_source = package_root / "config" / "agent-settings.template.yml"
+    profile_source = package_root / "src" / "config" / "profiles" / f"{profile}.ini"
+    template_source = package_root / "src" / "config" / "agent-settings.template.yml"
 
     if not profile_source.exists():
         fail(f"Missing profile preset: {profile_source}")
@@ -2204,7 +2204,7 @@ def _enforce_not_source_repo(scope: str, project_root: Path) -> None:
 #     defaults  <  global  <  project-overrides
 #
 # The defaults layer is the rendered template body in
-# ``config/agent-settings.template.yml``. The global layer is
+# ``src/config/agent-settings.template.yml``. The global layer is
 # ``~/.event4u/agent-config/.agent-settings.yml``. The project layer is
 # ``<project_root>/.agent-settings.yml`` — tolerated but no longer
 # required to exist. Any layer that is missing or unparseable falls back
@@ -2249,7 +2249,7 @@ def _load_default_settings(package_root: Path) -> dict:
     parsing — the resulting tree is the *defaults* layer of the merge,
     and downstream layers overwrite rule_loading_tier / user_type as needed.
     """
-    template_source = package_root / "config" / "agent-settings.template.yml"
+    template_source = package_root / "src" / "config" / "agent-settings.template.yml"
     if not template_source.exists():
         return {}
     try:
@@ -2735,15 +2735,15 @@ def _resolve_package_root_for_global() -> Path:
 
     Resolves relative to ``src/scripts/install.py`` (two levels up — 6.0.0-D
     Step 16 moved the tooling under ``src/``). Verified by the presence of
-    ``config/profiles/minimal.ini`` so a misplaced copy of install.py outside
+    ``src/config/profiles/minimal.ini`` so a misplaced copy of install.py outside
     the package fails loudly instead of writing nothing.
     """
     here = Path(__file__).resolve()
     candidate = here.parent.parent.parent
-    if not (candidate / "config" / "profiles" / "minimal.ini").exists():
+    if not (candidate / "src" / "config" / "profiles" / "minimal.ini").exists():
         fail(
             f"Could not locate agent-config package root from {here}. "
-            "Expected config/profiles/minimal.ini at the parent directory."
+            "Expected src/config/profiles/minimal.ini at the parent directory."
         )
     return candidate
 
@@ -3926,18 +3926,18 @@ def _is_tool_enabled(tools: set[str], tool_id: str) -> bool:
 
 
 def _minimal_templates_root() -> Path:
-    """Resolve the bundled ``templates/minimal/`` directory.
+    """Resolve the bundled ``src/templates/minimal/`` directory.
 
-    Walks up from this file looking for ``templates/minimal/``; this
+    Walks up from this file looking for ``src/templates/minimal/``; this
     works both in development mode (running the source tree) and from
     an ``npm install -g`` install (the script lives under the package
     root regardless).
     """
     for ancestor in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
-        candidate = ancestor / "templates" / "minimal"
+        candidate = ancestor / "src" / "templates" / "minimal"
         if candidate.is_dir():
             return candidate
-    fail("Could not locate templates/minimal/ — package install is corrupt.")
+    fail("Could not locate src/templates/minimal/ — package install is corrupt.")
     return Path()  # unreachable
 
 
@@ -4711,9 +4711,9 @@ def main(argv: list[str]) -> int:
         ).resolve()
         # Validate --user-type early so the minimal short-circuit fails
         # fast on a bogus slug instead of writing a half-formed stub.
-        # _minimal_templates_root() returns <package_root>/templates/minimal;
-        # walk two parents up to reach the package root where user-types/ lives.
-        minimal_package_root = _minimal_templates_root().parent.parent
+        # _minimal_templates_root() returns <package_root>/src/templates/minimal;
+        # walk three parents up to reach the package root where user-types/ lives.
+        minimal_package_root = _minimal_templates_root().parent.parent.parent
         validated_user_type = _validate_user_type(minimal_package_root, opts.user_type)
         return install_minimal(target_root, opts.force, validated_user_type)
 
@@ -4942,8 +4942,8 @@ def _main_project_install(
     """
     if opts.package:
         package_root = Path(opts.package).resolve()
-        if not (package_root / "config" / "profiles" / "minimal.ini").exists():
-            fail(f"Invalid --package path (missing config/profiles/minimal.ini): {package_root}")
+        if not (package_root / "src" / "config" / "profiles" / "minimal.ini").exists():
+            fail(f"Invalid --package path (missing src/config/profiles/minimal.ini): {package_root}")
         package_type = detect_package_type_for_project(project_root, package_root)
     else:
         package_root = detect_package_root(project_root)

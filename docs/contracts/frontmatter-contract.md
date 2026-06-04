@@ -19,8 +19,8 @@ from these alone — **no manual workspace or pack list is ever maintained**.
 
 | Key | Type | Vocabulary | Source |
 |---|---|---|---|
-| `workspaces` | `array<string>`, ≥1 | [`config/discovery/workspaces.yml`](../../config/discovery/workspaces.yml) | role-based axis |
-| `packs` | `array<string>`, ≥1 | [`config/discovery/packs.yml`](../../config/discovery/packs.yml) | functional axis |
+| `workspaces` | `array<string>`, ≥1 | [`src/config/discovery/workspaces.yml`](../../config/discovery/workspaces.yml) | role-based axis |
+| `packs` | `array<string>`, ≥1 | [`src/config/discovery/packs.yml`](../../config/discovery/packs.yml) | functional axis |
 | `lifecycle` | enum | `active` · `experimental` · `deprecated` · `archived` | review cycle |
 | `trust.level` | enum | `core` · `professional` · `experimental` · `advisory` · `restricted` | safety gate |
 | `trust.confidence` | enum | `high` · `medium` · `low` | curator signal |
@@ -109,7 +109,7 @@ install:
 
 Artefacts that genuinely cannot yet carry frontmatter (early scaffolds,
 generated stubs) MUST be listed in
-[`config/discovery/unassigned-artefacts.yml`](../../config/discovery/unassigned-artefacts.yml)
+[`src/config/discovery/unassigned-artefacts.yml`](../../config/discovery/unassigned-artefacts.yml)
 with a `reason`. A quarantined entry MUST NOT also carry the five keys —
 the linter rejects that collision.
 
@@ -118,7 +118,7 @@ the linter rejects that collision.
 | Surface | What runs | When |
 |---|---|---|
 | Local | `task lint-artefact-frontmatter` | manual / pre-commit |
-| Pre-commit | `pre-commit-roadmap-progress` template | when `.agent-src.uncondensed/*.md`, `config/discovery/*.yml`, or the linter itself is staged |
+| Pre-commit | `pre-commit-roadmap-progress` template | when `.agent-src.uncondensed/*.md`, `src/config/discovery/*.yml`, or the linter itself is staged |
 | CI | `task ci` → `lint-artefact-frontmatter` | every push / PR |
 
 Install the pre-commit hook with:

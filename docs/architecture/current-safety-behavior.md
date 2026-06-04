@@ -18,7 +18,7 @@ that ADR can specify "replace X", X has to be written down.
 ## The one switch — `personal.autonomy`
 
 **Where defined:** `.agent-settings.yml` under `personal.autonomy`.
-Template: `config/agent-settings.template.yml`.
+Template: `src/config/agent-settings.template.yml`.
 
 **Values:** `on` · `off` · `auto`.
 

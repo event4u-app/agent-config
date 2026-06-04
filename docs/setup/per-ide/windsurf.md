@@ -104,6 +104,6 @@ should match `ls .windsurf/workflows/`.
 ## Cross-references
 
 - [`docs/installation.md`](../../installation.md) — install matrix index.
-- [`templates/windsurf-rule.md.j2`](../../../templates/windsurf-rule.md.j2)
+- [`src/templates/windsurf-rule.md.j2`](../../../templates/windsurf-rule.md.j2)
   — template used by the projection generator.
 - [`AGENTS.md`](../../../AGENTS.md) — package self-orientation.

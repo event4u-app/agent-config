@@ -48,7 +48,7 @@ export interface BootOptions {
 }
 
 const PACKAGE_ROOT = resolve(process.cwd());
-const TEMPLATE_PATH = join(PACKAGE_ROOT, 'config', 'agent-settings.template.yml');
+const TEMPLATE_PATH = join(PACKAGE_ROOT, 'src', 'config', 'agent-settings.template.yml');
 
 export function settingsTemplate(): string {
     return readFileSync(TEMPLATE_PATH, 'utf8');

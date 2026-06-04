@@ -25,8 +25,8 @@ on:
       - "packages/**/*.md"
       - "src/scripts/plan_physical_move.py"
       - "src/scripts/_lib/agent_src.py"
-      - "config/discovery/packs.yml"
-      - "config/discovery/unassigned-artefacts.yml"
+      - "src/config/discovery/packs.yml"
+      - "src/config/discovery/unassigned-artefacts.yml"
       - ".github/workflows/migration-dry-run.yml"
   schedule:
     # Mondays 04:23 UTC — well clear of the freeze-guard nightly slot.

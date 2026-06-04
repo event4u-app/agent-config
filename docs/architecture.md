@@ -116,7 +116,7 @@ collapses all three failure modes.
 `composer.lock` / `package-lock.json` previously froze the runtime
 version per repo. Under npx-only, the equivalent role is played by the
 `agent_config_version` field in the consumer's `.agent-settings.yml`
-(see `config/agent-settings.template.yml`). The dispatcher reads the
+(see `src/config/agent-settings.template.yml`). The dispatcher reads the
 pin on every invocation and re-execs `npx @event4u/agent-config@<pin>`
 if the resolved version diverges (P3.2 pin-resolver). The pin lives in
 the consumer's repo, is reviewed in PRs, and survives `npx`'s own

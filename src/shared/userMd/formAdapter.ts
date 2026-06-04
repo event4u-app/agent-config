@@ -6,7 +6,7 @@
  * server and UI round-trip identically; ESLint forbids Node imports in
  * this tree.
  *
- * Defaults mirror `templates/agent-user.yml` so a fresh form is fully
+ * Defaults mirror `src/templates/agent-user.yml` so a fresh form is fully
  * renderable (every field has *something*), while keeping `name`,
  * `role[0]`, and `voice_sample` empty — the wizard surfaces those as
  * 422 issues when the user tries to finish with them blank.
@@ -20,7 +20,7 @@
 import type { UserIdentity } from './schema.js';
 
 /**
- * Defaults for a fresh form. Matches `templates/agent-user.yml`:
+ * Defaults for a fresh form. Matches `src/templates/agent-user.yml`:
  * `last_updated` is 1970-01-01 so any user-driven edit visibly bumps it.
  */
 export function defaultIdentity(): UserIdentity {

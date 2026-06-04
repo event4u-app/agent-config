@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / ".agent-src.uncondensed"
 PACKAGES = ROOT / "packages"
 CORE = PACKAGES / "core" / ".agent-src.uncondensed"
-VOCAB_DIR = ROOT / "config" / "discovery"
+VOCAB_DIR = ROOT / "src" / "config" / "discovery"
 PLAN_OUT = ROOT / "dist" / "migration" / "move-plan.json"
 UNASSIGNED_YAML = VOCAB_DIR / "unassigned-artefacts.yml"
 

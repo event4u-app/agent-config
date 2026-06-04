@@ -54,7 +54,7 @@ export interface UserMdRouteOptions {
 export const USER_IDENTITY_RELATIVE = join('settings', '.agent-user.yml');
 /** Legacy markdown path, relative to writeRoot or legacyReadRoot. */
 const LEGACY_USER_MD_RELATIVE = '.agent-user.md';
-const DEFAULT_TEMPLATE = join(PACKAGE_ROOT, 'templates', 'agent-user.yml');
+const DEFAULT_TEMPLATE = join(PACKAGE_ROOT, 'src', 'templates', 'agent-user.yml');
 
 interface ReadState {
     /** Parsed identity object — never the raw file body. */

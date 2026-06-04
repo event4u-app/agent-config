@@ -39,7 +39,7 @@ correct default while tier-1 was experimental, but four signals now point
 at `balanced`:
 
 1. **Documented intent already says so.** Both
-   `config/agent-settings.template.yml` (the source the installer projects
+   `src/config/agent-settings.template.yml` (the source the installer projects
    from) and `docs/customization.md` describe `balanced` as
    "default — current behaviour superset". The code default of `minimal`
    was a drift artifact, not a deliberate stance.
@@ -76,7 +76,7 @@ state-machine impact because the kernel carries the Iron-Law floor.
 CI must keep three surfaces in sync:
 
 - `scripts/install.py` — `DEFAULT_PROFILE` constant.
-- `config/agent-settings.template.yml` — comment block on the
+- `src/config/agent-settings.template.yml` — comment block on the
   `rule_loading_tier:` key.
 - `docs/customization.md` — cost-profile table default column.
 

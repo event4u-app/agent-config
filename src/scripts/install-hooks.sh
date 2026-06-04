@@ -95,7 +95,7 @@ fi
 # single-namespace collision lints. Only fires when staged changes touch pack
 # sources, the packs vocab, or the gate scripts themselves, so unrelated
 # commits stay fast.
-if git diff --cached --name-only | grep -qE '^(packages/|config/discovery/packs\.yml|src/scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|src/scripts/schemas/pack\.schema\.json|src/scripts/pack_dependency_allowlist\.json)'; then
+if git diff --cached --name-only | grep -qE '^(packages/|src/config/discovery/packs\.yml|src/scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|src/scripts/schemas/pack\.schema\.json|src/scripts/pack_dependency_allowlist\.json)'; then
     if ! python3 src/scripts/validate_pack_yaml.py \
         || ! python3 src/scripts/lint_pack_dependencies.py \
         || ! python3 src/scripts/lint_namespace_collisions.py; then

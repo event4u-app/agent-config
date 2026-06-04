@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sync the `event4u/agent-config` block in a project's `.gitignore`.
 
-Reads the canonical block body from `config/gitignore-block.txt` and
+Reads the canonical block body from `src/config/gitignore-block.txt` and
 ensures every managed entry is present in `.gitignore` between the
 START and END markers:
 
@@ -13,7 +13,7 @@ Idempotent. Append-only by default (user-added lines inside the block
 are preserved). Call with `--replace` for a destructive full rewrite.
 
 Usage:
-    python3 scripts/sync_gitignore.py [--path .gitignore] [--template config/gitignore-block.txt]
+    python3 scripts/sync_gitignore.py [--path .gitignore] [--template src/config/gitignore-block.txt]
                                       [--dry-run] [--replace] [--cleanup-legacy] [--quiet]
 
 `--cleanup-legacy` additionally scrubs legacy patterns (pre-/agents/ layout
@@ -38,9 +38,9 @@ from pathlib import Path
 SECTION_HEADER = "# event4u/agent-config"
 SECTION_FOOTER = "# event4u/agent-config — END"
 DEFAULT_GITIGNORE = ".gitignore"
-DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent.parent / "config" / "gitignore-block.txt"
+DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent.parent / "src" / "config" / "gitignore-block.txt"
 
-# Legacy patterns that lived in older versions of config/gitignore-block.txt
+# Legacy patterns that lived in older versions of src/config/gitignore-block.txt
 # before runtime artefacts moved under /agents/runtime/ (May 2026). They get
 # stripped wherever they appear in the consumer's .gitignore — inside the
 # managed block or outside (older installers / hand-edits). Current canonical

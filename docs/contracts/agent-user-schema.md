@@ -151,7 +151,7 @@ and the buffer.
 
 `.agent-user.md` and `.agent-user.observations.jsonl` are added to the
 package-managed `.gitignore` block
-([`config/gitignore-block.txt`](../../config/gitignore-block.txt)) and
+([`src/config/gitignore-block.txt`](../../config/gitignore-block.txt)) and
 ignored by default. A `--shared` opt-in to commit `.agent-user.md` is
 deferred — only the doc note lands in v1. The observation buffer is
 **never** shared.

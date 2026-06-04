@@ -96,7 +96,7 @@ Implemented in [`scripts/plan_physical_move.py`](../../src/scripts/plan_physical
 5. **Pack-routable artefacts** → `packages/pack-<id>/`, where `<id>` is
    the first entry in `packs[]`. Tie-breaking by alphabetic pack id.
 6. **Quarantined scaffolds** (the 26 entries in
-   [`config/discovery/unassigned-artefacts.yml`](../../config/discovery/unassigned-artefacts.yml))
+   [`src/config/discovery/unassigned-artefacts.yml`](../../config/discovery/unassigned-artefacts.yml))
    → `packages/core/` with `unassigned scaffold:` reason recorded in the
    move plan. The top-level `.agent-src.uncondensed/README.md` was added
    here during dry-run.

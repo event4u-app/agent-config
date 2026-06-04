@@ -22,7 +22,7 @@ not `ruamel.yaml` or any other third-party YAML library.
 
 The engine implements a narrow YAML subset (block-mappings, scalars,
 flow-list values, comments, CRLF/LF) that covers the full surface of
-`.agent-settings.yml` plus its template (`config/agent-settings.template.yml`).
+`.agent-settings.yml` plus its template (`src/config/agent-settings.template.yml`).
 Out-of-subset YAML — anchors, aliases, multi-document streams, complex
 keys, nested flow mappings — is **not supported** and raises `ValueError`.
 
