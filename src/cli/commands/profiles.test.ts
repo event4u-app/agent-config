@@ -20,9 +20,9 @@ function cmd(slug: string, pack: string, tier = 2): DiscoveryArtefact {
         workspaces: [],
         packs: [pack],
         lifecycle: 'stable',
-        trust: { level: 'core', human_review_required: false },
-        install: {},
-    } as DiscoveryArtefact;
+        trust: { level: 'core', confidence: 'high', human_review_required: false },
+        install: { default: true, removable: false },
+    };
 }
 
 const MANIFEST: DiscoveryArtefact[] = [
