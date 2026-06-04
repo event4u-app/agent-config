@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "scripts"))
+sys.path.insert(0, str(REPO / "src" / "scripts"))
 from _lib.agent_src import resolve_logical  # noqa: E402
 
 # Commands moved into the pack-physical src/domains homes in 6.0.0-D Phase 4;
@@ -20,7 +20,7 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 COMMAND = resolve_logical("commands/video/from-song.md")
 ORCHESTRATOR = resolve_logical("commands/video.md")
 SKILL = resolve_logical("skills/song-to-script/SKILL.md")
-PROBE = REPO / "scripts" / "ai-video" / "lib" / "probe-audio.sh"
+PROBE = REPO / "src" / "scripts" / "ai-video" / "lib" / "probe-audio.sh"
 CLUSTERS = REPO / "docs" / "contracts" / "command-clusters.md"
 
 

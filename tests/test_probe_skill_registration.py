@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PROBE = REPO_ROOT / "scripts" / "probe_skill_registration.py"
+PROBE = REPO_ROOT / "src" / "scripts" / "probe_skill_registration.py"
 
 sys.path.insert(0, str(REPO_ROOT))
 from scripts.probe_skill_registration import run_probe  # noqa: E402

@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = REPO_ROOT / "scripts" / "apply_modules_config.py"
+SCRIPT = REPO_ROOT / "src" / "scripts" / "apply_modules_config.py"
 TEMPLATE = REPO_ROOT / "packages" / "core" / ".agent-src.uncondensed" / "templates" / "agents" / "agent-project-settings.example.yml"
 
 

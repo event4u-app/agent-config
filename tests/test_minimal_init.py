@@ -12,12 +12,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 import install  # type: ignore  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-INSTALL_BASH = REPO_ROOT / "scripts" / "install"
+INSTALL_BASH = REPO_ROOT / "src" / "scripts" / "install"
 
 
 class _Silent(unittest.TestCase):

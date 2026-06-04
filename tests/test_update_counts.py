@@ -8,7 +8,7 @@ import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 import update_counts  # noqa: E402
 
@@ -126,7 +126,7 @@ class TestEndToEnd(unittest.TestCase):
 
         repo_root = Path(__file__).resolve().parent.parent
         result = subprocess.run(
-            ["python3", "scripts/update_counts.py", "--check"],
+            ["python3", "src/scripts/update_counts.py", "--check"],
             cwd=repo_root,
             capture_output=True,
             text=True,

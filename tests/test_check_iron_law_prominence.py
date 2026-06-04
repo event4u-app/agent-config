@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
     "check_iron_law_prominence",
-    ROOT / "scripts" / "check_iron_law_prominence.py",
+    ROOT / "src" / "scripts" / "check_iron_law_prominence.py",
 )
 assert SPEC and SPEC.loader
 mod = importlib.util.module_from_spec(SPEC)
@@ -124,7 +124,7 @@ def test_h4_iron_law_also_fails(tmp_path):
 
 def test_shipped_rules_clean():
     """All currently shipped rules must pass — guards regressions."""
-    sys.path.insert(0, str(ROOT / "scripts"))
+    sys.path.insert(0, str(ROOT / "src" / "scripts"))
     from _lib.agent_src import artefact_roots  # noqa: E402
 
     rules_dirs = [r / "rules" for r in artefact_roots() if (r / "rules").is_dir()]

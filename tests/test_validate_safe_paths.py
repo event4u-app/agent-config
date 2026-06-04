@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = REPO_ROOT / "scripts" / "validate_safe_paths.py"
+SCRIPT = REPO_ROOT / "src" / "scripts" / "validate_safe_paths.py"
 
 _SPEC = importlib.util.spec_from_file_location("validate_safe_paths", SCRIPT)
 assert _SPEC and _SPEC.loader
@@ -74,7 +74,7 @@ NEGATIVE_FIXTURES = [
     "README.md",
     "docs/contracts/telegraph-speak.md",
     "templates/AGENTS.md",
-    "scripts/condense.py",
+    "src/scripts/condense.py",
     "tests/test_validate_safe_paths.py",
     ".agent-src/rules/commit-policy.md",
     "agents/roadmaps/step-16-telegraph-substance.md",

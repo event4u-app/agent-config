@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # the shared discovery helper to find its physical location.
 import sys as _sys  # noqa: E402
 
-_sys.path.insert(0, str(REPO_ROOT / "scripts"))
+_sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 from _lib.agent_src import resolve_logical  # noqa: E402
 
 _skill_md = resolve_logical("skills/subagent-orchestration/SKILL.md")

@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
     "check_reply_consistency",
-    ROOT / "scripts" / "check_reply_consistency.py",
+    ROOT / "src" / "scripts" / "check_reply_consistency.py",
 )
 assert SPEC and SPEC.loader
 crc = importlib.util.module_from_spec(SPEC)
@@ -138,7 +138,7 @@ def test_scan_dir_missing_path(tmp_path: Path):
 
 # --- repo invariant: shipped sources stay clean ----------------------------
 
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src" / "scripts"))
 from _lib.agent_src import artefact_roots  # noqa: E402
 
 

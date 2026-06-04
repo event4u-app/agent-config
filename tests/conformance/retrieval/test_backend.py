@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src" / "scripts"))
 import memory_lookup  # noqa: E402
 import memory_status  # noqa: E402
 
@@ -24,7 +24,7 @@ from tests.conformance.retrieval.validator import (  # noqa: E402
     validate_retrieve,
 )
 
-SCRIPTS = Path(__file__).resolve().parents[3] / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[3] / "src" / "scripts"
 
 
 def _chdir(monkeypatch, tmp_path: Path) -> None:

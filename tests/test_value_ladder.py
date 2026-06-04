@@ -18,8 +18,8 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-LADDER_PATH = REPO_ROOT / "scripts" / "_lib" / "value_ladder.py"
-REPORT_PATH = REPO_ROOT / "scripts" / "_lib" / "value_report.py"
+LADDER_PATH = REPO_ROOT / "src" / "scripts" / "_lib" / "value_ladder.py"
+REPORT_PATH = REPO_ROOT / "src" / "scripts" / "_lib" / "value_report.py"
 
 
 def _load_module(name: str, path: Path):

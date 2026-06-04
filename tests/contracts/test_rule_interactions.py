@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 MATRIX_PATH = ROOT / "docs" / "contracts" / "rule-interactions.yml"
 
 import sys as _sys
-_sys.path.insert(0, str(ROOT / "scripts"))
+_sys.path.insert(0, str(ROOT / "src" / "scripts"))
 from _lib.agent_src import resolve_logical  # noqa: E402
 
 

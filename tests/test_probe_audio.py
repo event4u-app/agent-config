@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PROBE = REPO_ROOT / "scripts" / "ai-video" / "lib" / "probe-audio.sh"
+PROBE = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib" / "probe-audio.sh"
 
 pytestmark = pytest.mark.skipif(
     shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None,

@@ -19,7 +19,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RENDER_PATH = REPO_ROOT / "scripts" / "render_value_md.py"
+RENDER_PATH = REPO_ROOT / "src" / "scripts" / "render_value_md.py"
 
 
 def _load_renderer(monkeypatch, tmp_path: Path):

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-SCRIPT = Path(__file__).parent.parent / "scripts" / "lint_marketplace.py"
+SCRIPT = Path(__file__).parent.parent / "src" / "scripts" / "lint_marketplace.py"
 
 
 def run_linter(cwd: Path) -> subprocess.CompletedProcess:

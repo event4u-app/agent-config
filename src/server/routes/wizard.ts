@@ -110,8 +110,8 @@ const PACKAGE_AI_COUNCIL_REL = join('agents', 'settings', '.ai-council.yml');
 const AI_COUNCIL_PROVIDERS = ['anthropic', 'openai', 'gemini', 'xai', 'perplexity'] as const;
 // Only these two ship an interactive 0600-key installer; the rest use env vars.
 const AI_COUNCIL_KEY_INSTALL: Readonly<Record<string, string>> = {
-    anthropic: 'bash scripts/install_anthropic_key.sh',
-    openai: 'bash scripts/install_openai_key.sh',
+    anthropic: 'bash src/scripts/install_anthropic_key.sh',
+    openai: 'bash src/scripts/install_openai_key.sh',
 };
 /** Legacy flat-root files — read for migration, deleted on successful finish. */
 const LEGACY_USER_MD_REL = '.agent-user.md';
@@ -712,7 +712,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         // its own top-level "Projekt" page, not a wizard-only step.
         app.get('/api/v1/modules/detect', async (_request, reply) => {
             const root = legacyReadRoot ?? process.cwd();
-            const scriptPath = join(opts.packageRoot, 'scripts', 'propose_modules_config.py');
+            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'propose_modules_config.py');
             try {
                 const result = await spawnInstaller(scriptPath, ['--json', '--project', root]);
                 if (result.exitCode !== 0) {
@@ -751,7 +751,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 return reply;
             }
             const projectRoot = legacyReadRoot ?? process.cwd();
-            const scriptPath = join(opts.packageRoot, 'scripts', 'apply_modules_config.py');
+            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'apply_modules_config.py');
             const tmpPath = join(tmpdir(), `agent-config-modules-${randomBytes(8).toString('hex')}.json`);
             try {
                 await fs.writeFile(tmpPath, JSON.stringify(parsed.data), { mode: 0o600 });
@@ -824,7 +824,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                         title: 'Duplicate skill registration',
                         symptom: 'Same skill name appears twice in the available-skills list.',
                         cause: 'Cross-scope install drift (~/.claude/skills/ + ./.claude/skills/ at different versions).',
-                        action: 'Run `task probe:skills` — if findings show DUPLICATE/DRIFT, clean with `bash scripts/cleanup_other_scope.sh --confirm`.',
+                        action: 'Run `task probe:skills` — if findings show DUPLICATE/DRIFT, clean with `bash src/scripts/cleanup_other_scope.sh --confirm`.',
                     },
                 ],
                 triage: [
@@ -844,7 +844,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
                 return reply;
             }
-            const probePath = join(opts.packageRoot, 'scripts', 'probe_skill_registration.py');
+            const probePath = join(opts.packageRoot, 'src', 'scripts', 'probe_skill_registration.py');
             if (!existsSync(probePath)) {
                 await reply.code(500).send({ error: { code: 'PROBE_MISSING', message: `probe script not found at ${probePath}` } });
                 return reply;
@@ -884,7 +884,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
                 return reply;
             }
-            const guardPath = join(opts.packageRoot, 'scripts', '_lib', 'scope_guard.sh');
+            const guardPath = join(opts.packageRoot, 'src', 'scripts', '_lib', 'scope_guard.sh');
             if (!existsSync(guardPath)) {
                 await reply.code(500).send({ error: { code: 'GUARD_MISSING', message: `scope_guard.sh not found at ${guardPath}` } });
                 return reply;
@@ -959,7 +959,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             const isDryRun = parsed.data.dry_run === true;
             const payload = parsed.data;
             const tmpPath = join(tmpdir(), `agent-config-apply-${randomBytes(8).toString('hex')}.json`);
-            const scriptPath = join(opts.packageRoot, 'scripts', 'install.py');
+            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'install.py');
 
             if (isDryRun) {
                 // Plan-summary preview — buffered JSON (Review step).
@@ -1199,7 +1199,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 let modulesApplyError: { code: string; message: string; exitCode?: number } | null = null;
                 if (modulesConfigData !== null) {
                     const projectRoot = legacyReadRoot ?? process.cwd();
-                    const scriptPath = join(opts.packageRoot, 'scripts', 'apply_modules_config.py');
+                    const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'apply_modules_config.py');
                     const tmpPath = join(tmpdir(), `agent-config-modules-${randomBytes(8).toString('hex')}.json`);
                     try {
                         await fs.writeFile(tmpPath, JSON.stringify(modulesConfigData), { mode: 0o600 });

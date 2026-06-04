@@ -11,7 +11,7 @@ from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 import lint_one_off_age as mod  # noqa: E402
 

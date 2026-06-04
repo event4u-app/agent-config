@@ -22,11 +22,11 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts" / "hooks"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts" / "hooks"))
 
 import dispatch_hook  # noqa: E402
 
-MANIFEST = dispatch_hook._load_yaml(REPO_ROOT / "scripts" / "hook_manifest.yaml")
+MANIFEST = dispatch_hook._load_yaml(REPO_ROOT / "src" / "scripts" / "hook_manifest.yaml")
 ALIASES = MANIFEST.get("native_event_aliases") or {}
 
 

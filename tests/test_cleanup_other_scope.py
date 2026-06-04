@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CLEANUP_SH = REPO_ROOT / "scripts" / "cleanup_other_scope.sh"
+CLEANUP_SH = REPO_ROOT / "src" / "scripts" / "cleanup_other_scope.sh"
 
 
 def _scaffold_scope_tree(root: Path) -> dict[str, Path]:

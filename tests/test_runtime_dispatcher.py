@@ -8,13 +8,13 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 from runtime_registry import SkillRuntime
 from runtime_dispatcher import dispatch
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DISPATCHER = REPO_ROOT / "scripts" / "runtime_dispatcher.py"
+DISPATCHER = REPO_ROOT / "src" / "scripts" / "runtime_dispatcher.py"
 
 
 def _skill(name: str, exec_type: str = "manual", handler: str = "none",

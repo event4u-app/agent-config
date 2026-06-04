@@ -82,7 +82,7 @@ def test_json_output_validates_against_schema(
     assert trace["version"] == 1
     # Independent schema validation — the lint script is the contract.
     lint = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "lint_explain_trace.py"),
+        [sys.executable, str(REPO_ROOT / "src" / "scripts" / "lint_explain_trace.py"),
          "--stdin"],
         input=proc.stdout,
         cwd=REPO_ROOT, capture_output=True, text=True, check=False,

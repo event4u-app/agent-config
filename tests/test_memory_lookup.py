@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 import memory_lookup  # noqa: E402
 
 
@@ -220,7 +220,7 @@ def test_cli_operational_provider_handles_garbage_stdout(tmp_path):
 
 
 def test_package_operational_provider_returns_none_when_absent(monkeypatch):
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
     import memory_status  # noqa: E402
     monkeypatch.setattr(memory_status, "_find_cli", lambda: "")
     monkeypatch.delenv(memory_status._CACHE_ENV, raising=False)
@@ -231,7 +231,7 @@ def test_package_operational_provider_returns_callable_when_present(
     monkeypatch, tmp_path,
 ):
     import stat
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
     import memory_status  # noqa: E402
     fake = tmp_path / "memory"
     fake.write_text("#!/bin/sh\nexit 0\n")

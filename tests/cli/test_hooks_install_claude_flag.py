@@ -22,7 +22,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-AGENT_CONFIG = REPO_ROOT / "scripts" / "agent-config"
+AGENT_CONFIG = REPO_ROOT / "src" / "scripts" / "agent-config"
 
 
 def _run_in_consumer(consumer: Path, *args: str) -> subprocess.CompletedProcess:
@@ -58,7 +58,7 @@ def test_claude_creates_agent_config_symlink(consumer):
     link = consumer / "agent-config"
     assert link.is_symlink()
     target = os.readlink(link)
-    assert "scripts/agent-config" in target
+    assert "src/scripts/agent-config" in target
 
 
 def test_lifecycle_alias_identical_to_claude(consumer):

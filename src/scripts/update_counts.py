@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""Sync package-content counts (skills/rules/commands/guidelines) across docs.
+
+Source of truth: `.agent-src.uncondensed/`.
+
+Target files have explicit regex patterns for each count mention — no
+fuzzy matching, no risk of touching unrelated numbers.
+
+Modes:
+  update (default)  Rewrite each target to match the true counts.
+  --check           Exit 1 if any target is stale.
+
+Run as part of `task sync` (update) and `task ci` (check).
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots, iter_commands  # noqa: E402
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def count(kind: str) -> int:
+    if kind == "guidelines":
+        # Guidelines live under docs/guidelines/{topic}/ — they are reference
+        # material, not packaged artefacts. Recursive walk to count every .md.
+        return sum(1 for _ in (REPO_ROOT / "docs" / "guidelines").rglob("*.md"))
+    total = 0
+    seen: set[str] = set()
+    if kind == "commands":
+        # Commands live under packages/*/commands/ AND the 6.0.0-D
+        # src/domains/<pack>/<subpath>/command.md homes; iter_commands()
+        # covers both (artefact_roots()/commands cannot see src/domains).
+        # Skip the AGENTS.md reference orchestrator.
+        for f in iter_commands():
+            if f.name == "AGENTS.md":
+                continue
+            total += 1
+        return total
+    for root in artefact_roots():
+        subdir = root / kind
+        if not subdir.exists():
+            continue
+        if kind == "skills":
+            for f in subdir.rglob("SKILL.md"):
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+        elif kind == "personas":
+            # personas live as flat .md files, README excluded
+            for f in subdir.glob("*.md"):
+                if f.name == "README.md":
+                    continue
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+        else:
+            for f in subdir.glob("*.md"):
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+    return total
+
+
+# file → list of (regex, kind)
+# Each regex MUST use three capture groups: (prefix)(number)(suffix).
+TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
+    (
+        "README.md",
+        [
+            (r"(Browse all )(\d+)( commands\])", "commands"),
+            (r"(package \(rules \+ )(\d+)( skills)", "skills"),
+            # Hero badges: shields.io URLs `Skills-NNN-<color>` etc.
+            # Format: https://img.shields.io/badge/<Label>-<N>-<hex>?style=flat-square
+            (r"(/badge/Skills-)(\d+)(-)", "skills"),
+            (r"(/badge/Rules-)(\d+)(-)", "rules"),
+            (r"(/badge/Guidelines-)(\d+)(-)", "guidelines"),
+            (r"(/badge/Personas-)(\d+)(-)", "personas"),
+            # NOTE: hero `Commands-N` badge and tools-blurb
+            # `skills + N native commands` are owned by
+            # `check_command_count_messaging.py` (Phase-1.2 of
+            # road-to-pr-34-followups). Those surfaces advertise the
+            # **active** command count (total − deprecation shims), not
+            # the raw file count this script computes.
+        ],
+    ),
+    # Note: AGENTS.md previously held the per-directory count annotations
+    # (`skills/ (N skills)`, `rules/ (N rules)`, ...). The Thin-Root
+    # refactor (Phase 6, road-to-augment-limit-fit, 2026-05-08) made
+    # AGENTS.md a navigation-only surface — counts now live in README.md
+    # and docs/architecture.md. The corresponding pytest sentinel lives
+    # in tests/test_readme_hero_counts.py::test_agents_md_is_thin_root_navigation_surface.
+    (
+        "docs/getting-started.md",
+        [
+            (r"(automatically by )(\d+)( rules)", "rules"),
+            (r"(Browse all )(\d+)( commands\])", "commands"),
+        ],
+    ),
+    (
+        "docs/architecture.md",
+        [
+            # "What's inside" table: | **Skills** | NNN | … |
+            (r"(\| \*\*Skills\*\* \| )(\d+)( \|)", "skills"),
+            (r"(\| \*\*Rules\*\* \| )(\d+)( \|)", "rules"),
+            (r"(\| \*\*Commands\*\* \| )(\d+)( \|)", "commands"),
+            (r"(\| \*\*Guidelines\*\* \| )(\d+)( \|)", "guidelines"),
+        ],
+    ),
+    # Note: ``agents/roadmaps/road-to-stronger-skills.md`` was previously
+    # tracked here with a living ``baseline N as of`` pattern. The roadmap
+    # was moved to ``skipped/`` on 2026-04-23 (Q35 superseded), so its
+    # baseline is frozen as a historical snapshot and is no longer
+    # auto-synced.
+]
+
+
+def apply_to_text(text: str, patterns: list[tuple[str, str]], counts: dict[str, int]) -> tuple[str, list[tuple[str, int, int]]]:
+    """Return (new_text, drifts). Each drift is (kind, old, new)."""
+    drifts: list[tuple[str, int, int]] = []
+    new_text = text
+    for pattern, kind in patterns:
+        compiled = re.compile(pattern)
+        matches = list(compiled.finditer(new_text))
+        if not matches:
+            print(f"  ⚠️  pattern missed: /{pattern}/ (kind={kind})", file=sys.stderr)
+            continue
+        for m in matches:
+            old = int(m.group(2))
+            new = counts[kind]
+            if old != new:
+                drifts.append((kind, old, new))
+        new_text = compiled.sub(
+            lambda m, k=kind: f"{m.group(1)}{counts[k]}{m.group(3)}",
+            new_text,
+        )
+    return new_text, drifts
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="exit 1 on drift instead of rewriting")
+    args = parser.parse_args()
+
+    counts = {k: count(k) for k in ("skills", "rules", "commands", "guidelines", "personas")}
+    print(f"📊  Truth: skills={counts['skills']} rules={counts['rules']} "
+          f"commands={counts['commands']} guidelines={counts['guidelines']} "
+          f"personas={counts['personas']}")
+
+    any_drift = False
+    any_change = False
+    for rel, patterns in TARGETS:
+        path = REPO_ROOT / rel
+        if not path.exists():
+            print(f"❌  Missing target: {rel}", file=sys.stderr)
+            return 1
+        text = path.read_text(encoding="utf-8")
+        new_text, drifts = apply_to_text(text, patterns, counts)
+        if drifts:
+            any_drift = True
+            for kind, old, new in drifts:
+                print(f"  {'🔴' if args.check else '🔧'}  {rel}: {kind} {old} → {new}")
+        if new_text != text and not args.check:
+            path.write_text(new_text, encoding="utf-8")
+            any_change = True
+
+    if args.check:
+        if any_drift:
+            print("\n❌  Stale counts detected. Run `task counts-update` to fix.", file=sys.stderr)
+            return 1
+        print("✅  All counts in sync.")
+        return 0
+
+    if any_change:
+        print("✅  Counts updated.")
+    else:
+        print("✅  Counts already in sync.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

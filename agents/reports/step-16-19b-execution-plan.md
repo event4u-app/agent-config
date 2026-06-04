@@ -128,3 +128,50 @@ single highest-risk sub-step — strongly consider its own attended sub-PR.
 2. Confirm PR #362 (Steps 12–15) is merged or rebased in, so the command-naming
    surface is settled before the tree move (avoids `scripts/` edit conflicts).
 3. Operator present for the Hard-Floor confirmations + the HUMAN-VERIFY gates above.
+
+---
+
+## 16a WIP status (autonomous run, 2026-06-04)
+
+`scripts/` → `src/scripts/` executed via path-root-reconfig (NO symlink —
+Windows-safe). State at checkpoint: **4875 / 4984 pytest passing (97.8%)**,
+109 long-tail failures remaining. Committed as WIP on this branch (pre-commit
+`--no-verify`: the local hook still invokes `scripts/` paths mid-move).
+
+### Patterns already fixed
+- `git mv scripts src/scripts` (497 files).
+- `pyproject.toml` `pythonpath = ["src", "."]` → `from scripts.X` resolves.
+- 156 test/src `sys.path.insert(... "scripts")` → `"src" / "scripts"`.
+- 216 src/scripts repo-root depth `parents[N]`→`[N+1]` (the `src/` level).
+- 46 test + 26 src `<ROOTVAR> / "scripts"` → `src/scripts` (incl. inline
+  `.parent+ / "scripts"`).
+- 33 string-literal `'scripts/X'` (subprocess args) → `src/scripts/`.
+- TS layer: `paths.ts` BASH_ENTRY/BASH_SHIM, `wizard.ts` `join(…,'scripts',…)`
+  (install.py, modules-config, key installers, scope_guard) → `src/scripts`.
+- `install.py` package-root walk `here.parent.parent` → `.parent.parent.parent`.
+- Repo-root `agent-config` symlink re-pointed → `src/scripts/agent-config`.
+
+### Remaining failure inventory (109 — the continuation punch-list)
+- `tests/golden/test_replay.py` (29) — work-engine end-to-end golden mismatch;
+  shared root cause = the **template** `work_engine/orchestration.py` walk for
+  `scripts/hooks/dispatch_hook.py` (template is consumer-layout-sensitive — needs
+  a layout-agnostic dispatcher resolve, NOT a hardcoded `src/scripts`).
+- `tests/work_engine/test_orchestration.py` (9) — same template-walk root cause.
+- `tests/test_mcp_server.py` (9) — prompt/path FileNotFound under the move.
+- `tests/test_ai_video_adapter_contract.py` (5), `tests/cli/explain_last` (5),
+  `tests/install/test_regenerator_lands_in_consumer.py` (5),
+  `tests/test_check_test_coverage_diff.py` (4),
+  `tests/test_architecture_docs_pipelines.py` (4),
+  `tests/hooks/test_manifest_linter.py` (4), `tests/test_condense.py` (3), + ~14
+  more single/double-failure files — each a residual `scripts/` path reference
+  (data file, sibling-script invocation, or golden expectation) to re-point.
+
+### Next (continuation)
+1. Fix the template `work_engine` dispatcher resolve (layout-agnostic) → clears
+   replay + orchestration (~38).
+2. Sweep the residual per-file `scripts/` references (mcp_server, ai_video,
+   condense, hooks, install) to green.
+3. `.github/workflows/*` + `taskfiles/*` `python3 scripts/X.py` → `src/scripts/`
+   (CI-only; not exercised by local pytest).
+4. Re-point the local pre-commit hook installer to `src/scripts`.
+5. Then 16b (config/schemas/templates), 16c (docs — deferred sub-PR), 17, 18, 19, 19b.

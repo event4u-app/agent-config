@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-MODULE_PATH = REPO_ROOT / "scripts" / "adoption_report.py"
+MODULE_PATH = REPO_ROOT / "src" / "scripts" / "adoption_report.py"
 
 
 def _load_module():

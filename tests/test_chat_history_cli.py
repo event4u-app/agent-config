@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CLI = REPO_ROOT / "scripts" / "chat_history.py"
+CLI = REPO_ROOT / "src" / "scripts" / "chat_history.py"
 
 
 def _run(*args: str, hist: Path, stdin: str | None = None,

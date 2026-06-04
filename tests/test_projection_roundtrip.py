@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 
 # Add project scripts/ to path so we can import the condense module.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 import condense  # noqa: E402
 

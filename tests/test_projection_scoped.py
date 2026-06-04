@@ -22,7 +22,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 import condense  # noqa: E402
 
@@ -158,7 +158,7 @@ class ScopedResolverIntegration(unittest.TestCase):
         manifest = repo / "dist" / "discovery" / "discovery-manifest.json"
         if not manifest.exists():
             subprocess.run(
-                [sys.executable, "scripts/build_discovery_manifest.py", "--write", "--quiet"],
+                [sys.executable, "src/scripts/build_discovery_manifest.py", "--write", "--quiet"],
                 cwd=repo,
                 check=True,
                 capture_output=True,

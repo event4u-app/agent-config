@@ -23,9 +23,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-REPLAY_SCRIPT = REPO_ROOT / "scripts" / "hooks" / "replay_hook.py"
+REPLAY_SCRIPT = REPO_ROOT / "src" / "scripts" / "hooks" / "replay_hook.py"
 FIXTURE_DIR = REPO_ROOT / "tests" / "fixtures" / "hooks"
-MANIFEST = REPO_ROOT / "scripts" / "hook_manifest.yaml"
+MANIFEST = REPO_ROOT / "src" / "scripts" / "hook_manifest.yaml"
 
 EVENTS = [
     "session_start", "session_end", "user_prompt_submit",

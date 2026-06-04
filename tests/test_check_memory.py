@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-SCRIPT = Path("scripts/check_memory.py")
+SCRIPT = Path("src/scripts/check_memory.py")
 
 
 def _run(path: Path, fmt: str = "text") -> subprocess.CompletedProcess:

@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-MODULE_PATH = REPO_ROOT / "scripts" / "_lib" / "install_regenerator.py"
+MODULE_PATH = REPO_ROOT / "src" / "scripts" / "_lib" / "install_regenerator.py"
 
 
 def _load():

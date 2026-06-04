@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
     "check_gate_paths",
-    ROOT / "scripts" / "check_gate_paths.py",
+    ROOT / "src" / "scripts" / "check_gate_paths.py",
 )
 assert SPEC and SPEC.loader
 mod = importlib.util.module_from_spec(SPEC)

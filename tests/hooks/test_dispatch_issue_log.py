@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-HOOKS_DIR = REPO_ROOT / "scripts" / "hooks"
+HOOKS_DIR = REPO_ROOT / "src" / "scripts" / "hooks"
 DISPATCH_ISSUES = HOOKS_DIR / "dispatch_issues.py"
 
 

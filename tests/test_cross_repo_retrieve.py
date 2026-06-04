@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 crr = importlib.import_module("cross_repo_retrieve")
 
 FIXTURES = REPO_ROOT / "tests" / "fixtures" / "cross-repo"

@@ -19,7 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
 
 from lint_agents_layout import (  # noqa: E402
     ALLOWED_FLAT_FILES,
@@ -30,7 +30,7 @@ from lint_agents_layout import (  # noqa: E402
 )
 
 REPO = Path(__file__).resolve().parent.parent
-SCRIPT = REPO / "scripts" / "lint_agents_layout.py"
+SCRIPT = REPO / "src" / "scripts" / "lint_agents_layout.py"
 
 
 def _seed(root: Path, names: list[str]) -> None:
