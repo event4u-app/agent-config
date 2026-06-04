@@ -69,3 +69,70 @@ def test_iter_commands_covers_the_full_surface():
     # scanner regression silently dropping the src/domains homes.
     assert len(cmds) >= 150
     assert all(p.name == "command.md" or "/commands/" in p.as_posix() for p in cmds)
+
+
+# --- ADR-044 amendment A3: slug_prefix mechanism (Step 12) --------------------
+
+
+def _with_tmp_domains(tmp_path, build):
+    """Run ``build(domains_dir)`` with ``agent_src.SRC_DOMAINS`` pointed at a
+    fresh tmp tree and the prefix cache cleared, then restore."""
+    saved_root = agent_src.SRC_DOMAINS
+    saved_cache = dict(agent_src._slug_prefix_cache)
+    agent_src.SRC_DOMAINS = tmp_path
+    agent_src._slug_prefix_cache.clear()
+    try:
+        return build(tmp_path)
+    finally:
+        agent_src.SRC_DOMAINS = saved_root
+        agent_src._slug_prefix_cache.clear()
+        agent_src._slug_prefix_cache.update(saved_cache)
+
+
+def test_command_slug_no_prefix_is_bare_subpath(tmp_path):
+    """A pack with no slug_prefix projects the pack-stripped hyphenated subpath."""
+    def build(dom):
+        (dom / "meta" / "council").mkdir(parents=True)
+        (dom / "meta" / "council" / "command.md").write_text("x", encoding="utf-8")
+        (dom / "meta" / "council" / "analysis").mkdir(parents=True)
+        (dom / "meta" / "council" / "analysis" / "command.md").write_text("x", encoding="utf-8")
+        assert agent_src.command_slug(dom / "meta" / "council" / "command.md") == "council"
+        assert agent_src.command_slug(
+            dom / "meta" / "council" / "analysis" / "command.md"
+        ) == "council-analysis"
+    _with_tmp_domains(tmp_path, build)
+
+
+def test_command_slug_pack_prefix_applies(tmp_path):
+    """A pack declaring slug_prefix prefixes every command's slug (A3)."""
+    def build(dom):
+        gitdir = dom / "git"
+        (gitdir / "commit").mkdir(parents=True)
+        (gitdir / "pr" / "create").mkdir(parents=True)
+        (gitdir / "pack.yaml").write_text(
+            "id: git\nslug_prefix: git\nversion: 6.0.0\nartefact_count: 2\n",
+            encoding="utf-8",
+        )
+        (gitdir / "commit" / "command.md").write_text("x", encoding="utf-8")
+        (gitdir / "pr" / "create" / "command.md").write_text("x", encoding="utf-8")
+        assert agent_src.pack_slug_prefix("git") == "git"
+        assert agent_src.command_slug(gitdir / "commit" / "command.md") == "git-commit"
+        assert agent_src.command_slug(
+            gitdir / "pr" / "create" / "command.md"
+        ) == "git-pr-create"
+    _with_tmp_domains(tmp_path, build)
+
+
+def test_command_slug_prefix_not_double_applied(tmp_path):
+    """A subpath that already leads with the prefix is not doubled."""
+    def build(dom):
+        gitdir = dom / "git"
+        (gitdir / "git" / "sync").mkdir(parents=True)
+        (gitdir / "pack.yaml").write_text(
+            "id: git\nslug_prefix: git\nversion: 6.0.0\nartefact_count: 1\n",
+            encoding="utf-8",
+        )
+        (gitdir / "git" / "sync" / "command.md").write_text("x", encoding="utf-8")
+        # subpath git/sync already starts with the prefix → no `git-git-sync`
+        assert agent_src.command_slug(gitdir / "git" / "sync" / "command.md") == "git-sync"
+    _with_tmp_domains(tmp_path, build)

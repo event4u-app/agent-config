@@ -35,6 +35,7 @@ approved_verbs:
   - condense
   - council
   - feature
+  - git        # git-commit, git-pr-create (ADR-041 addendum 2026-06-04)
   - jira       # jira-ticket
   - judge
   - memory

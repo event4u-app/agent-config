@@ -1,0 +1,11 @@
+# Profile view — ops (6.0.0-D Step 14). Immutable built-in.
+profile:
+  id: ops
+  label: Operations
+  immutable: true
+  packs: [engineering-base, git]
+  view:
+    - work
+    - review-changes
+    - fix-ci
+    - git-commit

@@ -1,0 +1,1 @@
+../../../src/domains/git/commit/command.md

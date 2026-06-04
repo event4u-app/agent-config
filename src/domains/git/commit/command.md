@@ -1,12 +1,12 @@
 ---
 model_tier: medium
-name: commit
-pack: engineering-base
+name: git-commit
+pack: git
 intent: "Stage and commit changes in logical chunks with a Conventional Commits message"
 routes_to: [git-workflow, conventional-commits-writing]
-replaces: []
+replaces: [commit]
 tier: 0
-cluster: commit
+cluster: git-commit
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
 suggestion:
@@ -16,7 +16,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - git
 ---
 
 # /commit

@@ -112,6 +112,18 @@ makes, not a command surface to enumerate.
   other commands for no benefit; an explicit grandfather entry is cheaper and
   honest.
 
+## Amendment — 2026-06-04 · `git` verb (6.0.0-D Step 12, Class B1)
+
+> **Accepted** · 2026-06-04. ADR-044 §3 makes `commit` / `create-pr` move into a
+> dedicated `git` pack with `slug_prefix: git` (Class B1), so their canonical
+> invocations become `git-commit` / `git-pr-create`. The leading token `git` is
+> therefore added to `approved_verbs`. This both honours the new naming scheme
+> and lets the long-standing `create-pr` grandfather entry retire naturally: the
+> canonical name is now `git-pr-create` (verb `git`, banned `create-` prefix no
+> longer in the leading position), with `replaces: [create-pr]` keeping the old
+> invocation routable via `migrate`. The grandfather row stays until the alias
+> window closes (6.1).
+
 ## References
 
 - [`config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml) — the allowlist + banned prefixes + grandfathered exceptions.

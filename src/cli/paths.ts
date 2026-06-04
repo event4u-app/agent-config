@@ -54,6 +54,13 @@ export const PACKAGE_JSON = resolve(PACKAGE_ROOT, 'package.json');
 export const DISCOVERY_MANIFEST = resolve(PACKAGE_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
 
 /**
+ * Absolute path to the profiles-as-views directory (6.0.0-D Step 14).
+ * Each `src/profiles/<id>.yaml` declares a profile's curated command view +
+ * the packs whose full set `--expanded` adds. Read by `commands ls --profile`.
+ */
+export const PROFILES_DIR = resolve(PACKAGE_ROOT, 'src', 'profiles');
+
+/**
  * Resolve a script that may live in either the package root or one
  * of the projected template paths. Mirrors `resolve_script` in the
  * Bash dispatcher.

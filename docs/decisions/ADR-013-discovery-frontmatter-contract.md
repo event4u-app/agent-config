@@ -123,6 +123,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `ai-video` | AI video pipeline (per ADR-011, the only heavyweight domain). |
 | `fun` | Non-essential social/fun workflows (prediction-pool tips, etc.). Optional under the `small-business` workspace; `experimental` trust. |
 | `meta` | Artefacts that maintain *this* package (`agent-config` itself). |
+| `git` | Git workflow — commit, pull requests, branch sync. Carries `slug_prefix: git` (ADR-044 §A3); `requires: engineering-base`. Added 2026-06-04 for 6.0.0-D Step 12 Class B1 (`commit`→`git-commit`, `create-pr`→`git-pr-create`). |
 
 Amendments to the pack list require an ADR-013 amendment and the
 matching `config/discovery/packs.yml` row in the same PR.

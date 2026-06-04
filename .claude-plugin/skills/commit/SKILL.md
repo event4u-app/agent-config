@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/commit/command.md

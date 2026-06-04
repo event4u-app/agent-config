@@ -12,6 +12,11 @@
       "pattern": "^[a-z][a-z0-9-]*$",
       "description": "Pack id — globally unique, lowercase slug."
     },
+    "slug_prefix": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Opt-in command-slug prefix (ADR-044 amendment A3). When set, every command in this pack projects as `<slug_prefix>-<subpath>` (e.g. the `git` pack with `slug_prefix: git` → `git/commit` → `git-commit`). Default = absent = no prefix; the pack-stripped subpath is the bare slug. The only sanctioned way to obtain a pack-prefixed slug — no per-command override."
+    },
     "label": {
       "type": "string",
       "minLength": 1

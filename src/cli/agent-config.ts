@@ -245,8 +245,10 @@ async function main(argv: readonly string[]): Promise<number> {
         .description('List commands (command, pack, tier, visibility, intent)')
         .option('--pack <id>', 'Restrict to one owning pack')
         .option('--visible', 'Restrict to visible commands (tier 0/1)')
+        .option('--profile <id>', 'Render a profile\'s curated command view (developer, founder, …)')
+        .option('--expanded', 'With --profile: add the active packs\' full command set')
         .option('--json', 'Emit machine-readable JSON')
-        .action((opts: { pack?: string; visible?: boolean; json?: boolean }) => {
+        .action((opts: { pack?: string; visible?: boolean; profile?: string; expanded?: boolean; json?: boolean }) => {
             // exitCode (not process.exit) — the JSON payload exceeds the
             // 8 KiB pipe buffer; a hard exit truncates async stdout on macOS.
             process.exitCode = runCommandsLs(opts);

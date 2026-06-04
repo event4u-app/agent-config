@@ -1,0 +1,12 @@
+# Profile view — founder (6.0.0-D Step 14). Immutable built-in.
+profile:
+  id: founder
+  label: Founder / early-stage
+  immutable: true
+  packs: [engineering-base, git, product-basic, product-discovery]
+  view:
+    - work
+    - research
+    - roadmap
+    - council
+    - git-commit

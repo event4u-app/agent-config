@@ -16,11 +16,14 @@
 import { loadManifest, ManifestNotFoundError, ManifestParseError } from '../discovery/loadManifest.js';
 import type { DiscoveryArtefact, DiscoveryManifest } from '../discovery/loadManifest.js';
 import { logger } from '../log/logger.js';
+import { loadProfile, resolveProfileView } from './profiles.js';
 
 export interface CommandsLsOptions {
     pack?: string;
     visible?: boolean;
     json?: boolean;
+    profile?: string;
+    expanded?: boolean;
 }
 
 export interface CommandsExplainOptions {
@@ -65,7 +68,8 @@ function visibilityLabel(tier: number): string {
 function renderTable(cmds: readonly DiscoveryArtefact[]): string {
     const header = ['command', 'pack', 'tier', 'visibility', 'intent'];
     const rows: string[][] = cmds.map((c) => [
-        c.name ?? '',
+        // Canonical invocation slug (ADR-044) when present, else the name.
+        c.slug ?? c.name ?? '',
         c.pack ?? (c.packs[0] ?? '—'),
         String(tierOf(c)),
         visibilityLabel(tierOf(c)),
@@ -86,11 +90,38 @@ export function runCommandsLs(opts: CommandsLsOptions = {}): number {
     if (manifest === null) return 1;
 
     let cmds = commandArtefacts(manifest);
+
+    // --profile <id>: render the profile's curated command view (Step 14/15).
+    // Default = the focused `view`; --expanded adds the active packs' full set.
+    // The view ordering is meaningful, so a profile branch does NOT name-sort.
+    if (opts.profile) {
+        const profile = loadProfile(opts.profile);
+        if (profile === null) {
+            logger.error(
+                `unknown profile '${opts.profile}'. Built-in profiles: developer, ` +
+                    'founder, content_creator, agency, finance, ops.',
+            );
+            return 1;
+        }
+        cmds = resolveProfileView(profile, cmds, { expanded: Boolean(opts.expanded) });
+        if (opts.visible) cmds = cmds.filter((c) => VISIBLE_TIERS.has(tierOf(c)));
+        if (opts.json) {
+            process.stdout.write(`${JSON.stringify({ profile: profile.id, expanded: Boolean(opts.expanded), commands: cmds }, null, 2)}\n`);
+            return 0;
+        }
+        if (cmds.length === 0) {
+            logger.info(`Profile '${profile.id}' surfaces no commands in the current manifest.`);
+            return 0;
+        }
+        logger.info(renderTable(cmds));
+        return 0;
+    }
+
     if (opts.visible) cmds = cmds.filter((c) => VISIBLE_TIERS.has(tierOf(c)));
     // Filter on the canonical OWNER pack (`pack`), the budget/surfacing unit —
     // not the additive `packs` discovery tags.
     if (opts.pack) cmds = cmds.filter((c) => (c.pack ?? '') === opts.pack);
-    cmds.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+    cmds.sort((a, b) => (a.slug ?? a.name ?? '').localeCompare(b.slug ?? b.name ?? ''));
 
     if (opts.json) {
         process.stdout.write(`${JSON.stringify({ commands: cmds }, null, 2)}\n`);

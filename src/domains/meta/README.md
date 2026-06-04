@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `5.10.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 263
+- **artefacts**: 259
 
-## Commands (148)
+## Commands (144)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -37,8 +37,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`chat-history:import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 - **`chat-history:learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
 - **`chat-history:show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
-- **`commit`** — Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
-- **`commit:in-chunks`** — Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
 - **`condense`** — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context:create`** — Analyze a codebase area and create a structured context document
@@ -51,8 +49,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`council:design`** — Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
 - **`council:optimize`** — Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
 - **`council:pr`** — Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
-- **`create-pr`** — Create a GitHub PR with structured description from Jira ticket and code changes
-- **`create-pr:description-only`** — Generate a PR description as a copyable markdown block — used standalone or by create-pr
 - **`e2e-heal`** — Find, debug, and fix failing Playwright E2E tests
 - **`e2e-plan`** — Explore the application and create a structured E2E test plan in Markdown
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt

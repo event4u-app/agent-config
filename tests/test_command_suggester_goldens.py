@@ -82,8 +82,8 @@ def test_GT_CS2_multi_match_commit_and_pr(specs, specs_by_name) -> None:
         "commit my changes and write a PR description", specs, specs_by_name
     )
     names = [m.command for m in ranked]
-    assert "commit" in names
-    assert "create-pr:description-only" in names
+    assert "git-commit" in names
+    assert "git-pr-create-description-only" in names
     # As-is option index = len(matches) + 1.
     assert f"> {len(ranked) + 1}. Just run the prompt as-is, no command" in block
 
@@ -122,12 +122,12 @@ def test_GT_CS6_cooldown_silences_repeat(specs, specs_by_name) -> None:
     ranked1, _ = _suggest(
         "commit my changes please now", specs, specs_by_name, store=store
     )
-    assert any(m.command == "commit" for m in ranked1)
+    assert any(m.command == "git-commit" for m in ranked1)
     store.record_shown(ranked1)
     ranked2, _ = _suggest(
         "commit my changes please now", specs, specs_by_name, store=store
     )
-    assert all(m.command != "commit" for m in ranked2)
+    assert all(m.command != "git-commit" for m in ranked2)
 
 
 def test_GT_CS7_settings_disabled_silences(specs, specs_by_name) -> None:
@@ -156,4 +156,4 @@ def test_GT_CS9_adversarial_echo_does_not_trigger(specs, specs_by_name) -> None:
     """Quoted `/commit` in user-pasted code → no commit suggestion."""
     msg = "explain `/commit` versus `/commit-in-chunks` from the docs"
     ranked, _ = _suggest(msg, specs, specs_by_name)
-    assert all(m.command not in {"commit", "commit-in-chunks"} for m in ranked)
+    assert all(m.command not in {"git-commit", "git-commit-in-chunks"} for m in ranked)
