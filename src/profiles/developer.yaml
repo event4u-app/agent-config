@@ -1,0 +1,13 @@
+# Profile view — developer (6.0.0-D Step 14). Immutable built-in.
+profile:
+  id: developer
+  label: Software Development
+  immutable: true
+  packs: [engineering-base, git]
+  # Curated default surface — the focused five (roadmap acceptance).
+  view:
+    - work
+    - review-changes
+    - fix-ci
+    - git-commit
+    - git-pr-create

@@ -78,6 +78,9 @@ export interface DiscoveryArtefact {
     readonly intent?: string;
     readonly routes_to?: readonly string[];
     readonly replaces?: readonly string[];
+    // Canonical path-derived slug (ADR-044) — the invocation name; distinct
+    // from frontmatter `name:` (display). Present on `category: 'command'`.
+    readonly slug?: string;
 }
 
 export interface DiscoveryUnassigned {

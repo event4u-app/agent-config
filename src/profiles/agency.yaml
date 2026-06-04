@@ -1,0 +1,12 @@
+# Profile view — agency (6.0.0-D Step 14). Immutable built-in.
+profile:
+  id: agency
+  label: Multi-client delivery
+  immutable: true
+  packs: [engineering-base, git, product-basic]
+  view:
+    - work
+    - review-changes
+    - git-commit
+    - git-pr-create
+    - roadmap

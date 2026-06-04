@@ -1,0 +1,10 @@
+# Profile view — finance (6.0.0-D Step 14). Immutable built-in.
+profile:
+  id: finance
+  label: Finance & Planning
+  immutable: true
+  packs: [finance-basic]
+  view:
+    - work
+    - research
+    - council

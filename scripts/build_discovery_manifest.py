@@ -31,7 +31,7 @@ from validate_frontmatter import (  # noqa: E402
     load_schema,
     parse_frontmatter,
 )
-from _lib.agent_src import artefact_roots, logical_relpath, resolve_logical, strip_source_prefix  # noqa: E402
+from _lib.agent_src import artefact_roots, command_slug, logical_relpath, resolve_logical, strip_source_prefix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / ".agent-src.uncondensed"
@@ -310,6 +310,14 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
             for _k in ("intent", "routes_to", "replaces"):
                 if fm.get(_k) is not None:
                     entry[_k] = fm[_k]
+            # Canonical path-derived slug (ADR-044): the invocation name the
+            # `.claude`/`.cursor` projection and `commands ls --profile` use.
+            # Distinct from frontmatter `name:` (display, may still be colon
+            # for commands whose rename deferred to 6.1). Single source of
+            # truth = command_slug (path-stripped + slug_prefix).
+            _slug = command_slug(path)
+            if _slug:
+                entry["slug"] = _slug
         entry["checksum"] = _artefact_checksum(path, fm)
         artefacts.append(entry)
         trust_level = (payload.get("trust") or {}).get("level") if payload else None

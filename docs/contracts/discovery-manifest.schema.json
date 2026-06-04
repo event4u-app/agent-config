@@ -64,7 +64,7 @@
         "product-basic", "product-discovery",
         "finance-basic", "finance-advanced",
         "gtm-sales", "gtm-marketing",
-        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta"
+        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta", "git"
       ]
     },
     "lifecycle": {
@@ -138,6 +138,7 @@
         "intent": { "type": "string", "description": "6.0.0-C — command routing metadata (one-line existence justification). Present on visible command artefacts." },
         "routes_to": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (skill/cluster-sub/command slugs the intent routes to)." },
         "replaces": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (prior names/aliases this command absorbs; may be empty)." },
+        "slug": { "type": "string", "description": "6.0.0-D — canonical path-derived invocation slug (ADR-044; pack-stripped subpath + opt-in slug_prefix). Distinct from `name` (display, may still be colon for renames deferred to 6.1). The identity `commands ls --profile` matches on." },
         "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
         "packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" }, "minItems": 1 },
         "requires": {

@@ -1,0 +1,10 @@
+# Profile view — content_creator (6.0.0-D Step 14). Immutable built-in.
+profile:
+  id: content_creator
+  label: Content Creation
+  immutable: true
+  packs: [gtm-marketing]
+  view:
+    - work
+    - research
+    - council
