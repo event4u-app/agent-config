@@ -616,17 +616,20 @@ class TestGenerateClaudeCommands(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        commands_dir = self.project_root / ".agent-src" / "commands"
-        commands_dir.mkdir(parents=True)
-        (commands_dir / "commit.md").write_text("# commit\n\n## Instructions\n\nDo the commit.")
-        (commands_dir / "feature-dev.md").write_text("---\nold: data\n---\n\n# feature-dev\n\nDevelop.")
+        # Commands now source from src/domains/<pack>/<verb>/command.md (the slug
+        # is the pack-stripped hyphenated subpath — ADR-044 amendment).
+        pack_dir = self.project_root / "src" / "domains" / "testpack"
+        (pack_dir / "commit").mkdir(parents=True)
+        (pack_dir / "commit" / "command.md").write_text("# commit\n\n## Instructions\n\nDo the commit.")
+        (pack_dir / "feature-dev").mkdir(parents=True)
+        (pack_dir / "feature-dev" / "command.md").write_text("---\nold: data\n---\n\n# feature-dev\n\nDevelop.")
         self._orig = (
             condense.PROJECT_ROOT,
             condense.COMMANDS_SOURCE, condense.CLAUDE_SKILLS_DIR,
             condense.SKILLS_SOURCE,
         )
         condense.PROJECT_ROOT = self.project_root
-        condense.COMMANDS_SOURCE = commands_dir
+        condense.COMMANDS_SOURCE = self.project_root / ".agent-src" / "commands"
         condense.CLAUDE_SKILLS_DIR = self.project_root / ".claude" / "skills"
         # Point SKILLS_SOURCE to empty dir so no real skills interfere
         condense.SKILLS_SOURCE = self.project_root / ".agent-src" / "skills"
@@ -656,11 +659,11 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         self.assertIn("Do the commit.", content)
 
     def test_command_symlink_points_to_source(self):
-        """Symlink should point to the .agent-src/commands/ source file."""
+        """Symlink should point to the src/domains/ command source file."""
         condense.generate_claude_commands()
         skill_file = self.project_root / ".claude" / "skills" / "feature-dev" / "SKILL.md"
         target = str(skill_file.resolve())
-        self.assertIn("feature-dev.md", target)
+        self.assertIn("feature-dev/command.md", target)
 
     def test_command_skips_same_name_skill(self):
         """Commands with same name as a skill should be skipped."""

@@ -39,7 +39,6 @@ from _lib.script_output import info, success, flush_summary, resolve_level  # no
 from _lib.agent_src import (  # noqa: E402
     artefact_roots,
     iter_all_sources,
-    iter_commands,
     resolve_logical,
     strip_source_prefix,
 )
@@ -955,7 +954,7 @@ def generate_cursor_commands(active_command_slugs: set[str] | None = None) -> in
     or a slug allowlist for scoped projection; the `_clean_modern_dir` pass
     then reaps any command no longer in the active set.
     """
-    if not COMMANDS_SOURCE.exists():
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
         return 0
     cmds = [
         (sf, slug)
@@ -983,7 +982,7 @@ def generate_windsurf_workflows(active_command_slugs: set[str] | None = None) ->
     `active_command_slugs` is `None` for legacy-all or a slug allowlist for
     scoped projection (see `generate_cursor_commands`).
     """
-    if not COMMANDS_SOURCE.exists():
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
         return 0
     cmds = [
         (sf, slug)
@@ -1040,8 +1039,12 @@ def _iter_commands():
     consumer builds its symlink target relative to `PROJECT_ROOT`, not
     `COMMANDS_SOURCE`.
     """
-    for source_file in iter_commands():
-        slug = _command_path_to_slug(source_file.relative_to(PROJECT_ROOT).as_posix())
+    src_domains = PROJECT_ROOT / "src" / "domains"
+    if not src_domains.is_dir():
+        return
+    for source_file in sorted(src_domains.rglob("command.md")):
+        rel = source_file.relative_to(PROJECT_ROOT).as_posix()
+        slug = _command_path_to_slug(rel)
         if not slug:
             continue
         yield source_file, slug
@@ -1290,8 +1293,8 @@ def generate_claude_commands(active_command_slugs: set[str] | None = None) -> in
     cluster commands (e.g. `commands/council/default.md`) are flattened
     to `council-default` so directories never collide in `.claude/skills/`.
     """
-    if not COMMANDS_SOURCE.exists():
-        print("  ⚠️  .agent-src/commands/ not found — skipping commands", file=sys.stderr)
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
+        print("  ⚠️  src/domains/ not found — skipping commands", file=sys.stderr)
         return 0
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1387,7 +1390,7 @@ def generate_plugin_command_skills() -> int:
     auto-discovery channel (.claude/skills/, gitignored) keeps model rendering
     for the dev loop.
     """
-    if not COMMANDS_SOURCE.exists():
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
         return 0
 
     PLUGIN_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
