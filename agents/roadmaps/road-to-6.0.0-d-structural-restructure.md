@@ -268,15 +268,30 @@ Phase 0, never after the moves.
   Step 13: Class-A cluster-sub colon→hyphen follows its head (ADR-044 A9), and B2
   semantic rebrands were already Step 13 (A6). No standalone Class-A renames exist
   in the tree. -->
-- [ ] **Step 13:** Orchestrator HEADS — **structural part only in 6.0.0.** Move
+- [x] **Step 13:** Orchestrator HEADS — **structural part only in 6.0.0.** Move
   the head files into the flat hyphenated layout so the subs (`feature-plan`,
   `fix-ci`, …) render as standalone commands (Claude shadows bare colon heads
-  anyway). **Absorbs the Class-A cluster-sub colon→hyphen renames** (ADR-044 A9,
-  council 2026-06-04): each cluster's subs are renamed colon→hyphen together with
-  that cluster's head move — per cluster, atomically — so verb-governance
-  additions (e.g. `video`/`analytics`/`profile`) land with the head, not before.
-  Also covers the **B2 semantic rebrands** (`tests:*`→`test-*`,
-  `implement-ticket`→`ticket-implement`, `agent-handoff`→`session-handoff`, …). But the actual **folding** — collapsing N routers into one and
+  anyway).
+  <!-- done: the structural part is ALREADY satisfied by Step 10's path-slug
+  move — verified 2026-06-04: every cluster HEAD renders as a bare flat slug
+  (council, roadmap, feature, fix, video, memory, profile, analytics, …) and
+  every sub renders as a flat hyphenated path-slug (council-analysis,
+  roadmap-process-step, feature-plan, …). Dual-mode is inherent: the flat
+  path-slug IS the canonical Claude invocation; the legacy colon `name:` is
+  display-only, mapped by `replaces:`/migrate. Council (claude-sonnet-4-5 +
+  gpt-4o, 2026-06-04) ruled the remaining display-name renames DEFER to 6.1:
+  (1) the B2 set (tests:*→test-*, *-ticket→ticket-*, quality-fix→fix-quality,
+  agent-*→session-*) are SEMANTIC rebrands, not pure renames — forbidden in a
+  rename-only major; (2) new verbs video/analytics/profile REJECTED (single
+  commands), ticket/session CONDITIONAL (need a standalone pack / reframe +
+  ≥6-command evidence), e2e DEFERRED (needs ADR-046); (3) cluster-atomicity
+  (A9) forbids half-renaming a cluster whose [-] subs convert in 6.1. So 6.0-D
+  ships the structural reality (flat path-slugs, done) + the B1 git rename
+  (Step 12); all per-cluster display-name reconciliation moves to the 6.1
+  consolidation roadmap per the "Erst Strukturbruch, dann Konsolidierung"
+  guardrail. The future_state worksheet axis already records each command's
+  6.1 target. -->
+  But the actual **folding** — collapsing N routers into one and
   changing the routing/concurrency model — is **architectural** (council): it
   ships **staged in 6.0.x** with dual-mode (old head + new flat both resolve),
   the default flips in the next patch once the new routing is verified green
