@@ -19,7 +19,14 @@
 set -euo pipefail
 
 EXPECTED_WARNS=93
-EXPECTED_MIN_TOTAL=438
+# 6.0.0-D Step 10 moved the command surface out of skill_linter's scan
+# (`artefact_roots()` skills/rules/commands trees) into `src/domains/<pack>/`,
+# which skill_linter does not lint — commands are now guarded by their own
+# gates (command-count-messaging = 150 files / 0 shims, command-verbs,
+# namespace-collision). The skill_linter floor therefore tracks the remaining
+# skill/rule/persona/guideline corpus (≈329), not the pre-move 438 that double-
+# counted commands. This floor still catches accidental skill/rule deletion.
+EXPECTED_MIN_TOTAL=325
 
 quiet="${SMOKE_QUIET:-0}"
 log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
