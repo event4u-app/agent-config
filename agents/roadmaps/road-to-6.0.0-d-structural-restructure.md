@@ -310,7 +310,7 @@ Phase 0, never after the moves.
 
 ## Phase 5: Profiles-as-views + curated command tree
 
-- [ ] **Step 14:** Implement the inverse mapping (commands→profile aggregation):
+- [x] **Step 14:** Implement the inverse mapping (commands→profile aggregation):
   `src/profiles/<profile>.yaml` declares the surfaced command set. Built-in
   profiles are **opinionated templates, immutable in 6.0** (user customization of
   built-ins deferred to 6.1; custom profiles use a different name). Document the
@@ -322,7 +322,7 @@ Phase 0, never after the moves.
   a **Simple (default) vs Advanced** toggle — Simple picks sensible profile+pack
   defaults from the one answer; Advanced reveals profiles/packs for those who
   want them. README says "Choose your primary workflow", never "choose a profile".
-- [ ] **Step 15:** Extend `agent-config commands` (6.0.0-C CLI) with
+- [x] **Step 15:** Extend `agent-config commands` (6.0.0-C CLI) with
   `--profile <id>` AND a **default vs expanded view** (feedback-2): `commands ls
   --profile developer` renders exactly `work · review · fix · commit · pr`;
   `commands ls --profile developer --expanded` adds the rest of the active packs'

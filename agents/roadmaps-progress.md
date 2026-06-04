@@ -6,17 +6,17 @@
 
 ## Overall
 
-**62 / 178 steps done · 35%**
+**64 / 178 steps done · 36%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 37 | 19 | 18 | 0 | 0 | █████░░░░░ 49% |
+| 1 | [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md) | 9 | 37 | 17 | 20 | 0 | 0 | █████░░░░░ 54% |
 | 2 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
@@ -28,7 +28,7 @@
 
 ### [road-to-6.0.0-d-structural-restructure.md](roadmaps/road-to-6.0.0-d-structural-restructure.md)
 
-**Road to 6.0.0-D — Structural restructure (the hard break)** — 18 / 37 done (49%)
+**Road to 6.0.0-D — Structural restructure (the hard break)** — 20 / 37 done (54%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -38,7 +38,7 @@
 | 3 | Monorepo-collapse decision (evidence-gated) | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | Move the remaining packs | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4b | Command (and skill) naming + skill-conversion | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Profiles-as-views + curated command tree | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 5 | Profiles-as-views + curated command tree | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
 | 7 | Final verification + ADRs | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 8 | Post-move consolidation — NEXT roadmap, not this one | 🟡 in progress | 12 | 1 | 0 | 0 | 8% |
 
