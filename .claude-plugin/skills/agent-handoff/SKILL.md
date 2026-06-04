@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agent-handoff.md
+../../../src/domains/meta/agent-handoff/command.md

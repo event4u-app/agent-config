@@ -1,1 +1,1 @@
-../../../.agent-src/commands/prediction-pool.md
+../../../src/domains/fun/prediction-pool/command.md

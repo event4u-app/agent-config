@@ -1,1 +1,1 @@
-../../../.agent-src/commands/optimize/rtk.md
+../../../src/domains/meta/optimize/rtk/command.md

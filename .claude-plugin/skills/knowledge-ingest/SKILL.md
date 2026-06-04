@@ -1,1 +1,1 @@
-../../../.agent-src/commands/knowledge/ingest.md
+../../../src/domains/product-discovery/knowledge/ingest/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/threat-model.md
+../../../src/domains/engineering-base/threat-model/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/research/deep.md
+../../../src/domains/product-discovery/research/deep/command.md

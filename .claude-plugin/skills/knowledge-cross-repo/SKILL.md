@@ -1,1 +1,1 @@
-../../../.agent-src/commands/knowledge/cross-repo.md
+../../../src/domains/product-discovery/knowledge/cross-repo/command.md

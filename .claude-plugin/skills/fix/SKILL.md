@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix.md
+../../../src/domains/engineering-base/fix/command.md

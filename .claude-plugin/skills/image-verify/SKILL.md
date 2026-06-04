@@ -1,1 +1,1 @@
-../../../.agent-src/commands/image/verify.md
+../../../src/domains/ai-video/image/verify/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory/propose.md
+../../../src/domains/meta/memory/propose/command.md

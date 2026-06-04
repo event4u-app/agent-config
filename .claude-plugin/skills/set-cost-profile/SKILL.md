@@ -1,1 +1,1 @@
-../../../.agent-src/commands/set-cost-profile.md
+../../../src/domains/meta/set-cost-profile/command.md

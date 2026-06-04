@@ -1,1 +1,1 @@
-../../../.agent-src/commands/e2e-heal.md
+../../../src/domains/engineering-base/e2e-heal/command.md

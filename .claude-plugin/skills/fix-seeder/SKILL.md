@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix/seeder.md
+../../../src/domains/engineering-base/fix/seeder/command.md

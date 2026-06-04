@@ -1,1 +1,1 @@
-../../../.agent-src/commands/context/refactor.md
+../../../src/domains/meta/context/refactor/command.md

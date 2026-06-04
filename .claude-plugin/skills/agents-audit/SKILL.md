@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agents/audit.md
+../../../src/domains/meta/agents/audit/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/post-as/me.md
+../../../src/domains/gtm-marketing/post-as/me/command.md

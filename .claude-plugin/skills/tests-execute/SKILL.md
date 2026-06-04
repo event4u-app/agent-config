@@ -1,1 +1,1 @@
-../../../.agent-src/commands/tests/execute.md
+../../../src/domains/engineering-base/tests/execute/command.md

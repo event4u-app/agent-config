@@ -1,1 +1,1 @@
-../../../.agent-src/commands/roadmap/create.md
+../../../src/domains/product-basic/roadmap/create/command.md

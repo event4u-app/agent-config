@@ -1,1 +1,1 @@
-../../../.agent-src/commands/work.md
+../../../src/domains/engineering-base/work/command.md

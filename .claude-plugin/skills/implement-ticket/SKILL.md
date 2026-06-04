@@ -1,1 +1,1 @@
-../../../.agent-src/commands/implement-ticket.md
+../../../src/domains/engineering-base/implement-ticket/command.md

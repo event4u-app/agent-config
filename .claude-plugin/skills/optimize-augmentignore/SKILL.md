@@ -1,1 +1,1 @@
-../../../.agent-src/commands/optimize/augmentignore.md
+../../../src/domains/meta/optimize/augmentignore/command.md

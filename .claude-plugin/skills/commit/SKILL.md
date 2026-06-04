@@ -1,1 +1,1 @@
-../../../.agent-src/commands/commit.md
+../../../src/domains/engineering-base/commit/command.md

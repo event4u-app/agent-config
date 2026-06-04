@@ -954,7 +954,7 @@ def generate_cursor_commands(active_command_slugs: set[str] | None = None) -> in
     or a slug allowlist for scoped projection; the `_clean_modern_dir` pass
     then reaps any command no longer in the active set.
     """
-    if not COMMANDS_SOURCE.exists():
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
         return 0
     cmds = [
         (sf, slug)
@@ -969,7 +969,7 @@ def generate_cursor_commands(active_command_slugs: set[str] | None = None) -> in
         link = CURSOR_COMMANDS_DIR / f"{slug}.md"
         if link.exists() or link.is_symlink():
             link.unlink()
-        rel = Path("../../.agent-src/commands") / source_file.relative_to(COMMANDS_SOURCE)
+        rel = Path("../..") / source_file.relative_to(PROJECT_ROOT)
         link.symlink_to(rel)
         count += 1
     info(f"  ✅  Linked {count} `.cursor/commands/*.md` files")
@@ -982,7 +982,7 @@ def generate_windsurf_workflows(active_command_slugs: set[str] | None = None) ->
     `active_command_slugs` is `None` for legacy-all or a slug allowlist for
     scoped projection (see `generate_cursor_commands`).
     """
-    if not COMMANDS_SOURCE.exists():
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
         return 0
     cmds = [
         (sf, slug)
@@ -997,7 +997,7 @@ def generate_windsurf_workflows(active_command_slugs: set[str] | None = None) ->
         link = WINDSURF_WORKFLOWS_DIR / f"{slug}.md"
         if link.exists() or link.is_symlink():
             link.unlink()
-        rel = Path("../../.agent-src/commands") / source_file.relative_to(COMMANDS_SOURCE)
+        rel = Path("../..") / source_file.relative_to(PROJECT_ROOT)
         link.symlink_to(rel)
         count += 1
     info(f"  ✅  Linked {count} `.windsurf/workflows/*.md` files")
@@ -1028,14 +1028,26 @@ def _command_slug(source_file: Path) -> str:
 
 
 def _iter_commands():
-    """Yield (source_file, slug) for every command .md file (recursive)."""
-    if not COMMANDS_SOURCE.exists():
+    """Yield (source_file, slug) for every command, sourced from `src/domains/`.
+
+    Repointed (ADR-044 amendment, 2026-06-04) from the legacy
+    `.agent-src/commands/` tree to the canonical
+    `src/domains/<pack>/<verb>/command.md` source via
+    `_lib.agent_src.iter_commands()`. The slug is the pack-stripped hyphenated
+    subpath (`_command_path_to_slug`) — the path is the single source of truth
+    per the amendment. `source_file` is the physical `src/domains/` path; every
+    consumer builds its symlink target relative to `PROJECT_ROOT`, not
+    `COMMANDS_SOURCE`.
+    """
+    src_domains = PROJECT_ROOT / "src" / "domains"
+    if not src_domains.is_dir():
         return
-    for source_file in sorted(COMMANDS_SOURCE.rglob("*.md")):
-        # Skip the cluster AGENTS.md authoring doc (not a command).
-        if source_file.name == "AGENTS.md":
+    for source_file in sorted(src_domains.rglob("command.md")):
+        rel = source_file.relative_to(PROJECT_ROOT).as_posix()
+        slug = _command_path_to_slug(rel)
+        if not slug:
             continue
-        yield source_file, _command_slug(source_file)
+        yield source_file, slug
 
 
 # --- Per-skill model auto-switch (ADR-035 / road-to-model-capability-tiers) ---
@@ -1281,8 +1293,8 @@ def generate_claude_commands(active_command_slugs: set[str] | None = None) -> in
     cluster commands (e.g. `commands/council/default.md`) are flattened
     to `council-default` so directories never collide in `.claude/skills/`.
     """
-    if not COMMANDS_SOURCE.exists():
-        print("  ⚠️  .agent-src/commands/ not found — skipping commands", file=sys.stderr)
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
+        print("  ⚠️  src/domains/ not found — skipping commands", file=sys.stderr)
         return 0
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1319,7 +1331,7 @@ def generate_claude_commands(active_command_slugs: set[str] | None = None) -> in
         if skill_file.exists() or skill_file.is_symlink():
             skill_file.unlink()
 
-        rel_path = source_file.relative_to(COMMANDS_SOURCE)
+        rel_path = source_file.relative_to(PROJECT_ROOT)
         value = _model_tier(source_file) if auto else None
         if value in _TIER_TO_CLAUDE_MODEL:
             # Render a copy carrying the native Claude model: key (ADR-034).
@@ -1328,8 +1340,8 @@ def generate_claude_commands(active_command_slugs: set[str] | None = None) -> in
             )
             rendered += 1
         else:
-            # Symlink: .claude/skills/{slug}/SKILL.md → ../../../.agent-src/commands/<rel-path>
-            rel_target = Path("../../../.agent-src/commands") / rel_path
+            # Symlink: .claude/skills/{slug}/SKILL.md → ../../../src/domains/<pack>/<verb>/command.md
+            rel_target = Path("../../..") / rel_path
             skill_file.symlink_to(rel_target)
         count += 1
 
@@ -1378,7 +1390,7 @@ def generate_plugin_command_skills() -> int:
     auto-discovery channel (.claude/skills/, gitignored) keeps model rendering
     for the dev loop.
     """
-    if not COMMANDS_SOURCE.exists():
+    if not (PROJECT_ROOT / "src" / "domains").is_dir():
         return 0
 
     PLUGIN_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1401,8 +1413,8 @@ def generate_plugin_command_skills() -> int:
         if skill_file.exists() or skill_file.is_symlink():
             skill_file.unlink()
 
-        rel_path = source_file.relative_to(COMMANDS_SOURCE)
-        rel_target = Path("../../../.agent-src/commands") / rel_path
+        rel_path = source_file.relative_to(PROJECT_ROOT)
+        rel_target = Path("../../..") / rel_path
         skill_file.symlink_to(rel_target)
         count += 1
 

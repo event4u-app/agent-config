@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory/learn-low-impact.md
+../../../src/domains/meta/memory/learn-low-impact/command.md

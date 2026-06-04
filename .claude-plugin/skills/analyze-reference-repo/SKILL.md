@@ -1,1 +1,1 @@
-../../../.agent-src/commands/analyze-reference-repo.md
+../../../src/domains/engineering-base/analyze-reference-repo/command.md

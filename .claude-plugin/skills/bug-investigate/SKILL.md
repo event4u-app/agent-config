@@ -1,1 +1,1 @@
-../../../.agent-src/commands/bug-investigate.md
+../../../src/domains/engineering-base/bug-investigate/command.md

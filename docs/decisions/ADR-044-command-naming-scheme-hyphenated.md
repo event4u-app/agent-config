@@ -94,8 +94,109 @@ now has, and bare cluster heads disappear from the surface anyway.
   raw command *count* in the tree before 6.1 consolidation shrinks it. This is the
   cost of "structure first, consolidate second" (the feedback-2 guardrail).
 
+## Amendment — 2026-06-04 · slug-canonicalization mechanism (Step 12)
+
+> **Accepted** · 2026-06-04. Implementing Step 12 surfaced that Decision §1's
+> shorthand "`<pack>-<verb>`" is under-specified and inconsistent with
+> product-surface commands. Routed to the AI council (anthropic/claude-sonnet-4-5
+> + openai/gpt-4o, design + peer-review, 2026-06-04). The council **rejected**
+> frontmatter-as-slug and the hybrid override model as split-brain ("two trust
+> anchors"), and converged on **path = single source of truth** (Reviewer A)
+> **with a pack-scoped namespace policy** (peer-review synthesis). This amendment
+> locks that mechanism before any rename lands.
+
+### A1 — Canonical slug source is the PATH, pack-stripped
+
+The slug a command projects to (`.agent-src/commands/<slug>.md`, then
+`.claude` / `.cursor`) is **derived from the source path**, pack segment
+stripped, remaining subpath hyphenated:
+
+- `src/domains/engineering-base/feature/plan/command.md` → `feature-plan`
+- `src/domains/meta/council/analysis/command.md` → `council-analysis`
+
+Frontmatter `name:` is **display/metadata only — never the slug source**. This
+locks the generator's de-facto behaviour (`_command_path_to_slug`) as the single
+source of truth. There is no frontmatter slug override; relocating a command's
+directory is the only way to change its slug.
+
+### A2 — Decision §1's "`<pack>-<verb>`" is shorthand, not a mechanical rule
+
+The pack name is **not auto-prefixed** into the slug. The real rule is
+"hyphenated subpath within the pack". This is why `meta/council` → `council`
+(NOT `meta-council`) and `meta/research` → `research` — product-surface commands
+keep their bare name. ADR-044 §1's examples (`git-commit`, `feature-plan`) read
+as `<pack>-<verb>` only by coincidence of their paths; the governing rule is the
+subpath, not a pack prefix.
+
+### A3 — Pack-scoped prefix is opt-in via `pack.yaml`
+
+A pack whose bare verbs are generic/ambiguous (`commit`, `pr`, `sync`) MAY
+declare `slug_prefix: <p>` in its `pack.yaml`. Then every command in that pack
+projects as `<p>-<subpath>`:
+
+- `git` pack with `slug_prefix: git` → `git/commit` → `git-commit`,
+  `git/pr/create` → `git-pr-create`.
+- `meta` pack (no `slug_prefix`) → `meta/council` → `council`.
+
+Default = no prefix. This is the council's pack-scoped namespace policy and the
+only sanctioned way to obtain a pack-prefixed slug. No per-command override.
+
+### A4 — Slug uniqueness is GLOBAL
+
+`.agent-src/commands/` is a flat namespace; the Phase-0 single-namespace
+collision lint (Step 4) already enforces global uniqueness across skills /
+rules / commands. `slug_prefix` packs participate in the same global namespace
+(the prefix is part of the unique slug, not a separate scope).
+
+### A5 — Alias mechanism: `replaces:` list, routed by `migrate`
+
+A renamed command carries `replaces: [<old-slug>, …]` listing every prior
+invocation (the legacy colon name for Class A, the pre-rehome name for Class B).
+`migrate` reads these and rewrites old invocations to the new slug. The
+`superseded_by:` **shim** convention is reserved for **true command
+supersession** (one command replaced by a different one) and is NOT used for an
+in-place rename alias — a command never both *is* a slug and *is superseded*.
+One slug per file; `replaces:` carries the history.
+
+### A6 — Three rename classes, distinct sequencing
+
+| Class | Pattern | Example | Lane |
+|---|---|---|---|
+| **A** | colon → hyphen (punctuation only; path-slug already correct) | `feature:plan` → `feature-plan` | **Step 12** — reconcile `name:` display + `replaces:[old-colon]` + refs/evals; no path move |
+| **B1** | pack-prefix (generic verb gains a `slug_prefix` pack) | `commit` → `git-commit` | **Step 12** — gated on the `git` pack + its `slug_prefix`; a directory move into the pack |
+| **B2** | semantic rebrand (taxonomy changed) | `agent-handoff` → `session-handoff` | **Step 13** (pack/taxonomy restructure) — NOT Step 12; it changes pack membership AND name |
+
+Lumping B1 and B2 was the council's named false-dichotomy: B2 is a rebrand of the
+domain, not a rename, and ships with the pack restructure.
+
+### A7 — Pre-flight gates before any rename lands
+
+1. **No-op baseline.** Before touching the divergent commands, prove the
+   path-slug derivation is unchanged for the already-aligned commands (assert the
+   set of projected slugs is byte-identical pre/post the generator's
+   `slug_prefix` support; only the opted-in pack's slugs may change).
+2. **Circular-`replaces:` lint.** Reject any `replaces:` chain that cycles or
+   points at a live slug.
+3. **Global-collision lint** (Phase-0) must stay green after each class.
+4. **Rollback.** Each class is its own commit; a class that fails its gate is
+   reverted without touching the others (move-one-validate-one cadence).
+
+### A8 — `migrate` I/O (the trust-boundary the council flagged)
+
+- **Input:** command frontmatter `replaces:` across `src/domains/**`, producing
+  an `old-slug → new-slug` map. Reads source, not the projected `.agent-src/`.
+- **Output:** rewrites old invocations in the consumer's own artefacts (saved
+  commands, docs) to the new slug; emits the map for audit. It mutates
+  user-facing invocations only — never the package source.
+
 ## Alternatives considered
 
+- **Frontmatter `name:` as the slug source (council option a).** Rejected: two
+  trust anchors (slug from frontmatter, pack from path), commands become
+  non-relocatable, and `name:` / `replaces:` create a multi-field slug conflict.
+- **Hybrid: optional frontmatter override wins, else path (council option c).**
+  Rejected: institutionalises "sometimes path, sometimes frontmatter" — a
+  permanent split-brain with no north star for new contributors.
 - **Keep colon namespacing (`git:pr:create`).** Rejected: Claude Code does not
   resolve two-colon depth, and bare heads are shadowed — the syntax cannot
   express the domain tree.

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agents/init.md
+../../../src/domains/meta/agents/init/command.md

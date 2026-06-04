@@ -1,1 +1,1 @@
-../../../.agent-src/commands/quality-fix.md
+../../../src/domains/engineering-base/quality-fix/command.md

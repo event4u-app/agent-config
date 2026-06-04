@@ -1,1 +1,1 @@
-../../../.agent-src/commands/override/create.md
+../../../src/domains/meta/override/create/command.md

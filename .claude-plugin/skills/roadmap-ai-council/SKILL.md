@@ -1,1 +1,1 @@
-../../../.agent-src/commands/roadmap/ai-council.md
+../../../src/domains/product-basic/roadmap/ai-council/command.md

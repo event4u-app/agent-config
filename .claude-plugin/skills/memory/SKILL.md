@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory.md
+../../../src/domains/meta/memory/command.md

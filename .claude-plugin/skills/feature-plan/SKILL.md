@@ -1,1 +1,1 @@
-../../../.agent-src/commands/feature/plan.md
+../../../src/domains/engineering-base/feature/plan/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/feature/refactor.md
+../../../src/domains/engineering-base/feature/refactor/command.md

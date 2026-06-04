@@ -1,1 +1,1 @@
-../../../.agent-src/commands/challenge-me/with-docs.md
+../../../src/domains/meta/challenge-me/with-docs/command.md

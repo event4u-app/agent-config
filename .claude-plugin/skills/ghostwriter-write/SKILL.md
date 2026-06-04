@@ -1,1 +1,1 @@
-../../../.agent-src/commands/ghostwriter/write.md
+../../../src/domains/gtm-marketing/ghostwriter/write/command.md

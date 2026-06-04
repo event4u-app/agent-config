@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory/mine-session.md
+../../../src/domains/meta/memory/mine-session/command.md

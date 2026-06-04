@@ -1,1 +1,1 @@
-../../../.agent-src/commands/video/from-song.md
+../../../src/domains/ai-video/video/from-song/command.md

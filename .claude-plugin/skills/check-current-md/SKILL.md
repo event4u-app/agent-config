@@ -1,1 +1,1 @@
-../../../.agent-src/commands/check-current-md.md
+../../../src/domains/meta/check-current-md/command.md

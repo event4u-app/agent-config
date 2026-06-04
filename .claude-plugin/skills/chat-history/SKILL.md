@@ -1,1 +1,1 @@
-../../../.agent-src/commands/chat-history.md
+../../../src/domains/meta/chat-history/command.md

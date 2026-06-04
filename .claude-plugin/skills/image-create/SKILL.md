@@ -1,1 +1,1 @@
-../../../.agent-src/commands/image/create.md
+../../../src/domains/ai-video/image/create/command.md

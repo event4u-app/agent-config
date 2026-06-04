@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory/promote.md
+../../../src/domains/meta/memory/promote/command.md

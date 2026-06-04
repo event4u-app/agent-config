@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix/portability.md
+../../../src/domains/engineering-base/fix/portability/command.md

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/grill-me.md
+../../../src/domains/meta/grill-me/command.md
