@@ -1,9 +1,10 @@
 ---
 model_tier: medium
-name: create-pr:description-only
-pack: engineering-base
+name: git-pr-create-description-only
+pack: git
+replaces: [create-pr-description-only, create-pr:description-only]
 tier: 2
-cluster: create-pr
+cluster: git-pr-create
 sub: description-only
 skills: [git-workflow]
 description: Generate a PR description as a copyable markdown block — used standalone or by create-pr
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - git
 ---
 
 # /create-pr:description-only

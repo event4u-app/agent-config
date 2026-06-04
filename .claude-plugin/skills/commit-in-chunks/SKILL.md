@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/commit/in-chunks/command.md

@@ -12,7 +12,7 @@
   label: Engineering
   description: Code, tests, CI, reviews, architecture.
   example_roles: [Developer, CTO, Tech Lead]
-  default_packs: [engineering-base]
+  default_packs: [engineering-base, git]
   optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python]
 
 - id: product

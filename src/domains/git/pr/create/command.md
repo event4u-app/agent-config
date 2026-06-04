@@ -1,12 +1,12 @@
 ---
 model_tier: medium
-name: create-pr
-pack: engineering-base
+name: git-pr-create
+pack: git
 intent: "Open a pull request with a generated description and stripped attribution footers"
 routes_to: [git-workflow]
-replaces: []
+replaces: [create-pr]
 tier: 1
-cluster: create-pr
+cluster: git-pr-create
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes
 suggestion:
@@ -16,7 +16,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - git
 ---
 
 # /create-pr
@@ -30,14 +30,14 @@ sub-command produces a copyable PR description without creating the PR.
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/create-pr` (bare) | this file (`## Default flow`) | Full flow — generate description, push, create PR |
-| `/create-pr:description-only` | `commands/create-pr/description-only.md` | Generate the PR description as a copyable markdown block, no PR creation |
+| `/create-pr:description-only` | `commands/pr/create/description-only.md` | Generate the PR description as a copyable markdown block, no PR creation |
 
 ## Dispatch
 
 1. Parse the user's argument: `/create-pr[:<sub>] [args]`.
 2. Bare `/create-pr` → run the `## Default flow` below verbatim.
 3. `/create-pr:description-only` → load
-   `commands/create-pr/description-only.md` and follow its
+   `commands/pr/create/description-only.md` and follow its
    `## Instructions` section verbatim.
 4. Unknown sub-command → print the table above and ask which one.
 

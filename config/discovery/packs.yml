@@ -29,6 +29,16 @@
   domain: engineering
   size_class: core
 
+- id: git
+  label: Git
+  description: Git workflow — commit, pull requests, branch sync.
+  workspaces: [engineering]
+  requires: [engineering-base]
+  slug_prefix: git
+  trust_level_default: core
+  domain: engineering
+  size_class: small
+
 - id: php
   label: PHP
   description: PHP-language patterns (framework-free).

@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/create-pr/description-only/command.md

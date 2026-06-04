@@ -1,0 +1,1 @@
+../../../src/domains/git/pr/create/command.md

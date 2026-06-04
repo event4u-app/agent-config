@@ -1,0 +1,1 @@
+../../../src/domains/git/commit/in-chunks/command.md

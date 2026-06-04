@@ -1,9 +1,10 @@
 ---
 model_tier: medium
-name: commit:in-chunks
-pack: engineering-base
+name: git-commit-in-chunks
+pack: git
+replaces: [commit-in-chunks, commit:in-chunks]
 tier: 2
-cluster: commit
+cluster: git-commit
 sub: in-chunks
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - git
 ---
 
 # /commit:in-chunks
