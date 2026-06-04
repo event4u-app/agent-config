@@ -347,11 +347,11 @@ Phase 0, never after the moves.
   `src/internal`, `internal/`, `hooks/`, the maintainer `agents/` workspace) and
   fold `taskfiles/` to a folder with a thin root `Taskfile.yml`. Update every
   hardcoded path in `.github/workflows/*.yml` and `taskfiles/*.yml`.
-- [ ] **Step 17:** Update the **install contract**: `package.json` `files` / `bin`
+- [x] **Step 17:** Update the **install contract**: `package.json` `files` / `bin` <!-- done: files[] scripts/->src/scripts; build/prepack/prepublish npm scripts->src/scripts; install.sh + orchestrator SOURCE_DIR ../.. ; _dispatch regenerator via SCRIPT_DIR/_lib + PACKAGE_ROOT; install_regenerator parents[3]. 3 install-contract tests green (commit c9c6eca9). -->
   / prepack, the installer paths, and the discovery/MCP manifest paths to the new
   `src/` locations. The break is intentional — old `node_modules/.../{scripts,
   templates,config}` paths are gone.
-- [ ] **Step 18:** Ship a **first-class `migrate` command** (feedback-2: "ohne
+- [x] **Step 18:** Ship a **first-class `migrate` command** (feedback-2: "ohne <!-- done: cmd_migrate gains --check (exit 0/2) + --from {4,5}; shared _plan_lines; contract + dispatcher help updated; MIGRATION.md (4->6, 5->6) added to files[] + linked from README; README hero already count-free. 20 migrate tests green (commit 9b50e685). -->
   Dry-Run wird der Break unnötig riskant") — `agent-config migrate` with
   `--dry-run` (preview every change, mutate nothing), `--from 4|5` (explicit
   source major), and `--check` (report whether an install is on the old layout
@@ -362,9 +362,9 @@ Phase 0, never after the moves.
 
 ## Phase 7: Final verification + ADRs
 
-- [ ] **Step 19:** CI-path audit: every workflow + taskfile + script path
+- [x] **Step 19:** CI-path audit: every workflow + taskfile + script path <!-- done: 269 exec invocations + 47 workflow paths-filters + 3 -m PYTHONPATH=src + install-hooks PROJECT_ROOT/hook bodies + install.sh 4 runtime refs -> src/scripts; 0 remaining exec/path-filter refs; workflows+taskfiles parse (commit 79e0383e). -->
   resolves to the new tree; `task ci` green end-to-end on the restructured repo.
-- [ ] **Step 19b:** Model-tier auto-switch reaches the **consumer global tree**
+- [x] **Step 19b:** Model-tier auto-switch reaches the **consumer global tree** <!-- done: shared _lib/model_tier.py; install.py finalize_claude_model_tiers (gated on consumer model.auto_switch==auto) renders model_tier->native model: in installed .claude/skills/, mirroring condense.py. Verified e2e: 151 rendered, grep model_tier ->0, native model: present. 3 unit tests (commit 54ea80ba). -->
   (regression: 5.10.0 shipped `~/.claude/skills/` with raw `model_tier:` and
   zero native `model:`, so Claude Code never performed the per-turn switch —
   e.g. `medium`-tier skills never pulled Sonnet). The repo generator is correct
