@@ -253,7 +253,7 @@ Phase 0, never after the moves.
   flag; the controlled-verb allowlist (ADR-041) still applies. The same
   short-descriptive-name discipline applies to skills/rules (the flat library
   benefits from a single clean namespace — see the collision lint, Phase 0).
-- [ ] **Step 12:** Apply the rename worksheet
+- [x] **Step 12:** Apply the rename worksheet
   ([`agents/reports/command-classification-6.0.0-d.md`](../reports/command-classification-6.0.0-d.md)
   — all 150 commands, new name + old in parens + KEEP/SKILL recommendation, for
   the maintainer to curate with `[x]`/`[-]`): rename every KEEP command to its
@@ -262,10 +262,21 @@ Phase 0, never after the moves.
   structural rename, NOT a deletion — nothing is removed in 6.0-D. Update
   references + routing evals. (Worksheet lives under `agents/reports/`, not in
   this file, so its 150 checkboxes do not skew the roadmap dashboard.)
+  <!-- done: delivered scope = the slug_prefix pipeline (ADR-044 A3) + Class B1
+  git-pack rename (commit→git-commit, create-pr→git-pr-create). Council
+  (claude-sonnet-4-5 + gpt-4o, 2026-06-04) folded ALL remaining KEEP renames into
+  Step 13: Class-A cluster-sub colon→hyphen follows its head (ADR-044 A9), and B2
+  semantic rebrands were already Step 13 (A6). No standalone Class-A renames exist
+  in the tree. -->
 - [ ] **Step 13:** Orchestrator HEADS — **structural part only in 6.0.0.** Move
   the head files into the flat hyphenated layout so the subs (`feature-plan`,
   `fix-ci`, …) render as standalone commands (Claude shadows bare colon heads
-  anyway). But the actual **folding** — collapsing N routers into one and
+  anyway). **Absorbs the Class-A cluster-sub colon→hyphen renames** (ADR-044 A9,
+  council 2026-06-04): each cluster's subs are renamed colon→hyphen together with
+  that cluster's head move — per cluster, atomically — so verb-governance
+  additions (e.g. `video`/`analytics`/`profile`) land with the head, not before.
+  Also covers the **B2 semantic rebrands** (`tests:*`→`test-*`,
+  `implement-ticket`→`ticket-implement`, `agent-handoff`→`session-handoff`, …). But the actual **folding** — collapsing N routers into one and
   changing the routing/concurrency model — is **architectural** (council): it
   ships **staged in 6.0.x** with dual-mode (old head + new flat both resolve),
   the default flips in the next patch once the new routing is verified green
@@ -338,6 +349,20 @@ Phase 0, never after the moves.
 
 - [ ] **Step 19:** CI-path audit: every workflow + taskfile + script path
   resolves to the new tree; `task ci` green end-to-end on the restructured repo.
+- [ ] **Step 19b:** Model-tier auto-switch reaches the **consumer global tree**
+  (regression: 5.10.0 shipped `~/.claude/skills/` with raw `model_tier:` and
+  zero native `model:`, so Claude Code never performed the per-turn switch —
+  e.g. `medium`-tier skills never pulled Sonnet). The repo generator is correct
+  (`condense.py` `_TIER_TO_CLAUDE_MODEL`, gated on `model.auto_switch == auto`),
+  but the *install* path writes `~/.claude/skills/` from the binary, not from
+  this repo. (a) **Diagnose:** run `agent-config install` against a test consumer
+  with `model.auto_switch: auto` and confirm the install/generate stage applies
+  the tier→`model:` mapping (reads the consumer's `auto_switch`), rather than
+  copying raw `.agent-src` skills. (b) **Fix if the gap is real:** route the
+  consumer Claude-tree generation through the same condense mapping stage. (c)
+  **Re-verify:** `grep -rl '^model_tier:' ~/.claude/skills/ | wc -l` → 0, and
+  `grep -L '^model:' ~/.claude/skills/*/SKILL.md` → only `inherit`-tier skills.
+  Release gate: 6.0.0 does not ship until (c) passes.
 - [x] **Step 20:** Record the structural ADRs (supersede ADR-017 monorepo layout
   and ADR-028 root-layout as needed; new ADR for `src/domains/` + flat
   skills/rules + profiles-as-views + the hard-break decision). **Plus a dedicated
@@ -483,5 +508,9 @@ Phase 0, never after the moves.
 - [ ] `agent-config migrate` carries a 4.x and a 5.x install to 6.0;
   `MIGRATION.md` linked from the README.
 - [ ] `task ci` green on the new structure; all path audits pass.
+- [ ] Consumer install with `model.auto_switch: auto` writes native `model:`
+  (`high`→opus / `medium`→sonnet / `lite`→haiku) into `~/.claude/skills/`; zero
+  raw `model_tier:` remain in the global tree (closes the 5.10.0 per-turn-switch
+  regression).
 - [ ] No skill/rule/command deleted by this roadmap — move + re-home only
   (content consolidation is a later roadmap).

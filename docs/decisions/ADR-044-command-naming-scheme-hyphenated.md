@@ -189,6 +189,41 @@ domain, not a rename, and ships with the pack restructure.
   commands, docs) to the new slug; emits the map for audit. It mutates
   user-facing invocations only — never the package source.
 
+## Amendment — 2026-06-04 · cluster-subs follow their head (Class A → Step 13)
+
+> **Accepted** · 2026-06-04. Routed to the AI council (anthropic/claude-sonnet-4-5
+> + openai/gpt-4o, design mode) when implementing Step 12. Both members converged
+> on a classification tiebreaker the original A6 table missed.
+
+### A9 — A colon-named **cluster sub** follows its HEAD's lane, regardless of
+path-slug status.
+
+A6 classified `feature:plan` → `feature-plan` as **Class A → Step 12** because
+the path-slug is already correct. That reading misses **structural membership**:
+the colon was never decorative punctuation — it encoded cluster membership, and
+every remaining colon-named command in the tree is a tier-2 cluster sub whose
+HEAD move is **Step 13** (Decision §2). Renaming a sub colon→hyphen in Step 12
+while its head moves in Step 13 splits one coherent change across two steps and
+produces a command-scattered intermediate state (hyphenated subs under unmigrated
+heads).
+
+**The tiebreaker:** a Class-A rename that targets a **cluster sub** is performed
+**in Step 13, together with its head's structural move** — per cluster, atomically.
+Two consequences the council named:
+
+1. **Verb governance lands with the head, not before it.** Subs like
+   `video:storyboard` / `analytics:show` / `profile:show` would each force a new
+   ADR-041 verb (`video` / `analytics` / `profile`) just to align a display name.
+   The verb-namespace budget is decided WITH the cluster's head restructure in
+   Step 13, never burned prematurely in Step 12.
+2. **Step 12's delivered scope is therefore B1 (the `git` pack rename) + the
+   `slug_prefix` pipeline** — the only genuinely standalone structural renames.
+   All other KEEP renames are either cluster subs (this A9) or B2 semantic
+   rebrands (A6) — both Step 13.
+
+Standalone (non-cluster-sub) Class-A renames, should any appear, stay in Step 12
+per A6. None exist in the current tree.
+
 ## Alternatives considered
 
 - **Frontmatter `name:` as the slug source (council option a).** Rejected: two
