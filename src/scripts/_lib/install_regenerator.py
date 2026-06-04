@@ -117,8 +117,10 @@ def main() -> int:
     consumer_root = Path(sys.argv[1]).resolve()
     package_root = (
         Path(sys.argv[2]).resolve()
+        # __file__ = src/scripts/_lib/install_regenerator.py → package root is
+        # four levels up (_lib → scripts → src → root) since 6.0.0-D.
         if len(sys.argv) > 2
-        else Path(__file__).resolve().parent.parent.parent
+        else Path(__file__).resolve().parents[3]
     )
     ok, msg = install_regenerator(package_root, consumer_root)
     print(msg)

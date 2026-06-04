@@ -101,9 +101,10 @@ parse_args() {
 
     [[ -z "$TOOLS" ]] && TOOLS="all"
 
-    # Auto-detect source: directory where this script lives (../  = package root)
+    # Auto-detect source: this script lives at src/scripts/install.sh, so the
+    # package root (where .agent-src/ lives) is two levels up (../.. ).
     if [[ -z "$SOURCE_DIR" ]]; then
-        SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+        SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
     fi
 
     # Auto-detect target: PROJECT_ROOT env var, or derive from source location

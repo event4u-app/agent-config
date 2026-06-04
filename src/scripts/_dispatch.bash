@@ -750,9 +750,10 @@ PY
 # CONSUMER_ROOT — module form requires the package's `scripts` dir to
 # be on PYTHONPATH which is not the case when invoked from a consumer.
 _hooks_install_regenerator() {
-  local package_root
-  package_root="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")")"
-  python3 "$package_root/scripts/_lib/install_regenerator.py" "$CONSUMER_ROOT" "$package_root" 2>&1
+  # The helper module lives at src/scripts/_lib/ (6.0.0-D moved tooling under
+  # src/). $PACKAGE_ROOT is the package root (two levels above src/scripts) and
+  # is the search base the regenerator needs to locate .agent-src/ / .augment/.
+  python3 "$SCRIPT_DIR/_lib/install_regenerator.py" "$CONSUMER_ROOT" "$PACKAGE_ROOT" 2>&1
   return $?
 }
 

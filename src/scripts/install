@@ -261,9 +261,10 @@ if ! validate_tools "$TOOLS"; then
     exit 1
 fi
 
-# Auto-detect source: directory above this script
+# Auto-detect source: this orchestrator lives at src/scripts/install, so the
+# package root (where .agent-src/ lives) is two levels up (../.. ).
 if [[ -z "$SOURCE_DIR" ]]; then
-    SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+    SOURCE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 fi
 
 # Auto-detect target: PROJECT_ROOT env, or derive from node_modules path, else cwd

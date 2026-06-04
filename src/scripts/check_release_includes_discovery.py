@@ -26,7 +26,7 @@ SUMMARY = ROOT / "dist" / "discovery" / "discovery-manifest.summary.md"
 def _die(msg: str) -> int:
     sys.stderr.write(f"check-release-discovery: {msg}\n")
     sys.stderr.write(
-        "  hint: run `python3 scripts/build_discovery_manifest.py --write --strict`"
+        "  hint: run `python3 src/scripts/build_discovery_manifest.py --write --strict`"
         " before `npm pack` / `npm publish`.\n"
     )
     return 1
