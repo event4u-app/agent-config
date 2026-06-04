@@ -60,7 +60,9 @@ The sync script ships in the installed package. Resolve in order:
 2. `vendor/event4u/agent-config/scripts/sync_agent_settings.py` — Composer.
 3. `node_modules/@event4u/agent-config/scripts/sync_agent_settings.py` — npm.
 
-Target is always `<project_root>/.agent-settings.yml`.
+Target is always the canonical `agents/settings/.agent-settings.yml`; a legacy
+repo-root `.agent-settings.yml` is read as a fallback and migrated into the
+canonical location, never written afresh (ADR-038). Pass `--path` to override.
 
 ### 2. Dry-run — show the user what would change
 

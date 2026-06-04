@@ -51,6 +51,26 @@ co-located with the rest of the settings layer. The repo-root
 - The `.gitignore` basename match already covers the canonical path — no new
   ignore entry required.
 
+## Amendment — 2026-06-03 · dev-mode resolution semantics
+
+Recorded alongside [`ADR-049`](ADR-049-configuration-trust-boundary.md) so a
+future contributor does not read `AGENT_CONFIG_DEV_MODE=1` as a settings-scope
+escape hatch.
+
+When `AGENT_CONFIG_DEV_MODE=1` (`scripts/install.py` treats the package repo as
+both source and project surface, per [`ADR-020`](ADR-020-global-only-consumer-scope.md)):
+
+- The package repo's `agents/settings/` **is** the project surface — its
+  `.agent-settings.yml` / `.ai-council.yml` are the maintainer's test fixtures
+  for exercising the loader against real files, not a workaround.
+- The user-global layer (`~/.event4u/agent-config/`) still provides the
+  whitelisted identity keys and provider secrets exactly as in a consumer install.
+- **No special merge logic.** The normal cascade composes (user-global whitelist
+  → project-canonical → local override). Dev-mode changes *which directory* is the
+  project surface, never *which keys* may cascade — the `MERGEABLE_KEYS` trust
+  boundary from [`ADR-049`](ADR-049-configuration-trust-boundary.md) holds
+  unchanged.
+
 ## Alternatives considered
 
 - **Keep root canonical (status quo).** Rejected: leaves the override/main-file
