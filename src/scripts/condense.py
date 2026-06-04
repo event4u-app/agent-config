@@ -1065,8 +1065,13 @@ def _iter_commands():
 # place a capability tier resolves to a concrete model. `inherit`/absent emit
 # nothing and stay pure symlinks. Non-Claude agents never get a per-vendor
 # table — the rule surfaces the tier name as a suggestion.
-_TIER_TO_CLAUDE_MODEL = {"high": "opus", "medium": "sonnet", "lite": "haiku"}
-_MODEL_TIER_RE = re.compile(r'^model_tier:\s*"?([a-z]+)"?\s*$', re.MULTILINE)
+# Tier→model mapping + frontmatter regex live in the shared _lib module so the
+# repo generator (here) and the consumer install finalizer
+# (install.py::finalize_claude_model_tiers) can never drift (ADR-034/035).
+from _lib.model_tier import (  # noqa: E402
+    TIER_TO_CLAUDE_MODEL as _TIER_TO_CLAUDE_MODEL,
+    MODEL_TIER_RE as _MODEL_TIER_RE,
+)
 
 
 def _read_model_auto_switch() -> str:

@@ -12,11 +12,11 @@ format in `.agent-settings.yml`, leaves a one-shot backup as
 exactly once; subsequent runs are idempotent.
 
 Usage:
-  python3 scripts/install.py                     # defaults: rule_loading_tier=balanced
-  python3 scripts/install.py --profile=minimal   # set rule_loading_tier=minimal (kernel only)
-  python3 scripts/install.py --force             # accepted (no-op): installs always overwrite
-  python3 scripts/install.py --skip-bridges      # only create .agent-settings.yml
-  python3 scripts/install.py --project <dir>     # override project root
+  python3 src/scripts/install.py                     # defaults: rule_loading_tier=balanced
+  python3 src/scripts/install.py --profile=minimal   # set rule_loading_tier=minimal (kernel only)
+  python3 src/scripts/install.py --force             # accepted (no-op): installs always overwrite
+  python3 src/scripts/install.py --skip-bridges      # only create .agent-settings.yml
+  python3 src/scripts/install.py --project <dir>     # override project root
 
 Idempotent — safe to run multiple times. A run always refreshes every
 deployed file with the current package content; user configuration
@@ -4207,7 +4207,7 @@ def run_interactive_init(project_root: Path, force: bool) -> int:
     verbosity = _interactive_prompt_choice("Verbosity profile:", _INTERACTIVE_VERBOSITIES)
 
     payload: dict[str, Any] = {
-        "$schema": "https://github.com/event4u-app/agent-config/scripts/schemas/local-config.schema.json",
+        "$schema": "https://github.com/event4u-app/agent-config/src/scripts/schemas/local-config.schema.json",
         "version": 1,
         "user_type": user_type,
         "stack": stack,
@@ -4838,9 +4838,96 @@ def _propose_modules_config(project_root: Path, is_first_run: bool) -> None:
     print("    skip_dirs: [.module-template, .example]")
     print()
     info(
-        "Re-run anytime via `python3 scripts/propose_modules_config.py` "
-        "(installed under <package>/scripts/)."
+        "Re-run anytime via `python3 src/scripts/propose_modules_config.py` "
+        "(installed under <package>/src/scripts/)."
     )
+
+
+def _read_consumer_auto_switch(project_root: Path) -> str:
+    """Read `model.auto_switch` from the consumer's settings.
+
+    Returns `auto` | `suggest` | `off`; default `suggest`. Only `auto` makes
+    the install finalizer rewrite installed skills to a native Claude `model:`
+    key — mirroring the repo generator's gate (`condense.py`).
+    """
+    try:
+        from scripts._lib.agent_settings import load_agent_settings  # noqa: PLC0415
+    except ImportError:  # pragma: no cover — script-style invocation
+        try:
+            from _lib.agent_settings import load_agent_settings  # type: ignore[no-redef]  # noqa: PLC0415
+        except ImportError:
+            return "suggest"
+    try:
+        data = load_agent_settings(project_path=_resolve_settings_read(project_root))
+    except Exception:  # noqa: BLE001 — settings absence must never break install.
+        return "suggest"
+    model = data.get("model") if isinstance(data, dict) else None
+    value = model.get("auto_switch") if isinstance(model, dict) else None
+    if isinstance(value, str) and value.strip().lower() in ("auto", "suggest", "off"):
+        return value.strip().lower()
+    return "suggest"
+
+
+def finalize_claude_model_tiers(project_root: Path) -> int:
+    """Apply the tier→native-`model:` rewrite to the installed `.claude/skills/`.
+
+    Closes the consumer-global-tree regression (6.0.0-D Step 19b): the payload
+    sync symlinks each `.claude/skills/<skill>` → `../../.augment/skills/<skill>`
+    whose SKILL.md carries a raw `model_tier:` and **no** native `model:`, so
+    Claude Code never performed the per-turn switch on a consumer with
+    `model.auto_switch: auto`. Here — gated on the consumer's `auto_switch`,
+    reusing the shared `_lib.model_tier` mapping the repo generator uses — we
+    replace the symlink of each model-tier-bearing skill with a real directory
+    whose SKILL.md is rendered (`model_tier:` → `model:`) and whose other files
+    stay symlinked into `.augment/skills/`. Mirrors
+    `condense.py::generate_claude_skills`. No-op unless `auto_switch == auto`.
+    """
+    claude_skills = project_root / ".claude" / "skills"
+    augment_skills = project_root / ".augment" / "skills"
+    if not claude_skills.is_dir() or not augment_skills.is_dir():
+        return 0
+    if _read_consumer_auto_switch(project_root) != "auto":
+        return 0
+
+    from scripts._lib.model_tier import (  # noqa: PLC0415
+        TIER_TO_CLAUDE_MODEL,
+        read_model_tier,
+        render_native_model_md,
+    )
+
+    rendered = 0
+    for entry in sorted(claude_skills.iterdir()):
+        name = entry.name
+        src_dir = augment_skills / name
+        src_md = src_dir / "SKILL.md"
+        tier = read_model_tier(src_md)
+        if tier not in TIER_TO_CLAUDE_MODEL or not src_dir.is_dir():
+            continue
+        # Replace the symlink (or stale copy) with a rendered real directory.
+        if entry.is_symlink() or entry.is_file():
+            entry.unlink()
+        elif entry.is_dir():
+            shutil.rmtree(entry)
+        entry.mkdir(parents=True)
+        for f in sorted(src_dir.iterdir()):
+            if f.name == "SKILL.md":
+                (entry / "SKILL.md").write_text(
+                    render_native_model_md(src_md.read_text(encoding="utf-8"), tier),
+                    encoding="utf-8",
+                )
+            else:
+                # File depth is .claude/skills/<skill>/<file> → 3 levels to root.
+                (entry / f.name).symlink_to(
+                    Path("../../../.augment/skills") / name / f.name
+                )
+        rendered += 1
+
+    if rendered and not QUIET:
+        info(
+            f"Applied native model: to {rendered} model-tier skill(s) in "
+            ".claude/skills/ (model.auto_switch=auto)"
+        )
+    return rendered
 
 
 def _main_project_install(
@@ -4986,6 +5073,12 @@ def _main_project_install(
         )
         if rc != 0:
             return rc
+
+    # Step 19b — consumer model-tier auto-switch. After the payload sync has
+    # created the .claude/skills/ symlinks, render native `model:` keys for
+    # model-tier skills when the consumer opted into model.auto_switch: auto.
+    if not opts.skip_bridges and _is_tool_enabled(tools, "claude-code"):
+        finalize_claude_model_tiers(project_root)
 
     if not QUIET:
         print()
