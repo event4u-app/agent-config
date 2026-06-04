@@ -13,7 +13,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPT="$REPO_ROOT/scripts/mcp_registry_submit.sh"
+SCRIPT="$REPO_ROOT/src/scripts/mcp_registry_submit.sh"
 TESTS_RUN=0
 TESTS_FAIL=0
 
@@ -85,13 +85,14 @@ if [ "$EXIT" = "2" ]; then _pass "unknown arg exits 2"; else _fail "unknown arg 
 echo "Test 5: missing registries.md path"
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/mcp-submit-fixture-XXXX")
 # Copy the script into the fixture root; the script resolves its own
-# REPO_ROOT relative to its location, so we mirror the layout
-# (script under <fixture>/scripts/, no docs/distribution/ tree).
-mkdir -p "$TMP/scripts"
-cp "$SCRIPT" "$TMP/scripts/mcp_registry_submit.sh"
-chmod +x "$TMP/scripts/mcp_registry_submit.sh"
+# REPO_ROOT relative to its location (two levels up from src/scripts/), so we
+# mirror the layout (script under <fixture>/src/scripts/, no docs/distribution/
+# tree) — REPO_ROOT then resolves to <fixture>, which has no registries.md.
+mkdir -p "$TMP/src/scripts"
+cp "$SCRIPT" "$TMP/src/scripts/mcp_registry_submit.sh"
+chmod +x "$TMP/src/scripts/mcp_registry_submit.sh"
 set +e
-OUTPUT=$(bash "$TMP/scripts/mcp_registry_submit.sh" --dry-run 2>&1)
+OUTPUT=$(bash "$TMP/src/scripts/mcp_registry_submit.sh" --dry-run 2>&1)
 EXIT=$?
 set -e
 if [ "$EXIT" = "3" ]; then _pass "missing registries.md exits 3"; else _fail "missing registries.md exit=$EXIT"; fi

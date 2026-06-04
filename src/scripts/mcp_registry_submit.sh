@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"  # src/scripts/ -> repo root
 REGISTRIES_DOC="$REPO_ROOT/docs/distribution/registries.md"
 TODAY=$(date -u +%Y%m%d)
 BRANCH=${BRANCH:-add-event4u-agent-config-${TODAY}}

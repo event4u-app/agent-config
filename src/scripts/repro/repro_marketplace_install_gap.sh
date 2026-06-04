@@ -20,7 +20,7 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"  # src/scripts/repro/ -> repo root
 TMPDIR_BASE="${TMPDIR:-/tmp}"
 CONSUMER_ROOT="$(mktemp -d "$TMPDIR_BASE/marketplace-install-gap-XXXXXX")"
 EVIDENCE_FILE="$REPO_ROOT/agents/evidence/analysis/hooks-marketplace-gap-2026-05-29.md"

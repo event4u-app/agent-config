@@ -12,7 +12,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPT="$REPO_ROOT/scripts/recruit_preflight.sh"
+SCRIPT="$REPO_ROOT/src/scripts/recruit_preflight.sh"
 TESTS_RUN=0
 TESTS_FAIL=0
 

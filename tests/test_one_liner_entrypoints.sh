@@ -106,7 +106,7 @@ test_setup_local_install() {
 
 # --- Test 3: `agent-config init --help` (npm bin entry) ---
 test_npx_help() {
-    local bin="$NPX_EXTRACT/agent-config/scripts/agent-config"
+    local bin="$NPX_EXTRACT/agent-config/src/scripts/agent-config"
     if AGENT_CONFIG_NO_PIN_REEXEC=1 bash "$bin" help >/dev/null 2>&1; then
         pass "agent-config bin help exits 0"
     else
@@ -116,7 +116,7 @@ test_npx_help() {
 
 # --- Test 4: `agent-config init` installs from extracted tarball ---
 test_npx_local_install() {
-    local bin="$NPX_EXTRACT/agent-config/scripts/agent-config"
+    local bin="$NPX_EXTRACT/agent-config/src/scripts/agent-config"
     local target
     target="$TMPDIR/npx-target"
     mkdir -p "$target"

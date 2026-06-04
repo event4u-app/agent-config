@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run kernel smoke
-        run: scripts/smoke/kernel.sh
+        run: src/scripts/smoke/kernel.sh
 
   smoke-router:
     name: Smoke — router
@@ -56,7 +56,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run router smoke
-        run: scripts/smoke/router.sh
+        run: src/scripts/smoke/router.sh
 
   smoke-schema:
     name: Smoke — schema
@@ -67,7 +67,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run schema smoke
-        run: scripts/smoke/schema.sh
+        run: src/scripts/smoke/schema.sh
 
   smoke-skills:
     name: Smoke — skills
@@ -78,4 +78,4 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run skills smoke
-        run: scripts/smoke/skills.sh
+        run: src/scripts/smoke/skills.sh

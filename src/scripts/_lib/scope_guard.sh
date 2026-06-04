@@ -32,8 +32,9 @@ SOURCE_DIR="${2:-}"          # package source repo (read version from here)
 TARGET_DIR="${3:-}"          # consumer install root for "this" scope
 
 # Default SOURCE_DIR to the package root when invoked from inside this repo.
+# This lib lives at src/scripts/_lib/, so the package root is three levels up.
 if [[ -z "$SOURCE_DIR" ]]; then
-    SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 fi
 
 # Resolve the version we're about to install. Authoritative source:
