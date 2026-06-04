@@ -108,7 +108,7 @@ DISPATCH_STDERR="$(mktemp "$TMPDIR_BASE/dispatch-stderr-XXXXXX")"
 DISPATCH_EXIT=0
 echo "$ENVELOPE" | (
     cd "$CONSUMER_ROOT"
-    CLAUDE_PROJECT_DIR="$CONSUMER_ROOT" python3 "$REPO_ROOT/scripts/hooks/dispatch_hook.py" \
+    CLAUDE_PROJECT_DIR="$CONSUMER_ROOT" python3 "$REPO_ROOT/src/scripts/hooks/dispatch_hook.py" \
         --platform claude --event post_tool_use --native-event PostToolUse \
         2>"$DISPATCH_STDERR"
 ) || DISPATCH_EXIT=$?

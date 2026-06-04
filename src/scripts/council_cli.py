@@ -38,7 +38,7 @@ import yaml
 # install dir. Hardcoding the package dir here was the bug — settings and
 # `.ai-council.yml` were then read from the package (which has neither), so
 # `council:*` always refused with `ai_council.enabled is false`.
-PACKAGE_ROOT = Path(__file__).resolve().parents[2]
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT, _ = resolve_project_root(None)
 SETTINGS_FILE = project_settings_path(REPO_ROOT)
 AI_COUNCIL_FILE = REPO_ROOT / "agents" / "settings" / ".ai-council.yml"

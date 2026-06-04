@@ -21,7 +21,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 
 from _lib import script_output  # type: ignore[import-not-found]  # noqa: E402
 from _lib.bench_cost import aggregate_sessions  # noqa: E402

@@ -840,8 +840,8 @@ class TestGeneratePluginHooks(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = Path(tempfile.mkdtemp())
-        (self.tmpdir / "scripts").mkdir()
-        (self.tmpdir / "scripts" / "hook_manifest.yaml").write_text(
+        (self.tmpdir / "src" / "scripts").mkdir(parents=True)
+        (self.tmpdir / "src" / "scripts" / "hook_manifest.yaml").write_text(
             "platforms:\n"
             "  claude:\n"
             "    session_start: [chat-history]\n"

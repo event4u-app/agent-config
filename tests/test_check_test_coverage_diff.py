@@ -79,12 +79,12 @@ def test_non_gate_additions_ignored():
 # --- pragma reader: reads the in-file opt-out from the tree ----------------
 
 def test_pragma_reason_from_tree(tmp_path, monkeypatch):
-    gate = tmp_path / "scripts" / "check_demo.py"
+    gate = tmp_path / "src" / "scripts" / "check_demo.py"
     gate.parent.mkdir(parents=True)
     gate.write_text("#!/usr/bin/env python3\n# coverage-diff-ignore: trivial wrapper\nx = 1\n", encoding="utf-8")
     monkeypatch.setattr(mod, "REPO_ROOT", tmp_path)
     assert mod._pragma_reason_from_tree("src/scripts/check_demo.py") == "trivial wrapper"
-    other = tmp_path / "scripts" / "check_none.py"
+    other = tmp_path / "src" / "scripts" / "check_none.py"
     other.write_text("x = 1\n", encoding="utf-8")
     assert mod._pragma_reason_from_tree("src/scripts/check_none.py") is None
 

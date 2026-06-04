@@ -1414,7 +1414,7 @@ def test_repo_root_follows_consumer_cwd_not_package(tmp_path: Path) -> None:
         "import council_cli as m;"
         "print(m.REPO_ROOT);print(m.PACKAGE_ROOT)"
     )
-    env = {**os.environ, "PYTHONPATH": str(package_root / "scripts")}
+    env = {**os.environ, "PYTHONPATH": str(package_root / "src" / "scripts")}
     proc = subprocess.run(
         [sys.executable, "-c", probe],
         cwd=consumer, env=env, capture_output=True, text=True,

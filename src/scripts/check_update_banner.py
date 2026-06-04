@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from scripts._lib import agent_settings  # noqa: E402
 from scripts._lib import update_check  # noqa: E402

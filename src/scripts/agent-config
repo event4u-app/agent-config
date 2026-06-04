@@ -34,7 +34,7 @@ while [[ -L "$src" ]]; do
   [[ "$src" != /* ]] && src="$dir/$src"
 done
 here="$(cd -- "$(dirname -- "$src")" && pwd)"
-ts_entry="$here/../dist/cli/agent-config.js"
+ts_entry="$here/../../dist/cli/agent-config.js"
 legacy_entry="$here/_dispatch.bash"
 source_marker="$here/../src/cli/registry.ts"
 

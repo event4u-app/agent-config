@@ -28,7 +28,7 @@ while [ -L "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CONSUMER_ROOT="$(pwd)"
 
 VERSION_FILE="$PACKAGE_ROOT/package.json"
@@ -365,7 +365,7 @@ cmd_mcp_run() {
     echo "    Run \`./agent-config mcp:setup\` first to create it." >&2
     exit 1
   fi
-  exec env PYTHONPATH="$PACKAGE_ROOT" "$venv_py" -m scripts.mcp_server "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" "$venv_py" -m scripts.mcp_server "$@"
 }
 
 cmd_roadmap_progress() {
@@ -779,7 +779,7 @@ cmd_council() {
   local sub="$1"; shift || true
   local script
   script="$(resolve_script "scripts/council_cli.py")" || return 1
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 "$script" "$sub" "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 "$script" "$sub" "$@"
 }
 
 # `use --profile=<id>` — switch the active experience/profile. Writes
@@ -789,7 +789,7 @@ cmd_use() {
   require_python3
   local script
   script="$(resolve_script "scripts/profile_use.py")" || return 1
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 "$script" "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 "$script" "$@"
 }
 
 # `agent-config update` — flip the agent_config_version pin in
@@ -797,17 +797,17 @@ cmd_use() {
 # road-to-portable-runtime-and-update-check.md).
 cmd_update() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_update "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_update "$@"
 }
 
 cmd_upgrade() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_upgrade "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_upgrade "$@"
 }
 
 cmd_refresh() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_refresh "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_refresh "$@"
 }
 
 # `agent-config migrate` — one-shot migration off legacy composer / npm
@@ -815,7 +815,7 @@ cmd_refresh() {
 # (P3.5 of road-to-portable-runtime-and-update-check.md).
 cmd_migrate() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_migrate "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_migrate "$@"
 }
 
 # `agent-config init` — project-scope install entry point. Forwards
@@ -846,7 +846,7 @@ cmd_global() {
 # See scripts/_cli/cmd_export.py for the registry and idempotency logic.
 cmd_export() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_export "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_export "$@"
 }
 
 # `agent-config sync` — replay agents/installed-tools.lock (ADR-008
@@ -854,7 +854,7 @@ cmd_export() {
 # disk. Typical onboarding flow: clone → `./agent-config sync` → done.
 cmd_sync() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_sync "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_sync "$@"
 }
 
 # `agent-config validate` — read-only drift detection (ADR-008 Phase 3.4).
@@ -862,7 +862,7 @@ cmd_sync() {
 # any drift. Never edits the manifest or re-runs the installer.
 cmd_validate() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_validate "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_validate "$@"
 }
 
 # `agent-config settings:check` — read-only YAML-subset validator for
@@ -871,7 +871,7 @@ cmd_validate() {
 # 1 finding(s), 2 file absent / unreadable.
 cmd_settings_check() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_settings_check "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_settings_check "$@"
 }
 
 # `agent-config settings:migrate` — lift project-local
@@ -882,7 +882,7 @@ cmd_settings_check() {
 # Exit 0 success / no-op, 1 non-empty global without --force or parse error.
 cmd_settings_migrate() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_settings_migrate "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_settings_migrate "$@"
 }
 
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
@@ -891,7 +891,7 @@ cmd_settings_migrate() {
 # scripts/_cli/cmd_uninstall.py.
 cmd_uninstall() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_uninstall "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_uninstall "$@"
 }
 
 # `agent-config prune` — remove orphaned project bridge markers.
@@ -901,7 +901,7 @@ cmd_uninstall() {
 # scripts/_cli/cmd_prune.py.
 cmd_prune() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_prune "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_prune "$@"
 }
 
 # `agent-config doctor` — read-only drift report against the manifest.
@@ -909,7 +909,7 @@ cmd_prune() {
 # 2 manifest-absent. See scripts/_cli/cmd_doctor.py.
 cmd_doctor() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_doctor "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_doctor "$@"
 }
 
 # `agent-config versions` — list available @event4u/agent-config versions
@@ -918,7 +918,7 @@ cmd_doctor() {
 # scripts/_cli/cmd_versions.py.
 cmd_versions() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_versions "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_versions "$@"
 }
 
 # `agent-config explain <config|rule|route>` — print the decision chain
@@ -926,7 +926,7 @@ cmd_versions() {
 # edits state. See scripts/_cli/cmd_explain.py.
 cmd_explain() {
   require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_explain "$@"
+  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_explain "$@"
 }
 
 main() {
@@ -1027,7 +1027,7 @@ maybe_pin_reexec() {
   local installed
   installed="$(print_version)"
   [[ -z "$installed" || "$installed" == "unknown" ]] && return 0
-  env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._lib.pin_resolver \
+  env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._lib.pin_resolver \
     --cwd "$CONSUMER_ROOT" --installed "$installed" -- "$@" || true
 }
 
@@ -1045,7 +1045,7 @@ run_update_check_banner() {
   if ! command -v python3 >/dev/null 2>&1; then
     return 0
   fi
-  local banner_script="$PACKAGE_ROOT/scripts/check_update_banner.py"
+  local banner_script="$PACKAGE_ROOT/src/scripts/check_update_banner.py"
   [[ -f "$banner_script" ]] || return 0
   python3 "$banner_script" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
 }

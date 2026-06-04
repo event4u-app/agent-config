@@ -50,7 +50,7 @@ printf '\n== test-pipeline.sh — banana-arc golden run (offline) ==\n\n'
 printf '[1/6] parse-blueprint vs. expected.json\n'
 SCENES="01-simple 02-dialogue-native-audio 03-edge-duration"
 for s in $SCENES; do
-  actual="$(bash "$ROOT/scripts/ai-video/lib/parse-blueprint.sh" "$PROJECT/scenes/$s/blueprint.txt" 2>/dev/null \
+  actual="$(bash "$ROOT/src/scripts/ai-video/lib/parse-blueprint.sh" "$PROJECT/scenes/$s/blueprint.txt" 2>/dev/null \
     | jq -S . 2>/dev/null || true)"
   expected="$(jq -S . "$PROJECT/scenes/$s/expected.json" 2>/dev/null || true)"
   if [ -z "$actual" ]; then
@@ -102,7 +102,7 @@ printf '\n[4/6] adapter capability declarations\n'
 declare_caps() {
   local adapter="$1"; local expected="$2"
   local out got
-  out="$(AIV_DRYRUN=true bash "$ROOT/scripts/ai-video/adapters/$adapter.sh" capability 2>/dev/null || true)"
+  out="$(AIV_DRYRUN=true bash "$ROOT/src/scripts/ai-video/adapters/$adapter.sh" capability 2>/dev/null || true)"
   got="$(printf '%s' "$out" | jq -r '.audio // empty' 2>/dev/null || true)"
   if [ "$got" = "$expected" ]; then
     ok "$adapter: capability.audio=$got"
@@ -118,7 +118,7 @@ declare_caps kling         "none"
 # ---------------------------------------------------------------- 5
 printf '\n[5/6] stitch.sh dry-run returns manifest output path\n'
 STITCH_OUT="$(jq -r '.stitch_output' "$PROJECT/manifest.json")"
-stitch_log="$(AIV_DRYRUN=true bash "$ROOT/scripts/ai-video/stitch.sh" \
+stitch_log="$(AIV_DRYRUN=true bash "$ROOT/src/scripts/ai-video/stitch.sh" \
   "$PROJECT/manifest.json" "$PROJECT/$STITCH_OUT" 2>&1 || true)"
 case "$stitch_log" in
   *"$STITCH_OUT"*) ok   "stitch.sh dry-run referenced $STITCH_OUT";;

@@ -58,7 +58,7 @@ def test_stray_install_script_fails(capsys: pytest.CaptureFixture[str]) -> None:
     ]
     code, out = _check(files, capsys)
     assert code == 1
-    assert "OUT-OF-SHAPE: scripts/install.py" in out
+    assert "OUT-OF-SHAPE: src/scripts/install.py" in out
     # The shape-clean files do NOT appear in stdout on failure — only the
     # offenders, so CI logs surface the precise reason without noise.
     assert "ok: package.json" not in out

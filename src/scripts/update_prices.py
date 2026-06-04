@@ -24,7 +24,7 @@ import urllib.request
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from scripts.ai_council._default_prices import DEFAULT_PRICES, as_rows  # noqa: E402
 from scripts.ai_council.pricing import (  # noqa: E402

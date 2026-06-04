@@ -31,7 +31,7 @@ def test_fallback_yaml_handles_lists_and_scalars() -> None:
         schema_version: 1
         concerns:
           chat-history:
-            script: scripts/chat_history.py
+            script: src/scripts/chat_history.py
             args: [hook-dispatch]
             fail_closed: false
         platforms:
