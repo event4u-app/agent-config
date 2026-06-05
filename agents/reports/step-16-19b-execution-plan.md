@@ -1,6 +1,6 @@
 # Step 16–19b execution plan — the root→`src/` move (human-attended)
 
-> Companion to `agents/roadmaps/road-to-6.0.0-d-structural-restructure.md`
+> Companion to `agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md`
 > Phase 5–7. Lives under `agents/reports/` (transient) so it never skews the
 > roadmap dashboard. Authored 2026-06-04 after Steps 12–15 landed (PR #362) and
 > Step 16 was confirmed a **human-attended kill-switch**. This file makes the

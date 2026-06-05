@@ -14,7 +14,7 @@ type: decision
 ## Status
 
 **Accepted** · 2026-06-03. Records the Phase 3 decision gate of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md)
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md)
 (Step 9). Supersedes the per-pack physical layout of
 [`ADR-017`](ADR-017-monorepo-physical-layout.md) for the source tree.
 Decision routed through the AI council (anthropic/claude-sonnet-4-5 +
@@ -113,7 +113,7 @@ Absent either trigger, the collapse stands.
 
 ## References
 
-- [`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md) Step 9.
+- [`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md) Step 9.
 - [`ADR-017`](ADR-017-monorepo-physical-layout.md) — superseded source layout.
 - Council session: anthropic/claude-sonnet-4-5 + openai/gpt-4o, design mode,
   2026-06-03 (collapse-with-safeguards convergence).

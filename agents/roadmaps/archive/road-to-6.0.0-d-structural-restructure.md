@@ -552,12 +552,12 @@ Phase 0, never after the moves.
   collapse decision recorded with evidence (ADR).
 - [x] `agent-config migrate` carries a 4.x and a 5.x install to 6.0;
   `MIGRATION.md` linked from the README.
-- [ ] `task ci` green on the new structure; all path audits pass. <!-- merge-gated:
-  Step 19 established full-suite green on the restructured tree (79e0383e) and the
-  Step-16-closure PR #365 CI is green (Sync + Generate Tools Consistency incl.
-  ref/path audits). This whole-structure criterion confirms on PR-merge to main
-  (full suite runs unfiltered there). Left open so the roadmap archives post-merge,
-  keeping inbound ADR/report/sibling references intact while the PR is open. -->
+- [x] `task ci` green on the new structure; all path audits pass.
+  <!-- verified 2026-06-05: merge-gate satisfied — Step-16-closure PR #365 merged
+  to main (commit 4d01b8eb), full unfiltered suite green there; Step 19 had already
+  established full-suite green on the restructured tree (79e0383e). Box flipped and
+  the roadmap archived in the same response now the gating PR is merged; inbound
+  ADR/report/sibling references migrated to the archive/ path in this PR. -->
 - [x] Consumer install with `model.auto_switch: auto` writes native `model:`
   (`high`→opus / `medium`→sonnet / `lite`→haiku) into `~/.claude/skills/`; zero
   raw `model_tier:` remain in the global tree (closes the 5.10.0 per-turn-switch

@@ -14,7 +14,7 @@ type: decision
 ## Status
 
 **Accepted** · 2026-06-03. Authored as Phase 4b / Step 11 of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md).
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md).
 Builds on [`ADR-041`](ADR-041-controlled-command-verbs.md) (controlled verb
 allowlist — still applies, unchanged) and
 [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md) (the `src/domains/<pack>/`

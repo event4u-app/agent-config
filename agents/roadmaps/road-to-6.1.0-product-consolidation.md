@@ -9,7 +9,7 @@ parent_roadmap: road-to-6.0.0-d-structural-restructure
 > Draft until 6.0.0 ships — the ONLY gate is the dependency (you cannot
 > consolidate the renamed surface before it is renamed). **No telemetry wait.**
 > This roadmap holds everything the
-> [`6.0.0-D scope-line rule`](road-to-6.0.0-d-structural-restructure.md) put in
+> [`6.0.0-D scope-line rule`](archive/road-to-6.0.0-d-structural-restructure.md) put in
 > the **architectural (6.0.x staged)** and **behavioral (6.1)** lanes — changes
 > that need detection logic or non-TTY safety, NOT changes that need a usage
 > window.

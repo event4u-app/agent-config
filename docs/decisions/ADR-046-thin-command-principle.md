@@ -14,7 +14,7 @@ type: decision
 ## Status
 
 **Accepted** · 2026-06-03. Authored as Phase 7 / Step 20 of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md)
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md)
 (feedback-3: "it is an architecture decision, not just structure"). Composes with
 [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md) (the flat `src/skills/` +
 `src/rules/` shared library a command composes from) and

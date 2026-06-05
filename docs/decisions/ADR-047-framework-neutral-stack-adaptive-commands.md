@@ -14,7 +14,7 @@ type: decision
 ## Status
 
 **Accepted** · 2026-06-03. Authored as Phase 7 / Step 20 of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md).
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md).
 Codifies, as an architecture decision, the floor already enforced by the
 [`framework-neutrality-in-generic-skills`](../../src/rules/framework-neutrality-in-generic-skills.md)
 rule and the "stack-adaptive set" resolved in the

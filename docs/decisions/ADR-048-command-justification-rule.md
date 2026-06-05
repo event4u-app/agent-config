@@ -14,7 +14,7 @@ type: decision
 ## Status
 
 **Accepted** · 2026-06-03. Authored as Phase 7 / Step 20b of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md)
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md)
 (feedback-5/7: "the rule that ends every future discussion"). **Locks** the
 "Command justification" section already captured in
 [`command-clusters.md`](../contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
