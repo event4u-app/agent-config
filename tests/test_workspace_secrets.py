@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PY_DIR = REPO_ROOT / "packages" / "core" / "installer" / "python"
+PY_DIR = REPO_ROOT / "src" / "cli" / "python"
 
 
 def _load(name: str):

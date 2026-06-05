@@ -43,6 +43,28 @@ SRC = ROOT / "src"
 SRC_SKILLS = SRC / "skills"
 SRC_RULES = SRC / "rules"
 
+# 6.0.x workspace cleanup: the remaining uncondensed artefact categories
+# (contexts, personas, templates, profiles, presets, user-types, ghostwriter,
+# scripts, packs) move out of ``packages/core/.agent-src.uncondensed/`` into a
+# single relocated container ``src/agent-src/`` (prefix ""), keeping their
+# original per-category subdir names. This preserves logical identity exactly
+# (``contexts/<file>`` etc. — the snapshot of ``.agent-src/`` is byte-identical)
+# AND the ``artefact_roots()`` container+append contract, so the many scanners
+# that do ``root / "<category>"`` keep resolving with zero per-scanner edits.
+#
+# Council (claude-sonnet-4-5 + gpt-4o, 2026-06-05) converged on per-category
+# ``src/<category>`` roots with logical prefixes; execution refined that to one
+# ``src/agent-src/`` container because per-category physical names collide with
+# the pre-existing ``src/templates`` (workspace TS templates), ``src/profiles``
+# (runtime profile-views), and ``src/scripts`` (Python tooling) dirs, which would
+# break six ``artefact_roots()``+append consumers (the profile loader and five
+# test conftests resolving ``root / "templates" / "scripts"`` / ``root / "scripts"``
+# / ``root / "profiles"``). The container honours the council's #1 priority —
+# no generated-tree corruption / no collision — while keeping source under
+# ``src/`` (the council rejected a root-level ``.agent-src.uncondensed/`` for
+# reverting the at-``src/`` direction). See ADR-051.
+SRC_AGENT = SRC / "agent-src"
+
 # 6.0.0-D Phase 4 (Step 10): commands move out of the per-pack
 # ``packages/*/.agent-src.uncondensed/commands/`` trees into pack-physical
 # ``src/domains/<pack>/<subpath>/command.md``. Unlike skills/rules (whose
@@ -191,10 +213,27 @@ def _root_specs() -> list[tuple[Path, str]]:
             sub = pkg / ".agent-src.uncondensed"
             if sub.is_dir():
                 specs.append((sub, ""))
+    if SRC_AGENT.is_dir():
+        specs.append((SRC_AGENT, ""))
     if SRC_SKILLS.is_dir():
         specs.append((SRC_SKILLS, "skills/"))
     if SRC_RULES.is_dir():
         specs.append((SRC_RULES, "rules/"))
+    # Collision guard (council-required, 2026-06-05): two source roots emitting
+    # the same non-empty logical prefix would let `condense.py` silently
+    # overwrite one category's output with another's. Fail loud instead.
+    # Empty-prefix roots (legacy, packages/*, src/agent-src) are exempt — they
+    # namespace via per-category subdirs.
+    seen: dict[str, Path] = {}
+    for physical, prefix in specs:
+        if not prefix:
+            continue
+        if prefix in seen:
+            raise RuntimeError(
+                f"source-root logical-prefix collision: {prefix!r} claimed by "
+                f"both {seen[prefix]} and {physical}"
+            )
+        seen[prefix] = physical
     return specs
 
 
@@ -224,6 +263,13 @@ def artefact_roots() -> list[Path]:
             sub = pkg / ".agent-src.uncondensed"
             if sub.is_dir():
                 roots.append(sub)
+    # 6.0.x: the relocated uncondensed container. Ordered BEFORE ``SRC`` so the
+    # three categories that also exist under ``src/`` as a different concern
+    # (``templates`` = workspace TS, ``profiles`` = runtime views, ``scripts`` =
+    # Python tooling) resolve to the uncondensed source first — exactly the
+    # precedence ``packages/core/.agent-src.uncondensed/`` held before the move.
+    if SRC_AGENT.is_dir():
+        roots.append(SRC_AGENT)
     if SRC_SKILLS.is_dir() or SRC_RULES.is_dir():
         roots.append(SRC)
     return roots

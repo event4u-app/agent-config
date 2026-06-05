@@ -348,8 +348,8 @@ are excluded.
 | command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
 | command | [`check-current-md`](../.agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
-| command | [`commit`](../.agent-src/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
-| command | [`commit:in-chunks`](../.agent-src/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
+| command | [`git-commit`](../.agent-src/commands/commit.md) | cluster: git-commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
+| command | [`git-commit-in-chunks`](../.agent-src/commands/commit/in-chunks.md) | cluster: git-commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`condense`](../.agent-src/commands/condense.md) |  | Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/ |
 | command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`context:create`](../.agent-src/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
@@ -362,8 +362,6 @@ are excluded.
 | command | [`council:design`](../.agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council:optimize`](../.agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council:pr`](../.agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`create-pr`](../.agent-src/commands/create-pr.md) | cluster: create-pr | Create a GitHub PR with structured description from Jira ticket and code changes |
-| command | [`create-pr:description-only`](../.agent-src/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`e2e-heal`](../.agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
 | command | [`e2e-plan`](../.agent-src/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../.agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
@@ -429,6 +427,8 @@ are excluded.
 | command | [`post-as`](../.agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as:ghostwriter`](../.agent-src/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as:me`](../.agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+| command | [`git-pr-create`](../.agent-src/commands/pr/create.md) | cluster: git-pr-create | Create a GitHub PR with structured description from Jira ticket and code changes |
+| command | [`git-pr-create-description-only`](../.agent-src/commands/pr/create/description-only.md) | cluster: git-pr-create | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`prediction-pool`](../.agent-src/commands/prediction-pool.md) |  | Fill a prediction pool (kicktipp, football/basketball WM): optimize expected points under the rules, enter tips via Playwright. Triggers 'Tippspiel', 'kicktipp', 'predict the pool'. |
 | command | [`prepare-for-review`](../.agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`profile`](../.agent-src/commands/profile.md) | cluster: profile | Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence) |

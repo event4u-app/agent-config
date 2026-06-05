@@ -618,7 +618,7 @@ def print_preview(plan: Plan) -> None:
     print(f"  · {MARKETPLACE_JSON.relative_to(REPO_ROOT)}")
     print(f"  · {CHANGELOG.relative_to(REPO_ROOT)}")
     print("  · regenerated derived files via `task release-prepare`")
-    print("    (packages/*/pack.yaml + README.md, .agent-src/, tool projections)")
+    print("    (src/packs/*/pack.yaml + README.md, .agent-src/, tool projections)")
     if plan.split_plan is not None:
         sp = plan.split_plan
         print()
@@ -759,7 +759,7 @@ def execute(
         else:
             _step(3, total, f"Commit `release: {plan.target}`")
             # `git add -A` stages the three primary bump files AND every
-            # regenerated derived file (packages/*/pack.yaml + README.md,
+            # regenerated derived file (src/packs/*/pack.yaml + README.md,
             # .agent-src/, .augment/, tool projections). Listing them
             # explicitly would silently drift the moment a new generated
             # tree is added.

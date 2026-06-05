@@ -1,32 +1,37 @@
 {
   "description_catalog": {
     "commands_core_source": {
-      "chars": 20162,
-      "entries": 144,
-      "tokens_claude": 5601,
+      "chars": 20912,
+      "entries": 149,
+      "tokens_claude": 5809,
       "tokens_claude_exact": false,
-      "tokens_gpt": 5040,
+      "tokens_gpt": 5228,
       "tokens_gpt_exact": false
     },
     "skills_core_source": {
-      "chars": 23997,
-      "entries": 122,
-      "tokens_claude": 6666,
+      "chars": 42133,
+      "entries": 214,
+      "tokens_claude": 11704,
       "tokens_claude_exact": false,
-      "tokens_gpt": 5999,
+      "tokens_gpt": 10533,
       "tokens_gpt_exact": false
     },
     "skills_projected": {
-      "chars": 61417,
-      "entries": 353,
-      "tokens_claude": 17060,
+      "chars": 62371,
+      "entries": 359,
+      "tokens_claude": 17325,
       "tokens_claude_exact": false,
-      "tokens_gpt": 15354,
+      "tokens_gpt": 15593,
       "tokens_gpt_exact": false
     }
   },
-  "generated": "2026-06-01T08:44:40+00:00",
+  "generated": "2026-06-05T03:13:10+00:00",
   "longest_rules": [
+    {
+      "chars": 7771,
+      "id": "roadmap-progress-sync",
+      "tokens_gpt": 1943
+    },
     {
       "chars": 7556,
       "id": "autonomous-execution",
@@ -46,11 +51,6 @@
       "chars": 6364,
       "id": "roadmap-ci-steps-policy",
       "tokens_gpt": 1591
-    },
-    {
-      "chars": 6315,
-      "id": "roadmap-progress-sync",
-      "tokens_gpt": 1579
     },
     {
       "chars": 6278,
@@ -80,48 +80,32 @@
   ],
   "rule_footprint": {
     ".augment": {
-      "chars": 237436,
+      "chars": 239131,
       "files": 79,
-      "tokens_claude": 65954,
+      "tokens_claude": 66425,
       "tokens_claude_exact": false,
-      "tokens_gpt": 59359,
+      "tokens_gpt": 59783,
       "tokens_gpt_exact": false
     },
     ".claude": {
-      "chars": 237436,
+      "chars": 239131,
       "files": 79,
-      "tokens_claude": 65954,
+      "tokens_claude": 66425,
       "tokens_claude_exact": false,
-      "tokens_gpt": 59359,
-      "tokens_gpt_exact": false
-    },
-    ".cursor": {
-      "chars": 237436,
-      "files": 79,
-      "tokens_claude": 65954,
-      "tokens_claude_exact": false,
-      "tokens_gpt": 59359,
-      "tokens_gpt_exact": false
-    },
-    ".windsurfrules": {
-      "chars": 198676,
-      "files": 1,
-      "tokens_claude": 55188,
-      "tokens_claude_exact": false,
-      "tokens_gpt": 49669,
+      "tokens_gpt": 59783,
       "tokens_gpt_exact": false
     }
   },
   "thin_projection": {
-    "eager_chars": 237436,
-    "eager_gpt": 59359,
+    "eager_chars": 239131,
+    "eager_gpt": 59783,
     "kernel_full": 10,
     "non_kernel_thinned": 69,
     "rules_total": 79,
-    "saved_gpt": 45857,
+    "saved_gpt": 46222,
     "saved_pct": 77.3,
-    "thin_chars": 54006,
-    "thin_gpt": 13502,
+    "thin_chars": 54245,
+    "thin_gpt": 13561,
     "token_method": "tokens_gpt: proxy (chars/4.0, tiktoken not installed); tokens_claude: proxy (chars/3.6)"
   },
   "token_method": "tokens_gpt: proxy (chars/4.0, tiktoken not installed); tokens_claude: proxy (chars/3.6)"

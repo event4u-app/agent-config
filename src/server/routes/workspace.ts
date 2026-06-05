@@ -6,7 +6,7 @@
  * `docs/contracts/daily-workspace.md` § Endpoints. Each handler reads
  * from the on-disk role / session / knowledge / document layout and
  * returns JSON; no Python subprocess is shelled out. The Python CLI
- * modules in `packages/core/installer/python/workspace_*.py` keep their
+ * modules in `src/cli/python/workspace_*.py` keep their
  * standalone surface for non-GUI callers but this route is the
  * canonical path the WorkspacePage hits.
  *

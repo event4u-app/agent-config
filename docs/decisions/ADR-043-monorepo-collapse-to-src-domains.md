@@ -20,6 +20,13 @@ type: decision
 Decision routed through the AI council (anthropic/claude-sonnet-4-5 +
 openai/gpt-4o, design mode, 2026-06-03).
 
+**Executed** · 2026-06-05. The collapse is now carried out: `packages/` no longer
+exists at the repo root. The uncondensed source container moved to `src/agent-src/`
+([`ADR-051`](ADR-051-uncondensed-source-container-relocation.md)); pack homes moved to
+`src/packs/<id>/` (capability packs + core) and `src/domains/<pack>/` (command-bearing),
+with ops dirs to root `deploy/` ([`ADR-052`](ADR-052-packages-removal-and-pack-home-migration.md)).
+The condensed `.agent-src/` output is byte-identical across the move.
+
 ## Context
 
 The decision: collapse the build-time `packages/<pack>/.agent-src.uncondensed/`

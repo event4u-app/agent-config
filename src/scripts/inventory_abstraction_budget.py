@@ -45,11 +45,12 @@ try:
 except ImportError:
     script_output = None  # graceful fallback when running outside repo
 
-from _lib.agent_src import resolve_package_core_path  # noqa: E402
+from _lib.agent_src import SRC_AGENT  # noqa: E402
 
-CORE_SRC = resolve_package_core_path(".agent-src.uncondensed")
-# Enforced packages/core targets — read by scripts/check_gate_paths.py so a
-# future move that desyncs this path fails CI instead of silently no-opping.
+# 6.0.x: uncondensed source container moved to src/agent-src/ (ADR-051).
+CORE_SRC = SRC_AGENT
+# Enforced source target — read by scripts/check_gate_paths.py so a future move
+# that desyncs this path fails CI instead of silently no-opping.
 GATE_CORE_PATHS = (CORE_SRC,)
 DIRECTIVES_ROOT = CORE_SRC / "templates" / "scripts" / "work_engine" / "directives"
 EVIDENCE_DIR = REPO_ROOT / "agents" / "evidence" / "analysis"

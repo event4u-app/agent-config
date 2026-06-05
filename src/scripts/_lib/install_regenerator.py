@@ -51,6 +51,9 @@ def package_source(package_root: Path) -> Optional[Path]:
     site).
     """
     candidates = [
+        # 6.0.x (ADR-051): uncondensed source container moved to src/agent-src/.
+        package_root / "src" / "agent-src" / REGENERATOR_REL,
+        # Back-compat: pre-collapse packages/core/ layout.
         package_root / "packages" / "core" / ".agent-src.uncondensed" / REGENERATOR_REL,
         package_root / ".agent-src" / REGENERATOR_REL,
         package_root / ".augment" / REGENERATOR_REL,
@@ -77,7 +80,7 @@ def install_regenerator(package_root: Path, consumer_root: Path) -> tuple[bool, 
         return (
             False,
             "regenerator source not found in package "
-            "(searched packages/core/.agent-src.uncondensed/, "
+            "(searched src/agent-src/, packages/core/.agent-src.uncondensed/, "
             ".agent-src/, .augment/)",
         )
     target = consumer_target(consumer_root)

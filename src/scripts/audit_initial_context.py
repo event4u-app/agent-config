@@ -35,15 +35,17 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 from _lib import token_count  # noqa: E402
-from _lib.agent_src import resolve_package_core_path  # noqa: E402
+from _lib.agent_src import SRC_AGENT, SRC_DOMAINS  # noqa: E402
 
-_CORE_SRC = resolve_package_core_path(".agent-src.uncondensed")
-# Enforced packages/core target — the commands dir the description-catalog
-# globs scan. Read by scripts/check_gate_paths.py so a future move that
-# desyncs it fails CI instead of silently no-opping. Skills moved to the flat
-# shared library (src/skills/) in 6.0.0-D Phase 2 and are no longer a
-# packages/core target; the skills catalog globs the flat library directly.
-GATE_CORE_PATHS = (_CORE_SRC / "commands",)
+# 6.0.x: uncondensed source container moved to src/agent-src/ (ADR-051);
+# commands live under src/domains/<pack>/<verb>/command.md since 6.0.0-D Step 10.
+_CORE_SRC = SRC_AGENT
+# Enforced source target — the command surface the description-catalog scans.
+# Read by scripts/check_gate_paths.py so a future move that desyncs it fails CI
+# instead of silently no-opping. Skills moved to the flat shared library
+# (src/skills/) in 6.0.0-D Phase 2 and are no longer a source-container target;
+# the skills catalog globs the flat library directly.
+GATE_CORE_PATHS = (SRC_DOMAINS,)
 
 try:
     import yaml
@@ -120,11 +122,10 @@ def _catalog(glob_pat: str) -> dict:
 
 def description_catalog() -> dict:
     """0B.4 — description-catalog cost (eager progressive-disclosure surface)."""
-    core_rel = _CORE_SRC.relative_to(REPO_ROOT).as_posix()
     return {
         "skills_projected": _catalog(".claude/skills/*/SKILL.md"),
         "skills_core_source": _catalog("src/skills/*/SKILL.md"),
-        "commands_core_source": _catalog(f"{core_rel}/commands/**/*.md"),
+        "commands_core_source": _catalog("src/domains/*/**/command.md"),
     }
 
 

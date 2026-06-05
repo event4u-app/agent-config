@@ -7,7 +7,6 @@ on:
       - "src/scripts/**"
       - "tests/**"
       - "src/**"
-      - "packages/core/installer/**"
       - "package.json"
       - "package-lock.json"
       - "tsconfig.json"
@@ -27,7 +26,6 @@ on:
       - "src/scripts/**"
       - "tests/**"
       - "src/**"
-      - "packages/core/installer/**"
       - "package.json"
       - "package-lock.json"
       - "tsconfig.json"
@@ -226,9 +224,8 @@ jobs:
     name: Node Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md — release
-    # PRs don't touch src/**, tests/{cli,server,ui}/**, or
-    # packages/core/installer/**; ESLint, tsc, vitest, prepack-check
-    # have nothing new to prove.
+    # PRs don't touch src/** or tests/**; ESLint, tsc, vitest,
+    # prepack-check have nothing new to prove.
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
@@ -276,19 +273,6 @@ jobs:
 
       - name: prepack-check (compiled bin shape gate)
         run: node src/scripts/prepack-check.mjs
-
-      # ── Installer package (packages/core/installer) ────────────────
-      - name: Typecheck installer (tsc --noEmit)
-        working-directory: packages/core/installer
-        run: npx tsc -p tsconfig.json --noEmit
-
-      - name: Build installer (dist/)
-        working-directory: packages/core/installer
-        run: npx tsc -p tsconfig.json
-
-      - name: Vitest (packages/core/installer/tests/**/*.ts)
-        working-directory: packages/core/installer
-        run: npx vitest run --reporter=default
 
   # NOTE: windows-lockfile-export moved to
   # .github/workflows/windows-lockfile-export.yml in

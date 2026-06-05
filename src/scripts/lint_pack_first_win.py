@@ -22,22 +22,19 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = REPO_ROOT / "packages"
+SRC_PACKS = REPO_ROOT / "src" / "packs"
 SRC_DOMAINS = REPO_ROOT / "src" / "domains"
 
 
 def _pack_home(pid: str) -> Path | None:
-    """Resolve a pack's home dir, packages/ or the 6.0.0-D src/domains/ home.
-
-    A pack whose source has moved into the flat library + src/domains
-    (Step 10) is homed at ``src/domains/<id>/``; a not-yet-moved pack keeps
-    its ``packages/pack-<id>/`` tree. Returns the first that exists, else None.
+    """Resolve a pack's home dir. 6.0.x (ADR-052): manifest-only capability
+    packs are homed at ``src/packs/<id>/``, command-bearing packs at
+    ``src/domains/<id>/``; ``packages/pack-<id>/`` is the legacy back-compat
+    location. Returns the first that exists, else None.
     """
-    physical = PACKAGES / f"pack-{pid}"
-    if physical.is_dir():
-        return physical
-    domain = SRC_DOMAINS / pid
-    if domain.is_dir():
-        return domain
+    for cand in (SRC_PACKS / pid, SRC_DOMAINS / pid, PACKAGES / f"pack-{pid}"):
+        if cand.is_dir():
+            return cand
     return None
 
 

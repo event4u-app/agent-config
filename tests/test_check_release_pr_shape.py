@@ -10,7 +10,7 @@ Phase A Step 5:
 Plus two regression cases to lock the allowlist surface:
 
 * pack-only diff (multiple packages) — pass
-* nested file under packages/ (e.g. packages/core/installer/foo.ts) — fail
+* nested file under packages/ (e.g. src/packs/core/installer/foo.ts) — fail
 """
 
 from __future__ import annotations
@@ -37,10 +37,10 @@ def test_real_330_release_pr_passes(capsys: pytest.CaptureFixture[str]) -> None:
         "package.json",
         "CHANGELOG.md",
         ".claude-plugin/marketplace.json",
-        "packages/core/pack.yaml",
-        "packages/core/README.md",
-        "packages/pack-finance-basic/pack.yaml",
-        "packages/pack-finance-basic/README.md",
+        "src/packs/core/pack.yaml",
+        "src/packs/core/README.md",
+        "src/packs/finance-basic/pack.yaml",
+        "src/packs/finance-basic/README.md",
     ]
     code, out = _check(files, capsys)
     assert code == 0
@@ -76,23 +76,23 @@ def test_pack_only_release_passes(capsys: pytest.CaptureFixture[str]) -> None:
     files = [
         "package.json",
         "CHANGELOG.md",
-        "packages/core/pack.yaml",
-        "packages/pack-finance-basic/pack.yaml",
-        "packages/pack-founder-strategy/pack.yaml",
+        "src/packs/core/pack.yaml",
+        "src/packs/finance-basic/pack.yaml",
+        "src/packs/founder-strategy/pack.yaml",
     ]
     code, _ = _check(files, capsys)
     assert code == 0
 
 
 def test_nested_package_file_fails(capsys: pytest.CaptureFixture[str]) -> None:
-    """`packages/core/installer/foo.ts` must NOT match `packages/*/pack.yaml`."""
+    """`src/packs/core/installer/foo.ts` must NOT match `packages/*/pack.yaml`."""
     files = [
         "package.json",
-        "packages/core/installer/foo.ts",  # ← deeper than allowlist
+        "src/packs/core/installer/foo.ts",  # ← deeper than allowlist
     ]
     code, out = _check(files, capsys)
     assert code == 1
-    assert "OUT-OF-SHAPE: packages/core/installer/foo.ts" in out
+    assert "OUT-OF-SHAPE: src/packs/core/installer/foo.ts" in out
 
 
 def test_marketplace_metadata_only_passes(capsys: pytest.CaptureFixture[str]) -> None:
@@ -109,7 +109,7 @@ def test_changelog_only_passes(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_pack_readme_only_passes(capsys: pytest.CaptureFixture[str]) -> None:
     """Pack README updates are part of the release surface and shape-clean."""
-    code, _ = _check(["packages/core/README.md"], capsys)
+    code, _ = _check(["src/packs/core/README.md"], capsys)
     assert code == 0
 
 
@@ -125,8 +125,8 @@ def test_era_archive_release_passes(capsys: pytest.CaptureFixture[str]) -> None:
         "package.json",
         "CHANGELOG.md",
         ".claude-plugin/marketplace.json",
-        "packages/core/pack.yaml",
-        "packages/core/README.md",
+        "src/packs/core/pack.yaml",
+        "src/packs/core/README.md",
         "docs/archive/CHANGELOG-pre-5.4.0.md",
     ]
     code, out = _check(files, capsys)
@@ -150,9 +150,9 @@ def test_matches_helper_rejects_unrelated_paths() -> None:
     assert not shape._matches("src/scripts/install.py")
     assert not shape._matches("tests/test_condense.py")
     assert not shape._matches(".github/workflows/tests.yml")
-    assert not shape._matches("packages/core/installer/foo.ts")
+    assert not shape._matches("src/packs/core/installer/foo.ts")
     assert not shape._matches("docs/archive/some-other-doc.md")
     assert shape._matches("package.json")
-    assert shape._matches("packages/core/pack.yaml")
-    assert shape._matches("packages/core/README.md")
+    assert shape._matches("src/packs/core/pack.yaml")
+    assert shape._matches("src/packs/core/README.md")
     assert shape._matches("docs/archive/CHANGELOG-pre-5.4.0.md")

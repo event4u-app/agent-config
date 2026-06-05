@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/workspace_crypto.py``.
+"""Tests for ``src/cli/python/workspace_crypto.py``.
 
 Covers ``docs/contracts/at-rest-encryption.md`` (Phase 8):
 
@@ -23,7 +23,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "workspace_crypto.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "workspace_crypto.py"
 
 try:
     import cryptography  # noqa: F401
