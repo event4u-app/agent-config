@@ -6,18 +6,26 @@
 
 ## Overall
 
-**49 / 152 steps done · 32%**
+**54 / 152 steps done · 36%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
 ```
+
+## ⏳ Merge-gated — pending post-merge archival
+
+Every open item in these roadmaps is `merge-gated`: held open on purpose while a closing PR is in flight, so inbound references keep resolving until the file archives. **The moment the gating PR merges**, flip the merge-gated box → `[x]`, `git mv` the roadmap to `archive/`, migrate inbound refs, and regenerate this dashboard — all in the same response (per `roadmap-progress-sync` Iron Law 1). Do NOT leave it lingering at < 100%.
+
+| Roadmap | Done | Merge-gated open | Gating PR |
+|---|---:|---:|---|
+| [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md) | 10 | 1 | #369 |
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md) | 2 | 11 | 6 | 5 | 0 | 0 | ████░░░░░░ 45% |
+| 2 | [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md) | 2 | 11 | 1 | 10 | 0 | 0 | █████████░ 91% |
 | 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 | 5 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
@@ -39,12 +47,12 @@
 
 ### [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md)
 
-**Road to 6.0.x — Workspace structural cleanup (the deferred Step-16 remainder)** — 5 / 11 done (45%)
+**Road to 6.0.x — Workspace structural cleanup (the deferred Step-16 remainder)** — 10 / 11 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Complete the `packages/` dual-tree collapse (finish Step 10) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | Resolve the `agents/` namespace + runtime coupling | 🟡 in progress | 6 | 1 | 0 | 0 | 14% |
+| 2 | Resolve the `agents/` namespace + runtime coupling | 🟡 in progress | 1 | 6 | 0 | 0 | 86% |
 
 ### [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md)
 
