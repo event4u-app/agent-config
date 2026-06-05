@@ -117,25 +117,48 @@ staged PRs, CI-localisable, never bundled.
 
 ## Phase 2: Resolve the `agents/` namespace + runtime coupling
 
-- [ ] **Step 4:** *Design gate.* Decide the maintainer-workspace home: rename
+> **Council convergence** (claude-sonnet-4-5 + gpt-4o, design mode, 2-round
+> debate, 2026-06-05): **Option B — keep `agents/` at root + explicit marker**.
+> Both members converged independently in round 1; the round-2 adversarial pass
+> steel-manned Option A (rename → `.agents/`) and it was rejected because
+> `agents/settings/` *is* the loader's hardcoded convention path
+> (`LOCAL_PROJECT_SUBDIR`), so a rename needs dual-path loader logic (worse) or
+> leaves the collision unresolved. The maintainer `agents/` IS a dogfooded
+> instance of the shipped convention — the collision is conceptual. Recorded as
+> [`ADR-053`](../../docs/decisions/ADR-053-agents-namespace-dual-role-resolution.md).
+
+- [x] **Step 4:** *Design gate.* Decide the maintainer-workspace home: rename
   (`agents/` → `.agents/` or `internal/agents/`), keep-at-root-with-explicit-marker,
   or relocate contents to typed homes (roadmaps, settings, runtime). Record the call
   as an ADR. This MUST resolve the consumer-vs-maintainer `agents/` collision named
-  in ADR-050.
-- [ ] **Step 5:** Make `_lib/agent_settings.py` path-agnostic enough that moving the
+  in ADR-050. <!-- ADR-053: Option B (keep + marker). Council 2-round debate converged. -->
+- [x] **Step 5:** Make `_lib/agent_settings.py` path-agnostic enough that moving the
   settings file cannot self-brick the loader mid-move (resolve-from-env or
   search-upward), with a pre-flight test that runs the loader against the NEW path
   with the OLD path absent. No file move ships before this test is green.
-- [ ] **Step 6:** Execute the chosen disposition in its own PR; repoint the 443 refs
+  <!-- Loader already env-resolvable + cascade-based; relocation-safety locked by
+  tests/test_agent_settings_relocation_resilience.py (5 tests, green): resolves a
+  settings file at an arbitrary relocated root with the default location absent, via
+  cwd-cascade AND AGENT_CONFIG_PROJECT_ROOT, degrading to defaults when absent. -->
+- [x] **Step 6:** Execute the chosen disposition in its own PR; repoint the 443 refs
   in measured hunks; re-run the full path audit (the Step-19 surface) on the result.
+  <!-- Disposition B executed: landed agents/.maintainer-workspace.md (explicit
+  dual-role marker) + ADR-053 + the Step-5 loader test. No rename → the ~1106 agents/
+  refs stay valid; no repoint needed. Path-audit surface unchanged by construction
+  (Option B moves nothing). This roadmap IS the own-PR for the disposition. -->
+
+  <!-- Step-6 note: the roadmap's "443 refs" estimate predated this gate; the actual
+  surface is ~1106 files, the majority of which describe the CONSUMER convention, not
+  the maintainer workspace — which is precisely why Option B (no rename) is correct
+  per ADR-053 § Alternatives. -->
 
 ## Acceptance Criteria
 
 - [x] `packages/` no longer exists at repo root; no CI workflow or taskfile
   references it; Phase-0 gates green on the single `src/` tree. <!-- 1b / ADR-052 -->
-- [ ] The maintainer `agents/` namespace decision is recorded as an ADR and the
-  consumer-vs-maintainer collision named in ADR-050 is resolved. <!-- Phase 2 -->
-- [ ] `_lib/agent_settings.py` survives a settings-file relocation (pre-flight test
-  proves the loader resolves the new path with the old absent).
+- [x] The maintainer `agents/` namespace decision is recorded as an ADR and the
+  consumer-vs-maintainer collision named in ADR-050 is resolved. <!-- ADR-053: dual-role marker -->
+- [x] `_lib/agent_settings.py` survives a settings-file relocation (pre-flight test
+  proves the loader resolves the new path with the old absent). <!-- test_agent_settings_relocation_resilience.py -->
 - [ ] `task ci` green end-to-end after each phase; no skill/rule/command deleted
   beyond the `packages/` duplicates proven already-mirrored into `src/`.
