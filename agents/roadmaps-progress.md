@@ -12,6 +12,14 @@
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
 ```
 
+## ⏳ Merge-gated — pending post-merge archival
+
+Every open item in these roadmaps is `merge-gated`: held open on purpose while a closing PR is in flight, so inbound references keep resolving until the file archives. **The moment the gating PR merges**, flip the merge-gated box → `[x]`, `git mv` the roadmap to `archive/`, migrate inbound refs, and regenerate this dashboard — all in the same response (per `roadmap-progress-sync` Iron Law 1). Do NOT leave it lingering at < 100%.
+
+| Roadmap | Done | Merge-gated open | Gating PR |
+|---|---:|---:|---|
+| [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md) | 10 | 1 | #369 |
+
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |

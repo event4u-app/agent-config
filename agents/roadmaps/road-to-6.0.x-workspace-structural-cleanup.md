@@ -162,3 +162,6 @@ staged PRs, CI-localisable, never bundled.
   proves the loader resolves the new path with the old absent). <!-- test_agent_settings_relocation_resilience.py -->
 - [ ] `task ci` green end-to-end after each phase; no skill/rule/command deleted
   beyond the `packages/` duplicates proven already-mirrored into `src/`.
+  <!-- merge-gated: pr=369 — the additive Phase-2 diff deletes nothing; "task ci green
+  end-to-end" is proven by this PR's remote CI. Flip [x] + git mv to archive/ +
+  regen the moment PR #369 merges. -->
