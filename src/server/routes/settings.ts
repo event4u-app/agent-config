@@ -26,7 +26,7 @@ import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlI
 import { writeAtomic } from '../io/atomicWrite.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 
-// Installer placeholders in `config/agent-settings.template.yml` that
+// Installer placeholders in `src/config/agent-settings.template.yml` that
 // `scripts/install.py` substitutes per-user. The TypeScript defaults layer
 // renders the same scalars so the wizard's first-run form is schema-valid.
 // Keep this map in lockstep with the template — any new `__*__` placeholder
@@ -59,7 +59,7 @@ export interface SettingsRouteOptions {
      */
     legacyReadRoot?: string | null;
     /**
-     * Package root — used to locate `config/agent-settings.template.yml`
+     * Package root — used to locate `src/config/agent-settings.template.yml`
      * for the defaults layer of the three-layer merge (Phase 2.2 of
      * road-to-global-only-install). Defaults to the resolved `PACKAGE_ROOT`
      * so existing callers stay green; tests override via `createApp`.
@@ -125,7 +125,7 @@ interface LayeredState {
  */
 async function loadDefaultSettings(packageRoot: string): Promise<Record<string, unknown>> {
     try {
-        const text = await fs.readFile(join(packageRoot, 'config', 'agent-settings.template.yml'), 'utf8');
+        const text = await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8');
         let rendered = text;
         for (const [placeholder, value] of Object.entries(TEMPLATE_PLACEHOLDER_DEFAULTS)) {
             rendered = rendered.replaceAll(placeholder, value);

@@ -121,5 +121,5 @@ under **Project Rules**.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
 - [`AGENTS.md`](../../../AGENTS.md) — package self-orientation; Cursor
   reads it via the projected rules.
-- [`templates/cursor-rule.mdc.j2`](../../../templates/cursor-rule.mdc.j2) —
+- [`src/templates/cursor-rule.mdc.j2`](../../../templates/cursor-rule.mdc.j2) —
   template used by the projection generator.

@@ -63,7 +63,7 @@ now has, and bare cluster heads disappear from the surface anyway.
 
 4. **The controlled-verb allowlist (ADR-041) still applies, unchanged.** The
    leading token of every visible command must be drawn from
-   [`config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml).
+   [`src/config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml).
    This ADR governs the *shape* (`<pack>-<verb>`, hyphenated); ADR-041 governs the
    *verb vocabulary*. They compose.
 

@@ -53,7 +53,7 @@ makes, not a command surface to enumerate.
 1. **Controlled verb allowlist.** Visible commands (tier 0/1) must have a
    leading token (the substring before the first `-`, or the cluster sub-name
    for `cluster:sub` commands) drawn from the allowlist in
-   [`config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml).
+   [`src/config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml).
    The allowlist seeds the curated verbs (`work`, `audit`, `plan`, `implement`,
    `review`, `fix`, `test`, `ship`, `sync`, `explain`, `estimate`, `refine`,
    `publish`) plus the established cluster-head / standalone tokens already in
@@ -126,7 +126,7 @@ makes, not a command surface to enumerate.
 
 ## References
 
-- [`config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml) — the allowlist + banned prefixes + grandfathered exceptions.
+- [`src/config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml) — the allowlist + banned prefixes + grandfathered exceptions.
 - [`scripts/lint_command_verbs.py`](../../src/scripts/lint_command_verbs.py) — the forward-only single lint.
 - [`command-clusters.md`](../contracts/command-clusters.md) — locked clusters + sub-command naming.
 - [`capability-packs.md`](../contracts/capability-packs.md) — sibling per-pack budget governance (Phase 1).

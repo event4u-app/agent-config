@@ -50,7 +50,7 @@ are not roadmap steps.
 - **Status:** Prepared
 - **Owner:** maintainer
 - **Last Reviewed:** 2026-05-12
-- **Substrate:** [`templates/marketing-copy.yml`](../templates/marketing-copy.yml)
+- **Substrate:** [`src/templates/marketing-copy.yml`](../templates/marketing-copy.yml)
   is the single source for listing copy across surfaces.
 - **Doc anchor:** [`docs/setup/per-ide/cursor.md`](setup/per-ide/cursor.md)
   § "Marketplace install".
@@ -98,7 +98,7 @@ are not roadmap steps.
 - **Owner:** maintainer
 - **Last Reviewed:** 2026-05-12
 - **Substrate:** Topic list + tagline copy live in
-  [`templates/marketing-copy.yml`](../templates/marketing-copy.yml).
+  [`src/templates/marketing-copy.yml`](../templates/marketing-copy.yml).
 - **Doc anchor:** none (GitHub-native).
 - **Action:** Apply via `gh repo edit` (or repo Settings → General).
   Topics: `agent`, `claude-code`, `cursor`, `windsurf`, `cline`,

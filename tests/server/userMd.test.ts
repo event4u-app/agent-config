@@ -3,7 +3,7 @@
  *
  *   GET  /api/v1/user-md            → exists=false for fresh project,
  *                                     exists=true with identity + mtime once written
- *   GET  /api/v1/user-md/template   → template body from `templates/agent-user.yml`
+ *   GET  /api/v1/user-md/template   → template body from `src/templates/agent-user.yml`
  *   PUT  /api/v1/user-md            → create (no IUS header), update (IUS required),
  *                                     stale IUS → 409, invalid identity → 422
  */

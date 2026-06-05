@@ -8,7 +8,7 @@ linger in a consumer project and break every Claude hook (the hook
 resolves the master CLI *through* this wrapper). These helpers let the
 update commands re-stamp the wrapper from the canonical template.
 
-The template is the single source of truth (``templates/agent-config-wrapper.sh``);
+The template is the single source of truth (``src/templates/agent-config-wrapper.sh``);
 the installer copies it verbatim with no substitution, so refreshing is a
 plain copy + ``chmod``.
 """
@@ -20,7 +20,7 @@ from typing import Optional
 
 # scripts/_lib/cli_wrapper.py → parents[2] is the package root.
 _PACKAGE_ROOT = Path(__file__).resolve().parents[3]
-_TEMPLATE = _PACKAGE_ROOT / "templates" / "agent-config-wrapper.sh"
+_TEMPLATE = _PACKAGE_ROOT / "src" / "templates" / "agent-config-wrapper.sh"
 
 
 def template_path() -> Path:

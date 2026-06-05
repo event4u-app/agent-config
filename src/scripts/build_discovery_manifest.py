@@ -4,7 +4,7 @@
 Walks the trusted-root tree (`.agent-src.uncondensed/`), extracts the
 five Phase-4 frontmatter keys (`workspaces`, `packs`, `lifecycle`,
 `trust`, `install`), validates each value against the closed vocabulary
-in `config/discovery/*.yml`, and emits a deterministic JSON manifest
+in `src/config/discovery/*.yml`, and emits a deterministic JSON manifest
 plus a human-readable Markdown summary.
 
 CLI: see `--help`. Stdlib + pyyaml only at runtime.
@@ -35,7 +35,7 @@ from _lib.agent_src import artefact_roots, command_slug, logical_relpath, resolv
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / ".agent-src.uncondensed"
-VOCAB_DIR = ROOT / "config" / "discovery"
+VOCAB_DIR = ROOT / "src" / "config" / "discovery"
 DEFAULT_OUT = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 DEFAULT_SUMMARY = ROOT / "dist" / "discovery" / "discovery-manifest.summary.md"
 DEFAULT_DEPRECATION_REPORT = ROOT / "dist" / "discovery" / "deprecation-report.md"
@@ -155,7 +155,18 @@ def _iter_artefacts() -> Iterable[tuple[Path, str]]:
         for p in sorted(domains_root.rglob("command.md")):
             if p.is_file():
                 yield p, "command"
+    # 6.0.0-D Step 16b moved the install-scaffold templates to src/templates/
+    # (wrapper, consumer-settings, minimal stub, *.j2 rules). `src` is an
+    # artefact root for the new src/{skills,rules,domains} homes, so
+    # _collect("templates") now also sees src/templates — but those are
+    # install scaffold shipped via package.json files[], NOT discovery
+    # "template" content (which lives under .agent-src.uncondensed/templates).
+    # Skip them so strict mode does not demand artefact frontmatter on them.
+    _scaffold = (ROOT / "src" / "templates").resolve()
     for p in _collect("templates", "*.md"):
+        rp = p.resolve()
+        if rp == _scaffold or _scaffold in rp.parents:
+            continue
         yield p, "template"
 
 

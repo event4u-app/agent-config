@@ -448,7 +448,7 @@ copilot plugin install agent-config@event4u-agent-config
 ### Team auto-setup for plugins
 
 To auto-recommend the plugin for your team, add the marketplace to project settings.
-See [`templates/consumer-settings/`](../templates/consumer-settings/) for ready-to-use config templates per tool.
+See [`src/templates/consumer-settings/`](../templates/consumer-settings/) for ready-to-use config templates per tool.
 
 For marketplace registration (required once before `plugin install`):
 

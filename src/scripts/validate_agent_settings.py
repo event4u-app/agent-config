@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Agent-settings schema validator (rule_loading_tier untangle, 2026-06-01).
 
-Validates ``config/agent-settings.template.yml`` and any local
+Validates ``src/config/agent-settings.template.yml`` and any local
 ``.agent-settings.yml`` against
 ``scripts/schemas/agent-settings.schema.json``. The schema is
 deliberately permissive (``additionalProperties: true`` everywhere) and
@@ -48,7 +48,7 @@ except ImportError:  # pragma: no cover — bootstrap guard
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCHEMA_PATH = REPO_ROOT / "src" / "scripts" / "schemas" / "agent-settings.schema.json"
-TEMPLATE_PATH = REPO_ROOT / "config" / "agent-settings.template.yml"
+TEMPLATE_PATH = REPO_ROOT / "src" / "config" / "agent-settings.template.yml"
 LOCAL_PATHS = [project_settings_path(REPO_ROOT)]
 
 # Installer-default substitutions, mirroring scripts/install.py so the

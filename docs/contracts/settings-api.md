@@ -53,7 +53,7 @@ token for optimistic locking. Merge order (per **ADR-020** + roadmap
 `road-to-global-only-install` § Phase 2.2):
 
 ```text
-defaults (config/agent-settings.template.yml)
+defaults (src/config/agent-settings.template.yml)
   < global (~/.event4u/agent-config/settings/.agent-settings.yml)
     < project (<projectRoot>/settings/.agent-settings.yml, optional)
 ```
@@ -132,7 +132,7 @@ when the file is missing (wizard pre-fill case).
 
 ### `GET /api/v1/user-md/template`
 
-Returns the package-shipped template (`templates/agent-user.md`) when
+Returns the package-shipped template (`src/templates/agent-user.md`) when
 present, else 204 No Content. Wizard uses this to pre-fill the textarea
 on first run.
 
@@ -205,4 +205,4 @@ Round-trip fixtures live in `tests/server/fixtures/`. Every endpoint
 above has a happy-path test in `tests/server/<endpoint>.test.ts` and at
 least one error-path test (409 or 422). The schema↔template parity
 test (`tests/server/schemas/parity.test.ts`) is the gate that keeps
-`settingsSchema` and `config/agent-settings.template.yml` in lockstep.
+`settingsSchema` and `src/config/agent-settings.template.yml` in lockstep.

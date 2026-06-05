@@ -140,7 +140,7 @@ If you set the `MCP-Token` secret on the Worker (recommended — see
 ```
 
 A pre-wired template ships at
-[`templates/claude_desktop_config.json.template`](../../../templates/claude_desktop_config.json.template) —
+[`src/templates/claude_desktop_config.json.template`](../../../templates/claude_desktop_config.json.template) —
 copy, swap the placeholder URL for your deploy, and uncomment the MCP
 block.
 

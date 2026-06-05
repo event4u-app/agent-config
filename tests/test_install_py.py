@@ -34,10 +34,10 @@ def make_fake_package(root: Path) -> Path:
     step-9 axis can run without a fully-checked-out package.
     """
     package = root / "pkg"
-    (package / "config" / "profiles").mkdir(parents=True)
-    shutil.copy(REPO_ROOT / "config" / "agent-settings.template.yml", package / "config" / "agent-settings.template.yml")
+    (package / "src" / "config" / "profiles").mkdir(parents=True)
+    shutil.copy(REPO_ROOT / "src" / "config" / "agent-settings.template.yml", package / "src" / "config" / "agent-settings.template.yml")
     for profile in install.SUPPORTED_PROFILES:
-        shutil.copy(REPO_ROOT / "config" / "profiles" / f"{profile}.ini", package / "config" / "profiles" / f"{profile}.ini")
+        shutil.copy(REPO_ROOT / "src" / "config" / "profiles" / f"{profile}.ini", package / "src" / "config" / "profiles" / f"{profile}.ini")
     user_types_src = REPO_ROOT / "user-types"
     if user_types_src.is_dir():
         (package / "user-types").mkdir(parents=True, exist_ok=True)
@@ -608,8 +608,8 @@ class TestDetectPackageRoot(SilentTest):
         self.assertEqual(install.detect_package_root(self.tmpdir), package.resolve())
 
     def test_local_dev_mode(self) -> None:
-        (self.tmpdir / "config" / "profiles").mkdir(parents=True)
-        (self.tmpdir / "config" / "profiles" / "minimal.ini").write_text("rule_loading_tier=minimal\n", encoding="utf-8")
+        (self.tmpdir / "src" / "config" / "profiles").mkdir(parents=True)
+        (self.tmpdir / "src" / "config" / "profiles" / "minimal.ini").write_text("rule_loading_tier=minimal\n", encoding="utf-8")
         self.assertEqual(install.detect_package_root(self.tmpdir), self.tmpdir)
 
     def test_no_package_fails(self) -> None:
@@ -743,7 +743,7 @@ class TestEnsureAgentSettings(SilentTest):
 
     def test_profile_mismatch_fails(self) -> None:
         # Corrupt a profile ini so rule_loading_tier doesn't match --profile
-        bad = self.package / "config" / "profiles" / "minimal.ini"
+        bad = self.package / "src" / "config" / "profiles" / "minimal.ini"
         bad.write_text(
             "rule_loading_tier=balanced\n"
             "chat_history_frequency=per_turn\n"

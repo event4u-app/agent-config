@@ -374,7 +374,7 @@ tasks:
 
   lint-discovery-vocab:
     silent: true
-    desc: Validate config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
+    desc: Validate src/config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
     cmd: python3 src/scripts/lint_discovery_vocabulary.py {{.QUIET_FLAG}}
 
   build-discovery-manifest:

@@ -326,7 +326,7 @@ cluster registration.
 ## Gitignore
 
 `agents/reference/ghostwriter/*.md` (except `README.md`) is added to the
-package-managed `.gitignore` block ([`config/gitignore-block.txt`](../../config/gitignore-block.txt))
+package-managed `.gitignore` block ([`src/config/gitignore-block.txt`](../../config/gitignore-block.txt))
 and ignored by default. A `--shared` opt-in to commit profiles is
 deferred to v2.
 

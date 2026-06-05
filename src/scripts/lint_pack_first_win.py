@@ -109,7 +109,7 @@ def main() -> int:
             print(f"  - {e}", file=sys.stderr)
         print(
             "  fix: add FIRST_WIN.md to the pack root and the onboarding "
-            "block to config/discovery/packs.yml, then re-run "
+            "block to src/config/discovery/packs.yml, then re-run "
             "`task generate-pack-manifests`",
             file=sys.stderr,
         )

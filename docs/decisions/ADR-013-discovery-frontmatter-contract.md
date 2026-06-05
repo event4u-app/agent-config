@@ -126,7 +126,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `git` | Git workflow — commit, pull requests, branch sync. Carries `slug_prefix: git` (ADR-044 §A3); `requires: engineering-base`. Added 2026-06-04 for 6.0.0-D Step 12 Class B1 (`commit`→`git-commit`, `create-pr`→`git-pr-create`). |
 
 Amendments to the pack list require an ADR-013 amendment and the
-matching `config/discovery/packs.yml` row in the same PR.
+matching `src/config/discovery/packs.yml` row in the same PR.
 
 ### Non-overlap rule (ADR-010 alignment)
 
@@ -145,7 +145,7 @@ matching `config/discovery/packs.yml` row in the same PR.
   does not fail.
 - **Phase 4**: every artefact under
   `.agent-src.uncondensed/{skills,rules,commands,templates}` either
-  declares the new keys, or sits in `config/discovery/unassigned-artefacts.yml`
+  declares the new keys, or sits in `src/config/discovery/unassigned-artefacts.yml`
   with a one-line reason.
 - **Phase 4+**: CI flips strict; missing annotation is a fail.
 
@@ -223,7 +223,7 @@ Driven by [`agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md`](../../age
 
 ### 2026-05-27 — Additive advisory `cluster:` key on packs
 
-Pack entries in [`config/discovery/packs.yml`](../../config/discovery/packs.yml)
+Pack entries in [`src/config/discovery/packs.yml`](../../config/discovery/packs.yml)
 may carry an optional `cluster: <language-id>` field. It groups a framework
 pack under a programming-language tile in the setup wizard's capability-packs
 step (e.g. `laravel: cluster: php`, `react: cluster: typescript`). Like
@@ -237,7 +237,7 @@ Driven by [`agents/roadmaps/road-to-wizard-ux-improvements.md`](../../agents/roa
 
 ### 2026-05-27 — Additive advisory `example_roles:` key on workspaces
 
-Workspace entries in [`config/discovery/workspaces.yml`](../../config/discovery/workspaces.yml)
+Workspace entries in [`src/config/discovery/workspaces.yml`](../../config/discovery/workspaces.yml)
 may carry an optional `example_roles: [<title>, …]` list of illustrative job
 titles (e.g. `engineering: [Developer, CTO]`, `finance: [CFO]`). The wizard's
 roles step shows the workspace as the *area* and these titles as examples under
@@ -252,7 +252,7 @@ Additive, no vocabulary rename. (Same change cleaned the `finance` label from
 
 Added pack id `fun` to the closed vocabulary (Non-essential social/fun
 workflows — prediction-pool tip optimization, etc.). Mirrored in
-[`config/discovery/packs.yml`](../../config/discovery/packs.yml) and the
+[`src/config/discovery/packs.yml`](../../config/discovery/packs.yml) and the
 `ADR_PACKS` frozenset in
 [`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.py).
 Optional under the `small-business` workspace (alongside `ai-video`);

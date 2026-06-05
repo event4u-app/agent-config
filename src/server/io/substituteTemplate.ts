@@ -1,5 +1,5 @@
 /**
- * Render `config/agent-settings.template.yml` for the wizard's "Skip" path.
+ * Render `src/config/agent-settings.template.yml` for the wizard's "Skip" path.
  *
  * Source of truth for placeholder semantics is `scripts/install.py`
  * (`_render_template`, `_parse_profile_ini`). The wizard's Skip handler
@@ -7,7 +7,7 @@
  * helper mirrors the install-time substitution in TypeScript.
  *
  * Contract:
- *   - Reads `config/profiles/<profile>.ini` from `packageRoot`.
+ *   - Reads `src/config/profiles/<profile>.ini` from `packageRoot`.
  *   - Each ini key `foo_bar` substitutes the `__FOO_BAR__` placeholder.
  *   - Injects runtime-only values (`user_type`) from the caller.
  *   - Fails loudly if any placeholder remains unfilled — catches typos
@@ -24,7 +24,7 @@ import { join } from 'node:path';
 export type CostProfile = 'minimal' | 'balanced' | 'full';
 
 export interface SubstituteOptions {
-    /** Package root — `config/profiles/<profile>.ini` resolves under this. */
+    /** Package root — `src/config/profiles/<profile>.ini` resolves under this. */
     packageRoot: string;
     /** Profile to materialize. */
     profile: CostProfile;
@@ -79,12 +79,12 @@ export function applyPlaceholders(template: string, values: Record<string, strin
 }
 
 /**
- * Read `config/profiles/<profile>.ini`, merge runtime values, and return
+ * Read `src/config/profiles/<profile>.ini`, merge runtime values, and return
  * the rendered template body. Caller writes the body via `writeAtomic`.
  */
 export async function renderSettingsTemplate(opts: SubstituteOptions): Promise<string> {
-    const templatePath = join(opts.packageRoot, 'config', 'agent-settings.template.yml');
-    const profilePath = join(opts.packageRoot, 'config', 'profiles', `${opts.profile}.ini`);
+    const templatePath = join(opts.packageRoot, 'src', 'config', 'agent-settings.template.yml');
+    const profilePath = join(opts.packageRoot, 'src', 'config', 'profiles', `${opts.profile}.ini`);
 
     const [template, iniBody] = await Promise.all([
         readFile(templatePath, 'utf8'),

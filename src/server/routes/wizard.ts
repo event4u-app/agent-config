@@ -177,7 +177,7 @@ async function writeState(root: string, state: WizardState): Promise<void> {
 }
 
 async function readTemplate(packageRoot: string): Promise<string> {
-    return fs.readFile(join(packageRoot, 'config', 'agent-settings.template.yml'), 'utf8');
+    return fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8');
 }
 
 /**

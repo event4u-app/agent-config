@@ -9,7 +9,7 @@ message on a typo'd / non-existent reference." Two checks per manifest:
 2. **References resolve** — every ``dependencies.skills`` slug backs a real
    ``skills/<slug>/SKILL.md``; every ``dependencies.rules`` slug backs a real
    ``rules/<slug>.md``; every ``requires`` / ``suggests`` / ``dependencies.packs``
-   id is a known pack id (closed vocabulary in ``config/discovery/packs.yml``
+   id is a known pack id (closed vocabulary in ``src/config/discovery/packs.yml``
    plus the physical ``packages/*/`` ids).
 
 Exit codes: 0 = all valid · 1 = at least one violation · 3 = internal error.
@@ -28,7 +28,7 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = ROOT / "packages"
 SRC_DOMAINS = ROOT / "src" / "domains"
-PACKS_VOCAB = ROOT / "config" / "discovery" / "packs.yml"
+PACKS_VOCAB = ROOT / "src" / "config" / "discovery" / "packs.yml"
 
 
 def _manifest_dirs() -> list[Path]:

@@ -1,7 +1,7 @@
 /**
  * Zod schema for `.agent-settings.yml`.
  *
- * Source of truth: `config/agent-settings.template.yml`. Every leaf has a
+ * Source of truth: `src/config/agent-settings.template.yml`. Every leaf has a
  * matching template key; the schema↔template parity test
  * (`tests/server/schemas/parity.test.ts`) walks both trees and asserts the
  * Zod schema covers every template path. New template keys without schema

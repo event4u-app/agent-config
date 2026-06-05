@@ -201,7 +201,7 @@ export function discoverPacks(workspaceRoot: string): readonly string[] {
  * 1:1 port of `scripts/install.py:detect_package_root` — prefers an
  * npm-installed copy under `node_modules/@event4u/agent-config/`,
  * falls back to the project root itself for in-package development
- * (presence of `config/profiles/minimal.ini` is the development-mode
+ * (presence of `src/config/profiles/minimal.ini` is the development-mode
  * signal in the Python script; we mirror it).
  *
  * Returns `null` instead of failing — caller decides UX (Python `fail`
@@ -212,7 +212,7 @@ export function detectPackageRoot(projectRoot: string): string | null {
     if (isDir(npmPath)) {
         return resolve(npmPath);
     }
-    if (existsSync(join(projectRoot, 'config', 'profiles', 'minimal.ini'))) {
+    if (existsSync(join(projectRoot, 'src', 'config', 'profiles', 'minimal.ini'))) {
         return projectRoot;
     }
     return null;

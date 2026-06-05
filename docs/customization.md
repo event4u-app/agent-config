@@ -247,7 +247,7 @@ The authoritative matrix of all matrix-controlled settings lives in
 ### Chat-history defaults per profile
 
 `scripts/install.py` fills these placeholders from
-[`config/profiles/*.ini`](../config/profiles) when it writes
+[`src/config/profiles/*.ini`](../config/profiles) when it writes
 `.agent-settings.yml`. Edit the values afterwards if you want different
 behavior — the per-profile table is just the initial default.
 
@@ -387,9 +387,9 @@ discovery keys in its frontmatter — `workspaces:`, `packs:`,
 `lifecycle:`, `trust:`, `install:`. The contract is defined in
 [ADR-013](decisions/ADR-013-discovery-frontmatter-contract.md) and the
 closed vocabularies live in
-[`config/discovery/workspaces.yml`](../config/discovery/workspaces.yml)
+[`src/config/discovery/workspaces.yml`](../config/discovery/workspaces.yml)
 (9 workspaces) and
-[`config/discovery/packs.yml`](../config/discovery/packs.yml) (21
+[`src/config/discovery/packs.yml`](../config/discovery/packs.yml) (21
 packs).
 
 At release time, `scripts/build_discovery_manifest.py` walks the source
@@ -442,7 +442,7 @@ the matching packs' commands/skills are the surfaced set:
 - `/profile deactivate` — full surface returns.
 
 The activatable name is a session-profile alias
-(`config/discovery/session-profiles.yml`: `developer`, `po`, `finance`,
+(`src/config/discovery/session-profiles.yml`: `developer`, `po`, `finance`,
 `gtm`, `content`) or a raw pack id. It is **recommendation-bias only** —
 an inactive-pack command still runs (with a one-line notice); execution is
 never blocked. The choice is **ephemeral**: it writes

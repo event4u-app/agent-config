@@ -343,10 +343,22 @@ Phase 0, never after the moves.
   (worksheet tags, 6.0-D, 6.1), so it is already part of the architecture.
 
 - [ ] **Step 16:** Move every non-essential root tree under `src/`
-  (`config/`, `schemas/`, `templates/`, `docs/`, `scripts/`→`src/app` or
+  (`config/`, `schemas/`, `templates/`, `scripts/`→`src/app` or
   `src/internal`, `internal/`, `hooks/`, the maintainer `agents/` workspace) and
   fold `taskfiles/` to a folder with a thin root `Taskfile.yml`. Update every
   hardcoded path in `.github/workflows/*.yml` and `taskfiles/*.yml`.
+  <!-- progress: 16a scripts/->src/scripts (PR #363); 16b config/+templates/->src/
+  (commit 815442b0). schemas/ already under src/scripts/schemas. Remaining:
+  internal/, hooks/, maintainer agents/, taskfiles/ fold. -->
+  > **`docs/` is a deliberate exception — kept at root (decided 2026-06-05).**
+  > Convention (GitHub renders `docs/`, external/bookmarked links, npm
+  > `files[]` consumers point at `docs/`) plus the highest blast radius of any
+  > Step-16 tree: ~386 markdown cross-refs AND five verification/generator
+  > scripts hardcode `docs/` (`check_role_doc_links`, `check_public_links`,
+  > `check_public_catalog_links`, `generate_index`, `generate_catalog`). The
+  > thin-root benefit does not justify repointing the verification infrastructure
+  > itself against that convention. The remaining `internal/` / `hooks/` /
+  > maintainer-`agents/` moves deliver the thin-root effect at lower risk.
 - [x] **Step 17:** Update the **install contract**: `package.json` `files` / `bin` <!-- done: files[] scripts/->src/scripts; build/prepack/prepublish npm scripts->src/scripts; install.sh + orchestrator SOURCE_DIR ../.. ; _dispatch regenerator via SCRIPT_DIR/_lib + PACKAGE_ROOT; install_regenerator parents[3]. 3 install-contract tests green (commit c9c6eca9). -->
   / prepack, the installer paths, and the discovery/MCP manifest paths to the new
   `src/` locations. The break is intentional — old `node_modules/.../{scripts,

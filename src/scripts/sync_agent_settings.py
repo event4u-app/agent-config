@@ -48,8 +48,8 @@ except ImportError:
     sys.exit(2)
 
 DEFAULT_SETTINGS = ".agent-settings.yml"
-DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent.parent / "config" / "agent-settings.template.yml"
-DEFAULT_PROFILE_DIR = Path(__file__).resolve().parent.parent.parent / "config" / "profiles"
+DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent.parent / "src" / "config" / "agent-settings.template.yml"
+DEFAULT_PROFILE_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "config" / "profiles"
 
 
 def load_profile(profile_dir: Path, profile: str) -> dict[str, str]:

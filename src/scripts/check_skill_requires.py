@@ -9,7 +9,7 @@ composition graph) against two invariants:
 2. **Co-availability** — whenever a parent skill ships, every sub-skill its
    body assumes must ship too. A sub-skill is co-available under a parent's
    pack `P` iff one of the sub-skill's packs is in `{P}` ∪ the transitive
-   `requires_hint` closure of `P` (from `config/discovery/packs.yml`), or
+   `requires_hint` closure of `P` (from `src/config/discovery/packs.yml`), or
    the sub-skill is always-on (no pack). A parent with no pack (always-on)
    may only require always-on sub-skills.
 
@@ -31,7 +31,7 @@ import yaml  # noqa: E402
 from _lib.agent_src import ROOT, iter_artefacts  # noqa: E402
 from validate_frontmatter import parse_frontmatter  # noqa: E402
 
-PACKS_YML = ROOT / "config" / "discovery" / "packs.yml"
+PACKS_YML = ROOT / "src" / "config" / "discovery" / "packs.yml"
 
 
 def _load_pack_closure() -> dict[str, set[str]]:
@@ -122,7 +122,7 @@ def main() -> int:
                     f"{info['path']}: skill '{skill_id}' (pack '{p}') requires "
                     f"'{req}' (pack {sorted(req_packs)}), but '{p}' does not reach "
                     f"it. Add requires: {hint} to pack '{p}' in "
-                    f"config/discovery/packs.yml, or move '{req}' into a reachable pack."
+                    f"src/config/discovery/packs.yml, or move '{req}' into a reachable pack."
                 )
 
     if errors:

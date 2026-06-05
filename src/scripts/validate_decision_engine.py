@@ -50,7 +50,7 @@ from work_engine.scoring.decision_engine import (  # noqa: E402
 
 # Files we always validate, even if they don't exist (template is
 # canonical — its absence is itself a regression).
-TEMPLATE_PATH = REPO_ROOT / "config" / "agent-settings.template.yml"
+TEMPLATE_PATH = REPO_ROOT / "src" / "config" / "agent-settings.template.yml"
 # Project-level overrides developers may have on disk locally.
 LOCAL_PATHS = [project_settings_path(REPO_ROOT)]
 

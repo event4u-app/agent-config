@@ -48,7 +48,7 @@
     "documented_unassigned": {
       "type": "array",
       "items": { "$ref": "#/$defs/unassigned" },
-      "description": "Artefacts explicitly skipped via config/discovery/unassigned-artefacts.yml. Each entry MUST carry a reason."
+      "description": "Artefacts explicitly skipped via src/config/discovery/unassigned-artefacts.yml. Each entry MUST carry a reason."
     },
     "stats": { "$ref": "#/$defs/stats" }
   },

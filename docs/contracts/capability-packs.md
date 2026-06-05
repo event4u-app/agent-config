@@ -26,7 +26,7 @@ These are **different things** and must not be conflated:
 |---|---|---|
 | **What** | A domain grouping (`packs:` tag on an artefact). | A curated bundle (`profile + preset + surface allowlist`). |
 | **Granularity** | Per-artefact ownership. | Per-audience composition. |
-| **Source of truth** | `config/discovery/packs.yml` (this contract). | `.agent-src.uncondensed/packs/<id>.yml` ([`workflow-packs`](workflow-packs.md)). |
+| **Source of truth** | `src/config/discovery/packs.yml` (this contract). | `.agent-src.uncondensed/packs/<id>.yml` ([`workflow-packs`](workflow-packs.md)). |
 | **Cardinality** | ~19 in use today. | 3 seed bundles (`founder-mvp`, `content-engine`, `agency-delivery`). |
 | **Consumed by** | Projection filtering (6.0.0-B), per-pack budget lint (6.0.0-C), the pack-dependency graph. | The onboarding wizard's first-screen surface rendering. |
 
@@ -37,7 +37,7 @@ document says "pack" unqualified, it means **capability pack**.
 ## Registry — extend the existing vocabulary, do not fork it
 
 Capability packs already exist as the closed discovery vocabulary at
-`config/discovery/packs.yml`, governed by
+`src/config/discovery/packs.yml`, governed by
 [`ADR-013`](../decisions/ADR-013-discovery-frontmatter-contract.md) § packs.
 This contract **formalizes that file as the capability-pack registry** — it
 does not introduce a parallel catalog. Phase 0 extends each entry with the
@@ -46,7 +46,7 @@ three new fields below; the existing fields keep their ADR-013 meaning.
 ### Manifest shape
 
 ```yaml
-# config/discovery/packs.yml — one entry per capability pack
+# src/config/discovery/packs.yml — one entry per capability pack
 - id: laravel                        # kebab-case; matches the `packs:` tag
   label: Laravel                     # human-readable (existing, ADR-013)
   description: Laravel framework patterns; depends on PHP.

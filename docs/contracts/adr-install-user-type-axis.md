@@ -70,7 +70,7 @@ Three options were considered:
   accept `--user-type=<id>`. Validation against `user-types/*.yml`
   stems happens in one place (`install.py`) and the bash entry-point
   delegates. Invalid values fail fast with a non-zero exit.
-- `config/agent-settings.template.yml` keeps a commented
+- `src/config/agent-settings.template.yml` keeps a commented
   `personal.user_type:` stub documenting the seven valid values.
 - The existing `--interactive` flag (legacy `.agent-config.local.json`
   stub) is preserved for backward compat; the new flag is the

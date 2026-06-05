@@ -2,7 +2,7 @@
 """Controlled-verb linter for visible commands (6.0.0-C Phase 2 Step 4; ADR-041).
 
 A VISIBLE command (tier 0/1) must have a leading token drawn from the approved
-verb allowlist in ``config/discovery/command-verbs.yml``. ``create-*`` is a
+verb allowlist in ``src/config/discovery/command-verbs.yml``. ``create-*`` is a
 banned leading token for new visible commands (``create-pr`` is grandfathered).
 
 FORWARD-ONLY: only command files **added** since ``--baseline`` (default
@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-VERBS_YML = ROOT / "config" / "discovery" / "command-verbs.yml"
+VERBS_YML = ROOT / "src" / "config" / "discovery" / "command-verbs.yml"
 _CMD_PATH_RE = re.compile(r"\.agent-src\.uncondensed/commands/.+\.md$")
 NAME_RE = re.compile(r"^name:\s*(.*)$", re.MULTILINE)
 TIER_RE = re.compile(r"^tier:\s*(\d+)", re.MULTILINE)
@@ -151,7 +151,7 @@ def check(relpath: str, kind: str, baseline: str, approved: set[str],
         vio.append(Violation(relpath, "approved-verb",
                              f"leading token `{tok}` of `{name}` is not an "
                              f"approved verb. Rename to an existing verb, or add "
-                             f"`{tok}` to config/discovery/command-verbs.yml in "
+                             f"`{tok}` to src/config/discovery/command-verbs.yml in "
                              f"its own PR with an ADR (ADR-041 § 5)."))
     return vio
 

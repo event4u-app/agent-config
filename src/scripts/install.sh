@@ -946,12 +946,12 @@ migrate_legacy_council_yml() {
 # Ensure .gitignore contains the managed agent-config block.
 # Delegates to scripts/sync_gitignore.py so the installer and the
 # standalone /sync-gitignore command share one source of truth
-# (config/gitignore-block.txt). Honors --dry-run and --skip-gitignore.
+# (src/config/gitignore-block.txt). Honors --dry-run and --skip-gitignore.
 ensure_gitignore() {
     local project_root="$1"
     local gitignore="$project_root/.gitignore"
     local sync_script="$SOURCE_DIR/src/scripts/sync_gitignore.py"
-    local template="$SOURCE_DIR/config/gitignore-block.txt"
+    local template="$SOURCE_DIR/src/config/gitignore-block.txt"
 
     if $SKIP_GITIGNORE; then
         log_verbose "skip .gitignore (--skip-gitignore)"
@@ -984,7 +984,7 @@ ensure_gitignore() {
 # CLI shipped in the package (node_modules) or fetched on demand via npx.
 install_cli_wrapper() {
     local project_root="$1"
-    local template="$SOURCE_DIR/templates/agent-config-wrapper.sh"
+    local template="$SOURCE_DIR/src/templates/agent-config-wrapper.sh"
     local target="$project_root/agent-config"
 
     if [[ ! -f "$template" ]]; then
