@@ -17,8 +17,9 @@ parent_roadmap: road-to-6.0.0-d-structural-restructure
 >    `src/domains/` but never removed `packages/` (308 tracked files, still in CI).
 > 2. **`agents/` namespace + runtime-coupling resolution** — the maintainer `agents/`
 >    workspace (443 refs) collides conceptually with the consumer-facing `agents/`
->    convention the package ships, and `agents/settings/.agent-settings.yml` is read
->    at runtime by `_lib/agent_settings.py`, so a naive move is self-referential.
+>    convention the package ships, and the gitignored `.agent-settings.yml` (in
+>    `agents/settings/`) is read at runtime by `_lib/agent_settings.py`, so a naive
+>    move is self-referential.
 >
 > Draft until the 6.0-D closure PR merges and the maintainer greenlights sequencing.
 > Behavioral consolidation stays in [`road-to-6.1.0-product-consolidation`](road-to-6.1.0-product-consolidation.md);
