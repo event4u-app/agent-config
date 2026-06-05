@@ -19,6 +19,13 @@ packs:
 
 ## Step 0: Detect language
 
+Resolve the quality toolchain via the
+[`toolchain-resolver`](../contexts/execution/toolchain-resolver.md) — it
+returns the per-ecosystem `quality` commands (phpstan / pint / tsc /
+eslint / ruff / mypy / …) alongside the test runner, from the same
+manifest read. The wrapper-first preference and the language table below
+are the resolver's contract; this command is its quality-side consumer.
+
 Check which files were changed to determine which pipeline(s) to run:
 
 ```bash

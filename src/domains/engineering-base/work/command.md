@@ -117,7 +117,12 @@ engine owns the verdict.
 
 Once the gate releases, the rest of the loop is identical to
 `/implement-ticket`: `create-plan`, `apply-plan`, `run-tests`,
-`review-changes` directives flow through the same dispatch table.
+`review-changes` directives flow through the same dispatch table. The
+`run-tests` directive resolves the consumer's runner via the
+[`toolchain-resolver`](../contexts/execution/toolchain-resolver.md)
+(`work_engine/stack/runner.py`) — pest / phpunit / vitest / jest /
+pytest / go / cargo, fast suites by default — instead of assuming a
+single stack.
 
 ### 5. Final report + close-prompt
 
