@@ -76,6 +76,20 @@ When the closure check fires (`count_open == 0` and `count_deferred > 0`), the a
 
 The migration mechanics (file naming, frontmatter pattern, body shape, parent-back-link) live in [`roadmap-management § Spawn follow-up from deferred items`](../skills/roadmap-management/SKILL.md). This rule owns the obligation; the skill owns the procedure.
 
+## Merge-gated criteria — the only sanctioned "near-complete, unarchived" state
+
+A near-complete roadmap may hold its **last** `[ ]` item open on purpose while its closing PR is in flight, so inbound ADR / report / sibling links keep resolving until the file archives. `count_open > 0` keeps it out of the auto-archive backstop — so the item MUST be annotated machine-readably: `<!-- merge-gated: pr=<n> … -->` on the checkbox line or its immediately-following comment.
+
+```
+THE MOMENT THE GATING PR MERGES → FLIP [ ] → [x], git mv TO archive/,
+MIGRATE INBOUND REFS, REGEN DASHBOARD — ALL THE SAME RESPONSE (Iron Law 1).
+A MERGE-GATED ROADMAP LEFT < 100% AFTER ITS PR MERGED IS A RULE VIOLATION.
+```
+
+Example: `- [ ] task ci green on the new structure. <!-- merge-gated: pr=365 archives + ref-migrates the moment PR #365 merges -->`
+
+`update_roadmap_progress.py` surfaces every fully-merge-gated roadmap (every open item carries the annotation) in a dedicated **⏳ Merge-gated — pending post-merge archival** dashboard section plus an stderr warning on every run (write path AND `--check`). It is **not** a hard-fail — an open gating PR is a legitimate state. The loud, always-on surfacing is the backstop: a merge-gated roadmap can never again hide inside a partial progress bar.
+
 ## Pre-send self-check — MANDATORY
 
 Before sending any reply that landed roadmap work:
@@ -89,7 +103,8 @@ Before sending any reply that landed roadmap work:
    - Any file-shape touch (rename / phase add / archive) → yes, regardless of cadence.
    If yes and not run yet → run `./agent-config roadmap:progress`, then continue.
 4. Did `count_open` reach 0?
-   - **No** → continue normally.
+   - **No, but every open item is `merge-gated`** → the roadmap is complete pending its PR. If that PR has merged → flip + `git mv` to `archive/` + migrate inbound refs + regen, same reply. If still open → leave it; the dashboard surfaces it under ⏳ Merge-gated.
+   - **No (real open work remains)** → continue normally.
    - **Yes + `count_deferred == 0`** → `git mv` to `archive/` and regen again — same reply.
    - **Yes + `count_deferred > 0`** → STOP. Run the Iron Law 3 deferred-resolution flow (surface items + numbered options + wait). Archive only after resolution.
 

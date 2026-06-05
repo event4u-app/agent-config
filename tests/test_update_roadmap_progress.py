@@ -526,3 +526,111 @@ def test_parse_frontmatter_handles_quoted_and_blank_lines():
     text = '---\nstatus: "draft"\n\n# comment line\nowner: matze\n---\n# Title'
     fm = urp.parse_frontmatter(text)
     assert fm == {"status": "draft", "owner": "matze"}
+
+
+# ---------------------------------------------------------------------------
+# Merge-gated — a near-complete roadmap may hold its last `[ ]` item open
+# on purpose while its closing PR is in flight, so inbound refs keep
+# resolving until the file archives. `count_open > 0` keeps it out of
+# `unarchived_complete`; without a dedicated detector it silently lingers
+# at e.g. 97% the moment the PR merges. `merge_gated_pending` is the
+# always-on visibility backstop (dashboard section + stderr warning,
+# never a hard-fail — an open gating PR is a legitimate state).
+# ---------------------------------------------------------------------------
+
+MERGE_GATED_FIXTURE = """\
+# Roadmap — Gated on a closing PR
+
+## Phase 1 — Built
+- [x] one finished
+- [x] two finished
+
+## Phase 2 — Acceptance
+- [x] migrate command ships
+- [ ] `task ci` green on the new structure. <!-- merge-gated: pr=365
+  archives + ref-migrates the moment PR #365 merges to main -->
+"""
+
+# A roadmap with BOTH real open work and a merge-gated item is still
+# genuinely in progress — it must NOT be flagged as merge-gated-pending.
+MIXED_GATED_FIXTURE = """\
+# Roadmap — Real work plus a gated item
+
+## Phase 1 — Work
+- [x] done
+- [ ] real remaining work
+- [ ] gated criterion <!-- merge-gated: pr=42 -->
+"""
+
+
+def test_count_checkboxes_detects_merge_gated_open():
+    done, open_, deferred, cancelled, merge_gated, prs = urp.count_checkboxes(
+        "- [ ] gated thing <!-- merge-gated: pr=365 -->\n- [ ] plain open\n"
+    )
+    assert (done, open_, deferred, cancelled) == (0, 2, 0, 0)
+    assert merge_gated == 1  # only the annotated one
+    assert prs == [365]
+
+
+def test_merge_gated_detected_across_following_comment_lines(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "gated.md").write_text(MERGE_GATED_FIXTURE, encoding="utf-8")
+    r = urp.collect(root)[0]
+    assert r.open_ == 1
+    assert r.merge_gated == 1
+    assert r.merge_gated_prs == [365]
+    # done count unaffected
+    assert r.done == 3
+
+
+def test_merge_gated_pending_flags_only_fully_gated_roadmaps(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "gated.md").write_text(MERGE_GATED_FIXTURE, encoding="utf-8")
+    (root / "mixed.md").write_text(MIXED_GATED_FIXTURE, encoding="utf-8")
+    (root / "clean.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    (root / "open.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    gated = urp.merge_gated_pending(roadmaps)
+    # Only the roadmap whose EVERY open item is merge-gated qualifies.
+    assert sorted(r.rel for r in gated) == ["gated.md"]
+    # The mixed roadmap (real open work + a gated item) stays out.
+    assert "mixed.md" not in [r.rel for r in gated]
+
+
+def test_merge_gated_does_not_count_as_unarchived_complete(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "gated.md").write_text(MERGE_GATED_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    # open_ > 0 keeps it out of the clean-completion list — the whole
+    # reason the merge-gated escape hatch exists.
+    assert urp.unarchived_complete(roadmaps) == []
+
+
+def test_render_surfaces_merge_gated_block(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "gated.md").write_text(MERGE_GATED_FIXTURE, encoding="utf-8")
+    rendered = urp.render(urp.collect(root))
+    assert "Merge-gated — pending post-merge archival" in rendered
+    assert "gated.md" in rendered
+    assert "#365" in rendered
+
+
+def test_check_mode_warns_but_does_not_fail_on_merge_gated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "gated.md").write_text(MERGE_GATED_FIXTURE, encoding="utf-8")
+    rc = _run_main(monkeypatch, tmp_path)
+    assert rc == 0
+    rc = _run_main(monkeypatch, tmp_path, "--check")
+    captured = capsys.readouterr()
+    # Merge-gated is a legitimate in-flight state — surfaced, never fatal.
+    assert rc == 0
+    assert "Merge-gated roadmaps" in captured.err
+    assert "gated.md" in captured.err
+    assert "#365" in captured.err
