@@ -425,6 +425,21 @@ onboarding:
 # plus an always-present "run as-is" option. The suggestion layer
 # never auto-executes — the user picks. See rules/command-suggestion-policy.md.
 commands:
+  # --- Orchestrator auto-detection (6.1.0 non-interactive-contract) ---
+  #
+  # Global kill-switch for the auto-detection layer on cluster
+  # orchestrators (/judge, /fix, /analytics, /tests, /override).
+  #   enabled  = (default) orchestrators auto-detect the sub-command per
+  #              their confidence-tiered detection table.
+  #   warn     = detect, but always confirm the detected sub-command
+  #              before routing (never silent, even on HIGH confidence).
+  #   disabled = never auto-detect; orchestrators always show the menu
+  #              (interactive) or require an explicit sub-command (CI).
+  # Per-orchestrator override: auto_detect: false in a command's
+  # front-matter. Per-invocation override: --no-auto-detect.
+  # See src/agent-src/contexts/execution/non-interactive-contract.md.
+  auto_detect: enabled
+
   suggestion:
     # Master switch (true, false). false = the layer is silent; explicit
     # /commands still work as today.

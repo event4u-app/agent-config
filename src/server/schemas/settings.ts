@@ -208,6 +208,9 @@ export const settingsSchema = z.object({
         ),
     }),
     commands: z.object({
+        auto_detect: z.enum(['enabled', 'warn', 'disabled']).default('enabled').describe(
+            'Global kill-switch for orchestrator auto-detection (6.1.0 non-interactive-contract). enabled (default) = /judge, /fix, /analytics, /tests, /override auto-detect their sub-command per a confidence-tiered table; warn = detect but always confirm before routing; disabled = never auto-detect (always show the menu interactively, require an explicit sub-command in CI). Per-orchestrator override: auto_detect:false in front-matter. Per-invocation: --no-auto-detect.',
+        ),
         suggestion: z.object({
             enabled: z.boolean().default(true).describe(
                 'Master switch for the slash-command suggestion layer. When on, the agent offers numbered options ("did you mean /commit?") instead of guessing. Turn off if you prefer to type every command yourself.',
