@@ -25,7 +25,7 @@ task ci                # full pipeline — green before PR
 - **Consumer story** — `npx` + `scripts/install.sh`, sandbox / offline paths: [`README.md`](README.md).
 - **Personas** — 11 review lenses (6 + 5): [`docs/personas.md`](docs/personas.md).
 - **Discovery** — workspaces / packs manifest: [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md) + [`customization`](docs/customization.md#workspaces--packs-discovery).
-- **Root layout** — maintainer items in [`internal/`](internal/README.md) per [`ADR-028`](docs/decisions/ADR-028-root-layout.md); per-tool toggle: `agents/.agent-tools.yml`.
+- **Root layout** — `src/` = source; root keeps workspace tooling per [`ADR-050`](docs/decisions/ADR-050-workspace-vs-package-root-boundary.md); toggle: `agents/.agent-tools.yml`.
 
 ## Emergency triage — read this when nothing else is reachable
 

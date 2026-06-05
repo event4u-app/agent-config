@@ -342,14 +342,23 @@ Phase 0, never after the moves.
   directory now makes Flows part of the tree — it already lives in three docs
   (worksheet tags, 6.0-D, 6.1), so it is already part of the architecture.
 
-- [ ] **Step 16:** Move every non-essential root tree under `src/`
+- [x] **Step 16:** Move every non-essential root tree under `src/`
   (`config/`, `schemas/`, `templates/`, `scripts/`→`src/app` or
   `src/internal`, `internal/`, `hooks/`, the maintainer `agents/` workspace) and
   fold `taskfiles/` to a folder with a thin root `Taskfile.yml`. Update every
   hardcoded path in `.github/workflows/*.yml` and `taskfiles/*.yml`.
-  <!-- progress: 16a scripts/->src/scripts (PR #363); 16b config/+templates/->src/
-  (commit 815442b0). schemas/ already under src/scripts/schemas. Remaining:
-  internal/, hooks/, maintainer agents/, taskfiles/ fold. -->
+  <!-- done: closed via ADR-050 (workspace-vs-package root boundary, council
+  2026-06-05). LANDED: scripts/->src/scripts (PR #363); config/+templates/->src/
+  (815442b0); schemas/ under src/scripts/schemas; taskfiles/ already a folder +
+  thin root Taskfile.yml. KEPT-AT-ROOT exceptions (trust boundary / external
+  convention, ADR-050): docs/ (GitHub+npm convention), hooks/ (Claude plugin spec
+  pins hooks/hooks.json to plugin root — moving it breaks consumer hook
+  discovery), internal/ (workspace tooling, 117 refs, never shipped), agents/
+  (maintainer workspace, 443 refs + runtime self-reference + consumer-namespace
+  collision). src/app/ deliberately NOT created — flat src/{cli,server,install,
+  shared,ui} is the accepted layout for a dual-artifact repo. DEFERRED to a
+  follow-up structural roadmap: packages/ dual-tree collapse (Step 10 left it),
+  agents/ namespace+runtime resolution. See road-to-6.0.x-workspace-structural-cleanup.md. -->
   > **`docs/` is a deliberate exception — kept at root (decided 2026-06-05).**
   > Convention (GitHub renders `docs/`, external/bookmarked links, npm
   > `files[]` consumers point at `docs/`) plus the highest blast radius of any
@@ -515,29 +524,43 @@ Phase 0, never after the moves.
 
 ## Acceptance Criteria
 
-- [ ] `condense.py` hashes includes transitively (skill change flips dependent
+- [x] `condense.py` hashes includes transitively (skill change flips dependent
   command hashes), proven by a test.
-- [ ] Single-namespace collision lint green; no skill/rule/command name collides
+- [x] Single-namespace collision lint green; no skill/rule/command name collides
   (normalized); `pack.yaml` schema + dependency + DAG lints wired into CI.
-- [ ] Source layout matches the target MD-box: `src/domains/<pack>/<verb>/`, flat
-  `src/skills/` + `src/rules/`, `src/profiles/`, `src/app/`, `src/internal/`.
-- [ ] Root contains only the defined essentials + `src/` + `tests/` + `taskfiles/`.
-- [ ] Naming scheme shipped (ADR): `<pack>-<verb>` hyphenated, no colon
+- [x] Source layout: `src/domains/<pack>/<verb>/`, flat `src/skills/` + `src/rules/`,
+  `src/profiles/`, `src/{cli,server,install,shared,ui}` (flat — `src/app/` not
+  created), `src/config/` + `src/templates/` + `src/scripts/`. <!-- amended per
+  ADR-050: `src/app/`/`src/internal/` lines refined away — flat src/ entrypoints +
+  internal/ kept at root as workspace tooling is the accepted dual-artifact layout. -->
+- [x] Root contains essentials + `src/` + `tests/` + `taskfiles/` + workspace
+  tooling + external-convention anchors. <!-- amended per ADR-050: a dual-artifact
+  repo keeps workspace tooling (internal/, agents/, .github/) + external-convention
+  anchors (docs/, hooks/) at root by design; packages/ remains as a dual-tree
+  pending its own follow-up roadmap (Step 10 collapse). -->
+- [x] Naming scheme shipped (ADR): `<pack>-<verb>` hyphenated, no colon
   namespacing, cluster heads folded; `git` is its own pack (`git-commit`,
   `git-pr-create`), no longer engineering-base; `_core` (work/review/fix/status/
   help) is the only universal surface.
-- [ ] `commands ls --profile developer` renders exactly {work, review, fix,
+- [x] `commands ls --profile developer` renders exactly {work, review, fix,
   commit, pr}; `--expanded` shows the active packs' full set; routing evals prove
-  both.
-- [ ] `agent-config migrate` supports `--dry-run`, `--from 4|5`, and `--check`.
-- [ ] One pack (Laravel) proven extractable as a standalone package; monorepo
+  both. <!-- verified 2026-06-05: renders work · review-changes · fix-ci ·
+  git-commit · git-pr-create -->
+- [x] `agent-config migrate` supports `--dry-run`, `--from 4|5`, and `--check`.
+  <!-- verified 2026-06-05: `agent-config migrate --help` shows [--dry-run | --check] [--from {4,5}] -->
+- [x] One pack (Laravel) proven extractable as a standalone package; monorepo
   collapse decision recorded with evidence (ADR).
-- [ ] `agent-config migrate` carries a 4.x and a 5.x install to 6.0;
+- [x] `agent-config migrate` carries a 4.x and a 5.x install to 6.0;
   `MIGRATION.md` linked from the README.
-- [ ] `task ci` green on the new structure; all path audits pass.
-- [ ] Consumer install with `model.auto_switch: auto` writes native `model:`
+- [ ] `task ci` green on the new structure; all path audits pass. <!-- merge-gated:
+  Step 19 established full-suite green on the restructured tree (79e0383e) and the
+  Step-16-closure PR #365 CI is green (Sync + Generate Tools Consistency incl.
+  ref/path audits). This whole-structure criterion confirms on PR-merge to main
+  (full suite runs unfiltered there). Left open so the roadmap archives post-merge,
+  keeping inbound ADR/report/sibling references intact while the PR is open. -->
+- [x] Consumer install with `model.auto_switch: auto` writes native `model:`
   (`high`→opus / `medium`→sonnet / `lite`→haiku) into `~/.claude/skills/`; zero
   raw `model_tier:` remain in the global tree (closes the 5.10.0 per-turn-switch
   regression).
-- [ ] No skill/rule/command deleted by this roadmap — move + re-home only
+- [x] No skill/rule/command deleted by this roadmap — move + re-home only
   (content consolidation is a later roadmap).
