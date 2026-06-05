@@ -155,7 +155,18 @@ def _iter_artefacts() -> Iterable[tuple[Path, str]]:
         for p in sorted(domains_root.rglob("command.md")):
             if p.is_file():
                 yield p, "command"
+    # 6.0.0-D Step 16b moved the install-scaffold templates to src/templates/
+    # (wrapper, consumer-settings, minimal stub, *.j2 rules). `src` is an
+    # artefact root for the new src/{skills,rules,domains} homes, so
+    # _collect("templates") now also sees src/templates — but those are
+    # install scaffold shipped via package.json files[], NOT discovery
+    # "template" content (which lives under .agent-src.uncondensed/templates).
+    # Skip them so strict mode does not demand artefact frontmatter on them.
+    _scaffold = (ROOT / "src" / "templates").resolve()
     for p in _collect("templates", "*.md"):
+        rp = p.resolve()
+        if rp == _scaffold or _scaffold in rp.parents:
+            continue
         yield p, "template"
 
 

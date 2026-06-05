@@ -1,0 +1,23 @@
+# Agent Settings — minimal stub
+#
+# Created by `agent-config init --minimal`. This file marks the project as
+# an agent-config layer without installing any tool payload. The global
+# `agent-config` binary on $PATH supplies the rules / skills / commands;
+# this file is your per-project override point.
+#
+# Resolution order (deepest wins, see docs/contracts/layered-settings.md):
+#   1. <repo-root>/.agent-settings.yml  ← this file
+#   2. ~/.event4u/agent-config/agent-settings.yml  (user-global; whitelisted)
+#
+# Add keys here as you need them. Reference template:
+#   templates/consumer-settings/  or  docs/customization.md
+
+# --- Cost profile ---
+# Master switch for which rule tiers load. Options: minimal | balanced | full.
+# `balanced` is the recommended default; flip to `minimal` for kernel-only.
+rule_loading_tier: balanced
+
+# --- Version pin (opt-in) ---
+# Leave commented out to follow whatever `agent-config` is on $PATH (per D4).
+# Uncomment and pin to a specific release for reproducible installs.
+# agent_config_version: ""
