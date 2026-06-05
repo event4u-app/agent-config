@@ -38,17 +38,15 @@ from typing import List
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
-from _lib.agent_src import resolve_package_core_path  # noqa: E402
+from _lib.agent_src import SRC_DOMAINS  # noqa: E402
 
-# Pre-monorepo: REPO_ROOT/.agent-src.uncondensed/commands. Post-move (ADR-017)
-# the core command surface lives under packages/core/.agent-src.uncondensed.
-# Fall back to the legacy path only if the packages layout is absent.
-_CORE_COMMANDS = resolve_package_core_path(".agent-src.uncondensed/commands")
-_LEGACY_COMMANDS = REPO_ROOT / ".agent-src.uncondensed" / "commands"
-DEFAULT_ROOT = _CORE_COMMANDS if _CORE_COMMANDS.is_dir() else _LEGACY_COMMANDS
-# Enforced packages/core target — read by scripts/check_gate_paths.py so a
-# future move that desyncs this path fails CI instead of silently no-opping.
-GATE_CORE_PATHS = (_CORE_COMMANDS,)
+# 6.0.0-D Step 10 moved the command surface into pack-physical
+# src/domains/<pack>/<verb>/command.md; 6.0.x removed the packages/ tree
+# (ADR-051). The command source root is now src/domains.
+DEFAULT_ROOT = SRC_DOMAINS
+# Enforced source target — read by scripts/check_gate_paths.py so a future move
+# that desyncs this path fails CI instead of silently no-opping.
+GATE_CORE_PATHS = (SRC_DOMAINS,)
 REPORT_DIR = REPO_ROOT / "agents" / "reports"
 OUT_JSON = REPORT_DIR / "command-surface.json"
 OUT_MD = REPORT_DIR / "command-surface.md"
@@ -348,12 +346,11 @@ def render_md(commands: List[Command], pairs: list[dict]) -> str:
 # --- Budget audit (6.0.0-B Phase 2 Step 4) --------------------------------
 
 def _command_roots() -> list[Path]:
-    """Every package's command surface (core + packs), for accurate per-pack counts."""
+    """Every pack's command surface under src/domains/<pack>/, for per-pack counts."""
     roots: list[Path] = []
-    pkgs = REPO_ROOT / "packages"
-    if pkgs.is_dir():
-        for d in sorted(pkgs.glob("*/.agent-src.uncondensed/commands")):
-            if d.is_dir():
+    if SRC_DOMAINS.is_dir():
+        for d in sorted(SRC_DOMAINS.iterdir()):
+            if d.is_dir() and any(d.rglob("command.md")):
                 roots.append(d)
     return roots or [DEFAULT_ROOT]
 
@@ -499,7 +496,7 @@ def render_budget_md(audit: dict) -> str:
 # Pre-existing over-budget packs are grandfathered as long as they do not grow
 # their visible surface — see docs/contracts/capability-packs.md § exemption.
 
-_CMD_PATH_RE = re.compile(r"\.agent-src\.uncondensed/commands/.+\.md$")
+_CMD_PATH_RE = re.compile(r"src/domains/.+/command\.md$")
 
 
 def _git_lines(args: list[str]) -> list[str]:

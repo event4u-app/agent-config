@@ -28,7 +28,9 @@ import yaml
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[2]
-PACKAGE_DIR = REPO / ".agent-src.uncondensed" / "ghostwriter"
+# 6.0.x (ADR-051): the uncondensed package source container moved to
+# src/agent-src/ — ghostwriter fixtures now live at src/agent-src/ghostwriter/.
+PACKAGE_DIR = REPO / "src" / "agent-src" / "ghostwriter"
 CONSUMER_DIR = REPO / "agents" / "ghostwriter"
 ALLOWLIST = REPO / "src" / "scripts" / "ghostwriter_fixture_allowlist.txt"
 EXEMPT_STEMS = frozenset({"README"})

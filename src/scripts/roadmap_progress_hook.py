@@ -216,7 +216,7 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
                 detail=(
                     "update_roadmap_progress.py not found at any of: "
                     ".augment/scripts/, .agent-src/scripts/, "
-                    ".agent-src.uncondensed/scripts/"
+                    "src/agent-src/scripts/"
                 ),
                 resolution=(
                     "./agent-config hooks:install --regen "

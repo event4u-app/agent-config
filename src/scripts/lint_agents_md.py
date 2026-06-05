@@ -24,15 +24,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src" / "scripts"))
-from _lib.agent_src import resolve_package_core_path  # noqa: E402
+from _lib.agent_src import SRC_AGENT  # noqa: E402
 
 QUIET = "--quiet" in sys.argv
 
-_CONSUMER_TEMPLATE = resolve_package_core_path(".agent-src.uncondensed/templates/AGENTS.md")
-# Enforced packages/core target — read by scripts/check_gate_paths.py so a
-# future move that desyncs this path fails CI instead of silently no-opping.
-# Only the consumer-template lives under packages/core; the package-root
-# AGENTS.md sits at the repo root and is intentionally excluded.
+# 6.0.x: the uncondensed source container moved from
+# packages/core/.agent-src.uncondensed/ to src/agent-src/ (ADR-051).
+_CONSUMER_TEMPLATE = SRC_AGENT / "templates" / "AGENTS.md"
+# Enforced source target — read by scripts/check_gate_paths.py so a future move
+# that desyncs this path fails CI instead of silently no-opping. Only the
+# consumer-template lives under the source container; the package-root AGENTS.md
+# sits at the repo root and is intentionally excluded.
 GATE_CORE_PATHS = (_CONSUMER_TEMPLATE,)
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")

@@ -25,7 +25,7 @@ from typing import Any
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _lib.agent_src import iter_all_sources, resolve_logical  # noqa: E402
+from _lib.agent_src import SRC_AGENT, iter_all_sources, resolve_logical  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = ROOT / "packages"
@@ -123,18 +123,30 @@ def _artefact_record(path: Path, logical_rel: str, fm: dict[str, Any]) -> dict[s
 
 
 def _collect_physical(pkg_dir: Path) -> list[dict[str, Any]]:
-    """Collect a physical ``packages/<dir>/`` pack's artefacts (path-grouped)."""
-    src_root = pkg_dir / ".agent-src.uncondensed"
-    if not src_root.is_dir():
-        return []
+    """Collect a physical ``packages/<dir>/`` pack's artefacts (path-grouped).
+
+    6.0.x (ADR-051): the core pack's shared, framework-neutral artefact
+    categories (contexts, personas, templates, profiles, presets, user-types,
+    ghostwriter, scripts, packs) moved out of
+    ``packages/core/.agent-src.uncondensed/`` into the relocated container
+    ``src/agent-src/``. They remain core-owned, so the core pack collects from
+    both roots — keeping the manifest byte-stable across the move. The logical
+    relpath is unchanged (``personas/<file>`` etc.), so records are identical.
+    """
+    src_roots = [pkg_dir / ".agent-src.uncondensed"]
+    if pkg_dir.name == "core" and SRC_AGENT.is_dir():
+        src_roots.append(SRC_AGENT)
     items: list[dict[str, Any]] = []
-    for p in sorted(src_root.rglob("*.md")):
-        if not p.is_file():
+    for src_root in src_roots:
+        if not src_root.is_dir():
             continue
-        fm = _read_frontmatter(p)
-        if not fm:
-            continue
-        items.append(_artefact_record(p, p.relative_to(src_root).as_posix(), fm))
+        for p in sorted(src_root.rglob("*.md")):
+            if not p.is_file():
+                continue
+            fm = _read_frontmatter(p)
+            if not fm:
+                continue
+            items.append(_artefact_record(p, p.relative_to(src_root).as_posix(), fm))
     return items
 
 
