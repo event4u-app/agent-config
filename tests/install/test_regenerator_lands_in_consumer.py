@@ -77,10 +77,12 @@ def test_package_source_returns_existing_file(helper):
     source = helper.package_source(REPO_ROOT)
     assert source is not None
     assert source.is_file()
-    # Must be one of the three known canonical locations.
+    # Must be one of the known canonical locations.
     assert any(
         marker in str(source)
         for marker in (
+            # 6.0.x (ADR-051): uncondensed source container relocated to src/agent-src/.
+            "src/agent-src/scripts",
             "packages/core/.agent-src.uncondensed",
             ".agent-src/scripts",
             ".augment/scripts",

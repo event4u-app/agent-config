@@ -18,7 +18,8 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "src" / "scripts" / "apply_modules_config.py"
-TEMPLATE = REPO_ROOT / "packages" / "core" / ".agent-src.uncondensed" / "templates" / "agents" / "agent-project-settings.example.yml"
+# 6.0.x (ADR-051): the uncondensed source container moved to src/agent-src/.
+TEMPLATE = REPO_ROOT / "src" / "agent-src" / "templates" / "agents" / "agent-project-settings.example.yml"
 
 
 def _run(project: Path, payload: dict[str, object] | None, *, decline: bool = False) -> subprocess.CompletedProcess[str]:
