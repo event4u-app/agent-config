@@ -62,6 +62,12 @@ ALLOWED_FLAT_FILES: frozenset[str] = frozenset(
         # it before any subdirectory is touched (ADR-028 § Root layout
         # toggle).
         ".agent-tools.yml",
+        # Dual-role marker (ADR-053). Names, at the directory itself, that
+        # this agents/ tree is BOTH the maintainer workspace AND a dogfooded
+        # instance of the consumer convention. Intentionally a root-level
+        # flat file — it marks the directory, so a typed subdirectory would
+        # defeat its purpose. Spec: agents/.maintainer-workspace.md.
+        ".maintainer-workspace.md",
     }
 )
 
