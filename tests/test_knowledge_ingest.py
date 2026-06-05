@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/knowledge_ingest.py``.
+"""Tests for ``src/cli/python/knowledge_ingest.py``.
 
 Covers the contract surface defined in
 ``docs/contracts/local-knowledge-ingestion.md``:
@@ -24,7 +24,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "knowledge_ingest.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "knowledge_ingest.py"
 FIXTURES = REPO_ROOT / "tests" / "fixtures" / "knowledge-corpus"
 
 

@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/workspace_documents.py``.
+"""Tests for ``src/cli/python/workspace_documents.py``.
 
 Covers ``docs/contracts/workspace-documents.md``:
 
@@ -21,7 +21,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "workspace_documents.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "workspace_documents.py"
 
 
 def _load():

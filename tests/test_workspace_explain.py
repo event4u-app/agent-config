@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/workspace_explain.py``.
+"""Tests for ``src/cli/python/workspace_explain.py``.
 
 Covers ``docs/contracts/explain-modes.md`` renderer surface (Phase 6):
 plain vs technical labels, confidence + freshness banding, glossary
@@ -16,7 +16,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "workspace_explain.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "workspace_explain.py"
 
 
 def _load():

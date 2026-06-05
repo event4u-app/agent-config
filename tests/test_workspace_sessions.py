@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/workspace_sessions.py``.
+"""Tests for ``src/cli/python/workspace_sessions.py``.
 
 Covers ``docs/contracts/daily-workspace.md`` §Session JSONL schema:
 
@@ -21,7 +21,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "workspace_sessions.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "workspace_sessions.py"
 
 
 def _load():
