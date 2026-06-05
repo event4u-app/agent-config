@@ -203,6 +203,10 @@
     "gui_runnable": {
       "type": "boolean",
       "description": "AI OS Product UI allowlist (road-to-ai-os-product-ui.md Phase 1). When true, the command is exposed in the browser /tasks surface and may be spawned by POST /api/v1/task/run. Default false — commands that touch git, secrets, or run destructive migrations must stay false (terminal only). Per-command opt-in, never opt-out."
+    },
+    "auto_detect": {
+      "type": "boolean",
+      "description": "6.1.0 orchestrator auto-detection opt-in (Step 1, non-interactive-contract). When true, the orchestrator auto-detects its sub-command per the confidence-tiered detection table instead of always showing the menu, honoring the non-interactive-contract (TTY/CI detection, --yes/--json, abort schemas). Per-orchestrator kill-switch: set false to always show the menu; overridable globally via commands.auto_detect in .agent-settings.yml and per-invocation via --no-auto-detect. Only orchestrators (type: orchestrator) carry it."
     }
   }
 }

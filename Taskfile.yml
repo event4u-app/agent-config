@@ -117,6 +117,7 @@ tasks:
       - task: lint-command-routing
       - task: lint-new-skill-gate
       - task: check-cluster-patterns
+      - task: lint-orchestrator-auto-detect
       - task: lint-rule-interactions
       - task: lint-load-context
       - task: check-context-paths
@@ -234,6 +235,7 @@ tasks:
       - task: lint-command-routing
       - task: lint-new-skill-gate
       - task: check-cluster-patterns
+      - task: lint-orchestrator-auto-detect
       - task: lint-rule-interactions
       - task: lint-load-context
       - task: check-context-paths

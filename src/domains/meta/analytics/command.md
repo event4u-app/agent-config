@@ -6,6 +6,7 @@ tier: 2
 description: Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
 cluster: analytics
 type: orchestrator
+auto_detect: true
 suggestion:
   eligible: true
   trigger_description: "show my workspace analytics, top prompts last week, which role launched what, prune the analytics log"
@@ -32,13 +33,32 @@ contract — schema, retention, opt-out, event vocabulary.
 | `/analytics show` | `commands/analytics/show.md` | Render top prompts, launcher → completion, session length, knowledge usage |
 | `/analytics prune` | `commands/analytics/prune.md` | Drop events older than the 90-day retention window |
 
+## Non-interactive & auto-detection
+
+`/analytics` honors the [`non-interactive-contract`](../contexts/execution/non-interactive-contract.md)
+(surface detection, confidence tiers, `--yes`/`--json`, abort schemas,
+the `auto_detect` kill-switch, rollback). Detection table:
+
+| Basis (signal) | Sub-command | Confidence |
+|---|---|---|
+| Explicit sub given (`/analytics prune`) | that one | — (detection skipped) |
+| `--prune` flag, or explicit "drop/prune old events" intent | `analytics/prune` | HIGH (destructive — see below) |
+| Any read intent (show, report, top prompts), or no argument | `analytics/show` (read-only safe default) | HIGH |
+
+`show` is the read-only safe default — a bare `/analytics` always renders.
+`prune` **mutates** (drops events): per the contract it NEVER fires on an
+auto-detect/safe-default fallback — only on an explicit `prune` sub /
+`--prune`, and in CI only with an explicit `--yes`.
+
 ## Dispatch
 
 1. Parse the user's argument: `/analytics <sub-command> [args]`.
-2. Look up the sub-command in the table above.
+2. **Explicit sub** → look it up and route. Otherwise run the detection
+   table above per the non-interactive-contract (default → `show`).
 3. Load the body of the routed file and follow its `## Steps` section
    verbatim with the remaining args.
-4. If the sub-command is unknown or missing, print the table above and ask:
+4. On `--no-auto-detect` with no sub: interactive → print the table and
+   ask; non-interactive → route to `show` (read-only default).
 
    > 1. show — render the analytics report (markdown · csv · json)
    > 2. prune — drop events older than 90 days

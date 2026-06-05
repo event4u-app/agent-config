@@ -27,27 +27,41 @@ commands — the surface a newcomer can learn in five minutes — without losing
 capability (removed pieces become skills the survivors compose). Then make the
 implicit **Flows** layer explicit.
 
+> **AI-council convergence (claude-sonnet-4-5 + gpt-4o, 2026-06-05, design mode).**
+> Re-grounded against the post-6.0.x layout (orchestrator/sub-command hierarchy
+> already exists). Converged on a **6-PR sequence**, not one mega-PR:
+> **PR1 (this PR)** = Step 1 contract + the auto-detection layer (Steps 2–5)
+> guarded by an `auto_detect` kill-switch + confidence-tiered safe defaults +
+> two abort schemas, with Step 8 expressed as *deprecation* prose (not deletion).
+> Deferred to follow-up PRs: **5b** (feature-plan fold — both members: needs
+> standalone-usage evidence first), **6** (toolchain resolver — code subsystem,
+> sequenced after the contract), **7** (command→skill — after the layer is proven
+> in production), **8 deletion** (deprecate-now / delete-later window), **8b/9**
+> (flows layer — HIGH-risk, lands last). Auto-detection must target stable
+> sub-commands, so deprecation is documented before/with detection.
+
 ## Phase 1: Interactive-merge contract (the gate for every merge here)
 
-- [ ] **Step 1:** Ship the non-interactive contract every merged command depends
+- [x] **Step 1:** Ship the non-interactive contract every merged command depends
   on: detect a non-TTY (CI) reliably, honor `--yes` / `--json` / explicit flags,
   fall back to a safe default without hanging. Council: interactive prompts that
   block CI are "provably wrong for CI/CD" — no interactive merge ships without it.
 
 ## Phase 2: Interactive command merges
 
-- [ ] **Step 2:** `fix-pr-comments` ← `{fix-pr-bot-comments, fix-pr-developer-comments}`:
+- [x] **Step 2:** `fix-pr-comments` ← `{fix-pr-bot-comments, fix-pr-developer-comments}`:
   detect new/unanswered comments, ask "fix bot / human / both?"; improved
   detection dedupes by comment id + reply marker so already-answered comments are
-  never retried.
-- [ ] **Step 3:** `analytics` ← `{analytics-show, analytics-prune}`: show is the
-  default; prune is behind an explicit confirm/flag (destructive, never silent).
-- [ ] **Step 4:** `judge` ← `{judge-solo, judge-on-diff, judge-steps}`: auto-detect
+  never retried. <!-- PR1: /fix detection table routes any PR-review-comment intent to fix/pr-comments (which resolves bot/human/both); bot/developer variants marked deprecated→pr-comments in prose (hard lifecycle flip = council PR4). -->
+- [x] **Step 3:** `analytics` ← `{analytics-show, analytics-prune}`: show is the
+  default; prune is behind an explicit confirm/flag (destructive, never silent). <!-- PR1: /analytics detection table — show is the read-only safe default; prune never fires on auto-detect/safe-default per non-interactive-contract §4 (destructive). -->
+- [x] **Step 4:** `judge` ← `{judge-solo, judge-on-diff, judge-steps}`: auto-detect
   the mode (diff → on-diff, plan → steps, else solo) with a confirm; fall back to
-  an explicit prompt if detection confidence < 90%.
-- [ ] **Step 5:** `tests` create-vs-run disambiguation; `override` create-vs-edit.
-  Each merge ships only with the Phase-1 non-interactive escape.
+  an explicit prompt if detection confidence < 90%. <!-- PR1: /judge detection table with HIGH/MEDIUM/LOW tiers; solo = read-only safe default; LOW → menu (interactive) / ambiguous_routing (CI). Confidence is declarative (basis), not numeric, per council. -->
+- [x] **Step 5:** `tests` create-vs-run disambiguation; `override` create-vs-edit.
+  Each merge ships only with the Phase-1 non-interactive escape. <!-- PR1: detection tables on /tests (create-vs-execute) and /override (create-vs-manage), both wired to the non-interactive-contract. -->
 - [ ] **Step 5b:** `feature-plan` ← `{feature-explore, feature-roadmap}` — merge
+  <!-- DEFERRED to follow-up PR (council 2026-06-05): both members declined to fold without standalone-usage evidence; revisit when usage data shows how often feature/explore runs standalone. -->
   **decision deferred here from 6.0-D Step 13b**: `feature-explore` is `feature-plan`'s
   first phase (a subset, not a >95% duplicate) and `feature-roadmap` is its
   downstream "make it a roadmap" branch, so the council guardrail forbade
@@ -58,6 +72,7 @@ implicit **Flows** layer explicit.
 
 ## Phase 3: Stack-adaptive engineering commands (resolver)
 
+<!-- Step 6 DEFERRED to follow-up PR (council 2026-06-05): the resolver is a code subsystem and a sub-routine of /tests detection; it must follow Step 1's contract (which PR1 ships). The non-interactive escape it depends on now exists. -->
 - [ ] **Step 6:** Build the toolchain resolver: `test-run` / `test-create` /
   `quality-fix` / `review-changes` / `work` DETECT the consumer's stack (phpunit /
   pest / playwright / vitest / jest / …) and run the right tool — no per-stack
@@ -67,6 +82,7 @@ implicit **Flows** layer explicit.
 
 ## Phase 4: Command → skill conversions (the [-] leaves)
 
+<!-- Step 7 DEFERRED to follow-up PR (council 2026-06-05): command→skill conversion lands AFTER the auto-detection layer is proven in production; aggressive demotion needs reliable task→skill routing (per-skill confirmation gate at conversion time). -->
 - [ ] **Step 7:** Convert the `[-]`-marked leaf skill-candidates from
   [`command-classification-6.0.0-d.md`](../reports/command-classification-6.0.0-d.md)
   to skills (system-introspection: `skill-preview`, `skills-discover`,
@@ -83,6 +99,7 @@ implicit **Flows** layer explicit.
 
 ## Phase 5: Command removals (KILL list — maintainer-decided)
 
+<!-- Step 8 DEFERRED to follow-up PR (council 2026-06-05): deprecate-now / delete-later. PR1 documents the fix-pr-bot/developer deprecation in prose (auto-detection never routes to them); the hard lifecycle flip + alias-drop + KILL-list removals land after the deprecation window, decoupled from the contract PR. -->
 - [ ] **Step 8:** Remove (not merge) what the maintainer confirms is dead:
   separate `security` / `performance` review commands (fold into `review`
   lenses), stack-variant duplicates, commands the team never uses. The maintainer's
@@ -91,6 +108,7 @@ implicit **Flows** layer explicit.
 
 ## Phase 6: The Flows layer (the headline)
 
+<!-- Steps 8b + 9 DEFERRED to follow-up PR (council 2026-06-05): the flows layer is the HIGH-risk new abstraction and lands LAST, only once the orchestrator layer is proven stable. src/flows/*.yaml stubs already exist (6.0-D Step 15b); the schema + resolver are their own PR. -->
 - [ ] **Step 8b:** **Define the flow schema** (feedback-5 — so flows are real
   artefacts, not labels). Author `src/schemas/flow.schema.json` for the
   `src/flows/<flow>.yaml` files scaffolded in 6.0-D Step 15b:
@@ -123,7 +141,7 @@ implicit **Flows** layer explicit.
 
 ## Acceptance Criteria
 
-- [ ] Every merged command works non-interactively (CI-safe); proven by a CI test.
+- [x] Every merged command works non-interactively (CI-safe); proven by a CI test. <!-- PR1: non-interactive-contract + per-orchestrator detection tables + `task lint-orchestrator-auto-detect` (scripts/lint_orchestrator_auto_detect.py) asserting every auto_detect orchestrator wires the contract. -->
 - [ ] Stack-adaptive `test`/`quality`/`review` run the right toolchain on a PHP,
   a JS/TS, and a polyglot fixture; `--php`/flag narrows.
 - [ ] No capability lost — every removed command's behavior reachable via a skill.

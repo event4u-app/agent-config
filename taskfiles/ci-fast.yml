@@ -561,6 +561,11 @@ tasks:
     desc: Verify Phase-2 cluster dispatchers match Phase-1 reference structure (Phase 1 § 1.4.1)
     cmd: python3 src/scripts/check_cluster_patterns.py
 
+  lint-orchestrator-auto-detect:
+    silent: true
+    desc: "Fail when an auto_detect orchestrator lacks the non-interactive-contract link or detection section (6.1.0 Step 1; AC1)"
+    cmd: python3 src/scripts/lint_orchestrator_auto_detect.py {{.QUIET_FLAG}}
+
   lint-rule-interactions:
     silent: true
     desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)

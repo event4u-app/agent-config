@@ -9,6 +9,7 @@ tier: 1
 description: Judge orchestrator — routes to solo, steps, on-diff
 cluster: judge
 type: orchestrator
+auto_detect: true
 suggestion:
   eligible: true
   trigger_description: "judge this diff, review with verdict, run an implementer→judge loop, step-by-step judged execution"
@@ -36,14 +37,33 @@ Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 The standalone reviewer surface lives at [`/review`](review-changes.md).
 
+## Non-interactive & auto-detection
+
+`/judge` honors the [`non-interactive-contract`](../contexts/execution/non-interactive-contract.md)
+(surface detection, confidence tiers, `--yes`/`--json`, abort schemas,
+the `auto_detect` kill-switch, rollback). Detection table:
+
+| Basis (signal) | Sub-command | Confidence |
+|---|---|---|
+| Explicit sub given (`/judge solo`) | that one | — (detection skipped) |
+| User gives an ordered plan / step list to gate | `judge/steps` | HIGH |
+| Intent is "fix and re-judge" / iterate **and** a diff exists | `judge/on-diff` | MEDIUM (mutating — confirm interactive, `--yes` in CI) |
+| A diff / range / PR is named, verdict only | `judge/solo` | HIGH |
+| Only an unscoped change present, no iterate intent | `judge/solo` (safe default — read-only) | MEDIUM |
+| No target, or signals conflict | — | LOW → menu (interactive) / `ambiguous_routing` (CI) |
+
+`judge/solo` is the read-only safe default; `judge/on-diff` mutates via
+the implementer loop, so it never fires on a bare safe-default fallback.
+
 ## Dispatch
 
 1. Parse the user's argument: `/judge <sub-command> [args]`.
-2. Look up the sub-command in the table above.
+2. **Explicit sub** → look it up in the table above and route. Otherwise
+   run the detection table above per the non-interactive-contract.
 3. Load the body of the routed file and follow its `## Instructions`
    section verbatim with the remaining args.
-4. If the sub-command is unknown or missing, print the table above and
-   ask:
+4. On **LOW** confidence (or `--no-auto-detect`): interactive → print the
+   table and ask; non-interactive → emit `ambiguous_routing` and stop.
 
    > 1. solo — verdict only, no loop
    > 2. on-diff — implementer→judge revision loop
@@ -54,8 +74,9 @@ The standalone reviewer surface lives at [`/review`](review-changes.md).
 - **Do NOT commit, push, or open a PR** unless the sub-command
   explicitly authorizes it.
 - **Do NOT chain sub-commands.** One `/judge <sub>` per turn.
-- If the user invokes `/judge` with no argument, **show the menu** —
-  do not guess which sub-command they meant.
+- Auto-detection emits the structured pre-routing block (per the
+  contract) before routing; on LOW confidence it shows the menu
+  (interactive) or aborts (CI) — it **never** guesses past LOW.
 
 ## See also
 
