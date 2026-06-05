@@ -27,19 +27,20 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = ROOT / "packages"
+SRC_PACKS = ROOT / "src" / "packs"
 SRC_DOMAINS = ROOT / "src" / "domains"
 PACKS_VOCAB = ROOT / "src" / "config" / "discovery" / "packs.yml"
 
 
 def _manifest_dirs() -> list[Path]:
-    """Every directory that may own a ``pack.yaml`` — legacy ``packages/*/``
-    plus 6.0.0-D ``src/domains/*/`` homes."""
+    """Every directory that may own a ``pack.yaml`` — 6.0.x ``src/packs/*/``
+    (manifest-only capability packs incl. core) + ``src/domains/*/`` (command-
+    bearing) + legacy ``packages/*/`` (back-compat during the move window)."""
     dirs: list[Path] = []
-    if PACKAGES.is_dir():
-        dirs.extend(sorted(p for p in PACKAGES.iterdir() if p.is_dir()))
-    if SRC_DOMAINS.is_dir():
-        dirs.extend(sorted(p for p in SRC_DOMAINS.iterdir()
-                           if p.is_dir() and not p.name.startswith("_")))
+    for parent in (SRC_PACKS, SRC_DOMAINS, PACKAGES):
+        if parent.is_dir():
+            dirs.extend(sorted(p for p in parent.iterdir()
+                               if p.is_dir() and not p.name.startswith("_")))
     return dirs
 SCHEMA = ROOT / "src" / "scripts" / "schemas" / "pack.schema.json"
 ALLOWLIST = ROOT / "src" / "scripts" / "pack_dependency_allowlist.json"

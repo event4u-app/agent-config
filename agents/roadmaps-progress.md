@@ -6,10 +6,10 @@
 
 ## Overall
 
-**45 / 151 steps done · 30%**
+**49 / 152 steps done · 32%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md) | 2 | 10 | 9 | 1 | 0 | 0 | █░░░░░░░░░ 10% |
+| 2 | [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md) | 2 | 11 | 6 | 5 | 0 | 0 | ████░░░░░░ 45% |
 | 3 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 | 5 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
@@ -39,12 +39,12 @@
 
 ### [road-to-6.0.x-workspace-structural-cleanup.md](roadmaps/road-to-6.0.x-workspace-structural-cleanup.md)
 
-**Road to 6.0.x — Workspace structural cleanup (the deferred Step-16 remainder)** — 1 / 10 done (10%)
+**Road to 6.0.x — Workspace structural cleanup (the deferred Step-16 remainder)** — 5 / 11 done (45%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Complete the `packages/` dual-tree collapse (finish Step 10) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
-| 2 | Resolve the `agents/` namespace + runtime coupling | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Complete the `packages/` dual-tree collapse (finish Step 10) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Resolve the `agents/` namespace + runtime coupling | 🟡 in progress | 6 | 1 | 0 | 0 | 14% |
 
 ### [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md)
 

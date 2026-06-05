@@ -93,15 +93,27 @@ staged PRs, CI-localisable, never bundled.
   live uncondensed-source files go, and how is `_root_specs()` repointed? →
   routed to AI council before Step 2/3 execution. -->
 
-- [ ] **Step 2:** Repoint every CI + taskfile reference off `packages/` — notably
+- [x] **Step 2:** Repoint every CI + taskfile reference off `packages/` — notably
   `.github/workflows/tests.yml` (`packages/core/installer/**` working-directory +
   path filters), `taskfiles/ci-fast.yml` (`packages/<PACK>/.agent-src.uncondensed/`
   skill-linter path), and `migration-dry-run.yml` (`packages/**/*.md`). Each repoint
   is its own verifiable hunk.
-- [ ] **Step 3:** Remove `packages/` once nothing references it; re-run the Phase-0
+- [x] **Step 3:** Remove `packages/` once nothing references it; re-run the Phase-0
   6.0-D gates (transitive hash, collision lint, pack-graph DAG) against the
   single-tree `src/domains/` layout. Update ADR-043 (monorepo-collapse) to record the
   collapse as *executed*, not just decided.
+
+  <!-- Done in sub-phase 1b (ADR-052): 11 capability packs → src/packs/<id>/, core →
+  src/packs/core/ (artefacts from the src/agent-src container), installer/python workspace
+  modules → src/cli/python/, deploy/ → root deploy/, telemetry-worker → deploy/telemetry-worker/,
+  cloud pack registration dropped, packages/ removed. Council-converged (Option B + tie-break),
+  execution-refined core→src/packs/core to avoid condense-source pollution. Guards: .agent-src/
+  byte-identical + per-pack manifest snapshot (manifests corrected from a pre-existing empty state).
+  ADR-043 updated to record the collapse as executed. -->
+- [x] **Step 3b (recovery):** Restored the `installer/python/` workspace runtime modules
+  (`workspace_*`, `knowledge_ingest`) to `src/cli/python/` — they are live test+runtime deps, not
+  part of the superseded TS installer; deleting them with the installer was an error caught by the
+  full pytest suite and corrected before merge.
 
 ## Phase 2: Resolve the `agents/` namespace + runtime coupling
 
@@ -119,10 +131,10 @@ staged PRs, CI-localisable, never bundled.
 
 ## Acceptance Criteria
 
-- [ ] `packages/` no longer exists at repo root; no CI workflow or taskfile
-  references it; Phase-0 gates green on the single `src/domains/` tree.
+- [x] `packages/` no longer exists at repo root; no CI workflow or taskfile
+  references it; Phase-0 gates green on the single `src/` tree. <!-- 1b / ADR-052 -->
 - [ ] The maintainer `agents/` namespace decision is recorded as an ADR and the
-  consumer-vs-maintainer collision named in ADR-050 is resolved.
+  consumer-vs-maintainer collision named in ADR-050 is resolved. <!-- Phase 2 -->
 - [ ] `_lib/agent_settings.py` survives a settings-file relocation (pre-flight test
   proves the loader resolves the new path with the old absent).
 - [ ] `task ci` green end-to-end after each phase; no skill/rule/command deleted

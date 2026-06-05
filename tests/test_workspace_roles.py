@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/workspace_roles.py``.
+"""Tests for ``src/cli/python/workspace_roles.py``.
 
 Covers role + task discovery used by the workspace launcher (Phase 4).
 """
@@ -13,7 +13,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "workspace_roles.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "workspace_roles.py"
 
 
 def _load():

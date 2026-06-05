@@ -1,4 +1,4 @@
-"""Tests for ``packages/core/installer/python/workspace_analytics.py``.
+"""Tests for ``src/cli/python/workspace_analytics.py``.
 
 Covers the Phase 7 contract surface defined in ``docs/contracts/local-analytics.md``:
 
@@ -25,7 +25,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "packages" / "core" / "installer" / "python" / "workspace_analytics.py"
+MODULE_PATH = REPO_ROOT / "src" / "cli" / "python" / "workspace_analytics.py"
 
 
 def _load():
