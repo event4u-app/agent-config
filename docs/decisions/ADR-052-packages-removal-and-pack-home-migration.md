@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 **Accepted** · 2026-06-05. Completes Phase 1 (Steps 2–3) of
-[`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/road-to-6.0.x-workspace-structural-cleanup.md);
+[`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/archive/road-to-6.0.x-workspace-structural-cleanup.md);
 builds on [`ADR-051`](ADR-051-uncondensed-source-container-relocation.md) (sub-phase 1a) and executes
 [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md)'s collapse. Routed through the AI council
 (`claude-sonnet-4-5` + `gpt-4o`, 2026-06-05, two rounds incl. a tie-break).
@@ -81,6 +81,6 @@ future category is auto-included.
 
 ## References
 
-- [`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/road-to-6.0.x-workspace-structural-cleanup.md)
+- [`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/archive/road-to-6.0.x-workspace-structural-cleanup.md)
 - [`ADR-051`](ADR-051-uncondensed-source-container-relocation.md) · [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md)
 - `src/scripts/generate_pack_manifests.py` — `_pack_homes()`, `_collect_core()`.
