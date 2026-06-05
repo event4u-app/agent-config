@@ -114,8 +114,11 @@ def _find_cycle(graph: dict[str, set[str]]) -> list[str] | None:
 
 
 def main() -> int:
-    if not PACKAGES.is_dir():
-        print("packages/ does not exist — nothing to lint")
+    # 6.0.x (ADR-052): pack homes live under src/packs/ + src/domains/ (and
+    # legacy packages/ during the move window). Gate on the resolved home set,
+    # not on packages/ existing — else this lint silently no-ops post-removal.
+    if not gpm._pack_homes():
+        print("no pack homes (src/packs, src/domains, packages/) — nothing to lint")
         return 0
     errors = _dependency_drift()
     cycle = _find_cycle(_pack_requires_graph())

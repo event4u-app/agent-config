@@ -27,7 +27,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
-sys.path.insert(0, str(REPO_ROOT / "packages" / "core" / "installer" / "python"))
+sys.path.insert(0, str(REPO_ROOT / "src" / "cli" / "python"))
 from linked_projects_list import collect as collect_siblings  # type: ignore  # noqa: E402
 
 try:

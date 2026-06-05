@@ -39,8 +39,12 @@ ALLOWLIST_GLOBS = (
     "package.json",
     "CHANGELOG.md",
     ".claude-plugin/marketplace.json",
-    "packages/*/pack.yaml",
-    "packages/*/README.md",
+    # 6.0.x (ADR-052): generated pack manifests live under src/packs/<id>/
+    # (capability packs + core) and src/domains/<pack>/ (command-bearing).
+    "src/packs/*/pack.yaml",
+    "src/packs/*/README.md",
+    "src/domains/*/pack.yaml",
+    "src/domains/*/README.md",
     # `scripts/release.py` auto-splits the CHANGELOG era before bumping
     # (perform_split / plan_split in `_lib/changelog_eras.py`) whenever the
     # current era body crosses CURRENT_ERA_BODY_CAP. The split emits a new
