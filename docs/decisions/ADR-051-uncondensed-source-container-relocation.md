@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 **Accepted** · 2026-06-05. Lands sub-phase **1a** of
-[`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/road-to-6.0.x-workspace-structural-cleanup.md).
+[`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/archive/road-to-6.0.x-workspace-structural-cleanup.md).
 **Builds on** [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md) (commands →
 `src/domains/`) and [`ADR-045`](ADR-045-src-source-layout-and-profiles-as-views.md)
 (the flat `src/skills` + `src/rules` library). Routed through the AI council
@@ -109,6 +109,6 @@ roadmap's Goal that Phase 1 and Phase 2 ship as separate, never-bundled PRs.
 
 ## References
 
-- [`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/road-to-6.0.x-workspace-structural-cleanup.md)
+- [`road-to-6.0.x-workspace-structural-cleanup`](../../agents/roadmaps/archive/road-to-6.0.x-workspace-structural-cleanup.md)
 - [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md) · [`ADR-045`](ADR-045-src-source-layout-and-profiles-as-views.md) · [`ADR-050`](ADR-050-workspace-vs-package-root-boundary.md)
 - `src/scripts/_lib/agent_src.py` — `_root_specs()`, `artefact_roots()`, collision guard.

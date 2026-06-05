@@ -160,8 +160,8 @@ staged PRs, CI-localisable, never bundled.
   consumer-vs-maintainer collision named in ADR-050 is resolved. <!-- ADR-053: dual-role marker -->
 - [x] `_lib/agent_settings.py` survives a settings-file relocation (pre-flight test
   proves the loader resolves the new path with the old absent). <!-- test_agent_settings_relocation_resilience.py -->
-- [ ] `task ci` green end-to-end after each phase; no skill/rule/command deleted
+- [x] `task ci` green end-to-end after each phase; no skill/rule/command deleted
   beyond the `packages/` duplicates proven already-mirrored into `src/`.
-  <!-- merge-gated: pr=369 — the additive Phase-2 diff deletes nothing; "task ci green
-  end-to-end" is proven by this PR's remote CI. Flip [x] + git mv to archive/ +
-  regen the moment PR #369 merges. -->
+  <!-- Closed 2026-06-05: PR #369 merged (refactor(6.0.x): resolve agents/ namespace
+  dual-role, ADR-053 Phase 2); remote CI proved "task ci green end-to-end" on the
+  additive Phase-2 diff (deletes nothing). Roadmap archived in the same response. -->
