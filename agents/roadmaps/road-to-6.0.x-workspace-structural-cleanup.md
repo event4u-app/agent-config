@@ -1,5 +1,5 @@
 ---
-status: draft
+status: active
 complexity: structural
 parent_roadmap: road-to-6.0.0-d-structural-restructure
 ---
@@ -34,10 +34,65 @@ staged PRs, CI-localisable, never bundled.
 
 ## Phase 1: Complete the `packages/` dual-tree collapse (finish Step 10)
 
-- [ ] **Step 1:** Inventory what still lives only under `packages/` (not yet mirrored
+> **Council convergence** (claude-sonnet-4-5 + gpt-4o, 2026-06-05): destination =
+> per-category `src/` roots (Option A, mirrors `src/skills`→`skills/`); use distinct
+> names (`src/agent-templates/` ≠ existing `src/templates/`) **and** add a
+> collision guard to `_root_specs()` (raise if two roots emit the same logical
+> prefix); resolve the `profiles/` drift (`diff -qr`) as a pre-move blocker; stage
+> as **1a** (move source + rewire generator, guarded by an empty-diff snapshot of
+> the condensed `.agent-src/` tree before/after) then **1b** (delete `installer/`,
+> repoint CI), with the `rm packages/` itself as Step 3. Decisive correctness gate:
+> the condensed `.agent-src/` output is byte-identical after the move.
+
+> **Status — 2026-06-05 (sub-phase 1a landed).** The uncondensed source container
+> relocated `packages/core/.agent-src.uncondensed/` → `src/agent-src/` (~221 files),
+> generator + 4 path-gates rewired, `.agent-src/` byte-identical, core pack manifest
+> byte-stable. Recorded as
+> [`ADR-051`](../../docs/decisions/ADR-051-uncondensed-source-container-relocation.md).
+> **Blocker for Steps 2–3 (full `packages/` removal):** `packages/` is not just a
+> leftover dual-tree — it hosts a **live pack-home / manifest layer** (`pack.yaml` +
+> `README.md` + `FIRST_WIN.md` for 11 capability packs **not** in `src/domains/`),
+> plus `core/installer/` (superseded by `src/cli`+`src/install`+`src/server`),
+> `core/deploy/`, and `cloud/telemetry-worker/`. Deleting them would violate the
+> acceptance criterion. **Where the 13 pack homes + installer + deploy + cloud worker
+> migrate is an open design decision** → routed to a follow-up council session + its
+> own staged PR (sub-phase 1b), per the Goal's "separate, never bundled" mandate.
+> Steps 2–3 stay open pending that decision.
+
+- [x] **Step 1:** Inventory what still lives only under `packages/` (not yet mirrored
   into `src/domains/` or the flat `src/skills/` + `src/rules/`): `packages/core/installer/`,
   per-pack `.agent-src.uncondensed/`, `pack.yaml` files, deploy artefacts. Produce a
   disposition table (move / already-mirrored / delete) per path.
+
+  <!-- Step-1 disposition (308 tracked files under packages/). Source-of-truth
+  finding: `packages/core/.agent-src.uncondensed/` is NOT a dead duplicate — it is
+  the LIVE uncondensed source for every artefact category except skills/rules
+  (already in src/skills, src/rules) and commands (already in src/domains).
+  `_lib/agent_src.py::_root_specs()` still walks `packages/*/.agent-src.uncondensed/`.
+
+  | packages/ path | files | disposition |
+  |---|---|---|
+  | core/.agent-src.uncondensed/contexts | 33 | MOVE → src/contexts (new logical-prefix root) |
+  | core/.agent-src.uncondensed/personas | 31 | MOVE → src/personas |
+  | core/.agent-src.uncondensed/templates | 138 | MOVE → src/agent-templates (prompt templates; distinct from the 16 workspace TS templates in src/templates) |
+  | core/.agent-src.uncondensed/profiles | 7 | MOVE → src/profiles-src (verify vs existing src/profiles 7) |
+  | core/.agent-src.uncondensed/presets | 4 | MOVE → src/presets |
+  | core/.agent-src.uncondensed/user-types | 5 | MOVE → src/user-types |
+  | core/.agent-src.uncondensed/ghostwriter | 2 | MOVE → src/ghostwriter (copy-as-is dir) |
+  | core/.agent-src.uncondensed/scripts | 2 | MOVE → src/agent-templates-scripts or merge |
+  | core/.agent-src.uncondensed/packs | 4 | MOVE → src/presets (install presets) |
+  | core/.agent-src.uncondensed/commands | evals only | commands→src/domains already; keep evals |
+  | core/.agent-src.uncondensed/README.md | 1 | drop (per-root readme) |
+  | core/installer | 13 | DELETE — replaced by src/cli + src/install + src/server (taskfiles/dev.yml: "Replaces the v3 packages/core/installer"); repoint tests.yml |
+  | core/deploy (Dockerfile, compose, README) | 3 | MOVE → src/deploy or deploy/ (referenced by docs/deploy/*, ADR-021) |
+  | core/pack.yaml + README.md | 2 | resolve: core pack manifest |
+  | pack-*/{pack.yaml,README,FIRST_WIN} | ~28 | resolve: pack manifests (11 packs); src/domains carries the NEW domain packs |
+  | cloud/{telemetry-worker, README, pack.yaml} | 17 | resolve: cloud telemetry worker — likely MOVE → src/cloud or keep |
+
+  DESTINATION DESIGN GATE (Phase-1, not in original roadmap): where do the ~221
+  live uncondensed-source files go, and how is `_root_specs()` repointed? →
+  routed to AI council before Step 2/3 execution. -->
+
 - [ ] **Step 2:** Repoint every CI + taskfile reference off `packages/` — notably
   `.github/workflows/tests.yml` (`packages/core/installer/**` working-directory +
   path filters), `taskfiles/ci-fast.yml` (`packages/<PACK>/.agent-src.uncondensed/`
