@@ -122,8 +122,8 @@ A misbehaving heuristic is disabled by config, not by reverting 6.1.0.
    skipped.
 2. Disable globally: `commands.auto_detect: disabled` in
    `.agent-settings.yml`.
-3. Disable one orchestrator: `auto_detect: false` in its front-matter,
-   then `task sync`.
+3. Disable one orchestrator: set `auto_detect: false` in its
+   front-matter — the change takes effect on the next projection/sync.
 
 ## See also
 
