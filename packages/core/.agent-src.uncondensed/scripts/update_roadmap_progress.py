@@ -39,6 +39,30 @@ still under `agents/roadmaps/` instead of `agents/roadmaps/archive/` —
 backstopping the `roadmap-progress-sync` rule's "completion = archival,
 same response" requirement. The write path emits the same finding as a
 warning on stderr and still regenerates the dashboard.
+
+Merge-gated criteria
+--------------------
+A near-complete roadmap may hold its last open `[ ]` item open **on
+purpose** while its closing PR is in flight, so the file stays under
+`agents/roadmaps/` (unarchived) and inbound ADR / report / sibling
+links keep resolving until the PR merges. Such an item carries a
+machine-readable annotation on its line or the immediately-following
+HTML comment:
+
+    - [ ] task ci green on the new structure. <!-- merge-gated: pr=365
+      archives + ref-migrates the moment PR #365 merges to main -->
+
+The keyword is the literal `merge-gated`; an optional `pr=<n>` (or
+`PR #<n>`) records the gating pull request. A roadmap whose **every**
+open checkbox is merge-gated is "effectively complete, pending
+post-merge archival" — `count_open > 0` keeps it out of
+`unarchived_complete`, so without this detector it would sit at e.g.
+97% forever the moment its PR merges and nobody re-runs the closure.
+`merge_gated_pending()` surfaces these in a dedicated dashboard section
+and an stderr warning on every run (write path AND `--check`). It is
+**not** a hard-fail: an open gating PR is a legitimate state. The loud,
+always-on surfacing is the backstop — a merge-gated roadmap can never
+again hide inside a partial progress bar.
 """
 
 from __future__ import annotations
@@ -81,6 +105,15 @@ EXCLUDE_DIRS = {"archive", "skipped", "stubs"}
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 DRAFT_VALUES = frozenset({"draft"})
 
+# A `merge-gated` open item is held open on purpose while its closing PR
+# is in flight (see the module docstring). The keyword is matched in the
+# checkbox line OR its immediately-following HTML comment; `pr=<n>` /
+# `PR #<n>` records the gating pull request for the dashboard.
+MERGE_GATED_RE = re.compile(r"merge-gated", re.IGNORECASE)
+# Require a `pr` context so bare `#16` (e.g. "Step-16") is not mistaken
+# for a PR number. Matches: pr=365 · pr 365 · PR #365 · pr#365.
+PR_NUM_RE = re.compile(r"pr\s*[=#:]?\s*#?\s*(\d+)", re.IGNORECASE)
+
 
 @dataclass
 class PhaseStats:
@@ -94,6 +127,11 @@ class PhaseStats:
     open_: int = 0
     deferred: int = 0
     cancelled: int = 0
+    # Subset of open_ whose checkbox carries a `merge-gated` annotation —
+    # held open on purpose while a closing PR is in flight.
+    merge_gated: int = 0
+    # PR numbers parsed from this phase's merge-gated annotations.
+    merge_gated_prs: list[int] = field(default_factory=list)
 
     @property
     def total_active(self) -> int:  # denominator for %
@@ -142,6 +180,19 @@ class RoadmapStats:
     @property
     def cancelled(self) -> int:
         return sum(p.cancelled for p in self.phases)
+
+    @property
+    def merge_gated(self) -> int:
+        return sum(p.merge_gated for p in self.phases)
+
+    @property
+    def merge_gated_prs(self) -> list[int]:
+        seen: list[int] = []
+        for p in self.phases:
+            for n in p.merge_gated_prs:
+                if n not in seen:
+                    seen.append(n)
+        return seen
 
     @property
     def total_active(self) -> int:
@@ -197,19 +248,36 @@ def is_roadmap_candidate(path: Path) -> bool:
     return True
 
 
-def count_checkboxes(text: str) -> tuple[int, int, int, int]:
-    done = open_ = deferred = cancelled = 0
-    for m in CHECKBOX_RE.finditer(text):
+def count_checkboxes(text: str) -> tuple[int, int, int, int, int, list[int]]:
+    """Count checkbox states in a phase slice.
+
+    Returns ``(done, open_, deferred, cancelled, merge_gated, prs)`` where
+    ``merge_gated`` is the subset of ``open_`` whose checkbox carries a
+    ``merge-gated`` annotation (same line or the immediately-following
+    text up to the next checkbox), and ``prs`` collects any ``pr=<n>`` /
+    ``#<n>`` numbers parsed from those annotations.
+    """
+    done = open_ = deferred = cancelled = merge_gated = 0
+    prs: list[int] = []
+    matches = list(CHECKBOX_RE.finditer(text))
+    for i, m in enumerate(matches):
         c = m.group(1).lower()
         if c == "x":
             done += 1
         elif c == " ":
             open_ += 1
+            # Span from this checkbox to the next (or slice end) — the
+            # annotation may live on the line or a following HTML comment.
+            span_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+            span = text[m.start():span_end]
+            if MERGE_GATED_RE.search(span):
+                merge_gated += 1
+                prs.extend(int(n) for n in PR_NUM_RE.findall(span))
         elif c == "~":
             deferred += 1
         elif c == "-":
             cancelled += 1
-    return done, open_, deferred, cancelled
+    return done, open_, deferred, cancelled, merge_gated, prs
 
 
 def parse_roadmap(path: Path, roadmap_root: Path) -> RoadmapStats | None:
@@ -224,10 +292,10 @@ def parse_roadmap(path: Path, roadmap_root: Path) -> RoadmapStats | None:
     for i, pm in enumerate(phase_matches):
         start = pm.end()
         end = phase_matches[i + 1].start() if i + 1 < len(phase_matches) else len(text)
-        d, o, df, c = count_checkboxes(text[start:end])
+        d, o, df, c, mg, prs = count_checkboxes(text[start:end])
         phase_id = pm.group(2)
         name = (pm.group(3) or "").strip() or f"Phase {phase_id}"
-        stats.phases.append(PhaseStats(phase_id, name, d, o, df, c))
+        stats.phases.append(PhaseStats(phase_id, name, d, o, df, c, mg, prs))
     return stats
 
 
@@ -267,6 +335,21 @@ def unarchived_complete(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
     ]
 
 
+def merge_gated_pending(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
+    # Roadmaps whose ONLY remaining open work is merge-gated — i.e. every
+    # `[ ]` item is held open on purpose while a closing PR is in flight
+    # (see module docstring). `count_open > 0` keeps them out of
+    # `unarchived_complete`, so without this detector a merge-gated
+    # roadmap silently lingers at e.g. 97% the moment its PR merges and
+    # nobody re-runs the closure. This is the always-on visibility
+    # backstop — surfaced in the dashboard and as an stderr warning, but
+    # NOT a hard-fail (an open gating PR is a legitimate state).
+    return [
+        r for r in roadmaps
+        if r.open_ > 0 and r.merge_gated == r.open_
+    ]
+
+
 def pending_iron_law_3(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
     # Roadmaps with no open work but unresolved `[~]` deferred items.
     # Per `roadmap-progress-sync` Iron Law 3 the agent must NOT auto-
@@ -284,6 +367,7 @@ def render(roadmaps: list[RoadmapStats]) -> str:
     total_active = sum(r.total_active for r in roadmaps)
     overall_pct = round(total_done * 100 / total_active) if total_active else 0
     pending = pending_iron_law_3(roadmaps)
+    gated = merge_gated_pending(roadmaps)
     lines: list[str] = []
     lines.append("# Roadmap Progress\n")
     header_meta = (
@@ -315,6 +399,25 @@ def render(roadmaps: list[RoadmapStats]) -> str:
         for r in pending:
             lines.append(f"| [{r.rel}](roadmaps/{r.rel}) | {r.done} | "
                          f"{r.deferred} | {r.cancelled} |")
+        lines.append("")
+    if gated:
+        lines.append("## ⏳ Merge-gated — pending post-merge archival\n")
+        lines.append(
+            "Every open item in these roadmaps is `merge-gated`: held open "
+            "on purpose while a closing PR is in flight, so inbound "
+            "references keep resolving until the file archives. **The moment "
+            "the gating PR merges**, flip the merge-gated box → `[x]`, "
+            "`git mv` the roadmap to `archive/`, migrate inbound refs, and "
+            "regenerate this dashboard — all in the same response (per "
+            "`roadmap-progress-sync` Iron Law 1). Do NOT leave it lingering "
+            "at < 100%.\n"
+        )
+        lines.append("| Roadmap | Done | Merge-gated open | Gating PR |")
+        lines.append("|---|---:|---:|---|")
+        for r in gated:
+            prs = ", ".join(f"#{n}" for n in r.merge_gated_prs) or "—"
+            lines.append(f"| [{r.rel}](roadmaps/{r.rel}) | {r.done} | "
+                         f"{r.merge_gated} | {prs} |")
         lines.append("")
     if not roadmaps:
         lines.append("_No open roadmaps._\n")
@@ -369,6 +472,20 @@ def main() -> int:
     current = target.read_text(encoding="utf-8") if target.exists() else ""
     complete = unarchived_complete(roadmaps)
     pending = pending_iron_law_3(roadmaps)
+    gated = merge_gated_pending(roadmaps)
+
+    def _warn_merge_gated() -> None:
+        # Always-on, loud-but-not-fatal: a merge-gated roadmap is a
+        # legitimate state while its PR is open, but it must never hide.
+        # The moment the gating PR merges, the agent flips + archives.
+        print("⏳  Merge-gated roadmaps (every open item gated on a PR) — "
+              "flip + archive the moment the gating PR merges "
+              "(`roadmap-progress-sync` Iron Law 1):", file=sys.stderr)
+        for r in gated:
+            prs = ", ".join(f"#{n}" for n in r.merge_gated_prs) or "PR unknown"
+            print(f"      - {r.rel}  ({r.done}/{r.total_active} done · "
+                  f"{r.merge_gated} merge-gated · {prs})", file=sys.stderr)
+
     if args.check:
         stale = current != new_text
         if stale:
@@ -390,6 +507,8 @@ def main() -> int:
             for r in pending:
                 print(f"      - {r.rel}  ({r.done}/{r.total_active} done · "
                       f"{r.deferred} deferred)", file=sys.stderr)
+        if gated:
+            _warn_merge_gated()
         if stale or complete or pending:
             return 1
         print(f"✅  {target.relative_to(args.repo_root)} is up to date.")
@@ -409,6 +528,8 @@ def main() -> int:
               "before any archive:", file=sys.stderr)
         for r in pending:
             print(f"      - {r.rel}  ({r.deferred} deferred)", file=sys.stderr)
+    if gated:
+        _warn_merge_gated()
     return 0
 
 

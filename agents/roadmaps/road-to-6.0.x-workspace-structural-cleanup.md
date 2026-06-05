@@ -7,7 +7,7 @@ parent_roadmap: road-to-6.0.0-d-structural-restructure
 # Road to 6.0.x — Workspace structural cleanup (the deferred Step-16 remainder)
 
 > Draft follow-up spun off when [`ADR-050`](../../docs/decisions/ADR-050-workspace-vs-package-root-boundary.md)
-> closed Step 16 of [`road-to-6.0.0-d-structural-restructure`](road-to-6.0.0-d-structural-restructure.md)
+> closed Step 16 of [`road-to-6.0.0-d-structural-restructure`](archive/road-to-6.0.0-d-structural-restructure.md)
 > as "structurally complete with a documented trust boundary". Two structural
 > remainders were deferred out of the autonomous 6.0-D closure because each carries
 > a real design blocker, not an effort gap, and each is the kind of high-blast-radius

@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 **Accepted** · 2026-06-05. Closes Step 16 of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md).
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md).
 **Refines** [`ADR-045`](ADR-045-src-source-layout-and-profiles-as-views.md): ADR-045's
 profiles-as-views and hard-break decisions stand unchanged; this ADR refines
 ADR-045's stated *root inventory* against the executed reality. Routed through the
@@ -117,5 +117,5 @@ wrong repo shape.
 - [`ADR-045`](ADR-045-src-source-layout-and-profiles-as-views.md) — `src/` source
   layout + profiles-as-views (refined here on the root inventory only).
 - [`ADR-028`](ADR-028-root-layout.md) — earlier root-layout verdict (superseded by ADR-045).
-- [`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md) — Step 16 + amended acceptance criteria.
+- [`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md) — Step 16 + amended acceptance criteria.
 - AI council, design mode, 2026-06-05 (anthropic/claude-sonnet-4-5 + openai/gpt-4o) — converged on the trust-boundary closure.

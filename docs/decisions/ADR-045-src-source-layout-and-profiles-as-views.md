@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 **Accepted** · 2026-06-03. Authored as Phase 7 / Step 20 of
-[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md).
+[`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md).
 **Supersedes [`ADR-028`](ADR-028-root-layout.md)** (the "src/ is occupied, defer
 the root→src move" verdict). Composes with
 [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md) (packages→src/domains),
@@ -108,4 +108,4 @@ the value kept from the council is the **sequencing safeguards**, not "don't bre
 - [`ADR-028`](ADR-028-root-layout.md) — superseded root-layout verdict.
 - [`ADR-043`](ADR-043-monorepo-collapse-to-src-domains.md) — packages→src/domains.
 - [`ADR-044`](ADR-044-command-naming-scheme-hyphenated.md) · [`ADR-046`](ADR-046-thin-command-principle.md) · [`ADR-047`](ADR-047-framework-neutral-stack-adaptive-commands.md).
-- [`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/road-to-6.0.0-d-structural-restructure.md) — target structure + scope-line rule.
+- [`road-to-6.0.0-d-structural-restructure`](../../agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md) — target structure + scope-line rule.

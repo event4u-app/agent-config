@@ -1,6 +1,6 @@
 # Command rename & classification worksheet (6.0.0-D)
 
-> Companion to `agents/roadmaps/road-to-6.0.0-d-structural-restructure.md` Phase 4b. Lives under `agents/reports/` (not `agents/roadmaps/`) so the 150 worksheet checkboxes do NOT pollute the roadmap progress dashboard.
+> Companion to `agents/roadmaps/archive/road-to-6.0.0-d-structural-restructure.md` Phase 4b. Lives under `agents/reports/` (not `agents/roadmaps/`) so the 150 worksheet checkboxes do NOT pollute the roadmap progress dashboard.
 
 > **Council-converged scheme (claude-sonnet-4-5 + gpt-4o, 2026-06-03):** `<pack>-<verb>`, **hyphenated**. Claude shadows bare colon cluster-heads and does NOT support two-colon multi-level (`git:pr:create` ✗) — confirmed via claude-code-guide. So cluster heads fold away and each sub becomes a flat hyphenated command (`feature:plan` → `feature-plan`). Sub-actions are a separate command only if a distinct workflow, else a flag. KEEP vs SKILL weighs state-mutation + user verification, not just who invokes it.
 
