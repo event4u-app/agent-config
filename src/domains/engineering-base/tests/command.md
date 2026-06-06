@@ -26,11 +26,14 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/tests create` | `commands/tests/create.md` | Write meaningful tests for the changes in the current branch |
-| `/tests execute` | `commands/tests/execute.md` | Run PHP tests inside the Docker container |
+| `/tests create` | `commands/tests/create.md` | Write meaningful tests for the changes in the current branch (stack-adaptive) |
+| `/tests execute` | `commands/tests/execute.md` | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+Both sub-commands resolve the runner via the
+[`toolchain-resolver`](../contexts/execution/toolchain-resolver.md) — they
+adapt to the consumer's stack instead of assuming one.
 
 ## Non-interactive & auto-detection
 

@@ -144,8 +144,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 - **`sync-gitignore:fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 - **`tests`** — Tests orchestrator — routes to create, execute
-- **`tests:create`** — Write meaningful tests for the changes in the current branch
-- **`tests:execute`** — Run PHP tests inside the Docker container
+- **`tests:create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
+- **`tests:execute`** — Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`threat-model`** — Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 - **`update-form-request-messages`** — Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones.
 - **`upstream-contribute`** — Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package

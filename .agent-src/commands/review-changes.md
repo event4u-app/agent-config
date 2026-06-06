@@ -157,7 +157,11 @@ Per `verbosity.routine_confirmations` (default `false`):
   > 2. No — review done
   ```
   If yes, hand off to the project's quality workflow (e.g.
-  `/quality-fix` or the equivalent configured command).
+  `/quality-fix` or the equivalent configured command). The quality and
+  test runners are resolved per-stack via the
+  [`toolchain-resolver`](../contexts/execution/toolchain-resolver.md), so
+  the hand-off adapts to PHP / JS-TS / Python / Go / Rust rather than
+  assuming one stack.
 
 ## Backward compatibility
 

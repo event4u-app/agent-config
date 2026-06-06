@@ -5,8 +5,8 @@ pack: engineering-base
 tier: 2
 cluster: tests
 sub: execute
-skills: [pest-testing]
-description: Run PHP tests inside the Docker container
+skills: [pest-testing, quality-tools]
+description: Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
   eligible: true
   trigger_description: "run the tests, execute the test suite"
@@ -20,27 +20,44 @@ packs:
 # /tests execute
 ## Instructions
 
-### 1. Detect the test runner
+### 1. Resolve the toolchain
 
-Check in this order — use the **first match**:
+Resolve the stack-adaptive runner via the
+[`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md) — do
+**not** hard-code a single stack. `resolve_toolchain(project_root)`
+returns the runner(s) to invoke per ecosystem:
 
-1. **Makefile** exists → look for test targets (`make test`, `make test-unit`, etc.)
-2. **`artisan` exists** → Laravel project → `php artisan test`
-3. **`vendor/bin/pest` exists** → Pest → `vendor/bin/pest`
-4. **Fallback** → PHPUnit → `vendor/bin/phpunit`
+- **PHP** → pest (`vendor/bin/pest`), Laravel (`php artisan test`), or
+  phpunit (`vendor/bin/phpunit`).
+- **JS/TS** → vitest (`npx vitest run`) or jest (`npx jest`).
+- **Python** → pytest. **Go** → `go test ./...`. **Rust** → `cargo test`.
 
-**Prefer Makefile targets** over raw commands when they exist — they handle container access,
-environment variables, and parallel settings automatically.
+**Wrappers win.** When a `Makefile`/`Taskfile.yml` `test:` target or a
+`package.json` `test` script exists, the resolver returns the wrapper
+(`make test`, `pnpm test`, or the project's `Taskfile.yml` test target) —
+it handles container access, env, and parallelism. **Flags:** `--include-e2e` adds playwright/cypress,
+`--include-slow` adds `test:slow`/`test:integration`, `--php` narrows a
+polyglot repo to the PHP ecosystem. Fast unit suites run by default
+(the monorepo guard).
+
+Low confidence (no manifest, conflicting signals) → fall back per the
+[`non-interactive-contract`](../../contexts/execution/non-interactive-contract.md):
+ask interactively, or emit `ambiguous_routing` in CI.
 
 ### 2. Run the tests
 
-- If using Makefile/Taskfile targets → run from host (they handle Docker internally).
-- If using raw commands → execute **inside the PHP Docker container** (`docker compose exec -T <service> ...`).
-  Detect the PHP service name from `docker-compose.yml` / `compose.yaml` (see `rules/docker-commands.md`).
-- If the user provided a specific test file or filter, pass it through:
-  - Pest/Artisan: `--filter="test name"` or `tests/path/to/TestFile.php`
-  - PHPUnit: `--filter="test name"` or `tests/path/to/TestFile.php`
-- If no specific test is requested, run the full test suite.
+- **Wrapper command** (`make test`, `pnpm test`, or a `Taskfile.yml`
+  target) → run from the host; the wrapper handles Docker/env internally.
+- **Direct PHP tool** (`vendor/bin/pest`, `php artisan test`,
+  `vendor/bin/phpunit`) → run **inside the PHP Docker container**
+  (`docker compose exec -T <service> ...`); detect the service from
+  `docker-compose.yml` / `compose.yaml` (see `rules/docker-commands.md`).
+- **Direct JS/Python/Go/Rust tool** → run on the host (or the relevant
+  container when the project containerises it).
+- If the user named a specific file or filter, pass it through the
+  resolved runner's native flag (`--filter=…` / a path for pest/phpunit,
+  a path/`-t` for vitest/jest, a node-id for pytest).
+- No specific test requested → run the resolved fast suite.
 
 ### 3. Analyze results
 

@@ -5,8 +5,8 @@ pack: engineering-base
 tier: 2
 cluster: tests
 sub: create
-skills: [pest-testing]
-description: Write meaningful tests for the changes in the current branch
+skills: [pest-testing, quality-tools]
+description: Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
   eligible: true
   trigger_description: "write tests for these changes, add tests for this branch"
@@ -22,16 +22,23 @@ packs:
 
 ### 1. Detect the test framework
 
-- Check if **Pest** is installed: look for `pestphp/pest` in `composer.json` or `vendor/bin/pest`.
-    - If Pest is available → write **Pest tests**.
-- If Pest is not installed → write **PHPUnit tests**.
-- Check existing tests in the project (`tests/` directory) to match the style and conventions already in use.
+Resolve the framework via the
+[`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md) — write
+tests in the framework the project actually uses, never a hard-coded one:
+
+- **PHP** → Pest (`pestphp/pest`) or PHPUnit.
+- **JS/TS** → Vitest or Jest. **Python** → pytest. **Go** → `testing`.
+  **Rust** → `#[test]`.
+
+Then read the existing tests under the project's test directory to match
+the style and conventions already in use (assertion shape, naming, fixtures).
 
 ### 2. Identify what changed
 
 - Run `git diff origin/main..HEAD --name-only` or `git diff origin/master..HEAD --name-only` (depending on project) to get all changed
   files.
-- Focus on **PHP files with business logic** — skip config files, migrations, views, etc.
+- Focus on **source files with business logic** in the detected
+  language — skip config, generated files, migrations, views, assets.
 - Read each changed file and understand what was added or modified.
 
 ### 3. Understand the code before writing tests
