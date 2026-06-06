@@ -29,9 +29,8 @@ Eigenschaft des Systems. Lass mich das für dich aufschlüsseln —
 aktuell sind es 38 Always-Rules.
 ```
 
-**Failure mode:** flattery opener ("Sehr gute Frage!"), action
-announcement ("Lass mich…"), then 30 Wörter Anlauf für eine
-Ein-Wort-Antwort. Iron Law 1 + Iron Law 3 zusammen verletzt.
+**Failure mode:** flattery opener, action announcement, then a long
+run-up to a one-word answer. Iron Law 1 + Iron Law 3 violated together.
 
 ### Right shape
 
@@ -43,8 +42,8 @@ Agent: 38.
 
 ### Why it works
 
-Eine Frage mit einer wahren Antwort = ein Satz. Kein Anlauf, kein
-Kissen, kein "let me…". Die Zahl ist die ganze Antwort.
+One question with one true answer = one sentence. No run-up, no
+cushion, no "let me…". The number is the whole answer.
 
 ## Demo 2 — Hedged claim without verification (Iron Law 2)
 
@@ -57,10 +56,10 @@ Agent: Ja, ich glaube schon — die meisten Always-Rules haben das
 inzwischen. Sollte in der Frontmatter stehen.
 ```
 
-**Failure mode:** load-bearing project-shape claim ohne Verify, mit
-zwei Hedges ("ich glaube", "sollte"). Iron Law 2 § Severity-tiered:
-project-shape claims müssen mit einem Tool-Call belegt werden, wenn
-einer reicht — und hier reicht ein `view`/`grep` locker.
+**Failure mode:** load-bearing project-shape claim without verify, with
+two hedges. Iron Law 2 § Severity-tiered: project-shape claims must be
+backed by a tool call when one suffices — and here a `view` / `grep`
+easily suffices.
 
 ### Right shape
 
@@ -74,9 +73,9 @@ Eintrag (nur die anderen vier Safety-Floor-Rules tun das).
 
 ### Why it works
 
-Tool-Call vor Antwort, dann konkrete Aussage mit Begründung. Wenn
-der Verify-Aufwand zu groß wäre → fragen, nicht raten. Hier kostet
-ein `grep` zwei Sekunden, also Tool-Call ist Pflicht.
+Tool call before the answer, then a concrete statement with reasoning.
+If the verify cost were too high → ask, don't guess. Here a `grep`
+costs two seconds, so a tool call is mandatory.
 
 ## Demo 3 — Post-hoc summary creep (Iron Law 3)
 
@@ -95,10 +94,9 @@ und ist Teil der Phase 3 von road-to-context-layer-maturity.
 Lass mich wissen, falls du Fragen dazu hast.
 ```
 
-**Failure mode:** Nutzlose Zusammenfassung nach der Antwort, dann
-Service-Floskel ("Lass mich wissen…"). Iron Law 3: kürzeste
-vollständige Antwort gewinnt; Restaurierung von Kontext und
-Closing-Floskel sind beide Failure-Modes.
+**Failure mode:** useless summary after the answer, then a service
+phrase. Iron Law 3: the shortest complete answer wins; restating
+context and a closing phrase are both failure modes.
 
 ### Right shape
 
@@ -110,9 +108,8 @@ Agent: `docs/guidelines/agent-infra/verify-before-complete-demos.md`
 
 ### Why it works
 
-Pfad ist die ganze Antwort. Kein Re-Frame der Frage, kein
-"Zusammenfassend", kein angebotenes Follow-up. Wenn Matze mehr
-will, fragt er.
+The path is the whole answer. No re-frame of the question, no
+"in summary", no offered follow-up. If the user wants more, they ask.
 
 ## Demo 4 — Functional emoji vs prose flair
 
@@ -122,10 +119,10 @@ will, fragt er.
 Agent: 🚀 Tests sind durch! ✨ Alle 47 grün 🎉 Bereit für den nächsten Schritt 💪
 ```
 
-**Failure mode:** Emoji als Stil-Element, nicht als funktionaler
-Marker. § Emoji Scope erlaubt nur die Whitelist (`📒` Heartbeat,
-mode marker, `❌` `✅` `⚠️` mit Two-Space-Regel, Roadmap-`[x]/[~]/[-]`).
-Alles andere ist Rauschen.
+**Failure mode:** emoji as a style element, not as a functional
+marker. § Emoji Scope allows only the whitelist (`📒` heartbeat,
+mode marker, `❌` `✅` `⚠️` with the two-space rule, roadmap `[x]/[~]/[-]`).
+Everything else is noise.
 
 ### Right shape
 
@@ -140,6 +137,6 @@ $ vendor/bin/pest -q
 
 ### Why it works
 
-Genau ein Emoji aus der Whitelist (`✅` mit Two-Space), funktional
-verwendet als Status-Marker neben dem CLI-Output. Keine Deko, keine
-Reaktions-Emojis.
+Exactly one emoji from the whitelist (`✅` with two-space), used
+functionally as a status marker next to the CLI output. No decoration,
+no reaction emojis.

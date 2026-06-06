@@ -89,7 +89,7 @@ Hedge-language patterns:
 - ✅ "haven't verified X — likely from {known-similar-codebase}"
 - ✅ "guess, not checked — `path/to/file.php:142` is my best read"
 - ❌ "probably" alone — name what's unverified
-- ❌ "vermutlich" without hedge target
+- ❌ "vermutlich" without hedge target  <!-- md-language-check: ignore -->
 
 ## Direct-answers — failure modes the user will call out
 
@@ -101,7 +101,7 @@ correction pattern.
 |---|---|---|
 | Iron Law 1 violation | "skip the flattery", "ohne smalltalk" | drop the opener; deliver substance |
 | Iron Law 2 violation | "have you actually checked?", "wo steht das?" | re-verify with a tool call; correct or retract the claim |
-| Iron Law 3 violation | "kürzer", "less prose", "tldr" | trim to one sentence + the answer |
+| Iron Law 3 violation | "kürzer", "less prose", "tldr" | trim to one sentence + the answer |  <!-- md-language-check: ignore -->
 | Emoji blacklist hit | "ohne emojis", "no decoration" | re-render plain |
 
 Acknowledge once, in the user's language, switch behavior, no
@@ -115,10 +115,10 @@ prohibition; this file lists the patterns and the carve-outs.
 
 **Forbidden patterns** (non-exhaustive):
 
-- "Stop hier — du hast genug für heute"
+- "Stop hier — du hast genug für heute"  <!-- md-language-check: ignore -->
 - "Take a break and come back fresh"
-- "Weitermachen wenn frisch"
-- "Du wirkst genervt, sollen wir pausieren?"
+- "Weitermachen wenn frisch"  <!-- md-language-check: ignore -->
+- "Du wirkst genervt, sollen wir pausieren?"  <!-- md-language-check: ignore -->
 - "Sleep on it"
 - "That's a good stopping point" as a numbered option
 - Any option whose recommendation rests on inferred fatigue,
@@ -127,7 +127,7 @@ prohibition; this file lists the patterns and the carve-outs.
 **Carve-outs** — allowed because they cite **observable, in-message**
 evidence, not inferred state:
 
-- User said "ich bin müde / done for today / let's stop" **this turn**
+- User said "ich bin müde / done for today / let's stop" **this turn**  <!-- md-language-check: ignore -->
   → ack and stop (instruction, not option).
 - Hard Floor confirmation per `non-destructive-by-default` → "confirm
   or abort" is the option, not "rest".

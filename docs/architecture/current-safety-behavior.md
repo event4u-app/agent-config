@@ -42,7 +42,7 @@ default. The switch only narrows the **trivial-question** surface.
 |---|---|---|
 | `on` | **Suppress** — agent acts, surfaces what it did | Unchanged — still apply |
 | `off` | **Ask** — numbered options, single question | Unchanged — still apply |
-| `auto` | Same as `off` until the user opts in via a standing autonomy directive ("just work", "arbeite eigenständig"). Then sticky-flip to `on` for the rest of the conversation. Mirror opt-out flips back. | Unchanged — still apply |
+| `auto` | Same as `off` until the user opts in via a standing autonomy directive ("just work", "arbeite eigenständig"). Then sticky-flip to `on` for the rest of the conversation. Mirror opt-out flips back. | Unchanged — still apply |  <!-- md-language-check: ignore -->
 
 ### Opt-in detection
 
@@ -58,7 +58,7 @@ Two distinct autonomy shapes:
 | Shape | Trigger | Scope |
 |---|---|---|
 | **Conversation-wide trivial-question suppression** | "stop asking on trivial steps" — no deliverable named | Sticky for the rest of the conversation. Suppresses trivial workflow questions only. |
-| **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab" — deliverable named | Bound to that task. Ends when the task ends. Does NOT authorize a different later deliverable. |
+| **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab" — deliverable named | Bound to that task. Ends when the task ends. Does NOT authorize a different later deliverable. |  <!-- md-language-check: ignore -->
 
 Per [`autonomous-execution § task-scope`](../../.agent-src/rules/autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).
 

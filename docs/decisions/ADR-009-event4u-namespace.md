@@ -13,7 +13,7 @@ phase: v2.4 · namespace-and-claude-desktop
 ## Status
 
 **Accepted** · 2026-05-13 · signed off by Matze after the user ask
-*"auf globaler ebene sollen unsere dateien in einem
+*"auf globaler ebene sollen unsere dateien in einem  <!-- md-language-check: ignore -->
 .event4u/agent-config Folder im user ordner landen"* combined with the
 Claude Desktop deployment gap surfaced in the same turn (the v1
 `marker-only` integration did not actually make any skill visible to

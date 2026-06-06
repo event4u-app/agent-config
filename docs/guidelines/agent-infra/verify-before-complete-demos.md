@@ -28,7 +28,7 @@ Agent: Ja, sollte jetzt durchlaufen — ich habe die fehlende
 Bedingung ergänzt und die Tests müssten grün sein.
 ```
 
-**Failure mode:** "sollte", "müssten" are red-flag hedges (§ Red
+**Failure mode:** "sollte", "müssten" are red-flag hedges (§ Red  <!-- md-language-check: ignore -->
 flags — STOP immediately). No fresh command output in this message.
 The claim rides on inference, not evidence.
 

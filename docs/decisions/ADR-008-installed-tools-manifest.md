@@ -17,7 +17,7 @@ phase: v2.x · post-global-first-install
 
 Originates from user ask (Matze, 2026-05-12): "Sollten wir auf
 Projektebene festhalten, welche Agents wir initialisiert haben, damit
-bei jedem Sync das Verzeichnis aktualisiert werden kann?" Validated
+bei jedem Sync das Verzeichnis aktualisiert werden kann?" Validated  <!-- md-language-check: ignore -->
 through AI Council Round 1 (claude-sonnet-4-5 + gpt-4o, $0.0298 actual,
 both converged on "yes, separate file"). Council session:
 [`agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/`](../../agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/). <!-- council-ref-allowed: ADR decision trace -->

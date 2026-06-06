@@ -55,7 +55,7 @@ Use this exact text for the awesome-list entry. Adjust the link anchor per direc
 When the maintainer opens the PR / posts the directory entry, the
 description block carries the concrete reality the 3.2.0 review
 named. Reviewer verbatim quote: *"deutlich mehr vorzuweisen als bei
-jedem vorherigen Erwähnungszeitpunkt."* The numbers below mirror the
+jedem vorherigen Erwähnungszeitpunkt."* The numbers below mirror the  <!-- md-language-check: ignore -->
 3.2.0 release notes and the `task adoption:status` snapshot from
 that release; refresh them before posting if a later release has
 shipped.

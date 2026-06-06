@@ -28,7 +28,7 @@ phase: post-v2.1.0 · simplicity-and-everywhere
 
 **Accepted** · 2026-05-12 · signed off by Matze after Council Round 3 convergence. Implementation tracked in `agents/roadmaps/road-to-global-first-install.md`.
 
-Originates from user ask: "Es macht keinen Sinn, das paket nicht
+Originates from user ask: "Es macht keinen Sinn, das paket nicht  <!-- md-language-check: ignore -->
 global zu installieren." Validated through AI Council (2 + 1 rounds,
 2026-05-12 · members claude-sonnet-4-5 + gpt-4o). Council session:
 [`agents/runtime/council/sessions/2026-05-12-global-first-strategy/`](../../agents/runtime/council/sessions/2026-05-12-global-first-strategy/). <!-- council-ref-allowed: ADR decision trace -->

@@ -24,7 +24,7 @@ machine-readable source of truth.
 ## Source
 
 - **Chat thread:** 2026-05-27 (the owner's verdict: *"Aktuell bringen
-  diese Benchmarks nichts. Ich weiß worum es geht und verstehe sie nicht
+  diese Benchmarks nichts. Ich weiß worum es geht und verstehe sie nicht  <!-- md-language-check: ignore -->
   mal."*)
 - **Roadmap:** `agents/roadmaps/road-to-readable-value-dashboard.md`
 - **Extends:** archived `road-to-package-impact-benchmark.md` (A/B
@@ -70,13 +70,13 @@ Each rung is a measurement (or a clearly-marked `pending` placeholder),
 not a marketing number. The ladder is **honest about the up-front
 cost**: installing the package first *adds* input tokens (rules load
 into context); condense + rtk + terse then claw that back. The
-**NETTO** line is the real answer.
+**NET** line is the real answer.
 
 Rung order:
 
-1. **Ohne Paket** — baseline. Token delta = 0. Reference rung; the
+1. **Without package** — baseline. Token delta = 0. Reference rung; the
    ladder is computed relative to this.
-2. **Mit Paket (Regeln laden)** — the honest up-front cost. The
+2. **With package (rule load)** — the honest up-front cost. The
    always-loaded kernel + router footprint added to every request's
    input. Token delta is *positive* (the rule body lands in context).
    Source: `metric_a_footprint` from `frugality/baseline.jsonl`.
@@ -100,7 +100,7 @@ Rung order:
 
 The renderer prints, per rung:
 
-- **label** — short German + English ("Mit Paket / +load")
+- **label** — short English ("With package (rule load) / +load")
 - **what-it-does** — one phrase a non-developer understands
 - **token_delta** — signed integer (positive = adds tokens)
 - **eur_delta** — token_delta priced at the reference scale below
@@ -144,7 +144,7 @@ Every rung in the `cost_ladder` array carries:
 
 ```yaml
 id: <kebab-case>                  # e.g. "load", "condense", "rtk"
-label: "<German + English>"       # e.g. "Mit Paket (Regeln laden)"
+label: "<English>"                # e.g. "With package (rule load)"
 what_it_does: "<one phrase>"      # plain language, ≤ 80 chars
 token_delta: <signed int>         # per-request input token delta
 eur_delta: <float>                # token_delta priced at reference scale
@@ -212,7 +212,7 @@ Each metric in the `behaviour` block carries:
 
 ```yaml
 id: <kebab-case>                  # e.g. "selection", "destructive-stops"
-label: "<German + English>"
+label: "<English>"
 what_this_means: "<one line>"     # plain language caption
 with: <value>                     # metric-specific (pct, count, ratio)
 without: <value>
@@ -237,9 +237,9 @@ corpus. This roadmap considered two options:
 product (per the non-goals section of the roadmap). Hiding the
 negative number — even by relocating it to a "quality" panel —
 would betray the for-dummies-honest framing. The rung renders with
-its measured value, `confidence: measured`, and a caption: *"In
-unserem Testkorpus liefert Telegraph mehr Tokens als ein neutrales
-'sei knapp' — wir messen, wir verstecken nicht."*
+its measured value, `confidence: measured`, and a caption: *"In our
+test corpus, telegraph delivers more tokens than a neutral
+'be terse' — we measure, we do not hide."*
 
 ## Glossary (rendered into `docs/value.md`)
 
@@ -265,8 +265,8 @@ copies it verbatim into the dashboard.
 - **terse / telegraph** — a style of output (short phrases,
   dropped articles) the agent uses when condensing replies.
   Saves output tokens — when the corpus rewards it.
-- **Ohne Paket / Mit Paket** — "without the package" /
-  "with the package" — the two arms of the A/B comparison.
+- **Without package / With package** — the two arms of the A/B
+  comparison.
 - **Δ Tokens** — input-token difference per request vs. the baseline.
   The rendered dashboard reports cost in **tokens only** — no € figure.
   A €/USD comparison would assume per-call API pricing, which the many
@@ -292,9 +292,9 @@ actual always-loaded kernel. The real kernel has 10 rules per
 | Metric | Before fix | After fix | Delta |
 |---|---:|---:|---:|
 | `load` token delta | +4 843 | **+8 977** | +4 134 |
-| NETTO token delta | +4 120 | **+8 254** | +4 134 |
-| NETTO `cumulative_pct` | +51.5 % | **+103.2 %** | +51.7 pp |
-| NETTO €/1k requests | +€11.37 | **+€22.78** | +€11.41 |
+| NET token delta | +4 120 | **+8 254** | +4 134 |
+| NET `cumulative_pct` | +51.5 % | **+103.2 %** | +51.7 pp |
+| NET €/1k requests | +€11.37 | **+€22.78** | +€11.41 |
 
 The original dashboard under-reported the base-load by ~4 100
 tokens/request. Panel B's behaviour numbers are unaffected (they
@@ -309,7 +309,7 @@ measure agent behaviour, not token footprint).
 - Phase 5 — tier-1 dead-rule audit closed with zero cuts: of 20 never-matched rules, 19 are bench-blind / measurement-window / cluster-head (load-bearing despite zero corpus hits); the lone demote candidate (`symfony-routing`) is kept to preserve cross-stack portability.
 - Phase 6 — full live Track B re-run skipped: Phase 1-5 made no rule-body or frontmatter edits, so by construction Panel B is unchanged from the 2026-05-28 baseline (`with` 84.6 % completion, `without` 7.7 % completion). Re-running would consume tokens to re-confirm a known value.
 
-**Pass outcome:** NETTO moved from +4 120 (mis-measured) to **+8 254 tokens / request** (honest); Panel B held by construction. The pass's value is the corrected measurement floor + the new telemetry tooling, not any in-place rule cuts. Cuts must wait until the bench corpus is widened to exercise the rules' real trigger surfaces (git, onboarding, roadmap work, long-conversation windows, autonomy moments).
+**Pass outcome:** NET moved from +4 120 (mis-measured) to **+8 254 tokens / request** (honest); Panel B held by construction. The pass's value is the corrected measurement floor + the new telemetry tooling, not any in-place rule cuts. Cuts must wait until the bench corpus is widened to exercise the rules' real trigger surfaces (git, onboarding, roadmap work, long-conversation windows, autonomy moments).
 
 **Optimisation pass 2 close-out (2026-05-29, `road-to-corpus-expansion-evidence-based-cuts`):**
 
@@ -320,7 +320,7 @@ measure agent behaviour, not token footprint).
 - Phase 5 — zero cuts (0 demotes, 0 deletes). Same outcome as pass-1, but for a fundamentally different reason: pass-1 closed with zero cuts because the corpus was blind; pass-2 closes with zero cuts because the widened corpus **proved every tier-1 rule has structural reason to exist**.
 - Phase 6 — full live Track B re-run skipped: Phase 1-5 made zero rule-body / frontmatter / kernel edits — Panel B is unchanged from the 2026-05-28 baseline by construction.
 
-**Pass outcome:** NETTO unchanged at **+8 254 tokens / request** (+103.2 % vs. baseline, +€22.78 per 1 000 requests). The pass's actual deliverable is the **structural categorisation** of the 20 previously-never-matched rules — future audits no longer need to re-debate why these rules don't fire in standard corpora. 5 state-bound + 5 intent-only are permanently classified as router-replay-unreachable. The Pass B (kernel-body refactor) deferral remains intact — no candidate qualifies under the tightened thresholds.
+**Pass outcome:** NET unchanged at **+8 254 tokens / request** (+103.2 % vs. baseline, +€22.78 per 1 000 requests). The pass's actual deliverable is the **structural categorisation** of the 20 previously-never-matched rules — future audits no longer need to re-debate why these rules don't fire in standard corpora. 5 state-bound + 5 intent-only are permanently classified as router-replay-unreachable. The Pass B (kernel-body refactor) deferral remains intact — no candidate qualifies under the tightened thresholds.
 
 **Pass B status: deferred / closed for now.** Zero genuine candidates surfaced; the 4 raw-pareto flags are all false-positives. Reopen only when a tier-1 rule both activates frequently in the widened corpus AND has a body that exceeds the kernel-budget ceiling — current state has neither.
 
