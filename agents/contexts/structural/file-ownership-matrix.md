@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **380**
-- Edges (incl. self-WRITE): **1091**
+- Edges (incl. self-WRITE): **1093**
 
 ## READ_ONLY edges
 
@@ -169,6 +169,7 @@
 | `.agent-src.uncondensed/rules/invite-challenge.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/invite-challenge.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/language-and-tone.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/media-governance-routing.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/rules/media-governance-routing.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/media-sync-ground-truth.md` | `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `body_link` | 1 |
@@ -199,6 +200,7 @@
 | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `contexts/authority/destructive-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/persona-governance.md` | `.agent-src.uncondensed/rules/skill-quality.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/persona-governance.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/persona-governance.md` | `.agent-src.uncondensed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncondensed/rules/media-governance-routing.md` | `body_link` | 1 |
