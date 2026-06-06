@@ -35,8 +35,8 @@ REQUIRED_SECTIONS = (
     "## Reference scale",
     "## Panel A",
     "## Panel B",
-    "## Glossar",
-    "**NETTO",
+    "## Glossary",
+    "**NET",
 )
 
 
