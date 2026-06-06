@@ -1,18 +1,30 @@
-# Flow stub — scaffolded in 6.0.0-D (Step 15b). Schema (entry_points /
-# default_path / skills) lands in 6.1 (road-to-6.1.0 Step 8b/9). Inert in 6.0.x:
-# parsed by nothing until the resolver ships. `commands:` is a seed lifted from
-# the command-classification worksheet `·_flow:delivery_` tags.
+# Flow — scaffolded in 6.0.0-D (Step 15b), activated in 6.1 (Step 8b, ADR-055).
+# Validated on load by scripts/lint_flows.py against scripts/schemas/flow.schema.json:
+# every entry_points / default_path / commands entry resolves to a real command and
+# every skill resolves to a real skills/<slug>/SKILL.md. `commands:` is the descriptive
+# seed lifted from the command-classification worksheet `·_flow:delivery_` tags;
+# entry_points / default_path are the validated reference fields. Command refs are
+# LOGICAL paths (current command layout); slug-prefix projections like `git-commit` /
+# `git-pr-create` land with Step 8 (pack slug_prefix), not here.
 id: delivery
 title: Delivery
 summary: >-
   Ship it. Commit in logical chunks, open the PR, answer review comments, and
   prepare the branch for review.
-# 6.1 fields (placeholders — not yet active):
-entry_points: []      # commands that START the flow (daily front doors)
-default_path: []      # canonical command sequence
-skills: []            # skills the flow composes
-commands:             # seed from worksheet ·_flow:delivery_ tags
-  - git-commit
-  - git-pr-create
-  - fix-pr-comments
+entry_points:          # commands that START the flow (daily front doors)
+  - commit
+  - pr/create
+  - prepare-for-review
+default_path:          # canonical command sequence
+  - commit
+  - pr/create
+  - fix/pr-comments
+skills:                # skills the flow composes end-to-end
+  - conventional-commits-writing
+  - git-workflow
+  - requesting-code-review
+commands:              # seed from worksheet ·_flow:delivery_ tags
+  - commit
+  - pr/create
+  - fix/pr-comments
   - prepare-for-review

@@ -161,6 +161,7 @@ tasks:
       - task: lint-pack-boundaries
       - task: validate-pack-yaml
       - task: lint-pack-dependencies
+      - task: lint-flows
       - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
@@ -279,6 +280,7 @@ tasks:
       - task: lint-pack-boundaries
       - task: validate-pack-yaml
       - task: lint-pack-dependencies
+      - task: lint-flows
       - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
