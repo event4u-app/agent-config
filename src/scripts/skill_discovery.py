@@ -33,9 +33,9 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SKILLS_DIR = REPO_ROOT / ".agent-src" / "skills"
+SKILLS_DIR = REPO_ROOT / "dist/agent-src" / "skills"
 ROLES_DIR = REPO_ROOT / "agents" / "roles"
-COMMANDS_DIR = REPO_ROOT / ".agent-src" / "commands"
+COMMANDS_DIR = REPO_ROOT / "dist/agent-src" / "commands"
 RECENT_DAYS = 14
 
 sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))

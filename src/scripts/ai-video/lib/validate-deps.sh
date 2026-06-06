@@ -2,7 +2,7 @@
 # validate-deps.sh — startup validator invoked by every /video:* command
 # BEFORE any adapter or network call. Reads the YAML frontmatter from
 # the command file, resolves every declared persona + skill against
-# .agent-src/personas/ and .agent-src/skills/, and fails fast with the
+# dist/agent-src/personas/ and dist/agent-src/skills/, and fails fast with the
 # missing-id list.
 #
 # Scope (per roadmap Phase 5 Step 5): existence + frontmatter `id` match
@@ -36,8 +36,8 @@ repo_root="$(cd "${script_dir}/../../../.." && pwd)"
 
 # AIV_PERSONAS_DIR / AIV_SKILLS_DIR allow overrides for tests; defaults
 # point at the generated mirrors (skills+personas live there at runtime).
-personas_dir="${AIV_PERSONAS_DIR:-${repo_root}/.agent-src/personas}"
-skills_dir="${AIV_SKILLS_DIR:-${repo_root}/.agent-src/skills}"
+personas_dir="${AIV_PERSONAS_DIR:-${repo_root}/dist/agent-src/personas}"
+skills_dir="${AIV_SKILLS_DIR:-${repo_root}/dist/agent-src/skills}"
 
 # Extract the frontmatter block (between the first two `---` lines).
 fm="$(awk '
@@ -86,8 +86,8 @@ missing=()
 # bash 3.2 treats `"${arr[@]}"` on an empty array as unbound under
 # `set -u`. Guard each loop with the length check.
 
-# A persona is "present" if .agent-src/personas/<id>.md exists OR
-# .agent-src/personas/<id>/persona.md exists (template-specialist shape).
+# A persona is "present" if dist/agent-src/personas/<id>.md exists OR
+# dist/agent-src/personas/<id>/persona.md exists (template-specialist shape).
 if [ "${#personas[@]}" -gt 0 ]; then
 for p in "${personas[@]}"; do
   [ -z "${p}" ] && continue
@@ -106,7 +106,7 @@ for p in "${personas[@]}"; do
 done
 fi
 
-# A skill is "present" if .agent-src/skills/<id>/SKILL.md exists.
+# A skill is "present" if dist/agent-src/skills/<id>/SKILL.md exists.
 if [ "${#skills[@]}" -gt 0 ]; then
 for s in "${skills[@]}"; do
   [ -z "${s}" ] && continue

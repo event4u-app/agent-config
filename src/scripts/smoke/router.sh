@@ -3,7 +3,7 @@
 #
 # Asserts router.json structural integrity:
 #   1. 68 ids = 10 kernel + 23 tier_1 + 35 tier_2 (locked count).
-#   2. Every id resolves to .agent-src/rules/<id>.md (0 broken).
+#   2. Every id resolves to dist/agent-src/rules/<id>.md (0 broken).
 #   3. Every routes_to ref resolves through its prefix
 #      (skill:, command:, guideline:, contract:); missing-contract
 #      count locked at ≤ EXPECTED_MISSING_CONTRACTS.
@@ -37,7 +37,7 @@ ids = list(kernel) + [r["id"] for r in tier1] + [r["id"] for r in tier2]
 total = len(ids)
 
 # Rule-file resolution
-missing_rules = [i for i in ids if not os.path.exists(f".agent-src/rules/{i}.md")]
+missing_rules = [i for i in ids if not os.path.exists(f"dist/agent-src/rules/{i}.md")]
 
 # routes_to resolution — multi-root aware via resolve_logical.
 def resolve(ref):
@@ -48,7 +48,7 @@ def resolve(ref):
     if kind == "skill":
         # Legacy projected path first (fast path), then multi-root source.
         for p in (
-            f".agent-src/skills/{rest}/SKILL.md",
+            f"dist/agent-src/skills/{rest}/SKILL.md",
             f".agent-src.uncondensed/skills/{rest}/SKILL.md",
         ):
             if os.path.exists(p):
@@ -57,7 +57,7 @@ def resolve(ref):
         return (str(hit) if hit else f".agent-src.uncondensed/skills/{rest}/SKILL.md"), "skill"
     if kind == "command":
         for p in (
-            f".agent-src/commands/{rest}.md",
+            f"dist/agent-src/commands/{rest}.md",
             f".agent-src.uncondensed/commands/{rest}.md",
             f".agent-src.uncondensed/commands/{rest}/INDEX.md",
         ):

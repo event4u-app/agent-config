@@ -67,7 +67,7 @@ for artefact in \
     ".claude/settings.json (plugin enabled)" \
     "agent-config symlink" \
     ".augment/scripts/update_roadmap_progress.py" \
-    ".agent-src/scripts/update_roadmap_progress.py" \
+    "dist/agent-src/scripts/update_roadmap_progress.py" \
     ".agent-src.uncondensed/scripts/update_roadmap_progress.py" \
     ".git/hooks/pre-commit" \
     "agents/runtime/state/"

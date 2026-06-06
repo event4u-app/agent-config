@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — Agent-config payload sync (one of two installer stages).
 #
-# Reads from the package's .agent-src/ and writes the target project's
+# Reads from the package's dist/agent-src/ and writes the target project's
 # .augment/ tree: copies rules, symlinks everything else. When
 # augment.rules_use_symlinks: true is set in the target's
 # .agent-settings.yml, rules are symlinked instead of copied.
@@ -102,7 +102,7 @@ parse_args() {
     [[ -z "$TOOLS" ]] && TOOLS="all"
 
     # Auto-detect source: this script lives at src/scripts/install.sh, so the
-    # package root (where .agent-src/ lives) is two levels up (../.. ).
+    # package root (where dist/agent-src/ lives) is two levels up (../.. ).
     if [[ -z "$SOURCE_DIR" ]]; then
         SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
     fi
@@ -123,11 +123,11 @@ parse_args() {
         fi
     fi
 
-    # Resolve source layout. .agent-src/ is the only supported source since v2.0.
-    if [[ -d "$SOURCE_DIR/.agent-src" ]]; then
-        SOURCE_PAYLOAD="$SOURCE_DIR/.agent-src"
+    # Resolve source layout. dist/agent-src/ is the only supported source since v2.0.
+    if [[ -d "$SOURCE_DIR/dist/agent-src" ]]; then
+        SOURCE_PAYLOAD="$SOURCE_DIR/dist/agent-src"
     else
-        log_error "Source payload not found: $SOURCE_DIR/.agent-src"
+        log_error "Source payload not found: $SOURCE_DIR/dist/agent-src"
         exit 1
     fi
 }

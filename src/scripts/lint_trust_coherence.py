@@ -10,7 +10,7 @@ invariants:
      rule in the same pack.
   2. Every artefact with ``trust.human_review_required: true`` carries
      the ``_HRR_BANNER_MARKER`` in its compiled output under
-     ``.agent-src/<logical>``.
+     ``dist/agent-src/<logical>``.
   3. Every rule listed in ``router.json`` ``kernel[]`` declares
      ``trust.level: core`` (no escalation to advisory/restricted,
      no demotion to experimental).
@@ -28,7 +28,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 ROUTER = ROOT / "dist" / "router.json"
-COMPILED_SRC = ROOT / ".agent-src"
+COMPILED_SRC = ROOT / "dist/agent-src"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.agent_src import strip_source_prefix  # noqa: E402
@@ -174,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
         "--compiled-src",
         type=Path,
         default=COMPILED_SRC,
-        help="compiled output root (.agent-src/)",
+        help="compiled output root (dist/agent-src/)",
     )
     args = parser.parse_args(argv)
 

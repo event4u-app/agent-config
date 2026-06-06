@@ -29,7 +29,7 @@ QUIET = "--quiet" in sys.argv
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SKILL_GLOBS = (
     ".agent-src.uncondensed/skills/**/SKILL.md",
-    ".agent-src/skills/**/SKILL.md",
+    "dist/agent-src/skills/**/SKILL.md",
 )
 VALID_SLOTS = (
     "product", "team", "repo",

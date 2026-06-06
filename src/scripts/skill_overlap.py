@@ -56,7 +56,7 @@ STOPWORDS = {
     "command", "commands", "guideline", "guidelines",
 }
 
-PATH_RE = re.compile(r"`?(?:\.agent-src(?:\.uncondensed)?|agents|scripts|docs|tests|\.augment|\.claude)/[A-Za-z0-9_./-]+`?")
+PATH_RE = re.compile(r"`?(?:dist/agent-src(?:\.uncondensed)?|agents|scripts|docs|tests|\.augment|\.claude)/[A-Za-z0-9_./-]+`?")
 TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9_-]{2,}")
 
 

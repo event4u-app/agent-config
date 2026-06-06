@@ -73,8 +73,8 @@ except ImportError:
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 ROUTER_JSON = REPO_ROOT / "dist" / "router.json"
 PROJECTION_COST = REPO_ROOT / "internal" / "bench" / "reports" / "projection-cost.json"
-RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
-CHARTER_PATH = REPO_ROOT / ".agent-src" / "contexts" / "contracts" / "frugality-charter.md"
+RULES_DIR = REPO_ROOT / "dist/agent-src" / "rules"
+CHARTER_PATH = REPO_ROOT / "dist/agent-src" / "contexts" / "contracts" / "frugality-charter.md"
 FRUGALITY_BASELINE = REPO_ROOT / "agents" / "runtime" / "frugality" / "baseline.jsonl"
 TELEGRAPH_V2 = REPO_ROOT / "internal" / "bench" / "reports" / "telegraph-v2.json"
 TELEGRAPH_V1 = REPO_ROOT / "internal" / "bench" / "reports" / "telegraph-v1.json"

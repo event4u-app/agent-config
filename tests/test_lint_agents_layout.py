@@ -154,7 +154,7 @@ def test_is_source_repo_detects_root_uncondensed(tmp_path: Path) -> None:
 
 
 def test_is_source_repo_detects_root_condensed(tmp_path: Path) -> None:
-    (tmp_path / ".agent-src").mkdir()
+    (tmp_path / "dist/agent-src").mkdir(parents=True)
     assert is_source_repo(tmp_path) is True
 
 
@@ -224,7 +224,7 @@ def test_cli_strict_flips_warnings_to_errors(tmp_path: Path) -> None:
 
 def test_cli_no_warnings_in_source_repo(tmp_path: Path) -> None:
     """Maintainer source repo — full agents/ tree allowed, no warnings."""
-    (tmp_path / ".agent-src").mkdir()
+    (tmp_path / "dist/agent-src").mkdir(parents=True)
     agents = tmp_path / "agents"
     (agents / "overrides").mkdir(parents=True)
     (agents / "runtime").mkdir()

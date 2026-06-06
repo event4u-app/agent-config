@@ -64,7 +64,7 @@ EXCLUDE_DIRS = {
     ".windsurf",
     ".clinerules",
     ".augment",
-    ".agent-src",  # condensed output (counts already covered by .uncondensed)
+    "dist/agent-src",  # condensed output (counts already covered by .uncondensed)
     ".claude/skills",
     ".claude/commands",
     ".claude/personas",

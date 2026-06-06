@@ -59,7 +59,7 @@ jobs:
 
       - name: Bootstrap generated projection (.augment/, .cursor/, …)
         # install_global content tests need the projected `.augment/` etc.
-        # trees, which are git-ignored and rebuilt from `.agent-src/` by
+        # trees, which are git-ignored and rebuilt from `dist/agent-src/` by
         # sync.
         run: python src/scripts/condense.py --sync
 

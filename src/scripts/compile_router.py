@@ -137,7 +137,7 @@ def _iter_rule_files() -> list[Path]:
     roots = artefact_roots()
     if not roots:
         # Pure-condensed fallback for consumer projections that vendor
-        # the flat .agent-src/ tree without sources.
+        # the flat dist/agent-src/ tree without sources.
         if RULES_DIR.exists():
             for path in sorted(RULES_DIR.glob("*.md")):
                 seen.setdefault(path.stem, path)

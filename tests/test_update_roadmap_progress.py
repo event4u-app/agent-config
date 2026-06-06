@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-# Import the source-of-truth copy; .agent-src/ is a regenerated mirror.
+# Import the source-of-truth copy; dist/agent-src/ is a regenerated mirror.
 # Post-monorepo Phase 4 the script lives under packages/<pack>/...; use
 # the shared discovery helper instead of a hardcoded path.
 REPO_ROOT = Path(__file__).resolve().parent.parent

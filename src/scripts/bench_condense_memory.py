@@ -29,7 +29,7 @@ REPORT_MD = REPO_ROOT / "internal" / "bench" / "reports" / "telegraph-v2.md"
 CORPUS: list[tuple[str, str]] = [
     ("AGENTS.md", "thin-root-package"),
     (".agent-src.uncondensed/templates/AGENTS.md", "thin-root-consumer-template"),
-    (".agent-src/templates/AGENTS.md", "thin-root-consumer-generated"),
+    ("dist/agent-src/templates/AGENTS.md", "thin-root-consumer-generated"),
     ("docs/contracts/ai-council-config.md", "prose-heavy-contract"),
     ("docs/contracts/implement-ticket-flow.md", "prose-heavy-contract"),
     ("docs/contracts/command-clusters.md", "prose-heavy-contract"),

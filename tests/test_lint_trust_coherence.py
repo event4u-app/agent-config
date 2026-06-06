@@ -5,7 +5,7 @@ Covers the three Phase-5.4 invariants:
 1. Packs declaring ``advisory``/``restricted`` artefacts ship a
    ``*safety-floor*`` rule.
 2. Every artefact with ``trust.human_review_required: true`` carries
-   the HRR banner marker in its compiled output under ``.agent-src/``.
+   the HRR banner marker in its compiled output under ``dist/agent-src/``.
 3. Rules listed in ``dist/router.json`` ``kernel[]`` declare
    ``trust.level: core``.
 
@@ -53,7 +53,7 @@ def fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Set up a minimal fixture with one core rule, one HRR safety floor."""
     manifest = tmp_path / "dist" / "discovery" / "discovery-manifest.json"
     router = tmp_path / "router.json"
-    compiled = tmp_path / ".agent-src"
+    compiled = tmp_path / "dist/agent-src"
 
     _write_manifest(
         manifest,
@@ -124,7 +124,7 @@ def test_pack_missing_safety_floor_fails(fixture, capsys):
 
 
 def test_missing_banner_in_compiled_output_fails(fixture, capsys):
-    compiled = fixture / ".agent-src" / "rules" / "finance-safety-floor.md"
+    compiled = fixture / "dist/agent-src" / "rules" / "finance-safety-floor.md"
     compiled.write_text("# finance-safety-floor (no banner)\n", encoding="utf-8")
     assert mod.main(["--quiet"]) == 1
     err = capsys.readouterr().err
@@ -132,7 +132,7 @@ def test_missing_banner_in_compiled_output_fails(fixture, capsys):
 
 
 def test_missing_compiled_output_fails(fixture, capsys):
-    (fixture / ".agent-src" / "rules" / "finance-safety-floor.md").unlink()
+    (fixture / "dist/agent-src" / "rules" / "finance-safety-floor.md").unlink()
     assert mod.main(["--quiet"]) == 1
     err = capsys.readouterr().err
     assert "compiled output" in err and "missing" in err

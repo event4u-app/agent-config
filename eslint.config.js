@@ -14,7 +14,7 @@ export default [
             'dist/**',
             'node_modules/**',
             'scripts/**',
-            '.agent-src/**',
+            'dist/agent-src/**',
             '.agent-src.uncondensed/**',
             '.augment/**',
             '.claude/**',

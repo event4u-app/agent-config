@@ -33,10 +33,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
+RULES_DIR = REPO_ROOT / "dist/agent-src" / "rules"
 CONTRACTS_DIR = REPO_ROOT / "docs" / "contracts"
 GUIDELINES_DIR = REPO_ROOT / "docs" / "guidelines"
-CONTEXTS_DIR = REPO_ROOT / ".agent-src" / "contexts"
+CONTEXTS_DIR = REPO_ROOT / "dist/agent-src" / "contexts"
 ROUTER = REPO_ROOT / "dist" / "router.json"
 EVIDENCE_DIR = REPO_ROOT / "agents" / "evidence" / "analysis"
 

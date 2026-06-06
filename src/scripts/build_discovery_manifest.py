@@ -46,7 +46,7 @@ DEFAULT_PACKS_JSON = ROOT / "dist" / "discovery" / "packs.json"
 # ``src`` is the 6.0.0-D flat-library container (src/skills, src/rules, and
 # later src/domains commands). Iteration is category-scoped, so only the
 # artefact subtrees under src/ ever reach the trust gate.
-TRUST_ROOTS = (".agent-src.uncondensed", ".augment", ".claude", ".agent-src", "packages", "src")
+TRUST_ROOTS = (".agent-src.uncondensed", ".augment", ".claude", "dist/agent-src", "packages", "src")
 
 _FM_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
 _TRUST_REQ = ("level", "confidence", "human_review_required")

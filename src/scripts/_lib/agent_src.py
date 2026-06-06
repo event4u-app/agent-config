@@ -48,7 +48,7 @@ SRC_RULES = SRC / "rules"
 # scripts, packs) move out of ``packages/core/.agent-src.uncondensed/`` into a
 # single relocated container ``src/agent-src/`` (prefix ""), keeping their
 # original per-category subdir names. This preserves logical identity exactly
-# (``contexts/<file>`` etc. — the snapshot of ``.agent-src/`` is byte-identical)
+# (``contexts/<file>`` etc. — the snapshot of ``dist/agent-src/`` is byte-identical)
 # AND the ``artefact_roots()`` container+append contract, so the many scanners
 # that do ``root / "<category>"`` keep resolving with zero per-scanner edits.
 #
@@ -72,7 +72,7 @@ SRC_AGENT = SRC / "agent-src"
 # preserved exactly: ``src/domains/<pack>/<subpath>/command.md`` maps to
 # ``commands/<subpath>.md`` — the ``<pack>`` segment is stripped and the
 # always-``command.md`` leaf is replaced by the subpath. This keeps
-# condensation hashes, the ``.agent-src/commands/`` projection, discovery,
+# condensation hashes, the ``dist/agent-src/commands/`` projection, discovery,
 # and every cross-reference byte-stable across the move (council-converged,
 # 2026-06-03: preserve-logical-identity for the structural step; the
 # invocation-name rename is Step 12). The mapping is PATH-based, not
@@ -121,7 +121,7 @@ def _iter_domains_commands() -> Iterator[tuple[Path, str]]:
 
 # --- Canonical command-slug derivation (ADR-044 amendment, 2026-06-04) --------
 #
-# The slug a command projects to (``.agent-src/commands/<slug>.md``, then the
+# The slug a command projects to (``dist/agent-src/commands/<slug>.md``, then the
 # ``.claude`` / ``.cursor`` invocation name) is derived from the SOURCE PATH:
 # the ``<pack>`` segment is stripped and the remaining subpath is hyphenated
 # (A1). A pack MAY opt into a slug prefix via ``slug_prefix:`` in its

@@ -90,13 +90,13 @@ def test_budget_hard_spec_limit_always_raises() -> None:
 def test_swap_paths_replaces_package_internal_only() -> None:
     body = (
         "Edit `.agent-src.uncondensed/skills/foo/SKILL.md` and "
-        "see (`.agent-src/rules/x.md`). The `agents/roadmaps/` dir "
+        "see (`dist/agent-src/rules/x.md`). The `agents/roadmaps/` dir "
         "stays intact."
     )
     out = bcb.swap_paths(body)
     assert "<package-source>/skills/foo/SKILL.md" in out
     assert "<package-source>/rules/x.md" in out
-    assert ".agent-src" not in out
+    assert "dist/agent-src" not in out
     assert "`agents/roadmaps/`" in out  # untouched
 
 
@@ -141,7 +141,7 @@ def test_build_skill_zip_round_trip(tmp_path: Path) -> None:
 def test_build_skill_zip_t2_adds_sandbox_note(tmp_path: Path) -> None:
     src = _make_skill(
         tmp_path / "src", "auth", desc="Use when auth.",
-        body="See `.agent-src/skills/x/SKILL.md` for context.\n",
+        body="See `dist/agent-src/skills/x/SKILL.md` for context.\n",
     )
     out = tmp_path / "out"
     bcb.build_skill_zip(src, out, "T2", strict=False, dry_run=False)
@@ -149,7 +149,7 @@ def test_build_skill_zip_t2_adds_sandbox_note(tmp_path: Path) -> None:
         skill_md = zf.read("auth/SKILL.md").decode()
     assert "Cloud sandbox." in skill_md
     assert "<package-source>/skills/x/SKILL.md" in skill_md
-    assert "`.agent-src/skills/x/" not in skill_md  # swapped
+    assert "`dist/agent-src/skills/x/" not in skill_md  # swapped
 
 
 # ---------- build_all gating ---------------------------------------------

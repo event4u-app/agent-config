@@ -11,7 +11,7 @@ parses each turn for two signals:
     referenced the slug in backticks with one of the anchor verbs
     (using, via, per, route, dispatch, invoke, call) OR cited a SKILL.md
     path under `.augment/skills/<slug>/`, `.claude/skills/<slug>/`, or
-    `.agent-src/skills/<slug>/`.
+    `dist/agent-src/skills/<slug>/`.
 
 Emits one JSONL record per (session, turn, slug, kind) to
 `agents/runtime/metrics/skill-usage.jsonl` (append-only, deduped on the
@@ -138,7 +138,7 @@ def collect_session(jsonl: Path, all_known: set[str]) -> list[dict]:
 
 def load_known_slugs(repo: Path) -> set[str]:
     slugs: set[str] = set()
-    for root in (repo / ".augment" / "skills", repo / ".claude" / "skills", repo / ".agent-src" / "skills"):
+    for root in (repo / ".augment" / "skills", repo / ".claude" / "skills", repo / "dist/agent-src" / "skills"):
         if not root.is_dir():
             continue
         for skill_md in root.glob("*/SKILL.md"):

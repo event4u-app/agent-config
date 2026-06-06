@@ -216,12 +216,12 @@ describe('installRoute', () => {
     describe('POST /api/v1/install/plan (wizard branch — Phase B2)', () => {
         beforeEach(async () => {
             boot = await bootApp();
-            // Seed a minimal `.agent-src/rules/` tree inside the project root
+            // Seed a minimal `dist/agent-src/rules/` tree inside the project root
             // so the wizard branch's `packageRoot` override has content the
             // expander can resolve. Two files → assert filesByTool count.
-            mkdirSync(join(boot.projectRoot, '.agent-src', 'rules'), { recursive: true });
-            writeFileSync(join(boot.projectRoot, '.agent-src', 'rules', 'one.md'), 'rule-one\n');
-            writeFileSync(join(boot.projectRoot, '.agent-src', 'rules', 'two.md'), 'rule-two\n');
+            mkdirSync(join(boot.projectRoot, 'dist/agent-src', 'rules'), { recursive: true });
+            writeFileSync(join(boot.projectRoot, 'dist/agent-src', 'rules', 'one.md'), 'rule-one\n');
+            writeFileSync(join(boot.projectRoot, 'dist/agent-src', 'rules', 'two.md'), 'rule-two\n');
         });
 
         it('expands toolIds + home override into a plan with per-tool entries', async () => {

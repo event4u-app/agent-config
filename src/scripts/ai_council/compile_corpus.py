@@ -7,7 +7,7 @@ human-authored source-of-truth for PR review. This script reads it
 through the hardened
 :func:`scripts.ai_council.low_impact_corpus.parse_corpus_strict`
 parser and writes a YAML lockfile that becomes the **runtime**
-source-of-truth. The pattern mirrors `.agent-src/` vs
+source-of-truth. The pattern mirrors `dist/agent-src/` vs
 `.agent-src.uncondensed/`: human edits Markdown, `task consistency`
 enforces lockfile parity via the same ``git diff --quiet`` gate.
 

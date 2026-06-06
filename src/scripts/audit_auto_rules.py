@@ -42,7 +42,7 @@ def _src_rule_paths() -> list[Path]:
                     paths.append(p)
     return paths
 
-PROJECTED_RULES = REPO_ROOT / ".agent-src" / "rules"
+PROJECTED_RULES = REPO_ROOT / "dist/agent-src" / "rules"
 REPORT_DIR = REPO_ROOT / "agents" / "reports"
 JSON_OUT = REPORT_DIR / "auto-rules-audit.json"
 MD_OUT = REPORT_DIR / "auto-rules-audit.md"

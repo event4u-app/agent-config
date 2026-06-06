@@ -75,13 +75,13 @@ def resolve_persona_text(
 ) -> tuple[str, dict]:
     """Read a persona file, returning ``(body, frontmatter)``.
 
-    Condensed tree (``.agent-src/``) wins so production runs match the
+    Condensed tree (``dist/agent-src/``) wins so production runs match the
     same projection the rest of the package consumes. Uncondensed tree
     (``.agent-src.uncondensed/``) is the fallback for in-repo
     development before ``task sync`` has projected the file.
     """
     candidates = [
-        repo_root / ".agent-src" / persona_path,
+        repo_root / "dist/agent-src" / persona_path,
         repo_root / ".agent-src.uncondensed" / persona_path,
     ]
     for candidate in candidates:

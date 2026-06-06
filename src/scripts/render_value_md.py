@@ -232,7 +232,7 @@ def render_glossary() -> str:
         "fewer than input. More expensive per token than input.\n"
         "- **condense** — a build step that shrinks the rule files "
         "before shipping (`.agent-src.uncondensed` → "
-        "`.agent-src`). Saves input tokens on every request.\n"
+        "`dist/agent-src`). Saves input tokens on every request.\n"
         "- **rtk** — the *Rust Token Killer*, a CLI wrapper that "
         "filters verbose output (`git status`, lint output, test "
         "runners) before the model reads it. Saves input tokens on "

@@ -1,15 +1,15 @@
-"""Prompt loader — reads `.agent-src/skills/` and `.agent-src/commands/`.
+"""Prompt loader — reads `dist/agent-src/skills/` and `dist/agent-src/commands/`.
 
 Phase 1 (A4) exposed 5 hand-picked, stack-agnostic skills. Phase 2
 (B1–B3) extends to the full set: every `SKILL.md` under
-`.agent-src/skills/` plus every `*.md` under `.agent-src/commands/`.
+`dist/agent-src/skills/` plus every `*.md` under `dist/agent-src/commands/`.
 
 Frontmatter `name` + `description` map to MCP prompt metadata; the
 body (frontmatter stripped) is the prompt content. Frontmatter
 `source:` is forwarded verbatim into the MCP `_meta` field so clients
 can filter package-vs-project entries on the wire.
 
-Project-overrides resolution: `.agent-src/` is the already-merged
+Project-overrides resolution: `dist/agent-src/` is the already-merged
 view at sync time; the runtime loader does not re-merge.
 
 Frontmatter validation (B3): entries missing `name` or `description`
@@ -164,7 +164,7 @@ def _load_active_user_type(root: Path) -> str:
 def load_skill(name: str, root: Path | None = None) -> SkillPrompt:
     """Load a single skill by name. Raises FileNotFoundError if missing."""
     base = root or _project_root()
-    path = base / ".agent-src" / "skills" / name / "SKILL.md"
+    path = base / "dist/agent-src" / "skills" / name / "SKILL.md"
     if not path.exists():
         raise FileNotFoundError(f"SKILL.md not found: {path}")
     return _load_file(path, kind="skill", fallback_name=name)
@@ -214,14 +214,14 @@ def load_phase_1_prompts(root: Path | None = None) -> list[SkillPrompt]:
 def scan_skills(
     root: Path | None = None,
 ) -> tuple[list[SkillPrompt], list[str]]:
-    """Enumerate every `.agent-src/skills/*/SKILL.md`.
+    """Enumerate every `dist/agent-src/skills/*/SKILL.md`.
 
     Returns `(prompts, errors)`. Files missing `name` or
     `description` frontmatter are skipped with a one-line reason in
     `errors`. Files that fail to read are surfaced the same way.
     """
     base = root or _project_root()
-    skills_root = base / ".agent-src" / "skills"
+    skills_root = base / "dist/agent-src" / "skills"
     prompts: list[SkillPrompt] = []
     errors: list[str] = []
     if not skills_root.is_dir():
@@ -245,7 +245,7 @@ def scan_skills(
 def scan_commands(
     root: Path | None = None,
 ) -> tuple[list[SkillPrompt], list[str]]:
-    """Enumerate every `.agent-src/commands/**/*.md`.
+    """Enumerate every `dist/agent-src/commands/**/*.md`.
 
     Same return contract as `scan_skills`. Command frontmatter `name:`
     values use `:` as cluster/sub separator (e.g. `research:report`);
@@ -253,7 +253,7 @@ def scan_commands(
     in `to_mcp_prompt_meta`.
     """
     base = root or _project_root()
-    cmd_root = base / ".agent-src" / "commands"
+    cmd_root = base / "dist/agent-src" / "commands"
     prompts: list[SkillPrompt] = []
     errors: list[str] = []
     if not cmd_root.is_dir():
@@ -356,7 +356,7 @@ def _user_type_rank(prompt: SkillPrompt, user_type: str) -> tuple[int, UserTypeM
 class PromptCache:
     """In-memory cache with mtime-based invalidation (B5 hot-reload).
 
-    `get()` re-scans `.agent-src/skills/` and `.agent-src/commands/`
+    `get()` re-scans `dist/agent-src/skills/` and `dist/agent-src/commands/`
     when any tracked SKILL.md / command file has changed mtime since
     the previous scan. New / removed files also trigger a refresh
     (the set of tracked paths is part of the staleness key).
@@ -376,13 +376,13 @@ class PromptCache:
 
     def _current_signature(self) -> tuple[tuple[str, float], ...]:
         entries: list[tuple[str, float]] = []
-        skills_root = self._root / ".agent-src" / "skills"
+        skills_root = self._root / "dist/agent-src" / "skills"
         if skills_root.is_dir():
             for skill_dir in sorted(skills_root.iterdir()):
                 path = skill_dir / "SKILL.md"
                 if path.is_file():
                     entries.append((str(path), path.stat().st_mtime))
-        cmd_root = self._root / ".agent-src" / "commands"
+        cmd_root = self._root / "dist/agent-src" / "commands"
         if cmd_root.is_dir():
             for path in sorted(cmd_root.rglob("*.md")):
                 if path.is_file():

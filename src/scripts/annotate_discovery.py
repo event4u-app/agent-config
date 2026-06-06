@@ -4,7 +4,7 @@
 Walks a list of artefacts in `.agent-src.uncondensed/` and:
   1. Inserts the 5 ADR-013 frontmatter keys (workspaces, packs, lifecycle,
      trust, install) before the closing `---`, deterministically.
-  2. Mirrors the new keys into the matching `.agent-src/` counterpart so
+  2. Mirrors the new keys into the matching `dist/agent-src/` counterpart so
      the condensed projection stays consistent (body preserved).
   3. Refreshes `internal/.condensation-hashes.json` for each touched source path so
      `task check-condensation` stays green.
@@ -25,7 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / ".agent-src.uncondensed"
-DST = ROOT / ".agent-src"
+DST = ROOT / "dist/agent-src"
 HASH_FILE = ROOT / "internal" / ".condensation-hashes.json"
 
 # Pack → (workspace_id, trust_level, default_install, removable, lifecycle).

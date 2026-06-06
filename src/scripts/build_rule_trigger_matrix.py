@@ -19,9 +19,9 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_RULES = REPO_ROOT / ".agent-src.uncondensed" / "rules"
-COMP_RULES = REPO_ROOT / ".agent-src" / "rules"
+COMP_RULES = REPO_ROOT / "dist/agent-src" / "rules"
 SRC_PREFIX = ".agent-src.uncondensed/"
-COMP_PREFIX = ".agent-src/"
+COMP_PREFIX = "dist/agent-src/"
 OUT = REPO_ROOT / "agents" / "contexts" / "rule-trigger-matrix.md"
 
 # Classification table — one row per rule. See § Methodology in the
@@ -86,10 +86,10 @@ add("size-enforcement.md", "file save on .agent-src.uncondensed/{skills,rules,co
 add("no-roadmap-references.md", "file save on stable artifacts", "mechanical-already",
     "tool-call", "NA-mechanical", "mechanical-already",
     notes="Enforced by scripts/check_no_roadmap_refs.py (CI gate)")
-add("augment-portability.md", "file save on .agent-src/**", "mechanical-already",
+add("augment-portability.md", "file save on dist/agent-src/**", "mechanical-already",
     "tool-call", "NA-mechanical", "mechanical-already",
     notes="Enforced by scripts/check_portability.py")
-add("augment-source-of-truth.md", "file save on .agent-src/ or .augment/",
+add("augment-source-of-truth.md", "file save on dist/agent-src/ or .augment/",
     "hook", "tool-call", "low", "1",
     notes="Pre-write hook: refuse writes to generated dirs")
 add("package-ci-checks.md", "pre-push to remote", "mechanical-already",
@@ -258,7 +258,7 @@ def emit():
     lines.append("| Column | Meaning |")
     lines.append("|---|---|")
     lines.append("| `type` | Frontmatter `type` (`always` / `auto`) |")
-    lines.append("| `raw` | Condensed rule size in chars (`.agent-src/rules/<name>`) |")
+    lines.append("| `raw` | Condensed rule size in chars (`dist/agent-src/rules/<name>`) |")
     lines.append("| `ext` | Extended size under Model (b): raw + transitive `load_context` |")
     lines.append("| `trigger` | Observable event that should activate the rule |")
     lines.append("| `obs` | Where the trigger is observable: `hook` (platform hook), `settings` (`.agent-settings.yml` state), `agent-only` (in-head), `mechanical-already` (precedent — already enforced by a script) |")

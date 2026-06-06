@@ -17,7 +17,7 @@ Asserts the structural floor pinned in
      ``output_shape``) plus ``skill_hint``.
   6. Every ``skills.yml`` skill ``id`` resolves to an existing skill
      under ``.agent-src.uncondensed/skills/<id>/`` or
-     ``.agent-src/skills/<id>/`` (condensed projection counts).
+     ``dist/agent-src/skills/<id>/`` (condensed projection counts).
 
 The roadmap step is intentionally opt-in for CI — the existing
 ``task ci`` wiring is the caller's concern; this script is the
@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ROLES_DIR = ROOT / "agents" / "roles"
 SKILL_SOURCES = [
     ROOT / ".agent-src.uncondensed" / "skills",
-    ROOT / ".agent-src" / "skills",
+    ROOT / "dist/agent-src" / "skills",
 ]
 
 REQUIRED_INDEX_KEYS = {

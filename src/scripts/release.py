@@ -618,7 +618,7 @@ def print_preview(plan: Plan) -> None:
     print(f"  · {MARKETPLACE_JSON.relative_to(REPO_ROOT)}")
     print(f"  · {CHANGELOG.relative_to(REPO_ROOT)}")
     print("  · regenerated derived files via `task release-prepare`")
-    print("    (src/packs/*/pack.yaml + README.md, .agent-src/, tool projections)")
+    print("    (src/packs/*/pack.yaml + README.md, dist/agent-src/, tool projections)")
     if plan.split_plan is not None:
         sp = plan.split_plan
         print()
@@ -739,7 +739,7 @@ def execute(
             set_marketplace_version(MARKETPLACE_JSON, plan.target)
             prepend_changelog(CHANGELOG, plan.changelog_entry)
 
-        # Regenerate derived files (pack manifests, .agent-src/, tool
+        # Regenerate derived files (pack manifests, dist/agent-src/, tool
         # projections) so the PR's own consistency check passes. Without
         # this the bump only lands in package.json + marketplace.json and
         # the Sync + Generate Tools Consistency gate fails on the release
@@ -760,7 +760,7 @@ def execute(
             _step(3, total, f"Commit `release: {plan.target}`")
             # `git add -A` stages the three primary bump files AND every
             # regenerated derived file (src/packs/*/pack.yaml + README.md,
-            # .agent-src/, .augment/, tool projections). Listing them
+            # dist/agent-src/, .augment/, tool projections). Listing them
             # explicitly would silently drift the moment a new generated
             # tree is added.
             run("git", "add", "-A")

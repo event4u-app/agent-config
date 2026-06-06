@@ -92,14 +92,14 @@ def is_source_repo(project_root: Path) -> bool:
     The maintainer surface is identified by **any** of:
       - ``.agent-src.uncondensed/`` at the workspace root (legacy / single-pack layout),
       - ``packages/<pack>/.agent-src.uncondensed/`` (current monorepo layout — see ``AGENTS.md``),
-      - ``.agent-src/`` at the workspace root (condensed authoring tree).
+      - ``dist/agent-src/`` at the workspace root (condensed authoring tree).
 
     Consumer repos ship none of these — they only carry the deployed
     `.augment/`, `.claude/`, etc. plus `agents/overrides/`.
     """
     if (project_root / ".agent-src.uncondensed").is_dir():
         return True
-    if (project_root / ".agent-src").is_dir():
+    if (project_root / "dist/agent-src").is_dir():
         return True
     packages = project_root / "packages"
     if packages.is_dir():

@@ -312,7 +312,7 @@ resolve_script() {
 # Resolve a script that ships under templates/scripts/. Tries (in order):
 #   1. CONSUMER_ROOT/scripts/<name>                       — local copy / customization
 #   2. CONSUMER_ROOT/.augment/templates/scripts/<name>    — installer-shipped
-#   3. PACKAGE_ROOT/.agent-src/templates/scripts/<name>   — package-internal fallback
+#   3. PACKAGE_ROOT/dist/agent-src/templates/scripts/<name>   — package-internal fallback
 # Consumer customization wins so projects can patch behavior locally
 # without losing the upstream default.
 resolve_template_script() {
@@ -321,7 +321,7 @@ resolve_template_script() {
   for p in \
     "$CONSUMER_ROOT/scripts/$name" \
     "$CONSUMER_ROOT/.augment/templates/scripts/$name" \
-    "$PACKAGE_ROOT/.agent-src/templates/scripts/$name"; do
+    "$PACKAGE_ROOT/dist/agent-src/templates/scripts/$name"; do
     if [[ -f "$p" ]]; then
       printf '%s' "$p"
       return 0
@@ -331,7 +331,7 @@ resolve_template_script() {
   echo "    Searched:" >&2
   echo "      - $CONSUMER_ROOT/scripts/$name" >&2
   echo "      - $CONSUMER_ROOT/.augment/templates/scripts/$name" >&2
-  echo "      - $PACKAGE_ROOT/.agent-src/templates/scripts/$name" >&2
+  echo "      - $PACKAGE_ROOT/dist/agent-src/templates/scripts/$name" >&2
   return 1
 }
 
@@ -373,14 +373,14 @@ cmd_mcp_run() {
 cmd_roadmap_progress() {
   require_python3
   local script
-  script="$(resolve_script ".agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
+  script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
   exec python3 "$script" "$@"
 }
 
 cmd_roadmap_progress_check() {
   require_python3
   local script
-  script="$(resolve_script ".agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
+  script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
   exec python3 "$script" --check "$@"
 }
 
@@ -392,7 +392,7 @@ cmd_first_run() {
 
 cmd_implement_ticket() {
   require_python3
-  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  local engine_root="$PACKAGE_ROOT/dist/agent-src/templates/scripts"
   if [[ ! -d "$engine_root/work_engine" ]]; then
     echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
     echo "    Reinstall the package and retry." >&2
@@ -407,7 +407,7 @@ cmd_work() {
   # subcommand makes the user-facing distinction explicit and lets the
   # two flows diverge later without churn at the wrapper layer.
   require_python3
-  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  local engine_root="$PACKAGE_ROOT/dist/agent-src/templates/scripts"
   if [[ ! -d "$engine_root/work_engine" ]]; then
     echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
     echo "    Reinstall the package and retry." >&2
@@ -632,7 +632,7 @@ HELP
   fi
 
   local hook_src
-  hook_src="$(resolve_script ".agent-src/templates/hooks/pre-commit-roadmap-progress" ".augment/templates/hooks/pre-commit-roadmap-progress")" || return 1
+  hook_src="$(resolve_script "dist/agent-src/templates/hooks/pre-commit-roadmap-progress" ".augment/templates/hooks/pre-commit-roadmap-progress")" || return 1
 
   if $print_only; then
     cat "$hook_src"
@@ -754,7 +754,7 @@ PY
 _hooks_install_regenerator() {
   # The helper module lives at src/scripts/_lib/ (6.0.0-D moved tooling under
   # src/). $PACKAGE_ROOT is the package root (two levels above src/scripts) and
-  # is the search base the regenerator needs to locate .agent-src/ / .augment/.
+  # is the search base the regenerator needs to locate dist/agent-src/ / .augment/.
   python3 "$SCRIPT_DIR/_lib/install_regenerator.py" "$CONSUMER_ROOT" "$PACKAGE_ROOT" 2>&1
   return $?
 }

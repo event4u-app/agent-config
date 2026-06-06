@@ -42,7 +42,7 @@ ACTION_NEEDED_FILE = ".augment/.first-run-action-needed.md"
 
 REGENERATOR_PATHS = (
     ".augment/scripts/update_roadmap_progress.py",
-    ".agent-src/scripts/update_roadmap_progress.py",
+    "dist/agent-src/scripts/update_roadmap_progress.py",
     # 6.0.x (ADR-051): uncondensed source container moved to src/agent-src/.
     "src/agent-src/scripts/update_roadmap_progress.py",
 )

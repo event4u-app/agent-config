@@ -102,7 +102,7 @@ def test_upgrade_does_not_create_wrapper_where_none_exists(tmp_path: Path) -> No
 
 def test_upgrade_leaves_source_repo_wrapper_untouched(tmp_path: Path) -> None:
     """The agent-config checkout itself is never re-stamped by upgrade."""
-    (tmp_path / ".agent-src").mkdir()  # source-repo signal
+    (tmp_path / "dist/agent-src").mkdir(parents=True)  # source-repo signal
     wrapper = tmp_path / "agent-config"
     wrapper.write_text(_STALE_WRAPPER)
     out = io.StringIO()

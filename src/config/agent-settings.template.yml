@@ -202,7 +202,7 @@ github:
 # in sync without re-running install/sync, and remove a class of stale-
 # copy path bugs.
 augment:
-  # When true, .augment/rules/*.md are symlinked into .agent-src/rules/.
+  # When true, .augment/rules/*.md are symlinked into dist/agent-src/rules/.
   # When false (default) or missing, they are copied as real files.
   rules_use_symlinks: false
 

@@ -1,7 +1,7 @@
 # Router-coverage corpus — agent-docs-edits family
 #
 # Phase 2 of road-to-corpus-expansion-evidence-based-cuts.md.
-# Exercises rules that fire on edits to `.agent-src/` /
+# Exercises rules that fire on edits to `dist/agent-src/` /
 # `.agent-src.uncondensed/` / skill files / condense operations.
 
 version: 1
@@ -15,14 +15,14 @@ prompts:
     prompt: "Edit this rule file to add a new trigger keyword `'webhook'`."
     expected_skills: []
     intended_triggers: [augment-source-of-truth]
-    open_files: [.agent-src/rules/some-rule.md]
+    open_files: [dist/agent-src/rules/some-rule.md]
 
   - id: agent-docs-edits-02
     category: router-coverage
     language: en
     prompt: "Update this skill — tighten the description and add an example."
     expected_skills: [skill-writing]
-    intended_triggers: [skill-quality]  # augment-source-of-truth removed: it guards .agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
+    intended_triggers: [skill-quality]  # augment-source-of-truth removed: it guards dist/agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
     open_files: [.agent-src.uncondensed/skills/some-skill/SKILL.md]
 
   - id: agent-docs-edits-03
@@ -46,7 +46,7 @@ prompts:
     prompt: "Editiere diese Rule und füge einen neuen Trigger hinzu."
     expected_skills: []
     intended_triggers: [augment-source-of-truth]
-    open_files: [.agent-src/rules/foo.md]
+    open_files: [dist/agent-src/rules/foo.md]
 
   - id: agent-docs-edits-06
     category: router-coverage

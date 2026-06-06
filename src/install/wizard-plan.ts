@@ -65,8 +65,8 @@ export const USER_SCOPE_PATHS: Readonly<Record<string, string>> = {
  * tools. Mirrors `_CLAUDE_SKILL_BUNDLE` in `scripts/install.py`.
  */
 const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
-    ['.agent-src/rules',    'rules'],
-    ['.agent-src/skills',   'skills'],
+    ['dist/agent-src/rules',    'rules'],
+    ['dist/agent-src/skills',   'skills'],
     // Commands ship to ~/.claude/commands/ — native Claude Code slash-
     // command surface. Verified empirically 2026-05-28: rich frontmatter
     // (disable-model-invocation, custom fields) tolerated; nested
@@ -74,8 +74,8 @@ const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     // converged on Option B (native slash-only) — see
     // agents/runtime/council/responses/claude-code-distribution.json
     // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
-    ['.agent-src/commands', 'commands'],
-    ['.agent-src/personas', 'personas'],
+    ['dist/agent-src/commands', 'commands'],
+    ['dist/agent-src/personas', 'personas'],
 ];
 
 /**
@@ -93,23 +93,23 @@ const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
 export const GLOBAL_DEPLOY_SOURCES: Readonly<Record<string, ReadonlyArray<readonly [string, string]>>> = {
     'claude-code': CLAUDE_SKILL_BUNDLE,
     augment: [
-        ['.agent-src/rules',     'rules'],
-        ['.agent-src/skills',    'skills'],
-        ['.agent-src/commands',  'commands'],
-        ['.agent-src/contexts',  'contexts'],
-        ['.agent-src/personas',  'personas'],
-        ['.agent-src/templates', 'templates'],
+        ['dist/agent-src/rules',     'rules'],
+        ['dist/agent-src/skills',    'skills'],
+        ['dist/agent-src/commands',  'commands'],
+        ['dist/agent-src/contexts',  'contexts'],
+        ['dist/agent-src/personas',  'personas'],
+        ['dist/agent-src/templates', 'templates'],
     ],
     cursor: [
-        ['.agent-src/rules',    'rules'],
-        ['.agent-src/commands', 'commands'],
-        ['.agent-src/personas', 'personas'],
+        ['dist/agent-src/rules',    'rules'],
+        ['dist/agent-src/commands', 'commands'],
+        ['dist/agent-src/personas', 'personas'],
     ],
     windsurf: [
-        ['.agent-src/rules', 'rules'],
+        ['dist/agent-src/rules', 'rules'],
     ],
     cline: [
-        ['.agent-src/rules', ''],
+        ['dist/agent-src/rules', ''],
     ],
     'gemini-cli': CLAUDE_SKILL_BUNDLE,
     codex:        CLAUDE_SKILL_BUNDLE,
@@ -124,9 +124,9 @@ export const GLOBAL_DEPLOY_SOURCES: Readonly<Record<string, ReadonlyArray<readon
     droid:        CLAUDE_SKILL_BUNDLE,
     warp:         CLAUDE_SKILL_BUNDLE,
     kiro: [
-        ['.agent-src/rules',    'rules'],
-        ['.agent-src/skills',   'steering'],
-        ['.agent-src/personas', 'personas'],
+        ['dist/agent-src/rules',    'rules'],
+        ['dist/agent-src/skills',   'steering'],
+        ['dist/agent-src/personas', 'personas'],
     ],
 };
 
@@ -148,7 +148,7 @@ export function expandAnchor(anchor: string, home?: string): string {
 export interface WizardExpandInputs {
     /** Stable tool IDs selected by the user in the wizard. */
     readonly toolIds: ReadonlyArray<string>;
-    /** Absolute path to the agent-config package root (source of `.agent-src/`). */
+    /** Absolute path to the agent-config package root (source of `dist/agent-src/`). */
     readonly packageRoot: string;
     /** Override for the user's home directory (tests only). */
     readonly home?: string;

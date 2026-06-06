@@ -1,7 +1,7 @@
 """Pack agent-config content into a Worker-bundle JSON blob.
 
-Walks `.agent-src/skills/`, `.agent-src/commands/`, `.agent-src/rules/`,
-`docs/guidelines/`, `.agent-src/contexts/` via the same Python loaders
+Walks `dist/agent-src/skills/`, `dist/agent-src/commands/`, `dist/agent-src/rules/`,
+`docs/guidelines/`, `dist/agent-src/contexts/` via the same Python loaders
 that drive the local stdio kernel, emits one JSON blob and a sidecar
 manifest for `internal/workers/mcp/`.
 
@@ -13,7 +13,7 @@ Outputs (relative to repo root):
 Hard-fail thresholds (Phase 2-5 council verdict D2):
 - Uncondensed JSON > 2 MB         → SystemExit(1).
 - Empty content (zero URIs)        → SystemExit(2). Catches a broken
-                                     `.agent-src/` tree before deploy.
+                                     `dist/agent-src/` tree before deploy.
 
 Cloud signature divergence vs local kernel (`metadata.compute_skill_set_signature`):
 - Local kernel:  SHA-256 over `(uri, mtime)` pairs — reproducible only

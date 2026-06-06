@@ -6,7 +6,7 @@ pre-move and post-move `task sync` + `task build-discovery` outputs
 match byte-for-byte except for `artefacts[].path` values.
 
 Captures sha256 of every file under:
-  - .agent-src/
+  - dist/agent-src/
   - .augment/
   - dist/discovery/discovery-manifest.json (also stores parsed copy
     with paths stripped so the post-move diff is path-only)
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = ROOT / "dist" / "migration" / "pre-move-snapshot.json"
 
 TARGETS = (
-    ROOT / ".agent-src",
+    ROOT / "dist/agent-src",
     ROOT / ".augment",
 )
 MANIFEST = ROOT / "dist" / "discovery" / "discovery-manifest.json"

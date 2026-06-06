@@ -84,7 +84,7 @@ def test_package_source_returns_existing_file(helper):
             # 6.0.x (ADR-051): uncondensed source container relocated to src/agent-src/.
             "src/agent-src/scripts",
             "packages/core/.agent-src.uncondensed",
-            ".agent-src/scripts",
+            "dist/agent-src/scripts",
             ".augment/scripts",
         )
     )

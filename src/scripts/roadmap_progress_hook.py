@@ -58,10 +58,10 @@ DASHBOARD_PATH = "agents/roadmaps-progress.md"
 REGEN_NAME = "update_roadmap_progress.py"
 # Distributed-content script subtrees that may ship the regenerator,
 # in priority order. Project-scoped installs land it under .augment/ or
-# .agent-src/; the package itself carries the same projection.
+# dist/agent-src/; the package itself carries the same projection.
 DIST_SCRIPT_SUBDIRS = (
     Path(".augment") / "scripts",
-    Path(".agent-src") / "scripts",
+    Path("dist/agent-src") / "scripts",
     Path(".agent-src.uncondensed") / "scripts",
 )
 # Set by the dispatcher (scripts/hooks/dispatch_hook.py) to its own
@@ -134,7 +134,7 @@ def _package_roots() -> list[Path]:
     """Package roots to search for the shipped regenerator, in priority
     order, when the consumer carries no project-local copy.
 
-    A global-only consumer (ADR-020) never has `.augment/` / `.agent-src/`
+    A global-only consumer (ADR-020) never has `.augment/` / `dist/agent-src/`
     in its repo — those trees are *distributed content*, which global-only
     installs keep in the globally-installed package, not the project. The
     regenerator therefore lives next to the running code, not next to the
@@ -215,7 +215,7 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
                 issue="prerequisite_missing",
                 detail=(
                     "update_roadmap_progress.py not found at any of: "
-                    ".augment/scripts/, .agent-src/scripts/, "
+                    ".augment/scripts/, dist/agent-src/scripts/, "
                     "src/agent-src/scripts/"
                 ),
                 resolution=(

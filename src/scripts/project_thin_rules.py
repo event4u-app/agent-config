@@ -33,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
 from _lib import token_count  # noqa: E402
 
-RULES_SOURCE = REPO_ROOT / ".agent-src" / "rules"
+RULES_SOURCE = REPO_ROOT / "dist/agent-src" / "rules"
 ROUTER = REPO_ROOT / "dist" / "router.json"
 
 

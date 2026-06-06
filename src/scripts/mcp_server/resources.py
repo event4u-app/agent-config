@@ -3,12 +3,12 @@
 Phase 3 (C1–C4) extends the read-only MCP surface from prompts (skills
 + commands) to read-only **resources** for the governance layer:
 
-- `rule://<basename>`             — `.agent-src/rules/*.md`
+- `rule://<basename>`             — `dist/agent-src/rules/*.md`
 - `guideline://<relpath-no-ext>`  — `docs/guidelines/**/*.md`
-- `context://<relpath-no-ext>`    — `.agent-src/contexts/**/*.md`
+- `context://<relpath-no-ext>`    — `dist/agent-src/contexts/**/*.md`
 
 All three are served with `mimeType=text/markdown`. The merge-at-sync
-contract is the same as for prompts: `.agent-src/` is already the
+contract is the same as for prompts: `dist/agent-src/` is already the
 package + project merged view; this loader does not re-merge.
 
 Description resolution: frontmatter `description:` wins, else the
@@ -71,7 +71,7 @@ def _load(path: Path, *, uri: str, fallback_name: str, kind: ResourceKind) -> Re
 
 def scan_rules(root: Path | None = None) -> tuple[list[Resource], list[str]]:
     base = root or _project_root()
-    rules_root = base / ".agent-src" / "rules"
+    rules_root = base / "dist/agent-src" / "rules"
     out: list[Resource] = []
     errors: list[str] = []
     if not rules_root.is_dir():
@@ -118,7 +118,7 @@ def scan_guidelines(root: Path | None = None) -> tuple[list[Resource], list[str]
 
 def scan_contexts(root: Path | None = None) -> tuple[list[Resource], list[str]]:
     base = root or _project_root()
-    return _scan_tree(base / ".agent-src" / "contexts", scheme="context", kind="context")
+    return _scan_tree(base / "dist/agent-src" / "contexts", scheme="context", kind="context")
 
 
 def load_all_resources(
@@ -167,9 +167,9 @@ class ResourceCache:
     def _current_signature(self) -> tuple[tuple[str, float], ...]:
         entries: list[tuple[str, float]] = []
         for sub in (
-            self._root / ".agent-src" / "rules",
+            self._root / "dist/agent-src" / "rules",
             self._root / "docs" / "guidelines",
-            self._root / ".agent-src" / "contexts",
+            self._root / "dist/agent-src" / "contexts",
         ):
             if not sub.is_dir():
                 continue

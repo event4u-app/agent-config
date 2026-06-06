@@ -37,7 +37,7 @@ def test_does_not_create_wrapper(tmp_path: Path) -> None:
 
 
 def test_noop_in_source_repo(tmp_path: Path) -> None:
-    (tmp_path / ".agent-src").mkdir()  # source-repo signal
+    (tmp_path / "dist/agent-src").mkdir(parents=True)  # source-repo signal
     wrapper = tmp_path / "agent-config"
     wrapper.write_text(_STALE)
     assert _run(tmp_path) == 0

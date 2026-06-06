@@ -2,9 +2,9 @@
 
 Claude Desktop has no filesystem convention for skills; the Customize →
 Skills UI accepts a ZIP per skill via the Upload button. This module
-walks ``<package_root>/.agent-src/skills/*`` and produces one
+walks ``<package_root>/dist/agent-src/skills/*`` and produces one
 ``<skill-name>.zip`` per directory into ``dest_dir``. It additionally
-walks ``<package_root>/.agent-src/commands/`` and produces one
+walks ``<package_root>/dist/agent-src/commands/`` and produces one
 ``<command-slug>.zip`` per command ``.md`` file so Claude Desktop sees
 the same surface that Claude Code exposes via the ``.claude/skills/``
 symlink wrapper layer.
@@ -14,7 +14,7 @@ Contract:
 - Each ZIP contains ``SKILL.md`` plus every sibling file under the same
   directory (recursive). Symlinks are dereferenced so the ZIP is
   self-contained.
-- Command bundles wrap a single ``.agent-src/commands/<path>.md`` file
+- Command bundles wrap a single ``dist/agent-src/commands/<path>.md`` file
   as ``SKILL.md`` inside the ZIP. Nested commands flatten to
   ``<cluster>-<leaf>`` slugs (e.g. ``council/default.md`` →
   ``council-default.zip``) to mirror ``condense.py``.
@@ -63,7 +63,7 @@ def _walk_skill_files(skill_dir: Path) -> list[tuple[Path, tuple[str, ...]]]:
     """Return ``[(abs_path, rel_parts), ...]`` for every file in the skill.
 
     Symlinks are followed (``os.walk(..., followlinks=True)``) so a
-    bundle from a symlinked entry under ``.agent-src/skills/`` contains
+    bundle from a symlinked entry under ``dist/agent-src/skills/`` contains
     the actual target content, not a dangling symlink.
     """
     out: list[tuple[Path, tuple[str, ...]]] = []
@@ -133,7 +133,7 @@ def build_skill_bundles(
     ``curation`` optionally restricts the build to the given skill
     names; ``None`` bundles every skill folder containing ``SKILL.md``.
     """
-    skills_root = package_root / ".agent-src" / "skills"
+    skills_root = package_root / "dist/agent-src" / "skills"
     if not skills_root.is_dir():
         return []
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -200,7 +200,7 @@ def build_command_bundles(
     ``.claude/skills/<slug>/SKILL.md`` symlinks.
 
     Slugs that collide with an existing skill folder under
-    ``<package_root>/.agent-src/skills/`` are skipped so the real skill
+    ``<package_root>/dist/agent-src/skills/`` are skipped so the real skill
     bundle wins.
 
     Returns the list of ZIP paths that were (re-)written this call. ZIPs
@@ -210,10 +210,10 @@ def build_command_bundles(
     ``curation`` optionally restricts the build to the given command
     slugs; ``None`` bundles every command file.
     """
-    commands_root = package_root / ".agent-src" / "commands"
+    commands_root = package_root / "dist/agent-src" / "commands"
     if not commands_root.is_dir():
         return []
-    skills_root = package_root / ".agent-src" / "skills"
+    skills_root = package_root / "dist/agent-src" / "skills"
     skill_names: set[str] = set()
     if skills_root.is_dir():
         skill_names = {entry.name for entry in skills_root.iterdir() if entry.is_dir()}

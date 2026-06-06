@@ -3,7 +3,7 @@
 #
 # Asserts:
 #   1. router.json lists exactly 10 kernel rules.
-#   2. Every kernel rule file exists at .agent-src/rules/<id>.md.
+#   2. Every kernel rule file exists at dist/agent-src/rules/<id>.md.
 #   3. 9 of 10 carry at least one Iron-Law fenced block.
 #      agent-authority is the dispatch index, exempt from the fence
 #      requirement (docs/contracts/smoke-contracts.md § 3.1).
@@ -54,8 +54,8 @@ fi
 # 2. every kernel rule has a file
 missing=0
 for id in $kernel_ids; do
-  if [ ! -f ".agent-src/rules/$id.md" ]; then
-    echo "❌ missing rule file: .agent-src/rules/$id.md"
+  if [ ! -f "dist/agent-src/rules/$id.md" ]; then
+    echo "❌ missing rule file: dist/agent-src/rules/$id.md"
     missing=$((missing + 1))
   fi
 done
@@ -68,12 +68,12 @@ for id in $kernel_ids; do
   if printf ' %s ' "$EXEMPT_FROM_FENCE" | grep -q " $id "; then
     continue
   fi
-  if [ -f ".agent-src/rules/$id.md" ]; then
-    fences=$(awk 'BEGIN{c=0;open=0} /^```/{ if(open==0){c++;open=1}else{open=0} } END{print c}' ".agent-src/rules/$id.md")
+  if [ -f "dist/agent-src/rules/$id.md" ]; then
+    fences=$(awk 'BEGIN{c=0;open=0} /^```/{ if(open==0){c++;open=1}else{open=0} } END{print c}' "dist/agent-src/rules/$id.md")
     if [ "$fences" -ge 1 ]; then
       fence_carriers=$((fence_carriers + 1))
     else
-      echo "❌ no Iron-Law fence in .agent-src/rules/$id.md"
+      echo "❌ no Iron-Law fence in dist/agent-src/rules/$id.md"
       fail=1
     fi
   fi

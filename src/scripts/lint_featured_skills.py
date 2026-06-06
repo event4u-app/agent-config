@@ -9,7 +9,7 @@ removed skills / commands) fail the build.
 Detection:
 
   - Scan `docs/featured-skills.md` for inline links of shape
-    `[`<token>`](../.agent-src/{skills|commands}/<path>.md)` inside the
+    `[`<token>`](../dist/agent-src/{skills|commands}/<path>.md)` inside the
     Featured tables. Strip the `/` prefix on commands and the leading
     slash on skill names.
   - Cross-check each token against the manifest's `artefacts` array
@@ -37,10 +37,10 @@ from pathlib import Path
 DOC = Path("docs/featured-skills.md")
 MANIFEST = Path("dist/discovery/discovery-manifest.json")
 
-# Matches `[`token`](../.agent-src/skills/<slug>/SKILL.md)` or
-# `[`/token`](../.agent-src/commands/<path>.md)`. Captures (category, slug-path).
+# Matches `[`token`](../dist/agent-src/skills/<slug>/SKILL.md)` or
+# `[`/token`](../dist/agent-src/commands/<path>.md)`. Captures (category, slug-path).
 LINK_RE = re.compile(
-    r"\[`/?[^`]+`\]\(\.\./\.agent-src/(skills|commands)/([^)]+?)\.md\)"
+    r"\[`/?[^`]+`\]\(\.\./dist/agent-src/(skills|commands)/([^)]+?)\.md\)"
 )
 PACK_HINT_RE = re.compile(r"--pack\s+([a-z][a-z0-9-]*)")
 
@@ -109,7 +109,7 @@ def main() -> int:
         seen.add(key)
         pool = skills if cat == "skills" else commands
         if slug not in pool:
-            missing.append(f"  - {cat}/{slug} (linked path: ../.agent-src/{cat}/{raw}.md)")
+            missing.append(f"  - {cat}/{slug} (linked path: ../dist/agent-src/{cat}/{raw}.md)")
 
     unknown_packs: list[str] = []
     for pack in PACK_HINT_RE.findall(body):

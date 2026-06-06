@@ -243,7 +243,7 @@ def _migrate_state_file(project: Path) -> Optional[str]:
 def _load_state_migrator():
     """Import the v0→v1 state migrator from the shipped engine."""
     pkg_root = Path(__file__).resolve().parents[3]
-    engine_root = pkg_root / ".agent-src" / "templates" / "scripts"
+    engine_root = pkg_root / "dist/agent-src" / "templates" / "scripts"
     if not (engine_root / "work_engine" / "migration").is_dir():
         return None
     if str(engine_root) not in sys.path:

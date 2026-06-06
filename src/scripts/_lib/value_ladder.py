@@ -147,7 +147,7 @@ def load_rung_from_router(
 
     `router` is the decoded `dist/router.json` dict.
     `rule_chars` is a `{rule_id: char_count}` mapping (typically built
-    by walking `.agent-src/rules/<id>.md`).
+    by walking `dist/agent-src/rules/<id>.md`).
     `charter_chars` is the always-loaded charter footprint.
 
     Returns a `pending` rung when the router is missing or has no

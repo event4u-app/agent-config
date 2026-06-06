@@ -34,8 +34,8 @@ COMMANDS_DIRS = [
 ]
 DOMAINS_DIR = REPO / "src" / "domains"
 # Consumer-facing projection — must also carry tier so .augment/commands/
-# (which symlinks to .agent-src/commands/) renders the tier filter.
-COMMANDS_DIR_CONDENSED = REPO / ".agent-src" / "commands"
+# (which symlinks to dist/agent-src/commands/) renders the tier filter.
+COMMANDS_DIR_CONDENSED = REPO / "dist/agent-src" / "commands"
 
 VALID_TIERS = frozenset({"0", "1", "2"})
 
@@ -164,7 +164,7 @@ def main() -> int:
     for commands_dir in COMMANDS_DIRS:
         rc |= lint(commands_dir, quiet=QUIET)
     # The condensed projection is the consumer-facing tree (via the
-    # .augment/commands → .agent-src/commands symlink). It must also
+    # .augment/commands → dist/agent-src/commands symlink). It must also
     # carry tier so the surface stays uniform.
     if COMMANDS_DIR_CONDENSED.is_dir():
         rc |= lint(COMMANDS_DIR_CONDENSED, quiet=QUIET)

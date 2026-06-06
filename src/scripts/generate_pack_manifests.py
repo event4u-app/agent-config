@@ -96,7 +96,7 @@ def _pack_homes() -> list[tuple[str, Path, str]]:
     seen: set[str] = set()
     # Core is homed under src/packs/core/ (like the other capability packs) — NOT
     # at src/agent-src/, because src/agent-src/ is a condense source root (prefix
-    # "") and a pack.yaml/README.md there would leak into the condensed .agent-src/
+    # "") and a pack.yaml/README.md there would leak into the condensed dist/agent-src/
     # output. Collection (`_collect_core`) still reads the full src/agent-src/
     # container by rglob, so home != artefact-root for core, but there is no
     # whitelist to fall out of date (ADR-052).

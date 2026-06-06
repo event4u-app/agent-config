@@ -116,7 +116,7 @@ def test_to_mcp_prompt_meta_shape_for_command() -> None:
 def test_scan_skills_finds_all_skill_md() -> None:
     prompts, errors = scan_skills()
     assert errors == [], f"unexpected loader errors: {errors}"
-    assert len(prompts) > 100, "expected >100 skills under .agent-src/skills/"
+    assert len(prompts) > 100, "expected >100 skills under dist/agent-src/skills/"
     for prompt in prompts:
         assert prompt.kind == "skill"
         assert prompt.description.strip()
@@ -126,7 +126,7 @@ def test_scan_skills_finds_all_skill_md() -> None:
 def test_scan_commands_finds_nested_commands() -> None:
     prompts, errors = scan_commands()
     assert errors == [], f"unexpected loader errors: {errors}"
-    assert len(prompts) > 50, "expected >50 commands under .agent-src/commands/"
+    assert len(prompts) > 50, "expected >50 commands under dist/agent-src/commands/"
     names = {p.name for p in prompts}
     # Nested commands keep the `cluster:sub` shape from frontmatter.
     assert any(":" in n for n in names), "expected at least one nested command"
@@ -143,7 +143,7 @@ def test_load_all_prompts_returns_sorted_unique() -> None:
 
 def test_load_all_prompts_skips_malformed(tmp_path: Path) -> None:
     """B3 — malformed frontmatter is logged, not fatal."""
-    skills = tmp_path / ".agent-src" / "skills"
+    skills = tmp_path / "dist/agent-src" / "skills"
     good = skills / "good-skill"
     good.mkdir(parents=True)
     (good / "SKILL.md").write_text(
@@ -163,7 +163,7 @@ def test_load_all_prompts_skips_malformed(tmp_path: Path) -> None:
 
 def test_prompt_cache_hot_reloads_on_mtime_change(tmp_path: Path) -> None:
     """B5 — PromptCache re-scans when SKILL.md mtime changes."""
-    skill_dir = tmp_path / ".agent-src" / "skills" / "demo"
+    skill_dir = tmp_path / "dist/agent-src" / "skills" / "demo"
     skill_dir.mkdir(parents=True)
     skill_md = skill_dir / "SKILL.md"
     skill_md.write_text(
@@ -188,7 +188,7 @@ def test_prompt_cache_hot_reloads_on_mtime_change(tmp_path: Path) -> None:
 
 
 def test_prompt_cache_lookup_uses_wire_name(tmp_path: Path) -> None:
-    skill_dir = tmp_path / ".agent-src" / "skills" / "demo"
+    skill_dir = tmp_path / "dist/agent-src" / "skills" / "demo"
     skill_dir.mkdir(parents=True)
     (skill_dir / "SKILL.md").write_text(
         '---\nname: demo\ndescription: "desc"\n---\nbody\n',
@@ -206,7 +206,7 @@ def test_prompt_cache_lookup_uses_wire_name(tmp_path: Path) -> None:
 
 def _seed_user_type_tree(root: Path) -> None:
     """Seed a tmp tree with three skills covering match / universal / outside."""
-    skills = root / ".agent-src" / "skills"
+    skills = root / "dist/agent-src" / "skills"
     (skills / "match-skill").mkdir(parents=True)
     (skills / "match-skill" / "SKILL.md").write_text(
         "---\nname: match-skill\ndescription: \"matches\"\n"
@@ -487,7 +487,7 @@ def test_server_accepts_loader_callable_for_hot_reload(tmp_path: Path) -> None:
 
     from scripts.mcp_server.server import build_server
 
-    skill_dir = tmp_path / ".agent-src" / "skills" / "demo"
+    skill_dir = tmp_path / "dist/agent-src" / "skills" / "demo"
     skill_dir.mkdir(parents=True)
     skill_md = skill_dir / "SKILL.md"
     skill_md.write_text(
@@ -574,7 +574,7 @@ def test_resource_cache_invalidates_on_mtime(tmp_path: Path) -> None:
     """C4 — ResourceCache re-scans when a tracked file's mtime moves."""
     import os
 
-    rules_dir = tmp_path / ".agent-src" / "rules"
+    rules_dir = tmp_path / "dist/agent-src" / "rules"
     rules_dir.mkdir(parents=True)
     rule_md = rules_dir / "demo.md"
     rule_md.write_text(
@@ -951,7 +951,7 @@ def test_lint_skills_rejects_non_list_paths(tmp_path: Path) -> None:
 def test_lint_skills_returns_json_payload_for_subset() -> None:
     """D2 — call with an explicit path returns the same shape as `--format json`."""
     cache = ToolCache()
-    target = REPO_ROOT / ".agent-src" / "skills" / "verify-completion-evidence" / "SKILL.md"
+    target = REPO_ROOT / "dist/agent-src" / "skills" / "verify-completion-evidence" / "SKILL.md"
     if not target.exists():  # pragma: no cover — repo invariant
         pytest.skip("fixture skill not present in this checkout")
     result = asyncio.run(

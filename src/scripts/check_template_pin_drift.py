@@ -6,7 +6,7 @@ CI guard for P3.3 of road-to-portable-runtime-and-update-check.md.
 A release bump of ``package.json`` must update
 ``agent_config_version`` in
 ``.agent-src.uncondensed/templates/agents/agent-project-settings.example.yml``
-(and its condensed twin under ``.agent-src/``) in lockstep. Otherwise
+(and its condensed twin under ``dist/agent-src/``) in lockstep. Otherwise
 a fresh ``init`` on a new project would bootstrap onto a stale pin,
 and the pin-resolver would re-exec back to the older version.
 
@@ -31,7 +31,7 @@ PACKAGE_JSON = REPO_ROOT / "package.json"
 
 # Source-of-truth template lives under whichever artefact root owns it
 # (legacy .agent-src.uncondensed/ pre-move, packages/*/.agent-src.uncondensed/
-# post-ADR-017). Condensed twin always lands at the flat .agent-src/ surface.
+# post-ADR-017). Condensed twin always lands at the flat dist/agent-src/ surface.
 _TEMPLATE_LOGICAL = "templates/agents/agent-project-settings.example.yml"
 
 
@@ -42,7 +42,7 @@ def _template_files() -> tuple[Path, ...]:
         files.append(src)
     else:
         files.append(REPO_ROOT / ".agent-src.uncondensed" / _TEMPLATE_LOGICAL)
-    files.append(REPO_ROOT / ".agent-src" / _TEMPLATE_LOGICAL)
+    files.append(REPO_ROOT / "dist/agent-src" / _TEMPLATE_LOGICAL)
     return tuple(files)
 PIN_LINE_RE = re.compile(r"^\s*agent_config_version\s*:\s*\"?([^\"\s#]*)\"?")
 

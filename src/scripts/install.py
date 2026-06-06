@@ -1965,18 +1965,18 @@ PROJECT_BRIDGE_MARKERS = {
 #
 # Tools that follow the markdown-skills convention (anchors lifted from
 # nextlevelbuilder/ui-ux-pro-max-skill) deploy the universal Anthropic-
-# shaped skill bundle — sourced from ``.agent-src/`` (the npm-shipped
+# shaped skill bundle — sourced from ``dist/agent-src/`` (the npm-shipped
 # canonical asset tree) — into ``<anchor>/skills/`` (or
-# ``<anchor>/steering/`` for kiro). ``.agent-src/rules`` is also copied
+# ``<anchor>/steering/`` for kiro). ``dist/agent-src/rules`` is also copied
 # where the destination is a true rules-aware tool root.
 #
-# All source paths reference ``.agent-src/<subdir>`` because that is the
+# All source paths reference ``dist/agent-src/<subdir>`` because that is the
 # only asset tree included in the npm tarball (see ``package.json#files``).
 # The legacy ``.augment/``, ``.claude/``, ``.cursor/`` projections only
 # exist in the development checkout — they are not shipped.
 _CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
-    (".agent-src/rules",    "rules"),
-    (".agent-src/skills",   "skills"),
+    ("dist/agent-src/rules",    "rules"),
+    ("dist/agent-src/skills",   "skills"),
     # Commands ship to the native Claude Code user-scope slash-command
     # surface: `~/.claude/commands/<cluster>/<sub>.md` resolves as
     # `/<cluster>:<sub>` per Claude Code's filesystem-channel convention
@@ -1987,29 +1987,29 @@ _CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
     # 2026-05-28 (claude-sonnet-4-5 + gpt-4o, design mode) verdict
     # Option B (native slash-only). See
     # `agents/runtime/council/responses/claude-code-distribution.json`. <!-- council-ref-allowed: decision provenance comment -->
-    (".agent-src/commands", "commands"),
-    (".agent-src/personas", "personas"),
+    ("dist/agent-src/commands", "commands"),
+    ("dist/agent-src/personas", "personas"),
 ]
 GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
     "claude-code": _CLAUDE_SKILL_BUNDLE,
     "augment": [
-        (".agent-src/rules",     "rules"),
-        (".agent-src/skills",    "skills"),
-        (".agent-src/commands",  "commands"),
-        (".agent-src/contexts",  "contexts"),
-        (".agent-src/personas",  "personas"),
-        (".agent-src/templates", "templates"),
+        ("dist/agent-src/rules",     "rules"),
+        ("dist/agent-src/skills",    "skills"),
+        ("dist/agent-src/commands",  "commands"),
+        ("dist/agent-src/contexts",  "contexts"),
+        ("dist/agent-src/personas",  "personas"),
+        ("dist/agent-src/templates", "templates"),
     ],
     "cursor": [
-        (".agent-src/rules",    "rules"),
-        (".agent-src/commands", "commands"),
-        (".agent-src/personas", "personas"),
+        ("dist/agent-src/rules",    "rules"),
+        ("dist/agent-src/commands", "commands"),
+        ("dist/agent-src/personas", "personas"),
     ],
     "windsurf": [
-        (".agent-src/rules", "rules"),
+        ("dist/agent-src/rules", "rules"),
     ],
     "cline": [
-        (".agent-src/rules", ""),
+        ("dist/agent-src/rules", ""),
     ],
     # Markdown-skills tools — mirror the universal skill bundle into the
     # tool-specific anchor. Subpath matches the reference repo's
@@ -2030,9 +2030,9 @@ GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
     # Kiro reads from `steering/` not `skills/` (per
     # platforms/kiro.json#folderStructure.skillPath).
     "kiro": [
-        (".agent-src/rules",    "rules"),
-        (".agent-src/skills",   "steering"),
-        (".agent-src/personas", "personas"),
+        ("dist/agent-src/rules",    "rules"),
+        ("dist/agent-src/skills",   "steering"),
+        ("dist/agent-src/personas", "personas"),
     ],
 }
 

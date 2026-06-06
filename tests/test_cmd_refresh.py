@@ -49,7 +49,7 @@ def test_refresh_global_propagates_install_failure() -> None:
 
 
 def test_refresh_project_noops_in_source_repo(tmp_path: Path) -> None:
-    (tmp_path / ".agent-src").mkdir()  # marks an agent-config checkout
+    (tmp_path / "dist/agent-src").mkdir(parents=True)  # marks an agent-config checkout
     out = io.StringIO()
     rc = cmd_refresh.main(["--project"], project_root=tmp_path, out=out)
     assert rc == 0

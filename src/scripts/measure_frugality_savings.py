@@ -60,7 +60,7 @@ def metric_a_footprint(root: Path) -> dict:
     tier1_total = 0
     tier2_total = 0
     for name, tier in CANON_RULES:
-        condensed = root / ".agent-src" / "rules" / f"{name}.md"
+        condensed = root / "dist/agent-src" / "rules" / f"{name}.md"
         chars = len(_read(condensed))
         tokens = chars // 4  # rough 4-char/token approximation
         rows.append({"rule": name, "tier": tier, "chars": chars, "tokens_approx": tokens})
@@ -70,7 +70,7 @@ def metric_a_footprint(root: Path) -> dict:
             tier1_total += chars
         elif tier == "tier_2":
             tier2_total += chars
-    charter_chars = len(_read(root / ".agent-src" / "contexts" / "contracts" / f"{CHARTER}.md"))
+    charter_chars = len(_read(root / "dist/agent-src" / "contexts" / "contracts" / f"{CHARTER}.md"))
     return {
         "rules": rows,
         "kernel_total_chars": kernel_total,
@@ -117,7 +117,7 @@ def metric_c_condensation(root: Path) -> dict:
     rows = []
     for name, _ in CANON_RULES:
         un = len(_read(root / ".agent-src.uncondensed" / "rules" / f"{name}.md"))
-        co = len(_read(root / ".agent-src" / "rules" / f"{name}.md"))
+        co = len(_read(root / "dist/agent-src" / "rules" / f"{name}.md"))
         delta = un - co
         ratio = round(co / un, 3) if un else 0
         rows.append({"rule": name, "uncondensed_chars": un, "condensed_chars": co, "delta": delta, "ratio": ratio})

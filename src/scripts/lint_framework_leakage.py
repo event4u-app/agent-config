@@ -159,7 +159,7 @@ def is_inventory_file(path: Path) -> bool:
       - `<src>/contexts/**/*.md` — cross-reference tables, guideline
         catalogs, infrastructure maps.
       - top-level `README.md` directly under `.agent-src.uncondensed/`
-        or `.agent-src/` — package surface inventory.
+        or `dist/agent-src/` — package surface inventory.
     """
     try:
         rel = path.relative_to(REPO_ROOT)
@@ -169,7 +169,7 @@ def is_inventory_file(path: Path) -> bool:
     if "contexts" in parts:
         return True
     if rel.name == "README.md" and len(parts) == 2 and parts[0] in {
-        ".agent-src.uncondensed", ".agent-src",
+        ".agent-src.uncondensed", "dist/agent-src",
     }:
         return True
     return False
