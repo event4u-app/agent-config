@@ -73,6 +73,6 @@ The CI guarantee is structural reachability — the linter would fail if a provi
 ## See also
 
 - [`docs/contracts/provider-lifecycle.md`](../../docs/contracts/provider-lifecycle.md) — the full tier definitions, promotion / demotion criteria, and day-one assignment matrix.
-- [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md) — the four-method shell surface every adapter implements; the tier tag is read alongside this contract.
+- [`src/scripts/ai-video/lib/adapter-contract.md`](../../src/scripts/ai-video/lib/adapter-contract.md) — the four-method shell surface every adapter implements; the tier tag is read alongside this contract.
 - [`media-governance-routing`](media-governance-routing.md) — sibling tier-2a rule that surfaces the prompt-side policy layer; this rule covers the provider-side discipline.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the one-question-per-turn discipline the refuse-and-surface path uses.
