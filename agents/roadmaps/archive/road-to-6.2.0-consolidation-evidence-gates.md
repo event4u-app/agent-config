@@ -31,13 +31,13 @@ named gate, each as an independent PR with a stated rollback path.
 > in `src/flows/surface-map.yaml` (they no longer count as user-work flow
 > commands). This phase does the physical migration: command source → skill.
 
-- [ ] **Step 7a:** Convert `skill/preview` and `skills/discover` to skills —
+- [~] **Step 7a:** Convert `skill/preview` and `skills/discover` to skills —
   delete the command source under `src/domains/meta/`, author `src/skills/<slug>/SKILL.md`,
   regenerate projections, keep a deprecation pointer. **Gate:** prove the
   inline-invoke path (a skill is reachable by description-match without command
   ceremony) with a test, before deletion. Lowest-risk leaves first.
   <!-- blocked: inline-invoke PROOF shipped (tests/test_inline_invoke_reachability.py); CONVERSION deferred per AI-council (2026-06-06, ADR-057) — slug-collision projection-suppression + untested cross-provider description-match. Reopens with cross-provider validation. -->
-- [ ] **Step 7b:** Convert `review-routing` (command form; skill form already
+- [-] **Step 7b:** Convert `review-routing` (command form; skill form already
   exists at `src/skills/review-routing`) and `rule-compliance-audit`. **Gate
   (council, hard):** a guaranteed debug-bypass path that does NOT depend on the
   agent's task-routing pipeline — these are the tools used to debug auto-detection
@@ -80,7 +80,7 @@ named gate, each as an independent PR with a stated rollback path.
 
 ## Phase 4: Step 9b — Flows runtime navigation (after the doc proves itself)
 
-- [ ] **Step 9b:** Make the Flows view the *runtime* primary surface (CLI/help
+- [~] **Step 9b:** Make the Flows view the *runtime* primary surface (CLI/help
   navigation, profile-surfaced command grouping), beyond the generated
   `docs/command-flows.md` doc shipped in 6.1.0. **Gate (council):** signal that
   users actually navigate by the flow-organized doc (reference it in
@@ -92,6 +92,16 @@ named gate, each as an independent PR with a stated rollback path.
 > absent; doc stays the observation vehicle. Council-suggested follow-up: passive
 > flow-navigation telemetry (own roadmap, not this cycle). See
 > [`ADR-057`](../../docs/decisions/ADR-057-consolidation-evidence-gate-outcomes.md).
+
+> **AI-council outcome on deferred-resolution (claude-sonnet-4-5 + gpt-4o,
+> 2026-06-06, 2 rounds):** converged on **keep-in-archive (intentional drop)** —
+> both `[~]` items are signal-gated waiting conditions, not schedulable work; a
+> follow-up roadmap would be a category error (draft = invisible, ready-blocked =
+> dashboard noise). Reopen conditions stay recorded in
+> [`ADR-057`](../../docs/decisions/ADR-057-consolidation-evidence-gate-outcomes.md)
+> §§ 7a/9b. Divergence (supplementary tracking: embedded code-TODO triggers vs. a
+> deferred-work register) noted, not adopted — both proposals target artifacts
+> that do not exist yet or were rebutted in round 2.
 
 ## Acceptance Criteria
 
