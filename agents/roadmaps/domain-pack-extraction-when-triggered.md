@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: active
+status: draft
 ---
 
 # Roadmap: Domain-Pack Extraction (when triggered)
