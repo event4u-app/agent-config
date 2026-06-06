@@ -1,0 +1,208 @@
+# Command → flow / platform-surface classification — road-to-6.1.0 Step 9.
+#
+# THE FLOWS PRIMARY VIEW (machine-readable backbone). This is the authoritative
+# flat index mapping EVERY `src/domains/<pack>/**/command.md` to its flow or
+# platform surface, so the layered model `Profile → Pack → Flow → Command →
+# Skill → Rule` has a real, lintable command→flow edge — commands become flow
+# members, not a flat list.
+#
+# Two layers:
+#   * The four USER-WORK flows (discovery / implementation / review / delivery)
+#     carry rich definitions (entry_points / default_path / skills) in
+#     `src/flows/<flow>.yaml`, validated by `scripts/lint_flows.py`.
+#   * THIS file is the COMPLETE classification — it additionally covers the
+#     non-user-work platform surfaces (`agent-admin` is the platform/system
+#     surface, NOT a flow — feedback-6; plus `product` features, `session`,
+#     and the domain flows `media` / `marketing` / `fun`).
+#
+# Refs are LOGICAL command paths (the command `name:` with `:` → `/`), the same
+# shape `src/flows/*.yaml` use. Validated by
+# `scripts/lint_command_flow_coverage.py`: every `src/domains` command appears
+# in exactly one bucket, every ref backs a real command, every bucket is allowed.
+#
+# Adding a command → add its ref here (the lint fails the build otherwise).
+# Adding a new user-work flow is an ADR-gated governance decision (the closed
+# set is fixed in lint_flows.py + flow.schema.json).
+version: 1
+
+# Closed user-work flow set (rich definitions in src/flows/<flow>.yaml).
+user_work_flows: [discovery, implementation, review, delivery]
+# Non-user-work surfaces. `agent-admin` is the platform/system surface, not a
+# flow; `product` are deliberately-started features; domain flows cover media /
+# marketing / fun; `session` is the meta session surface.
+platform_surfaces: [product, agent-admin, session, media, marketing, fun]
+
+commands:
+  discovery:
+    - analyze-reference-repo
+    - bug-investigate
+    - estimate-ticket
+    - feature
+    - feature/explore
+    - feature/plan
+    - feature/refactor
+    - feature/roadmap
+    - project-analyze
+    - project-health
+    - refine-ticket
+
+  implementation:
+    - bug-fix
+    - e2e-heal
+    - e2e-plan
+    - feature/dev
+    - implement-ticket
+    - jira-ticket
+    - module/create
+    - tests
+    - tests/create
+    - tests/execute
+    - update-form-request-messages
+    - work
+
+  review:
+    - fix/ci
+    - judge
+    - judge/on-diff
+    - judge/solo
+    - judge/steps
+    - quality-fix
+    - review-changes
+    - threat-model
+
+  delivery:
+    - fix
+    - fix/portability
+    - fix/pr-bot-comments
+    - fix/pr-comments
+    - fix/pr-developer-comments
+    - fix/refs
+    - fix/seeder
+    - commit
+    - commit/in-chunks
+    - pr/create
+    - pr/create/description-only
+    - prepare-for-review
+
+  # Product-surface — deliberately-started FEATURES (not daily flow members,
+  # not buried as skills). council / challenge-me / research / roadmap.
+  product:
+    - challenge-me
+    - challenge-me/vision
+    - challenge-me/with-docs
+    - council
+    - council/analysis
+    - council/debate
+    - council/default
+    - council/design
+    - council/optimize
+    - council/pr
+    - grill-me
+    - research
+    - research/deep
+    - research/report
+    - roadmap
+    - roadmap/ai-council
+    - roadmap/create
+    - roadmap/process-full
+    - roadmap/process-phase
+    - roadmap/process-step
+
+  # Platform / system surface (feedback-6) — NOT a flow. memory · analytics ·
+  # governance · config · introspection, reached on demand.
+  agent-admin:
+    - agents
+    - agents/audit
+    - agents/init
+    - agents/optimize
+    - agents/user
+    - agents/user/accept
+    - agents/user/init
+    - agents/user/review
+    - agents/user/show
+    - agents/user/update
+    - analytics
+    - analytics/prune
+    - analytics/show
+    - chat-history
+    - chat-history/import
+    - chat-history/learn
+    - chat-history/show
+    - check-current-md
+    - condense
+    - context
+    - context/create
+    - context/refactor
+    - cost-report
+    - knowledge
+    - knowledge/cross-repo
+    - knowledge/forget
+    - knowledge/ingest
+    - knowledge/list
+    - memory
+    - memory/add
+    - memory/learn-low-impact
+    - memory/load
+    - memory/mine-session
+    - memory/promote
+    - memory/propose
+    - module
+    - module/explore
+    - optimize
+    - optimize-prompt
+    - optimize/agents-dir
+    - optimize/augmentignore
+    - optimize/rtk
+    - optimize/skills
+    - orchestrate
+    - override
+    - override/create
+    - override/manage
+    - package-reset
+    - package-test
+    - profile
+    - profile/activate
+    - profile/deactivate
+    - profile/show
+    - review-routing
+    - rule-compliance-audit
+    - set-cost-profile
+    - skill
+    - skill/preview
+    - skills
+    - skills/discover
+    - sync-agent-settings
+    - sync-gitignore
+    - sync-gitignore/fix
+    - upstream-contribute
+
+  session:
+    - agent-handoff
+    - agent-status
+    - mode
+
+  media:
+    - image
+    - image/analyse
+    - image/create
+    - image/verify
+    - video
+    - video/from-script
+    - video/from-song
+    - video/scene
+    - video/stitch
+    - video/storyboard
+
+  marketing:
+    - ghostwriter
+    - ghostwriter/delete
+    - ghostwriter/fetch
+    - ghostwriter/list
+    - ghostwriter/show
+    - ghostwriter/write
+    - post-as
+    - post-as/ghostwriter
+    - post-as/me
+
+  fun:
+    - prediction-pool
