@@ -65,6 +65,11 @@ def manifest_names(manifest: dict) -> tuple[set[str], set[str], set[str]]:
             skills.add(name)
         elif cat == "command":
             commands.add(name)
+            # Deprecation aliases are permanent stubs (ADR-057 § 8a) and
+            # still resolve — docs may feature a command by its alias.
+            for alias in art.get("replaces") or []:
+                if isinstance(alias, str) and alias:
+                    commands.add(alias)
     packs = {p.get("id") for p in manifest.get("packs", []) if p.get("id")}
     return skills, commands, packs
 

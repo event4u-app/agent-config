@@ -24,7 +24,15 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.agent_src import artefact_roots  # noqa: E402
 
-COMMANDS_DIRS = [root / "commands" for root in artefact_roots() if (root / "commands").is_dir()]
+# Post-ADR-051 the command sources live at src/domains/<pack>/**/command.md;
+# legacy artefact-root commands/ dirs are kept for older checkouts. A root
+# whose commands/ holds only evals (no .md) is not a command source.
+COMMANDS_DIRS = [
+    root / "commands" for root in artefact_roots()
+    if (root / "commands").is_dir()
+    and any(p.name != "AGENTS.md" for p in (root / "commands").rglob("*.md"))
+]
+DOMAINS_DIR = REPO / "src" / "domains"
 # Consumer-facing projection — must also carry tier so .augment/commands/
 # (which symlinks to .agent-src/commands/) renders the tier filter.
 COMMANDS_DIR_CONDENSED = REPO / ".agent-src" / "commands"
@@ -106,14 +114,53 @@ def lint(commands_dir: Path, *, quiet: bool = False) -> int:
     return 0
 
 
+def lint_domain_sources(*, quiet: bool = False) -> int:
+    """Lint src/domains/**/command.md — the post-ADR-051 authoring tree."""
+    commands = sorted(DOMAINS_DIR.rglob("command.md"))
+    if not commands:
+        print(
+            f"lint_command_tiers: no command.md found under {DOMAINS_DIR}",
+            file=sys.stderr,
+        )
+        return 1
+    missing = [
+        c.relative_to(REPO).as_posix() for c in commands
+        if parse_tier(c.read_text(encoding="utf-8")) is None
+    ]
+    invalid = [
+        (c.relative_to(REPO).as_posix(), t) for c in commands
+        if (t := parse_tier(c.read_text(encoding="utf-8"))) is not None
+        and t not in VALID_TIERS
+    ]
+    if missing or invalid:
+        print(
+            f"❌  lint_command_tiers: {len(missing)} missing, "
+            f"{len(invalid)} invalid (of {len(commands)} domain commands)",
+            file=sys.stderr,
+        )
+        for name in missing:
+            print(f"    missing tier: {name}", file=sys.stderr)
+        for name, tier in invalid:
+            print(f"    invalid tier '{tier}': {name}", file=sys.stderr)
+        return 1
+    if not quiet:
+        print(
+            f"✅  lint_command_tiers: {len(commands)} domain commands, "
+            f"all tier values valid"
+        )
+    return 0
+
+
 def main() -> int:
-    if not COMMANDS_DIRS:
+    if not COMMANDS_DIRS and not DOMAINS_DIR.is_dir():
         print(
             "lint_command_tiers: no commands dir found under any artefact root",
             file=sys.stderr,
         )
         return 1
     rc = 0
+    if DOMAINS_DIR.is_dir():
+        rc |= lint_domain_sources(quiet=QUIET)
     for commands_dir in COMMANDS_DIRS:
         rc |= lint(commands_dir, quiet=QUIET)
     # The condensed projection is the consumer-facing tree (via the

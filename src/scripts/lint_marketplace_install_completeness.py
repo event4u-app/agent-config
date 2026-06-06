@@ -71,11 +71,17 @@ def load_hook_commands(hooks_path: Path) -> list[tuple[str, str]]:
     return out
 
 
-# Pattern: `"$CLAUDE_PROJECT_DIR"/agent-config <subcommand> [args...]`.
+# Pattern A: `"$CLAUDE_PROJECT_DIR"/agent-config <subcommand> [args...]`.
 # Accepts both quoted and bare CLAUDE_PROJECT_DIR.
 _CMD_RE = re.compile(
     r'(?:"?\$\{?CLAUDE_PROJECT_DIR\}?"?/)?agent-config\s+([a-zA-Z0-9:_-]+)'
 )
+# Pattern B (ADR-020 global-binary fallback wrapper):
+#   BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config;
+#   "$BIN" <subcommand> [args...]
+# The subcommand follows the `"$BIN"` invocation; the wrapper must still
+# resolve an agent-config binary for the line to qualify.
+_BIN_CMD_RE = re.compile(r'"\$\{?BIN\}?"\s+([a-zA-Z0-9:_-]+)')
 
 
 def extract_subcommand(command_line: str) -> str | None:
@@ -83,6 +89,10 @@ def extract_subcommand(command_line: str) -> str | None:
     m = _CMD_RE.search(command_line)
     if m:
         return m.group(1)
+    if "agent-config" in command_line:
+        m = _BIN_CMD_RE.search(command_line)
+        if m:
+            return m.group(1)
     return None
 
 
