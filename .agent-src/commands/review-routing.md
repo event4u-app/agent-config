@@ -17,6 +17,13 @@ packs:
 
 # review-routing
 
+> **Intentionally a command, not a skill** (ADR-057, road-to-6.2.0 Step 7b).
+> Meta-tool that debugs task-routing itself. A skill reached only by
+> description-match cannot debug a broken description-matcher (circular
+> dependency); the explicit `/review-routing` command is the guaranteed
+> debug-bypass. Skill-conversion gate **declined**; the `review-routing` skill
+> remains the implementation this command dispatches to.
+
 ## Instructions
 
 Produce a review-routing block for the current diff — owner-mapped

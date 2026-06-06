@@ -17,6 +17,12 @@ packs:
 
 # rule-compliance-audit
 
+> **Intentionally a command, not a skill** (ADR-057, road-to-6.2.0 Step 7b).
+> Meta-tool that inspects rule-trigger quality — the auto-detection machinery
+> itself. A description-match-only skill cannot debug a broken
+> description-matcher; the explicit `/rule-compliance-audit` command is the
+> guaranteed debug-bypass. Skill-conversion gate **declined**.
+
 ## Instructions
 
 ### 1. Inventory all rules
