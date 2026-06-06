@@ -13,8 +13,8 @@ parent_roadmap: road-to-video-provider-multiplexers
 > orchestration pattern (beat-driven variable-length segmentation + per-segment
 > lyric↔audio modality switch + energy→intensity), modernized. Generalize the
 > existing vocal-map sign-off into ONE storyboard/cost preview gate over ALL
-> prompts. Replace the proposed `creative-brief` broadcast with a
-> `prompt-validator` skill that blocks on contradiction (skills are
+> prompts. Replace the proposed `creative-brief` broadcast with a new skill,
+> `prompt-validator`, that blocks on contradiction (skills are
 > deterministic — the risk is contradiction, not drift). Lip-sync is a separate
 > post-process adapter, sync.so hosted first, kept sparse (singing lip-sync is
 > genuinely hard). Depends on the multiplexers' `model-capabilities` manifest.
@@ -46,7 +46,7 @@ where it holds up.
 ## Phase 4 — Unified preview gate + prompt-validator
 
 - [ ] Merge the vocal-map sign-off and the batch cost gate into ONE storyboard/cost preview (shot list + per-shot prompt + total estimated cost) shown before any spend.
-- [ ] Add a `prompt-validator` skill that runs before the gate: collect every prompt in the run, block on contradiction (style / character / physics mismatch) with a specific error.
+- [ ] Add a new skill, `prompt-validator`, that runs before the gate: collect every prompt in the run, block on contradiction (style / character / physics mismatch) with a specific error.
 
 ## Phase 5 — Lip-sync post-process adapter
 
