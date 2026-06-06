@@ -526,6 +526,18 @@ tasks:
     desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncondensed/, all paths under package.json#files)
     cmd: python3 src/scripts/check_public_catalog_links.py {{.QUIET_FLAG}}
 
+  check-md-language:
+    silent: true
+    desc: |
+      Enforce docs/ are English (language-and-tone § ".md ALWAYS English").
+      Scans every docs/**/*.md except the two generated catalogs
+      (catalog.md / skills-catalog.md), whose German is sanctioned
+      trigger-example data sourced from skill descriptions — see
+      agents/reports/6.0.0-e-md-language-audit.md. Legitimately-required
+      German (verbatim provenance quotes, quoted trigger/forbidden-pattern
+      examples) is preserved via per-line `<!-- md-language-check: ignore -->`.
+    cmd: python3 src/scripts/check_md_language.py $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' | sort) {{.QUIET_FLAG}}
+
   check-command-count:
     silent: true
     desc: Verify README/AGENTS.md/docs/getting-started.md command counts match the cluster registry (active vs. shim split)
