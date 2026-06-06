@@ -112,3 +112,30 @@ Before saving any `.md` under `.augment/`, `.agent-src/`,
 
 Any hit → translate to English, OR move to a `DE: … · EN: …` anchor
 block (the only allowed German location).
+
+## Generated `.md` — fix the generator, never the page
+
+When a `.md` page is produced by a generator (e.g. `docs/value.md` from
+`scripts/render_value_md.py`, the catalogs from the index/catalog
+generators), German lives in the **generator's source strings** or the
+data it reads — fix it there so the page regenerates English. Hand-edits
+to a generated page are overwritten on the next regen. If a generated
+page legitimately carries German (e.g. catalogs echoing skill-description
+**trigger-phrase examples**), the page belongs **outside** the docs
+language gate — scanning a derived artefact is the wrong layer; the source
+artefact is what the relevant linter checks.
+
+## Sanctioned escapes for genuinely-required German
+
+Two — and only two — escapes are allowed when a line must carry German:
+
+1. **Labeled `DE: … · EN: …` anchor** — the only location for German
+   *prose* (a translated passage shown alongside its English).
+2. **Per-line `<!-- md-language-check: ignore -->` marker** — for a single
+   line that quotes a German **trigger-phrase example** (illustrating
+   German-input handling) or a **verbatim provenance quote** (an
+   immutable historical citation, e.g. the original user ask in an ADR).
+
+The marker is line-scoped and auditable. Never scatter it through a
+generated file to silence the linter — fix the generator instead. Both
+escapes are recognized by `scripts/check_md_language.py`.

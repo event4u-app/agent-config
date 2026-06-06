@@ -57,10 +57,8 @@ Examples + CLI spacing rules + wrong-vs-correct: [`language-and-tone-examples`](
 
 ## `.md` files — ALWAYS English
 
-Every text inside `.md` under `src/`, `docs/`, `.augment/`, `.agent-src/`, `.agent-src.uncondensed/`, `agents/`: headings, paragraphs, bullets, option labels, prompts, placeholders, ASCII labels, table headers / content — **prose AND examples**. Agent translates at runtime.
+All `.md` text under `src/`, `docs/`, `.augment/`, `.agent-src/`, `.agent-src.uncondensed/`, `agents/` — prose AND examples, **including generated output** (fix the generator's source strings, never hand-edit the generated page). Agent translates at runtime.
 
-**Generated `.md` — fix the generator, never the page.** When a `.md` is produced by a generator (e.g. `value.md`, the catalogs), its German lives in the generator's **source strings** or the data it reads — fix it there so the page regenerates English. Hand-edits to a generated page are overwritten on the next regen.
+Genuinely-required German uses a sanctioned escape only: a labeled `DE: … · EN: …` anchor (German *prose*), or a per-line `<!-- md-language-check: ignore -->` marker (one quoted trigger example / verbatim provenance quote — never scattered through a generated file).
 
-**Genuinely-required German — sanctioned escapes only.** Quoting German inside English prose is forbidden EXCEPT via one of: a labeled `DE: … · EN: …` anchor block (only location for German *prose*), OR a per-line `<!-- md-language-check: ignore -->` marker for a single line that must quote a German **trigger-phrase example** or a **verbatim provenance quote**. The marker is line-scoped and auditable — never scatter it through a generated file; fix the generator instead.
-
-Pre-save detection heuristic (umlauts / German function words / non-English quoted phrases): [`language-and-tone-examples § pre-save detection`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#md-files--pre-save-detection-heuristic).
+Generated-output rule, escape mechanics, pre-save detection heuristic: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#md-files--pre-save-detection-heuristic).
