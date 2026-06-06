@@ -96,6 +96,6 @@ A bench run counts as a real measurement (rather than a plumbing health check) w
 
 ## See also
 
-- `agents/roadmaps/road-to-package-impact-benchmark.md` — the roadmap that built this surface.
+- the `road-to-package-impact-benchmark` roadmap (archived) — built this surface.
 - `internal/bench/ab/README.md` — the Shape A vs. Shape B decision and the layout.
 - `docs/contracts/benchmark-report-schema.md` — per-report JSON shape (sibling contract).

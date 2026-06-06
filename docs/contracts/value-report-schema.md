@@ -160,7 +160,7 @@ The optional `.md` dump carries:
 ## Cross-references
 
 - Semantics — [`value-dashboard-spec.md`](value-dashboard-spec.md)
-- Roadmap — [`agents/roadmaps/road-to-readable-value-dashboard.md`](../../agents/roadmaps/road-to-readable-value-dashboard.md)
+- Roadmap — the `road-to-readable-value-dashboard` roadmap (archived)
 - Pricing source — [`internal/bench/pricing.yaml`](../../internal/bench/pricing.yaml)
 - Rung normaliser — [`scripts/_lib/value_ladder.py`](../../src/scripts/_lib/value_ladder.py)
 - Report assembler — [`scripts/_lib/value_report.py`](../../src/scripts/_lib/value_report.py)

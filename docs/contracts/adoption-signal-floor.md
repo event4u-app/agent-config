@@ -7,7 +7,7 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 # Adoption Signal Floor
 
 > **Status** · v0 / beta · 2026-05-26. Phase D Step 1 of
-> [`road-to-adoption-proof-and-ci-green.md`](../../agents/roadmaps/road-to-adoption-proof-and-ci-green.md).
+> the `road-to-adoption-proof-and-ci-green` roadmap (archived).
 > Defines the privacy-floor for adoption-signal collection — what
 > the package may measure, what it may NOT, and the opt-in gate
 > consumer-side telemetry would need to clear before it could ship.
