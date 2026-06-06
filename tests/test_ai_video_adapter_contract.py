@@ -143,6 +143,35 @@ def test_dry_run_emits_contract_shaped_stdout(adapter: str) -> None:
     )
 
 
+@pytest.mark.parametrize("adapter", ADAPTERS)
+def test_dry_run_surfaces_cost_estimate(adapter: str) -> None:
+    """Phase 3 — cost transparency. ``dry-run`` MUST surface a numeric
+    ``cost_estimate`` (modeled per-job USD) so the batch cost gate can sum
+    it across scenes before any live call and the ``--max-spend-usd``
+    kill-switch has a number to enforce against. The contract treats a
+    *missing* estimate as ``unknown`` (never ``0``); the committed fixtures
+    carry a representative modeled value so the dry-run gate is exercisable.
+    """
+    payload = json.loads(_run_adapter(adapter, "dry-run").stdout)
+    assert "cost_estimate" in payload, (
+        f"{adapter}: dry-run missing cost_estimate (batch cost gate would "
+        f"show this scene as 'unknown')"
+    )
+    cost = payload["cost_estimate"]
+    assert isinstance(cost, (int, float)) and not isinstance(cost, bool), (
+        f"{adapter}: cost_estimate must be a number, got {cost!r}"
+    )
+    assert cost >= 0, f"{adapter}: cost_estimate must be non-negative, got {cost}"
+
+
+def test_contract_documents_cost_estimate() -> None:
+    """The contract is the single source of truth for the field."""
+    text = CONTRACT.read_text()
+    assert "cost_estimate" in text, "adapter-contract.md must document cost_estimate"
+    assert "--max-spend-usd" in text or "max-spend" in text.lower(), (
+        "adapter-contract.md must reference the spend cap the field feeds"
+    )
+
 
 @pytest.mark.parametrize("adapter", ADAPTERS)
 def test_capability_and_dry_run_audio_embedded_are_coherent(adapter: str) -> None:

@@ -26,7 +26,7 @@ install:
 
 # /video:from-song
 
-`/video:from-song <images-dir> <song-file> [--brief "<description>"] [--auto-script] [--scene-durations <list>] [--character|--no-character] [--auto-pick] [--keep-native-audio] [--max-duration <min>] [--max-scenes <n>] [--image-provider <id>] [--video-provider <id>]`
+`/video:from-song <images-dir> <song-file> [--brief "<description>"] [--auto-script] [--scene-durations <list>] [--character|--no-character] [--auto-pick] [--keep-native-audio] [--max-duration <min>] [--max-scenes <n>] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
 
 Turns a **song** plus a **folder of reference images** into a finished
 music-video. The scene script is either supplied by the operator
@@ -242,6 +242,14 @@ prompt — image+video adapter, models, total scene count, and total
 estimated cost — and refuse to continue without an explicit operator
 confirmation (a literal yes) in this turn (mirrors
 [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
+The total comes from each scene's dry-run `cost_estimate` (adapter
+contract v2); a scene the adapter cannot price shows as `unknown` and is
+never silently counted as `0`. **`--max-spend-usd` kill-switch:** when
+set, if the summed estimate exceeds the cap the batch is **hard-blocked
+before the first live call** — operator confirmation does not override
+the cap; raise `--max-spend-usd` explicitly to proceed. If any scene is
+`unknown`, surface that the total is a lower bound and the cap cannot be
+fully guaranteed.
 Once confirmed, the run proceeds through every scene + stitch + mux
 without re-prompting **for cost**. The one remaining interactive surface
 is `from-script`'s per-scene **operator-pick** (best-of-N still
