@@ -26,7 +26,7 @@ tasks:
       docs/value.md. Cheap, no API spend. Use after any rung-source
       bench refresh, or as a daily-quick-read.
     cmds:
-      - python3 -c "import sys; sys.path.insert(0, 'scripts'); from _lib.value_report import assemble_value_v1, write_value_report, write_md_dump; r = assemble_value_v1(); write_value_report(r); write_md_dump(r); print('value-v1 assembled')"
+      - python3 -c "import sys; sys.path.insert(0, 'src/scripts'); from _lib.value_report import assemble_value_v1, write_value_report, write_md_dump; r = assemble_value_v1(); write_value_report(r); write_md_dump(r); print('value-v1 assembled')"
       - python3 src/scripts/render_value_md.py {{.QUIET_FLAG}}
       - python3 src/scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
 

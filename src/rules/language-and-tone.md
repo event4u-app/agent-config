@@ -57,8 +57,8 @@ Examples + CLI spacing rules + wrong-vs-correct: [`language-and-tone-examples`](
 
 ## `.md` files — ALWAYS English
 
-Every text inside `.md` under `.augment/`, `.agent-src/`, `.agent-src.uncondensed/`, `agents/`: headings, paragraphs, bullets, option labels, prompts, placeholders, ASCII labels, table headers / content. Agent translates at runtime.
+All `.md` text under `src/`, `docs/`, `.augment/`, `.agent-src/`, `.agent-src.uncondensed/`, `agents/` — prose AND examples, **including generated output** (fix the generator's source strings, never hand-edit the generated page). Agent translates at runtime.
 
-**Labeled-anchor exception** — quoting German inside English prose is forbidden. Either translate, OR use a labeled `DE: … · EN: …` anchor block (only allowed location for German prose).
+Genuinely-required German uses a sanctioned escape only: a labeled `DE: … · EN: …` anchor (German *prose*), or a per-line `<!-- md-language-check: ignore -->` marker (one quoted trigger example / verbatim provenance quote — never scattered through a generated file).
 
-Pre-save detection heuristic (umlauts / German function words / non-English quoted phrases): [`language-and-tone-examples § pre-save detection`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#md-files--pre-save-detection-heuristic).
+Generated-output rule, escape mechanics, pre-save detection heuristic: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#md-files--pre-save-detection-heuristic).

@@ -110,6 +110,7 @@ tasks:
       - task: check-public-links
       - task: check-beta-review-markers
       - task: check-public-catalog-links
+      - task: check-md-language
       - task: check-command-count
       - task: lint-no-new-atomic-commands
       - task: lint-command-budget
@@ -231,6 +232,7 @@ tasks:
       - task: check-public-links
       - task: check-beta-review-markers
       - task: check-public-catalog-links
+      - task: check-md-language
       - task: check-command-count
       - task: lint-no-new-atomic-commands
       - task: lint-command-budget

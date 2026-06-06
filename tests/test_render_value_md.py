@@ -228,8 +228,8 @@ def test_render_includes_net_line_with_verdict(monkeypatch, tmp_path):
     latest.write_text(json.dumps(_canonical_report(), ensure_ascii=False))
     mod.render(quiet=True)
     text = out.read_text()
-    assert "NETTO" in text
-    assert "Mehrkosten" in text  # net_verdict: net-cost
+    assert "NET" in text
+    assert "extra cost" in text  # net_verdict: net-cost
     assert "+58.20%" in text or "+58.2%" in text
 
 
@@ -259,7 +259,7 @@ def test_render_placeholder_when_no_report(monkeypatch, tmp_path):
     mod, _latest, out = _load_renderer(monkeypatch, tmp_path)
     assert mod.render(quiet=True) == 0
     text = out.read_text()
-    assert "Platzhalter" in text or "no report" in text.lower()
+    assert "placeholder" in text.lower() or "no report" in text.lower()
     assert "task value" in text
 
 

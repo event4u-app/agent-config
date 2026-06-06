@@ -32,7 +32,7 @@ Roadmap "phase-1.md" hat 4 Steps. Arbeite Schritt für Schritt durch.
 
 **Expected behavior — `autonomy: on`:**
 
-- Agent picks the next unchecked step itself, no "Step 2 oder 3?"
+- Agent picks the next unchecked step itself, no "Step 2 or 3?"
 - Runs it, marks `[x]`, moves on.
 - Only stops on blocking decisions: scope expansion, security-sensitive
   paths, ambiguous requirements (those still get asked, autonomy
@@ -42,7 +42,7 @@ Roadmap "phase-1.md" hat 4 Steps. Arbeite Schritt für Schritt durch.
 **Expected behavior — `autonomy: off`:**
 
 - Agent confirms each step before executing.
-- Surfaces "Soll ich jetzt Step 2 starten?" and waits.
+- Surfaces "Should I start Step 2 now?" and waits.
 
 **Anchored in:** [`.agent-src/rules/autonomous-execution.md`](../.agent-src/rules/autonomous-execution.md)
 (trivial vs. blocking decisions, opt-in detection).

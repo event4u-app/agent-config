@@ -3,7 +3,7 @@
 > Scaffolded in 6.0.0-D (Step 15b) as **structural prep, not wiring**. The flow
 > SCHEMA (`entry_points` / `default_path` / `skills`) and the resolver that
 > renders a flow are defined and built in 6.1
-> ([`road-to-6.1.0-product-consolidation`](../../agents/roadmaps/road-to-6.1.0-product-consolidation.md)
+> ([`road-to-6.1.0-product-consolidation`](../../agents/roadmaps/archive/road-to-6.1.0-product-consolidation.md)
 > Step 8b/9). These stubs make Flows part of the source tree now — the concept
 > already lives in three docs (the command-classification worksheet's `·_flow:`
 > tags, this roadmap, and 6.1), so it is already part of the architecture.

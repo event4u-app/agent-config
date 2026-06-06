@@ -6,7 +6,7 @@ parent_roadmap: road-to-6.1.0-product-consolidation
 
 # Road to 6.2.0 — Consolidation evidence-gates (the council-deferred remainder)
 
-> Spawned from [`road-to-6.1.0`](road-to-6.1.0-product-consolidation.md) (PR4)
+> Spawned from [`road-to-6.1.0`](archive/road-to-6.1.0-product-consolidation.md) (PR4)
 > per the AI-council design/deep review (claude-sonnet-4-5 + gpt-4o, 2026-06-06,
 > session `agents/runtime/council/responses/6.1.0-consolidation.json`). 6.1.0
 > shipped the safe, low-risk consolidation slice (Flows primary view + recorded

@@ -27,10 +27,10 @@ TypeScript installer (Phase 3), the browser wizard (Phase 6), the docs
 site, and any third-party consumer read instead of walking the source
 tree. The invariant from the founder intake:
 
-> Beim Erstellen eines Releases müssen alle Skills, etc. nach Workspace
-> und Pack untersucht werden, so dass das für den Installer gespeichert
-> wird und zur Verfügung steht. Es soll keine manuelle Package &
-> Workspace Liste gepflegt werden.
+> Beim Erstellen eines Releases müssen alle Skills, etc. nach Workspace  <!-- md-language-check: ignore -->
+> und Pack untersucht werden, so dass das für den Installer gespeichert  <!-- md-language-check: ignore -->
+> wird und zur Verfügung steht. Es soll keine manuelle Package &  <!-- md-language-check: ignore -->
+> Workspace Liste gepflegt werden.  <!-- md-language-check: ignore -->
 
 **No manual list. Ever.** The pack and workspace shape grows by stamping
 frontmatter, not by editing a list.

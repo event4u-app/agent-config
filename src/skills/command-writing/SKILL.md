@@ -37,6 +37,11 @@ A command is **user-invoked** and carries `disable-model-invocation: true`.
 A skill is model-invoked via description routing. If both audiences apply,
 author as a skill and add a thin command that delegates to it.
 
+**A command must EARN a top-level slot.** Only three justifications qualify:
+**flow-entry**, **state-query**, or **product-surface** — everything else is a
+skill. Check before authoring: [`command-clusters` § Command justification](../../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
+([ADR-048](../../../docs/decisions/ADR-048-command-justification-rule.md)).
+
 ## Commands ARE Claude skills (projection reality)
 
 Every command in `.agent-src.uncondensed/commands/{name}.md` is projected

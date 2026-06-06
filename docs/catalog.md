@@ -460,8 +460,8 @@ are excluded.
 | command | [`sync-gitignore`](../.agent-src/commands/sync-gitignore.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
 | command | [`sync-gitignore:fix`](../.agent-src/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`tests`](../.agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
-| command | [`tests:create`](../.agent-src/commands/tests/create.md) | cluster: tests | Write meaningful tests for the changes in the current branch |
-| command | [`tests:execute`](../.agent-src/commands/tests/execute.md) | cluster: tests | Run PHP tests inside the Docker container |
+| command | [`tests:create`](../.agent-src/commands/tests/create.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
+| command | [`tests:execute`](../.agent-src/commands/tests/execute.md) | cluster: tests | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`threat-model`](../.agent-src/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../.agent-src/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones. |
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
