@@ -70,6 +70,94 @@ aiv_assert_dryrun() {
   esac
 }
 
+# -- Trust boundary (adapter-contract.md v2) --------------------------------
+# Provider-returned artifact paths and downloads are UNTRUSTED input. The
+# three helpers below are the enforcement surface the live submit/poll/fetch
+# path MUST route through, so an adapter physically cannot return /etc/passwd,
+# a symlink that escapes the project, or a runaway multi-GB stream.
+
+# aiv_max_artifact_bytes — hard size cap for a single fetched artifact.
+# Default 512 MiB; override via AIV_MAX_ARTIFACT_BYTES.
+aiv_max_artifact_bytes() {
+  printf '%s\n' "${AIV_MAX_ARTIFACT_BYTES:-536870912}"
+}
+
+# aiv_validate_artifact_path <root> <path> — canonicalize <path> and assert it
+# resolves INSIDE <root>. Echoes the canonical absolute path on success;
+# aiv_die 10 on any violation. Rejects: empty path, injection/control chars
+# (newline, single quote, backtick, command-sub), a symlink artifact, a
+# parent-traversal that escapes <root>, and a missing parent directory.
+aiv_validate_artifact_path() {
+  local root="${1:-}" path="${2:-}"
+  [ -n "${root}" ] || aiv_die 10 "validate_artifact_path: scope root required"
+  [ -n "${path}" ] || aiv_die 10 "validate_artifact_path: empty artifact path (untrusted provider output)"
+
+  # Injection guard — these characters would break out of ffmpeg's concat
+  # list (`file '...'`) or a redacted log line.
+  case "${path}" in
+    *"'"* | *'`'* | *'$('*)
+      aiv_die 10 "validate_artifact_path: illegal character in artifact path (injection guard)" ;;
+  esac
+  if [ "$(printf '%s' "${path}" | tr -d '[:cntrl:]')" != "${path}" ]; then
+    aiv_die 10 "validate_artifact_path: control character in artifact path"
+  fi
+
+  local real_root
+  real_root="$(cd "${root}" 2>/dev/null && pwd -P)" \
+    || aiv_die 10 "validate_artifact_path: scope root not a directory: ${root}"
+
+  # A symlink artifact is rejected outright — its target is provider-controlled.
+  [ -L "${path}" ] && aiv_die 10 "validate_artifact_path: symlink artifacts are not allowed: ${path}"
+
+  # Canonicalize the PARENT (resolving any symlinked dirs) and re-attach the
+  # basename, so a not-yet-created live-fetch target still validates.
+  local parent base real_parent real_path
+  parent="$(dirname "${path}")"
+  base="$(basename "${path}")"
+  case "${base}" in
+    .. | .) aiv_die 10 "validate_artifact_path: illegal basename: ${base}" ;;
+  esac
+  real_parent="$(cd "${parent}" 2>/dev/null && pwd -P)" \
+    || aiv_die 10 "validate_artifact_path: parent dir missing: ${parent}"
+  real_path="${real_parent}/${base}"
+
+  case "${real_path}" in
+    "${real_root}"/* | "${real_root}") printf '%s\n' "${real_path}" ;;
+    *) aiv_die 10 "validate_artifact_path: path escapes scope root: ${path} not under ${root}" ;;
+  esac
+}
+
+# aiv_scene_dir <project_dir> <scene_id> — create and echo the scene-scoped
+# output dir. Live fetch writes artifacts here, then validates the result.
+aiv_scene_dir() {
+  local project="${1:-}" scene="${2:-}"
+  [ -n "${project}" ] && [ -n "${scene}" ] \
+    || aiv_die 10 "aiv_scene_dir: project dir and scene id required"
+  case "${scene}" in
+    */* | .. | . | *"'"*) aiv_die 10 "aiv_scene_dir: illegal scene id: ${scene}" ;;
+  esac
+  local dir="${project}/scenes/${scene}"
+  mkdir -p "${dir}" || aiv_die 10 "aiv_scene_dir: cannot create ${dir}"
+  printf '%s\n' "${dir}"
+}
+
+# aiv_fetch_url <url> <dest> [max_bytes] — download <url> into <dest> with a
+# hard size cap (aiv_max_artifact_bytes) and timeout (AIV_FETCH_TIMEOUT,
+# default 120s). Live `fetch` MUST route downloads through this helper so a
+# hostile or runaway response cannot exhaust disk. Echoes <dest> on success.
+aiv_fetch_url() {
+  local url="${1:-}" dest="${2:-}" cap="${3:-}"
+  [ -n "${url}" ] && [ -n "${dest}" ] || aiv_die 10 "aiv_fetch_url: url and dest required"
+  [ -n "${cap}" ] || cap="$(aiv_max_artifact_bytes)"
+  aiv_require_cmd curl
+  if ! curl --fail --silent --show-error --location \
+       --max-filesize "${cap}" --max-time "${AIV_FETCH_TIMEOUT:-120}" \
+       --output "${dest}" "${url}" 2>&1 | aiv_redact_stream >&2; then
+    aiv_die 11 "aiv_fetch_url: download failed or exceeded ${cap} bytes: ${url}"
+  fi
+  printf '%s\n' "${dest}"
+}
+
 # aiv_dispatch <adapter-id> <capability> "$@" — generic subcommand router.
 # Adapters override individual subcommands by defining bash functions
 # named `aiv_cmd_submit` / `aiv_cmd_poll` / `aiv_cmd_fetch` / `aiv_cmd_run`

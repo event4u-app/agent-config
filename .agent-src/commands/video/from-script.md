@@ -20,7 +20,7 @@ packs:
 
 # /video:from-script
 
-`/video:from-script <path-to-script.md> [--image-provider <id>] [--video-provider <id>]`
+`/video:from-script <path-to-script.md> [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
 
 Drives a Markdown script through the full pipeline. Provider flags
 override the `<default-image-provider>` / `<default-video-provider>`
@@ -72,6 +72,9 @@ For each scene blueprint:
    adapter, model, scene count, and estimated cost; refuse to continue
    without an explicit operator confirmation **in this turn**. Mirrors
    [`non-destructive-by-default`](../../rules/non-destructive-by-default.md).
+   Cost = sum of each scene's dry-run `cost_estimate` (contract v2);
+   unpriceable scene → `unknown`, never `0`. `--max-spend-usd` set + total
+   over cap → hard-block before first live call; confirmation cannot override.
 3. Call the image adapter (`run` subcommand) N times where N =
    `<tuning/best-of-n>` (default 1).
 
