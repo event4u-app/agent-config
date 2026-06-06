@@ -95,7 +95,7 @@ cast (usually Core-6 for review skills, empty for others).
 - Every persona is drafted via the `artifact-drafting-protocol` rule.
 - Every persona must pass the Unique-Questions heuristic.
 - Project-specific personas live in the consumer repo
-  (`.agent-src/personas/` overrides), never in this package.
+  (`dist/agent-src/personas/` overrides), never in this package.
 - **Core** template: [`../templates/persona.md`](../templates/persona.md) (5 sections, ≤ 120 lines).
 - **Specialist** template: [`./_template-specialist/persona.md`](./_template-specialist/persona.md) (7 sections, ≤ 100 lines).
 

@@ -28,10 +28,10 @@ shells**. It is a read-only instructional surface — see
 
 | Primitive | URIs | Source | Count (this package) |
 |---|---|---|---|
-| `prompts/list` + `prompts/get` | `skill.<name>`, `command.<name>` | `.agent-src/skills/`, `.agent-src/commands/` | 174 skills + 104 commands |
-| `resources/list` + `resources/read` | `rule://<stem>` | `.agent-src/rules/` | 60 rules |
+| `prompts/list` + `prompts/get` | `skill.<name>`, `command.<name>` | `dist/agent-src/skills/`, `dist/agent-src/commands/` | 174 skills + 104 commands |
+| `resources/list` + `resources/read` | `rule://<stem>` | `dist/agent-src/rules/` | 60 rules |
 | ↳ | `guideline://<relpath>` | `docs/guidelines/` | 69 guidelines |
-| ↳ | `context://<relpath>` | `.agent-src/contexts/` | 31 contexts |
+| ↳ | `context://<relpath>` | `dist/agent-src/contexts/` | 31 contexts |
 
 All resources are served with `mimeType: text/markdown`. Pagination is
 cursor-based (default page size: 100). Hot-reload triggers automatically on
@@ -148,7 +148,7 @@ boots cleanly:
 
 | Symptom | Fix |
 |---|---|
-| Client shows no prompts | Confirm the `cwd` points at the repo root (where `.agent-src/` lives), not at `scripts/`. |
+| Client shows no prompts | Confirm the `cwd` points at the repo root (where `dist/agent-src/` lives), not at `scripts/`. |
 | `ModuleNotFoundError: mcp` | Re-run `task mcp:setup`. The MCP runtime is isolated in `.venv-mcp/` — the project's base Python 3.9 deliberately does not see it. |
 | Stale prompts after editing | Hot-reload triggers on mtime; touch the file or reissue `resources/list`. |
 | Client refuses to start the server | Check the client's log for the full command. Most clients require **absolute** paths in `command` and `cwd`. |

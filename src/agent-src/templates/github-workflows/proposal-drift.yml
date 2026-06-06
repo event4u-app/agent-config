@@ -19,7 +19,7 @@
 #   - `scripts/memory_report.py` present in the repo (ships with the
 #     package).
 #   - Proposals live under `agents/proposals/` with the schema defined
-#     in `.agent-src/templates/agents/proposal.example.md`.
+#     in `dist/agent-src/templates/agents/proposal.example.md`.
 
 name: Proposal Drift
 

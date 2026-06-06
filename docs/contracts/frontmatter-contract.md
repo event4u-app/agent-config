@@ -136,5 +136,5 @@ are staged.
 Frontmatter survives the `task sync` condensation pipeline. Path-bearing
 keys (`load_context`) may be rewritten relative to the projected location,
 but the five Phase-1 keys above are byte-stable between
-`.agent-src.uncondensed/`, `.agent-src/`, and `.augment/`. Enforced by
+`.agent-src.uncondensed/`, `dist/agent-src/`, and `.augment/`. Enforced by
 `tests/test_frontmatter_roundtrip.py`.

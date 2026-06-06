@@ -267,7 +267,7 @@ Rationale:
 - `install.py`'s existing tool projection lays down `.augment/`
   unconditionally; piggy-backing on that directory means consumers
   do not need a separate "scripts" install step.
-- The other two paths (`.agent-src/scripts/`,
+- The other two paths (`dist/agent-src/scripts/`,
   `.agent-src.uncondensed/scripts/`) only populate in
   source-checkouts of the package itself.
 

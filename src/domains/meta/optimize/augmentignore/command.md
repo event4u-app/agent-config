@@ -22,7 +22,7 @@ Scans the project to find files that waste tokens in Augment's retrieval index
 and creates/updates `.augmentignore` accordingly. Also identifies irrelevant
 `.augment/skills/` and `.augment/rules/` to exclude them from the system prompt.
 
-**Source of truth for skills/rules:** `.agent-src.uncondensed/` — scan there, not `.agent-src/` or `.augment/`.
+**Source of truth for skills/rules:** `.agent-src.uncondensed/` — scan there, not `dist/agent-src/` or `.augment/`.
 
 ## Steps
 

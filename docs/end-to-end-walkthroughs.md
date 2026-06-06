@@ -42,8 +42,8 @@ AC: signature multiply(a: int, b: int) -> int returning the product;
 plan, changes, test verdict, judge findings, suggested next command
 (`/commit`).
 
-**Anchored in:** [`commands/implement-ticket.md`](../.agent-src/commands/implement-ticket.md)
-(eight-step contract) · [`work_engine/dispatcher.py`](../.agent-src/templates/scripts/work_engine/dispatcher.py)
+**Anchored in:** [`commands/implement-ticket.md`](../dist/agent-src/commands/implement-ticket.md)
+(eight-step contract) · [`work_engine/dispatcher.py`](../dist/agent-src/templates/scripts/work_engine/dispatcher.py)
 (`STEP_ORDER`).
 
 ---
@@ -75,8 +75,8 @@ Add modulo(a, b) to src/calculator.py — return a % b for ints
 **Outcome** — `success`. The same dispatcher and judges as GT-1; only
 the input envelope (`input.kind="prompt"` vs `"ticket"`) differs.
 
-**Anchored in:** [`commands/work.md`](../.agent-src/commands/work.md) ·
-[`skills/refine-prompt/SKILL.md`](../.agent-src/skills/refine-prompt/SKILL.md)
+**Anchored in:** [`commands/work.md`](../dist/agent-src/commands/work.md) ·
+[`skills/refine-prompt/SKILL.md`](../dist/agent-src/skills/refine-prompt/SKILL.md)
 · [`docs/contracts/adr-prompt-driven-execution.md`](contracts/adr-prompt-driven-execution.md).
 
 ---
@@ -104,12 +104,12 @@ generic implement loop.
 | c6 | _(none)_ | delivery report, exit `0` |
 
 **Outcome** — `success`. The audit-first ordering is enforced by the
-[`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) rule: any
+[`ui-audit-gate`](../dist/agent-src/rules/ui-audit-gate.md) rule: any
 non-trivial UI change without `state.ui_audit` halts before design.
 
 **Anchored in:** [`docs/ui-track-mental-model.md`](ui-track-mental-model.md) ·
-[`rules/ui-audit-gate.md`](../.agent-src/rules/ui-audit-gate.md) ·
-[`skills/existing-ui-audit/SKILL.md`](../.agent-src/skills/existing-ui-audit/SKILL.md).
+[`rules/ui-audit-gate.md`](../dist/agent-src/rules/ui-audit-gate.md) ·
+[`skills/existing-ui-audit/SKILL.md`](../dist/agent-src/skills/existing-ui-audit/SKILL.md).
 
 ---
 
@@ -147,9 +147,9 @@ the outcome-aware telemetry (`outcomes: ["blocked"]`, see
 [P2 #9](../agents/roadmaps/road-to-1-15-followups.md#phase-9--outcome-aware-telemetry-p2-9)).
 No work is committed, no auto-guess is taken.
 
-**Anchored in:** [`rules/ask-when-uncertain.md`](../.agent-src/rules/ask-when-uncertain.md)
-· [`rules/non-destructive-by-default.md`](../.agent-src/rules/non-destructive-by-default.md)
-· [`skills/refine-ticket/SKILL.md`](../.agent-src/skills/refine-ticket/SKILL.md).
+**Anchored in:** [`rules/ask-when-uncertain.md`](../dist/agent-src/rules/ask-when-uncertain.md)
+· [`rules/non-destructive-by-default.md`](../dist/agent-src/rules/non-destructive-by-default.md)
+· [`skills/refine-ticket/SKILL.md`](../dist/agent-src/skills/refine-ticket/SKILL.md).
 
 ---
 

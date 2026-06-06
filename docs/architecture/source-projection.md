@@ -26,20 +26,20 @@
 ```
 .agent-src.uncondensed/**         ← Source of truth (verbose, human-readable)
     ↓ scripts/condense.py + scripts/condense.sh (--sync)
-.agent-src/**                      ← Condensed, hash-tracked, shipped in @event4u/agent-config
+dist/agent-src/**                      ← Condensed, hash-tracked, shipped in @event4u/agent-config
 ```
 
 | Layer | Source | Output |
 |---|---|---|
-| Skills | `.agent-src.uncondensed/skills/<id>/SKILL.md` (+ assets) | `.agent-src/skills/<id>/SKILL.md` |
-| Rules | `.agent-src.uncondensed/rules/<name>.md` | `.agent-src/rules/<name>.md` |
-| Commands | `.agent-src.uncondensed/commands/**` | `.agent-src/commands/**` |
-| Personas, contexts, templates | `.agent-src.uncondensed/<dir>/**` | `.agent-src/<dir>/**` |
+| Skills | `.agent-src.uncondensed/skills/<id>/SKILL.md` (+ assets) | `dist/agent-src/skills/<id>/SKILL.md` |
+| Rules | `.agent-src.uncondensed/rules/<name>.md` | `dist/agent-src/rules/<name>.md` |
+| Commands | `.agent-src.uncondensed/commands/**` | `dist/agent-src/commands/**` |
+| Personas, contexts, templates | `.agent-src.uncondensed/<dir>/**` | `dist/agent-src/<dir>/**` |
 
 The path rewriter ([`scripts/condense.py:157`](../../src/scripts/condense.py)
 `apply_path_rewriter()`) converts logical names in source frontmatter
 (`contexts/execution/foo.md`) into the relative form expected from
-`.agent-src/rules/` (`../contexts/execution/foo.md`). Hardcoding
+`dist/agent-src/rules/` (`../contexts/execution/foo.md`). Hardcoding
 `.agent-src.uncondensed/` in source is a CI failure — caught by
 [`scripts/check_condensed_paths.py`](../../src/scripts/check_condensed_paths.py).
 
@@ -56,10 +56,10 @@ The path rewriter ([`scripts/condense.py:157`](../../src/scripts/condense.py)
 ## Invariants
 
 1. **Determinism** — same input must produce identical bytes in
-   `.agent-src/`. CI enforces via `task sync-check` (no output diff
+   `dist/agent-src/`. CI enforces via `task sync-check` (no output diff
    permitted on a clean checkout).
 2. **Hash tracking** — every condensed file's source-hash is stored
-   in `.agent-src/.condensation-hashes.json`; stale hashes are caught
+   in `dist/agent-src/.condensation-hashes.json`; stale hashes are caught
    by `task sync-check-hashes`.
 3. **No source-side leakage** — `.agent-src.uncondensed/` must not
    appear anywhere in condensed output (frontmatter, body, includes).

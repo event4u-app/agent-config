@@ -77,7 +77,7 @@ Present a summary before applying:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncondensed/` (source of truth). Regenerate `.agent-src/` and `.augment/` via `bash src/scripts/condense.sh --sync`.
+Edit files in `.agent-src.uncondensed/` (source of truth). Regenerate `dist/agent-src/` and `.augment/` via `bash src/scripts/condense.sh --sync`.
 
 After all fixes:
 
@@ -97,8 +97,8 @@ python3 src/scripts/condense.py --mark-done "{relative_path}"
 
 ## Rules
 
-- **Always fix in `.agent-src.uncondensed/`** — never edit `.agent-src/` or `.augment/` directly.
-- **Run `bash src/scripts/condense.sh --sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
+- **Always fix in `.agent-src.uncondensed/`** — never edit `dist/agent-src/` or `.augment/` directly.
+- **Run `bash src/scripts/condense.sh --sync`** after fixing to regenerate `dist/agent-src/` and `.augment/`.
 - **Do NOT commit or push** — the user decides.
 - **Do NOT fix references in code blocks** — they are examples, not live refs.
 - **Do NOT auto-fix without showing the summary first.**

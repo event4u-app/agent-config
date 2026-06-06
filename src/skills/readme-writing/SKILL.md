@@ -170,7 +170,7 @@ For every internal link in the new draft:
    - **dropped**: only linked by the old README
 
 For every `dropped` target, search the rest of the repository
-(`grep -r "<path>"` over `AGENTS.md`, `docs/`, `.agent-src*/`,
+(`grep -r "<path>"` over `AGENTS.md`, `docs/`, `dist/agent-src*/`,
 `.augment/`, `packages/`). If no other file references it, mark
 **orphan-candidate**. Surface the list to the user — do not delete
 silently.

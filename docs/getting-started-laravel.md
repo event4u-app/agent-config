@@ -10,43 +10,43 @@ Laravel ships with the broadest, battle-tested skill coverage in the package —
 
 | Skill | What it covers |
 |---|---|
-| [`laravel`](../.agent-src/skills/laravel/SKILL.md) | Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers |
-| [`eloquent`](../.agent-src/skills/eloquent/SKILL.md) | Models, relationships, scopes, query patterns |
-| [`artisan-commands`](../.agent-src/skills/artisan-commands/SKILL.md) | Console command structure, signatures, safe execution |
-| [`jobs-events`](../.agent-src/skills/jobs-events/SKILL.md) | Queued workflows, listeners, retry / failure handling |
-| [`laravel-validation`](../.agent-src/skills/laravel-validation/SKILL.md) | Form Requests, rules, custom rule objects |
-| [`laravel-middleware`](../.agent-src/skills/laravel-middleware/SKILL.md) | Request / response filtering, groups, priority |
-| [`laravel-notifications`](../.agent-src/skills/laravel-notifications/SKILL.md) | Mail, Slack, database, custom channels |
-| [`laravel-mail`](../.agent-src/skills/laravel-mail/SKILL.md) | Mailables, Markdown templates, queued sending |
-| [`laravel-scheduling`](../.agent-src/skills/laravel-scheduling/SKILL.md) | Cron expressions, overlap prevention, maintenance mode |
-| [`laravel-horizon`](../.agent-src/skills/laravel-horizon/SKILL.md) | Worker supervision, job metrics, balancing strategies |
-| [`laravel-pulse`](../.agent-src/skills/laravel-pulse/SKILL.md) | Real-time dashboard, custom recorders, performance insights |
-| [`laravel-reverb`](../.agent-src/skills/laravel-reverb/SKILL.md) | First-party WebSocket server, Pusher protocol compatibility |
-| [`laravel-pennant`](../.agent-src/skills/laravel-pennant/SKILL.md) | Feature flags, gradual rollouts, A/B testing |
+| [`laravel`](../dist/agent-src/skills/laravel/SKILL.md) | Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers |
+| [`eloquent`](../dist/agent-src/skills/eloquent/SKILL.md) | Models, relationships, scopes, query patterns |
+| [`artisan-commands`](../dist/agent-src/skills/artisan-commands/SKILL.md) | Console command structure, signatures, safe execution |
+| [`jobs-events`](../dist/agent-src/skills/jobs-events/SKILL.md) | Queued workflows, listeners, retry / failure handling |
+| [`laravel-validation`](../dist/agent-src/skills/laravel-validation/SKILL.md) | Form Requests, rules, custom rule objects |
+| [`laravel-middleware`](../dist/agent-src/skills/laravel-middleware/SKILL.md) | Request / response filtering, groups, priority |
+| [`laravel-notifications`](../dist/agent-src/skills/laravel-notifications/SKILL.md) | Mail, Slack, database, custom channels |
+| [`laravel-mail`](../dist/agent-src/skills/laravel-mail/SKILL.md) | Mailables, Markdown templates, queued sending |
+| [`laravel-scheduling`](../dist/agent-src/skills/laravel-scheduling/SKILL.md) | Cron expressions, overlap prevention, maintenance mode |
+| [`laravel-horizon`](../dist/agent-src/skills/laravel-horizon/SKILL.md) | Worker supervision, job metrics, balancing strategies |
+| [`laravel-pulse`](../dist/agent-src/skills/laravel-pulse/SKILL.md) | Real-time dashboard, custom recorders, performance insights |
+| [`laravel-reverb`](../dist/agent-src/skills/laravel-reverb/SKILL.md) | First-party WebSocket server, Pusher protocol compatibility |
+| [`laravel-pennant`](../dist/agent-src/skills/laravel-pennant/SKILL.md) | Feature flags, gradual rollouts, A/B testing |
 
 ## Quality pipeline
 
 The Laravel quality pipeline runs PHPStan + Rector + ECS, with Pest as the test runner:
 
-- [`quality-tools`](../.agent-src/skills/quality-tools/SKILL.md) — PHPStan output triage, Rector apply, ECS fix.
-- [`pest-testing`](../.agent-src/skills/pest-testing/SKILL.md) — Pest test authoring patterns.
-- [`/quality-fix`](../.agent-src/commands/quality-fix.md) — runs the full pipeline and fixes reported errors.
+- [`quality-tools`](../dist/agent-src/skills/quality-tools/SKILL.md) — PHPStan output triage, Rector apply, ECS fix.
+- [`pest-testing`](../dist/agent-src/skills/pest-testing/SKILL.md) — Pest test authoring patterns.
+- [`/quality-fix`](../dist/agent-src/commands/quality-fix.md) — runs the full pipeline and fixes reported errors.
 
 ## Docker and dev environment
 
-- [`docker`](../.agent-src/skills/docker/SKILL.md) — Dockerfile, compose, dual-container (fast + Xdebug) setup.
-- [`php-debugging`](../.agent-src/skills/php-debugging/SKILL.md) — Xdebug breakpoints, dual-container, header-based routing.
-- [`traefik`](../.agent-src/skills/traefik/SKILL.md) — local reverse proxy, real domains on 127.0.0.1, mkcert HTTPS.
+- [`docker`](../dist/agent-src/skills/docker/SKILL.md) — Dockerfile, compose, dual-container (fast + Xdebug) setup.
+- [`php-debugging`](../dist/agent-src/skills/php-debugging/SKILL.md) — Xdebug breakpoints, dual-container, header-based routing.
+- [`traefik`](../dist/agent-src/skills/traefik/SKILL.md) — local reverse proxy, real domains on 127.0.0.1, mkcert HTTPS.
 
 ## Multi-tenancy and database
 
-- [`multi-tenancy`](../.agent-src/skills/multi-tenancy/SKILL.md) — customer DB switching, FQDN routing, tenant isolation.
-- [`database`](../.agent-src/skills/database/SKILL.md) — MariaDB / MySQL tuning, indexing, multi-connection patterns.
-- [`sql-writing`](../.agent-src/skills/sql-writing/SKILL.md) — raw SQL, parameterization, raw migrations.
+- [`multi-tenancy`](../dist/agent-src/skills/multi-tenancy/SKILL.md) — customer DB switching, FQDN routing, tenant isolation.
+- [`database`](../dist/agent-src/skills/database/SKILL.md) — MariaDB / MySQL tuning, indexing, multi-connection patterns.
+- [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) — raw SQL, parameterization, raw migrations.
 
 ## Project analysis
 
-- [`project-analysis-laravel`](../.agent-src/skills/project-analysis-laravel/SKILL.md) — boot flow, request lifecycle, container usage, async systems, Laravel-specific failure patterns.
+- [`project-analysis-laravel`](../dist/agent-src/skills/project-analysis-laravel/SKILL.md) — boot flow, request lifecycle, container usage, async systems, Laravel-specific failure patterns.
 
 ## Install for a Laravel project
 
@@ -61,9 +61,9 @@ The installer detects `composer.json` + `artisan` + the Laravel framework depend
 
 | Stack | Coverage |
 |---|---|
-| **Symfony** | [`symfony-workflow`](../.agent-src/skills/symfony-workflow/SKILL.md) — DI, Doctrine, Messenger, voters, Twig; [`project-analysis-symfony`](../.agent-src/skills/project-analysis-symfony/SKILL.md) |
-| **Zend / Laminas** | [`project-analysis-zend-laminas`](../.agent-src/skills/project-analysis-zend-laminas/SKILL.md) + shared PHP coder / quality skills |
-| **Framework-free PHP** | [`php-coder`](../.agent-src/skills/php-coder/SKILL.md) — modern idioms, SOLID refactors, type hints without framework lock-in |
+| **Symfony** | [`symfony-workflow`](../dist/agent-src/skills/symfony-workflow/SKILL.md) — DI, Doctrine, Messenger, voters, Twig; [`project-analysis-symfony`](../dist/agent-src/skills/project-analysis-symfony/SKILL.md) |
+| **Zend / Laminas** | [`project-analysis-zend-laminas`](../dist/agent-src/skills/project-analysis-zend-laminas/SKILL.md) + shared PHP coder / quality skills |
+| **Framework-free PHP** | [`php-coder`](../dist/agent-src/skills/php-coder/SKILL.md) — modern idioms, SOLID refactors, type hints without framework lock-in |
 
 ## See also
 

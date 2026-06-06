@@ -122,7 +122,7 @@ If Copilot reviews a PR that fails any of these, reference the specific task.
 ## ✅ Known False Positives — Do NOT Flag
 
 The repo ships agent-config rules and skills under `.augment/`,
-`.agent-src/`, and (during authoring) `.agent-src.uncondensed/`.
+`dist/agent-src/`, and (during authoring) `.agent-src.uncondensed/`.
 Cross-references inside those trees resolve via the **delivered**
 `.augment/` layout — not via raw git checkout. Copilot's static
 checker walks the git tree, so it sees broken paths where there are
@@ -147,7 +147,7 @@ design:
   symlinks. Missing-file reports here are renderer artifacts.
 - **Body-link forms `../docs/guidelines/...`** (single-up). This is
   the post-rewrite shape produced by `src/scripts/condense.py`. The
-  condensed `.agent-src/rules/` tree is one level deeper than the
+  condensed `dist/agent-src/rules/` tree is one level deeper than the
   source `.agent-src.uncondensed/rules/`, so the rewriter collapses
   `../../docs/...` to `../docs/...`. Both forms are expected — one in
   source, one in condensed output.
@@ -158,5 +158,5 @@ design:
 
 **What TO flag:** code defects, security issues, broken tests, type
 errors, and any new `.agent-src.uncondensed/` substring introduced
-into `.agent-src/rules/` body content (the `check-condensed-paths`
+into `dist/agent-src/rules/` body content (the `check-condensed-paths`
 task gates this — flag it as a regression if it slips through).

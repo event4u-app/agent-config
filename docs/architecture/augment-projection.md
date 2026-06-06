@@ -1,17 +1,17 @@
 # Pipeline B — Augment projection
 
-> **Scope:** project the shipped `.agent-src/` payload into the
+> **Scope:** project the shipped `dist/agent-src/` payload into the
 > `.augment/` tree that Augment Code (CLI + IDE) reads on startup.
 
 ## Input → Transform → Output
 
 ```
-.agent-src/**                      ← Condensed payload (shipped in @event4u/agent-config)
+dist/agent-src/**                      ← Condensed payload (shipped in @event4u/agent-config)
     ↓ scripts/condense.py:project_to_augment()
 .augment/**                        ← Local projection (gitignored on consumer side)
     rules/                         ← copies (Augment historically does not load symlinked rules)
     skills/ commands/ contexts/
-    personas/ templates/           ← symlinks into .agent-src/<dir>/
+    personas/ templates/           ← symlinks into dist/agent-src/<dir>/
     docs/guidelines/               ← symlink → docs/guidelines/ (only docs/ subdir exposed)
 ```
 
@@ -21,11 +21,11 @@ rules to symlinks once the host supports it. The toggle is honored by
 both [`scripts/install.sh`](../../src/scripts/install.sh) on the consumer
 side and `project_to_augment()` in the package's own self-projection.
 
-Cross-references inside `.agent-src/rules/*.md` use **relative paths
-from `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`).
+Cross-references inside `dist/agent-src/rules/*.md` use **relative paths
+from `dist/agent-src/rules/`** (e.g. `../contexts/execution/foo.md`).
 After projection, those paths resolve through the symlinks in
 `.augment/`. The host agent reads `.augment/`, follows the symlink to
-`.agent-src/`, and lands on the payload.
+`dist/agent-src/`, and lands on the payload.
 
 ## Entry points
 
@@ -41,7 +41,7 @@ After projection, those paths resolve through the symlinks in
 1. **`.augment/rules/` are real files** by default — symlinks break
    Augment's rule loader on current versions.
 2. **Symlink targets exist** — `task sync-check` verifies every
-   `.augment/` symlink resolves into `.agent-src/`.
+   `.augment/` symlink resolves into `dist/agent-src/`.
 3. **Single docs subtree** — only `docs/guidelines/` is exposed; the
    `docs/contracts/` and `docs/decisions/` trees stay package-internal
    (rules inline 2–3 line excerpts instead of linking out).
@@ -53,7 +53,7 @@ After projection, those paths resolve through the symlinks in
 | Symptom | Cause | Fix |
 |---|---|---|
 | Rule not loading in Augment | rule was symlinked instead of copied | unset `augment.rules_use_symlinks` or re-run `task project-augment` |
-| Broken `load_context:` path | symlink target missing in `.agent-src/` | run `task sync` first (Pipeline A must succeed) |
+| Broken `load_context:` path | symlink target missing in `dist/agent-src/` | run `task sync` first (Pipeline A must succeed) |
 | `task sync-check` fails on clean tree | source edited but `.augment/` not regenerated | `task sync` |
 | Stale skill / command in `.augment/` after rename in source | projection didn't clean orphans | `task project-augment` re-runs cleanup |
 

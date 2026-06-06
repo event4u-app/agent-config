@@ -7,7 +7,7 @@
 ## Input → Transform → Output
 
 ```
-.agent-src/**                      ← Condensed payload
+dist/agent-src/**                      ← Condensed payload
     ↓ scripts/condense.py --generate-tools
 .claude/      .cursor/             ← Claude Code, Cursor (rules + skills)
 .clinerules/  .windsurfrules       ← Cline (rules dir), Windsurf (concatenated file)
@@ -57,7 +57,7 @@ removes `.cursor/` on next `task generate-tools`.
 | Symptom | Cause | Fix |
 |---|---|---|
 | Cursor doesn't see rules | `.cursor/` not generated | `tools.enabled.cursor: true` then `task generate-tools` |
-| Claude Code missing a skill | skill not in `.agent-src/` yet | run Pipeline A (`task sync`) first |
+| Claude Code missing a skill | skill not in `dist/agent-src/` yet | run Pipeline A (`task sync`) first |
 | Stale `.windsurfrules` after rule rename | concatenation cache | `task clean-tools && task generate-tools` |
 | Gemini CLI reads outdated content | `AGENTS.md` changed without re-symlink | `task generate-tools` |
 
@@ -65,7 +65,7 @@ removes `.cursor/` on next `task generate-tools`.
 
 The previous "0.45 % reduction" headline was a wrong-boundary
 measurement: that figure compares `.agent-src.uncondensed/` to
-`.agent-src/`, but the pipeline's claimed function is *projection*, not
+`dist/agent-src/`, but the pipeline's claimed function is *projection*, not
 byte condensation. The table below is produced by
 [`scripts/measure_projection_bytes.py --regenerate`](../../src/scripts/measure_projection_bytes.py)
 with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
@@ -73,7 +73,7 @@ with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
 | Surface | Files | Symlinks | Bytes materialized | Method |
 |---|---:|---:|---:|---|
 | `.agent-src.uncondensed/` | 596 | 0 | 3,253,997 | verbose source (input) |
-| `.agent-src/` | 596 | 0 | 3,242,579 | source projection (path-rewrite + `.npmignore`) |
+| `dist/agent-src/` | 596 | 0 | 3,242,579 | source projection (path-rewrite + `.npmignore`) |
 | `.augment/` | 61 | 7 | 136,146 | Augment Code — copies (rules) + symlinks (skills/cmds) |
 | `.claude/` | 0 | 395 | 0 | Claude Code — pure symlinks |
 | `.cursor/` | 61 | 189 | 124,741 | Cursor — per-rule `.mdc` materialized + symlinks |
@@ -100,7 +100,7 @@ with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
   per-rule frontmatter that cannot be supplied via symlink alone.
   `.windsurfrules` materializes the rule set a second time as a
   concatenated single file for users who prefer that surface.
-- **Source dedup** — the same rule body appears in `.agent-src/rules/`
+- **Source dedup** — the same rule body appears in `dist/agent-src/rules/`
   *and* in every tool's materialized projection. This is intentional:
   removing the duplication would push format conversion into runtime.
 

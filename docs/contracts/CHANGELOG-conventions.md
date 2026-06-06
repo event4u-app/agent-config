@@ -52,7 +52,7 @@ Tests: NNNN (+M since X.Y.(Z-1))
 ```
 
 The test-count line is enforced for any release that ships changes to
-`scripts/`, `internal/workers/`, or `.agent-src/` content; it can be omitted for
+`scripts/`, `internal/workers/`, or `dist/agent-src/` content; it can be omitted for
 pure-docs releases.
 
 ## What counts as breaking
@@ -72,7 +72,7 @@ A change is **breaking** (and MUST appear under `### BREAKING CHANGES`
    [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) (tool shape, prompt
    ids, resource URIs).
 4. **Generated tree shape** — removing or renaming top-level
-   directories under `.agent-src/`, `.augment/`, `.claude/`,
+   directories under `dist/agent-src/`, `.augment/`, `.claude/`,
    `.cursor/`, `.clinerules/`, or `.windsurfrules`.
 5. **Settings keys** — removing / renaming a key in
    `.agent-settings.yml` that consumer projects may rely on. Adding a

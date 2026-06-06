@@ -120,7 +120,7 @@ Tests: 4645
 ### Chores
 
 * add claude rules ([744328d](https://github.com/event4u-app/agent-config/commit/744328d57b4ba3c502ab3b41ded10e25ba3db8cf))
-* condense 4 .md files into .agent-src/ ([96ef2f9](https://github.com/event4u-app/agent-config/commit/96ef2f94504661f71b86a3fb16762069c39caaa7))
+* condense 4 .md files into dist/agent-src/ ([96ef2f9](https://github.com/event4u-app/agent-config/commit/96ef2f94504661f71b86a3fb16762069c39caaa7))
 * regenerate compiled trees for new rule (82 to 83) ([8b8af6a](https://github.com/event4u-app/agent-config/commit/8b8af6a4a918e927dbaafaeadc4402e3a7220981))
 
 ### Other

@@ -81,7 +81,7 @@ For each approved verdict:
 * **merge** → rewrite the surviving rule to cover both domains;
   delete the absorbed one; update any `routes_to:` references.
 * **delete** → remove the file from `.agent-src.uncondensed/rules/`
-  and the corresponding `.agent-src/rules/` projection.
+  and the corresponding `dist/agent-src/rules/` projection.
 * **move-to-context** → extract the body into
   `.agent-src.uncondensed/contexts/<area>/<name>.md`, replace the
   rule body with the obligation + a `load_context:` pointer.

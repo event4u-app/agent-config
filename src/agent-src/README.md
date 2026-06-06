@@ -1,13 +1,13 @@
 # Agent Infrastructure
 
-> **⚠️ DO NOT edit files in `.agent-src/` or `.augment/` directly.**
+> **⚠️ DO NOT edit files in `dist/agent-src/` or `.augment/` directly.**
 > The source of truth is `.agent-src.uncondensed/`. Edit there, then run `task sync`.
 > See `.agent-src.uncondensed/commands/condense.md` for the full workflow.
 
 This directory contains the shared agent infrastructure: skills, commands, rules, guidelines,
 templates, and contexts that power the AI coding assistant across all projects.
 
-In the package repo, this content lives in `.agent-src/` (shipped). Consumer projects install
+In the package repo, this content lives in `dist/agent-src/` (shipped). Consumer projects install
 it as `.augment/` (local projection).
 
 ## Directory Structure

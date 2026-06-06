@@ -2,12 +2,12 @@
 model_tier: medium
 name: condense
 pack: meta
-intent: "Condense .agent-src.uncondensed sources into the shipped .agent-src trees"
+intent: "Condense .agent-src.uncondensed sources into the shipped dist/agent-src trees"
 routes_to: [skill-management]
 replaces: []
 tier: 1
 skills: []
-description: Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/
+description: Condense .md files from .agent-src.uncondensed/ into telegraph format and write to dist/agent-src/
 suggestion:
   eligible: false
   rationale: "Package-internal tooling; only the event4u/agent-config repo runs this."
@@ -20,7 +20,7 @@ packs:
 # condense
 
 Condense agent config `.md` files from `.agent-src.uncondensed/` into token-efficient telegraph format
-and write the condensed output to `.agent-src/`.
+and write the condensed output to `dist/agent-src/`.
 
 Uses SHA-256 hashes to track which source files changed since last condensation.
 Only changed files need recondensation — saving tokens and time.
@@ -107,7 +107,7 @@ For each changed `.md` file:
      But don't add unrelated sections.
    - **Do NOT condense weak skills.** If the source has no procedure or no validation, fix structure first.
    - **Reference skill:** See [skill-writing](../skills/skill-writing/SKILL.md) for the gold standard
-6. Write the condensed output to `.agent-src/{path}`
+6. Write the condensed output to `dist/agent-src/{path}`
 7. **MANDATORY: Run condensation quality check on this file:**
 
 ```bash

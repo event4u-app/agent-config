@@ -73,7 +73,7 @@ contract stays clean. The warning is for **Python consumers** only.
 Removal of the shim is a separate, user-driven decision. This ADR
 deliberately does **not** pin a release, deprecation date, or removal
 milestone — release planning is decided outside roadmaps and ADRs (see
-[`scope-control`](../../.agent-src/rules/scope-control.md#git-operations--permission-gated)).
+[`scope-control`](../../dist/agent-src/rules/scope-control.md#git-operations--permission-gated)).
 
 ## State migration (v0 → v1)
 

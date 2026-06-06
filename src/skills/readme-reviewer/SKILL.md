@@ -161,7 +161,7 @@ For every internal link in the README:
 
 For every documentation file referenced by the README, check whether
 it has any **other** references in the repo (`grep -r` over
-`AGENTS.md`, `docs/`, `.agent-src*/`, `.augment/`, `packages/`).
+`AGENTS.md`, `docs/`, `dist/agent-src*/`, `.augment/`, `packages/`).
 Files referenced only by this README are **single-use** — note them
 so they can be moved or inlined later.
 

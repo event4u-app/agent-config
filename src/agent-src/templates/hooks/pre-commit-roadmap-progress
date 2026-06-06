@@ -47,7 +47,7 @@ resolve() {
 if $roadmap_relevant; then
   rp_script="$(resolve \
     ".augment/scripts/update_roadmap_progress.py" \
-    ".agent-src/scripts/update_roadmap_progress.py" \
+    "dist/agent-src/scripts/update_roadmap_progress.py" \
     ".agent-src.uncondensed/scripts/update_roadmap_progress.py" || true)"
 
   if [ -z "$rp_script" ]; then
@@ -72,7 +72,7 @@ fi
 if $frontmatter_relevant; then
   fm_script="$(resolve \
     ".augment/scripts/lint_artefact_frontmatter.py" \
-    ".agent-src/scripts/lint_artefact_frontmatter.py" \
+    "dist/agent-src/scripts/lint_artefact_frontmatter.py" \
     "scripts/lint_artefact_frontmatter.py" || true)"
 
   if [ -z "$fm_script" ]; then

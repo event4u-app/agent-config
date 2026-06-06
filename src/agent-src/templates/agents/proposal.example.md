@@ -16,7 +16,7 @@ type: ""                           # rule | skill | command | guideline
 scope: ""                          # project | package
 stage: proposed                    # captured | classified | proposed | gated | upstream
 source_learning: ""                # agents/learnings/<date>-<slug>.md
-target_artifact: ""                # .agent-src/<type>/<name>.md (for upstream scope)
+target_artifact: ""                # dist/agent-src/<type>/<name>.md (for upstream scope)
                                    # or agents/overrides/<...> (for project scope)
 author: ""                         # name or team slug
 created: 2026-01-01                # ISO date

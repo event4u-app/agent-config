@@ -207,7 +207,7 @@ is what this skill exists to teach.
 * Do NOT add `silent: true` to carve-out tasks
 * Do NOT hardcode `print()` for progress in new scripts — use `info()`
 * Do NOT skip the Taskfile wiring — without it the verbosity gates leak
-* Do NOT edit `.agent-src/`, `.augment/`, or `.claude/` projections
+* Do NOT edit `dist/agent-src/`, `.augment/`, or `.claude/` projections
 
 ## Cloud Behavior
 

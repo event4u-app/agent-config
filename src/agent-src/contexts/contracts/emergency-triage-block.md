@@ -19,9 +19,9 @@ Use this variant in `AGENTS.md` at the package root.
 
 1. **What is this repo?** — `event4u/agent-config`, a governed skill / rule / command suite for AI coding tools (no application runtime).
 2. **What language?** — All `.md` content is English; agents mirror the user's language at runtime.
-3. **Where do I edit?** — `.agent-src.uncondensed/` only. Never `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
+3. **Where do I edit?** — `.agent-src.uncondensed/` only. Never `dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
-5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `.agent-src/router.json`).
+5. **Where do the always-active rules live?** — `dist/agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `dist/agent-src/router.json`).
 ```
 
 ## Consumer-template variant
@@ -32,11 +32,11 @@ consumer's `AGENTS.md` lands at the consumer-project root after install.
 ```
 ## Emergency triage — read this when nothing else is reachable
 
-1. **What is this repo?** — Consumer project; agent-config is installed as a shared skill / rule / command suite at `.augment/` and `.agent-src/`.
+1. **What is this repo?** — Consumer project; agent-config is installed as a shared skill / rule / command suite at `.augment/` and `dist/agent-src/`.
 2. **What language?** — Project-specific; agents mirror the user's language at runtime.
-3. **Where do I edit agent-config?** — Do not edit `.augment/` or `.agent-src/` here; they are installed artifacts. Project edits live in `agents/` and project source.
+3. **Where do I edit agent-config?** — Do not edit `.augment/` or `dist/agent-src/` here; they are installed artifacts. Project edits live in `agents/` and project source.
 4. **Lint / test / sync entry point?** — Project-specific (see project README); agent-config itself reinstalls via `composer update event4u/agent-config` or `npm update @event4u/agent-config`.
-5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `.agent-src/router.json`).
+5. **Where do the always-active rules live?** — `dist/agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `dist/agent-src/router.json`).
 ```
 
 ## Why two variants

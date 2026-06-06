@@ -1,7 +1,7 @@
 # Rule Template
 
 > Template for creating new rules in `.agent-src.uncondensed/rules/{rule-name}.md`.
-> Rules ship to `.agent-src/rules/` (condensed) and `.augment/rules/` (projected).
+> Rules ship to `dist/agent-src/rules/` (condensed) and `.augment/rules/` (projected).
 > Schema: `scripts/schemas/rule.schema.json`.
 
 ## Instructions

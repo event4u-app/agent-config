@@ -26,7 +26,7 @@ duplicate triggers, verifies the Thin-Root contract, and flags stale references.
 refactor) or rule-/skill-level commands.
 
 **Source of truth:** `.agent-src.uncondensed/` — never read or edit
-`.agent-src/` or `.augment/` directly.
+`dist/agent-src/` or `.augment/` directly.
 
 ## Steps
 
@@ -142,7 +142,7 @@ Then ask:
 
 - **No edits** — read-only audit. Fixes route to `/agents optimize`,
   `skill-reviewer`, or `/optimize skills`.
-- **No edits to `.agent-src/` or `.augment/`** — those regenerate from
+- **No edits to `dist/agent-src/` or `.augment/`** — those regenerate from
   `.agent-src.uncondensed/`. Edit the source.
 - **No `agents/` folder ops** — scaffolding, folder-audit, folder-cleanup
   live in `/optimize agents-dir`.

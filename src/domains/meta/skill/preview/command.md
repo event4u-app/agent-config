@@ -27,7 +27,7 @@ decide whether to run it. Read-only, no network, no execution. Implements the
 ## Prerequisites
 
 - Python 3.10 + PyYAML on the host.
-- A skill name that resolves to `.agent-src/skills/<name>/SKILL.md`.
+- A skill name that resolves to `dist/agent-src/skills/<name>/SKILL.md`.
 
 ## Steps
 

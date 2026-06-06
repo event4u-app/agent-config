@@ -71,9 +71,9 @@ If project-specific content is found, ask:
 
 | Type | Uncondensed target | Condensed target |
 |---|---|---|
-| **Skill** | `.agent-src.uncondensed/skills/{name}/SKILL.md` | `.agent-src/skills/{name}/SKILL.md` |
-| **Rule** | `.agent-src.uncondensed/rules/{name}.md` | `.agent-src/rules/{name}.md` |
-| **Command** | `.agent-src.uncondensed/commands/{name}.md` | `.agent-src/commands/{name}.md` |
+| **Skill** | `.agent-src.uncondensed/skills/{name}/SKILL.md` | `dist/agent-src/skills/{name}/SKILL.md` |
+| **Rule** | `.agent-src.uncondensed/rules/{name}.md` | `dist/agent-src/rules/{name}.md` |
+| **Command** | `.agent-src.uncondensed/commands/{name}.md` | `dist/agent-src/commands/{name}.md` |
 | **Guideline** | `docs/guidelines/{cat}/{name}.md` | _(not condensed; reference-only)_ |
 
 ### 4. Get access to the package repo
@@ -128,7 +128,7 @@ Frontmatter must have `source: package`.
 python3 scripts/skill_linter.py --all           # 0 FAIL required
 python3 scripts/check_condensation.py            # No 🔴 errors for this file
 python3 scripts/condense.py --generate-tools    # Regenerate symlinks
-bash scripts/condense.sh --check                # .agent-src/ in sync with source
+bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
 bash scripts/condense.sh --check-hashes         # All hashes match
 ```
 
@@ -142,7 +142,7 @@ Fix any issues before continuing.
 > ✅ Files created in {package-repo}:
 >
 > - `.agent-src.uncondensed/{type}/{name}` (uncondensed)
-> - `.agent-src/{type}/{name}` (condensed)
+> - `dist/agent-src/{type}/{name}` (condensed)
 >
 > Quality gates: {pass/fail summary}
 >

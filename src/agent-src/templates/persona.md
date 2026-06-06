@@ -37,7 +37,7 @@ source: package
   - tier            required — "core" (always-loaded cast) or "specialist" (opt-in)
   - mode            optional — advisory link to a role-contracts workflow mode
   - version         required — semantic version; bump on breaking changes
-  - source          required — "package" for personas shipped in .agent-src/
+  - source          required — "package" for personas shipped in dist/agent-src/
 -->
 
 # {Role name}

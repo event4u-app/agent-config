@@ -45,7 +45,7 @@ Where:
 - `transitive_closure` walks `load_context:` declarations on
   context files **up to depth 2** — see § Nesting cap below.
 - `RawSize` is the byte size of the condensed file
-  (`.agent-src/...`), measured by `os.path.getsize()`. The
+  (`dist/agent-src/...`), measured by `os.path.getsize()`. The
   uncondensed source paths in frontmatter are mapped to their
   condensed counterparts before sizing.
 - A context loaded by N always-rules counts **N times** (once per

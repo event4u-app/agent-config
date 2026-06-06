@@ -229,5 +229,5 @@ Restoring the previous command surface:
 - `road-to-portable-runtime-and-update-check.md` § P3.5–P3.6 — the
   original `migrate` command (composer / npm cleanup).
 - `scripts/_cli/cmd_migrate.py` — implementation.
-- `.agent-src/templates/scripts/work_engine/migration/v0_to_v1.py`
+- `dist/agent-src/templates/scripts/work_engine/migration/v0_to_v1.py`
   — state-file migration helper invoked from step 4.

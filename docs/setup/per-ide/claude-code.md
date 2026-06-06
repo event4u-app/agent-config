@@ -24,8 +24,8 @@ curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.
 
 Either form populates:
 
-- `.claude/skills/`         — symlinks into `.agent-src/skills/`
-- `.claude/commands/`       — symlinks into `.agent-src/commands/`
+- `.claude/skills/`         — symlinks into `dist/agent-src/skills/`
+- `.claude/commands/`       — symlinks into `dist/agent-src/commands/`
 - `CLAUDE.md`               — agent root pointer (auto-loaded by Claude Code)
 - `.agent-settings.yml`     — your per-project knobs (kept out of git)
 
@@ -66,7 +66,7 @@ Full list: `ls .claude/skills/`.
 ## Verification
 
 ```bash
-ls -la .claude/skills/        # should symlink into .agent-src/skills/
+ls -la .claude/skills/        # should symlink into dist/agent-src/skills/
 ls -la CLAUDE.md              # exists, points to AGENTS.md
 test -f .agent-settings.yml   # per-project settings rendered
 ```

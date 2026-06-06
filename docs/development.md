@@ -8,7 +8,7 @@
 
 ## Editing content
 
-1. **Always edit in `.agent-src.uncondensed/`** — never in `.agent-src/` or `.augment/` directly
+1. **Always edit in `.agent-src.uncondensed/`** — never in `dist/agent-src/` or `.augment/` directly
 2. Run `task sync` to copy non-`.md` files
 3. Use the `/condense` command to condense changed `.md` files
 4. Run `task ci` to verify everything passes before pushing
@@ -33,9 +33,9 @@ task consistency-fix           # Regenerate all derived outputs from source
 ### Sync & Condensation
 
 ```bash
-task sync                      # .agent-src.uncondensed/ → .agent-src/, then project → .augment/
+task sync                      # .agent-src.uncondensed/ → dist/agent-src/, then project → .augment/
 task sync-changed              # List .md files changed since last condensation
-task sync-check                # Check if .agent-src/ is in sync (for CI)
+task sync-check                # Check if dist/agent-src/ is in sync (for CI)
 task sync-check-hashes         # Verify condensed .md hashes match source
 task sync-mark-done <file>     # Mark a single file as condensed
 task sync-mark-all-done        # Mark ALL files as condensed
@@ -210,12 +210,12 @@ src/templates/consumer-settings/   ← Settings templates for consumer projects
 ├── templates/                 ← Document scaffolds
 └── contexts/                  ← System knowledge documents
 
-.agent-src/                    ← Condensed output (token-efficient, shipped)
+dist/agent-src/                    ← Condensed output (token-efficient, shipped)
 ├── (same structure)           ← Condensed .md + copied non-.md files
 
 .augment/                      ← Local projection for Augment Code (gitignored)
 ├── rules/                     ← Real file copies (Augment cannot load symlinked rules)
-└── skills/, commands/, ...    ← Symlinks → ../.agent-src/<sub>
+└── skills/, commands/, ...    ← Symlinks → ../dist/agent-src/<sub>
 ```
 
 ---

@@ -109,7 +109,7 @@ asserts three invariants over `dist/discovery/discovery-manifest.json`:
    least one artefact whose logical path contains `safety-floor`.
 2. **Banner presence.** Every artefact with
    `trust.human_review_required: true` has its compiled output under
-   `.agent-src/<logical>` and that output contains
+   `dist/agent-src/<logical>` and that output contains
    `<!-- agent-config:human-review-banner -->`.
 3. **Kernel trust floor.** Every rule listed in `dist/router.json` `kernel[]`
    declares `trust.level: core`. No escalation (advisory blocks the

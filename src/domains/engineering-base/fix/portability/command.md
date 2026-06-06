@@ -82,7 +82,7 @@ Present a summary:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncondensed/`, then run `bash src/scripts/condense.sh --sync` to regenerate `.agent-src/` and `.augment/`.
+Edit files in `.agent-src.uncondensed/`, then run `bash src/scripts/condense.sh --sync` to regenerate `dist/agent-src/` and `.augment/`.
 
 After all fixes, re-run:
 

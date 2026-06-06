@@ -52,7 +52,7 @@ for narrative structure, mental-models lens for object selection).
 - **Do NOT chain sub-commands.** One `/research[:<sub>]` per turn.
 - If the user invokes `/research` with no argument, **show the menu** —
   do not guess whether they meant the bare workflow or a sub-command.
-- **Edit `.agent-src.uncondensed/` only.** `.agent-src/` and `.augment/`
+- **Edit `.agent-src.uncondensed/` only.** `dist/agent-src/` and `.augment/`
   regenerate from source.
 
 ## Trigger

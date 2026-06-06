@@ -60,7 +60,7 @@ opt-in and budget-gated.
     against `.agent-src.uncondensed/`).
   - `agents/settings/contexts/<file>.md` — project-local material (consumer
     repo only).
-  - `.agent-src/contexts/<file>.md` — condensed mirror; tolerated
+  - `dist/agent-src/contexts/<file>.md` — condensed mirror; tolerated
     defensively, not authored.
 - The `.agent-src.uncondensed/` prefix is **rejected** by the schema
   regex and by `lint_load_context.py` with a remediation hint pointing

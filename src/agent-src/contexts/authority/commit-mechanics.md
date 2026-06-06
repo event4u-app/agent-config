@@ -30,7 +30,7 @@ ODER MEHRERE?", "WIE SOLL ICH SPLITTEN?", "WELCHER ZUERST?".
 THE SPLIT IS THE AGENT'S CALL, NOT THE USER'S.
 ```
 
-Default shape — one chunk per concern (scope / refactor / rules / config / cleanup), in dependency order (foundation → feature → cleanup). Mixed-concern files split by hunk via `git add -p`. Generated / projected files (e.g. `.agent-src/`, `.augment/`, `.claude/`) ride with the source-of-truth chunk that produced them, not as a separate "regenerate projections" commit.
+Default shape — one chunk per concern (scope / refactor / rules / config / cleanup), in dependency order (foundation → feature → cleanup). Mixed-concern files split by hunk via `git add -p`. Generated / projected files (e.g. `dist/agent-src/`, `.augment/`, `.claude/`) ride with the source-of-truth chunk that produced them, not as a separate "regenerate projections" commit.
 
 The chunking decision is **never** a numbered option. Pick a sensible split, state it inline ("splitte in 3 chunks: workspace-scope · rules-hardening · gitignore-cleanup"), execute. The user retains revert / amend control after the fact — they don't need to pre-approve the chunk boundary.
 

@@ -1,7 +1,7 @@
 ---
 model_tier: lite
 name: md-language-check
-description: "Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone."
+description: "Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone."
 domain: process
 execution:
   type: assisted
@@ -24,7 +24,7 @@ packs:
 Fire this skill **before** writing or saving any `.md` file under:
 
 - `.agent-src.uncondensed/` (source of truth — skills, rules, commands, guidelines, templates, contexts)
-- `.agent-src/` (condensed projection)
+- `dist/agent-src/` (condensed projection)
 - `.augment/` (local agent projection)
 - `agents/` (project-specific roadmaps, contexts, sessions)
 

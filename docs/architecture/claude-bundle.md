@@ -8,7 +8,7 @@
 ## Input → Transform → Output
 
 ```
-.agent-src/skills/<id>/SKILL.md     ← Condensed skill (+ supporting assets)
+dist/agent-src/skills/<id>/SKILL.md     ← Condensed skill (+ supporting assets)
     ↓ scripts/build_cloud_bundle.py
 dist/cloud/<skill>.zip              ← Anthropic Skills bundle (Claude.ai Web / Skills API)
 ```
@@ -27,7 +27,7 @@ Cloud-side caps enforced by the builder:
 
 - `description` ≤ 200 chars (Claude.ai Web display limit).
 - 1024-char hard cap (Anthropic Skills API spec).
-- Sandbox note explains to the agent that `.agent-src/`, `agents/`,
+- Sandbox note explains to the agent that `dist/agent-src/`, `agents/`,
   and `task …` references are descriptive — the host has no
   filesystem access.
 
@@ -46,7 +46,7 @@ Cloud-side caps enforced by the builder:
    silently bundled with broken expectations.
 2. **Description budget enforced** — overlong descriptions fail
    the build (and CI via `ci-cloud-bundle --check`).
-3. **Package-internal paths swapped** — references to `.agent-src/`,
+3. **Package-internal paths swapped** — references to `dist/agent-src/`,
    `scripts/`, `agents/` are rewritten to descriptive form so the
    cloud agent does not attempt filesystem access.
 4. **`mcp_scope: lite`** — bundles tagged `lite` may not reference
@@ -61,7 +61,7 @@ Cloud-side caps enforced by the builder:
 |---|---|---|
 | `ci-cloud-bundle` fails on a skill | description > 200 chars, or T3-H detected | shorten frontmatter, or add cloud variant |
 | `frontmatter.description` reflows to the prompt unexpectedly | over the 200-char Claude.ai cap (hard 1024) | tighten the description |
-| Bundle references `.agent-src/` in body | path-swap rule missing | extend `build_cloud_bundle.py` rewrite table |
+| Bundle references `dist/agent-src/` in body | path-swap rule missing | extend `build_cloud_bundle.py` rewrite table |
 | Skill silently dropped from `dist/cloud/` | T3-H tier (cloud-unsafe) | author a cloud-aware variant, re-classify |
 
 ## Proving the pipeline

@@ -113,11 +113,11 @@ The id namespaces are stable and bounded:
 
 | Kind | Source | Example |
 |---|---|---|
-| `skills` | `.agent-src/skills/<id>/SKILL.md` | `php-coder`, `eloquent` |
-| `rules` | `.agent-src/rules/<id>.md` | `scope-control`, `language-and-tone` |
-| `commands` | `.agent-src/commands/<id>.md` | `commit`, `create-pr` |
+| `skills` | `dist/agent-src/skills/<id>/SKILL.md` | `php-coder`, `eloquent` |
+| `rules` | `dist/agent-src/rules/<id>.md` | `scope-control`, `language-and-tone` |
+| `commands` | `dist/agent-src/commands/<id>.md` | `commit`, `create-pr` |
 | `guidelines` | `docs/guidelines/<path>/<id>.md` | `agent-interaction-and-decision-quality` |
-| `personas` | `.agent-src/personas/<id>.md` | `qa`, `senior-engineer` |
+| `personas` | `dist/agent-src/personas/<id>.md` | `qa`, `senior-engineer` |
 
 `task_id` is the ticket key (`PROJ-123`) for `/implement-ticket` or a
 short opaque slug derived from the prompt for `/work`. Branch names,

@@ -61,7 +61,7 @@ as user-types — existing personas stay as personas.
 - One new directory (`user-types/`) projected the same way `personas/`
   is
 - Three seed files at merge time; consumer projects add their own
-  domain-specific user-types under `.agent-src/user-types/`
+  domain-specific user-types under `dist/agent-src/user-types/`
 
 **Locked v1 boundaries:**
 

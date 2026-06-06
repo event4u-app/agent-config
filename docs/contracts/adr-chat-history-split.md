@@ -128,7 +128,7 @@ sequence, just across three files.
 1. Create the three new rules under `.agent-src.uncondensed/rules/`.
 2. Delete `.agent-src.uncondensed/rules/chat-history.md`.
 3. Run `bash scripts/condense.sh --sync` to project the change into
-   `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`,
+   `dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`,
    `.windsurfrules`.
 4. Update every cross-reference (~30 files) — `check-refs` is the
    gate.

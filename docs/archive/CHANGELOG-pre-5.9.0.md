@@ -172,7 +172,7 @@ Tests: 5375 (+0 since 5.6.0)
 * **schema:** rule description cap 160 -> 190 (smoke gate treats over-cap as FAIL) ([72f05e0](https://github.com/event4u-app/agent-config/commit/72f05e02cca4e196e514d8f4f573ac9890f52583))
 * **kernel:** repoint iron_law_sha to packages/core layout (Iron-Law SHA gate was broken) ([aab5755](https://github.com/event4u-app/agent-config/commit/aab57558f7047fc21d0107dbab5aa3b49ebe4e2f))
 * **schema:** add lean_projection.mode to the settings schema (template-parity gate) ([51ed03e](https://github.com/event4u-app/agent-config/commit/51ed03ec9e74d4573b7da43a6b45804535986690))
-* **bench:** repoint bench_runner SKILLS_DIR to .agent-src for packages/core layout ([e183527](https://github.com/event4u-app/agent-config/commit/e183527c0efa4e3fe7dfb6a9df2c1e21534925a8))
+* **bench:** repoint bench_runner SKILLS_DIR to dist/agent-src for packages/core layout ([e183527](https://github.com/event4u-app/agent-config/commit/e183527c0efa4e3fe7dfb6a9df2c1e21534925a8))
 
 ### Performance
 

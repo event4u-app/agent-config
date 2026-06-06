@@ -32,7 +32,7 @@ blocks — it does not hand a half-filled doc to the next stage.
 - **Input:** raw observation (PR link, log line, review comment).
 - **Output:** learning note at `agents/learnings/<date>-<slug>.md`
   with frontmatter `source`, `evidence[]` (≥1 link), `stage: captured`.
-- **Guardrails:** nothing is written into `.agent-src/` at this stage.
+- **Guardrails:** nothing is written into `dist/agent-src/` at this stage.
   Learnings live in the consumer repo until promoted.
 
 ### Stage 2 — Classify

@@ -1,6 +1,6 @@
 {
   "command": "condense",
-  "intent": "Condense .agent-src.uncondensed sources into the shipped .agent-src trees",
+  "intent": "Condense .agent-src.uncondensed sources into the shipped dist/agent-src trees",
   "cases": [
     {
       "prompt": "condense the uncondensed sources into the shipped trees",
@@ -19,7 +19,7 @@
       "expected": "condense"
     },
     {
-      "prompt": "rebuild .agent-src from .agent-src.uncondensed",
+      "prompt": "rebuild dist/agent-src from .agent-src.uncondensed",
       "expected": "condense"
     },
     {

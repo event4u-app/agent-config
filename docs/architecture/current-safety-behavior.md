@@ -22,7 +22,7 @@ Template: `src/config/agent-settings.template.yml`.
 
 **Values:** `on` · `off` · `auto`.
 
-**Read site:** [`.agent-src/rules/autonomous-execution.md`](../../.agent-src/rules/autonomous-execution.md)
+**Read site:** [`dist/agent-src/rules/autonomous-execution.md`](../../dist/agent-src/rules/autonomous-execution.md)
 (Iron-Law rule, kernel-loaded in every profile). Cached on the first
 turn; missing key treated as `on`.
 
@@ -32,8 +32,8 @@ with the next phase?". These are suppressed when `autonomy` resolves to
 `on`.
 
 **What it does NOT gate:** any of the four floors below, any
-[`scope-control`](../../.agent-src/rules/scope-control.md) git operation,
-or any [`commit-policy`](../../.agent-src/rules/commit-policy.md) commit
+[`scope-control`](../../dist/agent-src/rules/scope-control.md) git operation,
+or any [`commit-policy`](../../dist/agent-src/rules/commit-policy.md) commit
 default. The switch only narrows the **trivial-question** surface.
 
 ### State table
@@ -48,8 +48,8 @@ default. The switch only narrows the **trivial-question** surface.
 
 Intent-matched, not literal-string-matched. Speech-act-checked: the
 phrase must be a meta-instruction, not content / quote / code. Detail:
-[`autonomy-detection`](../../.agent-src/contexts/execution/autonomy-detection.md),
-[`autonomy-mechanics`](../../.agent-src/contexts/execution/autonomy-mechanics.md).
+[`autonomy-detection`](../../dist/agent-src/contexts/execution/autonomy-detection.md),
+[`autonomy-mechanics`](../../dist/agent-src/contexts/execution/autonomy-mechanics.md).
 
 ### Task scope vs conversation scope
 
@@ -60,7 +60,7 @@ Two distinct autonomy shapes:
 | **Conversation-wide trivial-question suppression** | "stop asking on trivial steps" — no deliverable named | Sticky for the rest of the conversation. Suppresses trivial workflow questions only. |
 | **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab" — deliverable named | Bound to that task. Ends when the task ends. Does NOT authorize a different later deliverable. |  <!-- md-language-check: ignore -->
 
-Per [`autonomous-execution § task-scope`](../../.agent-src/rules/autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).
+Per [`autonomous-execution § task-scope`](../../dist/agent-src/rules/autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).
 
 ## The four non-overridable floors
 
@@ -70,14 +70,14 @@ phrases never reach them.
 
 ### 1. Hard Floor — `non-destructive-by-default`
 
-[`.agent-src/rules/non-destructive-by-default.md`](../../.agent-src/rules/non-destructive-by-default.md).
+[`dist/agent-src/rules/non-destructive-by-default.md`](../../dist/agent-src/rules/non-destructive-by-default.md).
 Stops on: production-branch merges; deploy / release; push to remote;
 production data / infra writes; whimsical bulk deletions; commits
 containing bulk deletions or infra changes. **Always confirm this turn.**
 
 ### 2. Git-ops Permission Gate — `scope-control`
 
-[`.agent-src/rules/scope-control.md § Git operations`](../../.agent-src/rules/scope-control.md#git-operations--permission-gated).
+[`dist/agent-src/rules/scope-control.md § Git operations`](../../dist/agent-src/rules/scope-control.md#git-operations--permission-gated).
 Stops on: commit · push · merge · rebase · force-push · branch create /
 switch / delete · PR create / close / retarget · tag / release / pin.
 Permission must be **this turn or a standing instruction not yet
@@ -85,14 +85,14 @@ revoked**.
 
 ### 3. Commit Default — `commit-policy`
 
-[`.agent-src/rules/commit-policy.md`](../../.agent-src/rules/commit-policy.md).
+[`dist/agent-src/rules/commit-policy.md`](../../dist/agent-src/rules/commit-policy.md).
 **Never commit, never ask about committing.** Four exceptions: user
 says so this turn · standing instruction · `/commit` invoked · roadmap
 authorization. Anything else → no commit.
 
 ### 4. Security-sensitive STOP — `security-sensitive-stop`
 
-[`.agent-src/rules/security-sensitive-stop.md`](../../.agent-src/rules/security-sensitive-stop.md).
+[`dist/agent-src/rules/security-sensitive-stop.md`](../../dist/agent-src/rules/security-sensitive-stop.md).
 Stops on: auth, billing, tenant boundaries, secrets, uploads,
 integrations, webhooks, public endpoints. Threat-model **before**
 editing.
@@ -102,7 +102,7 @@ editing.
 | Surface | What governs it |
 |---|---|
 | Trivial workflow question | `personal.autonomy` (the switch) |
-| Blocking architectural / scope question | [`ask-when-uncertain`](../../.agent-src/rules/ask-when-uncertain.md) (always) |
+| Blocking architectural / scope question | [`ask-when-uncertain`](../../dist/agent-src/rules/ask-when-uncertain.md) (always) |
 | Tool / MCP call cost | None today — Phase 1 item 4 introduces preset-loader Hard Enforcement |
 | Skill / command allowlist per audience | None today — Phase 2 item 7 introduces packs |
 | Per-domain `deny / ask / allow` | None today — Phase 2 item 9 introduces this |
@@ -117,7 +117,7 @@ editing.
    `content-engine` pack may want autonomy for content, ask-mode for
    spend; the current model cannot express that.
 2. **No per-domain policy.** Domain-safety rules
-   (`.agent-src/rules/domain-safety-*.md`) act as output floors but do
+   (`dist/agent-src/rules/domain-safety-*.md`) act as output floors but do
    not declare `deny / ask / allow` per profile. The Phase 2 model
    centralizes this.
 3. **No machine-readable safety schema.** The current behavior is
@@ -132,6 +132,6 @@ floors above.
 
 ## See also
 
-- [`autonomous-execution`](../../.agent-src/rules/autonomous-execution.md) · [`non-destructive-by-default`](../../.agent-src/rules/non-destructive-by-default.md) · [`scope-control`](../../.agent-src/rules/scope-control.md) · [`commit-policy`](../../.agent-src/rules/commit-policy.md) · [`security-sensitive-stop`](../../.agent-src/rules/security-sensitive-stop.md).
+- [`autonomous-execution`](../../dist/agent-src/rules/autonomous-execution.md) · [`non-destructive-by-default`](../../dist/agent-src/rules/non-destructive-by-default.md) · [`scope-control`](../../dist/agent-src/rules/scope-control.md) · [`commit-policy`](../../dist/agent-src/rules/commit-policy.md) · [`security-sensitive-stop`](../../dist/agent-src/rules/security-sensitive-stop.md).
 - [`docs/safety.md`](../safety.md) — domain-safety output floors.
 - [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md) — Phase 1 item 2a (this doc) and Phase 2 item 9 (Universal Safety Model ADR).

@@ -40,7 +40,7 @@ Bash (install scripts) · Python 3.10+ (linters, condensation, pytest) ·
 Markdown (all content) · Taskfile (`task ci/sync/test`) · GitHub
 Actions (`.github/workflows/`). Non-text inputs (PDF, DOCX, XLSX,
 images, audio) route through the
-[`markitdown`](../../.agent-src/skills/markitdown/SKILL.md) skill.
+[`markitdown`](../../dist/agent-src/skills/markitdown/SKILL.md) skill.
 Wings 2–4 enforce a cognition-only floor (no SaaS auth, no vendor
 SDKs) — `skill_linter.py` enforces it mechanically. Distribution
 mechanics deep-dive: [`agents-md-tech-stack.md`](agents-md-tech-stack.md) (beta).
@@ -50,12 +50,12 @@ mechanics deep-dive: [`agents-md-tech-stack.md`](agents-md-tech-stack.md) (beta)
 | Directory | Purpose | Editable? |
 |---|---|---|
 | `.agent-src.uncondensed/` | Authoring layer — full verbose content | ✅ Yes — edit here |
-| `.agent-src/` | Condensed output — shipped in the package, consumed by agents | ❌ No — regenerated |
-| `.augment/` | Local projection of `.agent-src/` for Augment Code (gitignored) | ❌ No — regenerated |
+| `dist/agent-src/` | Condensed output — shipped in the package, consumed by agents | ❌ No — regenerated |
+| `.augment/` | Local projection of `dist/agent-src/` for Augment Code (gitignored) | ❌ No — regenerated |
 | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` | Tool-specific projections | ❌ No — regenerated |
 | `agents/` | Package's own roadmaps, contexts, sessions | ✅ Yes |
 
-**Never edit `.agent-src/` or `.augment/` directly.** Edit
+**Never edit `dist/agent-src/` or `.augment/` directly.** Edit
 `.agent-src.uncondensed/` and run `task sync` (or `task ci`) to
 condense + regenerate the tool directories.
 
@@ -73,8 +73,8 @@ condense + regenerate the tool directories.
 docs/guidelines/            (47 guidelines — reference material, not packaged)
 docs/contracts/             (kernel-membership, rule-router, rule-classification, …)
 docs/decisions/             (ADRs — kernel overrides, scope decisions)
-.agent-src/                 ← condensed output shipped in the package
-.agent-src/router.json      ← compiled router manifest (consumed at runtime)
+dist/agent-src/                 ← condensed output shipped in the package
+dist/agent-src/router.json      ← compiled router manifest (consumed at runtime)
 .augment/                   ← local projection for Augment Code (gitignored)
 scripts/                    ← install.sh, install.py, condense.py, linters
 tests/                      ← pytest (324 tests) + test_install.sh
@@ -86,13 +86,13 @@ agents/                     ← this package's own roadmaps / sessions / context
 
 | Rule | File |
 |---|---|
-| `.agent-src/` must stay project-agnostic — no project names, domains, stacks | [`augment-portability`](../../.agent-src/rules/augment-portability.md) |
-| Root AGENTS.md + copilot-instructions.md must stay project-agnostic too | [`augment-portability`](../../.agent-src/rules/augment-portability.md) |
-| Edit `.agent-src.uncondensed/`, never `.agent-src/` or `.augment/` | [`augment-source-of-truth`](../../.agent-src/rules/augment-source-of-truth.md) |
-| Skills must declare frontmatter, be self-contained, pass the linter | [`skill-quality`](../../.agent-src/rules/skill-quality.md) |
-| Size budgets for skills, rules, commands | [`size-enforcement`](../../.agent-src/rules/size-enforcement.md) |
-| Keep `.agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](../../.agent-src/rules/docs-sync.md) |
-| Creating a new skill/rule/command/guideline runs Understand → Research → Draft | [`artifact-drafting-protocol`](../../.agent-src/rules/artifact-drafting-protocol.md) |
+| `dist/agent-src/` must stay project-agnostic — no project names, domains, stacks | [`augment-portability`](../../dist/agent-src/rules/augment-portability.md) |
+| Root AGENTS.md + copilot-instructions.md must stay project-agnostic too | [`augment-portability`](../../dist/agent-src/rules/augment-portability.md) |
+| Edit `.agent-src.uncondensed/`, never `dist/agent-src/` or `.augment/` | [`augment-source-of-truth`](../../dist/agent-src/rules/augment-source-of-truth.md) |
+| Skills must declare frontmatter, be self-contained, pass the linter | [`skill-quality`](../../dist/agent-src/rules/skill-quality.md) |
+| Size budgets for skills, rules, commands | [`size-enforcement`](../../dist/agent-src/rules/size-enforcement.md) |
+| Keep `dist/agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](../../dist/agent-src/rules/docs-sync.md) |
+| Creating a new skill/rule/command/guideline runs Understand → Research → Draft | [`artifact-drafting-protocol`](../../dist/agent-src/rules/artifact-drafting-protocol.md) |
 
 ## Maintainer telemetry (opt-in)
 
@@ -101,14 +101,14 @@ Default-off. `telemetry.artifact_engagement.enabled: true` in
 floor + pipeline:
 [`artifact-engagement-flow.md`](../../.agent-src.uncondensed/contexts/contracts/artifact-engagement-flow.md)
 (beta). Rule:
-[`artifact-engagement-recording`](../../.agent-src/rules/artifact-engagement-recording.md).
+[`artifact-engagement-recording`](../../dist/agent-src/rules/artifact-engagement-recording.md).
 
 ## Context-aware command suggestion
 
 When a free-form prompt matches a command's purpose, the agent
 surfaces matches as numbered options with a "run as-is" escape;
 **nothing auto-executes**. Engine: `scripts/command_suggester/`.
-Rule: [`command-suggestion-policy`](../../.agent-src/rules/command-suggestion-policy.md).
+Rule: [`command-suggestion-policy`](../../dist/agent-src/rules/command-suggestion-policy.md).
 Eligibility + scoring + hardening:
 [`adr-command-suggestion.md`](adr-command-suggestion.md) and
 [`command-suggestion-flow.md`](../../.agent-src.uncondensed/contexts/contracts/command-suggestion-flow.md)
@@ -116,7 +116,7 @@ Eligibility + scoring + hardening:
 
 ## Multi-agent tool support
 
-`task generate-tools` projects `.agent-src/` into Augment Code, Claude
+`task generate-tools` projects `dist/agent-src/` into Augment Code, Claude
 Code (Agent Skills standard), Cursor, Cline, Windsurf, Gemini CLI,
 and Claude.ai cloud bundles. Skills follow
 [agentskills.io](https://agentskills.io); commands are converted to
@@ -127,7 +127,7 @@ layout + cloud-bundle pipeline:
 ## Contributing
 
 1. Edit inside `.agent-src.uncondensed/` or `scripts/` or `tests/` —
-   never in `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, etc.
+   never in `dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, etc.
 2. Run `task ci` locally. It must exit 0.
 3. Commit in logical chunks with Conventional Commits.
 4. Open a PR against `main`.

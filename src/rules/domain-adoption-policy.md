@@ -150,7 +150,7 @@ core artefact.
 ## See also
 
 - [`augment-edit-discipline`](augment-edit-discipline.md) —
-  `.agent-src/` must stay project-agnostic and cross-references must stay
+  `dist/agent-src/` must stay project-agnostic and cross-references must stay
   in sync; domain plates inherit both floors
 - [`size-enforcement`](size-enforcement.md) — size budgets apply per
   artefact regardless of domain

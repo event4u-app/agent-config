@@ -15,7 +15,7 @@ when authoring or pre-review verification fires.
    (`bash scripts/condense.sh --changed`). If files need condensation,
    ask the user:
    ```
-   > 📦 {N} .agent-src files need condensation before commit.
+   > 📦 {N} dist/agent-src files need condensation before commit.
    >
    > 1. Condense now — run /condense
    > 2. Later — commit without condensation
@@ -66,20 +66,20 @@ disable-model-invocation: true
 
 1. Create `.agent-src.uncondensed/commands/{name}.md` (use template)
 2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
-3. Condense via `/condense`, which writes to `.agent-src/commands/`
+3. Condense via `/condense`, which writes to `dist/agent-src/commands/`
 4. Run `python3 scripts/condense.py --generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
 
 ## Multi-agent symlink mapping
 
-`.claude/skills/` contains symlinks to **both** `.agent-src/skills/` and `.agent-src/commands/`.
+`.claude/skills/` contains symlinks to **both** `dist/agent-src/skills/` and `dist/agent-src/commands/`.
 Claude Code treats both as "skills" — but they are different artifact types in our taxonomy.
 
 | `.claude/skills/{name}/SKILL.md` points to... | Actual type |
 |---|---|
-| `.agent-src/skills/{name}/SKILL.md` | **Skill** (workflow) |
-| `.agent-src/commands/{name}.md` | **Command** (slash-invoked procedure) |
+| `dist/agent-src/skills/{name}/SKILL.md` | **Skill** (workflow) |
+| `dist/agent-src/commands/{name}.md` | **Command** (slash-invoked procedure) |
 
 Always check the symlink target to determine the actual artifact type.
 Commands have `disable-model-invocation: true` in their frontmatter.
@@ -88,11 +88,11 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 
 | Task | What to do |
 |---|---|
-| Edit existing file | Edit in `.agent-src.uncondensed/`, condense to `.agent-src/` |
-| Create new `.md` | Create in `.agent-src.uncondensed/`, condense to `.agent-src/` |
+| Edit existing file | Edit in `.agent-src.uncondensed/`, condense to `dist/agent-src/` |
+| Create new `.md` | Create in `.agent-src.uncondensed/`, condense to `dist/agent-src/` |
 | Create new non-`.md` | Create in `.agent-src.uncondensed/`, run `bash scripts/condense.sh --sync` |
 | Create new command | Create in `.agent-src.uncondensed/commands/`, sync, `python3 scripts/condense.py --generate-tools` |
-| Delete a file | Delete from `.agent-src.uncondensed/` and `.agent-src/` |
+| Delete a file | Delete from `.agent-src.uncondensed/` and `dist/agent-src/` |
 | Check what needs condensation | `bash scripts/condense.sh --changed` |
 | Mark file as condensed | `bash scripts/condense.sh --mark-done {path}` |
 | Verify everything is in sync | `bash scripts/condense.sh --check` |

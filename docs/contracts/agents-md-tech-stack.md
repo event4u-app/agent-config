@@ -13,7 +13,7 @@ is the long-form reference.
 ## Recommended ingestion path for non-text formats
 
 PDF, DOCX, XLSX, PPTX, EPUB, image, and audio inputs route through the
-[`markitdown`](../../.agent-src/skills/markitdown/SKILL.md) skill — a
+[`markitdown`](../../dist/agent-src/skills/markitdown/SKILL.md) skill — a
 thin markdown-only wrapper over Microsoft's MIT-licensed
 `markitdown-mcp` server (peer-side install, zero Python in this
 package). The skill ships the four-layer security defense:
@@ -71,5 +71,5 @@ Malice Floor for the full rule.
   architecture and cloud-bundle pipeline
 - [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   — Structural Malice Floor
-- [`.agent-src/skills/markitdown/SKILL.md`](../../.agent-src/skills/markitdown/SKILL.md)
+- [`dist/agent-src/skills/markitdown/SKILL.md`](../../dist/agent-src/skills/markitdown/SKILL.md)
   — markitdown skill entry point

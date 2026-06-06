@@ -66,7 +66,7 @@ imperatives (`NEVER COMMIT.`).
 Sweep covered all 310 lintable artifacts via
 [`scripts/measure_density.py`](../../src/scripts/measure_density.py); raw
 data lives at `agents/runtime/density/snapshot.jsonl` (local-only — re-run
-`python3 scripts/measure_density.py --root .agent-src --jsonl
+`python3 scripts/measure_density.py --root dist/agent-src --jsonl
 agents/runtime/density/snapshot.jsonl` to regenerate).
 
 | Type | Count | Avg density | Median | Bucket [0.4-0.6] | Bucket [0.6-1.0] |

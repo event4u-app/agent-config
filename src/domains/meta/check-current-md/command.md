@@ -95,10 +95,10 @@ Apply all fixes** for ≤2 findings or when all are pure translations.
 Edit only the source-of-truth file:
 
 - Path under `.agent-src.uncondensed/` → edit there directly
-- Path under `.agent-src/` → edit the matching
+- Path under `dist/agent-src/` → edit the matching
   `.agent-src.uncondensed/` file instead, then run
   `bash scripts/condense.sh --sync`
-- Path under `.augment/` → same as `.agent-src/` (it's a projection)
+- Path under `.augment/` → same as `dist/agent-src/` (it's a projection)
 - Path under `agents/` → edit directly (no condensation layer)
 
 After all fixes, re-run:
@@ -131,7 +131,7 @@ This keeps `.condensation-hashes.json` consistent with the new content.
 
 ## When NOT to use
 
-- Project content outside `.agent-src*/`, `.augment/`, or `agents/`
+- Project content outside `dist/agent-src*/`, `.augment/`, or `agents/`
   follows a different language policy — do not enforce English there.
 - During autonomous edits, the [`md-language-check`](../skills/md-language-check/SKILL.md)
   skill already gates saves; this command is for **manual** spot-checks.

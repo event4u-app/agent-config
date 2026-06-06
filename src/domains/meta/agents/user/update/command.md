@@ -44,7 +44,7 @@ first." and stop.
 
 ### 2. Open in IDE
 
-Use the [`file-editor`](../../../../.agent-src/skills/file-editor/SKILL.md)
+Use the [`file-editor`](../../../../dist/agent-src/skills/file-editor/SKILL.md)
 skill — reads `personal.ide` from `.agent-settings.yml` (vscode,
 phpstorm, cursor, etc.) and opens the file.
 
@@ -94,7 +94,7 @@ Do NOT commit. Do NOT chain to another `/agents user *` command.
 - Never write third-party PII even if it appears in the user's edit —
   re-surface and ask for redaction.
 - Mirror the user's language for all prompts per
-  [`language-and-tone`](../../../../.agent-src/rules/language-and-tone.md).
+  [`language-and-tone`](../../../../dist/agent-src/rules/language-and-tone.md).
 
 ## See also
 

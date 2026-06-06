@@ -128,7 +128,7 @@ the PR or split by responsibility.
 
 * Run `python3 scripts/skill_linter.py .agent-src.uncondensed/rules/{name}.md`
   → must report **0 FAIL**.
-* Run `bash scripts/condense.sh --sync` to regenerate `.agent-src/rules/{name}.md`.
+* Run `bash scripts/condense.sh --sync` to regenerate `dist/agent-src/rules/{name}.md`.
 * Run `python3 scripts/condense.py --generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.
@@ -215,7 +215,7 @@ and body links (relative `../../docs/...`, rewriter handles depth).
 * Description like "Rule about X" — it must describe *when*, not *what*.
 * Pasting a workflow into a rule — if it has numbered steps, split into a skill.
 * Forgetting to run `python3 scripts/condense.py --generate-tools` — downstream tools stay stale.
-* Editing `.agent-src/rules/` or `.augment/rules/` directly — those are generated.
+* Editing `dist/agent-src/rules/` or `.augment/rules/` directly — those are generated.
 
 ## Frugality Standards
 
@@ -243,7 +243,7 @@ to every rule you author.
 
 * Do NOT inline long procedures
 * Do NOT exceed the hard size limit without an explicit waiver
-* Do NOT edit projections (`.agent-src/`, `.augment/`, `.claude/`, etc.)
+* Do NOT edit projections (`dist/agent-src/`, `.augment/`, `.claude/`, etc.)
 * Do NOT skip the linter
 * Do NOT create a rule when a guideline or skill is the right shape
 

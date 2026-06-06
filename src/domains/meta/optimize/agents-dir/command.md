@@ -108,7 +108,7 @@ surface changes.
 - **No edits to rules / skills / `.augment/`** — that's [`/agents audit`](../agents/audit.md), `/optimize skills`, or `skill-reviewer`.
 - **No commits, no push, no PR** — finishing is a user decision per
   [`commit-policy`](../../rules/commit-policy.md).
-- **No edits to `.agent-src/` or `.augment/`** — those regenerate from
+- **No edits to `dist/agent-src/` or `.augment/`** — those regenerate from
   `.agent-src.uncondensed/`. Edit the source.
 
 ## See also

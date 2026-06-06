@@ -30,7 +30,7 @@ esac
 script=""
 for cand in \
   ".augment/scripts/lint_artefact_frontmatter.py" \
-  ".agent-src/scripts/lint_artefact_frontmatter.py" \
+  "dist/agent-src/scripts/lint_artefact_frontmatter.py" \
   "scripts/lint_artefact_frontmatter.py"; do
   if [ -f "$cand" ]; then
     script="$cand"

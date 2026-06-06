@@ -8,7 +8,7 @@
 After installing `event4u/agent-config`, the consumer project gets:
 
 - `AGENTS.md` at project root — Thin-Root, points here.
-- `.augment/`, `.agent-src/`, `.claude/`, `.cursor/`, `.clinerules/`,
+- `.augment/`, `dist/agent-src/`, `.claude/`, `.cursor/`, `.clinerules/`,
   `.windsurfrules` — installed artifacts, never hand-edited.
 - `agents/` — project docs / roadmaps / sessions / overrides.
 - `.agent-settings.yml` — project config consumed by skills.

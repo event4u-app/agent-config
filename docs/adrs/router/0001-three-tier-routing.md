@@ -47,7 +47,7 @@ unconditional by definition.
 
 ### Compilation pipeline
 
-1. `scripts/sync.py` projects `.agent-src.uncondensed/` → `.agent-src/`.
+1. `scripts/sync.py` projects `.agent-src.uncondensed/` → `dist/agent-src/`.
 2. `scripts/compile_router.py` walks rule frontmatter, validates the
    `routes_to:` targets exist on disk, writes `dist/router.json`.
 3. `scripts/skill_linter.py` runs the bidirectional check: every

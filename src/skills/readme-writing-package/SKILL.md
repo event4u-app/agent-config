@@ -280,7 +280,7 @@ For every internal link in the new draft:
 2. For every anchor link, grep the target for the heading slug.
 3. Build the **link-delta** vs. the old README — `kept` / `added` /
    `dropped`. For every `dropped` target, search the rest of the repo
-   (`grep -r` over `AGENTS.md`, `docs/`, `.agent-src*/`, `packages/`).
+   (`grep -r` over `AGENTS.md`, `docs/`, `dist/agent-src*/`, `packages/`).
    No other reference → mark **orphan-candidate**.
 
 Surface the orphan-candidate list to the user — never delete silently.

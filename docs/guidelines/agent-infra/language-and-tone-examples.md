@@ -1,6 +1,6 @@
 # language-and-tone — examples and failure modes
 
-> Reference companion to [`.agent-src/rules/language-and-tone.md`](../../.agent-src/rules/language-and-tone.md).
+> Reference companion to [`dist/agent-src/rules/language-and-tone.md`](../../dist/agent-src/rules/language-and-tone.md).
 > Pulled out so the always-active rule stays under its character budget.
 > Linked from the rule via the **Examples** section; agents do not load this file
 > automatically, only when they want concrete demonstrations or are debugging a
@@ -100,7 +100,7 @@ rewrite the whole reply.
 
 ## `.md` files — pre-save detection heuristic
 
-Before saving any `.md` under `.augment/`, `.agent-src/`,
+Before saving any `.md` under `.augment/`, `dist/agent-src/`,
 `.agent-src.uncondensed/`, or `agents/`, scan the body for:
 
 - Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) **outside** fenced code,

@@ -34,7 +34,7 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 
 Four load-bearing additions reshaped the top of the model between 2.2.2 and the current release. They are listed here so the diagram above reads as the *current* package, not a historical accumulation:
 
-1. **Router-Kernel** — the always-loaded Iron Laws collapsed into a 9-rule kernel with explicit per-rule character budgets enforced by `task lint-rule-budget`; everything else routes via tier-1/2 (`.agent-src/router.json`). Contract: [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) — both (beta).
+1. **Router-Kernel** — the always-loaded Iron Laws collapsed into a 9-rule kernel with explicit per-rule character budgets enforced by `task lint-rule-budget`; everything else routes via tier-1/2 (`dist/agent-src/router.json`). Contract: [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) — both (beta).
 2. **MCP Lite/Full** — replaces the old "Tool Adapters" layer at the top level. Lite is the hosted read-only surface (Claude.ai, Cloud agents); Full is the local stdio server consumers self-host. Promotion to beta is gated on six falsifiable artefacts in `docs/contracts/mcp-beta-criteria.md`; the old GitHub / Jira adapters remain as an internal detail of the Execution Contracts layer (see Tool Adapters subsection below).
 3. **npx distribution** — Composer and `npm install` paths retired in favour of `npx @event4u/agent-config`, with the lockfile-equivalent role played by `agent_config_version` in `.agent-settings.yml`. Full rationale in the "Distribution model" subsection below.
 4. **Command tiering** — `/`-commands now declare a `tier:` (0 / 1 / 2 / 3) that maps to invocation frequency and surface budget; tier-0 is the trimmed Tier-0 set surfaced in `agent-config --help` after the 2.7.x surface-discipline pass. Contract: [`command-surface-tiers.md`](contracts/command-surface-tiers.md) + [`command-clusters.md`](contracts/command-clusters.md) — both (beta).
@@ -53,7 +53,7 @@ and cites the script, Taskfile target, and test file that prove
 the pipeline.
 
 ```
-.agent-src.uncondensed/   ──Pipeline A──▶  .agent-src/
+.agent-src.uncondensed/   ──Pipeline A──▶  dist/agent-src/
                                               │
                                               ├──Pipeline B──▶  .augment/
                                               │
@@ -65,7 +65,7 @@ the pipeline.
 
 | Pipeline | Page | Output |
 |---|---|---|
-| **A.** Source projection | [`architecture/source-projection.md`](architecture/source-projection.md) | `.agent-src/` |
+| **A.** Source projection | [`architecture/source-projection.md`](architecture/source-projection.md) | `dist/agent-src/` |
 | **B.** Augment projection | [`architecture/augment-projection.md`](architecture/augment-projection.md) | `.augment/` |
 | **C.** Multi-tool projection | [`architecture/multi-tool-projection.md`](architecture/multi-tool-projection.md) | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
 | **D.** Claude.ai bundle | [`architecture/claude-bundle.md`](architecture/claude-bundle.md) | `dist/cloud/<skill>.zip` |
@@ -79,13 +79,13 @@ Taskfile target — or vice versa.
 
 For every tool the package supports, **filesystem** is the canonical channel that the consumer installer (`scripts/install.sh`) writes — see [`contracts/skill-distribution-channels.md`](contracts/skill-distribution-channels.md). Pipeline C above always writes the filesystem trees (`.claude/skills/`, `.cursor/rules/`, `.clinerules/`, `.windsurfrules`, etc.) into the consumer project. Plugin manifests at the package source (`.claude-plugin/marketplace.json`, `.augment-plugin/marketplace.json`) are preserved for users who install via the host's plugin registry, but the installer does **not** project a second registry into consumer projects. Users on older harnesses that require both channels opt in with `bash scripts/install.sh --legacy-both`. Regression test: [`tests/test_canonical_distribution.py`](../tests/test_canonical_distribution.py).
 
-Cross-references inside `.agent-src/rules/*.md` are written
-**relative to `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
+Cross-references inside `dist/agent-src/rules/*.md` are written
+**relative to `dist/agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
 `../docs/guidelines/agent-infra/foo.md`). Source files under
 `.agent-src.uncondensed/rules/` use **logical names** without a
 directory prefix (e.g. `contexts/execution/foo.md`); the
 condense-time path rewriter in `scripts/condense.py` translates
-them to the relative form when writing into `.agent-src/`. Hardcoding
+them to the relative form when writing into `dist/agent-src/`. Hardcoding
 `.agent-src.uncondensed/` in source frontmatter or body links is
 forbidden and caught by `scripts/check_condensed_paths.py`.
 
@@ -330,7 +330,7 @@ Installed (copy-if-missing) by `scripts/install.sh` from
 the installer never overwrites.
 
 The mechanical floor is `scripts/check_condensed_paths.py`, wired into
-`task ci` as `check-condensed-paths`. It validates `.agent-src/rules/*.md`:
+`task ci` as `check-condensed-paths`. It validates `dist/agent-src/rules/*.md`:
 
 - `load_context:` entries must resolve to existing files.
 - Forbidden substrings (`.agent-src.uncondensed/`, `../../docs/`,
@@ -346,7 +346,7 @@ If a regression is suspected, replay the smoke test against the
 package's own `.augment/` projection:
 
 ```bash
-task sync                              # regenerate .agent-src/ → .augment/
+task sync                              # regenerate dist/agent-src/ → .augment/
 python3 scripts/smoke_path_resolution.py
 ```
 

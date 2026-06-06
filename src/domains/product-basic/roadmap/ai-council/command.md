@@ -27,7 +27,7 @@ artefact), then drives the user through applying convergence
 findings as numbered patches against the roadmap file.
 
 **Source of truth:** `.agent-src.uncondensed/` — never read or edit
-`.agent-src/` or `.augment/` directly.
+`dist/agent-src/` or `.augment/` directly.
 
 ## Instructions
 

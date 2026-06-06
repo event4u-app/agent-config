@@ -32,7 +32,7 @@ agent-config cost reset --confirm       # truncate sessions.jsonl + budget.json
 All subcommands are **read-only by default**. `ingest` writes only to
 `agents/cost-tracking/sessions.jsonl`. `reset` is destructive and
 gated by `--confirm` (Hard-Floor per
-[`non-destructive-by-default`](../../.agent-src/rules/non-destructive-by-default.md)).
+[`non-destructive-by-default`](../../dist/agent-src/rules/non-destructive-by-default.md)).
 
 ## `cost status` — output contract
 

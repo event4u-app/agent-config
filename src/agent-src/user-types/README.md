@@ -104,7 +104,7 @@ review proceeds without simulation.
   concrete review points, ≥ 3 Unique Questions falsifiable against a
   ticket).
 - Project-specific user-types live in the consumer repo
-  (`.agent-src/user-types/` overrides), never in this package — the
+  (`dist/agent-src/user-types/` overrides), never in this package — the
   three seeds shipped here are illustrative reference content.
 - Template: [`./_template/user-type.md`](./_template/user-type.md) (7 sections, ≤ 120 lines).
 

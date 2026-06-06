@@ -168,7 +168,7 @@ final reply per
 
 ## What this command does NOT do
 
-- **No edits to** `.augment/` **or** `.agent-src/` — those regenerate
+- **No edits to** `.augment/` **or** `dist/agent-src/` — those regenerate
   from `.agent-src.uncondensed/`. Edit the source.
 - **No commits, no push, no PR** — finishing the refactor is a user
   decision; cite [`commit-policy`](../../rules/commit-policy.md).

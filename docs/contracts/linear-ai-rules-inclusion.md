@@ -30,7 +30,7 @@ keep-beta-until: 2026-08-12
 Two transformations the digest builder (Phase 3 Step 2) must apply
 to *included-degraded* rules:
 
-1. Strip references to scripts, `.agent-settings.yml`, `.agent-src/`,
+1. Strip references to scripts, `.agent-settings.yml`, `dist/agent-src/`,
    `.augment/`, `agents/`, and `task <foo>` invocations.
 2. Replace `[link](path)` to other rules/skills/files with a footnote
    or inline summary, since the path won't resolve outside this repo.

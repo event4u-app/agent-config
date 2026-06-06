@@ -75,7 +75,7 @@ scripts/ai-video/lib/validate-deps.sh .agent-src.uncondensed/commands/video/from
 ```
 
 Fails fast with the missing-id list if any declared persona / skill is
-absent from `.agent-src/personas/` or `.agent-src/skills/`. No network
+absent from `dist/agent-src/personas/` or `dist/agent-src/skills/`. No network
 call has happened yet.
 
 Then confirm the **runtime helper scripts** exist and are executable —

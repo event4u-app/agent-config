@@ -85,7 +85,7 @@ Before completing any transformation, verify:
 - Skill merges (combining two skills into one)
 - Skill splits (extracting part of a skill)
 - Refactoring (restructuring without behavior change)
-- Condensation (`.agent-src.uncondensed/` → `.agent-src/`)
+- Condensation (`.agent-src.uncondensed/` → `dist/agent-src/`)
 - Rule consolidation
 - Guideline restructuring
 

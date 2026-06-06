@@ -532,7 +532,7 @@ Markdown parsing reserved as fallback.
 | CI gate | `task check-corpus` (used by `task consistency`) | Fails on drift between source and lockfile. |
 
 The committed lockfile is the contract: a stale lockfile fails CI the
-same way `.agent-src/` drift does. The Markdown parser stays in the
+same way `dist/agent-src/` drift does. The Markdown parser stays in the
 repo as a build-time dependency, not a runtime dependency — a parser
 regression breaks `task consistency`, never the live council.
 

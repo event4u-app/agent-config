@@ -152,7 +152,7 @@ Do NOT commit. Do NOT run any other `/agents user` sub-sub-command.
 
 - One question per turn. Never batch.
 - Numbered options where the answer is enum-like (per
-  [`user-interaction`](../../../../.agent-src/rules/user-interaction.md)).
+  [`user-interaction`](../../../../dist/agent-src/rules/user-interaction.md)).
 - Never invent fields not in the locked v1 schema.
 - Never write third-party PII even if the user pastes it — surface
   and ask for redaction.

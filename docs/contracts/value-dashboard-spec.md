@@ -81,7 +81,7 @@ Rung order:
    input. Token delta is *positive* (the rule body lands in context).
    Source: `metric_a_footprint` from `frugality/baseline.jsonl`.
 3. **+ condense** — the input-side carve-out savings from
-   condensation (`.agent-src.uncondensed` → `.agent-src`). Source:
+   condensation (`.agent-src.uncondensed` → `dist/agent-src`). Source:
    `internal/bench/reports/telegraph-v2.json`. **Excludes Thin-Root
    files** (AGENTS.md variants — they net negative); the Thin-Root
    caveat surfaces as a footnote, not a hidden exclusion.
@@ -258,7 +258,7 @@ copies it verbatim into the dashboard.
   than input. Per-token output costs more than input.
 - **condense** — a build step that shrinks the rule files
   before they ship (`.agent-src.uncondensed` →
-  `.agent-src`). Saves input tokens on every request.
+  `dist/agent-src`). Saves input tokens on every request.
 - **rtk** — the *Rust Token Killer*, a CLI wrapper that strips
   verbose output (`git status`, lint output, test runners) before
   the model reads it. Saves input tokens on tool calls.

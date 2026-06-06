@@ -59,7 +59,7 @@ def _load_pipeline(path: Path) -> dict[str, Any]:
 
     Walks parents to find ``scripts/hooks/dispatch_hook.py`` so the
     loader is reachable both when this module runs from the consumer
-    projection (``.agent-src/templates/scripts/work_engine/``) and
+    projection (``dist/agent-src/templates/scripts/work_engine/``) and
     from the source-of-truth tree
     (``packages/<pack>/.agent-src.uncondensed/templates/scripts/work_engine/``).
     Loaded via ``importlib.util`` by file path to avoid namespace
@@ -69,7 +69,7 @@ def _load_pipeline(path: Path) -> dict[str, Any]:
     here = Path(__file__).resolve()
     candidate: Path | None = None
     # Layout-agnostic: the dispatcher sits at `scripts/hooks/` in a consumer
-    # install + the `.agent-src/` projection, and at `src/scripts/hooks/` in the
+    # install + the `dist/agent-src/` projection, and at `src/scripts/hooks/` in the
     # maintainer source tree (6.0.0-D moved the tooling under `src/`). Probe both
     # per parent so the loader resolves regardless of where this template runs.
     rel_candidates = (

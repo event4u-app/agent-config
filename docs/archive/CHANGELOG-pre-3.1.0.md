@@ -77,7 +77,7 @@
 ### Bug Fixes
 
 * **ci:** sync condensed outputs (fetch description, failure-modes heading, agent-settings code block) ([6bb9b36](https://github.com/event4u-app/agent-config/commit/6bb9b363a46310ffe32d1859ed356eaf0cbd6b18))
-* **ci:** propagate path refactor into .agent-src/, trim ghostwriter description ([2747288](https://github.com/event4u-app/agent-config/commit/2747288b62ee4135d5f5459d2864f3a8fe0ce97a))
+* **ci:** propagate path refactor into dist/agent-src/, trim ghostwriter description ([2747288](https://github.com/event4u-app/agent-config/commit/2747288b62ee4135d5f5459d2864f3a8fe0ce97a))
 * **ui:** surface field errors on wizard step nav and toggle/radio inputs ([3abd156](https://github.com/event4u-app/agent-config/commit/3abd1560691397a4bfbf85f1279b6f9146513418))
 * **roadmaps:** update wizard-install-py-wiring parent link to archive path ([a40ae6e](https://github.com/event4u-app/agent-config/commit/a40ae6e2da01e2b96120af3fe87f2a787dc9b076))
 * **ui:** close diff modal and focus first errored field on save failure ([dd5bc72](https://github.com/event4u-app/agent-config/commit/dd5bc7236e26757dc4f809f49ee8f600710baebf))
