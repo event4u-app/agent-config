@@ -17,6 +17,15 @@ packs:
 
 # review-routing
 
+> **Intentionally a command, not a skill** (ADR-057, road-to-6.2.0 Step 7b).
+> This is a meta-tool used to debug task-routing itself. Converting it to a
+> skill would make it reachable *only* by description-match — useless when the
+> description-matcher is the thing being debugged (a circular dependency). The
+> explicit `/review-routing` command is the guaranteed debug-bypass, reachable
+> regardless of routing health. The `replaces:`/skill-conversion gate is
+> therefore **declined**; the `review-routing` skill below remains the
+> implementation this command dispatches to.
+
 ## Instructions
 
 Produce a review-routing block for the current diff — owner-mapped

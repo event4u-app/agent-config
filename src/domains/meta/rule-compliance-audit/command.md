@@ -17,6 +17,13 @@ packs:
 
 # rule-compliance-audit
 
+> **Intentionally a command, not a skill** (ADR-057, road-to-6.2.0 Step 7b).
+> Like `review-routing`, this is a meta-tool that inspects rule-trigger quality
+> — the auto-detection machinery itself. A skill reachable only by
+> description-match cannot be relied on to debug a broken description-matcher.
+> The explicit `/rule-compliance-audit` command is the guaranteed debug-bypass,
+> independent of the routing pipeline. Skill-conversion gate **declined**.
+
 ## Instructions
 
 ### 1. Inventory all rules

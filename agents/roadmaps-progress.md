@@ -6,17 +6,17 @@
 
 ## Overall
 
-**52 / 152 steps done · 34%**
+**57 / 152 steps done · 38%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.2.0-consolidation-evidence-gates.md](roadmaps/road-to-6.2.0-consolidation-evidence-gates.md) | 4 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-6.2.0-consolidation-evidence-gates.md](roadmaps/road-to-6.2.0-consolidation-evidence-gates.md) | 4 | 8 | 3 | 5 | 0 | 0 | ██████░░░░ 62% |
 | 2 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 | 3 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 | 4 | [road-to-music-video-orchestration.md](roadmaps/road-to-music-video-orchestration.md) | 5 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,14 +29,14 @@
 
 ### [road-to-6.2.0-consolidation-evidence-gates.md](roadmaps/road-to-6.2.0-consolidation-evidence-gates.md)
 
-**Road to 6.2.0 — Consolidation evidence-gates (the council-deferred remainder)** — 0 / 8 done (0%)
+**Road to 6.2.0 — Consolidation evidence-gates (the council-deferred remainder)** — 5 / 8 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Step 7 — physical command → skill conversion (the platform leaves) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Step 8 — hard alias-drop (the 6.0.0-D deprecation aliases) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Step 5b — feature-plan mode-flags (only if usage demands) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | Step 9b — Flows runtime navigation (after the doc proves itself) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Step 8 — hard alias-drop (the 6.0.0-D deprecation aliases) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 3 | Step 5b — feature-plan mode-flags (only if usage demands) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 4 | Step 9b — Flows runtime navigation (after the doc proves itself) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
