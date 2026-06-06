@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-09-04
 ---
 
 # Harness Expectations — when AI tool behaviour looks like a package bug but isn't
