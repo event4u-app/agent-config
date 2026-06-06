@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Pre-commit hook: roadmap progress + artefact frontmatter
+# (event4u/agent-config — installed by `./agent-config hooks:install`).
+#
+# Two opt-in checks run on relevant staged paths and short-circuit
+# otherwise:
+#   1. agents/roadmaps-progress.md sync (against agents/roadmaps/*.md)
+#   2. ADR-013 per-artefact frontmatter contract (.agent-src.uncondensed/*.md)
+#
+# To run manually:
+#   ./agent-config roadmap:progress-check
+#   python3 scripts/lint_artefact_frontmatter.py
+#
+# To uninstall:
+#   rm .git/hooks/pre-commit
+set -e
+
+staged="$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)"
+
+roadmap_relevant=false
+frontmatter_relevant=false
+case "$staged" in
+  *agents/roadmaps/*.md*|*agents/roadmaps-progress.md*|*.augment/scripts/update_roadmap_progress.py*)
+    roadmap_relevant=true ;;
+esac
+case "$staged" in
+  *.agent-src.uncondensed/*.md*|*config/discovery/*.yml*|*scripts/lint_artefact_frontmatter.py*)
+    frontmatter_relevant=true ;;
+esac
+
+if ! $roadmap_relevant && ! $frontmatter_relevant; then
+  exit 0
+fi
+
+resolve() {
+  local cand
+  for cand in "$@"; do
+    if [ -f "$cand" ]; then
+      printf '%s\n' "$cand"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# --- Check 1: roadmap progress dashboard sync --------------------------
+if $roadmap_relevant; then
+  rp_script="$(resolve \
+    ".augment/scripts/update_roadmap_progress.py" \
+    "dist/agent-src/scripts/update_roadmap_progress.py" \
+    ".agent-src.uncondensed/scripts/update_roadmap_progress.py" || true)"
+
+  if [ -z "$rp_script" ]; then
+    echo "⚠️  pre-commit: update_roadmap_progress.py not found — skipping roadmap check." >&2
+  elif ! python3 "$rp_script" --check >/dev/null 2>&1; then
+    echo "❌  agents/roadmaps-progress.md is stale relative to your staged changes." >&2
+    echo "" >&2
+    echo "    Regenerate the dashboard with one of:" >&2
+    echo "      ./agent-config roadmap:progress" >&2
+    echo "      task roadmap-progress" >&2
+    echo "      python3 $rp_script" >&2
+    echo "" >&2
+    echo "    Then \`git add agents/roadmaps-progress.md\` and retry the commit." >&2
+    echo "" >&2
+    echo "    To bypass once (NOT recommended):" >&2
+    echo "      git commit --no-verify" >&2
+    exit 1
+  fi
+fi
+
+# --- Check 2: ADR-013 artefact frontmatter contract --------------------
+if $frontmatter_relevant; then
+  fm_script="$(resolve \
+    ".augment/scripts/lint_artefact_frontmatter.py" \
+    "dist/agent-src/scripts/lint_artefact_frontmatter.py" \
+    "scripts/lint_artefact_frontmatter.py" || true)"
+
+  if [ -z "$fm_script" ]; then
+    echo "⚠️  pre-commit: lint_artefact_frontmatter.py not found — skipping frontmatter check." >&2
+  elif ! python3 "$fm_script" --quiet >/dev/null 2>&1; then
+    echo "❌  Artefact frontmatter lint failed (ADR-013 contract violation)." >&2
+    echo "" >&2
+    echo "    Re-run for details:" >&2
+    echo "      python3 $fm_script" >&2
+    echo "      task lint-artefact-frontmatter" >&2
+    echo "" >&2
+    echo "    Common fixes:" >&2
+    echo "      • Add missing workspaces/packs/lifecycle/trust/install keys." >&2
+    echo "      • Pick values from config/discovery/{workspaces,packs}.yml." >&2
+    echo "      • For scaffolds, add the path to" >&2
+    echo "        config/discovery/unassigned-artefacts.yml with a reason." >&2
+    echo "" >&2
+    echo "    To bypass once (NOT recommended):" >&2
+    echo "      git commit --no-verify" >&2
+    exit 1
+  fi
+fi
+
+exit 0

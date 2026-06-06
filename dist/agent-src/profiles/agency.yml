@@ -1,0 +1,36 @@
+# Seed profile — agency
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: agency
+  # Base capability packs for scoped projection (ADR-040 / capability-packs.md).
+  # Self-sufficient: multi-client delivery spans engineering + go-to-market +
+  # product (refine/estimate-ticket → product-basic) + perf-feedback-craft →
+  # ops-people. AI-council resolved Option A, 2026-06-03.
+  packs:
+    - engineering-base
+    - gtm-marketing
+    - product-basic
+    - ops-people
+  audience:
+    label: "Multi-client delivery shop"
+    readme_anchor: "agency"
+  defaults:
+    preset_id: strict
+    personas:
+      - reviewer
+      - product-strategist
+      - editor
+    skills_hint:
+      - doc-coauthoring
+      - decision-record
+      - refine-ticket
+      - estimate-ticket
+      - perf-feedback-craft
+  surface:
+    commands_hint:
+      - work
+      - implement-ticket
+      - refine-ticket
+      - feature
+      - roadmap
+    docs_first_pointer: "docs/getting-started-by-role.md#agency"

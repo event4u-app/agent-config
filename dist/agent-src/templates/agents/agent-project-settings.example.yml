@@ -1,0 +1,286 @@
+# .agent-project-settings.yml — repo-shared agent settings
+#
+# Committed to the repository (the opposite of `.agent-settings.yml`
+# which is git-ignored and per-developer). This file holds decisions
+# that belong to the **project**, not to an individual's workstation.
+#
+# Precedence (lowest → highest):
+#   1. Package defaults (shipped by event4u/agent-config)
+#   2. ~/.event4u/agent-config/agent-settings.yml — user-global DX-comfort
+#      defaults (whitelist: name, ide, rule_loading_tier, personal.bot_icon,
+#      personal.autonomy, telegraph.speak_scope). Created on opt-in via
+#      /onboard; project-local files always win. Legacy
+#      ~/.config/agent-config/agent-settings.yml is read as a fallback.
+#   3. This file (.agent-project-settings.yml) — team defaults
+#   4. .agent-settings.yml — developer overrides (gitignored)
+#
+# Any key marked `locked: true` in this file CANNOT be overridden by
+# .agent-settings.yml. Use sparingly — locked keys reduce developer
+# autonomy. Reserve for compliance or correctness concerns (e.g.
+# forcing a test framework, pinning a coding style).
+#
+# Full precedence model + user-global whitelist contract:
+#   docs/guidelines/agent-infra/layered-settings.md
+#
+# Copy this file to `.agent-project-settings.yml` (drop the `.example`)
+# and commit it.
+
+schema_version: 1
+
+# --- Agent config version pin (project-shared) ---
+#
+# Exact semver of @event4u/agent-config this project commits to. The
+# `npx @event4u/agent-config` dispatcher re-execs at this version when
+# the developer's locally-resolved version differs — so every
+# contributor runs the same agent surface regardless of their npm
+# cache state. Bump this together with a tested upgrade. Empty string
+# disables the pin (resolver picks the latest release; only safe for
+# greenfield projects). Ranges (^, ~, >=) are NOT supported.
+# CI guard: a release bump of `package.json` must update this value
+# in lockstep — see scripts/check_template_pin_drift.py (road-to-
+# portable-runtime-and-update-check P3.3).
+agent_config_version: "5.10.1"
+
+# --- Project identity ---
+project:
+  # Short slug used in agent output, prompts, and PR metadata. Keep it
+  # identical to the repo name unless there is a reason to differ.
+  slug: ""
+
+  # Human-readable name — used in generated docs and PR bodies.
+  name: ""
+
+  # Primary stack indicator — agent uses this to pick the right skills.
+  # Examples: "laravel", "nextjs", "symfony", "node-express", "react",
+  # "zend-laminas", "multi" (polyglot monorepo).
+  stack: ""
+
+# --- Modules (optional) ---
+#
+# Module-aware skills and commands (`module-management`, `/module
+# explore`, `/module create`, roadmap-writing) consult this block to
+# discover where modules live, which namespace template they use, and
+# whether per-module `agents/` folders ship contexts the agent should
+# auto-load. When `modules.enabled` is false (default), every
+# module-aware surface skips its module branch — the project is
+# treated as a flat repo.
+#
+# Populated automatically by `scripts/install.py` on a fresh install
+# when an `app/Modules/`, `src/modules/`, `packages/`, `internal/`, or
+# similar shape is detected. Set manually for custom layouts. Lockable
+# via `locked_keys: [modules.root_paths]` for compliance-critical
+# repos where the module layout must not drift.
+modules:
+  # Opt-in flag. When false, module-aware skills behave as if the
+  # block were absent — no enumeration, no auto-context-load. Flip to
+  # true once `root_paths` is populated and the team has agreed on the
+  # layout.
+  enabled: false
+
+  # Repo-relative paths to module root directories. Multiple entries
+  # supported for polyglot repos (e.g. `[app/Modules, packages]` for a
+  # Laravel + JS monorepo). Each subdirectory under a root path is a
+  # module unless its name is in `skip_dirs`. Examples by stack:
+  #   Laravel HMVC          → [app/Modules]
+  #   Symfony DDD-lite      → [src]
+  #   Node monorepo         → [packages]
+  #   Python src layout     → [src]
+  #   Go internal layout    → [internal]
+  root_paths: []
+
+  # Namespace template used when generating files for a new module.
+  # `{ModuleName}` is replaced with the module's directory name.
+  # Empty when the stack does not use a PHP-style namespace (Node,
+  # Python, Go). Examples:
+  #   Laravel HMVC          → "App\\Modules\\{ModuleName}\\App"
+  #   Symfony DDD-lite      → "App\\{ModuleName}"
+  namespace_template: ""
+
+  # Per-module agent docs directory name. The agent looks for this
+  # folder under every module to auto-load `contexts/*.md` when the
+  # user enters the module via `/module explore <Name>`. Override
+  # only if your project already uses a different convention.
+  agent_folder: "agents"
+
+  # Directory names skipped during module enumeration. Template
+  # scaffolds and example modules should not show up as real modules.
+  skip_dirs: [".module-template", ".example"]
+
+  # On-the-fly detection acknowledgement. The `module-detect-on-the-fly`
+  # skill flips this to `true` once the agent has asked the user whether
+  # detected module candidates should be enabled — regardless of the
+  # answer. Prevents repeated nagging on subsequent sessions when the
+  # user said "not now". Re-detection still runs if a new root appears
+  # outside the previously surfaced set.
+  detection_acknowledged: false
+
+# --- Memory layer (optional) ---
+#
+# Opt-in signal for the @event4u/agent-memory companion package and
+# the repo-shared curated-memory files. If omitted, memory features
+# stay inert — no writes, no reads, no nagging.
+memory:
+  # Enable curated memory files under `agents/memory/` as part of
+  # this repo's dogfooding of its own memory conventions. Only flip
+  # to true after you have agreed on the six content types from
+  # road-to-engineering-memory.md.
+  dogfood: false
+
+  # Path strategy for curated files. `agents` keeps them alongside
+  # roadmaps; `github` puts routing-relevant files under `.github/`.
+  # `auto` picks `github` if that directory exists, else `agents`.
+  path_strategy: auto
+
+  # Hygiene reminders — the agent nudges when entries are stale.
+  # Expiry is evaluated per type (see road-to-engineering-memory.md).
+  hygiene:
+    enabled: true
+    # Warn when `last_validated` is older than this (days). 0 = off.
+    staleness_days: 180
+
+# --- Review routing (optional) ---
+#
+# Points the `review-routing` skill at the two project-local YAML
+# files. See guidelines/agent-infra/review-routing-data-format.md
+# for the schema.
+review_routing:
+  # Location of ownership-map.yml and historical-bug-patterns.yml.
+  # `github` = .github/<file>.yml · `agents` = agents/<file>.yml ·
+  # `auto` = first match wins.
+  location: auto
+
+# --- Role modes (optional) ---
+#
+# Default role loaded for every session in this repo. See
+# guidelines/agent-infra/role-contracts.md for the six modes.
+# Leave empty to fall back to inferred mode switching.
+roles:
+  # One of: developer, reviewer, tester, po, incident, planner.
+  default: ""
+
+  # If set, the agent refuses work outside the default contract
+  # until the user explicitly switches modes with `/mode <name>`.
+  locked: false
+
+# --- Personas (optional) ---
+#
+# Personas are reusable review lenses (see .augment/personas/README.md).
+# Skills cite them in frontmatter (`personas: [id]`). This block lets
+# the project decide the default cast used by multi-lens skills without
+# editing each skill. A developer's .agent-settings.yml can override
+# or narrow the selection unless the key is listed under `locked_keys`.
+personas:
+  # Core cast always loaded by multi-lens skills when `personas:` is
+  # omitted from the skill's frontmatter. Drop an id to remove it from
+  # the default cast repo-wide. Known Core ids: developer,
+  # senior-engineer, product-owner, stakeholder, critical-challenger,
+  # ai-agent.
+  default: [developer, senior-engineer, product-owner, stakeholder, critical-challenger, ai-agent]
+
+  specialists:
+    # Specialist personas auto-included on every multi-lens run. `qa`
+    # is the v1 specialist; more land in v1.1+ (security, performance).
+    # Leave empty to require explicit --personas=+<id> opt-in.
+    auto_include: [qa]
+
+# --- Ghostwriter (optional) ---
+#
+# Toggles for the /ghostwriter command cluster. Consumer-only —
+# the package itself ignores this block (fixtures never carry aliases).
+# See docs/contracts/ghostwriter-schema.md § Aliases.
+ghostwriter:
+  # When true, `/ghostwriter:write --as=<value>` resolves <value> against
+  # both slug filenames AND every profile's `aliases:` list
+  # (case-insensitive). Conflicts are rejected at lint time
+  # (task lint-ghostwriter-source), never at runtime.
+  # Set to false to disable alias resolution (slug-only matching);
+  # any `aliases:` already in profiles are then ignored at resolve time
+  # but still validated by the lint.
+  aliases: true
+
+# --- Quality pipeline (optional) ---
+#
+# Per-language gate tools the `quality-fix` command invokes. Empty
+# list = skip the language. Agent will still auto-detect; these
+# values are advisory.
+quality:
+  php:
+    # Tools to run in order. Known: phpstan, rector, ecs, pint.
+    tools: [phpstan, rector, ecs]
+  js:
+    # Known: eslint, prettier, tsc, biome.
+    tools: [eslint, prettier, tsc]
+
+# --- Prompt optimization (engine-inbound + engine-outbound) ---
+#
+# Controls how aggressively the agent reshapes a free-form prompt
+# *before* the engine plans (`/work "<prompt>"`) and how the
+# outbound `/optimize-prompt` skill polishes a copy-and-paste
+# prompt for an external AI.
+#
+# Single-knob model — `default:` applies to both inbound and
+# outbound surfaces unless an override key is set:
+#
+#   off  — engine runs the user's literal prompt. No reconstruction,
+#          no AC inference, no template selection. Closest to "raw"
+#          behaviour; useful for power users who already write
+#          structured prompts.
+#   mini — light shaping. Inbound: `refine-prompt` runs in
+#          stack-aware mode (reads `package.json` / `CLAUDE.md` /
+#          `.cursorrules` only to infer the framework), asks at
+#          most 5 targeted clarifying questions, emits a structured
+#          6-block prompt. Outbound: BASIC mode of `prompt-optimizer`
+#          (4-D pass with safe defaults, no clarifying questions).
+#   max  — full restructure. Inbound: `refine-prompt` runs the
+#          5-dimension confidence rubric + assumption inference;
+#          medium-band halts surface the assumption list, low-band
+#          asks one clarifying question. Outbound: DETAIL mode of
+#          `prompt-optimizer` with template selection (RTF, CO-STAR,
+#          RISEN, CRISPE, …) per `docs/guidelines/prompt-templates.md`.
+#
+# Default `max` reshapes every prompt before the engine plans —
+# the AI Council (anthropic/openai, 2026-05-17) warned this risks
+# latency, token cost, and loss of author intent on the inbound
+# side. If that bites you, uncomment `inbound: mini` below. The
+# outbound side (explicit `/optimize-prompt`) is opt-in and stays
+# at `max` regardless.
+#
+# Bypass: any prompt starting with `bypass_prefix` skips both
+# inbound and outbound shaping verbatim. `/`-prefixed slash
+# commands (`/work`, `/commit`, …) and `#`-prefixed memory entries
+# auto-bypass.
+prompt_optimization:
+  default: max
+
+  # Optional per-surface overrides. Leave commented to inherit
+  # `default:`. Council-recommended split is `inbound: mini,
+  # outbound: max` — uncomment if you want fewer interceptions
+  # on `/work` but full polish on `/optimize-prompt`.
+  # inbound: mini
+  # outbound: max
+
+  # Prefix that skips all shaping. Must start with `/` to align
+  # with this project's slash-command convention. Default `/raw`.
+  bypass_prefix: "/raw"
+
+# --- Locked keys (override this file only; never locks .agent-settings.yml) ---
+#
+# List keys from this file whose values cannot be overridden by a
+# developer's .agent-settings.yml. Dot-notation. Example:
+#   locked_keys:
+#     - project.stack
+#     - quality.php.tools
+locked_keys: []
+
+# --- Links to curated data (read-only references) ---
+#
+# Paths the agent consults read-only during work. Curated memory
+# files live here when memory.dogfood is true. These paths are for
+# reference only — no enforcement is done from this file.
+references:
+  architecture_decisions: agents/memory/architecture-decisions/
+  domain_invariants: agents/memory/domain-invariants/
+  incident_learnings: agents/memory/incident-learnings/
+  product_rules: agents/memory/product-rules/
+  ownership_map: ""            # auto-resolved by review-routing
+  historical_bug_patterns: ""  # auto-resolved by review-routing

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Pre-commit hook: artefact frontmatter lint (event4u/agent-config, ADR-013)
+#
+# Aborts the commit when any staged .md file under
+# `.agent-src.uncondensed/` violates the per-artefact frontmatter
+# contract (workspaces / packs / lifecycle / trust / install). Exits
+# silently when no such files are staged — zero overhead on unrelated
+# commits.
+#
+# To run manually:
+#   ./agent-config hooks:install-frontmatter
+#   python3 scripts/lint_artefact_frontmatter.py
+#
+# To uninstall:
+#   rm .git/hooks/pre-commit
+set -e
+
+# Only act on commits that touch the source-of-truth artefact tree
+# (or the linter / vocabulary that govern it).
+staged="$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)"
+case "$staged" in
+  *.agent-src.uncondensed/*.md*|*config/discovery/*.yml*|*scripts/lint_artefact_frontmatter.py*)
+    : ;;
+  *)
+    exit 0 ;;
+esac
+
+# Resolve the linter — prefer the consumer-shipped path, fall back to
+# the source-of-truth copy when run from inside the package itself.
+script=""
+for cand in \
+  ".augment/scripts/lint_artefact_frontmatter.py" \
+  "dist/agent-src/scripts/lint_artefact_frontmatter.py" \
+  "scripts/lint_artefact_frontmatter.py"; do
+  if [ -f "$cand" ]; then
+    script="$cand"
+    break
+  fi
+done
+
+if [ -z "$script" ]; then
+  echo "⚠️  pre-commit-frontmatter: lint_artefact_frontmatter.py not found." >&2
+  echo "    Run \`task install\` (or \`./agent-config install\`) and retry." >&2
+  echo "    Skipping check — letting commit through." >&2
+  exit 0
+fi
+
+if ! python3 "$script" --quiet >/dev/null 2>&1; then
+  echo "❌  Artefact frontmatter lint failed (ADR-013 contract violation)." >&2
+  echo "" >&2
+  echo "    Re-run for details:" >&2
+  echo "      python3 $script" >&2
+  echo "      task lint-artefact-frontmatter" >&2
+  echo "" >&2
+  echo "    Common fixes:" >&2
+  echo "      • Add missing workspaces/packs/lifecycle/trust/install keys." >&2
+  echo "      • Pick values from config/discovery/{workspaces,packs}.yml." >&2
+  echo "      • For scaffolds, add the path to" >&2
+  echo "        config/discovery/unassigned-artefacts.yml with a reason." >&2
+  echo "" >&2
+  echo "    To bypass once (NOT recommended):" >&2
+  echo "      git commit --no-verify" >&2
+  exit 1
+fi
+
+exit 0

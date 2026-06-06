@@ -1,0 +1,37 @@
+---
+type: "manual"
+tier: "mechanical-already"
+description: "Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits"
+alwaysApply: false
+triggers:
+  - intent: "create rule"
+  - intent: "create skill"
+  - intent: "create command"
+  - intent: "create guideline"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+---
+
+# size-enforcement
+
+- Split by responsibility, not by length.
+
+- Rules must stay short, constraint-only, and easy to scan.
+- Skills must remain executable with clear workflow and validation.
+- Commands must orchestrate, not implement detailed workflows.
+- Guidelines must not replace skill execution.
+- AGENTS.md must stay high-level and not contain workflows.
+- copilot-instructions.md must stay short and behavioral.
+
+- If a component grows too large, mixes responsibilities, or becomes hard to scan → split or refactor.
+
+- Prefer small files:
+  - Rules and system instructions should stay well below 200 lines
+  - Smaller (≈60 lines) is strongly preferred
+
+→ Size limits and details: `../docs/guidelines/agent-infra/size-and-scope.md`
+
+→ Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
+`python3 scripts/validate_frontmatter.py`.

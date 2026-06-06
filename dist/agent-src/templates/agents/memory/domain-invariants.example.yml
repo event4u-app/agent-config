@@ -1,0 +1,80 @@
+# domain-invariants.yml — non-negotiable rules the system must uphold
+#
+# Writer:   senior engineer / architect
+# Reader:   `developer-like-execution`, `php-coder`, `laravel` skills
+#           (consulted BEFORE writing code in matching paths)
+# Expiry:   reviewed at every major version bump
+# Location: agents/memory/domain-invariants/<hash>.yml (content-addressed)
+#           OR agents/memory/domain-invariants.yml (single-file mode)
+#
+# See guidelines/agent-infra/role-contracts.md and
+# road-to-engineering-memory.md for the full contract.
+
+version: 1
+
+# Each entry is an invariant the code MUST uphold. Agents read them
+# before editing matched paths and call them out in their output.
+entries:
+  - id: tenant-isolation
+    status: active                       # active | deprecated | archived
+    confidence: high                     # low | medium | high
+    source:                              # at least one reference
+      - https://github.com/example/repo/pull/1234
+      - adr://0007-tenant-boundaries
+    owner: platform-team
+    last_validated: 2026-04-01
+    review_after_days: 365
+
+    # --- invariant body ---
+    rule: >
+      Tenant IDs must never cross-reference. A query in tenant A
+      must never return a row belonging to tenant B, regardless of
+      join path.
+    paths:                               # glob patterns the rule applies to
+      - app/Models/**
+      - app/Http/Controllers/Tenant*/**
+      - app/Services/Tenant*/**
+    enforcement:                         # how violation is detected
+      - test: tests/Feature/TenantIsolationTest.php
+      - policy: app/Policies/TenantPolicy.php
+    guardrail: >
+      Every Eloquent query on tenant-scoped models must go through
+      the `TenantScope` global scope. Raw DB::query() calls touching
+      tenant tables are forbidden outside migrations.
+
+  - id: money-as-integer-cents
+    status: active
+    confidence: high
+    source:
+      - adr://0012-money-representation
+    owner: finance-team
+    last_validated: 2026-03-20
+    review_after_days: 730
+
+    rule: >
+      All monetary amounts are stored and passed around as integer
+      cents (or the smallest unit of the currency). Float / decimal
+      representations are forbidden at every layer below the
+      formatter.
+    paths:
+      - app/Models/Invoice*.php
+      - app/Models/Payment*.php
+      - app/Services/Billing/**
+    enforcement:
+      - static_analysis: phpstan level 9 on Billing namespace
+      - test: tests/Unit/MoneyTest.php
+    guardrail: >
+      Use the `Money` value object for all monetary values. Never
+      cast a float to a model attribute. Formatter is the ONLY
+      boundary where floats appear, and only for display.
+
+# --- How to add an entry ---
+#
+# 1. Pick a stable `id` (kebab-case, unique within this file).
+# 2. Reference at least one source (PR, ADR, spec link).
+# 3. Pick a confidence honestly — if you are writing this from a
+#    hunch rather than evidence, start with `medium`.
+# 4. List concrete `paths` — globs the agent can match against.
+# 5. Describe the `guardrail` as a **mechanism**, not a wish. "Use
+#    X", "validate with Y" — not "be careful with Z".
+# 6. Run `task check-memory` before committing.

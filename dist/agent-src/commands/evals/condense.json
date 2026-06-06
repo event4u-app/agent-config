@@ -1,0 +1,34 @@
+{
+  "command": "condense",
+  "intent": "Condense .agent-src.uncondensed sources into the shipped dist/agent-src trees",
+  "cases": [
+    {
+      "prompt": "condense the uncondensed sources into the shipped trees",
+      "expected": "condense"
+    },
+    {
+      "prompt": "regenerate the condensed agent-src output",
+      "expected": "condense"
+    },
+    {
+      "prompt": "turn the uncondensed markdown into telegraph format",
+      "expected": "condense"
+    },
+    {
+      "prompt": "run the condensation for the changed source files",
+      "expected": "condense"
+    },
+    {
+      "prompt": "rebuild dist/agent-src from .agent-src.uncondensed",
+      "expected": "condense"
+    },
+    {
+      "prompt": "sync and condense the agent config sources",
+      "expected": "condense"
+    },
+    {
+      "prompt": "trim my installed skills for this project",
+      "expected": "optimize"
+    }
+  ]
+}

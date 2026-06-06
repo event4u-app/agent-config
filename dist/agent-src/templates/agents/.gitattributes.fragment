@@ -1,0 +1,16 @@
+# Agent memory — append-only JSONL, union-merged.
+# Append this block to the consumer project's root .gitattributes.
+# See: agents/roadmaps/road-to-memory-merge-safety.md
+
+# Intake layer — agent-written, append-only. Union merge concats both
+# sides on conflict instead of failing. Reader deduplicates by id.
+agents/memory/intake/*.jsonl merge=union eol=lf
+
+# Curated memory — content-addressed drop-ins. One file per entry.
+# Normal merge is fine; filename collisions are content-identity.
+agents/memory/ownership/*.yml              text eol=lf
+agents/memory/historical-patterns/*.yml    text eol=lf
+agents/memory/domain-invariants/*.yml      text eol=lf
+agents/memory/architecture-decisions/*.yml text eol=lf
+agents/memory/incident-learnings/*.yml     text eol=lf
+agents/memory/product-rules/*.yml          text eol=lf

@@ -1,0 +1,20 @@
+# Output-schema contract for `estimate-ticket`.
+#
+# Locks the frozen three-section shape of the `## Output template`
+# block so refactors cannot silently drift the estimate output away
+# from what consumers copy-paste into Jira / sprint tooling. Enforced
+# by `scripts/skill_linter.py` (`lint_output_schema`) — a drift is a
+# hard error.
+#
+# `Split points` is intentionally omitted — it is conditional on
+# `Split: Yes` and not part of the always-present base shape.
+#
+# Governed by: road-to-trigger-evals.md Phase 3.5 (originally deferred
+# from archive/road-to-ticket-refinement.md Phase 1 per Q26).
+
+version: 1
+
+required_headers:
+  - "Estimate"
+  - "Sizing rationale"
+  - "Persona voices (sizing-focused)"

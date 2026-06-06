@@ -1,0 +1,33 @@
+# Seed profile — ops
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: ops
+  # Base capability packs for scoped projection (ADR-040 / capability-packs.md).
+  # The `ops` profile is RevOps/support/SRE-adjacent — its skills_hint
+  # (incident-commander, logging-monitoring, threat-modeling, dashboard-design)
+  # are engineering-base; launch-readiness is founder-strategy. `ops-people` is
+  # the HR pack and does NOT belong here. AI-council resolved, 2026-06-03.
+  packs:
+    - engineering-base
+    - founder-strategy
+  audience:
+    label: "RevOps, support, SRE-adjacent"
+    readme_anchor: "ops"
+  defaults:
+    preset_id: strict
+    personas:
+      - reviewer
+      - security
+    skills_hint:
+      - incident-commander
+      - dashboard-design
+      - logging-monitoring
+      - threat-modeling
+      - launch-readiness
+  surface:
+    commands_hint:
+      - work
+      - threat-model
+      - review-changes
+      - fix
+    docs_first_pointer: "docs/getting-started-by-role.md#ops"

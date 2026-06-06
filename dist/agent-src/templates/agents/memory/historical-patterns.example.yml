@@ -1,0 +1,82 @@
+# historical-patterns.yml — recurring bug shapes and near-misses tied
+# to specific files or modules
+#
+# Writer:   engineers after incidents, code reviewers, bug-fix command
+# Reader:   `judge-bug-hunter`, `review-routing`, `blast-radius-analyzer`
+#           (consulted BEFORE editing matched paths)
+# Expiry:   reviewed after each incident against the matched module
+# Location: agents/memory/historical-patterns/<hash>.yml (content-addressed)
+#           OR agents/memory/historical-patterns.yml (single-file mode)
+#
+# See guidelines/agent-infra/engineering-memory-data-format.md for the
+# full schema.
+
+version: 1
+
+entries:
+  - id: checkout-null-currency
+    status: active
+    confidence: high
+    source:
+      - https://github.com/example/repo/issues/8421
+      - https://sentry.example.com/events/abc123
+    owner: billing-team
+    last_validated: 2026-03-15
+    review_after_days: 180
+
+    # --- historical pattern body ---
+    symptom: >
+      `TypeError: Cannot read property 'code' of null` when a guest
+      checkout hits the price formatter without a resolved currency.
+    paths:
+      - app/Services/Billing/PriceFormatter.php
+      - app/Http/Controllers/Billing/Checkout.php
+    trigger_conditions:
+      - "Anonymous user (no session currency)"
+      - "Product priced only in a non-default currency"
+    guardrail: >
+      Any code reading `$order->currency` must resolve via
+      `CurrencyResolver::forOrder($order)`, which falls back to the
+      tenant default. Never dereference `$order->currency->code`
+      directly.
+    regression_test: tests/Feature/Billing/GuestCheckoutTest.php
+    first_seen: 2025-11-03
+    last_seen: 2026-02-18
+    recurrence_count: 4
+
+  - id: queue-retry-log-noise
+    status: active
+    confidence: medium
+    source:
+      - https://github.com/example/repo/pull/9010
+    owner: platform-team
+    last_validated: 2026-04-10
+    review_after_days: 90
+
+    symptom: >
+      Retryable jobs double-log the same exception on every attempt,
+      inflating the Sentry error budget and masking real regressions.
+    paths:
+      - app/Jobs/**
+    trigger_conditions:
+      - "Job implements ShouldQueue and throws a typed exception"
+      - "retries() > 1 and no unique_for key set"
+    guardrail: >
+      Use `SilentRetry` trait or explicitly set `$this->dontReport = true`
+      on the first N-1 retries. Final-attempt failure is the only one
+      that calls `report()`.
+    regression_test: tests/Feature/Queue/RetryReportingTest.php
+    first_seen: 2026-01-20
+    last_seen: 2026-04-05
+    recurrence_count: 7
+
+# --- How to add an entry ---
+#
+# 1. Pick a stable `id` that names the pattern, not the fix.
+# 2. Cite the first bug report and the most recent recurrence.
+# 3. `trigger_conditions` are the minimal inputs that reproduce.
+# 4. `guardrail` is a mechanism, not a wish. "Go through X" — not
+#    "be careful with Y".
+# 5. Always link a `regression_test` — the pattern earns its entry
+#    only once a test exists that would have caught it.
+# 6. Run `task check-memory` before committing.

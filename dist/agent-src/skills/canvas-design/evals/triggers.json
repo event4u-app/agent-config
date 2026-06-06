@@ -1,0 +1,16 @@
+{
+  "skill": "canvas-design",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger asks for static visual art (poster / cover / marketing visual). Should-not-trigger near-misses share design vocabulary but route elsewhere (fe-design, tailwind-engineer, voice-and-tone-design, release-comms).",
+  "queries": [
+    {"q": "Need a launch poster for next week's release announcement — A3 print, minimal style", "trigger": true},
+    {"q": "Design us a social-media visual for the v3.0 release, 1080x1080 for IG", "trigger": true},
+    {"q": "Mach mir bitte ein Cover-Bild für den Talk nächste Woche, 1200x630 fürs Web", "trigger": true},
+    {"q": "We want a single-page PDF brand visual for the conference booth handout", "trigger": true},
+    {"q": "Build a minimalist poster for the team-offsite invitation, square format", "trigger": true},
+    {"q": "Design a new component library for our app — buttons, inputs, cards", "trigger": false},
+    {"q": "What color palette should we standardize on in tailwind.config.js?", "trigger": false},
+    {"q": "Refactor the brand voice doc — make it less corporate and more direct", "trigger": false},
+    {"q": "Draft the release announcement blog post for the v3.0 launch", "trigger": false},
+    {"q": "Help me wireframe the new onboarding flow — three screens, mobile-first", "trigger": false}
+  ]
+}

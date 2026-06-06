@@ -1,0 +1,242 @@
+---
+model_tier: high
+name: readme-reviewer
+description: "Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues."
+domain: quality
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: []
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+---
+
+# readme-reviewer
+
+## When to use
+
+- Reviewing a newly created or rewritten README
+- Validating a README matches the actual repository
+- Auditing README quality across repos
+- Checking for hallucinated setup, commands, or features
+
+Do NOT use when:
+
+- Only proofreading grammar or formatting
+- Writing a README from scratch → use `readme-writing` or `readme-writing-package`
+
+## Goal
+
+Ensure the README is correct (no invented content), aligned with the repo,
+useful for the intended audience, and has a strong quickstart path.
+
+## Core principles
+
+- Evidence over assumption — verify every claim against the repo
+- Commands must exist — check `Taskfile.yml`, `Makefile`, `package.json scripts`
+- Examples must match real APIs — compare against source code
+- Quickstart quality matters more than completeness
+- A clean-looking README can still be technically wrong
+
+## Procedure
+
+### 1. Identify README type and audience
+
+Determine repo type (package, app, CLI, internal, framework) and target audience
+(consumers, contributors, team). Check if README structure matches this type.
+
+### 2. Cross-check against repository
+
+Inspect truth-defining files:
+
+- `package.json` / `composer.json` — name, scripts, dependencies
+- `Dockerfile` / `docker-compose.yml` — runtime setup
+- `Taskfile.yml` / `Makefile` — available commands
+- CI workflows — what gets tested
+- Source entrypoints — actual public API
+- Config files, tests, existing docs
+
+Verify: install steps exist, commands work, features are implemented,
+dependencies are real.
+
+### 3. Validate installation and setup
+
+Check:
+
+- Install command is correct and complete
+- Required post-install steps are documented
+- No hidden setup assumptions
+- Environment/config requirements are listed
+
+Flag: missing steps, incorrect steps, implied-but-unwritten steps.
+
+### 4. Validate usage examples
+
+Check:
+
+- First example is minimal and realistic
+- Example matches actual API (verify against source)
+- Example does not rely on undocumented setup
+- Example is not overly complex or abstract
+
+Flag: pseudo-code, oversized examples, API mismatches.
+
+### 5. Validate compatibility and requirements
+
+Check:
+
+- Runtime versions stated (PHP, Node, etc.)
+- Framework compatibility is explicit
+- Dependencies are declared
+
+Flag: missing compatibility, vague claims ("works with most versions"),
+unconfirmed broad support.
+
+### 6. Evaluate structure and clarity
+
+Check:
+
+- Strong first screen (what + why + quickstart visible before scrolling)
+- Logical section order for repo type
+- No unnecessary sections (padded boilerplate)
+- No missing critical sections
+
+Common issues: architecture before installation, no quickstart,
+buried usage instructions, generic template sections.
+
+### 7. Detect hallucinations
+
+Explicitly search for:
+
+- Commands not present in repo
+- Features not implemented
+- Setup steps not supported by scripts/configs
+- Assumptions about environment or tools
+
+Classify each finding:
+
+- **Confirmed incorrect** — verifiably wrong
+- **Likely incorrect** — no evidence found, needs verification
+- **Unclear** — cannot confirm or deny, needs human input
+
+### 8. Check scope, size, and splitting
+
+- README not overloaded with deep technical detail
+- Complex content belongs in `/docs`, not README
+- Important onboarding info not missing due to over-condensation
+
+Size checks:
+
+- **< 150 lines** — healthy
+- **150–300 lines** — expect a Table of Contents; flag if missing
+- **300–500 lines** — flag as overloaded; deep content should be in `/docs/`
+- **> 500 lines** — flag as broken entry point; hard split required
+
+Structure checks:
+
+- ToC present if > 150 lines or > 6 top-level (`##`) sections
+- Multi-platform install (> 5 variants) uses a table with deep links, not stacked blocks
+- `<details>` used only for secondary, bulky content — never for install, first example, or requirements
+- No duplication between README and `/docs/` (same content in two places drifts)
+- Each `/docs/` file linked from README is self-contained (not just a fragment)
+
+→ See `docs/guidelines/docs/readme-size-and-splitting.md` for full thresholds,
+splitting strategies, and anti-patterns.
+
+### 9. Validate every link and detect orphans — MANDATORY
+
+For every internal link in the README:
+
+1. Resolve the path. `test -f` files, `test -d` directories. Strip
+   `#anchor` and `?query` before the check.
+2. For every anchor link (`file.md#section`), grep the target file for
+   the heading slug. Missing slug = broken anchor.
+3. Group findings:
+   - **broken** — target does not exist (❌ Critical)
+   - **anchor-broken** — file exists, anchor does not (⚠️ Major)
+   - **path-drift** — target moved but a valid path exists elsewhere
+     (⚠️ Major, propose the corrected path)
+
+For every documentation file referenced by the README, check whether
+it has any **other** references in the repo (`grep -r` over
+`AGENTS.md`, `docs/`, `dist/agent-src*/`, `.augment/`, `packages/`).
+Files referenced only by this README are **single-use** — note them
+so they can be moved or inlined later.
+
+For every doc under `/docs/` that the README **does not** link, check
+whether anything else in the repo links it. Files with zero inbound
+references are **orphan-candidates** — surface them, never delete
+silently.
+
+### 10. Currency check — drift detection
+
+The README may have been correct at write-time but drifted since.
+Compare the README's claims to the live repository:
+
+- **Counts** (badges like "Skills: 218") — recount from the source tree
+  and flag any drift > 0
+- **Commands** — every documented `task`, `npm run`, `npx`, or `bash`
+  call must exist in `Taskfile.yml`, `package.json scripts`, or the
+  named script file at its claimed path
+- **Profiles / user-types / packs** — list members against the live
+  directory listing
+- **Version pins** — runtime, framework, peer-dep versions stated in
+  README vs. the manifest's `engines` / `require` / `dependencies`
+- **Visual identity** — banner / hero image references resolve to real
+  files (not 404s in GitHub rendering)
+
+## Output format
+
+1. Produce three subsections in order: Summary, Findings, Confidence; no prose outside them.
+2. Findings table must use the severity vocabulary (❌ Critical / ⚠️ Major / ℹ️ Minor) and cite the exact section name.
+3. Close the report with a *Confidence* block that separates confirmed-correct, needs-verification, and unclear-due-to-missing-context.
+
+### 1. Summary
+
+| Field | Value |
+|---|---|
+| Repo type | {type} |
+| Audience | {audience} |
+| Overall | {short assessment} |
+
+### 2. Findings
+
+| # | Severity | Section | Issue | Fix |
+|---|---|---|---|---|
+| 1 | ❌ Critical | Install | Command `X` does not exist | Replace with `Y` |
+| 2 | ❌ Critical | Profile grid | Link `.agent-src.uncondensed/profiles/` 404s | Repoint to `packages/core/.agent-src.uncondensed/profiles/` |
+| 3 | ⚠️ Major | Badges | "Skills: 218" — live count is 207 | Update badge or note drift |
+| 4 | ⚠️ Major | Usage | Example uses deprecated API | Update to current API |
+| 5 | ℹ️ Minor | Structure | Requirements buried below usage | Move above install |
+| 6 | ℹ️ Minor | Docs | `docs/foo.md` only linked by README | Either inline or keep as standalone |
+
+Severity levels:
+
+- **❌ Critical** — breaks onboarding or is factually incorrect
+- **⚠️ Major** — confusing, incomplete, or misleading
+- **ℹ️ Minor** — clarity improvement, formatting, structure
+
+### 3. Confidence
+
+- What is confirmed correct
+- What needs human verification
+- What is unclear due to missing context
+
+## Gotcha
+
+- Model tends to trust the README instead of verifying against the repo
+- Model may miss subtle mismatches between examples and real APIs
+- Model may focus on wording/style instead of correctness
+- A well-formatted README with wrong commands is worse than ugly but correct
+- Model may accept "looks reasonable" compatibility without checking CI matrix
+
+## Do NOT
+
+- Do NOT assume README is correct without checking the repo
+- Do NOT ignore missing or broken setup steps
+- Do NOT accept vague compatibility statements as valid
+- Do NOT focus only on wording while missing structural/correctness issues
+- Do NOT overlook mismatches between examples and actual source code
+- Do NOT soften findings — state issues clearly with severity

@@ -1,0 +1,133 @@
+# Memory Hygiene — template shipped by agent-config
+#
+# Copy this file to `.github/workflows/memory-hygiene.yml` in the consumer
+# project. It runs `scripts/check_memory.py` on a weekly schedule and
+# opens (or updates) a single tracking issue when stale entries are
+# found in `agents/memory/`.
+#
+# This workflow is intentionally **not** wired into PR checks — staleness
+# is a review signal, not a merge blocker. See
+# `road-to-engineering-memory.md` Phase 4 for the rationale.
+#
+# Prerequisites:
+#   - `scripts/check_memory.py` copied from
+#     `.augment/templates/scripts/check_memory.py` into the consumer repo.
+#   - At least one file exists under `agents/memory/` — absence short-
+#     circuits the job with an informational log, no issue opened.
+
+name: Memory Hygiene
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC — run AFTER the weekly retro window.
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-staleness:
+    name: Report stale memory entries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Short-circuit if no memory files
+        id: has_memory
+        run: |
+          if [ -d "agents/memory" ] && [ "$(find agents/memory -name '*.yml' | wc -l)" -gt 0 ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No agents/memory/*.yml files — skipping."
+          fi
+
+      - name: Run staleness check
+        if: steps.has_memory.outputs.present == 'true'
+        id: check
+        run: |
+          set +e
+          {
+            echo "## Memory hygiene report"
+            echo
+            echo '```'
+            python3 scripts/check_memory.py --path agents/memory
+            exit_code=$?
+            echo '```'
+          } > staleness.md
+          echo "exit=${exit_code:-0}" >> "$GITHUB_OUTPUT"
+          cat staleness.md
+
+      - name: Find existing tracking issue
+        if: steps.has_memory.outputs.present == 'true'
+        id: find_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "memory-hygiene",
+              per_page: 5,
+            });
+            if (issues.length > 0) {
+              core.setOutput("number", issues[0].number);
+            }
+
+      - name: Open or update tracking issue
+        if: steps.has_memory.outputs.present == 'true' && steps.check.outputs.exit != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("staleness.md", "utf8");
+            const title = "Memory Hygiene — stale entries detected";
+            const existing = "${{ steps.find_issue.outputs.number }}";
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(existing, 10),
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["memory-hygiene"],
+              });
+            }
+
+      - name: Close tracking issue when clean
+        if: steps.has_memory.outputs.present == 'true' && steps.check.outputs.exit == '0' && steps.find_issue.outputs.number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt("${{ steps.find_issue.outputs.number }}", 10),
+              state: "closed",
+              state_reason: "completed",
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt("${{ steps.find_issue.outputs.number }}", 10),
+              body: "All memory entries are fresh — closing.",
+            });

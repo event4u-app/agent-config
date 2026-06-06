@@ -1,0 +1,76 @@
+# PR risk config — consumed by scripts/pr_risk_review.py
+#
+# Copy this file to `.github/pr-risk-config.yml` and adapt the patterns to
+# your stack. Omitting the file entirely is fine — the script ships with
+# cross-stack defaults (migrations, lockfiles, auth, workflows).
+#
+# Matching uses `fnmatch` with glob syntax:
+#   - `**/foo/**`  → any `foo/` anywhere in the tree
+#   - `composer.lock` → exact match at repo root
+#
+# Levels:
+#   - high   → lockfiles, auth, migrations, secrets, CI, infra
+#   - medium → queues, routes, controllers, models, manifests
+#   - anything not matched → low
+#
+# `ignore` removes paths BEFORE classification (docs, changelog, …).
+
+patterns:
+  high:
+    # --- universal ---
+    - "**/.env*"
+    - "**/secrets/**"
+    - ".github/workflows/**"
+
+    # --- Laravel / Symfony / generic PHP ---
+    - "**/database/migrations/**"
+    - "**/app/Policies/**"
+    - "**/config/auth.php"
+    - "**/config/services.php"
+    - "composer.lock"
+
+    # --- Node / Next.js ---
+    - "package-lock.json"
+    - "pnpm-lock.yaml"
+    - "yarn.lock"
+    - "**/middleware.ts"
+    - "**/app/api/**"
+
+    # --- Python / Django / Rails ---
+    - "poetry.lock"
+    - "Gemfile.lock"
+    - "**/migrations/*.py"
+    - "**/db/migrate/**"
+
+    # --- infra ---
+    - "**/Dockerfile*"
+    - "**/docker-compose*.y*ml"
+    - "**/terraform/**"
+    - "**/*.tf"
+
+  medium:
+    # --- Laravel ---
+    - "**/app/Http/Controllers/**"
+    - "**/app/Jobs/**"
+    - "**/app/Listeners/**"
+    - "**/routes/**"
+
+    # --- Symfony ---
+    - "**/src/Controller/**"
+    - "**/src/MessageHandler/**"
+
+    # --- Node / Next.js ---
+    - "**/app/**/route.ts"
+    - "**/pages/api/**"
+
+    # --- manifests (non-lock) ---
+    - "composer.json"
+    - "package.json"
+    - "pyproject.toml"
+    - "Gemfile"
+
+ignore:
+  - "**/*.md"
+  - "**/CHANGELOG*"
+  - "**/docs/**"
+  - "**/*.snap"

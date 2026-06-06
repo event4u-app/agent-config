@@ -1,0 +1,33 @@
+# Seed profile — founder
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: founder
+  # Base capability packs for scoped projection (ADR-040 / capability-packs.md).
+  # Self-sufficient: covers the profile's skills_hint (vision/fundraising →
+  # founder-strategy, rice-prioritization → product-basic, runway-cognition →
+  # finance-basic). AI-council resolved Option A, 2026-06-03.
+  packs:
+    - founder-strategy
+    - product-basic
+    - finance-basic
+  audience:
+    label: "Solo / early-stage founder"
+    readme_anchor: "founder"
+  defaults:
+    preset_id: fast
+    personas:
+      - product-strategist
+      - reviewer
+    skills_hint:
+      - refine-prompt
+      - rice-prioritization
+      - vision-articulation
+      - fundraising-narrative
+      - runway-cognition
+  surface:
+    commands_hint:
+      - work
+      - feature
+      - challenge-me
+      - council
+    docs_first_pointer: "docs/getting-started-by-role.md#founder"

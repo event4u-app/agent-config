@@ -1,0 +1,87 @@
+# Ownership map — consumed by scripts/pr_review_routing.py
+#
+# Copy this file to `.github/ownership-map.yml` (preferred) or
+# `agents/ownership-map.yml` and adapt the entries to your stack.
+# Omitting the file entirely is fine — routing falls back to the
+# generic role vocabulary from `reviewer-awareness`.
+#
+# First match wins per file. List narrower globs before broader ones.
+
+version: 1
+updated: 2026-04-21  # bump when entries change — stale maps warn after 6 months
+
+# Applied when no entry matches a changed file. Optional.
+defaults:
+  roles: [backend]
+
+entries:
+  # --- Laravel ---
+  - paths:
+      - "app/Billing/**"
+      - "app/Services/Payment*.php"
+      - "database/migrations/*billing*.php"
+    roles: [finance-engineering, security]
+    focus: "tax calculation + idempotency"
+    risk: "monetary correctness — regressions bill real customers"
+
+  - paths:
+      - "app/Http/Middleware/TenantScope.php"
+      - "**/Tenant*.php"
+    roles: [platform, security]
+    focus: "cross-tenant isolation"
+    risk: "data leak across customers"
+
+  - paths:
+      - "app/Http/Controllers/Admin/**"
+      - "routes/admin.php"
+    roles: [platform, security]
+    focus: "admin authorization boundary"
+
+  - paths:
+      - "resources/views/**"
+      - "**/*.blade.php"
+    roles: [frontend]
+    focus: "a11y + responsive layout"
+
+  # --- Symfony ---
+  - paths:
+      - "src/Controller/Api/**"
+      - "src/Security/**"
+    roles: [backend, security]
+    focus: "authorization + input validation"
+
+  # --- Node / Next.js ---
+  - paths:
+      - "app/api/**"
+      - "pages/api/**"
+    roles: [backend]
+    focus: "public endpoint — rate limit + auth"
+
+  - paths:
+      - "components/**"
+      - "app/**/*.tsx"
+    roles: [frontend]
+    focus: "UX + client-state"
+
+  # --- Infra ---
+  - paths:
+      - "**/Dockerfile*"
+      - "**/docker-compose*.y*ml"
+      - "**/terraform/**"
+      - ".github/workflows/**"
+    roles: [infra, security]
+    focus: "rollout + secrets handling"
+
+  # --- Data ---
+  - paths:
+      - "**/migrations/**"
+      - "**/*.sql"
+    roles: [database, backend]
+    focus: "index strategy + rollback realism"
+
+  # --- Docs ---
+  - paths:
+      - "docs/**"
+      - "**/*.md"
+    roles: [domain-owner]
+    focus: "accuracy — reviewers confirm behavior matches text"

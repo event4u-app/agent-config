@@ -1,0 +1,60 @@
+---
+type: "auto"
+tier: "2b"
+alwaysApply: false
+description: "Writing/editing UI — components, screens, layouts, design tokens — require existing-ui-audit findings first"
+triggers:
+  - path_prefix: "resources/views/"
+  - path_prefix: "resources/js/"
+  - keyword: "component"
+  - keyword: "design token"
+routes_to:
+  - "skill:existing-ui-audit"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+---
+
+# UI Audit Gate
+
+Defense-in-depth twin of the dispatcher gate in
+[`directives/ui/audit.py`](../templates/scripts/work_engine/directives/ui/audit.py).
+The dispatcher refuses to advance past `refine` without `state.ui_audit`;
+this rule refuses the write even when the agent acts outside the dispatcher.
+
+Body migrated to [`skill:existing-ui-audit`](../skills/existing-ui-audit/SKILL.md)
+(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates this
+routing under the `balanced` and `full` profiles.
+
+## The Iron Law
+
+```
+NO NEW COMPONENT, SCREEN, PARTIAL, OR PAGE WITHOUT AUDIT FINDINGS.
+EXISTING-UI-AUDIT RUNS FIRST. ALWAYS.
+```
+
+## What "audit findings" means
+
+`state.ui_audit` is a non-empty dict carrying at least one of:
+
+- `components_found` — inventory entries from `existing-ui-audit`.
+- `greenfield: true` plus `greenfield_decision` ∈
+  `{scaffold, bare, external_reference}`.
+- Legacy `components` alias — back-compat.
+
+`null` or `{}` is **not** findings; empty dict is rejected on purpose.
+
+## Allow-list — `ui-trivial`
+
+Skip only when **all** hold:
+
+- `directive_set == "ui-trivial"`.
+- ≤ 1 file, ≤ 5 changed lines, no new component, no new state.
+
+## Failure modes
+
+- Writing the component first and "thinking about reuse later".
+- Citing a similar-looking component from memory without verifying via the audit.
+- Treating `state.ui_audit = {}` as "audit ran, found nothing".
+- Bypassing the gate for "just one tile".

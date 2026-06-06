@@ -1,0 +1,113 @@
+# incident-learnings.yml — pattern + consequence + guardrail
+#
+# Writer:   incident commander after resolution
+# Reader:   `Incident` role mode, `bug-investigate`, `bug-analyzer`
+# Expiry:   archived when the underlying class is structurally
+#           eliminated (guardrail landed AND verified in prod)
+# Location: agents/memory/incident-learnings/<hash>.yml
+#           OR agents/memory/incident-learnings.yml (single-file)
+#
+# REDACTION IS MANDATORY — see road-to-engineering-memory.md.
+# Every entry is a PATTERN + CONSEQUENCE + GUARDRAIL.
+# Every entry that contains a customer name, internal URL, PII, or
+# secret is rejected by `scripts/check_memory.py`. No opt-out.
+#
+# BAD entry (auto-rejected):
+#   "On 2026-03-14 customer ACME hit a rate limit and Redis died."
+# GOOD entry:
+#   "When rate limit X is crossed on path Y, queue worker Z starves
+#   the primary DB pool. Guardrail: circuit-break at 80% of X."
+
+version: 1
+
+entries:
+  - id: queue-worker-db-pool-starvation
+    status: active                       # active | deprecated | archived
+    confidence: high
+    source:
+      - https://github.com/example/repo/pull/2104    # guardrail PR
+      - https://github.com/example/repo/issues/2098  # incident ticket
+    owner: platform-team
+    last_validated: 2026-04-15
+    review_after_days: 180
+    severity: high                       # low | medium | high | critical
+
+    # --- pattern ---
+    pattern: >
+      When sustained throughput on queue `invoices` exceeds the
+      configured rate limit on path `/api/invoices/*`, the queue
+      worker retries saturate the primary DB connection pool and
+      starve synchronous requests.
+    trigger_conditions:
+      - sustained_rps_gt: 150
+      - path_prefix: /api/invoices/
+      - worker_queue: invoices
+
+    # --- consequence (no customer specifics) ---
+    consequence: >
+      Synchronous requests on unrelated endpoints fail with 500 and
+      connection-timeout errors. User-facing latency spikes to ≥ 3s
+      p99 within 60 seconds.
+
+    # --- guardrail (mechanism, not wish) ---
+    guardrail: >
+      Circuit-break the queue worker at 80% of the rate limit.
+      Emit a sustained-latency alert on the `invoices` queue.
+      Connection pool sized to (worker_count × 2 + sync_workers).
+    enforcement:
+      - test: tests/Feature/QueueBackpressureTest.php
+      - alert: grafana/alerts/invoices-queue-latency.yml
+      - config: config/horizon.php — balance=simple, max_processes=...
+
+    paths:
+      - app/Jobs/ProcessInvoice.php
+      - app/Http/Controllers/Api/InvoiceController.php
+      - config/horizon.php
+
+  - id: webhook-signature-verify-timing
+    status: active
+    confidence: medium
+    source:
+      - https://github.com/example/repo/pull/1876
+    owner: integrations-team
+    last_validated: 2026-02-28
+    review_after_days: 90
+    severity: medium
+
+    pattern: >
+      Webhook signature verification that concatenates body parts
+      before hashing is vulnerable to timing-based side channels
+      on high-volume endpoints when response latency leaks.
+    trigger_conditions:
+      - endpoint_type: webhook
+      - verify_pattern: string-concat-then-hash
+
+    consequence: >
+      Attackers with sustained probe access can infer signature
+      prefix bytes from response-time deltas at the millisecond
+      granularity over minutes to hours.
+
+    guardrail: >
+      Always use `hash_equals()` for signature comparison. Compute
+      the full HMAC on the raw request body, never on a
+      concatenated view. Pad response time to the worst-case branch.
+    enforcement:
+      - test: tests/Security/WebhookVerifyTest.php
+      - static_analysis: phpstan rule forbids `===` on webhook sigs
+    paths:
+      - app/Http/Middleware/VerifyWebhookSignature.php
+      - app/Services/Webhook/**
+
+# --- How to add an entry ---
+#
+# 1. Wait until the incident is RESOLVED. Draft entries from open
+#    incidents leak half-baked hypotheses.
+# 2. Distil to pattern + consequence + guardrail. If the entry reads
+#    like a post-mortem summary, it is too specific.
+# 3. Scrub — no customer names, no ticket IDs from the incident, no
+#    internal URLs, no timestamps with identifying precision. The
+#    check rejects these; do not fight it.
+# 4. Link the guardrail PR as a source — an entry without a
+#    guardrail is not a learning, it is a confession.
+# 5. Set `review_after_days` aggressively (90–180). Entries that
+#    outlive their guardrail are more dangerous than missing.
