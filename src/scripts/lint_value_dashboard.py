@@ -6,7 +6,7 @@ Phase 5 Step 3 of `agents/roadmaps/road-to-readable-value-dashboard.md`.
 Invariants enforced (any violation → exit 1):
 
 1. Required sections present (intro / Reference scale / Panel A / Panel B
-   / Glossar / NETTO line).
+   / Glossary / NET line).
 2. Every cost-ladder rung row cites a `source_report` (or `n/a` for the
    baseline rung) — no rung sneaks in without traceability.
 3. No `measured` rung renders a `pending` source — internal consistency
@@ -44,8 +44,8 @@ REQUIRED_SECTIONS = (
     "## Reference scale",
     "## Panel A",
     "## Panel B",
-    "## Glossar",
-    "**NETTO",
+    "## Glossary",
+    "**NET",
 )
 
 CANONICAL_RUNG_IDS = ("baseline", "load", "thin", "condense", "rtk", "terse")

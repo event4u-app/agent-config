@@ -118,8 +118,8 @@ def baseline_rung(reference_scale: Dict[str, Any]) -> Dict[str, Any]:
     """The zero-point rung. token_delta = 0 by construction."""
     return {
         "id": "baseline",
-        "label": "Ohne Paket / Without package",
-        "what_it_does": "Baseline — der nackte Request ohne Paket-Regeln.",
+        "label": "Without package",
+        "what_it_does": "Baseline — the bare request without package rules.",
         "token_delta": 0,
         "eur_delta": 0.0,
         "cumulative_pct": 0.0,
@@ -156,8 +156,8 @@ def load_rung_from_router(
     if not router or "kernel" not in router:
         return pending_rung(
             "load",
-            "Mit Paket (Regeln laden) / With package (rule load)",
-            "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+            "With package (rule load)",
+            "The always-active rules land in the context of every request.",
             "dist/router.json",
             footnote="Run scripts/compile_router.py to generate the router.",
         )
@@ -169,8 +169,8 @@ def load_rung_from_router(
     token_delta = total_chars // 4
     return {
         "id": "load",
-        "label": "Mit Paket (Regeln laden) / With package (rule load)",
-        "what_it_does": "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+        "label": "With package (rule load)",
+        "what_it_does": "The always-active rules land in the context of every request.",
         "token_delta": token_delta,
         "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
@@ -206,8 +206,8 @@ def load_rung_from_frugality(
     if not frugality_record:
         return pending_rung(
             "load",
-            "Mit Paket (Regeln laden) / With package (rule load)",
-            "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+            "With package (rule load)",
+            "The always-active rules land in the context of every request.",
             "agents/runtime/frugality/baseline.jsonl",
             footnote="Run scripts/measure_frugality_savings.py to populate.",
         )
@@ -221,8 +221,8 @@ def load_rung_from_frugality(
     token_delta = total_chars // 4
     return {
         "id": "load",
-        "label": "Mit Paket (Regeln laden) / With package (rule load)",
-        "what_it_does": "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+        "label": "With package (rule load)",
+        "what_it_does": "The always-active rules land in the context of every request.",
         "token_delta": token_delta,
         "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
@@ -261,17 +261,17 @@ def load_rung_from_projection(
     files = int(entry.get("files", 0))
     return {
         "id": "load",
-        "label": "Mit Paket (Regeln laden) / With package (rule load)",
-        "what_it_does": "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+        "label": "With package (rule load)",
+        "what_it_does": "The always-active rules land in the context of every request.",
         "token_delta": token_delta,
         "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
         "confidence": "measured",
         "source_report": "internal/bench/reports/projection-cost.json",
         "footnote": (
-            f"Eager-Default: alle {files} Rule-Files always-on im "
-            f"`{tool}`-Projektionspfad (0B.6-bestätigt fürs primäre Tool). "
-            "Nicht nur der Kernel — das ist die ehrliche Up-Front-Last; "
+            f"Eager default: all {files} rule files always-on in the "
+            f"`{tool}` projection path (0B.6-confirmed for the primary tool). "
+            "Not just the kernel — this is the honest up-front load; "
             "tokens ≈ chars / 4."
         ),
     }
@@ -296,8 +296,8 @@ def thin_rung_from_projection(
     if not tp or "saved_gpt" not in tp:
         return pending_rung(
             "thin",
-            "+ thin (Regeln als Pointer) / + thin (rules as pointers)",
-            "Nicht-Kernel-Regel-Bodies werden zu router-aufgelösten Pointern.",
+            "+ thin (rules as pointers)",
+            "Non-kernel rule bodies become router-resolved pointers.",
             "internal/bench/reports/projection-cost.json",
             footnote="Run scripts/project_thin_rules.py --measure to populate.",
         )
@@ -307,20 +307,20 @@ def thin_rung_from_projection(
     pct = tp.get("saved_pct", 0)
     return {
         "id": "thin",
-        "label": "+ thin (Regeln als Pointer) / + thin (rules as pointers)",
-        "what_it_does": "Nicht-Kernel-Regel-Bodies werden zu router-aufgelösten Pointern.",
+        "label": "+ thin (rules as pointers)",
+        "what_it_does": "Non-kernel rule bodies become router-resolved pointers.",
         "token_delta": -saved,
         "eur_delta": price_input_delta_eur(-saved, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
         "confidence": "available",
         "source_report": "internal/bench/reports/projection-cost.json",
         "footnote": (
-            f"Verfügbar hinter `lean_projection.mode=thin` (Default `eager-all` "
-            f"— deshalb NICHT im Default-NETTO). Mit Thin aktiv: Rule-Layer "
+            f"Available behind `lean_projection.mode=thin` (default `eager-all` "
+            f"— hence NOT in the default NET). With thin active: rule layer "
             f"{eager_total} → {thin_total} GPT tok (−{saved}, −{pct}%). "
-            "MUST-LOAD-Floor `task trigger-coverage` 26/26 grün; "
-            "Live-A/B-Validierung ausstehend (Harness abgelehnt). "
-            "Rollback = ein Flip."
+            "MUST-LOAD floor `task trigger-coverage` 26/26 green; "
+            "live A/B validation pending (harness declined). "
+            "Rollback = one flip."
         ),
     }
 
@@ -340,8 +340,8 @@ def condense_rung_from_telegraph_v2(
     if not telegraph_v2 or "aggregate" not in telegraph_v2:
         return pending_rung(
             "condense",
-            "+ condense (Regeln eindampfen) / + condense (rule shrink)",
-            "Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern.",
+            "+ condense (rule shrink)",
+            "Build step shrinks rule files before shipping.",
             "internal/bench/reports/telegraph-v2.json",
             footnote="Run scripts/bench_telegraph.py to populate.",
         )
@@ -362,8 +362,8 @@ def condense_rung_from_telegraph_v2(
     token_delta = -int(round(baseline_input_tokens * median_saving_pct / 100.0))
     return {
         "id": "condense",
-        "label": "+ condense (Regeln eindampfen) / + condense (rule shrink)",
-        "what_it_does": "Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern.",
+        "label": "+ condense (rule shrink)",
+        "what_it_does": "Build step shrinks rule files before shipping.",
         "token_delta": token_delta,
         "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
@@ -391,8 +391,8 @@ def rtk_rung_from_report(
     if not rtk_report:
         return pending_rung(
             "rtk",
-            "+ rtk (CLI-Output filtern) / + rtk (filter CLI output)",
-            "rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg.",
+            "+ rtk (filter CLI output)",
+            "rtk cuts verbose CLI output before the model input.",
             "internal/bench/reports/rtk/latest.json",
             footnote="Install rtk and run scripts/bench_rtk_savings.py.",
         )
@@ -401,8 +401,8 @@ def rtk_rung_from_report(
     if tokens_saved <= 0:
         return pending_rung(
             "rtk",
-            "+ rtk (CLI-Output filtern) / + rtk (filter CLI output)",
-            "rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg.",
+            "+ rtk (filter CLI output)",
+            "rtk cuts verbose CLI output before the model input.",
             "internal/bench/reports/rtk/latest.json",
             footnote=(
                 "Report present but aggregate.tokens_saved_per_request "
@@ -414,8 +414,8 @@ def rtk_rung_from_report(
     token_delta = -tokens_saved
     return {
         "id": "rtk",
-        "label": "+ rtk (CLI-Output filtern) / + rtk (filter CLI output)",
-        "what_it_does": "rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg.",
+        "label": "+ rtk (filter CLI output)",
+        "what_it_does": "rtk cuts verbose CLI output before the model input.",
         "token_delta": token_delta,
         "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
@@ -438,8 +438,8 @@ def terse_rung_from_telegraph_v1(
     if not telegraph_v1 or "telegraph" not in telegraph_v1:
         return pending_rung(
             "terse",
-            "+ terse (Antworten knapper) / + terse (shorter replies)",
-            "Telegraph-Stil zielt auf knappere Modell-Antworten.",
+            "+ terse (shorter replies)",
+            "Telegraph style aims at terser model replies.",
             "internal/bench/reports/telegraph-v1.json",
             footnote="Run scripts/bench_telegraph.py to populate.",
         )
@@ -451,14 +451,14 @@ def terse_rung_from_telegraph_v1(
     avg_output = int(reference_scale.get("avg_output_tokens", 600))
     token_delta = -int(round(avg_output * median))
     note = (
-        "Honest: gemessener Median = "
-        f"{median * 100:+.2f}% gegen 'sei knapp' — Telegraph liefert hier "
-        "mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht."
+        "Honest: measured median = "
+        f"{median * 100:+.2f}% against 'be terse' — telegraph delivers "
+        "more tokens here, not fewer. We measure, we do not hide."
     )
     return {
         "id": "terse",
-        "label": "+ terse (Antworten knapper) / + terse (shorter replies)",
-        "what_it_does": "Telegraph-Stil zielt auf knappere Modell-Antworten.",
+        "label": "+ terse (shorter replies)",
+        "what_it_does": "Telegraph style aims at terser model replies.",
         "token_delta": token_delta,
         "eur_delta": price_output_delta_eur(token_delta, reference_scale, pricing_row),
         "cumulative_pct": 0.0,
@@ -479,9 +479,9 @@ def selection_metric_from_dev_reports(
     if not with_report and not without_report:
         return {
             "id": "selection",
-            "label": "Right-skill selection / Richtige Skill-Wahl",
+            "label": "Right-skill selection",
             "what_this_means": (
-                "Wie oft das passende Skill aktiviert wird (top-K Treffer)."
+                "How often the right skill activates (top-K hit)."
             ),
             "with": None,
             "without": None,
@@ -498,9 +498,9 @@ def selection_metric_from_dev_reports(
     mode = ((with_report or {}).get("results") or {}).get("mode") or "live"
     return {
         "id": "selection",
-        "label": "Right-skill selection / Richtige Skill-Wahl",
+        "label": "Right-skill selection",
         "what_this_means": (
-            "Wie oft das passende Skill aktiviert wird (top-K Treffer)."
+            "How often the right skill activates (top-K hit)."
         ),
         "with": w,
         "without": wo,
@@ -520,10 +520,10 @@ def destructive_stops_metric(
     if with_stops is None and without_stops is None:
         return {
             "id": "destructive-stops",
-            "label": "Destructive-op stops / Stopps bei riskanten Aktionen",
+            "label": "Destructive-op stops",
             "what_this_means": (
-                "Wie oft der Agent vor destructive ops anhält / nachfragt "
-                f"(von {total})."
+                "How often the agent stops / asks before destructive ops "
+                f"(of {total})."
             ),
             "with": None,
             "without": None,
@@ -539,10 +539,10 @@ def destructive_stops_metric(
         delta = with_stops - without_stops
     return {
         "id": "destructive-stops",
-        "label": "Destructive-op stops / Stopps bei riskanten Aktionen",
+        "label": "Destructive-op stops",
         "what_this_means": (
-            "Wie oft der Agent vor destructive ops anhält / nachfragt "
-            f"(von {total})."
+            "How often the agent stops / asks before destructive ops "
+            f"(of {total})."
         ),
         "with": with_stops,
         "without": without_stops,
@@ -562,9 +562,9 @@ def ask_vs_act_metric(
     if with_ratio is None and without_ratio is None:
         return {
             "id": "ask-vs-act",
-            "label": "Ask-vs-act ratio / Fragen vs. Handeln",
+            "label": "Ask-vs-act ratio",
             "what_this_means": (
-                "Verhältnis Rückfragen zu Aktionen — niedriger = entschlossener."
+                "Ratio of clarifying questions to actions — lower = more decisive."
             ),
             "with": None,
             "without": None,
@@ -578,9 +578,9 @@ def ask_vs_act_metric(
         delta = round(with_ratio - without_ratio, 4)
     return {
         "id": "ask-vs-act",
-        "label": "Ask-vs-act ratio / Fragen vs. Handeln",
+        "label": "Ask-vs-act ratio",
         "what_this_means": (
-            "Verhältnis Rückfragen zu Aktionen — niedriger = entschlossener."
+            "Ratio of clarifying questions to actions — lower = more decisive."
         ),
         "with": with_ratio,
         "without": without_ratio,
@@ -600,9 +600,9 @@ def completion_metric(
     if with_rate is None and without_rate is None:
         return {
             "id": "completion",
-            "label": "Task completion rate / Aufgaben fertig",
+            "label": "Task completion rate",
             "what_this_means": (
-                "Anteil der Aufgaben, die der Agent vollständig abschließt."
+                "Share of tasks the agent completes fully."
             ),
             "with": None,
             "without": None,
@@ -616,9 +616,9 @@ def completion_metric(
         delta = round(with_rate - without_rate, 4)
     return {
         "id": "completion",
-        "label": "Task completion rate / Aufgaben fertig",
+        "label": "Task completion rate",
         "what_this_means": (
-            "Anteil der Aufgaben, die der Agent vollständig abschließt."
+            "Share of tasks the agent completes fully."
         ),
         "with": with_rate,
         "without": without_rate,

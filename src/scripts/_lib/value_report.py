@@ -339,7 +339,7 @@ def assemble_value_v1(
         "generated_at": utc_iso(),
         "reference_scale": ref,
         "baseline": {
-            "label": "Ohne Paket / Without package",
+            "label": "Without package",
             "input_tokens_per_request": baseline_input_tokens,
         },
         "cost_ladder": ladder,
