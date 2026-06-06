@@ -34,8 +34,8 @@ returns the runner(s) to invoke per ecosystem:
 
 **Wrappers win.** When a `Makefile`/`Taskfile.yml` `test:` target or a
 `package.json` `test` script exists, the resolver returns the wrapper
-(`make test` / `task test` / `pnpm test`) — it handles container access,
-env, and parallelism. **Flags:** `--include-e2e` adds playwright/cypress,
+(`make test`, `pnpm test`, or the project's `Taskfile.yml` test target) —
+it handles container access, env, and parallelism. **Flags:** `--include-e2e` adds playwright/cypress,
 `--include-slow` adds `test:slow`/`test:integration`, `--php` narrows a
 polyglot repo to the PHP ecosystem. Fast unit suites run by default
 (the monorepo guard).
@@ -46,8 +46,8 @@ ask interactively, or emit `ambiguous_routing` in CI.
 
 ### 2. Run the tests
 
-- **Wrapper command** (`make test` / `task test` / `pnpm test`) → run
-  from the host; the wrapper handles Docker/env internally.
+- **Wrapper command** (`make test`, `pnpm test`, or a `Taskfile.yml`
+  target) → run from the host; the wrapper handles Docker/env internally.
 - **Direct PHP tool** (`vendor/bin/pest`, `php artisan test`,
   `vendor/bin/phpunit`) → run **inside the PHP Docker container**
   (`docker compose exec -T <service> ...`); detect the service from

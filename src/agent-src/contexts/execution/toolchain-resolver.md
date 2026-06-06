@@ -49,9 +49,10 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 
 **Task-runner wrappers win.** When the project root has a `Makefile`
 `test:` target, a `Taskfile.yml` `test:` task, or a `package.json`
-`test` script, the resolver prefers the wrapper (`make test`,
-`task test`, `pnpm test`) — wrappers handle container access, env, and
-parallelism (the architecture rule's "Build / Task Runner Detection").
+`test` script, the resolver prefers that wrapper (`make test`,
+`pnpm test`, or the `Taskfile.yml` test target) — wrappers handle
+container access, env, and parallelism (the architecture rule's
+"Build / Task Runner Detection").
 The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 `yarn.lock` → yarn, else npm).
 
