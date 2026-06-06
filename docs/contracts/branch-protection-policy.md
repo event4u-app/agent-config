@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Branch Protection Policy
 
 > **Status:** active · **Owner:** maintainer (GitHub UI ruleset) ·

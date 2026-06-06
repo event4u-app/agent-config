@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Install Scopes — user-global vs project-local
 
 **Status:** Active (locked 2026-05-25 via Phase B of `road-to-clean-skill-distribution-channels.md`)

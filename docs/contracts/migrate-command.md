@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # `agent-config migrate` — Behavior Contract
 
 > **Status:** active · **Owner:** maintainer (`src/scripts/_cli/cmd_migrate.py`) · **Opened:** 2026-05-29

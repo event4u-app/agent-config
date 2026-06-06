@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Harness Expectations — when AI tool behaviour looks like a package bug but isn't
 
 **Status:** Active (Phase D of `road-to-clean-skill-distribution-channels.md`)

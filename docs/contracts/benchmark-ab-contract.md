@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Package-Impact A/B Benchmark — Contract
 
 > Lifecycle, cache invalidation, and reader-side semantics for `docs/benchmark.md` and the underlying A/B bench reports. Companion to `docs/contracts/benchmark-report-schema.md` (which owns the per-report JSON shape this contract layers an axis onto).
