@@ -265,6 +265,11 @@ tasks:
     desc: "road-to-6.0.0-D Phase 0 — pack.yaml dependency drift (declared vs actual includes) + pack-graph DAG check"
     cmd: python3 src/scripts/lint_pack_dependencies.py
 
+  lint-flows:
+    silent: true
+    desc: "road-to-6.1.0 Step 8b (ADR-055) — validate src/flows/*.yaml against the flow schema + resolve every command/skill reference + closed-set/completeness"
+    cmd: python3 src/scripts/lint_flows.py {{.QUIET_FLAG}}
+
   lint-namespace-collisions:
     silent: true
     desc: "road-to-6.0.0-D Phase 0 — every skill/rule/command name unique within its namespace (single flat library)"

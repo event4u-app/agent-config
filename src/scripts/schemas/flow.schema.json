@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/flow.schema.json",
+  "title": "Flow (src/flows/<id>.yaml)",
+  "$comment": "Validated on load by scripts/lint_flows.py. Schema introduced in road-to-6.1.0 Step 8b (ADR-055). This schema fixes the SHAPE of a flow file; referential integrity (every entry_point / default_path entry resolves to a real command, every skill resolves to a real skill, id == filename stem, id is in the closed flow set) is enforced by the lint, not the schema — the same shape-vs-resolution split pack.schema.json + validate_pack_yaml.py use.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "summary", "entry_points", "default_path", "skills"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Flow id — lowercase slug, must equal the filename stem. The closed flow set {discovery, implementation, review, delivery} is enforced by lint_flows.py, not this schema (a new flow is a curated governance decision, not a free addition)."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-facing flow name (e.g. \"Discovery\")."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One- or two-sentence answer to \"what am I trying to do?\" — the journey, not a command list."
+    },
+    "entry_points": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/commandRef" },
+      "description": "Commands that START the flow (the daily front doors). Each must resolve to a real command via resolve_logical(\"commands/<ref>.md\")."
+    },
+    "default_path": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/commandRef" },
+      "description": "The canonical command sequence for the flow, in order. Each must resolve to a real command."
+    },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "description": "Skills the flow composes end-to-end. Each must resolve to a real skills/<slug>/SKILL.md."
+    },
+    "commands": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/commandRef" },
+      "description": "Optional descriptive seed list lifted from the command-classification worksheet `·_flow:` tags. Annotation only — entry_points / default_path are the validated reference fields. Each entry, if present, must still resolve to a real command."
+    }
+  },
+  "definitions": {
+    "commandRef": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(/[a-z][a-z0-9-]*)*$",
+      "description": "A logical command path — a top-level stem (`work`) or a cluster sub (`fix/pr-comments`, `pr/create`). Resolved by resolve_logical(\"commands/<ref>.md\")."
+    }
+  }
+}
