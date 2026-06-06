@@ -270,6 +270,21 @@ tasks:
     desc: "road-to-6.1.0 Step 8b (ADR-055) — validate src/flows/*.yaml against the flow schema + resolve every command/skill reference + closed-set/completeness"
     cmd: python3 src/scripts/lint_flows.py {{.QUIET_FLAG}}
 
+  lint-command-flow-coverage:
+    silent: true
+    desc: "road-to-6.1.0 Step 9 — every src/domains command is classified into exactly one flow/surface in src/flows/surface-map.yaml (the Flows primary view)"
+    cmd: python3 src/scripts/lint_command_flow_coverage.py {{.QUIET_FLAG}}
+
+  generate-command-flows:
+    silent: true
+    desc: "road-to-6.1.0 Step 9 — (re)generate docs/command-flows.md (the Flows primary view) from surface-map.yaml + src/flows/*.yaml"
+    cmd: python3 src/scripts/generate_command_flows.py {{.CLI_ARGS}}
+
+  generate-command-flows-check:
+    silent: true
+    desc: "road-to-6.1.0 Step 9 — fail if docs/command-flows.md is stale vs surface-map.yaml + src/flows/*.yaml"
+    cmd: python3 src/scripts/generate_command_flows.py --check
+
   lint-namespace-collisions:
     silent: true
     desc: "road-to-6.0.0-D Phase 0 — every skill/rule/command name unique within its namespace (single flat library)"

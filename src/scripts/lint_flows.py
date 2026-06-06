@@ -46,6 +46,11 @@ SCHEMA_PATH = ROOT / "src" / "scripts" / "schemas" / "flow.schema.json"
 # user-work journey. Growing this set is an ADR-gated governance decision.
 CLOSED_FLOWS = {"discovery", "implementation", "review", "delivery"}
 
+# Companion files under src/flows/ that are NOT flow definitions (validated by
+# their own linters). surface-map.yaml = the command→flow classification index
+# (road-to-6.1.0 Step 9), checked by scripts/lint_command_flow_coverage.py.
+_NON_FLOW_FILES = {"surface-map.yaml"}
+
 _REF_FIELDS = ("entry_points", "default_path", "commands")
 
 
@@ -171,7 +176,12 @@ def main(argv: list[str] | None = None) -> int:
         validator = jsonschema.Draft7Validator(schema)
         known_cmds = _known_command_refs()
         known_skills = _known_skill_slugs()
-        files = sorted(FLOWS_DIR.glob("*.yaml"))
+        # surface-map.yaml is the companion command→flow classification index
+        # (road-to-6.1.0 Step 9), NOT a flow file — it is validated by
+        # scripts/lint_command_flow_coverage.py instead.
+        files = sorted(
+            p for p in FLOWS_DIR.glob("*.yaml") if p.name not in _NON_FLOW_FILES
+        )
         vios: list[Violation] = []
         seen_ids: set[str] = set()
         for path in files:

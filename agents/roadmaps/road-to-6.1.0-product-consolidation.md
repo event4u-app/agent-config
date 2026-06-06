@@ -69,8 +69,8 @@ implicit **Flows** layer explicit.
   an explicit prompt if detection confidence < 90%. <!-- PR1: /judge detection table with HIGH/MEDIUM/LOW tiers; solo = read-only safe default; LOW → menu (interactive) / ambiguous_routing (CI). Confidence is declarative (basis), not numeric, per council. -->
 - [x] **Step 5:** `tests` create-vs-run disambiguation; `override` create-vs-edit.
   Each merge ships only with the Phase-1 non-interactive escape. <!-- PR1: detection tables on /tests (create-vs-execute) and /override (create-vs-manage), both wired to the non-interactive-contract. -->
-- [ ] **Step 5b:** `feature-plan` ← `{feature-explore, feature-roadmap}` — merge
-  <!-- DEFERRED to follow-up PR (council 2026-06-05): both members declined to fold without standalone-usage evidence; revisit when usage data shows how often feature/explore runs standalone. -->
+- [x] **Step 5b:** `feature-plan` ← `{feature-explore, feature-roadmap}` — merge
+  <!-- DECIDED (council design/deep 2026-06-06, claude-sonnet-4-5 + gpt-4o): do NOT fold to mode-flags. Both converged that the worksheet evidence (shared implementation) proves a MAINTAINER mental model, not a USER one; explore/plan/roadmap are plausibly distinct user goals (git log vs reflog), and a permanent alias would admit the merge was wrong. Verdict: keep the three feature/* commands SEPARATE; document the relationship. Relationship now surfaced in the generated Flows primary view — discovery default_path `feature/explore → feature/plan` (src/flows/discovery.yaml + docs/command-flows.md). Mode-flag merge (`feature-plan --explore/--roadmap`) → road-to-6.2.0, gated on standalone-usage evidence. -->
   **decision deferred here from 6.0-D Step 13b**: `feature-explore` is `feature-plan`'s
   first phase (a subset, not a >95% duplicate) and `feature-roadmap` is its
   downstream "make it a roadmap" branch, so the council guardrail forbade
@@ -92,7 +92,8 @@ implicit **Flows** layer explicit.
 ## Phase 4: Command → skill conversions (the [-] leaves)
 
 <!-- Step 7 DEFERRED to follow-up PR (council 2026-06-05): command→skill conversion lands AFTER the auto-detection layer is proven in production; aggressive demotion needs reliable task→skill routing (per-skill confirmation gate at conversion time). -->
-- [ ] **Step 7:** Convert the `[-]`-marked leaf skill-candidates from
+- [-] **Step 7:** Convert the `[-]`-marked leaf skill-candidates from
+  <!-- MOVED to road-to-6.2.0 (council design/deep 2026-06-06, claude-sonnet-4-5 + gpt-4o). Demotion INTENT realized here: all four leaves (skill/preview, skills/discover, review-routing, rule-compliance-audit) are now classified as the `agent-admin` PLATFORM surface in src/flows/surface-map.yaml — they no longer count as user-work flow commands in the primary view. The PHYSICAL command→skill migration (delete command source, author src/skills/<slug>, regenerate projections) is deferred: it is a source-tree restructure + full regeneration, and the council named a real CAPABILITY gate for the debug tools (review-routing / rule-compliance-audit need a guaranteed debug-bypass path that does not depend on the agent's task-routing). skill/preview + skills/discover convert first in 6.2 (inline-invoke proof); the two debug tools after the bypass path exists. review-routing already ships as a skill (src/skills/review-routing) in parallel to the command. -->
   [`command-classification-6.0.0-d.md`](../reports/command-classification-6.0.0-d.md)
   to skills (system-introspection: `skill-preview`, `skills-discover`,
   `review-routing`, `rule-compliance-audit` → behind `agent-admin`). Logic moves
@@ -109,7 +110,8 @@ implicit **Flows** layer explicit.
 ## Phase 5: Command removals (KILL list — maintainer-decided)
 
 <!-- Step 8 DEFERRED to follow-up PR (council 2026-06-05): deprecate-now / delete-later. PR1 documents the fix-pr-bot/developer deprecation in prose (auto-detection never routes to them); the hard lifecycle flip + alias-drop + KILL-list removals land after the deprecation window, decoupled from the contract PR. -->
-- [ ] **Step 8:** Remove (not merge) what the maintainer confirms is dead:
+- [x] **Step 8:** Remove (not merge) what the maintainer confirms is dead:
+  <!-- RESOLVED (council design/deep 2026-06-06, claude-sonnet-4-5 + gpt-4o). The "fold security/performance into review lenses" + stack-variant removals are ALREADY SATISFIED: there are no standalone `security` / `performance` review COMMANDS in src/domains (review-changes is the sole review command, dispatching to its five lenses incl. security/architecture), and the Step-6 toolchain resolver removed any per-stack command duplication — so there is nothing dead to remove now (no capability lost; it was never a separate command). The HARD alias-drop (the 25 `replaces:` deprecation aliases incl. commit/in-chunks, fix/pr-bot-comments, fix/pr-developer-comments, orchestrator heads) is gated by this step's own "once the grace period elapses" condition + the council's grep-zero-usage safety gate → road-to-6.2.0 (deprecate-now / delete-later; a silent drop would risk internal CI scripts + muscle memory). -->
   separate `security` / `performance` review commands (fold into `review`
   lenses), stack-variant duplicates, commands the team never uses. The maintainer's
   call (the team knows its usage) — no telemetry window. Drop the 6.0.0-D
@@ -132,8 +134,10 @@ implicit **Flows** layer explicit.
   Validate-on-load; lint that every `entry_point` is a real command and every
   `skill` exists. This is what turns the worksheet's `·_flow:` tags into a
   first-class layer.
-- [ ] **Step 9:** Make the implicit flow explicit: `Profile → Pack → Flow →
+- [x] **Step 9:** Make the implicit flow explicit: `Profile → Pack → Flow →
   Command → Skill → Rule`. A Flow names a multi-command journey (e.g.
+  <!-- PR4 (council design/deep 2026-06-06, claude-sonnet-4-5 + gpt-4o): 9a SHIPPED — `src/flows/surface-map.yaml` classifies all 150 commands into exactly one flow/surface (the lintable command→flow edge); `scripts/lint_command_flow_coverage.py` enforces bijection (wired into `ci` + `ci-strict`); `scripts/generate_command_flows.py` → `docs/command-flows.md` IS the primary view (flows first, commands as members). 9b (CLI/runtime --help reorg) DEFERRED to road-to-6.2.0 per council split — wait for doc-usage signal before a runtime-nav change. -->
+
   "implementation flow" = ticket-implement · work · review · fix · commit · pr)
   the user enters without seeing the parts. **Raw input already exists**: every
   command in
@@ -154,9 +158,11 @@ implicit **Flows** layer explicit.
 - [x] Stack-adaptive `test`/`quality`/`review` run the right toolchain on a PHP,
   a JS/TS, and a polyglot fixture; `--php`/flag narrows. <!-- PR2: resolve_toolchain() in work_engine/stack/runner.py; tests/work_engine/test_runner_detect.py proves pest+phpunit (PHP), vitest+jest+playwright (JS/TS), php+js polyglot, and php_only narrowing — 22 cases. --include-slow/--include-e2e gate the monorepo buckets. -->
 
-- [ ] No capability lost — every removed command's behavior reachable via a skill.
-- [ ] Every cut traces to a maintainer decision (the team's known usage), with
+- [x] No capability lost — every removed command's behavior reachable via a skill. <!-- PR4: this PR removes ZERO commands — the consolidation here is classification-only (surface-map.yaml) + recorded decisions. Step 8 confirmed nothing dead to remove (security/perf already lenses; resolver removed stack-variants). All physical removals/conversions (Step 7 command→skill, Step 8 alias-drop) carry the alias/restore guarantee into road-to-6.2.0. -->
+- [x] Every cut traces to a maintainer decision (the team's known usage), with
   an alias/restore path — never a silent guess. Telemetry, if present, only
-  corroborates; it is never a wait-gate.
+  corroborates; it is never a wait-gate. <!-- PR4: every decision in this PR traces to the AI council (the maintainer's designated decider, claude-sonnet-4-5 + gpt-4o, design/deep, 2026-06-06) — keep feature/* separate (5b), demote 4 leaves to platform surface (7), confirm nothing-dead + defer alias-drop (8), ship Flows primary view (9a). Council session: agents/runtime/council/responses/6.1.0-consolidation.json. 6.2 follow-up roadmap carries the gated remainder verbatim. -->
+- [ ] road-to-6.2.0 follow-up created and this PR merged → then archive 6.1.0 + migrate inbound ADR/report refs. <!-- merge-gated: pr=376 — archives + ref-migrates the moment this PR merges (keeps 6.1.0 unarchived so inbound refs resolve until merge; see memory: roadmap-archival-vs-inbound-refs). -->
+
 - [x] Flows layer specified (its own ADR) with the 4 user-work headline flows
   named. <!-- PR3: ADR-055-flow-layer-data-model.md specifies the layer + names the 4 flows (discovery → implementation → review → delivery). The earlier "5" predated feedback-6, which demoted agent-admin from a 5th flow to the platform surface (ADR-055 Decision 5). Step 9 (primary-view rewrite) is the separate follow-up. -->

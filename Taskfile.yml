@@ -162,6 +162,8 @@ tasks:
       - task: validate-pack-yaml
       - task: lint-pack-dependencies
       - task: lint-flows
+      - task: lint-command-flow-coverage
+      - task: generate-command-flows-check
       - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
@@ -281,6 +283,8 @@ tasks:
       - task: validate-pack-yaml
       - task: lint-pack-dependencies
       - task: lint-flows
+      - task: lint-command-flow-coverage
+      - task: generate-command-flows-check
       - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
