@@ -39,6 +39,15 @@ implicit **Flows** layer explicit.
 > in production), **8 deletion** (deprecate-now / delete-later window), **8b/9**
 > (flows layer — HIGH-risk, lands last). Auto-detection must target stable
 > sub-commands, so deprecation is documented before/with detection.
+>
+> **PR2 (council re-confirmed 2026-06-05, claude-sonnet-4-5 + gpt-4o).** With
+> PR1's contract merged, the council converged that **Step 6 (toolchain
+> resolver) is the single unblocked next step** and ships as its own PR —
+> rejecting a mega-PR (it would collapse 6 independent rollback units into
+> one). 5b (needs standalone-usage evidence), 7 ("proven in production" is a
+> real telemetry gate), 8-deletions (delete-later window), and 8b/9 (HIGH-risk
+> flows layer, lands last) **stay deferred** to their own follow-up PRs. PR2 =
+> Step 6 + AC2.
 
 ## Phase 1: Interactive-merge contract (the gate for every merge here)
 
@@ -72,8 +81,8 @@ implicit **Flows** layer explicit.
 
 ## Phase 3: Stack-adaptive engineering commands (resolver)
 
-<!-- Step 6 DEFERRED to follow-up PR (council 2026-06-05): the resolver is a code subsystem and a sub-routine of /tests detection; it must follow Step 1's contract (which PR1 ships). The non-interactive escape it depends on now exists. -->
-- [ ] **Step 6:** Build the toolchain resolver: `test-run` / `test-create` /
+<!-- Step 6 DONE in PR2 (council 2026-06-05 re-confirmed: this is the one unblocked step now that PR1's contract has merged; 5b/7/8-del/8b/9 stay deferred). Resolver = src/agent-src/templates/scripts/work_engine/stack/runner.py + contexts/execution/toolchain-resolver.md; tests = tests/work_engine/test_runner_detect.py. -->
+- [x] **Step 6:** Build the toolchain resolver: `test-run` / `test-create` /
   `quality-fix` / `review-changes` / `work` DETECT the consumer's stack (phpunit /
   pest / playwright / vitest / jest / …) and run the right tool — no per-stack
   command explosion. Monorepo guard: default to FAST tests, `--include-slow` /
@@ -142,8 +151,9 @@ implicit **Flows** layer explicit.
 ## Acceptance Criteria
 
 - [x] Every merged command works non-interactively (CI-safe); proven by a CI test. <!-- PR1: non-interactive-contract + per-orchestrator detection tables + `task lint-orchestrator-auto-detect` (scripts/lint_orchestrator_auto_detect.py) asserting every auto_detect orchestrator wires the contract. -->
-- [ ] Stack-adaptive `test`/`quality`/`review` run the right toolchain on a PHP,
-  a JS/TS, and a polyglot fixture; `--php`/flag narrows.
+- [x] Stack-adaptive `test`/`quality`/`review` run the right toolchain on a PHP,
+  a JS/TS, and a polyglot fixture; `--php`/flag narrows. <!-- PR2: resolve_toolchain() in work_engine/stack/runner.py; tests/work_engine/test_runner_detect.py proves pest+phpunit (PHP), vitest+jest+playwright (JS/TS), php+js polyglot, and php_only narrowing — 22 cases. --include-slow/--include-e2e gate the monorepo buckets. -->
+
 - [ ] No capability lost — every removed command's behavior reachable via a skill.
 - [ ] Every cut traces to a maintainer decision (the team's known usage), with
   an alias/restore path — never a silent guess. Telemetry, if present, only
