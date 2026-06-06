@@ -1,4 +1,4 @@
-# Adapter Contract (v1)
+# Adapter Contract (v2)
 
 > Single source of truth for every adapter under
 > `scripts/ai-video/adapters/`. Phase 4 Step 1 finalizes any open
@@ -82,12 +82,20 @@ are logged to stderr and ignored.
 {
   "video_path": "/abs/path/scene-0001.mp4",
   "audio_path": "/abs/path/scene-0001.wav",
-  "audio_embedded": true
+  "audio_embedded": true,
+  "cost_estimate": 0.12
 }
 ```
 
 Semantics:
 
+- `cost_estimate` (optional, USD float) — the modeled cost of the
+  equivalent **live** render for this scene, surfaced on `dry-run`
+  (and echoed on `fetch` / `run` as the actual when known). The
+  orchestrator sums it across scenes for the batch cost gate and the
+  `--max-spend-usd` kill-switch. Omitted when the adapter cannot price
+  the call — the gate then shows the scene as `unknown` and never treats
+  a missing estimate as `0`.
 - `audio_embedded: true` — `video_path` is a muxed MP4 with audio;
   `audio_path` is omitted or echoes the same path. Stitcher
   pass-through.
@@ -95,6 +103,35 @@ Semantics:
   at stitch time via `ffmpeg`.
 - `audio_embedded: false` without `audio_path` — video-only;
   operator supplies the audio bed at stitch time.
+
+## Trust boundary (v2)
+
+The artifact paths an adapter emits on `fetch` / `run`, and the bytes it
+downloads, are **untrusted provider output**. A buggy or hostile backend
+must not be able to make the orchestrator read `/etc/passwd`, follow a
+symlink out of the project, inject into the `ffmpeg` concat list, or fill
+the disk. Three rules, enforced by `scripts/ai-video/lib/adapter-common.sh`:
+
+1. **Project-scoped artifacts.** Live `fetch` writes downloads into the
+   scene-scoped output dir (`aiv_scene_dir <project> <scene_id>` →
+   `<project>/scenes/<scene_id>/`) and returns a path under it. The
+   orchestrator passes every consumed path through
+   `aiv_validate_artifact_path <project_root> <path>`, which canonicalizes
+   the path and **rejects** anything that escapes the root, is a symlink,
+   carries a parent-traversal (`..`), or contains injection / control
+   characters (`'`, `` ` ``, `$(`, newline). The consumer (`stitch.sh`)
+   re-validates before handing a path to `ffmpeg`.
+2. **Size cap.** Downloads go through `aiv_fetch_url <url> <dest>
+   [max_bytes]`, which caps a single artifact at `aiv_max_artifact_bytes`
+   (default 512 MiB, override `AIV_MAX_ARTIFACT_BYTES`) and times out
+   (`AIV_FETCH_TIMEOUT`, default 120 s). A runaway stream fails closed.
+3. **Opaque paths only.** `video_path` / `audio_path` SHOULD be returned
+   relative to the scene dir (or absolute under it). An absolute path
+   outside the project root is a contract violation and is rejected — it
+   is never consumed.
+
+Dry-run fixtures are committed, trusted inputs and are exempt (no network,
+no provider-controlled path).
 
 ## Error contract
 
@@ -157,7 +194,15 @@ set -euo pipefail
 
 ## Versioning
 
-This contract is `v1`. Backward-incompatible changes (renamed
-field, removed subcommand, changed stdout shape) bump to `v2` and
+This contract is `v2`. Backward-incompatible changes (renamed
+field, removed subcommand, changed stdout shape) bump the version and
 require an `adapter-contract` migration note plus a rerun of every
 adapter against the fixture set.
+
+**v1 → v2 migration.** Additive, no stdout-field change — the
+`{video_path, audio_path?, audio_embedded}` shape is unchanged, so
+committed fixtures stay valid. v2 adds the **Trust boundary** section
+above: live `fetch` MUST write into the scene-scoped dir and route every
+consumed artifact path through `aiv_validate_artifact_path` and every
+download through `aiv_fetch_url`. Existing dry-run-only adapters need no
+change; the obligation lands when their live `submit/poll/fetch` is wired.

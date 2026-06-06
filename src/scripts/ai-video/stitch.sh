@@ -116,10 +116,17 @@ while IFS= read -r row; do
     aiv_die 7 "missing clip for scene=${scene_id} at ${clip_path} (re-render the scene, pass --skip-scene ${scene_id}, or use --continue)"
   fi
 
+  # Trust boundary (adapter-contract.md v2): clip_path comes from the
+  # adapter's fetch output and is untrusted. Reject anything that escapes
+  # the project dir, is a symlink, or carries concat-injection characters
+  # before it reaches ffmpeg or the `file '...'` concat list.
+  clip_path="$(aiv_validate_artifact_path "${PROJECT_DIR}" "${clip_path}")"
+
   # For clips without embedded audio that ship a sibling track, mux
   # via ffmpeg into a tmp file before concat. Pure pass-through for
   # the embedded-audio case.
   if [ "${audio_embedded}" = "false" ] && [ -n "${audio_path}" ] && [ -f "${audio_path}" ]; then
+    audio_path="$(aiv_validate_artifact_path "${PROJECT_DIR}" "${audio_path}")"
     muxed="${WORK_DIR}/${scene_id}.mp4"
     ffmpeg -loglevel error -y -i "${clip_path}" -i "${audio_path}" \
       -c:v copy -c:a aac -shortest "${muxed}" >/dev/null \
