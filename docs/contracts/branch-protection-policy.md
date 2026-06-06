@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # Branch Protection Policy
 
 > **Status:** active · **Owner:** maintainer (GitHub UI ruleset) ·

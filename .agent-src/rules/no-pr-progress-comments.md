@@ -45,7 +45,7 @@ Reading `.agent-settings.yml`:
 
 **Not gated** (always allowed regardless of the setting):
 
-- The PR body / description in [`/create-pr`](../commands/create-pr.md) and
+- The PR body / description in [`/create-pr`](../commands/pr/create.md) and
   in PATCH-after-create strip passes — that text *is* the PR.
 - Replies to individual review comments via
   [`/fix:pr-comments`](../commands/fix/pr-comments.md),
@@ -101,7 +101,7 @@ notes do **not** clear this carve-out.
 
 ## See also
 
-- [`/create-pr`](../commands/create-pr.md) — PR body / description path (not gated).
+- [`/create-pr`](../commands/pr/create.md) — PR body / description path (not gated).
 - [`/fix:pr-comments`](../commands/fix/pr-comments.md) — review-reply path (not gated).
 - [`no-attribution-footers`](no-attribution-footers.md) — sibling rule on PR-comment hygiene.
 - [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md) — sibling rule gating decorative emojis in any comment that does get posted.

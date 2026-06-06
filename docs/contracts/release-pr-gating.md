@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # Release-PR Gating Contract
 
 > **Status:** active · **Owner:** maintainer (`scripts/release.py`) · **Opened:** 2026-05-26

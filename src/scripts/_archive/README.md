@@ -13,7 +13,7 @@ codebase is undefined behaviour.
 
 Archived 2026-05-14 as part of [`agents/roadmaps/step-1-v2-feedback-followup.md`](../../agents/roadmaps/step-1-v2-feedback-followup.md)
 Phase 1 Step 3, addressing audit finding F3 / council finding C3 from
-[`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md).
+[`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md). <!-- council-ref-allowed: archival decision provenance; session pruned by TTL -->
 
 ## Inventory
 

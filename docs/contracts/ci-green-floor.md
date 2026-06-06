@@ -7,7 +7,7 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 # CI Green Floor
 
 > **Status** · v0 / beta · 2026-05-26. Phase A Step 4 of
-> [`road-to-adoption-proof-and-ci-green.md`](../../agents/roadmaps/road-to-adoption-proof-and-ci-green.md).
+> the `road-to-adoption-proof-and-ci-green` roadmap (archived).
 > Defines what counts as a **blocking** CI failure (must be green
 > before merge) vs. an **advisory** signal (visible but not
 > merge-blocking), and the freeze rule that fires when main goes

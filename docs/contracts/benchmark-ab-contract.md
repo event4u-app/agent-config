@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # Package-Impact A/B Benchmark — Contract
 
 > Lifecycle, cache invalidation, and reader-side semantics for `docs/benchmark.md` and the underlying A/B bench reports. Companion to `docs/contracts/benchmark-report-schema.md` (which owns the per-report JSON shape this contract layers an axis onto).
@@ -96,6 +101,6 @@ A bench run counts as a real measurement (rather than a plumbing health check) w
 
 ## See also
 
-- `agents/roadmaps/road-to-package-impact-benchmark.md` — the roadmap that built this surface.
+- the `road-to-package-impact-benchmark` roadmap (archived) — built this surface.
 - `internal/bench/ab/README.md` — the Shape A vs. Shape B decision and the layout.
 - `docs/contracts/benchmark-report-schema.md` — per-report JSON shape (sibling contract).

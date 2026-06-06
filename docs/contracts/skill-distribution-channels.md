@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # Skill Distribution Channels — canonical per AI tool
 
 **Status:** Active (locked 2026-05-25 via Phase A of `road-to-clean-skill-distribution-channels.md`)

@@ -26,7 +26,7 @@ machine-readable source of truth.
 - **Chat thread:** 2026-05-27 (the owner's verdict: *"Aktuell bringen
   diese Benchmarks nichts. Ich weiß worum es geht und verstehe sie nicht  <!-- md-language-check: ignore -->
   mal."*)
-- **Roadmap:** `agents/roadmaps/road-to-readable-value-dashboard.md`
+- **Roadmap:** `road-to-readable-value-dashboard` (archived)
 - **Extends:** archived `road-to-package-impact-benchmark.md` (A/B
   surface) and archived `step-4-measurement-and-benchmark.md`
   (telegraph + selection bench).
@@ -370,7 +370,7 @@ deliberately rewriting this section.
 
 ## See also
 
-- [`agents/roadmaps/road-to-readable-value-dashboard.md`](../../agents/roadmaps/road-to-readable-value-dashboard.md) — the roadmap that built this surface.
+- the `road-to-readable-value-dashboard` roadmap (archived) — built this surface.
 - [`value-report-schema.md`](value-report-schema.md) — per-report JSON shape (sibling contract).
 - [`benchmark-ab-contract.md`](benchmark-ab-contract.md) — A/B variant-axis contract (data source for the rtk, behaviour, completion rungs).
 - [`benchmark-report-schema.md`](benchmark-report-schema.md) — per-report JSON shape for A/B reports.

@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # Evidence-based pruning contract
 
 > 6.0.0-C Phase 3 Step 7. The **rule by which a later, data-bearing roadmap

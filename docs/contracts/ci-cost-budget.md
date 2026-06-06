@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-04
+---
+
 # CI Cost Budget
 
 > **Status:** active · **Owner:** maintainer · **Opened:** 2026-05-26 ·

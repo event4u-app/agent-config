@@ -42,14 +42,24 @@ class Violation:
     reason: str
 
 
-def _command_roots() -> list[Path]:
-    pkgs = ROOT / "packages"
-    roots = [d for d in pkgs.glob("*/.agent-src.uncondensed/commands")
-             if d.is_dir()] if pkgs.is_dir() else []
-    legacy = ROOT / ".agent-src.uncondensed" / "commands"
-    if not roots and legacy.is_dir():
-        roots = [legacy]
-    return roots
+def _command_files() -> list[Path]:
+    """Discover command sources in the post-ADR-051 layout.
+
+    Authoring lives at src/domains/<domain>/**/command.md; the legacy
+    packages/*/.agent-src.uncondensed/commands tree is kept as a
+    fallback for older checkouts.
+    """
+    domains = ROOT / "src" / "domains"
+    if domains.is_dir():
+        return sorted(domains.rglob("command.md"))
+    legacy_roots = [d for d in (ROOT / "packages").glob(
+        "*/.agent-src.uncondensed/commands") if d.is_dir()]
+    return sorted(md for root in legacy_roots for md in root.rglob("*.md"))
+
+
+# Central eval store in the post-ADR-051 layout. Eval stems use the
+# command's `name` or one of its `replaces` aliases.
+EVALS_DIR = ROOT / "src" / "agent-src" / "commands" / "evals"
 
 
 def _frontmatter(text: str) -> dict:
@@ -83,10 +93,17 @@ def check(md: Path) -> list[Violation]:
         vio.append(Violation(rel, "missing `replaces` key (use `[]` when it "
                                   "replaces nothing) (Step 4b)"))
 
-    eval_path = md.parent / "evals" / f"{md.stem}.json"
+    eval_keys = [k for k in [fm.get("name"), *(fm.get("replaces") or [])]
+                 if isinstance(k, str) and k.strip()]
+    eval_path = next(
+        (EVALS_DIR / f"{k}.json" for k in eval_keys
+         if (EVALS_DIR / f"{k}.json").exists()),
+        md.parent / "evals" / f"{md.stem}.json",  # legacy per-dir layout
+    )
     if not eval_path.exists():
-        vio.append(Violation(rel, f"missing routing eval "
-                                  f"`{eval_path.relative_to(ROOT)}` (Step 5)"))
+        vio.append(Violation(rel, f"missing routing eval under "
+                                  f"`{EVALS_DIR.relative_to(ROOT)}/` for any of "
+                                  f"{eval_keys or [md.stem]} (Step 5)"))
     else:
         try:
             data = json.loads(eval_path.read_text(encoding="utf-8"))
@@ -109,22 +126,21 @@ def main() -> int:
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
 
-    roots = _command_roots()
-    if not roots:
+    files = _command_files()
+    if not files:
         print("❌  No command roots found.", file=sys.stderr)
         return 3
 
     visible = 0
     violations: list[Violation] = []
-    for root in roots:
-        for md in sorted(root.rglob("*.md")):
-            if md.name == "AGENTS.md" or "_archive" in md.parts \
-               or md.parent.name == "evals":
-                continue
-            fm = _frontmatter(md.read_text(encoding="utf-8"))
-            if fm.get("tier", 2) in VISIBLE_TIERS:
-                visible += 1
-            violations += check(md)
+    for md in files:
+        if md.name == "AGENTS.md" or "_archive" in md.parts \
+           or md.parent.name == "evals":
+            continue
+        fm = _frontmatter(md.read_text(encoding="utf-8"))
+        if fm.get("tier", 2) in VISIBLE_TIERS:
+            visible += 1
+        violations += check(md)
 
     if violations:
         print(f"❌  {len(violations)} routing-metadata violation(s) across "

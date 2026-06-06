@@ -75,7 +75,7 @@ Rejected alternatives:
 Session 2026-05-28, design mode, 2 rounds, $0.06 actual.
 Members: `claude-sonnet-4-5` + `gpt-4o`. Both converged on Option B,
 CONDITIONAL on the three verifications below. Responses captured at
-`agents/runtime/council/responses/claude-code-distribution.json`.
+`agents/runtime/council/responses/claude-code-distribution.json`. <!-- council-ref-allowed: ADR decision trace -->
 
 ### Three conditions (all verified 2026-05-28)
 
@@ -136,7 +136,7 @@ See § Decision above — Option A (dual projection) and Option C
 - Roadmap:
   `agents/roadmaps/road-to-claude-code-global-distribution.md` Phase 3.
 - Council session responses:
-  `agents/runtime/council/responses/claude-code-distribution.json`.
+  `agents/runtime/council/responses/claude-code-distribution.json`. <!-- council-ref-allowed: ADR decision trace -->
 - Empirical verification: `~/.claude/commands/probe/sub.md` route
   test, 2026-05-28 (Condition 1 + Condition 2).
 - Mirror implementation: `scripts/install.py::_CLAUDE_SKILL_BUNDLE`

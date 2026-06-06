@@ -127,7 +127,7 @@ evidence-reversible, not absolute.
 
 ## References
 
-- `agents/roadmaps/road-to-6.2.0-consolidation-evidence-gates.md` — the gated plan.
+- `agents/roadmaps/archive/road-to-6.2.0-consolidation-evidence-gates.md` — the gated plan (archived 2026-06-06; deferred items 7a/9b kept in-archive per council deferred-resolution).
 - `docs/contracts/command-clusters.md` — cluster/alias model.
 - `docs/contracts/skill-dry-run.md`, `docs/contracts/skill-discovery.md` — the
   contracts `skill/preview` + `skills/discover` implement.

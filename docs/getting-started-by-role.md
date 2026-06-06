@@ -41,7 +41,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 3. `/video:scene` — render one scene at a time against the configured provider adapter; iterate on the motion + audio prompt without paying for the full clip.
 4. `/video:stitch` — assemble the rendered scenes into the final clip via ffmpeg, with the character-lock JSON enforcing identity across cuts.
 
-**Try the first win →** [`pack-ai-video/FIRST_WIN.md`](../packages/pack-ai-video/FIRST_WIN.md) — one-line idea to a provider-tuned motion prompt in ~12 minutes.
+**Try the first win →** [`pack-ai-video/FIRST_WIN.md`](../src/domains/ai-video/FIRST_WIN.md) — one-line idea to a provider-tuned motion prompt in ~12 minutes.
 
 > **What this is not:** the package does **not** host a video model. It orchestrates prompts against the provider you select (Veo, Kling, Sora, Runway, …). Trust level is set by the provider's adapter lifecycle tier — see [`provider-lifecycle-discipline`](../.agent-src/rules/provider-lifecycle-discipline.md). You pay the provider directly, the package never sees your API key.
 
@@ -57,7 +57,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 - [`unit-economics-modeling`](../.agent-src/skills/unit-economics-modeling/SKILL.md) — CAC, LTV, payback, contribution margin per customer.
 - [`fundraising-narrative`](../.agent-src/skills/fundraising-narrative/SKILL.md) — why-now / why-us / why-this framing, market-size reasoning.
 
-**Try the first win →** [`pack-founder-strategy/FIRST_WIN.md`](../packages/pack-founder-strategy/FIRST_WIN.md) — investor question reshaped into a defensible memo in ~10 minutes.
+**Try the first win →** [`pack-founder-strategy/FIRST_WIN.md`](../src/packs/founder-strategy/FIRST_WIN.md) — investor question reshaped into a defensible memo in ~10 minutes.
 
 **Install path:** **MCP for advisor work, CLI when you touch code.** Claude Desktop covers strategy / finance / narrative; CLI is needed only when you sit in the repo with the dev team.
 
@@ -155,7 +155,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 
 Use the AI Video skills (see [Creator → AI Video Pipeline](#ai-video-pipeline)) when you need a launch asset, not a documentary — 8-second hero clips, social cutdowns, or feature-announcement teasers.
 
-**Try the first win →** [`pack-gtm-sales/FIRST_WIN.md`](../packages/pack-gtm-sales/FIRST_WIN.md) — single deal to a MEDDIC scorecard with inversion test in ~7 minutes.
+**Try the first win →** [`pack-gtm-sales/FIRST_WIN.md`](../src/packs/gtm-sales/FIRST_WIN.md) — single deal to a MEDDIC scorecard with inversion test in ~7 minutes.
 
 **Install path:** **MCP recommended.** GTM artifacts are documents, decks, and Notion pages; Claude Desktop is the natural home.
 
@@ -171,7 +171,7 @@ Use the AI Video skills (see [Creator → AI Video Pipeline](#ai-video-pipeline)
 
 Outputs are flagged for human-accountant review by default — the agent surfaces a trust banner on every forecast / scenario reply so downstream readers see the human-in-the-loop expectation. See [`finance-safety-floor`](../.agent-src/rules/finance-safety-floor.md).
 
-**Try the first win →** [`pack-finance-basic/FIRST_WIN.md`](../packages/pack-finance-basic/FIRST_WIN.md) — runway question to a base/upside/downside narrative with trust banner in ~8 minutes. People-leaders running 1:1s: [`pack-ops-people/FIRST_WIN.md`](../packages/pack-ops-people/FIRST_WIN.md) — 1:1 cadence audit to a concrete recommendation in ~6 minutes.
+**Try the first win →** [`pack-finance-basic/FIRST_WIN.md`](../src/packs/finance-basic/FIRST_WIN.md) — runway question to a base/upside/downside narrative with trust banner in ~8 minutes. People-leaders running 1:1s: [`pack-ops-people/FIRST_WIN.md`](../src/packs/ops-people/FIRST_WIN.md) — 1:1 cadence audit to a concrete recommendation in ~6 minutes.
 
 **Install path:** **MCP recommended.** Finance / ops workflows are spreadsheet- and document-heavy; the CLI buys nothing here unless you also export models into a code repo.
 

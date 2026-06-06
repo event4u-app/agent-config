@@ -19,7 +19,7 @@ are exempt structurally — see STRUCTURAL_CARVEOUTS below — because
 they encode immutable decision provenance, not transient drafting
 state. Anything else needs an inline pragma at the end of the line:
 
-    `agents/runtime/council/sessions/...json` <!-- council-ref-allowed: <reason> -->
+    `agents/runtime/council/sessions/...json` <!-- council-ref-allowed: usage example in this docstring -->
 
 Exit codes:
   0 — no forbidden references.
@@ -109,7 +109,7 @@ INLINE_PRAGMA = re.compile(r"<!--\s*council-ref-allowed:[^>]*-->")
 # Structural carve-outs — (source_pattern, target_pattern) pairs where
 # the reference is immutable decision provenance rather than transient
 # drafting state. Driven by the 2026-05-14 P3.4 council round
-# (agents/runtime/council/sessions/2026-05-14-p3-4-references/synthesis.md).
+# (agents/runtime/council/sessions/2026-05-14-p3-4-references/synthesis.md). <!-- council-ref-allowed: carve-out documentation example -->
 #
 # Each entry: source file matches `source` regex AND the captured
 # reference path matches `target` regex → reference is allowed without

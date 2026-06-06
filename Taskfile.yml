@@ -176,8 +176,9 @@ tasks:
       - task: typecheck-ts
       - task: test-ts
       - task: build-ts
-      - task: installer-typecheck
-      - task: installer-test
+      # installer-typecheck / installer-test removed in v4.0.0 — the unified
+      # setup engine under src/install/ is covered by test-ts (see the note
+      # in taskfiles/ci-fast.yml above test:ts).
       - task: check-roadmap-trackable
       - task: check-council-layout
       - task: lint-agents-layout

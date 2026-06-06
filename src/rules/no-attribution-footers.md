@@ -45,13 +45,13 @@ messages (`git commit`). Forbidden, case-insensitive, with or without
 ## Server-side re-injection
 
 `github-api` re-appends `Pull Request opened by …` on create AND on
-subsequent `PATCH`. Mitigation owned by [`/create-pr`](../commands/create-pr.md)
+subsequent `PATCH`. Mitigation owned by [`/create-pr`](../commands/pr/create.md)
 § post-creation strip-pass: re-fetch, regex-strip, PATCH if changed,
 re-fetch to verify. Other writing commands SHOULD adopt the same pass.
 
 ## See also
 
-[`/create-pr`](../commands/create-pr.md) ·
+[`/create-pr`](../commands/pr/create.md) ·
 [`commit-conventions`](commit-conventions.md) ·
 [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md) — sibling rule covering decorative emojis in the same surfaces ·
 [`scope-control`](scope-control.md).
