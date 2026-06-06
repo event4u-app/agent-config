@@ -18,7 +18,7 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 
 | Roadmap | Done | Merge-gated open | Gating PR |
 |---|---:|---:|---|
-| [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 15 | 1 | — |
+| [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 15 | 1 | #376 |
 
 ## Open roadmaps
 

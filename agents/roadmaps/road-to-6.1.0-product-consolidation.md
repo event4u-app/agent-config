@@ -162,7 +162,7 @@ implicit **Flows** layer explicit.
 - [x] Every cut traces to a maintainer decision (the team's known usage), with
   an alias/restore path — never a silent guess. Telemetry, if present, only
   corroborates; it is never a wait-gate. <!-- PR4: every decision in this PR traces to the AI council (the maintainer's designated decider, claude-sonnet-4-5 + gpt-4o, design/deep, 2026-06-06) — keep feature/* separate (5b), demote 4 leaves to platform surface (7), confirm nothing-dead + defer alias-drop (8), ship Flows primary view (9a). Council session: agents/runtime/council/responses/6.1.0-consolidation.json. 6.2 follow-up roadmap carries the gated remainder verbatim. -->
-- [ ] road-to-6.2.0 follow-up created and this PR merged → then archive 6.1.0 + migrate inbound ADR/report refs. <!-- merge-gated: pr=PENDING — archives + ref-migrates the moment this PR merges (keeps 6.1.0 unarchived so inbound refs resolve until merge; see memory: roadmap-archival-vs-inbound-refs). -->
+- [ ] road-to-6.2.0 follow-up created and this PR merged → then archive 6.1.0 + migrate inbound ADR/report refs. <!-- merge-gated: pr=376 — archives + ref-migrates the moment this PR merges (keeps 6.1.0 unarchived so inbound refs resolve until merge; see memory: roadmap-archival-vs-inbound-refs). -->
 
 - [x] Flows layer specified (its own ADR) with the 4 user-work headline flows
   named. <!-- PR3: ADR-055-flow-layer-data-model.md specifies the layer + names the 4 flows (discovery → implementation → review → delivery). The earlier "5" predated feedback-6, which demoted agent-admin from a 5th flow to the platform surface (ADR-055 Decision 5). Step 9 (primary-view rewrite) is the separate follow-up. -->
