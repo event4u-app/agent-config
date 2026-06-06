@@ -9,7 +9,7 @@ parent_roadmap: road-to-6.0.0-d-structural-restructure
 > Draft until 6.0.0 ships — the ONLY gate is the dependency (you cannot
 > consolidate the renamed surface before it is renamed). **No telemetry wait.**
 > This roadmap holds everything the
-> [`6.0.0-D scope-line rule`](archive/road-to-6.0.0-d-structural-restructure.md) put in
+> [`6.0.0-D scope-line rule`](road-to-6.0.0-d-structural-restructure.md) put in
 > the **architectural (6.0.x staged)** and **behavioral (6.1)** lanes — changes
 > that need detection logic or non-TTY safety, NOT changes that need a usage
 > window.
@@ -77,7 +77,7 @@ implicit **Flows** layer explicit.
   merge-then-unmerge on an untested assumption. 6.0-D moved all three as flat
   commands; decide the fold (and whether `--roadmap` becomes a flag on
   `feature-plan`) here, with aliases kept. Evidence:
-  [`command-classification-6.0.0-d.md` § Step 13b](../reports/command-classification-6.0.0-d.md).
+  [`command-classification-6.0.0-d.md` § Step 13b](../../reports/command-classification-6.0.0-d.md).
 
 ## Phase 3: Stack-adaptive engineering commands (resolver)
 
@@ -94,7 +94,7 @@ implicit **Flows** layer explicit.
 <!-- Step 7 DEFERRED to follow-up PR (council 2026-06-05): command→skill conversion lands AFTER the auto-detection layer is proven in production; aggressive demotion needs reliable task→skill routing (per-skill confirmation gate at conversion time). -->
 - [-] **Step 7:** Convert the `[-]`-marked leaf skill-candidates from
   <!-- MOVED to road-to-6.2.0 (council design/deep 2026-06-06, claude-sonnet-4-5 + gpt-4o). Demotion INTENT realized here: all four leaves (skill/preview, skills/discover, review-routing, rule-compliance-audit) are now classified as the `agent-admin` PLATFORM surface in src/flows/surface-map.yaml — they no longer count as user-work flow commands in the primary view. The PHYSICAL command→skill migration (delete command source, author src/skills/<slug>, regenerate projections) is deferred: it is a source-tree restructure + full regeneration, and the council named a real CAPABILITY gate for the debug tools (review-routing / rule-compliance-audit need a guaranteed debug-bypass path that does not depend on the agent's task-routing). skill/preview + skills/discover convert first in 6.2 (inline-invoke proof); the two debug tools after the bypass path exists. review-routing already ships as a skill (src/skills/review-routing) in parallel to the command. -->
-  [`command-classification-6.0.0-d.md`](../reports/command-classification-6.0.0-d.md)
+  [`command-classification-6.0.0-d.md`](../../reports/command-classification-6.0.0-d.md)
   to skills (system-introspection: `skill-preview`, `skills-discover`,
   `review-routing`, `rule-compliance-audit` → behind `agent-admin`). Logic moves
   to `src/skills/`; the host invokes inline. Candidate = maintainer-confirmed
@@ -141,7 +141,7 @@ implicit **Flows** layer explicit.
   "implementation flow" = ticket-implement · work · review · fix · commit · pr)
   the user enters without seeing the parts. **Raw input already exists**: every
   command in
-  [`command-classification-6.0.0-d.md`](../reports/command-classification-6.0.0-d.md)
+  [`command-classification-6.0.0-d.md`](../../reports/command-classification-6.0.0-d.md)
   carries a `·_flow:<x>_` tag — the user-work story is **discovery →
   implementation → review → delivery** (the only flows). **agent-admin is NOT a
   flow** (feedback-6): it is the platform/system surface where the demoted admin
@@ -162,7 +162,7 @@ implicit **Flows** layer explicit.
 - [x] Every cut traces to a maintainer decision (the team's known usage), with
   an alias/restore path — never a silent guess. Telemetry, if present, only
   corroborates; it is never a wait-gate. <!-- PR4: every decision in this PR traces to the AI council (the maintainer's designated decider, claude-sonnet-4-5 + gpt-4o, design/deep, 2026-06-06) — keep feature/* separate (5b), demote 4 leaves to platform surface (7), confirm nothing-dead + defer alias-drop (8), ship Flows primary view (9a). Council session: agents/runtime/council/responses/6.1.0-consolidation.json. 6.2 follow-up roadmap carries the gated remainder verbatim. -->
-- [ ] road-to-6.2.0 follow-up created and this PR merged → then archive 6.1.0 + migrate inbound ADR/report refs. <!-- merge-gated: pr=376 — archives + ref-migrates the moment this PR merges (keeps 6.1.0 unarchived so inbound refs resolve until merge; see memory: roadmap-archival-vs-inbound-refs). -->
+- [x] road-to-6.2.0 follow-up created and this PR merged → then archive 6.1.0 + migrate inbound ADR/report refs. <!-- merge-gated: pr=376 — archives + ref-migrates the moment this PR merges (keeps 6.1.0 unarchived so inbound refs resolve until merge; see memory: roadmap-archival-vs-inbound-refs). -->
 
 - [x] Flows layer specified (its own ADR) with the 4 user-work headline flows
   named. <!-- PR3: ADR-055-flow-layer-data-model.md specifies the layer + names the 4 flows (discovery → implementation → review → delivery). The earlier "5" predated feedback-6, which demoted agent-admin from a 5th flow to the platform surface (ADR-055 Decision 5). Step 9 (primary-view rewrite) is the separate follow-up. -->
