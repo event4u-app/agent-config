@@ -1986,7 +1986,7 @@ _CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
     # hidden from auto-complete — desired UX). Council session
     # 2026-05-28 (claude-sonnet-4-5 + gpt-4o, design mode) verdict
     # Option B (native slash-only). See
-    # `agents/runtime/council/responses/claude-code-distribution.json`.
+    # `agents/runtime/council/responses/claude-code-distribution.json`. <!-- council-ref-allowed: decision provenance comment -->
     (".agent-src/commands", "commands"),
     (".agent-src/personas", "personas"),
 ]
@@ -4244,7 +4244,7 @@ def run_interactive_init(project_root: Path, force: bool) -> int:
 #   7. on timeout: kills the child, prints captured stderr tail, falls
 #      through to a fallback message; install itself is unaffected.
 #
-# Council synthesis: agents/runtime/council/responses/wizard-wiring-2026-05-22.synthesis.md
+# Council synthesis: agents/runtime/council/responses/wizard-wiring-2026-05-22.synthesis.md <!-- council-ref-allowed: decision provenance comment -->
 # Roadmap: agents/roadmaps/wizard-install-py-wiring.md Step 3.
 
 _WIZARD_READY_RE = re.compile(
