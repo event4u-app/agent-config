@@ -6,10 +6,10 @@
 
 ## Overall
 
-**52 / 141 steps done · 37%**
+**54 / 141 steps done · 38%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-6.0.0-e-documentation-refactor.md](roadmaps/road-to-6.0.0-e-documentation-refactor.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 8 | 8 | 0 | 0 | █████░░░░░ 50% |
+| 2 | [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md) | 6 | 16 | 6 | 10 | 0 | 0 | ██████░░░░ 62% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
 | 4 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 
@@ -38,7 +38,7 @@
 
 ### [road-to-6.1.0-product-consolidation.md](roadmaps/road-to-6.1.0-product-consolidation.md)
 
-**Road to 6.1.0 — Product consolidation (behavioral cuts after the structural break)** — 8 / 16 done (50%)
+**Road to 6.1.0 — Product consolidation (behavioral cuts after the structural break)** — 10 / 16 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -47,7 +47,7 @@
 | 3 | Stack-adaptive engineering commands (resolver) | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | Command → skill conversions (the [-] leaves) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 5 | Command removals (KILL list — maintainer-decided) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 6 | The Flows layer (the headline) | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
+| 6 | The Flows layer (the headline) | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 

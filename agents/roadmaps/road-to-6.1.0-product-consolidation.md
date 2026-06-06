@@ -117,10 +117,10 @@ implicit **Flows** layer explicit.
 
 ## Phase 6: The Flows layer (the headline)
 
-<!-- Steps 8b + 9 DEFERRED to follow-up PR (council 2026-06-05): the flows layer is the HIGH-risk new abstraction and lands LAST, only once the orchestrator layer is proven stable. src/flows/*.yaml stubs already exist (6.0-D Step 15b); the schema + resolver are their own PR. -->
-- [ ] **Step 8b:** **Define the flow schema** (feedback-5 — so flows are real
+<!-- Step 8b DONE in PR3 (council design-review 2026-06-06, claude-sonnet-4-5 + gpt-4o re-confirmed: the data-model floor is the one rollback-deferred slice that does NOT require Step 9's primary-view rewrite; schema landed at src/scripts/schemas/flow.schema.json per ADR-055 Decision 2, not src/schemas/). Step 9 (primary view) stays DEFERRED — HIGH-risk, lands LAST once the orchestrator layer is proven stable. -->
+- [x] **Step 8b:** **Define the flow schema** (feedback-5 — so flows are real
   artefacts, not labels). Author `src/schemas/flow.schema.json` for the
-  `src/flows/<flow>.yaml` files scaffolded in 6.0-D Step 15b:
+  `src/flows/<flow>.yaml` files scaffolded in 6.0-D Step 15b: <!-- PR3 (ADR-055): schema at src/scripts/schemas/flow.schema.json (repo convention) + scripts/lint_flows.py validate-on-load; 4 flow files populated (entry_points/default_path/skills); shape-vs-resolution split mirrors pack.schema.json; closed flow set enforced in lint; `task lint-flows` wired into ci + ci-strict. Council (claude-sonnet-4-5 + gpt-4o, design, deep, 2026-06-06) converged sound; 6 risk-honesty fixes integrated into the ADR. -->
 
   ```yaml
   flow: implementation
@@ -158,4 +158,5 @@ implicit **Flows** layer explicit.
 - [ ] Every cut traces to a maintainer decision (the team's known usage), with
   an alias/restore path — never a silent guess. Telemetry, if present, only
   corroborates; it is never a wait-gate.
-- [ ] Flows layer specified (its own ADR) with the 5 headline flows named.
+- [x] Flows layer specified (its own ADR) with the 4 user-work headline flows
+  named. <!-- PR3: ADR-055-flow-layer-data-model.md specifies the layer + names the 4 flows (discovery → implementation → review → delivery). The earlier "5" predated feedback-6, which demoted agent-admin from a 5th flow to the platform surface (ADR-055 Decision 5). Step 9 (primary-view rewrite) is the separate follow-up. -->
