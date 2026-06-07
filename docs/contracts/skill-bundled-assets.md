@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-09-07
+---
+
 # Skill-bundled assets — `skills/<name>/{scripts,data}/` delivery contract
 
 > Sanctions and pins the pattern introduced by ADR-061: a skill may bundle
