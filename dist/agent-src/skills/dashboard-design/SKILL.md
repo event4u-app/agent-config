@@ -23,6 +23,12 @@ Do NOT use when:
 
 ## Procedure: Design a dashboard
 
+Ground chart-type choice in the adopted data-viz corpus, not memory:
+`ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
+--domain chart "<data shape>"` → best chart type, when-NOT-to-use, volume
+threshold, a11y grade + colorblind fallback, library recommendation
+([`design-intelligence`](../design-intelligence/SKILL.md)).
+
 | Domain | Technology | Purpose |
 |---|---|---|
 | **Monitoring** | Grafana + Loki | Infrastructure health, error rates, logs, SLAs |

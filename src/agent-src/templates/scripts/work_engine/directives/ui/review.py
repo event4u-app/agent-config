@@ -185,6 +185,9 @@ def _delegate_to_review_skill(state: DeliveryState) -> StepResult:
             "> The review pass compares `state.ticket.ui_apply.rendered` "
             "against `state.ui_design` (microcopy, states, a11y, layout) "
             "and produces a structured `findings` list.",
+            "> Ground chart-type and contrast findings in the adopted "
+            "corpus (design-intelligence § 'Grounding the review/polish "
+            "a11y gate') — cite the corpus row, don't eyeball.",
             "> 1. Continue \u2014 run the review and write "
             "`{findings: [...], review_clean: bool}` into "
             "`state.ui_review`",

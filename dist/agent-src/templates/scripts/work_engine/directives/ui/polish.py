@@ -251,6 +251,9 @@ def _delegate_to_polish_skill(
             f"> Stack: `{stack_label}`. Polish round "
             f"{next_round} of {ceiling}.",
             findings_line,
+            "> Fix chart-type / contrast findings against the adopted "
+            "corpus rows (design-intelligence \u00a7 'Grounding the "
+            "review/polish a11y gate'), not ad-hoc judgment.",
             "> 1. Continue \u2014 apply fixes, re-review, and increment "
             "`state.ui_polish.rounds`",
             "> 2. Abort \u2014 drop this UI request",

@@ -16,6 +16,11 @@ install:
 
 # flux
 
+> **Grounded stack guidance:** Tailwind-layer Do/Don't + docs URLs via
+> `ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
+> --stack html-tailwind "<topic>"`. See
+> [`design-intelligence`](../design-intelligence/SKILL.md).
+
 ## Positioning — dispatched, not standalone
 
 `flux` is the **primitive-library executor** for projects on the

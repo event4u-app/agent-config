@@ -16,6 +16,11 @@ install:
 
 # livewire
 
+> **Grounded stack guidance:** pull idiomatic Blade/UI Do/Don't + docs URLs
+> via `ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
+> --stack laravel "<topic>"` (UI-scoped corpus). See
+> [`design-intelligence`](../design-intelligence/SKILL.md).
+
 ## Positioning — dispatched, not standalone
 
 `livewire` is the **apply-step executor** for the Livewire stack. It is
