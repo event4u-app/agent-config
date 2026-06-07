@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "adapter": "musetalk",
+  "comment": "Local (MIT) lip-sync capability manifest — the offline alternative to the hosted syncso adapter. cost_per_second_usd is a KNOWN 0.0 (local inference, ADR-060 cost semantics). The lipsync_budget block mirrors the syncso sparse discipline: local renders are free but the QUALITY argument for sparseness is unchanged (singing lip-sync degrades fast off frontal close-ups) — the orchestrator enforces it BEFORE invoking the adapter. Every entry is documented-best-effort until a maintainer captures a trace against a real MuseTalk install (verified:false must be surfaced, never silently trusted).",
+  "lipsync_budget": {
+    "max_segments_per_song": 4,
+    "max_segment_seconds": 15,
+    "frontal_close_up_only": true,
+    "cost_gate": false
+  },
+  "models": {
+    "musetalk-1.5": {
+      "label": "MuseTalk 1.5 (MIT) — local real-time-class lip-sync",
+      "min_duration": 1,
+      "max_duration": 60,
+      "audio_sync": true,
+      "aspect": ["16:9", "9:16", "1:1"],
+      "cost_per_second_usd": 0.0,
+      "verified": false,
+      "license": "MIT",
+      "input_notes": "local video_path + audio_path (local-source rule); ASSUMED CLI surface --video/--audio/--output via MUSETALK_CMD; GPU strongly recommended — CPU inference is minutes-per-second; quality degrades off frontal close-ups like every lip-sync model"
+    }
+  }
+}
