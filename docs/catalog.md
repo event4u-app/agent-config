@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **529 public artefacts** shipped by
+Consumer-facing catalog of all **530 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -52,7 +52,7 @@ are excluded.
 | skill | [`conventional-commits-writing`](../dist/agent-src/skills/conventional-commits-writing/SKILL.md) |  | Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
 | skill | [`copilot-agents-optimization`](../dist/agent-src/skills/copilot-agents-optimization/SKILL.md) |  | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
 | skill | [`copilot-config`](../dist/agent-src/skills/copilot-config/SKILL.md) |  | Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`). |
-| skill | [`corpus-grounding`](../dist/agent-src/skills/corpus-grounding/SKILL.md) |  | Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded, pre-action option-space constraints (design, secur… |
+| skill | [`corpus-grounding`](../dist/agent-src/skills/corpus-grounding/SKILL.md) |  | Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints. |
 | skill | [`customer-research`](../dist/agent-src/skills/customer-research/SKILL.md) |  | Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'. |
 | skill | [`dashboard-design`](../dist/agent-src/skills/dashboard-design/SKILL.md) |  | Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling. |
 | skill | [`data-flow-mapper`](../dist/agent-src/skills/data-flow-mapper/SKILL.md) |  | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
@@ -65,9 +65,9 @@ are excluded.
 | skill | [`defense-in-depth`](../dist/agent-src/skills/defense-in-depth/SKILL.md) |  | Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one. |
 | skill | [`dependency-upgrade`](../dist/agent-src/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic. |
 | skill | [`description-assist`](../dist/agent-src/skills/description-assist/SKILL.md) |  | Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'. |
-| skill | [`design-intelligence`](../dist/agent-src/skills/design-intelligence/SKILL.md) |  | Grounded design brief from a queryable corpus — style, WCAG-checked color tokens, typography pairing, layout pattern, anti-patterns via BM25 + decision rules. Use on `ui-design-brief` or any 'which s… |
+| skill | [`design-intelligence`](../dist/agent-src/skills/design-intelligence/SKILL.md) |  | Grounded design brief from the adopted corpus — style, WCAG-checked color tokens, typography, layout pattern, anti-patterns. Use on ui-design-brief or any which-style/palette/font/chart decision. |
 | skill | [`design-review`](../dist/agent-src/skills/design-review/SKILL.md) |  | Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
-| skill | [`design-tokens`](../dist/agent-src/skills/design-tokens/SKILL.md) |  | Author a 3-layer DTCG design-token system (primitive → semantic → component) with light/dark theming, then generate CSS variables + Tailwind colors and lint hardcoded values via tokens.py. Use on 'de… |
+| skill | [`design-tokens`](../dist/agent-src/skills/design-tokens/SKILL.md) |  | Author a 3-layer DTCG token system (primitive → semantic → component) with light/dark theming; generate CSS vars + Tailwind colors and lint hardcoded values. Use on design tokens / CSS variables. |
 | skill | [`devcontainer`](../dist/agent-src/skills/devcontainer/SKILL.md) |  | Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`). |
 | skill | [`developer-like-execution`](../dist/agent-src/skills/developer-like-execution/SKILL.md) |  | Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it. |
 | skill | [`discovery-interview`](../dist/agent-src/skills/discovery-interview/SKILL.md) |  | Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'. |
@@ -477,7 +477,7 @@ are excluded.
 | command | [`video:storyboard`](../dist/agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (74)
+## Guidelines (75)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -488,6 +488,7 @@ are excluded.
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`carve-out-predicates`](../docs/guidelines/agent-infra/carve-out-predicates.md) | agent-infra |  |
 | guideline | [`comparison-matrix`](../docs/guidelines/agent-infra/comparison-matrix.md) | agent-infra |  |
+| guideline | [`corpus-grounding-authoring`](../docs/guidelines/agent-infra/corpus-grounding-authoring.md) | agent-infra |  |
 | guideline | [`critical-thinking`](../docs/guidelines/agent-infra/critical-thinking.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
