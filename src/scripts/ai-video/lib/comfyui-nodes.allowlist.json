@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "comment": "ADR-060 §2 — pinned custom-node allowlist for the comfyui adapter. A workflow referencing a class_type outside core_class_types AND outside a pinned custom_nodes entry is HARD-REFUSED (exit 7, named node). There is no bypass flag by design. Every custom_nodes entry pins repo + git commit SHA and carries risk_tier (high = monthly audit, low = quarterly). Kill-switch: >2 CVSS>=7 CVEs in 90 days removes the entry and deprecates dependent templates.",
+  "core_class_types": [
+    "CLIPLoader",
+    "CLIPTextEncode",
+    "CreateVideo",
+    "EmptyLTXVLatentVideo",
+    "KSampler",
+    "LTXVConditioning",
+    "LTXVScheduler",
+    "LoadImage",
+    "SamplerCustom",
+    "SaveVideo",
+    "UNETLoader",
+    "VAEDecode",
+    "VAELoader",
+    "Wan22ImageToVideoLatent"
+  ],
+  "custom_nodes": []
+}

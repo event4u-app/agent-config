@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "schema": 1,
+    "model": "ltx-2",
+    "verified": false,
+    "fps": 25,
+    "comment": "Package-shipped LTX-2 workflow template (ADR-060 §3). Graph is documented-best-effort from the public ComfyUI LTX-Video example layout — re-export from a live ComfyUI and re-pin BEFORE the first live render. Same substitution-slot rules as wan22-ti2v-5b.json; LoadImage node (id 90) removed when no ref image is supplied. audio_sync per model manifest — the saved container is expected to embed the generated audio track.",
+    "aspect_map": {
+      "16:9": { "width": 1216, "height": 704 },
+      "9:16": { "width": 704, "height": 1216 },
+      "1:1": { "width": 960, "height": 960 }
+    }
+  },
+  "prompt": {
+    "37": {
+      "class_type": "UNETLoader",
+      "inputs": { "unet_name": "ltx-2.safetensors", "weight_dtype": "default" }
+    },
+    "38": {
+      "class_type": "CLIPLoader",
+      "inputs": { "clip_name": "t5xxl_fp16.safetensors", "type": "ltxv", "device": "default" }
+    },
+    "39": {
+      "class_type": "VAELoader",
+      "inputs": { "vae_name": "ltx-2_vae.safetensors" }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": { "text": "{{PROMPT}}", "clip": ["38", 0] }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": { "text": "{{NEGATIVE}}", "clip": ["38", 0] }
+    },
+    "90": {
+      "class_type": "LoadImage",
+      "inputs": { "image": "{{REF_IMAGE}}" }
+    },
+    "69": {
+      "class_type": "LTXVConditioning",
+      "inputs": { "frame_rate": 25, "positive": ["6", 0], "negative": ["7", 0] }
+    },
+    "70": {
+      "class_type": "EmptyLTXVLatentVideo",
+      "inputs": { "width": "{{WIDTH}}", "height": "{{HEIGHT}}", "length": "{{FRAMES}}", "batch_size": 1 }
+    },
+    "71": {
+      "class_type": "LTXVScheduler",
+      "inputs": { "steps": 30, "max_shift": 2.05, "base_shift": 0.95, "stretch": true, "terminal": 0.1, "latent": ["70", 0] }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": "{{SEED}}",
+        "steps": 30,
+        "cfg": 3,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": ["37", 0],
+        "positive": ["69", 0],
+        "negative": ["69", 1],
+        "latent_image": ["70", 0]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": { "samples": ["3", 0], "vae": ["39", 0] }
+    },
+    "57": {
+      "class_type": "CreateVideo",
+      "inputs": { "fps": 25, "images": ["8", 0] }
+    },
+    "58": {
+      "class_type": "SaveVideo",
+      "inputs": { "filename_prefix": "video/aiv", "format": "mp4", "codec": "h264", "video": ["57", 0] }
+    }
+  }
+}
