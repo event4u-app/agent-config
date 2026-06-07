@@ -64,7 +64,7 @@
         "product-basic", "product-discovery",
         "finance-basic", "finance-advanced",
         "gtm-sales", "gtm-marketing",
-        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta", "git"
+        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta", "git", "frontend-design"
       ]
     },
     "lifecycle": {
