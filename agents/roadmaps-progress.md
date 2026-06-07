@@ -6,10 +6,10 @@
 
 ## Overall
 
-**52 / 144 steps done · 36%**
+**57 / 144 steps done · 40%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-frontend-design-intelligence.md](roadmaps/road-to-frontend-design-intelligence.md) | 10 | 53 | 52 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 | 3 | [road-to-music-video-orchestration.md](roadmaps/road-to-music-video-orchestration.md) | 5 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
-| 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
 
 ---
 
@@ -85,11 +85,11 @@
 
 ### [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md)
 
-**Road to video provider multiplexers — one adapter, many models (fal first, Replicate second)** — 0 / 7 done (0%)
+**Road to video provider multiplexers — one adapter, many models (fal first, Replicate second)** — 5 / 7 done (71%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | fal.ai multiplexer (priority 1) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Replicate multiplexer (priority 2) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | preview/commit mode | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | fal.ai multiplexer (priority 1) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 2 | Replicate multiplexer (priority 2) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 3 | preview/commit mode | ✅ done | 0 | 1 | 0 | 0 | 100% |
 

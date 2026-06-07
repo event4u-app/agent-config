@@ -5,7 +5,7 @@ pack: ai-video
 tier: 2
 cluster: video
 sub: scene
-description: Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation.
+description: Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, character-consistency, motion-choreographer]
 suggestion:
@@ -20,12 +20,23 @@ packs:
 
 # /video:scene
 
-`/video:scene "<idea>" [--image-provider <id>] [--video-provider <id>] [--project <slug>]`
+`/video:scene "<idea>" [--mode preview|commit] [--image-provider <id>] [--video-provider <id>] [--project <slug>]`
 
 Single-scene generation for iteration. Same pipeline as
 [`/video:from-script`](from-script.md) but skips the script parser and
 the stitch step — produces one clip under
 `<project>/scenes/<auto-id>/`.
+
+**Mode — visible intent, not a silent mock.** `--mode preview`
+(default) runs the whole pipeline **strictly offline**: adapter
+`dry-run` fixtures, no network, and a plan summary with the **modeled**
+cost (`cost_estimate`, labeled as modeled — preview never calls a
+pricing API). `--mode commit` is the spend path: the safety gate below
+fires, and only after explicit confirmation does the run set
+`AIV_DRYRUN=false` for the adapter calls. The resolved mode is echoed
+as the **first line of the report** — when no flag was passed, the
+report says `mode: preview (default — no spend; pass --mode commit to
+render live)` so a defaulted run can never read as a failed live run.
 
 **Block-on-ambiguity:** an idea string under 12 characters, a
 contradictory provider flag, or a missing project slug on resume halts
@@ -58,33 +69,42 @@ First run on a fresh project → `character-consistency` builds
 
 ### 5. Image render + operator pick
 
-Compose the eight-block image prompt via `video-director`. Safety gate
-fires before any live call (`AIV_DRYRUN=false` requires explicit
-per-turn confirmation). Render `<tuning/best-of-n>` candidates, then:
+Compose the eight-block image prompt via `video-director`. In commit
+mode the safety gate fires before any live call (explicit per-turn
+confirmation, then `AIV_DRYRUN=false`). Render `<tuning/best-of-n>`
+candidates, then:
 
 ```bash
 scripts/ai-video/lib/operator-pick.sh <project> <scene-id>
 ```
 
-Dry-run auto-selects candidate 1.
+Preview mode auto-selects candidate 1.
 
 ### 6. Motion + video render
 
 `motion-choreographer` builds the motion prompt for the resolved video
-provider; safety gate fires again; adapter `submit` / `poll` / `fetch`
-runs the call.
+provider; in commit mode the safety gate fires again; adapter
+`submit` / `poll` / `fetch` runs the call.
 
 ### 7. Report
 
-Print: project slug, scene id, clip path, audio status
-(`embedded` / `muxed` / `none`), live cost or `dry-run` marker. No
-stitch step; no commit; no push.
+First line: the resolved **mode** (`mode: commit` or `mode: preview
+(default — no spend; pass --mode commit to render live)`). Then:
+project slug, scene id, clip path, audio status
+(`embedded` / `muxed` / `none`), live cost (commit) or modeled
+`cost_estimate` labeled *modeled* (preview). No stitch step; no commit;
+no push.
 
 ## Rules
 
 - **No commit, no push, no PR.**
-- **Dry-run is the default.** Live calls need explicit per-turn
-  confirmation.
+- **Preview is the default.** `--mode commit` is the only spend path,
+  and it still needs explicit per-turn confirmation at the safety gate.
+  Preview is strictly offline (`AIV_DRYRUN=true`); its costs are
+  modeled, never quotes.
+- **The mode line is mandatory.** Every report opens with the resolved
+  mode so a defaulted preview can never be mistaken for a live render
+  that produced nothing.
 - **Block on ambiguity** — refuse to invent a project slug, scene id,
   or character descriptor on resume.
 - **Single scene per invocation.** For multi-scene work use

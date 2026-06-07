@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "adapter": "fal",
+  "comment": "Per-model capability manifest for the fal multiplexer. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace for that model — verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. Durations in seconds; cost_per_second_usd is a modeled estimate, never a quote.",
+  "models": {
+    "fal-ai/kling-video/v2/master/text-to-video": {
+      "label": "Kling v2 Master (text-to-video)",
+      "min_duration": 5,
+      "max_duration": 10,
+      "audio_sync": false,
+      "aspect": ["16:9", "9:16", "1:1"],
+      "cost_per_second_usd": 0.28,
+      "verified": false,
+      "input_notes": "duration is an enum string '5'|'10'; aspect_ratio; negative_prompt supported; cfg_scale optional"
+    },
+    "fal-ai/wan/v2.2-a14b/text-to-video": {
+      "label": "Wan 2.2 A14B (text-to-video)",
+      "min_duration": 5,
+      "max_duration": 5,
+      "audio_sync": false,
+      "aspect": ["16:9", "9:16"],
+      "cost_per_second_usd": 0.08,
+      "verified": false,
+      "input_notes": "resolution enum ('480p'|'580p'|'720p') instead of free aspect; num_frames-driven duration; seed supported"
+    },
+    "fal-ai/ltx-2/text-to-video": {
+      "label": "LTX-2 (text-to-video, synchronized audio)",
+      "min_duration": 6,
+      "max_duration": 10,
+      "audio_sync": true,
+      "aspect": ["16:9", "9:16", "1:1"],
+      "cost_per_second_usd": 0.16,
+      "verified": false,
+      "input_notes": "generates synchronized audio natively (audio_sync); resolution up to 4K; duration in seconds"
+    },
+    "fal-ai/veo3": {
+      "label": "Google Veo 3 (text-to-video, native audio)",
+      "min_duration": 8,
+      "max_duration": 8,
+      "audio_sync": true,
+      "aspect": ["16:9", "9:16"],
+      "cost_per_second_usd": 0.5,
+      "verified": false,
+      "input_notes": "fixed 8s clips; dialogue/ambient rendered from the prompt text; aspect_ratio; generate_audio flag"
+    },
+    "fal-ai/hunyuan-video": {
+      "label": "Hunyuan Video (text-to-video)",
+      "min_duration": 5,
+      "max_duration": 5,
+      "audio_sync": false,
+      "aspect": ["16:9", "9:16"],
+      "cost_per_second_usd": 0.08,
+      "verified": false,
+      "input_notes": "num_frames-driven duration; resolution enum; no negative_prompt"
+    }
+  }
+}

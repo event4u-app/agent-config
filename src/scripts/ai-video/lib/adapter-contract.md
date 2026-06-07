@@ -76,6 +76,37 @@ the same stdout shape on stdout and an exit code on completion.
 optional. `prompt.*` blocks are mandatory. Unknown top-level keys
 are logged to stderr and ignored.
 
+### `model_id` — multiplexer model selection (additive, v2)
+
+Multiplexer adapters (`fal`, `replicate`) reach many models through one
+provider API. The optional top-level `model_id` stdin key selects the
+model for **this job**, overriding the provider's XML `<default-model>`.
+Single-model adapters ignore it (unknown-key rule above). Rules:
+
+- `model_id` is **tainted input** — adapters validate it against a
+  strict charset whitelist before it touches a URL, and reject parent
+  traversal. It never appears in a filesystem path.
+- `poll` / `fetch` are **stateless**: adapters MUST NOT persist poll
+  state between calls. When the provider's status URL needs the model
+  (fal), the adapter encodes it into the returned `job_id`
+  (`<model_id>::<request_id>`) and re-validates both segments on every
+  poll/fetch.
+- Per-model capabilities (`min_duration`, `max_duration`, `audio_sync`,
+  `aspect`, modeled cost) live in
+  `scripts/ai-video/lib/model-capabilities/<adapter>.json` and are
+  surfaced via `capability --model <id>`. Entries are
+  `verified: false` until a real smoke trace exists for that model —
+  consumers must surface the flag, never trust the numbers silently.
+
+### `<enabled>` — provider kill-switch (additive, v2)
+
+A provider block in `agents/.ai-video.xml` MAY carry
+`<enabled>false</enabled>`. Adapters check it
+(`aiv_provider_enabled <id>`) before any network subcommand and refuse
+with exit 6 when disabled — the operator can take a misbehaving
+provider out of rotation without editing every procedure that names it.
+A missing element means enabled (existing configs keep working).
+
 ## Stdout JSON (emitted by `fetch` / `run` / `dry-run`)
 
 ```json

@@ -108,6 +108,43 @@
   </provider>
 
   <!-- ============================================================ -->
+  <!-- Multiplexer providers — one adapter, many models             -->
+  <!-- Model selection: top-level `model_id` stdin key overrides    -->
+  <!-- <default-model>. Per-model capabilities:                     -->
+  <!-- scripts/ai-video/lib/model-capabilities/<id>.json            -->
+  <!-- Kill-switch: <enabled>false</enabled> refuses every network  -->
+  <!-- subcommand without editing procedures that name the provider.-->
+  <!-- ============================================================ -->
+
+  <provider id="fal" kind="video">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <api-key>fal-REPLACE-ME</api-key>
+    <endpoint>https://queue.fal.run</endpoint>
+    <default-model>fal-ai/ltx-2/text-to-video</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <max-duration>10</max-duration>
+      <audio-native>false</audio-native>
+    </tuning>
+  </provider>
+
+  <provider id="replicate" kind="video">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <api-key>r8_REPLACE-ME</api-key>
+    <endpoint>https://api.replicate.com/v1</endpoint>
+    <default-model>kwaivgi/kling-v2.1-master</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <max-duration>10</max-duration>
+      <audio-native>false</audio-native>
+    </tuning>
+  </provider>
+
+  <!-- ============================================================ -->
   <!-- Extra slot — future providers without schema bump            -->
   <!-- Use kind="image" | "video" | "image+video".                  -->
   <!-- ============================================================ -->

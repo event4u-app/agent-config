@@ -5,7 +5,7 @@ pack: ai-video
 tier: 2
 cluster: video
 sub: from-song
-description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Dry-run default; one batch gate for live calls.
+description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
 personas: [hollywood-director, ai-video-technical-director]
 skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer]
 suggestion:
@@ -26,7 +26,7 @@ install:
 
 # /video:from-song
 
-`/video:from-song <images-dir> <song-file> [--brief "<description>"] [--auto-script] [--scene-durations <list>] [--character|--no-character] [--auto-pick] [--keep-native-audio] [--max-duration <min>] [--max-scenes <n>] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
+`/video:from-song <images-dir> <song-file> [--mode preview|commit] [--brief "<description>"] [--auto-script] [--scene-durations <list>] [--character|--no-character] [--auto-pick] [--keep-native-audio] [--max-duration <min>] [--max-scenes <n>] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
 
 Turns a **song** plus a **folder of reference images** into a finished
 music-video. The scene script is either supplied by the operator
@@ -165,14 +165,14 @@ with the Step 2 probe result:
 
 - **Brief mode** — the operator brief is the creative source; the audio
   sections drive only the **cut timing**.
-- **Auto mode** — skill infers mood/energy per section, writes action +
-  timing; vocal sections populate `dialogue:` for lip-sync **from the
-  transcribed vocal map**, not the brief.
+- **Auto mode** — the skill infers mood/energy per section and writes
+  both action and timing; vocal sections populate `dialogue:` for
+  lip-sync **from the transcribed vocal map**, not from the brief.
 - `--scene-durations` (if passed) overrides probe timing verbatim.
 
-Output: `<project>/script.md` summing to song length (reconciled in
-Step 8). Present script, section→scene map, **and probe `method`**, then
-continue.
+Output: `<project>/script.md` summing to the song length (reconciled in
+Step 8). Present the script, the section→scene map, **and the probe
+`method`**, then continue.
 
 #### 6a. Vocal map + sign-off gate (lip-sync / singer-assigned runs)
 
@@ -186,15 +186,15 @@ When the track has vocals **and** the run assigns singers / lip-sync:
 
 1. `song-to-script` emits `<project>/vocal-map.json`
    (`[{start, end, text, singer}]`) built by **transcribing the real
-   audio** (OpenAI `/v1/audio/transcriptions` or whisper). Probe gives
-   duration; transcript gives lyric timing + structure. Never derive
+   audio** (OpenAI `/v1/audio/transcriptions` or whisper). The probe gives
+   duration; the transcript gives lyric timing + structure. Never derive
    lyric timing from the brief or a stretched story skeleton.
 2. **Each vocal line maps to its OWN singer.** Never put one character's
-   line on another character's scene. Ambiguous singer → mark `?`, ask.
+   line on another character's scene. Ambiguous singer → mark `?` and ask.
 3. **Sign-off gate (mandatory).** Surface the map — `timestamp → line →
    singer → assigned shot/character` — and **wait for explicit operator
-   approval before any render**. Precedes the Step 8 cost gate; a wrong
-   map wastes the whole batch.
+   approval before any render**. This precedes the Step 8 cost gate; a
+   wrong map wastes the whole batch.
 4. Pure-instrumental / style-mode runs skip 6a (no singers, no lip-sync).
 
 ### 7. Character lock — optional, auto-detected
@@ -225,28 +225,37 @@ For each scene in `<project>/script.md`, run Steps 3–7 of
 blueprint → `video-director` eight-block image prompt → operator pick →
 `motion-choreographer` → video adapter.
 
-**Lip-sync sub-step (scenes with a `dialogue:` line + a singer).** A
-scene whose approved vocal-map entry assigns a singer routes to the
-audio-driven path, not plain motion: cut that line's WAV from the song at
-the map's `[start,end]`, host it, call the video adapter's `speak`
-capability (e.g. Higgsfield `/v1/speak/higgsfield`) with the **correct
-singer's** still + that WAV so the right character lip-syncs their own
-line. Place the clip at its real song position so the muxed master track
-stays aligned to the lips. Non-vocal / non-assigned scenes use the
-standard motion (dop) path. Never lip-sync a singer onto a line the vocal
-map attributes to someone else.
+**Lip-sync sub-step (scenes with a `dialogue:` line + a singer).** A scene
+whose approved vocal-map entry assigns a singer routes to the
+audio-driven path instead of plain motion: cut that line's WAV from the
+song at the map's `[start,end]`, host it, and call the video adapter's
+`speak` capability (e.g. Higgsfield `/v1/speak/higgsfield`) with the
+**correct singer's** still + that WAV so the right character lip-syncs
+their own line. Place the clip at its real song position so the muxed
+master track stays aligned to the lips. Non-vocal / non-assigned scenes
+use the standard motion (dop) path. Never lip-sync a singer onto a line
+the vocal map attributes to someone else.
 
-**Single batch COST confirmation (not per-step).** `AIV_DRYRUN=true` is
-the default. Before the *first* live call, print the whole plan in one
+**Single batch COST confirmation (not per-step).** `--mode preview`
+(default) keeps the whole run strictly offline (`AIV_DRYRUN=true`,
+fixture renders, modeled costs labeled as modeled — never a pricing
+API call); the resolved mode is echoed as the first line of the
+report, and a defaulted run says `mode: preview (default — no spend;
+pass --mode commit to render live)`. `--mode commit` is the spend
+path: before the *first* live call, print the whole plan in one
 prompt — image+video adapter, models, total scene count, and total
 estimated cost — and refuse to continue without an explicit operator
 confirmation (a literal yes) in this turn (mirrors
-[`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
-Total = sum of each scene's dry-run `cost_estimate` (contract v2); a scene
-the adapter cannot price shows `unknown`, never counted as `0`.
-**`--max-spend-usd` kill-switch:** total over cap → **hard-block before the
-first live call**; confirmation cannot override — raise `--max-spend-usd` to
-proceed. Any `unknown` → total is a lower bound, cap not fully guaranteed.
+[`non-destructive-by-default`](../../rules/non-destructive-by-default.md));
+only after that confirmation does the run set `AIV_DRYRUN=false`.
+The total comes from each scene's dry-run `cost_estimate` (adapter
+contract v2); a scene the adapter cannot price shows as `unknown` and is
+never silently counted as `0`. **`--max-spend-usd` kill-switch:** when
+set, if the summed estimate exceeds the cap the batch is **hard-blocked
+before the first live call** — operator confirmation does not override
+the cap; raise `--max-spend-usd` explicitly to proceed. If any scene is
+`unknown`, surface that the total is a lower bound and the cap cannot be
+fully guaranteed.
 Once confirmed, the run proceeds through every scene + stitch + mux
 without re-prompting **for cost**. The one remaining interactive surface
 is `from-script`'s per-scene **operator-pick** (best-of-N still
@@ -300,20 +309,25 @@ without re-paying for finished scenes.
 
 ### 10. Report
 
-Print: project slug, final MP4 path, song length vs. cut length, probe
+First line: the resolved **mode** (`mode: commit` or `mode: preview
+(default — no spend; pass --mode commit to render live)`). Then:
+project slug, final MP4 path, song length vs. cut length, probe
 `method`, scenes rendered, scenes skipped, script mode (`brief` | `auto`),
 subject mode (`character` | `style`), provider + lifecycle tier,
 **media-governance gate result** (pass / refused-and-surfaced — the audit
 record), **reconciliation action** taken (Step 9.3), disclosure
-confirmed, estimated cost (live mode) or `dry-run` marker. No commit. No
-push.
+confirmed, actual cost (commit) or summed modeled `cost_estimate`
+labeled *modeled* (preview). No commit. No push.
 
 ## Rules
 
 - **No commit, no push, no PR.** Pipeline produces artefacts; the
   operator chooses what to ship.
-- **Dry-run is the default.** One batch confirmation gates all live
-  calls — never a per-step interrogation, never a silent live run.
+- **Preview is the default.** `--mode commit` is the only spend path;
+  one batch confirmation gates all live calls — never a per-step
+  interrogation, never a silent live run. Preview is strictly offline
+  (`AIV_DRYRUN=true`); its costs are modeled, never quotes. The report
+  always opens with the resolved mode line.
 - **Media governance is a hard gate.** Input likeness / public-figure /
   voice checks block before render; the output MP4 always carries a
   non-removable AI-generation disclosure.

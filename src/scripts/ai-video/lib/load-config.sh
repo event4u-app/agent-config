@@ -105,6 +105,25 @@ aiv_key_status() {
   esac
 }
 
+# aiv_provider_enabled <provider-id> — operator kill-switch. Reads the
+# optional <enabled> element on the provider block; only an explicit
+# `false` disables (missing element = enabled, so existing configs keep
+# working). Adapters check this before any network subcommand so the
+# operator can take a misbehaving provider out of rotation without
+# editing every procedure that names it.
+aiv_provider_enabled() {
+  local pid="${1:-}" val
+  if [ -z "${pid}" ]; then
+    printf 'false'
+    return 0
+  fi
+  val="$(_aiv_xpath "(/ai-video/provider[@id='${pid}']|/ai-video/extra/provider[@id='${pid}'])/enabled")"
+  case "${val}" in
+    false|FALSE|0|no|NO) printf 'false' ;;
+    *) printf 'true' ;;
+  esac
+}
+
 # CLI mode — only `status <provider-id>` is supported; never echoes the key.
 if [ "${BASH_SOURCE[0]:-}" = "${0}" ]; then
   cmd="${1:-}"
