@@ -1,0 +1,16 @@
+{
+  "skill": "corpus-grounding",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers engine consultation + new-domain authoring; should-not-trigger covers domain skills that consult the engine themselves and reference/validation neighbors.",
+  "queries": [
+    {"q": "search the design corpus for fintech dashboard styles", "trigger": true},
+    {"q": "validate the manifest for my new security corpus", "trigger": true},
+    {"q": "how do I plug a new domain corpus into the grounding engine?", "trigger": true},
+    {"q": "run a grounded query with a severity filter against the stack corpus", "trigger": true},
+    {"q": "baue mir ein Corpus-Manifest für API-Patterns", "trigger": true},
+    {"q": "what's the WACC formula?", "trigger": false, "note": "mid-action reference — RAG/references, never the corpus"},
+    {"q": "lint this CSS for hardcoded hex values", "trigger": false, "note": "post-action validation — design-tokens tokens.py validate"},
+    {"q": "design a dashboard for my fintech app", "trigger": false, "note": "design-intelligence consults the engine itself"},
+    {"q": "threat-model the upload endpoint", "trigger": false, "note": "threat-modeling consults its corpus itself"},
+    {"q": "ground this prompt in the codebase", "trigger": false, "note": "codebase retrieval, not a curated corpus"}
+  ]
+}
