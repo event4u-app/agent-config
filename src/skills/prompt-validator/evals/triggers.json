@@ -1,0 +1,16 @@
+{
+  "skill": "prompt-validator",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers the pre-spend batch-contradiction gate (style / character / physics / lip-sync ownership). Should-not-trigger covers near-miss neighbors: single-prompt craft (video-director), LLM prompt tuning (prompt-optimizer / prompt-engineering-patterns), and vocal-map validation (validate-vocal-map.sh path).",
+  "queries": [
+    {"q": "validate the prompts before we render", "trigger": true},
+    {"q": "check the storyboard for contradictions", "trigger": true},
+    {"q": "do the scene prompts contradict each other?", "trigger": true},
+    {"q": "run the contradiction gate over the whole batch", "trigger": true},
+    {"q": "scene 5 says blue jacket but the character lock says red coat — check the full set", "trigger": true},
+    {"q": "improve this prompt for better image quality", "trigger": false, "note": "single-prompt craft — video-director / image prompting"},
+    {"q": "write the prompt for scene 3", "trigger": false, "note": "prompt authoring, not cross-scene validation"},
+    {"q": "validate the vocal map against the transcript", "trigger": false, "note": "validate-vocal-map.sh / song-to-script Step 3, not prompt contradiction"},
+    {"q": "review my ChatGPT system prompt", "trigger": false, "note": "routes to prompt-optimizer"},
+    {"q": "optimize the prompt for the LLM router", "trigger": false, "note": "routes to prompt-engineering-patterns"}
+  ]
+}

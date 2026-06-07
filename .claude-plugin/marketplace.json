@@ -201,6 +201,7 @@
         "./dist/agent-src/skills/project-docs",
         "./dist/agent-src/skills/prompt-engineering-patterns",
         "./dist/agent-src/skills/prompt-optimizer",
+        "./dist/agent-src/skills/prompt-validator",
         "./dist/agent-src/skills/quality-tools",
         "./dist/agent-src/skills/react-native-setup",
         "./dist/agent-src/skills/react-shadcn-ui",

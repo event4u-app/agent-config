@@ -8,9 +8,9 @@ AI video pipeline.
 - **version**: `5.10.1`
 - **owner**: small-business
 - **requires**: —
-- **artefacts**: 9
+- **artefacts**: 10
 
-## Skills (9)
+## Skills (10)
 
 - **`canvas-design`** — Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'.
 - **`character-consistency`** — Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
@@ -18,6 +18,7 @@ AI video pipeline.
 - **`image-creator`** — Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'.
 - **`motion-choreographer`** — Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'.
 - **`pixar-storyteller`** — Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'.
+- **`prompt-validator`** — Pre-spend contradiction gate for AI-video runs: checks every prompt in the batch, blocks on style / character / physics mismatch. Triggers 'validate the prompts', 'check the storyboard'.
 - **`scene-expander`** — Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'.
 - **`song-to-script`** — Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'.
 - **`video-director`** — Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'.

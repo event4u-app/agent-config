@@ -50,6 +50,7 @@ dependencies:
   - post-as
   - project-analyzer
   - prompt-optimizer
+  - prompt-validator
   - python-packages
   - quality-tools
   - refine-prompt
