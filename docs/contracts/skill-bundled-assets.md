@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-07
+keep-beta-until: 2026-09-01
 ---
 
 # Skill-bundled assets — `skills/<name>/{scripts,data}/` delivery contract
