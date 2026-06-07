@@ -13,6 +13,15 @@ packs:
 
 # database
 
+
+> **Grounded corpus (Tier-1 consultation):** symptom → index/strategy
+> decisions come grounded — `ground.py search --manifest
+> <skills-root>/database/data/manifest.json "<symptom>"` returns root
+> cause, strategy, good-code sketch, anti-pattern, and the verification
+> probe (EXPLAIN expectation). Corpus:
+> [`data/query-tuning.csv`](data/query-tuning.csv) (PostgreSQL 16 /
+> MySQL 8-derived).
+
 ## When to use
 
 Use when designing schemas, optimizing queries, adding indexes, or troubleshooting database performance.

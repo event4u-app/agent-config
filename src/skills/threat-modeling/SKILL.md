@@ -14,6 +14,17 @@ packs:
 
 # threat-modeling
 
+
+> **Grounded corpus (Tier-1 consultation):** before enumerating from
+> memory, ground surface → threats → controls in the adopted corpus —
+> `python3 <skills-root>/corpus-grounding/scripts/ground.py ground
+> --manifest <skills-root>/threat-modeling/data/manifest.json
+> "<surface description>"` returns the surface class, ATT&CK/CWE-cited
+> threats, required controls, and negative tests, with confidence +
+> evidence-gap. Propose grounded findings; the human confirms. Corpus:
+> [`data/threats.csv`](data/threats.csv) (MITRE ATT&CK v16 / OWASP
+> ASVS-derived, owner + cadence in the manifest).
+
 > You are a reviewer specialized in **pre-implementation threat analysis**.
 > Your only job is to produce a compact threat model for a planned change —
 > actors, assets, trust boundaries, abuse cases, and the minimum controls

@@ -1,0 +1,10 @@
+Surface_Class,Priority_Controls,Decision_Rules,Anti_Patterns,Severity
+authentication,MFA + rate-limit + rotation baseline,"{""if_password_reset"": ""single-use-hashed-tokens"", ""if_sso"": ""validate-audience-and-issuer"", ""if_remember_me"": ""rotate-on-privilege-change""}",Custom crypto + roll-your-own session store,HIGH
+authorization,"Object-level policy checks, deny-by-default","{""if_admin_panel"": ""separate-admin-guard"", ""if_mass_assignment_possible"": ""explicit-allowlist-dto""}",Route-middleware-only authorization,CRITICAL
+tenancy,ORM-layer global scope + sealed job context,"{""if_background_jobs"": ""seal-tenant-at-dispatch"", ""if_reports_or_exports"": ""scope-exports-explicitly""}",tenant_id from request body,CRITICAL
+file-upload,Content-sniffed allowlist outside webroot,"{""if_url_fetch"": ""ssrf-denylist-post-dns"", ""if_image_processing"": ""reencode-dont-trust""}",Extension-only validation,HIGH
+external-integration,HMAC + replay window + idempotency,"{""if_outbound_calls"": ""timeout-and-circuit-break"", ""if_queue_consumer"": ""verify-before-enqueue""}",Trusting source IP alone,HIGH
+public-endpoint,Rate limit + cache + minimal payload,"{""if_search_endpoint"": ""cap-page-size"", ""if_health_check"": ""no-version-disclosure""}",Expensive unauthenticated queries,MEDIUM
+billing,Ledger + idempotency + server-side amounts,"{""if_refunds"": ""one-way-state-machine"", ""if_webhooks_from_psp"": ""verify-signature-and-amount""}",Mutable balance column updates,CRITICAL
+secrets,Manager + redaction + scan,"{""if_third_party_keys"": ""scope-and-rotate-quarterly"", ""if_ci_pipeline"": ""masked-vars-only""}",Secrets in env committed to VCS,HIGH
+data-exposure,Allowlist serializers + contract tests,"{""if_admin_fields"": ""separate-serializer"", ""if_logs_contain_payloads"": ""logger-redaction-keys""}",Spreading model attributes into responses,MEDIUM

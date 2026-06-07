@@ -1,0 +1,35 @@
+{
+  "manifest_version": 1,
+  "domain": "db-query-tuning",
+  "tier": "lookup-only",
+  "retriever": "bm25",
+  "default_domain": "tuning",
+  "domains": {
+    "tuning": {
+      "file": "query-tuning.csv",
+      "search_cols": [
+        "Symptom",
+        "Keywords",
+        "Root Cause",
+        "Strategy"
+      ],
+      "output_cols": [
+        "Symptom",
+        "Root Cause",
+        "Strategy",
+        "Code Good",
+        "Anti-Pattern",
+        "Verification",
+        "Severity"
+      ],
+      "max_results": 3
+    }
+  },
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": {
+    "repo": "derived: PostgreSQL 16 + MySQL 8 reference docs",
+    "sha": "PostgreSQL 16.x / MySQL 8.4 docs",
+    "last_checked": "2026-06-07"
+  }
+}
