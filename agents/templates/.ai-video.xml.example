@@ -145,8 +145,44 @@
   </provider>
 
   <!-- ============================================================ -->
+  <!-- Audio adapters (music-video orchestration)                   -->
+  <!-- Contract: scripts/ai-video/lib/audio-adapter-contract.md     -->
+  <!-- local-cli adapters wrap an OPERATOR-installed tool (pip) —   -->
+  <!-- no api-key element needed; <enabled>false</enabled> opts a   -->
+  <!-- configured-but-unwanted adapter out (otherwise a missing CLI -->
+  <!-- is a loud config failure, never a silent probe fallback).    -->
+  <!-- ============================================================ -->
+
+  <provider id="allin1" kind="audio-analysis">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <dry-run>true</dry-run>
+  </provider>
+
+  <provider id="whisperx" kind="lyrics">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <dry-run>true</dry-run>
+  </provider>
+
+  <!-- ============================================================ -->
+  <!-- Lip-sync post-process (v2 contract, kind="lipsync")          -->
+  <!-- Sparse budget: lib/model-capabilities/syncso.json            -->
+  <!-- ============================================================ -->
+
+  <provider id="syncso" kind="lipsync">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <api-key>sk-REPLACE-ME</api-key>
+    <endpoint>https://api.sync.so</endpoint>
+    <default-model>lipsync-2</default-model>
+    <dry-run>true</dry-run>
+  </provider>
+
+  <!-- ============================================================ -->
   <!-- Extra slot — future providers without schema bump            -->
-  <!-- Use kind="image" | "video" | "image+video".                  -->
+  <!-- Use kind="image" | "video" | "image+video" | "audio-analysis"-->
+  <!-- | "lyrics" | "lipsync".                                      -->
   <!-- ============================================================ -->
 
   <extra>

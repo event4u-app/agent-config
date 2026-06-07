@@ -44,18 +44,32 @@ Do NOT use when:
 
 ## Inputs
 
-- **Audio probe** — JSON from
-  [`scripts/ai-video/lib/probe-audio.sh`](../../../../scripts/ai-video/lib/probe-audio.sh):
-  `{duration, method, warning?, sections:[{start,end,energy,label}]}`.
-  - `method: silence` — boundaries are real quiet gaps; trust them as cuts.
-  - `method: rms` — boundaries are energy-delta inflections; usable but
-    coarse.
-  - `method: interval` — **the track is structurally flat** (brick-walled
-    / sustained); sections are fixed-interval, NOT musical. When `method`
-    is `interval` (or `warning` is set), the emitted script header states
-    that timing is interval-based and the operator should pass
-    `--scene-durations` for musical sync. Never present interval cuts as
-    beat-synced.
+- **Audio analysis** — adapter-first, probe as the floor:
+  - **Analysis adapter** (when an `audio-analysis` provider is
+    configured — see
+    [`audio-adapter-contract.md`](../../scripts/ai-video/lib/audio-adapter-contract.md)):
+    `{bpm, beats, downbeats, sections:[{start,end,label,energy?}]}` —
+    real musical structure. Beats/downbeats become the candidate cut
+    grid; section labels are musical (`verse`, `chorus`, …).
+  - **Audio probe** — JSON from
+    [`scripts/ai-video/lib/probe-audio.sh`](../../scripts/ai-video/lib/probe-audio.sh):
+    `{duration, method, warning?, sections:[{start,end,energy,label}]}`.
+    - `method: silence` — boundaries are real quiet gaps; trust them as cuts.
+    - `method: rms` — boundaries are energy-delta inflections; usable but
+      coarse.
+    - `method: interval` — **the track is structurally flat** (brick-walled
+      / sustained); sections are fixed-interval, NOT musical. When `method`
+      is `interval` (or `warning` is set), the emitted script header states
+      that timing is interval-based and the operator should pass
+      `--scene-durations` for musical sync. Never present interval cuts as
+      beat-synced.
+- **Model capabilities** — the chosen video model's renderable envelope
+  from the multiplexer manifest:
+  `scripts/ai-video/adapters/<provider>.sh capability --model <id>` →
+  `{min_duration, max_duration, audio_sync, aspect, verified}`. Scene
+  durations MUST land inside `[min_duration, max_duration]`; a
+  `verified: false` manifest entry is surfaced in the report, never
+  trusted silently.
 - **Mode** — `brief` (operator text is the creative source) or `auto`
   (infer mood + action from energy).
 - **Brief** (brief mode only) — free text: story, settings, look.
@@ -65,13 +79,31 @@ Do NOT use when:
 
 ## Procedure
 
-### Step 1: Map sections → scenes
+### Step 1: Map sections → scenes (capability-clamped, beat-aligned)
 
-One `## Scene N` per probe section. `duration:` = `end - start`
-(rounded to 0.5 s). Merge any section shorter than the provider's
-`min-duration` into its neighbour; split any section longer than the
-provider's `max-duration` into equal sub-scenes so no single clip
-exceeds the backend limit (read both from the resolved provider tuning).
+One `## Scene N` per analysis section. `duration:` = `end - start`
+(rounded to 0.5 s). Then **clamp the plan to the chosen model's
+renderable envelope** — read `min_duration` / `max_duration` from the
+model-capabilities manifest (`<provider>.sh capability --model <id>`),
+falling back to the provider tuning for single-model adapters:
+
+- **Section shorter than `min_duration`** → merge into its neighbour.
+  With beat data, merge toward the neighbour that keeps the joined cut
+  on a **downbeat** (else any beat); without beat data, merge into the
+  shorter neighbour.
+- **Section longer than `max_duration`** → split into sub-scenes. With
+  beat data, place every split point on the **nearest downbeat** (else
+  beat) to the equal-division point — never mid-beat; without beat
+  data, split equally.
+- **No valid plan exists** (e.g. the whole song is shorter than
+  `min_duration`, or a section cannot be split onto any beat inside the
+  envelope) → **halt and surface the conflict** with the model id and
+  the violated bound — an unbuildable plan never reaches the renderer.
+
+Every emitted scene satisfies
+`min_duration ≤ duration ≤ max_duration`. When the manifest entry is
+`verified: false`, say so in the report — the envelope is
+documented-best-effort, not a smoke-traced fact.
 
 ### Step 2: Assign mood + action
 
@@ -84,20 +116,51 @@ First decide the **subject mode**:
   valid abstract / landscape / visualiser path — do not invent a human
   subject to fill the slot.
 
+Then pick the **prompt source per segment — the modality switch**:
+
+- **Lyric segment** (the vocal map places ≥1 transcribed line inside
+  it) → the scene prompt derives from the **lyric line itself**: its
+  imagery, subjects, and verbs seed `mood:` + `action:` (in character
+  mode, acted by the locked subject; in style mode, rendered as
+  setting / weather / palette — never an invented human). The line
+  lands in `dialogue:` per Step 3.
+- **Instrumental segment** (no vocal-map line) → the scene prompt
+  derives from the **audio features**: section `label` + `energy` via
+  the intent table below. Never recycle a lyric from another segment
+  into an instrumental one.
+
 Then assign per scene:
 
 - **Brief mode** — distribute the brief's beats across scenes in order;
-  energy only modulates pacing (low energy → slow push-in, high energy →
-  fast cuts / motion). Do not add story the brief did not state.
-- **Auto mode** — derive mood per section from `energy` and `label`:
+  the modality switch still applies (lyric segments quote the brief's
+  matching beat through the lyric's lens), and energy modulates pacing.
+  Do not add story the brief did not state.
+- **Auto mode** — derive mood per section from `energy` and `label`
+  (probe labels and musical labels from the analysis adapter both map):
 
   | label / energy | default scene intent |
   |---|---|
   | intro / low | establishing wide, slow camera, calm subject/scene |
+  | verse / mid | narrative motion, medium framing, follow the subject |
   | build / rising | approach, tightening framing |
-  | drop / peak | dynamic motion, weather/FX, fast push |
-  | breakdown / dip | close-up / detail, quiet, single light source |
+  | chorus · drop / peak | dynamic motion, weather/FX, fast push |
+  | bridge · breakdown / dip | close-up / detail, quiet, single light source |
   | outro / fade | pull-back, resolve, hold |
+
+**Energy → cut frequency + motion intensity.** Section energy (0..1,
+relative to the track mean) drives both how often the edit cuts and how
+hard the camera moves — chorus = faster cuts / more motion:
+
+| energy vs. track mean | cut length target | `camera:` motion intensity |
+|---|---|---|
+| ≥ mean + 0.10 (chorus / drop) | short — split the section toward `min_duration`, one scene per 1–2 downbeat bars | fast push / whip / handheld shake |
+| within ±0.10 of mean (verse / build) | medium — one scene per section or per 4-bar phrase | steady dolly, slow tighten |
+| ≤ mean − 0.10 (breakdown / outro) | long — merge toward `max_duration`, hold shots | locked-off or slow drift |
+
+High-energy splitting and low-energy merging both stay inside the
+Step 1 capability envelope and land on downbeats — the energy table
+chooses *where inside the envelope* a scene length falls, never
+outside it.
 
 ### Step 3: Vocal map — transcribe, never guess (vocal tracks)
 
@@ -110,20 +173,41 @@ LINE ON ANOTHER SINGER'S SCENE.
 When the track has vocals and the run intends lip-sync, build a
 **vocal map** from the real audio before assigning any `dialogue:`:
 
-1. **Transcribe** the audio to timestamped lines — OpenAI
-   `/v1/audio/transcriptions` (`response_format=verbose_json` →
-   `segments[].{start,end,text}`) or local whisper. This is the only
-   source of lyric timing.
-2. **Label the singer** per line. If the operator supplied a who-sings
-   reference (a roster, a brief that names who sings which line, or a
-   character cast), match each transcribed line to its singer. If a line's
-   singer is genuinely ambiguous, mark `singer: "?"` and surface it —
+1. **Transcribe** the audio to timestamped lines. Adapter-first: a
+   configured `lyrics` provider (e.g.
+   [`audio-adapters/whisperx.sh`](../../scripts/ai-video/audio-adapters/whisperx.sh))
+   returns word-level timestamps **plus per-line diarization labels**
+   (`SPEAKER_00`, …, or `"?"` when ambiguous):
+   ```bash
+   echo '{"audio_path":"<vocal-stem-or-song>"}' \
+     | scripts/ai-video/audio-adapters/whisperx.sh analyze
+   ```
+   No lyrics provider configured → OpenAI `/v1/audio/transcriptions`
+   (`response_format=verbose_json` → `segments[].{start,end,text}`) or
+   local whisper as before (no speaker labels — every line starts as
+   `"?"`). Either way the transcript is the only source of lyric timing.
+2. **Label the singer** per line — map diarization labels (or unlabeled
+   lines) to cast names via the operator's who-sings reference (a
+   roster, a brief that names who sings which line, or a character
+   cast): one diarization label ↦ one cast name, consistently. If a
+   line's singer is genuinely ambiguous (label `"?"`, mixed-speaker
+   line, or no roster match), keep `singer: "?"` and surface it —
    never guess a singer to fill the slot.
 3. **Emit** `<project>/vocal-map.json`:
    `[{start, end, text, singer}]`, timing verbatim from the transcript.
-4. **Place lines into the matching scene's** `dialogue:` block using the
+4. **Validate** — run the ground-truth enforcer before handing the map
+   to the sign-off gate:
+   ```bash
+   scripts/ai-video/lib/validate-vocal-map.sh <project>/vocal-map.json \
+     <project>/transcript.json --roster "<cast names>"
+   ```
+   It rejects re-timed lines, lyrics not in the transcript, and missing
+   singers (exit 7, specific line named). A red validator is a halt —
+   fix the map, never bypass.
+5. **Place lines into the matching scene's** `dialogue:` block using the
    transcript timing, tagged with the singer (`singer: "<line>"`). A
-   scene's lip-sync subject MUST be the line's labelled singer.
+   scene's lip-sync subject MUST be the line's labelled singer; a
+   `"?"` line gets NO lip-sync scene until the operator resolves it.
 
 No vocals / no transcript / no lip-sync intent → leave `dialogue:` empty;
 the scene is performance / B-roll. **Never fabricate lyrics**, **never
@@ -150,8 +234,12 @@ Concrete checks (all must pass before the script is handed to
   exact delta. A larger delta → halt, do not pad.
 - **Verify** every scene boundary equals a probe section boundary (or a
   `--scene-durations` value) — no invented cut points.
-- **Confirm** no scene `duration:` exceeds the provider `max-duration`
-  or falls below `min-duration`.
+- **Confirm** no scene `duration:` exceeds the model's `max_duration`
+  or falls below `min_duration` (model-capabilities manifest, or the
+  provider tuning for single-model adapters).
+- **Verify** every lyric-segment scene derives its prompt from its own
+  vocal-map line and every instrumental scene from audio features — no
+  cross-segment lyric recycling (modality switch).
 - **Ensure** every `## Scene N` carries all five keys (`duration` ·
   `mood` · `action` · `camera` · `dialogue`), and that `dialogue:` is
   empty in style mode.
