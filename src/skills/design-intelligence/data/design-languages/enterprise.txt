@@ -1,0 +1,89 @@
+Enterprise
+现代SaaS美学平衡了专业性和可接近性。鲜艳的靛蓝/紫罗兰色渐变、柔和的阴影、等距深度和干净的几何无衬线字体。
+1. 后台管理系统
+2. 生产力工具与协作平台
+3. 政务与金融类严肃应用
+4. 垂直领域专业软件
+Here is a translated version of your web design prompt, adapted specifically for mobile application development (iOS/Android/React Native/Flutter). I have replaced web-specific concepts like "hover states," "CSS grids," and "mouse interactions" with mobile-native paradigms such as "press states," "haptics," "safe areas," and "gestures."
+
+App Design System Prompt: Modern Enterprise SaaS (Mobile)
+1. Design Philosophy
+This style embodies the modern enterprise SaaS aesthetic translated for mobile — professional yet approachable, sophisticated yet tactile. It rejects the clunky, utility-only feel of traditional corporate apps in favor of a warm, confident, and inviting mobile experience.
+Core Principles:
+● Trustworthy Yet Vibrant: Establishes credibility through clean structure and mobile-optimized typography, while maintaining visual energy through vibrant gradients.
+● Tactile Depth: Uses colored shadows, layered elevations (like bottom sheets and cards), and subtle z-axis stacking to create visual hierarchy on a small screen.
+● Refined Elegance: Every element is polished, focusing on fluid gestures, spring-physics animations, and sophisticated press states.
+● Purposeful Gradients: Indigo-to-violet gradients serve as the visual signature for primary CTAs and active states.
+● Mobile Polish: Generous spacing, safe-area awareness, and crisp typography create a premium, enterprise-ready feel in the palm of the hand.
+Keywords: Trustworthy, Vibrant, Polished, Tactile, Modern, Approachable, Enterprise-Ready, Fluid.
+2. Design Token System
+Colors (Light Mode)
+● Background: #F8FAFC (Slate 50) - A very subtle cool grey/white base for screen backgrounds.
+● Surface: #FFFFFF (White) - For cards, bottom sheets, and elevated elements.
+● Primary: #4F46E5 (Indigo 600) - The core brand color. Vibrant blue-purple.
+● Secondary: #7C3AED (Violet 600) - For gradients, badges, and accents.
+● Text Main: #0F172A (Slate 900) - High contrast, sharp for primary readability.
+● Text Muted: #64748B (Slate 500) - For supporting text and inactive tab icons.
+● Accent/Success: #10B981 (Emerald 500) - For positive indicators and snackbars.
+● Divider/Border: #E2E8F0 (Slate 200) - Subtle separation for list items.
+Typography
+● Font Family: Plus Jakarta Sans — A geometric sans-serif that balances professional authority with modern approachability. High legibility on mobile screens.
+● Scaling: Designed to support iOS Dynamic Type and Android font scaling.
+● Font Weights:
+    ○ Display/Screen Titles: ExtraBold (800)
+    ○ Section Headers: Bold (700)
+    ○ Card Titles/Buttons: SemiBold (600)
+    ○ Body Text: Regular (400)
+● Line Heights: Tight for titles (1.1-1.2), relaxed for body text (1.4-1.5) to ensure comfortable reading on narrow screens.
+Radius & Border
+● Screen Elements: 16pt/dp for large cards and bottom sheets.
+● Interactive Elements: 8pt/dp for inputs and small chips.
+● Buttons: Fully rounded (pill shape) or 12pt/dp for a modern tech feel.
+● Borders: Hairline (0.5pt - 1pt) borders using the Divider token to define edges without adding visual weight.
+Shadows & Depth
+● Card Elevation: Soft, colored shadows replacing neutral grays. Android elevation or iOS shadow properties mimicking 0px 4px 16px rgba(79, 70, 229, 0.08).
+● Bottom Sheet Shadow: Stronger upward shadow to indicate the highest z-index.
+● Button Shadow (Primary): 0px 4px 12px rgba(79, 70, 229, 0.25) to make primary actions highly prominent.
+3. Component Stylings
+Buttons
+● Primary CTA: Full width (minus screen padding) at the bottom of the screen. Background uses the Indigo-to-Violet gradient. White text.
+● Secondary: White surface, slate border, slate text.
+● Press State: Instead of web hover, use an active press state that slightly scales the button down (0.95x) and reduces shadow, paired with subtle haptic feedback.
+Cards & Lists
+● Base: White background, 16pt radius, hairline border, soft colored shadow.
+● Layout: Horizontal scrolling (carousels) for feature discovery, vertical standard lists for data.
+● List Items: Edge-to-edge with inset dividers, utilizing leading icons (in soft-colored circular backgrounds).
+Inputs & Forms
+● Style: White background, 8pt radius, light slate border.
+● Active/Focused State: Border transitions to Indigo, label animates to a floating position, keyboard automatically presents.
+● Error State: Red border with an immediate, subtle shake animation.
+4. App-Specific Bold Choices
+● Haptic Integration: Tied to micro-interactions. Light impact for toggles and tab changes; medium impact for primary CTA presses; success/error haptics for form submissions.
+● Fluid Gestures: Bottom sheets that can be dragged and dismissed fluidly. Cards that support swipe-to-action (e.g., swipe left to archive) with color reveals underneath.
+● Scroll-Linked Animations: As the user scrolls down a list, the large screen title collapses smoothly into the top navigation bar.
+● Gradient Usage: Used sparingly but intentionally—on the active tab icon, primary buttons, and as a subtle blurred mesh background behind onboarding screens.
+● Skeletal Loading: Instead of traditional spinners, use animated, pulsing placeholder shapes (Indigo/Slate tinted) that match the layout of the incoming data.
+5. Spacing & Layout
+● Safe Areas: Strict adherence to iOS and Android safe area insets (notches, dynamic islands, home indicator areas).
+● Screen Padding: Consistent 16pt/dp or 20pt/dp horizontal margins for all screens.
+● Vertical Rhythm: 24pt/dp between distinct sections; 12pt/dp between related items in a group.
+● Navigation:
+    ○ Bottom Tab Navigation for primary destinations (3-5 items).
+    ○ Top App Bar for contextual actions, screen titles, and back buttons.
+● Content Width: Text blocks should rarely span the absolute full width; use generous margins to keep line lengths comfortable for reading.
+6. Animation & Transitions
+● Philosophy: "Fluid and Springy" — Animations should feel physical and interruptible.
+● Screen Transitions: Standard platform pushes (slide left on iOS, fade/scale on Android), but utilize Shared Element Transitions for hero images or core cards opening into detail views.
+● Press Animations: Scale-down (scale: 0.97) on press down, spring back on release.
+● Easing: Avoid linear animations. Use spring physics for layout changes and ease-out for opacities.
+7. Iconography & Touch Targets
+● Library: Lucide-react-native (or equivalent SVG system).
+● Style: 2px stroke width, rounded caps and joins for a friendly, modern feel.
+● Touch Targets: Crucial for mobile. Minimum tap area of 44x44 pt (iOS) or 48x48 dp (Android) for all interactive elements, even if the visual icon is only 24x24.
+● Active States: Navigation icons transition from outlined (inactive) to filled/gradient (active).
+8. Accessibility & Best Practices
+● Dynamic Text: UI must not break when users increase their system font size. Text must wrap or truncate gracefully.
+● Contrast: All text meets WCAG AA standards. Slate 900 on Slate 50 background is highly compliant.
+● Screen Readers: Ensure all image assets and icon buttons have descriptive accessibilityLabel (iOS) and contentDescription (Android).
+● Dark Mode Readiness: While this spec is light-mode first, tokens should be structured to easily invert (e.g., Slate 50 becomes Slate 900, gradients become slightly muted).
+● Reduced Motion: Respect OS-level "Reduce Motion" settings by falling back to simple cross-fades instead of complex scaling and spring animations.

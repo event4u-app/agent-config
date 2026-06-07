@@ -1,0 +1,16 @@
+{
+  "skill": "design-intelligence",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers the ui-design-brief rebound + selection questions; should-not-trigger covers audit, implementation, a11y-method, and token-authoring neighbors.",
+  "queries": [
+    {"q": "which design style fits a luxury e-commerce shop?", "trigger": true},
+    {"q": "produce the ui-design-brief for this fintech dashboard", "trigger": true},
+    {"q": "welche Farbpalette passt zu einer Health-App?", "trigger": true},
+    {"q": "what font pairing should the landing page use?", "trigger": true},
+    {"q": "what chart type for a trend over time, colorblind-safe?", "trigger": true},
+    {"q": "what UI components do we already have for forms?", "trigger": false, "note": "existing-ui-audit — what exists, not what to build"},
+    {"q": "implement the card component in shadcn", "trigger": false, "note": "react-shadcn-ui apply-step executor"},
+    {"q": "audit this screen for WCAG 2.2 AA", "trigger": false, "note": "accessibility-auditor owns the method"},
+    {"q": "generate CSS variables from tokens.json", "trigger": false, "note": "design-tokens toolchain"},
+    {"q": "make this page prettier", "trigger": false, "note": "vague-request trigger — ask first per ask-when-uncertain"}
+  ]
+}

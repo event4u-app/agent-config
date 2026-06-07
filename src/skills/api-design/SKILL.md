@@ -14,6 +14,14 @@ packs:
 
 # api-design
 
+
+> **Grounded corpus (Tier-1 consultation):** pagination, versioning,
+> error shape (RFC 9457), idempotency, async ops, rate limiting, bulk,
+> naming, expansion, webhooks — query `ground.py search --manifest
+> <skills-root>/api-design/data/manifest.json "<concern>"` and propose
+> the grounded pattern (+ hardening + anti-patterns + RFC link) before
+> designing from memory. Corpus: [`data/api-patterns.csv`](data/api-patterns.csv).
+
 ## When to use
 
 Use this skill when designing new API endpoints, restructuring existing APIs, or deciding about versioning and deprecation.

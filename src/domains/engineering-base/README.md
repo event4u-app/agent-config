@@ -8,7 +8,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `5.10.1`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 81
+- **artefacts**: 82
 
 ## Rules (14)
 
@@ -27,7 +27,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`think-before-action`** — Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error
 - **`verify-before-complete`** — Verify before completion — run tests and quality tools before claiming done
 
-## Skills (67)
+## Skills (68)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 - **`adversarial-review`** — ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review.
@@ -41,6 +41,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`bug-analyzer`** — Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 - **`code-refactoring`** — Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
 - **`conventional-commits-writing`** — Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
+- **`corpus-grounding`** — Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints.
 - **`dashboard-design`** — Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.
 - **`data-flow-mapper`** — Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line.
 - **`data-handling-judgment`** — Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'.

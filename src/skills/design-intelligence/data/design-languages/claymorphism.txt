@@ -1,0 +1,76 @@
+Claymorphism
+一种超现实的3D美学，模拟柔软的充气粘土物体，具有多层阴影堆叠、充满活力的糖果店颜色、触觉微交互和有机浮动环境元素，创造出优质、有趣的数字玩具体验。
+1. 针对儿童与青少年的教育类应用
+2. 品牌形象中的 3D 角色与插图
+3. 金融科技与加密货币 (轻量版)
+4. 创意工具与社交软件
+
+System Prompt: High-Fidelity Claymorphism (React Native Mobile Edition)
+Design Philosophy
+Core Concept: Digital Clay (Mobile) This design system is a high-fidelity simulation of a tangible, physical world constructed from premium digital clay. In a mobile environment, this translates to a "thumb-first" experience where every element feels like a soft, air-filled silicone object that physically reacts to touch. It rejects flat minimalism in favor of volume, weight, and extreme tactility.
+The "High-Fidelity" Difference: Unlike standard mobile UI, this system uses multi-layered Shadow Stacks(simulated via nested View components or react-native-shadow-2) to create density. Elements are not flat vectors; they are substantial objects that "squish" and "bounce" under the user's thumb.
+
+Visual Language & Materiality
+● Material: Soft-touch matte silicone and marshmallow-like foam. Surfaces absorb light; reflections are soft and diffused.
+● Lighting: A virtual overhead light source (top-left). This creates deep ambient occlusion below and gentle specular highlights on upper ridges.
+● The "Super-Rounded" Rule: Zero sharp corners.
+    ○ Outer Containers: borderRadius: 40 to 50
+    ○ Standard Cards: borderRadius: 32
+    ○ Buttons/Inputs: borderRadius: 20
+● The Sensory Vibe: Playful, "Candy Store" palette, and bouncy organic motion.
+
+Design Token System (Mobile)
+1. Colors (The Candy Shop Palette)
+● Canvas (BG): #F4F1FA (Cool lavender-white. Avoid pure white).
+● Text (Primary): #332F3A (Soft Charcoal).
+● Text (Muted): #635F69 (Dark Lavender-Gray - minimum for WCAG).
+● Accents:
+    ○ Primary: #7C3AED (Vivid Violet)
+    ○ Secondary: #DB2777 (Hot Pink)
+    ○ Success: #10B981 (Emerald)
+    ○ Warning: #F59E0B (Amber)
+2. Typography (React Native Styles)
+● Headings: Nunito-Black (Weight 900) or Extrabold. Rounded terminals are mandatory.
+● Body: DMSans-Medium (Weight 500). Clean and geometric.
+● Scaling:
+    ○ Hero: fontSize: 48, lineHeight: 52, letterSpacing: -1
+    ○ Section Title: fontSize: 32, lineHeight: 38
+    ○ Card Title: fontSize: 22, lineHeight: 28
+    ○ Body: fontSize: 16, lineHeight: 24
+
+Component Architecture (React Native Implementation)
+1. The Universal Clay Card
+Use a combination of backgroundColor: 'rgba(255,255,255,0.7)' and BlurView (from expo-blur or react-native-blur) for a "Glass-Clay" hybrid.
+● Shadow Stack: Since RN elevation is limited, use nested views or SVG shadows to simulate:
+    a. Outer: offset: {12, 12}, blur: 24, color: 'rgba(160, 150, 180, 0.2)'
+    b. Highlight: offset: {-8, -8}, blur: 16, color: '#FFFFFF'
+● Interaction: Use Pressable with useAnimatedStyle (Reanimated) to lift the card (translateY: -4) on press.
+2. The Clay Button (The "Squish" Factor)
+Buttons must feel like physical switches.
+● Base: height: 56, borderRadius: 20, justifyContent: 'center'.
+● Gradient: Use LinearGradient from #A78BFA to #7C3AED.
+● Micro-Physics: * On Press In: scale: 0.92, shadowOpacity decreases.
+    ○ On Press Out: Spring back to scale: 1.0 with damping: 10.
+● Shadow: Deep colored shadow matching the button hue.
+3. The Recessed Input
+Simulates a finger-press into the clay.
+● Style: backgroundColor: '#EFEBF5', height: 64, paddingHorizontal: 24.
+● Inner Shadow: Use a dark top-left inner shadow and a white bottom-right rim light to create the "hollow" look.
+
+Animation System (Powered by Reanimated)
+1. Buoyancy (Float): Background blobs should use withRepeat(withTiming(...)) to drift ±20px over 8-10 seconds.
+2. Clay Breathe: Stat orbs should subtly scale between 1.0 and 1.03 every 4 seconds.
+3. Haptic Feedback: Every "Squish" interaction (Buttons/Cards) must trigger Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).
+
+Layout Patterns & Responsive Strategy
+● Thumb Zone: Keep primary CTAs in the bottom 30% of the screen.
+● Bento Mobile: Use a 2-column grid where the "Hero Card" spans 2 columns, and secondary cards are square.
+● Safe Areas: Use SafeAreaView but allow background blobs to bleed into the margins for a "zero-gravity" feel.
+
+Dos and Don'ts
+● DO use Text with includeFontPadding: false to ensure vertical centering in rounded buttons.
+● DO use Spring physics for all transitions; avoid linear easing.
+● DO nested border radii: if a card is 32, the image inside is 24.
+● DON'T use standard Android elevation. It creates flat, gray shadows that break the clay aesthetic. Use SVG-based shadows.
+● DON'T use sharp corners (< 20).
+● DON'T use pure black #000000 for text or shadows.

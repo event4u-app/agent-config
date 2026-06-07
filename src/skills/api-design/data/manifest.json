@@ -1,0 +1,34 @@
+{
+  "manifest_version": 1,
+  "domain": "api-design",
+  "tier": "lookup-only",
+  "retriever": "bm25",
+  "default_domain": "patterns",
+  "domains": {
+    "patterns": {
+      "file": "api-patterns.csv",
+      "search_cols": [
+        "Concern",
+        "Keywords",
+        "Applies To",
+        "Recommended Pattern"
+      ],
+      "output_cols": [
+        "Concern",
+        "Applies To",
+        "Recommended Pattern",
+        "Hardening",
+        "Anti-Patterns",
+        "Docs URL"
+      ],
+      "max_results": 3
+    }
+  },
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": {
+    "repo": "derived: RFC 9110/9457/7396/8288 + httpapi WG drafts",
+    "sha": "RFC set as of 2026-06",
+    "last_checked": "2026-06-07"
+  }
+}

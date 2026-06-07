@@ -53,6 +53,18 @@ gets a verdict in step 5; missing one is a coverage failure.
 **Perceivable** — text alternatives for non-text (`alt`, `aria-label`),
 contrast ≥ 4.5:1 for body / 3:1 for large or UI components, no
 colour-only state ("error in red" must also be iconic or text).
+Grounded reference for palette + chart verdicts: the adopted corpus's
+WCAG-adjusted token sets (`--domain color`), chart a11y grades +
+colorblind fallbacks (`--domain chart`), and mobile touch/a11y rules
+(`--domain web`, 44pt targets) via
+[`design-intelligence`](../design-intelligence/SKILL.md) — cite the
+corpus row; the WCAG 2.2 AA *method* stays this skill's own checklists.
+Widget-pattern selection (dialog, combobox, tabs, toast, table, form
+errors, drag-reorder …) grounds in the ARIA-APG corpus:
+`ground.py search --manifest
+<skills-root>/accessibility-auditor/data/manifest.json "<component>"` →
+pattern, implementation, WCAG refs, anti-patterns
+([`data/aria-patterns.csv`](data/aria-patterns.csv)).
 
 **Operable** — every interactive element reachable by `Tab`, focus
 order matches visual order, focus indicator visible (≥ 3:1 against

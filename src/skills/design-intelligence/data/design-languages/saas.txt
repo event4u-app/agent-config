@@ -1,0 +1,109 @@
+SaaS
+一个大胆、极简主义的现代视觉系统，将简洁的美学与动态的执行相结合。具有标志性的电蓝渐变、复杂的双字体配对（Calistoga+Inter）、动画英雄图形、倒置对比部分和贯穿始终的微交互。专业而前卫的设计——自信而不杂乱。
+1. 业务管理与协作系统 (B2B / Operations)
+2. 开发者工具与云服务平台
+3. 企业内部工具与人力资源管理 (HRM)
+4. 营销与数据分析工具
+
+System Prompt: Mobile Excellence Design System (React Native)
+Design Philosophy
+Core Principle
+Clarity through structure, character through bold detail. This system adapts high-end editorial aesthetics for the palm of the hand. It rejects the "miniature website" feel in favor of a native-first, tactile experience.
+Whitespace is a precision instrument for thumb-driven navigation. Motion is not decoration; it is spatial feedback. Color is concentrated into a single, Electric Blue signature that guides the user through the app's hierarchy.
+The Visual Vibe
+"High-Tech Boutique." Imagine a premium fintech app combined with a modern design portfolio. It feels engineered, yet artistic; minimal, yet alive.
+● Confident: Bold typography and vibrant accents.
+● Sophisticated: Layered shadows and dual-font systems that whisper "quality."
+● Tactile: Haptic-ready interactions and fluid spring animations.
+● Premium: Generous "safe areas" and elevated surfaces.
+
+The DNA of This Style
+1. The Signature Gradient (Mobile Optimized)
+The Electric Blue gradient (#0052FF → #4D7CFF) is the heartbeat. In React Native, this is implemented via react-native-linear-gradient.
+● Usage: Primary Buttons, Active Tab Icons, Header Backgrounds, and Progress Indicators.
+● Why: Gradients provide depth on mobile screens where flat colors often feel "dead."
+2. Physical Depth & Living Elements
+Mobile is a 3D space. We use Z-index and shadows to create a clear mental model:
+● Floating Action Buttons (FAB): Gently bobbing using react-native-reanimated.
+● Surface Elevation: Cards use shadowColor and elevation (Android) to feel like physical layers.
+● Pulsing States: Small status dots use a scale loop to signal "Active" or "Live."
+3. Sophisticated Dual-Font Typography
+● Display: Calistoga (or Serif fallback) for Headlines. It adds human warmth to the digital interface.
+● UI/Body: Inter (or System Sans-Serif). The workhorse for readability.
+● Technical: JetBrains Mono for labels and data points.
+4. Texture & Micro-Patterns
+To prevent "Flat Design Fatigue":
+● Subtle Overlays: Use a very low-opacity dot pattern (PNG/SVG) on dark backgrounds.
+● Glassmorphism: Use BlurView (Expo/Community) for navigation bars to create a sense of context.
+
+Design Token System (The DNA)
+Color Strategy
+Token
+Value
+Usage
+background
+#FAFAFA
+Primary app canvas (warm off-white).
+foreground
+#0F172A
+Deep slate for primary text and dark sections.
+muted
+#F1F5F9
+Secondary surfaces (gray fills).
+accent
+#0052FF
+Primary actions and brand touchpoints.
+accent-sec
+#4D7CFF
+Gradient endpoint.
+card
+#FFFFFF
+Pure white for elevated components.
+border
+#E2E8F0
+Hairline dividers (0.5pt to 1pt).
+Typography Scale
+● Hero (H1): 36pt - 42pt | Calistoga | Leading 1.1
+● Section (H2): 28pt - 32pt | Calistoga | Leading 1.2
+● Body: 16pt - 18pt | Inter | Leading 1.5
+● Label: 12pt | JetBrains Mono | Uppercase | Letter Spacing 1.5
+
+Component Specifications (React Native)
+1. Primary Button (Pressable + Reanimated)
+● Height: 56px (Standard touch target).
+● Radius: 16px (Rounded-2xl).
+● Interaction: * On onPressIn: Scale down to 0.96.
+    ○ On onPressOut: Spring back to 1.0.
+● Style: Linear Gradient background with shadow-accent.
+2. The Section Badge
+A consistent pattern for orienting the user:
+JavaScript
+
+// Structure
+<View style={{flexDirection: 'row', alignItems: 'center', borderRadius: 100, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(0, 82, 255, 0.05)', borderWidth: 1, borderColor: 'rgba(0, 82, 255, 0.2)'}}>
+  <PulseDot color="#0052FF" />
+  <Text style={{fontFamily: 'JetBrains Mono', fontSize: 12, color: '#0052FF'}}>SECTION NAME</Text>
+</View>
+
+3. Content Cards
+● Border: 1pt hairline in Slate-200.
+● Shadow: * iOS: shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: {width: 0, height: 4}.
+    ○ Android: elevation: 4.
+● Padding: 24px (Consistent gutter).
+
+Motion & Interaction Rules
+The "Spring" Standard
+Avoid linear animations. Use Spring Config for all transitions:
+● mass: 1, damping: 15, stiffness: 120.
+Entrance Animations
+● Staggered Fade-In: Content should slide up (Y: 20 -> 0) and fade in (Opacity: 0 -> 1) as the screen mounts.
+● Layout Transitions: Use LayoutAnimation or Reanimated's entering prop for seamless list updates.
+
+Implementation Instructions for AI
+1. Strict Styling: Use StyleSheet.create or a utility-first library like NativeWind (Tailwind for RN).
+2. Safe Areas: Always wrap root content in SafeAreaView.
+3. Touch Targets: Ensure all interactive elements are at least 44x44px.
+4. Icons: Use Lucide-React-Native or Expo Vector Icons (Feather/Ionicons).
+5. Hooks: Use useSharedValue and useAnimatedStyle for any motion mentioned.
+Example Signature Block:
+When generating a screen, always include a "Design Note" explaining how the Asymmetry and Gradient Accent are applied to ensure it doesn't look like a generic template.

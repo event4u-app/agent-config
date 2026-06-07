@@ -1,0 +1,216 @@
+Monochrome
+一套简洁的编辑设计体系，建立在纯粹的黑白之上。没有点缀色——只有戏剧性的对比、超大衬线字体和精准的几何布局。让人联想到高端时尚专题和建筑作品集。严肃、成熟、毫不掩饰地大胆。
+"1. 极简主义电商与高端奢侈品
+2. 专业创意与文档编辑工具
+3. 数据密集型仪表盘（局部应用）
+4. 实验性与先锋感网站"
+
+Design Style: Minimalist Monochrome (Mobile)
+Design Philosophy
+Core Principle
+The Pocket Editorial. On mobile, Minimalist Monochrome transforms the screen into a tactile, high-end printed manifesto. It rejects the "app-like" tendency for soft bubbles and friendly gradients. Instead, it offers a stark, vertical journey defined by pure black (#000000), pure white (#FFFFFF), and razor-sharp borders. Every tap is a deliberate decision; every scroll is a flip of a page in a luxury monograph.
+Visual Vibe
+Emotional Keywords: Tactile, Austere, Editorial, Direct, High-Fidelity, Uncompromising, Sharp, Rhythmic.
+This is the visual language of:
+● Mobile typographers and digital brutalism
+● The mobile interfaces of luxury fashion houses (Balenciaga, Zara, SSENSE)
+● Digital exhibitions where the content frames itself
+● High-contrast e-reader aesthetics
+What This Design Is NOT
+● ❌ "App-y" (no cards with drop shadows, no floating bubbles)
+● ❌ Native iOS/Android standard (no system blue, no rounded groups)
+● ❌ Gesture-heavy (interactions are explicit taps, not vague swipes)
+● ❌ Cluttered (one idea per screen view)
+● ❌ Colorful (strictly grayscale)
+The DNA of Minimalist Monochrome (Mobile)
+1. Vertical Linearity
+The mobile screen is a continuous roll of paper. Structure is created not by boxes, but by horizontal lines (rules) that span the full width of the device. Content lives between these lines.
+2. Typography as Interface
+Buttons are often just large words. Navigation is text-based. The serif typeface (Playfair Display) acts as the primary image on the screen. Headlines must be large enough to break words onto new lines, creating graphic shapes.
+3. The "Touch" Inversion
+Since there is no "hover" on mobile, interaction is communicated through inversion. When a user touches a white block, it turns black instantly. This zero-latency binary feedback replaces physical tactility.
+4. Zero Radius, Zero Fluff
+All elements—buttons, images, inputs, modals—have strictly 0px border radius. This sharp geometry cuts through the rounded physical corners of modern smartphones, creating a striking contrast.
+
+Design Token System
+Colors (Strictly Monochrome)
+background:       #FFFFFF (Pure white)
+foreground:       #000000 (Pure black)
+muted:            #F5F5F5 (Off-white for "pressed" states or subtle blocks)
+mutedForeground:  #525252 (Dark gray for metadata)
+border:           #000000 (Black borders - heavy usage)
+borderLight:      #E5E5E5 (Subtle dividers)
+overlay:          #000000 (Full screen menu background)
+
+Rule: No accent colors. The "Active State" is simply the inverse of the "Default State."
+Typography
+Font Stack:
+● Display: "Playfair Display", serif - For all headlines and large numerals.
+● Body: "Source Serif 4", serif - For reading text.
+● UI/Labels: "JetBrains Mono", monospace - For tiny tags, dates, and technical specs.
+Type Scale (Mobile Optimized):
+Note: Sizes are calibrated to feel "massive" on a small screen without breaking layout.
+xs:   0.75rem  (12px) - Metadata / Breadcrumbs
+sm:   0.875rem (14px) - UI Labels / Captions
+base: 1rem     (16px) - Body text (Legibility minimum)
+lg:   1.125rem (18px) - Lead text / Button text
+xl:   1.5rem   (24px) - Section headers
+2xl:  2rem     (32px) - Standard Headlines
+3xl:  2.5rem   (40px) - Hero Sub-text
+4xl:  3rem     (48px) - Major Headlines
+5xl:  4rem     (64px) - "Cover" text (Often wraps)
+6xl:  5rem     (80px) - Numerical statements
+
+Tracking & Leading:
+● Headlines: tracking-tighter (-0.05em) and leading-[0.9]. Text should feel tightly packed.
+● Body: leading-relaxed for readability.
+● Button Text: tracking-widest uppercase.
+Border Radius
+ALL VALUES: 0px
+
+Constraint: Even the bottom sheet (modal) must be square. Even the active state of a tapped element is a sharp rectangle.
+Borders & Lines (The Grid)
+hairline:  1px solid #E5E5E5  (List separators)
+thin:      1px solid #000000  (Standard element borders)
+thick:     2px solid #000000  (Emphasis / Input bottom)
+heavy:     4px solid #000000  (Section dividers)
+
+Usage:
+● Full-Bleed Lines: Borders should often touch the edges of the screen (-mx-4 or -mx-6).
+● Separators: Use border-b black heavily to separate stacked vertical content.
+Shadows
+NONE
+
+Depth is strictly 2D. Layers are defined by opacity (100% vs 0%) or borders, never by shadows.
+Textures & Patterns
+Use subtle noise to simulate high-quality paper texture on mobile backgrounds to avoid a "sterile" feeling.
+Mobile Noise (CSS):
+CSS
+
+background-image: url("data:image/svg+xml,..."); /* Same noise SVG as web */
+opacity: 0.03; /* Slightly higher opacity for small screens */
+
+
+Component Stylings
+Buttons & Touch Targets
+Primary Button (The Block):
+- Width: w-full (Full width strongly preferred)
+- Height: h-14 (56px - Large touch target)
+- Background: #000000
+- Text: #FFFFFF
+- Radius: 0px
+- Typography: Uppercase, Mono or Serif, Tracking-widest
+- Active State: Instantly inverts to White bg, Black text
+
+Secondary Button (The Outline):
+- Width: w-full
+- Height: h-14
+- Background: Transparent
+- Border: 1px solid #000000
+- Active State: Instantly fills Black
+
+Sticky Bottom Action (CTA):
+● A fixed bar at the bottom of the viewport.
+● border-t-2 border-black.
+● Contains a single primary action or a price + action pair.
+● Background: #FFFFFF (or inverted #000000).
+Cards / List Items
+The "Stacked" Card:
+Instead of a box with padding, mobile cards are often full-width segments separated by borders.
+- Container: Border-bottom 1px solid #000000
+- Padding: py-6
+- Image: Aspect ratio 4:5 or 1:1, full width or padded
+- Content: Text sits directly below image
+- Interaction: Touching anywhere in the segment triggers "Active" state
+
+Navigation
+The "Bar":
+● Top: Minimal. Just a logo (Left) and a "MENU" text button or Hamburger (Right).
+● Bottom: Optional. If used, simple text labels or thin outline icons. border-t-2 border-black.
+The Menu Overlay:
+● Full screen.
+● Background: #000000 (Black).
+● Text: #FFFFFF (White).
+● List items: Massive text (text-4xl), serif, centered or left-aligned.
+● Divider: Thin white lines between menu items.
+Inputs
+Mobile Input:
+- Style: Flush with background.
+- Border: Bottom only (2px solid black).
+- Radius: 0px.
+- Height: h-14.
+- Focus: Border becomes 4px thick. No native blue glow.
+- Clear Button: Simple 'X' icon in black.
+
+
+Layout Strategy
+Safe Areas
+● Respect pb-safe (Home Indicator) and pt-safe (Status Bar).
+● Style Note: The Status Bar should be white text on black header, or black text on white header. High contrast.
+Container & Spacing
+● Horizontal Padding: px-5 (20px) or px-6 (24px).
+● Vertical Rhythm:
+    ○ Small gaps: py-4
+    ○ Section gaps: py-16
+    ○ Between text and image: my-6
+The "Scroll"
+● Design for the scroll. Use sticky headers for section titles (e.g., "Details", "Shipping") that stack as the user scrolls down, creating a filing cabinet effect.
+● Use divide-y divide-black for lists to create strong separation.
+
+Effects & Animation
+Motion Philosophy: Cut, Don't Fade.
+Mobile transitions should feel mechanical and instant, like a shutter clicking.
+Interactions:
+● Tap: active:bg-black active:text-white (Instant inversion).
+● Page Transition: Slide in from right (100% width) with a hard edge. No distinct shadow on the sliding page, just a clean line.
+● Modal: Slides up from bottom. 0px radius. Covers 100% or 90% of screen. Black border top.
+● Scroll Parallax: None. Keep scrolling tied 1:1 to finger movement.
+Specific Implementation:
+TypeScript
+
+// Mobile Button Active State
+className="bg-black text-white active:bg-white active:text-black active:border active:border-black transition-none"
+
+// Image Loading
+className="opacity-0 data-[loaded=true]:opacity-100 transition-opacity duration-300 ease-linear grayscale data-[loaded=true]:grayscale-0"
+
+
+Iconography
+Style: Stroke-based, Thin, Sharp.
+Library: Lucide React (or similar).
+Mobile Specifics:
+● Size: w-6 h-6 (Standard)
+● Stroke: 1.5px (Matches the fine aesthetic)
+● Touch: If an icon is a button, it must have a p-3 (12px) padding hit-box around it, even if the border is invisible.
+
+Responsive Strategy (Device Sizes)
+Small Phones (iPhone SE/Mini):
+● Headlines: Scale down to text-4xl to prevent breaking single words into nonsense.
+● Padding: Reduce to px-4.
+Large Phones (Max/Plus):
+● Headlines: text-5xl or text-6xl.
+● Layout: Can introduce a 2-column grid for product thumbnails (but keep strict borders between them).
+Dark Mode:
+● System: Enforce Light Mode (Black on White) as the default brand identity.
+● Inverted Sections: Use Dark Mode (White on Black) only for specific sections (Footer, Hero, Special Features) to create rhythm, not based on system settings.
+
+Bold Choices (Non-Negotiable)
+1. Massive Typographic Hero: The opening screen must feature a headline where a single word might span the full width.
+2. The "Hard" Line: A 4px black line (border-b-4) must separate the Hero from the content.
+3. Sticky Section Headers: As you scroll, the section title (e.g., "01. INFO") sticks to the top with a bottom border, stacking on top of the previous one.
+4. No Hamburger Icon: Use the word "MENU" in JetBrains Mono instead of an icon, if space permits.
+5. Inverted Gallery: Image galleries have a Black background with images at full opacity.
+6. Editorial Inputs: Form labels look like subheadings (Playfair Display, Italic).
+7. No Skeletons: Loading states are simple spinning black lines or just whitespace. No gray pulsing blobs.
+8. Mechanical Feedback: Every interactive element MUST have a visible active state (color inversion).
+
+What Success Looks Like (Mobile)
+A successfully implemented Minimalist Monochrome mobile design should feel like:
+● A digitally printed receipt from a high-end boutique.
+● A pocket edition of a brutally honest manifesto.
+● Clean, fast, and remarkably legible outdoors.
+● Intimidatingly simple.
+It should NOT feel like:
+● A scaled-down version of a desktop site.
+● A standard Bootstrap/Tailwind mobile layout.
+● An app trying to be "friendly.

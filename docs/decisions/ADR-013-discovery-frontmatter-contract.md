@@ -124,6 +124,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `fun` | Non-essential social/fun workflows (prediction-pool tips, etc.). Optional under the `small-business` workspace; `experimental` trust. |
 | `meta` | Artefacts that maintain *this* package (`agent-config` itself). |
 | `git` | Git workflow — commit, pull requests, branch sync. Carries `slug_prefix: git` (ADR-044 §A3); `requires: engineering-base`. Added 2026-06-04 for 6.0.0-D Step 12 Class B1 (`commit`→`git-commit`, `create-pr`→`git-pr-create`). |
+| `frontend-design` | Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge. `requires: engineering-base`; `suggests: react, nextjs`. Added 2026-06-07 (ADR-061). |
 
 Amendments to the pack list require an ADR-013 amendment and the
 matching `src/config/discovery/packs.yml` row in the same PR.
@@ -260,6 +261,23 @@ Optional under the `small-business` workspace (alongside `ai-video`);
 artefacts: the `/prediction-pool` command + `prediction-pool-optimizer` skill in
 `packages/pack-fun/`. Additive, no rename; non-overlap with cost-profile
 and `profile.id` reservations holds.
+
+### 2026-06-07 — New `frontend-design` pack
+
+Added pack id `frontend-design` to the closed vocabulary (grounded design
+intelligence — design-knowledge corpus + BM25 grounding engine, design tokens,
+stack best-practice and chart/typography knowledge, adopted from the MIT
+`nextlevelbuilder/ui-ux-pro-max-skill` corpus per ADR-061). Mirrored in
+[`src/config/discovery/packs.yml`](../../src/config/discovery/packs.yml) and the
+`ADR_PACKS` frozenset in
+[`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.py).
+`workspaces: [engineering]`, `requires: [engineering-base]`,
+`suggests: [react, nextjs]` (the corpus is stack-agnostic data — React is
+suggested, never required), `trust_level_default: professional`,
+`size_class: medium`. Council-resolved 2026-06-07 (anthropic/claude-sonnet-4-5 +
+openai/gpt-4o, converged A2: opt-in pack over inflating `engineering-base`
+with ~1 MB of design data). Additive, no rename; non-overlap with
+cost-profile and `profile.id` reservations holds.
 
 ## Cross-references
 

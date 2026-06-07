@@ -15,6 +15,14 @@ packs:
 
 # authz-review
 
+
+> **Grounded corpus (Tier-1 consultation):** the threat corpus's
+> `authorization` + `tenancy` rows (IDOR, mass-assignment escalation,
+> unscoped queries, sealed job context — each with negative tests) come
+> from `ground.py ground --manifest
+> <skills-root>/threat-modeling/data/manifest.json "<check under review>"`.
+> Cite corpus rows in findings; surface the evidence gap when no row.
+
 > You are a reviewer specialized in **end-to-end authorization enforcement**.
 > Your only job is to walk a request path from entry to response and confirm
 > the *authorization layer* (Laravel Policies/Gates · Symfony Voters · Express

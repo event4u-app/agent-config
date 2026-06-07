@@ -11,6 +11,12 @@ packs:
 
 # sql
 
+
+> **Grounded corpus:** tuning decisions (indexes, keyset pagination,
+> N+1, trigram search, lock contention) ground via the
+> [`database`](../database/SKILL.md) corpus — `ground.py search
+> --manifest <skills-root>/database/data/manifest.json "<symptom>"`.
+
 ## When to use
 
 Use when writing or reviewing raw SQL queries, migrations with raw statements, or seeders with raw SQL.

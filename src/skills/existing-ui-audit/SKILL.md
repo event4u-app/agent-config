@@ -13,6 +13,14 @@ packs:
 
 # existing-ui-audit
 
+> **Interplay:** this audit answers *what exists* (components, tokens,
+> primitives → `state.ui_audit`);
+> [`design-intelligence`](../design-intelligence/SKILL.md) answers *what to
+> build* (corpus-grounded style/token/typography/pattern selection for the
+> brief). Audit runs first, and its reuse findings outrank corpus
+> suggestions — never let a grounded recommendation introduce a new
+> component the inventory already covers.
+
 ## When to use
 
 Use this skill when:

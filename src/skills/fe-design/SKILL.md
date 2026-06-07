@@ -24,6 +24,7 @@ own the flow.
 | Layout / states / microcopy lock | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
 | Stack-dispatched implementation | [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
 | Existing-component inventory + tokens | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) (mandatory pre-step) |
+| Grounded selection (style, color tokens, typography, pattern, anti-patterns) | [`design-intelligence`](../design-intelligence/SKILL.md) — corpus-grounded; this skill stays the heuristic layer and *invokes* it |
 | Design-review polish loop | [`directives/ui/review.py`](../../templates/scripts/work_engine/directives/ui/review.py) + [`directives/ui/polish.py`](../../templates/scripts/work_engine/directives/ui/polish.py) |
 
 ## When to use
@@ -45,9 +46,13 @@ Do NOT use this skill to:
 ## How the directive set cites this skill
 
 `directives/ui/design.py` produces the design brief (layout, components,
-states, microcopy, a11y). The brief picks heuristics from this reference
-when the audit doesn't already pin a project pattern. Stack-specific
-choices come from the dispatched implementation skill, not from here.
+states, microcopy, a11y). Selection decisions (style, semantic color
+tokens, typography pairing, layout pattern, anti-patterns) come **grounded**
+from [`design-intelligence`](../design-intelligence/SKILL.md) — run its
+corpus query first; fall back to the heuristics in this reference only
+where the corpus reports an evidence gap or the audit already pins a
+project pattern. Stack-specific choices come from the dispatched
+implementation skill, not from here.
 
 ## Component Architecture
 
@@ -206,6 +211,13 @@ Step indicator (1 — 2 — 3)
 ## Aesthetic direction
 
 Audit-pinned tokens and components always take precedence (see `existing-ui-audit`). When the audit pins an aesthetic, honor it without deviation. When the audit shows **no pinned aesthetic** — greenfield surface, marketing landing page, brand-new feature without design-system precedent — the design brief is allowed (and expected) to commit to a deliberate direction instead of defaulting to safe centered hero + 3-column features + CTA.
+
+Typography pairings (73 curated heading/body combinations with Google
+Fonts URLs + Tailwind config) and icon-system guidance (104 Phosphor
+entries with import code) come grounded from
+[`design-intelligence`](../design-intelligence/SKILL.md)
+(`--domain typography`, `--domain icons`) — query before picking from
+memory.
 
 Pick one direction up front and let composition, typography, and color follow from it. Avoid the "neutral AI default": uniform grid, system fonts as the visible body face, purple-to-blue gradients on white, predictable spacing. A direction that fits the brand intent (editorial / brutalist / refined / playful / retro / maximal / minimal / etc.) and is consistent across the page beats hedging.
 

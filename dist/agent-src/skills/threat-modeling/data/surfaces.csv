@@ -1,0 +1,10 @@
+Surface,Keywords,Surface Class,Data Classes,Notes
+Login / session / token issuance,login password session jwt token oauth sso 2fa mfa reset,authentication,"credentials, session tokens",Covers password reset and remember-me flows
+Authorization / policy / role check,authorization policy gate voter role permission admin rbac acl,authorization,entitlements,Includes admin-only routes and ownership checks
+Tenant boundary / row-level scope,tenant multi-tenant tenant_id scope row-level isolation,tenancy,all tenant data,Any query touching tenant-scoped tables
+File upload / user-supplied URL,upload file image attachment url fetch import csv,file-upload,"user files, server filesystem",Includes URL-fetch (SSRF surface)
+Outbound integration / webhook consumer,webhook integration third-party callback queue consumer api client,external-integration,"partner payloads, secrets",Inbound webhooks AND outbound calls
+Public unauthenticated endpoint,public endpoint health status unauthenticated anonymous,public-endpoint,whatever it returns,Includes health/status and marketing forms
+Billing / payment / balance mutation,billing payment charge refund invoice subscription balance credit,billing,money movement,Anything that changes an amount owed/paid
+Secrets / key handling,secret api-key signing key env vault kms rotation,secrets,credentials,"Storage, rotation, and logging paths"
+Data export / serializer / log channel,export serializer api-resource log audit csv download report,data-exposure,"PII, internal fields",Response shaping and log sinks

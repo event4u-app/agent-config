@@ -1,0 +1,83 @@
+{
+  "manifest_version": 1,
+  "domain": "security-threat-modeling",
+  "tier": "conditional-grounding",
+  "retriever": "bm25",
+  "default_domain": "threats",
+  "domains": {
+    "surfaces": {
+      "file": "surfaces.csv",
+      "search_cols": [
+        "Surface",
+        "Keywords"
+      ],
+      "output_cols": [
+        "Surface",
+        "Surface Class",
+        "Data Classes",
+        "Notes"
+      ],
+      "max_results": 1
+    },
+    "threats": {
+      "file": "threats.csv",
+      "search_cols": [
+        "Surface Class",
+        "Threat",
+        "Abuse Case",
+        "Source Refs"
+      ],
+      "output_cols": [
+        "Surface Class",
+        "Threat",
+        "Source Refs",
+        "Abuse Case",
+        "Required Controls",
+        "Negative Tests",
+        "Severity"
+      ],
+      "max_results": 4
+    }
+  },
+  "detect": {
+    "surfaces": [
+      "surface",
+      "login",
+      "upload",
+      "webhook",
+      "tenant",
+      "billing",
+      "secret",
+      "endpoint"
+    ],
+    "threats": [
+      "threat",
+      "abuse",
+      "attack",
+      "idor",
+      "ssrf",
+      "forgery",
+      "stuffing",
+      "escalation"
+    ]
+  },
+  "reasoning": {
+    "file": "reasoning.csv",
+    "category_domain": "surfaces",
+    "category_column": "Surface Class",
+    "match_column": "Surface_Class",
+    "rules_column": "Decision_Rules",
+    "plan": {
+      "surfaces": 1,
+      "threats": 4
+    }
+  },
+  "default_category": "General",
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": {
+    "repo": "derived: MITRE ATT&CK + CWE + OWASP API Top 10 / ASVS 4.0",
+    "sha": "ATT&CK v16 / ASVS 4.0.3",
+    "last_checked": "2026-06-07"
+  }
+}

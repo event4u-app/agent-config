@@ -1,0 +1,16 @@
+{
+  "skill": "design-tokens",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers token authoring, generation, and discipline linting; should-not-trigger covers value selection, Tailwind usage discipline, and component work.",
+  "queries": [
+    {"q": "set up a design token system with light and dark mode", "trigger": true},
+    {"q": "generate CSS variables from our tokens.json", "trigger": true},
+    {"q": "find hardcoded hex values that should use tokens", "trigger": true},
+    {"q": "erstelle ein DTCG Token-System für das Projekt", "trigger": true},
+    {"q": "emit the Tailwind theme colors from the token file", "trigger": true},
+    {"q": "which color palette fits a fintech product?", "trigger": false, "note": "design-intelligence — value selection, not authoring"},
+    {"q": "style this button with Tailwind utilities", "trigger": false, "note": "tailwind-engineer usage discipline"},
+    {"q": "add the dialog component via shadcn", "trigger": false, "note": "react-shadcn-ui installer"},
+    {"q": "audit contrast ratios on this screen", "trigger": false, "note": "accessibility-auditor"},
+    {"q": "sync brand guidelines into tokens", "trigger": false, "note": "brand->token pipeline deferred (watch note)"}
+  ]
+}

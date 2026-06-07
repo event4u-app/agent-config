@@ -134,6 +134,7 @@
     "@agent-directive: ui-polish-plain",
     "> Stack: `plain`. Polish round 1 of 2.",
     "> 2 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+    "> Fix chart-type / contrast findings against the adopted corpus rows (design-intelligence § 'Grounding the review/polish a11y gate'), not ad-hoc judgment.",
     "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
     "> 2. Abort — drop this UI request"
   ],

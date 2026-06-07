@@ -16,6 +16,12 @@ install:
 
 # blade-ui
 
+> **Grounded stack guidance:** pull idiomatic Do/Don't + docs URLs from the
+> adopted stack corpus before improvising — `ground.py search --manifest
+> <skills-root>/design-intelligence/data/manifest.json --stack laravel "<topic>"`
+> (the `laravel` stack file is Blade/UI-scoped, not general Laravel). See
+> [`design-intelligence`](../design-intelligence/SKILL.md).
+
 ## Positioning — dispatched, not standalone
 
 `blade-ui` is the **apply-step executor** for the Blade stack. It is

@@ -1,0 +1,83 @@
+Sketch
+有机的不稳定边框、手写排版、纸张纹理和俏皮的不完美。每个元素都是用记号笔和铅笔在纹理纸上勾勒出来的。
+1. 原型设计与早期创意提案 (Low-Fidelity Prototyping)
+2. 创意品牌、艺术与独立文化项目
+3. 教育、绘本与儿童类产品
+4. 游戏化 UI 与 叙事解谜游戏
+
+Design Philosophy
+The Hand-Drawn mobile design style celebrates authentic imperfection and human touch within the palm of the hand. It rejects the sterile precision of typical mobile UI in favor of organic, playful irregularity that evokes a portable sketchbook, a pocket notebook, or a collection of sticky notes.
+Core Principles:
+● No Straight Lines: Every View and TouchableOpacity uses complex borderRadius logic or SVG masks to create wobbly edges that reject geometric perfection.
+● Tactile Texture: Use background overlays or tiled images to simulate physical media like grain, paper, or notebook grids, making the screen feel like a physical surface.
+● Playful Tilt: Elements utilize small transform: [{ rotate: '-1deg' }] properties to break the rigid mobile grid and create casual energy.
+● Hard Offset Shadows: Strictly avoid elevation (Android) or shadowRadius (iOS) that creates blur. Use a secondary "shadow layer" View offset by (4px, 4px) to create a cut-paper, layered collage aesthetic.
+● Handwritten Typography: Exclusively use handwritten fonts (Kalam, Patrick Hand). Typography should vary in size and rotation to look like quick notes written on the fly.
+● Scribbled Overlays: Use absolute-positioned SVGs for flourishes like hand-drawn arrows, "tape" effects on images, and "X" marks for close buttons.
+● Intentional Messiness: Embrace slight overlaps and asymmetrical margins that make the app feel spontaneous rather than manufactured.
+● Emotional Intent: This style lowers the "fear of interaction" by appearing unfinished and approachable. It is perfect for journaling apps, creative tools, education, or any product that wants to feel human-centered rather than corporate.
+
+Design Token System
+Colors (Single Palette - Light Mode)
+● Background: #fdfbf7 (Warm Paper)
+● Foreground: #2d2d2d (Soft Pencil Black)
+● Muted: #e5e0d8 (Old Paper / Erased Pencil)
+● Accent: #ff4d4d (Red Correction Marker)
+● Border: #2d2d2d (Pencil Lead)
+● Secondary Accent: #2d5da1 (Blue Ballpoint Pen)
+Typography
+● Headings: Kalam-Bold - High visual weight, felt-tip marker style.
+● Body: PatrickHand-Regular - Highly legible but distinctly human.
+● Scale: Large and readable for mobile. Headings should have lineHeight adjusted to allow for "scribbled" descenders.
+Radius & Border
+● Wobbly Borders: Since React Native doesn't support the slash / syntax for borderRadius, use unique values for each corner (e.g., borderTopLeftRadius: 15, borderTopRightRadius: 25, borderBottomLeftRadius: 20, borderBottomRightRadius: 10).
+● Border Width: Bold and visible. borderWidth: 2 minimum; borderWidth: 3 for primary actions.
+● Style: solid for containers; dashed for "cut-out" sections or empty states.
+Shadows & Effects
+● Hard Offset Shadows: Since shadowOpacity with 0 radius is inconsistent across platforms, implement as a "Shadow View" placed behind the main component.
+    ○ Standard: Offset { x: 4, y: 4 } with #2d2d2d.
+    ○ Active (Press): Offset { x: 0, y: 0 } (the button "sinks" into the paper).
+● Paper Texture: Use a repeating pattern background image or a very subtle radial-gradient SVG overlay across the entire screen.
+
+Component Stylings
+Buttons (TouchableOpacity)
+● Shape: Irregular wobbly rectangle.
+● Normal State: * White background, borderWidth: 3, Pencil Black text.
+    ○ Hard offset shadow view behind it.
+● Pressed State (activeOpacity={1}):
+    ○ Main button transform: [{ translateX: 4 }, { translateY: 4 }].
+    ○ The background "shadow view" is covered, simulating a physical press.
+● Variant: "Post-it" Yellow (#fff9c4) for primary CTAs.
+Cards/Containers
+● Base Style: White background, wobbly border, slight rotation (-1deg or 1deg).
+● Decoration Types:
+    ○ "Tape": A semi-transparent View (rgba(200, 200, 200, 0.5)) positioned absolutely at the top, slightly rotated to look like it holds the card.
+    ○ "Tack": A small red circle SVG at the top center.
+● Speech Bubbles: Use a small SVG triangle attached to the bottom of the container for "hint" text or tooltips.
+Inputs (TextInput)
+● Style: Full box with wobbly borderRadius.
+● Font: PatrickHand-Regular.
+● Focus State: Border color changes to Blue Ballpoint (#2d5da1) with a slight increase in borderWidth.
+● Placeholder: Muted Pencil (#2d2d2d60).
+
+Layout Strategy
+● The "Anti-Grid": Avoid perfect alignment. Give adjacent cards slightly different rotation values.
+● Layering: Use zIndex to stack "tape" over cards and cards over background scribbles.
+● Visual Rhythm: Use padding: 20 for standard screens. Use large gap values between vertical elements to let the "paper" breathe.
+● Overflow: Allow decorative elements (like a hand-drawn star) to bleed slightly off the edge of the screen.
+
+Non-Genericness (Bold Choices)
+● Sketchy Loaders: Instead of a spinner, use an animation that "scribbles" a circle or toggles between three hand-drawn frames.
+● Hand-Drawn Icons: Use icons that look like they were drawn with a 0.5mm fineliner (thick strokes, unclosed loops).
+● Strikethrough: When a task is completed or an item is deleted, use a red "scribble-out" SVG overlay instead of a simple line.
+● Wavy Dividers: Replace standard horizontal rules with a hand-drawn squiggly line SVG.
+
+Effects & Animation
+● The "Jiggle": When a user triggers an error, use a Sequence animation that rapidly rotates the element between -2deg and 2deg.
+● Snappy Transitions: Use LayoutAnimation.configureNext(LayoutAnimation.Presets.spring) for all layout changes to give a bouncy, physical feel.
+
+Mobile-First Strategy (React Native)
+● Touch Targets: Ensure all wobbly buttons have a minimum hit area of 48x48 even if the visual "ink" is smaller.
+● Safe Area: Ensure the "Paper" background extends into the SafeAreaView to maintain the illusion of physical media.
+● Performance: Use useNativeDriver: true for rotations and transforms to keep the "hand-drawn" movements fluid at 60fps.
+● Haptics: Add Haptics.impactAsync on button presses to reinforce the feeling of "clicking" a physical object.

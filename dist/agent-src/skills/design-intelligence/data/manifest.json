@@ -1,0 +1,500 @@
+{
+  "manifest_version": 1,
+  "domain": "frontend-design",
+  "tier": "conditional-grounding",
+  "data_dir": ".",
+  "retriever": "bm25",
+  "default_domain": "style",
+  "domains": {
+    "style": {
+      "file": "styles.csv",
+      "search_cols": [
+        "Style Category",
+        "Keywords",
+        "Best For",
+        "Type",
+        "AI Prompt Keywords"
+      ],
+      "output_cols": [
+        "Style Category",
+        "Type",
+        "Keywords",
+        "Primary Colors",
+        "Effects & Animation",
+        "Best For",
+        "Light Mode ✓",
+        "Dark Mode ✓",
+        "Performance",
+        "Accessibility",
+        "Framework Compatibility",
+        "Complexity",
+        "AI Prompt Keywords",
+        "CSS/Technical Keywords",
+        "Implementation Checklist",
+        "Design System Variables"
+      ],
+      "max_results": 3
+    },
+    "color": {
+      "file": "colors.csv",
+      "search_cols": [
+        "Product Type",
+        "Notes"
+      ],
+      "output_cols": [
+        "Product Type",
+        "Primary",
+        "On Primary",
+        "Secondary",
+        "On Secondary",
+        "Accent",
+        "On Accent",
+        "Background",
+        "Foreground",
+        "Card",
+        "Card Foreground",
+        "Muted",
+        "Muted Foreground",
+        "Border",
+        "Destructive",
+        "On Destructive",
+        "Ring",
+        "Notes"
+      ],
+      "max_results": 2
+    },
+    "chart": {
+      "file": "charts.csv",
+      "search_cols": [
+        "Data Type",
+        "Keywords",
+        "Best Chart Type",
+        "When to Use",
+        "When NOT to Use",
+        "Accessibility Notes"
+      ],
+      "output_cols": [
+        "Data Type",
+        "Keywords",
+        "Best Chart Type",
+        "Secondary Options",
+        "When to Use",
+        "When NOT to Use",
+        "Data Volume Threshold",
+        "Color Guidance",
+        "Accessibility Grade",
+        "Accessibility Notes",
+        "A11y Fallback",
+        "Library Recommendation",
+        "Interactive Level"
+      ],
+      "max_results": 3
+    },
+    "landing": {
+      "file": "landing.csv",
+      "search_cols": [
+        "Pattern Name",
+        "Keywords",
+        "Conversion Optimization",
+        "Section Order"
+      ],
+      "output_cols": [
+        "Pattern Name",
+        "Keywords",
+        "Section Order",
+        "Primary CTA Placement",
+        "Color Strategy",
+        "Conversion Optimization"
+      ],
+      "max_results": 2
+    },
+    "product": {
+      "file": "products.csv",
+      "search_cols": [
+        "Product Type",
+        "Keywords",
+        "Primary Style Recommendation",
+        "Key Considerations"
+      ],
+      "output_cols": [
+        "Product Type",
+        "Keywords",
+        "Primary Style Recommendation",
+        "Secondary Styles",
+        "Landing Page Pattern",
+        "Dashboard Style (if applicable)",
+        "Color Palette Focus"
+      ],
+      "max_results": 1
+    },
+    "ux": {
+      "file": "ux-guidelines.csv",
+      "search_cols": [
+        "Category",
+        "Issue",
+        "Description",
+        "Platform"
+      ],
+      "output_cols": [
+        "Category",
+        "Issue",
+        "Platform",
+        "Description",
+        "Do",
+        "Don't",
+        "Code Example Good",
+        "Code Example Bad",
+        "Severity"
+      ],
+      "max_results": 3
+    },
+    "typography": {
+      "file": "typography.csv",
+      "search_cols": [
+        "Font Pairing Name",
+        "Category",
+        "Mood/Style Keywords",
+        "Best For",
+        "Heading Font",
+        "Body Font"
+      ],
+      "output_cols": [
+        "Font Pairing Name",
+        "Category",
+        "Heading Font",
+        "Body Font",
+        "Mood/Style Keywords",
+        "Best For",
+        "Google Fonts URL",
+        "CSS Import",
+        "Tailwind Config",
+        "Notes"
+      ],
+      "max_results": 2
+    },
+    "icons": {
+      "file": "icons.csv",
+      "search_cols": [
+        "Category",
+        "Icon Name",
+        "Keywords",
+        "Best For"
+      ],
+      "output_cols": [
+        "Category",
+        "Icon Name",
+        "Keywords",
+        "Library",
+        "Import Code",
+        "Usage",
+        "Best For",
+        "Style"
+      ],
+      "max_results": 3
+    },
+    "react": {
+      "file": "react-performance.csv",
+      "search_cols": [
+        "Category",
+        "Issue",
+        "Keywords",
+        "Description"
+      ],
+      "output_cols": [
+        "Category",
+        "Issue",
+        "Platform",
+        "Description",
+        "Do",
+        "Don't",
+        "Code Example Good",
+        "Code Example Bad",
+        "Severity"
+      ],
+      "max_results": 3
+    },
+    "web": {
+      "file": "app-interface.csv",
+      "search_cols": [
+        "Category",
+        "Issue",
+        "Keywords",
+        "Description"
+      ],
+      "output_cols": [
+        "Category",
+        "Issue",
+        "Platform",
+        "Description",
+        "Do",
+        "Don't",
+        "Code Example Good",
+        "Code Example Bad",
+        "Severity"
+      ],
+      "max_results": 3
+    }
+  },
+  "detect": {
+    "color": [
+      "color",
+      "palette",
+      "hex",
+      "#",
+      "rgb",
+      "token",
+      "semantic",
+      "accent",
+      "destructive",
+      "muted",
+      "foreground"
+    ],
+    "chart": [
+      "chart",
+      "graph",
+      "visualization",
+      "trend",
+      "bar",
+      "pie",
+      "scatter",
+      "heatmap",
+      "funnel"
+    ],
+    "landing": [
+      "landing",
+      "page",
+      "cta",
+      "conversion",
+      "hero",
+      "testimonial",
+      "pricing",
+      "section"
+    ],
+    "product": [
+      "saas",
+      "ecommerce",
+      "e-commerce",
+      "fintech",
+      "healthcare",
+      "gaming",
+      "portfolio",
+      "crypto",
+      "dashboard",
+      "fitness",
+      "restaurant",
+      "hotel",
+      "travel",
+      "music",
+      "education",
+      "learning",
+      "legal",
+      "insurance",
+      "medical",
+      "beauty",
+      "pharmacy",
+      "dental",
+      "pet",
+      "dating",
+      "wedding",
+      "recipe",
+      "delivery",
+      "ride",
+      "booking",
+      "calendar",
+      "timer",
+      "tracker",
+      "diary",
+      "note",
+      "chat",
+      "messenger",
+      "crm",
+      "invoice",
+      "parking",
+      "transit",
+      "vpn",
+      "alarm",
+      "weather",
+      "sleep",
+      "meditation",
+      "fasting",
+      "habit",
+      "grocery",
+      "meme",
+      "wardrobe",
+      "plant care",
+      "reading",
+      "flashcard",
+      "puzzle",
+      "trivia",
+      "arcade",
+      "photography",
+      "streaming",
+      "podcast",
+      "newsletter",
+      "marketplace",
+      "freelancer",
+      "coworking",
+      "airline",
+      "museum",
+      "theater",
+      "church",
+      "non-profit",
+      "charity",
+      "kindergarten",
+      "daycare",
+      "senior care",
+      "veterinary",
+      "florist",
+      "bakery",
+      "brewery",
+      "construction",
+      "automotive",
+      "real estate",
+      "logistics",
+      "agriculture",
+      "coding bootcamp"
+    ],
+    "style": [
+      "style",
+      "design",
+      "ui",
+      "minimalism",
+      "glassmorphism",
+      "neumorphism",
+      "brutalism",
+      "dark mode",
+      "flat",
+      "aurora",
+      "prompt",
+      "css",
+      "implementation",
+      "variable",
+      "checklist",
+      "tailwind"
+    ],
+    "ux": [
+      "ux",
+      "usability",
+      "accessibility",
+      "wcag",
+      "touch",
+      "scroll",
+      "animation",
+      "keyboard",
+      "navigation",
+      "mobile"
+    ],
+    "typography": [
+      "font pairing",
+      "typography pairing",
+      "heading font",
+      "body font",
+      "font",
+      "typography",
+      "serif",
+      "sans"
+    ],
+    "icons": [
+      "icon",
+      "icons",
+      "lucide",
+      "heroicons",
+      "symbol",
+      "glyph",
+      "pictogram",
+      "svg icon"
+    ],
+    "react": [
+      "react",
+      "next.js",
+      "nextjs",
+      "suspense",
+      "memo",
+      "usecallback",
+      "useeffect",
+      "rerender",
+      "bundle",
+      "waterfall",
+      "barrel",
+      "dynamic import",
+      "rsc",
+      "server component"
+    ],
+    "web": [
+      "aria",
+      "focus",
+      "outline",
+      "semantic",
+      "virtualize",
+      "autocomplete",
+      "form",
+      "input type",
+      "preconnect"
+    ]
+  },
+  "reasoning": {
+    "file": "ui-reasoning.csv",
+    "category_domain": "product",
+    "category_column": "Product Type",
+    "match_column": "UI_Category",
+    "rules_column": "Decision_Rules",
+    "priority_column": "Style_Priority",
+    "priority_domain": "style",
+    "name_columns": {
+      "style": "Style Category"
+    },
+    "plan": {
+      "product": 1,
+      "style": 3,
+      "color": 2,
+      "landing": 2,
+      "typography": 2
+    }
+  },
+  "default_category": "General",
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": {
+    "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+    "sha": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+    "last_checked": "2026-06-07"
+  },
+  "stacks": {
+    "react": "stacks/react.csv",
+    "nextjs": "stacks/nextjs.csv",
+    "vue": "stacks/vue.csv",
+    "svelte": "stacks/svelte.csv",
+    "astro": "stacks/astro.csv",
+    "swiftui": "stacks/swiftui.csv",
+    "react-native": "stacks/react-native.csv",
+    "flutter": "stacks/flutter.csv",
+    "nuxtjs": "stacks/nuxtjs.csv",
+    "nuxt-ui": "stacks/nuxt-ui.csv",
+    "html-tailwind": "stacks/html-tailwind.csv",
+    "shadcn": "stacks/shadcn.csv",
+    "jetpack-compose": "stacks/jetpack-compose.csv",
+    "threejs": "stacks/threejs.csv",
+    "angular": "stacks/angular.csv",
+    "laravel": "stacks/laravel.csv"
+  },
+  "stack_cols": {
+    "search_cols": [
+      "Category",
+      "Guideline",
+      "Description",
+      "Do",
+      "Don't"
+    ],
+    "output_cols": [
+      "Category",
+      "Guideline",
+      "Description",
+      "Do",
+      "Don't",
+      "Code Good",
+      "Code Bad",
+      "Severity",
+      "Docs URL"
+    ]
+  }
+}

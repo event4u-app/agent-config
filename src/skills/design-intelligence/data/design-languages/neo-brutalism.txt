@@ -1,0 +1,65 @@
+Neo Brutalism
+一种原始的、高对比度的美学，模仿印刷设计和DIY朋克文化。其特点是奶油色背景、厚厚的黑色边框（4px）、零模糊的硬偏移阴影、冲突的鲜艳颜色（热红色、鲜艳的黄色、柔和的紫色）和厚重的Space Grotesk排版。拥抱不对称、旋转、贴纸般的分层和有组织的视觉混乱。
+1. 创意工具与协作平台
+2. 针对 Z 世代（Gen Z）的市场营销与电商
+3. 内容展示与个人作品集
+
+Design Philosophy: Mobile Neo-Brutalism (React Native)
+Neo-brutalism in a mobile context is a high-energy rebellion against the "Glassmorphism" and "Minimalist" trends of iOS and Android. It translates the raw, "sticker-on-a-laptop" aesthetic into a tactile, thumb-friendly interface. While standard mobile design hides structure, Mobile Neo-brutalism enforces it. It treats the mobile screen as a physical collage board where elements don't just "float"—they occupy heavy, bordered space.
+Core DNA & Fundamental Principles:
+● Unapologetic Visibility: Reject subtle elevation. If a component exists, it must have a thick black border(borderWidth: 4). No soft shadows; use solid offset blocks for depth.
+● Tactile Feedback (The "Mechanical" Tap): Interactions shouldn't feel like "touching glass." Buttons must feel like physical switches. On press, they physically shift (translateX and translateY) to "cover" their shadow, creating a mechanical click-down sensation.
+● Sticker Layering: Treat screens as a series of layered paper cutouts. Use slight rotations (transform: [{ rotate: '-2deg' }]) on cards, badges, and text blocks to break the rigid mobile grid.
+● High-Voltage Palette: Use a "Pop Art" color scheme. A warm Cream background (#FFFDF5) paired with high-saturation Hot Red, Vivid Yellow, and Pure Black.
+● Anti-Smooth Motion: Avoid slow, easing transitions. Use snappy, spring-based animations or immediate state changes. Movement should feel like an arcade game, not a luxury car dashboard.
+Design Token System (React Native)
+1. Colors (The "High-Saturation" Palette)
+● Background: #FFFDF5 (Cream) - The default canvas.
+● Ink/Stroke: #000000 (Pure Black) - Used for ALL text, borders, and shadows.
+● Accent (Primary): #FF6B6B (Hot Red) - Primary actions.
+● Secondary: #FFD93D (Vivid Yellow) - Secondary highlights/badges.
+● Muted: #C4B5FD (Soft Violet) - Tertiary/Card headers.
+● White: #FFFFFF - High contrast on dark backgrounds.
+2. Typography (Bold & Heavy)
+● Font Family: Space Grotesk (or System Bold if unavailable).
+● Weights: Only 700 (Bold) and 900 (Black/Heavy). Avoid "Regular" or "Light."
+● Sizing:
+    ○ Display: 48px - 64px (Headlines)
+    ○ Heading: 24px - 32px
+    ○ Body: 18px - 20px (Readable but heavy)
+    ○ Label: 14px (All caps, tracking: 2).
+3. Borders & Shadows (The Signature)
+● Border Width: Default 4px. Secondary 2px.
+● Border Radius: 0 (Sharp) is default. 999 (Pill) only for badges/special buttons.
+● Hard Shadows: Non-blurry, solid black offsets.
+    ○ Small: offset: { width: 4, height: 4 }
+    ○ Medium: offset: { width: 8, height: 8 }
+Component Styling Principles
+Buttons
+● Structure: height: 56, borderWidth: 4, borderColor: '#000', borderRadius: 0.
+● Shadow: Apply a solid black View behind the button offset by 4px.
+● Interaction: Use Pressable. When pressed, use transform: [{ translateX: 4 }, { translateY: 4 }] to hide the shadow and simulate a physical press.
+● Text: fontFamily: 'SpaceGrotesk-Bold', textTransform: 'uppercase'.
+Cards & Containers
+● Style: backgroundColor: '#FFF', borderWidth: 4, borderColor: '#000'.
+● Rotation: Add transform: [{ rotate: '-1deg' }] to one card and rotate: '2deg' to the next to create a "scattered sticker" look.
+● Padding: Aggressive padding (p: 20) to prevent text from touching the thick borders.
+Inputs
+● Style: height: 64, borderWidth: 4, borderColor: '#000', backgroundColor: '#FFF'.
+● Focus State: Change backgroundColor to Yellow (#FFD93D) when focused. No soft "glow" or blue rings.
+Badges
+● Style: Circular or rectangular with borderWidth: 2.
+● Positioning: Use position: 'absolute' to "slap" them onto the corners of cards or images, often rotated.
+Layout & Architecture
+1. The "Staggered" Grid: Avoid perfectly aligned columns. Use marginTop or marginLeft offsets to make elements feel hand-placed.
+2. Marquees: Use auto-scrolling horizontal text lists for "Breaking News" or "Featured" sections to add motion without complexity.
+3. Iconography: Use thick-stroke icons (e.g., Lucide-ReactNative with strokeWidth={3}). Always wrap icons in a bordered square or circle.
+4. Visual Noise: Use small repeating SVG patterns (dots/grids) in the background of headers or specific sections to add texture.
+Anti-Patterns (Avoid at all costs)
+● No Linear Gradients: Use solid color blocks only.
+● No Shadow Radius: Blur radius must always be 0.
+● No Subtle Grays: Use #000 or the palette colors.
+● No Soft Easing: Animations should be Spring or Linear.
+● No "Standard" Border Radius: Avoid borderRadius: 8 or 12. It’s either 0 or 999.
+System Prompt for AI Code Generation
+System Role: You are an expert React Native developer specializing in Neo-Brutalist Mobile UI.Core Instruction: Generate code that strictly adheres to the Neo-Brutalist aesthetic.Styling Rules:Goal: Create a high-contrast, loud, and tactile mobile interface that feels mechanical and rebellious.

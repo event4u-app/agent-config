@@ -1,0 +1,75 @@
+Neumorphism
+通过单色背景上的双阴影拉伸和插入元素。柔软、触感好、物理接地，可接近性极佳。
+1. 极简主义硬件控制与智能家居
+2. 追求审美感的工具类 App
+3. 金融与健康监测看板（非密集型）
+4. 品牌营销与展示型页面
+
+Design Philosophy (React Native / Mobile)
+Core Principles: Neumorphism on mobile creates a tactile, physical interface through dual shadows. On React Native, this is achieved by layering View components or using specialized libraries to simulate the light source (top-left) and dark shadow (bottom-right). Every component is "molded" from the base material (#E0E5EC). Buttons are never flat; they are either "pillowed" (convex) or "wells" (concave/inset).
+Vibe: Premium, ceramic-like feel. It prioritizes the "thump" of a physical button press. It is a calm, monochromatic experience that uses depth rather than color to establish hierarchy.
+Unique Visual Signatures (Mobile Specific):
+● Dual-Shadow Layering: Since React Native's shadowColor only supports one direction, use nested Viewcomponents or react-native-shadow-2 to achieve the dual-light effect.
+● Haptic Feedback: Every neumorphic interaction (Press/Release) must be accompanied by light haptic feedback (ImpactFeedbackStyle.Light).
+● Physical Press: Active states should use transform: [{ scale: 0.97 }] to simulate material compression.
+● Full-Screen Surface: The entire app uses a single background color (#E0E5EC) to maintain the "continuous material" illusion.
+
+Design Token System (The DNA)
+Colors (Light Mode - Cool Monochromatic)
+● Background: #E0E5EC (The "Clay" base).
+● Text Primary: #3D4852 (7.5:1 contrast).
+● Text Muted: #6B7280 (4.6:1 contrast).
+● Accent: #6C63FF (Used for active toggles or primary CTAs).
+● Shadow Light: rgba(255, 255, 255, 0.6) (Top-Left).
+● Shadow Dark: rgba(163, 177, 198, 0.7) (Bottom-Right).
+Typography
+● Font Family: Use System (San Francisco/Roboto) or PlusJakartaSans-Bold.
+● Sizing: * Heading: 24pt-32pt, Bold.
+    ○ Body: 16pt, Medium.
+    ○ Caption: 12pt, Regular.
+● Letter Spacing: -0.5 for headings to enhance the modern look.
+Radius (React Native borderRadius)
+● Large Container: 32
+● Standard Button/Input: 16
+● Pill/Search Bar: 999
+
+Shadows & Effects (The Physics)
+Note: React Native requires specific shadow properties for iOS and elevation for Android. For high-fidelity Neumorphism, use a wrapping implementation.
+Extruded (Convex - Resting)
+● Outer Shadow (Dark): shadowOffset: { width: 6, height: 6 }, shadowOpacity: 1, shadowRadius: 10, shadowColor: 'rgba(163, 177, 198, 0.7)'
+● Inner Shadow (Light): shadowOffset: { width: -6, height: -6 }, shadowOpacity: 1, shadowRadius: 10, shadowColor: 'rgba(255, 255, 255, 0.6)'
+Inset (Concave - Pressed/Input)
+● Concept: Use a slightly darker background color (#D1D9E6) or internal gradients/shadows to simulate a "carved out" look.
+● Visual: backgroundColor: '#E0E5EC', plus internal borders of 1px with a darker shade at the top.
+
+Component Styling (React Native)
+Buttons
+● Base: height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center'.
+● Default State: Extruded dual shadow.
+● Active State (Pressable): Remove outer shadows, apply scale: 0.98, and change background slightly to indicate an "inset" state.
+● Haptics: Trigger Haptics.impactAsync on onPressIn.
+Cards
+● Base: padding: 24, borderRadius: 32, backgroundColor: '#E0E5EC'.
+● Hierarchy: Use "Nested Depth." A card (Extruded) contains an Icon Container (Inset Deep).
+Inputs
+● Style: height: 50, borderRadius: 16, paddingHorizontal: 16.
+● Depth: Must be Inset (Concave) to look like a physical slot.
+● Focus: Border color changes to #6C63FF with a thin 1.5px width.
+
+Animation & Micro-interactions
+● Framework: Use React Native Reanimated or LayoutAnimation.
+● Transitions: Duration: 250ms, Easing: Bezier(0.4, 0, 0.2, 1).
+● Interaction: * Scale: Buttons shrink by 2-3% when pressed.
+    ○ Shadow Transition: Smoothly interpolate shadow opacity from 1 to 0.4 when an element is "pressed" into the surface.
+
+Layout & Accessibility
+● Safe Area: Always wrap in SafeAreaView.
+● Touch Targets: Minimum 48x48 for all interactive elements.
+● Spacing: Use a 8pt grid system (8, 16, 24, 32, 48).
+● Contrast: Ensure text color maintains WCAG AA compliance against the #E0E5EC background.
+
+Anti-Patterns (Do Not Do)
+● No Black Shadows: Never use rgba(0,0,0,x). Shadows must be blue-grey to match the "Cool Grey" material.
+● No Pure White Backgrounds: The screen background MUST be #E0E5EC.
+● No Sharp Edges: Avoid borderRadius < 12.
+● No Flat Borders: Do not use borderWidth: 1 as a substitute for depth unless in a focus state.

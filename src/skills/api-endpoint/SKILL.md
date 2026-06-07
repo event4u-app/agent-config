@@ -11,6 +11,12 @@ packs:
 
 # api-endpoint
 
+
+> **Grounded corpus:** endpoint-shape decisions (pagination, error
+> shape, idempotency, rate limits) are grounded via the
+> [`api-design`](../api-design/SKILL.md) corpus — `ground.py search
+> --manifest <skills-root>/api-design/data/manifest.json "<concern>"`.
+
 ## When to use
 
 Use this skill when the user asks to create a new API endpoint, REST route, or HTTP handler.
