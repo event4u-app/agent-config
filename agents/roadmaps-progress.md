@@ -6,17 +6,17 @@
 
 ## Overall
 
-**56 / 79 steps done · 71%**
+**65 / 79 steps done · 82%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   71%
+█████████████████████████████████░░░░░░░   82%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 17 | 43 | 11 | 0 | ███████░░░ 72% |
+| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 8 | 52 | 11 | 0 | █████████░ 87% |
 | 2 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 3 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
 
@@ -26,20 +26,20 @@
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
-**Employee Product + External Proof — close the two adoption gaps** — 43 / 60 done (72%)
+**Employee Product + External Proof — close the two adoption gaps** — 52 / 60 done (87%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Fast wins — MCP listing, content-creator path, CI hardening | ✅ done | 0 | 3 | 2 | 0 | 100% |
 | 1 | External adoption proof — three recruit sessions | ✅ done | 0 | 2 | 4 | 0 | 100% |
 | 2 | Single-user knowledge surface — local file ingestion | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | Role experiences — first three role-specific entry points | ✅ done | 0 | 2 | 4 | 0 | 100% |
-| 4 | Daily workspace UI — the structural inflection point | 🟡 in progress | 2 | 8 | 1 | 0 | 80% |
-| 5 | Document workflows — first-class offers, mails, briefs, memos | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
-| 6 | Non-technical explain mode — "what just happened" | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 3 | Role experiences — first three role-specific entry points | ✅ done | 0 | 3 | 3 | 0 | 100% |
+| 4 | Daily workspace UI — the structural inflection point | ✅ done | 0 | 10 | 1 | 0 | 100% |
+| 5 | Document workflows — first-class offers, mails, briefs, memos | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 6 | Non-technical explain mode — "what just happened" | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 7 | Analytics surface — turn the inert telemetry into a question | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
+| 8 | Single-user hardening — encryption at rest + secret hygiene | ✅ done | 0 | 4 | 1 | 0 | 100% |
+| 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 8 | 8 | 0 | 0 | 50% |
 
 ### [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md)
 
