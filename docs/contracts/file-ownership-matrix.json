@@ -1150,6 +1150,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/customer-research/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1222,7 +1228,37 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/design-intelligence/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/design-intelligence/references/design-languages.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/design-review/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/design-tokens/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -4907,6 +4943,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
       "target": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -5240,6 +5283,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/blade-ui/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/blade-ui/SKILL.md",
@@ -5844,6 +5894,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/customer-research/SKILL.md",
       "target": ".agent-src.uncondensed/personas/product-owner.md",
       "type": "READ_ONLY",
@@ -5891,6 +5962,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/dashboard-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/data-flow-mapper/SKILL.md",
@@ -6089,11 +6167,179 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/references/design-languages.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/flux/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/livewire/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/design-languages.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/references/design-languages.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md",
+      "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/design-review/SKILL.md",
       "target": ".agent-src.uncondensed/skills/design-review/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/devcontainer/SKILL.md",
@@ -6272,6 +6518,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
       "target": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -6322,6 +6575,13 @@
     {
       "source": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
       "target": ".agent-src.uncondensed/skills/dashboard-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6406,6 +6666,13 @@
     {
       "source": ".agent-src.uncondensed/skills/flux/SKILL.md",
       "target": ".agent-src.uncondensed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/flux/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7232,6 +7499,13 @@
     {
       "source": ".agent-src.uncondensed/skills/livewire/SKILL.md",
       "target": ".agent-src.uncondensed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/livewire/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8190,6 +8464,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
       "target": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -9079,6 +9360,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/sql-writing/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/database/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/sql-writing/SKILL.md",
       "target": ".agent-src.uncondensed/skills/sql-writing/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -9388,6 +9676,13 @@
     {
       "source": ".agent-src.uncondensed/skills/tailwind-engineer/SKILL.md",
       "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
