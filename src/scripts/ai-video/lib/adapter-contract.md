@@ -115,6 +115,11 @@ Its `submit` stdin is:
 - Both URLs MUST be https and fetchable by the provider; a local path
   is rejected with exit 7 and the host-the-artifacts hint (the
   orchestrator hosts the clip + the WAV cut from the song first).
+- **Local lip-sync variant** (`musetalk`): a local engine consumes
+  `video_path` / `audio_path` instead — validated local files per the
+  local-source rule below; a URL is rejected with the
+  use-the-hosted-adapter hint. Synchronous local inference ships as the
+  collapsed `run` subcommand and still honours `AIV_DRYRUN`.
 - `poll` / `fetch` follow the normal v2 triple; the fetched clip embeds
   the driving audio (`audio_embedded: true`, capability `audio=native`)
   — dropping its track at mux would desync the mouth.
@@ -124,6 +129,20 @@ Its `submit` stdin is:
   `frontal_close_up_only`, `cost_gate`). The **orchestrator** enforces
   them before any submit — the adapter renders single segments and
   never sees the whole song.
+
+### Local providers — local-source rule (additive, v2)
+
+A **local** provider (e.g. `comfyui` — the engine runs on the operator's
+machine/container, ADR-060) consumes local *input* paths instead of the
+https-only rule written for hosted lip-sync inputs: the https rule exists
+because a hosted provider must fetch the bytes over the network; a local
+engine reads them from the shared volume. Local input paths are still
+validated (`aiv_validate_artifact_path` against the project root when the
+orchestrator scoped the call) before use. Everything else is unchanged —
+the async `submit/poll/fetch` triple, the trust boundary on *returned*
+artifacts, and the fixture-backed `dry-run`. A local render that has no
+provider charge reports `cost_estimate: 0.0` (a **known** zero); an
+*omitted* estimate still means unknown and is never treated as `0`.
 
 ### `<enabled>` — provider kill-switch (additive, v2)
 

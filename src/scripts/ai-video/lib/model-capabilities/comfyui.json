@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "adapter": "comfyui",
+  "comment": "Local ComfyUI capability manifest (ADR-060). cost_per_second_usd is a KNOWN 0.0 — a local render has no provider charge (distinct from an omitted/unknown estimate; the cost gate still treats MISSING as unknown, never 0). Every entry is documented-best-effort until a maintainer captures a smoke trace against a real containerized ComfyUI — verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. The template field names the package-shipped workflow under lib/comfyui-templates/ — operator-supplied workflow JSONs are rejected (ADR-060 §3).",
+  "models": {
+    "wan22-ti2v-5b": {
+      "label": "Wan2.2 TI2V-5B (Apache-2.0) — local text/image-to-video, default template",
+      "min_duration": 1,
+      "max_duration": 5,
+      "audio_sync": false,
+      "aspect": ["16:9", "9:16", "1:1"],
+      "cost_per_second_usd": 0.0,
+      "verified": false,
+      "license": "Apache-2.0",
+      "template": "comfyui-templates/wan22-ti2v-5b.json",
+      "input_notes": "ASSUMED ~121-frame ceiling at 24 fps (~5 s) for the 5B TI2V checkpoint; optional start image (ref_images[0]) uploaded via /upload/image; silent video — the orchestrator muxes audio at stitch"
+    },
+    "ltx-2": {
+      "label": "LTX-2 (Lightricks) — local audio-synced video",
+      "min_duration": 1,
+      "max_duration": 10,
+      "audio_sync": true,
+      "aspect": ["16:9", "9:16", "1:1"],
+      "cost_per_second_usd": 0.0,
+      "verified": false,
+      "license": "LTX community license (verify before commercial use)",
+      "template": "comfyui-templates/ltx-2.json",
+      "input_notes": "ASSUMED duration ceiling and audio-sync behaviour from vendor docs; the LTX-2 graph + weights must be present in the container image; verify license terms before any commercial render"
+    }
+  }
+}

@@ -55,6 +55,8 @@ When the user requests provenance removal or forgery:
 
 LLM-readable decision framework + provider-side technical capability where it exists. The agent consults this file; provider adapters emit native provenance when supported; sidecar fallback covers the gap. The session transcript is the audit log. See [`README.md § Enforcement model`](README.md).
 
+**Mechanical surface:** `scripts/ai-video/lib/embed-provenance.sh embed` implements the Required fields in code — always-on sidecar `.provenance.json`, ffmpeg container disclosure tag (mp4-family), and a real C2PA manifest when the operator installed `c2patool` with signing configured (`C2PATOOL_SIGN_ARGS`). The script only *adds* provenance; it ships no strip/remove path by design.
+
 ## See also
 
 - [`disclosure.md`](disclosure.md) — human-readable disclosure layer (caption, opening card) that complements machine-readable provenance.

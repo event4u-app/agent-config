@@ -143,7 +143,12 @@ cost (commit) or summed modeled `cost_estimate` labeled *modeled*
 - **Block on ambiguity** — never silently best-guess scene splits or
   provider mismatches.
 - **One project per invocation.** Re-running on the same project
-  resumes from existing artefacts (skips completed scenes).
+  resumes from existing artefacts (skips completed scenes) via the
+  ADR-059 resume scan: `scripts/ai-video/lib/resume-scan.sh scan
+  <project> --plan <project>/plan.json` — `green` reused, `stale` /
+  `missing` re-render, `failed` surfaces its `error.json`. State =
+  per-scene sentinel set (`prompt.json` with `input_sha256`, the clip,
+  `error.json`, `cost.json`) — no central checkpoint file.
 
 ## See also
 

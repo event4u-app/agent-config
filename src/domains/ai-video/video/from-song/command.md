@@ -60,7 +60,7 @@ silent best-guess.
 | Input | Required | Meaning |
 |---|---|---|
 | `<images-dir>` | yes | Folder of reference stills (`.png` / `.jpg`). When they contain a consistent human subject the on-screen identity is locked from them; otherwise the run is style-only (Step 6). |
-| `<song-file>` | yes | Audio track (`.mp3` / `.wav` / `.m4a`). Defines total duration and, in `--auto-script` mode, the scene structure. |
+| `<song-file>` | yes | Audio track (`.mp3` / `.wav` / `.m4a`) — or an `https://` song link (Suno / Udio / YouTube / any yt-dlp-supported page): the link is ingested to a local file first via `scripts/ai-video/lib/ingest-song.sh <url> <project>` (operator-installed `yt-dlp` + `ffmpeg`; rights note surfaced; size-capped; never a silent overwrite) and the pipeline continues on `<project>/song.m4a`. Defines total duration and, in `--auto-script` mode, the scene structure. |
 | `--brief "<text>"` | one of brief/auto | Operator-written description of the video (mood, story, settings). |
 | `--auto-script` | one of brief/auto | Derive the script from the song via the `song-to-script` skill. |
 | `--scene-durations <list>` | no | Manual cut points (e.g. `0:00-0:15,0:15-0:30,…`). Overrides probe timing — the honest path when the track is flat (probe `method: interval`). |
@@ -94,6 +94,13 @@ with usage, never a deadlocked prompt.
 
 - `<images-dir>` exists and holds ≥1 `.png`/`.jpg`. Empty or missing →
   halt, list what was found.
+- `<song-file>` given as an `https://` link → ingest it first:
+  `scripts/ai-video/lib/ingest-song.sh <url> <project>` (exit 3 names
+  the missing tool; exit 75 is a retryable download failure). The
+  ingested local file replaces the URL for every later step — ground
+  truth stays the real bytes, and the media-governance gate below runs
+  on the ingested file (a platform link is *more* likely to be a
+  recognisable commercial song — check `voice-cloning` deliberately).
 - `<song-file>` exists and is a readable audio container (`ffprobe`
   returns an audio stream). Derive its length + structure now,
   **adapter-first with the probe as the floor** (fallback semantics per
@@ -263,7 +270,9 @@ audio-driven path instead of plain motion. Preferred path: render the
 scene normally, cut that line's WAV from the song at the map's
 `[start,end]`, host clip + WAV, and run the **lip-sync post-process
 adapter** (`scripts/ai-video/adapters/syncso.sh`, contract v2
-`kind="lipsync"`); fallback where the video provider has a native
+`kind="lipsync"`; offline alternative:
+`scripts/ai-video/adapters/musetalk.sh`, MIT, local files — no hosting
+step, same sparse budget); fallback where the video provider has a native
 `speak` capability (e.g. Higgsfield `/v1/speak/higgsfield`): the
 **correct singer's** still + that WAV. Either way the right character
 lip-syncs their own line, and the clip lands at its real song position
@@ -346,6 +355,28 @@ command resumes from the completed scenes (the "one project per
 invocation" resume path), so a failed or aborted run is recoverable
 without re-paying for finished scenes.
 
+**Resume mechanics (ADR-059 — filesystem-as-state, no checkpoint file).**
+Before rendering, run the mechanical scan:
+
+```bash
+scripts/ai-video/lib/resume-scan.sh scan <project> --plan <project>/plan.json
+```
+
+where `plan.json` holds each scene's current `input_sha256`
+(`resume-scan.sh hash < scenes/<id>/prompt.json` — same canonicalization
+the render path stamps). `green` scenes are skipped verbatim; `stale`
+(prompt edited, provider/model switched, hash tampered) and `missing`
+scenes re-render; `failed` scenes surface their `error.json` reason.
+After each live scene completes, write `scenes/<id>/cost.json`
+(`{charged_usd, adapter, model}`, atomic `tmp`+`mv`) — the scan sums it
+as `spent_usd` and the batch loop re-checks `--max-spend-usd` against it
+before **every** live submit, not only at the upfront gate. Per-scene
+kill-switch (ADR-059 §6): max one surfaced auto-retry on
+`retryable: true`, content-policy refusals always halt. Rollback is
+deletion (`rm -rf scenes/<id>/` → re-render); `--clean`
+(`resume-scan.sh clean <project>`) removes failed-scene residue only —
+green artifacts are never auto-deleted.
+
 ### 9. Stitch + master-audio mux + duration reconciliation
 
 1. Build `<project>/manifest.json` with every scene as **video-only**
@@ -380,6 +411,20 @@ without re-paying for finished scenes.
    and, where the container supports it, a provenance tag per
    [`transparency`](../../../agents/settings/policies/media/transparency.md).
    The run **cannot complete** without the disclosure — it is not a flag.
+   Mechanically:
+
+   ```bash
+   jq -n --arg p "<project>/final.mp4" --arg prov "<video-provider>" \
+     --arg m "<model>" --arg h "<sha256-of-REDACTED-prompt>" \
+     '{artifact_path:$p, provider:$prov, model:$m, prompt_sha256:$h}' \
+     | scripts/ai-video/lib/embed-provenance.sh embed
+   ```
+
+   writes the always-on sidecar `final.mp4.provenance.json`, tags the
+   container metadata (ffmpeg stream copy), and embeds a real C2PA
+   manifest when the operator has `c2patool` + signing configured —
+   sidecar-only otherwise (reported, never silent). The report cites
+   the emitted `provenance_path` + `c2pa` surface.
 
 ### 10. Report
 

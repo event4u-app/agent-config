@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "schema": 1,
+    "model": "wan22-ti2v-5b",
+    "verified": false,
+    "fps": 24,
+    "comment": "Package-shipped Wan2.2 TI2V-5B workflow template (ADR-060 §3 — operator workflows are rejected; this is the only executable shape for the model). Graph is documented-best-effort, captured from the public ComfyUI Wan2.2 example layout — re-export from a live ComfyUI and re-pin BEFORE the first live render (the adapter ships dry-run-first). Substitution slots ({{PROMPT}}, {{NEGATIVE}}, {{SEED}}, {{WIDTH}}, {{HEIGHT}}, {{FRAMES}}, {{REF_IMAGE}}) are filled via jq --arg (JSON-safe, never string-spliced); numeric slots are charset-validated upstream. The LoadImage node (id 90) is REMOVED by the adapter when no ref image is supplied.",
+    "aspect_map": {
+      "16:9": { "width": 1280, "height": 704 },
+      "9:16": { "width": 704, "height": 1280 },
+      "1:1": { "width": 960, "height": 960 }
+    }
+  },
+  "prompt": {
+    "37": {
+      "class_type": "UNETLoader",
+      "inputs": { "unet_name": "wan2.2_ti2v_5B_fp16.safetensors", "weight_dtype": "default" }
+    },
+    "38": {
+      "class_type": "CLIPLoader",
+      "inputs": { "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors", "type": "wan", "device": "default" }
+    },
+    "39": {
+      "class_type": "VAELoader",
+      "inputs": { "vae_name": "wan2.2_vae.safetensors" }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": { "text": "{{PROMPT}}", "clip": ["38", 0] }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": { "text": "{{NEGATIVE}}", "clip": ["38", 0] }
+    },
+    "90": {
+      "class_type": "LoadImage",
+      "inputs": { "image": "{{REF_IMAGE}}" }
+    },
+    "55": {
+      "class_type": "Wan22ImageToVideoLatent",
+      "inputs": {
+        "width": "{{WIDTH}}",
+        "height": "{{HEIGHT}}",
+        "length": "{{FRAMES}}",
+        "batch_size": 1,
+        "vae": ["39", 0],
+        "start_image": ["90", 0]
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": "{{SEED}}",
+        "steps": 20,
+        "cfg": 5,
+        "sampler_name": "uni_pc",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": ["37", 0],
+        "positive": ["6", 0],
+        "negative": ["7", 0],
+        "latent_image": ["55", 0]
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": { "samples": ["3", 0], "vae": ["39", 0] }
+    },
+    "57": {
+      "class_type": "CreateVideo",
+      "inputs": { "fps": 24, "images": ["8", 0] }
+    },
+    "58": {
+      "class_type": "SaveVideo",
+      "inputs": { "filename_prefix": "video/aiv", "format": "mp4", "codec": "h264", "video": ["57", 0] }
+    }
+  }
+}

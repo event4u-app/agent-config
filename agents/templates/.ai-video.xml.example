@@ -144,6 +144,32 @@
     </tuning>
   </provider>
 
+  <!--
+    Local ComfyUI (ADR-060 — container-primary sandbox). No api-key:
+    the adapter talks to YOUR ComfyUI. A loopback endpoint is assumed
+    to be the shipped container posture (read-only image, cap-drop ALL,
+    network-none at generation time — run line in the adapter header).
+    A NON-loopback endpoint is the remote escape hatch: isolation is
+    the operator's responsibility and the block must carry
+    <unsandboxed>accepted</unsandboxed> or the adapter refuses (exit 6).
+    Models: wan22-ti2v-5b (default, Apache-2.0) | ltx-2 (audio-sync).
+    Shipped workflow templates only — operator workflow JSONs are
+    rejected by design. macOS: no CUDA — container path is
+    reference-only; use the remote escape hatch.
+  -->
+  <provider id="comfyui" kind="video">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <endpoint>http://127.0.0.1:8188</endpoint>
+    <default-model>wan22-ti2v-5b</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <max-duration>5</max-duration>
+      <audio-native>false</audio-native>
+    </tuning>
+  </provider>
+
   <!-- ============================================================ -->
   <!-- Audio adapters (music-video orchestration)                   -->
   <!-- Contract: scripts/ai-video/lib/audio-adapter-contract.md     -->
@@ -169,6 +195,20 @@
   <!-- Lip-sync post-process (v2 contract, kind="lipsync")          -->
   <!-- Sparse budget: lib/model-capabilities/syncso.json            -->
   <!-- ============================================================ -->
+
+  <!--
+    Local (MIT) lip-sync — offline alternative to syncso. Wraps an
+    OPERATOR-installed MuseTalk (github.com/TMElyralab/MuseTalk); the
+    wrapped entry point is configurable via the MUSETALK_CMD env var.
+    No api-key. Same sparse lipsync_budget discipline as syncso
+    (lib/model-capabilities/musetalk.json) — local renders are free but
+    the quality argument for sparseness is unchanged.
+  -->
+  <provider id="musetalk" kind="lipsync">
+    <lifecycle>experimental</lifecycle>
+    <enabled>true</enabled>
+    <dry-run>true</dry-run>
+  </provider>
 
   <provider id="syncso" kind="lipsync">
     <lifecycle>experimental</lifecycle>

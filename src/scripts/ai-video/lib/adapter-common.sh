@@ -24,6 +24,11 @@ AIV_LIB_DIR="${_aiv_lib_dir}"
 AIV_FIXTURE_ROOT="${_aiv_lib_dir}/fixtures"
 export AIV_LIB_DIR AIV_FIXTURE_ROOT
 
+# Per-adapter run telemetry (success / cost / latency — local-only
+# JSONL, best-effort, AIV_TELEMETRY=false kill-switch).
+# shellcheck source=/dev/null
+. "${_aiv_lib_dir}/telemetry.sh"
+
 # aiv_die <exit-code> <message> — write redacted message to stderr.
 aiv_die() {
   local code="${1:-1}"; shift || true
@@ -158,11 +163,37 @@ aiv_fetch_url() {
   printf '%s\n' "${dest}"
 }
 
+# _aiv_dispatch_timed <adapter> <sub> "$@" — run aiv_cmd_<sub> in a
+# subshell, record success/latency/cost telemetry (best-effort), then
+# propagate stdout, stderr, and the exit code unchanged. The subshell
+# is what lets a failing subcommand (aiv_die exits) still produce a
+# telemetry record without altering the adapter's observable contract.
+# `capability` and `dry-run` are NOT timed — offline, byte-exact
+# fixture output stays untouched.
+_aiv_dispatch_timed() {
+  local adapter="${1}" sub="${2}"; shift 2
+  local fn="aiv_cmd_${sub//-/_}"
+  declare -F "${fn}" >/dev/null || aiv_die 5 "${adapter}: ${sub} not implemented"
+  local start_ms end_ms rc=0 out cost=""
+  start_ms="$(aiv_now_ms)"
+  out="$( ( "${fn}" "$@" ) )" || rc=$?
+  end_ms="$(aiv_now_ms)"
+  if [ "${rc}" -eq 0 ] && [ -n "${out}" ] && command -v jq >/dev/null 2>&1; then
+    cost="$(printf '%s' "${out}" | jq -r '.cost_estimate // empty' 2>/dev/null || true)"
+  fi
+  aiv_telemetry_record "${adapter}" "${sub}" \
+    "$([ "${rc}" -eq 0 ] && printf 'ok' || printf 'exit_%d' "${rc}")" \
+    "$(( end_ms - start_ms ))" "${cost}" || true
+  [ -n "${out}" ] && printf '%s\n' "${out}"
+  return "${rc}"
+}
+
 # aiv_dispatch <adapter-id> <capability> "$@" — generic subcommand router.
 # Adapters override individual subcommands by defining bash functions
 # named `aiv_cmd_submit` / `aiv_cmd_poll` / `aiv_cmd_fetch` / `aiv_cmd_run`
 # BEFORE calling aiv_dispatch. Anything not overridden falls through to
-# a stub that exits non-zero with a clear message.
+# a stub that exits non-zero with a clear message. Network-bound
+# subcommands route through _aiv_dispatch_timed for run telemetry.
 aiv_dispatch() {
   local adapter="${1:-}"; shift || true
   local cap="${1:-none}"; shift || true
@@ -174,25 +205,8 @@ aiv_dispatch() {
     dry-run)
       aiv_emit_dry_run "${adapter}"
       ;;
-    submit)
-      declare -F aiv_cmd_submit >/dev/null \
-        && aiv_cmd_submit "$@" \
-        || aiv_die 5 "${adapter}: submit not implemented"
-      ;;
-    poll)
-      declare -F aiv_cmd_poll >/dev/null \
-        && aiv_cmd_poll "$@" \
-        || aiv_die 5 "${adapter}: poll not implemented"
-      ;;
-    fetch)
-      declare -F aiv_cmd_fetch >/dev/null \
-        && aiv_cmd_fetch "$@" \
-        || aiv_die 5 "${adapter}: fetch not implemented"
-      ;;
-    run)
-      declare -F aiv_cmd_run >/dev/null \
-        && aiv_cmd_run "$@" \
-        || aiv_die 5 "${adapter}: run not implemented"
+    submit|poll|fetch|run)
+      _aiv_dispatch_timed "${adapter}" "${sub}" "$@"
       ;;
     "")
       aiv_die 2 "${adapter}: subcommand required (capability|dry-run|submit|poll|fetch|run)"
