@@ -5,7 +5,7 @@ pack: ai-video
 tier: 2
 cluster: video
 sub: from-script
-description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview mode default (no spend); --mode commit renders live behind the cost gate.
+description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:

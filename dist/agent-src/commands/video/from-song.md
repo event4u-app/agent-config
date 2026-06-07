@@ -5,7 +5,7 @@ pack: ai-video
 tier: 2
 cluster: video
 sub: from-song
-description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit + one batch gate for live calls.
+description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
 personas: [hollywood-director, ai-video-technical-director]
 skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer]
 suggestion:
