@@ -104,6 +104,16 @@
   domain: engineering
   size_class: medium
 
+- id: frontend-design
+  label: Frontend Design
+  description: Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge.
+  workspaces: [engineering]
+  requires: [engineering-base]
+  suggests: [react, nextjs]
+  trust_level_default: professional
+  domain: engineering
+  size_class: medium
+
 - id: python
   label: Python
   description: Python-language patterns.
