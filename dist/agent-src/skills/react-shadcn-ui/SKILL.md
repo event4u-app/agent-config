@@ -12,9 +12,31 @@ trust:
 install:
   default: false
   removable: true
+execution:
+  type: assisted
+  handler: shell
+  safety_mode: strict
+  allowed_tools:
+    - npx
 ---
 
 # react-shadcn-ui
+
+> **Grounded stack guidance:** pull idiomatic Do/Don't + docs URLs via
+> `ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
+> --stack shadcn "<topic>"` (also `--stack react`, `--stack nextjs`). See
+> [`design-intelligence`](../design-intelligence/SKILL.md).
+
+## Component installer — `scripts/shadcn_add.py` (gated, assisted)
+
+Bundled installer (Apache-2.0-derived, see header + `design-intelligence/ATTRIBUTION.md`)
+wraps `npx shadcn@latest add <components>` — **the only subprocess+network
+surface in the adopted suite**. Per `runtime-safety` + the `execution`
+block above:
+
+1. **Propose, never silent-run** — show exact `npx` command + component list first (`--dry-run`); user confirms before live run.
+2. **Missing tool** → per `missing-tool-handling`: `npx`/Node absent → STOP and ask (install vs manual copy) — never silently work around.
+3. **Verify after run** — `components/ui/<name>.tsx` exists, `components.json` unchanged or sanely updated, before reporting success.
 
 ## Compatibility
 

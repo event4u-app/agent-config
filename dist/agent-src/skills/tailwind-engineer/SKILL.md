@@ -51,6 +51,12 @@ radius, spacing, shadow, font-size to a configured token. If the design hands yo
 (`bg-[#3B82F6]`, `mt-[17px]`) are a smell — accept only with a
 one-line comment naming the design source.
 
+Token authoring (DTCG 3-layer, CSS-var/Tailwind generation):
+[`design-tokens`](../design-tokens/SKILL.md); its `tokens.py validate
+--dir <path>` is the **single token-discipline linter** behind this rule.
+Greenfield config: bundled `scripts/tailwind_config_gen.py`
+(Apache-2.0-derived, pure templating) scaffolds `tailwind.config.{js,ts}`.
+
 ### 2. Compose, don't inline
 
 Inline `style="..."` is allowed only for **runtime-computed values**
