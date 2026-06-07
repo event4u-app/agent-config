@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "adapter": "syncso",
+  "comment": "Lip-sync post-process capability manifest. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace — verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. The lipsync_budget block is the MACHINE-READABLE sparse-lip-sync discipline (council 2026-06-06: singing lip-sync is genuinely hard — keep it sparse): the orchestrator enforces it BEFORE any submit; tests lock its shape.",
+  "lipsync_budget": {
+    "max_segments_per_song": 4,
+    "max_segment_seconds": 15,
+    "frontal_close_up_only": true,
+    "cost_gate": true
+  },
+  "models": {
+    "lipsync-2": {
+      "label": "sync.so lipsync-2 (singing-capable lip-sync)",
+      "min_duration": 1,
+      "max_duration": 60,
+      "audio_sync": true,
+      "aspect": ["16:9", "9:16", "1:1"],
+      "cost_per_second_usd": 0.05,
+      "verified": false,
+      "input_notes": "input is [{type:video,url},{type:audio,url}] — both https-hosted; ASSUMED max clip length 60s; singing-capable per vendor docs, quality degrades off frontal close-ups"
+    }
+  }
+}

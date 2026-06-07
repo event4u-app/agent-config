@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "source": "allin1",
+  "bpm": 120.0,
+  "beats": [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0],
+  "downbeats": [0.5, 2.5, 4.5, 6.5],
+  "sections": [
+    {"start": 0.0, "end": 8.0, "label": "intro", "energy": 0.35},
+    {"start": 8.0, "end": 24.0, "label": "verse", "energy": 0.55},
+    {"start": 24.0, "end": 40.0, "label": "chorus", "energy": 0.85},
+    {"start": 40.0, "end": 48.0, "label": "outro", "energy": 0.30}
+  ]
+}

@@ -7,7 +7,7 @@ cluster: video
 sub: from-song
 description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
 personas: [hollywood-director, ai-video-technical-director]
-skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer]
+skills: [song-to-script, scene-expander, video-director, character-consistency, motion-choreographer, prompt-validator]
 suggestion:
   eligible: true
   trigger_description: "make a music video from a song, turn a track into a video, lip-sync clip from images and audio, AI music video"
@@ -43,7 +43,8 @@ absent flags fall back to the XML defaults.
 
 **Requires `pack-ai-video`.** The declared skills
 (`song-to-script`, `scene-expander`, `video-director`,
-`character-consistency`, `motion-choreographer`) ship in that pack; on a
+`character-consistency`, `motion-choreographer`, `prompt-validator`)
+ship in that pack; on a
 global-only install Step 1's `validate-deps.sh` fails fast with the
 missing-id list instead of an opaque mid-run error — install the pack
 and re-run.
@@ -94,15 +95,33 @@ with usage, never a deadlocked prompt.
 - `<images-dir>` exists and holds ≥1 `.png`/`.jpg`. Empty or missing →
   halt, list what was found.
 - `<song-file>` exists and is a readable audio container (`ffprobe`
-  returns an audio stream). Probe its length + structure now:
-  ```bash
-  scripts/ai-video/lib/probe-audio.sh <song-file>
-  ```
-  Emits `{duration, method, warning?, sections:[…]}` (deterministic, no
-  network). `duration` becomes the target length of the final cut. A
-  `method: interval` result (flat / brick-walled track) is surfaced to
-  the operator with the suggestion to pass `--scene-durations` for
-  musical cuts — never presented as beat-synced.
+  returns an audio stream). Derive its length + structure now,
+  **adapter-first with the probe as the floor** (fallback semantics per
+  [`audio-adapter-contract.md § Fallback`](../../../scripts/ai-video/lib/audio-adapter-contract.md)):
+  1. An `audio-analysis` provider is configured in `agents/.ai-video.xml`
+     **and** `scripts/ai-video/audio-adapters/<id>.sh` exists → run
+     ```bash
+     echo '{"audio_path":"<song-file>"}' | scripts/ai-video/audio-adapters/<id>.sh analyze
+     ```
+     Real `{bpm, beats, downbeats, sections:[{start,end,label}]}` drives
+     the cut; the report names the `source`. On a **transient** failure
+     (exit 75) retry once, then fall back to the probe with ONE warning
+     line. On a **config** failure (exit 3/6/7 — CLI missing, disabled,
+     bad key) **halt with the actionable message** — a configured
+     adapter never silently degrades.
+  2. No audio-analysis provider configured → run the zero-dependency
+     probe (the normal path, not a degradation):
+     ```bash
+     scripts/ai-video/lib/probe-audio.sh <song-file>
+     ```
+     Emits `{duration, method, warning?, sections:[…]}` (deterministic, no
+     network). A `method: interval` result (flat / brick-walled track) is
+     surfaced to the operator with the suggestion to pass
+     `--scene-durations` for musical cuts — never presented as beat-synced.
+
+  Either way `duration` becomes the target length of the final cut, and
+  the report states which source produced the boundaries (`allin1` |
+  probe `method`).
 - **Media-governance input gate (mandatory).** Before any render,
   consult the project-local media policies per
   [`media-governance-routing`](../../rules/media-governance-routing.md):
@@ -186,16 +205,29 @@ When the track has vocals **and** the run assigns singers / lip-sync:
 
 1. `song-to-script` emits `<project>/vocal-map.json`
    (`[{start, end, text, singer}]`) built by **transcribing the real
-   audio** (OpenAI `/v1/audio/transcriptions` or whisper). The probe gives
-   duration; the transcript gives lyric timing + structure. Never derive
-   lyric timing from the brief or a stretched story skeleton.
-2. **Each vocal line maps to its OWN singer.** Never put one character's
-   line on another character's scene. Ambiguous singer → mark `?` and ask.
-3. **Sign-off gate (mandatory).** Surface the map — `timestamp → line →
-   singer → assigned shot/character` — and **wait for explicit operator
-   approval before any render**. This precedes the Step 8 cost gate; a
-   wrong map wastes the whole batch.
-4. Pure-instrumental / style-mode runs skip 6a (no singers, no lip-sync).
+   audio** — the configured `lyrics` adapter
+   (`scripts/ai-video/audio-adapters/whisperx.sh`, word-level timing +
+   diarization labels) or OpenAI `/v1/audio/transcriptions` / whisper.
+   The probe gives duration; the transcript gives lyric timing +
+   structure. Never derive lyric timing from the brief or a stretched
+   story skeleton.
+2. **Validator gate (mechanical, before the human gate).** Run
+   ```bash
+   scripts/ai-video/lib/validate-vocal-map.sh <project>/vocal-map.json \
+     <project>/transcript.json --roster "<cast>"
+   ```
+   — it mechanically rejects re-timed lines, lyrics absent from the
+   transcript, and missing singers (exit 7 with the offending line). A
+   skeleton-derived map cannot reach the operator, let alone a render.
+3. **Each vocal line maps to its OWN singer.** Never put one character's
+   line on another character's scene. Ambiguous singer → mark `?` and ask;
+   a `?` line never gets a lip-sync scene.
+4. **Sign-off gate (mandatory).** The validated map feeds the unified
+   storyboard/cost preview gate in Step 8 — `timestamp → line → singer →
+   assigned shot/character` is part of that single preview; the operator
+   approves map + prompts + cost **once, before any render**. A wrong
+   map wastes the whole batch.
+5. Pure-instrumental / style-mode runs skip 6a (no singers, no lip-sync).
 
 ### 7. Character lock — optional, auto-detected
 
@@ -227,27 +259,69 @@ blueprint → `video-director` eight-block image prompt → operator pick →
 
 **Lip-sync sub-step (scenes with a `dialogue:` line + a singer).** A scene
 whose approved vocal-map entry assigns a singer routes to the
-audio-driven path instead of plain motion: cut that line's WAV from the
-song at the map's `[start,end]`, host it, and call the video adapter's
-`speak` capability (e.g. Higgsfield `/v1/speak/higgsfield`) with the
-**correct singer's** still + that WAV so the right character lip-syncs
-their own line. Place the clip at its real song position so the muxed
-master track stays aligned to the lips. Non-vocal / non-assigned scenes
-use the standard motion (dop) path. Never lip-sync a singer onto a line
-the vocal map attributes to someone else.
+audio-driven path instead of plain motion. Preferred path: render the
+scene normally, cut that line's WAV from the song at the map's
+`[start,end]`, host clip + WAV, and run the **lip-sync post-process
+adapter** (`scripts/ai-video/adapters/syncso.sh`, contract v2
+`kind="lipsync"`); fallback where the video provider has a native
+`speak` capability (e.g. Higgsfield `/v1/speak/higgsfield`): the
+**correct singer's** still + that WAV. Either way the right character
+lip-syncs their own line, and the clip lands at its real song position
+so the muxed master track stays aligned to the lips. Non-vocal /
+non-assigned scenes use the standard motion (dop) path. Never lip-sync
+a singer onto a line the vocal map attributes to someone else.
 
-**Single batch COST confirmation (not per-step).** `--mode preview`
-(default) keeps the whole run strictly offline (`AIV_DRYRUN=true`,
-fixture renders, modeled costs labeled as modeled — never a pricing
-API call); the resolved mode is echoed as the first line of the
-report, and a defaulted run says `mode: preview (default — no spend;
-pass --mode commit to render live)`. `--mode commit` is the spend
-path: before the *first* live call, print the whole plan in one
-prompt — image+video adapter, models, total scene count, and total
-estimated cost — and refuse to continue without an explicit operator
-confirmation (a literal yes) in this turn (mirrors
+**Sparse-lip-sync budget (enforced, not advisory).** Read
+`lipsync_budget` from
+`scripts/ai-video/lib/model-capabilities/syncso.json` and enforce it
+**before** any lip-sync submit:
+
+- more assigned lip-sync scenes than `max_segments_per_song` → halt the
+  plan with the count and the budget; the operator either drops
+  segments or raises the budget *in the manifest* (a visible diff) —
+  never an inline override;
+- a line longer than `max_segment_seconds` → halt, name the line;
+- `frontal_close_up_only: true` → a lip-sync scene whose `camera:` is
+  not a frontal close-up is rejected by `prompt-validator` (Step 4
+  physics class) — re-frame the shot or drop the lip-sync;
+- `cost_gate: true` → lip-sync segments appear as their own line items
+  in the unified preview's cost table.
+
+Everything outside the budget stays cinematic motion (DoP) — model
+lip-sync on singing degrades fast off frontal close-ups; sparseness is
+the quality strategy, not a cost hack.
+
+**Prompt-validator gate (mechanical, before anything is shown).** Once
+every scene's prompt exists, run the
+[`prompt-validator`](../../skills/prompt-validator/SKILL.md) skill over
+the **whole batch** — style / character / physics / lip-sync-ownership
+contradictions block with a specific error (scene + conflicting values).
+A blocked batch never reaches the preview below; fix the prompts and
+re-validate. Re-run it after any operator hand-edit to a scene.
+
+**ONE unified storyboard/cost preview (not per-step, not two gates).**
+The former separate vocal-map sign-off and batch cost confirmation are
+**one preview**, shown once per run:
+
+| Preview section | Content |
+|---|---|
+| Shot list | scene № · duration · section label · per-shot prompt summary (style/subject/action/camera) |
+| Vocal map | `timestamp → line → singer → assigned shot` for every lip-sync line (validated per Step 6a) |
+| Providers | image+video adapter, models, lifecycle tiers |
+| Cost | per-scene `cost_estimate` + total (modeled, from dry-run) |
+
+`--mode preview` (default) stops here: the whole run stays strictly
+offline (`AIV_DRYRUN=true`, fixture renders, modeled costs labeled as
+modeled — never a pricing API call); the resolved mode is echoed as the
+first line of the report, and a defaulted run says `mode: preview
+(default — no spend; pass --mode commit to render live)`. `--mode
+commit` is the spend path: the same single preview is the confirmation
+prompt — the operator approves shots + vocal map + cost with **one**
+explicit confirmation (a literal yes) in this turn (mirrors
 [`non-destructive-by-default`](../../rules/non-destructive-by-default.md));
-only after that confirmation does the run set `AIV_DRYRUN=false`.
+only after that confirmation does the run set `AIV_DRYRUN=false`. There
+is no second ask — approving the preview IS the vocal-map sign-off and
+the cost confirmation.
 The total comes from each scene's dry-run `cost_estimate` (adapter
 contract v2); a scene the adapter cannot price shows as `unknown` and is
 never silently counted as `0`. **`--max-spend-usd` kill-switch:** when

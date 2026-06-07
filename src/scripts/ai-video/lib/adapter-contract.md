@@ -98,6 +98,33 @@ Single-model adapters ignore it (unknown-key rule above). Rules:
   `verified: false` until a real smoke trace exists for that model —
   consumers must surface the flag, never trust the numbers silently.
 
+### Lip-sync adapters — `kind="lipsync"` stdin shape (additive, v2)
+
+A lip-sync adapter (e.g. `syncso`) is a **post-process** render job: it
+consumes a finished clip plus one audio line instead of prompt blocks.
+Its `submit` stdin is:
+
+```json
+{
+  "video_url": "https://…/scene-0007.mp4",
+  "audio_url": "https://…/line-0003.wav",
+  "model_id": "lipsync-2"
+}
+```
+
+- Both URLs MUST be https and fetchable by the provider; a local path
+  is rejected with exit 7 and the host-the-artifacts hint (the
+  orchestrator hosts the clip + the WAV cut from the song first).
+- `poll` / `fetch` follow the normal v2 triple; the fetched clip embeds
+  the driving audio (`audio_embedded: true`, capability `audio=native`)
+  — dropping its track at mux would desync the mouth.
+- **Sparse-budget discipline:** per-song limits live machine-readable
+  in `model-capabilities/<id>.json` under `lipsync_budget`
+  (`max_segments_per_song`, `max_segment_seconds`,
+  `frontal_close_up_only`, `cost_gate`). The **orchestrator** enforces
+  them before any submit — the adapter renders single segments and
+  never sees the whole song.
+
 ### `<enabled>` — provider kill-switch (additive, v2)
 
 A provider block in `agents/.ai-video.xml` MAY carry

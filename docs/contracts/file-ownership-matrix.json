@@ -1882,6 +1882,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/prompt-validator/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/quality-tools/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -8122,6 +8128,34 @@
     {
       "source": ".agent-src.uncondensed/skills/prompt-optimizer/SKILL.md",
       "target": ".agent-src.uncondensed/skills/refine-prompt/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prompt-validator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prompt-validator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/prompt-validator/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prompt-validator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/song-to-script/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/prompt-validator/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/video-director/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **525 public artefacts** shipped by
+Consumer-facing catalog of all **526 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (223)
+## Skills (224)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -171,6 +171,7 @@ are excluded.
 | skill | [`project-docs`](../dist/agent-src/skills/project-docs/SKILL.md) |  | Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs. |
 | skill | [`prompt-engineering-patterns`](../dist/agent-src/skills/prompt-engineering-patterns/SKILL.md) |  | Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt. |
 | skill | [`prompt-optimizer`](../dist/agent-src/skills/prompt-optimizer/SKILL.md) |  | Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'. |
+| skill | [`prompt-validator`](../dist/agent-src/skills/prompt-validator/SKILL.md) |  | Pre-spend contradiction gate for AI-video runs: checks every prompt in the batch, blocks on style / character / physics mismatch. Triggers 'validate the prompts', 'check the storyboard'. |
 | skill | [`quality-tools`](../dist/agent-src/skills/quality-tools/SKILL.md) |  | Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned. |
 | skill | [`react-native-setup`](../dist/agent-src/skills/react-native-setup/SKILL.md) |  | Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New Architecture — even when the user just says 'my RN build won't start'. |
 | skill | [`react-shadcn-ui`](../dist/agent-src/skills/react-shadcn-ui/SKILL.md) |  | Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack. |
