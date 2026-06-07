@@ -62,7 +62,7 @@ Rules: components never reference primitives directly; dark mode lives
 under `dark.semantic.*` overriding the same semantic names (emitted as a
 `.dark { … }` block); every value is a `{"$value": …, "$type": …}` pair
 (DTCG). Start from
-[`templates/design-tokens-starter.json`](templates/design-tokens-starter.json).
+[the bundled starter template](templates/design-tokens-starter.json).
 
 ## Toolchain (`scripts/tokens.py` — skill-relative, any cwd)
 
