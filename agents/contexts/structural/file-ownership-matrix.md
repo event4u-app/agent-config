@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **380**
-- Edges (incl. self-WRITE): **1093**
+- Files indexed: **381**
+- Edges (incl. self-WRITE): **1097**
 
 ## READ_ONLY edges
 
@@ -534,6 +534,9 @@
 | `.agent-src.uncondensed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncondensed/skills/refine-prompt/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncondensed/skills/description-assist/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncondensed/skills/refine-prompt/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/prompt-validator/SKILL.md` | `.agent-src.uncondensed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/prompt-validator/SKILL.md` | `.agent-src.uncondensed/skills/song-to-script/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/prompt-validator/SKILL.md` | `.agent-src.uncondensed/skills/video-director/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/quality-tools/SKILL.md` | `.agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/quality-tools/SKILL.md` | `.agent-src.uncondensed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
@@ -733,5 +736,5 @@
 | `context` | 35 |
 | `persona` | 31 |
 | `rule` | 79 |
-| `skill` | 235 |
+| `skill` | 236 |
 
