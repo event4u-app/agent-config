@@ -5,7 +5,7 @@ pack: ai-video
 tier: 2
 cluster: video
 sub: from-script
-description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation.
+description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview mode default (no spend); --mode commit renders live behind the cost gate.
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
@@ -20,12 +20,23 @@ packs:
 
 # /video:from-script
 
-`/video:from-script <path-to-script.md> [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
+`/video:from-script <path-to-script.md> [--mode preview|commit] [--max-spend-usd <usd>] [--image-provider <id>] [--video-provider <id>]`
 
 Drives a Markdown script through the full pipeline. Provider flags
 override the `<default-image-provider>` / `<default-video-provider>`
 from [`agents/.ai-video.xml`](../../../agents/templates/.ai-video.xml.example);
 absent flags fall back to the XML defaults.
+
+**Mode — visible intent, not a silent mock.** `--mode preview`
+(default) runs the whole pipeline **strictly offline**: adapter
+`dry-run` fixtures, no network, and a per-scene plan table with the
+summed **modeled** cost (`cost_estimate` — labeled as modeled; preview
+never calls a pricing API). `--mode commit` is the spend path: the
+Step 5 safety gate fires, and only after explicit confirmation does the
+run set `AIV_DRYRUN=false`. The resolved mode is echoed as the **first
+line of the report** — when no flag was passed, the report says
+`mode: preview (default — no spend; pass --mode commit to render
+live)` so a defaulted run can never read as a failed live run.
 
 **Block-on-ambiguity:** a missing scene heading, an unparseable
 character-lock block, or a contradictory provider flag halts the run
@@ -68,13 +79,16 @@ For each scene blueprint:
 
 1. Compose the eight-block image prompt via `video-director`
    (style · subject · environment · action · camera · lens · lighting · mood).
-2. **Safety gate (Phase 5 Step 6).** If `AIV_DRYRUN=false`, print the
-   adapter, model, scene count, and estimated cost; refuse to continue
-   without an explicit operator confirmation **in this turn**. Mirrors
+2. **Safety gate (Phase 5 Step 6).** In commit mode (`--mode commit`
+   resolves to `AIV_DRYRUN=false`), print the adapter, model, scene
+   count, and estimated cost; refuse to continue without an explicit
+   operator confirmation **in this turn**. Mirrors
    [`non-destructive-by-default`](../../rules/non-destructive-by-default.md).
-   Cost = sum of each scene's dry-run `cost_estimate` (contract v2);
-   unpriceable scene → `unknown`, never `0`. `--max-spend-usd` set + total
-   over cap → hard-block before first live call; confirmation cannot override.
+   Estimated cost sums each scene's dry-run `cost_estimate` (adapter
+   contract v2); an unpriceable scene shows `unknown` (never counted as
+   `0`). When `--max-spend-usd` is set and the summed estimate exceeds
+   it, hard-block before the first live call — confirmation does not
+   override the cap.
 3. Call the image adapter (`run` subcommand) N times where N =
    `<tuning/best-of-n>` (default 1).
 
@@ -109,15 +123,23 @@ per the stitcher contract.
 
 ### 9. Report
 
-Print: project slug, final MP4 path, scenes rendered, scenes skipped,
-estimated cost (live mode) or `dry-run` marker. No commit. No push.
+First line: the resolved **mode** (`mode: commit` or `mode: preview
+(default — no spend; pass --mode commit to render live)`). Then:
+project slug, final MP4 path, scenes rendered, scenes skipped, actual
+cost (commit) or summed modeled `cost_estimate` labeled *modeled*
+(preview). No commit. No push.
 
 ## Rules
 
 - **No commit, no push, no PR.** Pipeline produces artefacts; the
   operator chooses what to ship.
-- **Dry-run is the default.** Every live network call needs explicit
-  per-turn confirmation.
+- **Preview is the default.** `--mode commit` is the only spend path,
+  and every live network call still needs explicit per-turn
+  confirmation at the safety gate. Preview is strictly offline
+  (`AIV_DRYRUN=true`); its costs are modeled, never quotes.
+- **The mode line is mandatory.** Every report opens with the resolved
+  mode so a defaulted preview can never be mistaken for a live render
+  that produced nothing.
 - **Block on ambiguity** — never silently best-guess scene splits or
   provider mismatches.
 - **One project per invocation.** Re-running on the same project
