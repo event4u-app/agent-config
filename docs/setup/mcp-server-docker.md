@@ -95,5 +95,5 @@ The image inherits the A0 contract verbatim — see
 ## Size
 
 The runtime stage is `python:3.11-slim` + the pinned deps + the
-`.agent-src/` content. Expect ~150-200 MB; the builder stage is
+`dist/agent-src/` content. Expect ~150-200 MB; the builder stage is
 discarded.

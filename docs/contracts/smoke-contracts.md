@@ -34,7 +34,7 @@ the paths touched in the PR:
 
 | Tier | Globs that trigger | Script |
 |---|---|---|
-| kernel | `.agent-src.uncondensed/rules/**`, `.agent-src/rules/**`, `dist/router.json`, `scripts/measure_rule_budget.py` | `scripts/smoke/kernel.sh` |
+| kernel | `.agent-src.uncondensed/rules/**`, `dist/agent-src/rules/**`, `dist/router.json`, `scripts/measure_rule_budget.py` | `scripts/smoke/kernel.sh` |
 | router | `dist/router.json`, `.agent-src.uncondensed/rules/**`, `.agent-src.uncondensed/skills/**`, `docs/contracts/**`, `docs/guidelines/**` | `scripts/smoke/router.sh` |
 | schema | `.agent-src.uncondensed/skills/**`, `.agent-src.uncondensed/rules/**`, `scripts/schemas/**`, `scripts/skill_linter.py`, `scripts/validate_frontmatter.py` | `scripts/smoke/schema.sh` |
 | skills | `.agent-src.uncondensed/skills/**` | `scripts/smoke/skills.sh` |
@@ -74,7 +74,7 @@ constant in the script body and the row below.
 ```
 
 - **68 ids** — 10 kernel + 23 tier_1 + 35 tier_2; every id resolves to
-  `.agent-src/rules/<id>.md`.
+  `dist/agent-src/rules/<id>.md`.
 - **0 broken rule pointers** — hard assertion; smoke fails on any miss.
 - **36 routes_to refs** across tier_1 + tier_2; resolver honours the
   four prefixes (`skill:`, `command:`, `guideline:`, `contract:`).

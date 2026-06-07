@@ -184,7 +184,7 @@ multi-paragraph explanation, extract it into a skill and call it.
 
 * Run `python3 scripts/skill_linter.py .agent-src.uncondensed/commands/{name}.md`
   → 0 FAIL.
-* Run `bash scripts/condense.sh --sync` → regenerates `.agent-src/commands/{name}.md`.
+* Run `bash scripts/condense.sh --sync` → regenerates `dist/agent-src/commands/{name}.md`.
 * Run `python3 scripts/condense.py --generate-tools` → creates the Claude symlink at
   `.claude/skills/{name}/SKILL.md`.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
@@ -256,7 +256,7 @@ to every command you author.
 * Do NOT set `disable-model-invocation: false`
 * Do NOT auto-apply destructive actions
 * Do NOT inline skill-level detail — delegate
-* Do NOT edit `.agent-src/`, `.augment/`, or `.claude/` projections
+* Do NOT edit `dist/agent-src/`, `.augment/`, or `.claude/` projections
 * Do NOT exceed the hard size limit without a waiver
 
 ## Cloud Behavior

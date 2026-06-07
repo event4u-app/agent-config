@@ -12,13 +12,13 @@ Names the **per-tool guarantees** the projection pipeline (`scripts/condense.py 
 
 ## Source of truth
 
-Every projection starts from `.agent-src/` (condensed) which is generated from `.agent-src.uncondensed/`. The projection layer **never** writes to source; it only reads.
+Every projection starts from `dist/agent-src/` (condensed) which is generated from `.agent-src.uncondensed/`. The projection layer **never** writes to source; it only reads.
 
 ## Per-tool projection map
 
 | Tool | Rules surface | Skills surface | Commands surface | Frontmatter grammar |
 |---|---|---|---|---|
-| **Augment** (host) | `.augment/rules/*.md` (copies; symlink opt-in via `augment.rules_use_symlinks`) | `.augment/skills/<name>/SKILL.md` (symlink → `.agent-src/skills/`) | `.augment/commands/*.md` | full source frontmatter preserved |
+| **Augment** (host) | `.augment/rules/*.md` (copies; symlink opt-in via `augment.rules_use_symlinks`) | `.augment/skills/<name>/SKILL.md` (symlink → `dist/agent-src/skills/`) | `.augment/commands/*.md` | full source frontmatter preserved |
 | **Claude** (Code + Desktop) | `.claude/rules/*.md` | `.claude/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` (commands rendered as skills) | full source frontmatter preserved |
 | **Cursor** | `.cursor/rules/*.mdc` + legacy `.md` symlinks (130 files = 65 × 2) | **not projected** | `.cursor/commands/*.md` | `description`, `globs`, `alwaysApply` only — `triggers`, `routes_to`, `tier`, `type` are **dropped** |
 | **Windsurf** | `.windsurfrules` (single concatenated file) + `.windsurf/rules/*.md` (per-rule) | **not projected** | `.windsurf/workflows/*.md` | concatenated body; per-rule frontmatter only retained in `.windsurf/rules/`, not in the legacy `.windsurfrules` single-file |
@@ -84,7 +84,7 @@ to a concrete model.
 | Tool | Consumption |
 |---|---|
 | Claude | When `model.auto_switch: auto` AND the tier is `high`/`medium`/`lite`, the generator rewrites `model_tier: <tier>` to a **native `model:` key** (`high→opus`, `medium→sonnet`, `lite→haiku`) in the rendered `.claude/skills/<name>/SKILL.md` (sub-files stay symlinked; only `SKILL.md` is a rendered copy). `inherit`/absent emit nothing. `suggest` (default) / `off` emit nothing — pure symlink. |
-| Augment | Keeps the **neutral `model_tier:`** field (symlinked from `.agent-src/`); the `model-recommendation` rule names the tier as a one-question suggestion (Augment has no per-turn override). **No package-maintained per-vendor table** — the agent resolves the tier to its own model. |
+| Augment | Keeps the **neutral `model_tier:`** field (symlinked from `dist/agent-src/`); the `model-recommendation` rule names the tier as a one-question suggestion (Augment has no per-turn override). **No package-maintained per-vendor table** — the agent resolves the tier to its own model. |
 | Cursor / Windsurf / Cline / Gemini / Copilot | No skill surface — field is inert; if surfaced, the same suggestion-only contract applies. |
 
 The native Claude `model:` key exists **only** in the rendered Claude

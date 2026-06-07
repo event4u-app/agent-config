@@ -53,7 +53,7 @@ Plain-language definitions for the non-developer reader.
 - **Token** — the unit a language model bills in. Rule of thumb: one token ≈ 4 characters of German/English prose. 1,000 tokens ≈ 750 words.
 - **Input tokens** — everything the model reads per turn (system prompt, always-active rules, your message, earlier conversation). The package adds rules here — installation costs input tokens.
 - **Output tokens** — what the model writes back. Usually fewer than input. More expensive per token than input.
-- **condense** — a build step that shrinks the rule files before shipping (`.agent-src.uncondensed` → `.agent-src`). Saves input tokens on every request.
+- **condense** — a build step that shrinks the rule files before shipping (`.agent-src.uncondensed` → `dist/agent-src`). Saves input tokens on every request.
 - **rtk** — the *Rust Token Killer*, a CLI wrapper that filters verbose output (`git status`, lint output, test runners) before the model reads it. Saves input tokens on tool calls.
 - **terse / telegraph** — a style (short phrases, dropped articles) the agent uses for terser answers. Saves output tokens — when the corpus rewards it.
 - **Without package / With package** — the two arms of the A/B comparison.

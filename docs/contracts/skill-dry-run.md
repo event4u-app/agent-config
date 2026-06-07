@@ -29,7 +29,7 @@ IT IS NOT A GUARANTEE OF SIDE-EFFECT-FREENESS FOR SKILLS WITH AN `execution` BLO
 Preview reads declared intent — it does not run the skill, does not dry-run its commands, and cannot
 prove a skill is harmless. It tells you what the skill *says* it will touch, so you can decide whether
 to run it. For `execution: manual` skills (the default), it states plainly: **instructional only — no
-automatic execution** (per [`runtime-safety`](../../.agent-src/rules/runtime-safety.md): `manual` is
+automatic execution** (per [`runtime-safety`](../../dist/agent-src/rules/runtime-safety.md): `manual` is
 instructional, `assisted` must propose before executing).
 
 ## Surface
@@ -43,5 +43,5 @@ SKILL.md degrades to a **structured error**, never a crash.
 
 ## Implementation
 
-`scripts/skill_preview.py` (≤ 250 LOC). Read-only over `.agent-src/skills/<name>/SKILL.md`. No network,
+`scripts/skill_preview.py` (≤ 250 LOC). Read-only over `dist/agent-src/skills/<name>/SKILL.md`. No network,
 no execution. Coverage: `tests/test_skill_preview.py`.

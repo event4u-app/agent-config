@@ -5,13 +5,13 @@
 
 ## Purpose
 
-Package each skill from `.agent-src/skills/<name>/` as a ZIP file ready
+Package each skill from `dist/agent-src/skills/<name>/` as a ZIP file ready
 for upload to the Anthropic Skills API or Claude.ai Web (Settings →
 Customize → Skills). One ZIP per skill, sandbox-friendly.
 
 ## Inputs
 
-- `.agent-src/skills/<name>/SKILL.md` (required)
+- `dist/agent-src/skills/<name>/SKILL.md` (required)
 - Optional siblings: `references/`, `assets/`, `scripts/`, `evals/`
   (only the first three are bundled; `evals/` is local-tooling-only)
 - Tier classification from `audit_cloud_compatibility.py` (matched by
@@ -58,7 +58,7 @@ ships only the cloud-side instructions, not the full local rule.
 ## Sandbox path-swap
 
 Body text is preprocessed:
-- Literal `.agent-src.uncondensed/` and `.agent-src/` → `source/` note
+- Literal `.agent-src.uncondensed/` and `dist/agent-src/` → `source/` note
 - Literal `agents/` (path prefix only, not prose) → `(local-only)` note
 - Cloud header prepended explaining the constraint
 
@@ -95,7 +95,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import audit_cloud_compatibility as audit  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-SOURCE_SKILLS = ROOT / ".agent-src" / "skills"
+SOURCE_SKILLS = ROOT / "dist/agent-src" / "skills"
 DEFAULT_OUT = ROOT / "dist" / "cloud"
 DESC_LIMIT_WEB = 200
 DESC_LIMIT_SPEC = 1024
@@ -114,20 +114,20 @@ MARKER_LINE_RE = re.compile(
 # Body preprocessing — sandbox path-swap.
 #
 # Scope: only package-internal prefixes that are unreachable from a cloud
-# sandbox (`.agent-src.uncondensed/`, `.agent-src/`). `agents/` is left
+# sandbox (`.agent-src.uncondensed/`, `dist/agent-src/`). `agents/` is left
 # unchanged — it lives in the user's repo, the SANDBOX_NOTE header
 # already tells the agent the host has no access.
 PATH_SWAP_PATTERNS = [
     (re.compile(r"`\.agent-src\.uncondensed/"), "`<package-source>/"),
-    (re.compile(r"`\.agent-src/"), "`<package-source>/"),
+    (re.compile(r"`dist/agent-src/"), "`<package-source>/"),
     (re.compile(r"\(\.agent-src\.uncondensed/"), "(<package-source>/"),
-    (re.compile(r"\(\.agent-src/"), "(<package-source>/"),
+    (re.compile(r"\(dist/agent-src/"), "(<package-source>/"),
 ]
 
 SANDBOX_NOTE = """\
 > **Cloud sandbox.** This skill is running on Claude.ai Web or the
 > Anthropic Skills API. The host has no access to the user's repository.
-> References to `.agent-src/`, `agents/`, or local task commands are
+> References to `dist/agent-src/`, `agents/`, or local task commands are
 > descriptive: emit content for the user to save, don't try to read or
 > write those paths. Quality scripts (`task ci`, linters) run on the
 > user's machine after they apply the suggested change.

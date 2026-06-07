@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-15
 # Provider Lifecycle — AI Video / Image / Audio Adapter Tiers
 
 > **Status:** active · **Stability:** beta · **Owner:** universal-platform-refinement Phase 3
-> · **Linter:** none (declarative contract; enforced agent-in-the-loop via [`provider-lifecycle-discipline`](../../.agent-src/rules/provider-lifecycle-discipline.md))
+> · **Linter:** none (declarative contract; enforced agent-in-the-loop via [`provider-lifecycle-discipline`](../../dist/agent-src/rules/provider-lifecycle-discipline.md))
 > · **Source-of-truth template:** [`agents/templates/.ai-video.xml.example`](../../agents/templates/.ai-video.xml.example)
 
 Locks the lifecycle tagging used on every adapter under
@@ -116,7 +116,7 @@ snapshot — older snapshots live in git history, not in this file.
 
 ## See also
 
-- [`provider-lifecycle-discipline`](../../.agent-src/rules/provider-lifecycle-discipline.md) — the tier-2 routing rule that surfaces this contract when a provider is touched.
+- [`provider-lifecycle-discipline`](../../dist/agent-src/rules/provider-lifecycle-discipline.md) — the tier-2 routing rule that surfaces this contract when a provider is touched.
 - [`scripts/ai-video/lib/adapter-contract.md`](../../src/scripts/ai-video/lib/adapter-contract.md) — the four-method shell contract every adapter implements.
 - [`agents/templates/.ai-video.xml.example`](../../agents/templates/.ai-video.xml.example) — operator-facing provider configuration template (carries the tier tag inline).
 - [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — the agent-in-the-loop enforcement model this contract participates in.

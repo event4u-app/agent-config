@@ -12,7 +12,7 @@ does something else, the rule is either not loaded or being violated
 — either is reproducible and fixable.
 
 > Not installed yet? → [Installation](installation.md) ·
-> Settings reference → [`.agent-settings.yml` template](../.agent-src/templates/agent-settings.md)
+> Settings reference → [`.agent-settings.yml` template](../dist/agent-src/templates/agent-settings.md)
 
 ---
 
@@ -44,7 +44,7 @@ Roadmap "phase-1.md" hat 4 Steps. Arbeite Schritt für Schritt durch.
 - Agent confirms each step before executing.
 - Surfaces "Should I start Step 2 now?" and waits.
 
-**Anchored in:** [`.agent-src/rules/autonomous-execution.md`](../.agent-src/rules/autonomous-execution.md)
+**Anchored in:** [`dist/agent-src/rules/autonomous-execution.md`](../dist/agent-src/rules/autonomous-execution.md)
 (trivial vs. blocking decisions, opt-in detection).
 
 ---
@@ -83,9 +83,9 @@ Implementiere Feature X, teste es, und commit das Ergebnis.
 agent doesn't volunteer "soll ich pushen?"; you say "push das" or
 nothing happens.
 
-**Anchored in:** [`.agent-src/rules/commit-policy.md`](../.agent-src/rules/commit-policy.md)
+**Anchored in:** [`dist/agent-src/rules/commit-policy.md`](../dist/agent-src/rules/commit-policy.md)
 (four exceptions, never-ask iron law) ·
-[`.agent-src/rules/scope-control.md`](../.agent-src/rules/scope-control.md)
+[`dist/agent-src/rules/scope-control.md`](../dist/agent-src/rules/scope-control.md)
 (git operations permission gate).
 
 ---
@@ -118,9 +118,9 @@ Add caching to this.
 - Recommendation line is mandatory (single-source iron law: exactly
   one numbered recommendation, no inline `(recommended)` tag).
 
-**Anchored in:** [`.agent-src/rules/ask-when-uncertain.md`](../.agent-src/rules/ask-when-uncertain.md)
+**Anchored in:** [`dist/agent-src/rules/ask-when-uncertain.md`](../dist/agent-src/rules/ask-when-uncertain.md)
 (vague-request trigger table) ·
-[`.agent-src/rules/user-interaction.md`](../.agent-src/rules/user-interaction.md)
+[`dist/agent-src/rules/user-interaction.md`](../dist/agent-src/rules/user-interaction.md)
 (numbered-options + recommendation iron law).
 
 ---
@@ -153,7 +153,7 @@ Bist du fertig? Dann sag es und wir mergen.
 gate to a targeted test + smoke check + explicit list of skipped
 validations — never skips it entirely.
 
-**Anchored in:** [`.agent-src/rules/verify-before-complete.md`](../.agent-src/rules/verify-before-complete.md)
+**Anchored in:** [`dist/agent-src/rules/verify-before-complete.md`](../dist/agent-src/rules/verify-before-complete.md)
 (iron law, claim → command mapping, break-glass reduction).
 
 ---
@@ -183,9 +183,9 @@ criteria, assumptions, confidence band) before the engine plans.
 - Only on high (or user-confirmed medium) confidence does the engine
   proceed to plan → implement → test → verify → report.
 
-**Anchored in:** [`.agent-src/commands/work.md`](../.agent-src/commands/work.md)
+**Anchored in:** [`dist/agent-src/commands/work.md`](../dist/agent-src/commands/work.md)
 (Option-A loop, confidence-band gate, no auto-git) ·
-[`.agent-src/skills/refine-prompt/SKILL.md`](../.agent-src/skills/refine-prompt/SKILL.md)
+[`dist/agent-src/skills/refine-prompt/SKILL.md`](../dist/agent-src/skills/refine-prompt/SKILL.md)
 (AC + assumption reconstruction).
 
 ---
@@ -198,7 +198,7 @@ The five examples above cover the load-bearing iron laws. For the
 [`end-to-end-walkthroughs.md`](end-to-end-walkthroughs.md) — each
 walkthrough is anchored to a checked-in golden transcript.
 
-The full rule set lives in [`.agent-src/rules/`](../.agent-src/rules/)
+The full rule set lives in [`dist/agent-src/rules/`](../dist/agent-src/rules/)
 (browse the `description:` line in each file's frontmatter to see
 when it auto-triggers); the full skill catalog is in
 [`docs/skills-catalog.md`](skills-catalog.md).

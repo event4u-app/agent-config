@@ -2,7 +2,7 @@
 """
 Cross-reference checker for agent-config repositories.
 
-Scans .md files in .agent-src/ and agents/ for internal references
+Scans .md files in dist/agent-src/ and agents/ for internal references
 (file paths, skill names, rule names) and reports broken ones.
 
 Exit codes: 0 = clean, 1 = broken refs found, 3 = internal error
@@ -31,7 +31,7 @@ class BrokenRef:
     suggestion: str = ""
 
 
-SCAN_DIRS = [".agent-src", "agents"]
+SCAN_DIRS = ["dist/agent-src", "agents"]
 SKIP_DIRS = [
     "agents/roadmaps/archive",   # archived roadmaps have historical refs
     "agents/runtime/council/sessions",   # per-user audit trail (gitignored), captured provider output
@@ -186,7 +186,7 @@ def collect_artifacts(root: Path) -> dict[str, set[str]]:
         "skills": set(), "rules": set(), "commands": set(),
         "guidelines": set(), "personas": set(),
     }
-    augment = root / ".agent-src"
+    augment = root / "dist/agent-src"
     if not augment.exists():
         return arts
     for d in (augment / "skills").iterdir() if (augment / "skills").exists() else []:
@@ -259,7 +259,7 @@ def _extract_personas_frontmatter(text: str) -> list[tuple[int, str]]:
 
 def _find_suggestion(path: str, root: Path) -> str:
     name = Path(path).name
-    for d in [root / ".agent-src", root / ".agent-src.uncondensed", root / "agents"]:
+    for d in [root / "dist/agent-src", root / ".agent-src.uncondensed", root / "agents"]:
         if d.exists():
             for f in d.rglob(name):
                 return str(f.relative_to(root))
@@ -355,24 +355,24 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
                 continue
 
             resolved = False
-            # Try raw ref as-is from root (covers .agent-src/..., agents/..., etc.)
+            # Try raw ref as-is from root (covers dist/agent-src/..., agents/..., etc.)
             if (root / raw_ref).exists():
                 resolved = True
             else:
                 # Strip leading ./ and try with prefixes
                 ref = raw_ref.lstrip("./")
-                for prefix in [root, root / ".agent-src", root / ".agent-src.uncondensed"]:
+                for prefix in [root, root / "dist/agent-src", root / ".agent-src.uncondensed"]:
                     if (prefix / ref).exists():
                         resolved = True
                         break
-                # `.augment/` is a local projection of `.agent-src/` (gitignored).
+                # `.augment/` is a local projection of `dist/agent-src/` (gitignored).
                 # In CI the projection doesn't exist, so resolve `.augment/X`
-                # against the canonical source at `.agent-src/X` (and the
+                # against the canonical source at `dist/agent-src/X` (and the
                 # uncondensed authoring tree as a fallback). Note: `raw_ref`
                 # keeps the leading dot; `ref` above was stripped via lstrip.
                 if not resolved and raw_ref.startswith(".augment/"):
                     rel = raw_ref[len(".augment/") :]
-                    for prefix in [root / ".agent-src", root / ".agent-src.uncondensed"]:
+                    for prefix in [root / "dist/agent-src", root / ".agent-src.uncondensed"]:
                         if (prefix / rel).exists():
                             resolved = True
                             break

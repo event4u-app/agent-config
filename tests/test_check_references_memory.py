@@ -14,11 +14,11 @@ pytest.importorskip("yaml")
 
 
 def _setup_repo(tmp_path: Path) -> Path:
-    (tmp_path / ".agent-src/skills/demo-skill").mkdir(parents=True)
-    (tmp_path / ".agent-src/skills/demo-skill/SKILL.md").write_text("# demo", encoding="utf-8")
-    (tmp_path / ".agent-src/rules").mkdir(parents=True)
-    (tmp_path / ".agent-src/commands").mkdir(parents=True)
-    (tmp_path / ".agent-src/guidelines").mkdir(parents=True)
+    (tmp_path / "dist/agent-src/skills/demo-skill").mkdir(parents=True)
+    (tmp_path / "dist/agent-src/skills/demo-skill/SKILL.md").write_text("# demo", encoding="utf-8")
+    (tmp_path / "dist/agent-src/rules").mkdir(parents=True)
+    (tmp_path / "dist/agent-src/commands").mkdir(parents=True)
+    (tmp_path / "dist/agent-src/guidelines").mkdir(parents=True)
     (tmp_path / "agents/memory/domain-invariants").mkdir(parents=True)
     return tmp_path
 

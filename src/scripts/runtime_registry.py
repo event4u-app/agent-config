@@ -65,7 +65,7 @@ class SkillRuntime:
 def discover_skills(root: Path) -> List[Path]:
     """Find all SKILL.md files, preferring .agent-src.uncondensed/."""
     uncondensed = root / ".agent-src.uncondensed" / "skills"
-    condensed = root / ".agent-src" / "skills"
+    condensed = root / "dist/agent-src" / "skills"
     base = uncondensed if uncondensed.exists() else condensed
     if not base.exists():
         return []

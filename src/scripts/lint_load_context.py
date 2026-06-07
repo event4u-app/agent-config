@@ -3,7 +3,7 @@
 
 Validates per docs/contracts/load-context-schema.md:
   - Paths exist and are .md
-  - Allowed roots only (.agent-src*/contexts/, agents/settings/contexts/)
+  - Allowed roots only (dist/agent-src*/contexts/, agents/settings/contexts/)
   - No public→project-local leak (warn)
   - No circular refs across lazy + eager edges
   - Combined char-budget for eager edges (rule + eager targets ≤ cap)
@@ -31,7 +31,7 @@ SCAN_DIRS = [
 
 ALLOWED_PREFIXES = (
     "contexts/",                               # logical name (canonical — P1.1 / P5.3)
-    ".agent-src/contexts/",                    # projected (defensive — only seen in condensed inputs)
+    "dist/agent-src/contexts/",                    # projected (defensive — only seen in condensed inputs)
     "agents/settings/contexts/",                        # project-local
 )
 

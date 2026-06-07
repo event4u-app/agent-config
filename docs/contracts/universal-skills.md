@@ -18,21 +18,21 @@ The allowlist solves the over-siloing risk identified by the AI Council 2026-05-
 
 | Skill | Why universal |
 |---|---|
-| [`refine-prompt`](../../.agent-src/skills/refine-prompt/SKILL.md) | Every free-form request needs AC + assumption + confidence band before the engine runs. |
-| [`refine-ticket`](../../.agent-src/skills/refine-ticket/SKILL.md) | Every ticket (Jira / Linear / GH issue) needs scoped AC before plan. |
-| [`estimate-ticket`](../../.agent-src/skills/estimate-ticket/SKILL.md) | Sizing + split + risk — applies to any work item, technical or not. |
-| [`verify-completion-evidence`](../../.agent-src/skills/verify-completion-evidence/SKILL.md) | Iron-Law gate: fresh evidence before any "done" claim. Survives every mode. |
-| [`threat-modeling`](../../.agent-src/skills/threat-modeling/SKILL.md) | Pre-implementation abuse-case enumeration — same lens applies to a marketing form and a payment endpoint. |
-| [`systematic-debugging`](../../.agent-src/skills/systematic-debugging/SKILL.md) | Reproduce → isolate → hypothesize → verify — works on broken pipelines, broken docs, broken funnels. |
-| [`doc-coauthoring`](../../.agent-src/skills/doc-coauthoring/SKILL.md) | 3-stage write loop (context → section → reader-test) for any long-form doc. |
-| [`deep-reading-analyst`](../../.agent-src/skills/deep-reading-analyst/SKILL.md) | Article / long-form analysis via SCQA + mental models — used by every role that reads. |
-| [`decision-record`](../../.agent-src/skills/decision-record/SKILL.md) | Trade-off framing before any commit. ADR-shape works for tech, hiring, and pricing. |
-| [`adr-create`](../../.agent-src/skills/adr-create/SKILL.md) | Naming + numbering + index regen — the file mechanics of `decision-record`. |
-| [`risk-officer`](../../.agent-src/skills/risk-officer/SKILL.md) | Blast-radius framing + residual-risk verdict before any commit. |
-| [`adversarial-review`](../../.agent-src/skills/adversarial-review/SKILL.md) | Devil's advocate stress-test — opt-in but always available. |
-| [`customer-research`](../../.agent-src/skills/customer-research/SKILL.md) | Discovery-slice shaping (JTBD, switch-event) — used by founder, GTM, consultant, creator. |
-| [`stakeholder-tradeoff`](../../.agent-src/skills/stakeholder-tradeoff/SKILL.md) | Per-lens framing when stakeholders disagree — applies in every org. |
-| [`md-language-check`](../../.agent-src/skills/md-language-check/SKILL.md) | Hard gate: `.md` files stay English; the agent translates at runtime. |
+| [`refine-prompt`](../../dist/agent-src/skills/refine-prompt/SKILL.md) | Every free-form request needs AC + assumption + confidence band before the engine runs. |
+| [`refine-ticket`](../../dist/agent-src/skills/refine-ticket/SKILL.md) | Every ticket (Jira / Linear / GH issue) needs scoped AC before plan. |
+| [`estimate-ticket`](../../dist/agent-src/skills/estimate-ticket/SKILL.md) | Sizing + split + risk — applies to any work item, technical or not. |
+| [`verify-completion-evidence`](../../dist/agent-src/skills/verify-completion-evidence/SKILL.md) | Iron-Law gate: fresh evidence before any "done" claim. Survives every mode. |
+| [`threat-modeling`](../../dist/agent-src/skills/threat-modeling/SKILL.md) | Pre-implementation abuse-case enumeration — same lens applies to a marketing form and a payment endpoint. |
+| [`systematic-debugging`](../../dist/agent-src/skills/systematic-debugging/SKILL.md) | Reproduce → isolate → hypothesize → verify — works on broken pipelines, broken docs, broken funnels. |
+| [`doc-coauthoring`](../../dist/agent-src/skills/doc-coauthoring/SKILL.md) | 3-stage write loop (context → section → reader-test) for any long-form doc. |
+| [`deep-reading-analyst`](../../dist/agent-src/skills/deep-reading-analyst/SKILL.md) | Article / long-form analysis via SCQA + mental models — used by every role that reads. |
+| [`decision-record`](../../dist/agent-src/skills/decision-record/SKILL.md) | Trade-off framing before any commit. ADR-shape works for tech, hiring, and pricing. |
+| [`adr-create`](../../dist/agent-src/skills/adr-create/SKILL.md) | Naming + numbering + index regen — the file mechanics of `decision-record`. |
+| [`risk-officer`](../../dist/agent-src/skills/risk-officer/SKILL.md) | Blast-radius framing + residual-risk verdict before any commit. |
+| [`adversarial-review`](../../dist/agent-src/skills/adversarial-review/SKILL.md) | Devil's advocate stress-test — opt-in but always available. |
+| [`customer-research`](../../dist/agent-src/skills/customer-research/SKILL.md) | Discovery-slice shaping (JTBD, switch-event) — used by founder, GTM, consultant, creator. |
+| [`stakeholder-tradeoff`](../../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) | Per-lens framing when stakeholders disagree — applies in every org. |
+| [`md-language-check`](../../dist/agent-src/skills/md-language-check/SKILL.md) | Hard gate: `.md` files stay English; the agent translates at runtime. |
 
 ## Inclusion criteria
 

@@ -52,8 +52,8 @@ commands:
 
   - id: grep-iron-law
     description: "grep 'Iron Law' across rules"
-    raw: ["grep", "-rn", "Iron Law", ".agent-src/rules"]
-    rtk: ["rtk", "grep", "-rn", "Iron Law", ".agent-src/rules"]
+    raw: ["grep", "-rn", "Iron Law", "dist/agent-src/rules"]
+    rtk: ["rtk", "grep", "-rn", "Iron Law", "dist/agent-src/rules"]
 
   - id: wc-readme
     description: "wc README.md"

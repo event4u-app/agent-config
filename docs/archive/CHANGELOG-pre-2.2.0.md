@@ -685,7 +685,7 @@ Tests: 2471
 ### Chores
 
 * **generate-tools:** refresh .windsurfrules after roadmap-progress-sync body expansion ([3fdba11](https://github.com/event4u-app/agent-config/commit/3fdba11cd4e91425a05ef9ad82b0e7c611180668))
-* **condense:** sync .agent-src/ with hardened roadmap-progress-sync rule ([30e7d1a](https://github.com/event4u-app/agent-config/commit/30e7d1ab455da823afbe7602f01d543d3fe91c5d))
+* **condense:** sync dist/agent-src/ with hardened roadmap-progress-sync rule ([30e7d1a](https://github.com/event4u-app/agent-config/commit/30e7d1ab455da823afbe7602f01d543d3fe91c5d))
 * **roadmap:** archive markitdown-adoption + refresh progress dashboard ([5481d90](https://github.com/event4u-app/agent-config/commit/5481d9025f4c85f33e11533099cf725eeb306455))
 * add skills-provenance registry for upstream attribution ([65c2eeb](https://github.com/event4u-app/agent-config/commit/65c2eeb3d1c9d0f86957757ce22221ed0e255292))
 * **roadmap:** harden process-full to ignore horizon markers ([36d0fa6](https://github.com/event4u-app/agent-config/commit/36d0fa6c263721618999b7fa27ddb9cb336dd6c2))
@@ -1115,7 +1115,7 @@ Tests: 2471
 * **structural:** regenerate file-ownership-matrix after Phase 1 clusters ([29aabb1](https://github.com/event4u-app/agent-config/commit/29aabb11351f9fe648644b508eb6d24a5870b160))
 * **sync:** regenerate agents/index.md + docs/catalog.md after Phase 1 clusters ([f07987a](https://github.com/event4u-app/agent-config/commit/f07987ac12aaa77cbc4c7584ac00607e5a438318))
 * **sync:** regenerate condensed outputs + tool projections for Phase 1 clusters ([99466c0](https://github.com/event4u-app/agent-config/commit/99466c0a77116c7ed70db38fd957d061ad18e307))
-* **sync:** condense contexts/judges/persona-voice-rubric.md into .agent-src/ ([4060d01](https://github.com/event4u-app/agent-config/commit/4060d01af0680c2a913295166b978b605b1453db))
+* **sync:** condense contexts/judges/persona-voice-rubric.md into dist/agent-src/ ([4060d01](https://github.com/event4u-app/agent-config/commit/4060d01af0680c2a913295166b978b605b1453db))
 * **roadmap:** archive road-to-1-16-followups (100% done) + regen dashboard ([f78a9ad](https://github.com/event4u-app/agent-config/commit/f78a9ada649c01c03aa4e866e20bb32b547cd9d0))
 * **roadmap:** regenerate progress dashboard after 1.16 followups Phase 1+2 ([780db39](https://github.com/event4u-app/agent-config/commit/780db39b68230b68c51f158d8cc8b78e7937a40c))
 * **ai-council:** add multi-provider council scripts and openai sdk ([3c2360d](https://github.com/event4u-app/agent-config/commit/3c2360d137069287b7e2547a6132d36ebed09978))
@@ -1810,7 +1810,7 @@ Tests: 2471
 * add iron rule for skill independence ([b060730](https://github.com/event4u-app/agent-config/commit/b060730e98b15b6bc498ad68a111035fab72907f))
 * address Copilot PR review feedback ([11b4d20](https://github.com/event4u-app/agent-config/commit/11b4d2060084d1739bfc9e6550fc78c4a4a0bcb7))
 * address consumer-api PR [#1466](https://github.com/event4u-app/agent-config/issues/1466) bot feedback ([c5f8e18](https://github.com/event4u-app/agent-config/commit/c5f8e18a6c429e2f8f0224e1d9130233107ce65e))
-* **check-refs:** resolve .augment/X as alias for .agent-src/X ([ff3b094](https://github.com/event4u-app/agent-config/commit/ff3b09479a7fa266606467d862f8de9277ef1fc4))
+* **check-refs:** resolve .augment/X as alias for dist/agent-src/X ([ff3b094](https://github.com/event4u-app/agent-config/commit/ff3b09479a7fa266606467d862f8de9277ef1fc4))
 * **check-refs:** skip forward refs in unchecked TODO items ([1458a18](https://github.com/event4u-app/agent-config/commit/1458a181eb5bbe3189777b87bd9ad210b8cc00c5))
 * **check-refs:** validate paths inside memory YAML + exempt consumer dirs ([ec4e8aa](https://github.com/event4u-app/agent-config/commit/ec4e8aae2a0f8e7c489442441b8cfa7f9242be2f))
 * **ci:** add PR comment permissions, fix lint failure, sync condensation hashes ([dee8c47](https://github.com/event4u-app/agent-config/commit/dee8c47d080176d49c94d63d33be7ada025b0a64))
@@ -1928,16 +1928,16 @@ Tests: 2471
 ## [1.4.0] — 2026-04-18
 
 ### Added
-- **`.agent-src/` replaces `.augment/` as the canonical condensed directory
+- **`dist/agent-src/` replaces `.augment/` as the canonical condensed directory
   shipped in the package.** The new name is tool-agnostic. The installer on
   the consumer side still writes into `.augment/`, unchanged.
-- `.augment/` is now a **local projection** of `.agent-src/` for Augment Code
+- `.augment/` is now a **local projection** of `dist/agent-src/` for Augment Code
   (gitignored in this repo, rebuilt by `task sync`). Rules are copied (Augment
   Code cannot load symlinked rules); everything else is symlinked to save
   space.
 - `scripts/install.sh` and `scripts/install.py` now read from vendor's
-  `.agent-src/` with automatic fallback to `.augment/` for pre-2.0 packages.
-- `task project-augment` — rebuild the `.augment/` projection from `.agent-src/`.
+  `dist/agent-src/` with automatic fallback to `.augment/` for pre-2.0 packages.
+- `task project-augment` — rebuild the `.augment/` projection from `dist/agent-src/`.
 - MIT License file in the repository root (previously `license: proprietary` in
   `composer.json` with no `LICENSE` file).
 - Root-level package docs (`AGENTS.md`, `.github/copilot-instructions.md`) are

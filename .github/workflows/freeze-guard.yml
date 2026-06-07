@@ -26,9 +26,9 @@ on:
     branches: [main, master]
     paths:
       - ".agent-src.uncondensed/templates/scripts/work_engine/**"
-      - ".agent-src/templates/scripts/work_engine/**"
+      - "dist/agent-src/templates/scripts/work_engine/**"
       - ".agent-src.uncondensed/templates/scripts/implement_ticket/**"
-      - ".agent-src/templates/scripts/implement_ticket/**"
+      - "dist/agent-src/templates/scripts/implement_ticket/**"
       - "src/scripts/agent-config"
       - "tests/golden/**"
       - ".github/workflows/freeze-guard.yml"
@@ -36,9 +36,9 @@ on:
     branches: [main, master]
     paths:
       - ".agent-src.uncondensed/templates/scripts/work_engine/**"
-      - ".agent-src/templates/scripts/work_engine/**"
+      - "dist/agent-src/templates/scripts/work_engine/**"
       - ".agent-src.uncondensed/templates/scripts/implement_ticket/**"
-      - ".agent-src/templates/scripts/implement_ticket/**"
+      - "dist/agent-src/templates/scripts/implement_ticket/**"
       - "src/scripts/agent-config"
       - "tests/golden/**"
       - ".github/workflows/freeze-guard.yml"

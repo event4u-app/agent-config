@@ -5,7 +5,7 @@ Re-runs `task sync` + `task build-discovery` (caller invokes them
 ahead of this script), then loads the fresh outputs and compares them
 against `dist/migration/pre-move-snapshot.json`. The contract:
 
-- `.agent-src/` tree hashes must match exactly
+- `dist/agent-src/` tree hashes must match exactly
 - `.augment/` tree hashes must match exactly
 - `dist/discovery/discovery-manifest.json` with `artefacts[].path`
   stripped + `generated_at` dropped must match exactly
@@ -155,7 +155,7 @@ def main() -> int:
     _normalise_loaded_snapshot(before)
 
     issues: list[str] = []
-    for key in (".agent-src", ".augment"):
+    for key in ("dist/agent-src", ".augment"):
         issues.extend(_diff_tree(key, before["trees"].get(key, {}), after["trees"].get(key, {})))
     issues.extend(_diff_manifest(before.get("manifest_path_stripped"), after.get("manifest_path_stripped")))
 
@@ -169,7 +169,7 @@ def main() -> int:
     else:
         if ok:
             print("verify_physical_move: byte-identity OK")
-            print(f"  .agent-src/ files: {len(after['trees'].get('.agent-src', {}))}")
+            print(f"  dist/agent-src/ files: {len(after['trees'].get('dist/agent-src', {}))}")
             print(f"  .augment/   files: {len(after['trees'].get('.augment', {}))}")
             print(f"  manifest: path-stripped content matches")
         else:

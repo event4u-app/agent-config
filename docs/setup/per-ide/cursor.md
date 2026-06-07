@@ -25,7 +25,7 @@ npx @event4u/agent-config init --tools=cursor
 This populates:
 
 - `.cursor/rules/*.mdc`     — one file per rule, modern frontmatter format
-- `.cursor/commands/*.md`   — slash commands mirrored from `.agent-src/commands/`
+- `.cursor/commands/*.md`   — slash commands mirrored from `dist/agent-src/commands/`
 - `.cursorrules`            — legacy single-file aggregate
 - `.agent-settings.yml`     — per-project knobs
 

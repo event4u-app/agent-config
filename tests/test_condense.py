@@ -511,7 +511,7 @@ class TestGenerateRuleSymlinks(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        rules_dir = self.project_root / ".agent-src" / "rules"
+        rules_dir = self.project_root / "dist/agent-src" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "ask-when-uncertain.md").write_text("# Ask When Uncertain")
         (rules_dir / "scope-control.md").write_text("# Scope Control")
@@ -545,7 +545,7 @@ class TestGenerateWindsurfrules(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        rules_dir = self.project_root / ".agent-src" / "rules"
+        rules_dir = self.project_root / "dist/agent-src" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "rule-a.md").write_text('---\ntype: "always"\n---\n\n# Rule A\n\nContent A.')
         (rules_dir / "rule-b.md").write_text('---\ntype: "auto"\n---\n\n# Rule B\n\nContent B.')
@@ -579,7 +579,7 @@ class TestGenerateClaudeSkills(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        skills_dir = self.project_root / ".agent-src" / "skills"
+        skills_dir = self.project_root / "dist/agent-src" / "skills"
         (skills_dir / "api-design").mkdir(parents=True)
         (skills_dir / "api-design" / "SKILL.md").write_text("---\nname: api-design\n---\n# API")
         (skills_dir / "database").mkdir(parents=True)
@@ -629,10 +629,10 @@ class TestGenerateClaudeCommands(unittest.TestCase):
             condense.SKILLS_SOURCE,
         )
         condense.PROJECT_ROOT = self.project_root
-        condense.COMMANDS_SOURCE = self.project_root / ".agent-src" / "commands"
+        condense.COMMANDS_SOURCE = self.project_root / "dist/agent-src" / "commands"
         condense.CLAUDE_SKILLS_DIR = self.project_root / ".claude" / "skills"
         # Point SKILLS_SOURCE to empty dir so no real skills interfere
-        condense.SKILLS_SOURCE = self.project_root / ".agent-src" / "skills"
+        condense.SKILLS_SOURCE = self.project_root / "dist/agent-src" / "skills"
 
     def tearDown(self):
         (condense.PROJECT_ROOT,
@@ -668,10 +668,10 @@ class TestGenerateClaudeCommands(unittest.TestCase):
     def test_command_skips_same_name_skill(self):
         """Commands with same name as a skill should be skipped."""
         # Create a skill with same name as 'commit' command
-        skills_dir = self.project_root / ".agent-src" / "skills" / "commit"
+        skills_dir = self.project_root / "dist/agent-src" / "skills" / "commit"
         skills_dir.mkdir(parents=True)
         (skills_dir / "SKILL.md").write_text("# commit skill")
-        condense.SKILLS_SOURCE = self.project_root / ".agent-src" / "skills"
+        condense.SKILLS_SOURCE = self.project_root / "dist/agent-src" / "skills"
 
         condense.generate_claude_commands()
         # Only feature-dev should exist, not commit (skill takes priority)
@@ -686,17 +686,17 @@ class TestProjectToAugmentRulesMode(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        # Lay out a minimal .agent-src/ with rules + a symlinked subdir.
-        (self.project_root / ".agent-src" / "rules").mkdir(parents=True)
-        (self.project_root / ".agent-src" / "rules" / "alpha.md").write_text("rule alpha")
-        (self.project_root / ".agent-src" / "rules" / "beta.md").write_text("rule beta")
-        (self.project_root / ".agent-src" / "skills").mkdir()
-        (self.project_root / ".agent-src" / "README.md").write_text("readme")
+        # Lay out a minimal dist/agent-src/ with rules + a symlinked subdir.
+        (self.project_root / "dist/agent-src" / "rules").mkdir(parents=True)
+        (self.project_root / "dist/agent-src" / "rules" / "alpha.md").write_text("rule alpha")
+        (self.project_root / "dist/agent-src" / "rules" / "beta.md").write_text("rule beta")
+        (self.project_root / "dist/agent-src" / "skills").mkdir(parents=True)
+        (self.project_root / "dist/agent-src" / "README.md").write_text("readme")
 
         self._orig_target = condense.TARGET_DIR
         self._orig_augment = condense.AUGMENT_DIR
         self._orig_settings = condense.SETTINGS_FILE
-        condense.TARGET_DIR = self.project_root / ".agent-src"
+        condense.TARGET_DIR = self.project_root / "dist/agent-src"
         condense.AUGMENT_DIR = self.project_root / ".augment"
         condense.SETTINGS_FILE = self.project_root / ".agent-settings.yml"
 
@@ -730,13 +730,13 @@ class TestProjectToAugmentRulesMode(unittest.TestCase):
         self.assertFalse(alpha.is_symlink())
 
     def test_true_symlinks_rules(self):
-        """augment.rules_use_symlinks: true → rules are symlinks → .agent-src/rules/."""
+        """augment.rules_use_symlinks: true → rules are symlinks → dist/agent-src/rules/."""
         self._write_setting("true")
         condense.project_to_augment()
         alpha = self.project_root / ".augment" / "rules" / "alpha.md"
         self.assertTrue(alpha.is_symlink())
-        # Symlink resolves to the .agent-src/ source
-        self.assertEqual(alpha.resolve(), (self.project_root / ".agent-src" / "rules" / "alpha.md").resolve())
+        # Symlink resolves to the dist/agent-src/ source
+        self.assertEqual(alpha.resolve(), (self.project_root / "dist/agent-src" / "rules" / "alpha.md").resolve())
 
     def test_toggle_replaces_existing_files(self):
         """Switching modes must rewrite the entries (no copy↔symlink mismatch)."""

@@ -104,7 +104,7 @@ turn.
   file.
 - Buffer is the only mutable artefact (truncate via option 3).
 - Mirror the user's language for prompts per
-  [`language-and-tone`](../../../../.agent-src/rules/language-and-tone.md).
+  [`language-and-tone`](../../../../dist/agent-src/rules/language-and-tone.md).
 
 ## See also
 

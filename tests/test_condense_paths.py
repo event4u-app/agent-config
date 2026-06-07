@@ -151,7 +151,7 @@ class TestRewritePathsDepthAndIdempotence(unittest.TestCase):
 
 
 class TestApplyPathRewriterWiring(unittest.TestCase):
-    """In-place rewrite hooked into `mark_done` (writes to .agent-src/)."""
+    """In-place rewrite hooked into `mark_done` (writes to dist/agent-src/)."""
 
     def setUp(self):
         import tempfile

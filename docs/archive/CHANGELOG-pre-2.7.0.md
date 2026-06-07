@@ -48,7 +48,7 @@ Tests: 3530 (+9 since 2.4.1)
 ### Bug Fixes
 
 * **install:** write lockfile to canonical event4u namespace ([ca57607](https://github.com/event4u-app/agent-config/commit/ca5760785f150903bcad74e278b59e534f83634d))
-* **install:** source global deploy from .agent-src/ subdirectories ([f151caf](https://github.com/event4u-app/agent-config/commit/f151caf854d9ce8519bc244d441a7c8bf73e7fde))
+* **install:** source global deploy from dist/agent-src/ subdirectories ([f151caf](https://github.com/event4u-app/agent-config/commit/f151caf854d9ce8519bc244d441a7c8bf73e7fde))
 
 Tests: 3521 (+0 since 2.4.0)
 

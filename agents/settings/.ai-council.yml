@@ -254,7 +254,7 @@ members:
 #
 # Persona files live under .agent-src.uncondensed/personas/advisors/
 # and ship with the package; the orchestrator loads them from
-# .agent-src/personas/advisors/<key>.md (condensed projection) at call
+# dist/agent-src/personas/advisors/<key>.md (condensed projection) at call
 # time. See personas/advisors/ + docs/contracts/ai-council-config.md.
 advisors:
   contrarian:

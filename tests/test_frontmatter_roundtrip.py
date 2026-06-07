@@ -29,7 +29,7 @@ _DEFAULTED_KEYS = ("lifecycle", "trust", "install")
 # Phase-1 keys with no default — must stay byte-present in both layers.
 _REQUIRED_KEYS = ("workspaces", "packs")
 
-DST = REPO_ROOT / ".agent-src"
+DST = REPO_ROOT / "dist/agent-src"
 
 PHASE_1_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
 

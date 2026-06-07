@@ -26,11 +26,11 @@ ROOT = Path(".")
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 PACKAGE_JSON = ROOT / "package.json"
 # Committed marketplace skill sources (git-consumed): real skills resolve to
-# .agent-src/skills/<name>; command-as-skill entries to the committed
+# dist/agent-src/skills/<name>; command-as-skill entries to the committed
 # .claude-plugin/skills/<slug> projection. .claude/skills/ is a gitignored
 # local channel and is intentionally NOT a marketplace source.
 SKILL_SOURCE_DIRS = (
-    ROOT / ".agent-src" / "skills",
+    ROOT / "dist/agent-src" / "skills",
     ROOT / ".claude-plugin" / "skills",
 )
 
@@ -132,7 +132,7 @@ def main() -> int:
                 errors.append(f"{entry} has no SKILL.md: `{path}`")
 
     # Reverse-completeness: every SKILL.md on disk under the committed skill
-    # sources (.agent-src/skills/ + .claude-plugin/skills/) must appear in some
+    # sources (dist/agent-src/skills/ + .claude-plugin/skills/) must appear in some
     # plugin's skills[]. Catches the drift where new skills/commands are
     # generated but never added to the marketplace manifest.
     listed: set[str] = set()

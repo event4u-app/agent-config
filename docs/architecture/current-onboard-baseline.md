@@ -12,7 +12,7 @@
 
 `/onboard` lives at [`.agent-src.uncondensed/commands/onboard.md`](../../.agent-src.uncondensed/commands/onboard.md)
 (canonical source) and is triggered by the
-[`onboarding-gate`](../../.agent-src/rules/onboarding-gate.md) rule on
+[`onboarding-gate`](../../dist/agent-src/rules/onboarding-gate.md) rule on
 the first turn when `onboarding.onboarded == false` in
 `.agent-settings.yml`. Cloud surfaces (Claude.ai Web, Skills API): fully
 inert — no settings file, no flow.
@@ -79,7 +79,7 @@ User-global file (step 9, opt-in): the six whitelisted keys in
 
 ## Iron Laws today
 
-- **One question per turn** ([`ask-when-uncertain`](../../.agent-src/rules/ask-when-uncertain.md)).
+- **One question per turn** ([`ask-when-uncertain`](../../dist/agent-src/rules/ask-when-uncertain.md)).
 - **Re-runnable** — invoking `/onboard` when `onboarded: true` walks the
   flow again, never silently rewrites a value (asks before overwriting
   `user_name` / `ide`).
@@ -120,7 +120,7 @@ The wizard MUST:
 ## See also
 
 - [`/onboard` command](../../.agent-src.uncondensed/commands/onboard.md) — canonical source.
-- [`onboarding-gate`](../../.agent-src/rules/onboarding-gate.md) — trigger rule.
+- [`onboarding-gate`](../../dist/agent-src/rules/onboarding-gate.md) — trigger rule.
 - [`ADR-010`](../decisions/ADR-010-profile-pack-preset-boundary.md) — boundary the wizard must respect.
 - [`config-presets.md`](../contracts/config-presets.md) — preset axis the wizard writes.
 - [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md) — Phase 1 item 2.

@@ -40,7 +40,7 @@ Skills, rules, commands, guidelines, personas, and context docs run in
 **consumer projects**, which may not have Task installed. **Never**
 reference a `task <something>` invocation inside any artefact file
 under `.agent-src.uncondensed/{skills,rules,commands,guidelines,personas,contexts}/`
-(and therefore also not in the condensed mirror under `.agent-src/`).
+(and therefore also not in the condensed mirror under `dist/agent-src/`).
 Use direct script invocations instead.
 
 ## Consumer CLI — `./agent-config`

@@ -151,7 +151,7 @@ def test_run_regenerates_from_package_root_for_global_only_consumer(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Regression (road-to-self-update Phase 5): an ADR-020 global-only
-    consumer has NO project-local .augment/ or .agent-src/ tree — the
+    consumer has NO project-local .augment/ or dist/agent-src/ tree — the
     regenerator ships only in the globally-installed package. The hook
     must resolve it from the package root (passed by the dispatcher via
     AGENT_CONFIG_PACKAGE_ROOT) and still regenerate the dashboard.
@@ -164,9 +164,9 @@ def test_run_regenerates_from_package_root_for_global_only_consumer(
     consumer = tmp_path / "consumer"
     (consumer / "agents" / "roadmaps").mkdir(parents=True)
 
-    # Globally-installed package ships the regenerator under .agent-src/.
+    # Globally-installed package ships the regenerator under dist/agent-src/.
     pkg = tmp_path / "global-pkg"
-    pkg_scripts = pkg / ".agent-src" / "scripts"
+    pkg_scripts = pkg / "dist/agent-src" / "scripts"
     pkg_scripts.mkdir(parents=True)
     marker = tmp_path / "pkg-regen.marker"
     (pkg_scripts / "update_roadmap_progress.py").write_text(

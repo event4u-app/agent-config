@@ -47,7 +47,7 @@ HARD_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 FS_RE = re.compile(
-    r"(?:\.agent-src(?:\.uncondensed)?/|"
+    r"(?:dist/agent-src(?:\.uncondensed)?/|"
     r"\.augment/|\.claude/|\.cursor/|\.clinerules/|"
     r"agents/|\.agent-settings\.yml|\.agent-chat-history)"
 )

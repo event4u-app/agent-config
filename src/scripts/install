@@ -262,7 +262,7 @@ if ! validate_tools "$TOOLS"; then
 fi
 
 # Auto-detect source: this orchestrator lives at src/scripts/install, so the
-# package root (where .agent-src/ lives) is two levels up (../.. ).
+# package root (where dist/agent-src/ lives) is two levels up (../.. ).
 if [[ -z "$SOURCE_DIR" ]]; then
     SOURCE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 fi
@@ -298,7 +298,7 @@ if ! $GLOBAL && [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
         err "Refusing to install agent-config into its own source checkout."
         echo "      Target:   $TARGET_DIR" >&2
         echo "      Detected: $self_marker" >&2
-        echo "      Run \`task sync\` to regenerate .agent-src/ + .augment/ from" >&2
+        echo "      Run \`task sync\` to regenerate dist/agent-src/ + .augment/ from" >&2
         echo "      .agent-src.uncondensed/ instead. To force this anyway, set" >&2
         echo "      AGENT_CONFIG_ALLOW_SELF_INSTALL=1." >&2
         exit 2

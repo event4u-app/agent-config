@@ -76,7 +76,7 @@ NEGATIVE_FIXTURES = [
     "templates/AGENTS.md",
     "src/scripts/condense.py",
     "tests/test_validate_safe_paths.py",
-    ".agent-src/rules/commit-policy.md",
+    "dist/agent-src/rules/commit-policy.md",
     "agents/roadmaps/step-16-telegraph-substance.md",
     "Taskfile.yml",
 ]

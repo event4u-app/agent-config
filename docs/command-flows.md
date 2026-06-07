@@ -141,7 +141,7 @@ _The system/admin surface (NOT a flow): memory · analytics · governance · con
 - `chat-history:learn` — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-sk…
 - `chat-history:show` — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and t…
 - `check-current-md`
-- `condense` — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/
+- `condense` — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to dist/agent-src/
 - `context` — Context orchestrator — routes to create, refactor
 - `context:create` — Analyze a codebase area and create a structured context document
 - `context:refactor` — Analyze, update, and extend an existing context document

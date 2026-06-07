@@ -30,9 +30,9 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / ".agent-src.uncondensed"
-COMP_ROOT = REPO_ROOT / ".agent-src"
+COMP_ROOT = REPO_ROOT / "dist/agent-src"
 SRC_PREFIX = ".agent-src.uncondensed/"
-COMP_PREFIX = ".agent-src/"
+COMP_PREFIX = "dist/agent-src/"
 
 # Q2 cap — mirrors `scripts/check_always_budget.py::MAX_CONTEXTS_PER_RULE`.
 # Phase 1.3 of `road-to-context-layer-maturity`.
@@ -204,12 +204,12 @@ def _src_to_comp(entry: str) -> Path:
     Four input shapes are tolerated:
 
     1. Logical name (canonical, post-P5.3): ``contexts/<area>/<file>.md``
-       → ``.agent-src/contexts/<area>/<file>.md``. The condense rewriter
+       → ``dist/agent-src/contexts/<area>/<file>.md``. The condense rewriter
        resolves logical names to deployment-correct paths; the test
        walks the condensed twin to mirror the agent's runtime view.
     2. Rewritten relative path emitted by ``condense.py::_rewrite_paths``
        in condensed rules: ``../contexts/<area>/<file>.md`` (relative
-       to ``.agent-src/rules/``) → ``.agent-src/contexts/<area>/<file>.md``.
+       to ``dist/agent-src/rules/``) → ``dist/agent-src/contexts/<area>/<file>.md``.
     3. Legacy fully-qualified ``.agent-src.uncondensed/...`` (rejected
        by the schema; kept as a defensive branch so a stray entry
        fails loudly via the size assertion, not via a KeyError here).
@@ -288,7 +288,7 @@ def _walk_transitive_contexts(rule: Path) -> set[Path]:
 
     Mirrors `scripts/check_always_budget.py::_walk_contexts`. Resolves
     ``.agent-src.uncondensed/`` entries to their condensed twin under
-    ``.agent-src/`` so size accounting matches the linter's condensed-
+    ``dist/agent-src/`` so size accounting matches the linter's condensed-
     artifact view (the surface the agent actually loads at runtime).
     """
     seen: set[Path] = set()

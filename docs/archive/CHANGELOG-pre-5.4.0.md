@@ -39,7 +39,7 @@
 
 ### Chores
 
-* **frontmatter:** drop defaulted fields from the condensed .agent-src tree ([58e2c2a](https://github.com/event4u-app/agent-config/commit/58e2c2a6fc7cf7011e6c9b00801c9f8ff1412684))
+* **frontmatter:** drop defaulted fields from the condensed dist/agent-src tree ([58e2c2a](https://github.com/event4u-app/agent-config/commit/58e2c2a6fc7cf7011e6c9b00801c9f8ff1412684))
 * **roadmaps:** archive road-to-distribution-identity — CI green on PR #290 ([2ffeb62](https://github.com/event4u-app/agent-config/commit/2ffeb6239697228541334c7e234554f77c6935aa))
 * **roadmaps:** flip Phase 0 checkboxes + regen dashboard ([070e33e](https://github.com/event4u-app/agent-config/commit/070e33e4fd704ec0257f4c5cf6a72052c97796d3))
 

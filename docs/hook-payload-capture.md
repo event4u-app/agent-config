@@ -166,7 +166,7 @@ If the captured shape diverges from the docs-verified extractor
 branch, that is the trigger for a code patch — open a tiny new roadmap
 under `agents/roadmaps/` for the divergence work, do **not** edit the
 archived roadmap to track new code work
-(see [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md)).
+(see [`no-roadmap-references`](../dist/agent-src/rules/no-roadmap-references.md)).
 
 ## Final verify
 
@@ -188,7 +188,7 @@ python3 -m pytest tests/hooks/ -q
 ```
 
 Per
-[`commit-policy`](../.agent-src/rules/commit-policy.md):
+[`commit-policy`](../dist/agent-src/rules/commit-policy.md):
 do **not** commit unless explicitly told to. The user owns the commit
 step.
 

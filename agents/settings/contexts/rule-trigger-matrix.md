@@ -11,7 +11,7 @@ table; size and context-chain columns are derived from the rule files.
 | Column | Meaning |
 |---|---|
 | `type` | Frontmatter `type` (`always` / `auto`) |
-| `raw` | Condensed rule size in chars (`.agent-src/rules/<name>`) |
+| `raw` | Condensed rule size in chars (`dist/agent-src/rules/<name>`) |
 | `ext` | Extended size under Model (b): raw + transitive `load_context` |
 | `trigger` | Observable event that should activate the rule |
 | `obs` | Where the trigger is observable: `hook` (platform hook), `settings` (`.agent-settings.yml` state), `agent-only` (in-head), `mechanical-already` (precedent — already enforced by a script) |
@@ -40,8 +40,8 @@ table; size and context-chain columns are derived from the rule files.
 | `artifact-drafting-protocol.md` | auto | 3255 | 3255 | skill/rule create or major rewrite | hook | output | medium | 2a | no | Marker on file-create in .agent-src.uncondensed/{skills,rules,commands}/ |
 | `artifact-engagement-recording.md` | auto | 3870 | 6965 | phase-step / task end | mechanical-already | hook | NA-mechanical | mechanical-already | no | telemetry:record subprocess is already mechanical |
 | `ask-when-uncertain.md` | always | 3893 | 3893 | pre-send vague-detection | agent-only | output | NA-soft | 3 | no | One-question-per-turn — output-rewrite would be needed |
-| `augment-portability.md` | auto | 3256 | 7589 | file save on .agent-src/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_portability.py |
-| `augment-source-of-truth.md` | auto | 2789 | 6852 | file save on .agent-src/ or .augment/ | hook | tool-call | low | 1 | no | Pre-write hook: refuse writes to generated dirs |
+| `augment-portability.md` | auto | 3256 | 7589 | file save on dist/agent-src/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_portability.py |
+| `augment-source-of-truth.md` | auto | 2789 | 6852 | file save on dist/agent-src/ or .augment/ | hook | tool-call | low | 1 | no | Pre-write hook: refuse writes to generated dirs |
 | `autonomous-execution.md` | auto | 6175 | 14628 | workflow decision (trivial vs blocking) | agent-only | output | NA-soft | 3 | no | Disposition rule; trivial classification is judgment |
 | `capture-learnings.md` | auto | 3030 | 3030 | task completion | hook | output | medium | 2a | no | Post-task marker; learning detection is fuzzy |
 

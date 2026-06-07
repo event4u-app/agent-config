@@ -57,7 +57,7 @@ Examples + CLI spacing rules + wrong-vs-correct: [`language-and-tone-examples`](
 
 ## `.md` files — ALWAYS English
 
-All `.md` text under `src/`, `docs/`, `.augment/`, `.agent-src/`, `.agent-src.uncondensed/`, `agents/` — prose AND examples, **including generated output** (fix the generator's source strings, never hand-edit the generated page). Agent translates at runtime.
+All `.md` text under `src/`, `docs/`, `.augment/`, `dist/agent-src/`, `.agent-src.uncondensed/`, `agents/` — prose AND examples, **including generated output** (fix the generator's source strings, never hand-edit the generated page). Agent translates at runtime.
 
 Genuinely-required German uses a sanctioned escape only: a labeled `DE: … · EN: …` anchor (German *prose*), or a per-line `<!-- md-language-check: ignore -->` marker (one quoted trigger example / verbatim provenance quote — never scattered through a generated file).
 

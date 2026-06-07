@@ -30,7 +30,7 @@ prompts:
     language: en
     prompt: "In this rule, add a link to the active-thing roadmap as the source citation."
     expected_skills: [rule-writing]
-    intended_triggers: [no-roadmap-references]  # augment-source-of-truth removed: guards .agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
+    intended_triggers: [no-roadmap-references]  # augment-source-of-truth removed: guards dist/agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
     open_files: [.agent-src.uncondensed/rules/some-rule.md, agents/roadmaps/active-thing.md]
 
   - id: roadmap-ops-04

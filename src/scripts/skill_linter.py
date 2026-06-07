@@ -2073,7 +2073,7 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     """Gather all lintable files across every source root (ADR-017 multi-root).
 
     Walks ``artefact_roots()`` (legacy ``.agent-src.uncondensed/`` plus every
-    ``packages/*/.agent-src.uncondensed/``). Falls back to ``.agent-src/``
+    ``packages/*/.agent-src.uncondensed/``). Falls back to ``dist/agent-src/``
     only when no source root exists. Skips symlinks to avoid double-counting.
     Deduplicates on logical relpath \u2014 first root wins per the agent_src
     contract.
@@ -2117,9 +2117,9 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
             if charter.exists() and not charter.is_symlink():
                 _add(charter, src_root)
     else:
-        # Pure-condensed fallback (.agent-src/ only). Used by consumer
+        # Pure-condensed fallback (dist/agent-src/ only). Used by consumer
         # projects that vendor the condensed tree without sources.
-        augment_root = root / ".agent-src"
+        augment_root = root / "dist/agent-src"
         if augment_root.exists():
             for sub_pattern in (
                 ("skills", "SKILL.md"),
@@ -2221,7 +2221,7 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             path = root / raw
             if not path.exists():
                 continue
-            # Skip symlinks to avoid double-counting (e.g. .claude/skills/ → .agent-src/commands/)
+            # Skip symlinks to avoid double-counting (e.g. .claude/skills/ → dist/agent-src/commands/)
             if path.is_symlink():
                 continue
             norm = raw.replace("\\", "/")
@@ -2233,9 +2233,9 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             # packages/*/.agent-src.uncondensed/ paths.
             in_source = (
                 norm.startswith(".agent-src.uncondensed/")
-                or norm.startswith(".agent-src/")
+                or norm.startswith("dist/agent-src/")
                 or "/.agent-src.uncondensed/" in norm
-                or "/.agent-src/" in norm
+                or "/dist/agent-src/" in norm
             )
             if not in_source:
                 continue
@@ -2735,7 +2735,7 @@ def _skill_id_from_path(path: Path) -> Optional[str]:
 
 def _is_frugality_charter(path: Path) -> bool:
     """True iff the path ends in the canonical charter relpath, regardless
-    of whether it lives under .agent-src/ or .agent-src.uncondensed/."""
+    of whether it lives under dist/agent-src/ or .agent-src.uncondensed/."""
     norm = str(path).replace("\\", "/")
     return norm.endswith("/" + FRUGALITY_CHARTER_RELPATH)
 
@@ -2867,7 +2867,7 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     path_relative = path_str
 
     # Determine if this is a condensed or uncondensed artifact
-    is_condensed = "/.agent-src/" in path_str and "/.agent-src.uncondensed/" not in path_str
+    is_condensed = "/dist/agent-src/" in path_str and "/.agent-src.uncondensed/" not in path_str
     is_uncondensed = "/.agent-src.uncondensed/" in path_str
 
     if not is_condensed and not is_uncondensed:
@@ -2875,12 +2875,12 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
 
     # --- Check: condensed/uncondensed pair exists ---
     # ADR-017: sources live under packages/*/.agent-src.uncondensed/ but
-    # all packs project into the single repo-root .agent-src/ tree. The
+    # all packs project into the single repo-root dist/agent-src/ tree. The
     # pair-check now resolves via logical relpath, not a path-swap.
     from _lib.agent_src import strip_source_prefix as _strip
     norm = path_str.replace("\\", "/")
     if is_uncondensed:
-        # Compute logical path then map to .agent-src/ at repo root.
+        # Compute logical path then map to dist/agent-src/ at repo root.
         # Try direct strip first; fall back to substring split for absolute paths.
         logical = _strip(norm)
         if logical is None:
@@ -2888,15 +2888,15 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
             idx = norm.rfind(marker)
             logical = norm[idx + len(marker):] if idx != -1 else None
         if logical:
-            condensed_path = repo_root / ".agent-src" / logical
+            condensed_path = repo_root / "dist/agent-src" / logical
             if not condensed_path.exists():
                 issues.append(Issue("warning", "condensed_variant_missing",
                                     f"Uncondensed file exists but condensed variant missing: "
                                     f"{condensed_path.name}"))
     elif is_condensed:
-        # Condensed lives at repo-root .agent-src/<logical>. Source could
+        # Condensed lives at repo-root dist/agent-src/<logical>. Source could
         # be at any source root \u2014 resolve via artefact_roots.
-        marker = "/.agent-src/"
+        marker = "/dist/agent-src/"
         idx = norm.rfind(marker)
         logical = norm[idx + len(marker):] if idx != -1 else None
         if logical:
@@ -3313,7 +3313,7 @@ def check_condensation_pairs(root: Path) -> list[LintResult]:
 
     for subdir, pattern, is_nested in pairs:
         # ADR-017: union across every source root.
-        condensed_dir = root / ".agent-src" / subdir
+        condensed_dir = root / "dist/agent-src" / subdir
         uncondensed_names: set[str] = set()
         any_source = False
         for src_root in artefact_roots():
@@ -3340,18 +3340,18 @@ def check_condensation_pairs(root: Path) -> list[LintResult]:
 
         # Missing condensed
         for name in sorted(uncondensed_names - condensed_names):
-            path_str = f".agent-src/{subdir}/{name}/{pattern}" if is_nested else f".agent-src/{subdir}/{name}"
+            path_str = f"dist/agent-src/{subdir}/{name}/{pattern}" if is_nested else f"dist/agent-src/{subdir}/{name}"
             results.append(LintResult(
                 file=path_str,
                 artifact_type=subdir.rstrip("s"),
                 status="fail",
                 issues=[Issue("error", "missing_condensed", f"Uncondensed exists but condensed version is missing")],
-                suggestions=[f"Run /condense to generate .agent-src/{subdir}/{name}"],
+                suggestions=[f"Run /condense to generate dist/agent-src/{subdir}/{name}"],
             ))
 
         # Orphaned condensed (no source)
         for name in sorted(condensed_names - uncondensed_names):
-            path_str = f".agent-src/{subdir}/{name}/{pattern}" if is_nested else f".agent-src/{subdir}/{name}"
+            path_str = f"dist/agent-src/{subdir}/{name}/{pattern}" if is_nested else f"dist/agent-src/{subdir}/{name}"
             results.append(LintResult(
                 file=path_str,
                 artifact_type=subdir.rstrip("s"),
@@ -3366,7 +3366,7 @@ def check_condensation_pairs(root: Path) -> list[LintResult]:
 def check_condensation_quality(root: Path) -> list[LintResult]:
     """Check that condensed skills preserve key content from their uncondensed source."""
     results: list[LintResult] = []
-    condensed_dir = root / ".agent-src" / "skills"
+    condensed_dir = root / "dist/agent-src" / "skills"
     if not condensed_dir.exists():
         return results
 
@@ -3429,7 +3429,7 @@ def check_condensation_quality(root: Path) -> list[LintResult]:
                                 f"({dst_donot} vs {src_donot} in source)"))
 
         if issues:
-            rel_path = f".agent-src/skills/{skill_dir.name}/SKILL.md"
+            rel_path = f"dist/agent-src/skills/{skill_dir.name}/SKILL.md"
             results.append(LintResult(
                 file=rel_path,
                 artifact_type="skill",
@@ -3596,7 +3596,7 @@ def format_report(results: list[LintResult]) -> str:
         lines.append("| Skill | Structure | Validation | Scope | Dependency | Lines |")
         lines.append("|---|---|---|---|---|---|")
         for r in sorted(skill_results, key=lambda x: x.file):
-            short = r.file.replace(".agent-src.uncondensed/skills/", "").replace(".agent-src/skills/", "").replace("/SKILL.md", "")
+            short = r.file.replace(".agent-src.uncondensed/skills/", "").replace("dist/agent-src/skills/", "").replace("/SKILL.md", "")
             codes = {i.code for i in r.issues}
 
             # Structure: fail if missing required sections

@@ -147,7 +147,7 @@ for the contract and the transitional allowlist.
   or relocated to `contexts/` between releases as long as the global
   and per-rule caps still hold.
 - The condensed-vs-uncondensed delta. The CI gate runs against the
-  shipped `.agent-src/` (condensed) directory; the uncondensed
+  shipped `dist/agent-src/` (condensed) directory; the uncondensed
   source size is informational only.
 
 ## See also

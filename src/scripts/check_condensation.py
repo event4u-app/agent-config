@@ -2,7 +2,7 @@
 """
 Condensation quality checker for agent-config packages.
 
-Compares .agent-src.uncondensed/ source files with their .agent-src/ condensed versions.
+Compares .agent-src.uncondensed/ source files with their dist/agent-src/ condensed versions.
 Checks that condensation preserved structural integrity:
 - All headings from source present in condensed
 - All code blocks preserved exactly
@@ -36,7 +36,7 @@ from condense import _rewrite_paths  # noqa: E402
 Severity = Literal["error", "warning", "info"]
 
 SOURCE_DIR = Path(".agent-src.uncondensed")
-TARGET_DIR = Path(".agent-src")
+TARGET_DIR = Path("dist/agent-src")
 
 
 @dataclass

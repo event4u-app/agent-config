@@ -15,7 +15,7 @@ concrete-model `recommended_model` from ADR-034). Behaviour per artefact:
 
 A small explicit `_LITE` set demotes obviously-trivial mechanical skills to the
 cheapest band; `_CONTEXT_LARGE` adds the orthogonal `context: large` modifier to
-genuinely long-context skills. Writes BOTH the source and its `.agent-src` copy
+genuinely long-context skills. Writes BOTH the source and its `dist/agent-src` copy
 (frontmatter stays byte-identical); refresh condensation hashes afterwards.
 
 CLI: python3 scripts/backfill_model_tier.py [--dry-run]
@@ -33,7 +33,7 @@ from validate_frontmatter import parse_frontmatter  # noqa: E402
 from _lib.agent_src import artefact_roots, iter_commands, strip_source_prefix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-CONDENSED = ROOT / ".agent-src"
+CONDENSED = ROOT / "dist/agent-src"
 
 # ADR-034 → ADR-035 value map.
 _MIGRATE = {"opus": "high", "sonnet": "medium", "gpt": "high", "inherit": "inherit"}

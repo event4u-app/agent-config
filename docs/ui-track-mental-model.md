@@ -72,7 +72,7 @@ A misclassified `ui-trivial` that grows during edit must reclassify
 A non-empty `state.ui_audit` carrying **at least one of**:
 
 - `components_found` — `[{path, name, kind, similarity?}]` from
-  [`existing-ui-audit`](../.agent-src/skills/existing-ui-audit/SKILL.md).
+  [`existing-ui-audit`](../dist/agent-src/skills/existing-ui-audit/SKILL.md).
 - `greenfield: true` plus `greenfield_decision ∈ {scaffold, bare, external_reference}`.
 - Legacy `components` alias — same shape.
 
@@ -118,4 +118,4 @@ stack ships as a new skill bundle and a recipe — see
 - [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) — *why* this shape.
 - [`ui-track-flow.md`](contracts/ui-track-flow.md) — slot-by-slot contract.
 - [`ui-stack-extension.md`](contracts/ui-stack-extension.md) — adding a stack.
-- [`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) — the always-on rule that mirrors the dispatcher gate.
+- [`ui-audit-gate`](../dist/agent-src/rules/ui-audit-gate.md) — the always-on rule that mirrors the dispatcher gate.

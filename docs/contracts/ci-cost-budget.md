@@ -32,7 +32,7 @@ recent 50 main-branch runs.
 | `consistency.yml` | (single) | ubuntu | 27 s | always-on (PR / push) |
 | `smoke.yml` | smoke-contracts | ubuntu | 18 s | `scripts/schemas/**` |
 | `migration-dry-run.yml` | (single) | ubuntu | 20 s | migration-touching paths |
-| `skill-lint.yml` | (single) | ubuntu | 64 s | `.agent-src*/**`, schemas |
+| `skill-lint.yml` | (single) | ubuntu | 64 s | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
 
 **Critical path observations:**

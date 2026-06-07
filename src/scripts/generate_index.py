@@ -162,15 +162,15 @@ def _collect_guidelines() -> list[Entry]:
 
 
 # Path rewriter for the public catalog: link to the shipped surface
-# (`.agent-src/`) instead of the source-of-truth (`.agent-src.uncondensed/`),
+# (`dist/agent-src/`) instead of the source-of-truth (`.agent-src.uncondensed/`),
 # which is excluded from `package.json#files` and `composer.json` archives.
 # Post-ADR-017 the source-of-truth lives at packages/*/.agent-src.uncondensed/,
-# so we strip whichever prefix matches and pin to the flat .agent-src/ output.
+# so we strip whichever prefix matches and pin to the flat dist/agent-src/ output.
 def _to_shipped_path(path: str) -> str:
     from _lib.agent_src import strip_source_prefix
     logical = strip_source_prefix(path)
     if logical is not None:
-        return f".agent-src/{logical}"
+        return f"dist/agent-src/{logical}"
     return path
 
 

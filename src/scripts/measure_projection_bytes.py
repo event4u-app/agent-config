@@ -35,7 +35,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 # root. `kind` is "dir" (walk recursively) or "file" (single file size).
 SURFACES: list[tuple[str, str, str]] = [
     (".agent-src.uncondensed", "dir", "verbose source (input)"),
-    (".agent-src", "dir", "source projection (path-rewrite + .npmignore)"),
+    ("dist/agent-src", "dir", "source projection (path-rewrite + .npmignore)"),
     (".augment", "dir", "Augment Code — copies (rules) + symlinks (skills/cmds)"),
     (".claude", "dir", "Claude Code — pure symlinks"),
     (".cursor", "dir", "Cursor — per-rule `.mdc` materialized + symlinks"),

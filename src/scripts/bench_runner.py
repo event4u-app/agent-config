@@ -2,7 +2,7 @@
 """Bench runner for the eval corpora — step-4 measurement-and-benchmark Phase 1.
 
 Deterministic, no-API skill-selection baseline. For each prompt in a
-corpus YAML, ranks the skills in the projected catalog `.agent-src/skills/`
+corpus YAML, ranks the skills in the projected catalog `dist/agent-src/skills/`
 by keyword overlap between the prompt text and each skill's
 `description` frontmatter field. Reports selection accuracy as
 `top-K contains >= 1 expected_skill`.
@@ -33,7 +33,7 @@ except ImportError:
     sys.exit(2)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SKILLS_DIR = REPO_ROOT / ".agent-src" / "skills"
+SKILLS_DIR = REPO_ROOT / "dist/agent-src" / "skills"
 CORPUS_DIR = REPO_ROOT / "tests" / "eval"
 
 STOPWORDS = frozenset({

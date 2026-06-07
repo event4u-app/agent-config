@@ -32,7 +32,7 @@ Footer reads:
 > Strategic call belongs to a human. The agent surfaces trade-offs; the
 > founder makes the call.
 
-That footer is non-negotiable — see [`strategy-safety-floor`](../../.agent-src/rules/strategy-safety-floor.md).
+That footer is non-negotiable — see [`strategy-safety-floor`](../../dist/agent-src/rules/strategy-safety-floor.md).
 
 ## Screenshot
 

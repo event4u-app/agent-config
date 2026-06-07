@@ -31,7 +31,7 @@
         "cinematic-ai-video"
     ],
     "files": [
-        ".agent-src/",
+        "dist/agent-src/",
         ".augment-plugin/",
         ".claude-plugin/",
         "src/config/",

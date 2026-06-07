@@ -107,7 +107,7 @@ turn a session unrecoverably hostile mid-task.
   shell commands, MCP-static-resource fetches). The per-call ceiling
   targets paid token spend.
 - It does **not** override the Hard Floor in
-  [`non-destructive-by-default`](../../.agent-src/rules/non-destructive-by-default.md)
+  [`non-destructive-by-default`](../../dist/agent-src/rules/non-destructive-by-default.md)
   — a preset cannot lift the universal safety floor.
 
 ## Resolution chain

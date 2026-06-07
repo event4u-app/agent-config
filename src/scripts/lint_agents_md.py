@@ -91,9 +91,9 @@ def _resolve(target_str: str, template: bool) -> bool:
     candidates = [ROOT / raw]
     if template and raw.startswith(".augment/"):
         candidates.append(ROOT / raw.replace(".augment/", ".agent-src.uncondensed/", 1))
-        candidates.append(ROOT / raw.replace(".augment/", ".agent-src/", 1))
-    if raw.startswith(".agent-src/"):
-        candidates.append(ROOT / raw.replace(".agent-src/", ".agent-src.uncondensed/", 1))
+        candidates.append(ROOT / raw.replace(".augment/", "dist/agent-src/", 1))
+    if raw.startswith("dist/agent-src/"):
+        candidates.append(ROOT / raw.replace("dist/agent-src/", ".agent-src.uncondensed/", 1))
     return any(c.exists() for c in candidates)
 
 

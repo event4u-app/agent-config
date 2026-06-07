@@ -62,7 +62,7 @@ No env-var override. Bypass is durable and auditable.
 Refuse to compose the turn-start preamble in the kernel-rule loader.
 
 **Why rejected:** the kernel-rule loader is a static-projection step
-(`scripts/sync.py` writes `.agent-src/rules/` from
+(`scripts/sync.py` writes `dist/agent-src/rules/` from
 `.agent-src.uncondensed/`). There is no live loader at turn-start to
 hook — Claude / Augment / etc. read the projected files directly. A
 "refusal" would have to be baked into the file content, which mixes

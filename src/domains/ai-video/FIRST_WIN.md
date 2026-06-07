@@ -47,7 +47,7 @@ Likeness / public-figure rules per project media-governance policy apply.
 ```
 
 That disclosure footer is non-negotiable — see
-[`media-governance-routing`](../../.agent-src/rules/media-governance-routing.md).
+[`media-governance-routing`](../../dist/agent-src/rules/media-governance-routing.md).
 
 ## Screenshot
 

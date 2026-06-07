@@ -37,7 +37,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`chat-history:import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 - **`chat-history:learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
 - **`chat-history:show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
-- **`condense`** — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/
+- **`condense`** — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to dist/agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context:create`** — Analyze a codebase area and create a structured context document
 - **`context:refactor`** — Analyze, update, and extend an existing context document
@@ -166,7 +166,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`artifact-engagement-recording`** — After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call
 - **`ask-when-uncertain`** — Ask when uncertain — don't guess, assume, or improvise
 - **`augment-edit-discipline`** — Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
-- **`augment-source-of-truth`** — Editing files in .agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly
+- **`augment-source-of-truth`** — Editing files in dist/agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly
 - **`autonomous-execution`** — Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default
 - **`cli-output-handling`** — Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
@@ -248,7 +248,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`markitdown`** — Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
 - **`mcp`** — Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 - **`mcp-builder`** — Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
-- **`md-language-check`** — Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
+- **`md-language-check`** — Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
 - **`memory-consolidation`** — Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'.
 - **`module-detect-on-the-fly`** — Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config.
 - **`module-management`** — Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.

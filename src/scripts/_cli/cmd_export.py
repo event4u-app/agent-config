@@ -27,7 +27,7 @@ from scripts.install import (
 )
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[3]
-TEMPLATES_DIR = PACKAGE_ROOT / ".agent-src" / "templates"
+TEMPLATES_DIR = PACKAGE_ROOT / "dist/agent-src" / "templates"
 
 
 def _from_template(rel: str) -> Callable[[], str]:

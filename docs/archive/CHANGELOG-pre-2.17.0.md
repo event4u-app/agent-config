@@ -56,7 +56,7 @@
 ### Chores
 
 * **template:** bump agent_config_version pin to 2.15.0 ([093367d](https://github.com/event4u-app/agent-config/commit/093367d3e417a11a28295f2efa574e8c3fef6524))
-* **sync:** propagate Step 8 agent_settings.py to .agent-src/ projection ([7ce92e5](https://github.com/event4u-app/agent-config/commit/7ce92e514a8edbd970a4118b91d2f651bf730070))
+* **sync:** propagate Step 8 agent_settings.py to dist/agent-src/ projection ([7ce92e5](https://github.com/event4u-app/agent-config/commit/7ce92e514a8edbd970a4118b91d2f651bf730070))
 * **roadmap:** archive Step 8 discovery polish ([1c21982](https://github.com/event4u-app/agent-config/commit/1c219825dc413cfe45aefc3b12c08d2720583880))
 * **changelog:** split era 2.11.x → pre-2.15.0 ([c79363c](https://github.com/event4u-app/agent-config/commit/c79363c05d775ecfa95ab6fff5b3bbe706f797c9))
 

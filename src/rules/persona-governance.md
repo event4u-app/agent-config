@@ -4,7 +4,7 @@ tier: "2a"
 description: "Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path"
 triggers:
   - path_prefix: ".agent-src.uncondensed/personas/"
-  - path_prefix: ".agent-src/personas/"
+  - path_prefix: "dist/agent-src/personas/"
   - keyword: "persona"
   - keyword: "personas"
   - phrase: "new persona"
@@ -59,7 +59,7 @@ A **content domain** is a self-contained creative or technical surface that one 
 
 **Core personas** (`developer`, `senior-engineer`, `product-owner`, `stakeholder`, `critical-challenger`, `ai-agent`) are exempt — they are always-loaded cross-cutting lenses, not domain specialists.
 
-A new specialist into a full domain MUST come with a deprecation candidate from the same domain. The agent surfaces both, then runs an ai-council debate (per [`ai-council`](../../.agent-src/skills/ai-council/SKILL.md)) before any rename / merge / delete.
+A new specialist into a full domain MUST come with a deprecation candidate from the same domain. The agent surfaces both, then runs an ai-council debate (per [`ai-council`](../skills/ai-council/SKILL.md)) before any rename / merge / delete.
 
 ### 2. Skill citation floor — ≥ 1 cite before merge
 
@@ -89,5 +89,5 @@ Resolved 2026-05-17 via two-round ai-council debate (members: anthropic/claude-s
 
 - [`docs/contracts/persona-schema.md`](../../docs/contracts/persona-schema.md) — schema lock, tiers, sections, size budgets, linter enforcement surface.
 - [`docs/personas.md`](../../docs/personas.md) — active persona catalog, citation map, ownership column.
-- [`ai-council`](../../.agent-src/skills/ai-council/SKILL.md) — neutral second-opinion mechanism used for merge / deprecation decisions.
+- [`ai-council`](../skills/ai-council/SKILL.md) — neutral second-opinion mechanism used for merge / deprecation decisions.
 - [`skill-quality`](skill-quality.md) — sibling discipline rule for skill files.

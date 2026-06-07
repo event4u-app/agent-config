@@ -139,7 +139,7 @@ def main() -> int:
     print(f"created: {out.relative_to(ROOT)}")
     print("next steps:")
     print("  1. flesh out the body")
-    print("  2. run `task sync` to project into .agent-src/ and .augment/")
+    print("  2. run `task sync` to project into dist/agent-src/ and .augment/")
     print("  3. run `task lint-skills` for validation")
     return 0
 

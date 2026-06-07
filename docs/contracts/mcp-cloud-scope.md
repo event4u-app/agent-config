@@ -38,8 +38,8 @@ prose-only.
 ### `mcp_scope: lite` — hosted, read-only knowledge surfaces
 
 - **What it serves:** the governance content as MCP `prompts` and
-  `resources` — skills (`.agent-src/skills/<name>/SKILL.md`), commands
-  (`.agent-src/commands/**/*.md`), rules (`.agent-src/rules/*.md`),
+  `resources` — skills (`dist/agent-src/skills/<name>/SKILL.md`), commands
+  (`dist/agent-src/commands/**/*.md`), rules (`dist/agent-src/rules/*.md`),
   guidelines (`docs/guidelines/`), and the docs index. Plus a small
   set of **read-only tools** (`memory_lookup`, `chat_history_read`,
   `list_*`, `read_resource_body`) that touch the content blob only.
@@ -64,7 +64,7 @@ prose-only.
   `prompts/get`, `resources/list`, `resources/read` **plus**
   execution-side tools (`lint_skills`, `chat_history_append`, and
   the MVP-2 deferred tool set). Reads from the live worktree
-  (`.agent-src/` projection), not a release-pinned blob.
+  (`dist/agent-src/` projection), not a release-pinned blob.
 - **What it requires:** a local install per Quickstart (`npx
   @event4u/agent-config init` or `task mcp:setup`) — Python runtime,
   the package's ~112 scripts on disk, and a consumer-side
@@ -118,8 +118,8 @@ prose-only.
   + `resources/read` — read-only, parity with the local stdio surface.
 - **Source data:** release-pinned content blob in R2 under the key
   shape `releases/v<X.Y.Z>-<sha>/` (immutable per release). The blob
-  bundles `.agent-src/skills/<name>/SKILL.md`,
-  `.agent-src/commands/**/*.md`, and `docs/guidelines/` (the same
+  bundles `dist/agent-src/skills/<name>/SKILL.md`,
+  `dist/agent-src/commands/**/*.md`, and `docs/guidelines/` (the same
   projection the local kernel reads). Never reads `.agent-src.uncondensed/`.
 - **Identity surface:** `serverInfo.version` reads from a Worker-
   bundled constant, `_meta.packageVersion` reads from a
@@ -202,7 +202,7 @@ runtime mode switch.
   surface) is gated.
 - **Token handling:** the secret is prompted for interactively by
   `wrangler` — never accepted via argv per
-  [`tool-safety`](../../.agent-src/rules/tool-safety.md). The
+  [`tool-safety`](../../dist/agent-src/rules/tool-safety.md). The
   Worker never logs the secret, never echoes it in error bodies,
   and never includes it in telemetry sinks.
 - **README allowed to recommend:** mode `bearer-auth` for private

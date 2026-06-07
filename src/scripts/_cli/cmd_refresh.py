@@ -65,7 +65,7 @@ def _is_source_repo(project_root: Path) -> bool:
     ``package.json`` name) makes ``refresh --project`` a no-op in any
     agent-config checkout. Consumers use dev-mode, not refresh.
     """
-    if (project_root / ".agent-src").is_dir():
+    if (project_root / "dist/agent-src").is_dir():
         return True
     if any((project_root / "packages").glob("*/.agent-src.uncondensed")):
         return True

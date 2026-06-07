@@ -26,7 +26,7 @@ description-budget cap (~200 chars) silently truncating triggers.
 3. Tally per surface: `triggered / total = trigger-rate`.
 4. Compute `cloud-rate − local-rate` per skill.
 5. Where the gap is **≥ 30 percentage points**, file a follow-up
-   ticket pointing the [`description-assist`](../../.agent-src/skills/description-assist/SKILL.md)
+   ticket pointing the [`description-assist`](../../dist/agent-src/skills/description-assist/SKILL.md)
    skill at the underperforming description.
 
 **Procedure per Linear scenario (Step 4):** same shape, but the
@@ -53,7 +53,7 @@ variant.
 
 **Why:** highest-frequency framework-named trigger; easy case that
 sets the upper bound for cloud trigger rates.
-**Anchor:** [`.agent-src/skills/pest-testing/SKILL.md`](../../.agent-src/skills/pest-testing/SKILL.md)
+**Anchor:** [`dist/agent-src/skills/pest-testing/SKILL.md`](../../dist/agent-src/skills/pest-testing/SKILL.md)
 
 | # | Lang | Difficulty | Prompt | Expected |
 |---|---|---|---|---|
@@ -71,7 +71,7 @@ sets the upper bound for cloud trigger rates.
 **Why:** narrow concept trigger ("authorization", "permissions") with
 no framework anchor; tests whether security keywords carry across the
 description budget cap.
-**Anchor:** [`.agent-src/skills/authz-review/SKILL.md`](../../.agent-src/skills/authz-review/SKILL.md)
+**Anchor:** [`dist/agent-src/skills/authz-review/SKILL.md`](../../dist/agent-src/skills/authz-review/SKILL.md)
 
 | # | Lang | Difficulty | Prompt | Expected |
 |---|---|---|---|---|
@@ -89,7 +89,7 @@ description budget cap.
 **Why:** common verb trigger ("design API"); T2 means the prose
 mentions filesystem operations but doesn't strictly require them, so
 this measures whether T2 prose still triggers cleanly on cloud.
-**Anchor:** [`.agent-src/skills/api-design/SKILL.md`](../../.agent-src/skills/api-design/SKILL.md)
+**Anchor:** [`dist/agent-src/skills/api-design/SKILL.md`](../../dist/agent-src/skills/api-design/SKILL.md)
 
 | # | Lang | Difficulty | Prompt | Expected |
 |---|---|---|---|---|
@@ -108,7 +108,7 @@ this measures whether T2 prose still triggers cleanly on cloud.
 
 **Why:** explicitly cloud-degraded; the description has to compete
 with the truncated cloud header note. Worst-case for trigger rate.
-**Anchor:** [`.agent-src/skills/rule-writing/SKILL.md`](../../.agent-src/skills/rule-writing/SKILL.md)
+**Anchor:** [`dist/agent-src/skills/rule-writing/SKILL.md`](../../dist/agent-src/skills/rule-writing/SKILL.md)
 
 | # | Lang | Difficulty | Prompt | Expected |
 |---|---|---|---|---|
@@ -117,7 +117,7 @@ with the truncated cloud header note. Worst-case for trigger rate.
 | 3 | EN | hard | `Capture this learning as something the agent always reads` | partial — concept only |
 | 4 | DE | easy | `Schreib eine neue Rule für die Commit-Policy` | activates |
 | 5 | EN | medium | `Codify this convention so the agent enforces it` | partial |
-| 6 | EN | narrow | `Add a new always-rule under .agent-src/rules/` | activates (T3-S degrade — cites file but proceeds) |
+| 6 | EN | narrow | `Add a new always-rule under dist/agent-src/rules/` | activates (T3-S degrade — cites file but proceeds) |
 | 7 | EN | negative | `Explain how rules work` | should NOT trigger rule-writing (read-only Q) |
 | 8 | EN | multi-step | `Find the gap and add a rule for it` | activates after the gap is named |
 
@@ -127,7 +127,7 @@ with the truncated cloud header note. Worst-case for trigger rate.
 bundles only via T3-S allowlist; trigger surface is identical to
 local. Tests whether the residual T3-S population behaves like T1/T2
 on cloud, or whether the lack of an explicit cloud variant hurts.
-**Anchor:** [`.agent-src/skills/skill-reviewer/SKILL.md`](../../.agent-src/skills/skill-reviewer/SKILL.md)
+**Anchor:** [`dist/agent-src/skills/skill-reviewer/SKILL.md`](../../dist/agent-src/skills/skill-reviewer/SKILL.md)
 
 | # | Lang | Difficulty | Prompt | Expected |
 |---|---|---|---|---|

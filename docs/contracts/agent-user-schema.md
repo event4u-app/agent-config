@@ -54,7 +54,7 @@ enforced by `/agents user accept` and `/agents user update`.
 |---|---|---|
 | `version` | yes | Schema version. v1 is the only valid value today. |
 | `identity.name` | yes | How the agent addresses the user (full name or shorthand — user's choice). |
-| `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../.agent-src/rules/language-and-tone.md). |
+| `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../dist/agent-src/rules/language-and-tone.md). |
 | `role` | no | Unordered list of role labels (may be empty). Drives reviewer-voice selection and persona pairing when populated. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted; each present entry must be non-empty. The setup wizard never blocks a save on it. |
 | `style.pace` | yes | `pragmatic` (default), `thorough` (more verification), or `rapid` (shorter replies). |
 | `voice_sample` | no | Optional representative paste — sharpens mirror-back and tone calibration when present; may be empty. The setup wizard never blocks a save on it. |
@@ -165,6 +165,6 @@ Copy it to the project root as `.agent-user.md` and edit, or run
 
 ## See also
 
-- [`language-and-tone`](../../.agent-src/rules/language-and-tone.md) — language-mirroring rule the loader feeds.
-- [`agents-md-thin-root`](../../.agent-src/skills/agents-md-thin-root/SKILL.md) — Thin-Root contract that this file complements (user-state vs project-state).
-- [`ghostwriter-schema`](ghostwriter-schema.md) — sibling voice primitive for **external public-figure** voices (`/ghostwriter:write`, mandatory disclosure footer). `.agent-user.md` covers the maintainer's **own** voice (`/post-as:me`, no footer); the three-primitive model is summarised in [`personas/README.md § See also — sibling voice primitives`](../../.agent-src/personas/README.md).
+- [`language-and-tone`](../../dist/agent-src/rules/language-and-tone.md) — language-mirroring rule the loader feeds.
+- [`agents-md-thin-root`](../../dist/agent-src/skills/agents-md-thin-root/SKILL.md) — Thin-Root contract that this file complements (user-state vs project-state).
+- [`ghostwriter-schema`](ghostwriter-schema.md) — sibling voice primitive for **external public-figure** voices (`/ghostwriter:write`, mandatory disclosure footer). `.agent-user.md` covers the maintainer's **own** voice (`/post-as:me`, no footer); the three-primitive model is summarised in [`personas/README.md § See also — sibling voice primitives`](../../dist/agent-src/personas/README.md).

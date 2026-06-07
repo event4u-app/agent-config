@@ -14,7 +14,7 @@ mkdir -p "$HOOKS_DIR"
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
-# Pre-push hook: verify .agent-src/ is in sync with .agent-src.uncondensed/
+# Pre-push hook: verify dist/agent-src/ is in sync with .agent-src.uncondensed/
 # and that the canonical command count matches README + getting-started docs.
 #
 # The command-count gate exists because three consecutive PRs landed
@@ -24,9 +24,9 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 
 fail=0
 
-echo "🔍 Checking .agent-src/ sync..."
+echo "🔍 Checking dist/agent-src/ sync..."
 if ! python3 src/scripts/condense.py --check; then
-    echo "❌  .agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
+    echo "❌  dist/agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
     fail=1
 fi
 
@@ -58,7 +58,7 @@ echo "✅  Pre-push hook installed."
 cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 #!/usr/bin/env bash
 # Pre-commit hook: verify .claude-plugin/marketplace.json lists every skill
-# that exists on disk under the committed skill sources (.agent-src/skills/
+# that exists on disk under the committed skill sources (dist/agent-src/skills/
 # + .claude-plugin/skills/), AND verify
 # agents/roadmaps-progress.md is in sync with the current state of
 # agents/roadmaps/ (roadmap-progress-sync Iron Law).
@@ -154,7 +154,7 @@ write_chat_history_hook "post-rewrite"  "git:post-rewrite"
 
 # Auto-sync agent-tool projections after pull / branch-switch ---------------
 #
-# When `.agent-src.uncondensed/`, `.agent-src/`, `src/scripts/condense.py`,
+# When `.agent-src.uncondensed/`, `dist/agent-src/`, `src/scripts/condense.py`,
 # `agents/.agent-tools.yml`, or `Taskfile.yml` change between the previous and
 # new HEAD, the developer's working tree has stale `.claude/`,
 # `.augment/`, etc. projections until they remember to run `task sync`.
@@ -189,7 +189,7 @@ fi
 
 if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
     if git diff --name-only "\$prev" "\$new" 2>/dev/null | \\
-        grep -qE '^(\\.agent-src(\\.uncondensed)?/|src/scripts/condense\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
+        grep -qE '^(dist/agent-src/|\\.agent-src\\.uncondensed/|src/scripts/condense\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
         if command -v task >/dev/null 2>&1; then
             task sync >/dev/null 2>&1 || true
             task generate-tools >/dev/null 2>&1 || true

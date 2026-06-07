@@ -85,7 +85,7 @@ def status_for(row: dict) -> str:
 
 def all_known_slugs(repo: Path) -> set[str]:
     slugs: set[str] = set()
-    for root in (repo / ".augment" / "skills", repo / ".claude" / "skills", repo / ".agent-src" / "skills"):
+    for root in (repo / ".augment" / "skills", repo / ".claude" / "skills", repo / "dist/agent-src" / "skills"):
         if not root.is_dir():
             continue
         for skill_md in root.glob("*/SKILL.md"):

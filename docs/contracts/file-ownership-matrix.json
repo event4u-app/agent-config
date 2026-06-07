@@ -4145,6 +4145,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/media-governance-routing.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/media-governance-routing.md",
       "target": ".agent-src.uncondensed/rules/media-governance-routing.md",
       "type": "WRITE",
       "via": "self",
@@ -4447,6 +4454,13 @@
     {
       "source": ".agent-src.uncondensed/rules/persona-governance.md",
       "target": ".agent-src.uncondensed/rules/skill-quality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/persona-governance.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

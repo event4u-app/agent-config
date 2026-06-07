@@ -2,7 +2,7 @@
   "rule": "direct-answers",
   "iron_law_anchor": ".augment/rules/direct-answers.md#iron-law-1--no-flattery",
   "trigger_class": "factual-question",
-  "input_prompt": "Wie viele Always-Rules gibt es aktuell im .agent-src/?",
+  "input_prompt": "Wie viele Always-Rules gibt es aktuell im dist/agent-src/?",
   "baseline_reply": "38.",
   "expected_patterns": [
     "^[0-9]+\\."

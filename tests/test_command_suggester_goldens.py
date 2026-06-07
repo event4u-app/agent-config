@@ -45,8 +45,8 @@ def specs():
     # Since 6.0.0-D Phase 4 the SOURCE commands live under
     # src/domains/<pack>/<subpath>/command.md (all named `command.md`). The
     # loader expects a flat, command-named catalogue, so load against the
-    # condensed `.agent-src/commands/` projection — the rendered catalogue.
-    return load_commands(REPO_ROOT / ".agent-src" / "commands")
+    # condensed `dist/agent-src/commands/` projection — the rendered catalogue.
+    return load_commands(REPO_ROOT / "dist/agent-src" / "commands")
 
 
 @pytest.fixture(scope="module")

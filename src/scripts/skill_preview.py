@@ -22,7 +22,7 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SKILLS_DIR = REPO_ROOT / ".agent-src" / "skills"
+SKILLS_DIR = REPO_ROOT / "dist/agent-src" / "skills"
 
 _CMD_RE = re.compile(r"`(python3?|bash|node|php|npm|task|pytest)\s+[^`]+`")
 _PATH_RE = re.compile(r"`([\w./-]+\.(?:py|sh|md|json|yml|yaml|ts|js|php))`")
@@ -152,7 +152,7 @@ def render_technical(p: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Preview a skill's declared intent (read-only, no execution).")
-    ap.add_argument("name", help="Skill name (directory under .agent-src/skills/).")
+    ap.add_argument("name", help="Skill name (directory under dist/agent-src/skills/).")
     ap.add_argument("--technical", action="store_true", help="Show raw frontmatter + step list.")
     ap.add_argument("--format", choices=("text", "json"), default="text")
     args = ap.parse_args(argv)

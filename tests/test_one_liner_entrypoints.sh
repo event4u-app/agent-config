@@ -38,13 +38,20 @@ setup() {
     local stage="$TMPDIR/stage"
     mkdir -p "$stage/agent-config"
     local src
-    for src in .agent-src .agent-src.uncondensed \
+    for src in .agent-src.uncondensed \
                AGENTS.md .agent-settings.yml package.json \
                bin docker .augment; do
         if [[ -e "$REPO_ROOT/$src" ]]; then
             cp -R "$REPO_ROOT/$src" "$stage/agent-config/"
         fi
     done
+    # The condensed payload lives at dist/agent-src/ since ADR-058 — stage
+    # it at its real nested path so the installer's
+    # `$SOURCE_DIR/dist/agent-src` probe resolves.
+    if [[ -d "$REPO_ROOT/dist/agent-src" ]]; then
+        mkdir -p "$stage/agent-config/dist"
+        cp -R "$REPO_ROOT/dist/agent-src" "$stage/agent-config/dist/"
+    fi
     # The installer entrypoints (install / install.sh / install.py /
     # agent-config / _dispatch.bash) live under src/scripts/ since 6.0.0-D, and
     # config/ + templates/ moved under src/ in Step 16b — stage each subtree at

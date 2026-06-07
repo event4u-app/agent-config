@@ -41,7 +41,7 @@ banner attached by default.
 ```
 
 That trust banner is non-negotiable — see
-[`finance-safety-floor`](../../.agent-src/rules/finance-safety-floor.md).
+[`finance-safety-floor`](../../dist/agent-src/rules/finance-safety-floor.md).
 
 ## Screenshot
 

@@ -149,7 +149,7 @@ source: project
 def test_rule_with_skill_sections_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/bad-rule.md",
+        "dist/agent-src/rules/bad-rule.md",
         """---
 type: "always"
 source: package
@@ -176,7 +176,7 @@ source: package
 def test_valid_rule_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/good-rule.md",
+        "dist/agent-src/rules/good-rule.md",
         """---
 type: "always"
 source: package
@@ -202,7 +202,7 @@ Always validate before commit.
 def test_rule_missing_frontmatter_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/no-frontmatter.md",
+        "dist/agent-src/rules/no-frontmatter.md",
         """# No Frontmatter Rule
 
 Just some directives.
@@ -217,7 +217,7 @@ Just some directives.
 def test_rule_missing_type_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/no-type.md",
+        "dist/agent-src/rules/no-type.md",
         """---
 source: package
 ---
@@ -240,7 +240,7 @@ def test_rule_omitted_source_is_defaulted_invalid_fails(tmp_path: Path) -> None:
     # Omitted source → the linter must NOT raise missing_source.
     omitted = write_file(
         tmp_path,
-        ".agent-src/rules/no-source.md",
+        "dist/agent-src/rules/no-source.md",
         """---
 type: "always"
 ---
@@ -256,7 +256,7 @@ Some directives.
     # Invalid explicit source → still rejected.
     bad = write_file(
         tmp_path,
-        ".agent-src/rules/bad-source.md",
+        "dist/agent-src/rules/bad-source.md",
         """---
 type: "always"
 source: "bogus"
@@ -285,7 +285,7 @@ def test_rule_invalid_type_fails(tmp_path: Path) -> None:
     """
     path = write_file(
         tmp_path,
-        ".agent-src/rules/bad-type.md",
+        "dist/agent-src/rules/bad-type.md",
         """---
 type: "sometimes"
 source: package
@@ -308,7 +308,7 @@ Some directives.
 def test_rule_auto_without_description_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/auto-no-desc.md",
+        "dist/agent-src/rules/auto-no-desc.md",
         """---
 type: "auto"
 source: project
@@ -328,7 +328,7 @@ Some directives.
 def test_rule_auto_with_description_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/auto-with-desc.md",
+        "dist/agent-src/rules/auto-with-desc.md",
         """---
 type: "auto"
 source: project
@@ -350,7 +350,7 @@ def test_rule_council_depth_standard_rejected(tmp_path: Path) -> None:
     and must be rejected so artefacts don't waste frontmatter bytes."""
     path = write_file(
         tmp_path,
-        ".agent-src/rules/council-depth-standard.md",
+        "dist/agent-src/rules/council-depth-standard.md",
         """---
 type: "auto"
 source: package
@@ -376,7 +376,7 @@ def test_rule_council_depth_deep_passes(tmp_path: Path) -> None:
     """council_depth: deep is the only accepted value."""
     path = write_file(
         tmp_path,
-        ".agent-src/rules/council-depth-deep.md",
+        "dist/agent-src/rules/council-depth-deep.md",
         """---
 type: "auto"
 source: package
@@ -400,7 +400,7 @@ Some directives.
 def test_rule_missing_h1_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/no-heading.md",
+        "dist/agent-src/rules/no-heading.md",
         """---
 type: "always"
 source: package
@@ -418,7 +418,7 @@ Some directives without a heading.
 def test_rule_no_trailing_newline_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/no-newline.md",
+        "dist/agent-src/rules/no-newline.md",
         "---\ntype: \"always\"\nsource: package\n---\n\n# Rule\n\nContent.",
     )
 
@@ -429,7 +429,7 @@ def test_rule_no_trailing_newline_fails(tmp_path: Path) -> None:
 def test_rule_double_blank_lines_warns(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src/rules/double-blanks.md",
+        "dist/agent-src/rules/double-blanks.md",
         """---
 type: "always"
 source: package
@@ -635,7 +635,7 @@ def test_execution_skill_without_analysis_fails(tmp_path: Path) -> None:
     """Execution skill with implementation language but no analysis signals → ERROR."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/developer-execution/SKILL.md",
+        "dist/agent-src/skills/developer-execution/SKILL.md",
         """\
 ---
 name: developer-execution
@@ -667,7 +667,7 @@ def test_execution_skill_with_analysis_passes(tmp_path: Path) -> None:
     """Execution skill that includes analysis signals → no error."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/developer-execution/SKILL.md",
+        "dist/agent-src/skills/developer-execution/SKILL.md",
         """\
 ---
 name: developer-execution
@@ -701,7 +701,7 @@ def test_execution_skill_with_analysis_section_passes(tmp_path: Path) -> None:
     """Execution skill with analysis section header (not keywords) → no error."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/developer-validation/SKILL.md",
+        "dist/agent-src/skills/developer-validation/SKILL.md",
         """\
 ---
 name: developer-validation
@@ -740,7 +740,7 @@ def test_execution_skill_without_verification_fails(tmp_path: Path) -> None:
     """Execution skill without verification signals → ERROR."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/developer-action/SKILL.md",
+        "dist/agent-src/skills/developer-action/SKILL.md",
         """\
 ---
 name: developer-action
@@ -771,7 +771,7 @@ def test_non_execution_skill_skips_checks(tmp_path: Path) -> None:
     """Non-execution skills should not trigger execution quality checks."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/api-design/SKILL.md",
+        "dist/agent-src/skills/api-design/SKILL.md",
         """\
 ---
 name: api-design
@@ -801,7 +801,7 @@ def test_commands_excluded_from_execution_checks(tmp_path: Path) -> None:
     """Commands should be excluded from execution quality checks entirely."""
     path = write_file(
         tmp_path,
-        ".agent-src/commands/fix-something.md",
+        "dist/agent-src/commands/fix-something.md",
         """\
 ---
 name: fix-something
@@ -989,7 +989,7 @@ def test_command_without_skill_references_warns(tmp_path: Path) -> None:
     """Command that doesn't reference any skills → warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/commands/do-stuff.md",
+        "dist/agent-src/commands/do-stuff.md",
         """\
 ---
 name: do-stuff
@@ -1018,7 +1018,7 @@ def test_command_with_skill_references_passes(tmp_path: Path) -> None:
     """Command that references skills → no warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/commands/deploy.md",
+        "dist/agent-src/commands/deploy.md",
         """\
 ---
 name: deploy
@@ -1048,7 +1048,7 @@ def test_skill_with_vague_validation_warns(tmp_path: Path) -> None:
     """Skill with vague validation → warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/example-task/SKILL.md",
+        "dist/agent-src/skills/example-task/SKILL.md",
         """\
 ---
 name: example-task
@@ -1087,7 +1087,7 @@ def test_backend_skill_without_backend_verification_warns(tmp_path: Path) -> Non
     """Backend execution skill without curl/postman → warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/api-validation/SKILL.md",
+        "dist/agent-src/skills/api-validation/SKILL.md",
         """\
 ---
 name: api-validation
@@ -1118,7 +1118,7 @@ def test_backend_skill_with_curl_passes(tmp_path: Path) -> None:
     """Backend execution skill mentioning curl → no backend verification warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/skills/api-validation/SKILL.md",
+        "dist/agent-src/skills/api-validation/SKILL.md",
         """\
 ---
 name: api-validation
@@ -1179,7 +1179,7 @@ description: "When paired behavior occurs"
 - Always have a pair
 """
     write_file(tmp_path, ".agent-src.uncondensed/rules/paired-rule.md", content)
-    write_file(tmp_path, ".agent-src/rules/paired-rule.md", content)
+    write_file(tmp_path, "dist/agent-src/rules/paired-rule.md", content)
 
     path = tmp_path / ".agent-src.uncondensed" / "rules" / "paired-rule.md"
     result = lint_file(path, repo_root=tmp_path)
@@ -2439,7 +2439,7 @@ def test_procedural_rule_ignores_skill_link_pointer(tmp_path: Path) -> None:
     link target and is stripped before counting."""
     path = write_file(
         tmp_path,
-        ".agent-src/rules/pointer-rule.md",
+        "dist/agent-src/rules/pointer-rule.md",
         """---
 type: "always"
 source: package
@@ -2461,7 +2461,7 @@ def test_procedural_rule_ignores_code_span_keyword(tmp_path: Path) -> None:
     """Keyword inside an inline code span (`skill:procedure-x`) must not count."""
     path = write_file(
         tmp_path,
-        ".agent-src/rules/code-span-rule.md",
+        "dist/agent-src/rules/code-span-rule.md",
         """---
 type: "always"
 source: package
@@ -2483,7 +2483,7 @@ def test_procedural_rule_fires_on_real_procedure(tmp_path: Path) -> None:
     block is mis-classified as procedure — the heuristic must still fire."""
     path = write_file(
         tmp_path,
-        ".agent-src/rules/looks-procedural.md",
+        "dist/agent-src/rules/looks-procedural.md",
         """---
 type: "always"
 source: package
@@ -2509,7 +2509,7 @@ def test_procedural_rule_quiet_when_iron_law_block_present(tmp_path: Path) -> No
     artefact is a rule (verbatim imperative), so `procedural_rule` is suppressed."""
     path = write_file(
         tmp_path,
-        ".agent-src/rules/iron-law-rule.md",
+        "dist/agent-src/rules/iron-law-rule.md",
         """---
 type: "always"
 source: package

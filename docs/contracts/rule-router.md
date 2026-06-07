@@ -95,7 +95,7 @@ start. Deterministic key order, sorted lists, stable across runs.
              "verify-before-complete"],
   "tier_1": [{"id": "augment-source-of-truth",
               "triggers": [{"path_prefix": "agents/"},
-                           {"path_prefix": ".agent-src/"}],
+                           {"path_prefix": "dist/agent-src/"}],
               "routes_to": ["skill:agent-docs-writing"]}],
   "tier_2": [/* same shape as tier_1 */],
   "profiles": {
@@ -141,7 +141,7 @@ lean_projection:
 
 Revert procedure (one flip, no code change): set `lean_projection.mode:
 eager-all`, run `task generate-tools` (regenerates `.claude/`, `.cursor/`,
-`.clinerules/`, `.windsurfrules`) + `task sync` (`.agent-src/`, `.augment/`).
+`.clinerules/`, `.windsurfrules`) + `task sync` (`dist/agent-src/`, `.augment/`).
 The thin projector (Phase 3.1) MUST honour this key; with it absent or
 `eager-all` the projector behaves exactly as today. Default stays
 `eager-all` so the migration is opt-in and reversible by one line.

@@ -123,7 +123,7 @@ export const settingsSchema = z.object({
     }),
     augment: z.object({
         rules_use_symlinks: z.boolean().default(false).describe(
-            'When true, .augment/rules/*.md are symlinks into .agent-src/rules/ — edits flow back to source on save. When false (default), they are copies — safer on Windows and shared volumes, but rule edits in .augment/ are lost on the next `task sync`.',
+            'When true, .augment/rules/*.md are symlinks into dist/agent-src/rules/ — edits flow back to source on save. When false (default), they are copies — safer on Windows and shared volumes, but rule edits in .augment/ are lost on the next `task sync`.',
         ),
     }),
     eloquent: z.object({

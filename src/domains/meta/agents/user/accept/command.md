@@ -114,7 +114,7 @@ Do NOT commit. Do NOT auto-chain to a second field.
 - Never bypass the privacy-floor scan, even if the buffer writer
   already redacted.
 - Mirror the user's language for prompts per
-  [`language-and-tone`](../../../../.agent-src/rules/language-and-tone.md).
+  [`language-and-tone`](../../../../dist/agent-src/rules/language-and-tone.md).
 
 ## See also
 

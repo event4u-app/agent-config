@@ -123,5 +123,5 @@ Forget is atomic — no partial state. Pinned ingests are dropped the same as un
 ## See also
 
 - [`local-knowledge-ingestion`](../contracts/local-knowledge-ingestion.md) — contract (input shapes, bounds, storage, redaction).
-- [`/knowledge ingest`](../../.agent-src/commands/knowledge/ingest.md) · [`/knowledge list`](../../.agent-src/commands/knowledge/list.md) · [`/knowledge forget`](../../.agent-src/commands/knowledge/forget.md)
-- [`markitdown` skill](../../.agent-src/skills/markitdown/SKILL.md) — peer-side adapter for binary formats.
+- [`/knowledge ingest`](../../dist/agent-src/commands/knowledge/ingest.md) · [`/knowledge list`](../../dist/agent-src/commands/knowledge/list.md) · [`/knowledge forget`](../../dist/agent-src/commands/knowledge/forget.md)
+- [`markitdown` skill](../../dist/agent-src/skills/markitdown/SKILL.md) — peer-side adapter for binary formats.

@@ -5,7 +5,7 @@ Part of step-12 Phase 2. Runs in `task ci` to catch link rot when a
 skill is renamed or removed but the role docs still reference it.
 
 Scans `docs/getting-started-by-role.md` and `docs/getting-started-laravel.md`
-for markdown links of the form `../.agent-src/skills/<name>/SKILL.md`
+for markdown links of the form `../dist/agent-src/skills/<name>/SKILL.md`
 (relative to docs/) and checks that the target file exists on disk.
 
 Exit codes:
@@ -40,9 +40,9 @@ LINK_RE = re.compile(r"\]\(([^)\s]+)\)")
 
 # Anchors we know how to resolve. Each tuple is (prefix, base_dir).
 ANCHORS: list[tuple[str, Path]] = [
-    ("../.agent-src/skills/", ROOT / ".agent-src" / "skills"),
-    ("../.agent-src/commands/", ROOT / ".agent-src" / "commands"),
-    ("../.agent-src/rules/", ROOT / ".agent-src" / "rules"),
+    ("../dist/agent-src/skills/", ROOT / "dist/agent-src" / "skills"),
+    ("../dist/agent-src/commands/", ROOT / "dist/agent-src" / "commands"),
+    ("../dist/agent-src/rules/", ROOT / "dist/agent-src" / "rules"),
     ("../agents/", ROOT / "agents"),
     ("contracts/", DOCS_DIR / "contracts"),
     ("guidelines/", DOCS_DIR / "guidelines"),

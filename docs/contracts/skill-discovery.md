@@ -19,7 +19,7 @@ new always-loaded layer (that would fail the Phase-1 leaner-core premise).
 
 | Signal | Source | Used for |
 |---|---|---|
-| Skill catalog | `.agent-src/skills/*/SKILL.md` frontmatter (`name`, `description`, `domain`) | candidate universe + `domain` category |
+| Skill catalog | `dist/agent-src/skills/*/SKILL.md` frontmatter (`name`, `description`, `domain`) | candidate universe + `domain` category |
 | Role shortlist | `agents/roles/<role>/skills.yml` (priority-ordered `id` + `why`) | `most-useful-for-role` |
 | Local analytics | `~/.event4u/agent-config/workspace/analytics/events.jsonl` (`event`, `data.role`, `data.task`, optional `data.skill`) | `recently-adopted`, `popular-in-role` |
 

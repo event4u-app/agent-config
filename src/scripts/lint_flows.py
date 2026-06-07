@@ -77,10 +77,10 @@ def _known_command_refs() -> set[str]:
 
     Resolution (``resolve_logical``) stays the source of truth for pass/fail;
     this set only feeds suggestions on a miss, so a command that lives outside
-    ``.agent-src/commands/`` is never a false failure — it simply won't be
+    ``dist/agent-src/commands/`` is never a false failure — it simply won't be
     proposed as a near-match.
     """
-    base = ROOT / ".agent-src" / "commands"
+    base = ROOT / "dist/agent-src" / "commands"
     if not base.is_dir():
         return set()
     return {

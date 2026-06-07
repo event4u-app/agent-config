@@ -13,7 +13,7 @@ Canonical paths:
 | Side | Path |
 |---|---|
 | Source-of-truth (package) | `packages/core/.agent-src.uncondensed/scripts/update_roadmap_progress.py` |
-| Package self-use (dogfooding) | `.agent-src/scripts/update_roadmap_progress.py` (and `.augment/scripts/update_roadmap_progress.py` after `task sync`) |
+| Package self-use (dogfooding) | `dist/agent-src/scripts/update_roadmap_progress.py` (and `.augment/scripts/update_roadmap_progress.py` after `task sync`) |
 | Consumer install target | `<consumer_root>/.augment/scripts/update_roadmap_progress.py` |
 
 Used by:
@@ -43,7 +43,7 @@ def package_source(package_root: Path) -> Optional[Path]:
 
     Searches the package layout in priority order:
       1. `packages/core/.agent-src.uncondensed/scripts/update_roadmap_progress.py`
-      2. `.agent-src/scripts/update_roadmap_progress.py` (condensed projection)
+      2. `dist/agent-src/scripts/update_roadmap_progress.py` (condensed projection)
       3. `.augment/scripts/update_roadmap_progress.py` (tool projection)
 
     Returns the first existing file, or None if none exist (which is
@@ -55,7 +55,7 @@ def package_source(package_root: Path) -> Optional[Path]:
         package_root / "src" / "agent-src" / REGENERATOR_REL,
         # Back-compat: pre-collapse packages/core/ layout.
         package_root / "packages" / "core" / ".agent-src.uncondensed" / REGENERATOR_REL,
-        package_root / ".agent-src" / REGENERATOR_REL,
+        package_root / "dist/agent-src" / REGENERATOR_REL,
         package_root / ".augment" / REGENERATOR_REL,
     ]
     for c in candidates:
@@ -81,7 +81,7 @@ def install_regenerator(package_root: Path, consumer_root: Path) -> tuple[bool, 
             False,
             "regenerator source not found in package "
             "(searched src/agent-src/, packages/core/.agent-src.uncondensed/, "
-            ".agent-src/, .augment/)",
+            "dist/agent-src/, .augment/)",
         )
     target = consumer_target(consumer_root)
     try:

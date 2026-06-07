@@ -25,11 +25,11 @@ phase with its own design-call gate.
 
 - Transport: **stdio**. No SSE, no HTTP, no WebSocket.
 - MCP primitives: **`prompts/list`** + **`prompts/get`** — read-only.
-- Source data: **`.agent-src/skills/<name>/SKILL.md`** and
-  **`.agent-src/commands/**/*.md`** (condensed projections, never the
+- Source data: **`dist/agent-src/skills/<name>/SKILL.md`** and
+  **`dist/agent-src/commands/**/*.md`** (condensed projections, never the
   uncondensed source-of-truth tree).
 - Loaded set (Phase 2): every well-formed skill + command under
-  `.agent-src/` (Phase 1 hand-picked set retained as a smoke fixture
+  `dist/agent-src/` (Phase 1 hand-picked set retained as a smoke fixture
   in `prompts.py::PHASE_1_SKILLS`).
 - **Pagination** (B4): cursor-based `nextCursor` on `prompts/list`,
   default `page_size=100`. Cursor is an opaque stringified offset.
@@ -138,7 +138,7 @@ lift waits on SDK support):
   `scripts/mcp_server/__init__.py::__version__`. Bumps on
   **wire-surface** changes only: new tool, new resource MIME type,
   protocol-level break. Does **not** bump for content edits inside
-  `.agent-src/`.
+  `dist/agent-src/`.
 - **`packageVersion`** — read from `package.json::version` at boot.
   Bumps on every agent-config bundle release; build-ID semantics, not
   a stability signal.
@@ -159,7 +159,7 @@ change invalidates it.
 - **No HTTP / SSE listener** in the image. Stdio is the only wire.
 - The image embeds `scripts/mcp_server/`, the two tool dependencies
   (`scripts/skill_linter.py`, `scripts/chat_history.py`),
-  `.agent-src/`, `docs/guidelines/`, and `package.json`. Nothing
+  `dist/agent-src/`, `docs/guidelines/`, and `package.json`. Nothing
   outside the COPY-listed paths reaches the runtime stage.
 - The image runs as a non-root user (`mcp:mcp`); host volumes mounted
   for `chat_history_append` writes must be writable by that uid/gid.

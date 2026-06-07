@@ -43,9 +43,9 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 # The loader expects a flat catalogue where each file is named for its
 # command. Since 6.0.0-D Phase 4 the SOURCE commands live under
 # src/domains/<pack>/<subpath>/command.md (all named `command.md`), so load
-# against the condensed `.agent-src/commands/` projection — the rendered,
+# against the condensed `dist/agent-src/commands/` projection — the rendered,
 # correctly-named catalogue of all commands.
-COMMANDS_DIR = REPO_ROOT / ".agent-src" / "commands"
+COMMANDS_DIR = REPO_ROOT / "dist/agent-src" / "commands"
 
 
 # ---------------------------------------------------------------------------

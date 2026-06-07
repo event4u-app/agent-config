@@ -13,8 +13,8 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE_RULES = ROOT / ".agent-src" / "rules"
-SOURCE_COMMANDS = ROOT / ".agent-src" / "commands"
+SOURCE_RULES = ROOT / "dist/agent-src" / "rules"
+SOURCE_COMMANDS = ROOT / "dist/agent-src" / "commands"
 
 CURSOR_RULES_DIR = ROOT / ".cursor" / "rules"
 CURSOR_COMMANDS_DIR = ROOT / ".cursor" / "commands"

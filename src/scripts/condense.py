@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Agent-config sync — condense .agent-src.uncondensed/ → .agent-src/
-and project .agent-src/ → .augment/ (copies for rules by default,
+Agent-config sync — condense .agent-src.uncondensed/ → dist/agent-src/
+and project dist/agent-src/ → .augment/ (copies for rules by default,
 symlinks for the rest; opt into rule symlinks via
 augment.rules_use_symlinks in .agent-settings.yml).
 
@@ -49,7 +49,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 # that pass it explicitly. Multi-root iteration (post-ADR-017 physical
 # move) goes through `_lib.agent_src` helpers.
 SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncondensed"
-TARGET_DIR = PROJECT_ROOT / ".agent-src"
+TARGET_DIR = PROJECT_ROOT / "dist/agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / "internal" / ".condensation-hashes.json"
 SETTINGS_FILE = project_settings_path(PROJECT_ROOT)
@@ -284,7 +284,7 @@ def save_hashes(hashes: dict) -> None:
 def mark_done(relative_path: str) -> None:
     """Mark a single file as condensed by storing its current source hash.
 
-    Also runs the path rewriter on the just-written `.agent-src/<path>` so
+    Also runs the path rewriter on the just-written `dist/agent-src/<path>` so
     logical names from the source frontmatter resolve to deployment-correct
     relative paths in the shipped layer (P1 of road-to-path-fixes.md).
     Idempotent — re-running is a no-op.
@@ -301,7 +301,7 @@ def mark_done(relative_path: str) -> None:
 
 
 def apply_path_rewriter(relative_path: str) -> bool:
-    """Apply `_rewrite_paths` to `.agent-src/<relative_path>` in-place.
+    """Apply `_rewrite_paths` to `dist/agent-src/<relative_path>` in-place.
 
     Returns True if the file was modified, False otherwise. Silently
     returns False if the target doesn't exist (condensation hasn't run
@@ -489,35 +489,35 @@ def check_sync(source_dir: Path, target_dir: Path) -> tuple:
 
 # ── Multi-agent tool generation ──────────────────────────────────────
 
-RULES_SOURCE = PROJECT_ROOT / ".agent-src" / "rules"
+RULES_SOURCE = PROJECT_ROOT / "dist/agent-src" / "rules"
 
 TOOL_DIRS = {
-    ".claude/rules": "../../.agent-src/rules",
-    ".cursor/rules": "../../.agent-src/rules",
-    ".clinerules": "../.agent-src/rules",
+    ".claude/rules": "../../dist/agent-src/rules",
+    ".cursor/rules": "../../dist/agent-src/rules",
+    ".clinerules": "../dist/agent-src/rules",
 }
 
-SKILLS_SOURCE = PROJECT_ROOT / ".agent-src" / "skills"
-COMMANDS_SOURCE = PROJECT_ROOT / ".agent-src" / "commands"
-PERSONAS_SOURCE = PROJECT_ROOT / ".agent-src" / "personas"
-USER_TYPES_SOURCE = PROJECT_ROOT / ".agent-src" / "user-types"
+SKILLS_SOURCE = PROJECT_ROOT / "dist/agent-src" / "skills"
+COMMANDS_SOURCE = PROJECT_ROOT / "dist/agent-src" / "commands"
+PERSONAS_SOURCE = PROJECT_ROOT / "dist/agent-src" / "personas"
+USER_TYPES_SOURCE = PROJECT_ROOT / "dist/agent-src" / "user-types"
 CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
 # Committed plugin-marketplace projection for command-as-skill entries.
 # The marketplace is consumed as a git repo, so every skills[] path must be
-# committed. Real skills resolve to .agent-src/skills/<name> (already
+# committed. Real skills resolve to dist/agent-src/skills/<name> (already
 # committed); commands have no <slug>/SKILL.md shape in source, so their
 # committed projection lives here. .claude/skills/ stays a gitignored,
 # generate-tools-rebuilt local auto-discovery channel.
 PLUGIN_SKILLS_DIR = PROJECT_ROOT / ".claude-plugin" / "skills"
 
 PERSONA_TOOL_DIRS = {
-    ".claude/personas": "../../.agent-src/personas",
-    ".cursor/personas": "../../.agent-src/personas",
+    ".claude/personas": "../../dist/agent-src/personas",
+    ".cursor/personas": "../../dist/agent-src/personas",
 }
 
 USER_TYPE_TOOL_DIRS = {
-    ".claude/user-types": "../../.agent-src/user-types",
-    ".cursor/user-types": "../../.agent-src/user-types",
+    ".claude/user-types": "../../dist/agent-src/user-types",
+    ".cursor/user-types": "../../dist/agent-src/user-types",
 }
 
 # Map tool-projection directories to the canonical tool ID used by
@@ -552,7 +552,7 @@ def strip_frontmatter(content: str) -> str:
 
 # ── Path rewriter (P1 of road-to-path-fixes.md) ───────────────────────────
 # Source files use logical names that the rewriter resolves at condense
-# time, so the shipped `.agent-src/` (and `.augment/` projection) carry
+# time, so the shipped `dist/agent-src/` (and `.augment/` projection) carry
 # deployment-correct relative paths without the agent author having to
 # know how deep their file lives.
 #
@@ -560,7 +560,7 @@ def strip_frontmatter(content: str) -> str:
 #   load_context: / load_context_eager:
 #     contexts/<area>/<file>.md                          (logical, preferred)
 #     .agent-src.uncondensed/contexts/<area>/<file>.md  (legacy)
-#       → ../contexts/<area>/<file>.md  (relative from .agent-src/rules/)
+#       → ../contexts/<area>/<file>.md  (relative from dist/agent-src/rules/)
 #   triggers[].path_prefix:
 #     LEFT ALONE — `path_prefix:` is a literal match pattern, not a
 #     file reference. Source-of-truth rules that fire on edits under
@@ -575,7 +575,10 @@ def strip_frontmatter(content: str) -> str:
 # match the source patterns).
 
 _LEGACY_SRC_PREFIX = ".agent-src.uncondensed/"
-_PROJECTED_SRC_PREFIX = ".agent-src/"
+_PROJECTED_SRC_PREFIX = "dist/agent-src/"
+# Pre-ADR-057 projected prefix — still stripped defensively so content
+# authored against the old root-level output keeps resolving.
+_LEGACY_PROJECTED_SRC_PREFIX = ".agent-src/"
 
 # A YAML list item under load_context*: `  - some/path.md` (optionally quoted)
 _FM_LIST_ITEM_RE = re.compile(r'^(\s*-\s*)(["\']?)([^"\'\n]+?\.md)(["\']?)\s*$')
@@ -622,6 +625,8 @@ def _rewrite_load_context_value(value: str, prefix: str) -> str:
     # Projected source prefix (defensive — also strip).
     if value.startswith(_PROJECTED_SRC_PREFIX):
         return prefix + value[len(_PROJECTED_SRC_PREFIX):]
+    if value.startswith(_LEGACY_PROJECTED_SRC_PREFIX):
+        return prefix + value[len(_LEGACY_PROJECTED_SRC_PREFIX):]
     # Logical name (e.g. `contexts/execution/foo.md`).
     return prefix + value
 
@@ -747,7 +752,7 @@ def _inject_hrr_banner(body: str, level: str, owner: str) -> str:
 
 def _rewrite_paths(content: str, source_relative_path: str) -> str:
     """Rewrite logical / legacy paths in `content` for a file shipped at
-    `.agent-src/{source_relative_path}`. Idempotent.
+    `dist/agent-src/{source_relative_path}`. Idempotent.
 
     See module-level comment above for the full pattern catalog.
     Also injects the HUMAN_REVIEW banner when the source frontmatter
@@ -768,9 +773,9 @@ def _rewrite_paths(content: str, source_relative_path: str) -> str:
 def generate_rule_symlinks() -> int:
     """Create symlink directories for rules (.claude/rules/, .cursor/rules/, .clinerules/).
 
-    Symlinks ALL .md files from .agent-src/rules/ into tool-specific directories.
+    Symlinks ALL .md files from dist/agent-src/rules/ into tool-specific directories.
     """
-    # All .md files in .agent-src/rules/ — not just universal ones
+    # All .md files in dist/agent-src/rules/ — not just universal ones
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
     tool_dirs = _filter_tool_dirs(TOOL_DIRS)
 
@@ -823,7 +828,7 @@ def generate_windsurfrules() -> int:
     """Generate .windsurfrules by concatenating all rules (no frontmatter).
     """
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
-    parts = ["# Auto-generated from .agent-src/rules/ — do not edit directly\n"]
+    parts = ["# Auto-generated from dist/agent-src/rules/ — do not edit directly\n"]
 
     for rule in rules:
         path = RULES_SOURCE / rule
@@ -1022,7 +1027,7 @@ def _command_slug(source_file: Path) -> str:
     Top-level commands keep their stem (`commit.md` → `commit`). Nested
     commands flatten the relative path with `-` (`council/default.md` →
     `council-default`). Keeps slug collisions out of `.claude/skills/`
-    while preserving native nested invocation in `.agent-src/commands/`.
+    while preserving native nested invocation in `dist/agent-src/commands/`.
     """
     rel = source_file.relative_to(COMMANDS_SOURCE)
     return "-".join(rel.with_suffix("").parts)
@@ -1032,7 +1037,7 @@ def _iter_commands():
     """Yield (source_file, slug) for every command, sourced from `src/domains/`.
 
     Repointed (ADR-044 amendment, 2026-06-04) from the legacy
-    `.agent-src/commands/` tree to the canonical
+    `dist/agent-src/commands/` tree to the canonical
     `src/domains/<pack>/<verb>/command.md` source via
     `_lib.agent_src.iter_commands()`. The slug is the pack-stripped hyphenated
     subpath (`_command_path_to_slug`) — the path is the single source of truth
@@ -1224,9 +1229,9 @@ def _render_native_model_md(src_md: Path, tier: str) -> str:
 
 
 def generate_claude_skills(active_skill_names: set[str] | None = None) -> int:
-    """Create .claude/skills/ entries for ALL skills in .agent-src/skills/.
+    """Create .claude/skills/ entries for ALL skills in dist/agent-src/skills/.
 
-    Default: a directory symlink → .agent-src/skills/<name> (verbatim).
+    Default: a directory symlink → dist/agent-src/skills/<name> (verbatim).
     When `model.auto_switch: auto` AND a skill declares
     `model_tier: lite|medium|high`, the entry becomes a real directory whose
     sub-files are symlinked but whose SKILL.md is a rendered copy carrying a
@@ -1234,10 +1239,10 @@ def generate_claude_skills(active_skill_names: set[str] | None = None) -> int:
     break the symlink). Idempotent: each entry is rebuilt from scratch.
     """
     if not SKILLS_SOURCE.exists():
-        print("  ⚠️  .agent-src/skills/ not found — skipping skills", file=sys.stderr)
+        print("  ⚠️  dist/agent-src/skills/ not found — skipping skills", file=sys.stderr)
         return 0
 
-    # All skill directories in .agent-src/skills/. Under scoped projection
+    # All skill directories in dist/agent-src/skills/. Under scoped projection
     # (active_skill_names not None) keep only the active set; the stale-cleanup
     # loop below then reaps any now-inactive skill entry.
     skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
@@ -1286,11 +1291,11 @@ def generate_claude_skills(active_skill_names: set[str] | None = None) -> int:
                     )
                 else:
                     (link / entry.name).symlink_to(
-                        Path("../../../.agent-src/skills") / skill / entry.name
+                        Path("../../../dist/agent-src/skills") / skill / entry.name
                     )
             rendered += 1
         else:
-            link.symlink_to(Path("../../.agent-src/skills") / skill)
+            link.symlink_to(Path("../../dist/agent-src/skills") / skill)
         count += 1
 
     suffix = f" ({rendered} rendered with native model:)" if rendered else ""
@@ -1312,7 +1317,7 @@ def extract_description_from_md(content: str) -> str:
 def generate_claude_commands(active_command_slugs: set[str] | None = None) -> int:
     """Create .claude/skills/{slug}/SKILL.md symlinks for ALL Augment commands.
 
-    Commands in .agent-src/commands/ are the single source of truth.
+    Commands in dist/agent-src/commands/ are the single source of truth.
     They must include name: and disable-model-invocation: true in frontmatter
     (added once, then maintained as part of the command file).
 
@@ -1409,7 +1414,7 @@ def generate_plugin_command_skills() -> int:
     The plugin marketplace references each command entry as a <slug>/SKILL.md
     path that must be committed (git-consumed marketplace). Commands have no
     such shape in source, so this projects them as symlinks:
-    .claude-plugin/skills/<slug>/SKILL.md → ../../../.agent-src/commands/<rel>.
+    .claude-plugin/skills/<slug>/SKILL.md → ../../../dist/agent-src/commands/<rel>.
 
     Symlink-only by design: the committed .claude/skills/ shape was always
     symlinks (ADR-034 model-rendered copies are local-only, never committed),
@@ -1470,11 +1475,11 @@ def generate_plugin_command_skills() -> int:
 def generate_persona_symlinks() -> int:
     """Create symlink directories for personas (.claude/personas/, .cursor/personas/).
 
-    Symlinks each persona .md file from .agent-src/personas/ into tool-specific
+    Symlinks each persona .md file from dist/agent-src/personas/ into tool-specific
     directories. Excludes README.md — that's authoring documentation, not a persona.
     """
     if not PERSONAS_SOURCE.exists():
-        print("  ⚠️  .agent-src/personas/ not found — skipping personas")
+        print("  ⚠️  dist/agent-src/personas/ not found — skipping personas")
         return 0
 
     personas = sorted([
@@ -1506,12 +1511,12 @@ def generate_persona_symlinks() -> int:
 def generate_user_type_symlinks() -> int:
     """Create symlink directories for user-types (.claude/user-types/, .cursor/user-types/).
 
-    Symlinks each user-type .md file from .agent-src/user-types/ into tool-specific
+    Symlinks each user-type .md file from dist/agent-src/user-types/ into tool-specific
     directories. Excludes README.md and _template/ — those are authoring scaffolding,
     not user-type lenses.
     """
     if not USER_TYPES_SOURCE.exists():
-        print("  ⚠️  .agent-src/user-types/ not found — skipping user-types")
+        print("  ⚠️  dist/agent-src/user-types/ not found — skipping user-types")
         return 0
 
     user_types = sorted([
@@ -1674,21 +1679,21 @@ def generate_tools() -> None:
 
 
 # ── .augment/ projection ──────────────────────────────────────────────
-# The package uses .agent-src/ as the tool-agnostic condensed source of truth.
+# The package uses dist/agent-src/ as the tool-agnostic condensed source of truth.
 # .augment/ is a generated projection so that Augment Code (which reads from
 # .augment/) works on the package repo itself. Rules default to copies
 # because Augment Code historically does not load symlinked rule files;
 # flip augment.rules_use_symlinks: true in .agent-settings.yml to switch
 # them to symlinks (everything else is always symlinked).
 
-# Subdirectories of .agent-src/ that map into .augment/ as symlinks.
+# Subdirectories of dist/agent-src/ that map into .augment/ as symlinks.
 AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas", "user-types", "templates", "contexts", "scripts")
 # Top-level files to symlink into .augment/ (README, etc.)
 AUGMENT_SYMLINK_FILES = ("README.md",)
 
 
 def project_to_augment() -> None:
-    """Mirror .agent-src/ into .augment/. Symlink everything except rules,
+    """Mirror dist/agent-src/ into .augment/. Symlink everything except rules,
     which default to copies; opt into rule symlinks via
     augment.rules_use_symlinks in .agent-settings.yml."""
     if not TARGET_DIR.exists():
@@ -1714,7 +1719,7 @@ def project_to_augment() -> None:
             if target.is_symlink() or target.exists():
                 target.unlink()
             if use_symlinks:
-                target.symlink_to(Path("..") / ".." / ".agent-src" / "rules" / rule.name)
+                target.symlink_to(Path("..") / ".." / "dist/agent-src" / "rules" / rule.name)
             else:
                 shutil.copy2(rule, target)
             current.add(rule.name)
@@ -1727,7 +1732,7 @@ def project_to_augment() -> None:
     mode_label = "Symlinked" if use_symlinks else "Copied"
     print(f"  ✅  {mode_label} {written} rules to .augment/rules/" + (f" ({removed_rules} stale removed)" if removed_rules else ""))
 
-    # Subdirectories: replace each with a symlink → ../.agent-src/<subdir>
+    # Subdirectories: replace each with a symlink → ../dist/agent-src/<subdir>
     for sub in AUGMENT_SYMLINK_DIRS:
         dst = AUGMENT_DIR / sub
         if dst.is_symlink() or dst.exists():
@@ -1737,8 +1742,8 @@ def project_to_augment() -> None:
                 dst.unlink()
         src = TARGET_DIR / sub
         if src.exists():
-            dst.symlink_to(Path("..") / ".agent-src" / sub, target_is_directory=True)
-            print(f"  ✅  Symlinked .augment/{sub} → ../.agent-src/{sub}")
+            dst.symlink_to(Path("..") / "dist/agent-src" / sub, target_is_directory=True)
+            print(f"  ✅  Symlinked .augment/{sub} → ../dist/agent-src/{sub}")
 
     # Top-level files: symlink
     for name in AUGMENT_SYMLINK_FILES:
@@ -1747,8 +1752,8 @@ def project_to_augment() -> None:
         if dst.is_symlink() or dst.exists():
             dst.unlink()
         if src.exists():
-            dst.symlink_to(Path("..") / ".agent-src" / name)
-            print(f"  ✅  Symlinked .augment/{name} → ../.agent-src/{name}")
+            dst.symlink_to(Path("..") / "dist/agent-src" / name)
+            print(f"  ✅  Symlinked .augment/{name} → ../dist/agent-src/{name}")
 
     # Cleanup: remove any stray top-level entries in .augment/ that are no longer projected.
     # `state` holds runtime state files written by hooks (onboarding-gate,
@@ -1825,14 +1830,14 @@ def main() -> None:
     elif arg == "--check":
         missing, stale = check_sync(SOURCE_DIR, TARGET_DIR)
         if not missing and not stale:
-            print("✅  .agent-src/ is in sync with .agent-src.uncondensed/")
+            print("✅  dist/agent-src/ is in sync with .agent-src.uncondensed/")
             sys.exit(0)
         if missing:
-            print(f"❌  Missing in .agent-src/ ({len(missing)}):")
+            print(f"❌  Missing in dist/agent-src/ ({len(missing)}):")
             for f in missing:
                 print(f"  {f}")
         if stale:
-            print(f"❌  Stale in .agent-src/ ({len(stale)}):")
+            print(f"❌  Stale in dist/agent-src/ ({len(stale)}):")
             for f in stale:
                 print(f"  {f}")
         print(f"\nRun 'task sync' to fix non-.md files, then ask the agent to condense .md files.")
@@ -1860,7 +1865,7 @@ def main() -> None:
             print(f"📝  {len(changed)} .md files need condensation (run --changed to see them)")
         else:
             print(f"✅  All .md files are up to date")
-        print(f"\n--- Projecting .agent-src/ → .augment/ ---")
+        print(f"\n--- Projecting dist/agent-src/ → .augment/ ---")
         project_to_augment()
 
     elif arg == "--check-hashes":

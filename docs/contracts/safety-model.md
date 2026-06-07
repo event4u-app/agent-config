@@ -75,7 +75,7 @@ A profile may only reference an id from the table below.
 | Policy | Behaviour | Floor interaction |
 |---|---|---|
 | `deny` | The agent refuses. Numbered-option block surfaces the refusal and the rationale field; no override path. | `deny` is the default for every floor domain — it cannot be relaxed. |
-| `ask` | The agent stops and asks a single numbered question per [`user-interaction`](../../.agent-src/rules/user-interaction.md). One question per turn. | `ask` is the default for every floor domain in a profile that has not opted out — the floor remains operative even when `policy=allow` is set elsewhere. |
+| `ask` | The agent stops and asks a single numbered question per [`user-interaction`](../../dist/agent-src/rules/user-interaction.md). One question per turn. | `ask` is the default for every floor domain in a profile that has not opted out — the floor remains operative even when `policy=allow` is set elsewhere. |
 | `allow` | The agent proceeds without asking. Trivial-question suppression applies. | `allow` is **forbidden** on any domain whose `Floor reference` column is non-empty. Linter rejects it. |
 
 The legacy single switch (`personal.autonomy`) is preserved as a
@@ -91,7 +91,7 @@ Order (last writer wins, subject to the Iron Floor):
 3. Active pack's profile (if `--pack <id>` is active).
 4. `.agent-settings.yml` user override under `profile.safety.domains`.
 
-The explain command at [`explain config`](../../.agent-src/scripts/agent-config)
+The explain command at [`explain config`](../../dist/agent-src/scripts/agent-config)
 (Phase 1 Item 3 deliverable) surfaces the resolved policy per domain,
 with the writer source per row.
 

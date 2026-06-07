@@ -211,7 +211,7 @@ def main() -> int:
     for path, ln, ref in violations:
         print(f"  - {path.as_posix()}:{ln}: {ref}")
     print(
-        "\nRule: .agent-src/rules/no-roadmap-references.md (council clause)\n"
+        "\nRule: dist/agent-src/rules/no-roadmap-references.md (council clause)\n"
         "Fix: inline the convergence summary (members + date) instead of\n"
         "linking the file. Two source/target shapes are exempt structurally\n"
         "(evaluation-context → council-question, contract →\n"

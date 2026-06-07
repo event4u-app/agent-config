@@ -10,7 +10,7 @@ This page catalogs the **24 active personas** shipped with
 **advisor** personas in `personas/advisors/`. It also explains how
 `personas:` (lens axis) interacts with `/mode` (role-mode axis).
 Removed personas are deleted in-commit (no soak window) — see
-[`persona-governance § Deprecation path`](../.agent-src/rules/persona-governance.md).
+[`persona-governance § Deprecation path`](../dist/agent-src/rules/persona-governance.md).
 
 ## Catalog — Core (always-loaded, 6)
 
@@ -77,7 +77,7 @@ not cited by skills directly:
 - **Core (≤ 6)** — always-loaded cast. 5 sections (Focus · Mindset · Unique Questions · Output Expectations · Anti-Patterns), ≤ 120 lines.
 - **Specialist** — opt-in lenses. 7 sections (Core-5 + Critical Rules + Workflows). Line cap is wing-scoped: ≤ 100 (no wing / Wings 1–2), ≤ 140 (Wings 3–4) per [`persona-schema § 4`](contracts/persona-schema.md).
 
-Schema contract: [`docs/contracts/persona-schema.md`](contracts/persona-schema.md). Governance rule: [`persona-governance`](../.agent-src/rules/persona-governance.md).
+Schema contract: [`docs/contracts/persona-schema.md`](contracts/persona-schema.md). Governance rule: [`persona-governance`](../dist/agent-src/rules/persona-governance.md).
 
 ## When to invoke a persona
 
@@ -145,7 +145,7 @@ override mechanism:
 - **Body override** — full replace. Drop a same-named file under
   `agents/personas/<id>.md`; the package version is shadowed.
 
-See [`override-management`](../.agent-src/skills/override-management/SKILL.md)
+See [`override-management`](../dist/agent-src/skills/override-management/SKILL.md)
 for the mechanics.
 
 ## Anti-patterns

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validate condensed-output paths in `.agent-src/rules/*.md`.
+"""Validate condensed-output paths in `dist/agent-src/rules/*.md`.
 
-Runs after `scripts/condense.py` projects sources to `.agent-src/`. The
+Runs after `scripts/condense.py` projects sources to `dist/agent-src/`. The
 rewriter in `condense.py` is the load-bearing primitive (road-to-path-fixes
 P1.2); this script is the post-condition gate (P5.1) — every `load_context:`
-entry in `.agent-src/rules/*.md` must resolve relative to the rule file's
+entry in `dist/agent-src/rules/*.md` must resolve relative to the rule file's
 directory to an existing file, and forbidden substrings must not survive
 the rewrite (unless declared in `validator_ignore`).
 
@@ -16,7 +16,7 @@ Forbidden substrings (load_context + body):
 
 Body-link checks (Council Decision 2, 2026-05-06):
   - `load_context:` entries MUST resolve to an existing file under
-    `.agent-src/`.
+    `dist/agent-src/`.
   - Body markdown links to `../contexts/...md` MUST resolve.
   - Body markdown links to `../docs/guidelines/...md` are NOT checked
     (P3.1 was cancelled; resolution is intentionally out of scope, the
@@ -43,7 +43,7 @@ import yaml
 QUIET = "--quiet" in sys.argv
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-RULES_DIR = ROOT / ".agent-src" / "rules"
+RULES_DIR = ROOT / "dist/agent-src" / "rules"
 
 FORBIDDEN_SUBSTRINGS = (
     ".agent-src.uncondensed/",
@@ -57,16 +57,26 @@ _LINK_RE = re.compile(r'\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)')
 
 # Body-link prefixes whose resolution is intentionally out of scope.
 # Council Decision 2 (2026-05-06): P3.1 was cancelled, so guideline links
-# under `.agent-src/rules/` cannot resolve in the projected tree. Copilot
+# under `dist/agent-src/rules/` cannot resolve in the projected tree. Copilot
 # suppression (P6) is the silencer for the noise. `docs/contracts/` shares
 # the same shape as `docs/guidelines/` — both live at repo root and the
 # rewriter collapses `../../docs/{contracts,guidelines}/...` to a
-# `../docs/...` form that cannot resolve under `.agent-src/`.
+# `../docs/...` form that cannot resolve under `dist/agent-src/`.
 UNCHECKED_LINK_PREFIXES = (
     "../docs/guidelines/",
     "../../docs/guidelines/",
     "../docs/contracts/",
     "../../docs/contracts/",
+    # Consumer-layout root-escaping links (ADR-058): since the condensed
+    # output moved to `dist/agent-src/` the projected tree sits one level
+    # deeper than the consumer install (`.augment/rules/` — 2 deep), so the
+    # two-up forms below are authored for the consumer layout and cannot
+    # resolve in the package repo by construction. Same rationale as the
+    # docs/guidelines carve-out above; `validator_ignore` still audits the
+    # substring hits per rule.
+    "../../docs/",
+    "../../agents/",
+    "../../src/",
 )
 
 
@@ -209,7 +219,7 @@ def main() -> int:
         for v in viols:
             loc = f"{v.file}:{v.line}" if v.line else v.file
             print(f"❌  [{v.kind}] {loc} — {v.detail}")
-        print(f"\n{len(viols)} violation(s) in .agent-src/rules/")
+        print(f"\n{len(viols)} violation(s) in dist/agent-src/rules/")
         return 1
     rule_count = len(list(RULES_DIR.glob('*.md')))
     if not QUIET:

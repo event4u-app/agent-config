@@ -50,7 +50,7 @@ Beyond software: [`user-types/`](packages/core/.agent-src.uncondensed/user-types
 <details>
 <summary><b>Catalog at a glance</b> — raw artefact counts (maintainer reference)</summary>
 
-[![Skills](https://img.shields.io/badge/Skills-223-orange?style=flat-square)](.agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-79-orange?style=flat-square)](.agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-150-orange?style=flat-square)](.agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-74-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-orange?style=flat-square)](.agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](.agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-223-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-79-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-150-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-74-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 The headline is the **experience** (profile + packs), not the raw counts. Full catalog: [`docs/catalog.md`](docs/catalog.md).
 </details>
@@ -84,7 +84,7 @@ Working on the package itself? [Development](#development) covers the
 `task ci` pipeline, [Requirements](#requirements) the toolchain,
 [Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
 opt-in measurement loop. Source-of-truth tree is
-`packages/core/.agent-src.uncondensed/`; never hand-edit `.augment/` or `.agent-src/`.
+`packages/core/.agent-src.uncondensed/`; never hand-edit `.augment/` or `dist/agent-src/`.
 
 ---
 
@@ -180,7 +180,7 @@ refine → memory → analyze → plan → implement → test → verify → rep
 
 Any ambiguity halts the flow with numbered options — never a silent guess. Persona comes from `.agent-settings.yml` (`roles.active_role`): `senior-engineer` (default), `qa`, or `advisory` (plan-only).
 
-→ [Command reference](.agent-src/commands/implement-ticket.md) · [Flow contract](docs/contracts/implement-ticket-flow.md)
+→ [Command reference](dist/agent-src/commands/implement-ticket.md) · [Flow contract](docs/contracts/implement-ticket-flow.md)
 
 ### Sibling — `/work` (free-form prompt)
 
@@ -200,13 +200,13 @@ The first pass scores the prompt on five dimensions and routes on the band:
 
 After the band gate, the flow is identical to `/implement-ticket`. Free-form goal → `/work`; ticket payload → `/implement-ticket`.
 
-→ [Command reference](.agent-src/commands/work.md) · [`refine-prompt` skill](.agent-src/skills/refine-prompt/SKILL.md)
+→ [Command reference](dist/agent-src/commands/work.md) · [`refine-prompt` skill](dist/agent-src/skills/refine-prompt/SKILL.md)
 
 **After the run:** `agent-config explain last` reconstructs the trace (route · memory · council · halts · provider) — read-only, PII-scrubbed, offline. [Docs](docs/customization.md#explainability--explain-last)
 
 ### Product UI track
 
-UI-shaped work routes to one of three directive sets — `ui` (full audit→design→apply→review→polish→report), `ui-trivial` (≤ 1 file, ≤ 5 lines: apply→test→report), `mixed` (backend + UI: contract→ui→stitch). Existing-UI audit is a **hard gate** ([`ui-audit-gate`](.agent-src/rules/ui-audit-gate.md)); polish has a 2-round ceiling with a11y precedence. Stack detection → `blade-livewire-flux` / `react-shadcn` / `vue` / `plain`.
+UI-shaped work routes to one of three directive sets — `ui` (full audit→design→apply→review→polish→report), `ui-trivial` (≤ 1 file, ≤ 5 lines: apply→test→report), `mixed` (backend + UI: contract→ui→stitch). Existing-UI audit is a **hard gate** ([`ui-audit-gate`](dist/agent-src/rules/ui-audit-gate.md)); polish has a 2-round ceiling with a11y precedence. Stack detection → `blade-livewire-flux` / `react-shadcn` / `vue` / `plain`.
 
 → [Mental model](docs/ui-track-mental-model.md) (1 page) · [Flow contract](docs/contracts/ui-track-flow.md)
 
@@ -232,7 +232,7 @@ Under the hood: kernel-only · kernel + tier-1 · kernel + tier-1 + tier-2. Deta
 
 | Primitive | Voice | Disclosure |
 |---|---|---|
-| [`personas/*.md`](.agent-src/personas/) | Review-lens (internal critique) | n/a |
+| [`personas/*.md`](dist/agent-src/personas/) | Review-lens (internal critique) | n/a |
 | `.agent-user.md` (project root, gitignored) | The maintainer's own voice — `/post-as:me` | None (you are the author) |
 | [`agents/reference/ghostwriter/<slug>.md`](docs/contracts/ghostwriter-schema.md) (gitignored) | Documented public figure — `/post-as:ghostwriter` | **Mandatory, non-removable** footer |
 
@@ -377,7 +377,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 | [**Migration**](docs/MIGRATION.md) | Per-version upgrade steps |
 | [**Showcase**](docs/showcase.md) | More examples & expected behavior |
 
-Browse content: [all 150 commands](.agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
+Browse content: [all 150 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
 
 ---
 
@@ -386,7 +386,7 @@ Browse content: [all 150 commands](.agent-src/commands/) · [skills catalog](doc
 Working on the package itself? Edit `packages/core/.agent-src.uncondensed/`, regenerate trees:
 
 ```bash
-task sync             # regenerate .agent-src/ and .augment/
+task sync             # regenerate dist/agent-src/ and .augment/
 task generate-tools   # regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task ci               # full pipeline — green before PR
 task test             # unit + integration tests

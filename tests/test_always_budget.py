@@ -22,9 +22,9 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
+RULES_DIR = REPO_ROOT / "dist/agent-src" / "rules"
 SRC_PREFIX = ".agent-src.uncondensed/"
-COMP_PREFIX = ".agent-src/"
+COMP_PREFIX = "dist/agent-src/"
 
 TOTAL_CAP = 49_000
 TOLERANCE_BAND = 0.02  # G3 — overshoot ≤ 2 % accepted while Phase 2A pending

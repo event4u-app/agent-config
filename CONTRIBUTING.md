@@ -55,17 +55,17 @@ All checks must pass before a PR is merged:
 ## Source of truth
 
 - **Edit** `.agent-src.uncondensed/` — the authoring layer with verbose content.
-- **Do not edit** `.agent-src/` directly — it is the condensed output shipped
+- **Do not edit** `dist/agent-src/` directly — it is the condensed output shipped
   in the package, generated from the uncondensed layer by `task sync`.
 - **Do not edit** `.augment/` directly either — it is a local projection of
-  `.agent-src/` for Augment Code (gitignored), rebuilt by `task sync`.
+  `dist/agent-src/` for Augment Code (gitignored), rebuilt by `task sync`.
 - **Do not edit** `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` —
   they are generated projections for specific tools.
 
 Helper commands:
 
 ```bash
-task sync             # .agent-src.uncondensed/ → .agent-src/, then project → .augment/
+task sync             # .agent-src.uncondensed/ → dist/agent-src/, then project → .augment/
 task generate-tools   # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task test             # pytest tests/ + installer integration tests
 task lint-skills      # python3 scripts/skill_linter.py --all
@@ -88,13 +88,13 @@ task lint-skills      # python3 scripts/skill_linter.py --all
 - Each skill must pass `task lint-skills` — frontmatter, structure, size
   budgets, and self-containment are enforced by the linter.
 - Size budgets are enforced by the `size-enforcement` rule and the linter.
-  See [`size-enforcement`](.agent-src/rules/size-enforcement.md)
+  See [`size-enforcement`](dist/agent-src/rules/size-enforcement.md)
   for the current limits.
 - After editing content under `.agent-src.uncondensed/`, run `task sync` so
-  `.agent-src/`, `.augment/`, and the tool-specific projections stay in sync.
-- Skills must remain project-agnostic. Nothing in `.agent-src/` may reference a
+  `dist/agent-src/`, `.augment/`, and the tool-specific projections stay in sync.
+- Skills must remain project-agnostic. Nothing in `dist/agent-src/` may reference a
   specific consumer project, domain, or stack. The
-  [`augment-portability`](.agent-src/rules/augment-portability.md) rule and
+  [`augment-portability`](dist/agent-src/rules/augment-portability.md) rule and
   `scripts/check_portability.py` enforce this in CI.
 
 ## Agent-assisted contribution workflow

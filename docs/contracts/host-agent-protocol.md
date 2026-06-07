@@ -83,7 +83,7 @@ their semver, not derived from unstable stdout parsing.
   [`ADR-023`](../decisions/ADR-023-host-agent-protocol.md) ·
   [`ADR-024`](../decisions/ADR-024-workspace-v0-feature-floor.md) ·
   [`ADR-025`](../decisions/ADR-025-workspace-chrome.md).
-- Skill: [`ai-council`](../../.agent-src/skills/ai-council/SKILL.md) — uses
+- Skill: [`ai-council`](../../dist/agent-src/skills/ai-council/SKILL.md) — uses
   the same CLI subprocess shape (claude / codex / gemini) for council
   members; the workspace inherits the proven invocation paths.
 - Hooks: [`hook-architecture-v1`](hook-architecture-v1.md) — covers the

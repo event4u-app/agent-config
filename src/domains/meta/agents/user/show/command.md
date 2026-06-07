@@ -106,7 +106,7 @@ Do NOT chain to other `/agents user *` commands. Do NOT commit.
   a render target.)
 - Mirror the user's language for the rendered labels (`Identity` /
   `Identität`, `Language` / `Sprache`, etc.) per
-  [`language-and-tone`](../../../../.agent-src/rules/language-and-tone.md).
+  [`language-and-tone`](../../../../dist/agent-src/rules/language-and-tone.md).
 
 ## See also
 
