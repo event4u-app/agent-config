@@ -150,8 +150,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`update-form-request-messages`** — Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones.
 - **`upstream-contribute`** — Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
 - **`video`** — Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch.
-- **`video:from-script`** — Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview mode default (no spend); --mode commit renders live behind the cost gate.
-- **`video:from-song`** — Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit + one batch gate for live calls.
+- **`video:from-script`** — Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
+- **`video:from-song`** — Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
 - **`video:scene`** — Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
 - **`video:stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
 - **`video:storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
