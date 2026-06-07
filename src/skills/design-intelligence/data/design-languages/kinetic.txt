@@ -1,0 +1,98 @@
+Kinetic
+运动优先设计，排版是主要的视觉媒介。具有无限选框、视口缩放文本、滚动触发动画和激进的大写样式。高对比度的野兽派能量，有节奏的动作。
+1. 沉浸式叙事与品牌官网 (Storytelling)
+2. 具有强引导需求的复杂流程 (Guidance)
+3. 数据可视化与实时监控 (Data Visualization)
+4. 情感化设计与反馈 (Micro-interactions)
+System Prompt: Kinetic Mobile Brutalism
+Design Philosophy
+Core Principle: Typography is the architecture of the mobile screen. This style rejects standard app layouts in favor of a "kinetic poster" approach. Text is treated as a graphic element; headers are hero units. Motion is constant and reactive—if an element isn't moving, it should be responding to the user’s thumb. Every interaction feels heavy, tactile, and high-contrast.
+Aesthetic Vibe: High-energy street brutalism. Precision meets raw power. It is an underground zine optimized for a 6-inch screen. Everything is uppercase, oversized, and uncomfortably bold. It screams rather than whispers. Clarity is achieved through extreme contrast and massive scale, not through whitespace or subtle shadows.
+Visual DNA: Relentless motion and aggressive scale. Numbers tower over labels. Scrolling isn't just movement—it's a performance. Use hard edges ($0px$ radius), sharp $2px$ borders, and instant color flips. If traditional mobile design uses a $14pt$ body and $24pt$ header, this style uses $18pt$ body and $80pt$headers.
+Signature Elements:
+● Infinite Marquees: Horizontal scrolling text that never stops (using react-native-reanimated).
+● Aggressive Typography: Display text is ALWAYS uppercase with tight tracking.
+● Massive Numerical Elements: Numbers ($60-120pt$) used as background graphic textures.
+● Tactile Color Inversions: On press, cards flood with accent color instantly (no slow fades).
+● Scroll-Driven Scaling: Elements scale or rotate based on scroll position (using Interpolate).
+● Brutalist Geometry: $2px$ solid borders, $0px$ border-radius, hairline grid dividers.
+
+Design Token System (The DNA)
+Color Architecture
+Token
+Hex Value
+Usage
+background
+#09090B
+Rich black (primary canvas)
+foreground
+#FAFAFA
+Off-white (primary text)
+muted
+#27272A
+Dark gray (secondary surfaces/bg numbers)
+muted-foreground
+#A1A1AA
+Zinc 400 (body text/descriptions)
+accent
+#DFE104
+Acid yellow (energy/highlight/active states)
+accent-foreground
+#000000
+Pure black (text on accent backgrounds)
+border
+#3F3F46
+Zinc 700 (structural lines)
+Typography System
+● Font Selection: Geometric Sans-Serifs (e.g., Space Grotesk, Inter, or System Bold).
+● Scale Hierarchy:
+    ○ Hero/Display: $60pt$ to $120pt$ (use PixelRatio for scaling).
+    ○ Section Headings: $40pt$ to $50pt$.
+    ○ Card Titles: $28pt$ to $32pt$.
+    ○ Body/Descriptions: $18pt$ to $20pt$.
+    ○ Small Labels: $12pt$ (Uppercase + Wide Tracking).
+● Type Rules:
+    ○ Uppercase: All display headings, buttons, and navigation items.
+    ○ Letter Spacing: letterSpacing: -1 for large text, +2 for small labels.
+    ○ Line Height: lineHeight should be $0.9x$ to $1.1x$ the font size for headings to create a "blocky" look.
+Shape & Layout
+● Base Unit: $4pt$ grid.
+● Border Radius: Strictly 0.
+● Borders: $2px$ solid (use borderWidth: 2).
+● Shadows: NONE. Use color layering and borders for depth.
+● Padding: Aggressive. Section padding py: 40, Card padding p: 24.
+
+Component Styling Principles
+Buttons
+● Structure: Height 64px or 80px. Bold, uppercase text.
+● Primary: Background #DFE104, Text #000000.
+● Outline: borderWidth: 2, Border #3F3F46, Transparent background.
+● Interaction: Use Pressable with useAnimatedStyle. On onPressIn, scale to 0.95. On onPressOut, return to 1.0.
+Cards & Containers
+● Styling: Sharp corners, #3F3F46 border, #09090B background.
+● Interaction: On press, the background should "flood" with #DFE104 and text should flip to black.
+● Stacking: Use zIndex and translateY to create overlapping "sticky" card effects during scroll.
+Inputs
+● Styling: Height 80px. borderBottomWidth: 2. Large uppercase text ($24pt+$).
+● Focus: Border color flips to Acid Yellow. Placeholder text in Muted Zinc.
+
+Animation & Motion System (The Kinetic Engine)
+Marquee Motion
+● Implement using react-native-reanimated.
+● High Energy: Speed 5s per loop, no easing (easing: Linear).
+● Rule: No gradient fades at the edges. Text should clip sharply at the screen bounds.
+Scroll-Triggered Transforms
+● Hero Parallax: As the user scrolls, the hero text should scale from 1.0 to 1.3 and fade to 0.
+● Sticky Header: Headers should snap and "push" the previous section's content.
+Micro-Interactions
+● Haptic Feedback: Trigger Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium) on every button press and card flip.
+● Instant Transitions: Color changes should be near-instant ($100ms$) to maintain the "brutalist" feel. Scale transforms can be slightly smoother ($300ms$).
+
+Implementation Guidelines (React Native Specifics)
+● Performance: Use the Native Thread for all animations (Reanimated). Avoid setState for scroll animations.
+● Responsive Scaling: Use a helper function to scale font sizes based on screen width (windowWidth / 375 * size).
+● Safe Areas: Ensure massive headers don't collide with the notch/status bar using react-native-safe-area-context.
+● Accessibility:
+    ○ Maintain high contrast ratios ($15:1$ for text).
+    ○ Ensure accessibilityRole is defined for the massive custom buttons.
+    ○ Respect isReduceMotionEnabled to stop marquees for sensitive users.

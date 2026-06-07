@@ -1,0 +1,133 @@
+Material Design
+有趣、动态的颜色提取、药丸形状的按钮和不同的仰角状态。基于谷歌的Material Design 3，具有增强的深度和微观交互。
+1. 安卓（Android）生态系统应用
+2. 跨平台工具与生产力软件
+3. 数据密集型 B 端后台 (Material UI)
+
+System Prompt: Material You (MD3) for React Native
+Design Philosophy
+Core Principles: Personal, adaptive, and spirited. This framework translates Material Design 3’s organic system into a mobile-first experience. It prioritizes tonal surfaces over stark whites, utilizes organic shapes with soft curves, and leverages mobile-specific haptics and gestures.
+Vibe: Friendly, soft, rounded, and tactile. The UI feels alive—responding to touch with fluid motion and "state layers." Surfaces are depth-aware, using tonal tinting rather than heavy shadows to define hierarchy.
+Mobile-Specific Implementation Details:
+● Touch-First Feedback: Every interactive element utilizes Pressable with a state layer and subtle scaletransformations.
+● Haptic Integration: Success, warning, and heavy interactions (like FAB presses) trigger HapticFeedback for a physical feel.
+● Atmospheric Depth: Since CSS backdrop-blur is heavy on mobile, we use layered View components with LinearGradient and absolute-positioned blurred shapes to simulate depth.
+● Safe Area Awareness: Full compliance with react-native-safe-area-context to ensure organic shapes flow behind status bars and home indicators.
+● Fluid Motion: Powered by Reanimated using the signature Material "Emphasized" easing.
+
+Design Token System (The DNA)
+Colors (Light Mode)
+Seed Color: Purple/Violet (#6750A4)
+Token
+Hex Value
+Mobile Usage
+Background (Surface)
+#FFFBFE
+Screen-level containers (warm off-white)
+Foreground (On Surface)
+#1C1B1F
+Primary text and icons
+Primary
+#6750A4
+Main CTAs, active tab icons, focus states
+On Primary
+#FFFFFF
+Text/Icons on top of Primary
+Secondary Container
+#E8DEF8
+Chips, inactive toggle tracks, subtle buttons
+On Secondary Container
+#1D192B
+Text on secondary surfaces
+Tertiary
+#7D5260
+FABs, badges, accent highlights
+Surface Container
+#F3EDF7
+Card backgrounds, Bottom Sheets
+Surface Container Low
+#E7E0EC
+Text inputs, search bars
+Outline
+#79747E
+Unfocused borders, dividers
+State Layer Rules (Opacity Overlays):
+● Pressed State (Solid): Overlay black at 10% or white at 15% depending on background brightness.
+● Pressed State (Ghost): Primary color at 12% opacity.
+● Disabled: 38% opacity on both container and content.
+Typography
+Font Family: Roboto (System default on Android; load via Google Fonts for iOS parity).
+Scale
+Size
+Weight
+Line Height
+Display Large
+56px
+400
+64px
+Headline Large
+32px
+500
+40px
+Title Large
+22px
+500
+28px
+Body Large
+16px
+400
+24px
+Label Medium
+12px
+500
+16px
+● Letter Spacing: Buttons and Labels use 0.1px tracking for readability at small sizes.
+Radius & Borders
+● Extra Small (8px): Chips, small tooltips.
+● Small (12px): Tooltips, mini-cards.
+● Medium (16px): Standard Cards, Selection Dialogs.
+● Large (28px): Main Screen Cards, Bottom Sheets.
+● Full (Pills): All Buttons, Search Bars, FABs.
+● Inputs: borderTopLeftRadius: 12, borderTopRightRadius: 12, borderBottomLeftRadius: 0, borderBottomRightRadius: 0.
+
+Shadows & Effects
+Mobile elevation is primarily achieved through Tonal Elevation (overlaying a color) rather than just shadows.
+● Shadow Style: Use shadowColor with 0 offset and high blur for iOS; use elevation for Android.
+● Elevation Levels:
+    ○ Level 0: No shadow, flat surface.
+    ○ Level 1 (Cards): Subtle depth for list items.
+    ○ Level 2 (Active Cards): Enhanced depth for dragged or pressed items.
+    ○ Level 3 (FABs): Distinct floating effect.
+● Blur Shapes: Use absolute positioned View components with Canvas (via react-native-skia) or pre-rendered blurred SVG assets to create atmospheric background "blobs."
+
+Component Styling Principles
+Buttons
+● Shape: Always Pill-Shaped (borderRadius: 999).
+● Feedback: Must use Pressable with an Animated.View inside to handle scale: 0.95 on press.
+● FAB: 56x56dp, Tertiary color, borderRadius: 16 (rounded square) or 28 (circular).
+Inputs (M3 Filled Style)
+● Visuals: Background #E7E0EC, flat bottom with 2px indicator.
+● Animation: Label floats upward on focus using Reanimated. Bottom border expands from center.
+Cards
+● Radius: 24px-28px.
+● Separation: Use Surface Container color against the Surface background. Avoid harsh borders.
+
+Animation & Motion
+All animations must use the Material Emphasized Easing:
+Easing.bezier(0.2, 0, 0, 1)
+● Duration:
+    ○ Small (Switches/Checkboxes): 100ms.
+    ○ Medium (Buttons/Cards): 250ms.
+    ○ Large (Modals/Screen Transitions): 400ms.
+
+The "Mobile Bold Factor"
+1. Haptic Choreography: Light haptics on toggle, medium on long-press.
+2. Organic Overlays: Backgrounds must feature at least two blurred organic shapes (Primary/Tertiary) at 15% opacity to break the "app-grid" feel.
+3. Tonal Navigation: Bottom navigation bar should use a Secondary Container pill for the active icon state.
+4. Edge-to-Edge: UI elements should bleed into the safe areas where appropriate (e.g., hero images) to feel modern.
+
+Anti-Patterns (Avoid)
+● ❌ No Square Buttons: Everything interactive is pill-shaped or heavily rounded.
+● ❌ No Pure White: Use #FFFBFE for screens.
+● ❌ No Default Opacity Cuts: Use the Tonal Palette tokens for states, not just opacity: 0.5.
+● ❌ No Harsh Shadows: If it looks like a "drop shadow," it's too heavy. It should look like an "ambient glow.

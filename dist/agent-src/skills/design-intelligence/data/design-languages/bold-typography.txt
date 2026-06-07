@@ -1,0 +1,107 @@
+Bold Typography
+以字体为导向的设计，将大字体作为主要的视觉元素。超大标题、极端对比和戏剧性的负面空间创造了海报般的构图，文字成为了艺术。
+1. 创意品牌官网与产品首屏（Hero Section）
+2. 纯内容驱动的应用与阅读平台
+3. 活动推广、展览与快闪页面
+
+System Prompt: Bold Typography (Mobile/React Native)
+Design Philosophy
+Bold Typography Mobile is the translation of editorial poster design into a handheld experience. In this mobile-first environment, typography is the interface. We reject typical mobile "clutter" (shadows, rounded corners, heavy icons) in favor of high-contrast type and intentional negative space. The goal is to make a 6.7-inch screen feel like a premium printed broadsheet.
+Core Principles
+● Type as Hero: Headlines aren't just titles; they are the UI. A massive, tight-kerned headline (48pt+) is the primary visual anchor, replacing the need for decorative imagery.
+● Extreme Scale Contrast: Maintain a dramatic ratio between H1 and Body. On mobile, we push for a 5:1 ratio to ensure the hierarchy is undeniable even on small displays.
+● Deliberate Negative Space: Whitespace is used to frame "typographic blocks." We favor large vertical gaps between sections (60px+) to let the letterforms breathe.
+● Strict Hierarchy: The eye must follow a linear, editorial path: Massive Headline → Subhead (Mono) → Body → High-contrast CTA.
+● Restrained Palette: Near-black and warm-white. A single "Vermillion" accent for interaction. Color never decorates; it only indicates importance or action.
+The Vibe
+Confident. Editorial. High-end. It feels like a luxury brand's mobile app or a digital design manifesto. Every interaction is decisive, and every word is essential.
+Visual Signatures:
+● Edge-to-Edge Typography: Headlines that push the horizontal bounds of the screen.
+● No Rounded Corners: borderRadius: 0 across all buttons, inputs, and containers.
+● Underlines as Primary UI: Interactive text is identified by thick (2pt-3pt) accent underlines.
+● Sharp Transitions: Instant or high-speed transitions. No "bouncing" or "elastic" animations.
+
+Design Token System
+Colors (Dark Mode)
+JSON
+
+{
+  "background":        "#0A0A0A", // Near-black
+  "foreground":        "#FAFAFA", // Warm white
+  "muted":             "#1A1A1A", // Subtle surface
+  "mutedForeground":   "#737373", // Secondary text
+  "accent":            "#FF3D00", // Vermillion
+  "accentForeground":  "#0A0A0A", // Dark text on accent
+  "border":            "#262626", // Precise dividers
+  "input":             "#1A1A1A", // Input surfaces
+  "card":              "#0F0F0F"  // Elevation
+}
+
+Typography (React Native Style Objects)
+● Primary Stack: Inter-Tight, System (Weight: 600+)
+● Display Stack: PlayfairDisplay-Italic (For pull quotes)
+● Mono Stack: JetBrainsMono-Regular (For labels/stats)
+Scale System:
+● xs: 12px (Labels/Captions - Mono)
+● sm: 14px (Secondary info)
+● base: 16px (Body - standard for iOS/Android readability)
+● lg: 18px (Lead paragraphs)
+● xl: 22px (Subheads)
+● 2xl: 32px (Section intros)
+● 3xl: 40px (H2)
+● 4xl: 56px (H1 - Mobile Standard)
+● 5xl: 72px (Hero Statement)
+Letter Spacing (Tracking):
+● tighter: -1.5px (Headlines)
+● tight: -0.5px (Subheads)
+● wide: 1px (Mono labels)
+● wider: 2px (All-caps CTAs)
+Line Heights:
+● tight: 1.1 (Headlines)
+● normal: 1.6 (Body)
+
+Component Stylings
+Buttons
+Primary (The Underline CTA):
+● flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 0.
+● Text: Accent color, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1.5.
+● Decoration: A View acting as a bottom border: height: 2, backgroundColor: accent, marginTop: 4.
+● Feedback: opacity: 0.7 on press.
+Secondary (The Inverted Box):
+● borderWidth: 1, borderColor: foreground, borderRadius: 0.
+● paddingVertical: 16, paddingHorizontal: 24, backgroundColor: 'transparent'.
+● Text: Foreground color, centered, uppercase.
+Cards & Containers
+● No Shadows: Use borderBottomWidth: 1 and borderColor: border to separate content.
+● Sharp Edges: borderRadius: 0 for all view wrappers.
+● Section Spacing: Use paddingVertical: 64 as a standard for section breaks.
+● Accent Anchor: A small decorative View (width: 40, height: 4, backgroundColor: accent) placed above section titles.
+Inputs
+● height: 56, backgroundColor: input, borderWidth: 1, borderColor: border, borderRadius: 0.
+● paddingHorizontal: 16, color: foreground, fontSize: 16.
+● Focus State: borderColor: accent.
+
+Layout Strategy (Mobile)
+● Container Padding: Standard paddingHorizontal: 24.
+● Staggered Layout: Use asymmetric margins (e.g., marginLeft: 0 for headlines, marginLeft: 40 for body text) to create an editorial "grid" feel.
+● Verticality: Prioritize a single-column flow with massive vertical gaps.
+● Bleed: Large decorative type (like section numbers "01") should partially bleed off the screen edge (right: -20).
+
+Effects & Animation (Reanimated/Moti)
+● Philosophy: Fast, crisp, decisive.
+● Timing: 200ms duration for all transforms.
+● Easing: Easing.bezier(0.25, 0, 0, 1).
+● Entrance: Fade in + subtle slide up (10px) for text blocks.
+● Interactive: Pressing a card should result in a color shift (background from black to muted), not a "lift" or shadow effect.
+
+Iconography
+● Library: Lucide-react-native.
+● Style: strokeWidth: 1.5.
+● Size: 20px for UI controls, 32px for feature anchors.
+● Strict Rule: Icons must always be accompanied by a Mono-stack text label. Icons never stand alone unless they are standard navigation (e.g., Back arrow).
+
+Accessibility
+● Contrast: Ensure foreground/background ratio remains 18:1.
+● Touch Targets: All buttons/links must have a minimum hitSlop or height of 44px.
+● Readability: Body text never goes below 16px to ensure legibility on high-DPI mobile screens.
+● Visual Cues: Since we avoid shadows/depth, focus and active states must use the Accent Color (#FF3D00) or high-contrast inversion to indicate selection.

@@ -1,0 +1,120 @@
+Academia
+大学美学，古老的图书馆，温暖的纸张纹理，传统的衬线，金色/深红色的色调。
+1、知识管理与深度阅读工具类
+2、仪式感较强的个人品牌与创意作品集
+3、解谜与角色扮演游戏
+4、特定文化调性的社区平台
+
+System Prompt: Scholarly Academia Mobile (React Native)
+Design Philosophy
+Core Principles: Scholarly gravitas meets timeless elegance, optimized for the handheld experience. This style channels the atmosphere of centuries-old university libraries and Victorian study halls into a mobile interface. Every interaction—from a scroll to a tap—must feel like handling a prestigious artifact: rich material references (mahogany, brass, parchment) combined with measured ornamentation and traditional typography. Vibe: Scholarly, Prestigious, Tactile, Timeless, Dignified, Intellectual. The Academia Mobile Promise: This is not a flat mobile app. It is a digital "pocket watch" or "leather-bound journal." We trade modern minimalism for physical depth, replacing generic cards with "ledger pages" and standard buttons with "etched brass hardware."
+
+Design Token System (The DNA)
+Color System (The Library at Night)
+Foundation Colors:
+● background: #1C1714 (Deep Mahogany) - Primary screen background.
+● backgroundAlt: #251E19 (Aged Oak) - Surface elevation for cards and modals.
+● foreground: #E8DFD4 (Antique Parchment) - Primary text.
+● muted: #3D332B (Worn Leather) - Input backgrounds, disabled states.
+● mutedForeground: #9C8B7A (Faded Ink) - Secondary text and labels.
+● border: #4A3F35 (Wood Grain) - Subtle dividers.
+Accent Colors:
+● accent: #C9A962 (Polished Brass) - Primary interactive color (icons, links, active borders).
+● accentSecondary: #8B2635 (Library Crimson) - High-importance badges/wax seals.
+● accentForeground: #1C1714 (Dark on Brass) - Text on brass buttons.
+Brass Gradient (for Buttons): ['#D4B872', '#C9A962', '#B8953F'] (Linear Gradient)
+
+Typography System
+Font Families:
+● Heading: CormorantGaramond-Medium (Serif)
+● Body: CrimsonPro-Regular (Book-style Serif)
+● Display/Labels: Cinzel-SemiBold (Engraved All-caps)
+Type Scale (Mobile Optimized):
+● Display: 32px - 40px (Cormorant Garamond, tight leading)
+● H1: 28px - 32px (Cormorant Garamond)
+● H2: 22px - 26px (Cormorant Garamond)
+● Body: 16px - 18px (Crimson Pro, Leading: 24px-26px)
+● Labels/Overlines: 10px - 12px (Cinzel, Uppercase, Letter Spacing: 2px-3px)
+Special Typography Patterns:
+● Drop Caps: First letter of sections uses Cinzel, 60px, Color: Brass.
+● Volume Numbering: Major sections must be prefixed with "VOLUME I", "VOLUME II" in Cinzel, 10px, Brass.
+
+Radius & Border System
+● Default Radius: 4px (Buttons, Inputs, Cards).
+● Arch-Top Special: borderTopLeftRadius: 100, borderTopRightRadius: 100 (Applied to hero images and feature containers to mimic cathedral windows).
+● Border Thickness: 1px standard; 2px for brass interactive highlights.
+
+Shadows & Depth (Mobile-Specific)
+● Card Elevation: shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 6, elevation: 8.
+● Brass Button: shadowColor: '#C9A962', shadowOpacity: 0.2, shadowRadius: 4.
+● Engraved Text: Applied via subtle textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 1.
+
+Textures & Atmospheric Effects
+1. Vignette Overlay: Use a LinearGradient or absolute positioned View with a radial gradient to darken screen corners.
+2. Sepia Filter: All images must have a sepia tint by default (via Image filters or semi-transparent #C9A962overlay) until interacted with.
+3. Corner Flourishes: Use absolute positioned View elements at the top-left and bottom-right of major cards.
+    ○ Implementation: 24px x 24px L-shaped borders in Brass.
+4. Ornate Divider: A horizontal line with a centered Unicode glyph (e.g., "✶").
+    ○ Style: Gradient line Transparent -> #C9A962 -> Transparent.
+
+Component Styling Principles
+Buttons
+● Primary: Brass gradient background, Cinzel font, dark mahogany text, uppercase.
+● Secondary: Transparent background, 2px Brass border, Brass text.
+● Tertiary/Ghost: No border, Brass text, Cinzel font.
+● Size: Height 52px (Standard), 44px (Small).
+Cards
+● Background: #251E19 (Aged Oak).
+● Border: 1px of #4A3F35 (Wood Grain).
+● Arch Treatment: Top images in cards must use the rounded Arch-Top.
+Wax Seal Badges
+● Circular #8B2635 (Crimson) badge with a 1px Brass border.
+● Typically contains a small star or quill icon.
+● Position: Floating over the top-right corner of cards/images.
+Form Inputs
+● Background: #3D332B (Worn Leather).
+● Text: #E8DFD4 (Parchment).
+● Focus State: Border changes to Brass with a subtle glow.
+
+Layout Principles
+● Padding: Standard horizontal screen padding: 20px or 24px.
+● Vertical Rhythm: Generous spacing between sections (48px to 64px).
+● Alignment: Headings are typically centered for a formal "manifesto" feel; body text is left-aligned or justified for a "book" feel.
+
+The "Bold Factor" (Mandatory Signature Elements)
+1. Arch-Topped Imagery: Every main image must have a cathedral-arch top.
+2. Roman Numeral System: Use "Volume I, II, III" for section headers.
+3. Brass Interactive Language: Every tappable item must feature Brass (#C9A962).
+4. Drop Cap Intros: The first paragraph of any major section begins with a large Brass Cinzel letter.
+5. Tactile Textures: Use the vignette and corner flourishes to avoid a "flat" digital look.
+
+Animation & Motion
+● Philosophy: Heavy, deliberate, and smooth. No "springy" or "bouncing" effects.
+● Transitions: Use Timing with Easing.out(Easing.poly(4)).
+● Signature Interaction: On press, buttons should "dim" slightly (opacity 0.8) to feel like physical pressure on metal.
+
+Anti-Patterns (What to Avoid)
+● NO Pure White (#FFFFFF) or Pure Black (#000000). Use Parchment and Mahogany.
+● NO Sans-Serif fonts unless absolutely required for small system metadata.
+● NO Bright, neon, or saturated colors.
+● NO Sharp geometric/tech-inspired iconography.
+● NO Fast, poppy, or elastic animations.
+
+Implementation Reference (NativeWind / React Native)
+JavaScript
+
+// Example Token Usage
+const academiaTheme = {
+  colors: {
+    mahogany: '#1C1714',
+    oak: '#251E19',
+    parchment: '#E8DFD4',
+    brass: '#C9A962',
+    crimson: '#8B2635',
+    ink: '#9C8B7A',
+  },
+  archStyle: {
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 100,
+  }
+};

@@ -1,0 +1,123 @@
+Modern Dark
+一种电影般的高精度暗模式设计，通过动画渐变斑点、鼠标跟踪聚光灯效果和精心制作的微交互实现分层环境照明，感觉就像高级软件。
+"1. 影音娱乐与流媒体平台
+2. 开发者工具与专业生产力软件
+3. 金融、科技与 AI 仪表盘
+4. 高端运动与奢华品牌"
+
+Design Philosophy
+Core Principles: Precision, tactile depth, and fluid motion define this mobile design system. For React Native, every component is treated as a physical layer within a stacked 3D space, illuminated by virtual light sources. The design communicates "high-end mobile utility"—as responsive and refined as the Linear mobile app or Apple’s native interface. Every shadow uses multiple layers, every gradient is dithered to prevent banding, and every interaction uses precise haptic feedback combined with Expo.out easing.
+Vibe: Cinematic Technical Minimalism. It’s a "Dark Mode First" aesthetic, utilizing near-blacks (#050506) and deep indigos. Imagine a high-end pro tool interface viewed through frosted glass at night. It is technical but inviting, using soft "glow" sources (#5E6AD2) to guide the thumb. It should feel like a premium native iOS/Android app, not a web-wrapper.
+Differentiation: The signature is Atmospheric Depth. While most mobile apps are flat, this system uses:
+● Layered Backgrounds: Stacked View layers with varying opacities, blur intensities, and subtle noise textures.
+● Animated Ambient Light: Large, slow-moving blurred Canvas objects (using react-native-skia or Animated) that simulate light pools.
+● Haptic-Linked Interactions: Every "Pressable" event is paired with subtle haptics (Impact Light/Medium) to reinforce the "hardware" feel.
+● Spring-less Precision: Eschewing "bouncy" animations for sophisticated Bezier(0.16, 1, 0.3, 1) curves.
+
+Design Token System (The DNA)
+Color Strategy: Deep Space & Ambient Light
+Token
+Value
+Usage
+bg-deep
+#020203
+Screen background, Bottom Tab bar base
+bg-base
+#050506
+Primary view container background
+bg-elevated
+#0a0a0c
+Modals, Bottom sheets, Surface cards
+surface
+rgba(255,255,255,0.05)
+Card backgrounds, list items
+foreground
+#EDEDEF
+Primary text (High contrast)
+foreground-muted
+#8A8F98
+Secondary labels, body text
+accent
+#5E6AD2
+Buttons, active icons, primary brand glows
+accent-glow
+rgba(94,106,210,0.2)
+Ambient shadows and light emission
+border-default
+rgba(255,255,255,0.08)
+Subtle hairline dividers (0.5pt on iOS)
+
+Typography System (React Native)
+Font Family: Inter, GeistSans-Regular, or System San Francisco/Roboto.
+Level
+Size
+Weight
+Letter Spacing
+Display
+48
+700
+-1.5
+H1
+32
+600
+-0.5
+H2
+24
+600
+-0.5
+H3
+18
+600
+0
+Body
+16
+400
+0
+Label/Mono
+12
+500
+1.2 (Uppercase)
+Gradient Text: Implement using mask-view and react-native-linear-gradient. Headers should transition from #FFFFFF to rgba(255,255,255,0.7) vertically.
+
+Component Styling Principles
+1. The Background System
+Never use a single solid color for the screen.
+● Base: A LinearGradient from #0a0a0f at the top to #020203 at the bottom.
+● The "Blobs": Use AbsoluteFill views with borderRadius equal to half their width, high blurRadius (30-50), and low opacity (0.1).
+● Animation: Use useAnimatedStyle from Reanimated to slowly oscillate the translateX and translateY of these light pools.
+2. Cards & Containers
+● Radius: Always borderRadius: 16.
+● Border: Use borderWidth: StyleSheet.hairlineWidth with rgba(255,255,255,0.1).
+● Glow: Apply a subtle top-edge highlight using a 1px LinearGradient inside the card.
+● Shadow: React Native shadows are limited on Android; use react-native-shadow-2 or Skia to achieve the "3-layer" shadow look (Ambient + Diffuse + Accent).
+3. Buttons (Pressables)
+● Primary: Background #5E6AD2. Text #FFFFFF.
+● Interaction: On onPressIn, scale to 0.97. On onPressOut, scale back to 1.0. Use Selection haptic feedback.
+● Visual: Add a 10% opacity white "Shine" gradient overlaying the top half of the button.
+4. Interactive Navigation
+● Tab Bar: Use BlurView (expo-blur) with intensity={20} and tint="dark".
+● Active State: The active icon should have a small accent-glow shadow behind it.
+● Transitions: Shared Element Transitions for navigating from a card to a detail view, ensuring the card's border and background flow seamlessly.
+
+Layout & Motion
+Spacing Scale
+● Base Unit: 4pt.
+● Screen Margins: 20pt (Standard) or 16pt (Tight).
+● Gaps: Use gap (available in modern RN) with values of 8, 12, 16, or 24.
+Animation Specs
+● Easing: Easing.bezier(0.16, 1, 0.3, 1) (Expo Out).
+● Duration: * Micro-interactions (Toggle/Press): 200ms.
+    ○ Screen Transitions: 400ms.
+    ○ Modals (Bottom Sheet): 500ms with custom spring (damping: 20, stiffness: 90).
+
+Anti-Patterns (What to Avoid)
+● Pure Black (#000000): It causes "OLED Smearing" on mobile screens. Stick to #050506.
+● Standard OS Modals: Avoid default Modal components; use "Bottom Sheets" (like gorhom/bottom-sheet) with blurred backdrops to maintain depth.
+● Full Opacity Borders: Never use solid grey borders. Always use rgba white/black for natural blending.
+● Laggy Blobs: Do not use too many blurRadius effects on the main JS thread. Always use useNativeDriver: true or Skia.
+
+The "Bold Factor" (Signature Elements)
+1. Haptic Precision: Tactile feedback on every toggle, successful action, and bottom sheet detent.
+2. Glassmorphism: Heavy use of BlurView for headers and navigation to maintain the "Frosted Glass" aesthetic.
+3. Accent Glows: A faint, non-distracting glow behind primary actions that pulses slightly when the screen is idle.
+4. Bento Layouts: For dashboards, use Flexbox to create asymmetric cards (e.g., one card taking 60% width, the other 40% with different heights).

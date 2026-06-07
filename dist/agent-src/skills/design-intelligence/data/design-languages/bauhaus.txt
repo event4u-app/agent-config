@@ -1,0 +1,140 @@
+Bauhaus
+大胆的几何现代主义，包含圆形、方形和三角形。主色调（红/蓝/黄），边缘鲜明，阴影强烈。功能性与艺术性兼备，带有建构主义的不对称。
+1. 极简主义品牌官网与电商
+2. 工具类与高效率 App
+3. 数字媒体与在线杂志
+
+Design Style: Bauhaus (Mobile)
+1. Design Philosophy
+The Bauhaus style embodies the revolutionary principle "form follows function" while celebrating pure geometric beauty and primary color theory. On mobile, this translates to tactile constructivism—the screen is a canvas where elements are physically stacked blocks. The aesthetic creates a high-impact, poster-like experience in the palm of the hand: bold, touch-centric, and unapologetically graphic.
+Vibe: Tactile, Constructivist, Geometric, High-Contrast, Bold, Architectural
+Core Concept: The mobile interface is a vertical geometric composition. Scroll views are not just content streams but stacked layers of colored paper and rigid shapes. The limited screen real estate forces a focus on massive typography and distinct color blocking (Red #D02020, Blue #1040C0, Yellow #F0C020). Every tap should feel mechanical and substantial.
+Key Characteristics:
+● Geometric Purity: UI elements are strictly circles (buttons/avatars) or squares (cards/inputs).
+● Tactile Depth: Hard shadows indicate interactivity; elements look "pressable."
+● Color Blocking: distinct screen sections use solid primary colors to separate content without whitespace.
+● Thick Borders: 2px and 3px black borders ensure legibility and distinct separation on small screens.
+● Vertical Rhythm: Strong vertical stacking with deliberate spacing, avoiding clutter.
+● Constructivist Typography: Headlines are massive (text-4xl to text-5xl) relative to screen width, breaking traditional mobile scaling rules.
+● Thumb-Friendly: Interactive zones are large, distinct, and geometrically defined.
+2. Design Token System (The DNA)
+Colors (Single Palette - Light Mode)
+The palette remains strictly Bauhaus primaries, optimized for high contrast outdoors.
+● background: #F0F0F0 (Off-white canvas)
+● foreground: #121212 (Stark Black)
+● primary-red: #D02020 (Bauhaus Red)
+● primary-blue: #1040C0 (Bauhaus Blue)
+● primary-yellow: #F0C020 (Bauhaus Yellow)
+● border: #121212 (Thick, distinct borders)
+● muted: #E0E0E0
+Typography
+● Font Family: 'Outfit' (geometric sans-serif).
+● Font Import: Outfit:wght@400;500;700;900
+● Scaling: Aggressive scaling adapted for vertical viewports.
+    ○ Display: text-4xl → text-5xl (Massive headers taking up 30-40% of screen width)
+    ○ Subheadings: text-xl → text-2xl
+    ○ Body: text-base (16px minimum for legibility)
+    ○ Button Text: text-lg (Large for readability)
+● Weights:
+    ○ Headlines: font-black (900) uppercase, tight tracking (tracking-tighter)
+    ○ Buttons/Nav: font-bold (700) uppercase, wide tracking (tracking-wide)
+    ○ Body: font-medium (500)
+● Line Height: Tight (leading-none) for headlines to save vertical space; leading-relaxed for body text.
+Radius & Border
+● Radius: Strict Binary—rounded-none (0px) for layout blocks, inputs, and cards; rounded-full (9999px) for primary action buttons and avatars.
+● Border Widths:
+    ○ Standard Elements: border-2 (2px)
+    ○ Major Containers/Bottom Nav: border-t-2 or border-3
+    ○ Separators: divide-y-2
+● Border Color: Always #121212 (black).
+Shadows/Effects
+● Hard Offset Shadows (Tactile feedback):
+    ○ Small elements (Tags/Icons): shadow-[2px_2px_0px_0px_black]
+    ○ Buttons/Cards: shadow-[4px_4px_0px_0px_black] (Reduced from web 8px to save screen width)
+    ○ Floating Action Button (FAB): shadow-[5px_5px_0px_0px_black]
+● Touch Feedback: active:translate-x-[2px] active:translate-y-[2px] active:shadow-none (Instant mechanical depression).
+● Patterns:
+    ○ Dot grid backgrounds on "Paper" colored sections (background-size: 16px 16px).
+    ○ Screen transitions: Slide-over with hard black borders.
+3. Component Stylings
+Buttons (Touch Targets)
+● Minimum Size: Height h-12 or h-14 (48px-56px) for thumb accessibility.
+● Variants:
+    ○ Primary (CTA): w-full bg-[#D02020] text-white border-2 border-black shadow-[4px_4px_0px_0px_black]
+    ○ Secondary: w-full bg-[#1040C0] text-white border-2 border-black shadow-[4px_4px_0px_0px_black]
+    ○ Floating Action (FAB): h-14 w-14 rounded-full bg-[#F0C020] border-2 border-black shadow-[4px_4px_0px_0px_black] flex items-center justify-center
+● Shapes: Full-width rectangular buttons (rounded-none) or pill-shaped (rounded-full) for bottom-sticky actions.
+● States: NO hover. Focus on active state (press down effect).
+Cards (Mobile Stack)
+● Base Style: White background, border-2 border-black, shadow-[4px_4px_0px_0px_black], mb-6.
+● Decoration:
+    ○ Geometric badge in top-right: absolute top-0 right-0 h-8 w-8 bg-[#F0C020] border-l-2 border-b-2 border-black flex items-center justify-center.
+● Interaction: Entire card is a touch target. active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_black].
+● Content: Image usually takes top half (aspect-video), bold text below.
+Bottom Navigation (The Anchor)
+● Container: fixed bottom-0 w-full bg-white border-t-2 border-black z-50 h-20.
+● Grid: 3 to 5 items equally spaced.
+● Items:
+    ○ Inactive: Black stroke icon, clear background.
+    ○ Active: Icon inside a geometric shape (Square/Circle) with primary color fill (e.g., Red Square context).
+    ○ Label: Tiny uppercase bold text below icon, or icon only for minimalism.
+Inputs & Forms
+● Field: h-12 bg-white border-2 border-black rounded-none px-4 text-black placeholder:text-gray-400 focus:bg-[#FFF9C4] focus:ring-0 focus:border-black.
+● Label: Uppercase bold, mb-1 block.
+● Checkbox: h-6 w-6 appearance-none border-2 border-black bg-white checked:bg-[#1040C0] rounded-none.
+4. Layout & Spacing
+● Container: w-full with px-5 (20px) padding. Max-width constraints removed (fluid mobile).
+● Section Padding:
+    ○ Standard: py-8
+    ○ Hero: pt-12 pb-16
+● Grid Systems:
+    ○ Main Layout: Single column (Stack).
+    ○ Micro-grids: 2-column for stats/gallery (gap-3 or gap-4).
+● Safe Areas: Respect pt-safe (top notch) and pb-safe (bottom home indicator).
+● Dividers: Thick section separators border-b-2 border-black usually paired with a background color change.
+5. Non-Genericness (Bold Choices)
+Mobile Constraints require distinct personality to avoid looking like a wireframe:
+● Full-Screen Color Washes:
+    ○ Onboarding screens: Full solid backgrounds (Red Screen → Blue Screen → Yellow Screen).
+    ○ Success states: Full Yellow background (bg-[#F0C020]) with massive black centered checkmark.
+    ○ Error states: Full Red background (bg-[#D02020]) with white text.
+● Header Identity:
+    ○ Instead of a standard navbar, use a "Bauhaus Header Block": A row containing a Square (Menu), a flexible space for the Title (Left aligned, massive), and a Circle (Profile/Search). All elements separated by vertical borders divide-x-2 border-b-2 border-black.
+● Geometric Lists:
+    ○ List items aren't just text lines. They are alternating geometric bullets: Line 1 uses a ■, Line 2 uses a ●, Line 3 uses a ▲.
+● Rotated "Stickers":
+    ○ "New", "Sale", or Notification badges are rotated -12deg or +12deg, sitting on top of corners to break the rigid grid.
+● Image Filters:
+    ○ Thumbnails: Grayscale + High Contrast.
+    ○ Detail View: Full color, no rounded corners, thick black border.
+6. Icons & Imagery
+● Icon Library: lucide-react-native or similar (Circle, Square, Triangle, Menu, X, ArrowLeft).
+● Icon Style:
+    ○ Stroke: stroke-[2px].
+    ○ Size: w-6 h-6 (standard) or w-8 h-8 (hero actions).
+● Icon Containers:
+    ○ Navigation icons often live inside rigid 48x48px bordered squares.
+    ○ Back buttons are always circular rounded-full with a border.
+● Imagery:
+    ○ Masking: Use CSS clip-paths to crop header images into non-standard shapes (e.g., a trapezoid or a circle cropped at the bottom) within the mobile frame.
+7. Responsive Strategy (Device Sizes)
+● Small Phones (SE/Mini):
+    ○ Reduce display text to text-3xl.
+    ○ Stack stats vertically (1-col).
+    ○ Reduce padding to px-4.
+● Large Phones (Max/Plus):
+    ○ Display text scales to text-5xl.
+    ○ Stats can use 2-col grid.
+    ○ Card images gain more height.
+● Orientation:
+    ○ Portrait (Primary): Vertical stacking.
+    ○ Landscape: Avoid if possible, or split screen 50/50 (Text Left / Image Right).
+8. Animation & Micro-Interactions
+● Feel: Physical, snappy, zero-latency.
+● Duration: duration-150 (Very fast).
+● Easing: ease-in-out (Sharp stops).
+● Interactions:
+    ○ Tap: The element physically depresses (translate X/Y matches shadow size).
+    ○ Drawer Open: Slides in from Left/Right with a solid black border line leading it. No soft fades—it slides like a mechanical door.
+    ○ Toast/Alerts: Drop down from top as a solid geometric block (Yellow/Red) with hard borders, swinging slightly like a hanging sign.
+    ○ Scroll: Sticky headers snap into place instantly.

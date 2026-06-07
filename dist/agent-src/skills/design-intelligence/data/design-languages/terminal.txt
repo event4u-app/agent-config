@@ -1,0 +1,80 @@
+Terminal
+一种原始的、功能性的、复古的、未来主义的命令行界面美学。高对比度、等宽精度和闪烁光标。
+1. 开发者工具与极客类应用
+2. 区块链、Web3 与 加密货币项目
+3. 科幻、侦探与解谜类游戏 (ARG)
+4. 创意工作室与个人作品集
+System Prompt: React Native Terminal CLI Framework
+Design Philosophy
+The Mobile Terminal CLI aesthetic adapts the raw power of a command-line interface into a handheld, touch-first environment. It treats the smartphone screen as a portable "hacker’s deck" or a remote server console. It is utilitarian, high-contrast, and uncompromisingly rigid.
+The vibe is "Field Operative" or "System Administrator on the go." Unlike web layouts that can expand horizontally, the mobile version focuses on vertical "logs", collapsible panes, and touch-friendly bracketed commands.
+Key visual signatures:
+● Monospace Supremacy: Every UI element uses monospaced fonts. Layouts are calculated by character width rather than fluid percentages.
+● The Command Line Prompt: Every screen starts with a system path or user breadcrumb (e.g., ~/root/user/home).
+● Tactile Feedback: Subtle haptics on every "keystroke" or button press to mimic mechanical keyboard feedback.
+● ASCII Borders: Using characters like +, -, |, and * to define UI boundaries instead of standard mobile shadows or rounded containers.
+
+Design Token System
+Colors (OLED-Optimized Dark Mode)
+React Native implementations should use the StyleSheet or Tailwind/NativeWind tokens below:
+● Background: #050505 (Deepest black for OLED power saving and high contrast).
+● Foreground:
+    ○ Primary: #33FF00 (Classic Matrix Green).
+    ○ Secondary: #FFB000 (Terminal Amber for warnings/toggles).
+    ○ Muted: #1A3D1A (Low-intensity green for inactive text/guides).
+    ○ Error: #FF3333 (Command Failed Red).
+● Border: #33FF00 (1px solid green for terminal windows).
+Typography
+● Font Family: Courier New, SpaceMono-Regular (iOS/Android default), or bundled JetBrains Mono.
+● Size: Strict 12pt, 14pt, or 16pt. No "in-between" sizes.
+● Weight: Normal (monospaced fonts lose their character when too bold).
+● Line Height: Tight. 1.2x font size to maximize information density on small screens.
+Radius & Borders
+● Radius: 0. Standard React Native borderRadius: 0. No exceptions.
+● Borders: borderWidth: 1. Style: solid.
+
+Component Stylings (React Native Specific)
+Buttons (Commands)
+● Structure: Text wrapped in TouchableHighlight. Displayed as [ EXECUTE ] or > PROCEED.
+● Interaction: On press, underlayColor should be the Primary Green, and text color should flip to #000000(Inverted Video).
+● Haptics: Trigger Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light) on press.
+Cards (Process Windows)
+● Structure: A <View> with borderWidth: 1 and borderColor: primary.
+● Title Bar: A top row with inverted colors: [ TITLE: SYSTEM_LOG ].
+● Scroll: Use FlatList with indicatorStyle="white" to mimic a scrolling terminal buffer.
+Inputs (The Caret)
+● Style: No background. Starts with a prefix: $ or >.
+● The Cursor: A View with a blinking Opacity animation (0 to 1) placed at the end of the text string.
+● Keyboard: Set keyboardType="ascii-capable" and autoCapitalize="none".
+
+Layout Strategy (The Mobile Terminal)
+The layout mimics a mobile tmux session.
+● Vertical Stacking: Use Flexbox with flexDirection: 'column'. Screens should feel like a continuous stream of data.
+● Separators: Create a <Separator /> component that renders a string of dashes: --------------------------.
+● Status Bar: A permanent fixed footer showing [BATTERY: 88%] [NET: CONNECTED] [TIME: 08:51].
+
+Non-Genericness (The Bold Factor)
+● Boot Sequence: On app launch, show a rapid-fire scroll of fake system logs (INIT_KERNEL..., LOADING_UI...) before the main content appears.
+● ASCII Graphics: Use Text components for headers instead of PNG icons.
+Plaintext
+
+ _  _  ____  ____ 
+( \/ )(  _ \(  _ \
+ \  /  ) _ ( )   /
+  \/  (____/(_)\_)
+
+● Progress Indicators: No ActivityIndicator. Use text-based bars: [#####-----] 50%.
+
+Effects & Animation (React Native Reanimated)
+● Blink: A 500ms loop of opacity for the cursor █.
+● Typewriter: Use a custom hook to slice strings from 0 to n characters over time for new data arrivals.
+● Scanlines: A top-level <ImageBackground> or absolute <View> with a repeating horizontal line pattern at 0.05opacity.
+
+Iconography
+● Style: Use standard MaterialCommunityIcons or Lucide, but always set strokeWidth={1} and size={20}.
+● Implementation: Icons should be treated as "Characters." They must be the same color as the text they accompany.
+
+Accessibility & Performance
+● Contrast: Green on Black is highly legible for vision-impaired users.
+● Touch Targets: Even though the style is "tight," ensure hitSlop is used on bracketed buttons to meet 44x44dp mobile standards.
+● Reduced Motion: Respect AccessibilityInfo.isReduceMotionEnabled by disabling the typewriter and scanline effects if requested.
