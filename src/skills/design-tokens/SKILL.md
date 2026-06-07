@@ -2,7 +2,6 @@
 model_tier: inherit
 name: design-tokens
 description: "Author a 3-layer DTCG token system (primitive → semantic → component) with light/dark theming; generate CSS vars + Tailwind colors and lint hardcoded values. Use on design tokens / CSS variables."
-source: package
 domain: engineering
 personas:
   - frontend-engineer
@@ -10,13 +9,9 @@ workspaces:
   - engineering
 packs:
   - frontend-design
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 execution:
   type: manual
