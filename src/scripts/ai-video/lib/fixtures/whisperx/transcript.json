@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "source": "whisperx",
+  "language": "en",
+  "lines": [
+    {"start": 8.40, "end": 11.20, "text": "cold light over the harbor", "speaker": "SPEAKER_00"},
+    {"start": 12.00, "end": 15.10, "text": "we sail before the storm", "speaker": "SPEAKER_01"},
+    {"start": 24.50, "end": 27.80, "text": "hold the line together", "speaker": "?"}
+  ],
+  "words": [
+    {"start": 8.40, "end": 8.75, "word": "cold", "speaker": "SPEAKER_00"},
+    {"start": 8.80, "end": 9.20, "word": "light", "speaker": "SPEAKER_00"},
+    {"start": 9.35, "end": 9.70, "word": "over", "speaker": "SPEAKER_00"},
+    {"start": 9.75, "end": 10.10, "word": "the", "speaker": "SPEAKER_00"},
+    {"start": 10.15, "end": 11.20, "word": "harbor", "speaker": "SPEAKER_00"},
+    {"start": 12.00, "end": 12.30, "word": "we", "speaker": "SPEAKER_01"},
+    {"start": 12.35, "end": 12.90, "word": "sail", "speaker": "SPEAKER_01"},
+    {"start": 13.00, "end": 13.40, "word": "before", "speaker": "SPEAKER_01"},
+    {"start": 13.45, "end": 13.75, "word": "the", "speaker": "SPEAKER_01"},
+    {"start": 13.80, "end": 15.10, "word": "storm", "speaker": "SPEAKER_01"},
+    {"start": 24.50, "end": 24.90, "word": "hold", "speaker": "SPEAKER_00"},
+    {"start": 24.95, "end": 25.30, "word": "the", "speaker": "SPEAKER_00"},
+    {"start": 25.35, "end": 25.95, "word": "line", "speaker": "SPEAKER_01"},
+    {"start": 26.10, "end": 27.80, "word": "together", "speaker": "SPEAKER_01"}
+  ]
+}
