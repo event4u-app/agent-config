@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# glama.ai build step for the stdio MCP server.
+#
+# Why this file exists: glama's "Build steps" admin field silently drops
+# the last character of any token containing a dot (e.g. `3.11` -> `3.1`,
+# `requirements.txt` -> `requirements.tx`). Keeping the dotted literals
+# (the Python version, the pinned requirements path) inside this committed
+# script means the glama field only ever holds a dot-free token:
+#
+#     bash /app/internal/glama/build
+#
+# Build context: cwd is the cloned repo root (/app). Creates the venv and
+# installs the pinned MCP server runtime deps into it.
+set -euo pipefail
+
+uv venv /opt/venv
+uv pip install --python /opt/venv/bin/python -r src/scripts/mcp_server/requirements.txt
