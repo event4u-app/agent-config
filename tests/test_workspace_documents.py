@@ -37,6 +37,29 @@ def _load():
 def docs(tmp_path, monkeypatch):
     mod = _load()
     monkeypatch.setattr(mod, "WORKSPACE_HOME", tmp_path / "documents")
+    # Default: encryption OFF (flag default). Deterministic regardless of any
+    # repo-root .agent-settings.yml in the cwd.
+    monkeypatch.setattr(mod.workspace_crypto, "is_enabled", lambda *a, **k: False)
+    return mod
+
+
+try:
+    import cryptography  # noqa: F401
+    HAS_CRYPTO = True
+except ImportError:
+    HAS_CRYPTO = False
+
+
+@pytest.fixture
+def enc_docs(tmp_path, monkeypatch):
+    """Document store fixture with encryption-at-rest ON and a fixed key."""
+    import base64
+    import os as _os
+    mod = _load()
+    monkeypatch.setattr(mod, "WORKSPACE_HOME", tmp_path / "documents")
+    monkeypatch.setattr(mod.workspace_crypto, "is_enabled", lambda *a, **k: True)
+    key_b64 = base64.b64encode(_os.urandom(32)).decode("ascii")
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY", key_b64)
     return mod
 
 
@@ -157,11 +180,15 @@ def test_export_pandoc_invocation_contract(docs, tmp_path, monkeypatch, doc_type
                         lambda name: fake_pandoc if name == "pandoc" else None)
 
     calls: list[list[str]] = []
+    input_seen: list[str] = []
 
     def _record(argv, *args, **kwargs):
         calls.append(list(argv))
-        # pandoc would write the target; the contract test owns only the argv,
-        # so materialise an empty target to mirror a successful run.
+        # Capture the cleartext input pandoc is handed AT CALL TIME — under
+        # encryption the export materialises a temp cleartext .md and never
+        # hands pandoc the .enc blob. The temp file is deleted after run().
+        src = argv[1]
+        input_seen.append(Path(src).read_text(encoding="utf-8"))
         Path(argv[argv.index("-o") + 1]).write_bytes(b"")
         return None
 
@@ -174,9 +201,123 @@ def test_export_pandoc_invocation_contract(docs, tmp_path, monkeypatch, doc_type
     assert len(calls) == 1
     argv = calls[0]
     assert argv[0] == fake_pandoc
-    assert str(doc.path) in argv
+    # pandoc receives a real readable cleartext .md (never the source path
+    # directly, never ciphertext) and the caller-chosen output target.
+    assert argv[1].endswith(".md")
+    assert "body" in input_seen[0]
     assert "-o" in argv
     assert argv[argv.index("-o") + 1] == str(expected_target)
+
+
+# --- encryption-at-rest (ADR-062 Part B, documents-only) -----------------
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_create_writes_enc_not_plaintext(enc_docs):
+    doc = enc_docs.create(type="offer", title="Kunde X Angebot", body="secret body\n")
+    assert doc.path.name.endswith(".md.enc")
+    assert not (doc.path.with_name(doc.path.name[:-4])).exists()  # no plaintext .md
+    raw = doc.path.read_bytes()
+    assert raw[:4] == b"AC1\x00"          # AES-256-GCM envelope
+    assert b"secret body" not in raw       # body not in cleartext on disk
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_round_trip_read_and_list(enc_docs):
+    doc = enc_docs.create(type="memo", title="Quarterly", body="# H\n\nthe body\n")
+    got = enc_docs.read("memo", doc.slug)
+    assert got is not None and "the body" in got.body
+    rows = enc_docs.list_documents()
+    assert any(r["slug"] == doc.slug and r["title"] == "Quarterly" for r in rows)
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_save_round_trip(enc_docs):
+    doc = enc_docs.create(type="brief", title="Brief", body="v1\n")
+    enc_docs.save("brief", doc.slug, "v2 updated\n")
+    got = enc_docs.read("brief", doc.slug)
+    assert "v2 updated" in got.body
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_migrate_then_decrypt_all_round_trip(enc_docs, tmp_path, monkeypatch):
+    # Write a plaintext doc with the flag OFF, then migrate it.
+    monkeypatch.setattr(enc_docs.workspace_crypto, "is_enabled", lambda *a, **k: False)
+    doc = enc_docs.create(type="offer", title="Legacy", body="plaintext body\n")
+    plain = doc.path
+    assert plain.name.endswith(".md") and not plain.name.endswith(".enc")
+
+    # Flip ON and migrate: plaintext → .enc, plaintext removed, content intact.
+    monkeypatch.setattr(enc_docs.workspace_crypto, "is_enabled", lambda *a, **k: True)
+    result = enc_docs.migrate(root=enc_docs.WORKSPACE_HOME)
+    assert result["migrated"] == 1
+    assert not plain.exists()
+    assert enc_docs._enc_path(plain).exists()
+    assert "plaintext body" in enc_docs.read("offer", doc.slug).body
+
+    # migrate is idempotent (no double-encrypt).
+    assert enc_docs.migrate(root=enc_docs.WORKSPACE_HOME)["migrated"] == 0
+
+    # Kill-switch: decrypt-all returns to plaintext .md.
+    dres = enc_docs.decrypt_all(root=enc_docs.WORKSPACE_HOME)
+    assert dres["decrypted"] == 1
+    assert plain.exists() and not enc_docs._enc_path(plain).exists()
+    assert "plaintext body" in plain.read_text(encoding="utf-8")
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_rekey_reencrypts_and_still_reads(enc_docs, monkeypatch):
+    # rekey is only coherent when the key resolver tracks the rotated key
+    # (NOT when AGENT_CONFIG_WORKSPACE_KEY pins it externally). Drive the
+    # resolver + rotate_key off a hermetic in-test key holder.
+    import os as _os
+    wc = enc_docs.workspace_crypto
+    monkeypatch.delenv("AGENT_CONFIG_WORKSPACE_KEY", raising=False)
+    state = {"key": _os.urandom(32)}
+    monkeypatch.setattr(wc, "_get_or_create_master_key", lambda **k: state["key"])
+
+    def _fake_rotate():
+        state["key"] = _os.urandom(32)
+        return state["key"]
+
+    monkeypatch.setattr(wc, "rotate_key", _fake_rotate)
+
+    doc = enc_docs.create(type="memo", title="Rotate", body="rotate me\n")
+    enc_file = enc_docs.WORKSPACE_HOME / "memo" / f"{doc.slug}.md.enc"
+    before = enc_file.read_bytes()
+    res = enc_docs.rekey(root=enc_docs.WORKSPACE_HOME)
+    assert res["rekeyed"] == 1
+    assert enc_file.read_bytes() != before        # re-encrypted under the new key
+    assert "rotate me" in enc_docs.read("memo", doc.slug).body
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_list_json_cli_returns_decrypted_rows(enc_docs, tmp_path, capsys):
+    """The `list --json --root` CLI is the Python-authoritative read path the
+    Node GUI server consumes. With encryption on, it must return CLEARTEXT
+    titles (decrypted from the .md.enc), plus the updated_at/path shape Node
+    maps. This is the cross-runtime contract (Python encrypts → Node reads
+    back via this CLI)."""
+    import json as _json
+    enc_docs.create(type="offer", title="Decrypted Title", body="confidential\n")
+    rc = enc_docs.main(["list", "--json", "--root", str(enc_docs.WORKSPACE_HOME)])
+    assert rc == 0
+    rows = _json.loads(capsys.readouterr().out)
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["title"] == "Decrypted Title"      # decrypted, not ciphertext
+    assert row["type"] == "offer"
+    assert row["updated_at"].endswith("Z")        # Node-compatible mtime ISO
+    assert row["path"].endswith(".md.enc")         # backing file is encrypted
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_read_survives_flag_flip_off(enc_docs, monkeypatch):
+    # Written encrypted; reading after the flag flips OFF still decrypts the
+    # on-disk .enc (decryption only needs the key, not the flag).
+    doc = enc_docs.create(type="memo", title="Flip", body="still readable\n")
+    monkeypatch.setattr(enc_docs.workspace_crypto, "is_enabled", lambda *a, **k: False)
+    got = enc_docs.read("memo", doc.slug)
+    assert got is not None and "still readable" in got.body
 
 
 def test_export_pandoc_failure_propagates(docs, tmp_path, monkeypatch):
