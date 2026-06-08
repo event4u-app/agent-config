@@ -246,6 +246,35 @@ async function recordDriveHealth(writeRoot: string, host: string, ok: boolean, e
     }
 }
 
+// Inline a task prompt's declared input spec + skill_hint into the tasks
+// response (ADR-075). Read-only display data: the GUI builds its input form
+// from this; the actual render/drive still goes through the Python store
+// (authoritative). Parsed in-process (prompts are plaintext) so the tasks
+// fetch needs no subprocess fan-out.
+interface PromptInputSpec { name: string; required: boolean; shape: string }
+
+async function loadPromptInputs(
+    packageRoot: string, role: string, promptName: string,
+): Promise<{ inputs: PromptInputSpec[]; skill_hint: string | null }> {
+    const path = join(rolesRoot(packageRoot), role, 'prompts', `${promptName}.md`);
+    if (!existsSync(path)) return { inputs: [], skill_hint: null };
+    const { fm } = parseFrontmatter(await readFile(path, 'utf8'));
+    const raw = Array.isArray(fm['inputs']) ? (fm['inputs'] as unknown[]) : [];
+    const inputs: PromptInputSpec[] = [];
+    for (const e of raw) {
+        if (e !== null && typeof e === 'object' && typeof (e as Record<string, unknown>)['name'] === 'string') {
+            const rec = e as Record<string, unknown>;
+            inputs.push({
+                name: rec['name'] as string,
+                required: rec['required'] === true,
+                shape: typeof rec['shape'] === 'string' ? (rec['shape'] as string) : '',
+            });
+        }
+    }
+    const sh = fm['skill_hint'];
+    return { inputs, skill_hint: typeof sh === 'string' && sh !== '' ? sh : null };
+}
+
 // Resolve a task name → its prompt file basename (sans .md) from the role's
 // "Three first tasks" list. Null when the task has no prompt mapping.
 function promptNameForTask(role: Role, task: string): string | null {
@@ -573,7 +602,12 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 await reply.code(404).send({ error: 'role not found', slug: params.role });
                 return reply;
             }
-            return { role: r.slug, tasks: r.first_tasks, skills: r.skills };
+            const tasks = await Promise.all(r.first_tasks.map(async (t) => {
+                if (t.prompt === '') return { ...t, inputs: [], skill_hint: null };
+                const spec = await loadPromptInputs(opts.packageRoot, r.slug, t.prompt.replace(/\.md$/, ''));
+                return { ...t, inputs: spec.inputs, skill_hint: spec.skill_hint };
+            }));
+            return { role: r.slug, tasks, skills: r.skills };
         });
 
         app.get('/api/v1/workspace/sessions', async (request) => {

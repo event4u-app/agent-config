@@ -140,12 +140,25 @@ describe('workspaceRoute', () => {
             headers: AUTH,
         });
         expect(res.statusCode).toBe(200);
-        const body = res.json() as { role: string; tasks: Array<{ name: string; prompt: string }>; skills: Array<{ id: string }> };
+        const body = res.json() as {
+            role: string;
+            tasks: Array<{ name: string; prompt: string; inputs: Array<{ name: string; required: boolean; shape: string }>; skill_hint: string | null }>;
+            skills: Array<{ id: string }>;
+        };
         expect(body.role).toBe('galabau');
         expect(body.tasks).toHaveLength(3);
         expect(body.tasks[0]?.prompt).toBe('offer-from-brief.md');
         expect(body.skills).toHaveLength(2);
         expect(body.skills[0]?.id).toBe('refine-prompt');
+        // ADR-075: the tasks endpoint inlines each prompt's input spec + skill_hint
+        // (the fixture's offer-from-brief.md declares brief[required] + notes).
+        const offer = body.tasks.find((t) => t.prompt === 'offer-from-brief.md');
+        expect(offer?.inputs.map((i) => i.name)).toEqual(['brief', 'notes']);
+        expect(offer?.inputs[0]?.required).toBe(true);
+        expect(offer?.skill_hint).toBe('doc-coauthoring');
+        // A task whose prompt file doesn't exist degrades to an empty spec.
+        const reply = body.tasks.find((t) => t.prompt === 'customer-email-reply.md');
+        expect(reply?.inputs).toEqual([]);
     });
 
     it('returns 404 for an unknown role', async () => {
