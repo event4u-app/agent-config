@@ -70,6 +70,7 @@ never logged.
 | Path | Form | ADR | Sensitivity |
 |---|---|---|---|
 | `workspace/documents/**/*.md` | whole-file `.md.enc`, Python-authoritative read | 062 | offer / mail / memo / brief bodies |
+| `workspace/documents/**/*.history.jsonl` | per-record (one base64 `AC1\0` line per revision) | 064 | edit metadata + SHAs |
 | `workspace/analytics/events.jsonl` | per-record (one base64 `AC1\0` line per event) | 064 | event counters; lower sensitivity |
 
 **Deferred — the remaining append-JSONL set (ADR-063 → protocol ADR-064):**
@@ -79,7 +80,6 @@ protected.
 
 | Path | Phase | Why not yet | Sensitivity |
 |---|---|---|---|
-| `workspace/documents/**/*.history.jsonl` | 5 | needs a per-line pass added to the documents store's whole-file migrate/rekey | edit metadata + SHAs |
 | `workspace/sessions/**/*.jsonl` | 4 | Node reads+writes these → needs the Option-4 Node-session refactor (ADR-064 rollout step 3) | host replies may contain customer data |
 | `workspace/inbox/**/*.md` | 4 | whole-file like documents; not yet wired | rendered prompts for Tier-3 hand-off may contain customer names |
 

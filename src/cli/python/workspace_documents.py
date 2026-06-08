@@ -11,9 +11,10 @@ Encryption-at-rest (ADR-062 Part B, Option 4 Python-authoritative): when
 sibling ``<slug>.md.enc`` (AES-256-GCM via ``workspace_crypto``). Reads
 auto-detect plaintext vs ``.enc`` on disk — independent of the flag — so a
 read always returns cleartext whether the flag flipped since the write.
-Only **whole-file** content is encrypted here; the append-only
-``.history.jsonl`` revision log is part of the deferred append-JSONL set
-(ADR-063) and stays plaintext for now.
+The `.md` body uses the whole-file `.enc` layout; the append-only
+``<slug>.history.jsonl`` revision log uses per-record encryption (ADR-064 —
+one base64 envelope line per revision) since AES-GCM can't append to a blob.
+migrate / decrypt-all / rekey cover both forms.
 
 CLI::
 
@@ -144,6 +145,24 @@ def _write_text(p: Path, text: str) -> Path:
     return p
 
 
+# The .md body uses the whole-file .enc layout above. The append-only
+# `.history.jsonl` revision log is append-JSONL → per-record encryption
+# (ADR-064): one base64 envelope line per revision, plaintext JSON otherwise.
+
+def _history_line(text: str) -> str:
+    return workspace_crypto.encrypt_line(text) if _enc_enabled() else text
+
+
+def _rewrite_history(hp: Path, transform) -> int:
+    """Apply ``transform(line) -> line`` to each record in a history log;
+    atomic temp+rename. Returns the number of records rewritten."""
+    if not hp.exists():
+        return 0
+    out = [transform(ln) for ln in hp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    _atomic_write_bytes(hp, ("\n".join(out) + ("\n" if out else "")).encode("utf-8"))
+    return len(out)
+
+
 def _guard_secrets(fields: dict[str, str | None]) -> None:
     """Pre-write secret-scan hook for user-authored documents (Phase 8 Step 5).
 
@@ -250,7 +269,7 @@ def create(*, type: str, title: str, body: str, role: str | None = None,
     entry = {"ts": now, "actor": "host", "kind": "save",
              "delta": {"added": len(body.splitlines()), "removed": 0},
              "body_sha256": _body_sha(body)}
-    hp.write_text(json.dumps(entry, sort_keys=True) + "\n", encoding="utf-8")
+    hp.write_text(_history_line(json.dumps(entry, sort_keys=True)) + "\n", encoding="utf-8")
     return Document(type=type, slug=slug, title=title, body=body, path=written, history_path=hp)
 
 
@@ -277,7 +296,7 @@ def save(type: str, slug: str, body: str, *, actor: str = "user",
              "body_sha256": _body_sha(body)}
     hp = base / f"{slug}.history.jsonl"
     with hp.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry, sort_keys=True) + "\n")
+        fh.write(_history_line(json.dumps(entry, sort_keys=True)) + "\n")
     return entry
 
 
@@ -415,6 +434,18 @@ def migrate(*, root: Path | None = None) -> dict:
                 raise RuntimeError(f"migrate: verify failed for {p}, rolled back")
             p.unlink()
             migrated += 1
+        # History logs are append-JSONL → per-record (ADR-064). Encrypt any
+        # plaintext line; an already-encrypted line round-trips unchanged in
+        # content (re-nonced), so this is content-idempotent.
+        for hp in sorted(tdir.glob("*.history.jsonl")):
+            had_plaintext = any(
+                ln.strip() and ln.lstrip()[0] in "{["
+                for ln in hp.read_text(encoding="utf-8").splitlines()
+            )
+            _rewrite_history(hp, lambda ln: workspace_crypto.encrypt_line(
+                workspace_crypto.decrypt_line(ln)))
+            if had_plaintext:
+                migrated += 1
     return {"migrated": migrated, "skipped": skipped}
 
 
@@ -435,6 +466,16 @@ def decrypt_all(*, root: Path | None = None) -> dict:
             _atomic_write_bytes(target, plaintext)
             enc.unlink()
             decrypted += 1
+        # History logs back to plaintext JSON lines (decrypt_line passes an
+        # already-plaintext line through, so this is idempotent).
+        for hp in sorted(tdir.glob("*.history.jsonl")):
+            had_encrypted = any(
+                ln.strip() and ln.lstrip()[0] not in "{["
+                for ln in hp.read_text(encoding="utf-8").splitlines()
+            )
+            _rewrite_history(hp, workspace_crypto.decrypt_line)
+            if had_encrypted:
+                decrypted += 1
     return {"decrypted": decrypted}
 
 
@@ -447,14 +488,34 @@ def rekey(*, root: Path | None = None) -> dict:
     """
     base = root if root is not None else WORKSPACE_HOME
     pending: list[tuple[Path, bytes]] = []
+    # History: hold (path, [(was_encrypted, cleartext_line)]) decrypted under
+    # the OLD key BEFORE rotation; re-encrypt the encrypted ones under the NEW
+    # key after. Plaintext lines stay plaintext.
+    hist_pending: list[tuple[Path, list[tuple[bool, str]]]] = []
     if base.exists():
         for tdir in sorted(p for p in base.iterdir() if p.is_dir()):
             for enc in sorted(tdir.glob("*.md" + ENC_SUFFIX)):
                 pending.append((enc, workspace_crypto.decrypt_bytes(enc.read_bytes())))
+            for hp in sorted(tdir.glob("*.history.jsonl")):
+                rows: list[tuple[bool, str]] = []
+                for ln in hp.read_text(encoding="utf-8").splitlines():
+                    if not ln.strip():
+                        continue
+                    was_enc = ln.lstrip()[0] not in "{["
+                    rows.append((was_enc, workspace_crypto.decrypt_line(ln)))
+                hist_pending.append((hp, rows))
     new_key = workspace_crypto.rotate_key()
     for enc, cleartext in pending:
         _atomic_write_bytes(enc, workspace_crypto.encrypt_bytes(cleartext, key=new_key))
-    return {"rekeyed": len(pending)}
+    rekeyed_hist = 0
+    for hp, rows in hist_pending:
+        if not any(was_enc for was_enc, _ in rows):
+            continue  # all-plaintext history: nothing to rotate
+        out = [workspace_crypto.encrypt_line(c, key=new_key) if was_enc else c
+               for was_enc, c in rows]
+        _atomic_write_bytes(hp, ("\n".join(out) + ("\n" if out else "")).encode("utf-8"))
+        rekeyed_hist += 1
+    return {"rekeyed": len(pending), "rekeyed_history": rekeyed_hist}
 
 
 def main(argv: list[str] | None = None) -> int:
