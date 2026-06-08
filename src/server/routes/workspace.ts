@@ -483,6 +483,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             const task = typeof body?.['task'] === 'string' ? (body['task'] as string) : '';
             const prompt = typeof body?.['prompt'] === 'string' ? (body['prompt'] as string) : '';
             const session = typeof body?.['session'] === 'string' ? (body['session'] as string) : '';
+            const skillHint = typeof body?.['skill_hint'] === 'string' ? (body['skill_hint'] as string) : '';
             if (role === '' || task === '' || prompt === '') {
                 await reply.code(400).send({ error: 'role, task and prompt are required' });
                 return reply;
@@ -500,6 +501,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                     'python3',
                     [WORKSPACE_INBOX_CLI, 'write', '--role', role, '--task', task,
                      '--body-file', tmp, ...(session ? ['--session', session] : []),
+                     ...(skillHint ? ['--skill-hint', skillHint] : []),
                      '--root', inboxRoot(opts.writeRoot)],
                     { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
                 );

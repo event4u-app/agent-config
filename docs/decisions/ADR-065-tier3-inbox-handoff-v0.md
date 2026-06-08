@@ -42,10 +42,10 @@ Build the Tier-3 inbox as a **plaintext, ephemeral, content-minimal** store.
   transient hand-off surface, not durable storage.
 - **Content-minimal (v0).** The file is a small frontmatter header
   (id / role / task / session / created_at) + the **rendered prompt body**
-  supplied by the caller. **Deferred:** skill-body pre-rendering (ADR-024
-  notes Codex/Gemini lack skill resolution — that resolution algorithm is its
-  own feature + ADR) and host-tier **auto-detection** (v0 takes the hand-off
-  intent explicitly from the caller).
+  supplied by the caller. Skill-body pre-rendering **shipped** as a follow-up
+  ([`ADR-066`](ADR-066-skill-body-prerendering.md) — `--skill-hint` resolves the
+  skill body into the hand-off). Still **deferred:** host-tier **auto-detection**
+  (v0 takes the hand-off intent explicitly from the caller).
 - **Python-authoritative, ships dark.** `workspace_inbox.py`
   (write / read / list / forget / prune, `--root` validated to
   `…/workspace/inbox`) is the store; the Node `POST /api/v1/workspace/inbox`

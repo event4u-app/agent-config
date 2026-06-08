@@ -38,6 +38,7 @@ from pathlib import Path
 # Sibling import: robust under direct execution and the importlib test loader.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import workspace_secrets  # noqa: E402
+import workspace_skills  # noqa: E402
 
 WORKSPACE_HOME = Path.home() / ".event4u" / "agent-config" / "workspace" / "inbox"
 RETENTION_HOURS = 24
@@ -77,10 +78,17 @@ def _frontmatter(meta: dict) -> str:
 
 
 def write(role: str, task: str, body: str, *, session: str | None = None,
-          root: Path | None = None) -> dict:
-    """Write one Tier-3 hand-off file. Returns ``{id, path, banner}``."""
+          skill_hint: str | None = None, root: Path | None = None) -> dict:
+    """Write one Tier-3 hand-off file. Returns ``{id, path, banner}``.
+
+    When ``skill_hint`` is given, the resolved skill body is pre-rendered into
+    the hand-off (ADR-066) so a host without skill resolution still gets the
+    context. A missing / invalid skill degrades to an inline note.
+    """
     base = root if root is not None else WORKSPACE_HOME
     inbox_id = _new_id()
+    if skill_hint:
+        body = body.rstrip("\n") + "\n" + workspace_skills.resolve_section(skill_hint)
     # Disposable hand-off → scrub a pasted credential silently (same posture as
     # the session/analytics telemetry stores), rather than refuse the write.
     safe_body, _ = workspace_secrets.scrub(body)
@@ -176,6 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     s_w.add_argument("--task", required=True)
     s_w.add_argument("--body-file", required=True)
     s_w.add_argument("--session")
+    s_w.add_argument("--skill-hint", dest="skill_hint",
+                     help="resolve this skill's body into the hand-off (ADR-066)")
     s_w.add_argument("--root")
     s_r = sub.add_parser("read")
     s_r.add_argument("inbox_id")
@@ -195,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "write":
         body = Path(args.body_file).read_text(encoding="utf-8")
         print(json.dumps(write(args.role, args.task, body, session=args.session,
-                               root=root), sort_keys=True))
+                               skill_hint=args.skill_hint, root=root), sort_keys=True))
         return 0
     if args.cmd == "read":
         text = read(args.inbox_id, root=root)

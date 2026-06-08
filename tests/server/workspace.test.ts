@@ -324,6 +324,28 @@ describe('workspaceRoute', () => {
         }
     });
 
+    it('inbox write pre-renders a skill_hint into the hand-off (ADR-066)', async () => {
+        process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
+        try {
+            const write = await app.inject({
+                method: 'POST', url: '/api/v1/workspace/inbox',
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { role: 'galabau', task: 'offer', prompt: 'Draft an offer.',
+                           skill_hint: 'doc-coauthoring' },
+            });
+            expect(write.statusCode).toBe(200);
+            const { id } = write.json() as { id: string };
+            const read = await app.inject({
+                method: 'GET', url: `/api/v1/workspace/inbox/${id}`, headers: AUTH,
+            });
+            const body = (read.json() as { body: string }).body;
+            expect(body).toContain('Draft an offer.');
+            expect(body).toContain('## Skill context: doc-coauthoring');
+        } finally {
+            delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        }
+    });
+
     it('inbox read of a missing id returns 404 when enabled', async () => {
         process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
         try {
