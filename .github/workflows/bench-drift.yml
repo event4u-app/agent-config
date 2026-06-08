@@ -40,7 +40,7 @@ jobs:
           python-version: "3.12"
           cache: 'pip'
 
-      - uses: arduino/setup-task@v2
+      - uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 

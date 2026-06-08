@@ -1,0 +1,47 @@
+name: "Setup Task (resilient)"
+description: >-
+  Install go-task/task via arduino/setup-task, with a retrying
+  install-script fallback that survives transient CDN 504s on the
+  release download (the documented flake this action exists to absorb).
+
+inputs:
+  repo-token:
+    description: "GITHUB_TOKEN, forwarded to arduino/setup-task to avoid API rate limits."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    # Happy path: the trusted action. continue-on-error so a transient
+    # download failure (HTTP 504 from the release CDN) does not fail the
+    # job outright — the fallback below takes over.
+    - id: action
+      uses: arduino/setup-task@v2
+      continue-on-error: true
+      with:
+        repo-token: ${{ inputs.repo-token }}
+
+    # Fallback: only runs when the action step failed. Retries the
+    # official install script (which itself uses --retry on the binary
+    # fetch) up to 3 times with backoff.
+    - name: Set up Task (fallback — retry transient download failures)
+      if: steps.action.outcome == 'failure'
+      shell: bash
+      run: |
+        set -euo pipefail
+        bindir="$HOME/.local/bin"
+        mkdir -p "$bindir"
+        for attempt in 1 2 3; do
+          if sh -c "$(curl --fail --silent --show-error --location \
+              --retry 5 --retry-all-errors https://taskfile.dev/install.sh)" \
+              -- -b "$bindir"; then
+            echo "$bindir" >> "$GITHUB_PATH"
+            "$bindir/task" --version
+            exit 0
+          fi
+          echo "task fallback install attempt ${attempt}/3 failed; retrying" >&2
+          sleep $(( attempt * 5 ))
+        done
+        echo "task install failed after arduino/setup-task + 3 fallback attempts" >&2
+        exit 1
