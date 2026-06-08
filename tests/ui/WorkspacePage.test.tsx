@@ -24,6 +24,7 @@ interface FixtureOverrides {
     documents?: unknown;
     tasks?: unknown;
     launch?: { status: number; body: unknown };
+    continueTurn?: { status: number; body: unknown };
 }
 
 function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: Call[]; restore: () => void } {
@@ -119,6 +120,15 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
                 task: reqBody.task,
                 driven: true,
                 turn: { text: 'Here is your drafted offer.', model: 'claude-code', usage: { input_tokens: 12, output_tokens: 40 } },
+            }), { status: 200 });
+        }
+        if (/\/api\/v1\/workspace\/sessions\/[^/]+\/continue$/.test(path) && method === 'POST') {
+            const ov = overrides.continueTurn;
+            if (ov !== undefined) return new Response(JSON.stringify(ov.body), { status: ov.status });
+            const id = path.split('/')[5];
+            return new Response(JSON.stringify({
+                id, role: 'galabau', task: 'Offer drafting', driven: true,
+                turn: { text: 'Shorter offer.', model: 'claude-code', usage: { input_tokens: 8, output_tokens: 20 } },
             }), { status: 200 });
         }
         return new Response(JSON.stringify({ error: { code: 'NOT_FOUND', message: path } }), { status: 404 });
@@ -310,6 +320,57 @@ describe('WorkspacePage', () => {
             const plain = await findByLabelText('Plain language');
             fireEvent.click(plain);
             await findByText(/Replies use everyday words/);
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('sends a follow-up that continues the session and renders the new turn', async () => {
+        const mock = installWorkspaceFetchMock({ sessions: { sessions: [] } });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'Build a hedge.' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await findByText('Here is your drafted offer.');   // first turn drove
+            // The follow-up box appears under the result; sending it continues.
+            const followup = await findByRole('textbox', { name: /Follow-up prompt/ });
+            fireEvent.input(followup, { target: { value: 'make it shorter' } });
+            fireEvent.click(await findByRole('button', { name: /Send follow-up/ }));
+            await waitFor(() => {
+                const cont = mock.calls.filter((c) => /\/continue$/.test(c.path) && c.method === 'POST');
+                expect(cont.length).toBe(1);
+            });
+            const cont = mock.calls.find((c) => /\/continue$/.test(c.path));
+            expect(cont?.path).toBe('/api/v1/workspace/sessions/20260525T130000Z-deadbeef/continue');
+            expect(cont?.body).toMatchObject({ prompt: 'make it shorter' });
+            await findByText('Shorter offer.');                // continued turn rendered
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('does not show a follow-up box until a turn has driven', async () => {
+        const mock = installWorkspaceFetchMock({
+            sessions: { sessions: [] },
+            launch: { status: 200, body: {
+                id: '20260525T130000Z-deadbeef', role: 'galabau', task: 'Offer drafting',
+                driven: false, handoff: '/x/inbox/y.md',
+            } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole, queryByRole } = render(<WorkspacePage />);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'x' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await findByText(/Prepared a hand-off/);
+            expect(queryByRole('textbox', { name: /Follow-up prompt/ })).toBeNull();   // not driven → no follow-up
         } finally {
             mock.restore();
         }
