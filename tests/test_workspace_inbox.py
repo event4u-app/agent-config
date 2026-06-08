@@ -95,6 +95,27 @@ def test_secret_scrubbed_from_body(wi):
     assert "AKIAIOSFODNN7EXAMPLE" not in raw
 
 
+def test_write_with_skill_hint_prerenders_skill(wi):
+    # A real shipped skill is pre-rendered into the hand-off (ADR-066).
+    r = wi.write("galabau", "offer", "Draft an offer.\n", skill_hint="doc-coauthoring")
+    raw = Path(r["path"]).read_text(encoding="utf-8")
+    assert "Draft an offer." in raw
+    assert "## Skill context: doc-coauthoring" in raw          # skill body appended
+
+
+def test_write_with_missing_skill_hint_is_graceful(wi):
+    r = wi.write("galabau", "offer", "Draft.\n", skill_hint="no-such-skill-xyz")
+    raw = Path(r["path"]).read_text(encoding="utf-8")
+    assert "Draft." in raw
+    assert "not found" in raw                                  # inline note, no crash
+
+
+def test_write_without_skill_hint_unchanged(wi):
+    r = wi.write("galabau", "offer", "Just the prompt.\n")
+    raw = Path(r["path"]).read_text(encoding="utf-8")
+    assert "## Skill context" not in raw                       # no section when absent
+
+
 def test_cli_root_validation_rejects_bad_path(wi, tmp_path):
     bad = tmp_path / "not-inbox"
     bad.mkdir()
