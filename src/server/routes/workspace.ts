@@ -212,28 +212,33 @@ async function degradeToInbox(
     }
 }
 
-// Kill-switch read (ADR-073). Fails open: any error → not killed (the cache is
-// a convenience; a broken cache must never block a launch).
-async function isHostKilled(writeRoot: string, host: string): Promise<boolean> {
+// Circuit-breaker gate (ADR-073 v1). Returns 'closed' (drive), 'open' (skip →
+// inbox) or 'half_open' (drive ONE recovery probe). Fails open ('closed') on
+// any error — a broken cache must never block a launch. A 'half_open' return
+// stamps the probe lease in the CLI, so the next call sees 'open'.
+async function driveGate(writeRoot: string, host: string): Promise<'closed' | 'open' | 'half_open'> {
     try {
         const { stdout } = await execFileAsync(
             'python3',
-            [WORKSPACE_HEALTH_CLI, 'status', '--host', host, '--json', '--root', healthRoot(writeRoot)],
+            [WORKSPACE_HEALTH_CLI, 'gate', '--host', host, '--root', healthRoot(writeRoot)],
             { timeout: 5_000 },
         );
-        return (JSON.parse(stdout) as { killed?: boolean }).killed === true;
+        const s = stdout.trim();
+        return s === 'open' || s === 'half_open' ? s : 'closed';
     } catch {
-        return false;
+        return 'closed';
     }
 }
 
 // Record one drive outcome into the health cache (best-effort; never throws).
-async function recordDriveHealth(writeRoot: string, host: string, ok: boolean, errorKind?: string): Promise<void> {
+// `isProbe` marks a half-open recovery probe so a success closes the circuit.
+async function recordDriveHealth(writeRoot: string, host: string, ok: boolean, errorKind?: string, isProbe = false): Promise<void> {
     try {
         await execFileAsync(
             'python3',
             [WORKSPACE_HEALTH_CLI, 'record', '--host', host, '--outcome', ok ? 'ok' : 'fail',
-             ...(errorKind ? ['--error-kind', errorKind] : []), '--root', healthRoot(writeRoot)],
+             ...(errorKind ? ['--error-kind', errorKind] : []), ...(isProbe ? ['--is-probe'] : []),
+             '--root', healthRoot(writeRoot)],
             { timeout: 5_000 },
         );
     } catch {
@@ -650,26 +655,29 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 return { ...base, driven: false, ...(handoff !== null ? { handoff } : {}) };
             }
 
-            // Kill-switch (ADR-073): a host that auto-tripped on a failure streak
-            // is routed to the inbox without burning another drive, until reset.
-            if (await isHostKilled(opts.writeRoot, host)) {
+            // Kill-switch gate (ADR-073 v1). 'open' → skip the drive (routed to
+            // inbox); 'half_open' → drive ONE recovery probe (success un-kills);
+            // 'closed' → drive normally.
+            const gateState = await driveGate(opts.writeRoot, host);
+            if (gateState === 'open') {
                 await appendSession(opts.writeRoot, id, 'host.error', { error_kind: 'host-killed', error: `host ${host} is killed (drive failure streak)` });
                 const handoff = await degradeToInbox(opts.writeRoot, role, task, r.rendered, r.skill_hint);
                 if (handoff !== null) await appendSession(opts.writeRoot, id, 'inbox.handoff', { path: handoff });
                 return { ...base, driven: false, host_killed: true, error_kind: 'host-killed',
                          ...(handoff !== null ? { handoff } : {}) };
             }
+            const isProbe = gateState === 'half_open';
 
             const turn = await driveHostTurn(opts.writeRoot, host, r.rendered);
             if (turn['ok'] === true) {
                 await appendSession(opts.writeRoot, id, 'host.turn', turn);
-                await recordDriveHealth(opts.writeRoot, host, true);
-                return { ...base, driven: true, turn };
+                await recordDriveHealth(opts.writeRoot, host, true, undefined, isProbe);
+                return { ...base, driven: true, turn, ...(isProbe ? { recovered: true } : {}) };
             }
-            // Drive failed → record host.error, update health (may trip the
-            // kill-switch), best-effort inbox degrade.
+            // Drive failed → record host.error, update health (a probe failure
+            // re-opens the circuit; a normal failure may trip it), inbox degrade.
             await appendSession(opts.writeRoot, id, 'host.error', turn);
-            await recordDriveHealth(opts.writeRoot, host, false, typeof turn['error_kind'] === 'string' ? turn['error_kind'] as string : undefined);
+            await recordDriveHealth(opts.writeRoot, host, false, typeof turn['error_kind'] === 'string' ? turn['error_kind'] as string : undefined, isProbe);
             const handoff = await degradeToInbox(opts.writeRoot, role, task, r.rendered, r.skill_hint);
             if (handoff !== null) await appendSession(opts.writeRoot, id, 'inbox.handoff', { path: handoff });
             return { ...base, driven: false, error_kind: turn['error_kind'], error: turn['error'],

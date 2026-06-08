@@ -76,15 +76,107 @@ def test_manual_kill_and_reset(dh, root):
     assert dh.status(root, "claude-code")["consecutive_failures"] == 0
 
 
-def test_success_does_not_clear_a_trip(dh, root):
-    # A success resets the streak but a tripped host stays killed until reset
-    # (manual-reset-only, v0). The streak counter starts fresh, killed holds.
+def test_auto_trip_success_closes_circuit(dh, root):
+    # ADR-073 v1: a successful drive closes an AUTO-tripped circuit (un-kills).
     for _ in range(5):
         dh.record(root, "codex", ok=False, error_kind="timeout")
     assert dh.is_killed(root, "codex") is True
-    dh.record(root, "codex", ok=True)
-    assert dh.status(root, "codex")["consecutive_failures"] == 0
-    assert dh.is_killed(root, "codex") is True              # still killed → manual reset only
+    dh.record(root, "codex", ok=True)                       # probe / drive succeeds
+    s = dh.status(root, "codex")
+    assert s["consecutive_failures"] == 0
+    assert s["killed"] is False                             # auto-recovered
+    assert s["kill_reason"] is None and s["killed_at"] is None
+
+
+def _trip_auto(dh, root, host, at):
+    """Auto-trip a host at epoch `at` (5 consecutive failures)."""
+    for _ in range(5):
+        dh.record(root, host, ok=False, error_kind="timeout", now=at)
+
+
+def test_gate_closed_when_healthy(dh, root):
+    assert dh.gate(root, "codex", now=1000.0) == "closed"
+
+
+def test_gate_open_during_cooldown(dh, root):
+    _trip_auto(dh, root, "codex", at=1000.0)
+    # default cooldown 600s → still open at +599
+    assert dh.gate(root, "codex", now=1599.0) == "open"
+
+
+def test_gate_half_open_after_cooldown_and_marks_probe(dh, root):
+    _trip_auto(dh, root, "codex", at=1000.0)
+    assert dh.gate(root, "codex", now=1601.0) == "half_open"
+    # probe lease now stamped → a concurrent gate sees open
+    assert dh.gate(root, "codex", now=1601.0) == "open"
+    assert dh.status(root, "codex")["probe_started_at"] is not None
+
+
+def test_probe_success_recovers(dh, root):
+    _trip_auto(dh, root, "codex", at=1000.0)
+    assert dh.gate(root, "codex", now=1601.0) == "half_open"
+    dh.record(root, "codex", ok=True, is_probe=True, now=1602.0)
+    assert dh.is_killed(root, "codex") is False
+    assert dh.gate(root, "codex", now=1603.0) == "closed"
+
+
+def test_probe_failure_reopens_and_counts_trip(dh, root):
+    _trip_auto(dh, root, "codex", at=1000.0)          # trip_count 1
+    dh.gate(root, "codex", now=1601.0)                # half-open, lease set
+    dh.record(root, "codex", ok=False, error_kind="timeout", is_probe=True, now=1602.0)
+    s = dh.status(root, "codex")
+    assert s["killed"] is True and s["trip_count"] == 2
+    assert s["killed_at"] == 1602.0                   # cooldown restarted
+    assert dh.gate(root, "codex", now=1700.0) == "open"   # cooling again
+
+
+def test_flapping_guard_goes_sticky_after_max_trips(dh, root):
+    # trip 1 (auto) + two failed probes (trips 2, 3) → trip_count == MAX_AUTO_TRIPS
+    _trip_auto(dh, root, "codex", at=1000.0)
+    t = 1601.0
+    for _ in range(2):
+        dh.gate(root, "codex", now=t)
+        dh.record(root, "codex", ok=False, error_kind="timeout", is_probe=True, now=t + 1)
+        t += 700
+    assert dh.status(root, "codex")["trip_count"] >= dh.MAX_AUTO_TRIPS
+    # now sticky: even far past cooldown, stays open (manual reset only)
+    assert dh.gate(root, "codex", now=t + 10_000) == "open"
+
+
+def test_manual_kill_is_sticky(dh, root):
+    dh.kill(root, "gemini", now=1000.0)
+    assert dh.status(root, "gemini")["kill_reason"] == "manual"
+    # never half-opens, even long past any cooldown
+    assert dh.gate(root, "gemini", now=1_000_000.0) == "open"
+    # a success does NOT auto-clear a manual kill
+    dh.record(root, "gemini", ok=True, now=1_000_001.0)
+    assert dh.is_killed(root, "gemini") is True
+
+
+def test_auto_recovery_flag_off_keeps_open(dh, root, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_DRIVE_AUTO_RECOVERY", "off")
+    _trip_auto(dh, root, "codex", at=1000.0)
+    assert dh.gate(root, "codex", now=10_000.0) == "open"   # no half-open when disabled
+
+
+def test_cooldown_env_override(dh, root, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_DRIVE_COOLDOWN_SEC", "60")
+    _trip_auto(dh, root, "codex", at=1000.0)
+    assert dh.gate(root, "codex", now=1059.0) == "open"
+    assert dh.gate(root, "codex", now=1061.0) == "half_open"
+
+
+def test_reset_clears_v1_fields(dh, root):
+    _trip_auto(dh, root, "codex", at=1000.0)
+    dh.reset(root, "codex")
+    s = dh.status(root, "codex")
+    assert s["killed"] is False and s["trip_count"] == 0
+    assert s["killed_at"] is None and s["kill_reason"] is None
+
+
+def test_gate_cli(dh, root, capsys):
+    dh.main(["gate", "--host", "codex", "--root", str(root)])
+    assert capsys.readouterr().out.strip() == "closed"
 
 
 def test_status_all_hosts(dh, root):
