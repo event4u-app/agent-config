@@ -20,11 +20,27 @@
  */
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { readdir, readFile, mkdir, writeFile, stat, appendFile } from 'node:fs/promises';
+import { readdir, readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { join, basename, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import yaml from 'js-yaml';
+
+const execFileAsync = promisify(execFile);
+
+// Python-authoritative document read path (ADR-062 Part B, Option 4). When
+// encrypt-at-rest is on, document bodies live as AES-256-GCM `.md.enc` files
+// the Node runtime must not decrypt itself — so the recent-documents rail
+// reads through the Python store CLI, which owns encryption. The script is
+// resolved from THIS server source tree (never the content packageRoot), so
+// it resolves identically in tests and in an installed consumer.
+const WORKSPACE_DOCS_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_documents.py',
+);
 
 export interface WorkspaceRouteOptions {
     writeRoot: string;
@@ -289,30 +305,28 @@ interface DocumentSummary {
 async function listDocuments(writeRoot: string, limit = 20): Promise<DocumentSummary[]> {
     const root = join(writeRoot, 'workspace', 'documents');
     if (!existsSync(root)) return [];
-    const out: DocumentSummary[] = [];
-    const types = await readdir(root, { withFileTypes: true });
-    for (const t of types) {
-        if (!t.isDirectory()) continue;
-        const typeDir = join(root, t.name);
-        const files = await readdir(typeDir);
-        for (const f of files) {
-            if (!f.endsWith('.md') || f.endsWith('.history.jsonl')) continue;
-            const p = join(typeDir, f);
-            const text = await readFile(p, 'utf8').catch(() => '');
-            const { fm } = parseFrontmatter(text);
-            const s = await stat(p);
-            out.push({
-                type: t.name,
-                slug: basename(f, '.md'),
-                title: typeof fm['title'] === 'string' ? (fm['title'] as string) : basename(f, '.md'),
-                role: typeof fm['role'] === 'string' ? (fm['role'] as string) : '',
-                updated_at: s.mtime.toISOString(),
-                path: p,
-            });
-        }
+    // Python-authoritative read (ADR-062 Part B): the store CLI returns
+    // decrypted summaries whether the bodies are plaintext `.md` or encrypted
+    // `.md.enc`. A spawn failure (no python3, script error) degrades to an
+    // empty rail rather than 500-ing the whole workspace page.
+    try {
+        const { stdout } = await execFileAsync(
+            'python3',
+            [WORKSPACE_DOCS_CLI, 'list', '--json', '--root', root, '--limit', String(limit)],
+            { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+        );
+        const rows = JSON.parse(stdout || '[]') as Array<Record<string, unknown>>;
+        return rows.map((r) => ({
+            type: typeof r['type'] === 'string' ? (r['type'] as string) : '',
+            slug: typeof r['slug'] === 'string' ? (r['slug'] as string) : '',
+            title: typeof r['title'] === 'string' ? (r['title'] as string) : '',
+            role: typeof r['role'] === 'string' ? (r['role'] as string) : '',
+            updated_at: typeof r['updated_at'] === 'string' ? (r['updated_at'] as string) : '',
+            path: typeof r['path'] === 'string' ? (r['path'] as string) : '',
+        }));
+    } catch {
+        return [];
     }
-    out.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-    return out.slice(0, limit);
 }
 
 interface ExplainPayload {
