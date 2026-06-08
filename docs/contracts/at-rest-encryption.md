@@ -9,6 +9,18 @@ stability: experimental
 > Single-user, single-machine encryption for the three workspace
 > stores added in Phases 4 / 5 / 7. Does **not** touch the existing
 > `agents/memory/` store — that gets a separate decision.
+>
+> **Architecture locked 2026-06-08 → [`ADR-062`](../decisions/ADR-062-encrypt-at-rest-store-architecture.md).**
+> Two decisions the store-wiring PR implements: (A) the shipped
+> `workspace_crypto.py` currently uses **Fernet**, not the AES-256-GCM
+> `AC1\0` envelope this contract specifies — the code is re-ciphered to
+> match the contract (safe: flag default-OFF, no field data to migrate);
+> (B) store access is **Python-authoritative end-to-end** — the Node GUI
+> server stops touching the encrypted files directly and routes through
+> the Python CLI (no `keytar`, no dual-runtime crypto). The wiring is a
+> deliberate dedicated PR with a must-have checklist (CI-exercised
+> cipher, concurrency-safe migration, key rotation, kill-switch, envelope
+> versioning, cross-runtime test) — see ADR-062.
 
 ## Threat model
 
