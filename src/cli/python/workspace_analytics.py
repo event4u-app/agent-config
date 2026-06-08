@@ -37,6 +37,7 @@ from typing import Iterable
 # test loader (see workspace_secrets module docstring).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import workspace_secrets  # noqa: E402
+import workspace_crypto  # noqa: E402
 
 # --- Storage layout (contract §Storage) ------------------------------------
 
@@ -139,11 +140,21 @@ def emit(event: str, data: dict | None = None, *, settings_path: Path | None = N
         "data": safe_data,
     }
     try:
+        line = json.dumps(record, sort_keys=True)
+        # Per-record encryption (ADR-064): one base64 envelope line per event,
+        # appended atomically (no whole-file rewrite). On any crypto error,
+        # DROP the event — never persist it unencrypted, never raise.
+        if workspace_crypto.is_enabled():
+            line = workspace_crypto.encrypt_line(line)
         WORKSPACE_HOME.mkdir(parents=True, exist_ok=True)
         with EVENTS_PATH.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, sort_keys=True) + "\n")
+            fh.write(line + "\n")
     except OSError as err:
         print(f"workspace_analytics: drop event {event!r} ({err})", file=sys.stderr)
+        return False
+    except Exception as err:  # noqa: BLE001 — never let the hot path raise/leak
+        print(f"workspace_analytics: drop event {event!r} (encrypt failed: {err})",
+              file=sys.stderr)
         return False
     return True
 
@@ -157,10 +168,15 @@ def read_events(path: Path | None = None) -> list[Event]:
         if not line.strip():
             continue
         try:
-            rec = json.loads(line)
+            # decrypt_line passes a plaintext JSON line through and decrypts a
+            # base64 envelope line — so a file with mixed plaintext+encrypted
+            # records (flag flipped mid-life) reads correctly either way.
+            rec = json.loads(workspace_crypto.decrypt_line(line))
             out.append(Event(ts=rec["ts"], schema=rec["schema"], event=rec["event"], data=rec.get("data", {})))
-        except (json.JSONDecodeError, KeyError):
-            # Contract §Failure modes: skip malformed lines silently in query
+        except Exception:  # noqa: BLE001
+            # Contract §Failure modes + ADR-064 analytics policy: best-effort
+            # telemetry — skip a malformed / torn / undecryptable line and
+            # continue (NOT fail-closed; that policy is for document history).
             continue
     return out
 
@@ -210,11 +226,14 @@ def prune(*, path: Path | None = None, retention_days: int = RETENTION_DAYS) -> 
             if not line.strip():
                 continue
             try:
-                rec = json.loads(line)
+                # Decrypt-aware: age-test the cleartext ts, but keep the
+                # ORIGINAL (still-encrypted) line so prune never decrypts at
+                # rest. Plaintext lines pass through decrypt_line unchanged.
+                rec = json.loads(workspace_crypto.decrypt_line(line))
                 if _parse_ts(rec["ts"]) < cutoff:
                     dropped += 1
                     continue
-            except (json.JSONDecodeError, KeyError, ValueError):
+            except Exception:  # noqa: BLE001 — undecryptable/malformed → keep
                 pass
             keep.append(line)
         tmp = p.with_suffix(".jsonl.tmp")
@@ -226,6 +245,65 @@ def prune(*, path: Path | None = None, retention_days: int = RETENTION_DAYS) -> 
             lock.unlink()
         except FileNotFoundError:
             pass
+
+
+# --- encryption-at-rest ops (ADR-064: per-record, append-JSONL) -----------
+#
+# migrate / decrypt-all / rekey mirror the documents store. Each rewrites
+# events.jsonl atomically (tmp + replace). Because every record line is
+# self-contained, a rewrite is a straight per-line transform.
+
+def _rewrite_lines(p: Path, transform) -> int:
+    """Apply ``transform(line) -> line`` to each record; atomic replace.
+
+    Returns the number of records rewritten. Empty/whitespace lines drop.
+    """
+    if not p.exists():
+        return 0
+    out: list[str] = []
+    for line in p.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        out.append(transform(line))
+    tmp = p.with_suffix(".jsonl.tmp")
+    tmp.write_text("\n".join(out) + ("\n" if out else ""), encoding="utf-8")
+    os.replace(tmp, p)
+    return len(out)
+
+
+def migrate(*, path: Path | None = None) -> dict:
+    """Plaintext → per-record encrypted. Requires the flag on. Idempotent
+    (an already-encrypted line decrypts then re-encrypts to an equivalent
+    record)."""
+    if not workspace_crypto.is_enabled():
+        raise RuntimeError("workspace.encrypt_at_rest is off — enable it before migrate")
+    p = path if path is not None else EVENTS_PATH
+    n = _rewrite_lines(p, lambda ln: workspace_crypto.encrypt_line(
+        workspace_crypto.decrypt_line(ln)))
+    return {"migrated": n}
+
+
+def decrypt_all(*, path: Path | None = None) -> dict:
+    """Kill-switch: every record back to plaintext JSON (works flag-off)."""
+    p = path if path is not None else EVENTS_PATH
+    n = _rewrite_lines(p, workspace_crypto.decrypt_line)
+    return {"decrypted": n}
+
+
+def rekey(*, path: Path | None = None) -> dict:
+    """Rotate the master key and re-encrypt every record under the new key."""
+    p = path if path is not None else EVENTS_PATH
+    if not p.exists():
+        workspace_crypto.rotate_key()
+        return {"rekeyed": 0}
+    cleartext = [workspace_crypto.decrypt_line(ln)
+                 for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    new_key = workspace_crypto.rotate_key()
+    out = [workspace_crypto.encrypt_line(c, key=new_key) for c in cleartext]
+    tmp = p.with_suffix(".jsonl.tmp")
+    tmp.write_text("\n".join(out) + ("\n" if out else ""), encoding="utf-8")
+    os.replace(tmp, p)
+    return {"rekeyed": len(out)}
 
 
 # --- /analytics:show renderer ---------------------------------------------
@@ -339,6 +417,9 @@ def _main(argv: list[str]) -> int:
     s.add_argument("--format", default="markdown", choices=("markdown", "csv", "json"))
 
     sub.add_parser("prune", help="drop events older than retention window")
+    sub.add_parser("migrate", help="encrypt-at-rest: plaintext → per-record .enc lines")
+    sub.add_parser("decrypt-all", help="kill-switch: every record back to plaintext")
+    sub.add_parser("rekey", help="rotate master key and re-encrypt every record")
 
     args = parser.parse_args(argv)
 
@@ -351,6 +432,15 @@ def _main(argv: list[str]) -> int:
     if args.cmd == "prune":
         n = prune()
         sys.stdout.write(f"pruned {n} event(s)\n")
+        return 0
+    if args.cmd == "migrate":
+        sys.stdout.write(json.dumps(migrate(), sort_keys=True) + "\n")
+        return 0
+    if args.cmd == "decrypt-all":
+        sys.stdout.write(json.dumps(decrypt_all(), sort_keys=True) + "\n")
+        return 0
+    if args.cmd == "rekey":
+        sys.stdout.write(json.dumps(rekey(), sort_keys=True) + "\n")
         return 0
     return 2
 

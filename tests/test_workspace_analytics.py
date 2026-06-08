@@ -49,7 +49,28 @@ def isolated(tmp_path, wa, monkeypatch):
     monkeypatch.setattr(wa, "WORKSPACE_HOME", tmp_path)
     monkeypatch.setattr(wa, "RETENTION_LOCK", tmp_path / "retention.lock")
     monkeypatch.delenv(wa.ENV_OPT_OUT, raising=False)
+    # Encryption OFF by default — deterministic regardless of a repo-root
+    # .agent-settings.yml in the cwd. Encryption tests flip it explicitly.
+    monkeypatch.setattr(wa.workspace_crypto, "is_enabled", lambda *a, **k: False)
     return events
+
+
+try:
+    import cryptography  # noqa: F401
+    HAS_CRYPTO = True
+except ImportError:
+    HAS_CRYPTO = False
+
+
+@pytest.fixture
+def enc_isolated(isolated, wa, monkeypatch):
+    """`isolated`, but with encryption-at-rest ON and a fixed key."""
+    import base64
+    import os as _os
+    monkeypatch.setattr(wa.workspace_crypto, "is_enabled", lambda *a, **k: True)
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY",
+                       base64.b64encode(_os.urandom(32)).decode("ascii"))
+    return isolated
 
 
 def test_emit_writes_schema_v0(wa, isolated):
@@ -154,3 +175,76 @@ def test_cli_emit_show_prune(tmp_path):
     r = subprocess.run(cmd + ["prune"], env=env, capture_output=True, text=True)
     assert r.returncode == 0
     assert "pruned" in r.stdout
+
+
+# --- encryption-at-rest (ADR-064: per-record append-JSONL) ----------------
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_emit_writes_base64_not_plaintext(wa, enc_isolated):
+    assert wa.emit("launcher.opened", {"role": "tradesperson"}) is True
+    line = enc_isolated.read_text(encoding="utf-8").strip()
+    assert not line.startswith("{")            # not plaintext JSON
+    import base64
+    raw = base64.b64decode(line, validate=True)
+    assert raw[:4] == b"AC1\x00"               # per-record AES-256-GCM envelope
+    assert b"tradesperson" not in raw          # payload not cleartext on disk
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_round_trip_read_events(wa, enc_isolated):
+    wa.emit("launcher.opened", {"role": "a"})
+    wa.emit("session.started", {"role": "b"})
+    events = wa.read_events(enc_isolated)
+    assert [e.event for e in events] == ["launcher.opened", "session.started"]
+    assert events[0].data["role"] == "a"       # decrypted per line
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_each_line_has_distinct_nonce(wa, enc_isolated):
+    wa.emit("launcher.opened", {"role": "x"})
+    wa.emit("launcher.opened", {"role": "x"})   # identical payload
+    lines = enc_isolated.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    assert lines[0] != lines[1]                 # random nonce → distinct ciphertext
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_migrate_then_decrypt_all(wa, isolated, monkeypatch):
+    import base64, os as _os
+    # Write two plaintext events (flag off).
+    wa.emit("launcher.opened", {"role": "a"})
+    wa.emit("session.started", {"role": "b"})
+    assert isolated.read_text(encoding="utf-8").splitlines()[0].startswith("{")
+
+    # Flip on + migrate → every line per-record encrypted, content intact.
+    monkeypatch.setattr(wa.workspace_crypto, "is_enabled", lambda *a, **k: True)
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY",
+                       base64.b64encode(_os.urandom(32)).decode("ascii"))
+    assert wa.migrate()["migrated"] == 2
+    assert all(not ln.startswith("{") for ln in isolated.read_text().splitlines())
+    assert [e.event for e in wa.read_events(isolated)] == ["launcher.opened", "session.started"]
+
+    # Kill-switch back to plaintext.
+    assert wa.decrypt_all()["decrypted"] == 2
+    assert all(ln.startswith("{") for ln in isolated.read_text().splitlines())
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_prune_ages_encrypted_records_by_cleartext_ts(wa, enc_isolated, monkeypatch):
+    # An old encrypted record must still be pruned by its decrypted ts.
+    old_ts = "2000-01-01T00:00:00Z"
+    rec = {"ts": old_ts, "schema": wa.SCHEMA, "event": "launcher.opened", "data": {}}
+    enc_isolated.write_text(
+        wa.workspace_crypto.encrypt_line(json.dumps(rec, sort_keys=True)) + "\n",
+        encoding="utf-8")
+    assert wa.prune() == 1                       # pruned by decrypted ts
+    assert enc_isolated.read_text(encoding="utf-8").strip() == ""
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_torn_line_skipped_best_effort(wa, enc_isolated):
+    wa.emit("launcher.opened", {"role": "good"})
+    with enc_isolated.open("a", encoding="utf-8") as fh:
+        fh.write("dG90YWxseS1ub3QtYW4tZW52ZWxvcGU=\n")  # base64 garbage → skip
+    events = wa.read_events(enc_isolated)
+    assert [e.event for e in events] == ["launcher.opened"]   # torn line skipped
