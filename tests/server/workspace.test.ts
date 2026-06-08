@@ -195,11 +195,14 @@ describe('workspaceRoute', () => {
     });
 
     it('appends to a session log and reads it back via /sessions/:id', async () => {
+        // host 'local' is Tier-3 (inbox off) so the launch renders but does not
+        // drive — header only. Inputs satisfy the prompt's required `brief` so
+        // no render-error record is appended; the log is just the header here.
         const launch = await app.inject({
             method: 'POST',
             url: '/api/v1/workspace/launch',
             headers: { ...AUTH, 'content-type': 'application/json' },
-            payload: { role: 'galabau', task: 'Offer drafting' },
+            payload: { role: 'galabau', task: 'Offer drafting', inputs: { brief: 'x' } },
         });
         const launchBody = launch.json() as { id: string };
         const id = launchBody.id;
@@ -457,5 +460,78 @@ describe('workspaceRoute', () => {
             payload: { role: 'galabau', inputs: {} },
         });
         expect(res.statusCode).toBe(400);
+    });
+
+    // --- launch drive integration (ADR-070 PR-2) ---------------------------
+    // The actual tier-1 drive-success path needs a real `claude` CLI (absent in
+    // CI) — it is covered by the workspace_drive.py stubbed + contract tests.
+    // Here we lock the deterministic launch wiring: header always written, then
+    // render / degrade outcomes reported via `driven` + `reason`/`error_kind`.
+
+    it('launch reports driven:false with reason when the task has no prompt', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'No Such Task', inputs: { x: 1 } },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as Record<string, unknown>;
+        expect(body['id']).toBeTruthy();                 // header still recorded
+        expect(body['driven']).toBe(false);
+        expect(body['reason']).toBe('no-prompt-for-task');
+        expect(body['ignored_inputs']).toBe(true);       // inputs were supplied + dropped
+    });
+
+    it('launch records a render-error (driven:false) when a required input is missing', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'Offer drafting', host: 'claude-code' },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as Record<string, unknown>;
+        expect(body['driven']).toBe(false);
+        expect(body['error_kind']).toBe('render-error');
+        expect(String(body['error'])).toContain('brief');
+        // the render-error is recorded on the session log
+        const read = await app.inject({ method: 'GET', url: `/api/v1/workspace/sessions/${body['id']}`, headers: AUTH });
+        const log = (read.json() as { log: Array<{ kind: string }> }).log;
+        expect(log.some((e) => e.kind === 'host.error')).toBe(true);
+    });
+
+    it('Tier-3 launch degrades to the inbox hand-off when the flag is on', async () => {
+        process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
+        try {
+            const res = await app.inject({
+                method: 'POST', url: '/api/v1/workspace/launch',
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { role: 'galabau', task: 'Offer drafting', host: 'augment',
+                           inputs: { brief: 'Build a hedge.' } },
+            });
+            expect(res.statusCode).toBe(200);
+            const body = res.json() as Record<string, unknown>;
+            expect(body['effective_tier']).toBe(3);
+            expect(body['driven']).toBe(false);
+            expect(typeof body['handoff']).toBe('string');   // inbox path returned
+            const read = await app.inject({ method: 'GET', url: `/api/v1/workspace/sessions/${body['id']}`, headers: AUTH });
+            const log = (read.json() as { log: Array<{ kind: string }> }).log;
+            expect(log.some((e) => e.kind === 'inbox.handoff')).toBe(true);
+        } finally {
+            delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        }
+    });
+
+    it('Tier-3 launch without the inbox flag is header-only (no handoff)', async () => {
+        delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'Offer drafting', host: 'augment',
+                       inputs: { brief: 'Build a hedge.' } },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as Record<string, unknown>;
+        expect(body['driven']).toBe(false);
+        expect(body['handoff']).toBeUndefined();
     });
 });

@@ -92,11 +92,119 @@ function rolesRoot(packageRoot: string): string {
     return join(packageRoot, 'agents', 'roles');
 }
 
+// Tier-1 drive executor (ADR-070). On a tier-1 launch the server renders the
+// task prompt, drives one host turn via this CLI, and records the result.
+// Single-turn, fail-closed: any drive failure becomes a host.error record +
+// (best-effort) a Tier-3 inbox hand-off so the user is never stuck.
+const WORKSPACE_DRIVE_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_drive.py',
+);
+
 interface HostTier {
     effective_tier: number;
     cli_present: boolean;
     known: boolean;
     mode: string;
+}
+
+// --- launch-drive orchestration helpers (ADR-070 PR-2) ---------------------
+
+// Append one event to the session store (Python-authoritative, encrypted when
+// the flag is on). Best-effort: a launch must still respond even if the append
+// fails — the failure is logged, never thrown into the response path.
+async function appendSession(writeRoot: string, id: string, kind: string, data: unknown): Promise<boolean> {
+    try {
+        await execFileAsync(
+            'python3',
+            [WORKSPACE_SESSIONS_CLI, 'append', id, '--kind', kind,
+             '--data-json', JSON.stringify(data), '--root', sessionsRoot(writeRoot)],
+            { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+        );
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// Render a task prompt (ADR-069) → {rendered, skill_hint} or {error}. Inputs
+// flow via a temp JSON file (values can be multi-line). A missing-required /
+// undeclared-placeholder error is returned, never thrown.
+async function renderTaskPrompt(
+    packageRoot: string, writeRoot: string, role: string, promptName: string, inputs: Record<string, unknown>,
+): Promise<{ rendered: string; skill_hint: string | null } | { error: string }> {
+    await mkdir(join(writeRoot, 'workspace'), { recursive: true });
+    const tmp = join(writeRoot, 'workspace', `.launch-render-${randomUUID()}.json`);
+    await writeFile(tmp, JSON.stringify(inputs), 'utf8');
+    try {
+        const { stdout } = await execFileAsync(
+            'python3',
+            [WORKSPACE_RENDER_CLI, 'render', '--role', role, '--prompt', promptName,
+             '--inputs-json', tmp, '--root', rolesRoot(packageRoot), '--json'],
+            { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+        );
+        return JSON.parse(stdout) as { rendered: string; skill_hint: string | null };
+    } catch (err) {
+        return { error: ((err as { stderr?: string }).stderr ?? 'render failed').trim() };
+    } finally {
+        await rm(tmp, { force: true });
+    }
+}
+
+// Drive one Tier-1 host turn (ADR-070). Returns the uniform turn record
+// (`ok:true` or `ok:false` with `error_kind`). The CLI prints the turn JSON on
+// stdout for both outcomes (exit 1 on failure) — capture stdout either way.
+async function driveHostTurn(writeRoot: string, host: string, rendered: string): Promise<Record<string, unknown>> {
+    await mkdir(join(writeRoot, 'workspace'), { recursive: true });
+    const tmp = join(writeRoot, 'workspace', `.launch-drive-${randomUUID()}.md`);
+    await writeFile(tmp, rendered, 'utf8');
+    try {
+        let stdout: string;
+        try {
+            ({ stdout } = await execFileAsync(
+                'python3',
+                [WORKSPACE_DRIVE_CLI, 'drive', '--host', host, '--prompt-file', tmp, '--json'],
+                { timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
+            ));
+        } catch (err) {
+            stdout = (err as { stdout?: string }).stdout ?? '';
+        }
+        if (stdout.trim() === '') return { ok: false, host, error: 'no drive output', error_kind: 'spawn-failed' };
+        return JSON.parse(stdout) as Record<string, unknown>;
+    } finally {
+        await rm(tmp, { force: true });
+    }
+}
+
+// Best-effort Tier-3 inbox hand-off when driving is unavailable / failed. Only
+// writes when the flag is on; never throws into the response path.
+async function degradeToInbox(
+    writeRoot: string, role: string, task: string, rendered: string, skillHint: string | null,
+): Promise<string | null> {
+    if (!tier3InboxEnabled()) return null;
+    await mkdir(inboxRoot(writeRoot), { recursive: true });
+    const tmp = join(inboxRoot(writeRoot), `.launch-handoff-${randomUUID()}.tmp`);
+    await writeFile(tmp, rendered, 'utf8');
+    try {
+        const { stdout } = await execFileAsync(
+            'python3',
+            [WORKSPACE_INBOX_CLI, 'write', '--role', role, '--task', task, '--body-file', tmp,
+             ...(skillHint ? ['--skill-hint', skillHint] : []), '--root', inboxRoot(writeRoot)],
+            { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+        );
+        const res = JSON.parse(stdout) as { path?: string };
+        return res.path ?? null;
+    } catch {
+        return null;
+    }
+}
+
+// Resolve a task name → its prompt file basename (sans .md) from the role's
+// "Three first tasks" list. Null when the task has no prompt mapping.
+function promptNameForTask(role: Role, task: string): string | null {
+    const match = role.first_tasks.find((t) => t.name === task);
+    if (match === undefined || match.prompt === '') return null;
+    return match.prompt.replace(/\.md$/, '');
 }
 
 async function detectHostTier(host: string): Promise<HostTier> {
@@ -455,12 +563,16 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             // is CLI-drivable (drive loop still unbuilt → mode tier1-drive-
             // pending); Tier 3 = use the inbox hand-off (POST /inbox). Detection
             // is side-effect-free; it never drives or spawns the host.
+            const inputs = (body?.['inputs'] !== null && typeof body?.['inputs'] === 'object' && !Array.isArray(body?.['inputs']))
+                ? (body['inputs'] as Record<string, unknown>)
+                : {};
             const tier = await detectHostTier(host);
             if (opts.dryRun === true) {
-                return { id: 'dry-run', role, task, host, dryRun: true, ...tier };
+                return { id: 'dry-run', role, task, host, dryRun: true, driven: false, ...tier };
             }
             // Python-authoritative write (ADR-064): the store CLI owns the
             // session-id minting + per-record encryption when the flag is on.
+            // A fresh id per launch → no shared-session append race.
             const { stdout } = await execFileAsync(
                 'python3',
                 [WORKSPACE_SESSIONS_CLI, 'start', '--role', role, '--task', task,
@@ -468,7 +580,45 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 { timeout: 10_000 },
             );
             const id = stdout.trim();
-            return { id, role, task, host, dryRun: false, ...tier };
+            const base = { id, role, task, host, dryRun: false, ...tier };
+
+            // Tier-1 drive (ADR-070 PR-2). The session header is always written
+            // above (backwards-compatible); driving is additive and opt-in:
+            // it only happens for a tier-1 host whose task resolves to a prompt.
+            const roleObj = await loadRole(role, opts.packageRoot);
+            const promptName = roleObj !== null ? promptNameForTask(roleObj, task) : null;
+            if (promptName === null) {
+                // No prompt for this task — header-only (the legacy contract).
+                // Signal explicitly when inputs were supplied but ignored.
+                return { ...base, driven: false, reason: 'no-prompt-for-task',
+                         ...(Object.keys(inputs).length > 0 ? { ignored_inputs: true } : {}) };
+            }
+
+            const r = await renderTaskPrompt(opts.packageRoot, opts.writeRoot, role, promptName, inputs);
+            if ('error' in r) {
+                await appendSession(opts.writeRoot, id, 'host.error', { error_kind: 'render-error', error: r.error });
+                return { ...base, driven: false, error_kind: 'render-error', error: r.error };
+            }
+
+            if (tier.effective_tier !== 1) {
+                // Tier-3 host → best-effort inbox hand-off (the rendered prompt
+                // is what the user pastes); header already records the launch.
+                const handoff = await degradeToInbox(opts.writeRoot, role, task, r.rendered, r.skill_hint);
+                if (handoff !== null) await appendSession(opts.writeRoot, id, 'inbox.handoff', { path: handoff });
+                return { ...base, driven: false, ...(handoff !== null ? { handoff } : {}) };
+            }
+
+            const turn = await driveHostTurn(opts.writeRoot, host, r.rendered);
+            if (turn['ok'] === true) {
+                await appendSession(opts.writeRoot, id, 'host.turn', turn);
+                return { ...base, driven: true, turn };
+            }
+            // Drive failed → record host.error + best-effort inbox degrade.
+            await appendSession(opts.writeRoot, id, 'host.error', turn);
+            const handoff = await degradeToInbox(opts.writeRoot, role, task, r.rendered, r.skill_hint);
+            if (handoff !== null) await appendSession(opts.writeRoot, id, 'inbox.handoff', { path: handoff });
+            return { ...base, driven: false, error_kind: turn['error_kind'], error: turn['error'],
+                     ...(handoff !== null ? { handoff } : {}) };
         });
 
         app.post('/api/v1/workspace/sessions/:id/append', async (request, reply) => {

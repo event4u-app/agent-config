@@ -52,7 +52,7 @@ in [`gui-wizard`](gui-wizard.md) are untouched.
 | `GET  /workspace` | HTML shell + initial state (role list, recent sessions). |
 | `GET  /api/v1/workspace/roles` | List available roles from `agents/roles/<role>/`. |
 | `GET  /api/v1/workspace/roles/:role/tasks` | Per-role task list from `skills.yml` + `prompts/`. |
-| `POST /api/v1/workspace/launch` | Body: `{ role, task, host? }`. Resolves host via ADR-023 tier; runs the launch; appends to JSONL log. |
+| `POST /api/v1/workspace/launch` | Body: `{ role, task, inputs?, host? }`. Writes a session header; resolves host tier (ADR-068). On a **tier-1** host whose task resolves to a prompt, renders (ADR-069) + drives one turn (ADR-070/071), appending `host.turn`/`host.error`. Tier-3 / drive failure degrades to the inbox hand-off (best-effort). Always 200 with `{driven, turn?\|reason?\|error_kind?, handoff?}`. |
 | `GET  /api/v1/workspace/sessions` | List of recent sessions (≤ 20, ordered by mtime). |
 | `GET  /api/v1/workspace/sessions/:id` | Streams the JSONL log for one session. |
 | `GET  /api/v1/workspace/knowledge` | Snapshot of the current `knowledge:` memory namespace (read-only). |
