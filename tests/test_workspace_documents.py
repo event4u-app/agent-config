@@ -247,21 +247,61 @@ def test_migrate_then_decrypt_all_round_trip(enc_docs, tmp_path, monkeypatch):
     assert plain.name.endswith(".md") and not plain.name.endswith(".enc")
 
     # Flip ON and migrate: plaintext → .enc, plaintext removed, content intact.
+    # migrated counts the .md body (1) + the .history.jsonl that had plaintext
+    # lines (1) = 2, since the history log is per-record encrypted too (ADR-064).
     monkeypatch.setattr(enc_docs.workspace_crypto, "is_enabled", lambda *a, **k: True)
     result = enc_docs.migrate(root=enc_docs.WORKSPACE_HOME)
-    assert result["migrated"] == 1
+    assert result["migrated"] == 2
     assert not plain.exists()
     assert enc_docs._enc_path(plain).exists()
     assert "plaintext body" in enc_docs.read("offer", doc.slug).body
+    # The history log is now per-record encrypted on disk.
+    hp = enc_docs.WORKSPACE_HOME / "offer" / f"{doc.slug}.history.jsonl"
+    assert all(not ln.startswith("{") for ln in hp.read_text().splitlines() if ln.strip())
 
-    # migrate is idempotent (no double-encrypt).
+    # migrate is idempotent for the .md body (no plaintext .md remains → 0).
     assert enc_docs.migrate(root=enc_docs.WORKSPACE_HOME)["migrated"] == 0
 
-    # Kill-switch: decrypt-all returns to plaintext .md.
+    # Kill-switch: decrypt-all returns body + history to plaintext (2).
     dres = enc_docs.decrypt_all(root=enc_docs.WORKSPACE_HOME)
-    assert dres["decrypted"] == 1
+    assert dres["decrypted"] == 2
     assert plain.exists() and not enc_docs._enc_path(plain).exists()
     assert "plaintext body" in plain.read_text(encoding="utf-8")
+    assert all(ln.startswith("{") for ln in hp.read_text().splitlines() if ln.strip())
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_history_line_encrypted_on_write(enc_docs):
+    doc = enc_docs.create(type="memo", title="Audited", body="v1\n")
+    enc_docs.save("memo", doc.slug, "v2\n")
+    hp = enc_docs.WORKSPACE_HOME / "memo" / f"{doc.slug}.history.jsonl"
+    lines = [ln for ln in hp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(lines) == 2                          # create + save revisions
+    assert all(not ln.startswith("{") for ln in lines)   # per-record encrypted
+    import base64
+    assert base64.b64decode(lines[0], validate=True)[:4] == b"AC1\x00"
+    # decrypt_line recovers the cleartext revision record.
+    rec = json.loads(enc_docs.workspace_crypto.decrypt_line(lines[1]))
+    assert rec["kind"] == "save"
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_rekey_covers_history_log(enc_docs, monkeypatch):
+    import os as _os
+    wc = enc_docs.workspace_crypto
+    monkeypatch.delenv("AGENT_CONFIG_WORKSPACE_KEY", raising=False)
+    state = {"key": _os.urandom(32)}
+    monkeypatch.setattr(wc, "_get_or_create_master_key", lambda **k: state["key"])
+    monkeypatch.setattr(wc, "rotate_key",
+                        lambda: state.__setitem__("key", _os.urandom(32)) or state["key"])
+    doc = enc_docs.create(type="memo", title="Rot", body="b\n")
+    hp = enc_docs.WORKSPACE_HOME / "memo" / f"{doc.slug}.history.jsonl"
+    before = hp.read_text(encoding="utf-8")
+    res = enc_docs.rekey(root=enc_docs.WORKSPACE_HOME)
+    assert res["rekeyed"] == 1 and res["rekeyed_history"] == 1
+    assert hp.read_text(encoding="utf-8") != before          # re-encrypted
+    rec = json.loads(wc.decrypt_line(hp.read_text().splitlines()[0]))
+    assert rec["kind"] == "save"                              # still decryptable
 
 
 @pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
