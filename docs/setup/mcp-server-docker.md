@@ -34,13 +34,15 @@ docker run --rm -i agent-config-mcp:local
 You should see, on **stderr**:
 
 ```
-mcp-server: loaded 278 prompts (0 warnings)
-mcp-server: loaded 160 resources (0 warnings)
-mcp-server: registered 2 tools: ['chat_history_append', 'lint_skills']
-mcp-server: identity serverVersion=0.1.0 packageVersion=1.36.1 skillSetSignature=<12-hex>
+mcp-server: loaded 377 prompts (0 warnings)
+mcp-server: loaded 189 resources (0 warnings)
+mcp-server: registered 20 tools (9 implemented, 11 stubs)
+mcp-server: identity serverVersion=0.1.0 packageVersion=<semver> skillSetSignature=<12-hex>
 ```
 
-The fourth line is the F1 identity surface — see
+Prompt / resource / tool counts grow as the suite grows — the meaningful
+signal is `0 warnings`, not the exact numbers. The fourth line is the F1
+identity surface — see
 [`mcp-phase-1-scope.md § Phase 6`](../contracts/mcp-phase-1-scope.md)
 for semantics.
 
@@ -85,7 +87,7 @@ The image inherits the A0 contract verbatim — see
 - No `subprocess`, `os.system`, `requests`, `httpx`, or `urllib`
   imports anywhere on the MCP wire surface (enforced by
   `test_no_unsafe_imports_in_*` tests).
-- Tools allowlist is hardcoded in `scripts/mcp_server/tools.py`. The
+- Tools allowlist is hardcoded in `src/scripts/mcp_server/tools.py`. The
   container cannot grow new tools at runtime.
 - Image runs as a non-root user (`mcp:mcp`). Mounted host paths must
   be writable by uid/gid `999` or you'll see permission errors.
