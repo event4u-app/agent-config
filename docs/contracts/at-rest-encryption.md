@@ -65,23 +65,23 @@ never logged.
 
 ## Scope
 
-**Shipped in Part B (ADR-062) — whole-file `.md` bodies, encrypted + Python-authoritative read:**
+**Shipped — encrypted at rest:**
 
-| Path | Phase | Sensitivity |
-|---|---|---|
-| `workspace/documents/**/*.md` | 5 | offer / mail / memo / brief bodies |
+| Path | Form | ADR | Sensitivity |
+|---|---|---|---|
+| `workspace/documents/**/*.md` | whole-file `.md.enc`, Python-authoritative read | 062 | offer / mail / memo / brief bodies |
+| `workspace/analytics/events.jsonl` | per-record (one base64 `AC1\0` line per event) | 064 | event counters; lower sensitivity |
 
-**Deferred — the append-JSONL set (ADR-063):** these are append-heavy logs;
-AES-256-GCM cannot append to a blob, and per-record encryption needs a
-nonce-management protocol that is not yet designed. They stay **plaintext**
-until ADR-063's gate is met. Do **not** assume they are protected.
+**Deferred — the remaining append-JSONL set (ADR-063 → protocol ADR-064):**
+append-heavy logs that reuse the ADR-064 per-record protocol but are not yet
+wired. They stay **plaintext** until wired. Do **not** assume they are
+protected.
 
-| Path | Phase | Sensitivity |
-|---|---|---|
-| `workspace/sessions/**/*.jsonl` | 4 | host replies may contain customer data |
-| `workspace/documents/**/*.history.jsonl` | 5 | edit metadata + SHAs |
-| `workspace/inbox/**/*.md` | 4 | rendered prompts for Tier-3 hand-off may contain customer names |
-| `workspace/analytics/events.jsonl` | 7 | event counters; lower sensitivity |
+| Path | Phase | Why not yet | Sensitivity |
+|---|---|---|---|
+| `workspace/documents/**/*.history.jsonl` | 5 | needs a per-line pass added to the documents store's whole-file migrate/rekey | edit metadata + SHAs |
+| `workspace/sessions/**/*.jsonl` | 4 | Node reads+writes these → needs the Option-4 Node-session refactor (ADR-064 rollout step 3) | host replies may contain customer data |
+| `workspace/inbox/**/*.md` | 4 | whole-file like documents; not yet wired | rendered prompts for Tier-3 hand-off may contain customer names |
 
 Does **not** encrypt (v0):
 
