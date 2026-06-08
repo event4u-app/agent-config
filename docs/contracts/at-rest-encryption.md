@@ -74,11 +74,11 @@ never logged.
 | `workspace/analytics/events.jsonl` | per-record (one base64 `AC1\0` line per event) | 064 | event counters; lower sensitivity |
 | `workspace/sessions/**/*.jsonl` | per-record (Python-authoritative; Node routes all 5 session endpoints through the CLI) | 064 | host replies may contain customer data |
 
-**Deferred:**
+**Intentionally plaintext (encryption declined — [`ADR-065`](../decisions/ADR-065-tier3-inbox-handoff-v0.md)):**
 
-| Path | Phase | Why not yet | Sensitivity |
-|---|---|---|---|
-| `workspace/inbox/**/*.md` | 4 | whole-file like documents; the Tier-3 inbox hand-off surface is not yet wired | rendered prompts for Tier-3 hand-off may contain customer names |
+| Path | Form | Why not encrypted |
+|---|---|---|
+| `workspace/inbox/**/*.md` | plaintext, ephemeral (24h prune), Python-authoritative, ships dark behind `AGENT_CONFIG_TIER3_INBOX` | the Tier-3 hand-off holds a rendered prompt the user **reads to copy-paste**; that same content already lives in the **encrypted sessions store**, so encrypting it defends against no incremental threat (security theater). **Trigger to revisit:** if the inbox ever carries content NOT mirrored in sessions, encrypt it via the documents whole-file `.md.enc` pattern. |
 
 Does **not** encrypt (v0):
 

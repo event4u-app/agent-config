@@ -1,5 +1,5 @@
 ---
-adr: 065
+adr: 067
 status: proposed
 date: 2026-06-08
 decision: glama-registry-listing
@@ -9,7 +9,7 @@ phase: road-to-glama-registry-listing (Phases 1–3)
 type: lightweight
 ---
 
-# ADR-065 — Glama MCP registry listing
+# ADR-067 — Glama MCP registry listing
 
 ## Status
 
@@ -126,7 +126,7 @@ discreet line was added to `README.md` in the MCP section (after the Worker
 > The built-in **local stdio** server is listed for discovery in the
 > [Glama MCP Registry](https://glama.ai/mcp/servers/event4u-app/agent-config)
 > (agent developers / contributors; requires a local checkout, not a turnkey
-> install — see [ADR-065](docs/decisions/ADR-065-glama-registry-listing.md)).
+> install — see [ADR-067](docs/decisions/ADR-067-glama-registry-listing.md)).
 ```
 
 This link is the **sole reputational signal** from the listing and is removable

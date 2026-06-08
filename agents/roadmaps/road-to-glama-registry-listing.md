@@ -42,48 +42,48 @@ honest and unblocked now.
 - [x] Submit the **stdio** MCP server to the Glama registry (repo URL +
   description + tags). List the stdio server **only** — never the Cloudflare
   Worker, whose `experimental` / not-README-linked status would make a public
-  listing an incoherent support promise. <!-- done: Glama auto-indexed the repo — live at https://glama.ai/mcp/servers/event4u-app/agent-config (no manual form needed); recorded in ADR-065 § Listing URL -->
+  listing an incoherent support promise. <!-- done: Glama auto-indexed the repo — live at https://glama.ai/mcp/servers/event4u-app/agent-config (no manual form needed); recorded in ADR-067 § Listing URL -->
 - [x] Write the listing description with an **honest scope label**: "for agent
   developers / contributors / forks; not a turnkey package." If a hosted preview
   is mentioned at all, frame the experimental Worker as a roadmap-preview, "use
-  at your own risk," not as a product. <!-- done: full copy-paste listing description in ADR-065 § Listing description; developer-first scope, explicit "Not a turnkey package" clause, experimental Worker framed as roadmap-preview -->
+  at your own risk," not as a product. <!-- done: full copy-paste listing description in ADR-067 § Listing description; developer-first scope, explicit "Not a turnkey package" clause, experimental Worker framed as roadmap-preview -->
 - [x] Add a single discreet README line/badge pointing at the listing. This badge
   is the only reputational signal and is removable in one commit — it is the
-  Phase-3 kill-switch surface. <!-- done: plain link added to README.md MCP section (Glama exposes no embeddable badge for this listing); removable in one commit per ADR-065 § README badge -->
+  Phase-3 kill-switch surface. <!-- done: plain link added to README.md MCP section (Glama exposes no embeddable badge for this listing); removable in one commit per ADR-067 § README badge -->
 - [x] Capture the listing process in a short ADR (one-time manual web form). Do
   **not** build "auto-sync" or "release-reminder" tooling — the linked repo +
   GitHub releases are the source of truth; if Glama needs manual version bumps,
-  that is a kill-switch criterion, not a maintenance project to absorb. <!-- done: ADR-065-glama-registry-listing.md — submission steps, listing description, badge markup, kill-switches, review trigger, discovery channels, Awesome MCP path -->
+  that is a kill-switch criterion, not a maintenance project to absorb. <!-- done: ADR-067-glama-registry-listing.md — submission steps, listing description, badge markup, kill-switches, review trigger, discovery channels, Awesome MCP path -->
 
 ## Phase 2 — Avoid single-channel lock-in
 
 - [x] Cross-list in at least one other surface (the GitHub `Awesome MCP` list
   and/or relevant GitHub topics) so discovery does not depend on Glama alone.
   Rationale: MCP registries have winner-take-all network-effect dynamics; "no
-  lock-in" only holds while the directory space stays fragmented. <!-- done: added GitHub topics `model-context-protocol` + `mcp-server` to event4u-app/agent-config via gh api (additive, preserves all existing topics); surfaces repo at github.com/topics/model-context-protocol. Awesome MCP PR path documented in ADR-065 as optional next step if needed -->
+  lock-in" only holds while the directory space stays fragmented. <!-- done: added GitHub topics `model-context-protocol` + `mcp-server` to event4u-app/agent-config via gh api (additive, preserves all existing topics); surfaces repo at github.com/topics/model-context-protocol. Awesome MCP PR path documented in ADR-067 as optional next step if needed -->
 
 ## Phase 3 — Trigger-based review + kill-switches (no calendar)
 
 - [x] Define the review **trigger**, not a date: the first inbound GitHub
   issue/PR/star that references Glama. On that signal, assess whether the user
   hit friction (could they actually run the server?) and fix docs or sharpen the
-  audience label accordingly. <!-- done: trigger defined in ADR-065 § Review trigger — first inbound issue/PR/star mentioning Glama; 12-month timeout kill-switch -->
+  audience label accordingly. <!-- done: trigger defined in ADR-067 § Review trigger — first inbound issue/PR/star mentioning Glama; 12-month timeout kill-switch -->
 - [x] Record the kill-switches in the ADR from Phase 1:
   (a) Glama makes a registry listing **conditional on using their hosting** →
   delist (we will not migrate infra — see Option D below);
   (b) the registry degrades into a spam farm (low-quality servers dominate
   search) → remove the README badge, let the listing rot harmlessly;
   (c) per-release maintenance for the listing exceeds ~5 min → reconsider.
-  A bare listing fee is **not** an auto-delist trigger — weigh the amount. <!-- done: all three kill-switches + fee nuance recorded in ADR-065 § Kill-switches -->
+  A bare listing fee is **not** an auto-delist trigger — weigh the amount. <!-- done: all three kill-switches + fee nuance recorded in ADR-067 § Kill-switches -->
 
 ## Phase 4 — Archival (merge-gated)
 
 All substantive work is complete and verified; this item holds the roadmap open
-only until its closing PR merges, so the ADR-065 back-link and other inbound
+only until its closing PR merges, so the ADR-067 back-link and other inbound
 references keep resolving until the move.
 
 - [ ] Archive this roadmap to `agents/roadmaps/archive/` + migrate inbound refs
-  (ADR-065 back-link, dashboard) the moment the closing PR merges.
+  (ADR-067 back-link, dashboard) the moment the closing PR merges.
   <!-- merge-gated: pr=403 — archives + ref-migrates on merge; substantive work done + verified (ADR index clean, check_references green) -->
 
 ## Dropped — do not relitigate

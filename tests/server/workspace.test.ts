@@ -274,4 +274,87 @@ describe('workspaceRoute', () => {
         });
         expect(res.statusCode).toBe(400);
     });
+
+    // --- Tier-3 inbox (ADR-065) — ships dark behind AGENT_CONFIG_TIER3_INBOX --
+
+    it('inbox is disabled by default (flag off → 404)', async () => {
+        delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/inbox',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'offer', prompt: 'RENDERED' },
+        });
+        expect(res.statusCode).toBe(404);
+    });
+
+    it('inbox write + read round-trips when the flag is on', async () => {
+        process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
+        try {
+            const write = await app.inject({
+                method: 'POST', url: '/api/v1/workspace/inbox',
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { role: 'galabau', task: 'offer', prompt: 'RENDERED PROMPT BODY', session: 's1' },
+            });
+            expect(write.statusCode).toBe(200);
+            const { id, banner } = write.json() as { id: string; banner: string };
+            expect(id).toBeTruthy();
+            expect(banner.toLowerCase()).toContain('copy');
+
+            const read = await app.inject({
+                method: 'GET', url: `/api/v1/workspace/inbox/${id}`, headers: AUTH,
+            });
+            expect(read.statusCode).toBe(200);
+            expect((read.json() as { body: string }).body).toContain('RENDERED PROMPT BODY');
+        } finally {
+            delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        }
+    });
+
+    it('inbox write rejects missing fields (400) when enabled', async () => {
+        process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
+        try {
+            const res = await app.inject({
+                method: 'POST', url: '/api/v1/workspace/inbox',
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { role: 'galabau' },
+            });
+            expect(res.statusCode).toBe(400);
+        } finally {
+            delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        }
+    });
+
+    it('inbox write pre-renders a skill_hint into the hand-off (ADR-066)', async () => {
+        process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
+        try {
+            const write = await app.inject({
+                method: 'POST', url: '/api/v1/workspace/inbox',
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { role: 'galabau', task: 'offer', prompt: 'Draft an offer.',
+                           skill_hint: 'doc-coauthoring' },
+            });
+            expect(write.statusCode).toBe(200);
+            const { id } = write.json() as { id: string };
+            const read = await app.inject({
+                method: 'GET', url: `/api/v1/workspace/inbox/${id}`, headers: AUTH,
+            });
+            const body = (read.json() as { body: string }).body;
+            expect(body).toContain('Draft an offer.');
+            expect(body).toContain('## Skill context: doc-coauthoring');
+        } finally {
+            delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        }
+    });
+
+    it('inbox read of a missing id returns 404 when enabled', async () => {
+        process.env['AGENT_CONFIG_TIER3_INBOX'] = '1';
+        try {
+            const res = await app.inject({
+                method: 'GET', url: '/api/v1/workspace/inbox/nope', headers: AUTH,
+            });
+            expect(res.statusCode).toBe(404);
+        } finally {
+            delete process.env['AGENT_CONFIG_TIER3_INBOX'];
+        }
+    });
 });
