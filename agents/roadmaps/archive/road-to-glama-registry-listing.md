@@ -82,9 +82,9 @@ All substantive work is complete and verified; this item holds the roadmap open
 only until its closing PR merges, so the ADR-067 back-link and other inbound
 references keep resolving until the move.
 
-- [ ] Archive this roadmap to `agents/roadmaps/archive/` + migrate inbound refs
+- [x] Archive this roadmap to `agents/roadmaps/archive/` + migrate inbound refs
   (ADR-067 back-link, dashboard) the moment the closing PR merges.
-  <!-- merge-gated: pr=403 — archives + ref-migrates on merge; substantive work done + verified (ADR index clean, check_references green) -->
+  <!-- done: PR #403 merged; archived + ADR-067 back-link migrated + dashboard regenerated in chore/archive-glama-roadmap -->
 
 ## Dropped — do not relitigate
 

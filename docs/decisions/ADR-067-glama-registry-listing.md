@@ -14,7 +14,7 @@ type: lightweight
 ## Status
 
 **Proposed** · 2026-06-08. Implements
-[`road-to-glama-registry-listing.md`](../../agents/roadmaps/road-to-glama-registry-listing.md).
+[`road-to-glama-registry-listing.md`](../../agents/roadmaps/archive/road-to-glama-registry-listing.md).
 Council convergence: claude-sonnet-4-5 + gpt-4o, design mode, 2 rounds +
 peer-review, 2026-06-08 — one of four candidate Glama moves survives the
 "no-bullshit" bar (registry listing only; Gateway, Inspector in CI, and Worker
@@ -253,7 +253,7 @@ badge removal cost is one commit.
 
 ## See also
 
-- [`road-to-glama-registry-listing.md`](../../agents/roadmaps/road-to-glama-registry-listing.md)
+- [`road-to-glama-registry-listing.md`](../../agents/roadmaps/archive/road-to-glama-registry-listing.md)
 - [`road-to-mcp-stdio-end-user-packaging.md`](../../agents/roadmaps/road-to-mcp-stdio-end-user-packaging.md) — follow-up
 - [`docs/contracts/mcp-phase-1-scope.md`](../contracts/mcp-phase-1-scope.md) — stdio kernel contract
 - [`docs/contracts/mcp-cloud-scope.md`](../contracts/mcp-cloud-scope.md) — Worker A0-cloud contract
