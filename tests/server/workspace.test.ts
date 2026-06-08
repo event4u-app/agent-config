@@ -275,7 +275,7 @@ describe('workspaceRoute', () => {
         expect(res.statusCode).toBe(400);
     });
 
-    // --- host-tier detection on launch (ADR-067) ---------------------------
+    // --- host-tier detection on launch (ADR-068) ---------------------------
 
     it('launch reports the effective host tier (Tier-3 host → handoff)', async () => {
         const res = await app.inject({

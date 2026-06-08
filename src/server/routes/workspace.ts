@@ -69,7 +69,7 @@ function inboxRoot(writeRoot: string): string {
     return join(writeRoot, 'workspace', 'inbox');
 }
 
-// Host-tier detection (ADR-067). Side-effect-free (PATH probe only). launch
+// Host-tier detection (ADR-068). Side-effect-free (PATH probe only). launch
 // reports the effective tier so the caller knows whether the host is CLI-
 // drivable (Tier 1) or needs the inbox hand-off (Tier 3). The Tier-1 drive
 // loop is unbuilt — launch reports the tier, it does not claim a drive.
@@ -437,7 +437,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 await reply.code(400).send({ error: 'role and task are required' });
                 return reply;
             }
-            // Effective host tier (ADR-067) — informational: Tier 1 = the host
+            // Effective host tier (ADR-068) — informational: Tier 1 = the host
             // is CLI-drivable (drive loop still unbuilt → mode tier1-drive-
             // pending); Tier 3 = use the inbox hand-off (POST /inbox). Detection
             // is side-effect-free; it never drives or spawns the host.

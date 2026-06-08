@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Host-agent tier detection — ADR-067.
+"""Host-agent tier detection — ADR-068.
 
 The workspace shells out to a host agent per ADR-023. This module reports a
 host's **effective tier** so the launcher knows whether the host is CLI-
@@ -10,17 +10,17 @@ checks the inventory tier and whether the host's CLI is on PATH (`shutil.which`)
 `HOST_INVENTORY` mirrors the source-of-truth table in
 `docs/contracts/host-agent-protocol.md`; `tests/test_workspace_hosts.py`
 asserts the two agree, so the human-readable contract stays canonical without
-fragile runtime markdown parsing (ADR-067 H1).
+fragile runtime markdown parsing (ADR-068 H1).
 
-Effective tier (ADR-067 H2): `1` iff the inventory tier is 1 **and** the CLI is
+Effective tier (ADR-068 H2): `1` iff the inventory tier is 1 **and** the CLI is
 on PATH; otherwise `3` (the contract's fail-closed rule — a Tier-1 host whose
 CLI is missing demotes to the inbox hand-off). An **unknown** host id fails
 **soft** to Tier 3 with ``known: false`` (so a launcher never 500s on a host
 string), while the ``detect`` CLI exits non-zero on an unknown id (so tooling /
-tests catch typos — ADR-067 § unknown-host).
+tests catch typos — ADR-068 § unknown-host).
 
 NOTE — what this does NOT do: it does not execute a Tier-1 drive (the
-`claude -p` turn loop is unbuilt) and it does not claim one. v1 debt (ADR-067):
+`claude -p` turn loop is unbuilt) and it does not claim one. v1 debt (ADR-068):
 a `--version` probe (vs PATH-only), a generated inventory manifest, and
 detection circuit-breaker metrics.
 

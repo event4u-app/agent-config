@@ -1,7 +1,7 @@
-"""Tests for ``src/cli/python/workspace_hosts.py`` (ADR-067 host-tier detect).
+"""Tests for ``src/cli/python/workspace_hosts.py`` (ADR-068 host-tier detect).
 
 Includes the contract-consistency check that keeps
-``docs/contracts/host-agent-protocol.md`` canonical (ADR-067 H1): the code map
+``docs/contracts/host-agent-protocol.md`` canonical (ADR-068 H1): the code map
 must agree with the contract's inventory table on every host's tier.
 """
 from __future__ import annotations
@@ -39,7 +39,7 @@ _CONTRACT_LABEL = {
 
 def test_inventory_matches_contract_tiers():
     """Every HOST_INVENTORY tier must match the contract's inventory table —
-    so the human-readable contract stays the source of truth (ADR-067 H1)."""
+    so the human-readable contract stays the source of truth (ADR-068 H1)."""
     text = CONTRACT.read_text(encoding="utf-8")
     rows = [ln for ln in text.splitlines() if ln.startswith("|") and "Tier" in ln]
     for host, entry in WH.HOST_INVENTORY.items():
