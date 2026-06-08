@@ -20,11 +20,10 @@
  */
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { readdir, readFile, mkdir, writeFile, appendFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, basename, dirname } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomBytes } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import yaml from 'js-yaml';
@@ -41,6 +40,21 @@ const WORKSPACE_DOCS_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
     '..', '..', 'cli', 'python', 'workspace_documents.py',
 );
+
+// Sessions are also Python-authoritative (ADR-064 store 3b). They are
+// per-record encrypted when the flag is on, so Node never reads/writes the
+// JSONL directly — every session op routes through this CLI, which owns
+// encryption (uniform, like documents; session appends are human-turn-paced
+// so the per-op subprocess cost is imperceptible). `--root` is always
+// `<writeRoot>/workspace/sessions`, which the CLI validates.
+const WORKSPACE_SESSIONS_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_sessions.py',
+);
+
+function sessionsRoot(writeRoot: string): string {
+    return join(writeRoot, 'workspace', 'sessions');
+}
 
 export interface WorkspaceRouteOptions {
     writeRoot: string;
@@ -171,54 +185,11 @@ async function listRoles(packageRoot: string): Promise<Role[]> {
     return roles;
 }
 
-function newSessionId(): string {
-    const now = new Date();
-    const iso = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-    const hex = randomBytes(4).toString('hex');
-    return `${iso}-${hex}`;
-}
-
-function dayDir(writeRoot: string, date = new Date()): string {
-    const y = date.getUTCFullYear();
-    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(date.getUTCDate()).padStart(2, '0');
-    return join(writeRoot, 'workspace', 'sessions', `${y}-${m}-${d}`);
-}
-
 interface SessionMeta {
     id: string;
     role: string;
     task: string;
     started_at: string;
-    path: string;
-}
-
-async function listSessions(writeRoot: string, limit = 20): Promise<SessionMeta[]> {
-    const root = join(writeRoot, 'workspace', 'sessions');
-    if (!existsSync(root)) return [];
-    const days = await readdir(root, { withFileTypes: true });
-    const dayDirs = days.filter((d) => d.isDirectory()).map((d) => d.name).sort().reverse();
-    const out: SessionMeta[] = [];
-    for (const day of dayDirs) {
-        const dayPath = join(root, day);
-        const files = await readdir(dayPath);
-        const jsonl = files.filter((f) => f.endsWith('.jsonl')).sort().reverse();
-        for (const f of jsonl) {
-            const p = join(dayPath, f);
-            const id = basename(f, '.jsonl');
-            const first = await peekFirstLine(p);
-            const data = first?.data as Record<string, unknown> | undefined;
-            out.push({
-                id,
-                role: typeof data?.['role'] === 'string' ? (data['role'] as string) : '',
-                task: typeof data?.['task'] === 'string' ? (data['task'] as string) : '',
-                started_at: typeof first?.ts === 'string' ? (first.ts as string) : '',
-                path: p,
-            });
-            if (out.length >= limit) return out;
-        }
-    }
-    return out;
 }
 
 interface SessionRecord {
@@ -227,31 +198,38 @@ interface SessionRecord {
     data: unknown;
 }
 
-async function peekFirstLine(path: string): Promise<SessionRecord | null> {
+// Python-authoritative session reads (ADR-064 store 3b): the store CLI
+// returns decrypted records whether the JSONL is plaintext or per-record
+// encrypted. A spawn failure degrades to an empty result rather than 500.
+async function listSessions(writeRoot: string, limit = 20): Promise<SessionMeta[]> {
+    if (!existsSync(sessionsRoot(writeRoot))) return [];
     try {
-        const text = await readFile(path, 'utf8');
-        const nl = text.indexOf('\n');
-        const line = nl >= 0 ? text.slice(0, nl) : text;
-        if (line.trim() === '') return null;
-        return JSON.parse(line) as SessionRecord;
+        const { stdout } = await execFileAsync(
+            'python3',
+            [WORKSPACE_SESSIONS_CLI, 'list', '--json',
+             '--root', sessionsRoot(writeRoot), '--limit', String(limit)],
+            { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+        );
+        const rows = JSON.parse(stdout || '[]') as Array<Record<string, unknown>>;
+        return rows.map((r) => ({
+            id: typeof r['session_id'] === 'string' ? (r['session_id'] as string) : '',
+            role: typeof r['role'] === 'string' ? (r['role'] as string) : '',
+            task: typeof r['task'] === 'string' ? (r['task'] as string) : '',
+            started_at: typeof r['started_at'] === 'string' ? (r['started_at'] as string) : '',
+        }));
     } catch {
-        return null;
+        return [];
     }
 }
 
-async function readSessionLog(path: string): Promise<SessionRecord[]> {
+async function readSessionLog(writeRoot: string, id: string): Promise<SessionRecord[]> {
     try {
-        const text = await readFile(path, 'utf8');
-        const lines = text.split('\n').filter((l) => l.trim() !== '');
-        const out: SessionRecord[] = [];
-        for (const line of lines) {
-            try {
-                out.push(JSON.parse(line) as SessionRecord);
-            } catch {
-                // skip malformed line
-            }
-        }
-        return out;
+        const { stdout } = await execFileAsync(
+            'python3',
+            [WORKSPACE_SESSIONS_CLI, 'read', id, '--json', '--root', sessionsRoot(writeRoot)],
+            { timeout: 10_000, maxBuffer: 16 * 1024 * 1024 },
+        );
+        return JSON.parse(stdout || '[]') as SessionRecord[];
     } catch {
         return [];
     }
@@ -385,14 +363,16 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
 
         app.get('/api/v1/workspace/sessions/:id', async (request, reply) => {
             const params = request.params as { id: string };
-            const sessions = await listSessions(opts.writeRoot, 200);
-            const found = sessions.find((s) => s.id === params.id);
-            if (found === undefined) {
+            const log = await readSessionLog(opts.writeRoot, params.id);
+            if (log.length === 0) {
                 await reply.code(404).send({ error: 'session not found', id: params.id });
                 return reply;
             }
-            const log = await readSessionLog(found.path);
-            return { id: found.id, role: found.role, task: found.task, log };
+            // role/task come from the opening launcher.input record.
+            const first = log[0]?.data as Record<string, unknown> | undefined;
+            const role = typeof first?.['role'] === 'string' ? (first['role'] as string) : '';
+            const task = typeof first?.['task'] === 'string' ? (first['task'] as string) : '';
+            return { id: params.id, role, task, log };
         });
 
         app.post('/api/v1/workspace/launch', async (request, reply) => {
@@ -404,19 +384,19 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 await reply.code(400).send({ error: 'role and task are required' });
                 return reply;
             }
-            const id = newSessionId();
-            if (opts.dryRun !== true) {
-                const dir = dayDir(opts.writeRoot);
-                await mkdir(dir, { recursive: true });
-                const path = join(dir, `${id}.jsonl`);
-                const record: SessionRecord = {
-                    ts: new Date().toISOString(),
-                    kind: 'launcher.input',
-                    data: { role, task, host_tier: 'tier-1', host_id: host },
-                };
-                await writeFile(path, `${JSON.stringify(record)}\n`, 'utf8');
+            if (opts.dryRun === true) {
+                return { id: 'dry-run', role, task, host, dryRun: true };
             }
-            return { id, role, task, host, dryRun: opts.dryRun === true };
+            // Python-authoritative write (ADR-064): the store CLI owns the
+            // session-id minting + per-record encryption when the flag is on.
+            const { stdout } = await execFileAsync(
+                'python3',
+                [WORKSPACE_SESSIONS_CLI, 'start', '--role', role, '--task', task,
+                 '--host', host, '--root', sessionsRoot(opts.writeRoot)],
+                { timeout: 10_000 },
+            );
+            const id = stdout.trim();
+            return { id, role, task, host, dryRun: false };
         });
 
         app.post('/api/v1/workspace/sessions/:id/append', async (request, reply) => {
@@ -428,17 +408,25 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 await reply.code(400).send({ error: 'kind is required' });
                 return reply;
             }
-            const sessions = await listSessions(opts.writeRoot, 200);
-            const found = sessions.find((s) => s.id === params.id);
-            if (found === undefined) {
-                await reply.code(404).send({ error: 'session not found', id: params.id });
+            if (opts.dryRun === true) {
+                return { id: params.id, appended: { kind, data }, dryRun: true };
+            }
+            // Python-authoritative append (ADR-064): nested data flows verbatim
+            // via --data-json (the flat --data k=v cannot carry it). The CLI
+            // rejects an unknown kind / missing session with exit 1 → 404.
+            try {
+                await execFileAsync(
+                    'python3',
+                    [WORKSPACE_SESSIONS_CLI, 'append', params.id, '--kind', kind,
+                     '--data-json', JSON.stringify(data),
+                     '--root', sessionsRoot(opts.writeRoot)],
+                    { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+                );
+            } catch {
+                await reply.code(404).send({ error: 'session not found or invalid kind', id: params.id });
                 return reply;
             }
-            const record: SessionRecord = { ts: new Date().toISOString(), kind, data };
-            if (opts.dryRun !== true) {
-                await appendFile(found.path, `${JSON.stringify(record)}\n`, 'utf8');
-            }
-            return { id: params.id, appended: record, dryRun: opts.dryRun === true };
+            return { id: params.id, appended: { kind, data }, dryRun: false };
         });
 
         app.get('/api/v1/workspace/knowledge', async (request) => {
