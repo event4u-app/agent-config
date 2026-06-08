@@ -5,15 +5,17 @@ tagline: "Answer customer questions, draft offers, and prep discovery calls — 
 recommended_packs: [core, content, gtm-launch]
 install_path_hint: "MCP recommended (Claude Desktop) — no terminal needed. CLI when your team owns custom CRM integrations."
 recruit_session_ref: null
-status: draft
+status: beta-internal
 ---
 
 # Role experience — Sales rep
 
 > Scaffold per `docs/contracts/role-experience.md`. First tasks are the
 > maintainer's hypothesis for a B2B SaaS / services-team sales rep
-> until a real recruit-session validates them. Status flips to `beta`
-> after the first sales-shaped recruit-session lands.
+> until a real recruit-session validates them. Promoted to
+> `beta-internal` on an internal-authoring basis (see
+> [`agents/roles/EVIDENCE_BASIS.md`](../EVIDENCE_BASIS.md)); a
+> sales-shaped recruit-session is optional and would upgrade it to `beta`.
 
 ## Persona
 

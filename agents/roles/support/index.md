@@ -5,15 +5,17 @@ tagline: "Summarise the ticket, draft the reply, flag the escalation — without
 recommended_packs: [core, content]
 install_path_hint: "MCP recommended (Claude Desktop) — no terminal needed."
 recruit_session_ref: null
-status: draft
+status: beta-internal
 ---
 
 # Role experience — Support agent
 
 > Scaffold per `docs/contracts/role-experience.md`. First tasks are the
 > maintainer's hypothesis for a B2B SaaS support team until a real
-> recruit-session validates them. Status flips to `beta` after the
-> first support-shaped recruit-session lands.
+> recruit-session validates them. Promoted to `beta-internal` on an
+> internal-authoring basis (see
+> [`agents/roles/EVIDENCE_BASIS.md`](../EVIDENCE_BASIS.md)); a
+> support-shaped recruit-session is optional and would upgrade it to `beta`.
 
 ## Persona
 

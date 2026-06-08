@@ -5,12 +5,12 @@ tagline: "Client briefs, investor memos, and deck outlines — refined before th
 recommended_packs: [core, founder-strategy, content]
 install_path_hint: "MCP recommended (Claude Desktop) — no terminal needed. CLI when you keep a working repo of client artefacts."
 recruit_session_ref: null
-status: draft
+status: beta-internal
 ---
 
 # Role experience — Consultant / advisor
 
-> Scaffold per `docs/contracts/role-experience.md`. The consultant role sits at the intersection of strategy work (founder-strategy setup) and writing discipline (content setup); the scaffold pins both. Recruit-session 03 will replace the seeded first tasks with verbatim findings.
+> Scaffold per `docs/contracts/role-experience.md`. The consultant role sits at the intersection of strategy work (founder-strategy setup) and writing discipline (content setup); the scaffold pins both. Promoted to `beta-internal` on an internal-authoring basis (see [`agents/roles/EVIDENCE_BASIS.md`](../EVIDENCE_BASIS.md)); recruit-session 03 is optional and would upgrade it to `beta`, replacing the seeded first tasks with verbatim findings.
 
 ## Persona
 
