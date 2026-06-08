@@ -69,6 +69,41 @@ function inboxRoot(writeRoot: string): string {
     return join(writeRoot, 'workspace', 'inbox');
 }
 
+// Host-tier detection (ADR-068). Side-effect-free (PATH probe only). launch
+// reports the effective tier so the caller knows whether the host is CLI-
+// drivable (Tier 1) or needs the inbox hand-off (Tier 3). The Tier-1 drive
+// loop is unbuilt — launch reports the tier, it does not claim a drive.
+const WORKSPACE_HOSTS_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_hosts.py',
+);
+
+interface HostTier {
+    effective_tier: number;
+    cli_present: boolean;
+    known: boolean;
+    mode: string;
+}
+
+async function detectHostTier(host: string): Promise<HostTier> {
+    try {
+        const { stdout } = await execFileAsync(
+            'python3', [WORKSPACE_HOSTS_CLI, 'detect', host, '--json'],
+            { timeout: 5_000 },
+        );
+        const r = JSON.parse(stdout) as Record<string, unknown>;
+        return {
+            effective_tier: typeof r['effective_tier'] === 'number' ? (r['effective_tier'] as number) : 3,
+            cli_present: r['cli_present'] === true,
+            known: r['known'] === true,
+            mode: typeof r['mode'] === 'string' ? (r['mode'] as string) : 'handoff',
+        };
+    } catch {
+        // Detector unavailable → safe default: treat as Tier-3 hand-off.
+        return { effective_tier: 3, cli_present: false, known: false, mode: 'handoff' };
+    }
+}
+
 function tier3InboxEnabled(): boolean {
     const v = (process.env['AGENT_CONFIG_TIER3_INBOX'] ?? '').trim().toLowerCase();
     return v !== '' && v !== '0' && v !== 'false' && v !== 'off';
@@ -402,8 +437,13 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 await reply.code(400).send({ error: 'role and task are required' });
                 return reply;
             }
+            // Effective host tier (ADR-068) — informational: Tier 1 = the host
+            // is CLI-drivable (drive loop still unbuilt → mode tier1-drive-
+            // pending); Tier 3 = use the inbox hand-off (POST /inbox). Detection
+            // is side-effect-free; it never drives or spawns the host.
+            const tier = await detectHostTier(host);
             if (opts.dryRun === true) {
-                return { id: 'dry-run', role, task, host, dryRun: true };
+                return { id: 'dry-run', role, task, host, dryRun: true, ...tier };
             }
             // Python-authoritative write (ADR-064): the store CLI owns the
             // session-id minting + per-record encryption when the flag is on.
@@ -414,7 +454,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 { timeout: 10_000 },
             );
             const id = stdout.trim();
-            return { id, role, task, host, dryRun: false };
+            return { id, role, task, host, dryRun: false, ...tier };
         });
 
         app.post('/api/v1/workspace/sessions/:id/append', async (request, reply) => {

@@ -41,6 +41,15 @@ their semver, not derived from unstable stdout parsing.
 | **Cline (VS Code ext)** | None. Hooks (`~/Documents/Cline/Hooks/`) are post-event. | None at the protocol layer. | **Tier 3** — observe-only. |
 | **Windsurf (Cascade)** | None. Hooks (`.windsurf/hooks.json`) are post-event. | None at the protocol layer. | **Tier 3** — observe-only. |
 
+> **Detection (ADR-068).** This table is mirrored by `HOST_INVENTORY` in
+> `src/cli/python/workspace_hosts.py`; `tests/test_workspace_hosts.py` asserts
+> the two agree, so this markdown stays the source of truth. `workspace_hosts.py
+> detect <id>` returns a host's **effective tier** (its inventory tier, demoted
+> to 3 if the Tier-1 CLI is absent from PATH — fail-closed), side-effect-free
+> (PATH probe only, never spawns a host CLI). `POST /api/v1/workspace/launch`
+> reports it (`effective_tier` / `cli_present` / `mode`); it does **not** drive
+> the host (the Tier-1 drive loop is unbuilt).
+
 ## Tier definitions
 
 - **Tier 1 — first-class.** Both `launch` and `emit_trace` are stable.
