@@ -534,4 +534,30 @@ describe('workspaceRoute', () => {
         expect(body['driven']).toBe(false);
         expect(body['handoff']).toBeUndefined();
     });
+
+    // --- drive health + kill-switch (ADR-073) ------------------------------
+    // The kill-switch *enforcement* in launch only fires for a tier-1 host
+    // (a CLI on PATH, absent in CI) — that path is covered by the
+    // workspace_drive_health.py unit tests. Here we lock the read surface.
+
+    it('GET /drive-health returns an empty snapshot before any drive', async () => {
+        const res = await app.inject({ method: 'GET', url: '/api/v1/workspace/drive-health', headers: AUTH });
+        expect(res.statusCode).toBe(200);
+        expect((res.json() as { health: Record<string, unknown> }).health).toEqual({});
+    });
+
+    it('GET /drive-health?host= reflects the on-disk health cache', async () => {
+        // Seed a tripped host the way the drive recorder would.
+        const healthDir = join(tmpWrite, 'workspace', 'health');
+        mkdirSync(healthDir, { recursive: true });
+        writeFileSync(join(healthDir, 'codex.json'), JSON.stringify({
+            host: 'codex', consecutive_failures: 5, killed: true,
+            total_success: 0, total_failure: 5, last_outcome: 'fail', last_error_kind: 'timeout',
+        }));
+        const res = await app.inject({ method: 'GET', url: '/api/v1/workspace/drive-health?host=codex', headers: AUTH });
+        expect(res.statusCode).toBe(200);
+        const health = (res.json() as { health: Record<string, unknown> }).health;
+        expect(health['killed']).toBe(true);
+        expect(health['consecutive_failures']).toBe(5);
+    });
 });

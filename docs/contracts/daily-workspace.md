@@ -57,6 +57,7 @@ in [`gui-wizard`](gui-wizard.md) are untouched.
 | `GET  /api/v1/workspace/sessions/:id` | Streams the JSONL log for one session. |
 | `GET  /api/v1/workspace/knowledge` | Snapshot of the current `knowledge:` memory namespace (read-only). |
 | `POST /api/v1/workspace/render` | Body: `{ role, prompt, inputs }`. Fills `{{name}}` placeholders in `prompts/<prompt>.md`; returns `{ rendered, skill_hint }`. Pure — skill body is **not** appended (ADR-069). Missing-required / undeclared-placeholder → 400. |
+| `GET  /api/v1/workspace/drive-health` | `?host=<id>` for one host, omitted for all. Read-only per-host kill-switch cache (ADR-073): `{ consecutive_failures, killed, total_success, total_failure, … }`. Fails open (missing cache → empty). |
 
 ## Session JSONL schema
 
