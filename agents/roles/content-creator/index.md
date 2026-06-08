@@ -5,12 +5,12 @@ tagline: "From a one-line idea to a stitched short — voice-locked, character-l
 recommended_packs: [core, content, ai-video]
 install_path_hint: "MCP recommended (Claude Desktop) — no terminal needed. CLI when you sit in a code repo for adapter work."
 recruit_session_ref: null
-status: draft
+status: beta-internal
 ---
 
 # Role experience — Content creator
 
-> Scaffold per `docs/contracts/role-experience.md`. The AI-video pipeline is the most differentiated surface of the package; this scaffold pins the role's shape so the launcher in Phase 4 reads it. Recruit-session 02 will replace the seeded first tasks with verbatim findings.
+> Scaffold per `docs/contracts/role-experience.md`. The AI-video pipeline is the most differentiated surface of the package; this scaffold pins the role's shape so the launcher in Phase 4 reads it. Promoted to `beta-internal` on an internal-authoring basis (see [`agents/roles/EVIDENCE_BASIS.md`](../EVIDENCE_BASIS.md)); recruit-session 02 is optional and would upgrade it to `beta`, replacing the seeded first tasks with verbatim findings.
 
 ## Persona
 

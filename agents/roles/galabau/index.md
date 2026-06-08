@@ -5,12 +5,12 @@ tagline: "Drafting customer offers and project briefs without a project manager 
 recommended_packs: [core, content]
 install_path_hint: "MCP recommended (Claude Desktop) — no terminal needed. CLI only if you also write code in this repo."
 recruit_session_ref: null
-status: draft
+status: beta-internal
 ---
 
 # Role experience — Galabau owner
 
-> Scaffold per `docs/contracts/role-experience.md`. First tasks are seeded from the maintainer's domain hypothesis; recruit-session 01 will replace this seeding with verbatim findings. Status flips to `beta` after the first session lands.
+> Scaffold per `docs/contracts/role-experience.md`. First tasks are seeded from the maintainer's domain hypothesis. Promoted to `beta-internal` on an internal-authoring basis (see [`agents/roles/EVIDENCE_BASIS.md`](../EVIDENCE_BASIS.md)); an external recruit session is optional and would upgrade it to `beta` with verbatim findings.
 
 ## Persona
 

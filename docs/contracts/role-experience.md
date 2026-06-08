@@ -96,11 +96,14 @@ Every `id` must resolve to an existing skill under `packages/<pack>/.agent-src.u
 
 ## Versioning + status
 
-- `status: draft` — scaffold only, no recruit-session evidence yet. Launcher hides drafts in the default view.
-- `status: beta` — scaffold + at least one recruit session backs the first-task choice. Launcher surfaces with a `beta` badge.
-- `status: stable` — at least two recruit sessions concurred on the role's first tasks and the friction-inventory landed at ≤ 3 P0 items.
+- `status: draft` — scaffold only, no validation evidence yet. Launcher hides drafts in the default view.
+- `status: beta-internal` — scaffold + maintainer internal-authoring / dogfooding basis; **no external recruit session yet**. `recruit_session_ref` stays `null`. Launcher surfaces with an `internal beta` badge. This tier exists so a role can be *used* without claiming external validation it does not have. The basis is recorded in [`agents/roles/EVIDENCE_BASIS.md`](../../agents/roles/EVIDENCE_BASIS.md). It is the honest ceiling for a role that has never been in front of an external user.
+- `status: beta` — scaffold + at least one recruit session backs the first-task choice. Requires a non-null `recruit_session_ref`. Launcher surfaces with a `beta` badge.
+- `status: stable` — at least two recruit sessions concurred on the role's first tasks and the friction-inventory landed at ≤ 3 P0 items. Requires a non-null `recruit_session_ref`.
 
-Status promotion is a maintainer decision, captured in the `recruit_session_ref` frontmatter trail. Demotion (stable → beta) happens when a follow-up recruit session contradicts the existing first-task choice.
+Status promotion is a maintainer decision. `draft → beta-internal` is an internal-authoring promotion (no recruit session needed); `beta-internal → beta → stable` is the **external-validation** ladder and is gated on the `recruit_session_ref` trail. Demotion (stable → beta) happens when a follow-up recruit session contradicts the existing first-task choice.
+
+> **Why two beta tiers (AI-council convergence, claude-sonnet-4-5 + gpt-4o, 2026-06-08, design mode):** the recruit sessions test a boundary the self-improvement loop is blind to — *can a cold-start external user get in at all?* — so they are kept as an optional future activity, never faked and never cancelled. `beta-internal` lets downstream work proceed and the launcher surface the roles **today**, honestly labelled, while `beta`/`stable` stay reserved for real external evidence. Fabricating a `recruit_session_ref` to reach `beta` is the one move this contract forbids.
 
 ## Lint pass (deferred to Phase 3 Step 6)
 
@@ -110,9 +113,10 @@ The lint pass (`task lint-role-experiences`, wired into `task ci`) asserts:
 2. Every `prompts/<name>.md` has the four required frontmatter keys (`name`, `intent`, `inputs`, `output_shape`) plus `skill_hint`.
 3. Every `skills.yml#skills[].id` resolves to an existing skill.
 4. Every `recommended_packs[]` entry resolves to an existing pack manifest.
-5. Status promotion never happens without a non-null `recruit_session_ref`.
+5. `status` is one of `draft | beta-internal | beta | stable`.
+6. `status: beta` and `status: stable` require a **non-null** `recruit_session_ref` (external-validation gate). `draft` and `beta-internal` may keep `recruit_session_ref: null`.
 
-Lint pass code lives at `scripts/lint_role_experiences.py`, ≤ 200 LOC. Until the lint pass ships, the scaffolds in Phase 3 Steps 2–4 are hand-validated against this contract.
+Lint pass code lives at `scripts/lint_role_experiences.py`, ≤ 200 LOC.
 
 ## Open questions (Phase 3 optional council pass)
 

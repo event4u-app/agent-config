@@ -5,7 +5,7 @@ tagline: "Summarise weekly status, write the risk memo, structure the decision b
 recommended_packs: [core, content, founder-strategy]
 install_path_hint: "MCP recommended (Claude Desktop) — no terminal needed."
 recruit_session_ref: null
-status: draft
+status: beta-internal
 ---
 
 # Role experience — Team leader
@@ -13,8 +13,10 @@ status: draft
 > Scaffold per `docs/contracts/role-experience.md`. First tasks reflect
 > the leadership-shaped writing the maintainer hears from peers: status
 > summaries before the leadership meeting, risk memos before the
-> decision, decision records after the decision. Status flips to
-> `beta` after a leadership-shaped recruit-session validates them.
+> decision, decision records after the decision. Promoted to
+> `beta-internal` on an internal-authoring basis (see
+> [`agents/roles/EVIDENCE_BASIS.md`](../EVIDENCE_BASIS.md)); a
+> leadership-shaped recruit-session is optional and would upgrade it to `beta`.
 
 ## Persona
 
