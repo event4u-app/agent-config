@@ -78,29 +78,64 @@ def test_decrypt_passes_through_plaintext(mod):
     assert mod.decrypt_bytes(payload, key=b"unused") == payload
 
 
+def _key(mod):
+    """A raw 32-byte AES-256-GCM key (no keyring lookup)."""
+    import os
+    return os.urandom(mod._KEY_LEN)
+
+
 @pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
 def test_round_trip_bytes(mod):
-    from cryptography.fernet import Fernet
-    key = Fernet.generate_key()
+    key = _key(mod)
     blob = mod.encrypt_bytes(b"hello world", key=key)
     assert blob.startswith(mod.MAGIC)
+    assert blob[len(mod.MAGIC)] == mod.VERSION
     assert mod.decrypt_bytes(blob, key=key) == b"hello world"
 
 
 @pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_envelope_shape(mod):
+    """Magic + version + 12-byte nonce + 16-byte tag precede ciphertext."""
+    blob = mod.encrypt_bytes(b"x", key=_key(mod))
+    assert blob[:4] == b"AC1\x00"
+    assert len(blob) >= 5 + 12 + 16 + 1  # header + nonce + tag + >=1 ct byte
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_wrong_key_raises(mod):
+    blob = mod.encrypt_bytes(b"secret", key=_key(mod))
+    with pytest.raises(Exception):  # cryptography InvalidTag
+        mod.decrypt_bytes(blob, key=_key(mod))
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_unknown_version_rejected(mod):
+    key = _key(mod)
+    blob = bytearray(mod.encrypt_bytes(b"secret", key=key))
+    blob[len(mod.MAGIC)] = 0xFF  # corrupt the version byte
+    with pytest.raises(ValueError, match="version"):
+        mod.decrypt_bytes(bytes(blob), key=key)
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
 def test_round_trip_file(mod, tmp_path):
-    from cryptography.fernet import Fernet
-    key = Fernet.generate_key()
+    key = _key(mod)
     src = tmp_path / "in.txt"
     src.write_bytes(b"top secret")
     enc = tmp_path / "out.enc"
     dec = tmp_path / "out.txt"
-
-    # Encrypt without keyring/cryptography lookup: pass key explicitly via
-    # encrypt_bytes, write file ourselves to bypass keyring requirement.
     enc.write_bytes(mod.encrypt_bytes(src.read_bytes(), key=key))
     dec.write_bytes(mod.decrypt_bytes(enc.read_bytes(), key=key))
     assert dec.read_bytes() == b"top secret"
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_key_accepts_base64_and_raw(mod):
+    """A base64-encoded 32-byte key decrypts a blob made with the raw key."""
+    import base64
+    raw = _key(mod)
+    blob = mod.encrypt_bytes(b"data", key=raw)
+    assert mod.decrypt_bytes(blob, key=base64.b64encode(raw)) == b"data"
 
 
 def test_missing_cryptography_raises_clean_error(mod, monkeypatch):
@@ -108,15 +143,24 @@ def test_missing_cryptography_raises_clean_error(mod, monkeypatch):
     real_import = __builtins__["__import__"] if isinstance(__builtins__, dict) else __builtins__.__import__
 
     def fake_import(name, *args, **kwargs):
-        if name == "cryptography.fernet":
+        if name.startswith("cryptography"):
             raise ImportError("simulated missing")
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr("builtins.__import__", fake_import)
     with pytest.raises(RuntimeError, match="cryptography"):
-        mod._load_fernet()
+        mod._load_aesgcm()
 
 
 def test_env_override_key_used(mod, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY", "ZmFrZS1rZXk=")
-    assert mod._get_or_create_master_key() == b"ZmFrZS1rZXk="
+    import base64
+    import os
+    raw = os.urandom(mod._KEY_LEN)
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY", base64.b64encode(raw).decode("ascii"))
+    assert mod._get_or_create_master_key() == raw
+
+
+def test_env_override_rejects_bad_length(mod, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY", "ZmFrZS1rZXk=")  # 8 bytes
+    with pytest.raises(ValueError, match="32 bytes"):
+        mod._get_or_create_master_key()
