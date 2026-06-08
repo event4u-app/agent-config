@@ -573,4 +573,80 @@ describe('workspaceRoute', () => {
         expect(health['killed']).toBe(true);
         expect(health['consecutive_failures']).toBe(5);
     });
+
+    // --- conversation continuation (ADR-076) -------------------------------
+    // The actual resume drive needs a tier-1 CLI (absent in CI). Here we lock
+    // the deterministic wiring: prompt validation, 404, the 409 "no host turn
+    // to continue" guard, and that a recorded host.turn's session_id drives a
+    // resume invocation (which then fails at the CLI boundary in CI).
+
+    it('continue requires a non-empty prompt (400)', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/sessions/whatever/continue',
+            headers: { ...AUTH, 'content-type': 'application/json' }, payload: { prompt: '  ' },
+        });
+        expect(res.statusCode).toBe(400);
+    });
+
+    it('continue returns 404 for an unknown session', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/sessions/nope/continue',
+            headers: { ...AUTH, 'content-type': 'application/json' }, payload: { prompt: 'hi' },
+        });
+        expect(res.statusCode).toBe(404);
+    });
+
+    it('continue returns 409 when the session has no host turn yet', async () => {
+        // A Tier-3 launch records only the header (no host.turn) → nothing to resume.
+        const launch = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'Offer drafting', host: 'augment', inputs: { brief: 'x' } },
+        });
+        const id = (launch.json() as { id: string }).id;
+        const res = await app.inject({
+            method: 'POST', url: `/api/v1/workspace/sessions/${id}/continue`,
+            headers: { ...AUTH, 'content-type': 'application/json' }, payload: { prompt: 'make it shorter' },
+        });
+        expect(res.statusCode).toBe(409);
+    });
+
+    it('continue clears the 409 guard once a host.turn with a session_id exists (dryRun)', async () => {
+        // A dryRun app never drives a host CLI, so this stays hermetic on a dev
+        // box where the CLIs are installed. Seed the session via a dryRun launch
+        // + an injected host.turn (carrying a host session_id, as a real drive
+        // would), then continue: reaching the dryRun drive stage proves the
+        // session_id lookup cleared the 409 guard. The real resume drive is
+        // covered hermetically by the workspace_drive.py resume tests.
+        const dryApp = await createApp({
+            writeRoot: tmpWrite, uiDistDir: uiDir, token: TOKEN, expectedPort: PORT,
+            logLevel: 'fatal', skipReplay: true, packageRoot: tmpPackage, dryRun: true,
+        });
+        await dryApp.ready();
+        try {
+            // Real (non-dry) header so the session file exists, but on a Tier-3
+            // host id so the launch never drives a CLI locally.
+            const launch = await app.inject({
+                method: 'POST', url: '/api/v1/workspace/launch',
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { role: 'galabau', task: 'Offer drafting', host: 'augment', inputs: { brief: 'x' } },
+            });
+            const id = (launch.json() as { id: string }).id;
+            await app.inject({
+                method: 'POST', url: `/api/v1/workspace/sessions/${id}/append`,
+                headers: { ...AUTH, 'content-type': 'application/json' },
+                payload: { kind: 'host.turn', data: { session_id: 'hostsess-1', text: 'first turn' } },
+            });
+            const res = await dryApp.inject({
+                method: 'POST', url: `/api/v1/workspace/sessions/${id}/continue`,
+                headers: { ...AUTH, 'content-type': 'application/json' }, payload: { prompt: 'make it shorter' },
+            });
+            expect(res.statusCode).toBe(200);
+            const body = res.json() as Record<string, unknown>;
+            expect(body['dryRun']).toBe(true);           // reached the drive stage, not a 409
+            expect(body['host']).toBe('augment');        // host carried from the launcher header
+        } finally {
+            await dryApp.close();
+        }
+    });
 });

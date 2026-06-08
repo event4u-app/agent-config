@@ -167,7 +167,7 @@ async function renderTaskPrompt(
 // Drive one Tier-1 host turn (ADR-070). Returns the uniform turn record
 // (`ok:true` or `ok:false` with `error_kind`). The CLI prints the turn JSON on
 // stdout for both outcomes (exit 1 on failure) — capture stdout either way.
-async function driveHostTurn(writeRoot: string, host: string, rendered: string): Promise<Record<string, unknown>> {
+async function driveHostTurn(writeRoot: string, host: string, rendered: string, resumeSessionId?: string): Promise<Record<string, unknown>> {
     await mkdir(join(writeRoot, 'workspace'), { recursive: true });
     const tmp = join(writeRoot, 'workspace', `.launch-drive-${randomUUID()}.md`);
     await writeFile(tmp, rendered, 'utf8');
@@ -176,7 +176,8 @@ async function driveHostTurn(writeRoot: string, host: string, rendered: string):
         try {
             ({ stdout } = await execFileAsync(
                 'python3',
-                [WORKSPACE_DRIVE_CLI, 'drive', '--host', host, '--prompt-file', tmp, '--json'],
+                [WORKSPACE_DRIVE_CLI, 'drive', '--host', host, '--prompt-file', tmp, '--json',
+                 ...(resumeSessionId !== undefined ? ['--resume-session-id', resumeSessionId] : [])],
                 { timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
             ));
         } catch (err) {
@@ -629,6 +630,60 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             const role = typeof first?.['role'] === 'string' ? (first['role'] as string) : '';
             const task = typeof first?.['task'] === 'string' ? (first['task'] as string) : '';
             return { id: params.id, role, task, log };
+        });
+
+        // Continue a conversation in the same host session (ADR-076 multi-turn).
+        // Resumes by the host session id recorded on the latest host.turn — no
+        // tool execution at our layer; the host runs its own loop each turn.
+        app.post('/api/v1/workspace/sessions/:id/continue', async (request, reply) => {
+            const params = request.params as { id: string };
+            const body = request.body as Record<string, unknown> | undefined;
+            const prompt = typeof body?.['prompt'] === 'string' ? (body['prompt'] as string) : '';
+            if (prompt.trim() === '') {
+                await reply.code(400).send({ error: 'prompt is required' });
+                return reply;
+            }
+            const log = await readSessionLog(opts.writeRoot, params.id);
+            if (log.length === 0) {
+                await reply.code(404).send({ error: 'session not found', id: params.id });
+                return reply;
+            }
+            const first = log[0]?.data as Record<string, unknown> | undefined;
+            const role = typeof first?.['role'] === 'string' ? (first['role'] as string) : '';
+            const task = typeof first?.['task'] === 'string' ? (first['task'] as string) : '';
+            const host = typeof first?.['host_id'] === 'string' ? (first['host_id'] as string) : 'local';
+            // The host session id lives on the most recent host.turn (canonical).
+            // Continuation requires at least one successful turn → else 409.
+            let hostSessionId: string | null = null;
+            for (let i = log.length - 1; i >= 0; i--) {
+                if (log[i]?.kind === 'host.turn') {
+                    const sid = (log[i]?.data as Record<string, unknown> | undefined)?.['session_id'];
+                    if (typeof sid === 'string' && sid !== '') { hostSessionId = sid; break; }
+                }
+            }
+            if (hostSessionId === null) {
+                await reply.code(409).send({ error: 'no host session to continue — run at least one turn first', id: params.id });
+                return reply;
+            }
+            if (opts.dryRun === true) {
+                return { id: params.id, role, task, host, driven: false, dryRun: true };
+            }
+
+            const gateState = await driveGate(opts.writeRoot, host);
+            if (gateState === 'open') {
+                await appendSession(opts.writeRoot, params.id, 'host.error', { error_kind: 'host-killed', error: `host ${host} is killed` });
+                return { id: params.id, role, task, host, driven: false, host_killed: true, error_kind: 'host-killed' };
+            }
+            const isProbe = gateState === 'half_open';
+            const turn = await driveHostTurn(opts.writeRoot, host, prompt, hostSessionId);
+            if (turn['ok'] === true) {
+                await appendSession(opts.writeRoot, params.id, 'host.turn', turn);
+                await recordDriveHealth(opts.writeRoot, host, true, undefined, isProbe);
+                return { id: params.id, role, task, host, driven: true, turn, ...(isProbe ? { recovered: true } : {}) };
+            }
+            await appendSession(opts.writeRoot, params.id, 'host.error', turn);
+            await recordDriveHealth(opts.writeRoot, host, false, typeof turn['error_kind'] === 'string' ? turn['error_kind'] as string : undefined, isProbe);
+            return { id: params.id, role, task, host, driven: false, error_kind: turn['error_kind'], error: turn['error'] };
         });
 
         app.post('/api/v1/workspace/launch', async (request, reply) => {
