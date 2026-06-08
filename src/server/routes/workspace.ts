@@ -20,10 +20,11 @@
  */
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, mkdir, writeFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import yaml from 'js-yaml';
@@ -54,6 +55,23 @@ const WORKSPACE_SESSIONS_CLI = join(
 
 function sessionsRoot(writeRoot: string): string {
     return join(writeRoot, 'workspace', 'sessions');
+}
+
+// Tier-3 host hand-off inbox (ADR-023 Tier 3 / ADR-065). Plaintext, ephemeral,
+// Python-authoritative. Ships dark behind AGENT_CONFIG_TIER3_INBOX (default
+// off) until the hand-off UX is validated.
+const WORKSPACE_INBOX_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_inbox.py',
+);
+
+function inboxRoot(writeRoot: string): string {
+    return join(writeRoot, 'workspace', 'inbox');
+}
+
+function tier3InboxEnabled(): boolean {
+    const v = (process.env['AGENT_CONFIG_TIER3_INBOX'] ?? '').trim().toLowerCase();
+    return v !== '' && v !== '0' && v !== 'false' && v !== 'off';
 }
 
 export interface WorkspaceRouteOptions {
@@ -451,6 +469,63 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             }
             const rendered = renderExplain(body);
             return { mode: body.mode, ...rendered };
+        });
+
+        // Tier-3 host hand-off inbox (ADR-065). Ships dark: when the flag is
+        // off, the endpoints report disabled rather than write anything.
+        app.post('/api/v1/workspace/inbox', async (request, reply) => {
+            if (!tier3InboxEnabled()) {
+                await reply.code(404).send({ error: 'tier-3 inbox disabled (set AGENT_CONFIG_TIER3_INBOX=1)' });
+                return reply;
+            }
+            const body = request.body as Record<string, unknown> | undefined;
+            const role = typeof body?.['role'] === 'string' ? (body['role'] as string) : '';
+            const task = typeof body?.['task'] === 'string' ? (body['task'] as string) : '';
+            const prompt = typeof body?.['prompt'] === 'string' ? (body['prompt'] as string) : '';
+            const session = typeof body?.['session'] === 'string' ? (body['session'] as string) : '';
+            if (role === '' || task === '' || prompt === '') {
+                await reply.code(400).send({ error: 'role, task and prompt are required' });
+                return reply;
+            }
+            if (opts.dryRun === true) return { id: 'dry-run', dryRun: true };
+            // Python-authoritative write. The rendered prompt is passed via a
+            // temp body-file (it can be large / multi-line). Tier auto-detection
+            // and skill-body pre-rendering are deferred (ADR-065) — the caller
+            // supplies the already-rendered prompt.
+            const tmp = join(inboxRoot(opts.writeRoot), `.write-${randomUUID()}.tmp`);
+            await mkdir(inboxRoot(opts.writeRoot), { recursive: true });
+            await writeFile(tmp, prompt, 'utf8');
+            try {
+                const { stdout } = await execFileAsync(
+                    'python3',
+                    [WORKSPACE_INBOX_CLI, 'write', '--role', role, '--task', task,
+                     '--body-file', tmp, ...(session ? ['--session', session] : []),
+                     '--root', inboxRoot(opts.writeRoot)],
+                    { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+                );
+                return JSON.parse(stdout) as Record<string, unknown>;
+            } finally {
+                await rm(tmp, { force: true });
+            }
+        });
+
+        app.get('/api/v1/workspace/inbox/:id', async (request, reply) => {
+            if (!tier3InboxEnabled()) {
+                await reply.code(404).send({ error: 'tier-3 inbox disabled' });
+                return reply;
+            }
+            const params = request.params as { id: string };
+            try {
+                const { stdout } = await execFileAsync(
+                    'python3',
+                    [WORKSPACE_INBOX_CLI, 'read', params.id, '--root', inboxRoot(opts.writeRoot)],
+                    { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+                );
+                return { id: params.id, body: stdout };
+            } catch {
+                await reply.code(404).send({ error: 'hand-off not found', id: params.id });
+                return reply;
+            }
         });
     };
     return plugin;
