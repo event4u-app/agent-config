@@ -18,7 +18,7 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 
 | Roadmap | Done | Merge-gated open | Gating PR |
 |---|---:|---:|---|
-| [road-to-glama-registry-listing.md](roadmaps/road-to-glama-registry-listing.md) | 10 | 1 | — |
+| [road-to-glama-registry-listing.md](roadmaps/road-to-glama-registry-listing.md) | 10 | 1 | #403 |
 
 ## Open roadmaps
 

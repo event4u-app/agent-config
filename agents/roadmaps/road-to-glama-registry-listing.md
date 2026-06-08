@@ -84,7 +84,7 @@ references keep resolving until the move.
 
 - [ ] Archive this roadmap to `agents/roadmaps/archive/` + migrate inbound refs
   (ADR-065 back-link, dashboard) the moment the closing PR merges.
-  <!-- merge-gated: pr=pending — archives + ref-migrates on merge; substantive work done + verified (ADR index clean, check_references green) -->
+  <!-- merge-gated: pr=403 — archives + ref-migrates on merge; substantive work done + verified (ADR index clean, check_references green) -->
 
 ## Dropped — do not relitigate
 
