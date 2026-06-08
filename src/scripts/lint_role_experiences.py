@@ -56,6 +56,12 @@ REQUIRED_INDEX_KEYS = {
 
 REQUIRED_PROMPT_KEYS = {"name", "intent", "inputs", "output_shape", "skill_hint"}
 
+# Status tiers per docs/contracts/role-experience.md § Versioning + status.
+# `beta` / `stable` are the external-validation ladder and require a non-null
+# recruit_session_ref; `draft` / `beta-internal` may keep it null.
+VALID_STATUS = {"draft", "beta-internal", "beta", "stable"}
+EXTERNAL_VALIDATED_STATUS = {"beta", "stable"}
+
 MIN_FIRST_TASKS = 3
 MIN_PROMPTS_PER_ROLE = 5
 
@@ -129,6 +135,18 @@ def lint_role(role_dir: Path, known_skills: set[str], failures: list[str]) -> No
     if missing_keys:
         failures.append(
             f"{index_path}: missing frontmatter keys: {sorted(missing_keys)}"
+        )
+
+    status = fm.get("status")
+    if status not in VALID_STATUS:
+        failures.append(
+            f"{index_path}: status {status!r} not in {sorted(VALID_STATUS)}"
+        )
+    elif status in EXTERNAL_VALIDATED_STATUS and not fm.get("recruit_session_ref"):
+        failures.append(
+            f"{index_path}: status '{status}' requires a non-null "
+            f"recruit_session_ref (external-validation gate); use "
+            f"'beta-internal' for the internal-authoring basis"
         )
 
     first_tasks = count_first_tasks(body)
