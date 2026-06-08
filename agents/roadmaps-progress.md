@@ -6,18 +6,26 @@
 
 ## Overall
 
-**78 / 94 steps done · 83%**
+**85 / 95 steps done · 89%**
 
 ```text
-█████████████████████████████████░░░░░░░   83%
+████████████████████████████████████░░░░   89%
 ```
+
+## ⏳ Merge-gated — pending post-merge archival
+
+Every open item in these roadmaps is `merge-gated`: held open on purpose while a closing PR is in flight, so inbound references keep resolving until the file archives. **The moment the gating PR merges**, flip the merge-gated box → `[x]`, `git mv` the roadmap to `archive/`, migrate inbound refs, and regenerate this dashboard — all in the same response (per `roadmap-progress-sync` Iron Law 1). Do NOT leave it lingering at < 100%.
+
+| Roadmap | Done | Merge-gated open | Gating PR |
+|---|---:|---:|---|
+| [road-to-glama-registry-listing.md](roadmaps/road-to-glama-registry-listing.md) | 10 | 1 | #403 |
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 3 | 62 | 6 | 0 | ██████████ 95% |
-| 2 | [road-to-glama-registry-listing.md](roadmaps/road-to-glama-registry-listing.md) | 4 | 10 | 7 | 3 | 0 | 0 | ███░░░░░░░ 30% |
+| 2 | [road-to-glama-registry-listing.md](roadmaps/road-to-glama-registry-listing.md) | 5 | 11 | 1 | 10 | 0 | 0 | █████████░ 91% |
 | 3 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 4 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
 
@@ -44,14 +52,15 @@
 
 ### [road-to-glama-registry-listing.md](roadmaps/road-to-glama-registry-listing.md)
 
-**Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more** — 3 / 10 done (30%)
+**Road to a Glama registry listing — the one genuinely-useful Glama move, and nothing more** — 10 / 11 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Audience gate (RESOLVED) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 1 | List the stdio server (the actual move) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Avoid single-channel lock-in | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Trigger-based review + kill-switches (no calendar) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | List the stdio server (the actual move) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Avoid single-channel lock-in | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 3 | Trigger-based review + kill-switches (no calendar) | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 4 | Archival (merge-gated) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md)
 

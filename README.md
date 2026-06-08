@@ -252,6 +252,8 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 > **Scope — Lite, not Full.** The Worker serves read-only governance (skills · commands · rules · guidelines · contexts) as MCP prompts and resources, plus small read-only tools (`memory_lookup`, `chat_history_read`, `list_*`). It does **not** execute the ~112 Python scripts (linters, audits, `task ci`, work-engine hooks) — those require local install per [Quickstart](#quickstart).
 
+> The built-in **local stdio** server is listed for discovery in the [Glama MCP Registry](https://glama.ai/mcp/servers/event4u-app/agent-config) (agent developers / contributors; requires a local checkout, not a turnkey install — see [ADR-067](docs/decisions/ADR-067-glama-registry-listing.md)).
+
 ### Deployment posture
 
 | Shape | Status | Path |
