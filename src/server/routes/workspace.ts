@@ -101,6 +101,19 @@ const WORKSPACE_DRIVE_CLI = join(
     '..', '..', 'cli', 'python', 'workspace_drive.py',
 );
 
+// Drive health + kill-switch (ADR-073). A per-host cache counter: 5 consecutive
+// drive failures auto-trip the host to inbox-only (manual reset). The launch
+// path consults it before driving and records each outcome. The cache fails
+// open (missing → healthy); the session log stays canonical.
+const WORKSPACE_HEALTH_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_drive_health.py',
+);
+
+function healthRoot(writeRoot: string): string {
+    return join(writeRoot, 'workspace', 'health');
+}
+
 interface HostTier {
     effective_tier: number;
     cli_present: boolean;
@@ -196,6 +209,35 @@ async function degradeToInbox(
         return res.path ?? null;
     } catch {
         return null;
+    }
+}
+
+// Kill-switch read (ADR-073). Fails open: any error → not killed (the cache is
+// a convenience; a broken cache must never block a launch).
+async function isHostKilled(writeRoot: string, host: string): Promise<boolean> {
+    try {
+        const { stdout } = await execFileAsync(
+            'python3',
+            [WORKSPACE_HEALTH_CLI, 'status', '--host', host, '--json', '--root', healthRoot(writeRoot)],
+            { timeout: 5_000 },
+        );
+        return (JSON.parse(stdout) as { killed?: boolean }).killed === true;
+    } catch {
+        return false;
+    }
+}
+
+// Record one drive outcome into the health cache (best-effort; never throws).
+async function recordDriveHealth(writeRoot: string, host: string, ok: boolean, errorKind?: string): Promise<void> {
+    try {
+        await execFileAsync(
+            'python3',
+            [WORKSPACE_HEALTH_CLI, 'record', '--host', host, '--outcome', ok ? 'ok' : 'fail',
+             ...(errorKind ? ['--error-kind', errorKind] : []), '--root', healthRoot(writeRoot)],
+            { timeout: 5_000 },
+        );
+    } catch {
+        // health is a cache; a failed record never fails the launch.
     }
 }
 
@@ -608,13 +650,26 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 return { ...base, driven: false, ...(handoff !== null ? { handoff } : {}) };
             }
 
+            // Kill-switch (ADR-073): a host that auto-tripped on a failure streak
+            // is routed to the inbox without burning another drive, until reset.
+            if (await isHostKilled(opts.writeRoot, host)) {
+                await appendSession(opts.writeRoot, id, 'host.error', { error_kind: 'host-killed', error: `host ${host} is killed (drive failure streak)` });
+                const handoff = await degradeToInbox(opts.writeRoot, role, task, r.rendered, r.skill_hint);
+                if (handoff !== null) await appendSession(opts.writeRoot, id, 'inbox.handoff', { path: handoff });
+                return { ...base, driven: false, host_killed: true, error_kind: 'host-killed',
+                         ...(handoff !== null ? { handoff } : {}) };
+            }
+
             const turn = await driveHostTurn(opts.writeRoot, host, r.rendered);
             if (turn['ok'] === true) {
                 await appendSession(opts.writeRoot, id, 'host.turn', turn);
+                await recordDriveHealth(opts.writeRoot, host, true);
                 return { ...base, driven: true, turn };
             }
-            // Drive failed → record host.error + best-effort inbox degrade.
+            // Drive failed → record host.error, update health (may trip the
+            // kill-switch), best-effort inbox degrade.
             await appendSession(opts.writeRoot, id, 'host.error', turn);
+            await recordDriveHealth(opts.writeRoot, host, false, typeof turn['error_kind'] === 'string' ? turn['error_kind'] as string : undefined);
             const handoff = await degradeToInbox(opts.writeRoot, role, task, r.rendered, r.skill_hint);
             if (handoff !== null) await appendSession(opts.writeRoot, id, 'inbox.handoff', { path: handoff });
             return { ...base, driven: false, error_kind: turn['error_kind'], error: turn['error'],
@@ -663,6 +718,25 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             const limit = typeof query?.['limit'] === 'string' ? parseInt(query['limit'], 10) : 20;
             const documents = await listDocuments(opts.writeRoot, Number.isFinite(limit) ? limit : 20);
             return { documents };
+        });
+
+        // Drive health (ADR-073). Read-only snapshot of the per-host kill-switch
+        // cache — `?host=<id>` for one host, omitted for all. The GUI reads this
+        // rather than the on-disk JSON directly (the CLI/endpoint is the surface).
+        app.get('/api/v1/workspace/drive-health', async (request) => {
+            const query = request.query as Record<string, unknown> | undefined;
+            const host = typeof query?.['host'] === 'string' ? (query['host'] as string) : '';
+            try {
+                const { stdout } = await execFileAsync(
+                    'python3',
+                    [WORKSPACE_HEALTH_CLI, 'status', ...(host !== '' ? ['--host', host] : []),
+                     '--json', '--root', healthRoot(opts.writeRoot)],
+                    { timeout: 5_000 },
+                );
+                return { health: JSON.parse(stdout) as unknown };
+            } catch {
+                return { health: host !== '' ? {} : {} };
+            }
         });
 
         app.post('/api/v1/workspace/explain', async (request, reply) => {
