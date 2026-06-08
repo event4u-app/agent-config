@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# glama.ai CMD launcher for the stdio MCP server.
+#
+# Companion to ./build — see that file for why the dotted module name
+# (`scripts.mcp_server`) lives here instead of in glama's CMD field. The
+# glama CMD only ever holds dot-free tokens:
+#
+#     ["mcp-proxy","--","bash","/app/internal/glama/run"]
+#
+# The server resolves its content root as four parents up from
+# prompts.py (/app/src/scripts/mcp_server -> /app), so PYTHONPATH=/app/src
+# is the only env it needs. `exec` hands signals straight to Python so
+# mcp-proxy can manage the child cleanly.
+set -euo pipefail
+
+export PYTHONPATH=/app/src
+exec /opt/venv/bin/python -m scripts.mcp_server
