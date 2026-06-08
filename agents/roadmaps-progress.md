@@ -6,17 +6,17 @@
 
 ## Overall
 
-**65 / 79 steps done · 82%**
+**69 / 81 steps done · 85%**
 
 ```text
-█████████████████████████████████░░░░░░░   82%
+██████████████████████████████████░░░░░░   85%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 8 | 52 | 11 | 0 | █████████░ 87% |
+| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 6 | 56 | 9 | 0 | █████████░ 90% |
 | 2 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 3 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
 
@@ -26,11 +26,11 @@
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
-**Employee Product + External Proof — close the two adoption gaps** — 52 / 60 done (87%)
+**Employee Product + External Proof — close the two adoption gaps** — 56 / 62 done (90%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Fast wins — MCP listing, content-creator path, CI hardening | ✅ done | 0 | 3 | 2 | 0 | 100% |
+| 0 | Fast wins — MCP listing, content-creator path, CI hardening | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | External adoption proof — three recruit sessions | ✅ done | 0 | 2 | 4 | 0 | 100% |
 | 2 | Single-user knowledge surface — local file ingestion | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Role experiences — first three role-specific entry points | ✅ done | 0 | 3 | 3 | 0 | 100% |
@@ -39,7 +39,7 @@
 | 6 | Non-technical explain mode — "what just happened" | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 7 | Analytics surface — turn the inert telemetry into a question | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 8 | Single-user hardening — encryption at rest + secret hygiene | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 8 | 8 | 0 | 0 | 50% |
+| 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 6 | 10 | 0 | 0 | 62% |
 
 ### [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md)
 

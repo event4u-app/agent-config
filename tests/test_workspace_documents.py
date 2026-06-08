@@ -137,6 +137,78 @@ def test_export_unknown_format_errors(docs, tmp_path):
         docs.export("memo", doc.slug, tmp_path / "out", format="xls")
 
 
+# --- pandoc invocation-contract matrix (3 types × {pdf, docx}) -----------
+#
+# Council (claude-sonnet-4-5 + gpt-4o, 2026-06-08, design mode) converged on
+# option (b): do NOT add pandoc (+ TeX) to CI for a gracefully-degrading
+# pre-v1.0 feature. Byte-level golden tests on pandoc output verify pandoc's
+# determinism (a supply-chain concern), not OUR code. What this repo owns is
+# the *invocation contract* — the argv we hand pandoc, the output path, the
+# format routing. These tests stub pandoc and assert exactly that, with no
+# system dependency. The real-render path is covered opt-in below when a
+# pandoc binary happens to be present locally.
+
+@pytest.mark.parametrize("doc_type", ["offer", "memo", "brief"])
+@pytest.mark.parametrize("fmt", ["pdf", "docx"])
+def test_export_pandoc_invocation_contract(docs, tmp_path, monkeypatch, doc_type, fmt):
+    doc = docs.create(type=doc_type, title="Export Matrix", body="# H\n\nbody\n")
+    fake_pandoc = "/usr/bin/pandoc-stub"
+    monkeypatch.setattr(docs.shutil, "which",
+                        lambda name: fake_pandoc if name == "pandoc" else None)
+
+    calls: list[list[str]] = []
+
+    def _record(argv, *args, **kwargs):
+        calls.append(list(argv))
+        # pandoc would write the target; the contract test owns only the argv,
+        # so materialise an empty target to mirror a successful run.
+        Path(argv[argv.index("-o") + 1]).write_bytes(b"")
+        return None
+
+    monkeypatch.setattr(docs.subprocess, "run", _record)
+
+    out = docs.export(doc_type, doc.slug, tmp_path / "out", format=fmt)
+
+    expected_target = tmp_path / "out" / f"{doc.slug}.{fmt}"
+    assert out == expected_target
+    assert len(calls) == 1
+    argv = calls[0]
+    assert argv[0] == fake_pandoc
+    assert str(doc.path) in argv
+    assert "-o" in argv
+    assert argv[argv.index("-o") + 1] == str(expected_target)
+
+
+def test_export_pandoc_failure_propagates(docs, tmp_path, monkeypatch):
+    import subprocess as _sp
+    doc = docs.create(type="memo", title="Export", body="body\n")
+    monkeypatch.setattr(docs.shutil, "which", lambda _n: "/usr/bin/pandoc-stub")
+
+    def _boom(argv, *a, **k):
+        raise _sp.CalledProcessError(1, argv)
+
+    monkeypatch.setattr(docs.subprocess, "run", _boom)
+    with pytest.raises(_sp.CalledProcessError):
+        docs.export("memo", doc.slug, tmp_path / "out", format="docx")
+
+
+# Opt-in real-render: runs ONLY when a pandoc binary is on PATH (local dev,
+# or a CI image that already ships pandoc). docx is chosen over pdf because
+# it needs only pandoc — pdf additionally needs a TeX engine that a bare
+# pandoc install lacks. Asserts the docx zip magic bytes (PK\x03\x04), i.e.
+# pandoc actually produced a structurally-valid container. Never gates CI.
+import shutil as _shutil  # noqa: E402
+
+@pytest.mark.skipif(_shutil.which("pandoc") is None,
+                    reason="pandoc not on PATH — opt-in real-render check")
+def test_export_docx_real_render_when_pandoc_present(docs, tmp_path):
+    doc = docs.create(type="memo", title="Real Render", body="# Title\n\nbody\n")
+    out = docs.export("memo", doc.slug, tmp_path / "out", format="docx")
+    assert out.exists()
+    data = out.read_bytes()
+    assert data[:4] == b"PK\x03\x04", "docx export is not a valid zip container"
+
+
 def test_slugify_normalises_input(docs):
     assert docs.slugify("Spring  Cleanup!! 2025") == "spring-cleanup-2025"
     assert docs.slugify("") == "document"
