@@ -73,9 +73,19 @@ rest.
 2. **document `.history.jsonl`** — Python-only, inside `workspace_documents.py`;
    its whole-file `.md` migrate/rekey/decrypt-all gained a parallel per-line
    history pass. **Shipped.**
-3. **sessions** — Node reads+writes; needs the Option-4 Node-session refactor
-   (listSessions / readSessionLog / launch / append routed through the Python
-   CLI). Largest, its own PR. **Remaining.**
+3. **sessions** — Node reads+writes; the Option-4 Node-session refactor routed
+   all 5 endpoints (list / read / launch / append) through the Python CLI
+   (`--root` validated, `--host` / `--data-json` for record fidelity).
+   **Shipped.** All three append-JSONL stores now encrypt at rest.
+
+> **Routing choice (sessions):** the refactor went **uniform** Python-routing
+> (reads + writes always through the CLI, like documents), not the
+> conditional flag-gated routing this ADR's design round leaned toward. Uniform
+> removes the need for Node to read the flag (Python owns the flag decision —
+> true single source of truth), is consistent with the documents precedent, and
+> is fully CI-testable (plaintext path needs no `cryptography`). The design
+> round's perf concern targeted *machine-hot* appends; session appends are
+> human-turn-paced, so the per-op subprocess cost is imperceptible.
 
 ## Consequences
 
