@@ -185,6 +185,36 @@ def decrypt_file(src: Path, dst: Path, *, key: bytes | None = None) -> None:
     dst.write_bytes(decrypt_bytes(src.read_bytes(), key=key))
 
 
+# --- per-record encryption for append-JSONL stores (ADR-064) -------------
+#
+# AES-GCM can't append to a blob, so each JSONL record becomes its own
+# self-contained envelope, base64-encoded as one line. Append stays a single
+# atomic O_APPEND write (no whole-file rewrite, no shared counter): each line
+# carries a fresh random 96-bit nonce in its own `AC1\0` envelope (safe well
+# below the NIST 2^32-per-key bound for these volumes; `rekey` resets the
+# per-key count). A torn final line fails base64/GCM and is skipped by the
+# reader. The (key, nonce) uniqueness rests on the random nonce, not on any
+# crash-fragile counter state.
+
+def encrypt_line(text: str, *, key: bytes | None = None) -> str:
+    """Encrypt one record's text → a single base64 line (no trailing newline)."""
+    return base64.b64encode(encrypt_bytes(text.encode("utf-8"), key=key)).decode("ascii")
+
+
+def decrypt_line(line: str, *, key: bytes | None = None) -> str:
+    """Decrypt a base64 record line; pass a plaintext JSON line through.
+
+    A plaintext record (flag was off at write) is raw JSON starting with
+    ``{``/``[``; an encrypted record is base64 of the ``AC1\\0`` envelope.
+    The first-char check distinguishes them without ambiguity.
+    """
+    s = line.strip()
+    if not s or s[0] in "{[":
+        return s
+    raw = base64.b64decode(s, validate=True)
+    return decrypt_bytes(raw, key=key).decode("utf-8")
+
+
 def rotate_key() -> bytes:
     """Generate a new master key, replace the keyring/keyfile entry. Returns raw key."""
     key_b64 = _generate_key_b64()
