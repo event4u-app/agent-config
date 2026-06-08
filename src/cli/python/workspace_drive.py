@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tier-1 host drive loop — ADR-070 (v0: single-turn, claude-code only).
+"""Tier-1 host drive loop — ADR-070 (v0: single-turn) + ADR-072 (codex / gemini).
 
 A Tier-1 host (Claude Code / Codex / Gemini — ADR-023, host-agent-protocol) is
 CLI-drivable: spawn `claude -p "<prompt>" --output-format json`, parse the JSON
@@ -18,18 +18,18 @@ Design (AI-council 2026-06-08, claude-sonnet-4-5 + gpt-4o, design mode):
   **fails closed** — the caller degrades to the Tier-3 inbox hand-off rather
   than fabricating a turn.
 - **Unified adapter.** One `drive(host, prompt, …)` with a per-host config
-  (arg builder + envelope normaliser), mirroring the proven `ai-council`
-  subprocess shape. v0 ships the `claude-code` config; `codex` / `gemini`
-  slot in without touching the control flow.
+  (arg builder + envelope parser), mirroring the proven `ai-council`
+  subprocess shape. All three Tier-1 hosts (`claude-code` / `codex` /
+  `gemini`) slot in without touching the control flow.
 - **Sync, bounded.** Default 90 s timeout. CLI-missing / non-zero-exit /
   timeout / unrecognised-envelope all return an `ok=False` error turn (with an
   `error_kind`) so the caller records `host.error` and degrades — the user is
   never stuck.
 - **`runner` injectable** so tests never spawn a real host CLI.
 
-Deferred to v1 (debt, recorded in ADR-070): multi-turn agentic loops, tool-call
-execution, `codex` / `gemini` configs, drive success/timeout **metrics** +
-kill-switch observability, error-taxonomy refinement.
+Deferred to v1 (debt, recorded in ADR-070 / ADR-072): multi-turn agentic loops,
+tool-call execution, drive success/timeout **metrics** + kill-switch
+observability, error-taxonomy refinement.
 
 CLI::
 
@@ -52,40 +52,131 @@ class EnvelopeError(ValueError):
     """The host CLI returned output that does not match its declared contract."""
 
 
-# --- per-host envelope normalisers -----------------------------------------
+# --- per-host envelope parsers (stdout → uniform turn) ----------------------
+# Each parser owns its host's full stdout shape: a single JSON object
+# (claude / gemini) or a newline-delimited event stream (codex). Required keys
+# are validated; a missing one raises EnvelopeError → fail-closed. Envelope
+# shapes are reused verbatim from the proven `ai_council` CLI clients
+# (claude / codex) and a live `gemini --output-format json` probe.
 
-def _normalise_claude(env: dict) -> dict:
-    """Map a `claude -p --output-format json` envelope → uniform turn.
-
-    Required: ``result`` (the assistant text). A truthy ``is_error`` fails
-    closed. Everything else is optional and copied through when present.
-    """
-    if not isinstance(env, dict):
-        raise EnvelopeError("envelope is not a JSON object")
-    if env.get("is_error") is True:
-        raise EnvelopeError(f"host reported is_error: {env.get('result', '')[:200]}")
-    if not isinstance(env.get("result"), str):
-        raise EnvelopeError("missing required key: result")
-    usage = env.get("usage") if isinstance(env.get("usage"), dict) else None
+def _turn(*, text, model=None, usage=None, session_id=None, cost_usd=None,
+          num_turns=None, tool_calls=None) -> dict:
     return {
-        "text": env["result"],
-        "model": env.get("model"),
-        "usage": usage,
-        "session_id": env.get("session_id"),
-        "cost_usd": env.get("total_cost_usd"),
-        "num_turns": env.get("num_turns"),
-        # v0 records tool calls opaquely; the simple json mode rarely carries
-        # them, but pass through whatever is present (never executed).
-        "tool_calls": env.get("tool_calls") if isinstance(env.get("tool_calls"), list) else [],
+        "text": text, "model": model, "usage": usage, "session_id": session_id,
+        "cost_usd": cost_usd, "num_turns": num_turns,
+        "tool_calls": tool_calls if isinstance(tool_calls, list) else [],
     }
 
 
+def _parse_claude(stdout: str) -> dict:
+    """`claude -p --output-format json` → single JSON envelope.
+
+    Required: ``result`` (assistant text). Truthy ``is_error`` fails closed.
+    """
+    env = json.loads(stdout)
+    if not isinstance(env, dict):
+        raise EnvelopeError("envelope is not a JSON object")
+    if env.get("is_error") is True:
+        raise EnvelopeError(f"host reported is_error: {str(env.get('result', ''))[:200]}")
+    if not isinstance(env.get("result"), str):
+        raise EnvelopeError("missing required key: result")
+    usage = env.get("usage") if isinstance(env.get("usage"), dict) else None
+    return _turn(
+        text=env["result"], model=env.get("model"), usage=usage,
+        session_id=env.get("session_id"), cost_usd=env.get("total_cost_usd"),
+        num_turns=env.get("num_turns"),
+        tool_calls=env.get("tool_calls"),
+    )
+
+
+def _parse_codex(stdout: str) -> dict:
+    """`codex exec --json` → newline-delimited JSON event stream.
+
+    Mirrors `ai_council.clients.OpenAICliClient`: the final assistant text is
+    the last ``item.completed`` event's ``item.content[].text``; token usage
+    comes from ``turn.completed``; ``session.created`` carries the session id.
+    Unknown events are skipped. Required: at least one item with text.
+    """
+    text = ""
+    usage: dict | None = None
+    session_id = None
+    tool_calls: list = []
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        etype = event.get("type")
+        if etype == "item.completed":
+            item = event.get("item") or {}
+            if isinstance(item, dict):
+                content = item.get("content") or []
+                if isinstance(content, list):
+                    chunks = [str(e["text"]) for e in content
+                              if isinstance(e, dict) and e.get("text")]
+                    if chunks:
+                        text = "\n".join(chunks).strip()
+                # Tool items are recorded opaquely (never executed).
+                if item.get("type") in {"tool_call", "function_call", "command"}:
+                    tool_calls.append(item)
+        elif etype == "turn.completed":
+            u = event.get("usage") or {}
+            if isinstance(u, dict):
+                usage = {"input_tokens": int(u.get("input_tokens", 0) or 0),
+                         "output_tokens": int(u.get("output_tokens", 0) or 0)}
+        elif etype == "session.created" and event.get("session_id"):
+            session_id = str(event["session_id"])
+    if text == "":
+        raise EnvelopeError("no item.completed text in codex event stream")
+    return _turn(text=text, usage=usage, session_id=session_id, tool_calls=tool_calls)
+
+
+def _parse_gemini(stdout: str) -> dict:
+    """`gemini -p … --output-format json` → single JSON envelope.
+
+    Required: ``response`` (assistant text). Token usage is nested under
+    ``stats.models.<model>.tokens`` (model name is dynamic); take the first
+    model entry best-effort. ``session_id`` is top-level.
+    """
+    env = json.loads(stdout)
+    if not isinstance(env, dict):
+        raise EnvelopeError("envelope is not a JSON object")
+    if not isinstance(env.get("response"), str):
+        raise EnvelopeError("missing required key: response")
+    model = None
+    usage = None
+    stats = env.get("stats")
+    if isinstance(stats, dict) and isinstance(stats.get("models"), dict) and stats["models"]:
+        model = next(iter(stats["models"]))
+        tokens = stats["models"][model].get("tokens") if isinstance(stats["models"][model], dict) else None
+        if isinstance(tokens, dict):
+            in_tok = int(tokens.get("prompt", tokens.get("input", 0)) or 0)
+            total = int(tokens.get("total", 0) or 0)
+            usage = {"input_tokens": in_tok, "output_tokens": max(total - in_tok, 0)}
+    return _turn(text=env["response"], model=model, usage=usage,
+                 session_id=env.get("session_id"))
+
+
 HOST_CONFIGS: dict[str, dict] = {
-    # v0 ships claude-code only. codex / gemini land in a later PR with their
-    # own build_args + normaliser — the unified drive() never changes.
+    # All three Tier-1 hosts (ADR-023). Each owns its CLI flags + envelope
+    # parser; the unified drive() never changes. Envelope shapes verified
+    # against the ai_council CLI clients (claude / codex) + a gemini probe.
     "claude-code": {
         "build_args": lambda prompt, cwd: ["claude", "-p", prompt, "--output-format", "json"],
-        "normalise": _normalise_claude,
+        "parse": _parse_claude,
+    },
+    "codex": {
+        "build_args": lambda prompt, cwd: ["codex", "exec", "--json", prompt],
+        "parse": _parse_codex,
+    },
+    "gemini": {
+        "build_args": lambda prompt, cwd: ["gemini", "-p", prompt, "--output-format", "json"],
+        "parse": _parse_gemini,
     },
 }
 
@@ -138,8 +229,7 @@ def drive(
         return _error_turn(host, f"host CLI exited {rc}: {(stderr or '').strip()[:200]}", "nonzero-exit")
 
     try:
-        env = json.loads(stdout)
-        turn = cfg["normalise"](env)
+        turn = cfg["parse"](stdout)
     except (json.JSONDecodeError, EnvelopeError) as err:
         return _error_turn(host, f"unrecognised envelope: {err}", "bad-envelope")
 
