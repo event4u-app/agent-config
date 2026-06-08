@@ -275,6 +275,34 @@ describe('workspaceRoute', () => {
         expect(res.statusCode).toBe(400);
     });
 
+    // --- host-tier detection on launch (ADR-067) ---------------------------
+
+    it('launch reports the effective host tier (Tier-3 host → handoff)', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'offer', host: 'augment' },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as Record<string, unknown>;
+        expect(body['id']).toBeTruthy();              // session still recorded
+        expect(body['effective_tier']).toBe(3);
+        expect(body['mode']).toBe('handoff');
+        expect(body['known']).toBe(true);
+    });
+
+    it('launch with an unknown host fails soft to Tier 3', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'offer', host: 'local' },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as Record<string, unknown>;
+        expect(body['effective_tier']).toBe(3);
+        expect(body['known']).toBe(false);            // unknown → safe handoff default
+    });
+
     // --- Tier-3 inbox (ADR-065) — ships dark behind AGENT_CONFIG_TIER3_INBOX --
 
     it('inbox is disabled by default (flag off → 404)', async () => {
