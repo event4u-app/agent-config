@@ -65,15 +65,23 @@ never logged.
 
 ## Scope
 
-Encrypts (Phase 8 v0):
+**Shipped in Part B (ADR-062) — whole-file `.md` bodies, encrypted + Python-authoritative read:**
+
+| Path | Phase | Sensitivity |
+|---|---|---|
+| `workspace/documents/**/*.md` | 5 | offer / mail / memo / brief bodies |
+
+**Deferred — the append-JSONL set (ADR-063):** these are append-heavy logs;
+AES-256-GCM cannot append to a blob, and per-record encryption needs a
+nonce-management protocol that is not yet designed. They stay **plaintext**
+until ADR-063's gate is met. Do **not** assume they are protected.
 
 | Path | Phase | Sensitivity |
 |---|---|---|
 | `workspace/sessions/**/*.jsonl` | 4 | host replies may contain customer data |
-| `workspace/documents/**/*.md` | 5 | offer / mail / memo / brief bodies |
 | `workspace/documents/**/*.history.jsonl` | 5 | edit metadata + SHAs |
 | `workspace/inbox/**/*.md` | 4 | rendered prompts for Tier-3 hand-off may contain customer names |
-| `workspace/analytics/events.jsonl` | 7 | event counters; lower sensitivity but uniform treatment |
+| `workspace/analytics/events.jsonl` | 7 | event counters; lower sensitivity |
 
 Does **not** encrypt (v0):
 
@@ -104,6 +112,30 @@ Filename itself is **not** encrypted in v0 (filename leakage is an
 accepted trade-off — slugs are kebab-case derived from titles and
 may contain customer names; mitigation: title slug allowlist
 documented in `workspace-documents.md`).
+
+## Part B operations (documents) — shipped
+
+`workspace_documents.py` owns document encryption (Python-authoritative,
+ADR-062 Option 4):
+
+- **Write** (`create` / `save`): when the flag is on, the `.md` body is
+  written as `<slug>.md.enc` via atomic temp+fsync+rename; the opposite form
+  is removed so a slug never has both.
+- **Read** (`read` / `list` / `export`): auto-detects `.md` vs `.md.enc` on
+  disk and decrypts the `.enc` — **independent of the flag** (decryption needs
+  only the key), so a read is correct after the flag flips either way.
+- **Node read path**: the GUI server's recent-documents rail calls
+  `workspace_documents.py list --json --root <writeRoot>/workspace/documents`
+  rather than reading files directly — so it never has to decrypt `.enc` in
+  Node. The script is resolved from the server source tree.
+- **`migrate`**: non-destructive plaintext → `.enc` (encrypt, verify-decrypt,
+  then delete plaintext; idempotent; rolls back a file on verify failure).
+- **`decrypt-all`**: kill-switch — every `.md.enc` back to plaintext `.md`
+  (works after the flag is off; `AGENT_CONFIG_NO_ENCRYPTION` also forces
+  plaintext writes).
+- **`rekey`**: rotate the master key and re-encrypt every document under the
+  new key (coherent only when the key lives in keyring/keyfile, not pinned via
+  `AGENT_CONFIG_WORKSPACE_KEY`).
 
 ## Feature flag + migration
 
