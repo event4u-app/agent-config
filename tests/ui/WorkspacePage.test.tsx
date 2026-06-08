@@ -22,6 +22,7 @@ interface FixtureOverrides {
     sessions?: unknown;
     knowledge?: unknown;
     documents?: unknown;
+    tasks?: unknown;
     launch?: { status: number; body: unknown };
 }
 
@@ -65,6 +66,25 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
             };
             return new Response(JSON.stringify(payload), { status: 200 });
         }
+        if (/\/api\/v1\/workspace\/roles\/[^/]+\/tasks$/.test(path) && method === 'GET') {
+            const slug = path.split('/')[5];   // /api/v1/workspace/roles/<slug>/tasks
+            if (overrides.tasks === undefined && slug !== 'galabau') {
+                return new Response(JSON.stringify({ role: slug, tasks: [], skills: [] }), { status: 200 });
+            }
+            const payload = overrides.tasks ?? {
+                role: 'galabau',
+                tasks: [
+                    { name: 'Offer drafting', intent: 'Draft an offer from a brief.', prompt: 'offer-from-brief.md',
+                      inputs: [{ name: 'brief', required: true, shape: 'the customer brief' },
+                               { name: 'notes', required: false, shape: 'extra notes' }],
+                      skill_hint: 'doc-coauthoring' },
+                    { name: 'Email reply', intent: 'Reply in the right tone.', prompt: 'customer-email-reply.md',
+                      inputs: [], skill_hint: null },
+                ],
+                skills: [{ id: 'refine-prompt', why: 'Tightens fuzzy customer briefs.' }],
+            };
+            return new Response(JSON.stringify(payload), { status: 200 });
+        }
         if (path.startsWith('/api/v1/workspace/sessions') && method === 'GET') {
             const payload = overrides.sessions ?? {
                 sessions: [
@@ -97,6 +117,8 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
                 id: '20260525T130000Z-deadbeef',
                 role: reqBody.role,
                 task: reqBody.task,
+                driven: true,
+                turn: { text: 'Here is your drafted offer.', model: 'claude-code', usage: { input_tokens: 12, output_tokens: 40 } },
             }), { status: 200 });
         }
         return new Response(JSON.stringify({ error: { code: 'NOT_FOUND', message: path } }), { status: 404 });
@@ -176,23 +198,74 @@ describe('WorkspacePage', () => {
         }
     });
 
-    it('POSTs /workspace/launch when the user clicks Start session', async () => {
+    it('opens the input form, drives the task, and renders the turn', async () => {
         const mock = installWorkspaceFetchMock({ sessions: { sessions: [] } });
         try {
             const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
             const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
-            const galabauBtn = await findByRole('button', { name: /Pick role Galabau owner/ });
-            fireEvent.click(galabauBtn);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
             await findByText('Offer drafting');
-            const startButtons = await findAllByRole('button', { name: /Start session/ });
-            fireEvent.click(startButtons[0]!);
+            // Start session expands the inline form (it does not POST yet).
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            const brief = await findByRole('textbox', { name: /brief \(required\)/ });
+            // Required not filled → Run task is disabled, no POST yet.
+            expect((await findByRole('button', { name: /Run task/ })).hasAttribute('disabled')).toBe(true);
+            expect(mock.calls.some((c) => c.path === '/api/v1/workspace/launch')).toBe(false);
+            fireEvent.input(brief, { target: { value: 'Build a 20m hedge.' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
             await waitFor(() => {
-                const launches = mock.calls.filter((c) => c.path === '/api/v1/workspace/launch' && c.method === 'POST');
-                expect(launches.length).toBe(1);
+                expect(mock.calls.filter((c) => c.path === '/api/v1/workspace/launch' && c.method === 'POST').length).toBe(1);
             });
             const launch = mock.calls.find((c) => c.path === '/api/v1/workspace/launch');
-            expect(launch?.body).toMatchObject({ role: 'galabau', task: 'Offer drafting', host: 'local' });
-            await findByText(/Started session 20260525T130000Z-deadbeef/);
+            expect(launch?.body).toMatchObject({
+                role: 'galabau', task: 'Offer drafting', host: 'claude-code',
+                inputs: { brief: 'Build a 20m hedge.' },
+            });
+            await findByText('Here is your drafted offer.');   // driven turn rendered
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('shows the hand-off banner when a launch degrades to the inbox', async () => {
+        const mock = installWorkspaceFetchMock({
+            sessions: { sessions: [] },
+            launch: { status: 200, body: {
+                id: '20260525T130000Z-deadbeef', role: 'galabau', task: 'Offer drafting',
+                driven: false, handoff: '/home/u/.event4u/agent-config/workspace/inbox/x.md',
+            } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'x' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await findByText(/Prepared a hand-off — open .*inbox\/x\.md/);
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('shows a render-error banner when a required input rejection comes back', async () => {
+        const mock = installWorkspaceFetchMock({
+            sessions: { sessions: [] },
+            launch: { status: 200, body: {
+                id: '20260525T130000Z-deadbeef', role: 'galabau', task: 'Offer drafting',
+                driven: false, error_kind: 'render-error', error: 'missing required input(s): brief',
+            } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'x' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await findByText(/Couldn't fill the prompt: missing required/);
         } finally {
             mock.restore();
         }

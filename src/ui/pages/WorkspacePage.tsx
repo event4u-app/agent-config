@@ -29,10 +29,40 @@ import { useEffect } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { apiFetch, ApiCallError } from '../api.js';
 
+interface PromptInput {
+    name: string;
+    required: boolean;
+    shape: string;
+}
+
 interface RoleTask {
     name: string;
     intent: string;
     prompt: string;
+    inputs?: PromptInput[];
+    skill_hint?: string | null;
+}
+
+interface DrivenTurn {
+    text: string;
+    model?: string | null;
+    usage?: { input_tokens?: number; output_tokens?: number } | null;
+}
+
+// Shape of a /workspace/launch response (ADR-071/074). Only `driven` is always
+// present; the rest are outcome-specific.
+interface LaunchResult {
+    id: string;
+    role: string;
+    task: string;
+    driven: boolean;
+    turn?: DrivenTurn;
+    reason?: string;
+    error_kind?: string;
+    error?: string;
+    handoff?: string;
+    host_killed?: boolean;
+    recovered?: boolean;
 }
 
 interface Role {
@@ -78,6 +108,18 @@ const loaded = signal(false);
 const loadError = signal<string | null>(null);
 const launchBanner = signal<string | null>(null);
 const explainMode = signal<ExplainMode>('plain');
+// Drive integration (ADR-075). Tasks-with-input-specs for the selected role,
+// the inline form's open task + field values, the in-flight flag, and the last
+// driven turn / outcome.
+const selectedTasks = signal<RoleTask[]>([]);
+const openTask = signal<string | null>(null);
+const formInputs = signal<Record<string, string>>({});
+const launching = signal(false);
+const launchResult = signal<LaunchResult | null>(null);
+const showFullTurn = signal(false);
+
+const DRIVE_HOST = 'claude-code';      // v0: single hard-coded tier-1 host (council)
+const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
 
 async function load(): Promise<void> {
     loadError.value = null;
@@ -102,23 +144,64 @@ async function load(): Promise<void> {
     }
 }
 
-async function launch(role: string, task: string): Promise<void> {
-    launchBanner.value = null;
+// Fetch the selected role's tasks WITH their prompt input specs (ADR-075) so
+// the inline form can be built. Falls back to the role's embedded first_tasks
+// (no input specs) if the fetch fails.
+async function loadTasks(slug: string, fallback: RoleTask[]): Promise<void> {
     try {
-        const res = await apiFetch<{ id: string; role: string; task: string }>(
+        const res = await apiFetch<{ tasks: RoleTask[] }>(`/api/v1/workspace/roles/${slug}/tasks`);
+        selectedTasks.value = res.tasks;
+    } catch {
+        selectedTasks.value = fallback;
+    }
+}
+
+async function launch(role: string, task: string, inputs: Record<string, string>): Promise<void> {
+    launchBanner.value = null;
+    launching.value = true;
+    showFullTurn.value = false;
+    try {
+        const res = await apiFetch<LaunchResult>(
             '/api/v1/workspace/launch',
-            { method: 'POST', body: { role, task, host: 'local' } },
+            { method: 'POST', body: { role, task, inputs, host: DRIVE_HOST } },
         );
-        launchBanner.value = `Started session ${res.id} (${res.role} · ${res.task}).`;
+        launchResult.value = res;
+        launchBanner.value = bannerFor(res);
+        openTask.value = null;                 // collapse the form on a completed launch
         const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
         sessions.value = s.sessions;
     } catch (err) {
+        launchResult.value = null;
         if (err instanceof ApiCallError) {
             launchBanner.value = err.body?.error?.message ?? err.message;
         } else {
             launchBanner.value = err instanceof Error ? err.message : String(err);
         }
+    } finally {
+        launching.value = false;
     }
+}
+
+// One human-readable banner per launch outcome (ADR-071/074).
+function bannerFor(r: LaunchResult): string {
+    if (r.driven) {
+        return r.recovered === true
+            ? `Host recovered — drove the turn for ${r.role} · ${r.task}.`
+            : `Drove the turn for ${r.role} · ${r.task}.`;
+    }
+    if (r.host_killed === true) {
+        return `Host ${DRIVE_HOST} is paused after repeated failures — handed off to the inbox.`;
+    }
+    if (r.error_kind === 'render-error') {
+        return `Couldn't fill the prompt: ${r.error ?? 'missing input'}.`;
+    }
+    if (r.reason === 'no-prompt-for-task') {
+        return `Recorded the session — this task has no runnable prompt yet.`;
+    }
+    if (typeof r.handoff === 'string') {
+        return `Prepared a hand-off — open ${r.handoff} and paste it into your host.`;
+    }
+    return `Recorded the session ${r.id} (${r.role} · ${r.task}).`;
 }
 
 function RoleCard({ role }: { role: Role }): preact.JSX.Element {
@@ -135,6 +218,11 @@ function RoleCard({ role }: { role: Role }): preact.JSX.Element {
             onClick={(): void => {
                 selectedRole.value = role.slug;
                 launchBanner.value = null;
+                launchResult.value = null;
+                openTask.value = null;
+                formInputs.value = {};
+                selectedTasks.value = role.first_tasks;   // immediate; refined with input specs
+                void loadTasks(role.slug, role.first_tasks);
             }}
         >
             <span class="ac-workspace__role-name">{role.display_name}</span>
@@ -144,30 +232,107 @@ function RoleCard({ role }: { role: Role }): preact.JSX.Element {
     );
 }
 
+// Inline input form for one task (ADR-075): one field per declared prompt
+// input, required marked, `shape` as the placeholder hint. Submit drives.
+function TaskForm({ role, task }: { role: string; task: RoleTask }): preact.JSX.Element {
+    const specs = task.inputs ?? [];
+    const values = formInputs.value;
+    const missingRequired = specs.some((s) => s.required && (values[s.name] ?? '').trim() === '');
+    return (
+        <form
+            class="ac-workspace__task-form"
+            onSubmit={(e): void => {
+                e.preventDefault();
+                if (!missingRequired && !launching.value) void launch(role, task.name, formInputs.value);
+            }}
+        >
+            {specs.length === 0 ? (
+                <p class="ac-workspace__form-note">No inputs — runs the prompt as-is.</p>
+            ) : specs.map((s) => (
+                <label key={s.name} class="ac-workspace__field">
+                    <span class="ac-workspace__field-label">
+                        {s.name}{s.required ? <span class="ac-workspace__req" aria-hidden="true"> *</span> : null}
+                    </span>
+                    <textarea
+                        class="ac-workspace__field-input"
+                        placeholder={s.shape}
+                        required={s.required}
+                        aria-label={`${s.name}${s.required ? ' (required)' : ''}`}
+                        value={values[s.name] ?? ''}
+                        onInput={(e): void => {
+                            formInputs.value = { ...formInputs.value, [s.name]: (e.target as HTMLTextAreaElement).value };
+                        }}
+                    />
+                </label>
+            ))}
+            <div class="ac-workspace__form-actions">
+                <button type="submit" class="ac-button ac-button--primary" disabled={missingRequired || launching.value}>
+                    {launching.value ? 'Running…' : 'Run task'}
+                </button>
+                <button type="button" class="ac-button" onClick={(): void => { openTask.value = null; }}>Cancel</button>
+            </div>
+        </form>
+    );
+}
+
+// The driven turn's assistant text (ADR-075). Long turns collapse behind a
+// "Show full" toggle so a 4k-token response can't break the layout chrome.
+function TurnResult(): preact.JSX.Element | null {
+    const r = launchResult.value;
+    if (r === null || !r.driven || r.turn === undefined) return null;
+    const text = r.turn.text ?? '';
+    const long = text.length > TURN_COLLAPSE_CHARS;
+    const shown = long && !showFullTurn.value ? `${text.slice(0, TURN_COLLAPSE_CHARS)}…` : text;
+    const usage = r.turn.usage;
+    return (
+        <section class="ac-workspace__turn" aria-label="Host turn result">
+            <h2 class="ac-workspace__heading">Result · {r.task}</h2>
+            <pre class="ac-workspace__turn-text">{shown}</pre>
+            {long ? (
+                <button type="button" class="ac-button" onClick={(): void => { showFullTurn.value = !showFullTurn.value; }}>
+                    {showFullTurn.value ? 'Show less' : 'Show full'}
+                </button>
+            ) : null}
+            {usage != null ? (
+                <p class="ac-workspace__turn-meta">
+                    {r.turn.model ?? DRIVE_HOST} · in {usage.input_tokens ?? 0} / out {usage.output_tokens ?? 0} tokens
+                </p>
+            ) : null}
+        </section>
+    );
+}
+
 function TaskPicker({ role }: { role: Role }): preact.JSX.Element {
+    const tasks = selectedTasks.value.length > 0 ? selectedTasks.value : role.first_tasks;
     return (
         <section class="ac-workspace__tasks" aria-labelledby="task-heading">
             <h2 id="task-heading" class="ac-workspace__heading">First tasks · {role.display_name}</h2>
-            {role.first_tasks.length === 0 ? (
+            {tasks.length === 0 ? (
                 <p class="ac-workspace__empty">No tasks scaffolded yet for this role.</p>
             ) : (
                 <ul class="ac-workspace__task-list">
-                    {role.first_tasks.map((t) => (
+                    {tasks.map((t) => (
                         <li key={t.name} class="ac-workspace__task">
                             <div class="ac-workspace__task-head">
                                 <span class="ac-workspace__task-name">{t.name}</span>
                                 <button
                                     type="button"
                                     class="ac-button ac-button--primary"
-                                    onClick={(): void => { void launch(role.slug, t.name); }}
+                                    aria-expanded={openTask.value === t.name}
+                                    onClick={(): void => {
+                                        openTask.value = openTask.value === t.name ? null : t.name;
+                                        formInputs.value = {};
+                                        launchResult.value = null;
+                                    }}
                                 >
-                                    Start session
+                                    {openTask.value === t.name ? 'Close' : 'Start session'}
                                 </button>
                             </div>
                             <p class="ac-workspace__task-intent">{t.intent}</p>
                             {t.prompt !== '' ? (
                                 <code class="ac-workspace__task-prompt">prompts/{t.prompt}</code>
                             ) : null}
+                            {openTask.value === t.name ? <TaskForm role={role.slug} task={t} /> : null}
                         </li>
                     ))}
                 </ul>
@@ -347,6 +512,7 @@ export function WorkspacePage(): preact.JSX.Element {
                     {role !== null ? <TaskPicker role={role} /> : (
                         <p class="ac-workspace__empty">Pick a role on the left to see its first tasks.</p>
                     )}
+                    <TurnResult />
                     <SessionStrip />
                 </main>
                 <aside class="ac-workspace__rail" aria-label="Knowledge and documents">
