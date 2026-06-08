@@ -37,6 +37,29 @@ def _load():
 def ws(tmp_path, monkeypatch):
     mod = _load()
     monkeypatch.setattr(mod, "WORKSPACE_HOME", tmp_path / "sessions")
+    # Encryption OFF by default — deterministic regardless of a repo-root
+    # .agent-settings.yml in the cwd. Encryption tests flip it explicitly.
+    monkeypatch.setattr(mod.workspace_crypto, "is_enabled", lambda *a, **k: False)
+    return mod
+
+
+try:
+    import cryptography  # noqa: F401
+    HAS_CRYPTO = True
+except ImportError:
+    HAS_CRYPTO = False
+
+
+@pytest.fixture
+def enc_ws(tmp_path, monkeypatch):
+    """Session store with encryption-at-rest ON and a fixed key."""
+    import base64
+    import os as _os
+    mod = _load()
+    monkeypatch.setattr(mod, "WORKSPACE_HOME", tmp_path / "sessions")
+    monkeypatch.setattr(mod.workspace_crypto, "is_enabled", lambda *a, **k: True)
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY",
+                       base64.b64encode(_os.urandom(32)).decode("ascii"))
     return mod
 
 
@@ -128,3 +151,88 @@ def test_cli_list_returns_jsonl(tmp_path):
     assert len(rows) == 1
     assert rows[0]["role"] == "galabau"
     assert rows[0]["task"] == "memo"
+
+
+# --- encryption-at-rest (ADR-064: per-record append-JSONL) ----------------
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_start_append_round_trip(enc_ws):
+    sid = enc_ws.start("galabau", "offer")
+    enc_ws.append(sid, "host.turn", {"text": "hello customer"})
+    p = enc_ws._session_path(sid)
+    lines = [ln for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(lines) == 2
+    assert all(not ln.startswith("{") for ln in lines)        # per-record encrypted
+    import base64
+    assert base64.b64decode(lines[0], validate=True)[:4] == b"AC1\x00"
+    assert b"hello customer" not in p.read_bytes()             # not cleartext on disk
+    recs = enc_ws.read(sid)                                    # decrypts per line
+    assert [r["kind"] for r in recs] == ["launcher.input", "host.turn"]
+    assert recs[1]["data"]["text"] == "hello customer"
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_encrypted_list_decrypts_first_record_meta(enc_ws):
+    sid = enc_ws.start("consultant", "investor-memo")
+    metas = enc_ws.list_sessions()
+    assert any(m.session_id == sid and m.role == "consultant"
+               and m.task == "investor-memo" for m in metas)   # first line decrypted
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_migrate_then_decrypt_all(ws, monkeypatch):
+    import base64, os as _os
+    sid = ws.start("galabau", "t")
+    ws.append(sid, "host.turn", {"x": 1})
+    p = ws._session_path(sid)
+    assert p.read_text(encoding="utf-8").splitlines()[0].startswith("{")  # plaintext
+
+    monkeypatch.setattr(ws.workspace_crypto, "is_enabled", lambda *a, **k: True)
+    monkeypatch.setenv("AGENT_CONFIG_WORKSPACE_KEY",
+                       base64.b64encode(_os.urandom(32)).decode("ascii"))
+    assert ws.migrate()["migrated"] == 1
+    assert all(not ln.startswith("{") for ln in p.read_text().splitlines() if ln.strip())
+    assert [r["kind"] for r in ws.read(sid)] == ["launcher.input", "host.turn"]
+
+    assert ws.decrypt_all()["decrypted"] == 1
+    assert all(ln.startswith("{") for ln in p.read_text().splitlines() if ln.strip())
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_rekey_reencrypts_sessions(enc_ws, monkeypatch):
+    import os as _os
+    wc = enc_ws.workspace_crypto
+    monkeypatch.delenv("AGENT_CONFIG_WORKSPACE_KEY", raising=False)
+    state = {"key": _os.urandom(32)}
+    monkeypatch.setattr(wc, "_get_or_create_master_key", lambda **k: state["key"])
+    monkeypatch.setattr(wc, "rotate_key",
+                        lambda: state.__setitem__("key", _os.urandom(32)) or state["key"])
+    sid = enc_ws.start("galabau", "t")
+    p = enc_ws._session_path(sid)
+    before = p.read_bytes()
+    assert enc_ws.rekey()["rekeyed"] == 1
+    assert p.read_bytes() != before                            # re-encrypted
+    assert enc_ws.read(sid)[0]["kind"] == "launcher.input"     # still decryptable
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_torn_line_skipped(enc_ws):
+    sid = enc_ws.start("galabau", "t")
+    with enc_ws._session_path(sid).open("a", encoding="utf-8") as fh:
+        fh.write("dG90YWxseS1nYXJiYWdl\n")                     # base64 garbage → skip
+    assert [r["kind"] for r in enc_ws.read(sid)] == ["launcher.input"]
+
+
+def test_cli_root_validation_rejects_bad_path(ws, tmp_path):
+    bad = tmp_path / "not-a-sessions-dir"
+    bad.mkdir()
+    with pytest.raises(SystemExit, match="workspace/sessions"):
+        ws.main(["list", "--root", str(bad)])
+
+
+def test_cli_list_json_with_valid_root(ws, tmp_path):
+    root = tmp_path / "workspace" / "sessions"
+    root.mkdir(parents=True)
+    sid = ws.start("galabau", "t", root=root)
+    rc = ws.main(["list", "--json", "--root", str(root)])
+    assert rc == 0
