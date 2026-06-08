@@ -69,7 +69,7 @@ jobs:
           cache: 'pip'
 
       - name: Set up Task
-        uses: arduino/setup-task@v2
+        uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -92,7 +92,7 @@ jobs:
           cache: 'pip'
 
       - name: Set up Task
-        uses: arduino/setup-task@v2
+        uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -192,7 +192,7 @@ jobs:
           cache: 'pip'
 
       - name: Set up Task
-        uses: arduino/setup-task@v2
+        uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
