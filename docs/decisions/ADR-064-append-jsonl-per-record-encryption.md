@@ -69,13 +69,13 @@ rest.
 
 ### Rollout order
 
-1. **analytics** — Python-only, single-writer already true. **Shipped here.**
+1. **analytics** — Python-only, single-writer already true. **Shipped.**
 2. **document `.history.jsonl`** — Python-only, inside `workspace_documents.py`;
-   follow-up (its whole-file `.md` migrate/rekey must gain a parallel per-line
-   pass).
+   its whole-file `.md` migrate/rekey/decrypt-all gained a parallel per-line
+   history pass. **Shipped.**
 3. **sessions** — Node reads+writes; needs the Option-4 Node-session refactor
    (listSessions / readSessionLog / launch / append routed through the Python
-   CLI). Largest, its own PR.
+   CLI). Largest, its own PR. **Remaining.**
 
 ## Consequences
 
