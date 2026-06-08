@@ -166,16 +166,27 @@ HOST_CONFIGS: dict[str, dict] = {
     # All three Tier-1 hosts (ADR-023). Each owns its CLI flags + envelope
     # parser; the unified drive() never changes. Envelope shapes verified
     # against the ai_council CLI clients (claude / codex) + a gemini probe.
+    # `build_resume_args` continues a prior session by its host session id
+    # (ADR-076, conversation multi-turn) — all three expose a documented
+    # non-interactive resume, so `supports_resume` is True for each. Resume
+    # invocations verified: claude `--resume <id> -p`, codex `exec resume <id>
+    # --json <prompt>`, gemini `--resume <id> -p`.
     "claude-code": {
         "build_args": lambda prompt, cwd: ["claude", "-p", prompt, "--output-format", "json"],
+        "build_resume_args": lambda sid, prompt, cwd: ["claude", "--resume", sid, "-p", prompt, "--output-format", "json"],
+        "supports_resume": True,
         "parse": _parse_claude,
     },
     "codex": {
         "build_args": lambda prompt, cwd: ["codex", "exec", "--json", prompt],
+        "build_resume_args": lambda sid, prompt, cwd: ["codex", "exec", "resume", sid, "--json", prompt],
+        "supports_resume": True,
         "parse": _parse_codex,
     },
     "gemini": {
         "build_args": lambda prompt, cwd: ["gemini", "-p", prompt, "--output-format", "json"],
+        "build_resume_args": lambda sid, prompt, cwd: ["gemini", "--resume", sid, "-p", prompt, "--output-format", "json"],
+        "supports_resume": True,
         "parse": _parse_gemini,
     },
 }
@@ -199,6 +210,7 @@ def drive(
     *,
     cwd: str | None = None,
     timeout: int = DEFAULT_TIMEOUT,
+    resume_session_id: str | None = None,
     runner=None,
 ) -> dict:
     """Drive one Tier-1 host turn → a uniform turn record.
@@ -207,6 +219,11 @@ def drive(
     num_turns, tool_calls}`` on success, or ``{ok: False, host, error,
     error_kind}`` on any failure (caller records ``host.error`` + degrades to
     the Tier-3 inbox). Never raises for an operational failure.
+
+    When ``resume_session_id`` is given (ADR-076 multi-turn continuation), the
+    host's resume invocation is used instead of a fresh launch — the host
+    continues its own session. A host without a documented resume → error
+    ``resume-unsupported``.
     """
     cfg = HOST_CONFIGS.get(host)
     if cfg is None:
@@ -214,7 +231,12 @@ def drive(
     if not isinstance(prompt, str) or prompt.strip() == "":
         return _error_turn(host, "prompt is empty", "empty-prompt")
 
-    args = cfg["build_args"](prompt, cwd)
+    if resume_session_id is not None:
+        if not cfg.get("supports_resume"):
+            return _error_turn(host, f"host {host} does not support resume", "resume-unsupported")
+        args = cfg["build_resume_args"](resume_session_id, prompt, cwd)
+    else:
+        args = cfg["build_args"](prompt, cwd)
     run = runner or _subprocess_runner
     try:
         rc, stdout, stderr = run(args, cwd, timeout)
@@ -246,12 +268,14 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--prompt-file", required=True, help="path to the rendered prompt, or '-' for stdin")
     d.add_argument("--cwd")
     d.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    d.add_argument("--resume-session-id", help="continue a prior host session (ADR-076)")
     d.add_argument("--json", action="store_true", help="emit the turn record as JSON")
     args = p.parse_args(argv)
 
     if args.cmd == "drive":
         prompt = sys.stdin.read() if args.prompt_file == "-" else Path(args.prompt_file).read_text(encoding="utf-8")
-        turn = drive(args.host, prompt, cwd=args.cwd, timeout=args.timeout)
+        turn = drive(args.host, prompt, cwd=args.cwd, timeout=args.timeout,
+                     resume_session_id=args.resume_session_id)
         if args.json:
             print(json.dumps(turn, sort_keys=True))
         elif turn["ok"]:

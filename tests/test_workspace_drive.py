@@ -195,6 +195,60 @@ def test_default_timeout_is_90(wd):
     assert wd.DEFAULT_TIMEOUT == 90
 
 
+# --- resume / multi-turn continuation (ADR-076) ----------------------------
+
+def _capturing_runner(stdout):
+    seen = {}
+
+    def run(args, cwd, timeout):
+        seen["args"] = args
+        return 0, stdout, ""
+    return run, seen
+
+
+def test_resume_uses_host_resume_invocation(wd):
+    run, seen = _capturing_runner(_ok_envelope("resumed reply"))
+    turn = wd.drive("claude-code", "make it shorter", resume_session_id="sess-1", runner=run)
+    assert turn["ok"] is True and turn["text"] == "resumed reply"
+    # claude resume: claude --resume <id> -p <prompt> --output-format json
+    assert seen["args"][:3] == ["claude", "--resume", "sess-1"]
+    assert "make it shorter" in seen["args"]
+
+
+def test_resume_codex_arg_order(wd):
+    run, seen = _capturing_runner(_codex_stream("ok"))
+    wd.drive("codex", "follow up", resume_session_id="cx-1", runner=run)
+    assert seen["args"][:4] == ["codex", "exec", "resume", "cx-1"]
+
+
+def test_resume_gemini_arg_order(wd):
+    run, seen = _capturing_runner(_gemini_env("ok"))
+    wd.drive("gemini", "follow up", resume_session_id="gm-1", runner=run)
+    assert seen["args"][:3] == ["gemini", "--resume", "gm-1"]
+
+
+def test_fresh_launch_does_not_use_resume_args(wd):
+    run, seen = _capturing_runner(_ok_envelope())
+    wd.drive("claude-code", "first turn", runner=run)
+    assert "--resume" not in seen["args"]
+
+
+def test_cli_resume_flag(wd, tmp_path, capsys, monkeypatch):
+    captured = {}
+
+    def run(args, cwd, timeout):
+        captured["args"] = args
+        return 0, _ok_envelope("cli resumed"), ""
+    monkeypatch.setattr(wd, "_subprocess_runner", run)
+    pf = tmp_path / "p.md"
+    pf.write_text("again", encoding="utf-8")
+    rc = wd.main(["drive", "--host", "claude-code", "--prompt-file", str(pf),
+                  "--resume-session-id", "sess-9", "--json"])
+    assert rc == 0
+    assert "sess-9" in captured["args"]
+    assert json.loads(capsys.readouterr().out)["text"] == "cli resumed"
+
+
 # --- CLI -------------------------------------------------------------------
 
 def test_cli_drive_json(wd, tmp_path, capsys, monkeypatch):
