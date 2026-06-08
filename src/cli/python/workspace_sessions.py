@@ -72,21 +72,27 @@ class SessionMeta:
     role: str | None
     task: str | None
     mtime: float
+    started_at: str | None = None
 
 
-def start(role: str, task: str, *, root: Path | None = None) -> str:
-    """Create a new session file and write the opening ``launcher.input`` line."""
+def start(role: str, task: str, *, host: str | None = None, root: Path | None = None) -> str:
+    """Create a new session file and write the opening ``launcher.input`` line.
+
+    When ``host`` is given the launcher.input data carries ``host_tier`` +
+    ``host_id`` (the shape the Node GUI server writes); omitted → the bare
+    ``{role, task}`` shape.
+    """
     sid = _new_session_id()
     p = _session_path(sid, root=root)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Pre-write secret-scan hook (Phase 8 Step 5): a pasted credential in the
     # opening task lands at rest. Telemetry is disposable → scrub silently.
     safe_task, _ = workspace_secrets.scrub(task)
-    rec = {
-        "ts": _now_iso(),
-        "kind": "launcher.input",
-        "data": {"role": role, "task": safe_task},
-    }
+    data = {"role": role, "task": safe_task}
+    if host is not None:
+        data["host_tier"] = "tier-1"
+        data["host_id"] = host
+    rec = {"ts": _now_iso(), "kind": "launcher.input", "data": data}
     with p.open("w", encoding="utf-8") as fh:
         fh.write(_line_out(json.dumps(rec, sort_keys=True)) + "\n")
     return sid
@@ -144,6 +150,7 @@ def list_sessions(*, limit: int = 20, root: Path | None = None) -> list[SessionM
             role=(first or {}).get("data", {}).get("role"),
             task=(first or {}).get("data", {}).get("task"),
             mtime=p.stat().st_mtime,
+            started_at=(first or {}).get("ts"),
         ))
     return out
 
@@ -266,10 +273,16 @@ def main(argv: list[str] | None = None) -> int:
     s_start = sub.add_parser("start")
     s_start.add_argument("--role", required=True)
     s_start.add_argument("--task", required=True)
+    s_start.add_argument("--host")
+    s_start.add_argument("--root")
     s_app = sub.add_parser("append")
     s_app.add_argument("session_id")
     s_app.add_argument("--kind", required=True)
     s_app.add_argument("--data", action="append", default=[])
+    s_app.add_argument("--data-json", dest="data_json",
+                       help="full event data as a JSON object (preserves nested "
+                            "structure the flat --data k=v cannot; used by the Node bridge)")
+    s_app.add_argument("--root")
     s_list = sub.add_parser("list")
     s_list.add_argument("--limit", type=int, default=20)
     s_list.add_argument("--root", help="sessions dir (Node passes <writeRoot>/workspace/sessions)")
@@ -283,15 +296,19 @@ def main(argv: list[str] | None = None) -> int:
         sp.add_argument("--root")
     args = p.parse_args(argv)
     if args.cmd == "start":
-        print(start(args.role, args.task))
+        root = _validate_cli_root(args.root) if args.root else None
+        print(start(args.role, args.task, host=args.host, root=root))
         return 0
     if args.cmd == "append":
-        ok = append(args.session_id, args.kind, _parse_kv(args.data))
+        root = _validate_cli_root(args.root) if args.root else None
+        data = json.loads(args.data_json) if args.data_json else _parse_kv(args.data)
+        ok = append(args.session_id, args.kind, data, root=root)
         return 0 if ok else 1
     if args.cmd == "list":
         root = _validate_cli_root(args.root) if args.root else None
         rows = [{"session_id": m.session_id, "role": m.role, "task": m.task,
-                 "mtime": m.mtime} for m in list_sessions(limit=args.limit, root=root)]
+                 "mtime": m.mtime, "started_at": m.started_at}
+                for m in list_sessions(limit=args.limit, root=root)]
         if args.json:
             print(json.dumps(rows, sort_keys=True))
         else:

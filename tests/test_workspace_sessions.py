@@ -236,3 +236,73 @@ def test_cli_list_json_with_valid_root(ws, tmp_path):
     sid = ws.start("galabau", "t", root=root)
     rc = ws.main(["list", "--json", "--root", str(root)])
     assert rc == 0
+
+
+# --- Node-bridge CLI surface (ADR-064 store 3b — what workspace.ts calls) --
+
+def test_cli_start_with_host_and_root(ws, tmp_path):
+    root = tmp_path / "workspace" / "sessions"
+    root.mkdir(parents=True)
+    import io, contextlib
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = ws.main(["start", "--role", "galabau", "--task", "offer",
+                      "--host", "local", "--root", str(root)])
+    assert rc == 0
+    sid = buf.getvalue().strip()
+    rec = ws.read(sid, root=root)[0]
+    assert rec["data"] == {"role": "galabau", "task": "offer",
+                           "host_tier": "tier-1", "host_id": "local"}
+
+
+def test_cli_append_data_json_preserves_nested(ws, tmp_path):
+    root = tmp_path / "workspace" / "sessions"
+    root.mkdir(parents=True)
+    sid = ws.start("galabau", "t", root=root)
+    rc = ws.main(["append", sid, "--kind", "host.turn",
+                  "--data-json", json.dumps({"nested": {"a": [1, 2]}, "s": "x"}),
+                  "--root", str(root)])
+    assert rc == 0
+    rec = ws.read(sid, root=root)[1]
+    assert rec["data"] == {"nested": {"a": [1, 2]}, "s": "x"}   # nested preserved
+
+
+def test_cli_append_unknown_kind_exit_1(ws, tmp_path):
+    root = tmp_path / "workspace" / "sessions"
+    root.mkdir(parents=True)
+    sid = ws.start("galabau", "t", root=root)
+    rc = ws.main(["append", sid, "--kind", "not.a.kind",
+                  "--data-json", "{}", "--root", str(root)])
+    assert rc == 1                                             # Node maps → 404
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_cli_read_json_encrypted_returns_decrypted(enc_ws, tmp_path, capsys, monkeypatch):
+    # The cross-runtime contract: Python encrypts; the `read --json` CLI that
+    # the Node server calls returns DECRYPTED records.
+    root = tmp_path / "workspace" / "sessions"
+    root.mkdir(parents=True)
+    monkeypatch.setattr(enc_ws, "WORKSPACE_HOME", root)
+    sid = enc_ws.start("consultant", "memo", host="local")
+    enc_ws.append(sid, "host.turn", {"text": "secret reply"})
+    # on-disk is encrypted
+    assert b"secret reply" not in enc_ws._session_path(sid, root=root).read_bytes()
+    capsys.readouterr()
+    rc = enc_ws.main(["read", sid, "--json", "--root", str(root)])
+    assert rc == 0
+    records = json.loads(capsys.readouterr().out)
+    assert records[1]["data"]["text"] == "secret reply"        # decrypted via CLI
+
+
+@pytest.mark.skipif(not HAS_CRYPTO, reason="cryptography not installed")
+def test_cli_list_json_encrypted_returns_decrypted_meta(enc_ws, tmp_path, capsys, monkeypatch):
+    root = tmp_path / "workspace" / "sessions"
+    root.mkdir(parents=True)
+    monkeypatch.setattr(enc_ws, "WORKSPACE_HOME", root)
+    sid = enc_ws.start("consultant", "investor-memo", host="local")
+    capsys.readouterr()
+    rc = enc_ws.main(["list", "--json", "--root", str(root)])
+    assert rc == 0
+    rows = json.loads(capsys.readouterr().out)
+    assert any(r["session_id"] == sid and r["role"] == "consultant"
+               and r["task"] == "investor-memo" and r["started_at"] for r in rows)

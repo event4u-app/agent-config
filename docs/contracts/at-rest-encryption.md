@@ -72,16 +72,13 @@ never logged.
 | `workspace/documents/**/*.md` | whole-file `.md.enc`, Python-authoritative read | 062 | offer / mail / memo / brief bodies |
 | `workspace/documents/**/*.history.jsonl` | per-record (one base64 `AC1\0` line per revision) | 064 | edit metadata + SHAs |
 | `workspace/analytics/events.jsonl` | per-record (one base64 `AC1\0` line per event) | 064 | event counters; lower sensitivity |
+| `workspace/sessions/**/*.jsonl` | per-record (Python-authoritative; Node routes all 5 session endpoints through the CLI) | 064 | host replies may contain customer data |
 
-**Deferred — the remaining append-JSONL set (ADR-063 → protocol ADR-064):**
-append-heavy logs that reuse the ADR-064 per-record protocol but are not yet
-wired. They stay **plaintext** until wired. Do **not** assume they are
-protected.
+**Deferred:**
 
 | Path | Phase | Why not yet | Sensitivity |
 |---|---|---|---|
-| `workspace/sessions/**/*.jsonl` | 4 | Node reads+writes these → needs the Option-4 Node-session refactor (ADR-064 rollout step 3) | host replies may contain customer data |
-| `workspace/inbox/**/*.md` | 4 | whole-file like documents; not yet wired | rendered prompts for Tier-3 hand-off may contain customer names |
+| `workspace/inbox/**/*.md` | 4 | whole-file like documents; the Tier-3 inbox hand-off surface is not yet wired | rendered prompts for Tier-3 hand-off may contain customer names |
 
 Does **not** encrypt (v0):
 
