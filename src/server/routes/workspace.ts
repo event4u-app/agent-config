@@ -78,6 +78,20 @@ const WORKSPACE_HOSTS_CLI = join(
     '..', '..', 'cli', 'python', 'workspace_hosts.py',
 );
 
+// Role-prompt placeholder rendering (ADR-069). Python-authoritative + pure:
+// it fills `{{name}}` placeholders from caller inputs and returns the
+// `skill_hint` for the caller to act on — it never appends a skill body
+// (the inbox owns that, ADR-066). Reads role prompts from the read-only
+// `<packageRoot>/agents/roles` tree, never the write root.
+const WORKSPACE_RENDER_CLI = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..', '..', 'cli', 'python', 'workspace_render.py',
+);
+
+function rolesRoot(packageRoot: string): string {
+    return join(packageRoot, 'agents', 'roles');
+}
+
 interface HostTier {
     effective_tier: number;
     cli_present: boolean;
@@ -509,6 +523,48 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             }
             const rendered = renderExplain(body);
             return { mode: body.mode, ...rendered };
+        });
+
+        // Role-prompt rendering (ADR-069). Fills `{{name}}` placeholders from
+        // the supplied inputs and returns `{rendered, skill_hint}`. Pure: the
+        // skill body is NOT appended here — the caller (inbox hand-off / Tier-1
+        // pre-render) decides whether to attach it via the returned hint.
+        // A missing required input or an undeclared placeholder → 400.
+        app.post('/api/v1/workspace/render', async (request, reply) => {
+            const body = request.body as Record<string, unknown> | undefined;
+            const role = typeof body?.['role'] === 'string' ? (body['role'] as string) : '';
+            const prompt = typeof body?.['prompt'] === 'string' ? (body['prompt'] as string) : '';
+            const inputs = (body?.['inputs'] !== null && typeof body?.['inputs'] === 'object' && !Array.isArray(body?.['inputs']))
+                ? (body['inputs'] as Record<string, unknown>)
+                : {};
+            if (role === '' || prompt === '') {
+                await reply.code(400).send({ error: 'role and prompt are required' });
+                return reply;
+            }
+            if (opts.dryRun === true) {
+                return { role, prompt, rendered: '', skill_hint: null, dryRun: true };
+            }
+            // Inputs flow via a temp JSON file (mirrors the inbox body-file
+            // path) — values can be large / multi-line. The CLI exits 1 on a
+            // missing-required / undeclared-placeholder error → surfaced as 400.
+            await mkdir(join(opts.writeRoot, 'workspace'), { recursive: true });
+            const tmp = join(opts.writeRoot, 'workspace', `.render-${randomUUID()}.json`);
+            await writeFile(tmp, JSON.stringify(inputs), 'utf8');
+            try {
+                const { stdout } = await execFileAsync(
+                    'python3',
+                    [WORKSPACE_RENDER_CLI, 'render', '--role', role, '--prompt', prompt,
+                     '--inputs-json', tmp, '--root', rolesRoot(opts.packageRoot), '--json'],
+                    { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
+                );
+                return JSON.parse(stdout) as Record<string, unknown>;
+            } catch (err) {
+                const stderr = (err as { stderr?: string }).stderr ?? '';
+                await reply.code(400).send({ error: stderr.trim() || 'render failed', role, prompt });
+                return reply;
+            } finally {
+                await rm(tmp, { force: true });
+            }
         });
 
         // Tier-3 host hand-off inbox (ADR-065). Ships dark: when the flag is

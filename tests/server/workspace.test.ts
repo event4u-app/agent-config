@@ -63,6 +63,27 @@ const ROLE_SKILLS_YML = `skills:
     why: "Locks the voice."
 `;
 
+const PROMPT_MD = `---
+name: offer-from-brief
+intent: "Turn a brief into an offer."
+inputs:
+  - name: brief
+    required: true
+    shape: "the customer brief"
+  - name: notes
+    required: false
+    shape: "extra notes"
+skill_hint: doc-coauthoring
+---
+Draft an offer from this brief:
+
+{{brief}}
+
+**Notes**
+
+{{notes}}
+`;
+
 describe('workspaceRoute', () => {
     let app: FastifyInstance;
     let tmpWrite: string;
@@ -80,6 +101,9 @@ describe('workspaceRoute', () => {
         mkdirSync(roleDir, { recursive: true });
         writeFileSync(join(roleDir, 'index.md'), ROLE_INDEX_MD);
         writeFileSync(join(roleDir, 'skills.yml'), ROLE_SKILLS_YML);
+        const promptDir = join(roleDir, 'prompts');
+        mkdirSync(promptDir, { recursive: true });
+        writeFileSync(join(promptDir, 'offer-from-brief.md'), PROMPT_MD);
 
         app = await createApp({
             writeRoot: tmpWrite,
@@ -384,5 +408,54 @@ describe('workspaceRoute', () => {
         } finally {
             delete process.env['AGENT_CONFIG_TIER3_INBOX'];
         }
+    });
+
+    // --- prompt rendering (ADR-069) ----------------------------------------
+
+    it('renders a role prompt and carries the skill_hint (not appended)', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/render',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', prompt: 'offer-from-brief',
+                       inputs: { brief: 'Build a 20m hedge.', notes: 'rush job' } },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as { rendered: string; skill_hint: string };
+        expect(body.rendered).toContain('Build a 20m hedge.');
+        expect(body.rendered).toContain('rush job');
+        expect(body.rendered).not.toContain('{{');
+        expect(body.skill_hint).toBe('doc-coauthoring');     // returned, not appended
+        expect(body.rendered).not.toContain('## Skill context');
+    });
+
+    it('renders with a missing optional input (empty, heading stays)', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/render',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', prompt: 'offer-from-brief', inputs: { brief: 'X' } },
+        });
+        expect(res.statusCode).toBe(200);
+        const body = res.json() as { rendered: string };
+        expect(body.rendered).toContain('**Notes**');         // heading not stripped
+        expect(body.rendered).not.toContain('{{notes}}');
+    });
+
+    it('returns 400 when a required input is missing', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/render',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', prompt: 'offer-from-brief', inputs: {} },
+        });
+        expect(res.statusCode).toBe(400);
+        expect((res.json() as { error: string }).error).toContain('brief');
+    });
+
+    it('returns 400 when role or prompt is missing', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/render',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', inputs: {} },
+        });
+        expect(res.statusCode).toBe(400);
     });
 });
