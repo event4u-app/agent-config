@@ -56,6 +56,7 @@ in [`gui-wizard`](gui-wizard.md) are untouched.
 | `GET  /api/v1/workspace/sessions` | List of recent sessions (≤ 20, ordered by mtime). |
 | `GET  /api/v1/workspace/sessions/:id` | Streams the JSONL log for one session. |
 | `GET  /api/v1/workspace/knowledge` | Snapshot of the current `knowledge:` memory namespace (read-only). |
+| `POST /api/v1/workspace/render` | Body: `{ role, prompt, inputs }`. Fills `{{name}}` placeholders in `prompts/<prompt>.md`; returns `{ rendered, skill_hint }`. Pure — skill body is **not** appended (ADR-069). Missing-required / undeclared-placeholder → 400. |
 
 ## Session JSONL schema
 
