@@ -111,11 +111,78 @@ def test_drive_cli_missing(wd):
 
 
 def test_drive_unsupported_host(wd):
-    # codex / gemini are Tier-1 but not wired in v0; Tier-3 hosts never drive.
-    for host in ("codex", "gemini", "augment", "nonsense"):
+    # Tier-3 hosts (and unknown ids) never drive; the three Tier-1 hosts do.
+    for host in ("augment", "cursor", "nonsense"):
         turn = wd.drive(host, "go", runner=_runner(0, _ok_envelope()))
         assert turn["ok"] is False
         assert turn["error_kind"] == "unsupported-host"
+
+
+# --- codex (NDJSON event stream) -------------------------------------------
+
+def _codex_stream(text="Codex reply.", sid="cx-1", in_tok=10, out_tok=20):
+    return "\n".join([
+        json.dumps({"type": "session.created", "session_id": sid}),
+        json.dumps({"type": "item.completed", "item": {"id": "i1", "content": [{"text": text}]}}),
+        json.dumps({"type": "turn.completed", "usage": {"input_tokens": in_tok, "output_tokens": out_tok}}),
+    ])
+
+
+def test_drive_codex_ndjson(wd):
+    turn = wd.drive("codex", "go", runner=_runner(0, _codex_stream()))
+    assert turn["ok"] is True and turn["host"] == "codex"
+    assert turn["text"] == "Codex reply."
+    assert turn["session_id"] == "cx-1"
+    assert turn["usage"] == {"input_tokens": 10, "output_tokens": 20}
+
+
+def test_drive_codex_skips_unknown_events_and_order(wd):
+    stream = "\n".join([
+        json.dumps({"type": "turn.completed", "usage": {"input_tokens": 1, "output_tokens": 2}}),
+        "not json — skipped",
+        json.dumps({"type": "mystery.event", "x": 1}),
+        json.dumps({"type": "item.completed", "item": {"content": [{"text": "late text"}]}}),
+    ])
+    turn = wd.drive("codex", "go", runner=_runner(0, stream))
+    assert turn["ok"] is True and turn["text"] == "late text"
+
+
+def test_drive_codex_no_text_fails_closed(wd):
+    stream = json.dumps({"type": "turn.completed", "usage": {"input_tokens": 1, "output_tokens": 2}})
+    turn = wd.drive("codex", "go", runner=_runner(0, stream))
+    assert turn["ok"] is False and turn["error_kind"] == "bad-envelope"
+
+
+# --- gemini (single JSON, nested stats) ------------------------------------
+
+def _gemini_env(response="Gemini reply.", sid="gm-1"):
+    return json.dumps({
+        "session_id": sid, "response": response,
+        "stats": {"models": {"gemini-3-flash-preview": {
+            "tokens": {"input": 100, "prompt": 100, "total": 130, "candidates": 1}}}},
+    })
+
+
+def test_drive_gemini_json(wd):
+    turn = wd.drive("gemini", "go", runner=_runner(0, _gemini_env()))
+    assert turn["ok"] is True and turn["host"] == "gemini"
+    assert turn["text"] == "Gemini reply."
+    assert turn["session_id"] == "gm-1"
+    assert turn["model"] == "gemini-3-flash-preview"
+    assert turn["usage"] == {"input_tokens": 100, "output_tokens": 30}
+
+
+def test_drive_gemini_missing_response_fails_closed(wd):
+    env = json.dumps({"session_id": "x", "stats": {}})
+    turn = wd.drive("gemini", "go", runner=_runner(0, env))
+    assert turn["ok"] is False and turn["error_kind"] == "bad-envelope"
+
+
+def test_drive_gemini_tolerates_missing_stats(wd):
+    env = json.dumps({"session_id": "x", "response": "ok"})
+    turn = wd.drive("gemini", "go", runner=_runner(0, env))
+    assert turn["ok"] is True and turn["text"] == "ok"
+    assert turn["usage"] is None and turn["model"] is None
 
 
 def test_drive_empty_prompt(wd):
@@ -162,6 +229,26 @@ def test_contract_real_claude_envelope_has_result(wd):
     # Either it drove successfully (envelope had `result`) or it failed for an
     # operational reason (no auth / rate limit) — but NOT because the contract
     # key vanished. A bad-envelope here is the drift signal we want to catch.
+    if not turn["ok"]:
+        assert turn["error_kind"] != "bad-envelope", f"envelope drift: {turn['error']}"
+    else:
+        assert isinstance(turn["text"], str)
+
+
+@pytest.mark.skipif(shutil.which("codex") is None, reason="codex CLI not installed")
+def test_contract_real_codex_envelope_has_item_text(wd):
+    """Catches codex NDJSON drift (item.completed / turn.completed renamed)."""
+    turn = wd.drive("codex", "Reply with the single word: ok", timeout=90)
+    if not turn["ok"]:
+        assert turn["error_kind"] != "bad-envelope", f"envelope drift: {turn['error']}"
+    else:
+        assert isinstance(turn["text"], str)
+
+
+@pytest.mark.skipif(shutil.which("gemini") is None, reason="gemini CLI not installed")
+def test_contract_real_gemini_envelope_has_response(wd):
+    """Catches gemini drift (the `response` key renamed)."""
+    turn = wd.drive("gemini", "Reply with the single word: ok", timeout=90)
     if not turn["ok"]:
         assert turn["error_kind"] != "bad-envelope", f"envelope drift: {turn['error']}"
     else:

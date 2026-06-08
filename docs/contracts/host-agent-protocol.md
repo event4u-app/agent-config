@@ -67,12 +67,15 @@ their semver, not derived from unstable stdout parsing.
 
 - The workspace v0 ships against **Claude Code** as the single Tier-1 host.
   Codex and Gemini are wired but secondary (no skill surface — see ADR-024).
-  The single-turn drive executor for Claude Code lands in
+  The single-turn drive executor lands in
   [`ADR-070`](../decisions/ADR-070-tier1-drive-loop.md)
-  (`src/cli/python/workspace_drive.py`): it spawns
-  `claude -p … --output-format json`, parses the envelope by named keys, and
-  fails closed to the Tier-3 inbox on any error. Codex / Gemini configs and
-  multi-turn / tool execution are v1.
+  (`src/cli/python/workspace_drive.py`): it spawns the host CLI, parses the
+  envelope by named keys, and fails closed to the Tier-3 inbox on any error.
+  All three Tier-1 hosts are wired —
+  [`ADR-072`](../decisions/ADR-072-codex-gemini-drive-configs.md) adds the
+  `codex` (`codex exec --json`, NDJSON) and `gemini`
+  (`gemini -p … --output-format json`) configs alongside `claude-code`.
+  Multi-turn / tool execution remain v1.
 - Tier-3 hosts get the **inbox handoff** fallback only: workspace writes the
   rendered prompt + skill body into the inbox file and surfaces a one-line
   copy-to-clipboard banner. No tighter integration is attempted in v0.
