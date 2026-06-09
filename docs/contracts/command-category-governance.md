@@ -1,11 +1,35 @@
-# Command-category governance — Phase-2 hand-off
+# Command-category governance
 
-> **Status:** hand-off stub. The `category:` lint (positioning roadmap "step 7b")
-> was **re-cut from Phase 0 to Phase 2** per AI-council convergence
-> (claude-sonnet-4-5 + gpt-4o, 2026-06-09): it is product/governance judgment,
-> not a CI-plumbing guardrail, and it should follow the Phase-2 **ownership map**
-> rather than bottleneck on one architect making 125 calls. This doc is the
-> bridge so the decision is not relitigated.
+> **Status (2026-06-09):** Phase-2b resolved as **Option 1 (light)** — an
+> AI-council tie-break (claude-sonnet-4-5 + gpt-4o) chose light over a
+> full/blocking lint, decisively: no consumer reads `category:` today, so
+> populating all 54 + blocking CI is "supply without demand" (YAGNI), and a
+> blocking gate on a 15%-ambiguous taxonomy enforces *presence, not correctness*
+> — mis-calls made under CI pressure surface later as a re-categorization pass
+> ("pays the cost twice"). What shipped, and the upgrade trigger, are below.
+
+## Shipped (Option 1 — light)
+
+- **`category:` defined** as an OPTIONAL enum in `command.schema.json`
+  (`flow-entry | state-query | product-surface`), **validate-when-present** —
+  a declared value must be a valid enum; absence is fine. (Note: the 150
+  `src/domains/**/command.md` files are not yet full-schema-validated — a
+  pre-existing gap, separate from this field; the enum bites wherever
+  command-schema validation runs / when a consumer reads it.)
+- **Creation-time checklist** in the [`command-writing`](../../src/skills/command-writing/SKILL.md)
+  skill: categorize a NEW top-level command at authoring; fits-none → it's a
+  skill; genuinely ambiguous → omit `category:` and note why (intentionally
+  deferred, not forgotten). Sub-commands inherit the parent cluster's category.
+
+## Deferred — until the upgrade trigger fires
+
+**Full categorization of all 54 top-level commands + a blocking lint + the
+demotion of fits-none commands** are deferred. **Upgrade trigger:** a **merged
+consumer PR** — runnable code that *reads* `category:` (routing, analytics, a
+catalog/discovery grouping, a "daily five" surface). A design doc is not the
+trigger; running code that breaks on miscategorization is. When it lands,
+population + enforcement land together in one focused PR, with the consumer's
+requirements defining the ambiguous categories unambiguously.
 
 ## The schema (to introduce in Phase 2)
 

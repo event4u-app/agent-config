@@ -176,11 +176,13 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
 - [~] Skill ownership map (CODEOWNERS-style, or a `SKILL_OWNERS` doc keyed by family) assigning a
       maintainer per family. Group-by-family makes this tractable.
       <!-- deferred (AI-council 2026-06-09): single maintainer → per-family ownership is ceremony with zero information. Deferred until a 2nd maintainer exists; the `owner:` field then becomes a skill-family-map.yml column, not a separate CODEOWNERS. Recorded in docs/governance.md § Deferred governance. -->
-- [ ] **Command `category:` lint (from Phase-0 step 7b).** Introduce the `category:` frontmatter field
+- [x] **Command `category:` lint (from Phase-0 step 7b) — resolved as Option 1 (light).** Introduce the `category:` frontmatter field
       (`flow-entry | state-query | product-surface` per ADR-048), categorize the 125 visible commands
       (after the ownership map assigns owners — avoids one architect making 125 calls), decide the
       demotion path for commands that fit none, then ship the lint (warn first, then blocking). Full
       hand-off: [`docs/contracts/command-category-governance.md`](../../docs/contracts/command-category-governance.md).
+      <!-- done as Option 1 (AI-council tie-break 2026-06-09, light > full, decisive; maintainer: "Option 2 only if better — it isn't"): `category:` DEFINED as an optional validate-when-present enum in command.schema.json; creation-time categorization checklist added to the command-writing skill; full 54-categorization + blocking lint + demotion DEFERRED until a merged CONSUMER PR reads `category:` (no consumer today = supply-without-demand/YAGNI; blocking a 15%-ambiguous taxonomy enforces presence-not-correctness). Upgrade trigger + rationale in command-category-governance.md. -->
+- [ ] **(deferred → consumer-gated)** Full categorization of all 54 top-level commands + blocking `category:` lint + demotion of fits-none commands — lands in one focused PR when a consumer (routing/analytics/discovery) that reads `category:` is merged.
 - [x] Skill lifecycle policy — review cadence and active/dormant/sunset states; dormancy triggers
       *review*, not automatic deprecation. Slot it beside `persona-governance` as its skill-side sibling.
       <!-- done: docs/governance.md § Skill lifecycle policy — commit-based dormancy (git log, no last_reviewed busywork for a solo maintainer); review-not-auto-deprecate; sunset recorded in-commit. -->

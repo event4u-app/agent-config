@@ -42,6 +42,22 @@ author as a skill and add a thin command that delegates to it.
 skill. Check before authoring: [`command-clusters` § Command justification](../../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
 ([ADR-048](../../../docs/decisions/ADR-048-command-justification-rule.md)).
 
+**Categorize at creation (checklist).** When you author a NEW top-level command,
+declare its justification as a `category:` in the frontmatter — the schema enum
+is `flow-entry | state-query | product-surface`:
+
+- [ ] **flow-entry** — a daily work starting point the user TYPES to begin
+  (`work`, `git-commit`, `review-changes`).
+- [ ] **state-query** — a read-only check (`agent-status`, `project-health`, `profile`).
+- [ ] **product-surface** — a feature started deliberately (`council`, `research`, `roadmap`).
+- [ ] **fits none → it is a skill.** Don't add the command; author a skill.
+- [ ] **genuinely ambiguous?** Omit `category:` and note why — `category:` is
+  OPTIONAL (validate-when-present); deferring is intentional, not forgotten.
+
+Sub-commands (`council:debate`) inherit the parent cluster's category — leave
+`category:` off them. Why optional + not yet a blocking lint, and what triggers
+the upgrade: [`command-category-governance`](../../../docs/contracts/command-category-governance.md).
+
 ## Commands ARE Claude skills (projection reality)
 
 Every command in `src/agent-src/commands/{name}.md` is projected
