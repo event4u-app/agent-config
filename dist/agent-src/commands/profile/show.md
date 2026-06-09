@@ -32,6 +32,15 @@ python3 -m scripts.config.session_profiles show --json
 
 Fields: `active_packs`, `commands_shown`, `skills_shown`, `hidden_total`.
 
+For a **non-technical employee**, render plain language instead — deterministic
+template (no LLM), the right content for an employee-facing surface:
+
+```bash
+python3 -m scripts.config.session_profiles show --plain
+```
+
+Shape: [`session-profile-overlay` § Plain status surface](../../../../docs/contracts/session-profile-overlay.md#plain-status-surface).
+
 ### 2. Report
 
 - **No overlay** (`active_packs` empty):

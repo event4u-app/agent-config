@@ -112,6 +112,35 @@ axis (ADR-010 addendum) so it adds no new axis despite sharing the word.
 - Hook: `scripts/profile_staleness_hook.py` (session_start staleness notice).
 - Tests: `tests/test_session_profiles.py`.
 
+## Plain status surface
+
+`/profile show --plain` renders the active-overlay state in plain language for a
+**non-technical employee** — "which profile, what it surfaces/hides, why the
+agent behaves differently" — over the existing `show` state, with **zero new
+overlay logic**.
+
+It is a **deterministic, template-based** render (`session_profiles.format_plain_status`),
+**never LLM-generated**: a pure function of the `show` JSON
+(`active_packs`, `commands_shown`, `skills_shown`, `hidden_total`). This is a hard
+constraint — it removes any hidden-pack-name leak or hallucination surface, and
+lets the golden tests pin the output byte-for-byte.
+
+The render says, for an active overlay:
+
+1. the active profile/pack name(s);
+2. how many commands + skills you'll **see**;
+3. how many items are **hidden** behind packs you haven't turned on (this doubles
+   as the "what changed vs the full surface" line);
+4. that the overlay **persists across sessions** until `/profile deactivate`.
+
+With no overlay it states the full surface is active.
+
+**Staleness is rendered as persistence, not an age-in-days.** The overlay
+(`runtime.active_packs`) carries no timestamp, and adding one would change overlay
+semantics — out of scope for this surface. A future age-in-days render is a
+separate, semantics-touching change (an overlay set-time), not a plain-render
+concern. The session-boundary reminder remains the `stale-notice` hook's job.
+
 ## See also
 
 - [`ADR-010 addendum`](../decisions/ADR-010-profile-pack-preset-boundary.md) — overlay ≠ fifth axis.

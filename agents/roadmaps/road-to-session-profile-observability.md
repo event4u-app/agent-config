@@ -92,19 +92,19 @@ no new UI substrate, and no connector. The two real phases are small; Phase 3 is
 Goal: a non-technical employee can see the active profile, what it surfaces/hides, and how stale it is, in
 one plain-language reply — over the **existing** `session_profiles.py` state, with zero new overlay logic.
 
-- [ ] Author a plain-mode contract addendum (`docs/contracts/session-profile-overlay.md` § "Plain status
+- [x] Author a plain-mode contract addendum (`docs/contracts/session-profile-overlay.md` § "Plain status
       surface") — the human-readable shape of an active-profile summary: active profile name, "you'll see
       X tasks / Y are hidden behind packs you haven't turned on", staleness age in days, and a one-line
       "what changed vs the full surface" sentence. **Template-based only** — the summary is a deterministic
       render of `show`/`surface` JSON, never LLM-generated prose (no hidden-pack-name leak, no
       hallucination surface).
-- [ ] Extend `/profile show` with a `--plain` flag (and make plain the default when invoked through the
+- [x] Extend `/profile show` with a `--plain` flag (and make plain the default when invoked through the
       employee-facing surface) that renders the addendum's template from the existing
       `session_profiles.py show|surface` JSON. No change to `activate|deactivate|surface` semantics.
-- [ ] Coverage — extend `tests/test_session_profiles.py` with golden plain-render cases: no overlay (full
+- [x] Coverage — extend `tests/test_session_profiles.py` with golden plain-render cases: no overlay (full
       surface), single-pack overlay, multi-pack overlay, and a stale overlay (staleness age rendered).
       Run the targeted test once locally to confirm the goldens. <!-- carve-out: new-gate-verification -->
-- [ ] Cross-reference note — record that when the daily-workspace right-rail (employee-product Phase 4)
+- [x] Cross-reference note — record that when the daily-workspace right-rail (employee-product Phase 4)
       next gets touched, this plain summary is the content it should surface. Do **not** build new
       workspace UI here; this roadmap stays CLI + contract + tests (host agents own their UX).
 

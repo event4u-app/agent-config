@@ -196,3 +196,36 @@ def test_stale_notice_when_overlay_present(fake_repo: Path) -> None:
 
 def test_stale_notice_none_when_empty(fake_repo: Path) -> None:
     assert sp.stale_notice(fake_repo) is None
+
+
+# --- plain status surface (Phase 1, road-to-session-profile-observability) ---
+# Goldens for the deterministic, template-based plain render. format_plain_status
+# is a pure function of the `show` JSON — these pin it byte-for-byte (no LLM, no
+# hidden-pack-name leak). Staleness is rendered as PERSISTENCE, not age-in-days.
+
+def test_plain_no_overlay_full_surface() -> None:
+    out = sp.format_plain_status([], commands_shown=150, skills_shown=227, hidden_total=0)
+    assert out == (
+        "No profile is active — you see the full surface: every command and skill is available."
+    )
+
+
+def test_plain_single_pack_overlay() -> None:
+    out = sp.format_plain_status(["engineering-base"], commands_shown=40, skills_shown=60, hidden_total=167)
+    assert "Profile active: engineering-base." in out
+    assert "You'll see 40 commands and 60 skills." in out
+    assert "167 item(s) are hidden behind packs you haven't turned on" in out
+    # staleness rendered as persistence, never an age-in-days
+    assert "persists across sessions until you run `/profile deactivate`" in out
+    assert "days" not in out
+
+
+def test_plain_multi_pack_overlay_joins_names() -> None:
+    out = sp.format_plain_status(["finance-basic", "finance-advanced"], commands_shown=12, skills_shown=20, hidden_total=345)
+    assert "Profile active: finance-basic, finance-advanced." in out
+
+
+def test_plain_render_is_deterministic() -> None:
+    a = sp.format_plain_status(["ops-people"], 30, 50, 100)
+    b = sp.format_plain_status(["ops-people"], 30, 50, 100)
+    assert a == b

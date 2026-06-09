@@ -6,10 +6,10 @@
 
 ## Overall
 
-**37 / 67 steps done · 55%**
+**41 / 67 steps done · 61%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+████████████████████████░░░░░░░░░░░░░░░░   61%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 30 | 2 | 24 | 4 | 0 | █████████░ 92% |
-| 3 | [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md) | 3 | 10 | 6 | 4 | 0 | 0 | ████░░░░░░ 40% |
 | 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
 
@@ -49,11 +49,11 @@
 
 ### [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md)
 
-**Session-Profile Observability for Employees — make "which profile, what changed, why" legible without a CLI** — 0 / 10 done (0%)
+**Session-Profile Observability for Employees — make "which profile, what changed, why" legible without a CLI** — 4 / 10 done (40%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Plain-language profile surface (read the existing state, say it in human words) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Plain-language profile surface (read the existing state, say it in human words) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Profile-overlay explain envelope ("why is the agent behaving differently?") | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Overlay-integrity guard + employee task-type gap audit | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
