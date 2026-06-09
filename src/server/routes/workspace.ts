@@ -669,6 +669,14 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
                 return { id: params.id, role, task, host, driven: false, dryRun: true };
             }
 
+            // Record the user's follow-up prompt as a launcher.input (followup)
+            // BEFORE driving (ADR-083), so the thread view shows the question
+            // even if the turn then fails. The workspace is per-user / local
+            // (daily-workspace § State scope), so this is the same user's text
+            // at the same encryption-at-rest tier as every other record — no new
+            // privacy surface. Reuses launcher.input (no new record kind).
+            await appendSession(opts.writeRoot, params.id, 'launcher.input', { role, task, prompt, followup: true });
+
             const gateState = await driveGate(opts.writeRoot, host);
             if (gateState === 'open') {
                 await appendSession(opts.writeRoot, params.id, 'host.error', { error_kind: 'host-killed', error: `host ${host} is killed` });

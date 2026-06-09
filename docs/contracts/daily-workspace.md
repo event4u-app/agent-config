@@ -55,7 +55,7 @@ in [`gui-wizard`](gui-wizard.md) are untouched.
 | `POST /api/v1/workspace/launch` | Body: `{ role, task, inputs?, host? }`. Writes a session header; resolves host tier (ADR-068). On a **tier-1** host whose task resolves to a prompt, renders (ADR-069) + drives one turn (ADR-070/071), appending `host.turn`/`host.error`. Tier-3 / drive failure degrades to the inbox hand-off (best-effort). Always 200 with `{driven, turn?\|reason?\|error_kind?, handoff?}`. |
 | `GET  /api/v1/workspace/sessions` | List of recent sessions (≤ 20, ordered by mtime). |
 | `GET  /api/v1/workspace/sessions/:id` | Streams the JSONL log for one session. |
-| `POST /api/v1/workspace/sessions/:id/continue` | Body: `{ prompt }`. Continues the conversation in the same host session (ADR-076) — resumes by the `session_id` on the latest `host.turn` (`--resume`), appends another `host.turn`. 409 if no host turn has run yet; **410** if the host session has expired (ADR-080); same kill-switch gate as launch. |
+| `POST /api/v1/workspace/sessions/:id/continue` | Body: `{ prompt }`. Continues the conversation in the same host session (ADR-076) — records the prompt (`launcher.input` `followup:true`, ADR-083), resumes by the `session_id` on the latest `host.turn` (`--resume`), appends another `host.turn`. 409 if no host turn has run yet; **410** if the host session has expired (ADR-080); same kill-switch gate as launch. |
 | `GET  /api/v1/workspace/knowledge` | Snapshot of the current `knowledge:` memory namespace (read-only). |
 | `POST /api/v1/workspace/render` | Body: `{ role, prompt, inputs }`. Fills `{{name}}` placeholders in `prompts/<prompt>.md`; returns `{ rendered, skill_hint }`. Pure — skill body is **not** appended (ADR-069). Missing-required / undeclared-placeholder → 400. |
 | `GET  /api/v1/workspace/drive-health` | `?host=<id>` for one host, omitted for all. Read-only per-host kill-switch cache (ADR-073/074): `{ consecutive_failures, killed, kill_reason, killed_at, trip_count, total_success, total_failure, … }`. Auto-tripped hosts self-recover via a half-open probe after `AGENT_CONFIG_DRIVE_COOLDOWN_SEC` (default 600 s); manual kills are sticky. Fails open (missing cache → empty). |
@@ -75,7 +75,7 @@ Each line is one JSON record with the shared envelope:
 
 Event kinds:
 
-- `launcher.input` — `{ role, task, rendered_prompt, host_tier, host_id }`
+- `launcher.input` — `{ role, task, rendered_prompt, host_tier, host_id }` (opening); a follow-up turn appends `{ role, task, prompt, followup: true }` (ADR-083)
 - `host.turn` — `{ host_id, turn_id, model, input_tokens, output_tokens, latency_ms }`
 - `host.output` — `{ host_id, turn_id, role: "assistant", text }` *(verbatim host envelope text — Tier 1 only)*
 - `host.tool` — `{ host_id, turn_id, tool_name, input, output_excerpt }` *(when the host envelope surfaces it)*

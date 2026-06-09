@@ -618,6 +618,32 @@ describe('workspaceRoute', () => {
         expect(res.statusCode).toBe(400);
     });
 
+    it('continue records the user follow-up prompt for the thread (ADR-083)', async () => {
+        // host 'augment' is not a drivable HOST_CONFIGS entry → driveHostTurn
+        // fails fast with unsupported-host (no real CLI spawn), keeping this
+        // hermetic. The followup launcher.input is appended BEFORE the drive.
+        const launch = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/launch',
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { role: 'galabau', task: 'Offer drafting', host: 'augment', inputs: { brief: 'x' } },
+        });
+        const id = (launch.json() as { id: string }).id;
+        await app.inject({
+            method: 'POST', url: `/api/v1/workspace/sessions/${id}/append`,
+            headers: { ...AUTH, 'content-type': 'application/json' },
+            payload: { kind: 'host.turn', data: { session_id: 'hs-1', text: 'first' } },
+        });
+        await app.inject({
+            method: 'POST', url: `/api/v1/workspace/sessions/${id}/continue`,
+            headers: { ...AUTH, 'content-type': 'application/json' }, payload: { prompt: 'make it shorter' },
+        });
+        const read = await app.inject({ method: 'GET', url: `/api/v1/workspace/sessions/${id}`, headers: AUTH });
+        const log = (read.json() as { log: Array<{ kind: string; data: Record<string, unknown> }> }).log;
+        const followup = log.find((e) => e.kind === 'launcher.input' && e.data['followup'] === true);
+        expect(followup).toBeTruthy();
+        expect(followup?.data['prompt']).toBe('make it shorter');
+    });
+
     it('continue returns 404 for an unknown session', async () => {
         const res = await app.inject({
             method: 'POST', url: '/api/v1/workspace/sessions/nope/continue',
