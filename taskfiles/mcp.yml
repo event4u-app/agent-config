@@ -26,6 +26,14 @@ tasks:
     cmds:
       - python3 src/scripts/mcp_telemetry_health.py {{.CLI_ARGS}}
 
+  mcp:glama-test:
+    desc: "Reproduce glama.ai's build/run env in Docker and smoke-test the MCP handshake (local working tree, offline). See internal/glama/README.md."
+    cmds:
+      - |
+        command -v docker >/dev/null 2>&1 || { echo "❌  docker not found — install Docker to run the glama-parity test"; exit 1; }
+      - docker build -f internal/glama/Dockerfile -t agent-config-mcp-glama-test .
+      - docker run --rm agent-config-mcp-glama-test /opt/venv/bin/python /app/internal/glama/smoke.py
+
   # ---------------------------------------------------------------------------
   # Cloudflare hosted MCP — one-time operator setup.
   #
