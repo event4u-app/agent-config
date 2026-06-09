@@ -116,6 +116,10 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
             const payload = overrides.health ?? { health: {} };
             return new Response(JSON.stringify(payload), { status: 200 });
         }
+        if (/\/api\/v1\/workspace\/drive-health\/[^/]+\/reset$/.test(path) && method === 'POST') {
+            const host = path.split('/')[5];
+            return new Response(JSON.stringify({ host, state: { killed: false } }), { status: 200 });
+        }
         if (path === '/api/v1/workspace/hosts' && method === 'GET') {
             const payload = overrides.hosts ?? { hosts: [
                 { id: 'claude-code', cli_present: true, effective_tier: 1 },
@@ -454,6 +458,49 @@ describe('WorkspacePage', () => {
             });
             const launch = mock.calls.find((c) => c.path === '/api/v1/workspace/launch');
             expect(launch?.body).toMatchObject({ host: 'codex' });
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('health panel reset button resets a killed host (ADR-081)', async () => {
+        const mock = installWorkspaceFetchMock({
+            health: { health: {
+                codex: { killed: true, kill_reason: 'auto', consecutive_failures: 5, trip_count: 1,
+                         total_success: 0, total_failure: 5, last_error_kind: 'timeout' },
+            } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByRole } = render(<WorkspacePage />);
+            const reset = await findByRole('button', { name: /Reset codex/ });
+            fireEvent.click(reset);
+            await waitFor(() => {
+                expect(mock.calls.some((c) => c.path === '/api/v1/workspace/drive-health/codex/reset' && c.method === 'POST')).toBe(true);
+            });
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('a 410 on follow-up shows the session-expired affordance', async () => {
+        const mock = installWorkspaceFetchMock({
+            sessions: { sessions: [] },
+            continueTurn: { status: 410, body: { error: { code: 'GONE', message: 'host session expired' } } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole, queryByRole } = render(<WorkspacePage />);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'x' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await findByText('Here is your drafted offer.');
+            fireEvent.input(await findByRole('textbox', { name: /Follow-up prompt/ }), { target: { value: 'more' } });
+            fireEvent.click(await findByRole('button', { name: /Send follow-up/ }));
+            await findByText(/Host session expired — pick a task above/);
+            expect(queryByRole('textbox', { name: /Follow-up prompt/ })).toBeNull();   // form gone
         } finally {
             mock.restore();
         }

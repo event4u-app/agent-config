@@ -847,6 +847,25 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             }
         });
 
+        // Clear a host's kill-switch (ADR-081). Operator action for a paused
+        // host — auto-recovery (ADR-074) handles transient trips, this is the
+        // manual escape hatch (and the only path for a sticky manual kill).
+        app.post('/api/v1/workspace/drive-health/:host/reset', async (request, reply) => {
+            const params = request.params as { host: string };
+            try {
+                const { stdout } = await execFileAsync(
+                    'python3',
+                    [WORKSPACE_HEALTH_CLI, 'reset', '--host', params.host, '--root', healthRoot(opts.writeRoot)],
+                    { timeout: 5_000 },
+                );
+                return { host: params.host, state: JSON.parse(stdout) as unknown };
+            } catch (err) {
+                // An invalid host id is rejected by the CLI root/charset guard.
+                await reply.code(400).send({ error: 'reset failed', host: params.host, detail: ((err as { stderr?: string }).stderr ?? '').trim() });
+                return reply;
+            }
+        });
+
         // Tier-1 host availability (ADR-079). Lets the GUI host picker annotate
         // / disable hosts whose CLI is absent, so a user doesn't pick a host
         // that will only degrade to the inbox. Side-effect-free PATH probe.

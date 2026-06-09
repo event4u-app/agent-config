@@ -164,6 +164,7 @@ const showFullTurn = signal(false);
 // in-flight follow-up prompt + busy flag for the active session.
 const followupText = signal('');
 const continuing = signal(false);
+const sessionGone = signal(false);     // 410: host session expired (ADR-080/081)
 
 const DRIVE_HOST = 'claude-code';      // v0: single hard-coded tier-1 host (council)
 const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
@@ -216,6 +217,7 @@ async function launch(role: string, task: string, inputs: Record<string, string>
     launching.value = true;
     showFullTurn.value = false;
     followupText.value = '';        // a new launch starts a fresh conversation
+    sessionGone.value = false;
     try {
         const res = await apiFetch<LaunchResult>(
             '/api/v1/workspace/launch',
@@ -257,13 +259,29 @@ async function continueTurn(sessionId: string, prompt: string): Promise<void> {
         const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
         sessions.value = s.sessions;
     } catch (err) {
-        if (err instanceof ApiCallError) {
+        if (err instanceof ApiCallError && err.status === 410) {
+            // The host session expired (ADR-080) — this conversation can't be
+            // continued; prompt the user to start a fresh one.
+            sessionGone.value = true;
+            launchBanner.value = 'Host session expired — start a new conversation.';
+        } else if (err instanceof ApiCallError) {
             launchBanner.value = err.body?.error?.message ?? err.message;
         } else {
             launchBanner.value = err instanceof Error ? err.message : String(err);
         }
     } finally {
         continuing.value = false;
+    }
+}
+
+// Reset a paused host's kill-switch (ADR-081), then refresh the health snapshot.
+async function resetHost(host: string): Promise<void> {
+    try {
+        await apiFetch(`/api/v1/workspace/drive-health/${host}/reset`, { method: 'POST' });
+        const h = await apiFetch<{ health: Record<string, HostHealth> }>('/api/v1/workspace/drive-health');
+        driveHealth.value = h.health ?? {};
+    } catch {
+        // non-fatal: leave the panel as-is; the operator can retry.
     }
 }
 
@@ -382,6 +400,11 @@ function TurnResult(): preact.JSX.Element | null {
                     {r.turn.model ?? DRIVE_HOST} · in {usage.input_tokens ?? 0} / out {usage.output_tokens ?? 0} tokens
                 </p>
             ) : null}
+            {sessionGone.value ? (
+                <p class="ac-workspace__followup-gone" role="status">
+                    Host session expired — pick a task above to start a new conversation.
+                </p>
+            ) : (
             <form
                 class="ac-workspace__followup"
                 onSubmit={(e): void => {
@@ -407,6 +430,7 @@ function TurnResult(): preact.JSX.Element | null {
                     {continuing.value ? 'Continuing…' : 'Send follow-up'}
                 </button>
             </form>
+            )}
         </section>
     );
 }
@@ -562,6 +586,16 @@ function DriveHealthPanel(): preact.JSX.Element {
                                         {h.consecutive_failures} fail streak
                                         {h.last_error_kind != null ? ` · ${h.last_error_kind}` : ''}
                                     </span>
+                                    {h.killed ? (
+                                        <button
+                                            type="button"
+                                            class="ac-button ac-workspace__health-reset"
+                                            aria-label={`Reset ${host}`}
+                                            onClick={(): void => { void resetHost(host); }}
+                                        >
+                                            Reset
+                                        </button>
+                                    ) : null}
                                 </li>
                             );
                         })}
