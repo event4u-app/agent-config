@@ -1,0 +1,64 @@
+name: glama MCP smoke
+
+# Reproduces glama.ai's build/run environment in Docker and asserts the
+# stdio MCP server boots + speaks MCP (`task mcp:glama-test` ->
+# internal/glama/{build,run} + smoke.py). Catches the failure surface WE
+# own — the 2026-06-04 `scripts/` -> `src/scripts/` move broke the build
+# and only surfaced when glama failed to sync.
+#
+# Shape decided by AI council 2026-06-09 (anthropic/claude-sonnet-4-5 +
+# openai/gpt-4o, converged):
+#   - path-filtered to the MCP-build surface + weekly cron on main (bitrot)
+#   - NON-BLOCKING / informational: the failure domain includes third-party
+#     registries (Docker Hub, nodesource, astral.sh, PyPI) we do not control.
+#     Do NOT add this check to the required-checks set in
+#     docs/contracts/branch-protection-policy.md. Failures stay visible (red)
+#     so the forcing function works: a glama sync failure audits ignored runs.
+#   - no retry day-1 (the regression was deterministic, not transient)
+#   - kill switch: repo variable SMOKE_TEST_ENABLED=false disables it.
+#
+# Proves: our build artifacts + content roots boot in a Debian + Node 24 +
+# mcp-proxy container. Does NOT prove glama's sync succeeds (their clone,
+# timeouts, and generated Dockerfile live on their side).
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "internal/glama/**"
+      - "src/scripts/mcp_server/**"
+      - "src/scripts/_lib/**"
+      - "dist/agent-src/**"
+      - "docs/guidelines/**"
+      - "package.json"
+      - ".dockerignore"
+      - "taskfiles/mcp.yml"
+      - ".github/workflows/glama-mcp-smoke.yml"
+  schedule:
+    # Weekly bitrot guard on the default branch: pinned toolchain
+    # (node 24 / uv / python 3.11 / debian trixie) rots upstream.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  glama-smoke:
+    name: glama MCP smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Kill switch: set repository variable SMOKE_TEST_ENABLED=false to disable
+    # without deleting the workflow (auditable in repo settings history).
+    if: ${{ vars.SMOKE_TEST_ENABLED != 'false' && github.repository == 'event4u-app/agent-config' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-task
+
+      - name: Build glama-parity image and smoke the MCP handshake
+        run: task mcp:glama-test
