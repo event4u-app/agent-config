@@ -558,6 +558,26 @@ describe('WorkspacePage', () => {
         }
     });
 
+    it('refreshes drive-health after a drive (ADR-084)', async () => {
+        const mock = installWorkspaceFetchMock({ sessions: { sessions: [] } });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
+            await findByText('Host health');                    // initial load fetched health once
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'x' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await waitFor(() => {
+                const healthGets = mock.calls.filter((c) => c.path === '/api/v1/workspace/drive-health' && c.method === 'GET');
+                expect(healthGets.length).toBeGreaterThanOrEqual(2);   // load + post-drive refresh
+            });
+        } finally {
+            mock.restore();
+        }
+    });
+
     it('surfaces a load error when /api/v1/workspace/roles fails', async () => {
         const original = global.fetch;
         global.fetch = vi.fn(async (url: string | URL | Request) => {
