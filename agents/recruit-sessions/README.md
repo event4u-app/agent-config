@@ -1,6 +1,6 @@
 # Recruit sessions — external adoption proof
 
-> Roadmap home: `agents/roadmaps/road-to-employee-product-and-external-proof.md` Phase 1.
+> Roadmap home: `agents/roadmaps/archive/road-to-employee-product-and-external-proof.md` Phase 1.
 > Input contract for Phases 2 onwards: any phase whose scope is **not** validated by a recruit-session finding gets re-justified or descoped.
 
 ## What a recruit session is

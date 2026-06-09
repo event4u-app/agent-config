@@ -1,6 +1,6 @@
 # Local analytics — a 3-minute walkthrough
 
-> Phase 7 of [`road-to-employee-product-and-external-proof`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> Phase 7 of [`road-to-employee-product-and-external-proof`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md).
 > Contract: [`docs/contracts/local-analytics.md`](../contracts/local-analytics.md).
 
 ## What this is

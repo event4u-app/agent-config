@@ -118,4 +118,4 @@ AES-256-GCM was the deliberate original design).
 - Crypto layer: `src/cli/python/workspace_crypto.py`.
 - GUI store IO: `src/server/routes/workspace.ts`.
 - Prior deferral: AI-council 2026-06-07 (recorded in the roadmap Phase 8 Step 3 deferral note).
-- Roadmap: `agents/roadmaps/road-to-employee-product-and-external-proof.md` Phase 8.
+- Roadmap: `agents/roadmaps/archive/road-to-employee-product-and-external-proof.md` Phase 8.

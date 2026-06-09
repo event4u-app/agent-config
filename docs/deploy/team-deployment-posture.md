@@ -1,7 +1,7 @@
 # Team Deployment Posture
 
 > **Status** · v0 · 2026-05-24. Phase 9 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md).
 > Codifies what is shipped today, what stays cancelled-with-reason,
 > and what is reachable via existing primitives — so feedback rounds
 > 9+ asking "team SSO when?" land on a written answer.

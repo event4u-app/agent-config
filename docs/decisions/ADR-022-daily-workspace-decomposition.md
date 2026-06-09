@@ -14,7 +14,7 @@ type: forward-looking
 ## Status
 
 **Accepted** · 2026-05-24. Phase 4 Step 1 of
-[`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+[`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md).
 Records the council's verdict on the original "workspace shape"
 question — that the question was malformed — and replaces a single
 chrome decision with three sequenced sub-decisions.
@@ -29,7 +29,7 @@ number under the new strategy.
 
 Companion artefacts:
 
-- Roadmap: [`agents/roadmaps/road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md)
+- Roadmap: [`agents/roadmaps/archive/road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md)
 - Council question: [`agents/decisions/open-questions/daily-workspace-shape.md`](../../agents/decisions/open-questions/daily-workspace-shape.md)
 - Council verdict: `agents/runtime/council/responses/daily-workspace-shape.json` (gitignored) <!-- council-ref-allowed: ADR decision trace -->
 - Predecessor ADRs: [`ADR-014`](ADR-014-gui-framework-choice.md) (installer chrome), [`ADR-016`](ADR-016-installer-architecture.md) (installer architecture), [`ADR-020`](ADR-020-global-only-consumer-scope.md) (consumer scope).
