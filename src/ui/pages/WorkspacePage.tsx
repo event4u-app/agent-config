@@ -99,6 +99,17 @@ interface DocumentSummary {
 
 type ExplainMode = 'plain' | 'technical';
 
+// Per-host drive health snapshot (ADR-073/074, surfaced read-only per ADR-078).
+interface HostHealth {
+    killed: boolean;
+    kill_reason: string | null;
+    consecutive_failures: number;
+    trip_count: number;
+    total_success: number;
+    total_failure: number;
+    last_error_kind: string | null;
+}
+
 const roles = signal<Role[]>([]);
 const sessions = signal<SessionMeta[]>([]);
 const knowledge = signal<KnowledgeChunk[]>([]);
@@ -108,6 +119,7 @@ const loaded = signal(false);
 const loadError = signal<string | null>(null);
 const launchBanner = signal<string | null>(null);
 const explainMode = signal<ExplainMode>('plain');
+const driveHealth = signal<Record<string, HostHealth>>({});
 // Drive integration (ADR-075). Tasks-with-input-specs for the selected role,
 // the inline form's open task + field values, the in-flight flag, and the last
 // driven turn / outcome.
@@ -128,16 +140,20 @@ const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
 async function load(): Promise<void> {
     loadError.value = null;
     try {
-        const [r, s, k, d] = await Promise.all([
+        const [r, s, k, d, h] = await Promise.all([
             apiFetch<{ roles: Role[] }>('/api/v1/workspace/roles'),
             apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20'),
             apiFetch<{ chunks: KnowledgeChunk[] }>('/api/v1/workspace/knowledge?limit=20'),
             apiFetch<{ documents: DocumentSummary[] }>('/api/v1/workspace/documents?limit=20'),
+            // Health is non-critical — never let it fail the page load.
+            apiFetch<{ health: Record<string, HostHealth> }>('/api/v1/workspace/drive-health')
+                .catch(() => ({ health: {} as Record<string, HostHealth> })),
         ]);
         roles.value = r.roles;
         sessions.value = s.sessions;
         knowledge.value = k.chunks;
         recentDocs.value = d.documents;
+        driveHealth.value = h.health ?? {};
         loaded.value = true;
     } catch (err) {
         if (err instanceof ApiCallError) {
@@ -484,6 +500,42 @@ function RecentDocs(): preact.JSX.Element {
     );
 }
 
+// Read-only per-host drive health (ADR-078). Surfaces the kill-switch state so
+// an operator can see why a host isn't driving + whether it is auto-recovering.
+// Reset stays a CLI action in v0 (auto-cooldown handles the common case).
+function DriveHealthPanel(): preact.JSX.Element {
+    const hosts = Object.values(driveHealth.value);
+    const unhealthy = hosts.filter((h) => h.killed || h.consecutive_failures > 0);
+    return (
+        <section class="ac-workspace__drive-health" aria-labelledby="drive-health-heading">
+            <h2 id="drive-health-heading" class="ac-workspace__heading">Host health</h2>
+            {unhealthy.length === 0 ? (
+                <p class="ac-workspace__empty">All hosts healthy.</p>
+            ) : (
+                <ul class="ac-workspace__health-list">
+                    {Object.entries(driveHealth.value)
+                        .filter(([, h]) => h.killed || h.consecutive_failures > 0)
+                        .map(([host, h]) => {
+                            const state = h.killed
+                                ? (h.kill_reason === 'manual' ? 'paused (manual)' : 'paused — auto-recovering')
+                                : 'degraded';
+                            return (
+                                <li key={host} class="ac-workspace__health" data-killed={h.killed ? 'true' : 'false'}>
+                                    <span class="ac-workspace__health-host">{host}</span>
+                                    <span class="ac-workspace__health-state">{state}</span>
+                                    <span class="ac-workspace__health-meta">
+                                        {h.consecutive_failures} fail streak
+                                        {h.last_error_kind != null ? ` · ${h.last_error_kind}` : ''}
+                                    </span>
+                                </li>
+                            );
+                        })}
+                </ul>
+            )}
+        </section>
+    );
+}
+
 function ExplainToggle(): preact.JSX.Element {
     const mode = explainMode.value;
     return (
@@ -576,6 +628,7 @@ export function WorkspacePage(): preact.JSX.Element {
                 <aside class="ac-workspace__rail" aria-label="Knowledge and documents">
                     <KnowledgePane />
                     <RecentDocs />
+                    <DriveHealthPanel />
                     <ExplainToggle />
                 </aside>
             </div>

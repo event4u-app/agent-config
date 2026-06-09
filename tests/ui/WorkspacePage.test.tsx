@@ -25,6 +25,7 @@ interface FixtureOverrides {
     tasks?: unknown;
     launch?: { status: number; body: unknown };
     continueTurn?: { status: number; body: unknown };
+    health?: unknown;
 }
 
 function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: Call[]; restore: () => void } {
@@ -108,6 +109,10 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
                     { type: 'offer', slug: 'offer-001', title: 'Offer 001', role: 'galabau', updated_at: '2026-05-25T11:00:00Z' },
                 ],
             };
+            return new Response(JSON.stringify(payload), { status: 200 });
+        }
+        if (path.startsWith('/api/v1/workspace/drive-health') && method === 'GET') {
+            const payload = overrides.health ?? { health: {} };
             return new Response(JSON.stringify(payload), { status: 200 });
         }
         if (path === '/api/v1/workspace/launch' && method === 'POST') {
@@ -371,6 +376,36 @@ describe('WorkspacePage', () => {
             fireEvent.click(await findByRole('button', { name: /Run task/ }));
             await findByText(/Prepared a hand-off/);
             expect(queryByRole('textbox', { name: /Follow-up prompt/ })).toBeNull();   // not driven → no follow-up
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('drive-health panel shows "All hosts healthy" when nothing is tripped', async () => {
+        const mock = installWorkspaceFetchMock();
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText } = render(<WorkspacePage />);
+            await findByText('Host health');
+            await findByText('All hosts healthy.');
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('drive-health panel surfaces an auto-recovering killed host', async () => {
+        const mock = installWorkspaceFetchMock({
+            health: { health: {
+                codex: { killed: true, kill_reason: 'auto', consecutive_failures: 5, trip_count: 1,
+                         total_success: 2, total_failure: 5, last_error_kind: 'timeout' },
+            } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText } = render(<WorkspacePage />);
+            await findByText('codex');
+            await findByText(/paused — auto-recovering/);
+            await findByText(/5 fail streak · timeout/);
         } finally {
             mock.restore();
         }
