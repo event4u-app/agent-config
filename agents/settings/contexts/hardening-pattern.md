@@ -23,7 +23,7 @@ Every hardened Tier 1 rule ships **four artefacts** together:
 | 1 | **Hook script** (platform-agnostic) | `scripts/<rule>_hook.py` | This repo |
 | 2 | **Augment trampoline** | `scripts/hooks/augment-<rule>.sh` | This repo |
 | 3 | **Claude Code wiring** (Phase 4 onward) | `.claude/hooks/<rule>.sh` (symlink or shim) | This repo |
-| 4 | **Rule body update** | `.agent-src.uncondensed/rules/<rule>.md` | This repo |
+| 4 | **Rule body update** | `src/rules/<rule>.md` | This repo |
 
 The hook script is the **truth**; the trampolines are thin shims; the
 rule body cites the hook as the primary enforcement and demotes the
@@ -109,5 +109,5 @@ the hook script lives outside the always-budget surface.
 
 - Hook: [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
 - Trampoline: [`scripts/hooks/augment-roadmap-progress.sh`](../../scripts/hooks/augment-roadmap-progress.sh)
-- Rule body: `.agent-src.uncondensed/rules/roadmap-progress-sync.md`
+- Rule body: `src/rules/roadmap-progress-sync.md`
 - Tier classification: [`rule-trigger-matrix.md`](rule-trigger-matrix.md) (`roadmap-progress-sync` → Tier 1)

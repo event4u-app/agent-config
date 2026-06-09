@@ -56,7 +56,7 @@ member call once.
 fenced code blocks) of the agent's reply, bucketed by task class:
 `/implement-ticket`, `/work`, `/review-changes`, free-form Q&A. The
 goal is short replies; long replies are a failure mode per
-[`direct-answers`](../../.agent-src.uncondensed/rules/direct-answers.md).
+[`direct-answers`](../../src/rules/direct-answers.md).
 
 **Measurement command.**
 
@@ -146,8 +146,8 @@ class, not to extend the staleness window.
 ## See also
 
 - [`road-to-feedback-consolidation.md`](../roadmaps/road-to-feedback-consolidation.md) — owning roadmap (Phase 1)
-- [`direct-answers`](../../.agent-src.uncondensed/rules/direct-answers.md) — brevity rule the (b) metric measures against
-- [`verify-before-complete`](../../.agent-src.uncondensed/rules/verify-before-complete.md) — Iron Law the (d) metric measures
+- [`direct-answers`](../../src/rules/direct-answers.md) — brevity rule the (b) metric measures against
+- [`verify-before-complete`](../../src/rules/verify-before-complete.md) — Iron Law the (d) metric measures
 - `scripts/capture_showcase_session.py` — Phase 1.2 deliverable; computes the metrics
 - `scripts/lint_showcase_sessions.py` — Phase 1.6 deliverable; CI gate
 - [`memory-visibility-v1.md`](../../docs/contracts/memory-visibility-v1.md) — Phase 4.1 contract; provides the trace lines (c) reads

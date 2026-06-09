@@ -82,4 +82,4 @@ session per the roadmap's Phase 1+ discipline.
 
 - [`../roadmaps/road-to-multi-stack.md`](../roadmaps/road-to-multi-stack.md) — governing roadmap
 - [`../roadmaps/road-to-stronger-skills.md`](../roadmaps/road-to-stronger-skills.md) — pattern-compliance baseline for new skills
-- [`../../.agent-src.uncondensed/rules/augment-portability.md`](../../.agent-src.uncondensed/rules/augment-portability.md) — portability gate
+- [`../../src/rules/augment-portability.md`](../../src/rules/augment-portability.md) — portability gate

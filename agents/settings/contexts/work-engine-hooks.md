@@ -25,7 +25,7 @@ Three guarantees the layer enforces:
 
 - **Insertion-ordered.** Callbacks fire in registration order. No
   priorities, no implicit reorder.
-- **Single emit point.** [`HookRunner.emit`](../../.agent-src.uncondensed/templates/scripts/work_engine/hooks/runner.py)
+- **Single emit point.** [`HookRunner.emit`](../../src/agent-src/templates/scripts/work_engine/hooks/runner.py)
   is the only path; `dispatcher.py` and `cli.py` carry no hook
   bookkeeping.
 - **Default-off.** Master switch `hooks.enabled` defaults to
@@ -46,7 +46,7 @@ regardless of platform:
   phase boundaries. Cooperative.
 - **ENGINE** — the work-engine fires its own `before_*` /
   `after_*` events around `dispatch()` and registered hooks
-  (see [`builtin/`](../../.agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/))
+  (see [`builtin/`](../../src/agent-src/templates/scripts/work_engine/hooks/builtin/))
   perform the boundary work. Active only while the engine is
   running; outside that window, control falls back to the
   platform's HOOK or CHECKPOINT path.
@@ -88,7 +88,7 @@ hook. Add the event when a real consumer needs it.
 ## Three-tier error contract
 
 Defined in
-[`exceptions.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/hooks/exceptions.py)
+[`exceptions.py`](../../src/agent-src/templates/scripts/work_engine/hooks/exceptions.py)
 and enforced by `HookRunner.emit`:
 
 | Class | Semantics | Runner action |
@@ -117,14 +117,14 @@ depends on **where** the halt fires:
 | `after_save` | Yes — `_save()` already ran; surface is rendered, exit still 2 | 2 |
 
 The single source for the surface is
-[`cli._emit_halt`](../../.agent-src.uncondensed/templates/scripts/work_engine/cli.py).
+[`cli._emit_halt`](../../src/agent-src/templates/scripts/work_engine/cli.py).
 Format: each line of `halt.surface` to stderr verbatim; if
 empty, fall back to `halt: <reason>`.
 
 ## Built-in hooks
 
 Eight hooks ship under
-[`hooks/builtin/`](../../.agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/).
+[`hooks/builtin/`](../../src/agent-src/templates/scripts/work_engine/hooks/builtin/).
 Each exposes a `register(registry)` method so the registry stays
 the single source of truth for event → callback wiring. None mutate
 engine state; failures surface as `HookError` (non-fatal).
@@ -157,7 +157,7 @@ hooks:
 ```
 
 Loaded by
-[`hooks/settings.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/hooks/settings.py)
+[`hooks/settings.py`](../../src/agent-src/templates/scripts/work_engine/hooks/settings.py)
 into a frozen `HookSettings`. Defaults are permissive: a missing
 file or missing block returns `enabled=False`. Malformed YAML is
 treated as missing (silent degrade) rather than crashing the CLI.

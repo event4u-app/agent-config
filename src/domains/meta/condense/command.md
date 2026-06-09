@@ -2,12 +2,12 @@
 model_tier: medium
 name: condense
 pack: meta
-intent: "Condense .agent-src.uncondensed sources into the shipped dist/agent-src trees"
+intent: "Condense src/ sources into the shipped dist/agent-src trees"
 routes_to: [skill-management]
 replaces: []
 tier: 1
 skills: []
-description: Condense .md files from .agent-src.uncondensed/ into telegraph format and write to dist/agent-src/
+description: Condense .md files from src/ into telegraph format and write to dist/agent-src/
 suggestion:
   eligible: false
   rationale: "Package-internal tooling; only the event4u/agent-config repo runs this."
@@ -19,7 +19,7 @@ packs:
 
 # condense
 
-Condense agent config `.md` files from `.agent-src.uncondensed/` into token-efficient telegraph format
+Condense agent config `.md` files from `src/` into token-efficient telegraph format
 and write the condensed output to `dist/agent-src/`.
 
 Uses SHA-256 hashes to track which source files changed since last condensation.
@@ -53,7 +53,7 @@ A condensed file should be easier to scan, easier to trigger, and easier to exec
 
 For each changed `.md` file:
 
-1. Read the source from `.agent-src.uncondensed/{path}`
+1. Read the source from `src/{path}`
 2. Condense the prose using these rules:
    - **Remove:** articles (a, an, the), filler (just, really, basically, actually, simply, essentially),
      pleasantries, hedging, connective fluff (however, furthermore, additionally),
@@ -197,7 +197,7 @@ For every Iron Law section in a source file:
 and block CI.
 
 If an Iron Law section genuinely contains filler (rare): edit the SOURCE in
-`.agent-src.uncondensed/`, not the condensed copy. Source is the truth.
+`src/`, not the condensed copy. Source is the truth.
 
 ## Condensation quality checklist
 
@@ -234,7 +234,7 @@ Unsafe (DO NOT do this):
 ## Rules
 
 - **Do NOT commit or push.** Only write files.
-- **Do NOT modify `.agent-src.uncondensed/`** — it is the source of truth.
+- **Do NOT modify `src/`** — it is the source of truth.
 - **Only write to `.augment/`** — the condensed output directory.
 - **Preserve ALL technical content** — only condense natural language prose.
 - **YAML frontmatter** in command/skill files must be preserved exactly.

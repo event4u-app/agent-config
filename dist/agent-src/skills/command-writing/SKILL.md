@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: command-writing
-description: "Use when creating or editing a slash command in .agent-src.uncondensed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'."
+description: "Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'."
 domain: process
 workspaces:
   - agent-config-maintainer
@@ -15,7 +15,7 @@ packs:
 
 ## When to use
 
-* Creating a new slash command in `.agent-src.uncondensed/commands/{name}.md`
+* Creating a new slash command in `src/agent-src/commands/{name}.md`
 * Rewriting an existing command (not a typo fix)
 * Deciding whether a request should be a command at all
 * Splitting an oversized command into smaller ones
@@ -44,7 +44,7 @@ Check first: [`command-clusters` § Command justification](../../../docs/contrac
 
 ## Commands ARE Claude skills (projection reality)
 
-Every `.agent-src.uncondensed/commands/{name}.md` projects to
+Every `src/agent-src/commands/{name}.md` projects to
 `.claude/skills/{slug}/SKILL.md` via `scripts/condense.py`
 (`generate_claude_commands`). Nested commands flatten with `-`
 (`council/default.md` → `council-default`). Skills + commands share the
@@ -81,7 +81,7 @@ Research → Draft from the
 
 * **Understand** — what user-facing problem does `/{name}` solve in one
   session? What are the inputs, outputs, side effects?
-* **Research** — **inspect** `.agent-src.uncondensed/templates/command.md`,
+* **Research** — **inspect** `src/agent-src/templates/command.md`,
   grep `commands/` for overlap, and **analyze** 1–2 peer commands
   (e.g. `create-pr`, `commit`).
 * **Draft** — propose frontmatter (`name`, `description`) first, then the
@@ -89,7 +89,7 @@ Research → Draft from the
 
 ### 1. Use the template
 
-Canonical source: `.agent-src.uncondensed/templates/command.md`.
+Canonical source: `src/agent-src/templates/command.md`.
 
 Minimum frontmatter:
 
@@ -139,7 +139,7 @@ no silent edits, max two rounds.
 Required sections in this order:
 
 1. `# /{name}` heading + one-line summary
-2. **Source of truth note** — works on `.agent-src.uncondensed/`, never on
+2. **Source of truth note** — works on `src/`, never on
    generated directories
 3. `## Steps` — numbered sub-headings `### 1.`, `### 2.`, ...
 4. Final step **presents findings** and asks the user before destructive
@@ -151,16 +151,16 @@ Required sections in this order:
 * No auto-apply of destructive actions without user confirmation.
 * Every step with side effects (git push, file delete, PR merge) asks first.
 * If the command calls external APIs, list required keys / permissions.
-* If the command edits agent files, target `.agent-src.uncondensed/` only.
+* If the command edits agent files, target `src/` only.
 
 ### 3b. Path conventions in command body
 
 Body links to guidelines / contracts use the verbatim relative form
 (`../../docs/guidelines/...`, `../../docs/contracts/...`); the
 condense-time rewriter handles depth. Do not pre-rewrite in source. Do
-not write `.agent-src.uncondensed/` in any markdown link target — the
+not write `src/` in any markdown link target — the
 file ships into `.augment/commands/` and the prefix breaks consumer
-resolution. The only legitimate `.agent-src.uncondensed/` strings in a
+resolution. The only legitimate `src/` strings in a
 command file are prose mentions and step instructions about where to
 edit (per § 2 above). Canonical reference: `rule-writing` § 3b.
 
@@ -180,7 +180,7 @@ multi-paragraph explanation, extract it into a skill and call it.
 
 ### 5. Validate
 
-* Run `python3 scripts/skill_linter.py .agent-src.uncondensed/commands/{name}.md`
+* Run `python3 scripts/skill_linter.py src/agent-src/commands/{name}.md`
   → 0 FAIL.
 * Run `bash scripts/condense.sh --sync` → regenerates `dist/agent-src/commands/{name}.md`.
 * Run `python3 scripts/condense.py --generate-tools` → creates the Claude symlink at
@@ -210,7 +210,7 @@ See `agents/evidence/analysis/lint-warning-triage.md` for the 3-bucket reference
 
 ## Output format
 
-1. Complete command file at `.agent-src.uncondensed/commands/{name}.md`
+1. Complete command file at `src/agent-src/commands/{name}.md`
 2. Frontmatter populated, `disable-model-invocation: true` present
 3. Linter output showing 0 FAIL
 4. Generated Claude symlink verified
@@ -222,7 +222,7 @@ See `agents/evidence/analysis/lint-warning-triage.md` for the 3-bucket reference
 * Numbered options without a "skip" / "no change" path.
 * Steps that silently apply destructive changes — always show summary + ask.
 * Referring to `.augment/` paths for editing — source of truth is
-  `.agent-src.uncondensed/`.
+  `src/`.
 * Duplicating another command's workflow instead of delegating via `skills:`.
 
 ## Frugality Standards
@@ -271,7 +271,7 @@ prose-only validation:
 * Self-check the body shape: numbered steps, explicit safety gates,
   no inline skill-level detail.
 * Tell the user to save the file under
-  `.agent-src.uncondensed/commands/{name}.md` and run
+  `src/agent-src/commands/{name}.md` and run
   `task sync && task lint-skills` locally before committing.
 * Skip every reference to running the linter, condenseor, or
   generators yourself — they only run on the user's machine.

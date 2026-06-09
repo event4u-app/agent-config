@@ -33,7 +33,7 @@ status: draft
 
 ## Out of scope until trigger fires
 
-- Reshaping `.agent-src.uncondensed/` directory layout.
+- Reshaping `src/` directory layout.
 - Introducing a `pack.id` field to `.agent-settings.yml`.
 - Splitting `scripts/ai-video/` into a sibling repo or namespaced
   pack.
