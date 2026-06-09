@@ -2,7 +2,7 @@
 
 > **Status** · stub. Not started. Created 2026-05-24 to satisfy
 > Phase 9 Step 4 of
-> [`road-to-employee-product-and-external-proof.md`](../road-to-employee-product-and-external-proof.md).
+> [`road-to-employee-product-and-external-proof.md`](../archive/road-to-employee-product-and-external-proof.md).
 > See [`stubs/README.md`](README.md) for promotion criteria.
 
 ## Surface this stub tracks

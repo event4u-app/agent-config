@@ -8,7 +8,7 @@ keep-beta-until: 2026-08-24
 Point the agent at a folder of local files (PDFs, Markdown, Word docs, spreadsheets). It chunks, redacts PII + secrets, and persists into the agent memory namespace — local-only, single-user, no OAuth, no remote fetch.
 
 Contract: [`local-knowledge-ingestion`](../contracts/local-knowledge-ingestion.md).
-Roadmap home: `agents/roadmaps/road-to-employee-product-and-external-proof.md` Phase 2.
+Roadmap home: `agents/roadmaps/archive/road-to-employee-product-and-external-proof.md` Phase 2.
 
 ## Prerequisites
 

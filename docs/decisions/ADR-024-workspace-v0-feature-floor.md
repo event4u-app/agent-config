@@ -123,4 +123,4 @@ be dropped or expanded without rewriting the others.
 - Predecessor ADRs: [`ADR-022`](ADR-022-daily-workspace-decomposition.md), [`ADR-023`](ADR-023-host-agent-protocol.md).
 - Knowledge ingestion contract: [`docs/contracts/local-knowledge-ingestion.md`](../contracts/local-knowledge-ingestion.md).
 - Role experience contract: [`docs/contracts/role-experience.md`](../contracts/role-experience.md).
-- Roadmap: [`agents/roadmaps/road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md) Phase 4.
+- Roadmap: [`agents/roadmaps/archive/road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md) Phase 4.

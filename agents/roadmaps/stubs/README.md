@@ -5,7 +5,7 @@ complexity: lightweight
 # Roadmap Stubs — successor placeholders
 
 > **Status** · stubs only. Created by Phase 9 of
-> [`road-to-employee-product-and-external-proof.md`](../road-to-employee-product-and-external-proof.md)
+> [`road-to-employee-product-and-external-proof.md`](../archive/road-to-employee-product-and-external-proof.md)
 > so cross-references from the deployment-posture document and the
 > archived `road-to-internal-ai-os-deployment.md` resolve.
 

@@ -66,7 +66,7 @@ in week 1 can age out by week 4.
 
 Each row's status contributes to the adoption-dimension score
 tracked in
-[`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md)
+[`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md)
 Phase 0 § Adoption surface:
 
 - ≥ 1 row in `accepted` — adoption-dimension lifts from "scaffolded"

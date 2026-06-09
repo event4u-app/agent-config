@@ -1,7 +1,7 @@
 # Small-Team Recipe — 3–10 people, no code change
 
 > **Status** · v0 · 2026-05-24. Phase 9 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/archive/road-to-employee-product-and-external-proof.md).
 > The recipe relies entirely on **existing primitives**. No new
 > code, no new server, no shared backend. Each user runs the
 > workspace locally; the team shares the inputs.
