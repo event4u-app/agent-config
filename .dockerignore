@@ -1,0 +1,29 @@
+# Build context for internal/glama/Dockerfile (task mcp:glama-test).
+# Goal: keep ONLY what the MCP build + server need, drop the ~1.2 GB of
+# node_modules / .git / venvs that bloat the context.
+#
+# The MCP server's content roots are load-bearing (verified in
+# src/scripts/mcp_server/{prompts,resources}.py):
+#   dist/agent-src/{skills,commands,rules,contexts}
+#   docs/guidelines
+# Starve any of these and the server boots, then crashes at runtime with an
+# empty content root — a silent failure worse than a build error.
+
+.git
+**/node_modules
+.venv
+.venv-*
+*.log
+.DS_Store
+coverage
+ui/dist
+
+# dist/ holds the CLI + UI bundles the server never reads; keep only agent-src.
+# NEGATION ORDER IS LOAD-BEARING: Docker honours `!` re-includes only when the
+# parent is matched by a glob (`dist/*`), NOT when an ancestor dir is excluded
+# whole (`dist/`). Writing `dist/` here would silently drop dist/agent-src.
+dist/*
+!dist/agent-src
+
+# Transient runtime state (council sessions, dashboards) — not needed to boot.
+agents/runtime
