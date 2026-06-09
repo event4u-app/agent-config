@@ -137,7 +137,6 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"docs/adr/00"),                # challenge-me-with-docs + architecture-decisions example: sample ADR refs (package uses docs/decisions/ADR-NNN)
     re.compile(r"src/scripts/X\.py"),          # step-execution report: `X.py` literal placeholder
     # ── docs/ forward-looking artefacts (planned, will materialise) ──
-    re.compile(r"docs/flows\.md"),             # positioning roadmap Phase-1 deliverable (not yet shipped)
     re.compile(r"docs/contracts/domain-pack-overlap-inventory\.md"),  # domain-pack-extraction roadmap: planned contract
     # Forward references inside in-flight planning docs (road-to-
     # structural-optimization.md and its companion spike protocols).

@@ -141,9 +141,9 @@ Whether/when to call this a 6.0 release stays the human's decision; this roadmap
 Goal: a reader sees the architecture as profiles → flows → skills, can pick an experience, and a
 maintainer can navigate 227 skills by family — without touching any skill file or its routing triggers.
 
-- [ ] Add a "Workflows, not raw commands" section to the README naming the five `src/flows/` flows and
+- [x] Add a "Workflows, not raw commands" section to the README naming the five `src/flows/` flows and
       mapping each profile to the flow(s) it drives (developer→implementation/review, content→delivery, …).
-- [ ] Flow documentation — author `docs/flows.md` describing each flow's purpose, entry commands, involved
+- [x] Flow documentation — author `docs/flows.md` describing each flow's purpose, entry commands, involved
       packs, default path, skills/lenses, rules, and output evidence, and propose a per-flow metadata
       schema for `src/flows/*.yaml`. **Scope gate:** document the *existing* flow structure and behaviour
       only — do NOT change flow execution logic. Any execution gap surfaced here becomes an input to a
