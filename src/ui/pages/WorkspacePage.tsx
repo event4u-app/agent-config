@@ -82,6 +82,13 @@ interface SessionMeta {
     started_at: string;
 }
 
+// One record from a session JSONL log (ADR-083 thread view).
+interface SessionRecord {
+    ts: string;
+    kind: string;
+    data: Record<string, unknown>;
+}
+
 interface KnowledgeChunk {
     id: string;
     source: string;
@@ -159,13 +166,17 @@ const openTask = signal<string | null>(null);
 const formInputs = signal<Record<string, string>>({});
 const launching = signal(false);
 const launchResult = signal<LaunchResult | null>(null);
-const showFullTurn = signal(false);
 // Follow-up continuation (ADR-076 GUI, closes the ADR-076 v1 debt): the
 // in-flight follow-up prompt + busy flag for the active session.
 const followupText = signal('');
 const continuing = signal(false);
 const sessionGone = signal(false);     // 410: host session expired (ADR-080/081)
 const lastLaunch = signal<{ role: string; task: string; inputs: Record<string, string> } | null>(null);
+// One current-session model (ADR-083): the thread + the follow-up box key off
+// this id, set by a launch OR by selecting a past session from the strip.
+const currentSessionId = signal<string | null>(null);
+const thread = signal<SessionRecord[]>([]);
+const expandedTurns = signal<Set<number>>(new Set());
 
 const DRIVE_HOST = 'claude-code';      // v0: single hard-coded tier-1 host (council)
 const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
@@ -213,10 +224,32 @@ async function loadTasks(slug: string, fallback: RoleTask[]): Promise<void> {
     }
 }
 
+// Load (or reload) a session's full log into the thread (ADR-083). Sets it as
+// the current session — the thread + follow-up box key off this id.
+async function loadThread(id: string): Promise<void> {
+    currentSessionId.value = id;
+    expandedTurns.value = new Set();
+    try {
+        const res = await apiFetch<{ id: string; log: SessionRecord[] }>(`/api/v1/workspace/sessions/${id}`);
+        thread.value = Array.isArray(res.log) ? res.log : [];
+    } catch {
+        thread.value = [];
+    }
+}
+
+// Open a past session from the strip (ADR-083) → it becomes the current
+// session; its thread renders and a follow-up continues it.
+async function openSession(id: string): Promise<void> {
+    launchBanner.value = null;
+    sessionGone.value = false;
+    followupText.value = '';
+    openTask.value = null;
+    await loadThread(id);
+}
+
 async function launch(role: string, task: string, inputs: Record<string, string>): Promise<void> {
     launchBanner.value = null;
     launching.value = true;
-    showFullTurn.value = false;
     followupText.value = '';        // a new launch starts a fresh conversation
     sessionGone.value = false;
     lastLaunch.value = { role, task, inputs };   // remembered for one-click re-launch on 410 (ADR-082)
@@ -228,6 +261,7 @@ async function launch(role: string, task: string, inputs: Record<string, string>
         launchResult.value = res;
         launchBanner.value = bannerFor(res);
         openTask.value = null;                 // collapse the form on a completed launch
+        await loadThread(res.id);              // the new session becomes current (ADR-083)
         const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
         sessions.value = s.sessions;
     } catch (err) {
@@ -249,7 +283,6 @@ async function continueTurn(sessionId: string, prompt: string): Promise<void> {
     if (prompt.trim() === '' || continuing.value) return;
     continuing.value = true;
     launchBanner.value = null;
-    showFullTurn.value = false;
     try {
         const res = await apiFetch<LaunchResult>(
             `/api/v1/workspace/sessions/${sessionId}/continue`,
@@ -258,6 +291,7 @@ async function continueTurn(sessionId: string, prompt: string): Promise<void> {
         launchResult.value = res;
         launchBanner.value = bannerFor(res);
         if (res.driven) followupText.value = '';     // clear only on a landed turn
+        await loadThread(sessionId);                 // re-render the thread with the new turn
         const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
         sessions.value = s.sessions;
     } catch (err) {
@@ -381,27 +415,67 @@ function TaskForm({ role, task }: { role: string; task: RoleTask }): preact.JSX.
 
 // The driven turn's assistant text (ADR-075). Long turns collapse behind a
 // "Show full" toggle so a 4k-token response can't break the layout chrome.
-function TurnResult(): preact.JSX.Element | null {
-    const r = launchResult.value;
-    if (r === null || !r.driven || r.turn === undefined) return null;
-    const text = r.turn.text ?? '';
-    const long = text.length > TURN_COLLAPSE_CHARS;
-    const shown = long && !showFullTurn.value ? `${text.slice(0, TURN_COLLAPSE_CHARS)}…` : text;
-    const usage = r.turn.usage;
+// One conversation turn rendered as a block (ADR-083). Assistant turns collapse
+// past the 2000-char limit, tracked per-record so a long thread stays readable.
+interface ThreadBlock { kind: 'task' | 'user' | 'assistant' | 'error'; text: string; meta?: string }
+
+function threadBlocks(records: SessionRecord[]): ThreadBlock[] {
+    const out: ThreadBlock[] = [];
+    for (const rec of records) {
+        const d = rec.data ?? {};
+        if (rec.kind === 'launcher.input') {
+            if (d['followup'] === true) {
+                out.push({ kind: 'user', text: typeof d['prompt'] === 'string' ? d['prompt'] : '' });
+            } else {
+                out.push({ kind: 'task', text: typeof d['task'] === 'string' ? d['task'] : '' });
+            }
+        } else if (rec.kind === 'host.turn') {
+            const usage = d['usage'] as { input_tokens?: number; output_tokens?: number } | null | undefined;
+            const meta = usage != null
+                ? `${typeof d['model'] === 'string' ? d['model'] : DRIVE_HOST} · in ${usage.input_tokens ?? 0} / out ${usage.output_tokens ?? 0} tokens`
+                : undefined;
+            out.push({ kind: 'assistant', text: typeof d['text'] === 'string' ? d['text'] : '', meta });
+        } else if (rec.kind === 'host.error') {
+            const ek = typeof d['error_kind'] === 'string' ? d['error_kind'] : 'error';
+            out.push({ kind: 'error', text: `${ek}: ${typeof d['error'] === 'string' ? d['error'] : ''}` });
+        }
+        // host.output / host.tool / inbox.handoff are not rendered as thread blocks in v0.
+    }
+    return out;
+}
+
+function ThreadView(): preact.JSX.Element | null {
+    if (currentSessionId.value === null) return null;
+    const blocks = threadBlocks(thread.value);
+    const hasTurn = thread.value.some((r) => r.kind === 'host.turn');
     return (
-        <section class="ac-workspace__turn" aria-label="Host turn result">
-            <h2 class="ac-workspace__heading">Result · {r.task}</h2>
-            <pre class="ac-workspace__turn-text">{shown}</pre>
-            {long ? (
-                <button type="button" class="ac-button" onClick={(): void => { showFullTurn.value = !showFullTurn.value; }}>
-                    {showFullTurn.value ? 'Show less' : 'Show full'}
-                </button>
-            ) : null}
-            {usage != null ? (
-                <p class="ac-workspace__turn-meta">
-                    {r.turn.model ?? DRIVE_HOST} · in {usage.input_tokens ?? 0} / out {usage.output_tokens ?? 0} tokens
-                </p>
-            ) : null}
+        <section class="ac-workspace__thread" aria-label="Conversation thread">
+            <h2 class="ac-workspace__heading">Conversation</h2>
+            {blocks.length === 0 ? (
+                <p class="ac-workspace__empty">No turns yet.</p>
+            ) : (
+                <ol class="ac-workspace__thread-list">
+                    {blocks.map((b, i) => {
+                        const long = b.kind === 'assistant' && b.text.length > TURN_COLLAPSE_CHARS;
+                        const open = expandedTurns.value.has(i);
+                        const shown = long && !open ? `${b.text.slice(0, TURN_COLLAPSE_CHARS)}…` : b.text;
+                        return (
+                            <li key={i} class={`ac-workspace__thread-block ac-workspace__thread-block--${b.kind}`}>
+                                <span class="ac-workspace__thread-role">{b.kind === 'task' ? 'Task' : b.kind === 'user' ? 'You' : b.kind === 'assistant' ? 'Host' : 'Error'}</span>
+                                <pre class="ac-workspace__thread-text">{shown}</pre>
+                                {long ? (
+                                    <button type="button" class="ac-button" onClick={(): void => {
+                                        const next = new Set(expandedTurns.value);
+                                        if (next.has(i)) { next.delete(i); } else { next.add(i); }
+                                        expandedTurns.value = next;
+                                    }}>{open ? 'Show less' : 'Show full'}</button>
+                                ) : null}
+                                {b.meta != null ? <p class="ac-workspace__turn-meta">{b.meta}</p> : null}
+                            </li>
+                        );
+                    })}
+                </ol>
+            )}
             {sessionGone.value ? (
                 <div class="ac-workspace__followup-gone" role="status">
                     <p>Host session expired.</p>
@@ -421,33 +495,33 @@ function TurnResult(): preact.JSX.Element | null {
                         <p>Pick a task above to start a new conversation.</p>
                     )}
                 </div>
-            ) : (
-            <form
-                class="ac-workspace__followup"
-                onSubmit={(e): void => {
-                    e.preventDefault();
-                    void continueTurn(r.id, followupText.value);
-                }}
-            >
-                <label class="ac-workspace__field">
-                    <span class="ac-workspace__field-label">Follow up</span>
-                    <textarea
-                        class="ac-workspace__field-input"
-                        placeholder="Continue this conversation — e.g. make it shorter"
-                        aria-label="Follow-up prompt"
-                        value={followupText.value}
-                        onInput={(e): void => { followupText.value = (e.target as HTMLTextAreaElement).value; }}
-                    />
-                </label>
-                <button
-                    type="submit"
-                    class="ac-button ac-button--primary"
-                    disabled={followupText.value.trim() === '' || continuing.value}
+            ) : hasTurn ? (
+                <form
+                    class="ac-workspace__followup"
+                    onSubmit={(e): void => {
+                        e.preventDefault();
+                        if (currentSessionId.value !== null) void continueTurn(currentSessionId.value, followupText.value);
+                    }}
                 >
-                    {continuing.value ? 'Continuing…' : 'Send follow-up'}
-                </button>
-            </form>
-            )}
+                    <label class="ac-workspace__field">
+                        <span class="ac-workspace__field-label">Follow up</span>
+                        <textarea
+                            class="ac-workspace__field-input"
+                            placeholder="Continue this conversation — e.g. make it shorter"
+                            aria-label="Follow-up prompt"
+                            value={followupText.value}
+                            onInput={(e): void => { followupText.value = (e.target as HTMLTextAreaElement).value; }}
+                        />
+                    </label>
+                    <button
+                        type="submit"
+                        class="ac-button ac-button--primary"
+                        disabled={followupText.value.trim() === '' || continuing.value}
+                    >
+                        {continuing.value ? 'Continuing…' : 'Send follow-up'}
+                    </button>
+                </form>
+            ) : null}
         </section>
     );
 }
@@ -473,6 +547,8 @@ function TaskPicker({ role }: { role: Role }): preact.JSX.Element {
                                         openTask.value = openTask.value === t.name ? null : t.name;
                                         formInputs.value = {};
                                         launchResult.value = null;
+                                        currentSessionId.value = null;   // clear the prior thread
+                                        thread.value = [];
                                     }}
                                 >
                                     {openTask.value === t.name ? 'Close' : 'Start session'}
@@ -514,9 +590,17 @@ function SessionStrip(): preact.JSX.Element {
                 <ul class="ac-workspace__session-list">
                     {sessions.value.map((s) => (
                         <li key={s.id} class="ac-workspace__session">
-                            <span class="ac-workspace__session-id">{s.id.slice(0, 16)}</span>
-                            <span class="ac-workspace__session-role">{s.role}</span>
-                            <span class="ac-workspace__session-task">{s.task}</span>
+                            <button
+                                type="button"
+                                class={`ac-workspace__session-open${currentSessionId.value === s.id ? ' ac-workspace__session-open--active' : ''}`}
+                                aria-label={`Open session ${s.task}`}
+                                aria-current={currentSessionId.value === s.id ? 'true' : undefined}
+                                onClick={(): void => { void openSession(s.id); }}
+                            >
+                                <span class="ac-workspace__session-id">{s.id.slice(0, 16)}</span>
+                                <span class="ac-workspace__session-role">{s.role}</span>
+                                <span class="ac-workspace__session-task">{s.task}</span>
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -740,7 +824,7 @@ export function WorkspacePage(): preact.JSX.Element {
                     {role !== null ? <TaskPicker role={role} /> : (
                         <p class="ac-workspace__empty">Pick a role on the left to see its first tasks.</p>
                     )}
-                    <TurnResult />
+                    <ThreadView />
                     <SessionStrip />
                 </main>
                 <aside class="ac-workspace__rail" aria-label="Knowledge and documents">

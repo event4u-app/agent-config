@@ -31,6 +31,9 @@ interface FixtureOverrides {
 
 function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: Call[]; restore: () => void } {
     const calls: Call[] = [];
+    // Stateful session log (ADR-083): launch/continue append records; the
+    // single-session GET returns them so ThreadView renders a real thread.
+    const sessionLog: Array<{ ts: string; kind: string; data: Record<string, unknown> }> = [];
     const original = global.fetch;
     global.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
         const path = typeof url === 'string' ? url : url.toString();
@@ -88,6 +91,11 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
             };
             return new Response(JSON.stringify(payload), { status: 200 });
         }
+        // Single session (thread) — must precede the list handler.
+        if (/\/api\/v1\/workspace\/sessions\/[^/?]+$/.test(path) && method === 'GET') {
+            const id = path.split('/')[5];
+            return new Response(JSON.stringify({ id, role: 'galabau', task: 'Offer drafting', log: sessionLog }), { status: 200 });
+        }
         if (path.startsWith('/api/v1/workspace/sessions') && method === 'GET') {
             const payload = overrides.sessions ?? {
                 sessions: [
@@ -129,24 +137,35 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
             return new Response(JSON.stringify(payload), { status: 200 });
         }
         if (path === '/api/v1/workspace/launch' && method === 'POST') {
-            const ov = overrides.launch;
-            if (ov !== undefined) return new Response(JSON.stringify(ov.body), { status: ov.status });
             const reqBody = body as { role: string; task: string };
+            sessionLog.length = 0;   // a launch starts a fresh session log
+            sessionLog.push({ ts: 't', kind: 'launcher.input', data: { role: reqBody.role, task: reqBody.task } });
+            const ov = overrides.launch;
+            if (ov !== undefined) {
+                const ob = ov.body as { driven?: boolean; turn?: Record<string, unknown> };
+                if (ob.driven === true && ob.turn) sessionLog.push({ ts: 't', kind: 'host.turn', data: ob.turn });
+                return new Response(JSON.stringify(ov.body), { status: ov.status });
+            }
+            const turn = { text: 'Here is your drafted offer.', model: 'claude-code', usage: { input_tokens: 12, output_tokens: 40 } };
+            sessionLog.push({ ts: 't', kind: 'host.turn', data: turn });
             return new Response(JSON.stringify({
-                id: '20260525T130000Z-deadbeef',
-                role: reqBody.role,
-                task: reqBody.task,
-                driven: true,
-                turn: { text: 'Here is your drafted offer.', model: 'claude-code', usage: { input_tokens: 12, output_tokens: 40 } },
+                id: '20260525T130000Z-deadbeef', role: reqBody.role, task: reqBody.task, driven: true, turn,
             }), { status: 200 });
         }
         if (/\/api\/v1\/workspace\/sessions\/[^/]+\/continue$/.test(path) && method === 'POST') {
-            const ov = overrides.continueTurn;
-            if (ov !== undefined) return new Response(JSON.stringify(ov.body), { status: ov.status });
             const id = path.split('/')[5];
+            const reqBody = body as { prompt: string };
+            sessionLog.push({ ts: 't', kind: 'launcher.input', data: { prompt: reqBody.prompt, followup: true } });
+            const ov = overrides.continueTurn;
+            if (ov !== undefined) {
+                const ob = ov.body as { driven?: boolean; turn?: Record<string, unknown> };
+                if (ob.driven === true && ob.turn) sessionLog.push({ ts: 't', kind: 'host.turn', data: ob.turn });
+                return new Response(JSON.stringify(ov.body), { status: ov.status });
+            }
+            const turn = { text: 'Shorter offer.', model: 'claude-code', usage: { input_tokens: 8, output_tokens: 20 } };
+            sessionLog.push({ ts: 't', kind: 'host.turn', data: turn });
             return new Response(JSON.stringify({
-                id, role: 'galabau', task: 'Offer drafting', driven: true,
-                turn: { text: 'Shorter offer.', model: 'claude-code', usage: { input_tokens: 8, output_tokens: 20 } },
+                id, role: 'galabau', task: 'Offer drafting', driven: true, turn,
             }), { status: 200 });
         }
         return new Response(JSON.stringify({ error: { code: 'NOT_FOUND', message: path } }), { status: 404 });
