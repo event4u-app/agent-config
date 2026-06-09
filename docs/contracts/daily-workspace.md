@@ -60,6 +60,7 @@ in [`gui-wizard`](gui-wizard.md) are untouched.
 | `POST /api/v1/workspace/render` | Body: `{ role, prompt, inputs }`. Fills `{{name}}` placeholders in `prompts/<prompt>.md`; returns `{ rendered, skill_hint }`. Pure — skill body is **not** appended (ADR-069). Missing-required / undeclared-placeholder → 400. |
 | `GET  /api/v1/workspace/drive-health` | `?host=<id>` for one host, omitted for all. Read-only per-host kill-switch cache (ADR-073/074): `{ consecutive_failures, killed, kill_reason, killed_at, trip_count, total_success, total_failure, … }`. Auto-tripped hosts self-recover via a half-open probe after `AGENT_CONFIG_DRIVE_COOLDOWN_SEC` (default 600 s); manual kills are sticky. Fails open (missing cache → empty). |
 | `GET  /api/v1/workspace/hosts` | Tier-1 host availability for the picker (ADR-079): `{ hosts: [{ id, cli_present, effective_tier }] }` (claude-code / codex / gemini). Side-effect-free PATH probe. Fails open (`[]`). |
+| `POST /api/v1/workspace/drive-health/:host/reset` | Clears a host's kill-switch (ADR-081) → `{ host, state }`. Operator escape hatch (and the only path for a sticky manual kill). 400 on an invalid host id. |
 
 ## Session JSONL schema
 
