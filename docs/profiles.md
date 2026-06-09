@@ -9,6 +9,10 @@ and the exact commands and skills wired into the profile YAML at
 The summary table at the top of [`README.md`](../README.md) is the
 one-page index; the prose below is the deep version.
 
+→ Each profile's **experience page** (packs · flows · what is *not* loaded ·
+examples) lives under [`docs/experiences/`](experiences/); the multi-command
+**work journeys** those profiles run are in [`docs/flows.md`](flows.md).
+
 **Switching experience.** `agent-config setup` writes `profile.id` on first run
 (it is the wizard's first question). To switch later, run
 `agent-config use --profile=<id>` (one of `developer` · `content_creator` ·

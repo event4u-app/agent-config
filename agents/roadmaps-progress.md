@@ -6,10 +6,10 @@
 
 ## Overall
 
-**85 / 119 steps done · 71%**
+**87 / 119 steps done · 73%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   71%
+█████████████████████████████░░░░░░░░░░░   73%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 3 | 62 | 6 | 0 | ██████████ 95% |
-| 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 26 | 15 | 10 | 1 | 0 | ████░░░░░░ 40% |
+| 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 26 | 13 | 12 | 1 | 0 | █████░░░░░ 48% |
 | 3 | [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
@@ -45,12 +45,12 @@
 
 ### [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md)
 
-**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 10 / 25 done (40%)
+**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 12 / 25 done (48%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Trust: align the public surface with the code, and guard it | 🟡 in progress | 1 | 8 | 1 | 0 | 89% |
-| 1 | Positioning & Flows: make the product navigable (docs only, zero routing risk) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
+| 1 | Positioning & Flows: make the product navigable (docs only, zero routing risk) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
 | 2 | Governance: own, age, and contract the surface | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | Consolidation discovery (decide; merge nothing here) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 

@@ -148,13 +148,13 @@ maintainer can navigate 227 skills by family — without touching any skill file
       schema for `src/flows/*.yaml`. **Scope gate:** document the *existing* flow structure and behaviour
       only — do NOT change flow execution logic. Any execution gap surfaced here becomes an input to a
       future roadmap, not in-phase work.
-- [ ] Per-profile experience landing pages — `docs/experiences/{developer,founder,content_creator,
+- [x] Per-profile experience landing pages — `docs/experiences/{developer,founder,content_creator,
       agency,finance,ops}.md`. Each page: who it's for · first 3 tasks · first commands · which packs
       activate · which flows apply · what is NOT loaded · examples. README links these instead of artefact lists.
 - [ ] Skill-family taxonomy doc (`docs/`) grouping the 227 skills into navigable families (engineering,
       review, architecture, testing, security, frontend, content, video, finance, strategy, operations,
       agent-admin, …). Navigation only — no file moves, no description edits, no merges.
-- [ ] Cross-link profile pages ↔ flows ↔ representative skills so the "experience" framing is walkable.
+- [x] Cross-link profile pages ↔ flows ↔ representative skills so the "experience" framing is walkable.
       Verify every new link resolves (`check-refs`).
 - [ ] Cross-reference note — record that the experience pages, flow docs, and taxonomy feed the active
       `road-to-employee-product-and-external-proof.md` workstream; coordinate timing, do not duplicate its

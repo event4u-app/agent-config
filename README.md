@@ -31,6 +31,15 @@ schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
 Beyond software: [`user-types/`](src/agent-src/user-types/)
 (galabau · metalworking · truck — see [Beyond software](#beyond-software).
 
+**Per-profile experience pages** (who it's for · first tasks · packs + flows ·
+what is *not* loaded · examples):
+[developer](docs/experiences/developer.md) ·
+[content_creator](docs/experiences/content_creator.md) ·
+[founder](docs/experiences/founder.md) ·
+[agency](docs/experiences/agency.md) ·
+[finance](docs/experiences/finance.md) ·
+[ops](docs/experiences/ops.md).
+
 ### Workflows, not raw commands
 
 You don't memorize 150 commands — you run a **work journey**. Four flows span the
