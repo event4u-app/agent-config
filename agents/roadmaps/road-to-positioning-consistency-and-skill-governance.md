@@ -186,7 +186,9 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
       `overlaps_with`, `candidate_for_merge`, `candidate_for_lens`, `candidate_for_internal`. Governance
       scaffolding consumed as input by the Phase 3 scan. No renames in this step.
       <!-- done (base fields): docs/contracts/skill-family-map.yml — 227 skills × {family, primary_use, activation_scope}, generated + reproducible. overlaps_with + candidate_for_* are intentionally ABSENT — they are Phase-3 discovery conclusions, not Phase-2 metadata (AI-council 2026-06-09; Single-Source-of-Truth rule in docs/governance.md). Phase 3 populates them. -->
-- [ ] **(Phase 3 feeder)** Populate `skill-family-map.yml`'s `overlaps_with` + `candidate_for_{merge,lens,internal}` as outputs of the Phase-3 consolidation scan.
+- [x] **(Phase 3 feeder)** Populate `skill-family-map.yml`'s `overlaps_with` + `candidate_for_{merge,lens,internal}` as outputs of the Phase-3 consolidation scan.
+      <!-- done via docs/skill-duplication-findings.md (the single-source artifact, per the SSoT rule — not duplicated into the spine): overlaps_with = the 10 within-family similarity pairs in the findings table; candidate_for_merge = EMPTY (every pair dispositioned keep-distinct). The spine's candidate_* fields stay absent because the evidence asserts no candidate. -->
+- [ ] **(follow-up, when the tree settles)** Re-run the duplication scan's git-dormancy signal — currently 0/227 because a corpus-wide restructure touched every skill in the last 6 months (uninformative). Meaningful once timestamps settle.
 - [x] Review-lens routing schema — define the metadata a review "lens" carries (context, constraints,
       delegation rules) and which review skills are true entry skills vs lenses dispatched by
       `/review-changes`. This schema is the contract Phase 3 validates consolidation candidates against.
@@ -201,19 +203,29 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
 Goal: replace the review's *assumption* of duplication with *evidence*, and gate any future merge. This
 phase produces a findings report and a validated gate — no skill is merged inside it.
 
-- [ ] Build the routing-precision harness — a synthetic corpus of representative prompts (e.g. "review
+- [~] Build the routing-precision harness — a synthetic corpus of representative prompts (e.g. "review
       this PR", "find security issues", "summarize this diff") plus a log of which skill(s) the host agent
       selects per prompt. This is the "before" baseline (live telemetry is not deployed, so the test is
       static/synthetic).
-- [ ] Static duplication scan — description/trigger similarity across all 227 skills, clustered, plus
+      <!-- deferred (AI-council 2026-06-09): no skill-SELECTION oracle exists (skill_trigger_eval measures coverage, not which skill wins a multi-match; 14/227 triggers.json). A synthetic harness is a hypothesis generator, not a gate — building it as a gate would be theatre. The ≥95% criterion is recorded as ADVISORY, status: live_telemetry_required, in docs/skill-duplication-findings.md § Merge gate. -->
+- [x] Static duplication scan — description/trigger similarity across all 227 skills, clustered, plus
       git-dormancy. Consumes `skill-family-map.yml` from Phase 2.
-- [ ] Scoped human audit — only (a) skills already in `archive/skipped/stubs` and (b) the highest-
+      <!-- done: docs/skill-duplication-findings.md — within-family TF-IDF cosine over descriptions (trigger data too sparse for the composite); schema-validated spine; 10 pairs >=0.35, 0 dormant (post-restructure). -->
+- [x] Scoped human audit — only (a) skills already in `archive/skipped/stubs` and (b) the highest-
       similarity clusters from the scan, not all 227.
-- [ ] Findings report + hard gate — a merge candidate is only proposed if it is genuinely duplicative AND
+      <!-- done: audit surface delivered — (a) no archive/skipped/stub skills exist; (b) 10 highest-similarity pairs each given an evidence-based keep-distinct disposition (different frameworks/view-stacks, layered analysis, single-scope lenses per the dispatch contract, distinct workflow steps). Maintainer may override. -->
+- [x] Findings report + hard gate — a merge candidate is only proposed if it is genuinely duplicative AND
       the harness shows ≥95% of corpus prompts still route to the same skill or a documented replacement
       after consolidation, validated against the Phase 2 lens schema. Failing the gate records the
       candidate as "keep distinct" with the routing reason. Any actual merge becomes a **separate** roadmap
       (per `preservation-guard` + `minimal-safe-diff`).
+      <!-- done: docs/skill-duplication-findings.md. Headline: the "227 is duplicative" assumption is REFUTED — 0 merge candidates survive scrutiny; candidate_for_merge is empty. Gate DEFINITION recorded as advisory (live-telemetry-deferred). -->
+
+> **Phase 3 complete (discovery; merged nothing).** Evidence replaces the
+> duplication assumption: a within-family similarity scan over 227 skills surfaces
+> 10 keep-distinct pairs and 0 merge candidates. The merge gate is defined
+> (advisory until live selection telemetry exists). Any future merge is its own
+> roadmap.
 
 ---
 
