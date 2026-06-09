@@ -187,11 +187,11 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
       scaffolding consumed as input by the Phase 3 scan. No renames in this step.
       <!-- done (base fields): docs/contracts/skill-family-map.yml — 227 skills × {family, primary_use, activation_scope}, generated + reproducible. overlaps_with + candidate_for_* are intentionally ABSENT — they are Phase-3 discovery conclusions, not Phase-2 metadata (AI-council 2026-06-09; Single-Source-of-Truth rule in docs/governance.md). Phase 3 populates them. -->
 - [ ] **(Phase 3 feeder)** Populate `skill-family-map.yml`'s `overlaps_with` + `candidate_for_{merge,lens,internal}` as outputs of the Phase-3 consolidation scan.
-- [ ] Review-lens routing schema — define the metadata a review "lens" carries (context, constraints,
+- [x] Review-lens routing schema — define the metadata a review "lens" carries (context, constraints,
       delegation rules) and which review skills are true entry skills vs lenses dispatched by
       `/review-changes`. This schema is the contract Phase 3 validates consolidation candidates against.
       Proposal/schema only — no skill merged here.
-- [ ] Video-pack boundary contract (`docs/`) — "Creative Pack is optional": (a) user-facing video
+- [x] Video-pack boundary contract (`docs/`) — "Creative Pack is optional": (a) user-facing video
       artefacts, (b) internal/provider-specific ones, (c) a compatibility matrix of which profiles/flows
       work without the Creative Pack, which degrade gracefully, which break. Keeps video a bounded
       Creator pack, not core identity.
