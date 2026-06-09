@@ -180,6 +180,11 @@ agents/reference/ai-video/*
 !agents/reference/ai-video/prompts/**
 !agents/reference/ai-video/examples/
 !agents/reference/ai-video/examples/**
+# smoke-traces/: the format spec is tracked; captured *.json traces stay local
+# (operator evidence — may carry provider response data).
+!agents/reference/ai-video/smoke-traces/
+agents/reference/ai-video/smoke-traces/*.json
+!agents/reference/ai-video/smoke-traces/README.md
 
 # Wizard runtime state — local-only resume snapshot (current step + partial form),
 # written 0600 by the GUI wizard. Never committed.

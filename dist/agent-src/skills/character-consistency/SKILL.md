@@ -39,9 +39,10 @@ install:
 Do NOT use when:
 
 - One-shot scene with no recurring character — overhead is wasted.
-- The "character" is an object or environment, not a person /
-  creature — use a `style.json` lock pattern in the project's notes
-  instead.
+- The "character" is an environment or set (a place, not an
+  entity) — use a `style.json` lock pattern in the project's notes
+  instead. Recurring creatures, vehicles, and hero objects DO get a
+  real lock — pick the matching `subject_class` below.
 
 ## Procedure
 
@@ -63,6 +64,7 @@ the lock.
 {
   "id": "kebab-case-id",
   "name": "Display Name",
+  "subject_class": "humanoid | creature | vehicle | abstract | object",
   "silhouette": "one-line read of the body shape from 30m",
   "palette": ["#hex1", "#hex2", "#hex3"],
   "wardrobe": "garment list, materials, era",
@@ -72,6 +74,48 @@ the lock.
   "face": "age band, skin tone, hair (length / color / texture), distinguishing marks",
   "voice_note": "timbre + cadence for native-audio adapters; null if N/A",
   "reference_frame": "scenes/<id>/frames/<n>.png or null",
+  "version": 1
+}
+```
+
+#### Subject-class token matrix
+
+Field NAMES are fixed (downstream consumers extract them verbatim);
+their SEMANTICS shift per `subject_class`. Missing `subject_class` →
+`humanoid` (back-compat with existing locks). The blueprint layer
+stays subject-agnostic on purpose — it only consumes the rendered
+SUBJECT string; class semantics live here, in the one file the
+drafting agent reads.
+
+| Field | humanoid | creature | vehicle | abstract | object |
+|---|---|---|---|---|---|
+| `silhouette` | body shape from 30m | body shape + locomotion read | hull/body outline | dominant form | outline + scale cue |
+| `wardrobe` | garments, materials, era | integument: fur / scales / skin texture + markings | body panels, livery, decals, wear | motif / texture field | surface finish, material, wear |
+| `signature_prop` | the object that travels with them | anatomical signature (horn, tail tuft, scar) | hood ornament / aerial / charm | recurring sub-form | defining attachment or mark |
+| `posture_default` | how they stand | gait + resting stance | stance / ride attitude | motion signature | resting pose / orientation |
+| `eye_behavior` | blink rhythm, glance habit | eye/ear behavior | lighting signature (headlights, dash glow) | pulse / emission rhythm | highlight + reflection behavior |
+| `face` | age band, skin, hair, marks | head anatomy (muzzle, eyes, dentition) | front fascia (grille, lights) | focal form | defining front / face side |
+| `voice_note` | timbre + cadence | vocalization | engine / motion sound | sound signature | interaction sound |
+
+Universal slots (`id`, `name`, `palette`, `reference_frame`,
+`version`) keep one meaning across all classes.
+
+Worked example — `creature`:
+
+```json
+{
+  "id": "moor-wyrm",
+  "name": "Moor Wyrm",
+  "subject_class": "creature",
+  "silhouette": "low six-limbed serpentine bulk, head held below shoulder line",
+  "palette": ["#2e4a3f", "#c9b458", "#1a1a1a"],
+  "wardrobe": "moss-green plated scales, gold-flecked underbelly, mud-matted ridge fur",
+  "signature_prop": "broken left tusk capped with a brass ring",
+  "posture_default": "coiled low, weight on forelimbs, tail tip always moving",
+  "eye_behavior": "slow horizontal nictitating blink; ears flatten before lunges",
+  "face": "blunt muzzle, four-nostril ridge, amber eyes with horizontal pupils",
+  "voice_note": "sub-bass rumble with clicking overtones; null if scenes are scored only",
+  "reference_frame": null,
   "version": 1
 }
 ```
@@ -90,8 +134,12 @@ the lock.
 
 1. JSON parses (`jq . characters/<id>.json` exits 0).
 2. All mandatory fields present and non-empty.
-3. Palette has ≥ 2 and ≤ 5 hex values.
-4. Downstream skills cite this file by path, never paraphrase its
+3. `subject_class` (when present) is one of `humanoid | creature |
+   vehicle | abstract | object`; each field reads per the matrix row
+   for that class — a creature lock with a garment list in `wardrobe`
+   is a drafting error, not a style choice.
+4. Palette has ≥ 2 and ≤ 5 hex values.
+5. Downstream skills cite this file by path, never paraphrase its
    contents.
 
 ## Output format
@@ -105,6 +153,9 @@ the lock.
 
 ## Gotcha
 
+- A non-humanoid lock without `subject_class` reads as humanoid
+  downstream — the lock is structurally weaker and nobody can tell.
+  Always set the class for non-humanoid subjects.
 - The model wants to "improve" identity tokens on each scene —
   this is the silent drift failure. Tokens are immutable until a
   revision note bumps `version`.
