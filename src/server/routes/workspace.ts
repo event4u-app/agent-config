@@ -836,6 +836,29 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             }
         });
 
+        // Tier-1 host availability (ADR-079). Lets the GUI host picker annotate
+        // / disable hosts whose CLI is absent, so a user doesn't pick a host
+        // that will only degrade to the inbox. Side-effect-free PATH probe.
+        app.get('/api/v1/workspace/hosts', async () => {
+            try {
+                const { stdout } = await execFileAsync(
+                    'python3', [WORKSPACE_HOSTS_CLI, 'list', '--json'], { timeout: 5_000 },
+                );
+                const rows = JSON.parse(stdout) as Array<Record<string, unknown>>;
+                const hosts = rows
+                    .filter((r) => r['inventory_tier'] === 1)
+                    .map((r) => ({
+                        id: String(r['host']),
+                        cli_present: r['cli_present'] === true,
+                        effective_tier: typeof r['effective_tier'] === 'number' ? r['effective_tier'] : 3,
+                    }));
+                return { hosts };
+            } catch {
+                // Fail open: no availability data → the GUI enables all hosts.
+                return { hosts: [] };
+            }
+        });
+
         app.post('/api/v1/workspace/explain', async (request, reply) => {
             const body = request.body as ExplainPayload | undefined;
             if (body === undefined || (body.mode !== 'plain' && body.mode !== 'technical')) {

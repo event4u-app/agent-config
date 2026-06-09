@@ -99,6 +99,13 @@ interface DocumentSummary {
 
 type ExplainMode = 'plain' | 'technical';
 
+// Tier-1 host availability for the picker (ADR-079).
+interface HostOption {
+    id: string;
+    cli_present: boolean;
+    effective_tier: number;
+}
+
 // Per-host drive health snapshot (ADR-073/074, surfaced read-only per ADR-078).
 interface HostHealth {
     killed: boolean;
@@ -120,6 +127,30 @@ const loadError = signal<string | null>(null);
 const launchBanner = signal<string | null>(null);
 const explainMode = signal<ExplainMode>('plain');
 const driveHealth = signal<Record<string, HostHealth>>({});
+// Host picker (ADR-079). Available Tier-1 hosts + the session-global choice,
+// seeded from sessionStorage (per-session, not cross-session — council).
+const hosts = signal<HostOption[]>([]);
+
+const HOST_LABELS: Record<string, string> = {
+    'claude-code': 'Claude Code',
+    codex: 'Codex',
+    gemini: 'Gemini',
+};
+
+function readStoredHost(): string {
+    try {
+        return globalThis.sessionStorage?.getItem('ac-workspace-host') ?? 'claude-code';
+    } catch {
+        return 'claude-code';
+    }
+}
+
+const selectedHost = signal<string>(readStoredHost());
+
+function setSelectedHost(id: string): void {
+    selectedHost.value = id;
+    try { globalThis.sessionStorage?.setItem('ac-workspace-host', id); } catch { /* non-fatal */ }
+}
 // Drive integration (ADR-075). Tasks-with-input-specs for the selected role,
 // the inline form's open task + field values, the in-flight flag, and the last
 // driven turn / outcome.
@@ -140,7 +171,7 @@ const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
 async function load(): Promise<void> {
     loadError.value = null;
     try {
-        const [r, s, k, d, h] = await Promise.all([
+        const [r, s, k, d, h, ho] = await Promise.all([
             apiFetch<{ roles: Role[] }>('/api/v1/workspace/roles'),
             apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20'),
             apiFetch<{ chunks: KnowledgeChunk[] }>('/api/v1/workspace/knowledge?limit=20'),
@@ -148,12 +179,16 @@ async function load(): Promise<void> {
             // Health is non-critical — never let it fail the page load.
             apiFetch<{ health: Record<string, HostHealth> }>('/api/v1/workspace/drive-health')
                 .catch(() => ({ health: {} as Record<string, HostHealth> })),
+            // Host availability is non-critical too — failure → empty (picker enables all).
+            apiFetch<{ hosts: HostOption[] }>('/api/v1/workspace/hosts')
+                .catch(() => ({ hosts: [] as HostOption[] })),
         ]);
         roles.value = r.roles;
         sessions.value = s.sessions;
         knowledge.value = k.chunks;
         recentDocs.value = d.documents;
         driveHealth.value = h.health ?? {};
+        hosts.value = ho.hosts ?? [];
         loaded.value = true;
     } catch (err) {
         if (err instanceof ApiCallError) {
@@ -184,7 +219,7 @@ async function launch(role: string, task: string, inputs: Record<string, string>
     try {
         const res = await apiFetch<LaunchResult>(
             '/api/v1/workspace/launch',
-            { method: 'POST', body: { role, task, inputs, host: DRIVE_HOST } },
+            { method: 'POST', body: { role, task, inputs, host: selectedHost.value } },
         );
         launchResult.value = res;
         launchBanner.value = bannerFor(res);
@@ -572,6 +607,37 @@ function ExplainToggle(): preact.JSX.Element {
     );
 }
 
+// Session-global Tier-1 host picker (ADR-079). Friendly label + id; a host
+// whose CLI is absent is disabled with a "(not installed)" note so the user
+// doesn't pick a host that would only degrade to the inbox. Availability data
+// may be empty (fetch failed) → every host stays selectable (fail open).
+function HostPicker(): preact.JSX.Element {
+    const known = hosts.value;
+    const ids = known.length > 0 ? known.map((h) => h.id) : Object.keys(HOST_LABELS);
+    const present = new Map(known.map((h) => [h.id, h.cli_present]));
+    return (
+        <label class="ac-workspace__host-picker">
+            <span class="ac-workspace__host-label">Host</span>
+            <select
+                class="ac-workspace__host-select"
+                aria-label="Host agent"
+                value={selectedHost.value}
+                onChange={(e): void => { setSelectedHost((e.target as HTMLSelectElement).value); }}
+            >
+                {ids.map((id) => {
+                    const installed = present.get(id) !== false;   // unknown availability → enabled
+                    const label = HOST_LABELS[id] ?? id;
+                    return (
+                        <option key={id} value={id} disabled={!installed}>
+                            {label} ({id}){installed ? '' : ' — not installed'}
+                        </option>
+                    );
+                })}
+            </select>
+        </label>
+    );
+}
+
 export function WorkspacePage(): preact.JSX.Element {
     useEffect(() => { void load(); }, []);
 
@@ -603,6 +669,7 @@ export function WorkspacePage(): preact.JSX.Element {
                 <p class="ac-page__subtitle">
                     Pick a role, pick a first task, run it.
                 </p>
+                <HostPicker />
             </header>
             {launchBanner.value !== null
                 ? <p class="ac-banner" role="status">{launchBanner.value}</p>

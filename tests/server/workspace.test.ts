@@ -574,6 +574,19 @@ describe('workspaceRoute', () => {
         expect(health['consecutive_failures']).toBe(5);
     });
 
+    // --- host availability (ADR-079) ---------------------------------------
+
+    it('GET /hosts lists the three Tier-1 hosts with availability', async () => {
+        const res = await app.inject({ method: 'GET', url: '/api/v1/workspace/hosts', headers: AUTH });
+        expect(res.statusCode).toBe(200);
+        const hosts = (res.json() as { hosts: Array<{ id: string; cli_present: boolean; effective_tier: number }> }).hosts;
+        expect(hosts.map((h) => h.id).sort()).toEqual(['claude-code', 'codex', 'gemini']);
+        for (const h of hosts) {
+            expect(typeof h.cli_present).toBe('boolean');
+            expect(typeof h.effective_tier).toBe('number');
+        }
+    });
+
     // --- conversation continuation (ADR-076) -------------------------------
     // The actual resume drive needs a tier-1 CLI (absent in CI). Here we lock
     // the deterministic wiring: prompt validation, 404, the 409 "no host turn
