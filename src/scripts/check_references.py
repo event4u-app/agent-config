@@ -38,6 +38,9 @@ SKIP_DIRS = [
     "agents/runtime/council/responses",  # paired council output (gitignored), captured provider output
     "agents/runtime/council/questions",  # design Q&A trail — forward-refs to planned artifacts
     "agents/evidence/analysis",           # plate-comparison working docs — forward-refs to planned artifacts
+    "agents/evidence/audits",    # point-in-time audit write-ups — historical refs to then-current artefacts
+    "agents/reports",            # transient run reports — historical/scratch refs, not stable artefacts
+    "agents/roadmaps/skipped",   # skipped roadmaps — abandoned plans w/ forward-refs that never shipped
     "agents/runtime",            # volatile / machine-generated artefacts (gitignored)
     "agents/tmp",                # transient working docs (gitignored) — pr-bodies, council questions, manual-step scratchpads
 ]
@@ -67,7 +70,7 @@ MEMORY_SKIP_URI_PREFIXES = ("http://", "https://", "adr://", "ticket://",
 # File path references like `guidelines/agent-infra/size-and-scope.md`
 PATH_PATTERN = re.compile(
     r'[`"\s]'
-    r'(\.?(?:augment|agents|guidelines|rules|skills|commands|contexts|templates|patterns|personas)'
+    r'(\.?(?:augment|agents|guidelines|rules|skills|commands|contexts|templates|patterns|personas|docs|src)'
     r'(?:/[\w._-]+)+\.(?:md|php|py|yml|yaml|json|sh))'
     r'[`"\s,;)\]]'
 )
@@ -122,6 +125,20 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"\.condensation-hashes\.json"), # JSON file, not .md
     re.compile(r"-foo\.(md|json|yml|yaml)$"),  # `-foo.<ext>` placeholder examples
     re.compile(r"-bar\.(md|json|yml|yaml)$"),  # `-bar.<ext>` placeholder examples
+    # ── docs/+src/ illustrative example paths (Phase-0 step 7a) ──
+    # Each entry is a PEDAGOGICAL placeholder inside a skill/template whose
+    # stated purpose is demonstrating doc structure — not a real package
+    # artefact. (Council rigor: allowlist must cite the skill's intent.)
+    re.compile(r"docs/foo\.md"),               # readme-reviewer skill: example doc-path placeholder
+    re.compile(r"docs/decisions/foo\.md"),     # council/default command: example ADR placeholder
+    re.compile(r"docs/auth\.md"),              # security skill: sample consumer auth-doc path
+    re.compile(r"docs/billing\.md"),           # agents-md-anatomy context: sample consumer doc path
+    re.compile(r"docs/runbooks/"),             # observability template: sample consumer runbook paths
+    re.compile(r"docs/adr/00"),                # challenge-me-with-docs + architecture-decisions example: sample ADR refs (package uses docs/decisions/ADR-NNN)
+    re.compile(r"src/scripts/X\.py"),          # step-execution report: `X.py` literal placeholder
+    # ── docs/ forward-looking artefacts (planned, will materialise) ──
+    re.compile(r"docs/flows\.md"),             # positioning roadmap Phase-1 deliverable (not yet shipped)
+    re.compile(r"docs/contracts/domain-pack-overlap-inventory\.md"),  # domain-pack-extraction roadmap: planned contract
     # Forward references inside in-flight planning docs (road-to-
     # structural-optimization.md and its companion spike protocols).
     # Each pattern below is removed once the matching phase lands.

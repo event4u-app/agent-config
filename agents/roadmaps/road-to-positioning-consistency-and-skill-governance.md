@@ -116,15 +116,25 @@ regression, and the docs reach a release-ready baseline.
 - [x] Artefact census — count public artefacts per type with a stated methodology, publish
       `docs/artefact-census.md`. This is the baseline the Phase 3 discovery scan reports against (resolves
       the 530-vs-560 ambiguity).
-- [ ] Extend the CI guardrail: (a) link/path integrity (a dead in-repo doc path fails the build), and
-      (b) a `category:` lint asserting every *visible* command declares `flow-entry | state-query |
-      product-surface` per ADR-048. <!-- carve-out: new-gate-verification --> Run both once locally to
-      confirm they catch the current breakage and pass after the fixes.
+- [x] **7a** — link/path integrity: a dead in-repo `docs/` or `src/` path fails the build.
+      `check_references.py` PATH_PATTERN extended to the `docs/` + `src/` roots; illustrative
+      example paths allowlisted with skill-purpose rationale; transient layers
+      (skipped roadmaps, evidence/audits, reports) added to SKIP_DIRS; the one genuine dead ref
+      (`role-contracts` path in `persona-writing`) fixed. <!-- carve-out: new-gate-verification -->
+      CI-for-the-CI tests added (`tests/test_check_references_allowlist.py`): dead docs//src path
+      fails, live passes, illustrative allowlisted, both roots covered — run locally, 16/16 green.
+- [~] **7b** — the `category:` lint (every visible command declares `flow-entry | state-query |
+      product-surface` per ADR-048) is **re-cut to Phase 2** per AI-council (claude-sonnet-4-5 +
+      gpt-4o, 2026-06-09): it is product/governance judgment over 125 commands (0 categorized today),
+      not CI plumbing, and should follow the Phase-2 ownership map. Hand-off captured in
+      [`docs/contracts/command-category-governance.md`](../../docs/contracts/command-category-governance.md).
+      <!-- deferred: moved to Phase 2 (command-category governance); see hand-off doc -->
 
 **Exit criteria:** README + `CLAUDE.md` carry no dead source-of-truth paths, the dead-path grep family
-returns zero hits in stable artefacts, both CI guardrails are green, and the build/source convention is
-documented — i.e. the docs are at a release-ready baseline. Whether/when to call that a 6.0 release stays
-the human's decision; this roadmap pins no version.
+returns zero hits in stable hand-authored artefacts, the link/path-integrity CI guardrail (7a) is green,
+and the build/source convention is documented — i.e. the docs are at a release-ready baseline. The
+command-`category:` guardrail (7b) is tracked in Phase 2, not a Phase-0 blocker (orthogonal property).
+Whether/when to call this a 6.0 release stays the human's decision; this roadmap pins no version.
 
 ## Phase 1 — Positioning & Flows: make the product navigable (docs only, zero routing risk)
 
@@ -157,6 +167,11 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
 
 - [ ] Skill ownership map (CODEOWNERS-style, or a `SKILL_OWNERS` doc keyed by family) assigning a
       maintainer per family. Group-by-family makes this tractable.
+- [ ] **Command `category:` lint (from Phase-0 step 7b).** Introduce the `category:` frontmatter field
+      (`flow-entry | state-query | product-surface` per ADR-048), categorize the 125 visible commands
+      (after the ownership map assigns owners — avoids one architect making 125 calls), decide the
+      demotion path for commands that fit none, then ship the lint (warn first, then blocking). Full
+      hand-off: [`docs/contracts/command-category-governance.md`](../../docs/contracts/command-category-governance.md).
 - [ ] Skill lifecycle policy — review cadence and active/dormant/sunset states; dormancy triggers
       *review*, not automatic deprecation. Slot it beside `persona-governance` as its skill-side sibling.
 - [ ] Machine-readable `skill-family-map.yml` — per skill: `family`, `primary_use`, `activation_scope`,

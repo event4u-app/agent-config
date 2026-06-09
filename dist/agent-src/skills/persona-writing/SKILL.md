@@ -29,7 +29,7 @@ Do NOT use this skill when:
 * The content is a hard obligation the agent must always honor → use
   [`rule-writing`](../rule-writing/SKILL.md)
 * The content describes the project's role-mode contract → that lives
-  in `docs/contracts/role-contracts.md`, not in personas
+  in `docs/guidelines/agent-infra/role-contracts.md`, not in personas
 
 ## Persona vs skill vs role-mode — critical test
 
@@ -119,7 +119,7 @@ is too broad.
 - **Vibe-based unique questions** — "Does this feel right?" cannot
   be evaluated against the artifact. Replace with decidable triggers.
 - **Restating role-mode contracts** — closing-contract obligations
-  belong in `docs/contracts/role-contracts.md`, not in the persona
+  belong in `docs/guidelines/agent-infra/role-contracts.md`, not in the persona
   body.
 
 ## Frugality Standards
