@@ -54,18 +54,29 @@ All checks must pass before a PR is merged:
 
 ## Source of truth
 
-- **Edit** `.agent-src.uncondensed/` — the authoring layer with verbose content.
-- **Do not edit** `dist/agent-src/` directly — it is the condensed output shipped
-  in the package, generated from the uncondensed layer by `task sync`.
-- **Do not edit** `.augment/` directly either — it is a local projection of
-  `dist/agent-src/` for Augment Code (gitignored), rebuilt by `task sync`.
-- **Do not edit** `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` —
-  they are generated projections for specific tools.
+`src/` is the single source of truth — the authoring layer you edit:
+`src/skills/`, `src/rules/`, `src/agent-src/` (profiles, user-types, commands,
+contexts, personas, packs), `src/domains/<pack>/`, `src/scripts/`.
+
+- **Edit** `src/` — verbose, authored content.
+- **Do not edit** `dist/agent-src/` directly — it is the **condensed output
+  shipped in the package**, generated from `src/` by `task sync`.
+- **Do not edit** `.augment/` directly either — it is a generated projection of
+  `dist/agent-src/` for Augment Code (gitignored in this repo; the installed
+  runtime tree in a consumer project — a deployment role, not source privilege).
+- **Do not edit** `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`,
+  `GEMINI.md` — generated projections for specific tools.
+
+**The build chain:** `src/` → `task sync` condenses → `dist/agent-src/` (the
+shipped, published artefact) → projected → `.augment/` + the per-tool trees. No
+tool is privileged; every projection is read-only output. The condensed output
+lands in `dist/agent-src/` (and, in a consumer install, in that project's
+`.augment/`). Authoritative: the `source-of-truth` rule.
 
 Helper commands:
 
 ```bash
-task sync             # .agent-src.uncondensed/ → dist/agent-src/, then project → .augment/
+task sync             # src/ → dist/agent-src/, then project → .augment/
 task generate-tools   # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task test             # pytest tests/ + installer integration tests
 task lint-skills      # python3 scripts/skill_linter.py --all
@@ -84,13 +95,14 @@ task lint-skills      # python3 scripts/skill_linter.py --all
 
 ## Adding or editing skills, rules, and commands
 
-- Skills, rules, and commands live in `.agent-src.uncondensed/`.
+- Skills and rules live in `src/skills/` and `src/rules/`; commands in
+  `src/domains/<pack>/` and `src/agent-src/commands/`.
 - Each skill must pass `task lint-skills` — frontmatter, structure, size
   budgets, and self-containment are enforced by the linter.
 - Size budgets are enforced by the `size-enforcement` rule and the linter.
   See [`size-enforcement`](dist/agent-src/rules/size-enforcement.md)
   for the current limits.
-- After editing content under `.agent-src.uncondensed/`, run `task sync` so
+- After editing content under `src/`, run `task sync` so
   `dist/agent-src/`, `.augment/`, and the tool-specific projections stay in sync.
 - Skills must remain project-agnostic. Nothing in `dist/agent-src/` may reference a
   specific consumer project, domain, or stack. The
@@ -115,7 +127,7 @@ intent — *"a skill that validates JWT tokens"*, *"a rule banning
 silent fallbacks"* — and the agent:
 
 - picks the right artefact type (skill vs. rule vs. command vs. guideline);
-- places it in the correct directory under `.agent-src.uncondensed/`;
+- places it in the correct directory under `src/`;
 - writes frontmatter, trigger phrase (≤ 200 chars, multi-trigger coverage),
   required sections, and a size budget that fits the linter;
 - runs `task sync` so the condensed and projected copies stay aligned;
