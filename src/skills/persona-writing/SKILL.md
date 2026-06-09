@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: persona-writing
-description: "Use when creating or editing a persona in .agent-src.uncondensed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'."
+description: "Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'."
 domain: process
 workspaces:
   - agent-config-maintainer
@@ -16,7 +16,7 @@ packs:
 ## When to use
 
 * Creating a new persona file in
-  `.agent-src.uncondensed/personas/{id}.md`
+  `src/agent-src/personas/{id}.md`
 * Rewriting an existing persona (focus shift, output-expectation
   change — not a typo fix)
 * Deciding whether a new reviewer voice should be a persona at all
@@ -51,7 +51,7 @@ Creating or materially rewriting a persona must go through
 Understand → Research → Draft per the
 [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
 rule. Inspect existing personas under
-`.agent-src.uncondensed/personas/` for overlap before writing a new
+`src/agent-src/personas/` for overlap before writing a new
 one.
 
 ### 1. Decide focus, not topic
@@ -99,7 +99,7 @@ persona pairs naturally with; it does not bind.
 
 ## Output format
 
-A single Markdown file at `.agent-src.uncondensed/personas/{id}.md`:
+A single Markdown file at `src/agent-src/personas/{id}.md`:
 
 1. Frontmatter (`id`, `role`, `description`, `tier`, `mode`,
    `version`, `source`)
@@ -153,6 +153,6 @@ to every persona you author.
 
 ## Examples
 
-See `.agent-src.uncondensed/personas/ai-agent.md` (automation
+See `src/agent-src/personas/ai-agent.md` (automation
 readiness) and `critical-challenger.md` (adversarial review) for
 canonical structure.

@@ -102,10 +102,12 @@ regression, and the docs reach a release-ready baseline.
       paths (profiles, user-types, rules, source-of-truth note).
 - [x] Fix the stale source-of-truth path in `CLAUDE.md` (`packages/<pack>/.agent-src.uncondensed/`
       → the real `src/` layout).
-- [ ] Sweep all stable artefacts for the dead path family — grep `packages/core`, `packages/pack-`,
+- [x] Sweep all stable artefacts for the dead path family — grep `packages/core`, `packages/pack-`,
       `packages/<pack>`, bare `.agent-src.uncondensed` across README, `docs/profiles.md`,
       `docs/catalog.md`, `MIGRATION.md`, AGENTS.md, contexts, and active roadmaps; fix each to its real
       `src/` target. (Reuse `/fix:refs` / `check-refs` where it applies.)
+      <!-- done: hand-authored stable artefacts swept to 0 (README/MIGRATION/AGENTS/profiles already clean; catalog via 4 source descriptions; 8 settings/contexts docs; domain-pack-extraction roadmap). Residual dead-path lives ONLY in two GENERATED artefacts (rule-trigger-matrix.md, file-ownership-matrix.md) — a generator bug (build_rule_trigger_matrix reads the dead path → 0 rules; OUT + generate_ownership MD_OUT write to non-canonical agents/contexts/ vs canonical agents/settings/contexts/), owned by the generator-fix follow-up (defers the 0→79-rule behavior change for isolated verification). The 753-file corpus-wide .agent-src.uncondensed prose (skill/rule bodies, dist/) is out of step-4 scope — a separate broad migration. -->
+- [ ] **(follow-up, generator-bug)** Fix `build_rule_trigger_matrix.py` (read `src/rules`, write canonical `agents/settings/contexts/`) and `generate_ownership_matrix.py` (`MD_OUT` → `agents/settings/contexts/structural/`); regenerate both matrices clean; remove the stray `agents/contexts/` outputs. Verify the regenerated rule-trigger matrix (0 → real rule count) is correct.
 - [ ] Document the `src/` (source of truth) → built/published-artefact convention in `CONTRIBUTING.md`
       so the `.agent-src.uncondensed` naming stops implying a path that no longer exists. Name where the
       condensed output actually lands.

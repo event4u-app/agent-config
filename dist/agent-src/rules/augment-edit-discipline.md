@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete"
+description: "Editing .augment/ or src/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete"
 triggers:
   - path_prefix: ".augment/"
   - path_prefix: ".agent-src.uncondensed/"

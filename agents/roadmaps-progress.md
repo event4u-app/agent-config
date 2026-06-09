@@ -6,10 +6,10 @@
 
 ## Overall
 
-**78 / 116 steps done · 67%**
+**79 / 117 steps done · 68%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+███████████████████████████░░░░░░░░░░░░░   68%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 3 | 62 | 6 | 0 | ██████████ 95% |
-| 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 22 | 19 | 3 | 0 | 0 | █░░░░░░░░░ 14% |
+| 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 23 | 19 | 4 | 0 | 0 | ██░░░░░░░░ 17% |
 | 3 | [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
@@ -45,11 +45,11 @@
 
 ### [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md)
 
-**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 3 / 22 done (14%)
+**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 4 / 23 done (17%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Trust: align the public surface with the code, and guard it | 🟡 in progress | 4 | 3 | 0 | 0 | 43% |
+| 0 | Trust: align the public surface with the code, and guard it | 🟡 in progress | 4 | 4 | 0 | 0 | 50% |
 | 1 | Positioning & Flows: make the product navigable (docs only, zero routing risk) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 2 | Governance: own, age, and contract the surface | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Consolidation discovery (decide; merge nothing here) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

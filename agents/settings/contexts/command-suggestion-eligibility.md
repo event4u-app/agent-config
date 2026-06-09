@@ -2,7 +2,7 @@
 
 > Source-of-truth audit feeding Phase 2 (frontmatter migration) of the
 > `road-to-context-aware-command-suggestion` roadmap. Every command
-> under `.agent-src.uncondensed/commands/` is listed exactly once
+> under `src/agent-src/commands/` is listed exactly once
 > with an explicit `eligible` decision.
 
 ## Rules

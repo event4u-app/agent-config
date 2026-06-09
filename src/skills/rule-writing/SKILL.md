@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: rule-writing
-description: "Use when creating or editing a rule in .agent-src.uncondensed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'."
+description: "Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'."
 domain: process
 workspaces:
   - agent-config-maintainer
@@ -15,7 +15,7 @@ packs:
 
 ## When to use
 
-* Creating a new rule in `.agent-src.uncondensed/rules/{name}.md`
+* Creating a new rule in `src/rules/{name}.md`
 * Rewriting an existing rule (not a typo fix)
 * Deciding whether something should be a rule at all
 * Converting a learning from `learning-to-rule-or-skill` into a concrete rule
@@ -47,7 +47,7 @@ Research → Draft from the
 
 * **Understand** — which agent behavior is wrong today? What should change?
   Can you point to a concrete incident or repeated pattern?
-* **Research** — **inspect** `.agent-src.uncondensed/rules/` for overlap
+* **Research** — **inspect** `src/rules/` for overlap
   and **analyze** `rule-type-governance`, `size-enforcement`,
   `skill-quality` before drafting.
 * **Draft** — propose frontmatter (`type`, `description`) first, wait for
@@ -97,8 +97,8 @@ fail `python3 scripts/lint_load_context.py`. Canonical reference:
 
 | Field | Form | Example |
 |---|---|---|
-| `load_context:` / `load_context_eager:` | **Logical name** rooted at the source — never `.agent-src.uncondensed/` | `contexts/execution/verification-mechanics.md` |
-| `triggers[].path_prefix:` | **Literal match pattern** the host evaluates against the file the agent is editing — not rewritten | `.agent-src.uncondensed/skills/` (source-of-truth rules) or `agents/`, `app/`, `.augment/` |
+| `load_context:` / `load_context_eager:` | **Logical name** rooted at the source — never `src/` | `contexts/execution/verification-mechanics.md` |
+| `triggers[].path_prefix:` | **Literal match pattern** the host evaluates against the file the agent is editing — not rewritten | `src/skills/` (source-of-truth rules) or `agents/`, `app/`, `.augment/` |
 | Body links to guidelines / contracts | **Verbatim relative form** — `../../docs/...` works in any markdown viewer; rewriter handles depth | `[guideline](../../docs/guidelines/<group>/<name>.md)` |
 
 The condense-time rewriter (`scripts/condense.py::_rewrite_paths`) is
@@ -106,7 +106,7 @@ idempotent and depth-aware — it resolves logical names and body links
 to the deployment-correct relative path at condense time, leaving
 `path_prefix:` literally as written. The schema regex
 (`scripts/schemas/rule.schema.json`) and `scripts/lint_load_context.py`
-both reject the `.agent-src.uncondensed/` prefix in `load_context:` /
+both reject the `src/` prefix in `load_context:` /
 `load_context_eager:` with an error pointing at the canonical logical
 name.
 
@@ -126,7 +126,7 @@ the PR or split by responsibility.
 
 ### 5. Validate
 
-* Run `python3 scripts/skill_linter.py .agent-src.uncondensed/rules/{name}.md`
+* Run `python3 scripts/skill_linter.py src/rules/{name}.md`
   → must report **0 FAIL**.
 * Run `bash scripts/condense.sh --sync` to regenerate `dist/agent-src/rules/{name}.md`.
 * Run `python3 scripts/condense.py --generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
@@ -191,7 +191,7 @@ source: package           # or project for consumer-local rules
 load_context:             # logical names only — `contexts/<area>/<file>.md`
   - contexts/execution/verification-mechanics.md
 triggers:                 # path_prefix is literal, not rewritten
-  - path_prefix: ".agent-src.uncondensed/rules/"
+  - path_prefix: "src/rules/"
 routes_to:
   - "skill:related-skill"
 ---
@@ -203,7 +203,7 @@ and body links (relative `../../docs/...`, rewriter handles depth).
 
 ## Output format
 
-1. Complete rule file at `.agent-src.uncondensed/rules/{name}.md`
+1. Complete rule file at `src/rules/{name}.md`
 2. Frontmatter fully populated, no placeholders left
 3. Linter output showing 0 FAIL
 4. Confirmation that `bash scripts/condense.sh --sync` + `python3 scripts/condense.py --generate-tools` ran clean
@@ -261,7 +261,7 @@ validation:
   `type`.
 * Self-check the body: under the size budget (200 lines hard,
   120 soft), trigger sentence first, no embedded procedures.
-* Tell the user to save under `.agent-src.uncondensed/rules/{name}.md`
+* Tell the user to save under `src/rules/{name}.md`
   and run `task sync && task lint-skills` locally before committing.
 * Do not call the linter or condenseor — they only run on the
   user's machine.

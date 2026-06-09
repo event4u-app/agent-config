@@ -2,7 +2,7 @@
 
 > **Status:** Decided · Phase 0 of `road-to-trim-frugality-canon` · 2026-05-08
 > **Context:** [`road-to-trim-frugality-canon.md`](../roadmaps/road-to-trim-frugality-canon.md) ·
-> [`frugality-charter.md`](../../.agent-src.uncondensed/contexts/contracts/frugality-charter.md)
+> [`frugality-charter.md`](../../src/agent-src/contexts/contracts/frugality-charter.md)
 > **Harness:** [`scripts/measure_frugality_savings.py`](../../scripts/measure_frugality_savings.py)
 > **Local log:** `agents/.frugality-baseline.jsonl` (gitignored — running record)
 
