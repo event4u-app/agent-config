@@ -151,14 +151,20 @@ maintainer can navigate 227 skills by family — without touching any skill file
 - [x] Per-profile experience landing pages — `docs/experiences/{developer,founder,content_creator,
       agency,finance,ops}.md`. Each page: who it's for · first 3 tasks · first commands · which packs
       activate · which flows apply · what is NOT loaded · examples. README links these instead of artefact lists.
-- [ ] Skill-family taxonomy doc (`docs/`) grouping the 227 skills into navigable families (engineering,
+- [x] Skill-family taxonomy doc (`docs/`) grouping the 227 skills into navigable families (engineering,
       review, architecture, testing, security, frontend, content, video, finance, strategy, operations,
       agent-admin, …). Navigation only — no file moves, no description edits, no merges.
+      <!-- done: docs/skills-taxonomy.md — 227 skills, 19 families, 0 uncategorized; heuristic (pack + name-pattern), reproducible, counts match the census. -->
 - [x] Cross-link profile pages ↔ flows ↔ representative skills so the "experience" framing is walkable.
       Verify every new link resolves (`check-refs`).
-- [ ] Cross-reference note — record that the experience pages, flow docs, and taxonomy feed the active
+- [x] Cross-reference note — record that the experience pages, flow docs, and taxonomy feed the active
       `road-to-employee-product-and-external-proof.md` workstream; coordinate timing, do not duplicate its
       external-proof work here.
+      <!-- recorded: docs/flows.md, docs/experiences/*.md, docs/skills-taxonomy.md are NAVIGATION docs (no case-studies / benchmarks / external proof) — they feed the employee-product workstream's discoverability surface without duplicating its external-proof deliverables. Coordinate any README "Prove it" edits with that roadmap. -->
+
+> **Phase 1 complete.** README surfaces flows + per-profile experience pages; `docs/flows.md`,
+> `docs/experiences/*.md`, and `docs/skills-taxonomy.md` make the 227-skill surface navigable by
+> work-journey, profile, and family — docs only, zero routing risk.
 
 ## Phase 2 — Governance: own, age, and contract the surface
 
