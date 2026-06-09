@@ -26,9 +26,9 @@ six entries, no role-detection guesswork.
 **Not sure which one?** Run `npx @event4u/agent-config init` then
 `agent-config setup` — the browser wizard asks a single 8-option role
 question and maps to the closest profile. Source-of-truth:
-[`packages/core/.agent-src.uncondensed/profiles/`](packages/core/.agent-src.uncondensed/profiles/) ·
+[`src/agent-src/profiles/`](src/agent-src/profiles/) ·
 schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
-Beyond software: [`user-types/`](packages/core/.agent-src.uncondensed/user-types/)
+Beyond software: [`user-types/`](src/agent-src/user-types/)
 (galabau · metalworking · truck — see [Beyond software](#beyond-software).
 
 <p align="center">
@@ -84,7 +84,7 @@ Working on the package itself? [Development](#development) covers the
 `task ci` pipeline, [Requirements](#requirements) the toolchain,
 [Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
 opt-in measurement loop. Source-of-truth tree is
-`packages/core/.agent-src.uncondensed/`; never hand-edit `.augment/` or `dist/agent-src/`.
+`src/` (`src/skills`, `src/rules`, `src/agent-src/`); never hand-edit `.augment/` or `dist/agent-src/`.
 
 ---
 
@@ -339,13 +339,13 @@ Stack-agnostic governance core (orchestration · role modes · command clusters 
 
 ### Beyond software
 
-The same orchestration core drives non-software trades via [`user-types/`](packages/core/.agent-src.uncondensed/user-types/): [`galabau-field-crew`](packages/core/.agent-src.uncondensed/user-types/galabau-field-crew.md) · [`metalworking-shop`](packages/core/.agent-src.uncondensed/user-types/metalworking-shop.md) · [`truck-driver`](packages/core/.agent-src.uncondensed/user-types/truck-driver.md). Contribute your own — [5-minute scaffold](packages/core/.agent-src.uncondensed/user-types/_template/).
+The same orchestration core drives non-software trades via [`user-types/`](src/agent-src/user-types/): [`galabau-field-crew`](src/agent-src/user-types/galabau-field-crew.md) · [`metalworking-shop`](src/agent-src/user-types/metalworking-shop.md) · [`truck-driver`](src/agent-src/user-types/truck-driver.md). Contribute your own — [5-minute scaffold](src/agent-src/user-types/_template/).
 
 ---
 
 ## Data governance & domain safety
 
-Three domain-safety rules ([`domain-safety-pii`](packages/core/.agent-src.uncondensed/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](packages/core/.agent-src.uncondensed/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](packages/core/.agent-src.uncondensed/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
+Three domain-safety rules ([`domain-safety-pii`](src/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](src/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](src/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
 
 ### Maintainer telemetry (opt-in, default-off)
 
@@ -385,7 +385,7 @@ Browse content: [all 150 commands](dist/agent-src/commands/) · [skills catalog]
 
 ## Development
 
-Working on the package itself? Edit `packages/core/.agent-src.uncondensed/`, regenerate trees:
+Working on the package itself? Edit `src/` (the source of truth — `src/skills`, `src/rules`, `src/agent-src/`), regenerate trees:
 
 ```bash
 task sync             # regenerate dist/agent-src/ and .augment/
