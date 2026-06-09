@@ -6,10 +6,10 @@
 
 ## Overall
 
-**96 / 132 steps done · 73%**
+**100 / 132 steps done · 76%**
 
 ```text
-█████████████████████████████░░░░░░░░░░░   73%
+██████████████████████████████░░░░░░░░░░   76%
 ```
 
 ## ⏳ Merge-gated — pending post-merge archival
@@ -26,7 +26,7 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 1 | 65 | 5 | 0 | ██████████ 98% |
 | 2 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 27 | 7 | 18 | 2 | 0 | ███████░░░ 72% |
+| 3 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 28 | 3 | 22 | 3 | 0 | █████████░ 88% |
 | 4 | [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 6 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
@@ -64,14 +64,14 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 
 ### [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md)
 
-**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 18 / 25 done (72%)
+**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 22 / 25 done (88%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Trust: align the public surface with the code, and guard it | 🟡 in progress | 1 | 8 | 1 | 0 | 89% |
 | 1 | Positioning & Flows: make the product navigable (docs only, zero routing risk) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Governance: own, age, and contract the surface | 🟡 in progress | 2 | 4 | 1 | 0 | 67% |
-| 3 | Consolidation discovery (decide; merge nothing here) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Governance: own, age, and contract the surface | 🟡 in progress | 2 | 5 | 1 | 0 | 71% |
+| 3 | Consolidation discovery (decide; merge nothing here) | ✅ done | 0 | 3 | 1 | 0 | 100% |
 
 ### [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md)
 
