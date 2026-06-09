@@ -110,10 +110,10 @@ regression, and the docs reach a release-ready baseline.
 - [x] **(follow-up, generator-bug)** Fix `build_rule_trigger_matrix.py` (read `src/rules`, write canonical `agents/settings/contexts/`) and `generate_ownership_matrix.py` (`MD_OUT` → `agents/settings/contexts/structural/`); regenerate both matrices; remove the stray `agents/contexts/` outputs. Verify the regenerated rule-trigger matrix (0 → real rule count) is correct.
       <!-- done: both generators now read `src/` and write the canonical `agents/settings/contexts/` location; stray `agents/contexts/` removed. rule-trigger-matrix went 0 → 79 rules, 0 dead-path (30 newer rules surface as honest "NOT CLASSIFIED" — the hand-curated CLASSIFICATION table predates them; classifying them is a separate audit task). The ownership matrix is location-fixed + regenerated, but its ~748 `.agent-src.uncondensed` cells are EDGE records of links that still exist in ~753 corpus files (skill/rule bodies) — the matrix records existing links faithfully, so those clear only with the broad corpus-prose migration, not the generator fix. They are backtick table cells, not `[](){}` links, so check-refs stays green. -->
 - [ ] **(follow-up, corpus-migration)** Broad `.agent-src.uncondensed/` → `src/` prose migration across the ~753 corpus files (skill/rule bodies, `dist/`) with the non-uniform map (`skills`/`rules` → `src/`; `contexts`/`commands`/`personas`/`templates` → `src/agent-src/`). This is the only remaining source of dead-path strings (e.g. the ownership-matrix edge cells). Large mechanical migration — own PR(s), recondense in lockstep.
-- [ ] Document the `src/` (source of truth) → built/published-artefact convention in `CONTRIBUTING.md`
+- [x] Document the `src/` (source of truth) → built/published-artefact convention in `CONTRIBUTING.md`
       so the `.agent-src.uncondensed` naming stops implying a path that no longer exists. Name where the
       condensed output actually lands.
-- [ ] Artefact census — count public artefacts per type with a stated methodology, publish
+- [x] Artefact census — count public artefacts per type with a stated methodology, publish
       `docs/artefact-census.md`. This is the baseline the Phase 3 discovery scan reports against (resolves
       the 530-vs-560 ambiguity).
 - [ ] Extend the CI guardrail: (a) link/path integrity (a dead in-repo doc path fails the build), and
