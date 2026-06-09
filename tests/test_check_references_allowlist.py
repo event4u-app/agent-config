@@ -128,3 +128,48 @@ def test_is_allowlisted_matches_expected_tokens():
     assert not cr._is_allowlisted("real-skill")
     assert not cr._is_allowlisted("nonexistent-skill")
     assert not cr._is_allowlisted("packaging-helper")
+
+
+# --- docs/ + src/ path-root coverage (Phase-0 step 7a guardrail) ---------
+# CI-for-the-CI: prove the extended PATH_PATTERN actually catches a dead
+# docs/ or src/ path, that a live one passes, that illustrative example
+# paths stay allowlisted, and that the two new roots are really in the regex
+# (a typo would silently un-check whole directories).
+
+def _path_refs(broken: list[cr.BrokenRef]) -> list[cr.BrokenRef]:
+    return [b for b in broken if b.ref_type == "path"]
+
+
+def test_docs_dead_path_fails(tmp_path):
+    """A dead docs/ path must fail the build — the step-7a guardrail."""
+    body = "See the guide at `docs/nonexistent-guide.md` for details.\n"
+    broken = _path_refs(_check(tmp_path, body))
+    assert any("docs/nonexistent-guide.md" in b.ref for b in broken)
+
+
+def test_src_dead_path_fails(tmp_path):
+    """A dead src/ path must fail the build. (Not under `skills/<x>/SKILL.md`,
+    which is an existing example-path allowlist — use a context path so the
+    test exercises the new `src/` root, not a pre-existing allowlist entry.)"""
+    body = "Edit `src/agent-src/contexts/nonexistent-context.md` to change it.\n"
+    broken = _path_refs(_check(tmp_path, body))
+    assert any("src/agent-src/contexts/nonexistent-context.md" in b.ref for b in broken)
+
+
+def test_docs_existing_path_passes(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "real.md").write_text("ok", encoding="utf-8")
+    body = "See `docs/real.md`.\n"
+    assert not _path_refs(_check(tmp_path, body))
+
+
+def test_docs_illustrative_example_allowlisted(tmp_path):
+    """Pedagogical placeholder paths stay allowlisted, not flagged."""
+    body = "Put auth docs in `docs/auth.md`, runbooks in `docs/runbooks/5xx.md`.\n"
+    assert not _path_refs(_check(tmp_path, body))
+
+
+def test_pattern_covers_docs_and_src_roots():
+    """Regression: docs/ and src/ roots are actually in PATH_PATTERN."""
+    assert cr.PATH_PATTERN.search(" `docs/x/y.md` ")
+    assert cr.PATH_PATTERN.search(" `src/rules/z.md` ")
