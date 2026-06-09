@@ -31,7 +31,7 @@ Trigger = user's last **chat message**. Not turn count, open file, roadmap, tick
 
 ## User-visible prose — every token mirrors
 
-Applies to opening / closing line, **inter-tool commentary** (`Found it`, `Let me check`, `OK`, `Alright`, `Here's`, `So`), section headings, table headers and cells, bullet text, blockquote text, status lines, and the `Recommendation:` / `Empfehlung:` label under numbered-options blocks (per [`user-interaction`](user-interaction.md) Iron Law 1). Wrong label = violation.
+Opening / closing line, **inter-tool commentary** (`Found it`, `Let me check`, `OK`, `Alright`, `Here's`, `So`), section headings, table headers and cells, bullet text, blockquote text, status lines, the `Recommendation:` / `Empfehlung:` label under numbered-options blocks ([`user-interaction`](user-interaction.md) Iron Law 1). Wrong label = violation.
 
 Stays in source language: code blocks, command output, file contents, quoted tool output, frontmatter keys, file paths, identifier names, log lines.
 
@@ -40,7 +40,7 @@ Stays in source language: code blocks, command output, file contents, quoted too
 1. **Detect** — language of user's last chat message. Mixed → dominant; tie → German.
 2. **Scan** — every user-visible token per catalog above.
 3. **Rewrite** — wrong-language token → rewrite the whole reply.
-4. **Confirm** — first sentence in target language; recommendation label matches; no wrong-language filler-phrase opener. Blocklist: [`language-and-tone-examples § Pre-send gate`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#pre-send-gate--filler-phrase-blocklist).
+4. **Confirm** — first sentence in target language; recommendation label matches; no wrong-language filler-phrase opener. Blocklist: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ## Spelled out
 
@@ -61,4 +61,4 @@ All `.md` text under `src/`, `docs/`, `.augment/`, `dist/agent-src/`, `.agent-sr
 
 Genuinely-required German uses a sanctioned escape only: a labeled `DE: … · EN: …` anchor (German *prose*), or a per-line `<!-- md-language-check: ignore -->` marker (one quoted trigger example / verbatim provenance quote — never scattered through a generated file).
 
-Generated-output rule, escape mechanics, pre-save detection heuristic: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#md-files--pre-save-detection-heuristic).
+Generated-output rule, escape mechanics, pre-save detection heuristic: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
