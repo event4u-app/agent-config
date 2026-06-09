@@ -6,7 +6,7 @@
 
 ## Overall
 
-**36 / 66 steps done · 55%**
+**37 / 67 steps done · 55%**
 
 ```text
 ██████████████████████░░░░░░░░░░░░░░░░░░   55%
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 29 | 2 | 23 | 4 | 0 | █████████░ 92% |
+| 2 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 30 | 2 | 24 | 4 | 0 | █████████░ 92% |
 | 3 | [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
@@ -38,13 +38,13 @@
 
 ### [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md)
 
-**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 23 / 25 done (92%)
+**Positioning Consistency + Skill Governance — close the doc-drift and 227-skill gaps** — 24 / 26 done (92%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Trust: align the public surface with the code, and guard it | ✅ done | 0 | 9 | 2 | 0 | 100% |
 | 1 | Positioning & Flows: make the product navigable (docs only, zero routing risk) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Governance: own, age, and contract the surface | 🟡 in progress | 2 | 5 | 1 | 0 | 71% |
+| 2 | Governance: own, age, and contract the surface | 🟡 in progress | 2 | 6 | 1 | 0 | 75% |
 | 3 | Consolidation discovery (decide; merge nothing here) | ✅ done | 0 | 3 | 1 | 0 | 100% |
 
 ### [road-to-session-profile-observability.md](roadmaps/road-to-session-profile-observability.md)

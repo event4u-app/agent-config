@@ -69,6 +69,11 @@
       },
       "description": "6.0.0-C Phase 2 routing metadata. The data backbone the routing-eval lint checks against: the skill slug(s), cluster sub-command(s), or command(s) this command routes the intent to (e.g. ['refine-ticket', 'feature-planning'] or ['fix:ci']). REQUIRED on every visible command (tier 0/1), enforced by scripts/lint_command_routing.py; optional on internal commands."
     },
+    "category": {
+      "type": "string",
+      "enum": ["flow-entry", "state-query", "product-surface"],
+      "description": "ADR-048 command-justification category for a top-level slot: `flow-entry` (daily work starting point), `state-query` (read-only check), `product-surface` (deliberately-started feature). OPTIONAL and validate-when-present (positioning Phase 2b, AI-council 2026-06-09): the field is defined and an author MAY categorize a command at creation (see the command-writing skill checklist), but full categorization + blocking enforcement are DEFERRED until a consumer (routing / analytics / discovery) reads it — populating supply before demand is YAGNI. Sub-commands inherit the parent cluster's category."
+    },
     "replaces": {
       "type": "array",
       "uniqueItems": true,

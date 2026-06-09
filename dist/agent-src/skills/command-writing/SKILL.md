@@ -42,6 +42,20 @@ author as a skill and add a thin command that delegates to it.
 Check first: [`command-clusters` § Command justification](../../../docs/contracts/command-clusters.md#command-justification--a-command-must-earn-a-top-level-slot)
 ([ADR-048](../../../docs/decisions/ADR-048-command-justification-rule.md)).
 
+**Categorize at creation (checklist).** New top-level command → declare
+`category:` (schema enum `flow-entry | state-query | product-surface`):
+
+- [ ] **flow-entry** — daily work start (`work`, `git-commit`, `review-changes`).
+- [ ] **state-query** — read-only check (`agent-status`, `project-health`, `profile`).
+- [ ] **product-surface** — deliberately-started feature (`council`, `research`, `roadmap`).
+- [ ] **fits none → it's a skill.** Don't add the command.
+- [ ] **ambiguous?** Omit `category:` + note why — OPTIONAL (validate-when-present);
+  deferring is intentional.
+
+Sub-commands inherit the parent cluster's category — leave `category:` off them.
+Why optional + not yet blocking, + the upgrade trigger:
+[`command-category-governance`](../../../docs/contracts/command-category-governance.md).
+
 ## Commands ARE Claude skills (projection reality)
 
 Every `src/agent-src/commands/{name}.md` projects to
