@@ -12,11 +12,12 @@ right rail. Pairs with the accessibility audit at
 [`daily-workspace-a11y.md`](daily-workspace-a11y.md) and the surface
 contract at [`docs/contracts/daily-workspace.md`](../contracts/daily-workspace.md).
 
-> **Screenshots + recruit quotes pending.** Per the roadmap step this
-> walkthrough belongs to, real screenshots and verbatim quotes come
-> from a follow-up validation session with a Phase 1 recruit-session
-> participant (human-owner). Until that session runs, this document
-> ships text-only — no staged or fabricated screenshots.
+> **Screenshots are real; recruit quotes pending.** The screenshots
+> below are maintainer-captured renders of the actual app — Chromium
+> against the same server `ui:serve` boots, with the six shipped roles
+> and a clean first-run state. Nothing staged or fabricated. Verbatim
+> user quotes still come from the optional Phase 1 recruit sessions
+> (human-owner); until one runs, this walkthrough carries no quotes.
 
 ## Prerequisites
 
@@ -36,13 +37,21 @@ The local UI server starts on `127.0.0.1` (loopback only — nothing is
 exposed to your network) and opens the browser. Pick the **Workspace**
 tab. The page header reads "Pick a role, pick a first task, run it."
 
+![Workspace tab on first open — role cards on the left, empty session
+strip in the centre, knowledge / documents / explanation-style rail on
+the right](assets/workspace-role-grid.png)
+
 ## 2. Pick a role
 
 The left column lists every installed role as a card: display name, a
 status badge (`draft` / `beta` / `stable`), and a one-line tagline.
-Click your role — say **Sales**. The centre column swaps to that
-role's three first tasks. Clicking a different role later swaps the
-task list without losing your session history.
+Click your role — say **Galabau owner**. The centre column swaps to
+that role's three first tasks. Clicking a different role later swaps
+the task list without losing your session history.
+
+![Galabau owner selected — the centre column lists the role's first
+tasks, each with a Start session button and the prompt template it
+references](assets/workspace-task-picker.png)
 
 ## 3. Start a first task
 
@@ -56,6 +65,9 @@ append-only file under `~/.event4u/agent-config/workspace/sessions/`
 The host agent (Claude Code, or your configured tool) picks the
 session up from there; the prompt template the task references lives
 under `agents/roles/<role>/prompts/`.
+
+![Session started — confirmation banner with the session id at the
+top, task list and right rail unchanged below](assets/workspace-session-started.png)
 
 ## 4. The right rail — sources, documents, explanation style
 
@@ -105,8 +117,11 @@ blocks) are refused on documents and silently scrubbed from telemetry.
 - The host-agent turn loop (how replies stream back) — that substrate
   is [`ADR-023`](../decisions/ADR-023-host-agent-protocol.md) Tier 1
   and lands separately.
-- Encryption at rest — the layer exists (`workspace_crypto.py`) but
-  store-side wiring is deferred to its own PR; see the roadmap's
-  Phase 8 Step 3 deferral note.
+- Encryption at rest — the layer (`workspace_crypto.py`) and the
+  store-side wiring are in place across sessions, documents, and
+  analytics ([`ADR-062`](../decisions/ADR-062-encrypt-at-rest-store-architecture.md)
+  family); the feature flag (`workspace.encrypt_at_rest`) stays
+  default-off until the v1.0 activation event, so day-to-day stores
+  are plaintext unless you opt in.
 - Team / multi-user deployment — single-user by design; see
   [`docs/deploy/team-deployment-posture.md`](../deploy/team-deployment-posture.md).
