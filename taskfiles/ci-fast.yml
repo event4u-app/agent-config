@@ -309,6 +309,11 @@ tasks:
     desc: Check for broken cross-references in .md files
     cmd: python3 src/scripts/check_references.py
 
+  check-no-new-legacy-path:
+    silent: true
+    desc: "Regression guard — no NEW .agent-src.uncondensed/ references added under src/ (ADR-051)"
+    cmd: python3 src/scripts/check_no_new_legacy_path.py
+
   check-refs-json:
     silent: true
     desc: Check for broken cross-references (JSON output)

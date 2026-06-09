@@ -66,6 +66,27 @@ States: **active** · **dormant** · **sunset**. Slots beside the
 | **`candidate_*` / `overlaps_with`** spine fields | discovery *conclusions*, not metadata | Phase 3 (consolidation scan) |
 | **Command `category:` lint — full 125-command categorization** | product-surface judgment; large | Phase 2b / 3 — see [`command-category-governance.md`](contracts/command-category-governance.md) |
 
+## Legacy-path freeze (`.agent-src.uncondensed/`)
+
+The pre-relocation source path `.agent-src.uncondensed/` is dead (ADR-051; source
+of truth is `src/`). Existing stale **prose** mentions in `src/` are fixed
+**opportunistically** — a large blind sweep was rejected by AI-council
+(2026-06-09): the literal is also the *detection subject* of the reference
+linters (rewriting it disables them), and historical ADRs are correct as written.
+
+What is enforced instead — the debt cannot **grow**:
+
+```
+NO NEW `.agent-src.uncondensed/` REFERENCE MAY BE ADDED UNDER src/.
+```
+
+`scripts/check_no_new_legacy_path.py` (CI, PR-scoped via `gh pr diff`) fails on any
+**added** line under `src/` containing the literal — except the three files where
+it is legitimate forever (`_lib/agent_src.py`'s `LEGACY_SRC`, and the two
+`check_*` reference detectors). Existing mentions migrate to `src/` when their
+file is touched for another reason. Historical ADRs (`docs/decisions/`) keep their
+mentions; `internal/` (glama) + `agents/roadmaps/{archive,skipped}` are out of scope.
+
 ## See also
 
 - [`docs/contracts/skill-family-map.yml`](contracts/skill-family-map.yml) — the spine.
