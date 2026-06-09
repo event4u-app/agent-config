@@ -1,0 +1,915 @@
+# skill-family-map.yml — machine-readable governance spine (positioning Phase 2)
+# GENERATED. Base fields only: family / primary_use / activation_scope.
+# overlaps_with + candidate_for_{merge,lens,internal} are Phase-3 discovery
+# conclusions and are intentionally ABSENT here (see docs/governance.md).
+# Regenerate: re-run the documented logic in docs/governance.md.
+schema_version: 1
+skills:
+  accessibility-auditor:
+    family: frontend-design
+    primary_use: 'Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader sema'
+    activation_scope: core
+  activation-design:
+    family: product-discovery
+    primary_use: 'Use when defining or auditing the activation event — aha-moment selection, retention correlation, falsifiable'
+    activation_scope: product-discovery
+  adr-create:
+    family: agent-admin
+    primary_use: 'Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status /'
+    activation_scope: core
+  adversarial-review:
+    family: ai-council-decision
+    primary_use: 'ONLY when user requests adversarial review, devil''s advocate, stress-test, OR honest critique of finished work'
+    activation_scope: core
+  agent-docs-writing:
+    family: agent-admin
+    primary_use: 'Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md'
+    activation_scope: core
+  agents-md-thin-root:
+    family: agent-admin
+    primary_use: 'Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: har'
+    activation_scope: core
+  ai-council:
+    family: ai-council-decision
+    primary_use: 'Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a r'
+    activation_scope: core
+  analysis-autonomous-mode:
+    family: debugging-analysis
+    primary_use: 'ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or ''dig into'
+    activation_scope: core
+  analysis-skill-router:
+    family: debugging-analysis
+    primary_use: 'Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and s'
+    activation_scope: core
+  api-design:
+    family: backend-data
+    primary_use: 'Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user'
+    activation_scope: core
+  api-endpoint:
+    family: backend-data
+    primary_use: 'Use when creating an API endpoint or HTTP route handler — detects the project stack and routes to the matching'
+    activation_scope: core
+  api-testing:
+    family: testing
+    primary_use: 'Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked exte'
+    activation_scope: core
+  architecture-review-lens:
+    family: review-judging
+    primary_use: 'Use when a diff may break system boundaries, dependency direction, or cross-service contracts — fifth judge di'
+    activation_scope: core
+  artisan-commands:
+    family: backend-data
+    primary_use: 'Use when creating or modifying Artisan commands'
+    activation_scope: laravel
+  async-python-patterns:
+    family: backend-data
+    primary_use: 'Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, time'
+    activation_scope: python
+  authz-review:
+    family: review-judging
+    primary_use: 'Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before c'
+    activation_scope: core
+  aws-infrastructure:
+    family: devops-infra
+    primary_use: 'Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env de'
+    activation_scope: core
+  blade-ui:
+    family: frontend-design
+    primary_use: 'Use when the project''s frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`'
+    activation_scope: laravel
+  blast-radius-analyzer:
+    family: security
+    primary_use: 'Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migrati'
+    activation_scope: core
+  bug-analyzer:
+    family: debugging-analysis
+    primary_use: 'Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis'
+    activation_scope: core
+  build-buy-partner:
+    family: strategy
+    primary_use: 'Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality p'
+    activation_scope: founder-strategy
+  canvas-design:
+    family: frontend-design
+    primary_use: 'Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even i'
+    activation_scope: ai-video
+  character-consistency:
+    family: ai-video-image
+    primary_use: 'Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette'
+    activation_scope: ai-video
+  check-refs:
+    family: agent-admin
+    primary_use: 'Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not'
+    activation_scope: core
+  churn-prevention:
+    family: product-discovery
+    primary_use: 'Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship'
+    activation_scope: product-basic
+  code-refactoring:
+    family: architecture-refactor
+    primary_use: 'Use when the user says ''refactor this'', ''rename class'', or ''move method'''
+    activation_scope: core
+  code-review:
+    family: review-judging
+    primary_use: 'Use when the user says "review this", "check my code", or wants feedback on changes'
+    activation_scope: core
+  command-routing:
+    family: agent-admin
+    primary_use: 'Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content —'
+    activation_scope: core
+  command-writing:
+    family: agent-admin
+    primary_use: 'Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety'
+    activation_scope: core
+  comp-banding:
+    family: people-org
+    primary_use: 'Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correc'
+    activation_scope: ops-people
+  competitive-moat-analysis:
+    family: strategy
+    primary_use: 'Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, w'
+    activation_scope: founder-strategy
+  competitive-positioning:
+    family: strategy
+    primary_use: 'Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoptio'
+    activation_scope: gtm-marketing
+  composer-packages:
+    family: backend-data
+    primary_use: 'Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing'
+    activation_scope: php
+  condense-memory:
+    family: agent-admin
+    primary_use: 'Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — ref'
+    activation_scope: core
+  content-funnel-design:
+    family: content-writing
+    primary_use: 'Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selecti'
+    activation_scope: gtm-marketing
+  context-authoring:
+    family: agent-admin
+    primary_use: 'Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deploymen'
+    activation_scope: core
+  context-document:
+    family: agent-admin
+    primary_use: 'Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase ar'
+    activation_scope: core
+  contracts-cognition:
+    family: strategy
+    primary_use: 'Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actual'
+    activation_scope: ops-people
+  conventional-commits-writing:
+    family: engineering-workflow
+    primary_use: 'Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes'
+    activation_scope: core
+  copilot-agents-optimization:
+    family: agent-admin
+    primary_use: 'Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces li'
+    activation_scope: core
+  copilot-config:
+    family: agent-admin
+    primary_use: 'Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbos'
+    activation_scope: core
+  corpus-grounding:
+    family: agent-admin
+    primary_use: 'Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain mani'
+    activation_scope: engineering-base
+  customer-research:
+    family: product-discovery
+    primary_use: 'Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summ'
+    activation_scope: product-discovery
+  dashboard-design:
+    family: operations-reliability
+    primary_use: 'Use when designing monitoring dashboards — visualization selection, layout principles, observability strategie'
+    activation_scope: core
+  data-flow-mapper:
+    family: security
+    primary_use: 'Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → s'
+    activation_scope: core
+  data-handling-judgment:
+    family: security
+    primary_use: 'Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow'
+    activation_scope: core
+  database:
+    family: backend-data
+    primary_use: 'Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi'
+    activation_scope: core
+  dcf-modeling:
+    family: finance
+    primary_use: 'Wing-4 valuation cognition for a CFO / finance-partner'
+    activation_scope: finance-advanced
+  deal-qualification-meddic:
+    family: gtm-sales
+    primary_use: 'Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualificat'
+    activation_scope: gtm-sales
+  decision-record:
+    family: ai-council-decision
+    primary_use: 'Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade'
+    activation_scope: core
+  deep-reading-analyst:
+    family: debugging-analysis
+    primary_use: 'Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — ''analyze articl'
+    activation_scope: core
+  defense-in-depth:
+    family: security
+    primary_use: 'Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot'
+    activation_scope: core
+  dependency-upgrade:
+    family: architecture-refactor
+    primary_use: 'Use when upgrading dependencies — ''update framework X'', ''bump runtime version'', or ''upgrade packages'''
+    activation_scope: core
+  description-assist:
+    family: agent-admin
+    primary_use: 'Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage'
+    activation_scope: core
+  design-intelligence:
+    family: frontend-design
+    primary_use: 'Grounded design brief from the adopted corpus — style, WCAG-checked color tokens, typography, layout pattern'
+    activation_scope: frontend-design
+  design-review:
+    family: review-judging
+    primary_use: 'Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review'
+    activation_scope: core
+  design-tokens:
+    family: frontend-design
+    primary_use: 'Author a 3-layer DTCG token system (primitive → semantic → component) with light/dark theming; generate CSS va'
+    activation_scope: frontend-design
+  devcontainer:
+    family: agent-admin
+    primary_use: 'Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features'
+    activation_scope: core
+  developer-like-execution:
+    family: engineering-workflow
+    primary_use: 'Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → exe'
+    activation_scope: core
+  discovery-interview:
+    family: product-discovery
+    primary_use: 'Use when running discovery interviews — question-bank build, bias audit, insight extraction'
+    activation_scope: product-discovery
+  doc-coauthoring:
+    family: content-writing
+    primary_use: 'Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → sectio'
+    activation_scope: core
+  docker:
+    family: devops-infra
+    primary_use: 'Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (f'
+    activation_scope: core
+  editorial-calendar:
+    family: content-writing
+    primary_use: 'Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-'
+    activation_scope: gtm-marketing
+  eloquent:
+    family: backend-data
+    primary_use: 'Use when writing Eloquent models, relationships, scopes, or queries via Model:: — ''fetch users with their orde'
+    activation_scope: laravel
+  error-handling-patterns:
+    family: architecture-refactor
+    primary_use: 'Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circui'
+    activation_scope: core
+  estimate-ticket:
+    family: product-discovery
+    primary_use: 'Estimate a Jira/Linear ticket — ''estimate PROJ-123'', ''wie groß ist das?'', ''should we split this?'' — size + ris'
+    activation_scope: product-basic
+  existing-ui-audit:
+    family: frontend-design
+    primary_use: 'Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, a'
+    activation_scope: core
+  expansion-playbook:
+    family: gtm-sales
+    primary_use: 'Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognitio'
+    activation_scope: gtm-sales
+  fe-design:
+    family: frontend-design
+    primary_use: 'Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, respons'
+    activation_scope: core
+  feature-planning:
+    family: product-discovery
+    primary_use: 'Use when the user says "plan a feature", "brainstorm", "explore this idea", or wants to go from idea to struct'
+    activation_scope: product-basic
+  file-editor:
+    family: agent-admin
+    primary_use: 'Use when opening edited files in the user''s IDE'
+    activation_scope: core
+  finishing-a-development-branch:
+    family: engineering-workflow
+    primary_use: 'Use when the feature is implementation-complete and the next step is ''ship it'' — verifies, cleans up, and rout'
+    activation_scope: core
+  flux:
+    family: frontend-design
+    primary_use: 'Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`'
+    activation_scope: laravel
+  forecast-accuracy:
+    family: finance
+    primary_use: 'Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence te'
+    activation_scope: gtm-sales
+  forecasting:
+    family: finance
+    primary_use: 'Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop'
+    activation_scope: finance-basic
+  form-handler:
+    family: backend-data
+    primary_use: 'Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI'
+    activation_scope: core
+  fundraising-narrative:
+    family: finance
+    primary_use: 'Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-'
+    activation_scope: founder-strategy
+  funnel-analysis:
+    family: product-discovery
+    primary_use: 'Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — c'
+    activation_scope: product-basic
+  git-workflow:
+    family: engineering-workflow
+    primary_use: 'Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process'
+    activation_scope: core
+  github-ci:
+    family: devops-infra
+    primary_use: 'Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusa'
+    activation_scope: core
+  grafana:
+    family: devops-infra
+    primary_use: 'Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when'
+    activation_scope: core
+  gtm-launch:
+    family: gtm-sales
+    primary_use: 'Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engi'
+    activation_scope: gtm-marketing
+  guideline-writing:
+    family: agent-admin
+    primary_use: 'Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-tri'
+    activation_scope: core
+  hiring-loop-design:
+    family: people-org
+    primary_use: 'Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-no'
+    activation_scope: ops-people
+  image-analyser:
+    family: debugging-analysis
+    primary_use: 'Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-re'
+    activation_scope: ai-video
+  image-creator:
+    family: ai-video-image
+    primary_use: 'Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first'
+    activation_scope: ai-video
+  incident-commander:
+    family: operations-reliability
+    primary_use: 'Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton —'
+    activation_scope: core
+  jira-integration:
+    family: operations-reliability
+    primary_use: 'Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions'
+    activation_scope: core
+  jobs-events:
+    family: backend-data
+    primary_use: 'Use when creating Laravel jobs, queued workflows, events, or listeners'
+    activation_scope: laravel
+  judge-bug-hunter:
+    family: review-judging
+    primary_use: 'Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispat'
+    activation_scope: core
+  judge-code-quality:
+    family: review-judging
+    primary_use: 'Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with code'
+    activation_scope: core
+  judge-security-auditor:
+    family: review-judging
+    primary_use: 'Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, ma'
+    activation_scope: core
+  judge-test-coverage:
+    family: review-judging
+    primary_use: 'Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for'
+    activation_scope: core
+  laravel-api-endpoint:
+    family: backend-data
+    primary_use: 'Use when creating a new Laravel API endpoint — Controller, FormRequest, Resource, route, Policy, OpenAPI annot'
+    activation_scope: laravel
+  laravel-dto:
+    family: backend-data
+    primary_use: 'Use when creating a Laravel/PHP DTO with the SimpleDto base class and attribute mapping'
+    activation_scope: laravel
+  laravel-horizon:
+    family: backend-data
+    primary_use: 'Use when working with Laravel queues in production — Horizon dashboard, worker supervision, job metrics, balan'
+    activation_scope: laravel
+  laravel-mail:
+    family: backend-data
+    primary_use: 'Use when building Laravel emails — Mailables, Markdown templates, queued sending, attachments, previews — even'
+    activation_scope: laravel
+  laravel-middleware:
+    family: backend-data
+    primary_use: 'Use when creating or modifying Laravel middleware — request/response filtering, groups, priority, terminable m'
+    activation_scope: laravel
+  laravel-migration:
+    family: backend-data
+    primary_use: 'Use when creating a Laravel migration — table prefixes, column naming, multi-tenant awareness, php artisan mak'
+    activation_scope: laravel
+  laravel-notifications:
+    family: backend-data
+    primary_use: 'Use when sending notifications via mail, Slack, database, or custom channels — with queuing, on-demand recipie'
+    activation_scope: laravel
+  laravel-pennant:
+    family: backend-data
+    primary_use: 'Use when working with feature flags — Laravel Pennant, gradual rollouts, A/B testing, scope-based flags — even'
+    activation_scope: laravel
+  laravel-pulse:
+    family: backend-data
+    primary_use: 'Use when setting up Laravel Pulse — real-time dashboard, built-in cards, custom recorders, performance insight'
+    activation_scope: laravel
+  laravel-reverb:
+    family: backend-data
+    primary_use: 'Use when configuring Laravel Reverb — the first-party WebSocket server with Pusher protocol compatibility, hor'
+    activation_scope: laravel
+  laravel-scheduling:
+    family: backend-data
+    primary_use: 'Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, mainte'
+    activation_scope: laravel
+  laravel-validation:
+    family: backend-data
+    primary_use: 'Use when writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when t'
+    activation_scope: laravel
+  laravel-websocket:
+    family: backend-data
+    primary_use: 'Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels'
+    activation_scope: laravel
+  laravel:
+    family: backend-data
+    primary_use: 'Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers'
+    activation_scope: laravel
+  launch-readiness:
+    family: operations-reliability
+    primary_use: 'Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff'
+    activation_scope: founder-strategy
+  learning-to-rule-or-skill:
+    family: agent-admin
+    primary_use: 'Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill'
+    activation_scope: core
+  lint-skills:
+    family: agent-admin
+    primary_use: 'Use when running the package''s skill linter against all skills and rules to validate frontmatter, required sec'
+    activation_scope: core
+  livewire-architect:
+    family: frontend-design
+    primary_use: 'Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, stat'
+    activation_scope: laravel
+  livewire:
+    family: frontend-design
+    primary_use: 'Use when the project''s frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`'
+    activation_scope: laravel
+  logging-monitoring:
+    family: operations-reliability
+    primary_use: 'Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured'
+    activation_scope: core
+  market-entry-analysis:
+    family: strategy
+    primary_use: 'Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta'
+    activation_scope: founder-strategy
+  markitdown:
+    family: agent-admin
+    primary_use: 'Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstre'
+    activation_scope: core
+  mcp-builder:
+    family: agent-admin
+    primary_use: 'Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design'
+    activation_scope: core
+  mcp:
+    family: agent-admin
+    primary_use: 'Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for'
+    activation_scope: core
+  md-language-check:
+    family: agent-admin
+    primary_use: 'Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words'
+    activation_scope: core
+  memory-consolidation:
+    family: agent-admin
+    primary_use: 'Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → P'
+    activation_scope: core
+  merge-conflicts:
+    family: engineering-workflow
+    primary_use: 'Use when the user has merge conflicts or says "resolve conflicts"'
+    activation_scope: core
+  messaging-architecture:
+    family: architecture-refactor
+    primary_use: 'Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked position'
+    activation_scope: gtm-marketing
+  migration-architect:
+    family: architecture-refactor
+    primary_use: 'Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation'
+    activation_scope: core
+  mobile-e2e-strategy:
+    family: testing
+    primary_use: 'Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Sim'
+    activation_scope: core
+  module-detect-on-the-fly:
+    family: agent-admin
+    primary_use: 'Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `'
+    activation_scope: core
+  module-management:
+    family: agent-admin
+    primary_use: 'Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMV'
+    activation_scope: core
+  motion-choreographer:
+    family: ai-video-image
+    primary_use: 'Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary'
+    activation_scope: ai-video
+  multi-tenancy:
+    family: backend-data
+    primary_use: 'Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, o'
+    activation_scope: core
+  nextjs-patterns:
+    family: backend-data
+    primary_use: 'Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, a'
+    activation_scope: nextjs
+  okr-tree-modeling:
+    family: strategy
+    primary_use: 'Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an exist'
+    activation_scope: founder-strategy
+  onboarding-design:
+    family: product-discovery
+    primary_use: 'Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagn'
+    activation_scope: product-basic
+  onboarding-program:
+    family: people-org
+    primary_use: 'Use when shaping employee onboarding — time-to-productivity, role-by-role program, mentor pairing, 30/60/90 mi'
+    activation_scope: ops-people
+  one-on-one-cadence:
+    family: people-org
+    primary_use: 'Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti'
+    activation_scope: ops-people
+  openapi:
+    family: architecture-refactor
+    primary_use: 'Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when t'
+    activation_scope: core
+  org-design:
+    family: people-org
+    primary_use: 'Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries'
+    activation_scope: ops-people
+  override-management:
+    family: agent-admin
+    primary_use: 'Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing or'
+    activation_scope: core
+  perf-feedback-craft:
+    family: people-org
+    primary_use: 'Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-i'
+    activation_scope: ops-people
+  performance-analysis:
+    family: debugging-analysis
+    primary_use: 'ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection'
+    activation_scope: core
+  performance:
+    family: architecture-refactor
+    primary_use: 'Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis pat'
+    activation_scope: core
+  persona-writing:
+    family: agent-admin
+    primary_use: 'Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output'
+    activation_scope: core
+  pest-testing:
+    family: testing
+    primary_use: 'Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable'
+    activation_scope: laravel
+  php-coder:
+    family: backend-data
+    primary_use: 'Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without nam'
+    activation_scope: php
+  php-debugging:
+    family: backend-data
+    primary_use: 'Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, heade'
+    activation_scope: php
+  php-service:
+    family: backend-data
+    primary_use: 'Use when the user says ''create service'', ''new service class'', or needs a PHP service following SOLID principle'
+    activation_scope: php
+  pipeline-strategy:
+    family: gtm-sales
+    primary_use: 'Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning'
+    activation_scope: gtm-sales
+  pixar-storyteller:
+    family: ai-video-image
+    primary_use: 'Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored'
+    activation_scope: ai-video
+  playwright-architect:
+    family: testing
+    primary_use: 'Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-pre'
+    activation_scope: core
+  playwright-testing:
+    family: testing
+    primary_use: 'Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures'
+    activation_scope: core
+  po-discovery:
+    family: product-discovery
+    primary_use: 'Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tig'
+    activation_scope: product-basic
+  positioning-strategy:
+    family: strategy
+    primary_use: 'Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch'
+    activation_scope: gtm-marketing
+  prediction-pool-optimizer:
+    family: ai-video-image
+    primary_use: 'Optimize prediction-pool tips (kicktipp etc.): rules + multi-book consensus odds → expected-points-max answer'
+    activation_scope: fun
+  privacy-review:
+    family: review-judging
+    primary_use: 'Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII'
+    activation_scope: core
+  project-analysis-core:
+    family: debugging-analysis
+    primary_use: 'Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, executio'
+    activation_scope: core
+  project-analysis-hypothesis-driven:
+    family: debugging-analysis
+    primary_use: 'Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-'
+    activation_scope: core
+  project-analysis-laravel:
+    family: backend-data
+    primary_use: 'Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, asyn'
+    activation_scope: laravel
+  project-analysis-nextjs:
+    family: backend-data
+    primary_use: 'Use for deep Next.js analysis: server vs client boundaries, routing, data fetching, caching, rendering modes'
+    activation_scope: nextjs
+  project-analysis-node-express:
+    family: backend-data
+    primary_use: 'Use for deep Node.js / Express project analysis: boot flow, middleware order, async behavior, data layer, auth'
+    activation_scope: typescript
+  project-analysis-react:
+    family: frontend-design
+    primary_use: 'Use for deep React analysis: component tree, state flow, props flow, hooks usage, rendering behavior, and Reac'
+    activation_scope: react
+  project-analysis-symfony:
+    family: backend-data
+    primary_use: 'Use for deep Symfony project analysis: kernel/bootstrap, container wiring, routing/request flow, Doctrine, sec'
+    activation_scope: symfony
+  project-analysis-zend-laminas:
+    family: debugging-analysis
+    primary_use: 'Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC f'
+    activation_scope: php
+  project-analyzer:
+    family: debugging-analysis
+    primary_use: 'ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up'
+    activation_scope: core
+  project-docs:
+    family: agent-admin
+    primary_use: 'Use when looking for project-specific documentation'
+    activation_scope: core
+  prompt-engineering-patterns:
+    family: agent-admin
+    primary_use: 'Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verifi'
+    activation_scope: core
+  prompt-optimizer:
+    family: agent-admin
+    primary_use: 'Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — ''make this prompt bett'
+    activation_scope: core
+  prompt-validator:
+    family: agent-admin
+    primary_use: 'Pre-spend contradiction gate for AI-video runs: checks every prompt in the batch, blocks on style / character'
+    activation_scope: ai-video
+  quality-tools:
+    family: engineering-workflow
+    primary_use: 'Use when PHPStan, Rector, or ECS output appears — "phpstan says mixed ", type errors, "fix code style ", "run'
+    activation_scope: core
+  react-native-setup:
+    family: frontend-design
+    primary_use: 'Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New'
+    activation_scope: react
+  react-shadcn-ui:
+    family: frontend-design
+    primary_use: 'Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `d'
+    activation_scope: react
+  readme-reviewer:
+    family: agent-admin
+    primary_use: 'Use when reviewing a README for accuracy, usability, and alignment with the actual repository'
+    activation_scope: core
+  readme-writing-package:
+    family: agent-admin
+    primary_use: 'Use when creating or rewriting a README for a reusable package or library'
+    activation_scope: core
+  readme-writing:
+    family: agent-admin
+    primary_use: 'Use when creating, rewriting, or significantly improving a README based on the actual repository structure, co'
+    activation_scope: core
+  receiving-code-review:
+    family: review-judging
+    primary_use: 'Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and push'
+    activation_scope: core
+  refine-prompt:
+    family: agent-admin
+    primary_use: 'Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — ''/'
+    activation_scope: core
+  refine-ticket:
+    family: product-discovery
+    primary_use: 'Refine a Jira/Linear ticket before planning — ''refine ticket'', ''tighten AC on PROJ-123'', ''ist das Ticket klar?'
+    activation_scope: product-basic
+  release-comms:
+    family: content-writing
+    primary_use: 'Use when turning a shipped changelog into a release narrative — value-not-feature framing, audience-segmented'
+    activation_scope: gtm-marketing
+  repomix-packer:
+    family: agent-admin
+    primary_use: 'Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JS'
+    activation_scope: core
+  requesting-code-review:
+    family: review-judging
+    primary_use: 'Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included'
+    activation_scope: core
+  retention-loops:
+    family: product-discovery
+    primary_use: 'Use when designing product-led retention — habit formation, trigger-action-reward, network vs single-user loop'
+    activation_scope: product-basic
+  review-routing:
+    family: review-judging
+    primary_use: 'Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus'
+    activation_scope: core
+  rice-prioritization:
+    family: product-discovery
+    primary_use: 'Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backl'
+    activation_scope: product-basic
+  risk-officer:
+    family: ai-council-decision
+    primary_use: 'Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verd'
+    activation_scope: core
+  roadmap-management:
+    family: agent-admin
+    primary_use: 'Use when the user says "create roadmap", "show roadmap", or "execute roadmap"'
+    activation_scope: core
+  roadmap-writing:
+    family: agent-admin
+    primary_use: 'Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteri'
+    activation_scope: core
+  rtk-output-filtering:
+    family: agent-admin
+    primary_use: 'Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings'
+    activation_scope: core
+  rule-refactor:
+    family: agent-admin
+    primary_use: 'Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / me'
+    activation_scope: core
+  rule-writing:
+    family: agent-admin
+    primary_use: 'Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budge'
+    activation_scope: core
+  runway-cognition:
+    family: finance
+    primary_use: 'Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions'
+    activation_scope: finance-basic
+  scenario-modeling:
+    family: finance
+    primary_use: 'Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, opt'
+    activation_scope: finance-advanced
+  scene-expander:
+    family: ai-video-image
+    primary_use: 'Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes o'
+    activation_scope: ai-video
+  script-writing:
+    family: content-writing
+    primary_use: 'Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent'
+    activation_scope: core
+  secrets-management:
+    family: security
+    primary_use: 'Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azur'
+    activation_scope: core
+  security-audit:
+    family: security
+    primary_use: 'ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review'
+    activation_scope: core
+  security:
+    family: security
+    primary_use: 'Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization'
+    activation_scope: core
+  sentry-integration:
+    family: operations-reliability
+    primary_use: 'Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors'
+    activation_scope: core
+  sequential-thinking:
+    family: agent-admin
+    primary_use: 'ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative ana'
+    activation_scope: core
+  skill-improvement-pipeline:
+    family: agent-admin
+    primary_use: 'ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected'
+    activation_scope: meta
+  skill-management:
+    family: agent-admin
+    primary_use: 'Use when condensing, decondenseing, refactoring, or improving existing skills'
+    activation_scope: core
+  skill-reviewer:
+    family: agent-admin
+    primary_use: 'Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produ'
+    activation_scope: core
+  skill-writing:
+    family: agent-admin
+    primary_use: 'Use when deciding ''should this be a skill or a rule?'', creating/improving/reviewing agent skills, SKILL.md fro'
+    activation_scope: core
+  song-to-script:
+    family: ai-video-image
+    primary_use: 'Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood'
+    activation_scope: ai-video
+  sql-writing:
+    family: backend-data
+    primary_use: 'Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement'
+    activation_scope: core
+  stakeholder-tradeoff:
+    family: ai-council-decision
+    primary_use: 'Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, s'
+    activation_scope: product-basic
+  subagent-orchestration:
+    family: agent-admin
+    primary_use: 'Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/paralle'
+    activation_scope: core
+  symfony-workflow:
+    family: backend-data
+    primary_use: 'Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands'
+    activation_scope: symfony
+  systematic-debugging:
+    family: debugging-analysis
+    primary_use: 'Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesi'
+    activation_scope: core
+  tailwind-engineer:
+    family: frontend-design
+    primary_use: 'Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, re'
+    activation_scope: core
+  tech-debt-tracker:
+    family: agent-admin
+    primary_use: 'Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying co'
+    activation_scope: core
+  technical-specification:
+    family: engineering-workflow
+    primary_use: 'Use when the user says "write a spec", "create RFC", "write a PRD", or "document this decision"'
+    activation_scope: product-basic
+  terraform:
+    family: devops-infra
+    primary_use: 'Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user jus'
+    activation_scope: core
+  terragrunt:
+    family: devops-infra
+    primary_use: 'Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — ev'
+    activation_scope: core
+  test-driven-development:
+    family: testing
+    primary_use: 'Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — ev'
+    activation_scope: core
+  test-performance:
+    family: testing
+    primary_use: 'Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipelin'
+    activation_scope: core
+  testing-anti-patterns:
+    family: testing
+    primary_use: 'Use BEFORE writing or changing tests, adding mocks, or putting test-only methods on production classes — five'
+    activation_scope: core
+  threat-modeling:
+    family: security
+    primary_use: 'Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces tr'
+    activation_scope: core
+  throughput-vs-morale-tradeoff:
+    family: people-org
+    primary_use: 'Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock'
+    activation_scope: ops-people
+  token-optimizer:
+    family: agent-admin
+    primary_use: 'Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tre'
+    activation_scope: core
+  traefik:
+    family: devops-infra
+    primary_use: 'Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, au'
+    activation_scope: core
+  ui-component-architect:
+    family: frontend-design
+    primary_use: 'Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled'
+    activation_scope: core
+  unit-economics-modeling:
+    family: finance
+    primary_use: 'Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, o'
+    activation_scope: finance-basic
+  universal-project-analysis:
+    family: debugging-analysis
+    primary_use: 'ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + fra'
+    activation_scope: core
+  upstream-contribute:
+    family: agent-admin
+    primary_use: 'Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed bac'
+    activation_scope: core
+  using-git-worktrees:
+    family: agent-admin
+    primary_use: 'Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety'
+    activation_scope: core
+  validate-feature-fit:
+    family: strategy
+    primary_use: 'Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope cr'
+    activation_scope: core
+  verify-completion-evidence:
+    family: engineering-workflow
+    primary_use: 'Use when claiming ''done'', suggesting a commit, push, or PR — runs the evidence gate so completion claims come'
+    activation_scope: core
+  video-director:
+    family: ai-video-image
+    primary_use: 'Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, bl'
+    activation_scope: ai-video
+  vision-articulation:
+    family: strategy
+    primary_use: 'Use when articulating internal vision — where we''re going / why now / why us, founder-mode anchor, distinct fr'
+    activation_scope: founder-strategy
+  voc-extract:
+    family: content-writing
+    primary_use: 'Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns'
+    activation_scope: product-discovery
+  voice-and-tone-design:
+    family: content-writing
+    primary_use: 'Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review'
+    activation_scope: gtm-marketing

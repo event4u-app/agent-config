@@ -171,18 +171,22 @@ maintainer can navigate 227 skills by family — without touching any skill file
 Goal: the recurring "227 skills is a maintainer burden" claim is answered structurally, pack boundaries
 are honest, and Phase 3's consolidation has a contract to validate against — independent of any merge.
 
-- [ ] Skill ownership map (CODEOWNERS-style, or a `SKILL_OWNERS` doc keyed by family) assigning a
+- [~] Skill ownership map (CODEOWNERS-style, or a `SKILL_OWNERS` doc keyed by family) assigning a
       maintainer per family. Group-by-family makes this tractable.
+      <!-- deferred (AI-council 2026-06-09): single maintainer → per-family ownership is ceremony with zero information. Deferred until a 2nd maintainer exists; the `owner:` field then becomes a skill-family-map.yml column, not a separate CODEOWNERS. Recorded in docs/governance.md § Deferred governance. -->
 - [ ] **Command `category:` lint (from Phase-0 step 7b).** Introduce the `category:` frontmatter field
       (`flow-entry | state-query | product-surface` per ADR-048), categorize the 125 visible commands
       (after the ownership map assigns owners — avoids one architect making 125 calls), decide the
       demotion path for commands that fit none, then ship the lint (warn first, then blocking). Full
       hand-off: [`docs/contracts/command-category-governance.md`](../../docs/contracts/command-category-governance.md).
-- [ ] Skill lifecycle policy — review cadence and active/dormant/sunset states; dormancy triggers
+- [x] Skill lifecycle policy — review cadence and active/dormant/sunset states; dormancy triggers
       *review*, not automatic deprecation. Slot it beside `persona-governance` as its skill-side sibling.
-- [ ] Machine-readable `skill-family-map.yml` — per skill: `family`, `primary_use`, `activation_scope`,
+      <!-- done: docs/governance.md § Skill lifecycle policy — commit-based dormancy (git log, no last_reviewed busywork for a solo maintainer); review-not-auto-deprecate; sunset recorded in-commit. -->
+- [x] Machine-readable `skill-family-map.yml` — per skill: `family`, `primary_use`, `activation_scope`,
       `overlaps_with`, `candidate_for_merge`, `candidate_for_lens`, `candidate_for_internal`. Governance
       scaffolding consumed as input by the Phase 3 scan. No renames in this step.
+      <!-- done (base fields): docs/contracts/skill-family-map.yml — 227 skills × {family, primary_use, activation_scope}, generated + reproducible. overlaps_with + candidate_for_* are intentionally ABSENT — they are Phase-3 discovery conclusions, not Phase-2 metadata (AI-council 2026-06-09; Single-Source-of-Truth rule in docs/governance.md). Phase 3 populates them. -->
+- [ ] **(Phase 3 feeder)** Populate `skill-family-map.yml`'s `overlaps_with` + `candidate_for_{merge,lens,internal}` as outputs of the Phase-3 consolidation scan.
 - [ ] Review-lens routing schema — define the metadata a review "lens" carries (context, constraints,
       delegation rules) and which review skills are true entry skills vs lenses dispatched by
       `/review-changes`. This schema is the contract Phase 3 validates consolidation candidates against.
