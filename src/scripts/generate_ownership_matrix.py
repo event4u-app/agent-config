@@ -47,7 +47,7 @@ CANONICAL_SRC_PREFIX = ".agent-src.uncondensed"
 SCAN_DIRS = ("rules", "skills", "commands", "contexts", "personas")
 
 JSON_OUT = ROOT / "docs" / "contracts" / "file-ownership-matrix.json"
-MD_OUT = ROOT / "agents" / "contexts" / "structural" / "file-ownership-matrix.md"
+MD_OUT = ROOT / "agents" / "settings" / "contexts" / "structural" / "file-ownership-matrix.md"
 
 LINK_RE = re.compile(r"\]\(([^)]+\.md)(?:#[^)]*)?\)")
 

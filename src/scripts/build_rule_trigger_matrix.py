@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build agents/settings/contexts/rule-trigger-matrix.md.
 
-Emits a single matrix mapping every rule in `.agent-src.uncondensed/rules/`
+Emits a single matrix mapping every rule in `src/rules/`
 to its trigger event, observability, enforcement surface, hook-cost
 estimate, and Tier classification. Sourced from the Phase 1 inventory of
 `road-to-rule-hardening.md` plus `road-to-context-layer-maturity.md`
@@ -18,11 +18,11 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SRC_RULES = REPO_ROOT / ".agent-src.uncondensed" / "rules"
+SRC_RULES = REPO_ROOT / "src" / "rules"
 COMP_RULES = REPO_ROOT / "dist/agent-src" / "rules"
-SRC_PREFIX = ".agent-src.uncondensed/"
+SRC_PREFIX = "src/"
 COMP_PREFIX = "dist/agent-src/"
-OUT = REPO_ROOT / "agents" / "contexts" / "rule-trigger-matrix.md"
+OUT = REPO_ROOT / "agents" / "settings" / "contexts" / "rule-trigger-matrix.md"
 
 # Classification table — one row per rule. See § Methodology in the
 # generated file for the column meanings. Sourced from the Phase 1 audit;
@@ -80,7 +80,7 @@ add("roadmap-progress-sync.md", "file-edit on agents/roadmaps/**", "hook",
 add("context-hygiene.md", "turn counter / tool-loop / topic shift", "hook",
     "state", "medium", "1",
     notes="Per-turn counter + tool-call repetition detector. Cross-platform persistence is the cost driver.")
-add("size-enforcement.md", "file save on .agent-src.uncondensed/{skills,rules,commands}/**",
+add("size-enforcement.md", "file save on src/{skills,rules} or src/agent-src/commands/**",
     "mechanical-already", "tool-call", "NA-mechanical", "mechanical-already",
     notes="Enforced by skill_linter.py + check_always_budget.py")
 add("no-roadmap-references.md", "file save on stable artifacts", "mechanical-already",
@@ -127,7 +127,7 @@ add("cli-output-handling.md", "tool-call (verbose CLI)", "hook", "tool-call",
     "low", "2a", notes="Pre-tool-call marker on git/test/lint invocations")
 add("artifact-drafting-protocol.md", "skill/rule create or major rewrite",
     "hook", "output", "medium", "2a",
-    notes="Marker on file-create in .agent-src.uncondensed/{skills,rules,commands}/")
+    notes="Marker on file-create in src/{skills,rules} + src/agent-src/commands/")
 add("missing-tool-handling.md", "tool failure (command not found)", "hook",
     "output", "low", "2a", notes="Post-tool-failure marker — strong fit")
 add("token-efficiency.md", "every reply / verbose-tool invocation", "hook",
