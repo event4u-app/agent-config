@@ -18,7 +18,7 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 
 | Roadmap | Done | Merge-gated open | Gating PR |
 |---|---:|---:|---|
-| [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 65 | 1 | — |
+| [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 65 | 1 | #439 |
 
 ## Open roadmaps
 
