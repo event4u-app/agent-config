@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: roadmap
+disable-model-invocation: true
 pack: product-basic
 intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council"
 routes_to: [roadmap:create, roadmap:process-step, roadmap:process-phase, roadmap:process-full]

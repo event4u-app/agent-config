@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: tests
+disable-model-invocation: true
 pack: engineering-base
 tier: 2
 description: Tests orchestrator — routes to create, execute

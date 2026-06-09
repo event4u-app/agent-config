@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: fix
+disable-model-invocation: true
 pack: engineering-base
 intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability"
 routes_to: [fix:ci, fix:pr-comments, fix:refs, fix:seeder, fix:portability]

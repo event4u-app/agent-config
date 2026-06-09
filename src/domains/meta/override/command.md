@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: override
+disable-model-invocation: true
 pack: meta
 tier: 2
 description: Override orchestrator — routes to create, manage

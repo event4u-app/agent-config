@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: git-pr-create
+disable-model-invocation: true
 pack: git
 intent: "Open a pull request with a generated description and stripped attribution footers"
 routes_to: [git-workflow]
@@ -19,7 +20,7 @@ packs:
   - git
 ---
 
-# /create-pr
+# /git-pr-create
 
 Top-level entry point for the `/create-pr` family. Bare `/create-pr`
 runs the full create-PR flow described below. The `:description-only`

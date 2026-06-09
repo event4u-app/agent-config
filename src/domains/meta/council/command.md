@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: council
+disable-model-invocation: true
 pack: meta
 intent: "Poll external AIs for a neutral second opinion (pr/design/optimize/analysis lenses)"
 routes_to: [council:default, council:pr, council:design, council:analysis]

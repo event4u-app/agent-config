@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: judge
+disable-model-invocation: true
 pack: engineering-base
 intent: "Adversarial-judging dispatcher — solo, on-diff, steps"
 routes_to: [judge:solo, judge:on-diff, judge:steps]

@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
 """Cluster-pattern compliance check.
 
-Compares each cluster dispatcher under
-`.agent-src.uncondensed/commands/<cluster>.md` against the Phase 1
-reference patterns (`fix.md`, `optimize.md`, `feature.md`).
+Compares each cluster dispatcher against the Phase 1 reference patterns
+(`fix`, `optimize`, `feature`).
 
-Required structure:
+Post-ADR-051 layout: dispatchers live at
+`src/domains/<pack>/<subpath>/command.md`; their canonical identity is the
+path-derived slug from `_lib.agent_src.command_slug()` (pack-prefixed when
+the pack declares `slug_prefix`, e.g. `git/commit` → `git-commit`). The
+locked-clusters table lists these canonical slugs in column 1.
+
+Required structure per dispatcher:
 
   Frontmatter:
-    - `name: <cluster>`
-    - `cluster: <cluster>`
-    - `disable-model-invocation: true`
+    - `name: <slug>`
+    - `cluster: <slug>`
+    - `disable-model-invocation: true` (template mandate, council-confirmed
+      enforce-and-backfill 2026-06-09 — issue #380)
 
   Body:
-    - `# /<cluster>` H1
+    - `# /<slug>` H1
     - `## Sub-commands` section with a markdown table whose header is
       exactly `Sub-command | Routes to | Purpose`
     - `## Dispatch` section
     - `## Rules` section
 
-Cluster files are detected by reading the locked-clusters table in
-`docs/contracts/command-clusters.md` (column-1 backticks).
+Cluster slugs are detected by reading the locked-clusters table in
+`docs/contracts/command-clusters.md` (column-1 backticks, phase-numbered
+rows only — `—`-phase rows keep their legacy shape).
 
 Exit codes: 0 = clean, 1 = pattern violations, 3 = internal error.
 """
@@ -33,23 +40,37 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src" / "scripts"))
-from _lib.agent_src import resolve_logical  # noqa: E402
+from _lib.agent_src import SRC_DOMAINS, command_slug, resolve_logical  # noqa: E402
 
 CONTRACT = ROOT / "docs/contracts/command-clusters.md"
 
 
-def _resolve_command(cluster: str) -> Path:
-    """Return the physical path for ``commands/<cluster>.md``.
+def build_slug_map() -> dict[str, Path]:
+    """Map canonical command slug → physical dispatcher path (domains tree)."""
+    out: dict[str, Path] = {}
+    if not SRC_DOMAINS.is_dir():
+        return out
+    for p in sorted(SRC_DOMAINS.rglob("command.md")):
+        if not p.is_file():
+            continue
+        slug = command_slug(p)
+        if slug is not None:
+            out[slug] = p
+    return out
 
-    Walks every artefact root (legacy + packages/*) and returns the first
-    match. If none exist, returns the conventional legacy path so the
-    caller can surface a missing-file error.
+
+def _resolve_command(cluster: str, slug_map: dict[str, Path]) -> Path | None:
+    """Return the physical path for the dispatcher with canonical slug
+    ``cluster``.
+
+    Domains tree wins (canonical, post-ADR-051); the legacy
+    ``commands/<cluster>.md`` logical path is the fallback for any artefact
+    still living in an ``.agent-src.uncondensed/`` root.
     """
-    rel = f"commands/{cluster}.md"
-    hit = resolve_logical(rel)
+    hit = slug_map.get(cluster)
     if hit is not None:
         return hit
-    return ROOT / ".agent-src.uncondensed" / rel
+    return resolve_logical(f"commands/{cluster}.md")
 
 REQUIRED_SECTIONS = ["## Sub-commands", "## Dispatch", "## Rules"]
 TABLE_HEADER_RE = re.compile(
@@ -65,7 +86,7 @@ class FileReport:
 
 
 def load_cluster_table() -> list[tuple[str, str]]:
-    """Return [(cluster_name, kind)] where kind ∈ {"dispatch", "flag"}."""
+    """Return [(cluster_slug, kind)] where kind ∈ {"dispatch", "flag"}."""
     text = CONTRACT.read_text(encoding="utf-8")
     in_table = False
     rows: list[tuple[str, str]] = []
@@ -102,16 +123,20 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     return fm, body
 
 
-def check_dispatcher(cluster: str) -> FileReport:
-    path = _resolve_command(cluster)
-    rep = FileReport(path=path, cluster=cluster)
-    if not path.exists():
-        rep.errors.append(f"dispatcher file missing: commands/{cluster}.md")
+def check_dispatcher(cluster: str, slug_map: dict[str, Path]) -> FileReport:
+    path = _resolve_command(cluster, slug_map)
+    if path is None:
+        rep = FileReport(path=SRC_DOMAINS / "<unresolved>" / cluster, cluster=cluster)
+        rep.errors.append(
+            f"dispatcher file missing: no domains command with slug `{cluster}` "
+            f"and no legacy commands/{cluster}.md"
+        )
         return rep
+    rep = FileReport(path=path, cluster=cluster)
     text = path.read_text(encoding="utf-8")
     fm, body = parse_frontmatter(text)
 
-    # Frontmatter checks.
+    # Frontmatter checks — name/cluster carry the canonical slug.
     if fm.get("name") != cluster:
         rep.errors.append(f"frontmatter `name:` is {fm.get('name')!r}, expected {cluster!r}")
     if fm.get("cluster") != cluster:
@@ -119,7 +144,7 @@ def check_dispatcher(cluster: str) -> FileReport:
     if fm.get("disable-model-invocation") != "true":
         rep.errors.append("frontmatter `disable-model-invocation: true` missing")
 
-    # H1 check.
+    # H1 check — the canonical invocation name.
     h1 = f"# /{cluster}"
     if h1 not in body.splitlines()[:5]:
         rep.errors.append(f"missing top-level heading {h1!r} in first 5 body lines")
@@ -144,15 +169,16 @@ def main() -> int:
               file=sys.stderr)
         return 3
 
+    slug_map = build_slug_map()
     dispatch_clusters = [n for n, k in rows if k == "dispatch"]
     flag_clusters = [n for n, k in rows if k == "flag"]
 
-    reports = [check_dispatcher(n) for n in dispatch_clusters]
+    reports = [check_dispatcher(n, slug_map) for n in dispatch_clusters]
     bad = [r for r in reports if r.errors]
 
     # Flag clusters: only assert the file exists; legacy shape is preserved.
     flag_missing = [n for n in flag_clusters
-                    if not _resolve_command(n).exists()]
+                    if _resolve_command(n, slug_map) is None]
     if flag_missing:
         print(f"❌  Flag-cluster file(s) missing: {flag_missing}")
         return 1
@@ -161,10 +187,15 @@ def main() -> int:
         print(f"❌  {len(bad)}/{len(reports)} cluster dispatcher(s) deviate "
               f"from the Phase-1 reference pattern:")
         for r in bad:
-            print(f"  • {r.path.relative_to(ROOT)} (cluster `{r.cluster}`)")
+            try:
+                shown = r.path.relative_to(ROOT)
+            except ValueError:
+                shown = r.path
+            print(f"  • {shown} (cluster `{r.cluster}`)")
             for err in r.errors:
                 print(f"      - {err}")
-        print(f"\nReference: commands/fix.md, commands/optimize.md, commands/feature.md")
+        print(f"\nReference: the `fix`, `optimize`, `feature` dispatchers "
+              f"under src/domains/")
         return 1
     print(f"✅  {len(reports)} cluster dispatcher(s) match the Phase-1 reference "
           f"pattern; {len(flag_clusters)} flag-cluster(s) verified present.")

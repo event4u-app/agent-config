@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: context
+disable-model-invocation: true
 pack: meta
 tier: 2
 description: Context orchestrator — routes to create, refactor

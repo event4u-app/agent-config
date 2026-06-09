@@ -40,8 +40,8 @@ column 1 of this table.
 | `context` | 2 | `create` · `refactor` | `context-create` · `context-refactor` |
 | `override` | 2 | `create` · `manage` | `override-create` · `override-manage` |
 | `judge` | 2 | `solo` · `on-diff` · `steps` | `judge` (legacy standalone) · `do-and-judge` · `do-in-steps` |
-| `commit` | 2 | `in-chunks` | `commit-in-chunks` |
-| `create-pr` | 2 | `description-only` | `create-pr-description` |
+| `git-commit` | 2 | `in-chunks` | `commit-in-chunks` · former cluster name `commit` — renamed 2026-06-09 to the path-derived pack-prefixed slug (`src/domains/git/commit/`, ADR-044 amendment; issue #380) |
+| `git-pr-create` | 2 | `description-only` | `create-pr-description` · former cluster `create-pr` — physically merged into the `pr` verb family at `src/domains/git/pr/create/` and renamed 2026-06-09 to the path-derived pack-prefixed slug (ADR-044 amendment; issue #380) |
 | `council` | 3 | `default` · `pr` · `design` · `optimize` · `analysis` | `council` (legacy default lens) · `council-pr` · `council-design` · `council-optimize`; `analysis` added 2026-05-14 — wrapper for local analysis outputs with a Top-N consensus tail block consumed by `/roadmap create` |
 | `challenge-me` | — | `vision` · `with-docs` | new — Pocock-inspired one-question-at-a-time interview; `vision` is the standard 95%-confidence variant, `with-docs` adds doc/glossary awareness with a session-scoped glossary and load-bearing claim-vs-code verification |
 | `research` | 2 | `deep` · `report` | preliminary-research scaffolder ported from `Weizhena/Deep-Research-skills` (cluster head emits `outline.yaml` + `fields.yaml` against the `research-schema` contract). `:deep` populates per-item JSON in batches with native web-search + JSON-Schema self-validation (no Python runtime); `:report` renders `report.md` directly + optionally emits a `jq` template for deterministic regeneration. `add-items` / `add-fields` intentionally **not** ported — re-run `/research <topic>` to extend the field framework. |
