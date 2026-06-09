@@ -165,6 +165,7 @@ const showFullTurn = signal(false);
 const followupText = signal('');
 const continuing = signal(false);
 const sessionGone = signal(false);     // 410: host session expired (ADR-080/081)
+const lastLaunch = signal<{ role: string; task: string; inputs: Record<string, string> } | null>(null);
 
 const DRIVE_HOST = 'claude-code';      // v0: single hard-coded tier-1 host (council)
 const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
@@ -218,6 +219,7 @@ async function launch(role: string, task: string, inputs: Record<string, string>
     showFullTurn.value = false;
     followupText.value = '';        // a new launch starts a fresh conversation
     sessionGone.value = false;
+    lastLaunch.value = { role, task, inputs };   // remembered for one-click re-launch on 410 (ADR-082)
     try {
         const res = await apiFetch<LaunchResult>(
             '/api/v1/workspace/launch',
@@ -401,9 +403,24 @@ function TurnResult(): preact.JSX.Element | null {
                 </p>
             ) : null}
             {sessionGone.value ? (
-                <p class="ac-workspace__followup-gone" role="status">
-                    Host session expired — pick a task above to start a new conversation.
-                </p>
+                <div class="ac-workspace__followup-gone" role="status">
+                    <p>Host session expired.</p>
+                    {lastLaunch.value !== null ? (
+                        <button
+                            type="button"
+                            class="ac-button ac-button--primary"
+                            disabled={launching.value}
+                            onClick={(): void => {
+                                const l = lastLaunch.value;
+                                if (l !== null) void launch(l.role, l.task, l.inputs);
+                            }}
+                        >
+                            {launching.value ? 'Starting…' : 'Start a new conversation'}
+                        </button>
+                    ) : (
+                        <p>Pick a task above to start a new conversation.</p>
+                    )}
+                </div>
             ) : (
             <form
                 class="ac-workspace__followup"
