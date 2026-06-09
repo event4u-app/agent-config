@@ -26,6 +26,7 @@ interface FixtureOverrides {
     launch?: { status: number; body: unknown };
     continueTurn?: { status: number; body: unknown };
     health?: unknown;
+    hosts?: unknown;
 }
 
 function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: Call[]; restore: () => void } {
@@ -115,6 +116,14 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
             const payload = overrides.health ?? { health: {} };
             return new Response(JSON.stringify(payload), { status: 200 });
         }
+        if (path === '/api/v1/workspace/hosts' && method === 'GET') {
+            const payload = overrides.hosts ?? { hosts: [
+                { id: 'claude-code', cli_present: true, effective_tier: 1 },
+                { id: 'codex', cli_present: true, effective_tier: 1 },
+                { id: 'gemini', cli_present: false, effective_tier: 3 },
+            ] };
+            return new Response(JSON.stringify(payload), { status: 200 });
+        }
         if (path === '/api/v1/workspace/launch' && method === 'POST') {
             const ov = overrides.launch;
             if (ov !== undefined) return new Response(JSON.stringify(ov.body), { status: ov.status });
@@ -141,8 +150,8 @@ function installWorkspaceFetchMock(overrides: FixtureOverrides = {}): { calls: C
     return { calls, restore: (): void => { global.fetch = original; } };
 }
 
-beforeEach(() => { vi.resetModules(); });
-afterEach(() => { cleanup(); });
+beforeEach(() => { vi.resetModules(); try { sessionStorage.clear(); } catch { /* jsdom */ } });
+afterEach(() => { cleanup(); try { sessionStorage.clear(); } catch { /* jsdom */ } });
 
 describe('WorkspacePage', () => {
     it('renders the roles, sessions, knowledge, and documents panels after load', async () => {
@@ -406,6 +415,45 @@ describe('WorkspacePage', () => {
             await findByText('codex');
             await findByText(/paused — auto-recovering/);
             await findByText(/5 fail streak · timeout/);
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('host picker lists hosts and disables an uninstalled one', async () => {
+        const mock = installWorkspaceFetchMock();
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByRole } = render(<WorkspacePage />);
+            const select = await findByRole('combobox', { name: /Host agent/ }) as HTMLSelectElement;
+            const opts = Array.from(select.options);
+            expect(opts.map((o) => o.value)).toEqual(['claude-code', 'codex', 'gemini']);
+            const gemini = opts.find((o) => o.value === 'gemini')!;
+            expect(gemini.disabled).toBe(true);                 // cli_present: false
+            expect(gemini.textContent).toContain('not installed');
+            expect(opts.find((o) => o.value === 'codex')!.disabled).toBe(false);
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('launch sends the picked host', async () => {
+        const mock = installWorkspaceFetchMock({ sessions: { sessions: [] } });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
+            const select = await findByRole('combobox', { name: /Host agent/ });
+            fireEvent.change(select, { target: { value: 'codex' } });
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'x' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await waitFor(() => {
+                expect(mock.calls.some((c) => c.path === '/api/v1/workspace/launch' && c.method === 'POST')).toBe(true);
+            });
+            const launch = mock.calls.find((c) => c.path === '/api/v1/workspace/launch');
+            expect(launch?.body).toMatchObject({ host: 'codex' });
         } finally {
             mock.restore();
         }
