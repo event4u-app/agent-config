@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: git-commit
+disable-model-invocation: true
 pack: git
 intent: "Stage and commit changes in logical chunks with a Conventional Commits message"
 routes_to: [git-workflow, conventional-commits-writing]
@@ -19,7 +20,7 @@ packs:
   - git
 ---
 
-# /commit
+# /git-commit
 
 Top-level entry point for the `/commit` family. Bare `/commit` runs the
 interactive split-and-confirm flow described below. The `:in-chunks`

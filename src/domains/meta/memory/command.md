@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: memory
+disable-model-invocation: true
 pack: meta
 intent: "Manage the agent memory layer — add, load, promote, propose"
 routes_to: [memory:add, memory:load, memory:promote, memory:propose]

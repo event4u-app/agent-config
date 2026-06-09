@@ -1,6 +1,7 @@
 ---
 model_tier: medium
 name: optimize
+disable-model-invocation: true
 pack: meta
 intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir"
 routes_to: [optimize:skills, optimize:rtk, optimize:augmentignore, optimize:agents-dir]
