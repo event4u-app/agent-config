@@ -264,6 +264,7 @@ async function launch(role: string, task: string, inputs: Record<string, string>
         await loadThread(res.id);              // the new session becomes current (ADR-083)
         const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
         sessions.value = s.sessions;
+        await refreshHealth();                 // reflect a host that just tripped/recovered (ADR-084)
     } catch (err) {
         launchResult.value = null;
         if (err instanceof ApiCallError) {
@@ -294,6 +295,7 @@ async function continueTurn(sessionId: string, prompt: string): Promise<void> {
         await loadThread(sessionId);                 // re-render the thread with the new turn
         const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
         sessions.value = s.sessions;
+        await refreshHealth();                       // reflect a host that just tripped/recovered (ADR-084)
     } catch (err) {
         if (err instanceof ApiCallError && err.status === 410) {
             // The host session expired (ADR-080) — this conversation can't be
@@ -310,12 +312,21 @@ async function continueTurn(sessionId: string, prompt: string): Promise<void> {
     }
 }
 
+// Re-fetch the drive-health snapshot (ADR-084). Called after every drive so a
+// host that just tripped or auto-recovered shows in the panel without a reload.
+// Non-critical: a failure leaves the panel as-is.
+async function refreshHealth(): Promise<void> {
+    try {
+        const h = await apiFetch<{ health: Record<string, HostHealth> }>('/api/v1/workspace/drive-health');
+        driveHealth.value = h.health ?? {};
+    } catch { /* non-fatal */ }
+}
+
 // Reset a paused host's kill-switch (ADR-081), then refresh the health snapshot.
 async function resetHost(host: string): Promise<void> {
     try {
         await apiFetch(`/api/v1/workspace/drive-health/${host}/reset`, { method: 'POST' });
-        const h = await apiFetch<{ health: Record<string, HostHealth> }>('/api/v1/workspace/drive-health');
-        driveHealth.value = h.health ?? {};
+        await refreshHealth();
     } catch {
         // non-fatal: leave the panel as-is; the operator can retry.
     }
