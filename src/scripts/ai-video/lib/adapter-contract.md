@@ -29,6 +29,19 @@ orchestrator muxes the operator-supplied track at stitch time.
 A per-model adapter (e.g. Higgsfield) MAY declare `audio=per-model`
 and surface the capability via `capability --model <id>`.
 
+## Blueprint → provider translation
+
+The 12-block Cinematic Scene Blueprint (`scene-expander`) is the
+provider-agnostic intermediate representation. Adapters never see the
+raw blueprint — they consume the adapter-contract JSON below. The
+ONLY place provider-specific prompt grammar may be introduced is the
+`motion-choreographer` skill's per-provider encoder table (named
+moves for Veo, motion-intensity token for Kling, natural-language
+moves for Sora, preset ids for Higgsfield). If an adapter needs a new
+provider-specific prompt idiom, extend that encoder table — never the
+blueprint vocabulary. The anti-leak test in
+`tests/test_ai_video_blueprint_schema.py` enforces this boundary.
+
 ## Subcommands
 
 Every adapter implements four:

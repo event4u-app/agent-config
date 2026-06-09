@@ -70,13 +70,32 @@ in seconds, and start-end framing.
 - Speed in seconds per beat (`0.4s push, hold 1.6s, 0.4s pull`).
 - Start and end framing named (`MS → CU`, `WS → MS`).
 
-Adapter quirks:
+Blueprint intent-class decoding — the blueprint CAMERA block names
+one of six provider-agnostic intent classes; map it to the move types
+above before encoding:
+
+| Intent class | Move-type mapping |
+|---|---|
+| static hold | lock-off |
+| push-in | push / dolly-in |
+| pull-back | pull / dolly-out |
+| lateral track | truck / pan |
+| handheld drift | handheld / gimbal-glide |
+| orbit | crane / arc via truck+pan |
+
+Adapter quirks (per-provider encoding of the mapped move):
 
 - **Veo** — accepts named moves; prefers ≤ 8s clips.
 - **Kling** — motion intensity 0–1 token; map our speed to that.
 - **Sora** — natural-language move + duration; no token.
 - **Higgsfield** — preset-driven; pick the preset that matches the
   move; record the preset id in the motion prompt.
+- **LENS handling** — blueprint mm + aperture translate to the
+  provider's nearest lens / FOV idiom; never forward raw mm to a
+  provider that lacks lens grammar.
+- **DURATION handling** — the blueprint value is free; clamp to the
+  provider ceiling here and record the clamp in `review.md` (a
+  silent clamp is a drift bug).
 
 ### Step 2: Primary + secondary motion
 

@@ -9,6 +9,12 @@
 # heading. Labels are case-insensitive; whitespace around `:` is
 # tolerated. Block order is the canonical order below — out-of-order
 # blocks are accepted but logged as a warning.
+#
+# The blueprint is the provider-agnostic intermediate representation:
+# no block may carry one provider's prompt grammar. Per-provider
+# encoding lives in the motion-choreographer skill; the anti-leak
+# test in tests/test_ai_video_blueprint_schema.py scans this schema
+# and the scene-expander skill for provider tokens.
 
 version: 1
 
@@ -36,7 +42,7 @@ blocks:
   CAMERA:
     required: true
     target: prompt.camera
-    description: "Position, height, distance, move."
+    description: "Position, height, distance, move intent (provider-agnostic vocabulary)."
 
   LENS:
     required: true
