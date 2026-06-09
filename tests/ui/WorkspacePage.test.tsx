@@ -499,8 +499,41 @@ describe('WorkspacePage', () => {
             await findByText('Here is your drafted offer.');
             fireEvent.input(await findByRole('textbox', { name: /Follow-up prompt/ }), { target: { value: 'more' } });
             fireEvent.click(await findByRole('button', { name: /Send follow-up/ }));
-            await findByText(/Host session expired — pick a task above/);
+            await findByText(/Host session expired\./);
+            // lastLaunch is set (we launched first) → a one-click re-launch button (ADR-082).
+            await findByRole('button', { name: /Start a new conversation/ });
             expect(queryByRole('textbox', { name: /Follow-up prompt/ })).toBeNull();   // form gone
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('the 410 re-launch button re-launches the same role/task/inputs (ADR-082)', async () => {
+        const mock = installWorkspaceFetchMock({
+            sessions: { sessions: [] },
+            continueTurn: { status: 410, body: { error: { code: 'GONE', message: 'expired' } } },
+        });
+        try {
+            const { WorkspacePage } = await import('../../src/ui/pages/WorkspacePage.js');
+            const { findByText, findByRole, findAllByRole } = render(<WorkspacePage />);
+            fireEvent.click(await findByRole('button', { name: /Pick role Galabau owner/ }));
+            await findByText('Offer drafting');
+            fireEvent.click((await findAllByRole('button', { name: /Start session/ }))[0]!);
+            fireEvent.input(await findByRole('textbox', { name: /brief \(required\)/ }), { target: { value: 'Build a hedge.' } });
+            fireEvent.click(await findByRole('button', { name: /Run task/ }));
+            await findByText('Here is your drafted offer.');
+            fireEvent.input(await findByRole('textbox', { name: /Follow-up prompt/ }), { target: { value: 'more' } });
+            fireEvent.click(await findByRole('button', { name: /Send follow-up/ }));
+            const relaunch = await findByRole('button', { name: /Start a new conversation/ });
+            const before = mock.calls.filter((c) => c.path === '/api/v1/workspace/launch' && c.method === 'POST').length;
+            fireEvent.click(relaunch);
+            await waitFor(() => {
+                const after = mock.calls.filter((c) => c.path === '/api/v1/workspace/launch' && c.method === 'POST');
+                expect(after.length).toBe(before + 1);
+                expect(after[after.length - 1]!.body).toMatchObject({
+                    role: 'galabau', task: 'Offer drafting', inputs: { brief: 'Build a hedge.' },
+                });
+            });
         } finally {
             mock.restore();
         }
