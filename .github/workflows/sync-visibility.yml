@@ -32,7 +32,6 @@ on:
 
 permissions:
   contents: write       # commit the audit log
-  metadata: read
   administration: write # required for PUT /repos/{owner}/{repo}/topics
 
 concurrency:
