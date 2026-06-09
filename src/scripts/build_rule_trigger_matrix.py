@@ -89,7 +89,7 @@ add("no-roadmap-references.md", "file save on stable artifacts", "mechanical-alr
 add("augment-portability.md", "file save on dist/agent-src/**", "mechanical-already",
     "tool-call", "NA-mechanical", "mechanical-already",
     notes="Enforced by scripts/check_portability.py")
-add("augment-source-of-truth.md", "file save on dist/agent-src/ or .augment/",
+add("source-of-truth.md", "file save on dist/agent-src/ or .augment/",
     "hook", "tool-call", "low", "1",
     notes="Pre-write hook: refuse writes to generated dirs")
 add("package-ci-checks.md", "pre-push to remote", "mechanical-already",

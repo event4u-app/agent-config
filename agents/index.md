@@ -250,7 +250,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`artifact-engagement-recording`](../src/rules/artifact-engagement-recording.md) | auto | After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call |
 | rule | [`ask-when-uncertain`](../src/rules/ask-when-uncertain.md) | always | Ask when uncertain — don't guess, assume, or improvise |
 | rule | [`augment-edit-discipline`](../src/rules/augment-edit-discipline.md) | auto | Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete |
-| rule | [`augment-source-of-truth`](../src/rules/augment-source-of-truth.md) | auto | Editing files in dist/agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly |
 | rule | [`autonomous-execution`](../src/rules/autonomous-execution.md) | auto | Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default |
 | rule | [`cli-output-handling`](../src/rules/cli-output-handling.md) | auto | Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback |
 | rule | [`command-suggestion-policy`](../src/rules/command-suggestion-policy.md) | auto | Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes |
@@ -310,6 +309,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`skill-improvement-trigger`](../src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
 | rule | [`slash-command-routing-policy`](../src/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
+| rule | [`source-of-truth`](../src/rules/source-of-truth.md) | auto | Editing files in dist/agent-src/, .augment/, .claude/, or .cursor/ — source of truth is src/; never edit a generated projection directly |
 | rule | [`strategy-safety-floor`](../src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision |
 | rule | [`symfony-routing`](../src/rules/symfony-routing.md) | auto | Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow |
 | rule | [`telegraph-speak`](../src/rules/telegraph-speak.md) | auto | When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers |

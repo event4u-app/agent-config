@@ -53,7 +53,7 @@
 | `rules/artifact-engagement-recording.md` | auto | mechanical-already | package |
 | `rules/ask-when-uncertain.md` | always | 3 | package |
 | `rules/augment-edit-discipline.md` | auto | 2a | package |
-| `rules/augment-source-of-truth.md` | auto | 1 | package |
+| `rules/source-of-truth.md` | auto | 1 | package |
 | `rules/autonomous-execution.md` | auto | 3 | package |
 | `rules/telegraph-speak.md` | auto | 1 | package |
 

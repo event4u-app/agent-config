@@ -21,9 +21,9 @@
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md` | `.agent-src.uncondensed/rules/guidelines.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `.agent-src.uncondensed/rules/skill-quality.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md` | `.agent-src.uncondensed/rules/think-before-action.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncondensed/rules/language-and-tone.md` | `body_link` | 1 |
@@ -106,8 +106,6 @@
 | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `.agent-src.uncondensed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `.agent-src.uncondensed/rules/model-recommendation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-detection.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-examples.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
@@ -189,8 +187,8 @@
 | `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/rules/no-decorative-emojis-in-git-surfaces.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/augment-edit-discipline.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `.agent-src.uncondensed/contexts/authority/destructive-mechanics.md` | `body_link` | 1 |
@@ -219,6 +217,8 @@
 | `.agent-src.uncondensed/rules/scope-control.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/scope-control.md` | `contexts/authority/kernel-rule-edits.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/scope-control.md` | `contexts/authority/scope-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncondensed/rules/source-of-truth.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/source-of-truth.md` | `contexts/communication/rules-auto/source-of-truth-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/strategy-safety-floor.md` | `.agent-src.uncondensed/skills/competitive-moat-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/strategy-safety-floor.md` | `.agent-src.uncondensed/skills/positioning-strategy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/telegraph-speak.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |

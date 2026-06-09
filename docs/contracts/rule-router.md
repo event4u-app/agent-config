@@ -93,7 +93,7 @@ start. Deterministic key order, sorted lists, stable across runs.
              "direct-answers", "language-and-tone", "no-cheap-questions",
              "non-destructive-by-default", "scope-control",
              "verify-before-complete"],
-  "tier_1": [{"id": "augment-source-of-truth",
+  "tier_1": [{"id": "source-of-truth",
               "triggers": [{"path_prefix": "agents/"},
                            {"path_prefix": "dist/agent-src/"}],
               "routes_to": ["skill:agent-docs-writing"]}],

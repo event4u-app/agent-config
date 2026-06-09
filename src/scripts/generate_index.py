@@ -32,7 +32,7 @@ CATALOG_PATH = ROOT / "docs" / "catalog.md"
 
 # Internal-only rules — excluded from the public catalog.
 INTERNAL_RULES = {
-    "augment-source-of-truth",
+    "source-of-truth",
     "augment-portability",
     "docs-sync",
 }

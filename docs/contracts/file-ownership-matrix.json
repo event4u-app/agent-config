@@ -33,12 +33,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md": {
-      "kind": "context",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md": {
       "kind": "context",
       "rule_type": null,
@@ -52,6 +46,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -443,14 +443,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncondensed/rules/augment-source-of-truth.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [
-        "contexts/communication/rules-auto/augment-source-of-truth-mechanics.md"
-      ],
-      "load_context_eager": []
-    },
     ".agent-src.uncondensed/rules/autonomous-execution.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -820,6 +812,14 @@
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/source-of-truth.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [
+        "contexts/communication/rules-auto/source-of-truth-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/strategy-safety-floor.md": {
@@ -2457,20 +2457,6 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
-      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
-      "target": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md",
       "target": ".agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md",
       "type": "WRITE",
@@ -2504,6 +2490,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/source-of-truth.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md",
@@ -3528,27 +3528,6 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
-      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
-      "target": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
-      "target": "contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
-      "type": "READ_ONLY",
-      "via": "load_context",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "target": ".agent-src.uncondensed/contexts/execution/autonomy-detection.md",
       "type": "READ_ONLY",
@@ -4390,13 +4369,6 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/no-roadmap-references.md",
-      "target": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/rules/no-roadmap-references.md",
       "target": ".agent-src.uncondensed/rules/no-roadmap-references.md",
       "type": "WRITE",
       "via": "self",
@@ -4405,6 +4377,13 @@
     {
       "source": ".agent-src.uncondensed/rules/no-roadmap-references.md",
       "target": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncondensed/rules/source-of-truth.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -4737,6 +4716,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/source-of-truth.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/source-of-truth.md",
+      "target": ".agent-src.uncondensed/rules/source-of-truth.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/source-of-truth.md",
+      "target": "contexts/communication/rules-auto/source-of-truth-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/strategy-safety-floor.md",
