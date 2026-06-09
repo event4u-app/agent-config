@@ -7,7 +7,7 @@ keep-beta-until: 2026-09-04
 
 **Status:** Active (locked 2026-05-25 via Phase A of `road-to-clean-skill-distribution-channels.md`)
 **Owner:** maintainer-team
-**Inputs:** [`agents/evidence/audits/2026-05-distribution-channels/`](../../agents/evidence/audits/2026-05-distribution-channels/) (audits 01 + 02), AI Council convergence `agents/runtime/council/responses/2026-05-25-canonical-channel.json` (claude-sonnet-4-5 + gpt-4o, 2026-05-25)
+**Inputs:** [`agents/evidence/audits/2026-05-distribution-channels/`](../../agents/evidence/audits/2026-05-distribution-channels/) (audits 01 + 02), AI Council convergence on the canonical-channel question (claude-sonnet-4-5 + gpt-4o, 2026-05-25 — session artefact auto-pruned; the decision body is inlined in this contract)
 
 ## Rule
 
