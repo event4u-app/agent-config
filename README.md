@@ -31,6 +31,23 @@ schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
 Beyond software: [`user-types/`](src/agent-src/user-types/)
 (galabau · metalworking · truck — see [Beyond software](#beyond-software).
 
+### Workflows, not raw commands
+
+You don't memorize 150 commands — you run a **work journey**. Four flows span the
+developer story end-to-end; each names the command you TYPE to start and the
+skills it composes:
+
+| Flow | Start with | The journey |
+|---|---|---|
+| 🔍 **Discovery** | `/feature:plan` · `/research` | explore → plan → estimate → refine, *before* building |
+| 🔨 **Implementation** | `/work` · `/implement-ticket` | plan → implement → verify → commit |
+| 🔎 **Review** | `/review-changes` · `/judge` | self-review → judge → quality-fix → threat-model |
+| 🚢 **Delivery** | `/commit` · `/pr:create` | commit in chunks → open PR → answer review |
+
+Full detail — entry commands, canonical path, composed skills per flow:
+[`docs/flows.md`](docs/flows.md). (`agent-admin` — memory / analytics / config —
+is platform operation, not a user-work flow.)
+
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
   <a href="MIGRATION.md">Upgrade to 6.0</a> ·
