@@ -33,7 +33,6 @@ on:
 
 permissions:
   contents: read
-  metadata: read
 
 concurrency:
   group: visibility-drift-${{ github.ref }}
