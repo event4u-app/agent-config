@@ -574,6 +574,23 @@ describe('workspaceRoute', () => {
         expect(health['consecutive_failures']).toBe(5);
     });
 
+    it('POST /drive-health/:host/reset clears a killed host (ADR-081)', async () => {
+        const healthDir = join(tmpWrite, 'workspace', 'health');
+        mkdirSync(healthDir, { recursive: true });
+        writeFileSync(join(healthDir, 'codex.json'), JSON.stringify({
+            host: 'codex', consecutive_failures: 5, killed: true, kill_reason: 'auto',
+            total_success: 0, total_failure: 5, trip_count: 1,
+        }));
+        const res = await app.inject({
+            method: 'POST', url: '/api/v1/workspace/drive-health/codex/reset', headers: AUTH,
+        });
+        expect(res.statusCode).toBe(200);
+        expect((res.json() as { state: { killed: boolean } }).state.killed).toBe(false);
+        // and the snapshot now reports it healthy
+        const after = await app.inject({ method: 'GET', url: '/api/v1/workspace/drive-health?host=codex', headers: AUTH });
+        expect((after.json() as { health: { killed: boolean } }).health.killed).toBe(false);
+    });
+
     // --- host availability (ADR-079) ---------------------------------------
 
     it('GET /hosts lists the three Tier-1 hosts with availability', async () => {
