@@ -23,72 +23,96 @@ table; size and context-chain columns are derived from the rule files.
 ## Tier counts
 
 - **Tier `safety-floor`** — 3 rules
-- **Tier `mechanical-already`** — 9 rules
-- **Tier `1`** — 6 rules
-- **Tier `2a`** — 17 rules
+- **Tier `mechanical-already`** — 6 rules
+- **Tier `1`** — 5 rules
+- **Tier `2a`** — 13 rules
 - **Tier `2b`** — 10 rules
-- **Tier `3`** — 13 rules
+- **Tier `3`** — 12 rules
+- **Tier `?`** — 30 rules
 
 ## Matrix
 
 | Rule | type | raw | ext | trigger | obs | enforce | hook-cost | tier | dormant? | notes |
 |---|---|---:|---:|---|---|---|---|---|---|---|
-| `agent-authority.md` | always | 1468 | 1468 | every turn (router) | agent-only | none | NA-soft | 3 | no | Priority index, no trigger of its own |
-| `agent-docs.md` | auto | 2745 | 2745 | file-edit on agents/reference/docs/, AGENTS.md | hook | tool-call | medium | 2a | no | Path-pattern based marker |
-| `analysis-skill-routing.md` | auto | 1486 | 1486 | analysis skill picker | agent-only | output | NA-soft | 3 | suspected | Skill-router; no observable surface today |
-| `architecture.md` | auto | 2712 | 2712 | new file/class/module creation | agent-only | output | NA-soft | 3 | no | Architectural decisions — judgment-bound |
-| `artifact-drafting-protocol.md` | auto | 3255 | 3255 | skill/rule create or major rewrite | hook | output | medium | 2a | no | Marker on file-create in .agent-src.uncondensed/{skills,rules,commands}/ |
-| `artifact-engagement-recording.md` | auto | 3870 | 6965 | phase-step / task end | mechanical-already | hook | NA-mechanical | mechanical-already | no | telemetry:record subprocess is already mechanical |
-| `ask-when-uncertain.md` | always | 3893 | 3893 | pre-send vague-detection | agent-only | output | NA-soft | 3 | no | One-question-per-turn — output-rewrite would be needed |
-| `augment-portability.md` | auto | 3256 | 7589 | file save on dist/agent-src/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_portability.py |
-| `augment-source-of-truth.md` | auto | 2789 | 6852 | file save on dist/agent-src/ or .augment/ | hook | tool-call | low | 1 | no | Pre-write hook: refuse writes to generated dirs |
-| `autonomous-execution.md` | auto | 6175 | 14628 | workflow decision (trivial vs blocking) | agent-only | output | NA-soft | 3 | no | Disposition rule; trivial classification is judgment |
-| `capture-learnings.md` | auto | 3030 | 3030 | task completion | hook | output | medium | 2a | no | Post-task marker; learning detection is fuzzy |
-
-| `cli-output-handling.md` | auto | 2228 | 5668 | tool-call (verbose CLI) | hook | tool-call | low | 2a | no | Pre-tool-call marker on git/test/lint invocations |
-| `command-suggestion-policy.md` | auto | 4350 | 7181 | user prompt match (engine-driven) | mechanical-already | hook | NA-mechanical | mechanical-already | suspected | Engine in scripts/command_suggester/ exists; live-fire signal unverified — needs telemetry pass |
-| `commit-conventions.md` | auto | 2126 | 2126 | commit message draft | hook | output | low | 2a | no | Hook on /commit invocation, marker for conventional-commits format |
-| `commit-policy.md` | always | 3309 | 5781 | commit intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — never-ask Iron Law |
-| `context-hygiene.md` | auto | 2901 | 2901 | turn counter / tool-loop / topic shift | hook | state | medium | 1 | no | Per-turn counter + tool-call repetition detector. Cross-platform persistence is the cost driver. |
-| `direct-answers.md` | always | 4098 | 4098 | pre-send (every reply) | agent-only | output | NA-soft | 3 | no | No-flattery + verify + brevity Iron Laws |
-| `docker-commands.md` | auto | 2049 | 2049 | PHP CLI in Docker context | agent-only | output | NA-soft | 3 | no | Topic-matched |
-| `docs-sync.md` | auto | 3490 | 7350 | file-edit on .augment/{skills,rules,commands}/** | hook | tool-call | medium | 2a | no | Detect add/rename/delete; remind to update count + cross-refs |
-| `downstream-changes.md` | auto | 3158 | 3158 | post-edit (callsite check) | hook | tool-call | high | 2b | no | Requires callsite analysis — codebase-retrieval-style query. High cost, high value. |
-| `e2e-testing.md` | auto | 1995 | 1995 | Playwright file edit | agent-only | output | NA-soft | 3 | no | Topic-matched |
-| `guidelines.md` | auto | 4373 | 4373 | before code edit (topic match) | agent-only | output | NA-soft | 3 | no | Generic 'check guidelines' nudge |
-| `improve-before-implement.md` | auto | 4113 | 4113 | task-start (implementation intent) | hook | output | medium | 2b | no | Pre-implementation gate; could inject 'validated?' field requirement |
-| `language-and-tone.md` | always | 3969 | 3969 | pre-send language detection | agent-only | output | medium | 3 | no | Hook could detect German trigger words in last user msg + flag drift. Best-effort marker only. |
-| `laravel-translations.md` | auto | 1181 | 1181 | lang/ file edit | hook | tool-call | low | 2a | suspected | Path-pattern detectable but rare in this repo |
-| `markdown-safe-codeblocks.md` | auto | 690 | 690 | markdown output with code | hook | output | medium | 2b | no | Output-shape check; nesting detection |
-| `minimal-safe-diff.md` | auto | 3589 | 3589 | every diff | hook | tool-call | high | 2b | no | Diff-shape check; reformatting/drive-by detection is fuzzy |
-| `missing-tool-handling.md` | auto | 2815 | 2815 | tool failure (command not found) | hook | output | low | 2a | no | Post-tool-failure marker — strong fit |
-| `model-recommendation.md` | auto | 3172 | 3172 | task-start / topic-shift | hook | output | low | 2a | no | Phase 5 prototype target. Marker injection at first user msg + topic-change detection. |
-| `no-cheap-questions.md` | always | 4257 | 4257 | pre-send Q&A check | agent-only | output | NA-soft | 3 | no | Pre-send self-check, no platform surface |
-| `no-roadmap-references.md` | auto | 2786 | 2786 | file save on stable artifacts | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_no_roadmap_refs.py (CI gate) |
-| `non-destructive-by-default.md` | always | 4607 | 7887 | destructive-op intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — Iron Law, not modified |
-| `onboarding-gate.md` | auto | 3792 | 3792 | first turn (settings.onboarded == false) | settings | state | low | 1 | no | Pilot candidate — frequency 100% on un-onboarded projects, binary verifiable |
-| `package-ci-checks.md` | auto | 1644 | 4264 | pre-push to remote | mechanical-already | hook | NA-mechanical | mechanical-already | no | task ci is the gate |
-| `php-coding.md` | auto | 3631 | 3631 | PHP file edit | agent-only | output | NA-soft | 3 | no | Topic-matched coding guideline |
-| `preservation-guard.md` | auto | 4065 | 4065 | skill/rule merge or condense | hook | tool-call | medium | 2b | no | Pre-merge structured check — diff-shape verifiable |
-| `review-routing-awareness.md` | auto | 4580 | 7352 | PR-prep / risk flagging | hook | output | medium | 2a | no | Marker when /create-pr or risk-tagging keywords detected |
-| `reviewer-awareness.md` | auto | 3833 | 3833 | PR-prep | hook | output | medium | 2a | no | Reviewer-suggestion marker at PR creation |
-| `roadmap-progress-sync.md` | auto | 5827 | 10132 | file-edit on agents/roadmaps/** | hook | tool-call | low | 1 | no | Pilot 1 (smallest hook). PostToolUse path filter; already documented in mechanics context. |
-| `role-mode-adherence.md` | auto | 1910 | 1910 | settings.roles.active_role set | settings | output | low | 2a | no | Mode marker emit at turn end |
-| `rule-type-governance.md` | auto | 1500 | 1500 | rule create/edit | hook | tool-call | low | 2a | no | Linter could enforce; currently advisory |
-| `runtime-safety.md` | auto | 1304 | 1304 | skill metadata change | hook | tool-call | low | 2b | no | Linter-enforceable on skill frontmatter |
-| `scope-control.md` | always | 4636 | 8529 | git-op / refactor intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — permission gate |
-| `security-sensitive-stop.md` | auto | 3271 | 3271 | file-edit on auth/billing/secrets paths | hook | tool-call | low | 2a | no | Path-pattern based marker — strong candidate for low-cost hook |
-| `size-enforcement.md` | auto | 1073 | 1073 | file save on .agent-src.uncondensed/{skills,rules,commands}/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by skill_linter.py + check_always_budget.py |
-| `skill-improvement-trigger.md` | auto | 1809 | 1809 | task completion (settings.skill_improvement) | settings | state | low | 2a | no | Settings-flag observable; pipeline already exists |
-| `skill-quality.md` | auto | 3047 | 5675 | skill create/edit | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/skill_linter.py |
-| `slash-command-routing-policy.md` | auto | 1806 | 5351 | user msg starts with / | hook | tool-call | low | 1 | suspected | Pattern-detection; live-fire signal unverified |
-| `think-before-action.md` | auto | 5540 | 5540 | pre-edit | hook | output | medium | 2b | no | Pre-tool-call marker requiring analysis-first |
-| `token-efficiency.md` | auto | 4131 | 4131 | every reply / verbose-tool invocation | hook | output | medium | 2a | no | Soft Iron Law; nudge via verbose-output detection |
-| `tool-safety.md` | auto | 1417 | 1417 | skill creation (external tool decl) | hook | tool-call | low | 2b | no | Allowlist-enforceable in skill linter |
-| `ui-audit-gate.md` | auto | 3674 | 5992 | pre-edit on UI files (settings.state.ui_audit empty) | settings | tool-call | medium | 2b | no | Block edit until state.ui_audit populated |
-| `upstream-proposal.md` | auto | 2677 | 2677 | skill/rule create event | hook | output | medium | 2a | no | Marker after new artifact lands |
-| `user-interaction.md` | auto | 6493 | 9280 | pre-send (every Q&A reply) | agent-only | output | NA-soft | 3 | no | Numbered-options Iron Law |
-| `verify-before-complete.md` | always | 2196 | 5481 | completion claim | agent-only | output | low | 2b | no | Pre-PR/commit gate. Hookable: detect 'done'/'complete' in reply, require fresh test/quality output in same turn. |
+| `agent-authority.md` | always | 1325 | 1325 | every turn (router) | agent-only | none | NA-soft | 3 | no | Priority index, no trigger of its own |
+| `analysis-skill-routing.md` | manual | 668 | 668 | analysis skill picker | agent-only | output | NA-soft | 3 | suspected | Skill-router; no observable surface today |
+| `architecture.md` | auto | 5400 | 5400 | new file/class/module creation | agent-only | output | NA-soft | 3 | no | Architectural decisions — judgment-bound |
+| `artifact-drafting-protocol.md` | auto | 3620 | 3620 | skill/rule create or major rewrite | hook | output | medium | 2a | no | Marker on file-create in src/{skills,rules} + src/agent-src/commands/ |
+| `artifact-engagement-recording.md` | auto | 1486 | 1486 | phase-step / task end | mechanical-already | hook | NA-mechanical | mechanical-already | no | telemetry:record subprocess is already mechanical |
+| `ask-when-uncertain.md` | always | 3268 | 3268 | pre-send vague-detection | agent-only | output | NA-soft | 3 | no | One-question-per-turn — output-rewrite would be needed |
+| `augment-edit-discipline.md` | auto | 1175 | 1175 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `autonomous-execution.md` | auto | 7625 | 7625 | workflow decision (trivial vs blocking) | agent-only | output | NA-soft | 3 | no | Disposition rule; trivial classification is judgment |
+| `cli-output-handling.md` | auto | 708 | 708 | tool-call (verbose CLI) | hook | tool-call | low | 2a | no | Pre-tool-call marker on git/test/lint invocations |
+| `command-suggestion-policy.md` | auto | 1698 | 1698 | user prompt match (engine-driven) | mechanical-already | hook | NA-mechanical | mechanical-already | suspected | Engine in scripts/command_suggester/ exists; live-fire signal unverified — needs telemetry pass |
+| `commit-conventions.md` | auto | 853 | 853 | commit message draft | hook | output | low | 2a | no | Hook on /commit invocation, marker for conventional-commits format |
+| `commit-policy.md` | always | 2872 | 2872 | commit intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — never-ask Iron Law |
+| `context-hygiene.md` | auto | 5622 | 5622 | turn counter / tool-loop / topic shift | hook | state | medium | 1 | no | Per-turn counter + tool-call repetition detector. Cross-platform persistence is the cost driver. |
+| `copilot-routing.md` | auto | 907 | 907 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `devcontainer-routing.md` | auto | 918 | 918 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `direct-answers.md` | always | 2819 | 2819 | pre-send (every reply) | agent-only | output | NA-soft | 3 | no | No-flattery + verify + brevity Iron Laws |
+| `docker-commands.md` | auto | 665 | 665 | PHP CLI in Docker context | agent-only | output | NA-soft | 3 | no | Topic-matched |
+| `domain-adoption-policy.md` | auto | 7240 | 7240 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `domain-safety-disclaimer.md` | auto | 7367 | 7367 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `domain-safety-pii.md` | auto | 6307 | 6307 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `domain-safety-retention.md` | auto | 4525 | 4525 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `downstream-changes.md` | auto | 3540 | 3540 | post-edit (callsite check) | hook | tool-call | high | 2b | no | Requires callsite analysis — codebase-retrieval-style query. High cost, high value. |
+| `engineering-safety-floor.md` | auto | 4537 | 4537 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `external-reference-deep-dive.md` | auto | 4912 | 4912 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `fast-path-marker-visibility.md` | auto | 2174 | 2174 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `finance-safety-floor.md` | auto | 4745 | 4745 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `framework-neutrality-in-generic-skills.md` | auto | 5610 | 5610 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `git-history-discipline.md` | auto | 5469 | 5469 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `guidelines.md` | manual | 1331 | 1331 | before code edit (topic match) | agent-only | output | NA-soft | 3 | no | Generic 'check guidelines' nudge |
+| `improve-before-implement.md` | auto | 4430 | 4430 | task-start (implementation intent) | hook | output | medium | 2b | no | Pre-implementation gate; could inject 'validated?' field requirement |
+| `invite-challenge.md` | auto | 3056 | 3056 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `language-and-tone.md` | always | 3738 | 3738 | pre-send language detection | agent-only | output | medium | 3 | no | Hook could detect German trigger words in last user msg + flag drift. Best-effort marker only. |
+| `laravel-routing.md` | auto | 893 | 893 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `laravel-translations.md` | auto | 704 | 704 | lang/ file edit | hook | tool-call | low | 2a | suspected | Path-pattern detectable but rare in this repo |
+| `linked-projects-onboarding-gate.md` | auto | 3942 | 3942 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `low-impact-corpus-privacy-floor.md` | auto | 2771 | 2771 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `markdown-safe-codeblocks.md` | auto | 978 | 978 | markdown output with code | hook | output | medium | 2b | no | Output-shape check; nesting detection |
+| `media-governance-routing.md` | auto | 5301 | 5301 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `media-sync-ground-truth.md` | auto | 3173 | 3173 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `minimal-safe-diff.md` | auto | 3920 | 3920 | every diff | hook | tool-call | high | 2b | no | Diff-shape check; reformatting/drive-by detection is fuzzy |
+| `missing-tool-handling.md` | auto | 2958 | 2958 | tool failure (command not found) | hook | output | low | 2a | no | Post-tool-failure marker — strong fit |
+| `model-recommendation.md` | auto | 3834 | 3834 | task-start / topic-shift | hook | output | low | 2a | no | Phase 5 prototype target. Marker injection at first user msg + topic-change detection. |
+| `no-attribution-footers.md` | auto | 1997 | 1997 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `no-cheap-questions.md` | always | 3553 | 3553 | pre-send Q&A check | agent-only | output | NA-soft | 3 | no | Pre-send self-check, no platform surface |
+| `no-decorative-emojis-in-git-surfaces.md` | auto | 4280 | 4280 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `no-pr-progress-comments.md` | auto | 4363 | 4363 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `no-roadmap-references.md` | auto | 6289 | 6289 | file save on stable artifacts | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_no_roadmap_refs.py (CI gate) |
+| `non-destructive-by-default.md` | always | 4079 | 4079 | destructive-op intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — Iron Law, not modified |
+| `onboarding-gate.md` | auto | 1125 | 1125 | first turn (settings.onboarded == false) | settings | state | low | 1 | no | Pilot candidate — frequency 100% on un-onboarded projects, binary verifiable |
+| `package-ci-checks.md` | manual | 633 | 633 | pre-push to remote | mechanical-already | hook | NA-mechanical | mechanical-already | no | task ci is the gate |
+| `persona-governance.md` | auto | 5812 | 5812 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `php-coding.md` | auto | 715 | 715 | PHP file edit | agent-only | output | NA-soft | 3 | no | Topic-matched coding guideline |
+| `preservation-guard.md` | auto | 4395 | 4395 | skill/rule merge or condense | hook | tool-call | medium | 2b | no | Pre-merge structured check — diff-shape verifiable |
+| `provider-lifecycle-discipline.md` | auto | 5556 | 5556 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `reviewer-awareness.md` | auto | 991 | 991 | PR-prep / reviewer-suggestion / risk flagging | hook | output | medium | 2a | no | Reviewer-suggestion + risk-tagging marker at PR creation; consolidates former review-routing-awareness |
+| `roadmap-ci-steps-policy.md` | auto | 6422 | 6422 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `roadmap-progress-sync.md` | auto | 7885 | 7885 | file-edit on agents/roadmaps/** | hook | tool-call | low | 1 | no | Pilot 1 (smallest hook). PostToolUse path filter; already documented in mechanics context. |
+| `role-mode-adherence.md` | auto | 2009 | 2009 | settings.roles.active_role set | settings | output | low | 2a | no | Mode marker emit at turn end |
+| `rule-type-governance.md` | auto | 652 | 652 | rule create/edit | hook | tool-call | low | 2a | no | Linter could enforce; currently advisory |
+| `runtime-safety.md` | auto | 1451 | 1451 | skill metadata change | hook | tool-call | low | 2b | no | Linter-enforceable on skill frontmatter |
+| `scope-control.md` | always | 4029 | 4029 | git-op / refactor intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — permission gate |
+| `security-sensitive-stop.md` | auto | 3385 | 3385 | file-edit on auth/billing/secrets paths | hook | tool-call | low | 2a | no | Path-pattern based marker — strong candidate for low-cost hook |
+| `size-enforcement.md` | manual | 1262 | 1262 | file save on src/{skills,rules} or src/agent-src/commands/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by skill_linter.py + check_always_budget.py |
+| `skill-improvement-trigger.md` | auto | 683 | 683 | task completion (settings.skill_improvement) | settings | state | low | 2a | no | Settings-flag observable; pipeline already exists |
+| `skill-quality.md` | auto | 680 | 680 | skill create/edit | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/skill_linter.py |
+| `slash-command-routing-policy.md` | auto | 658 | 658 | user msg starts with / | hook | tool-call | low | 1 | suspected | Pattern-detection; live-fire signal unverified |
+| `source-of-truth.md` | auto | 3455 | 3455 | file save on dist/agent-src/ or .augment/ | hook | tool-call | low | 1 | no | Pre-write hook: refuse writes to generated dirs |
+| `strategy-safety-floor.md` | auto | 5015 | 5015 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `symfony-routing.md` | auto | 949 | 949 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `telegraph-speak.md` | auto | 3362 | 3362 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `think-before-action.md` | auto | 2140 | 2140 | pre-edit | hook | output | medium | 2b | no | Pre-tool-call marker requiring analysis-first |
+| `token-efficiency.md` | auto | 1301 | 1301 | every reply / verbose-tool invocation | hook | output | medium | 2a | no | Soft Iron Law; nudge via verbose-output detection |
+| `token-optimizer-maintenance.md` | auto | 2232 | 2232 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `tool-safety.md` | auto | 1552 | 1552 | skill creation (external tool decl) | hook | tool-call | low | 2b | no | Allowlist-enforceable in skill linter |
+| `ui-audit-gate.md` | auto | 1864 | 1864 | pre-edit on UI files (settings.state.ui_audit empty) | settings | tool-call | medium | 2b | no | Block edit until state.ui_audit populated |
+| `upstream-proposal.md` | auto | 682 | 682 | skill/rule create event | hook | output | medium | 2a | no | Marker after new artifact lands |
+| `user-interaction.md` | auto | 2525 | 2525 | pre-send (every Q&A reply) | agent-only | output | NA-soft | 3 | no | Numbered-options Iron Law |
+| `user-interrupt-priority.md` | always | 1982 | 1982 | — | — | — | — | **?** | unknown | NOT CLASSIFIED |
+| `verify-before-complete.md` | always | 2699 | 2699 | completion claim | agent-only | output | low | 2b | no | Pre-PR/commit gate. Hookable: detect 'done'/'complete' in reply, require fresh test/quality output in same turn. |
 
 ## `load_context:` chains (CL Phase 1 inventory)
 
@@ -97,26 +121,6 @@ Chars are measured on the condensed context file (Model (b) literal).
 
 | Rule | Context | Depth | Chars |
 |---|---|---:|---:|
-| `artifact-engagement-recording.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | 1 | 3095 |
-| `augment-portability.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/augment-portability-mechanics.md` | 1 | 4333 |
-| `augment-source-of-truth.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | 1 | 4063 |
-| `autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-detection.md` | 1 | 2428 |
-| `autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | 1 | 1671 |
-| `autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-examples.md` | 1 | 4354 |
-| `cli-output-handling.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/cli-output-handling-mechanics.md` | 1 | 3440 |
-| `command-suggestion-policy.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md` | 1 | 2831 |
-| `commit-policy.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | 1 | 2472 |
-| `docs-sync.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/docs-sync-mechanics.md` | 1 | 3860 |
-| `non-destructive-by-default.md` | `.agent-src.uncondensed/contexts/authority/destructive-mechanics.md` | 1 | 3280 |
-| `package-ci-checks.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/package-ci-checks-mechanics.md` | 1 | 2620 |
-| `review-routing-awareness.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | 1 | 2772 |
-| `roadmap-progress-sync.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md` | 1 | 4305 |
-| `scope-control.md` | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | 1 | 3893 |
-| `skill-quality.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md` | 1 | 2628 |
-| `slash-command-routing-policy.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md` | 1 | 3545 |
-| `ui-audit-gate.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | 1 | 2318 |
-| `user-interaction.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | 1 | 2787 |
-| `verify-before-complete.md` | `.agent-src.uncondensed/contexts/execution/verification-mechanics.md` | 1 | 3285 |
 
 ## Dormant-suspected (per RH Phase 1)
 
@@ -143,5 +147,5 @@ Order locked in RH Phase 3: 1 → 2 → 3 (smallest hook first).
 ## Cross-references
 
 - Budget contract: [`docs/contracts/load-context-budget-model.md`](../../docs/contracts/load-context-budget-model.md)
-- Pattern precedent: `scripts/chat_history.py` + work-engine hooks (hook-only contract)
+- Pattern precedent: `roadmap-progress-sync` (PostToolUse path-filter hook)
 - Phase 2A finding: [`adr-always-rule-context-split-not-viable.md`](adr-always-rule-context-split-not-viable.md)
