@@ -88,7 +88,7 @@ agents/                     ← this package's own roadmaps / sessions / context
 |---|---|
 | `dist/agent-src/` must stay project-agnostic — no project names, domains, stacks | [`augment-portability`](../../dist/agent-src/rules/augment-portability.md) |
 | Root AGENTS.md + copilot-instructions.md must stay project-agnostic too | [`augment-portability`](../../dist/agent-src/rules/augment-portability.md) |
-| Edit `.agent-src.uncondensed/`, never `dist/agent-src/` or `.augment/` | [`augment-source-of-truth`](../../dist/agent-src/rules/augment-source-of-truth.md) |
+| Edit `.agent-src.uncondensed/`, never `dist/agent-src/` or `.augment/` | [`source-of-truth`](../../dist/agent-src/rules/source-of-truth.md) |
 | Skills must declare frontmatter, be self-contained, pass the linter | [`skill-quality`](../../dist/agent-src/rules/skill-quality.md) |
 | Size budgets for skills, rules, commands | [`size-enforcement`](../../dist/agent-src/rules/size-enforcement.md) |
 | Keep `dist/agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](../../dist/agent-src/rules/docs-sync.md) |

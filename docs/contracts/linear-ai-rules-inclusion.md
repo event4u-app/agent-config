@@ -88,7 +88,7 @@ and shipped from this repository. They have no meaning for a third-party
 agent that does not maintain `event4u/agent-config`.
 
 `agent-docs`, `architecture`, `artifact-drafting-protocol`,
-`augment-portability`, `augment-source-of-truth`, `capture-learnings`,
+`augment-portability`, `source-of-truth`, `capture-learnings`,
 `docs-sync`, `guidelines`, `package-ci-checks`, `preservation-guard`,
 `reviewer-awareness`, `roadmap-progress-sync`,
 `role-mode-adherence`, `rule-type-governance`, `runtime-safety`,

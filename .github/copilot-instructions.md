@@ -138,7 +138,7 @@ design:
 - **`path_prefix:` triggers containing `.agent-src.uncondensed/`**
   in YAML frontmatter. This is a literal match pattern for the
   host's router, **not** a file reference — source-of-truth meta-rules
-  (`augment-source-of-truth`, `augment-portability`, `skill-quality`,
+  (`source-of-truth`, `augment-portability`, `skill-quality`,
   `docs-sync`, `rule-type-governance`) legitimately match against the
   authoring tree.
 - **Symlinked rule / skill / command files** under `.claude/`,

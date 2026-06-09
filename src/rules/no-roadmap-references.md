@@ -135,7 +135,7 @@ Failure modes:
   roadmap layer conventions
 - [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard
   on roadmap touch
-- [`augment-source-of-truth`](augment-source-of-truth.md) — edit
+- [`source-of-truth`](source-of-truth.md) — edit
   `.agent-src.uncondensed/`
 - [`ai-council`](../skills/ai-council/SKILL.md) — output path
   convention and convergence-summary format

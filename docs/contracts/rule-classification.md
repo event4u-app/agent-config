@@ -76,7 +76,7 @@ in place per P2.2 playbook. Loaded by router on trigger match.
 |---|---:|---|---|
 | architecture | 2491 | 3 | Behavioural; project-organization gates |
 | artifact-drafting-protocol | 2957 | 2a | Iron-Law-shaped Understand→Research→Draft sequence |
-| augment-source-of-truth | 2439 | 1 | Behavioural Iron Law: never edit generated dirs |
+| source-of-truth | 2439 | 1 | Behavioural Iron Law: never edit generated dirs |
 | autonomous-execution | 5631 | 3 | Trivial-vs-blocking decision; tier-1 on `balanced` |
 | context-hygiene | 3811 | 1 | Behavioural Iron Law: 3-failure stop, fresh-chat trigger |
 | downstream-changes | 2940 | 2b | Behavioural: every code edit |

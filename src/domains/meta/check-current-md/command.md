@@ -120,7 +120,7 @@ This keeps `.condensation-hashes.json` consistent with the new content.
 ## Rules
 
 - **Never edit `.augment/` directly** — it's a generated projection.
-  Per [`augment-source-of-truth`](../rules/augment-source-of-truth.md),
+  Per [`source-of-truth`](../rules/source-of-truth.md),
   the source is `.agent-src.uncondensed/`.
 - **Per-line ignore marker is reserved** for meta-documentation that
   must quote German tokens; do NOT use it as a generic mute.
@@ -140,4 +140,4 @@ This keeps `.condensation-hashes.json` consistent with the new content.
 
 - [`md-language-check`](../skills/md-language-check/SKILL.md) — the gate skill this command wraps
 - [`language-and-tone`](../rules/language-and-tone.md) — the rule that defines the policy
-- [`augment-source-of-truth`](../rules/augment-source-of-truth.md) — where to apply fixes
+- [`source-of-truth`](../rules/source-of-truth.md) — where to apply fixes

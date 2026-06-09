@@ -68,7 +68,7 @@ install-axis without a current consumer. Re-evaluate in Phase 5.
 
 The generator walks `.agent-src.uncondensed/`, **not** `.agent-src/`.
 The Phase-2 roadmap text §Phase 2 says "the condensed canonical tree"
-— that is a documentation slip. `augment-source-of-truth` rule states
+— that is a documentation slip. `source-of-truth` rule states
 that uncondensed is canonical; the condensed tree is a build output
 and may be regenerated. Manifest pipelines that read build outputs are
 fragile to bootstrap order.

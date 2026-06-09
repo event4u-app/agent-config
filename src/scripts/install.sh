@@ -24,7 +24,7 @@ COPY_DIRS="rules"  # Subdirectories where files must be real copies (space-separ
 
 # Rules that are internal to the agent-config package and should NOT be shipped to consumers.
 # These are only relevant when developing the agent-config package itself.
-EXCLUDE_RULES="augment-source-of-truth.md augment-portability.md docs-sync.md"
+EXCLUDE_RULES="source-of-truth.md augment-portability.md docs-sync.md"
 
 # Files inside target/.augment/ that are NOT managed by sync (created by the bridge installer).
 # Never remove them in clean_stale even though they are absent in the source manifest.

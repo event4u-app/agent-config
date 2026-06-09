@@ -64,7 +64,7 @@
 | `.agent-src.uncondensed/commands/chat-history/learn.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/chat-history/learn.md` | `.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/chat-history/learn.md` | `.agent-src.uncondensed/skills/upstream-contribute/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/commands/check-current-md.md` | `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/commands/check-current-md.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/check-current-md.md` | `.agent-src.uncondensed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/check-current-md.md` | `.agent-src.uncondensed/skills/md-language-check/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/commands/commit.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
@@ -242,7 +242,7 @@
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md` | `.agent-src.uncondensed/rules/guidelines.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `.agent-src.uncondensed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md` | `.agent-src.uncondensed/rules/think-before-action.md` | `body_link` | 1 |
@@ -317,8 +317,8 @@
 | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `.agent-src.uncondensed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `.agent-src.uncondensed/rules/model-recommendation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncondensed/rules/source-of-truth.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/source-of-truth.md` | `contexts/communication/rules-auto/source-of-truth-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `.agent-src.uncondensed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `.agent-src.uncondensed/commands/commit/in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-detection.md` | `body_link` | 1 |
@@ -384,7 +384,7 @@
 | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `.agent-src.uncondensed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/augment-edit-discipline.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/augment-source-of-truth.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |

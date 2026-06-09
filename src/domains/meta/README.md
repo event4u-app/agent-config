@@ -166,7 +166,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`artifact-engagement-recording`** — After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call
 - **`ask-when-uncertain`** — Ask when uncertain — don't guess, assume, or improvise
 - **`augment-edit-discipline`** — Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
-- **`augment-source-of-truth`** — Editing files in dist/agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly
 - **`autonomous-execution`** — Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default
 - **`cli-output-handling`** — Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
@@ -210,6 +209,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained
 - **`slash-command-routing-policy`** — User types a slash command like /create-pr, /commit, or pastes command file content
+- **`source-of-truth`** — Editing files in dist/agent-src/, .augment/, .claude/, or .cursor/ — source of truth is src/; never edit a generated projection directly
 - **`telegraph-speak`** — When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers
 - **`token-efficiency`** — Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise
 - **`token-optimizer-maintenance`** — Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit

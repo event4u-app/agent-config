@@ -24,7 +24,7 @@ Body-link checks (Council Decision 2, 2026-05-06):
 
 `validator_ignore:` frontmatter primitive:
   - Per-rule allowlist for rules that *describe* a forbidden substring as
-    their subject matter (e.g. `augment-source-of-truth` documents the
+    their subject matter (e.g. `augment-edit-discipline` documents the
     `.agent-src.uncondensed/` boundary). Each entry: `{type, pattern,
     reason}`. The validator emits an audit line per matched ignore so
     drift cannot hide.
