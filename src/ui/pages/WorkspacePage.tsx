@@ -117,6 +117,10 @@ const formInputs = signal<Record<string, string>>({});
 const launching = signal(false);
 const launchResult = signal<LaunchResult | null>(null);
 const showFullTurn = signal(false);
+// Follow-up continuation (ADR-076 GUI, closes the ADR-076 v1 debt): the
+// in-flight follow-up prompt + busy flag for the active session.
+const followupText = signal('');
+const continuing = signal(false);
 
 const DRIVE_HOST = 'claude-code';      // v0: single hard-coded tier-1 host (council)
 const TURN_COLLAPSE_CHARS = 2000;      // collapse long turns behind "Show full"
@@ -160,6 +164,7 @@ async function launch(role: string, task: string, inputs: Record<string, string>
     launchBanner.value = null;
     launching.value = true;
     showFullTurn.value = false;
+    followupText.value = '';        // a new launch starts a fresh conversation
     try {
         const res = await apiFetch<LaunchResult>(
             '/api/v1/workspace/launch',
@@ -183,6 +188,34 @@ async function launch(role: string, task: string, inputs: Record<string, string>
 }
 
 // One human-readable banner per launch outcome (ADR-071/074).
+// Continue the active session's conversation (ADR-076). Reuses the launch
+// result shape + banner; updates the displayed turn in place.
+async function continueTurn(sessionId: string, prompt: string): Promise<void> {
+    if (prompt.trim() === '' || continuing.value) return;
+    continuing.value = true;
+    launchBanner.value = null;
+    showFullTurn.value = false;
+    try {
+        const res = await apiFetch<LaunchResult>(
+            `/api/v1/workspace/sessions/${sessionId}/continue`,
+            { method: 'POST', body: { prompt } },
+        );
+        launchResult.value = res;
+        launchBanner.value = bannerFor(res);
+        if (res.driven) followupText.value = '';     // clear only on a landed turn
+        const s = await apiFetch<{ sessions: SessionMeta[] }>('/api/v1/workspace/sessions?limit=20');
+        sessions.value = s.sessions;
+    } catch (err) {
+        if (err instanceof ApiCallError) {
+            launchBanner.value = err.body?.error?.message ?? err.message;
+        } else {
+            launchBanner.value = err instanceof Error ? err.message : String(err);
+        }
+    } finally {
+        continuing.value = false;
+    }
+}
+
 function bannerFor(r: LaunchResult): string {
     if (r.driven) {
         return r.recovered === true
@@ -298,6 +331,31 @@ function TurnResult(): preact.JSX.Element | null {
                     {r.turn.model ?? DRIVE_HOST} · in {usage.input_tokens ?? 0} / out {usage.output_tokens ?? 0} tokens
                 </p>
             ) : null}
+            <form
+                class="ac-workspace__followup"
+                onSubmit={(e): void => {
+                    e.preventDefault();
+                    void continueTurn(r.id, followupText.value);
+                }}
+            >
+                <label class="ac-workspace__field">
+                    <span class="ac-workspace__field-label">Follow up</span>
+                    <textarea
+                        class="ac-workspace__field-input"
+                        placeholder="Continue this conversation — e.g. make it shorter"
+                        aria-label="Follow-up prompt"
+                        value={followupText.value}
+                        onInput={(e): void => { followupText.value = (e.target as HTMLTextAreaElement).value; }}
+                    />
+                </label>
+                <button
+                    type="submit"
+                    class="ac-button ac-button--primary"
+                    disabled={followupText.value.trim() === '' || continuing.value}
+                >
+                    {continuing.value ? 'Continuing…' : 'Send follow-up'}
+                </button>
+            </form>
         </section>
     );
 }
