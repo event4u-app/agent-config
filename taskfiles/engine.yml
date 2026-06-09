@@ -87,6 +87,12 @@ tasks:
     cmds:
       - bash src/scripts/ai-video/test-pipeline.sh
 
+  video:smoke-trace:
+    silent: true
+    desc: "Capture an adapter smoke trace. Dry-run by default (no spend); pass PROVIDER=<id> and LIVE=1 for the real round-trip (needs a key + real spend — maintainer Hard Floor)."
+    cmds:
+      - bash src/scripts/ai-video/smoke-trace.sh --provider {{.PROVIDER | default "gemini-veo"}} {{if eq .LIVE "1"}}--live{{end}}
+
   test-install:
     silent: true
     desc: Run install.sh + orchestrator + install.py + key-script tests
