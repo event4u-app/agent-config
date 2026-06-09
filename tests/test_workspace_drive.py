@@ -249,6 +249,45 @@ def test_cli_resume_flag(wd, tmp_path, capsys, monkeypatch):
     assert json.loads(capsys.readouterr().out)["text"] == "cli resumed"
 
 
+# --- session-expired detection on resume (ADR-080) -------------------------
+
+@pytest.mark.parametrize("stderr", [
+    "No conversation found with session ID: 00000000-0000-0000-0000-000000000000",   # claude
+    'Error resuming session: Invalid session identifier "x".',                        # gemini
+    "Error: thread/resume: thread/resume failed: no rollout found for thread id x",   # codex
+])
+def test_resume_session_expired_maps_distinct_kind(wd, stderr):
+    def run(args, cwd, timeout):
+        return 1, "", stderr
+    turn = wd.drive("claude-code", "again", resume_session_id="gone", runner=run)
+    assert turn["ok"] is False
+    assert turn["error_kind"] == "session-expired"
+
+
+def test_session_expired_only_on_resume_not_fresh_launch(wd):
+    # The same stderr on a FRESH launch is a normal nonzero-exit, not expired.
+    def run(args, cwd, timeout):
+        return 1, "", "No conversation found with session ID: x"
+    fresh = wd.drive("claude-code", "first", runner=run)
+    assert fresh["error_kind"] == "nonzero-exit"
+    resumed = wd.drive("claude-code", "again", resume_session_id="gone", runner=run)
+    assert resumed["error_kind"] == "session-expired"
+
+
+def test_resume_other_failure_stays_nonzero_exit(wd):
+    def run(args, cwd, timeout):
+        return 1, "", "some unrelated crash"
+    turn = wd.drive("claude-code", "again", resume_session_id="s", runner=run)
+    assert turn["error_kind"] == "nonzero-exit"
+
+
+def test_is_session_expired_helper(wd):
+    assert wd._is_session_expired("Invalid session identifier") is True
+    assert wd._is_session_expired("No rollout found for thread id 7") is True
+    assert wd._is_session_expired(None) is False
+    assert wd._is_session_expired("network blip") is False
+
+
 # --- CLI -------------------------------------------------------------------
 
 def test_cli_drive_json(wd, tmp_path, capsys, monkeypatch):

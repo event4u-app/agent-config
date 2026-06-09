@@ -204,6 +204,24 @@ def _error_turn(host: str, message: str, kind: str) -> dict:
     return {"ok": False, "host": host, "error": message, "error_kind": kind}
 
 
+# Verified host "resume session not found / expired" stderr signatures
+# (ADR-080, probed 2026-06-09): claude `No conversation found with session ID`,
+# gemini `Invalid session identifier`, codex `no rollout found for thread id`.
+# Substring, case-insensitive — best-effort + extensible as hosts evolve.
+SESSION_EXPIRED_SIGNATURES = (
+    "no conversation found with session",
+    "invalid session identifier",
+    "no rollout found for thread",
+    "thread/resume failed",
+    "session not found",
+)
+
+
+def _is_session_expired(stderr: str | None) -> bool:
+    s = (stderr or "").lower()
+    return any(sig in s for sig in SESSION_EXPIRED_SIGNATURES)
+
+
 def drive(
     host: str,
     prompt: str,
@@ -246,6 +264,13 @@ def drive(
         return _error_turn(host, f"host CLI not found: {args[0]}", "cli-missing")
     except OSError as err:
         return _error_turn(host, f"host CLI spawn failed: {err}", "spawn-failed")
+
+    # On a resume, a host whose session has expired / is unknown reports it on
+    # stderr (verified messages, ADR-080). Map that to a distinct
+    # `session-expired` so the caller can answer 410 (start a new conversation)
+    # rather than a generic failure. Only on the resume path.
+    if resume_session_id is not None and _is_session_expired(stderr):
+        return _error_turn(host, f"host session expired: {(stderr or '').strip()[:200]}", "session-expired")
 
     if rc != 0:
         return _error_turn(host, f"host CLI exited {rc}: {(stderr or '').strip()[:200]}", "nonzero-exit")
