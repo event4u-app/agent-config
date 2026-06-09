@@ -58,8 +58,8 @@ complexity: structural
 > **Then the downstream roadmaps (in order):**
 > `road-to-video-provider-multiplexers` → `road-to-music-video-orchestration`
 > → `road-to-video-deferred-design` (draft). Strategy + rationale: AI-council
-> session `agents/runtime/council/responses/video-strategy.json` (claude-sonnet-4-5
-> + gpt-4o, 2026-06-06) and the inline convergence note below.
+> convergence (claude-sonnet-4-5 + gpt-4o, 2026-06-06 — session artefact
+> auto-pruned) and the inline convergence note below.
 
 ## Goal
 
