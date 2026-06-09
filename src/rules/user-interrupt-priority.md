@@ -13,7 +13,7 @@ packs:
 
 # User-Interrupt Priority
 
-A new instruction mid-flight is **not** a continuation. Examples and failure modes: [`contexts/execution/interrupt-examples.md`](../contexts/execution/interrupt-examples.md).
+A new instruction mid-flight is **not** a continuation. Examples + failure modes: [`interrupt-examples`](../contexts/execution/interrupt-examples.md).
 
 ## The Iron Law
 
@@ -24,7 +24,7 @@ THEN ASK BEFORE RESUMING THE OLD TASK.
 NEVER SILENTLY RESUME.
 ```
 
-Holds regardless of `personal.autonomy`, a standing autonomy directive, or roadmap authorization. Autonomy narrows trivial workflow questions — it does not authorize ignoring a fresh instruction.
+Holds regardless of `personal.autonomy`, standing autonomy directives, or roadmap authorization. Autonomy narrows trivial workflow questions — never authorizes ignoring a fresh instruction.
 
 ## Classify every user turn
 

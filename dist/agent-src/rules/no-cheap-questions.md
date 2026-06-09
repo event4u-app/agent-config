@@ -21,7 +21,7 @@ NEVER OFFER AN IRON-LAW-VIOLATING OPTION.
 NEVER NUMBER CHOICES WITHOUT A REAL TRADE-OFF.
 ```
 
-Cheap-class catalog + IL 3 (no paternalistic state-assuming options): [`cheap-question-mechanics § cheap classes`](../contexts/execution/cheap-question-mechanics.md#cheap-classes--full-catalog).
+Cheap-class catalog + IL 3 (no paternalistic state-assuming options): [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Iron Law 4 — No Continuation Prompts Under Autonomous Mandate
 
@@ -31,7 +31,7 @@ STANDING AUTONOMOUS MANDATE ACTIVE → NEVER ASK
 A CLEAN EDIT-BATCH IS NOT A HALT CONDITION.
 ```
 
-Mandate triggers + halt list: [`cheap-question-mechanics § Iron Law 4`](../contexts/execution/cheap-question-mechanics.md#iron-law-4--halt-conditions-under-autonomous-mandate).
+Mandate triggers + halt list: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Iron Law 5 — Prereq Work Is Execution, Not a Question
 
@@ -41,7 +41,7 @@ USER AUTHORIZES X ("COMMIT" / "PUSH" / "OPEN PR" / "DEPLOY")
 "DO THE PREREQ" vs "SKIP AND BREAK THE GATE".
 ```
 
-Prereq catalog + halt conditions: [`cheap-question-mechanics § Iron Law 5`](../contexts/execution/cheap-question-mechanics.md#iron-law-5--prereq-examples-silent-execution-never-a-question).
+Prereq catalog + halt conditions: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Iron Law 6 — Destination Already Stated, Never Re-Ask
 
@@ -50,7 +50,7 @@ USER NAMED THE DESTINATION → DO NOT RE-ASK.
 NO BRANCH-BASE INVENTORY, NO "WHICH BRANCH?", NO "NEW PR?".
 ```
 
-Triggers + scope-control interaction: [`cheap-question-mechanics § Iron Law 6`](../contexts/execution/cheap-question-mechanics.md#iron-law-6--destination-triggers-never-re-ask).
+Triggers + scope-control interaction: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
@@ -72,4 +72,4 @@ Silent, before any numbered-options block. Any "yes" → don't ask:
 
 Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
 
-In doubt → ask. This rule narrows asking, never widens silence. When asking IS allowed: [`cheap-question-mechanics § when-asking-is-allowed`](../contexts/execution/cheap-question-mechanics.md#when-asking-is-allowed).
+In doubt → ask. This rule narrows asking, never widens silence. When asking IS allowed: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).

@@ -37,7 +37,7 @@ Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fi
 
 "Should I commit this?" / "do we want to commit?" — **forbidden**. The user invokes a command or says so explicitly. Don't surface a commit option in numbered-options blocks unless the rest of the message would be incomplete without it.
 
-Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet) are **not** permission — see [`commit-mechanics § Speech-act check`](../contexts/authority/commit-mechanics.md).
+Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet) are **not** permission — see [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
 ## Always split into logical chunks — never ask how
 
@@ -47,11 +47,11 @@ NEVER ASK "ONE COMMIT OR MULTIPLE?", "HOW SHOULD I SPLIT?",
 "WHICH CHUNK FIRST?". THE AGENT PICKS THE SPLIT.
 ```
 
-One chunk per concern, foundation-first; generated files ride with their source. Full mechanics + carve-outs: [`commit-mechanics § Always split into logical chunks`](../contexts/authority/commit-mechanics.md).
+One chunk per concern, foundation-first; generated files ride with their source. Full mechanics + carve-outs: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
 ## NEVER write commit steps into roadmaps unsolicited
 
-Roadmaps plan **work**, not commits — when creating a roadmap, never add commit steps unless the user explicitly asked. Detail: [`commit-mechanics § roadmap commit steps`](../contexts/authority/commit-mechanics.md).
+Roadmaps plan **work**, not commits — when creating a roadmap, never add commit steps unless the user explicitly asked. Detail: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
 ## See also
 

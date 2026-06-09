@@ -34,7 +34,7 @@ Even if trivial or independent — exactly one.
 
 Nine patterns — "improve / optimize" · "add caching" · "make it better / cleaner" · "clean up this file" · "fix this" (no symptom) · "refactor X" · "use best practices" · "handle errors properly" · "add a UI / component / tile / page" in a mixed-framework repo. Match without further context → ask **before** touching code.
 
-Per-pattern missing-info and clarifying questions: [`asking-and-brevity-examples § vague-triggers`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+Per-pattern missing-info and clarifying questions: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
 
 **Escape hatch:** unambiguous from ticket / open file / prior turn → proceed, state the assumption.
 
@@ -48,18 +48,18 @@ Numbered options (per [`user-interaction`](user-interaction.md)). Short.
 2. Two or more separate numbered-option blocks?
 3. User would need a structured reply (`1a, 2b`) instead of a single number?
 
-Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples § serial-wins`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
+Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
 
 ### Ordering & handoff
 
-- **Session handoff** — ask LAST, after domain / clarifying questions. Full: [`agent-interaction-and-decision-quality § handoff`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+- **Session handoff** — ask LAST, after domain / clarifying questions. Full: [`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md).
 - **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone.
 - **Blocking clarification** — ask FIRST, alone, before research / planning output.
 - **Optional refinement** — don't ask; state the assumption, proceed.
 
 ## Impact-based routing (AI Council)
 
-AI Council enabled → questions classified and routed per `decision_resolution`. **Iron Law: `high_impact` and `user_required` ALWAYS reach the user.** Contract: [`ai-council-config`](../docs/contracts/ai-council-config.md#decision-resolution-by-impact-phase-10-ask-user-routing).
+AI Council enabled → questions classified and routed per `decision_resolution`. **Iron Law: `high_impact` and `user_required` ALWAYS reach the user.** Contract: [`ai-council-config`](../docs/contracts/ai-council-config.md).
 
 ## Creating new agent artifacts
 

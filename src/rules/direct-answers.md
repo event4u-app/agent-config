@@ -32,7 +32,7 @@ THE MORE LOAD-BEARING THE CLAIM, THE HARDER YOU VERIFY.
 WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 ```
 
-Severity tiers (High = load-bearing · Medium = project-shape · Low = idioms), per-tier verification actions, and "just guess" override: [`asking-and-brevity-examples § severity`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
+Severity tiers (High = load-bearing · Medium = project-shape · Low = idioms), per-tier verification actions, and "just guess" override: [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
 
 ## Iron Law 3 — Brevity by Default
 
@@ -57,8 +57,8 @@ Never overrides `user-interaction` (numbered options stay) or command-mandated s
 
 ## Failure modes & examples
 
-Trigger phrases + correction pattern: [`asking-and-brevity-examples § failure-modes`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
+Trigger phrases + correction pattern: [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
 Pattern Memory (wrong / right / why): [`direct-answers-demos`](../../docs/guidelines/agent-infra/direct-answers-demos.md).
 Outcome baseline: [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
 
-Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).
+Cross-rule index: [`frugality-charter`](../contexts/contracts/frugality-charter.md).
