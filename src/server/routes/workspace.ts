@@ -683,6 +683,17 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             }
             await appendSession(opts.writeRoot, params.id, 'host.error', turn);
             await recordDriveHealth(opts.writeRoot, host, false, typeof turn['error_kind'] === 'string' ? turn['error_kind'] as string : undefined, isProbe);
+            // An expired / unknown host session is not our failure and not a bad
+            // request — it's a gone resource (ADR-080). Answer 410 so the GUI can
+            // say "start a new conversation" rather than show a generic error.
+            if (turn['error_kind'] === 'session-expired') {
+                await reply.code(410).send({
+                    id: params.id, role, task, host, driven: false,
+                    error_kind: 'session-expired',
+                    error: 'host session expired — start a new conversation',
+                });
+                return reply;
+            }
             return { id: params.id, role, task, host, driven: false, error_kind: turn['error_kind'], error: turn['error'] };
         });
 
