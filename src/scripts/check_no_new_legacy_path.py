@@ -51,7 +51,10 @@ def find_offenders(diff_text: str) -> list[str]:
             cur_file = line[6:]
             continue
         if line.startswith("+") and not line.startswith("+++"):
-            if cur_file and cur_file not in EXEMPT and LEGACY in line:
+            # src/-scoped: a full diff (e.g. `gh pr diff`) carries every path;
+            # only added lines under src/ (minus the exempt detectors) count.
+            if (cur_file and cur_file.startswith("src/")
+                    and cur_file not in EXEMPT and LEGACY in line):
                 offenders.append(f"{cur_file}: {line[1:].strip()[:100]}")
     return offenders
 

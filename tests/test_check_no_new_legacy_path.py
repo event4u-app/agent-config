@@ -46,6 +46,19 @@ def test_exempt_files_are_not_flagged():
         assert g.find_offenders(diff) == [], f"{exempt} must be exempt"
 
 
+def test_non_src_files_are_ignored():
+    # a full diff (gh pr diff) carries every path; only src/ is in scope —
+    # docs/, tests/, agents/, taskfiles/ mentions must NOT be flagged
+    for path in (
+        "docs/governance.md",
+        "tests/test_check_no_new_legacy_path.py",
+        "agents/roadmaps/x.md",
+        "taskfiles/ci-fast.yml",
+    ):
+        diff = _diff(path, "the `.agent-src.uncondensed/` literal")
+        assert g.find_offenders(diff) == [], f"{path} is outside src/ — must be ignored"
+
+
 def test_multiple_files_in_one_diff():
     diff = (
         _diff("src/rules/a.md", "`.agent-src.uncondensed/rules/a.md`")
