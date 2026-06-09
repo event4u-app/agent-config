@@ -37,7 +37,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`chat-history:import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 - **`chat-history:learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
 - **`chat-history:show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
-- **`condense`** — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to dist/agent-src/
+- **`condense`** — Condense .md files from src/ into telegraph format and write to dist/agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context:create`** — Analyze a codebase area and create a structured context document
 - **`context:refactor`** — Analyze, update, and extend an existing context document
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`artifact-drafting-protocol`** — Creating a new skill/rule/command/guideline or significantly rewriting one — runs mandatory Understand → Research → Draft first
 - **`artifact-engagement-recording`** — After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call
 - **`ask-when-uncertain`** — Ask when uncertain — don't guess, assume, or improvise
-- **`augment-edit-discipline`** — Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
+- **`augment-edit-discipline`** — Editing .augment/ or src/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
 - **`autonomous-execution`** — Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default
 - **`cli-output-handling`** — Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
@@ -229,7 +229,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`analysis-skill-router`** — Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
 - **`check-refs`** — Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 - **`command-routing`** — Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
-- **`command-writing`** — Use when creating or editing a slash command in .agent-src.uncondensed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
+- **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 - **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
 - **`context-authoring`** — Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
@@ -253,7 +253,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`module-detect-on-the-fly`** — Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config.
 - **`module-management`** — Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 - **`override-management`** — Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
-- **`persona-writing`** — Use when creating or editing a persona in .agent-src.uncondensed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
+- **`persona-writing`** — Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 - **`project-docs`** — Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs.
 - **`prompt-engineering-patterns`** — Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt.
 - **`prompt-optimizer`** — Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'.
@@ -266,7 +266,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
 - **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
 - **`rule-refactor`** — Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
-- **`rule-writing`** — Use when creating or editing a rule in .agent-src.uncondensed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
+- **`rule-writing`** — Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 - **`script-writing`** — Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'.
 - **`sequential-thinking`** — ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks.
 - **`skill-improvement-pipeline`** — ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
