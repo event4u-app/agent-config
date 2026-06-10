@@ -83,20 +83,14 @@ against a real provider API, harden its trust boundary, and make cost visible
 
 ## Phase 2 — One real adapter, end-to-end (the smoke trace)
 
-> **Blocked on the maintainer (Hard Floor).** This phase spends real money
-> against a provider API and needs (a) a live provider key in
-> `agents/.ai-video.xml` and (b) explicit per-turn spend authorization
-> (`non-destructive-by-default`). The contract-v2 trust-boundary + cost
-> helpers from Phases 1 & 3 are in place, so the wiring can route through
-> them the moment the maintainer green-lights the spend. Provider choice
-> awaits the ADR-056 disposition.
+> **Unblocked 2026-06-10:** maintainer picked `gemini-veo` (live Veo key handed
+> over in-session) and authorized the spend (single smoke + 10-render batch).
 
-- [ ] Pick the single most stable hosted provider already shipped (candidate: `gemini-veo` or `sora`); confirm its terms allow automated calls. <!-- blocked (open, resume later): maintainer decision via ADR-056; recommended pick gemini-veo; ToS-for-automated-calls confirmation is the maintainer's -->
-- [ ] Implement a real `submit→poll→fetch` round-trip and capture the smoke trace under `agents/reference/ai-video/smoke-traces/`. <!-- blocked (open, resume later): Hard Floor — needs live provider key + real spend (non-destructive-by-default); carve-out: new-gate-verification once wired --> <!-- carve-out: new-gate-verification -->
-      <!-- harness landed (autonomous, no spend): src/scripts/ai-video/smoke-trace.sh + `task video:smoke-trace` capture the round-trip + write the trace; dry-run verified on gemini-veo/fal/replicate/sora (validates the v2 stdout shape + the trust boundary on the returned path; live failure recorded gracefully). The LIVE capture is now ONE command (`... --live` with a key) — but the real submit/poll/fetch is wired only on fal/replicate/higgsfield (gemini-veo/sora/kling stubs record "live not wired"). The actual paid run + the chosen-adapter live-wiring remain the maintainer's Hard-Floor step. Format + status: agents/reference/ai-video/smoke-traces/README.md. -->
-      <!-- carve-out: new-gate-verification -->
-- [ ] Run ~10 real end-to-end renders; record success rate + per-render cost; compare against the VGTeam baseline (98.4% / ~$0.10). <!-- blocked (open, resume later): Hard Floor — real paid renders; maintainer authorizes spend -->
-- [ ] If the validated adapter clears the bar, promote it `experimental → stable` per `provider-lifecycle-discipline` (maintainer-authored tier flip). <!-- blocked (open, resume later): maintainer-authored tier flip, gated on the smoke trace above -->
+- [x] Pick the single most stable hosted provider already shipped (candidate: `gemini-veo` or `sora`); confirm its terms allow automated calls. <!-- done 2026-06-10: maintainer picked gemini-veo by handing over the live Veo key + authorizing automated validation calls in-session (supersedes the ADR-056 "recommended pick" question for the validation track) -->
+- [x] Implement a real `submit→poll→fetch` round-trip and capture the smoke trace under `agents/reference/ai-video/smoke-traces/`. <!-- carve-out: new-gate-verification -->
+      <!-- done 2026-06-10: gemini-veo.sh live-wired (predictLongRunning submit → operation poll → fetch via AIV_FETCH_HEADER'd aiv_fetch_url + aiv_validate_artifact_path; operation names taint-validated). Harness gained the live poll-loop + artifact scoping + subshelled validation (3 debug renders burned by the pre-fix harness dying AFTER successful fetch — honest overspend, recorded). 7 harness-captured live traces: agents/reference/ai-video/smoke-traces/gemini-veo-live-2026-06-10T05-3*.json. -->
+- [x] Run ~10 real end-to-end renders; record success rate + per-render cost; compare against the VGTeam baseline (98.4% / ~$0.10). <!-- done 2026-06-10: 10/10 server-side renders succeeded (100%); $1.60/render modeled (4s × $0.40/s, durationSeconds=4 ACCEPTED); ~40–70s round-trip; daily-quota ≈10/day caveat (renders 11–12 → HTTP 429 pre-submit, no spend). Full table: agents/reference/ai-video/smoke-traces/README.md § Validation result. -->
+- [x] If the validated adapter clears the bar, promote it `experimental → stable` per `provider-lifecycle-discipline` (maintainer-authored tier flip). <!-- done 2026-06-10: maintainer authorized the promotion in-session; gemini-veo flipped to stable in all 3 sync points (adapter header, agents/templates/.ai-video.xml.example, operator's agents/.ai-video.xml); daily-quota caveat recorded in the header; tests 94 pass, harness reports tier=stable -->
 
 ## Phase 3 — Cost transparency
 

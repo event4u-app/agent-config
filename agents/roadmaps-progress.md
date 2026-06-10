@@ -6,10 +6,10 @@
 
 ## Overall
 
-**42 / 66 steps done · 64%**
+**36 / 68 steps done · 53%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## Open roadmaps
@@ -17,9 +17,9 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-mcp-stdio-end-user-packaging.md](roadmaps/road-to-mcp-stdio-end-user-packaging.md) | 4 | 9 | 4 | 5 | 0 | 0 | ██████░░░░ 56% |
-| 3 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 30 | 2 | 24 | 4 | 0 | █████████░ 92% |
-| 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
+| 2 | [road-to-mcp-discovery-helper.md](roadmaps/road-to-mcp-discovery-helper.md) | 4 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-mcp-stdio-end-user-packaging.md](roadmaps/road-to-mcp-stdio-end-user-packaging.md) | 4 | 9 | 2 | 7 | 0 | 0 | ████████░░ 78% |
+| 4 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 30 | 2 | 24 | 4 | 0 | █████████░ 92% |
 | 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
 
 ---
@@ -36,15 +36,26 @@
 | 2 | Role promotion + release-notes honesty | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Encrypt-at-rest activation — v1.0 event | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
+### [road-to-mcp-discovery-helper.md](roadmaps/road-to-mcp-discovery-helper.md)
+
+**Read-only cross-agent MCP discovery helper** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Demand gate + fact-finishing — decide whether to proceed at all | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Registry query + normalize to server.json | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Per-agent copy-paste install rendering | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Adoption signal + auto-install decision checkpoint | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-mcp-stdio-end-user-packaging.md](roadmaps/road-to-mcp-stdio-end-user-packaging.md)
 
-**Road to a turnkey end-user stdio MCP server — packaging the local server for people who configure agents, not clone repos** — 5 / 9 done (56%)
+**Road to a turnkey end-user stdio MCP server — packaging the local server for people who configure agents, not clone repos** — 7 / 9 done (78%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Decide the distribution shape (ADR, no code) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Turnkey launch entrypoint | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | stdio client-config templates | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | stdio client-config templates | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | End-user docs + smoke | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md)
@@ -57,17 +68,6 @@
 | 1 | Positioning & Flows: make the product navigable (docs only, zero routing risk) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Governance: own, age, and contract the surface | 🟡 in progress | 2 | 6 | 1 | 0 | 75% |
 | 3 | Consolidation discovery (decide; merge nothing here) | ✅ done | 0 | 3 | 1 | 0 | 100% |
-
-### [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md)
-
-**Road to video foundation validation — prove the adapter contract with real money before building anything new** — 8 / 12 done (67%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Trust-boundary hardening (blocks all new adapters) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | One real adapter, end-to-end (the smoke trace) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Cost transparency | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | Decide the fate of the unvalidated adapters (maintainer decision) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 ### [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md)
 

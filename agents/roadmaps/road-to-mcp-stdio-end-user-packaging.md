@@ -65,11 +65,13 @@ The stdio server today is **CLI-first internal tooling, not a library**:
 
 ## Phase 3 — stdio client-config templates
 
-- [ ] Add copy-paste stdio client snippets (command + args) for Claude Desktop,
+- [x] Add copy-paste stdio client snippets (command + args) for Claude Desktop,
   Cursor, Zed, and Claude Code — the stdio counterpart to today's Worker-only
   `mcp-remote` templates. Keep the remote-Worker templates untouched.
-- [ ] Distinguish the two paths in the docs so users do not confuse the local
+  <!-- done: docs/setup/mcp-client-config.md § "Local stdio (turnkey)" — 4 client snippets all `command: agent-config, args: [mcp-server]` (+ npx fallback) + a "Verify the local server" stdio drive. Remote-Worker per-client sections + claude_desktop_config.json.template untouched. Doc-only (the roadmap's "templates" = the per-client snippets; a separate .template file would pull in claude_desktop_bundler wiring — out of scope). -->
+- [x] Distinguish the two paths in the docs so users do not confuse the local
   stdio entry with the self-hosted Worker entry.
+  <!-- done: new "## Two ways to connect — pick one" table (command vs URL, needs, network/account, surface, best-for) + a "don't mix them up" note; H1/intro reframed from "Self-hosted Worker" to both paths; Transport note contrasts local-stdio (no bridge) vs remote (mcp-remote bridge); contributor clone-based kernel kept as a sub-note. -->
 
 ## Phase 4 — End-user docs + smoke
 
