@@ -113,19 +113,21 @@ one plain-language reply — over the **existing** `session_profiles.py` state, 
 Goal: `/why` answers the profile question, not just the memory/trust question — in plain language, over a
 new envelope rendered by the **existing** plain renderer, template-based only.
 
-- [ ] Author the `profile-overlay` explain-envelope shape in `docs/contracts/explain-modes.md` (a new
+- [x] Author the `profile-overlay` explain-envelope shape in `docs/contracts/explain-modes.md` (a new
       `envelope_type` alongside `explain-v1`) — fields: active profile, activated seed tokens, expanded
       pack closure, counts surfaced/hidden, staleness age, and the deterministic "what this changed"
       delta. **Trust boundary (council amendment):** the renderer is a pure template over these fields; it
       never calls an LLM to generate the explanation and never reads beyond the overlay state it is given.
-- [ ] Implement the renderer path — `workspace_explain.py` (or a sibling `profile_explain.py` if the
+- [x] Implement the renderer path — `workspace_explain.py` (or a sibling `profile_explain.py` if the
       shared module would couple awkwardly) renders the `profile-overlay` envelope in plain mode by
       default, `--mode technical` for the engineering-lead view, reusing the explain-modes plumbing and the
       4-band/3-band convention. Build the envelope from `session_profiles.py show|surface` output.
-- [ ] Wire `/why profile` (or extend `/why` to detect "why is the surface different / why these
+- [x] Wire `/why profile` (or extend `/why` to detect "why is the surface different / why these
       commands") to emit the `profile-overlay` plain render. One question per turn if the intent is
       ambiguous (memory-explain vs profile-explain), per `ask-when-uncertain`.
-- [ ] Coverage — `tests/` golden cases for the `profile-overlay` renderer: no overlay, single overlay,
+      <!-- done: wired as `session_profiles explain --mode plain|technical` (a script subcommand) + agent-intent routing documented in explain-modes.md § profile-overlay — same model as /why for memory. Deliberately NOT a new top-level command verb (that needs an ADR-041 verb addition; the /why intent routes to the explain subcommand, no new surface). -->
+- [x] **(renderer detail)** Built `src/scripts/config/profile_explain.py` (sibling to session_profiles, not a shared workspace module — the workspace one doesn't exist post-`src/` move and would couple awkwardly).
+- [x] Coverage — `tests/` golden cases for the `profile-overlay` renderer: no overlay, single overlay,
       multi-pack overlay, stale overlay, and a missing-field placeholder (renderer never throws). Run the
       targeted test once locally. <!-- carve-out: new-gate-verification -->
 

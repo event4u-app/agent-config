@@ -41,6 +41,7 @@ except Exception:  # pragma: no cover - yaml is a hard dep in practice
     yaml = None  # type: ignore
 
 from scripts._lib import agent_settings
+from scripts.config import profile_explain
 
 # --- Paths -----------------------------------------------------------------
 
@@ -434,6 +435,10 @@ def main(argv: list[str] | None = None) -> int:
     p_surf = sub.add_parser("surface", parents=[common], help="list shown/hidden artefacts")
     p_surf.add_argument("--category", choices=["command", "skill"], default=None)
     sub.add_parser("stale-notice", parents=[common], help="emit session_start staleness notice if any")
+    p_exp = sub.add_parser("explain", parents=[common],
+                           help="explain WHY the surface is different (the profile-overlay envelope)")
+    p_exp.add_argument("--mode", choices=["plain", "technical"], default="plain",
+                       help="plain (default, employee) or technical (engineering lead)")
 
     args = ap.parse_args(argv)
     root = _repo_root(args.root)
@@ -488,6 +493,19 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"active packs: {', '.join(active)}")
                     print(f"surfaced: {cmds_shown} commands, {skills_shown} skills "
                           f"({len(surf.hidden)} hidden behind inactive packs)")
+            return 0
+
+        if args.cmd == "explain":
+            active = read_overlay(root)
+            surf = compute_surface(root, active=active)
+            cmds_shown = sum(1 for a in surf.shown if a["category"] == "command")
+            skills_shown = sum(1 for a in surf.shown if a["category"] == "skill")
+            env = profile_explain.build_profile_envelope(
+                active, cmds_shown, skills_shown, len(surf.hidden))
+            if args.json:
+                print(json.dumps(env))
+            else:
+                print(profile_explain.render_profile_overlay(env, mode=args.mode))
             return 0
 
         if args.cmd == "surface":
