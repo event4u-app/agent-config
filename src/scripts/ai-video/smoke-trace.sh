@@ -32,13 +32,15 @@ ADAPTER_DIR="${ROOT}/src/scripts/ai-video/adapters"
 PROVIDER=""
 MODE="dry-run"
 MODEL=""
+REF_IMAGE=""
 OUT_DIR="${ROOT}/agents/reference/ai-video/smoke-traces"
 while [ $# -gt 0 ]; do
   case "$1" in
-    --provider) PROVIDER="${2:-}"; shift 2 ;;
-    --model)    MODEL="${2:-}"; shift 2 ;;
-    --live)     MODE="live"; shift ;;
-    --out)      OUT_DIR="${2:-}"; shift 2 ;;
+    --provider)  PROVIDER="${2:-}"; shift 2 ;;
+    --model)     MODEL="${2:-}"; shift 2 ;;
+    --ref-image) REF_IMAGE="${2:-}"; shift 2 ;;
+    --live)      MODE="live"; shift ;;
+    --out)       OUT_DIR="${2:-}"; shift 2 ;;
     *) echo "smoke-trace: unknown arg '$1'" >&2; exit 2 ;;
   esac
 done
@@ -57,13 +59,16 @@ TRACE="${OUT_DIR}/${PROVIDER}${MODEL_SLUG}-${MODE}-${TS}.json"
 
 # Minimal valid stdin JSON (contract: prompt.* blocks mandatory). --model
 # injects the optional top-level model_id key (multiplexer adapters route it;
-# single-model adapters ignore unknown stdin keys per contract).
-STDIN_JSON="$(jq -nc --arg model "${MODEL}" '{
+# single-model adapters ignore unknown stdin keys per contract). --ref-image
+# injects ref_images[0] for image2video adapters (e.g. higgsfield) that
+# animate a still instead of generating from text alone.
+STDIN_JSON="$(jq -nc --arg model "${MODEL}" --arg ref "${REF_IMAGE}" '{
   prompt: {style:"smoke-test", subject:"a red cube", environment:"white void",
            action:"rotates slowly", camera:"locked", lens:"50mm",
            lighting:"soft key", mood:"neutral"},
   duration: 2.0, aspect:"16:9", seed: 1
-} + (if $model != "" then {model_id: $model} else {} end)')"
+} + (if $model != "" then {model_id: $model} else {} end)
+  + (if $ref   != "" then {ref_images: [$ref]} else {} end)')"
 
 ms_now() { python3 -c 'import time;print(int(time.time()*1000))'; }
 
@@ -130,6 +135,10 @@ else
     else
       SUCCESS=false   # timed out or provider-failed — recorded in PHASES
     fi
+  elif [ -n "$(jq -r '.video_path // empty' <<<"${LAST_OUT}" 2>/dev/null || true)" ]; then
+    # Synchronous adapter (e.g. images API): submit produced the artifact
+    # directly — its stdout IS the round-trip result, no poll/fetch.
+    FETCH_OUT="${LAST_OUT}"
   else
     SUCCESS=false   # stub adapter (live not wired) or submit failed — recorded in PHASES
   fi
