@@ -382,6 +382,11 @@ tasks:
     desc: Validate src/config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
     cmd: python3 src/scripts/lint_discovery_vocabulary.py {{.QUIET_FLAG}}
 
+  lint-profile-overlay-set-only:
+    silent: true
+    desc: Freeze the set-only overlay invariant — aliases resolve only to pack-id sets, no scalar audience-hint / precedence key feeds runtime.active_packs (session-profile-observability Phase 3, ADR-010 addendum)
+    cmd: python3 src/scripts/lint_profile_overlay_set_only.py {{.QUIET_FLAG}}
+
   build-discovery-manifest:
     silent: true
     desc: Run the release-time discovery scanner — writes dist/discovery/discovery-manifest.{json,summary.md} (R3 Phase 2.1)

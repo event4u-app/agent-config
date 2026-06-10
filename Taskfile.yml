@@ -94,6 +94,7 @@ tasks:
       - task: lint-roadmap-ci-steps
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
+      - task: lint-profile-overlay-set-only
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
       - task: check-skill-requires
@@ -217,6 +218,7 @@ tasks:
       - task: lint-roadmap-ci-steps
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
+      - task: lint-profile-overlay-set-only
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
       - task: check-skill-requires
