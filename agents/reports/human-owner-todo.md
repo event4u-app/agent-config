@@ -87,42 +87,38 @@ screenshots, encrypt-at-rest PR timing) is gated on these three sessions.
 
 ---
 
-## 2. Roadmap: `road-to-video-foundation-validation.md` (Phase 2 — blocked only on you)
+## 2. Roadmap: `road-to-video-foundation-validation.md` — ✅ COMPLETED 2026-06-10
 
-The trust boundary, cost transparency, and ADR are done. Phase 2 spends real
-money, so all four remaining steps wait on these maintainer actions:
+Fully closed in-session with the maintainer: Veo key handed over, spend
+authorized, `gemini-veo` live-wired and validated (**10/10 renders, $1.60/render,
+4s MP4 with native AAC audio**), promoted `experimental → stable` (all 3 sync
+points). Evidence: `agents/reference/ai-video/smoke-traces/README.md`
+§ Validation result. Roadmap archived.
 
-- [ ] **Decide ADR-056 — which adapter gets validated first** (~10 min reading)
-  - **What:** Pick fold/shim/remove for the 5 unvalidated adapters + the first validation target. Written recommendation: `gemini-veo`.
+One leftover that is still yours (NOT blocking anything):
+
+- [ ] **Decide ADR-056 for the remaining 4 unvalidated adapters** (~10 min reading)
+  - **What:** `gemini-veo` is now validated+stable; the fold/shim/remove disposition for `higgsfield`, `kling`, `openai-images`, `sora` is still open.
   - **Where:** `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md` (status: `proposed`).
-  - **How:** Read the options table, pick one, tell the agent "accept ADR-056 with option X / provider Y" — it flips the ADR to `accepted` and regenerates the index.
-- [ ] **Confirm the provider's ToS allow automated calls** (~10 min)
-  - **What:** Read the chosen provider's terms (e.g. Google AI Studio / Gemini API ToS for `gemini-veo`) for automated-generation clauses.
-  - **Then:** tell the agent "ToS confirmed" — it flips Phase 2 Step 1.
-- [ ] **Put a live provider key into `agents/.ai-video.xml`**
-  - **What:** Real API key for the chosen provider.
-  - **Where:** `agents/.ai-video.xml` in this repo (file exists locally, gitignored — never committed). Schema reference: `agents/templates/.ai-video.xml.example`.
-  - **How:** Get the key from the provider console (Gemini: <https://aistudio.google.com/apikey> · Sora/OpenAI: <https://platform.openai.com/api-keys>), paste it into the matching `<provider id="…">` block.
-- [ ] **Authorize the real spend (~10 renders, Hard Floor)**
-  - **What:** Explicit per-turn authorization — this is the one thing no setting can pre-approve.
-  - **How:** Tell the agent in one message: "Key is in `.ai-video.xml`, ADR-056 accepted — wire the real submit/poll/fetch for <provider>, run the ~10-render validation, max spend $X."
-  - **Then (autonomous from here):** agent wires the adapter through the v2 trust boundary, captures the smoke trace under `agents/reference/ai-video/smoke-traces/`, records success-rate + per-render cost vs the VGTeam baseline (98.4% / ~$0.10), and drafts the `experimental → stable` promotion for your sign-off.
+  - **How:** Read the options table, pick one, tell the agent "accept ADR-056 with option X" — it flips the ADR to `accepted` and regenerates the index.
+  - **Note:** daily quota on the validated Gemini tier is ≈10 renders/day — relevant context for whether the multiplexers (fal/replicate) should carry batch workloads instead.
 
 ---
 
-## 3. Roadmap: `road-to-video-provider-multiplexers.md` (2 steps, same pattern)
+## 3. Roadmap: `road-to-video-provider-multiplexers.md` — ✅ COMPLETED 2026-06-10
 
-Both adapters (`fal`, `replicate`) are fully wired and contract-tested; only
-the paid smoke traces remain.
+Fully closed in-session with the maintainer: fal + Replicate keys handed over,
+spend authorized, **3 models per multiplexer live-validated** (fal: ltx-2 w/
+native audio, wan-2.2, hunyuan · Replicate: wan-2.2-fast, ltx-video, hunyuan),
+manifests `verified:true` with trace refs, ~$2–4 total. Bonus: the Kling direct
+adapter got real keypair/JWT auth (AccessKey+SecretKey) and a live trace.
+Roadmap archived.
 
-- [ ] **fal.ai: key + spend authorization**
-  - **Where to get the key:** <https://fal.ai/dashboard/keys> (create account → API key).
-  - **How:** Paste into the `fal` provider block in `agents/.ai-video.xml`, then tell the agent: "fal key is in place — capture the smoke trace, max spend $X."
-  - **Then:** agent records success-rate + cost, sets the lifecycle tier, flips Phase 1 Step 4.
-- [ ] **Replicate: key + spend authorization**
-  - **Where to get the key:** <https://replicate.com/account/api-tokens>.
-  - **How:** Same as fal — paste into the `replicate` block, authorize spend.
-  - **Then:** agent captures the trace and flips Phase 2 Step 2.
+One open maintainer call (NOT blocking):
+
+- [ ] **Lifecycle promotions** — `fal` (3/3), `replicate` (3/3), `kling` (1/1)
+  all have live traces and stay `experimental` until your tier flip. Tell the
+  agent which to promote to `stable` (gemini-veo already is).
 
 ---
 
