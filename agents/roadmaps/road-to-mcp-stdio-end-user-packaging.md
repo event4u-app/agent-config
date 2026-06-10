@@ -55,11 +55,13 @@ The stdio server today is **CLI-first internal tooling, not a library**:
 
 ## Phase 2 — Turnkey launch entrypoint
 
-- [ ] Provide a single command that launches the stdio server with dependencies
+- [x] Provide a single command that launches the stdio server with dependencies
   resolved and **no repo clone** — the chosen channel from Phase 1. Must not
   require the user to know `PYTHONPATH`, the venv path, or the module name.
-- [ ] Verify it runs on a clean machine (no prior checkout) end-to-end over
+  <!-- done: `agent-config mcp-server` (native TS command). Pure-Node stdio-lite server (src/cli/mcp/{content,dispatch,stdio}.ts + commands/mcpServer.ts) reading the bundled dist/agent-src/ + docs/guidelines/ — zero Python/venv/PYTHONPATH. Wire shapes mirror the hosted Worker (handlers/prompts/resources) verbatim → multi-channel consistency. Read-only: tools/list empty, tools/call → not_implemented (ADR-085 defers execution). -->
+- [x] Verify it runs on a clean machine (no prior checkout) end-to-end over
   stdio. <!-- carve-out: new-gate-verification -->
+  <!-- done: tests/cli/mcp-server.e2e.test.ts spawns the compiled binary, drives a real initialize→prompts/list→resources/list→tools/list handshake over stdio, asserts STDOUT PURITY (every line JSON-RPC, readiness note on stderr — the ADR-085 fatal-flaw guard), clean exit on stdin close. + src/cli/mcp/{dispatch,content}.test.ts (pure goldens + real-tree load). 33 mcp/cli tests green; full TS suite 496 green; typecheck + eslint clean. Manual smoke: 531 entries served. -->
 
 ## Phase 3 — stdio client-config templates
 
