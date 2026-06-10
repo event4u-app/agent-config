@@ -12,11 +12,12 @@
 # is documented in agents/reference/ai-video/prompts/motion-choreography.md
 # (Phase 6).
 #
-# Lifecycle: experimental — capability-discovery path conformant; no
-# maintainer real-API smoke trace captured yet. See
-# docs/contracts/provider-lifecycle.md for promotion criteria. The
-# agent must surface this tier and ask before defaulting to this
-# adapter.
+# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# image2video round-trip validated 1/1 — 5.4s h264 1168x768, ~5.3min
+# render, full presigned-upload flow. Contract re-read from the official
+# higgsfield-js SDK after three honest failures exposed wrong ASSUMED
+# shapes (auth headers, upload route, poll route — all fixed). Raw trace
+# is local-only operator evidence (smoke-traces/, gitignored).
 # Encoder note: provider-specific prompt grammar comes from the
 #   motion-choreographer encoder table; the scene blueprint stays
 #   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
@@ -58,14 +59,17 @@ aiv_higgsfield_capability() {
 }
 
 # --- live helpers -----------------------------------------------------
-# Higgsfield API (authoritative contract — official higgsfield-js SDK):
+# Higgsfield API (authoritative contract — read from the official
+# higgsfield-js SDK source 2026-06-10: src/client.ts, src/models/JobSet.ts,
+# src/types.ts; the previous Authorization/upload/poll shapes were wrong):
 #   base   https://platform.higgsfield.ai
-#   auth   Authorization: Key <KEY_ID>:<KEY_SECRET>  (api-key + api-key-secret)
-#   upload POST /api/v1/upload_file  (multipart)        -> hosted image URL
-#   submit POST /v1/image2video/dop                     -> { request_id, status_url }
-#   poll   GET  /requests/<id>/status                   -> { status, video:{url} }
-# Fields tagged ASSUMED are documented-best-effort and verified on the
-# first live smoke (this adapter has no captured smoke trace yet).
+#   auth   TWO headers: hf-api-key: <KEY_ID> + hf-secret: <KEY_SECRET>
+#   upload POST /files/generate-upload-url {content_type}
+#            -> {upload_url, public_url}; PUT bytes to upload_url,
+#            reference public_url in the request
+#   submit POST /v1/image2video/dop {params:{…}} -> JobSet {id, jobs:[…]}
+#   poll   GET  /v1/job-sets/<id> -> {jobs:[{status, results:{raw:{url}}}]}
+#   status enum: queued|in_progress|completed|failed|nsfw|canceled
 HF_BASE_DEFAULT="https://platform.higgsfield.ai"
 
 _hf_secret() {
@@ -81,11 +85,27 @@ _hf_base() {
   esac
 }
 
+# SDK auth = two headers (hf-api-key + hf-secret), NOT an Authorization
+# combo — verified against higgsfield-js src/client.ts.
 _hf_auth() {
+  printf 'hf-api-key: %s' "${AIV_KEY}"
+}
+
+_hf_auth2() {
   local secret; secret="$(_hf_secret)"
   [ -n "${secret}" ] || aiv_die 6 "${ADAPTER_ID}: api-key-secret missing in agents/.ai-video.xml"
   command -v aiv_redact_register >/dev/null 2>&1 && aiv_redact_register "${secret}"
-  printf 'Authorization: Key %s:%s' "${AIV_KEY}" "${secret}"
+  printf 'hf-secret: %s' "${secret}"
+}
+
+# _hf_validate_job_id <id> — job-set ids are tainted input (provider
+# response / orchestrator replay); they land in the request URL. Sets
+# HF_JOB_ID (global; not command-substituted so aiv_die exits propagate).
+_hf_validate_job_id() {
+  HF_JOB_ID="${1:-}"
+  [ -n "${HF_JOB_ID}" ] || aiv_die 2 "${ADAPTER_ID}: job_id required"
+  printf '%s' "${HF_JOB_ID}" | grep -Eq '^[A-Za-z0-9._-]+$' \
+    || aiv_die 7 "${ADAPTER_ID}: illegal job_id: ${HF_JOB_ID}"
 }
 
 # image2video needs a DoP video model; the XML default may carry an
@@ -106,9 +126,9 @@ aiv_cmd_submit() {
   [ "$(aiv_key_status)" = "present" ] \
     || aiv_die 6 "${ADAPTER_ID}: api key missing in agents/.ai-video.xml"
 
-  local stdin_json base auth model ref img_url prompt req resp http body rid
+  local stdin_json base auth auth2 model ref img_url prompt req resp http body rid
   stdin_json="$(cat)"
-  base="$(_hf_base)"; auth="$(_hf_auth)"; model="$(_hf_model)"
+  base="$(_hf_base)"; auth="$(_hf_auth)"; auth2="$(_hf_auth2)"; model="$(_hf_model)"
 
   # image2video must animate a still — require ref_images[0].
   ref="$(printf '%s' "${stdin_json}" | jq -r '.ref_images[0] // empty')"
@@ -119,15 +139,38 @@ aiv_cmd_submit() {
     *)
       case "${ref}" in /*) : ;; *) ref="$(pwd)/${ref}" ;; esac
       [ -f "${ref}" ] || aiv_die 7 "${ADAPTER_ID}: ref image not found: ${ref}"
-      # Upload local still -> hosted URL. Multipart field name ASSUMED 'file'.
-      local up up_code up_body
-      up="$(curl -sS -w '\n%{http_code}' -X POST "${base}/api/v1/upload_file" \
-        -H "${auth}" -F "file=@${ref}")" \
-        || aiv_die 8 "${ADAPTER_ID}: upload_file curl failed"
+      # Upload local still via the SDK's presigned flow:
+      # POST /files/generate-upload-url -> {upload_url, public_url};
+      # PUT the bytes; reference public_url.
+      local ctype up up_code up_body upload_url put_code
+      case "${ref}" in
+        *.png|*.PNG) ctype="image/png" ;;
+        *.webp)      ctype="image/webp" ;;
+        *)           ctype="image/jpeg" ;;
+      esac
+      # Content sniff beats extension when they disagree (artifacts may
+      # carry provider-side names like .mp4 for a PNG payload).
+      if command -v file >/dev/null 2>&1; then
+        case "$(file -b --mime-type "${ref}" 2>/dev/null)" in
+          image/png)  ctype="image/png" ;;
+          image/jpeg) ctype="image/jpeg" ;;
+          image/webp) ctype="image/webp" ;;
+        esac
+      fi
+      up="$(curl -sS -w '\n%{http_code}' -X POST "${base}/files/generate-upload-url" \
+        -H "${auth}" -H "${auth2}" -H "Content-Type: application/json" \
+        --data-binary "$(jq -nc --arg t "${ctype}" '{content_type:$t}')")" \
+        || aiv_die 8 "${ADAPTER_ID}: generate-upload-url curl failed"
       up_code="$(printf '%s' "${up}" | tail -n1)"; up_body="$(printf '%s' "${up}" | sed '$d')"
-      case "${up_code}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: upload HTTP ${up_code}: $(printf '%s' "${up_body}" | head -c 200)" ;; esac
-      img_url="$(printf '%s' "${up_body}" | jq -r '.url // .image_url // .file_url // .data.url // empty')"
-      [ -n "${img_url}" ] || aiv_die 8 "${ADAPTER_ID}: no URL in upload response (got: $(printf '%s' "${up_body}" | head -c 200))"
+      case "${up_code}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: generate-upload-url HTTP ${up_code}: $(printf '%s' "${up_body}" | head -c 200)" ;; esac
+      upload_url="$(printf '%s' "${up_body}" | jq -r '.upload_url // empty')"
+      img_url="$(printf '%s' "${up_body}" | jq -r '.public_url // empty')"
+      { [ -n "${upload_url}" ] && [ -n "${img_url}" ]; } \
+        || aiv_die 8 "${ADAPTER_ID}: no upload_url/public_url in response (got: $(printf '%s' "${up_body}" | head -c 200))"
+      put_code="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "${upload_url}" \
+        -H "Content-Type: ${ctype}" --data-binary "@${ref}")" \
+        || aiv_die 8 "${ADAPTER_ID}: presigned PUT curl failed"
+      case "${put_code}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: presigned PUT HTTP ${put_code}" ;; esac
       ;;
   esac
 
@@ -144,34 +187,39 @@ aiv_cmd_submit() {
     '{params:{model:$m, prompt:$p, input_images:[{type:"image_url", image_url:$u}]}}')"
 
   resp="$(curl -sS -w '\n%{http_code}' -X POST "${base}/v1/image2video/dop" \
-    -H "${auth}" -H "Content-Type: application/json" --data-binary "${req}")" \
+    -H "${auth}" -H "${auth2}" -H "Content-Type: application/json" --data-binary "${req}")" \
     || aiv_die 8 "${ADAPTER_ID}: image2video curl failed"
   http="$(printf '%s' "${resp}" | tail -n1)"; body="$(printf '%s' "${resp}" | sed '$d')"
   case "${http}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: submit HTTP ${http}: $(printf '%s' "${body}" | jq -r '.detail // .error // .message // "unknown"' 2>/dev/null | head -c 300)" ;; esac
 
-  rid="$(printf '%s' "${body}" | jq -r '.request_id // .generation_id // .id // empty')"
-  [ -n "${rid}" ] || aiv_die 8 "${ADAPTER_ID}: no request_id in submit response (got: $(printf '%s' "${body}" | head -c 200))"
-  jq -n --arg id "${rid}" '{job_id:$id}'
+  # Response is a JobSet {id, jobs:[…]} (SDK models/JobSet.ts); the
+  # job-set id is the poll handle.
+  rid="$(printf '%s' "${body}" | jq -r '.id // .request_id // empty')"
+  [ -n "${rid}" ] || aiv_die 8 "${ADAPTER_ID}: no job-set id in submit response (got: $(printf '%s' "${body}" | head -c 200))"
+  _hf_validate_job_id "${rid}"
+  jq -n --arg id "${HF_JOB_ID}" '{job_id:$id, status:"queued"}'
 }
 
-# Reconstruct the status URL from the request id (status_url also returned by submit).
+# Poll handle is the job-set id: GET /v1/job-sets/{id} (SDK JobSet.pollingUrl).
 _hf_status_json() {
-  local job_id="${1}" base auth resp http body
-  base="$(_hf_base)"; auth="$(_hf_auth)"
-  resp="$(curl -sS -w '\n%{http_code}' -X GET "${base}/requests/${job_id}/status" -H "${auth}")" \
+  local job_id="${1}" base auth auth2 resp http body
+  base="$(_hf_base)"; auth="$(_hf_auth)"; auth2="$(_hf_auth2)"
+  resp="$(curl -sS -w '\n%{http_code}' -X GET "${base}/v1/job-sets/${job_id}" \
+    -H "${auth}" -H "${auth2}")" \
     || aiv_die 8 "${ADAPTER_ID}: status curl failed"
   http="$(printf '%s' "${resp}" | tail -n1)"; body="$(printf '%s' "${resp}" | sed '$d')"
-  case "${http}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: status HTTP ${http}" ;; esac
+  case "${http}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: status HTTP ${http}: $(printf '%s' "${body}" | jq -r '.detail // "unknown"' 2>/dev/null | head -c 200)" ;; esac
   printf '%s' "${body}"
 }
 
 aiv_cmd_poll() {
-  local job_id="${1:-}"
-  [ -n "${job_id}" ] || aiv_die 2 "${ADAPTER_ID}: poll <job_id> required"
+  _hf_validate_job_id "${1:-}"
   aiv_assert_dryrun
   aiv_require_cmd curl jq
   aiv_load_provider "${ADAPTER_ID}"
-  local st; st="$(_hf_status_json "${job_id}" | jq -r '.status // empty')"
+  local body st
+  body="$(_hf_status_json "${HF_JOB_ID}")" || exit $?
+  st="$(printf '%s' "${body}" | jq -r '.jobs[0].status // .status // empty')"
   case "${st}" in
     completed|done|success)          printf '{"status":"done"}\n' ;;
     queued)                          printf '{"status":"queued"}\n' ;;
@@ -182,18 +230,32 @@ aiv_cmd_poll() {
 }
 
 aiv_cmd_fetch() {
-  local job_id="${1:-}"
-  [ -n "${job_id}" ] || aiv_die 2 "${ADAPTER_ID}: fetch <job_id> required"
+  _hf_validate_job_id "${1:-}"
   aiv_assert_dryrun
   aiv_require_cmd curl jq
   aiv_load_provider "${ADAPTER_ID}"
-  local body url out
-  body="$(_hf_status_json "${job_id}")"
-  url="$(printf '%s' "${body}" | jq -r '.video.url // .results.raw.url // .video_url // (.images[0].url) // empty')"
-  [ -n "${url}" ] || aiv_die 8 "${ADAPTER_ID}: no video url in status (status=$(printf '%s' "${body}" | jq -r '.status // "?"'))"
-  out="${AIV_OUT:-}"; [ -n "${out}" ] || out="$(mktemp -t aiv-hf-XXXXXX).mp4"
-  curl -sS -L -o "${out}" "${url}" || aiv_die 8 "${ADAPTER_ID}: download failed: ${url}"
-  case "${out}" in /*) : ;; *) out="$(pwd)/${out}" ;; esac
+  local body url dest root out
+  body="$(_hf_status_json "${HF_JOB_ID}")" || exit $?
+  # Result lives on the job (SDK types.ts: Results = {raw:{url}, min:{url}}).
+  url="$(printf '%s' "${body}" | jq -r '
+    .jobs[0].results.raw.url // .jobs[0].results.min.url
+    // .video.url // .video_url // empty')"
+  [ -n "${url}" ] || aiv_die 8 "${ADAPTER_ID}: no video url in job-set (status=$(printf '%s' "${body}" | jq -r '.jobs[0].status // .status // "?"'))"
+
+  # Trust boundary (contract v2): scene-scoped dir > AIV_OUT > temp dir;
+  # download via aiv_fetch_url (size cap + timeout), validate the path.
+  if [ -n "${AIV_PROJECT_DIR:-}" ] && [ -n "${AIV_SCENE_ID:-}" ]; then
+    dest="$(aiv_scene_dir "${AIV_PROJECT_DIR}" "${AIV_SCENE_ID}")/scene-${HF_JOB_ID}.mp4"
+    root="${AIV_PROJECT_DIR}"
+  elif [ -n "${AIV_OUT:-}" ]; then
+    dest="${AIV_OUT}"
+    root="$(dirname "${AIV_OUT}")"
+  else
+    root="$(mktemp -d -t aiv-hf-XXXXXX)"
+    dest="${root}/scene-${HF_JOB_ID}.mp4"
+  fi
+  aiv_fetch_url "${url}" "${dest}" >/dev/null
+  out="$(aiv_validate_artifact_path "${root}" "${dest}")"
   jq -n --arg p "${out}" '{video_path:$p, audio_embedded:false}'
 }
 
@@ -209,9 +271,9 @@ aiv_cmd_speak() {
   aiv_load_provider "${ADAPTER_ID}"
   [ "$(aiv_key_status)" = "present" ] \
     || aiv_die 6 "${ADAPTER_ID}: api key missing in agents/.ai-video.xml"
-  local stdin_json base auth img aud prompt req resp http body rid
+  local stdin_json base auth auth2 img aud prompt req resp http body rid
   stdin_json="$(cat)"
-  base="$(_hf_base)"; auth="$(_hf_auth)"
+  base="$(_hf_base)"; auth="$(_hf_auth)"; auth2="$(_hf_auth2)"
   img="$(printf '%s' "${stdin_json}" | jq -r '.input_image // .image_url // (.ref_images[0]?) // empty')"
   aud="$(printf '%s' "${stdin_json}" | jq -r '.input_audio // .audio_url // empty')"
   prompt="$(printf '%s' "${stdin_json}" | jq -r 'if (.prompt|type)=="string" then .prompt else empty end')"
@@ -223,7 +285,7 @@ aiv_cmd_speak() {
   req="$(jq -n --arg i "${img}" --arg a "${aud}" --arg p "${prompt}" \
     '{params:{input_image:{type:"image_url",image_url:$i},input_audio:{type:"audio_url",audio_url:$a},prompt:$p}}')"
   resp="$(curl -sS -w '\n%{http_code}' -X POST "${base}/v1/speak/higgsfield" \
-    -H "${auth}" -H "Content-Type: application/json" --data-binary "${req}")" \
+    -H "${auth}" -H "${auth2}" -H "Content-Type: application/json" --data-binary "${req}")" \
     || aiv_die 8 "${ADAPTER_ID}: speak curl failed"
   http="$(printf '%s' "${resp}" | tail -n1)"; body="$(printf '%s' "${resp}" | sed '$d')"
   case "${http}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: speak HTTP ${http}: $(printf '%s' "${body}" | jq -r '.detail // .error // .message // "unknown"' 2>/dev/null | head -c 300)" ;; esac

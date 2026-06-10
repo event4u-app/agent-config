@@ -1,6 +1,6 @@
 ---
 adr: 056
-status: proposed
+status: accepted
 date: 2026-06-06
 decision: unvalidated-video-adapters-disposition
 supersedes: —
@@ -13,11 +13,34 @@ type: structural
 
 ## Status
 
-**Proposed** · 2026-06-06. Drafted for maintainer review (design-first) as
-Phase 4 of `road-to-video-foundation-validation`. The disposition is a
-**maintainer decision** — this ADR surfaces the options and a recommendation;
-it does not delete anything. Strategy context routed through the AI council
-(anthropic/claude-sonnet-4-5 + openai/gpt-4o, design mode, 2026-06-06).
+**Accepted** · 2026-06-10 (maintainer decision, in-session). Outcome: the
+alternative this draft originally rejected as wasteful — **validate all
+five** — is what the maintainer chose interactively, and it was the right
+call: provider keys were at hand, total validation spend stayed ~$30, and
+the live runs exposed real contract bugs in four adapters (Kling keypair/JWT
+auth, Replicate community-model create route, fal server-side duration
+validation, Higgsfield auth-header/upload/poll shapes — re-read from the
+official higgsfield-js SDK) that mocks could never have caught.
+
+**Disposition: all five validated, all five kept, all five promoted
+`experimental → stable`** (none removed; option A's removal rationale
+dissolved once every adapter actually worked):
+
+| Adapter | Validation | Promotion |
+|---|---|---|
+| `gemini-veo` | 10/10 renders (native audio) | stable (PR #457) |
+| `kling` | 1/1 (keypair/JWT rework) | stable (PR #459) |
+| `sora` | 1/1 (newly wired, OpenAI Videos API, native audio) | stable |
+| `openai-images` | 2/2 (sync adapter; real PNGs) | stable |
+| `higgsfield` | 1/1 image2video (SDK-corrected upload/auth/poll) | stable |
+
+The multiplexers (`fal`, `replicate` — also validated 3 models each, also
+stable) remain the preferred batch path; the per-model adapters are now
+honest, validated direct integrations rather than dead stubs.
+
+Original proposal text below is retained for provenance.
+
+---
 
 ## Context
 
