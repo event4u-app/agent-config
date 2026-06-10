@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: merge-conflicts
-description: "Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow."
+description: "Use when the user has merge conflicts or says \"resolve conflicts\". Understands conflict markers, resolution strategies, and verification workflow."
 domain: process
 workspaces:
   - engineering

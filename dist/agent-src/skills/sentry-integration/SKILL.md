@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: sentry-integration
-description: "Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis."
+description: "Use when the user shares a Sentry URL, says \"check Sentry\", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis."
 domain: devops
 workspaces:
   - engineering
