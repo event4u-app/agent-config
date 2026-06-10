@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -257,4 +258,64 @@ def test_adapter_declares_lifecycle_tier(adapter: str) -> None:
     )
     assert marker in VALID_LIFECYCLE, (
         f"{adapter}: lifecycle tier {marker!r} not in {VALID_LIFECYCLE}"
+    )
+
+
+# --- Audio-ownership contract surfaces (issue #180) -----------------------
+
+
+def test_audio_ownership_contract_is_documented() -> None:
+    """The three-layer audio ownership (blueprint = intent, encoder =
+    translation, orchestrator = validation) must stay documented in
+    the adapter contract — it is the semantic counterpart of the
+    structural capability ↔ dry-run coherence test above.
+    """
+    text = CONTRACT.read_text(encoding="utf-8")
+    assert "## Audio ownership" in text, (
+        "adapter-contract.md lost the § Audio ownership section (issue #180)"
+    )
+    for phrase in (
+        "contract commitment",
+        "AUDIO DOWNGRADE",
+        "requires.audio_native",
+    ):
+        assert phrase in text, (
+            f"adapter-contract.md § Audio ownership lost the {phrase!r} clause"
+        )
+
+
+def test_encoder_documents_mandatory_downgrade_warning() -> None:
+    """motion-choreographer must mandate the AUDIO DOWNGRADE warning
+    block for the audio=none + dialogue case — silent dialogue loss is
+    the failure mode issue #180 closes.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
+    from _lib.agent_src import resolve_logical
+
+    mc = resolve_logical("skills/motion-choreographer/SKILL.md")
+    assert mc is not None, "motion-choreographer SKILL.md not found"
+    text = mc.read_text(encoding="utf-8")
+    assert "AUDIO DOWNGRADE" in text, (
+        "motion-choreographer lost the mandatory AUDIO DOWNGRADE warning"
+    )
+    assert "never validates" in text or "NEVER silently strips" in text, (
+        "motion-choreographer must state the translator-not-validator boundary"
+    )
+
+
+def test_orchestrator_documents_audio_preflight_gate() -> None:
+    """The /video:scene flow must carry the audio pre-flight gate —
+    the runtime guard that surfaces dialogue loss before spend.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "src" / "scripts"))
+    from _lib.agent_src import resolve_logical
+
+    cmd = resolve_logical("commands/video/scene.md")
+    assert cmd is not None, "video/scene command not found"
+    text = cmd.read_text(encoding="utf-8")
+    assert "Audio pre-flight gate" in text, (
+        "/video:scene lost the audio pre-flight gate step (issue #180)"
+    )
+    assert "audio-native provider" in text and "override and attempt anyway" in text, (
+        "/video:scene audio gate lost its numbered options"
     )

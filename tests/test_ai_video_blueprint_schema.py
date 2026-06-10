@@ -216,3 +216,108 @@ def test_unknown_top_level_block_does_not_pollute_contract_json() -> None:
     )
     assert "provider" not in payload
     assert "watermark" not in payload
+
+
+# --- Anti-Veo-leak guard (issue #179) ------------------------------------
+#
+# The blueprint layer is the provider-agnostic intermediate
+# representation. Provider names and provider-private prompt idioms
+# must not appear in the blueprint-defining surfaces: the schema YAML
+# and the scene-expander skill body. Per-provider grammar lives in the
+# motion-choreographer encoder table (its own file, deliberately NOT
+# scanned here).
+
+PROVIDER_TOKENS = (
+    "veo",
+    "sora",
+    "kling",
+    "higgsfield",
+    "gemini",
+    "openai",
+    "replicate",
+    "fal.ai",
+    "comfyui",
+    "musetalk",
+    "predictlongrunning",
+    "motion intensity",   # Kling-private token
+    "preset id",          # Higgsfield-private idiom
+)
+
+_SKILL_RESOLVED = resolve_logical("skills/scene-expander/SKILL.md")
+assert _SKILL_RESOLVED is not None, "scene-expander SKILL.md not found"
+
+
+def _provider_hits(text: str) -> list[str]:
+    lower = text.lower()
+    hits = []
+    for tok in PROVIDER_TOKENS:
+        idx = 0
+        while True:
+            idx = lower.find(tok, idx)
+            if idx == -1:
+                break
+            # whole-word-ish: no [a-z0-9] glued on either side
+            before = lower[idx - 1] if idx else " "
+            after = lower[idx + len(tok)] if idx + len(tok) < len(lower) else " "
+            if not before.isalnum() and not after.isalnum():
+                line_no = text.count("\n", 0, idx) + 1
+                hits.append(f"{tok!r} at line {line_no}")
+            idx += len(tok)
+    return hits
+
+
+def test_blueprint_schema_has_no_provider_tokens() -> None:
+    """The schema YAML must stay provider-agnostic — any provider name
+    or provider-private prompt idiom in a block description re-shapes
+    the shared IR toward one provider's grammar (issue #179).
+    """
+    hits = _provider_hits(SCHEMA.read_text(encoding="utf-8"))
+    assert not hits, (
+        f"provider tokens leaked into blueprint schema: {hits} — "
+        "move provider grammar to the motion-choreographer encoder table"
+    )
+
+
+def test_scene_expander_skill_has_no_provider_tokens() -> None:
+    """The scene-expander skill defines the blueprint vocabulary; it
+    must describe camera moves, lenses, and durations in intent terms,
+    never one provider's grammar (issue #179). The motion-choreographer
+    encoder table is the only sanctioned home for provider idioms.
+    """
+    hits = _provider_hits(_SKILL_RESOLVED.read_text(encoding="utf-8"))
+    assert not hits, (
+        f"provider tokens leaked into scene-expander skill: {hits} — "
+        "rephrase in intent terms; provider idioms belong in motion-choreographer"
+    )
+
+
+def test_motion_choreographer_decodes_all_camera_intent_classes() -> None:
+    """Cross-reference guard (issue #179 council ask): every CAMERA
+    intent class the blueprint may emit MUST have a documented
+    decoding in the motion-choreographer encoder table, and each
+    shipped video provider MUST have an encoding row — otherwise an
+    intent class fails at render time instead of test time.
+    """
+    mc = resolve_logical("skills/motion-choreographer/SKILL.md")
+    assert mc is not None, "motion-choreographer SKILL.md not found"
+    text = mc.read_text(encoding="utf-8").lower()
+    intent_classes = (
+        "static hold",
+        "push-in",
+        "pull-back",
+        "lateral track",
+        "handheld drift",
+        "orbit",
+    )
+    missing = [c for c in intent_classes if c not in text]
+    assert not missing, (
+        f"motion-choreographer lacks a decoding for intent class(es) {missing} — "
+        "add the row to the 'Blueprint intent-class decoding' table so the "
+        "blueprint vocabulary stays fully encodable"
+    )
+    providers = ("veo", "kling", "sora", "higgsfield")
+    missing_p = [p for p in providers if p not in text]
+    assert not missing_p, (
+        f"motion-choreographer lacks an encoder row for provider(s) {missing_p} — "
+        "every shipped video provider needs an 'Adapter quirks' entry"
+    )
