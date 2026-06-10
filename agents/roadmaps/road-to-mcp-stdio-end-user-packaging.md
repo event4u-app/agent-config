@@ -1,5 +1,5 @@
 ---
-status: draft
+status: ready
 complexity: structural
 parent_roadmap: road-to-glama-registry-listing
 ---
@@ -42,13 +42,16 @@ The stdio server today is **CLI-first internal tooling, not a library**:
 
 ## Phase 1 — Decide the distribution shape (ADR, no code)
 
-- [ ] Pick the end-user scope: full local kernel (bundle scripts + venv) vs a
+- [x] Pick the end-user scope: full local kernel (bundle scripts + venv) vs a
   read-only lite subset (skills/commands/rules/guidelines, no execution tools).
   Name the trade-off (package weight + maintenance vs capability) in an ADR.
-- [ ] Pick the launch channel: the existing `@event4u/agent-config` npm bin, or
+  <!-- done: A2 read-only stdio-lite. ADR-085. Council (claude-sonnet-4-5 + gpt-4o, 2026-06-10): round-1 split A2×B1/A1×B2, tie-break converged A2×B1. Full-kernel execution (A1) deferred to a later phase, no demand evidence; minimal-safe-diff + YAGNI. -->
+- [x] Pick the launch channel: the existing `@event4u/agent-config` npm bin, or
   `pipx` / `uvx` for the Python server, or a bundled venv bootstrap. One channel,
   with the reason.
-- [ ] Record the demand trigger that promoted this roadmap (per precondition).
+  <!-- done: B1 existing npm bin, pure-Node. ADR-085. A1×B1 (Node bin spawning Python) rejected as fatal — stdout pollution breaks JSON-RPC; channel must match impl language. Pure-Node serves bundled dist/ content (the hosted lite Worker already proves the read-only-from-blob pattern in TS). -->
+- [x] Record the demand trigger that promoted this roadmap (per precondition).
+  <!-- done: maintainer decision 2026-06-10 ("position the package for end-users") — recorded in ADR-085 § Demand trigger. Note: positioning for end-users, NOT proven execution demand → Phase-2 trigger in the ADR. -->
 
 ## Phase 2 — Turnkey launch entrypoint
 
