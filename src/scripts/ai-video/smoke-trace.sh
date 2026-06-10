@@ -31,10 +31,12 @@ ADAPTER_DIR="${ROOT}/src/scripts/ai-video/adapters"
 
 PROVIDER=""
 MODE="dry-run"
+MODEL=""
 OUT_DIR="${ROOT}/agents/reference/ai-video/smoke-traces"
 while [ $# -gt 0 ]; do
   case "$1" in
     --provider) PROVIDER="${2:-}"; shift 2 ;;
+    --model)    MODEL="${2:-}"; shift 2 ;;
     --live)     MODE="live"; shift ;;
     --out)      OUT_DIR="${2:-}"; shift 2 ;;
     *) echo "smoke-trace: unknown arg '$1'" >&2; exit 2 ;;
@@ -47,15 +49,21 @@ command -v jq >/dev/null 2>&1 || { echo "smoke-trace: jq required" >&2; exit 2; 
 
 TS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
 mkdir -p "${OUT_DIR}"
-TRACE="${OUT_DIR}/${PROVIDER}-${MODE}-${TS}.json"
+# Per-model traces (multiplexer adapters) carry a filesystem-safe model slug
+# in the filename so one adapter can collect traces per reachable model.
+MODEL_SLUG=""
+[ -n "${MODEL}" ] && MODEL_SLUG="-$(printf '%s' "${MODEL}" | tr '/' '_' | tr -cd 'A-Za-z0-9._-')"
+TRACE="${OUT_DIR}/${PROVIDER}${MODEL_SLUG}-${MODE}-${TS}.json"
 
-# Minimal valid stdin JSON (contract: prompt.* blocks mandatory).
-STDIN_JSON="$(jq -nc '{
+# Minimal valid stdin JSON (contract: prompt.* blocks mandatory). --model
+# injects the optional top-level model_id key (multiplexer adapters route it;
+# single-model adapters ignore unknown stdin keys per contract).
+STDIN_JSON="$(jq -nc --arg model "${MODEL}" '{
   prompt: {style:"smoke-test", subject:"a red cube", environment:"white void",
            action:"rotates slowly", camera:"locked", lens:"50mm",
            lighting:"soft key", mood:"neutral"},
   duration: 2.0, aspect:"16:9", seed: 1
-}')"
+} + (if $model != "" then {model_id: $model} else {} end)')"
 
 ms_now() { python3 -c 'import time;print(int(time.time()*1000))'; }
 
@@ -89,12 +97,39 @@ if [ "${MODE}" = "dry-run" ]; then
   FETCH_OUT="${LAST_OUT}"
 else
   export AIV_DRYRUN=false
+  # Scope the adapter's artifact into a per-trace dir beside the trace JSON
+  # (contract v2: unscoped adapters fall back to mktemp OUTSIDE the repo,
+  # which the harness's own ROOT-scoped validation below would then reject).
+  ARTIFACT_DIR="${OUT_DIR}/artifacts"
+  mkdir -p "${ARTIFACT_DIR}"
+  export AIV_OUT="${ARTIFACT_DIR}/${PROVIDER}-${TS}.mp4"
   run_phase submit "${STDIN_JSON}" bash "${ADAPTER}" submit
   JOB="$(jq -r '.job_id // empty' <<<"${LAST_OUT}" 2>/dev/null || true)"
   if [ -n "${JOB}" ]; then
-    run_phase poll "" bash "${ADAPTER}" poll "${JOB}"
-    run_phase fetch "" bash "${ADAPTER}" fetch "${JOB}"
-    FETCH_OUT="${LAST_OUT}"
+    # Async providers render for minutes — poll quietly until done/failed or
+    # AIV_SMOKE_POLL_TIMEOUT (default 600s; interval AIV_SMOKE_POLL_INTERVAL,
+    # default 10s), then record ONE final poll phase with the attempt count
+    # (recording every tick would bloat the trace with dozens of identical
+    # "running" records).
+    POLL_DEADLINE=$(( $(date +%s) + ${AIV_SMOKE_POLL_TIMEOUT:-600} ))
+    POLL_ATTEMPTS=0
+    POLL_ST=""
+    while :; do
+      POLL_OUT="$(bash "${ADAPTER}" poll "${JOB}" 2>/dev/null || true)"
+      POLL_ATTEMPTS=$((POLL_ATTEMPTS + 1))
+      POLL_ST="$(jq -r '.status // empty' <<<"${POLL_OUT}" 2>/dev/null || true)"
+      case "${POLL_ST}" in done|failed) break ;; esac
+      [ "$(date +%s)" -lt "${POLL_DEADLINE}" ] || break
+      sleep "${AIV_SMOKE_POLL_INTERVAL:-10}"
+    done
+    run_phase "poll(final,attempts=${POLL_ATTEMPTS})" "" bash "${ADAPTER}" poll "${JOB}"
+    POLL_ST="$(jq -r '.status // empty' <<<"${LAST_OUT}" 2>/dev/null || true)"
+    if [ "${POLL_ST}" = "done" ]; then
+      run_phase fetch "" bash "${ADAPTER}" fetch "${JOB}"
+      FETCH_OUT="${LAST_OUT}"
+    else
+      SUCCESS=false   # timed out or provider-failed — recorded in PHASES
+    fi
   else
     SUCCESS=false   # stub adapter (live not wired) or submit failed — recorded in PHASES
   fi
@@ -105,9 +140,16 @@ fi
 VIDEO_PATH="$(jq -r '.video_path // empty' <<<"${FETCH_OUT}" 2>/dev/null | head -1 || true)"
 ARTIFACT_OK="n/a"
 if [ -n "${VIDEO_PATH}" ]; then
-  if aiv_validate_artifact_path "${ROOT}" "${VIDEO_PATH}" >/dev/null 2>&1; then ARTIFACT_OK=true; else ARTIFACT_OK=false; SUCCESS=false; fi
+  # Subshell the validation: aiv_validate_artifact_path uses aiv_die (exit),
+  # which would kill the harness BEFORE the trace is written. In live mode the
+  # scope root is the per-trace artifact dir; dry-run fixtures live in ROOT.
+  VALIDATE_ROOT="${ROOT}"
+  [ "${MODE}" = "live" ] && [ -n "${ARTIFACT_DIR:-}" ] && VALIDATE_ROOT="${ARTIFACT_DIR}"
+  if ( aiv_validate_artifact_path "${VALIDATE_ROOT}" "${VIDEO_PATH}" ) >/dev/null 2>&1; then ARTIFACT_OK=true; else ARTIFACT_OK=false; SUCCESS=false; fi
 fi
-COST="$(jq -r '.cost_estimate // "unknown"' <<<"${FETCH_OUT}" 2>/dev/null | head -1 || echo unknown)"
+# cost_estimate lives on the SUBMIT stdout (contract v2); fall back to fetch.
+COST="$(jq -r 'first(.[] | select(.name=="submit") | .stdout | try fromjson | .cost_estimate | select(. != null) | tostring) // empty' <<<"${PHASES}" 2>/dev/null | head -1 || true)"
+[ -n "${COST}" ] || COST="$(jq -r '.cost_estimate // "unknown"' <<<"${FETCH_OUT}" 2>/dev/null | head -1 || echo unknown)"
 AUDIO_EMB="$(jq -r 'if .audio_embedded == true then "true" else "false" end' <<<"${FETCH_OUT}" 2>/dev/null | head -1 || echo false)"
 
 NOTE="dry-run = plumbing proof (no network/spend); NOT a real validation. Run --live with a provider key for the real smoke trace."
