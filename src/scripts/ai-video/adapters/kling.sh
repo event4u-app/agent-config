@@ -6,10 +6,12 @@
 # / ambient at stitch time. Max duration is model-dependent; clip-time
 # clamping happens in motion-choreographer (it tunes the prompt to fit).
 #
-# Lifecycle: experimental — live submit/poll/fetch wired (JWT keypair
-# auth); maintainer real-API smoke trace pending. See
-# docs/contracts/provider-lifecycle.md for promotion criteria. The agent
-# must surface this tier and ask before defaulting to this adapter.
+# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# round-trip validated 1/1 (5.04s h264 720p, video-only as expected,
+# ~$1.40 kling-v2-master 5s std; ~2.3min render). JWT keypair auth
+# reference-verified. Raw trace is local-only operator evidence
+# (agents/reference/ai-video/smoke-traces/, gitignored).
+# See docs/contracts/provider-lifecycle.md for tier semantics.
 #
 # Auth: Kling has NO single API token. The console issues an
 # AccessKey + SecretKey pair (<access-key>/<secret-key> in
