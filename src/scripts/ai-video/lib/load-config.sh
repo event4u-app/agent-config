@@ -62,6 +62,10 @@ aiv_load_provider() {
 
   AIV_PROVIDER_ID="${pid}"
   AIV_KEY="$(_aiv_xpath "${base}/api-key")"
+  # Keypair-auth providers (e.g. Kling: JWT signed from AccessKey+SecretKey)
+  # carry <access-key>/<secret-key> instead of <api-key>. Empty for others.
+  AIV_ACCESS_KEY="$(_aiv_xpath "${base}/access-key")"
+  AIV_SECRET_KEY="$(_aiv_xpath "${base}/secret-key")"
   AIV_ENDPOINT="$(_aiv_xpath "${base}/endpoint")"
   AIV_MODEL="$(_aiv_xpath "${base}/default-model")"
   AIV_KIND="$(_aiv_xpath "${base}/@kind")"
@@ -90,19 +94,31 @@ aiv_load_provider() {
     AIV_TUNING_AUDIO_NATIVE AIV_TUNING_PRESET AIV_TUNING_QUALITY \
     AIV_TUNING_BEST_OF_N
 
-  # Register key with redact.sh if loaded — adapters always source both.
+  # Register keys with redact.sh if loaded — adapters always source both.
   if command -v aiv_redact_register >/dev/null 2>&1; then
     aiv_redact_register "${AIV_KEY}"
+    [ -n "${AIV_ACCESS_KEY}" ] && aiv_redact_register "${AIV_ACCESS_KEY}"
+    [ -n "${AIV_SECRET_KEY}" ] && aiv_redact_register "${AIV_SECRET_KEY}"
   fi
 
   return 0
 }
 
 aiv_key_status() {
+  # Any value carrying the REPLACE-ME marker is a template placeholder —
+  # regardless of the prefix shape (`fal-REPLACE-ME`, `r8_REPLACE-ME`, …).
   case "${AIV_KEY:-}" in
-    ""|"REPLACE-ME"|*"-REPLACE-ME") printf 'missing' ;;
+    ""|*"REPLACE-ME"*) printf 'missing' ;;
     *) printf 'present' ;;
   esac
+}
+
+# aiv_keypair_status — `present` only when BOTH halves of an
+# AccessKey/SecretKey pair are set and neither is a template placeholder.
+aiv_keypair_status() {
+  case "${AIV_ACCESS_KEY:-}" in ""|*"REPLACE-ME"*) printf 'missing'; return 0 ;; esac
+  case "${AIV_SECRET_KEY:-}" in ""|*"REPLACE-ME"*) printf 'missing'; return 0 ;; esac
+  printf 'present'
 }
 
 # aiv_provider_enabled <provider-id> — operator kill-switch. Reads the
@@ -135,9 +151,14 @@ if [ "${BASH_SOURCE[0]:-}" = "${0}" ]; then
         exit 2
       fi
       aiv_load_provider "${pid}" >/dev/null
+      # Keypair-auth providers report the pair; single-key providers the key.
+      key_field="$(aiv_key_status)"
+      if [ -n "${AIV_ACCESS_KEY:-}${AIV_SECRET_KEY:-}" ]; then
+        key_field="$(aiv_keypair_status) (access+secret pair)"
+      fi
       printf 'provider=%s key=%s dryrun=%s model=%s endpoint=%s kind=%s\n' \
         "${AIV_PROVIDER_ID}" \
-        "$(aiv_key_status)" \
+        "${key_field}" \
         "${AIV_DRYRUN:-true}" \
         "${AIV_MODEL:-}" \
         "${AIV_ENDPOINT:-}" \

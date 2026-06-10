@@ -150,15 +150,28 @@ aiv_scene_dir() {
 # hard size cap (aiv_max_artifact_bytes) and timeout (AIV_FETCH_TIMEOUT,
 # default 120s). Live `fetch` MUST route downloads through this helper so a
 # hostile or runaway response cannot exhaust disk. Echoes <dest> on success.
+# Optional: AIV_FETCH_HEADER carries ONE auth header for providers whose
+# artifact URIs require it (e.g. Gemini file downloads need x-goog-api-key).
+# Empty/unset = no header — existing callers are unchanged. The header value
+# is never echoed; registered keys are redacted from any curl stderr.
 aiv_fetch_url() {
   local url="${1:-}" dest="${2:-}" cap="${3:-}"
   [ -n "${url}" ] && [ -n "${dest}" ] || aiv_die 10 "aiv_fetch_url: url and dest required"
   [ -n "${cap}" ] || cap="$(aiv_max_artifact_bytes)"
   aiv_require_cmd curl
-  if ! curl --fail --silent --show-error --location \
-       --max-filesize "${cap}" --max-time "${AIV_FETCH_TIMEOUT:-120}" \
-       --output "${dest}" "${url}" 2>&1 | aiv_redact_stream >&2; then
-    aiv_die 11 "aiv_fetch_url: download failed or exceeded ${cap} bytes: ${url}"
+  if [ -n "${AIV_FETCH_HEADER:-}" ]; then
+    if ! curl --fail --silent --show-error --location \
+         --max-filesize "${cap}" --max-time "${AIV_FETCH_TIMEOUT:-120}" \
+         -H "${AIV_FETCH_HEADER}" \
+         --output "${dest}" "${url}" 2>&1 | aiv_redact_stream >&2; then
+      aiv_die 11 "aiv_fetch_url: download failed or exceeded ${cap} bytes: ${url}"
+    fi
+  else
+    if ! curl --fail --silent --show-error --location \
+         --max-filesize "${cap}" --max-time "${AIV_FETCH_TIMEOUT:-120}" \
+         --output "${dest}" "${url}" 2>&1 | aiv_redact_stream >&2; then
+      aiv_die 11 "aiv_fetch_url: download failed or exceeded ${cap} bytes: ${url}"
+    fi
   fi
   printf '%s\n' "${dest}"
 }
