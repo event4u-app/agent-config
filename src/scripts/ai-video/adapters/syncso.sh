@@ -11,6 +11,9 @@
 # Lifecycle: experimental — structural shape conformant; no maintainer
 # real-API smoke trace captured yet. See docs/contracts/provider-lifecycle.md
 # for promotion criteria.
+# Encoder note: provider-specific prompt grammar comes from the
+#   motion-choreographer encoder table; the scene blueprint stays
+#   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
 #
 # Kind: lipsync (adapter-contract.md v2 § Lip-sync adapters). Stdin is
 # NOT the prompt-block shape — a lip-sync job consumes:

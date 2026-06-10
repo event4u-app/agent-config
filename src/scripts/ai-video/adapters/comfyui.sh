@@ -12,6 +12,9 @@
 # Lifecycle: experimental — structural shape conformant; no maintainer
 # smoke trace against a real containerized ComfyUI captured yet. See
 # docs/contracts/provider-lifecycle.md for promotion criteria.
+# Encoder note: provider-specific prompt grammar comes from the
+#   motion-choreographer encoder table; the scene blueprint stays
+#   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
 #
 # Sandbox posture (ADR-060 §1 — container-primary, remote escape hatch):
 #   - The documented install path is a containerized ComfyUI:
