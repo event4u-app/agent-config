@@ -379,6 +379,29 @@ def stale_notice(repo_root: Path) -> str | None:
     )
 
 
+def format_plain_status(
+    active: list[str], commands_shown: int, skills_shown: int, hidden_total: int
+) -> str:
+    """Deterministic, template-based plain-language render of `show` state for a
+    non-technical employee. NEVER LLM-generated, never names a hidden pack (no
+    leak / hallucination surface) — a pure function of the `show` JSON, so the
+    golden tests fully pin it. Staleness is rendered as PERSISTENCE, not an
+    age-in-days: the overlay carries no timestamp and adding one would change
+    overlay semantics (out of scope — see the contract addendum)."""
+    if not active:
+        return (
+            "No profile is active — you see the full surface: every command and "
+            "skill is available."
+        )
+    return "\n".join([
+        f"Profile active: {', '.join(active)}.",
+        f"You'll see {commands_shown} commands and {skills_shown} skills.",
+        f"{hidden_total} item(s) are hidden behind packs you haven't turned on — "
+        "that's what changed vs the full surface.",
+        "This overlay persists across sessions until you run `/profile deactivate`.",
+    ])
+
+
 # --- CLI -------------------------------------------------------------------
 
 def _repo_root(arg: str | None) -> Path:
@@ -405,7 +428,9 @@ def main(argv: list[str] | None = None) -> int:
     p_de = sub.add_parser("deactivate", parents=[common], help="deactivate (clear, or named tokens)")
     p_de.add_argument("tokens", nargs="*")
 
-    sub.add_parser("show", parents=[common], help="show active overlay + surface counts")
+    p_show = sub.add_parser("show", parents=[common], help="show active overlay + surface counts")
+    p_show.add_argument("--plain", action="store_true",
+                        help="plain-language status for a non-technical employee (template render, no LLM)")
     p_surf = sub.add_parser("surface", parents=[common], help="list shown/hidden artefacts")
     p_surf.add_argument("--category", choices=["command", "skill"], default=None)
     sub.add_parser("stale-notice", parents=[common], help="emit session_start staleness notice if any")
@@ -445,6 +470,9 @@ def main(argv: list[str] | None = None) -> int:
             surf = compute_surface(root, active=active)
             cmds_shown = sum(1 for a in surf.shown if a["category"] == "command")
             skills_shown = sum(1 for a in surf.shown if a["category"] == "skill")
+            if getattr(args, "plain", False):
+                print(format_plain_status(active, cmds_shown, skills_shown, len(surf.hidden)))
+                return 0
             if args.json:
                 print(json.dumps({
                     "active_packs": active,
