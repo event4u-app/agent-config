@@ -83,6 +83,14 @@ one-line "from inactive pack X" notice. Hard execution-gating is deferred
   concurrent reader never sees a half-written overlay.
 - **Closure self-heal** — a closure dependency that is not installed is
   dropped from the written set with a note, never blocking activation.
+- **Set-only — precedence intentionally undefined.** The overlay is an
+  order-independent **union of pack ids**: no precedence, no scalar
+  "audience hint", no ordering. `set_overlay` always writes `sorted(set(...))`,
+  and the static definitions are frozen at the data layer by
+  `scripts/lint_profile_overlay_set_only.py` (aliases resolve only to pack-id
+  sets; no profile/pack file declares a scalar `active_packs` or a
+  `precedence`/`priority`/`order` key). A future scalar-precedence regression
+  fails the build rather than silently re-introducing a precedence concept.
 
 ## Reconciliation with the existing `--profile=<id>` install flag
 

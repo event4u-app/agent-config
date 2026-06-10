@@ -136,20 +136,23 @@ new envelope rendered by the **existing** plain renderer, template-based only.
 Goal: keep the overlay model provably set-only (so the "precedence" concern stays a non-concept), and
 confirm the reviewer's employee workflows are genuinely covered rather than assumed.
 
-- [ ] Overlay-integrity guard — a cheap lint (`src/scripts/lint_profile_overlay_set_only.py`, or a check
+- [x] Overlay-integrity guard — a cheap lint (`src/scripts/lint_profile_overlay_set_only.py`, or a check
       folded into the existing discovery-vocabulary lint) asserting that every `/profile activate` token
       resolves only to pack-id sets and that no profile/pack path injects a **scalar** audience hint into
       the `runtime.active_packs` overlay. This freezes the order-independent union invariant and makes a
       future scalar-precedence regression fail the build. Add one contract sentence to
       `session-profile-overlay.md` stating precedence is intentionally undefined because overlays are
       set-only. Run the lint once locally to confirm it passes today. <!-- carve-out: new-gate-verification -->
-- [ ] Employee task-type gap audit — confirm the five reviewer-named workflows (ticket summary, customer
+      <!-- done: standalone lint_profile_overlay_set_only.py (single-responsibility — not folded into the larger discovery-vocab lint). Two clauses: aliases are pack-id lists of known ids; no static profile/pack declares scalar active_packs or precedence/priority/order keys. Wired into Taskfile lint: (both ci-fast + full aggregators) + taskfiles/ci-fast.yml. Contract sentence added to session-profile-overlay.md § Robustness invariants. 6 goldens (live tree + negative detectors). Passes today. -->
+- [x] Employee task-type gap audit — confirm the five reviewer-named workflows (ticket summary, customer
       reply, meeting prep, proposal draft, incident review) each resolve to an existing role prompt under
       `agents/roles/*/prompts/`; record the mapping in a short note. If exactly one is genuinely missing a
       dedicated prompt (candidate: a first-class "incident review" distinct from `escalation-risk-analysis`
       / `risk-analysis-memo`), add **one** additive role prompt following the existing
       `role-experience` contract — no orchestration, no new system. Anything that wants multi-step
       orchestration is explicitly **out of scope** (see below).
+      <!-- done: 4/5 already shipped (support/sales/galabau/consultant/leadership) — mapping in agents/roles/employee-task-type-gap-audit.md. The one gap (incident review = retrospective postmortem, distinct from the two FORWARD risk prompts) closed with one additive prompt leadership/prompts/incident-review.md (blameless, standalone, skill_hint decision-record). lint_role_experiences green (leadership 6 prompts, within 5–10). -->
+- [x] **(verification)** `lint_role_experiences` ✅ · `check_role_doc_links` 86 links OK · `lint_profile_overlay_set_only` ✅.
 
 ---
 
