@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `5.10.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 259
+- **artefacts**: 263
 
-## Commands (144)
+## Commands (145)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -37,6 +37,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`chat-history:import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 - **`chat-history:learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
 - **`chat-history:show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
+- **`check-current-md`** — Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
 - **`condense`** — Condense .md files from src/ into telegraph format and write to dist/agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context:create`** — Analyze a codebase area and create a structured context document
@@ -219,7 +220,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 
-## Skills (55)
+## Skills (58)
 
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -232,6 +233,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 - **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
 - **`context-authoring`** — Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
+- **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
 - **`copilot-config`** — Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`).
 - **`decision-record`** — Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`.
@@ -239,6 +241,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`doc-coauthoring`** — Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
 - **`file-editor`** — Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
 - **`guideline-writing`** — Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
+- **`jira-integration`** — Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
 - **`judge-bug-hunter`** — Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'.
 - **`judge-code-quality`** — Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge.
 - **`judge-security-auditor`** — Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge.
@@ -263,6 +266,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`refine-prompt`** — Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work "…"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
 - **`repomix-packer`** — Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
+- **`roadmap-management`** — Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking.
 - **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
 - **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
 - **`rule-refactor`** — Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.

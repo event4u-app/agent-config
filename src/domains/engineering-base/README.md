@@ -8,7 +8,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `5.10.1`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 82
+- **artefacts**: 86
 
 ## Rules (14)
 
@@ -27,7 +27,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`think-before-action`** — Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error
 - **`verify-before-complete`** — Verify before completion — run tests and quality tools before claiming done
 
-## Skills (68)
+## Skills (72)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 - **`adversarial-review`** — ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review.
@@ -40,6 +40,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`blast-radius-analyzer`** — Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 - **`bug-analyzer`** — Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 - **`code-refactoring`** — Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
+- **`code-review`** — Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 - **`conventional-commits-writing`** — Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
 - **`corpus-grounding`** — Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints.
 - **`dashboard-design`** — Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.
@@ -49,6 +50,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`deep-reading-analyst`** — Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary.
 - **`defense-in-depth`** — Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one.
 - **`dependency-upgrade`** — Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic.
+- **`design-review`** — Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more.
 - **`devcontainer`** — Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`).
 - **`developer-like-execution`** — Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it.
 - **`docker`** — Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'.
@@ -62,6 +64,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`grafana`** — Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana.
 - **`incident-commander`** — Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'.
 - **`logging-monitoring`** — Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers.
+- **`merge-conflicts`** — Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow.
 - **`migration-architect`** — Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked.
 - **`mobile-e2e-strategy`** — Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps.
 - **`multi-tenancy`** — Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
@@ -81,6 +84,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`secrets-management`** — Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized.
 - **`security`** — Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
 - **`security-audit`** — ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work.
+- **`sentry-integration`** — Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 - **`sql-writing`** — Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL.
 - **`systematic-debugging`** — Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'.
 - **`tailwind-engineer`** — Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'.

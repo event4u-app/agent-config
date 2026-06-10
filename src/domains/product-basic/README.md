@@ -8,12 +8,13 @@ Core PO/PM artefacts (ticket refinement, AC, estimation).
 - **version**: `5.10.1`
 - **owner**: product
 - **requires**: engineering-base
-- **artefacts**: 9
+- **artefacts**: 11
 
-## Skills (9)
+## Skills (11)
 
 - **`churn-prevention`** — Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'.
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt.
+- **`feature-planning`** — Use when the user says "plan a feature", "brainstorm", "explore this idea", or wants to go from idea to structured plan and roadmap.
 - **`funnel-analysis`** — Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven.
 - **`onboarding-design`** — Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagnosis. Triggers on 'fix onboarding', 'why do new accounts churn fast'.
 - **`po-discovery`** — Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'.
@@ -21,3 +22,4 @@ Core PO/PM artefacts (ticket refinement, AC, estimation).
 - **`retention-loops`** — Use when designing product-led retention — habit formation, trigger-action-reward, network vs single-user loops. Triggers on 'why don't users come back', 'design a habit loop'.
 - **`rice-prioritization`** — Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort.
 - **`stakeholder-tradeoff`** — Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'.
+- **`technical-specification`** — Use when the user says "write a spec", "create RFC", "write a PRD", or "document this decision". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure.
