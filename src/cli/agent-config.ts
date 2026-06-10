@@ -22,6 +22,7 @@ import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions } from './initRouting.js';
 import { runSettings } from './commands/settings.js';
+import { runMcpServer } from './commands/mcpServer.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
 import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
@@ -82,6 +83,16 @@ async function main(argv: readonly string[]): Promise<number> {
         .action(() => {
             const code = runDoctorShell();
             process.exit(code);
+        });
+
+    program
+        .command('mcp-server')
+        .description('Run the turnkey read-only stdio MCP server (no repo clone; ADR-085)')
+        .action(async () => {
+            // No hard process.exit() — that truncates buffered stdout writes
+            // (the JSON-RPC responses) on a pipe. Set the code and let the
+            // process exit naturally once stdin is at EOF and stdout drained.
+            process.exitCode = await runMcpServer();
         });
 
     program
@@ -293,7 +304,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help'];
+    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.

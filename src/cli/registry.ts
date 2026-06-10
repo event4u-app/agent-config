@@ -51,6 +51,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'mcp:check', disposition: 'delegate' },
     { name: 'mcp:setup', disposition: 'delegate' },
     { name: 'mcp:run', disposition: 'delegate' },
+    { name: 'mcp-server', disposition: 'native', synopsis: 'Turnkey read-only stdio MCP server over the bundled content (no repo clone; ADR-085).' },
     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
     { name: 'roadmap:progress', disposition: 'delegate' },
     { name: 'roadmap:progress-check', disposition: 'delegate' },

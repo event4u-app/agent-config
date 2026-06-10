@@ -6,10 +6,10 @@
 
 ## Overall
 
-**40 / 66 steps done · 61%**
+**42 / 66 steps done · 64%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   61%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-mcp-stdio-end-user-packaging.md](roadmaps/road-to-mcp-stdio-end-user-packaging.md) | 4 | 9 | 6 | 3 | 0 | 0 | ███░░░░░░░ 33% |
+| 2 | [road-to-mcp-stdio-end-user-packaging.md](roadmaps/road-to-mcp-stdio-end-user-packaging.md) | 4 | 9 | 4 | 5 | 0 | 0 | ██████░░░░ 56% |
 | 3 | [road-to-positioning-consistency-and-skill-governance.md](roadmaps/road-to-positioning-consistency-and-skill-governance.md) | 4 | 30 | 2 | 24 | 4 | 0 | █████████░ 92% |
 | 4 | [road-to-video-foundation-validation.md](roadmaps/road-to-video-foundation-validation.md) | 4 | 12 | 4 | 8 | 0 | 0 | ███████░░░ 67% |
 | 5 | [road-to-video-provider-multiplexers.md](roadmaps/road-to-video-provider-multiplexers.md) | 3 | 7 | 2 | 5 | 0 | 0 | ███████░░░ 71% |
@@ -38,12 +38,12 @@
 
 ### [road-to-mcp-stdio-end-user-packaging.md](roadmaps/road-to-mcp-stdio-end-user-packaging.md)
 
-**Road to a turnkey end-user stdio MCP server — packaging the local server for people who configure agents, not clone repos** — 3 / 9 done (33%)
+**Road to a turnkey end-user stdio MCP server — packaging the local server for people who configure agents, not clone repos** — 5 / 9 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Decide the distribution shape (ADR, no code) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Turnkey launch entrypoint | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Turnkey launch entrypoint | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | stdio client-config templates | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | End-user docs + smoke | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
