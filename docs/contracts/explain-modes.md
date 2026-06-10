@@ -142,6 +142,43 @@ one with a glossary override. ≥ 90 % branch on the renderer module.
 - `/why` finds no `mem://` markers → renders "This reply did not
   cite any stored memory entries." No error.
 
+## `profile-overlay` envelope (session-profile observability)
+
+A second `envelope_type` alongside `explain-v1`, answering **"why is the surface
+different / why these commands?"** over the session-profile overlay — not the
+memory/trust question. Built by `scripts/config/profile_explain.build_profile_envelope`
+from `session_profiles show|surface` state; rendered by
+`render_profile_overlay(envelope, mode)`.
+
+Fields:
+
+| field | meaning |
+|---|---|
+| `active` | the effective active pack set (the persisted overlay) |
+| `commands_shown` / `skills_shown` | surfaced counts |
+| `hidden_total` | items hidden behind inactive packs |
+| `delta.hidden_behind_inactive_packs` | the deterministic "what changed vs the full surface" |
+| `persists_across_sessions` | staleness as **persistence** (the overlay has no timestamp) |
+
+**Trust boundary (council amendment):** the renderer is a **pure template** over
+these fields — it **never calls an LLM** and **never reads beyond the overlay
+state** it is handed. `build_profile_envelope` is the only state read;
+`render_profile_overlay` is a pure function (golden-tested,
+`tests/test_profile_explain.py`). Missing fields render a placeholder; the
+renderer never throws.
+
+**Not fields** (not persisted, so deliberately absent — same honesty as the
+plain status surface): the seed-token-vs-closure split (the overlay stores the
+effective set, no request log) and a staleness **age-in-days** (no timestamp).
+An age render is a separate, overlay-semantics-touching change.
+
+**`/why profile` routing.** Same model as `/why` for memory: the agent
+recognises a "why is the surface different / why aren't these commands showing"
+intent and renders the `profile-overlay` plain view
+(`session_profiles explain --mode plain`; `--mode technical` for an engineering
+lead). One question per turn if the intent is ambiguous between memory-explain and
+profile-explain (`ask-when-uncertain`).
+
 ## Cross-references
 
 - ADR: [`ADR-026`](../decisions/ADR-026-explain-mode-translation.md).
