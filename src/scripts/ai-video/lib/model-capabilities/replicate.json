@@ -1,57 +1,82 @@
 {
   "schema": 1,
   "adapter": "replicate",
-  "comment": "Per-model capability manifest for the replicate multiplexer. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace for that model — verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. Durations in seconds; cost_per_second_usd is a modeled estimate, never a quote.",
+  "comment": "Per-model capability manifest for the replicate multiplexer. Every entry is documented-best-effort until a maintainer captures a real-API smoke trace for that model \u2014 verified:false entries MUST NOT be trusted for planning-critical decisions without surfacing the flag. Durations in seconds; cost_per_second_usd is a modeled estimate, never a quote.",
   "models": {
     "google/veo-3": {
       "label": "Google Veo 3 (text-to-video, native audio)",
       "min_duration": 8,
       "max_duration": 8,
       "audio_sync": true,
-      "aspect": ["16:9", "9:16"],
+      "aspect": [
+        "16:9",
+        "9:16"
+      ],
       "cost_per_second_usd": 0.5,
       "verified": false,
-      "input_notes": "fixed 8s clips; dialogue/ambient rendered from the prompt text; resolution flag"
+      "input_notes": "fixed 8s clips; dialogue/ambient rendered from the prompt text; resolution flag",
+      "official": true
     },
     "kwaivgi/kling-v2.1-master": {
       "label": "Kling v2.1 Master (text/image-to-video)",
       "min_duration": 5,
       "max_duration": 10,
       "audio_sync": false,
-      "aspect": ["16:9", "9:16", "1:1"],
+      "aspect": [
+        "16:9",
+        "9:16",
+        "1:1"
+      ],
       "cost_per_second_usd": 0.28,
       "verified": false,
-      "input_notes": "duration enum 5|10; start_image for image-to-video; negative_prompt supported"
+      "input_notes": "duration enum 5|10; start_image for image-to-video; negative_prompt supported",
+      "official": true
     },
     "wan-video/wan-2.2-t2v-fast": {
       "label": "Wan 2.2 (text-to-video, fast)",
       "min_duration": 5,
       "max_duration": 5,
       "audio_sync": false,
-      "aspect": ["16:9", "9:16"],
+      "aspect": [
+        "16:9",
+        "9:16"
+      ],
       "cost_per_second_usd": 0.05,
-      "verified": false,
-      "input_notes": "num_frames-driven duration; resolution enum; seed supported"
+      "verified": true,
+      "input_notes": "num_frames-driven duration; resolution enum; seed supported",
+      "official": true,
+      "smoke_trace": "replicate-wan-video_wan-2.2-t2v-fast-live-2026-06-10T10-43-52Z"
     },
     "lightricks/ltx-video": {
       "label": "LTX Video (text-to-video)",
       "min_duration": 5,
       "max_duration": 9,
       "audio_sync": false,
-      "aspect": ["16:9", "9:16", "1:1"],
+      "aspect": [
+        "16:9",
+        "9:16",
+        "1:1"
+      ],
       "cost_per_second_usd": 0.06,
-      "verified": false,
-      "input_notes": "length in frames at fixed fps; cfg + negative_prompt supported"
+      "verified": true,
+      "input_notes": "length in frames at fixed fps; cfg + negative_prompt supported",
+      "official": false,
+      "smoke_trace": "replicate-lightricks_ltx-video-live-2026-06-10T10-46-47Z"
     },
     "tencent/hunyuan-video": {
       "label": "Hunyuan Video (text-to-video)",
       "min_duration": 5,
       "max_duration": 5,
       "audio_sync": false,
-      "aspect": ["16:9", "9:16"],
+      "aspect": [
+        "16:9",
+        "9:16"
+      ],
       "cost_per_second_usd": 0.08,
-      "verified": false,
-      "input_notes": "video_length in frames; embedded_guidance_scale; no negative_prompt"
+      "verified": true,
+      "input_notes": "video_length in frames; embedded_guidance_scale; no negative_prompt",
+      "official": false,
+      "smoke_trace": "replicate-tencent_hunyuan-video-live-2026-06-10T10-54-32Z"
     }
   }
 }

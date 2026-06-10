@@ -94,22 +94,34 @@ def test_manifest_values_are_coherent(manifest: Path) -> None:
 
 @pytest.mark.parametrize("manifest", MANIFESTS, ids=lambda p: p.stem)
 def test_unsmoked_models_stay_unverified(manifest: Path) -> None:
-    """``verified: true`` requires a captured smoke trace for the adapter.
-    While ``agents/reference/ai-video/smoke-traces/`` has no trace for
-    this adapter, every manifest entry MUST be ``verified: false`` —
-    documented-best-effort numbers may never masquerade as validated.
+    """``verified: true`` requires named smoke-trace provenance.
+
+    Captured traces are deliberately LOCAL-ONLY operator evidence
+    (``agents/reference/ai-video/smoke-traces/`` is gitignored — traces can
+    carry provider response data), so CI cannot demand the trace file
+    itself. The guard that remains enforceable everywhere: a ``verified:
+    true`` entry MUST name its trace in a ``smoke_trace`` field whose
+    filename starts with the adapter id — documented-best-effort numbers
+    may never silently masquerade as validated. When the trace dir exists
+    locally and holds the named trace, it is cross-checked too.
     """
     adapter = manifest.stem
-    has_trace = SMOKE_TRACE_DIR.is_dir() and any(
-        adapter in p.name for p in SMOKE_TRACE_DIR.iterdir()
-    )
-    if has_trace:
-        pytest.skip(f"{adapter}: smoke trace exists; verified entries are legitimate")
     for model_id, entry in _load(manifest)["models"].items():
-        assert entry["verified"] is False, (
-            f"{manifest.name}:{model_id}: verified must stay false until a "
-            f"smoke trace for {adapter!r} lands under {SMOKE_TRACE_DIR}"
+        ctx = f"{manifest.name}:{model_id}"
+        if entry["verified"] is False:
+            continue
+        trace = entry.get("smoke_trace", "")
+        assert isinstance(trace, str) and trace.startswith(f"{adapter}-"), (
+            f"{ctx}: verified:true requires a smoke_trace field naming the "
+            f"captured {adapter!r} trace (local-only evidence under "
+            f"{SMOKE_TRACE_DIR})"
         )
+        local = SMOKE_TRACE_DIR / f"{trace}.json"
+        if SMOKE_TRACE_DIR.is_dir() and not local.exists():
+            pytest.fail(
+                f"{ctx}: smoke_trace {trace!r} named but {local} is missing "
+                f"on this machine — fix the reference or re-capture"
+            )
 
 
 # ---------------------------------------------------------------------------

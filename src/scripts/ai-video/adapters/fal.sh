@@ -141,7 +141,7 @@ aiv_cmd_submit() {
   [ "$(aiv_key_status)" = "present" ] \
     || aiv_die 6 "${ADAPTER_ID}: api key missing in agents/.ai-video.xml"
 
-  local stdin_json model base req resp http body rid
+  local stdin_json model base req resp http body rid orig
   stdin_json="$(cat)"
   printf '%s' "${stdin_json}" | jq -e '.prompt.subject and .prompt.action' >/dev/null \
     || aiv_die 3 "${ADAPTER_ID}: stdin JSON missing required prompt.subject / prompt.action"
@@ -150,18 +150,41 @@ aiv_cmd_submit() {
   _fal_warn_unverified "${model}"
   base="$(_fal_base)"
 
+  # Clamp stdin duration into the manifest's [min_duration, max_duration]
+  # — fal models VALIDATE duration server-side (verified live 2026-06-10:
+  # ltx-2 rejects 2.0 with "Input should be 6, 8 or 10"; the queue still
+  # returns COMPLETED, with the 422 only on the result). Out-of-range
+  # values would silently burn a queue slot, never render.
+  local dmin dmax dur_clamped
+  dmin=""; dmax=""
+  if [ -f "${FAL_MANIFEST}" ]; then
+    dmin="$(jq -r --arg m "${model}" '.models[$m].min_duration // empty' "${FAL_MANIFEST}" 2>/dev/null || true)"
+    dmax="$(jq -r --arg m "${model}" '.models[$m].max_duration // empty' "${FAL_MANIFEST}" 2>/dev/null || true)"
+  fi
+  dur_clamped="$(printf '%s' "${stdin_json}" | jq -r --arg lo "${dmin}" --arg hi "${dmax}" '
+    .duration as $d
+    | if $d == null then ""
+      elif $lo != "" and $d < ($lo|tonumber) then ($lo|tonumber)
+      elif $hi != "" and $d > ($hi|tonumber) then ($hi|tonumber)
+      else $d end | tostring')"
+  if [ -n "${dur_clamped}" ]; then
+    orig="$(printf '%s' "${stdin_json}" | jq -r '.duration')"
+    [ "${dur_clamped}" != "${orig}" ] && printf '%s: duration %s clamped to %s (manifest range %s–%s for %s)\n' \
+      "${ADAPTER_ID}" "${orig}" "${dur_clamped}" "${dmin:-?}" "${dmax:-?}" "${model}" >&2
+  fi
+
   # Contract prompt blocks -> one fal prompt string; the per-model input
   # differences (duration enums, aspect_ratio names) are documented in
   # lib/model-capabilities/README.md. Optional keys map best-effort and
   # are dropped when absent (fal models reject unknown fields: ASSUMED
   # tolerated — verified on first live smoke).
-  req="$(printf '%s' "${stdin_json}" | jq '{
+  req="$(printf '%s' "${stdin_json}" | jq --arg dur "${dur_clamped}" '{
     prompt: ([.prompt.style, .prompt.subject, .prompt.environment,
               .prompt.action, .prompt.camera, .prompt.lens,
               .prompt.lighting, .prompt.mood]
              | map(select(. != null and . != "")) | join(". ")),
   }
-  + (if .duration   then {duration: .duration}             else {} end)
+  + (if $dur != "" then {duration: ($dur|tonumber)}         else {} end)
   + (if .aspect     then {aspect_ratio: .aspect}           else {} end)
   + (if .seed       then {seed: .seed}                     else {} end)
   + (if (.negative // []) | length > 0
@@ -221,7 +244,7 @@ aiv_cmd_fetch() {
   _fal_assert_enabled
   local app body url dest root out
   app="$(_fal_app_id "${FAL_MODEL_ID}")"
-  body="$(_fal_status_json "${app}/requests/${FAL_REQUEST_ID}")"
+  body="$(_fal_status_json "${app}/requests/${FAL_REQUEST_ID}")" || exit $?
   url="$(printf '%s' "${body}" | jq -r '.video.url // .videos[0].url // .output.url // empty')"
   [ -n "${url}" ] || aiv_die 8 "${ADAPTER_ID}: no video url in result (status=$(printf '%s' "${body}" | jq -r '.status // "?"'))"
 
