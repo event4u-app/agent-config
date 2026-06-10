@@ -3,7 +3,7 @@ model_tier: medium
 name: check-current-md
 pack: meta
 tier: 2
-description: Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
+description: "Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes."
 suggestion:
   eligible: false
   rationale: "Package-internal — only the event4u/agent-config repo runs this."

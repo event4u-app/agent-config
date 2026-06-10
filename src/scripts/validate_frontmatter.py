@@ -28,12 +28,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+try:  # Real-consumer-equivalent strict parse. Optional — see strict_yaml_error.
+    import yaml as _yaml
+except ImportError:  # pragma: no cover - yaml is present across this repo's CI
+    _yaml = None
+
 __all__ = [
     "SchemaError",
     "validate",
     "load_schema",
     "parse_frontmatter",
     "apply_schema_defaults",
+    "strict_yaml_error",
 ]
 
 _FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
@@ -72,6 +78,69 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any] | None, int]:
     body = match.group(1)
     line_offset = text[: match.start()].count("\n") + 2  # +2 for `---\n`
     return _parse_yaml_block(body), line_offset
+
+
+def strict_yaml_error(text: str) -> str | None:
+    """Reject frontmatter that the lenient subset parser accepts but a real
+    YAML parser rejects.
+
+    ``_parse_yaml_block`` is deliberately forgiving (it strips matching outer
+    quotes without checking the inner content), so malformed frontmatter such
+    as ``description: "say "hi" now"`` (unescaped inner quotes) or
+    ``description: a: b`` (a bare ``": "`` that reads as a nested mapping)
+    sails through schema validation here — then fails to load in stricter
+    consumers (Zed, any PyYAML-based reader). This gate closes that gap.
+
+    Returns a one-line error message, or ``None`` when the frontmatter is
+    valid YAML. When PyYAML is importable it is the source of truth (same
+    parser real consumers use); otherwise a stdlib structural fallback catches
+    the two known top-level shapes so the gate never silently no-ops.
+    """
+    match = _FRONTMATTER_RE.search(text)
+    if not match:
+        return None  # missing frontmatter is flagged elsewhere
+    body = match.group(1)
+
+    if _yaml is not None:
+        try:
+            loaded = _yaml.safe_load(body)
+        except _yaml.YAMLError as exc:  # type: ignore[union-attr]
+            return f"invalid YAML: {str(exc).splitlines()[0]}"
+        if loaded is not None and not isinstance(loaded, dict):
+            return "frontmatter is not a mapping"
+        return None
+
+    return _structural_yaml_error(body)
+
+
+def _structural_yaml_error(body: str) -> str | None:
+    """Stdlib fallback for ``strict_yaml_error`` when PyYAML is unavailable.
+
+    Covers the two shapes that have actually shipped broken: a double-quoted
+    scalar with an unescaped inner ``"``, and a bare scalar containing ``": "``
+    (or a trailing ``:``) that a YAML parser reads as a nested mapping. Only
+    top-level ``key: value`` lines are checked — PyYAML covers the nested case
+    when present.
+    """
+    for raw in body.splitlines():
+        if not raw or raw[0].isspace() or raw.lstrip().startswith("#"):
+            continue
+        m = re.match(r"^([\w-]+):\s*(.*)$", raw.rstrip())
+        if not m:
+            continue
+        key, val = m.group(1), m.group(2).strip()
+        if not val:
+            continue
+        if val.startswith('"'):
+            if len(val) == 1 or not val.endswith('"'):
+                return f"{key}: unterminated double-quoted value"
+            inner = val[1:-1]
+            if '"' in inner.replace('\\"', ""):
+                return f'{key}: unescaped double-quote inside a double-quoted value (escape it as \\")'
+        elif not val.startswith("'") and not (val.startswith("[") and val.endswith("]")):
+            if ": " in val or val.endswith(":"):
+                return f'{key}: unquoted value contains ": " (reads as a mapping) — wrap the value in quotes'
+    return None
 
 
 def _coerce(value: str) -> Any:
@@ -541,6 +610,13 @@ def _main() -> int:
         for artefact_type, path in _iter_artefacts(root):
             total += 1
             text = path.read_text(encoding="utf-8")
+            yaml_err = strict_yaml_error(text)
+            if yaml_err is not None:
+                failing += 1
+                print(f"❌ [{artefact_type}] {path}: invalid-yaml at "
+                      f"(frontmatter) – {yaml_err}")
+                # Frontmatter doesn't parse — schema results would be noise.
+                continue
             data, _offset = parse_frontmatter(text)
             if data is None:
                 # Other tooling flags missing frontmatter; don't double-report.

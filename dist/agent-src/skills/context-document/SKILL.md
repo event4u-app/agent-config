@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: context-document
-description: "Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation."
+description: "Use when the user says \"create context\", \"document this area\", or wants a structured snapshot of a codebase area for agent orientation."
 domain: process
 workspaces:
   - agent-config-maintainer
