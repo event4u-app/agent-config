@@ -125,6 +125,13 @@ If adapter capability is `audio: none`:
 - Emit a `# AUDIO: ffmpeg-mux fallback` comment with the
   blueprint's audio paths queued for stitch-time mux.
 - Set `enable_native_audio: false` in the motion-prompt JSON.
+- Blueprint carries DIALOGUE → the mux fallback cannot speak text
+  lines. Emit a mandatory `AUDIO DOWNGRADE` warning block in
+  `motion-prompt.txt` AND `adapter-notes.md` listing every dialogue
+  line that will not render. The decision whether that is acceptable
+  belongs to the orchestrator gate (adapter-contract § Audio
+  ownership) — this skill translates, it never validates, and it
+  NEVER silently strips dialogue.
 
 ### Step 4: Physics constraints
 

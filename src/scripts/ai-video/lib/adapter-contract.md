@@ -42,6 +42,37 @@ provider-specific prompt idiom, extend that encoder table — never the
 blueprint vocabulary. The anti-leak test in
 `tests/test_ai_video_blueprint_schema.py` enforces this boundary.
 
+## Audio ownership — intent, translation, validation (issue #180)
+
+Three layers, three owners — no layer may absorb another's job:
+
+1. **Intent — the blueprint (scene-expander).** DIALOGUE / AMBIENT
+   blocks are emitted whenever creatively warranted, provider-agnostic,
+   regardless of which adapter will render. The parser mirrors dialogue
+   into `requires.audio_native: true`.
+2. **Translation — the encoder (motion-choreographer).** Encodes audio
+   intent into the provider's grammar when `capability.audio = native`;
+   prepares the stitch-time mux fallback when `audio = none`. The
+   encoder is a translator, NEVER a validator — it does not decide
+   whether dropping dialogue is acceptable.
+3. **Validation — the orchestrator (`/video:scene`,
+   `/video:from-script`, `/video:from-song`).** Before submit, when
+   `requires.audio_native = true` meets `capability.audio = none`, the
+   flow STOPS and surfaces the mismatch with numbered options: switch
+   to an audio-native adapter · proceed without dialogue (ambient mux
+   only) · drop audio intentionally · override and attempt anyway
+   (operator-owned cost risk; verify the dry-run's `audio_embedded`
+   first). A downgrade decision is recorded by the encoder as an
+   `AUDIO DOWNGRADE` warning block in `motion-prompt.txt` and
+   `adapter-notes.md` — silent dialogue loss is a contract violation.
+
+`capability.audio` is a **contract commitment**, not a best-effort
+hint: an adapter whose rendered output contradicts its declared
+capability violates this contract (the capability ↔ dry-run coherence
+test in `tests/test_ai_video_adapter_contract.py` is the build-time
+guard; the orchestrator gate is the runtime guard — they are
+complementary, not redundant).
+
 ## Subcommands
 
 Every adapter implements four:

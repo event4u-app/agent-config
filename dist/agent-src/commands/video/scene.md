@@ -80,13 +80,26 @@ scripts/ai-video/lib/operator-pick.sh <project> <scene-id>
 
 Preview mode auto-selects candidate 1.
 
-### 6. Motion + video render
+### 6. Audio pre-flight gate
+
+When the blueprint's `requires.audio_native` is `true` and the
+resolved video provider declares `capability.audio = none`: STOP
+before any submit (preview AND commit) and surface the mismatch with
+numbered options — 1) switch to an audio-native provider, 2) proceed
+without dialogue (ambient mux only), 3) drop audio intentionally,
+4) override and attempt anyway (operator-owned cost risk — check the
+dry-run's `audio_embedded` first). Record the picked option; the
+encoder writes the matching `AUDIO DOWNGRADE` block. Contract:
+adapter-contract.md § Audio ownership. Silent dialogue loss is a
+contract violation.
+
+### 7. Motion + video render
 
 `motion-choreographer` builds the motion prompt for the resolved video
 provider; in commit mode the safety gate fires again; adapter
 `submit` / `poll` / `fetch` runs the call.
 
-### 7. Report
+### 8. Report
 
 First line: the resolved **mode** (`mode: commit` or `mode: preview
 (default — no spend; pass --mode commit to render live)`). Then:
