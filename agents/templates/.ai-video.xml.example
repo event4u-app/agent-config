@@ -35,7 +35,7 @@
   <!-- ============================================================ -->
 
   <provider id="openai-images" kind="image">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <api-key>sk-REPLACE-ME</api-key>
     <endpoint>https://api.openai.com/v1</endpoint>
     <default-model>gpt-image-1</default-model>
@@ -52,7 +52,7 @@
   <!-- ============================================================ -->
 
   <provider id="higgsfield" kind="image+video">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <api-key>hf-REPLACE-ME</api-key>
     <endpoint>https://api.higgsfield.ai/v1</endpoint>
     <default-model>higgsfield-soul</default-model>
@@ -95,7 +95,7 @@
   </provider>
 
   <provider id="sora" kind="video">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <api-key>sora-REPLACE-ME</api-key>
     <endpoint>https://api.openai.com/v1</endpoint>
     <default-model>sora-2</default-model>

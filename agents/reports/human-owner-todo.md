@@ -95,13 +95,12 @@ authorized, `gemini-veo` live-wired and validated (**10/10 renders, $1.60/render
 points). Evidence: `agents/reference/ai-video/smoke-traces/README.md`
 § Validation result. Roadmap archived.
 
-One leftover that is still yours (NOT blocking anything):
-
-- [ ] **Decide ADR-056 for the remaining 4 unvalidated adapters** (~10 min reading)
-  - **What:** `gemini-veo` is now validated+stable; the fold/shim/remove disposition for `higgsfield`, `kling`, `openai-images`, `sora` is still open.
-  - **Where:** `docs/decisions/ADR-056-unvalidated-video-adapters-disposition.md` (status: `proposed`).
-  - **How:** Read the options table, pick one, tell the agent "accept ADR-056 with option X" — it flips the ADR to `accepted` and regenerates the index.
-  - **Note:** daily quota on the validated Gemini tier is ≈10 renders/day — relevant context for whether the multiplexers (fal/replicate) should carry batch workloads instead.
+- [x] **ADR-056 decided** — ✅ accepted 2026-06-10 (maintainer, in-session):
+  ALL adapters validated and kept — `sora` newly wired against the OpenAI
+  Videos API (1/1, native audio), `openai-images` validated (2/2, sync
+  shape), `higgsfield` fixed against the official SDK and validated (1/1
+  image2video). All seven video/image adapters now run `stable`. Nothing
+  removed.
 
 ---
 

@@ -10,10 +10,11 @@
 # Provider: top-level <provider id="openai-images" kind="image"> in
 # agents/.ai-video.xml.
 #
-# Lifecycle: experimental — structural shape conformant; no maintainer
-# real-API smoke trace captured yet. See docs/contracts/provider-lifecycle.md
-# for promotion criteria. The agent must surface this tier and ask
-# before defaulting to this adapter.
+# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# generation validated 2/2 — real 1536x1024 PNGs (gpt-image), ~$0.15 each.
+# NOTE: synchronous adapter — submit returns the artifact directly (no
+# job_id/poll/fetch); the smoke harness handles this sync shape. Raw
+# traces are local-only operator evidence (smoke-traces/, gitignored).
 # Encoder note: provider-specific prompt grammar comes from the
 #   motion-choreographer encoder table; the scene blueprint stays
 #   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
