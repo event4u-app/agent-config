@@ -11,6 +11,9 @@
 # Lifecycle: experimental — wrapper is structurally conformant; no
 # maintainer trace against a real MuseTalk install captured yet. See
 # docs/contracts/provider-lifecycle.md for promotion criteria.
+# Encoder note: provider-specific prompt grammar comes from the
+#   motion-choreographer encoder table; the scene blueprint stays
+#   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
 #
 # Kind: lipsync, LOCAL variant (adapter-contract.md v2 § Local providers
 # — local-source rule). Unlike the hosted syncso adapter (https-only

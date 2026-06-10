@@ -12,6 +12,9 @@
 # real-API smoke trace captured yet. See docs/contracts/provider-lifecycle.md
 # for promotion criteria. The agent must surface this tier and ask
 # before defaulting to this adapter.
+# Encoder note: provider-specific prompt grammar comes from the
+#   motion-choreographer encoder table; the scene blueprint stays
+#   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
 #
 # Queue API (documented-best-effort — fields tagged ASSUMED are verified
 # on the first live smoke; this adapter has no captured smoke trace yet):

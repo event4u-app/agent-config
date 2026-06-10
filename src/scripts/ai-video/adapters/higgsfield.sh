@@ -17,6 +17,9 @@
 # docs/contracts/provider-lifecycle.md for promotion criteria. The
 # agent must surface this tier and ask before defaulting to this
 # adapter.
+# Encoder note: provider-specific prompt grammar comes from the
+#   motion-choreographer encoder table; the scene blueprint stays
+#   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).
 
 set -euo pipefail
 

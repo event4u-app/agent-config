@@ -68,10 +68,15 @@ One label per line. Order is mandatory.
    world does in response to the subject.
 4. **ACTION** — anticipation / action / reaction with beat counts
    (`0.5s / 1.2s / 0.8s`). No adjective paragraphs.
-5. **CAMERA** — position, height, distance, move (lock-off, dolly,
-   handheld, push, pull). Off-axis when on-axis is default.
+5. **CAMERA** — position, height, distance, move as an INTENT
+   class (static hold, push-in, pull-back, lateral track, handheld
+   drift, orbit). Intent vocabulary, never one provider's move
+   grammar — the per-provider encoding happens in
+   [`motion-choreographer`](../motion-choreographer/SKILL.md).
+   Off-axis when on-axis is default.
 6. **LENS** — focal length in mm and aperture intent. "Cinematic"
-   alone fails.
+   alone fails. mm + aperture are cinematography units, not provider
+   tokens — they stay.
 7. **LIGHTING** — key / fill / back / practical named; "golden
    hour" requires a sun angle.
 8. **MOOD** — one emotional read.
@@ -79,7 +84,9 @@ One label per line. Order is mandatory.
    line. Marks `audio: native` capability requirement.
 10. **AMBIENT SOUND** — optional. Layer list (wind, traffic,
     crowd, ocean). Marks `audio: native` or routes to ffmpeg mux.
-11. **DURATION** — seconds (integer or one decimal).
+11. **DURATION** — seconds (integer or one decimal). Free value;
+    per-provider clip-length clamping is the encoder's concern, not
+    the blueprint's.
 12. **NEGATIVE** — clichés to reject, load-bearing order top-first.
     Always names: centered framing, symmetric composition, generic
     "cinematic", soap-opera contrast.
@@ -123,11 +130,15 @@ Any "no" → revise that block.
 - ACTION written as "the character does X dramatically" fails —
   adapters need verbs with beat counts.
 - DIALOGUE forces `audio: native` requirement — flag this to the
-  orchestrator so it picks a capable adapter (Veo / Sora).
+  orchestrator so it picks an audio-native adapter
+  (`capability.audio = native`).
 
 ## Do NOT
 
 - Do NOT emit provider tokens — that is `motion-choreographer`.
+- Do NOT shape any block toward one provider's prompt grammar — the
+  blueprint is the decoupling layer; the anti-leak schema test scans
+  it for provider tokens.
 - Do NOT skip the blueprint parser validation step.
 - Do NOT paraphrase identity tokens when a lock exists.
 - Do NOT mix live-action LENS prescriptions with animated STYLE
