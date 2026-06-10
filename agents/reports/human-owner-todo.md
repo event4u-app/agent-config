@@ -114,11 +114,11 @@ manifests `verified:true` with trace refs, ~$2–4 total. Bonus: the Kling direc
 adapter got real keypair/JWT auth (AccessKey+SecretKey) and a live trace.
 Roadmap archived.
 
-One open maintainer call (NOT blocking):
-
-- [ ] **Lifecycle promotions** — `fal` (3/3), `replicate` (3/3), `kling` (1/1)
-  all have live traces and stay `experimental` until your tier flip. Tell the
-  agent which to promote to `stable` (gemini-veo already is).
+- [x] **Lifecycle promotions** — ✅ done 2026-06-10 (maintainer-authorized):
+  `fal`, `replicate`, `kling` promoted `experimental → stable` (all sync
+  points: adapter headers + template + operator config). All four wired
+  video adapters now run `stable`; only the ADR-056 leftovers (`sora`,
+  `openai-images`, `higgsfield`) remain `experimental`.
 
 ---
 

@@ -8,10 +8,12 @@
 # lib/model-capabilities/fal.json and are surfaced via
 # `capability --model <id>`.
 #
-# Lifecycle: experimental — structural shape conformant; no maintainer
-# real-API smoke trace captured yet. See docs/contracts/provider-lifecycle.md
-# for promotion criteria. The agent must surface this tier and ask
-# before defaulting to this adapter.
+# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): 3/3 live
+# renders succeeded — ltx-2 (6.1s, native audio confirmed), wan-2.2 (5.0s),
+# hunyuan (5.4s; ~14.5min render). Manifest entries carry verified:true +
+# smoke_trace refs; raw traces are local-only operator evidence
+# (agents/reference/ai-video/smoke-traces/, gitignored).
+# See docs/contracts/provider-lifecycle.md for tier semantics.
 # Encoder note: provider-specific prompt grammar comes from the
 #   motion-choreographer encoder table; the scene blueprint stays
 #   provider-agnostic (see adapter-contract.md § Blueprint → provider translation).

@@ -80,7 +80,7 @@
   </provider>
 
   <provider id="kling" kind="video">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <access-key>kling-access-REPLACE-ME</access-key>
     <secret-key>kling-secret-REPLACE-ME</secret-key>
     <endpoint>https://api.klingai.com/v1</endpoint>
@@ -118,7 +118,7 @@
   <!-- ============================================================ -->
 
   <provider id="fal" kind="video">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <enabled>true</enabled>
     <api-key>fal-REPLACE-ME</api-key>
     <endpoint>https://queue.fal.run</endpoint>
@@ -132,7 +132,7 @@
   </provider>
 
   <provider id="replicate" kind="video">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <enabled>true</enabled>
     <api-key>r8_REPLACE-ME</api-key>
     <endpoint>https://api.replicate.com/v1</endpoint>
