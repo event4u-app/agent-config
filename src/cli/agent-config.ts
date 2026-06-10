@@ -89,8 +89,10 @@ async function main(argv: readonly string[]): Promise<number> {
         .command('mcp-server')
         .description('Run the turnkey read-only stdio MCP server (no repo clone; ADR-085)')
         .action(async () => {
-            const code = await runMcpServer();
-            process.exit(code);
+            // No hard process.exit() — that truncates buffered stdout writes
+            // (the JSON-RPC responses) on a pipe. Set the code and let the
+            // process exit naturally once stdin is at EOF and stdout drained.
+            process.exitCode = await runMcpServer();
         });
 
     program

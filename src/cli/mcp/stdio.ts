@@ -82,6 +82,15 @@ export function runStdioServer(
             write(dispatch(tree, identity, parsed as JsonRpcRequest));
         });
 
-        rl.on('close', () => resolveClose());
+        rl.on('close', () => {
+            // Drain any buffered stdout before resolving — on macOS a pipe write
+            // is async and resolving (→ process exit) too early truncates the
+            // last responses. Resolve only once the write buffer is empty.
+            if (output.writableLength === 0) {
+                resolveClose();
+            } else {
+                output.once('drain', () => resolveClose());
+            }
+        });
     });
 }
