@@ -47,6 +47,10 @@
     </tuning>
   </provider>
 
+  <!-- ============================================================ -->
+  <!-- Video providers                                              -->
+  <!-- ============================================================ -->
+
   <provider id="higgsfield" kind="image+video">
     <lifecycle>experimental</lifecycle>
     <api-key>hf-REPLACE-ME</api-key>
@@ -61,12 +65,8 @@
     </tuning>
   </provider>
 
-  <!-- ============================================================ -->
-  <!-- Video providers                                              -->
-  <!-- ============================================================ -->
-
   <provider id="gemini-veo" kind="video">
-    <lifecycle>experimental</lifecycle>
+    <lifecycle>stable</lifecycle>
     <api-key>AIza-REPLACE-ME</api-key>
     <endpoint>https://generativelanguage.googleapis.com/v1beta</endpoint>
     <default-model>veo-3.0-generate-001</default-model>
@@ -81,7 +81,8 @@
 
   <provider id="kling" kind="video">
     <lifecycle>experimental</lifecycle>
-    <api-key>kling-REPLACE-ME</api-key>
+    <access-key>kling-access-REPLACE-ME</access-key>
+    <secret-key>kling-secret-REPLACE-ME</secret-key>
     <endpoint>https://api.klingai.com/v1</endpoint>
     <default-model>kling-v2-master</default-model>
     <dry-run>true</dry-run>
