@@ -142,11 +142,44 @@ aiv_cmd_submit() {
   + (if (.ref_images // []) | length > 0
        then {image: .ref_images[0]}                        else {} end))}')"
 
-  resp="$(curl -sS -w '\n%{http_code}' -X POST "${base}/models/${model}/predictions" \
-    -H "$(_rpl_auth)" -H "Content-Type: application/json" \
-    --data-binary "${req}")" \
-    || aiv_die 8 "${ADAPTER_ID}: submit curl failed"
-  http="$(printf '%s' "${resp}" | tail -n1)"; body="$(printf '%s' "${resp}" | sed '$d')"
+  # Community models without an official deployment 404 on the
+  # models/{owner}/{name}/predictions route (verified live 2026-06-10:
+  # lightricks/ltx-video) and must create version-based via
+  # POST {base}/predictions {"version": <id>, "input": …}. The manifest's
+  # `official` flag routes them there DIRECTLY — a doomed official-route
+  # POST would burn the create-rate budget (burst 1/min under $5 credit).
+  local official="true"
+  if [ -f "${RPL_MANIFEST}" ]; then
+    official="$(jq -r --arg m "${model}" \
+      '.models[$m] | if . == null then "true" elif .official == false then "false" else "true" end' \
+      "${RPL_MANIFEST}" 2>/dev/null || printf 'true')"
+  fi
+
+  if [ "${official}" = "true" ]; then
+    resp="$(curl -sS -w '\n%{http_code}' -X POST "${base}/models/${model}/predictions" \
+      -H "$(_rpl_auth)" -H "Content-Type: application/json" \
+      --data-binary "${req}")" \
+      || aiv_die 8 "${ADAPTER_ID}: submit curl failed"
+    http="$(printf '%s' "${resp}" | tail -n1)"; body="$(printf '%s' "${resp}" | sed '$d')"
+  else
+    http="404"; body=""   # known-community model: go straight to the version route below
+  fi
+
+  if [ "${http}" = "404" ]; then
+    local version
+    version="$(curl -sS -X GET "${base}/models/${model}" -H "$(_rpl_auth)" \
+      | jq -r '.latest_version.id // empty')"
+    [ -n "${version}" ] \
+      || aiv_die 8 "${ADAPTER_ID}: model ${model} not runnable (official route 404, no latest_version)"
+    printf '%s: %s has no official deployment — falling back to version-based create (%s)\n' \
+      "${ADAPTER_ID}" "${model}" "${version}" >&2
+    req="$(printf '%s' "${req}" | jq --arg v "${version}" '. + {version: $v}')"
+    resp="$(curl -sS -w '\n%{http_code}' -X POST "${base}/predictions" \
+      -H "$(_rpl_auth)" -H "Content-Type: application/json" \
+      --data-binary "${req}")" \
+      || aiv_die 8 "${ADAPTER_ID}: submit curl failed (version route)"
+    http="$(printf '%s' "${resp}" | tail -n1)"; body="$(printf '%s' "${resp}" | sed '$d')"
+  fi
   case "${http}" in 2*) : ;; *) aiv_die 8 "${ADAPTER_ID}: submit HTTP ${http}: $(printf '%s' "${body}" | jq -r '.detail // .error // .title // "unknown"' 2>/dev/null | head -c 300)" ;; esac
 
   pid="$(printf '%s' "${body}" | jq -r '.id // empty')"
@@ -190,7 +223,7 @@ aiv_cmd_fetch() {
   aiv_load_provider "${ADAPTER_ID}"
   _rpl_assert_enabled
   local body url dest root out
-  body="$(_rpl_prediction_json "${pid}")"
+  body="$(_rpl_prediction_json "${pid}")" || exit $?
   # output is a url string, an array of urls, or an object with a url.
   url="$(printf '%s' "${body}" | jq -r '.output
     | if type=="string" then .
