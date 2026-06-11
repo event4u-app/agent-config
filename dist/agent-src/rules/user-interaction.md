@@ -42,7 +42,7 @@ SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
 Mechanical backstop:
-`python3 scripts/check_reply_consistency.py --stdin < draft.md`
+`./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
 (non-zero exit on any rule below). Self-scan is the primary gate;
 the script is the deterministic safety net.
 

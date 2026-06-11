@@ -62,8 +62,8 @@ ask:
 ```bash
 target="<path-to-AGENTS.md>"
 wc -c "$target"
-python3 scripts/lint_agents_md.py 2>&1 | grep -A1 "$target" || \
-  python3 scripts/lint_agents_md.py
+./scripts-run src/scripts/lint_agents_md 2>&1 | grep -A1 "$target" || \
+  ./scripts-run src/scripts/lint_agents_md
 ```
 
 Record: total chars, gap to FAIL/WARN cap, pointer-ratio output,
@@ -150,8 +150,8 @@ as a finding in the step-7 numbered options instead of editing here.
 ### 9. Verify before claiming done
 
 ```bash
-python3 scripts/lint_agents_md.py
-python3 scripts/check_references.py
+./scripts-run src/scripts/lint_agents_md
+./scripts-run src/scripts/check_references
 ```
 
 Both green = the refactor is finished. Surface fresh output in the

@@ -34,4 +34,4 @@ packs:
 → Size limits and details: `../docs/guidelines/agent-infra/size-and-scope.md`
 
 → Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
-`python3 scripts/validate_frontmatter.py`.
+`./scripts-run src/scripts/validate_frontmatter`.

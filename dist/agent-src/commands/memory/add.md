@@ -109,7 +109,7 @@ On confirmation:
 ### 6. Cross-link
 
 If the entry has a `references:` block pointing to a skill, rule, or
-ADR file, run `python3 scripts/check_references.py` to verify the
+ADR file, run `./scripts-run src/scripts/check_references` to verify the
 link resolves. Broken link → block and ask the user to fix.
 
 ## When to reject

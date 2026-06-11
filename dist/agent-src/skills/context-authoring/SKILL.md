@@ -116,10 +116,10 @@ has to confirm or correct, not invent from scratch.
 
 ### Step 4: Validate
 
-1. Run `python3 scripts/check_portability.py` — project-specific content is
+1. Run `./scripts-run src/scripts/check_portability` — project-specific content is
    expected here, but the check catches accidental copy of other projects'
    identifiers.
-2. Run `python3 scripts/check_references.py` — cross-file links between the
+2. Run `./scripts-run src/scripts/check_references` — cross-file links between the
    five contexts must resolve.
 3. Confirm with the user: "is this accurate enough that a reviewer should
    treat it as the source of truth?" — anything less and a `<!-- TBD -->`

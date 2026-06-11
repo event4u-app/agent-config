@@ -42,7 +42,7 @@ done | sort -rn | head -15
 ### 2. Run skill linter
 
 ```bash
-python3 scripts/skill_linter.py --pairs --duplicates .agent-src.uncondensed/skills/*/SKILL.md 2>&1 | tail -20
+./scripts-run src/scripts/skill_linter --pairs --duplicates .agent-src.uncondensed/skills/*/SKILL.md 2>&1 | tail -20
 ```
 
 Report FAIL/WARN counts. Do NOT fix linter issues here — that's the linter's or `skill-reviewer`'s job.

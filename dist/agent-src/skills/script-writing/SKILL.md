@@ -138,7 +138,7 @@ Every Taskfile task that wraps a `--quiet`-aware script MUST set
 tasks:
   lint-handoffs:
     silent: true
-    cmd: python3 scripts/lint_handoffs.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_handoffs {{.QUIET_FLAG}}
 ```
 
 The `QUIET_FLAG` var is defined once at the root of `Taskfile.yml`
@@ -156,7 +156,7 @@ do **not** add `silent: true` and do **not** use `{{.QUIET_FLAG}}`.
 
 ### 5. Validate
 
-* Run `python3 scripts/skill_linter.py .agent-src.uncondensed/skills/script-writing/SKILL.md` → 0 FAIL
+* Run `./scripts-run src/scripts/skill_linter .agent-src.uncondensed/skills/script-writing/SKILL.md` → 0 FAIL
 * Run `python3 scripts/{your-script}.py --quiet` and the verbose path — exit code 0 on clean, non-zero on failure regardless of flag
 * If the script uses `_lib/script_output`, add a test under `tests/` patterned on `tests/test_script_output.py` — assert `silent` / `minimal` / `verbose` behave per § 2
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for the script list) — must exit 0 except for tolerated warnings

@@ -66,9 +66,9 @@ disable-model-invocation: true
 **Creating a new command:**
 
 1. Create `src/agent-src/commands/{name}.md` (use template)
-2. Run `python3 src/scripts/skill_linter.py` — must be 0 FAIL
+2. Run `./scripts-run src/scripts/skill_linter` — must be 0 FAIL
 3. Condense via `/condense`, which writes to `dist/agent-src/commands/`
-4. Run `python3 src/scripts/condense.py --generate-tools` — creates Claude symlink automatically
+4. Run `./scripts-run src/scripts/condense --generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
 
@@ -92,7 +92,7 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 | Edit existing file | Edit in `src/`, condense to `dist/agent-src/` |
 | Create new `.md` | Create in `src/`, condense to `dist/agent-src/` |
 | Create new non-`.md` | Create in `src/`, run `bash src/scripts/condense.sh --sync` |
-| Create new command | Create in `src/agent-src/commands/`, sync, `python3 src/scripts/condense.py --generate-tools` |
+| Create new command | Create in `src/agent-src/commands/`, sync, `./scripts-run src/scripts/condense --generate-tools` |
 | Delete a file | Delete from `src/` and `dist/agent-src/` |
 | Check what needs condensation | `bash src/scripts/condense.sh --changed` |
 | Mark file as condensed | `bash src/scripts/condense.sh --mark-done {path}` |

@@ -154,7 +154,7 @@ Before scoring the 5 Killers, verify structure:
 - Gotchas
 - Do NOT
 
-**Linter:** Run `python3 scripts/skill_linter.py` on any skill after review — must be 0 FAIL.
+**Linter:** Run `./scripts-run src/scripts/skill_linter` on any skill after review — must be 0 FAIL.
 
 **Rules** — must be:
 - Short and directive
