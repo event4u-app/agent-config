@@ -26,13 +26,13 @@ The package is a hybrid Python + TypeScript system; the user wants a single-lang
 
 ### Execution model (locked)
 
-Sequential gated phasing **across** phases, subagent fan-out **within** a phase. A phase starts only when the previous phase's exit criteria are green on the integration branch. Within a phase, an orchestrator session splits the cluster into dependency-free batches (~5–15 scripts each) and dispatches them to parallel porting subagents; each batch lands as one PR. State tracking is the roadmap checkbox layer + the migration dashboard (Phase 1); rollback is `git revert` of the porting PR — the dispatcher then resolves the restored `.py` again. No separate control plane.
+Sequential gated phasing **across** phases, subagent fan-out **within** a phase. A phase starts only when (a) the previous phase's exit criteria are green on the integration branch AND (b) the **phase-entry sync ritual** has run: merge `origin/main` into `python2ts`, resolve conflicts there (never in port branches), and verify the sync lag is 0 before the first batch branches off. Within a phase, an orchestrator session splits the cluster into dependency-free batches (~5–15 scripts each) and dispatches them to parallel porting subagents; each batch lands as one PR. State tracking is the roadmap checkbox layer + the migration dashboard (Phase 1); rollback is `git revert` of the porting PR — the dispatcher then resolves the restored `.py` again. No separate control plane.
 
 ### Branch strategy (user-mandated, locked)
 
 - **Integration branch `python2ts`** is the working trunk of this migration. It is cut from `main` in Phase 1 and lives until the migration is complete.
 - **Every migration PR targets `python2ts` — never `main`.** No migration commit, port, infra change, or teardown step goes directly against `main`. CI (migration gates + full pipeline) runs on PRs targeting `python2ts`.
-- **`main` stays the consumer-facing trunk** and keeps receiving normal (non-migration) work throughout. A scheduled sync merges `main → python2ts` (see Phase 1) so the migration continuously absorbs mainline changes instead of diverging toward a big-bang conflict.
+- **`main` stays the consumer-facing trunk** and keeps receiving normal (non-migration) work throughout. A scheduled sync merges `main → python2ts` (see Phase 1) so the migration continuously absorbs mainline changes instead of diverging toward a big-bang conflict. On top of the scheduled cadence, the **phase-entry sync ritual is mandatory**: before any new phase opens, the orchestrator merges `origin/main` into `python2ts` and only then cuts the phase's batch branches. Long-running phases re-check the sync lag (dashboard column) between batches and pull a sync forward when `main` moved materially (touched files overlap the phase's cluster).
 - **The final `python2ts → main` integration merge is a delivery decision owned by the user** — it is intentionally not a roadmap step (Hard Floor: production-trunk merge, explicit per-turn confirmation).
 
 ### Subagent orchestration
