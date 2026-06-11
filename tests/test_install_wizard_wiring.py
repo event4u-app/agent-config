@@ -451,5 +451,108 @@ class WizardZeroTerminalContractTests(unittest.TestCase):
         self.assertEqual(spawned, [True], "global handoff must end in _wizard_spawn (browser)")
 
 
+class WizardMigrateNoPythonPathRegressionTests(unittest.TestCase):
+    """Regression for the browser-wizard "Finish writes nothing" bug.
+
+    The wizard server spawns ``python3 install.py --apply-payload`` with NO
+    PYTHONPATH (src/server/routes/wizard.ts), so ``sys.path[0]`` is only
+    ``src/scripts``. When the consumer project already has a legacy tool dir
+    (``.claude`` / ``.augment`` / ``.cursor`` — every Claude Code user has
+    ``.claude``), the global-scope apply triggers the migrate-to-global step,
+    which imported the package-qualified ``scripts._cli.cmd_migrate``. Without
+    PYTHONPATH that raised ImportError → ``warn("migrate unavailable")`` →
+    ``return 1`` → ``install_global`` never ran → an empty install tree.
+
+    These two tests pin the spawn-environment contract: stripping PYTHONPATH
+    AND seeding a legacy ``.claude`` dir must still produce a populated global
+    tree (exit 0, ``installed.lock`` written). Pre-fix both fail.
+    """
+
+    def _run_no_pythonpath(self, args, home: Path, proj: Path):
+        # Replicate the wizard server's spawn: clean env, NO PYTHONPATH, and
+        # run from the script's own dir so sys.path[0] == src/scripts (exactly
+        # what `python3 <abs>/install.py` gives). DEV_MODE / CONSUMER flags are
+        # stripped so legacy detection is not auto-skipped.
+        env = os.environ.copy()
+        env["HOME"] = str(home)
+        env["EVENT4U_CONFIG_HOME"] = str(home / ".event4u-global")
+        env["AGENT_CONFIG_NO_UPDATE_CHECK"] = "1"
+        for key in ("PYTHONPATH", "CI", "AGENT_CONFIG_NO_UI", "AGENT_CONFIG_DEV_MODE"):
+            env.pop(key, None)
+        return subprocess.run(  # noqa: S603 - args are locally-built
+            [sys.executable, str(REPO_ROOT / "src" / "scripts" / "install.py"), *args],
+            capture_output=True, text=True, env=env, cwd=str(proj),
+            stdin=subprocess.DEVNULL, timeout=120,
+        )
+
+    def _write_payload(self, proj: Path) -> Path:
+        payload = proj / "payload.json"
+        payload.write_text(
+            '{"schema_version":"wizard-v2","tools":["claude-code"],"packs":[],'
+            '"settings":{"rule_loading_tier":"minimal"},'
+            '"scope_to_project_only":false,"dry_run":false}',
+            encoding="utf-8",
+        )
+        return payload
+
+    def test_apply_with_legacy_claude_dir_and_no_pythonpath_installs(self):
+        with tempfile.TemporaryDirectory() as home, \
+             tempfile.TemporaryDirectory() as proj:
+            proj_path = Path(proj)
+            # The legacy tool dir that trips migrate-to-global. Every Claude
+            # Code user has this — it is the exact field-report scenario.
+            (proj_path / ".claude").mkdir()
+            payload = self._write_payload(proj_path)
+
+            res = self._run_no_pythonpath(
+                ["--apply-payload", str(payload), "--project", proj],
+                Path(home), proj_path,
+            )
+
+            self.assertEqual(
+                res.returncode, 0,
+                msg=f"apply aborted (the bug):\nstdout={res.stdout}\nstderr={res.stderr}",
+            )
+            self.assertNotIn("migrate unavailable", res.stderr)
+            self.assertNotIn("migrate unavailable", res.stdout)
+            # The global tree must actually be populated, not empty.
+            global_root = Path(home) / ".event4u-global"
+            lock = global_root / "installed.lock"
+            self.assertTrue(
+                lock.is_file(),
+                msg=f"global install produced no installed.lock — nothing created. "
+                    f"stdout={res.stdout}",
+            )
+
+    def test_apply_emits_done_frame_without_pythonpath(self):
+        with tempfile.TemporaryDirectory() as home, \
+             tempfile.TemporaryDirectory() as proj:
+            proj_path = Path(proj)
+            (proj_path / ".claude").mkdir()
+            payload = self._write_payload(proj_path)
+
+            res = self._run_no_pythonpath(
+                ["--apply-payload", str(payload), "--project", proj],
+                Path(home), proj_path,
+            )
+            self.assertEqual(res.returncode, 0, msg=res.stderr)
+            # Mirror streamInstaller in wizard.ts: keep only JSON-parseable
+            # lines (the migrate step may emit a human line onto stdout, which
+            # the SSE bridge drops rather than corrupt the frame stream).
+            frames = []
+            for line in res.stdout.splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    frames.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+            self.assertTrue(frames, msg=f"no NDJSON frames on stdout: {res.stdout!r}")
+            self.assertEqual(
+                frames[-1].get("type"), "done",
+                msg=f"apply did not reach the terminal 'done' frame: {frames}",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
