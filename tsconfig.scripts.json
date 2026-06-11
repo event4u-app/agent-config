@@ -8,7 +8,8 @@
     "src/scripts/**/*.ts",
     "tests/scripts/**/*.ts",
     "tests/parity/**/*.ts",
-    "tests/spikes/**/*.ts"
+    "tests/spikes/**/*.ts",
+    "tests/lib/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

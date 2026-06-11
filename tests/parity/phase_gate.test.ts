@@ -26,14 +26,28 @@ function phase(
 }
 
 describe('parseManifest', () => {
-    it('parses the checked-in manifest (phases 2-12, all pending)', () => {
+    it('parses the checked-in manifest (phases 2-12, valid statuses, gate passes)', () => {
         const raw = readFileSync(
             resolve(REPO_ROOT, 'src/scripts/parity/phase-manifest.json'),
             'utf-8',
         );
         const phases = parseManifest(raw);
         expect(phases.map((p) => p.phase)).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-        expect(phases.every((p) => p.status === 'pending')).toBe(true);
+        // Statuses are orchestrator-owned live state — assert validity, not a
+        // snapshot (a "all pending" pin broke the moment phase 2 opened).
+        const valid = new Set(['pending', 'in-progress', 'complete']);
+        expect(phases.every((p) => valid.has(p.status))).toBe(true);
+        // The checked-in manifest must always satisfy its own sequencing rule
+        // (no later phase started while an earlier one is still pending).
+        const firstPending = phases.findIndex((p) => p.status === 'pending');
+        const started = phases.filter((p) => p.status !== 'pending').map((p) => p.phase);
+        if (firstPending !== -1) {
+            const pendingPhase = phases[firstPending];
+            expect(pendingPhase).toBeDefined();
+            if (pendingPhase !== undefined) {
+                expect(started.every((n) => n < pendingPhase.phase)).toBe(true);
+            }
+        }
         // installer category gates both phase 3 and phase 11.
         const installerPhases = phases.filter((p) => p.categories.includes('installer'));
         expect(installerPhases.map((p) => p.phase)).toEqual([3, 11]);
