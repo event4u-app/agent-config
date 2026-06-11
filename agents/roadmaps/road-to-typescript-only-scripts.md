@@ -74,10 +74,10 @@ Council verdict: this phase is mandatory before any script is ported; the YAML s
 
 Everything downstream imports these; they port first.
 
-- [ ] **Step 1:** Port pytest suites for `_lib/` to vitest 1:1 (mechanical translation only: `parametrize` → `test.each`, `monkeypatch` → `vi.mock`, fixtures → `beforeEach`); run them against the Python originals via subprocess where applicable to baseline.
-- [ ] **Step 2:** Port `_lib/agent_settings.py` (840 LOC — settings schema, enumerate_modules, YAML I/O) with golden parity on real settings fixtures; reuse/align with any existing settings logic in `src/server`/`src/cli` instead of duplicating.
-- [ ] **Step 3:** Port the remaining `_lib/` modules in dependency order (YAML/JSON/schema/caching utils, `agent_src.py`, `value_ladder.py`, `value_report.py`), deleting each `.py` in the same PR after vitest + golden parity are green.
-- [ ] **Step 4:** Run the coverage-diff gate for the cluster and update the migration dashboard.
+- [x] **Step 1:** Port pytest suites for `_lib/` to vitest 1:1 (mechanical translation only: `parametrize` → `test.each`, `monkeypatch` → `vi.mock`, fixtures → `beforeEach`); run them against the Python originals via subprocess where applicable to baseline.
+- [x] **Step 2:** Port `_lib/agent_settings.py` (840 LOC — settings schema, enumerate_modules, YAML I/O) with golden parity on real settings fixtures; reuse/align with any existing settings logic in `src/server`/`src/cli` instead of duplicating.
+- [x] **Step 3:** Port the remaining `_lib/` modules in dependency order (wave-1 leaf utils, then agent_src, value_ladder/value_report, the install + bench clusters, finally agent_settings-dependent script_output + agents_overlay). Per the cross-language-import contract the `.py` originals are NOT deleted here — they stay while Python importers exist; deletion is the Phase 12 final sweep. Each module landed beside its original with a vitest 1:1 port + differential golden parity against the live Python module.
+- [x] **Step 4:** Run the coverage-diff gate for the cluster and update the migration dashboard.
 
 **Exit criteria:** every `_lib` module has a TS twin with vitest suite green and golden parity proven; vitest coverage ≥ pytest baseline; full CI green. The Python `_lib` originals stay in place while Python importers exist (per the note below) — their deletion is tracked by the dashboard and completes with the last importing cluster (final sweep in Phase 12), so the phase gate for libs counts TS-twin coverage, not `.py` deletion.
 **Rollback:** revert per-batch PRs; dispatcher restores Python resolution.

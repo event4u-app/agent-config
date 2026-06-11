@@ -9,10 +9,18 @@ linters, so a blanket rewrite is a loaded gun, and historical ADRs are correct
 as written. This guard stops the debt from *growing*: it fails when a diff
 **adds** a new `.agent-src.uncondensed/` line under `src/`.
 
-Three `src/` files legitimately contain the literal forever and are exempt:
+Files that legitimately contain the literal forever are exempt:
   - src/scripts/_lib/agent_src.py        (the LEGACY_SRC constant)
   - src/scripts/check_references.py       (forbidden-substring detector)
   - src/scripts/check_condensed_paths.py  (forbidden-substring detector)
+
+Faithful-twin rule (Python→TypeScript migration): a `*.ts` file is also
+exempt when a same-stem `*.py` sibling exists AND already contains the
+literal. A TS twin that faithfully mirrors a pre-existing legacy
+reference (e.g. agent_src.ts, install_regenerator.ts) is not a NEW
+dead-path — the reference already lived in the ported `.py`. This
+cannot mask a genuinely new dead-path: a fresh one introduced only in
+a `.ts` has no `.py` sibling already carrying it.
 
 Diff-based: compares added lines against a base ref (default `origin/main`).
 On a clean checkout with no diff, it is a no-op (exit 0).
@@ -34,6 +42,22 @@ EXEMPT = {
 }
 
 
+def _is_faithful_twin(cur_file: str) -> bool:
+    """True when `cur_file` is a `*.ts` whose same-stem `*.py` sibling exists
+    and already contains the legacy literal — a faithful TS port of a
+    pre-existing legacy reference, not a new dead-path. Reads from disk
+    relative to cwd (CI runs the guard at the repo root); injectable in tests
+    via the `twin_check` param of `find_offenders`."""
+    if not cur_file.endswith(".ts"):
+        return False
+    sibling = cur_file[:-3] + ".py"
+    try:
+        with open(sibling, encoding="utf-8") as fh:
+            return LEGACY in fh.read()
+    except OSError:
+        return False
+
+
 def _base() -> str:
     for i, a in enumerate(sys.argv):
         if a == "--base" and i + 1 < len(sys.argv):
@@ -41,9 +65,10 @@ def _base() -> str:
     return "origin/main"
 
 
-def find_offenders(diff_text: str) -> list[str]:
+def find_offenders(diff_text: str, twin_check=_is_faithful_twin) -> list[str]:
     """Added (`+`) lines under a non-exempt src/ file that introduce the legacy
-    path. Pure function over a unified-diff string — unit-testable."""
+    path. Pure over the diff string except for the faithful-twin sibling check
+    (`twin_check`, injectable for unit tests)."""
     cur_file = None
     offenders: list[str] = []
     for line in diff_text.splitlines():
@@ -52,9 +77,11 @@ def find_offenders(diff_text: str) -> list[str]:
             continue
         if line.startswith("+") and not line.startswith("+++"):
             # src/-scoped: a full diff (e.g. `gh pr diff`) carries every path;
-            # only added lines under src/ (minus the exempt detectors) count.
+            # only added lines under src/ (minus the exempt detectors and
+            # faithful TS twins) count.
             if (cur_file and cur_file.startswith("src/")
-                    and cur_file not in EXEMPT and LEGACY in line):
+                    and cur_file not in EXEMPT and LEGACY in line
+                    and not twin_check(cur_file)):
                 offenders.append(f"{cur_file}: {line[1:].strip()[:100]}")
     return offenders
 
