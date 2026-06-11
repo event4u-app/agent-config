@@ -45,10 +45,16 @@ both registries are queryable read-only with **no API key** — official
 `GET glama.ai/api/mcp/v1/servers?first=&after=` (200; resolves ADR-086's open
 "does Glama need a key?" question — it does not).
 
-**Follow-up recommendations (not actioned by the closing roadmap — net-new / external
-scope):** contribute Augment support to `smithery-ai/cli` (`VALID_CLIENTS`); optionally
-ship a registry coverage-matrix doc (official / Glama / Smithery) to capture the
-registry-agnostic value cheaply.
+**Follow-up — resolved 2026-06-11 (AI council, claude-sonnet-4-5 + gpt-4o, design
+mode; split → tie-break → converged C-only):** the surviving value is captured as a
+reference doc, [`docs/mcp-registries.md`](../mcp-registries.md) — the three-registry
+comparison plus a per-agent install path (Smithery covers 5/6; Augment via manual
+Import-from-JSON). An automated **Smithery → Augment** contribution is **deferred, not
+filed**: Augment's writable surface is undocumented/nested and there is no demand
+signal, so a PR or issue would externalise risk for zero proven benefit. Reopen only
+if all three hold: ≥ 3 independent user requests, Augment documents its `settings.json`
+MCP schema as stable, and the Smithery maintainers pre-approve the approach (mirrored
+in the doc footer).
 
 **Reopen criteria:** 5+ demand responses citing a concrete need Smithery cannot serve,
 OR Smithery registry-locks / declines Augment support / shuts down. Any reopen is a new

@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: image:create
+name: image-create
 pack: ai-video
 tier: 2
 cluster: image

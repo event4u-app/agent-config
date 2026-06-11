@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: challenge-me:with-docs
+name: challenge-me-with-docs
 pack: meta
 tier: 2
 cluster: challenge-me

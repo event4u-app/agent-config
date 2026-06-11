@@ -3,9 +3,20 @@ name: Skill Lint
 on:
   pull_request:
     paths:
+      # Legacy source roots (pre-6.0 layout, packages/*/ trees).
       - ".agent-src.uncondensed/**"
       - ".augment/**"
+      # 6.0.x flat-library source of truth + its condensed projection —
+      # without these a content-only PR (src/skills, src/rules, …) never
+      # triggered the lint gate or the regression report at all.
+      - "src/skills/**"
+      - "src/rules/**"
+      - "src/agent-src/**"
+      - "src/domains/**"
+      - "dist/agent-src/**"
+      - "docs/guidelines/**"
       - "src/scripts/skill_linter.py"
+      - "src/scripts/lint_regression.py"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -16,7 +27,14 @@ on:
     paths:
       - ".agent-src.uncondensed/**"
       - ".augment/**"
+      - "src/skills/**"
+      - "src/rules/**"
+      - "src/agent-src/**"
+      - "src/domains/**"
+      - "dist/agent-src/**"
+      - "docs/guidelines/**"
       - "src/scripts/skill_linter.py"
+      - "src/scripts/lint_regression.py"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"

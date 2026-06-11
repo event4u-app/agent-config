@@ -15,147 +15,147 @@ Artefacts that maintain this package (agent-config itself).
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
 - **`agents`** — Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules).
-- **`agents:audit`** — Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.
-- **`agents:init`** — Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.
-- **`agents:optimize`** — Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.
-- **`agents:user`** — User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed.
-- **`agents:user-accept`** — Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
-- **`agents:user-init`** — Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
-- **`agents:user-review`** — List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
-- **`agents:user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
-- **`agents:user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
+- **`agents-audit`** — Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.
+- **`agents-init`** — Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.
+- **`agents-optimize`** — Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.
+- **`agents-user`** — User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed.
+- **`agents-user-accept`** — Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
+- **`agents-user-init`** — Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
+- **`agents-user-review`** — List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
+- **`agents-user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
+- **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
 - **`analytics`** — Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
-- **`analytics:prune`** — Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
-- **`analytics:show`** — Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
+- **`analytics-prune`** — Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
+- **`analytics-show`** — Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 - **`challenge-me`** — Challenge-me orchestrator — routes to vision, with-docs
-- **`challenge-me:vision`** — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff.
-- **`challenge-me:with-docs`** — Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch.
+- **`challenge-me-vision`** — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff.
+- **`challenge-me-with-docs`** — Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch.
 - **`chat-history`** — Chat-history orchestrator — routes to show, import, learn
-- **`chat-history:import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
-- **`chat-history:learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
-- **`chat-history:show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
+- **`chat-history-import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
+- **`chat-history-learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
+- **`chat-history-show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
 - **`check-current-md`** — Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
 - **`condense`** — Condense .md files from src/ into telegraph format and write to dist/agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
-- **`context:create`** — Analyze a codebase area and create a structured context document
-- **`context:refactor`** — Analyze, update, and extend an existing context document
+- **`context-create`** — Analyze a codebase area and create a structured context document
+- **`context-refactor`** — Analyze, update, and extend an existing context document
 - **`cost-report`** — Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions.
 - **`council`** — Council orchestrator — routes to default, pr, design, optimize, analysis, debate
-- **`council:analysis`** — Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness.
-- **`council:debate`** — Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds.
-- **`council:default`** — Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare.
-- **`council:design`** — Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
-- **`council:optimize`** — Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
-- **`council:pr`** — Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
+- **`council-analysis`** — Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness.
+- **`council-debate`** — Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds.
+- **`council-default`** — Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare.
+- **`council-design`** — Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
+- **`council-optimize`** — Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
+- **`council-pr`** — Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
 - **`e2e-heal`** — Find, debug, and fix failing Playwright E2E tests
 - **`e2e-plan`** — Explore the application and create a structured E2E test plan in Markdown
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
 - **`feature`** — Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
-- **`feature:dev`** — Full 7-phase feature development workflow for complex features.
-- **`feature:explore`** — Brainstorm and explore a feature idea before committing to a full plan
-- **`feature:plan`** — Interactively plan a feature — research, discuss, and create a structured feature document
-- **`feature:refactor`** — Refine and update an existing feature plan through interactive discussion
-- **`feature:roadmap`** — Generate implementation roadmap(s) from a feature plan and link them
+- **`feature-dev`** — Full 7-phase feature development workflow for complex features.
+- **`feature-explore`** — Brainstorm and explore a feature idea before committing to a full plan
+- **`feature-plan`** — Interactively plan a feature — research, discuss, and create a structured feature document
+- **`feature-refactor`** — Refine and update an existing feature plan through interactive discussion
+- **`feature-roadmap`** — Generate implementation roadmap(s) from a feature plan and link them
 - **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments
-- **`fix:ci`** — Fetch CI errors from GitHub Actions and fix them
-- **`fix:portability`** — Find and fix project-specific references in shared .augment/ package files
-- **`fix:pr-bot-comments`** — Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
-- **`fix:pr-comments`** — Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
-- **`fix:pr-developer-comments`** — Fix and reply to human reviewer comments on a GitHub PR
-- **`fix:refs`** — Find and fix broken cross-references in .augment/ and agents/ files
-- **`fix:seeder`** — Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
+- **`fix-ci`** — Fetch CI errors from GitHub Actions and fix them
+- **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
+- **`fix-pr-bot-comments`** — Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
+- **`fix-pr-comments`** — Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
+- **`fix-pr-developer-comments`** — Fix and reply to human reviewer comments on a GitHub PR
+- **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files
+- **`fix-seeder`** — Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 - **`ghostwriter`** — Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).
-- **`ghostwriter:delete`** — Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
-- **`ghostwriter:fetch`** — Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
-- **`ghostwriter:list`** — List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
-- **`ghostwriter:show`** — Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only.
-- **`ghostwriter:write`** — Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
+- **`ghostwriter-delete`** — Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
+- **`ghostwriter-fetch`** — Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
+- **`ghostwriter-list`** — List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
+- **`ghostwriter-show`** — Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only.
+- **`ghostwriter-write`** — Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
 - **`grill-me`** — Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 - **`image`** — Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.
-- **`image:analyse`** — Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
-- **`image:create`** — Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
-- **`image:verify`** — Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
+- **`image-analyse`** — Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
+- **`image-create`** — Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
+- **`image-verify`** — Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
 - **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 - **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
-- **`judge:on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
-- **`judge:solo`** — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
-- **`judge:steps`** — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
+- **`judge-on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
+- **`judge-solo`** — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
+- **`judge-steps`** — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
 - **`knowledge`** — Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace.
-- **`knowledge:cross-repo`** — Targeted, read-only retrieval over opted-in linked-project siblings (ADR-032 Option A). Pulls a shared type / API contract / config without bulk-including sibling files.
-- **`knowledge:forget`** — Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
-- **`knowledge:ingest`** — Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
-- **`knowledge:list`** — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
+- **`knowledge-cross-repo`** — Targeted, read-only retrieval over opted-in linked-project siblings (ADR-032 Option A). Pulls a shared type / API contract / config without bulk-including sibling files.
+- **`knowledge-forget`** — Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
+- **`knowledge-ingest`** — Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
+- **`knowledge-list`** — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
 - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
-- **`memory:add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
-- **`memory:learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
-- **`memory:load`** — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
-- **`memory:mine-session`** — Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.
-- **`memory:promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
-- **`memory:propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
+- **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
+- **`memory-learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
+- **`memory-load`** — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
+- **`memory-mine-session`** — Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.
+- **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
+- **`memory-propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
 - **`mode`** — Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts)
 - **`module`** — Module orchestrator — routes to create, explore
-- **`module:create`** — Create a new module from .module-template with interactive setup
-- **`module:explore`** — Explore a module — load its structure, docs, and context into the current conversation
+- **`module-create`** — Create a new module from .module-template with interactive setup
+- **`module-explore`** — Explore a module — load its structure, docs, and context into the current conversation
 - **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
+- **`optimize-agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
+- **`optimize-augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
 - **`optimize-prompt`** — Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt.
-- **`optimize:agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
-- **`optimize:augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
-- **`optimize:rtk`** — Create or optimize project-local rtk filters based on the actual toolchain
-- **`optimize:skills`** — Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
+- **`optimize-rtk`** — Create or optimize project-local rtk filters based on the actual toolchain
+- **`optimize-skills`** — Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
 - **`orchestrate`** — Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract
 - **`override`** — Override orchestrator — routes to create, manage
-- **`override:create`** — Creates a project-level override for a shared skill, rule, or command.
-- **`override:manage`** — Reviews, updates, and refactors existing project-level overrides.
+- **`override-create`** — Creates a project-level override for a shared skill, rule, or command.
+- **`override-manage`** — Reviews, updates, and refactors existing project-level overrides.
 - **`package-reset`** — /package-reset
 - **`package-test`** — /package-test
 - **`post-as`** — Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer).
-- **`post-as:ghostwriter`** — Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer.
-- **`post-as:me`** — Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
+- **`post-as-ghostwriter`** — Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer.
+- **`post-as-me`** — Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
 - **`prepare-for-review`** — Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date
 - **`profile`** — Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence)
-- **`profile:activate`** — Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence
-- **`profile:deactivate`** — Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns
-- **`profile:show`** — Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface)
+- **`profile-activate`** — Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence
+- **`profile-deactivate`** — Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns
+- **`profile-show`** — Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface)
 - **`project-analyze`** — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 - **`project-health`** — Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 - **`quality-fix`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - **`refine-ticket`** — Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt
 - **`research`** — Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans.
-- **`research:deep`** — Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths.
-- **`research:report`** — Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime.
+- **`research-deep`** — Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths.
+- **`research-report`** — Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime.
 - **`review-changes`** — Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 - **`review-routing`** — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 - **`roadmap`** — Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
-- **`roadmap:ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
-- **`roadmap:create`** — Interactively create a new roadmap file in agents/roadmaps/
-- **`roadmap:process-full`** — Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-- **`roadmap:process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
-- **`roadmap:process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
+- **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
+- **`roadmap-create`** — Interactively create a new roadmap file in agents/roadmaps/
+- **`roadmap-process-full`** — Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
+- **`roadmap-process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
+- **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 - **`set-cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`skill`** — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
-- **`skill:preview`** — Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.
+- **`skill-preview`** — Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.
 - **`skills`** — Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.
-- **`skills:discover`** — Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.
+- **`skills-discover`** — Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
-- **`sync-gitignore:fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
+- **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 - **`tests`** — Tests orchestrator — routes to create, execute
-- **`tests:create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
-- **`tests:execute`** — Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
+- **`tests-create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
+- **`tests-execute`** — Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`threat-model`** — Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 - **`update-form-request-messages`** — Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones.
 - **`upstream-contribute`** — Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
 - **`video`** — Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch.
-- **`video:from-script`** — Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
-- **`video:from-song`** — Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
-- **`video:scene`** — Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
-- **`video:stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
-- **`video:storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
+- **`video-from-script`** — Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.
+- **`video-from-song`** — Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.
+- **`video-scene`** — Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.
+- **`video-stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
+- **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
 ## Rules (59)

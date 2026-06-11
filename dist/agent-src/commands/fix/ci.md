@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: fix:ci
+name: fix-ci
 pack: engineering-base
 tier: 2
 cluster: fix

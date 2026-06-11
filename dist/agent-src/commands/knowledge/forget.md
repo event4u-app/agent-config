@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: knowledge:forget
+name: knowledge-forget
 pack: product-discovery
 tier: 2
 cluster: knowledge

@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: analytics:show
+name: analytics-show
 pack: meta
 tier: 2
 cluster: analytics

@@ -2549,6 +2549,15 @@ def _load_installed_lock_module():
     return installed_lock
 
 
+def _inventory_mod():
+    """Lazy-import ``scripts._lib.global_deploy_inventory`` (stale reaping)."""
+    pkg_root = str(Path(__file__).resolve().parents[1])
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+    from scripts._lib import global_deploy_inventory  # noqa: WPS433 — lazy by design
+    return global_deploy_inventory
+
+
 def _load_installed_tools_module():
     """Lazy-import ``scripts._lib.installed_tools`` (ADR-008 manifest)."""
     pkg_root = str(Path(__file__).resolve().parents[1])
@@ -3370,6 +3379,7 @@ def _deploy_global_content(
         written_total = 0
         skipped_total = 0
         written_paths: list[Path] = []
+        current_files: set[str] = set()
         for src_rel, dest_sub in plan:
             src = package_root / src_rel
             dest = anchor / dest_sub if dest_sub else anchor
@@ -3379,6 +3389,9 @@ def _deploy_global_content(
             written_total += w
             skipped_total += s
             written_paths.extend(paths)
+            current_files |= _inventory_mod().expected_deploy_files(
+                src, Path(dest_sub) if dest_sub else Path(""),
+            )
         # Phase 5 (road-to-claude-code-global-distribution): postcheck.
         # Every entry in the deploy plan must end with the destination
         # subpath populated — directory exists AND is non-empty. A
@@ -3402,6 +3415,28 @@ def _deploy_global_content(
             )
             continue
         _emit_progress({"type": "verified", "tool": tool_id})
+        # Stale reaping (2026-06 Zed fix follow-up): delete files a PREVIOUS
+        # deploy recorded under this anchor that the current bundle no longer
+        # ships (renamed/removed skills, pre-fix colon-named command entries).
+        # Inventory-proven ownership only — user-authored files in shared
+        # anchors (e.g. own Zed skills in ~/.agents/skills/) are never touched.
+        # Runs only after the postcheck verified the deploy is complete, so a
+        # partial copy can never trigger deletions.
+        inv_mod = _inventory_mod()
+        inventory = inv_mod.load_inventory()
+        reaped = inv_mod.reap_stale(tool_id, anchor, current_files, inventory)
+        # Record the UNexpanded anchor (`~/.agents/`) so the inventory stays
+        # byte-identical across homes (GUI/CLI parity) and home relocations.
+        inv_mod.record_deploy(tool_id, anchor_raw, current_files, inventory)
+        inv_mod.save_inventory(inventory)
+        if reaped and not QUIET:
+            info(
+                f"  {tool_id}: reaped {len(reaped)} stale deployed file(s) "
+                f"from a previous install"
+            )
+        _emit_progress({
+            "type": "reaped", "tool": tool_id, "count": len(reaped),
+        })
         results[tool_id] = (written_total, skipped_total, "deployed", written_paths)
     return results
 

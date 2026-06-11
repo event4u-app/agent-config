@@ -94,7 +94,22 @@ def test_to_mcp_prompt_meta_shape_for_skill() -> None:
 
 
 def test_to_mcp_prompt_meta_shape_for_command() -> None:
-    """Command names use `:` in frontmatter; wire form converts to `.`."""
+    """Command names are hyphen slugs (2026-06 Zed fix); wire prefixes `command.`."""
+    prompt = SkillPrompt(
+        name="research-report",
+        description="desc",
+        body="body",
+        source="package",
+        kind="command",
+    )
+    meta = to_mcp_prompt_meta(prompt)
+    assert meta["name"] == "command.research-report"
+    assert meta["title"] == "research-report"
+    assert meta["_meta"] == {"source": "package", "kind": "command"}
+
+
+def test_to_mcp_prompt_meta_tolerates_legacy_colon_names() -> None:
+    """Stale colon-named trees (pre-Zed-fix installs) still map `:` → `.`."""
     prompt = SkillPrompt(
         name="research:report",
         description="desc",
@@ -104,8 +119,6 @@ def test_to_mcp_prompt_meta_shape_for_command() -> None:
     )
     meta = to_mcp_prompt_meta(prompt)
     assert meta["name"] == "command.research.report"
-    assert meta["title"] == "research:report"
-    assert meta["_meta"] == {"source": "package", "kind": "command"}
 
 
 # ----------------------------------------------------------------------
@@ -128,8 +141,10 @@ def test_scan_commands_finds_nested_commands() -> None:
     assert errors == [], f"unexpected loader errors: {errors}"
     assert len(prompts) > 50, "expected >50 commands under dist/agent-src/commands/"
     names = {p.name for p in prompts}
-    # Nested commands keep the `cluster:sub` shape from frontmatter.
-    assert any(":" in n for n in names), "expected at least one nested command"
+    # Nested commands carry the hyphen slug of their `cluster/sub` path
+    # (2026-06 Zed fix — colon names are forbidden by command.schema.json).
+    assert "fix-ci" in names, "expected the nested fix/ci.md command as `fix-ci`"
+    assert not any(":" in n for n in names), "colon command names must not reappear"
     for prompt in prompts:
         assert prompt.kind == "command"
 

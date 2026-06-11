@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: image:analyse
+name: image-analyse
 pack: ai-video
 tier: 2
 cluster: image

@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: feature:dev
+name: feature-dev
 pack: engineering-base
 tier: 2
 cluster: feature

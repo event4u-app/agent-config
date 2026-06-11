@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: agents:user-accept
+name: agents-user-accept
 pack: meta
 tier: 2
 cluster: agents

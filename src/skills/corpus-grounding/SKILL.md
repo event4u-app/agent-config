@@ -78,10 +78,10 @@ python3 <skills-root>/corpus-grounding/scripts/ground.py validate --manifest …
 `<skills-root>` is wherever skills are deployed (`~/.claude/skills/` for
 Claude Code installs; `src/skills/` inside this repo).
 
-## Output format — interface contract v1 (stability promise)
+## Output format
 
-Per ADR-061 §2 ("Opus condition"), this interface is **versioned**; domains
-may depend on it. Breaking any item below requires a major bump
+**Interface contract v1 — stability promise.** Per ADR-061 §2 ("Opus
+condition"), this interface is **versioned**; domains may depend on it. Breaking any item below requires a major bump
 (`manifest_version: 2`), a migration note here, and updates to every
 consuming skill in the same PR. Additive fields are allowed anytime.
 

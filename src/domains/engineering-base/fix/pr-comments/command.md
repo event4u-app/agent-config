@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: fix:pr-comments
+name: fix-pr-comments
 pack: engineering-base
 tier: 2
 cluster: fix

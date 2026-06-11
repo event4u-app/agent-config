@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: council:optimize
+name: council-optimize
 pack: meta
 tier: 2
 cluster: council

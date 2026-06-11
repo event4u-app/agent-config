@@ -4,7 +4,7 @@ name: agents
 disable-model-invocation: true
 pack: meta
 intent: "Manage the AGENTS.md file family — init, optimize, audit, user persona"
-routes_to: [agents:init, agents:optimize, agents:audit, agents:user]
+routes_to: [agents-init, agents-optimize, agents-audit, agents-user]
 replaces: []
 tier: 1
 description: Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules).

@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: video:from-script
+name: video-from-script
 pack: ai-video
 tier: 2
 cluster: video

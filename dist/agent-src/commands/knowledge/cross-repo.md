@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: knowledge:cross-repo
+name: knowledge-cross-repo
 pack: product-discovery
 tier: 2
 cluster: knowledge

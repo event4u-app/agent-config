@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: feature:roadmap
+name: feature-roadmap
 pack: engineering-base
 tier: 2
 cluster: feature

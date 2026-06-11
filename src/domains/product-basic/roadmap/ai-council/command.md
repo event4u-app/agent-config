@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: roadmap:ai-council
+name: roadmap-ai-council
 pack: product-basic
 tier: 2
 cluster: roadmap

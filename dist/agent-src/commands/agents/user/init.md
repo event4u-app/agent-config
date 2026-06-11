@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: agents:user-init
+name: agents-user-init
 pack: meta
 tier: 2
 cluster: agents
@@ -20,7 +20,7 @@ packs:
 
 Short interactive interview that creates **`.agent-user.md`** at the
 project root from the locked v1 schema in
-[`docs/contracts/agent-user-schema.md`](../../../../../../../../../docs/contracts/agent-user-schema.md).
+[`docs/contracts/agent-user-schema.md`](../../../../../../../../../../docs/contracts/agent-user-schema.md).
 
 Use when:
 
@@ -97,7 +97,7 @@ Before writing, scan the collected `voice_sample` and `role` for:
 - Health/legal status keywords.
 
 Hit → surface the line and ask the user to redact before proceeding.
-Per [`agent-user-schema § Explicit exclusions`](../../../../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+Per [`agent-user-schema § Explicit exclusions`](../../../../../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 
 ### 5. Render and write
 
@@ -159,5 +159,5 @@ Do NOT commit. Do NOT run any other `/agents user` sub-sub-command.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../../../../../docs/contracts/agent-user-schema.md).
+- Schema: [`agent-user-schema`](../../../../../../../../../../docs/contracts/agent-user-schema.md).
 - Parent: [`/agents user`](../user.md).
