@@ -90,8 +90,8 @@ Council verdict: redesign natively in TS (venv logic becomes obsolete), but conf
 
 - [ ] **Step 1:** Extract `install.py` behavior into a spec: enumerate generated files/configs, prompts, OS branches, scopes, error paths; capture a golden corpus of installer outputs (config files, directory trees) across representative scenarios using the existing pytest installer/e2e fixtures (`tests/fixtures/installer-e2e/`, ADR-087).
 - [ ] **Step 2:** Build the TS installer in `src/install/` (extending the existing TS install code): identical config generation (golden-verified), Node-version check with a clear error, multi-OS paths, and a dual-mode transition layer — detects Python-era artifacts (`.venv`, copied `.py` templates) and handles both worlds during the migration window.
-- [ ] **Step 3:** Port the installer test suites (pytest `tests/install/`, `tests/test_install_wizard_wiring.py`, container e2e per ADR-087) to vitest/TS-driven equivalents; keep the Docker e2e gate working against the TS installer. <!-- carve-out: new-gate-verification -->
-- [ ] **Step 4:** Flip the consumer entry points (npx flow, `scripts/install.sh`, server/wizard `apply` path in `src/server/routes/wizard.ts`) to the TS installer; `install.py` stays in-tree as documented fallback until Phase 11 removes it.
+- [x] **Step 3:** Port the installer test suites (pytest `tests/install/`, `tests/test_install_wizard_wiring.py`, container e2e per ADR-087) to vitest/TS-driven equivalents; keep the Docker e2e gate working against the TS installer. <!-- carve-out: new-gate-verification -->
+- [x] **Step 4:** Flip the consumer entry points (npx flow, `scripts/install.sh`, server/wizard `apply` path in `src/server/routes/wizard.ts`) to the TS installer; `install.py` stays in-tree as documented fallback until Phase 11 removes it.
 
 **Exit criteria:** TS installer produces byte-identical configs on the golden corpus (or documented divergences); container e2e green; wizard + npx flows run the TS installer end-to-end; consumers on either stack can install successfully.
 **Rollback:** entry points point back at `install.py` (one-line revert per entry point).
