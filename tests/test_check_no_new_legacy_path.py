@@ -66,3 +66,28 @@ def test_multiple_files_in_one_diff():
     )
     offenders = g.find_offenders(diff)
     assert len(offenders) == 2
+
+
+def test_faithful_ts_twin_is_exempt_via_injected_check():
+    # A *.ts whose same-stem *.py sibling already carries the literal is a
+    # faithful port, not a new dead-path. The sibling check is injected so the
+    # test does not depend on the real filesystem.
+    diff = _diff(
+        "src/scripts/_lib/agent_src.ts",
+        'const _LEGACY_PREFIX = ".agent-src.uncondensed/";',
+    )
+    twin_yes = g.find_offenders(diff, twin_check=lambda f: True)
+    assert twin_yes == [], "faithful TS twin must be exempt"
+    # Same diff, but no faithful sibling → it IS a new dead-path.
+    twin_no = g.find_offenders(diff, twin_check=lambda f: False)
+    assert len(twin_no) == 1, "a .ts with no legacy-carrying .py sibling is flagged"
+
+
+def test_faithful_twin_default_reads_sibling_from_disk():
+    # Default twin_check reads the real sibling. agent_src.py exists and carries
+    # the literal → its .ts twin is exempt under the default predicate.
+    assert g._is_faithful_twin("src/scripts/_lib/agent_src.ts") is True
+    # A .ts with no .py sibling carrying the literal is not a faithful twin.
+    assert g._is_faithful_twin("src/scripts/_lib/__does_not_exist__.ts") is False
+    # A .py is never auto-exempted by this rule (only the static EXEMPT set).
+    assert g._is_faithful_twin("src/scripts/_lib/agent_src.py") is False
