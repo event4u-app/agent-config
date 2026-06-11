@@ -57,18 +57,18 @@ jobs:
         run: pip install pyyaml
 
       - name: Lint topics.yml
-        run: python3 src/scripts/lint_topics_yaml.py
+        run: ./scripts-run src/scripts/lint_topics_yaml
 
       - name: Dry-run preview
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 src/scripts/sync_github_metadata.py
+        run: ./scripts-run src/scripts/sync_github_metadata
 
       - name: Apply (gated on dry_run=false)
         if: ${{ inputs.dry_run == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 src/scripts/sync_github_metadata.py --apply
+        run: ./scripts-run src/scripts/sync_github_metadata --apply
 
       - name: Commit audit log
         if: ${{ inputs.dry_run == 'false' }}

@@ -167,7 +167,7 @@ jobs:
         # that step, so without this bootstrap `_copy_dir_dereferencing
         # _symlinks` returns 0 written files (src missing) and the
         # tests fail with "rules dir does not exist".
-        run: python3 src/scripts/condense.py --sync
+        run: ./scripts-run src/scripts/condense --sync
 
       - name: Golden Replay — smoke subset (P2.4 PR budget)
         # Replays the smoke-tagged Golden Transcripts (~6 of 25) for
@@ -198,9 +198,9 @@ jobs:
         # render a job summary even if an individual skill fails.
         run: |
           mkdir -p agents/reports/runs
-          python3 src/scripts/runtime_dispatcher.py run --skill lint-skills \
+          ./scripts-run src/scripts/runtime_dispatcher run --skill lint-skills \
             --output agents/reports/runs/lint-skills.json
-          python3 src/scripts/runtime_dispatcher.py run --skill check-refs \
+          ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs \
             --output agents/reports/runs/check-refs.json
 
       - name: CI summary (dispatcher runs)
@@ -208,7 +208,7 @@ jobs:
         # Summary. Runs on success AND failure so failing pilots still
         # show up in the PR UI with their stderr tail.
         if: always()
-        run: python3 src/scripts/ci_summary.py --runs agents/reports/runs
+        run: ./scripts-run src/scripts/ci_summary --runs agents/reports/runs
 
   node-tests:
     # Consolidates TypeScript CLI/UI tests (Phase 5.2 of
@@ -252,7 +252,7 @@ jobs:
         # (the macOS system python3 lacks pyyaml).
         run: |
           pip install --quiet pyyaml
-          python3 src/scripts/build_discovery_manifest.py --write --quiet
+          ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       - name: Install dependencies (hoists installer toolchain)
         run: npm ci

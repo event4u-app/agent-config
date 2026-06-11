@@ -25,13 +25,13 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 fail=0
 
 echo "🔍 Checking dist/agent-src/ sync..."
-if ! python3 src/scripts/condense.py --check; then
+if ! ./scripts-run src/scripts/condense --check; then
     echo "❌  dist/agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
     fail=1
 fi
 
 echo "🔍 Checking command count messaging..."
-if ! python3 src/scripts/check_command_count_messaging.py; then
+if ! ./scripts-run src/scripts/check_command_count_messaging; then
     echo "❌  Command-count drift in README / AGENTS.md / getting-started. Run 'task counts-update', stage the changes, then re-commit."
     fail=1
 fi
@@ -63,7 +63,7 @@ cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 # agents/roadmaps-progress.md is in sync with the current state of
 # agents/roadmaps/ (roadmap-progress-sync Iron Law).
 
-python3 src/scripts/lint_marketplace.py
+./scripts-run src/scripts/lint_marketplace
 status=$?
 
 if [ $status -ne 0 ]; then
@@ -96,9 +96,9 @@ fi
 # sources, the packs vocab, or the gate scripts themselves, so unrelated
 # commits stay fast.
 if git diff --cached --name-only | grep -qE '^(packages/|src/config/discovery/packs\.yml|src/scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|src/scripts/schemas/pack\.schema\.json|src/scripts/pack_dependency_allowlist\.json)'; then
-    if ! python3 src/scripts/validate_pack_yaml.py \
-        || ! python3 src/scripts/lint_pack_dependencies.py \
-        || ! python3 src/scripts/lint_namespace_collisions.py; then
+    if ! ./scripts-run src/scripts/validate_pack_yaml \
+        || ! ./scripts-run src/scripts/lint_pack_dependencies \
+        || ! ./scripts-run src/scripts/lint_namespace_collisions; then
         echo ""
         echo "❌  Commit blocked — Phase-0 pack gate failed (schema / dependency / namespace)."
         echo "   Run 'task generate-pack-manifests' if manifests drifted, fix the"

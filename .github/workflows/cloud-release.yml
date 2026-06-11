@@ -57,7 +57,7 @@ jobs:
 
       - name: Build Claude.ai Web cloud bundles (dist/cloud/*.zip)
         run: |
-          python3 src/scripts/build_cloud_bundle.py --all --clean
+          ./scripts-run src/scripts/build_cloud_bundle --all --clean
           echo "=== bundle inventory ==="
           ls -la dist/cloud/
           count=$(find dist/cloud -name '*.zip' | wc -l | tr -d ' ')
@@ -69,7 +69,7 @@ jobs:
 
       - name: Build Linear AI digest (dist/linear/*.md)
         run: |
-          python3 src/scripts/build_linear_digest.py --strict-missing
+          ./scripts-run src/scripts/build_linear_digest --strict-missing
           echo "=== digest inventory ==="
           ls -la dist/linear/
           for layer in workspace team personal; do

@@ -94,8 +94,8 @@ jobs:
 
       - name: Build discovery manifest
         run: |
-          python3 src/scripts/build_discovery_manifest.py --write --strict
-          python3 src/scripts/lint_discovery_manifest.py --quiet
+          ./scripts-run src/scripts/build_discovery_manifest --write --strict
+          ./scripts-run src/scripts/lint_discovery_manifest --quiet
 
       - name: Assert discovery manifest is in the tarball
         # --ignore-scripts so the JSON output is not polluted by vite/build
