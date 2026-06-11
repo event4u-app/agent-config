@@ -44,16 +44,20 @@ EXEMPT = {
 
 def _is_faithful_twin(cur_file: str) -> bool:
     """True when `cur_file` is a `*.ts` whose same-stem `*.py` sibling exists
-    and already contains the legacy literal — a faithful TS port of a
-    pre-existing legacy reference, not a new dead-path. Reads from disk
-    relative to cwd (CI runs the guard at the repo root); injectable in tests
-    via the `twin_check` param of `find_offenders`."""
+    and already references the legacy tree — a faithful TS port of a
+    pre-existing legacy reference, not a new dead-path. The sibling check
+    matches the bare directory name (`.agent-src.uncondensed`, no trailing
+    slash) because the `.py` may reference it as a path SEGMENT
+    (`root / ".agent-src.uncondensed"`) while the `.ts` twin / its comments
+    use the slash form — both are the same faithful reference. Reads from
+    disk relative to cwd (CI runs the guard at the repo root); injectable in
+    tests via the `twin_check` param of `find_offenders`."""
     if not cur_file.endswith(".ts"):
         return False
     sibling = cur_file[:-3] + ".py"
     try:
         with open(sibling, encoding="utf-8") as fh:
-            return LEGACY in fh.read()
+            return LEGACY.rstrip("/") in fh.read()
     except OSError:
         return False
 
