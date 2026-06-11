@@ -1,0 +1,66 @@
+name: Migration Gates
+
+# Phase 1 Step 10 of agents/roadmaps/road-to-typescript-only-scripts.md.
+# Phase-gate CI for the Python -> TypeScript migration: enforces the
+# phase manifest (src/scripts/parity/phase-manifest.json) on every PR
+# targeting the long-lived `python2ts` integration branch.
+#
+#   - phase_gate.ts: sequencing (no later phase starts while an earlier
+#     one is pending) + zero tracked .py files in completed phases.
+#   - vitest: the migration test suites (tests/scripts, tests/parity,
+#     tests/spikes).
+#   - typecheck: tsconfig.json + tsconfig.scripts.json.
+#   - migration_status.ts: dashboard table appended to the job summary.
+#
+# The `phase-gate` job is intended to become a required check on
+# `python2ts` branch protection.
+
+on:
+  pull_request:
+    branches:
+      - python2ts
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phase-gate:
+    name: Migration phase gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          # Full history so migration_status.ts can compute the sync lag
+          # vs origin/main (falls back to "n/a" on shallow clones).
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Phase gate (sequencing + completed-phase cleanliness)
+        run: npx tsx src/scripts/parity/phase_gate.ts
+
+      - name: Migration test suites
+        run: npx vitest run tests/scripts/ tests/parity/ tests/spikes/
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Migration status dashboard
+        run: |
+          set -euo pipefail
+          npx tsx src/scripts/migration_status.ts --out /tmp/migration-status.md
+          cat /tmp/migration-status.md >> "$GITHUB_STEP_SUMMARY"

@@ -19,12 +19,13 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 // ---------------------------------------------------------------------------
 // Categories and phase mapping
 // ---------------------------------------------------------------------------
 
-type Category =
+export type Category =
     | 'libs'
     | 'installer'
     | 'linters'
@@ -53,7 +54,7 @@ const PHASE_BY_CATEGORY: Readonly<Record<Category, string>> = {
 };
 
 /** Render order — by owning phase. */
-const CATEGORY_ORDER: readonly Category[] = [
+export const CATEGORY_ORDER: readonly Category[] = [
     'parity',
     'libs',
     'installer',
@@ -115,7 +116,7 @@ const PIPELINE_BASENAMES = new Set([
     'build_discovery_manifest.py',
 ]);
 
-function categorize(path: string): Category {
+export function categorize(path: string): Category {
     if (path.startsWith('src/scripts/_lib/')) return 'libs';
     if (path.startsWith('src/scripts/ai_council/') || path === 'src/scripts/council_cli.py') {
         return 'council';
@@ -152,11 +153,11 @@ function git(args: readonly string[], cwd: string): string {
     return execFileSync('git', [...args], { cwd, encoding: 'utf-8' }).trim();
 }
 
-function repoRoot(): string {
+export function repoRoot(): string {
     return git(['rev-parse', '--show-toplevel'], process.cwd());
 }
 
-function trackedPythonFiles(root: string): string[] {
+export function trackedPythonFiles(root: string): string[] {
     const raw = git(['ls-files', '*.py'], root);
     if (raw === '') return [];
     return raw
@@ -290,4 +291,11 @@ function main(): void {
     process.stdout.write(`Tracked .py after exclusions: ${pyFiles.length}\n`);
 }
 
-main();
+// Run the CLI only when executed directly (`npx tsx src/scripts/migration_status.ts`),
+// not when imported (e.g. by src/scripts/parity/phase_gate.ts for `categorize`).
+const isCliEntry =
+    process.argv[1] !== undefined &&
+    import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+if (isCliEntry) {
+    main();
+}
