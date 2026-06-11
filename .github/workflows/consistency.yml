@@ -63,6 +63,19 @@ jobs:
           python-version: "3.12"
           cache: 'pip'
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          # Retry once — the per-pack matrix fans out ~14 concurrent npm ci
+          # calls; transient registry ECONNRESET would otherwise flake a job.
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
       - name: Set up Task
         uses: ./.github/actions/setup-task
         with:
