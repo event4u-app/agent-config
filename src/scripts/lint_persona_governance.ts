@@ -2,7 +2,7 @@
 /**
  * Lint persona governance — per-domain cap (hard) + citation floor (warn).
  *
- * TypeScript twin of `src/scripts/lint_persona_governance.py` (ADR-088,
+ * TypeScript twin of `src/scripts/lint_persona_governance.py` (ADR-089,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * flag read from argv at module load, persona enumeration + sorted ordering,
  * finding messages, output channel (emit → stdout; overflow summary on

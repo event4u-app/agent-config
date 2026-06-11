@@ -2,7 +2,7 @@
 /**
  * One-off script-location guard (Phase 0a.2 of road-to-rule-hardening).
  *
- * TypeScript twin of `src/scripts/check_one_off_location.py` (ADR-088,
+ * TypeScript twin of `src/scripts/check_one_off_location.py` (ADR-089,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — the
  * `--quiet` flag, exit codes (0 clean, 1 violation, 3 internal error),
  * stdout/stderr split, byte-identical finding messages, and the same

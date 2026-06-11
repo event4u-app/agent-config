@@ -1,7 +1,7 @@
 /**
  * Shared constants + helpers for CHANGELOG.md era discipline.
  *
- * TypeScript twin of `src/scripts/_lib/changelog_eras.py` (ADR-088
+ * TypeScript twin of `src/scripts/_lib/changelog_eras.py` (ADR-089
  * py2ts Phase 2 / Wave 1). The drift gate (`tests/test_changelog_eras.py`
  * / `tests/lib/changelog_eras.test.ts`) and the release automation
  * (`scripts/release.py`) both reason about the same era shape: a single

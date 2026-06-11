@@ -2,7 +2,7 @@
 /**
  * Token-Optimizer freshness validator.
  *
- * TypeScript twin of `src/scripts/check_token_optimizer_freshness.py` (ADR-088,
+ * TypeScript twin of `src/scripts/check_token_optimizer_freshness.py` (ADR-089,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
  * exit codes (0 clean, 1 drift / missing skill / unparseable), stdout/stderr
  * split, byte-identical messages, the same catalog-row parsing, the same

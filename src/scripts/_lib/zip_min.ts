@@ -2,7 +2,7 @@
  * Minimal ZIP writer/reader on Node builtins only (`node:zlib`).
  *
  * Internal helper for the TypeScript twin of
- * `src/scripts/_lib/claude_desktop_bundler.py` (ADR-088 py2ts Phase 2):
+ * `src/scripts/_lib/claude_desktop_bundler.py` (ADR-089 py2ts Phase 2):
  * the repo ships no ZIP dependency, and the ADR contract forbids adding
  * one — so the bundler twin writes the (well-specified) ZIP container
  * itself and compresses entries with `zlib.deflateRawSync`

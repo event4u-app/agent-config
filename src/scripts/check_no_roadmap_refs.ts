@@ -2,7 +2,7 @@
 /**
  * No-roadmap-references checker.
  *
- * TypeScript twin of `src/scripts/check_no_roadmap_refs.py` (ADR-088,
+ * TypeScript twin of `src/scripts/check_no_roadmap_refs.py` (ADR-089,
  * Phase 4 / Wave 4a). The CLI contract is mirrored EXACTLY — `--format`
  * / `--root` flags, exit codes (0 clean, 1 violations, 3 internal error),
  * stdout/stderr split, byte-identical finding messages, same scan trees

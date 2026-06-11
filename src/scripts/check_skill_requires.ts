@@ -2,7 +2,7 @@
 /**
  * Skill-composition graph gate (roadmap 3.4).
  *
- * TypeScript twin of `src/scripts/check_skill_requires.py` (ADR-088,
+ * TypeScript twin of `src/scripts/check_skill_requires.py` (ADR-089,
  * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — no flags,
  * exit codes (0 clean, 1 violations), stdout, byte-identical messages
  * (including Python list-repr of sorted pack sets), same skill collection

@@ -2,7 +2,7 @@
 /**
  * Fail when a skill or command lacks a `model_tier` value.
  *
- * TypeScript twin of `src/scripts/lint_model_tier_coverage.py` (ADR-088,
+ * TypeScript twin of `src/scripts/lint_model_tier_coverage.py` (ADR-089,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * flag, target enumeration + ordering (skills via artefact_roots, then
  * commands via iter_commands), finding messages, stdout/stderr split,

@@ -2,7 +2,7 @@
 /**
  * Lint rule frontmatter for the `tier:` key.
  *
- * TypeScript twin of `src/scripts/lint_rule_tiers.py` (ADR-088, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_rule_tiers.py` (ADR-089, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same scan scope, file
  * ordering, finding messages, stdout/stderr split, and exit codes.
  *

@@ -2,7 +2,7 @@
 /**
  * Lint an ExplainTrace v1 JSON payload against the schema.
  *
- * TypeScript twin of `src/scripts/lint_explain_trace.py` (ADR-088, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_explain_trace.py` (ADR-089, Phase 4 /
  * Wave 4b). Reads a JSON file (or stdin via `--stdin`) and validates it
  * against `docs/contracts/explain-trace.schema.json`.
  *

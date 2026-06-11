@@ -2,7 +2,7 @@
 /**
  * Condensation quality checker for agent-config packages.
  *
- * TypeScript twin of `src/scripts/check_condensation.py` (ADR-088 —
+ * TypeScript twin of `src/scripts/check_condensation.py` (ADR-089 —
  * Python→TS migration, Phase 4 / Wave 4a). Mirrors the Python CLI
  * contract exactly: flags (`--format text|json`, `--summary`, `--root`),
  * exit codes (0 = clean, 1 = issues found, 3 = internal error),

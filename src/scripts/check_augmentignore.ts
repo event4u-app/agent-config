@@ -2,7 +2,7 @@
 /**
  * Advisory check for `.augmentignore` (road-to-governance-cleanup F6.3).
  *
- * TypeScript twin of `src/scripts/check_augmentignore.py` (ADR-088,
+ * TypeScript twin of `src/scripts/check_augmentignore.py` (ADR-089,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--quiet` flag,
  * always exits 0, byte-identical advisory messages, same staleness /
  * min-useful-lines thresholds, stdout-only output.

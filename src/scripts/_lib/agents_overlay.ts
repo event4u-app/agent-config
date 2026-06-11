@@ -1,7 +1,7 @@
 /**
  * Resolve files under `agents/<kind>/<name>.md` via the cascade.
  *
- * TypeScript twin of `src/scripts/_lib/agents_overlay.py` (ADR-088,
+ * TypeScript twin of `src/scripts/_lib/agents_overlay.py` (ADR-089,
  * Phase 2 / Wave 2b). Companion to `agent_settings`: where the settings
  * loader merges YAML, this resolves single-file overlays — overrides,
  * contexts, decisions — to a single deepest match across the in-project

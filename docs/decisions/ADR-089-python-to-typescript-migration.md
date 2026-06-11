@@ -1,5 +1,5 @@
 ---
-adr: 088
+adr: 089
 status: accepted
 date: 2026-06-11
 decision: python-to-typescript-migration
@@ -9,7 +9,7 @@ phase: py2ts · migration-infrastructure
 type: structural
 ---
 
-# ADR-088 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
+# ADR-089 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
 
 ## Status
 

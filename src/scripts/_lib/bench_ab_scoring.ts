@@ -1,7 +1,7 @@
 /**
  * Structural success criteria for Track B.
  *
- * TypeScript twin of `src/scripts/_lib/bench_ab_scoring.py` (ADR-088,
+ * TypeScript twin of `src/scripts/_lib/bench_ab_scoring.py` (ADR-089,
  * Phase 2 Wave 2a). Public API mirrors the Python module exactly — same
  * exported names (deliberately snake_case), same A/B scoring math, same
  * check ordering, same JSON-identical result shape.

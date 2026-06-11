@@ -1,7 +1,7 @@
 /**
  * JSON-pointer helpers for the v2 `merged_keys[]` manifest field.
  *
- * TypeScript twin of `src/scripts/_lib/json_pointers.py` (ADR-088 —
+ * TypeScript twin of `src/scripts/_lib/json_pointers.py` (ADR-089 —
  * Python→TS migration, Phase 2 / Wave 1). Public API mirrors the Python
  * module exactly (snake_case kept deliberately).
  *

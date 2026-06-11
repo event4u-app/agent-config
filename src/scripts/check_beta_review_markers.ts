@@ -2,7 +2,7 @@
 /**
  * Beta-review-marker checker for `docs/contracts/`.
  *
- * TypeScript twin of `src/scripts/check_beta_review_markers.py` (ADR-088,
+ * TypeScript twin of `src/scripts/check_beta_review_markers.py` (ADR-089,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--json`
  * flag, exit codes (0 clean, 1 violations, 3 internal error), stdout/stderr
  * split, byte-identical messages, the same scan order and the same date

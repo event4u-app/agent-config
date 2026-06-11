@@ -2,7 +2,7 @@
 /**
  * Lint `src/scripts/hook_manifest.yaml`.
  *
- * TypeScript twin of `src/scripts/lint_hook_manifest.py` (ADR-088, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_hook_manifest.py` (ADR-089, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same manifest default,
  * finding messages, finding order, stdout/stderr split, and exit codes.
  *
