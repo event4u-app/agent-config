@@ -182,7 +182,8 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
       demotion path for commands that fit none, then ship the lint (warn first, then blocking). Full
       hand-off: [`docs/contracts/command-category-governance.md`](../../docs/contracts/command-category-governance.md).
       <!-- done as Option 1 (AI-council tie-break 2026-06-09, light > full, decisive; maintainer: "Option 2 only if better — it isn't"): `category:` DEFINED as an optional validate-when-present enum in command.schema.json; creation-time categorization checklist added to the command-writing skill; full 54-categorization + blocking lint + demotion DEFERRED until a merged CONSUMER PR reads `category:` (no consumer today = supply-without-demand/YAGNI; blocking a 15%-ambiguous taxonomy enforces presence-not-correctness). Upgrade trigger + rationale in command-category-governance.md. -->
-- [ ] **(deferred → consumer-gated)** Full categorization of all 54 top-level commands + blocking `category:` lint + demotion of fits-none commands — lands in one focused PR when a consumer (routing/analytics/discovery) that reads `category:` is merged.
+- [~] **(deferred → consumer-gated)** Full categorization of all 54 top-level commands + blocking `category:` lint + demotion of fits-none commands — lands in one focused PR when a consumer (routing/analytics/discovery) that reads `category:` is merged.
+      <!-- verified 2026-06-11: 0 commands carry category: frontmatter; no routing/analytics/discovery code reads the field. Consumer condition not yet met. -->
 - [x] Skill lifecycle policy — review cadence and active/dormant/sunset states; dormancy triggers
       *review*, not automatic deprecation. Slot it beside `persona-governance` as its skill-side sibling.
       <!-- done: docs/governance.md § Skill lifecycle policy — commit-based dormancy (git log, no last_reviewed busywork for a solo maintainer); review-not-auto-deprecate; sunset recorded in-commit. -->
@@ -192,7 +193,8 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
       <!-- done (base fields): docs/contracts/skill-family-map.yml — 227 skills × {family, primary_use, activation_scope}, generated + reproducible. overlaps_with + candidate_for_* are intentionally ABSENT — they are Phase-3 discovery conclusions, not Phase-2 metadata (AI-council 2026-06-09; Single-Source-of-Truth rule in docs/governance.md). Phase 3 populates them. -->
 - [x] **(Phase 3 feeder)** Populate `skill-family-map.yml`'s `overlaps_with` + `candidate_for_{merge,lens,internal}` as outputs of the Phase-3 consolidation scan.
       <!-- done via docs/skill-duplication-findings.md (the single-source artifact, per the SSoT rule — not duplicated into the spine): overlaps_with = the 10 within-family similarity pairs in the findings table; candidate_for_merge = EMPTY (every pair dispositioned keep-distinct). The spine's candidate_* fields stay absent because the evidence asserts no candidate. -->
-- [ ] **(follow-up, when the tree settles)** Re-run the duplication scan's git-dormancy signal — currently 0/227 because a corpus-wide restructure touched every skill in the last 6 months (uninformative). Meaningful once timestamps settle.
+- [~] **(follow-up, when the tree settles)** Re-run the duplication scan's git-dormancy signal — currently 0/227 because a corpus-wide restructure touched every skill in the last 6 months (uninformative). Meaningful once timestamps settle.
+      <!-- verified 2026-06-11: 10 commits to src/skills/ in the last 3 days — tree still active, signal still uninformative. -->
 - [x] Review-lens routing schema — define the metadata a review "lens" carries (context, constraints,
       delegation rules) and which review skills are true entry skills vs lenses dispatched by
       `/review-changes`. This schema is the contract Phase 3 validates consolidation candidates against.
