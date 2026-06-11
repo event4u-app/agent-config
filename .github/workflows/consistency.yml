@@ -97,11 +97,14 @@ jobs:
         # PR-scoped: pull the diff via the GitHub API (gh) instead of
         # `git fetch <base>` — the shallow PR-merge checkout races with the
         # auth extraheader (same failure the kernel-rule-bundle step sidesteps).
+        # NOTE: no --patch — that emits a per-commit format-patch series, so a
+        # line added by one commit and fixed by a later commit in the same PR
+        # would fail forever. The guard's contract is the NET diff of the PR.
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr diff "${{ github.event.pull_request.number }}" --patch \
+          gh pr diff "${{ github.event.pull_request.number }}" \
             | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
 
       - name: Check package portability
