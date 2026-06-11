@@ -26,6 +26,12 @@ tasks:
     cmds:
       - python3 src/scripts/mcp_telemetry_health.py {{.CLI_ARGS}}
 
+  mcp:parity-stdio:
+    desc: "Turnkey-launch parity: drive the built `agent-config mcp-server` over stdio and diff its content surface against the local Python source-of-truth (ADR-085 subset). Builds the CLI first. Guards the turnkey path from silent content drift."
+    cmds:
+      - npm run build:cli
+      - python3 src/scripts/mcp_parity_smoke.py --node-stdio
+
   mcp:glama-test:
     desc: "Reproduce glama.ai's build/run env in Docker and smoke-test the MCP handshake (local working tree, offline). See internal/glama/README.md."
     cmds:

@@ -254,6 +254,6 @@ badge removal cost is one commit.
 ## See also
 
 - [`road-to-glama-registry-listing.md`](../../agents/roadmaps/archive/road-to-glama-registry-listing.md)
-- [`road-to-mcp-stdio-end-user-packaging.md`](../../agents/roadmaps/road-to-mcp-stdio-end-user-packaging.md) — follow-up
+- [`road-to-mcp-stdio-end-user-packaging.md`](../../agents/roadmaps/archive/road-to-mcp-stdio-end-user-packaging.md) — follow-up (completed + archived)
 - [`docs/contracts/mcp-phase-1-scope.md`](../contracts/mcp-phase-1-scope.md) — stdio kernel contract
 - [`docs/contracts/mcp-cloud-scope.md`](../contracts/mcp-cloud-scope.md) — Worker A0-cloud contract

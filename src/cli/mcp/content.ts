@@ -13,7 +13,7 @@
  */
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join, resolve, basename, dirname } from 'node:path';
+import { join, resolve, basename, relative, sep } from 'node:path';
 import yaml from 'js-yaml';
 
 export type PromptKind = 'skill' | 'command';
@@ -84,7 +84,10 @@ function makeEntry(
 ): ContentEntry {
     const raw = readFileSync(file, 'utf8');
     const { fm, body } = parseFrontmatter(raw);
-    const name = str(fm.name, fallbackName);
+    // Frontmatter name wins if present + non-empty; else the path fallback
+    // (mirrors the Python kernel's `meta.get("name", fallback).strip() or fallback`).
+    const fmName = str(fm.name).trim();
+    const name = fmName || fallbackName;
     const entry: ContentEntry = {
         uri: `${scheme}://${name}`,
         name,
@@ -139,8 +142,11 @@ export function loadContentTree(packageRoot: string): ContentTree {
     }
 
     // Guidelines — docs/guidelines/**/*.md
-    for (const f of walkMd(resolve(packageRoot, 'docs', 'guidelines'))) {
-        const fallback = `${basename(dirname(f))}/${basename(f, '.md')}`;
+    // Name = relpath-from-guidelines-root, no extension (mirrors the Python
+    // kernel `scripts/mcp_server/resources.py` `guideline://<relpath-no-ext>`).
+    const guidelinesRoot = resolve(packageRoot, 'docs', 'guidelines');
+    for (const f of walkMd(guidelinesRoot)) {
+        const fallback = relative(guidelinesRoot, f).replace(/\.md$/, '').split(sep).join('/');
         safe(() => add(makeEntry(f, 'guideline', 'guideline', fallback)), f);
     }
 

@@ -75,11 +75,14 @@ The stdio server today is **CLI-first internal tooling, not a library**:
 
 ## Phase 4 — End-user docs + smoke
 
-- [ ] Write a short "Getting Started (local stdio)" page aimed at end-users, not
+- [x] Write a short "Getting Started (local stdio)" page aimed at end-users, not
   contributors.
-- [ ] Extend smoke coverage to the packaged launch path (a new check, or a flag
+  <!-- done: docs/getting-started-local-stdio.md — install → point your client (links the mcp-client-config § Local stdio snippets) → verify → what-you-get/don't (read-only, ADR-085) → troubleshooting table. Explicitly end-user-facing; contributor clone path linked out to mcp-server.md. -->
+- [x] Extend smoke coverage to the packaged launch path (a new check, or a flag
   on `src/scripts/mcp_parity_smoke.py`), so the turnkey path cannot rot silently.
   <!-- carve-out: new-gate-verification -->
+  <!-- done: `--node-stdio` flag on mcp_parity_smoke.py — spawns the built `agent-config mcp-server`, paginates the FULL prompts+resources surface over stdio, diffs the ADR-085 subset (skill/command prompts, rule/guideline resources; contexts excluded by design) against the Python source-of-truth, asserts tools/list empty. + `task mcp:parity-stdio`. Ran locally: 377 prompts + 154 resources parity, tools empty. It CAUGHT a real Phase-2 loader bug (top-level guidelines got a spurious `guidelines/` prefix + lost nesting) — fixed in content.ts (relpath-from-guidelines-root, mirrors resources.py) + a CI-resident regression assertion in content.test.ts. -->
+- [x] **(bug fix surfaced by the smoke)** content.ts guideline naming now mirrors the Python `guideline://<relpath-no-ext>` convention; regression-guarded in content.test.ts.
 
 ## Out of scope
 
