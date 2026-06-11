@@ -287,8 +287,9 @@ create_symlink() {
 # Check if a relative path matches an excluded rule
 is_excluded_rule() {
     local rel_path="$1"
-    local filename
-    filename="$(basename "$rel_path")"
+    # Pure-bash basename — this runs once per file in hot loops; a
+    # $(basename) command substitution here costs a fork per call.
+    local filename="${rel_path##*/}"
 
     for excluded in $EXCLUDE_RULES; do
         if [[ "$filename" == "$excluded" ]]; then
@@ -333,7 +334,11 @@ sync_hybrid() {
     local source_files
     source_files=$(cd "$source_augment" && find . -type f | sed 's|^\./||' | sort)
 
-    # Sync each file
+    # Sync each file. The body runs ~1200 times per install — every command
+    # substitution or external binary in here is a fork that multiplies by
+    # the file count (measured: forks in this loop made sync_hybrid ~9.6s of
+    # a ~12s install; pure-bash equivalents bring it under 2s).
+    local last_mkdir=""
     while IFS= read -r rel_path; do
         [[ -z "$rel_path" ]] && continue
 
@@ -345,10 +350,18 @@ sync_hybrid() {
 
         local source_file="$source_augment/$rel_path"
         local target_file="$target_augment/$rel_path"
-        local target_dir
-        target_dir="$(dirname "$target_file")"
+        # Pure-bash dirname (relative): "." for root-level files.
+        local rel_dir="."
+        [[ "$rel_path" == */* ]] && rel_dir="${rel_path%/*}"
+        local target_dir="$target_augment"
+        [[ "$rel_dir" != "." ]] && target_dir="$target_augment/$rel_dir"
 
-        $DRY_RUN || mkdir -p "$target_dir"
+        # The file list is sorted, so files in the same directory arrive
+        # grouped — mkdir once per directory run instead of once per file.
+        if [[ "$target_dir" != "$last_mkdir" ]]; then
+            $DRY_RUN || mkdir -p "$target_dir"
+            last_mkdir="$target_dir"
+        fi
 
         if should_copy "$rel_path"; then
             # Remove existing symlink before copying
@@ -362,13 +375,12 @@ sync_hybrid() {
             fi
         else
             # Fast symlink: compute relative path from depth offset instead of per-file resolution
-            local rel_dir
-            rel_dir="$(dirname "$rel_path")"
             local depth_prefix=""
             if [[ "$rel_dir" != "." ]]; then
-                # Count directory depth and prepend ../ for each level
-                local depth
-                depth=$(echo "$rel_dir" | tr '/' '\n' | wc -l | tr -d ' ')
+                # Directory depth = slash count + 1, computed without forks
+                # (the previous echo|tr|wc pipeline forked 3× per file).
+                local slashes="${rel_dir//[!\/]/}"
+                local depth=$(( ${#slashes} + 1 ))
                 local i
                 for ((i=0; i<depth; i++)); do
                     depth_prefix="../$depth_prefix"
@@ -413,6 +425,12 @@ clean_stale() {
     local target_entries
     target_entries=$(cd "$target_dir" && find . \( -type f -o -type l \) | sed 's|^\./||' | sort)
 
+    # Entries present in target but absent from source — ONE comm fork over
+    # the two (already sorted) lists instead of a `grep` fork per target
+    # entry (~1280 forks per install before this change).
+    local missing_entries
+    missing_entries=$(comm -13 <(printf '%s\n' "$source_manifest") <(printf '%s\n' "$target_entries"))
+
     # Remove stale entries (in target but not in source) and excluded rules
     while IFS= read -r entry; do
         [[ -z "$entry" ]] && continue
@@ -420,7 +438,7 @@ clean_stale() {
             log_verbose "preserve: $entry"
             continue
         fi
-        if is_excluded_rule "$entry" || ! grep -qxF -- "$entry" <<<"$source_manifest"; then
+        if is_excluded_rule "$entry" || [[ $'\n'"$missing_entries"$'\n' == *$'\n'"$entry"$'\n'* ]]; then
             local path="$target_dir/$entry"
             if $DRY_RUN; then
                 log_verbose "remove stale: $entry"
@@ -482,8 +500,7 @@ create_tool_symlinks() {
 
         for rule_file in "$rules_dir"/*.md; do
             [[ -f "$rule_file" ]] || continue
-            local filename
-            filename="$(basename "$rule_file")"
+            local filename="${rule_file##*/}"
             local link="$target_dir/$filename"
             local target="$rel_prefix/$filename"
 
@@ -510,8 +527,7 @@ create_tool_symlinks() {
 
         for entry in "$target_dir"/*; do
             [[ -L "$entry" ]] || continue
-            local entry_name
-            entry_name="$(basename "$entry")"
+            local entry_name="${entry##*/}"
             # If no matching source rule exists, remove the stale symlink
             if [[ ! -f "$rules_dir/$entry_name" ]]; then
                 $DRY_RUN || rm -f "$entry"
@@ -537,8 +553,8 @@ create_skill_symlinks() {
     local count=0
     for skill_dir in "$skills_dir"/*/; do
         [[ -d "$skill_dir" ]] || continue
-        local skill_name
-        skill_name="$(basename "$skill_dir")"
+        local skill_name="${skill_dir%/}"
+        skill_name="${skill_name##*/}"
         local link="$target_dir/$skill_name"
         local target="../../.augment/skills/$skill_name"
 
@@ -565,8 +581,7 @@ create_skill_symlinks() {
     # Clean stale skill symlinks
     for entry in "$target_dir"/*; do
         [[ -L "$entry" ]] || continue
-        local entry_name
-        entry_name="$(basename "$entry")"
+        local entry_name="${entry##*/}"
         if [[ ! -d "$skills_dir/$entry_name" ]]; then
             $DRY_RUN || rm -f "$entry"
             log_verbose "Removed stale skill symlink: .claude/skills/$entry_name"
