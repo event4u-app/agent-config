@@ -1,7 +1,7 @@
 ---
 adr: 086
-status: proposed
-date: 2026-06-10
+status: rejected
+date: 2026-06-11
 decision: read-only-cross-agent-mcp-discovery-helper
 supersedes: —
 superseded_by: —
@@ -13,9 +13,46 @@ type: structural
 
 ## Status
 
-**Proposed** · 2026-06-10. Pending the Phase-0 demand gate in
-`road-to-mcp-discovery-helper`. Routed through the AI council
-(claude-sonnet-4-5 + gpt-4o, design mode, 2026-06-10 — converged).
+**Rejected at its own Phase-0 gate** · 2026-06-11. The proposal to *build* the
+read-only discovery helper was not adopted: the Phase-0 demand gate in
+`road-to-mcp-discovery-helper` (which this ADR was pending) resolved to **STOP per
+Option C**. The defer-auto-install half of the decision stands (auto-install remains
+deferred to a future security-first ADR). Originally proposed 2026-06-10, routed
+through the AI council (claude-sonnet-4-5 + gpt-4o, design mode, 2026-06-10 —
+converged on the proposal); the build was then rejected at the gate by a second
+council round (claude-sonnet-4-5 + gpt-4o, design mode, 2026-06-11 — converged STOP).
+
+**Why rejected (verified at the gate, 2026-06-11):**
+
+- **Existing tooling covers it.** Smithery's CLI already does cross-client *install*
+  (read-write — the harder capability) for **5 of our 6 target agents** (Claude Code,
+  Cursor, Windsurf, Cline, VS Code/Copilot; verified in `src/config/clients.ts`,
+  `VALID_CLIENTS`, 23 clients). The lone gap is **Augment**. A read-only discovery
+  tool for the same 5 agents is strictly weaker — this trips ADR-086 Step 2's own
+  "if Smithery covers our full set read-write, reassess whether discovery is
+  non-duplicative" criterion.
+- **No demand signal.** Zero responses to the demand probe (shipped to the CHANGELOG
+  `[Unreleased]` notes → GitHub Discussions). ADR-086 made "weak signal → stop" the
+  gate condition.
+- **Surviving value is doc-shaped, not tool-shaped.** Registry-agnostic coverage is a
+  comparison matrix, not a 500-line CLI. Building the CLI would also create sunk-cost
+  bias toward reimplementing (rather than wrapping) Smithery in any future phase.
+
+**Verified registry facts (live-checked 2026-06-11, recorded for any future reopen):**
+both registries are queryable read-only with **no API key** — official
+`GET registry.modelcontextprotocol.io/v0/servers?search=&limit=&cursor=` (200, returns
+`server.json` records + `nextCursor`) and Glama
+`GET glama.ai/api/mcp/v1/servers?first=&after=` (200; resolves ADR-086's open
+"does Glama need a key?" question — it does not).
+
+**Follow-up recommendations (not actioned by the closing roadmap — net-new / external
+scope):** contribute Augment support to `smithery-ai/cli` (`VALID_CLIENTS`); optionally
+ship a registry coverage-matrix doc (official / Glama / Smithery) to capture the
+registry-agnostic value cheaply.
+
+**Reopen criteria:** 5+ demand responses citing a concrete need Smithery cannot serve,
+OR Smithery registry-locks / declines Augment support / shuts down. Any reopen is a new
+ADR (security-first if it touches auto-install).
 
 ## Context
 
