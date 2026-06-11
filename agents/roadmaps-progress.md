@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 77 steps done · 0%**
+**10 / 77 steps done · 13%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   13%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 65 | 65 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 65 | 55 | 10 | 0 | 0 | ██░░░░░░░░ 15% |
 
 ---
 
@@ -35,11 +35,11 @@
 
 ### [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md)
 
-**TypeScript-only scripts — full Python → TypeScript migration** — 0 / 65 done (0%)
+**TypeScript-only scripts — full Python → TypeScript migration** — 10 / 65 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Migration infrastructure (blocking — nothing ports before this is green) | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
+| 1 | Migration infrastructure (blocking — nothing ports before this is green) | 🟡 in progress | 3 | 10 | 0 | 0 | 77% |
 | 2 | Shared libraries (`src/scripts/_lib/` — 26 files, ~6.2k LOC) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Dual-mode installer (consumer trust boundary) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Linters & CI checks (101 files, ~17.4k LOC) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |

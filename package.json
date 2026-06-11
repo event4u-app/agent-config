@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "version": "5.10.1",
-    "description": "Universal AI Agent OS \u2014 audited skills, governance rules, commands, and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
+    "description": "Universal AI Agent OS — audited skills, governance rules, commands, and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
     "license": "MIT",
     "private": false,
     "type": "module",
@@ -59,7 +59,7 @@
         "build:discovery": "python3 src/scripts/build_discovery_manifest.py --write --strict",
         "build:mcp-manifest": "python3 src/scripts/build_mcp_registry_manifest.py --write --strict",
         "build": "npm run build:cli && npm run build:ui",
-        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
         "lint:ts": "eslint 'src/**/*.ts'",
         "test:ts": "vitest run",
         "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node src/scripts/prepack-check.mjs",
@@ -102,6 +102,7 @@
         "js-yaml": "^4.1.0",
         "open": "^10.2.0",
         "preact": "^10.29.0",
+        "yaml": "^2.9.0",
         "zod": "^3.25.0",
         "zod-to-json-schema": "^3.25.0"
     }

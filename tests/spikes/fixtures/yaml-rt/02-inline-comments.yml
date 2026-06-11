@@ -1,0 +1,6 @@
+# Inline comments after values, comment-only values, hashes in quotes.
+mode: fast  # inline comment after a bare scalar
+label: "color: #aabbcc"  # hash inside double quotes is not a comment
+note: 'keep # this'
+empty_with_comment:  # only a comment, no value
+flag: yes # single space before hash

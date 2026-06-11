@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Migration dispatcher shim (py2ts Phase 1, Step 4).
+# Resolves tsx + run.ts relative to this file so it works from any cwd.
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$DIR/node_modules/.bin/tsx" "$DIR/src/scripts/run.ts" "$@"

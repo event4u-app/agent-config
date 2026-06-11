@@ -1,0 +1,29 @@
+# Synthetic settings file shaped like the agent-settings template
+# (structure sampled from src/config/agent-settings.template.yml,
+# all values generic).
+
+# --- Version pin ---
+#
+# Exact semver pin; empty string = unpinned.
+config_version: ""
+
+# --- Profile ---
+#
+# Which experience you run.
+profile:
+  id: developer
+
+projection:
+  mode: legacy-all  # legacy-all | scoped
+
+personal:
+  autonomy: auto
+  pr_progress_comments: false
+
+quality:
+  local_auto_run: false
+
+runtime:
+  active_packs:
+    - core
+    - docs

@@ -1,0 +1,6 @@
+# Basic two-space block mapping with a header comment.
+project: demo
+settings:
+  enabled: true
+  retries: 3
+  name: example
