@@ -16,13 +16,13 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [later/road-to-external-proof-upgrade.md](roadmaps/later/road-to-external-proof-upgrade.md) | 3 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
 ## Per-roadmap phase breakdown
 
-### [road-to-external-proof-upgrade.md](roadmaps/road-to-external-proof-upgrade.md)
+### [later/road-to-external-proof-upgrade.md](roadmaps/later/road-to-external-proof-upgrade.md)
 
 **External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events** — 0 / 12 done (0%)
 
