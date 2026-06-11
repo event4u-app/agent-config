@@ -60,7 +60,7 @@ Do NOT use when:
 
 ## Procedure
 
-### Step 1: Collect the full prompt set
+### 1. Collect the full prompt set
 
 Read every scene's prompt blocks into one table:
 `scene → {style, subject, environment, action, camera, lens, lighting,
@@ -68,7 +68,7 @@ mood, duration, aspect, dialogue/singer}`. Prompt missing or
 unparseable → **block**: `scene N: prompt missing/unreadable` — an
 incomplete batch already contradicts the script.
 
-### Step 2: Style consistency
+### 2. Style consistency
 
 `style` block must agree across all scenes — one look per video unless
 the script *names* an intentional break (e.g. "dream sequence").
@@ -79,7 +79,7 @@ the script *names* an intentional break (e.g. "dream sequence").
 - Conflicting era/grade tokens (`1970s film grain` vs `clean digital
   HDR`) → same error shape, name both scenes + both tokens.
 
-### Step 3: Character consistency (character mode)
+### 3. Character consistency (character mode)
 
 With `character.json` present, every scene naming the subject must
 match the lock:
@@ -94,7 +94,7 @@ match the lock:
   render-money-burning failure (`media-sync-ground-truth`). A `"?"`
   singer with a lip-sync scene → block until resolved.
 
-### Step 4: Physics + continuity
+### 4. Physics + continuity
 
 - Day/night or weather flips **inside one contiguous song section**
   with no scripted transition → `continuity: scene 4 'noon sun' →
@@ -106,7 +106,7 @@ match the lock:
   with the violated bound (defense-in-depth after `song-to-script`
   Step 1 — hand-edited prompts re-open this hole).
 
-### Step 5: Verdict
+### 5. Verdict
 
 - **Zero findings** → emit `prompt-validator: N scenes, no
   contradictions`, hand the batch to the preview gate.
@@ -118,6 +118,12 @@ match the lock:
   legitimizes it on the next pass.
 
 ## Output format
+
+1. One line per finding — `class: scene(s) + conflicting values + fix
+   hint` — and report **every** finding, never just the first.
+2. Terminal `verdict:` line: `OK` with the scene count, or
+   `BLOCKED (N contradictions) — fix and re-run`; a blocked verdict
+   never hands the batch to the preview gate.
 
 ```
 prompt-validator: 12 scenes checked
