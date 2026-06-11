@@ -191,6 +191,75 @@ def reap_stale(
     return deleted
 
 
+def bootstrap_reap_tagged(
+    anchor: Path,
+    dest_subs: list[str],
+    current_files: set[str],
+    package_tag: str,
+) -> list[Path]:
+    """First-run reaping for PRE-inventory installs (marker-based ownership).
+
+    Existing installs in the wild predate the inventory sidecar, so
+    :func:`reap_stale` has nothing to diff against on the first upgraded
+    deploy — the legacy mess (renamed skills, retired command-as-skill
+    entries, the 2026-05-13 colon-named shapes) would rot forever. Every
+    deployed ``.md`` however carries the injected ``package:`` frontmatter
+    tag (install P5.1), which is exactly the ownership proof reaping needs.
+
+    Deletes ``.md`` files under ``<anchor>/<dest_sub>`` that (a) carry
+    ``package: <package_tag>`` in their frontmatter and (b) are not in the
+    current expected file set; then prunes empty directories. Untagged
+    files (user-authored skills in shared anchors) are never touched.
+    Returns the absolute paths deleted.
+    """
+    anchor_resolved = anchor.expanduser().resolve()
+    deleted: list[Path] = []
+    prune_candidates: set[Path] = set()
+    needle = f"package: {package_tag}"
+    for dest_sub in dest_subs:
+        root = anchor_resolved / dest_sub if dest_sub else anchor_resolved
+        if not root.is_dir():
+            continue
+        for md in root.rglob("*.md"):
+            if md.is_dir():
+                continue
+            rel = md.relative_to(anchor_resolved).as_posix()
+            if rel in current_files:
+                continue
+            try:
+                md.parent.resolve().relative_to(anchor_resolved)
+            except ValueError:
+                continue
+            try:
+                head = md.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            if not head.startswith("---"):
+                continue
+            end = head.find("\n---", 3)
+            block = head[: end if end != -1 else len(head)]
+            if not any(
+                line.strip() == needle for line in block.splitlines()
+            ):
+                continue
+            try:
+                md.unlink()
+            except OSError:
+                continue
+            deleted.append(md)
+            prune_candidates.add(md.parent)
+    for start in sorted(prune_candidates, key=lambda p: len(p.parts),
+                        reverse=True):
+        node = start
+        while node != anchor_resolved and anchor_resolved in node.parents:
+            try:
+                node.rmdir()  # only succeeds when empty
+            except OSError:
+                break
+            node = node.parent
+    return deleted
+
+
 def record_deploy(
     tool_id: str,
     anchor: "Path | str",
