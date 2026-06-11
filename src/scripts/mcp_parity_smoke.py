@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import urllib.request
 from pathlib import Path
@@ -28,6 +29,11 @@ from typing import Any
 
 _SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SCRIPTS))
+_REPO_ROOT = _SCRIPTS.parents[1]
+DEFAULT_NODE_CLI = _REPO_ROOT / "dist" / "cli" / "agent-config.js"
+# Kinds the turnkey local stdio-lite surface serves (ADR-085 subset — no
+# contexts, no execution). The parity leg compares this subset only.
+_NODE_RESOURCE_KINDS = {"rule", "guideline"}
 
 from mcp_server.catalog import load_catalog  # noqa: E402
 from mcp_server.prompts import load_all_prompts, to_mcp_prompt_meta  # noqa: E402
@@ -113,6 +119,75 @@ def _normalize_tools(payload: dict[str, Any]) -> list[dict[str, Any]]:
     )
 
 
+class _NodeSession:
+    """Interactive stdio session with `node <cli> mcp-server` — write a request
+    line, read one JSON-RPC response line. Enables cursor pagination (we can't
+    know cursors ahead of a batch). stdout is JSON-RPC; stderr (the readiness
+    note) is drained separately. Asserts stdout purity: every line is JSON-RPC.
+    """
+
+    def __init__(self, cli: Path) -> None:
+        self._proc = subprocess.Popen(  # noqa: S603
+            ["node", str(cli), "mcp-server"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        self._id = 0
+
+    def call(self, method: str, params: dict[str, Any] | None = None) -> Any:
+        self._id += 1
+        assert self._proc.stdin and self._proc.stdout
+        self._proc.stdin.write(
+            json.dumps({"jsonrpc": "2.0", "id": self._id, "method": method, "params": params or {}}) + "\n"
+        )
+        self._proc.stdin.flush()
+        line = self._proc.stdout.readline().strip()
+        resp = json.loads(line)  # stdout purity: a non-JSON line throws here
+        if "error" in resp and not method.startswith("tools/"):
+            raise RuntimeError(f"{method}: {resp['error']}")
+        return resp.get("result", resp.get("error"))
+
+    def list_all(self, method: str, items_key: str, cursor_field: str) -> list[dict[str, Any]]:
+        """Follow `nextCursor` until exhausted — returns the FULL list."""
+        items: list[dict[str, Any]] = []
+        cursor: str | None = None
+        while True:
+            result = self.call(method, {"cursor": cursor} if cursor else {})
+            items.extend(result.get(items_key, []))
+            cursor = result.get("nextCursor")
+            if not cursor:
+                return items
+
+    def close(self) -> None:
+        assert self._proc.stdin
+        self._proc.stdin.close()
+        self._proc.wait(timeout=15)
+
+
+def _subset_prompts(metas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Key on name + kind only — robust to condensed-vs-uncondensed
+    description telegraphing across surfaces."""
+    return sorted(
+        ({"name": p["name"], "kind": p["kind"]} for p in metas),
+        key=lambda x: x["name"],
+    )
+
+
+def _subset_resources(metas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Filter to the kinds the turnkey surface serves; key on uri + kind +
+    mimeType (drop description for the same robustness reason)."""
+    return sorted(
+        (
+            {"uri": r["uri"], "kind": r["kind"], "mimeType": r["mimeType"]}
+            for r in metas
+            if r["kind"] in _NODE_RESOURCE_KINDS
+        ),
+        key=lambda x: x["uri"],
+    )
+
+
 def _diff(label: str, local: list[Any], remote: list[Any]) -> int:
     if local == remote:
         print(f"✅  {label}: {len(local)} entries match")
@@ -131,32 +206,109 @@ def _diff(label: str, local: list[Any], remote: list[Any]) -> int:
     return 1
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--target", required=True, help="HTTP URL of the Worker.")
-    args = ap.parse_args()
-
+def _run_http_leg(target: str) -> int:
+    """Local Python kernel vs deployed Worker (HTTP). Full normalized diff."""
     failed = 0
-    local_p = _normalize_prompts(_local_prompts_list())
-    remote_p = _normalize_prompts(_rpc(args.target, "prompts/list"))
-    failed += _diff("prompts/list", local_p, remote_p)
-
-    local_r = _normalize_resources(_local_resources_list())
-    remote_r = _normalize_resources(_rpc(args.target, "resources/list"))
-    failed += _diff("resources/list", local_r, remote_r)
-
+    failed += _diff(
+        "prompts/list",
+        _normalize_prompts(_local_prompts_list()),
+        _normalize_prompts(_rpc(target, "prompts/list")),
+    )
+    failed += _diff(
+        "resources/list",
+        _normalize_resources(_local_resources_list()),
+        _normalize_resources(_rpc(target, "resources/list")),
+    )
     try:
-        local_t = _normalize_tools(_local_tools_list())
-        remote_t = _normalize_tools(_rpc(args.target, "tools/list"))
-        failed += _diff("tools/list", local_t, remote_t)
+        failed += _diff(
+            "tools/list",
+            _normalize_tools(_local_tools_list()),
+            _normalize_tools(_rpc(target, "tools/list")),
+        )
     except Exception as e:
         print(f"❌  tools/list: {e}")
         failed += 1
+    print(f"{'' if failed else 'parity OK '}against {target}".strip())
+    return failed
+
+
+def _local_prompts_all() -> list[dict[str, Any]]:
+    """ALL skill+command prompt metas (uncapped — for full-set parity)."""
+    prompts, _ = load_all_prompts()
+    return [to_mcp_prompt_meta(p) for p in prompts]
+
+
+def _local_resources_all() -> list[dict[str, Any]]:
+    """ALL resource metas (uncapped — for full-set parity)."""
+    resources, _ = load_all_resources()
+    return [to_mcp_resource_meta(r) for r in resources]
+
+
+def _run_node_leg(cli: Path) -> int:
+    """Local Python kernel vs the turnkey Node stdio-lite binary (ADR-085).
+
+    Compares the FULL SUBSET the turnkey surface serves (skill/command prompts,
+    rule/guideline resources — contexts excluded by design) via cursor
+    pagination, on name/kind/uri keys, and asserts the read-only boundary
+    (`tools/list` empty). Skips with a note if the binary isn't built.
+    """
+    if not cli.exists():
+        print(f"⏭️  node-stdio: {cli} not built — run `npm run build:cli` (skipped)")
+        return 0
+    session = _NodeSession(cli)
+    try:
+        node_prompts = session.list_all("prompts/list", "prompts", "name")
+        node_resources = session.list_all("resources/list", "resources", "uri")
+        node_tools = session.call("tools/list").get("tools", [])
+    finally:
+        session.close()
+
+    failed = 0
+    failed += _diff(
+        "node prompts/list (full subset)",
+        _subset_prompts(_normalize_prompts({"prompts": _local_prompts_all()})),
+        _subset_prompts(_normalize_prompts({"prompts": node_prompts})),
+    )
+    failed += _diff(
+        "node resources/list (full subset)",
+        _subset_resources(_normalize_resources({"resources": _local_resources_all()})),
+        _subset_resources(_normalize_resources({"resources": node_resources})),
+    )
+    if node_tools:
+        print(f"❌  node tools/list: expected empty (read-only), got {len(node_tools)}")
+        failed += 1
+    else:
+        print("✅  node tools/list: empty (read-only, ADR-085)")
+    print(f"{'' if failed else 'node-stdio parity OK '}({cli.name})".strip())
+    return failed
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--target", help="HTTP URL of the Worker (HTTP-parity leg).")
+    ap.add_argument(
+        "--node-stdio",
+        nargs="?",
+        const=str(DEFAULT_NODE_CLI),
+        help=(
+            "Run the turnkey-launch parity leg against the Node stdio-lite "
+            f"binary (default: {DEFAULT_NODE_CLI.relative_to(_REPO_ROOT)})."
+        ),
+    )
+    args = ap.parse_args()
+    if not args.target and not args.node_stdio:
+        ap.error("at least one of --target or --node-stdio is required")
+
+    failed = 0
+    if args.target:
+        failed += _run_http_leg(args.target)
+    if args.node_stdio:
+        failed += _run_node_leg(Path(args.node_stdio))
 
     if failed:
-        print(f"\n{failed} surface(s) drifted between local stdio and {args.target}")
+        print(f"\n{failed} surface(s) drifted")
         return 1
-    print(f"\nparity OK against {args.target}")
+    print("\nparity OK")
     return 0
 
 

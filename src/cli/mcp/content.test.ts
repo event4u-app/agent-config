@@ -38,4 +38,19 @@ describe('loadContentTree (real dist/agent-src)', () => {
         expect(commitPolicy).toBeDefined();
         expect(commitPolicy!.body.length).toBeGreaterThan(0);
     });
+
+    it('guideline uris are relpath-from-guidelines-root (no `guidelines/` prefix; nesting preserved)', () => {
+        // Regression guard for the Phase-4 parity-smoke finding: top-level
+        // guidelines must NOT carry a spurious `guidelines/` prefix, and nested
+        // ones must keep their full path — mirrors the Python kernel's
+        // `guideline://<relpath-no-ext>` convention (resources.py).
+        const guidelines = entriesOfKind(tree, ['guideline']);
+        expect(guidelines.length).toBeGreaterThan(10);
+        for (const g of guidelines) {
+            expect(g.uri.startsWith('guideline://guidelines/')).toBe(false);
+        }
+        // a known nested guideline keeps its directory segment(s)
+        const nested = guidelines.find((g) => g.uri.includes('php/patterns/'));
+        expect(nested, 'expected a nested php/patterns/ guideline').toBeDefined();
+    });
 });
