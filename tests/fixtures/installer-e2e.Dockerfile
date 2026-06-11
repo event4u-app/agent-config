@@ -20,16 +20,22 @@ RUN apt-get update \
 
 WORKDIR /pkg
 
+# Dependency layer FIRST — only the package manifests. Source edits then
+# leave the (slow, network-bound) `npm ci` layer cached; before this split
+# every repo change re-ran the full dependency install on rebuild.
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
 # Copy the whole repo (`.dockerignore` drops node_modules / dist/cli|server /
-# .git / internal/bench). `dist/agent-src` IS kept — it is the deployable
-# content the global install lays down. src/config + src/templates are needed
-# by the installer too, so a selective COPY is brittle; copy the lot.
+# .git / internal/bench — so this COPY cannot clobber the node_modules layer).
+# `dist/agent-src` IS kept — it is the deployable content the global install
+# lays down. src/config + src/templates are needed by the installer too, so a
+# selective COPY is brittle; copy the lot.
 COPY . .
 
-# Full install (devDeps carry tsc), then rebuild the CLI + server bundles
-# (dist/cli + dist/server were excluded from the context on purpose).
-RUN npm ci --no-audit --no-fund \
-    && npm run build:cli \
+# Rebuild the CLI + server bundles (dist/cli + dist/server were excluded
+# from the context on purpose; devDeps from the layer above carry tsc).
+RUN npm run build:cli \
     && chmod +x tests/fixtures/installer-e2e/run-scenarios.sh
 
 ENTRYPOINT ["bash", "/pkg/tests/fixtures/installer-e2e/run-scenarios.sh"]
