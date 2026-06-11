@@ -3424,7 +3424,19 @@ def _deploy_global_content(
         # partial copy can never trigger deletions.
         inv_mod = _inventory_mod()
         inventory = inv_mod.load_inventory()
-        reaped = inv_mod.reap_stale(tool_id, anchor, current_files, inventory)
+        if tool_id in inventory.get("tools", {}):
+            reaped = inv_mod.reap_stale(
+                tool_id, anchor, current_files, inventory,
+            )
+        else:
+            # First deploy after the upgrade — no inventory to diff against.
+            # Fall back to marker-based ownership: every previously deployed
+            # .md carries the injected `package:` tag (P5.1), so tagged
+            # orphans under the plan's destinations are provably ours.
+            reaped = inv_mod.bootstrap_reap_tagged(
+                anchor, [dest_sub for _, dest_sub in plan],
+                current_files, PACKAGE_TAG_ID,
+            )
         # Record the UNexpanded anchor (`~/.agents/`) so the inventory stays
         # byte-identical across homes (GUI/CLI parity) and home relocations.
         inv_mod.record_deploy(tool_id, anchor_raw, current_files, inventory)
