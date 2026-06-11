@@ -22,7 +22,7 @@ packs:
 ### 1. Run the reference checker
 
 ```bash
-python3 src/scripts/check_references.py --format json
+./scripts-run src/scripts/check_references --format json
 ```
 
 ### 2. Parse findings
@@ -82,7 +82,7 @@ Edit files in `.agent-src.uncondensed/` (source of truth). Regenerate `dist/agen
 After all fixes:
 
 ```bash
-python3 src/scripts/check_references.py
+./scripts-run src/scripts/check_references
 ```
 
 Show final result.
@@ -92,7 +92,7 @@ Show final result.
 For each modified file:
 
 ```bash
-python3 src/scripts/condense.py --mark-done "{relative_path}"
+./scripts-run src/scripts/condense --mark-done "{relative_path}"
 ```
 
 ## Rules

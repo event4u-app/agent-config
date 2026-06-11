@@ -11,9 +11,9 @@
    land on a hijacked release.
 2. Re-run the builder so payloads reflect the current package:
    ```bash
-   python3 scripts/build_discovery_manifest.py --write --strict
-   python3 scripts/build_mcp_registry_manifest.py --write --strict
-   python3 scripts/lint_mcp_registry_manifest.py
+   ./scripts-run src/scripts/build_discovery_manifest --write --strict
+   ./scripts-run src/scripts/build_mcp_registry_manifest --write --strict
+   ./scripts-run src/scripts/lint_mcp_registry_manifest
    ```
 3. Confirm `dist/mcp/registry-manifest.json` `package.version`
    matches the latest published npm version (or the version about to

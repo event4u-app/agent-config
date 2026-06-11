@@ -145,17 +145,17 @@ the area's contract from the README in
 
 ### 5. Regenerate the index
 
-- **Flat surface** — `python3 scripts/adr/regenerate_index.py
+- **Flat surface** — `./scripts-run src/scripts/adr/regenerate_index
   --dir docs/decisions/` writes `INDEX.md` from `ADR-*.md`.
-- **Per-area surface** — `python3 scripts/audit_adr_coverage.py
+- **Per-area surface** — `./scripts-run src/scripts/audit_adr_coverage
   --regen-area-readme <area>` rewrites `docs/adrs/<area>/README.md`.
-  Coverage gate: run `python3 scripts/audit_adr_coverage.py` (no
+  Coverage gate: run `./scripts-run src/scripts/audit_adr_coverage` (no
   args) — exit 0 only when every canonical area has ≥ 1 ADR.
 
 ### 6. Validate
 
-- Flat: `python3 scripts/adr/regenerate_index.py --check` exits 0.
-- Per-area: `python3 scripts/audit_adr_coverage.py --check` exits 0.
+- Flat: `./scripts-run src/scripts/adr/regenerate_index --check` exits 0.
+- Per-area: `./scripts-run src/scripts/audit_adr_coverage --check` exits 0.
 - The project's CI / quality pipeline passes locally.
 
 ## Output format

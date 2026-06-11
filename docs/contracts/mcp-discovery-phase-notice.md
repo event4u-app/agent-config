@@ -35,7 +35,7 @@ raw identifiers (J4 in the roadmap). Three outcomes are logged:
 On any host running the stdio server:
 
 ```bash
-python3 scripts/mcp_telemetry_health.py
+./scripts-run src/scripts/mcp_telemetry_health
 ```
 
 Healthy → exit 0 with the 24 h count. Silent → exit 1; treat as an alert.

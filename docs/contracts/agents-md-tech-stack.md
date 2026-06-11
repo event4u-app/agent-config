@@ -30,7 +30,7 @@ package). The skill ships the four-layer security defense:
 Calibrated token claim: 3-5× comprehension on text-heavy formats
 (PDF, DOCX), 10-50× on image-heavy formats (scanned PDF, PPTX with
 diagrams). Measure locally with
-`python3 scripts/measure_markitdown_lift.py` against
+`./scripts-run src/scripts/measure_markitdown_lift` against
 `tests/fixtures/markitdown-corpus/`.
 
 ## Cognition-only floor for Wings 2–4

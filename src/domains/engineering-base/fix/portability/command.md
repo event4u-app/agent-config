@@ -22,7 +22,7 @@ packs:
 ### 1. Run the portability checker
 
 ```bash
-python3 src/scripts/check_portability.py --format json
+./scripts-run src/scripts/check_portability --format json
 ```
 
 ### 2. Parse findings
@@ -87,7 +87,7 @@ Edit files in `.agent-src.uncondensed/`, then run `bash src/scripts/condense.sh 
 After all fixes, re-run:
 
 ```bash
-python3 src/scripts/check_portability.py
+./scripts-run src/scripts/check_portability
 ```
 
 ### 6. Mark hashes
@@ -95,7 +95,7 @@ python3 src/scripts/check_portability.py
 For each modified file:
 
 ```bash
-python3 src/scripts/condense.py --mark-done "{relative_path}"
+./scripts-run src/scripts/condense --mark-done "{relative_path}"
 ```
 
 ## Rules

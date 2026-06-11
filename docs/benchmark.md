@@ -53,7 +53,7 @@ Per-category:
 
 - **Target shape:** Shape A (neutral TypeScript fixture under `internal/bench/ab/fixture/`).
 - **Variants:** `with` clone inherits `.claude/`, `.augment/`, `AGENTS.md`, `CLAUDE.md` from the package root; `without` does not.
-- **Integrity:** `python3 scripts/bench_ab_integrity.py` exits 0 on every run (clones differ only at the agent-config surface).
+- **Integrity:** `./scripts-run src/scripts/bench_ab_integrity` exits 0 on every run (clones differ only at the agent-config surface).
 - **Scoring:** structural only (no LLM judge). See `scripts/_lib/bench_ab_scoring.py`.
 
 Cache key for the latest run:

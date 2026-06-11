@@ -87,7 +87,7 @@ Every entry above MUST resolve in [`dist/discovery/discovery-manifest.json`](../
 ```bash
 task lint-featured-skills
 # or directly:
-python3 scripts/lint_featured_skills.py
+./scripts-run src/scripts/lint_featured_skills
 ```
 
 CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../src/scripts/lint_featured_skills.py) for the matcher.

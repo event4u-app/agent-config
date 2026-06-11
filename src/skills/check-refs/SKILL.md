@@ -48,7 +48,7 @@ Invoke the skill through the runtime dispatcher so the `execution:` block in
 this skill's frontmatter governs the call:
 
 ```bash
-python3 scripts/runtime_dispatcher.py run --skill check-refs
+./scripts-run src/scripts/runtime_dispatcher run --skill check-refs
 ```
 
 The dispatcher resolves the request, the shell handler runs

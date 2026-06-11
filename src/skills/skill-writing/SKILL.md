@@ -159,7 +159,7 @@ description: "Use when writing Playwright E2E tests — locators, assertions,
 ```
 
 The *good* version routes correctly on *"my E2E keeps flaking on CI"*
-without naming Playwright. Run `python3 scripts/audit_skill_descriptions.py`
+without naming Playwright. Run `./scripts-run src/scripts/audit_skill_descriptions`
 after writing; if flagged `too-short` or `no-trigger-prefix`, rewrite
 before commit.
 
@@ -320,7 +320,7 @@ each criterion to one falsifiable sentence.
 
 **Loop** (orchestrated by `scripts/run_skill_evals.py`):
 
-1. **Scaffold** — `python3 scripts/run_skill_evals.py scaffold {skill}`
+1. **Scaffold** — `./scripts-run src/scripts/run_skill_evals scaffold {skill}`
    creates `runs/{timestamp}-{baseline,with-skill}/` and seeds each
    scenario's `meta.json`.
 2. **Baseline run** — spawn one sub-agent per scenario **without** the
@@ -331,10 +331,10 @@ each criterion to one falsifiable sentence.
 4. **Grade** — for each scenario, write a `grade.json` file with
    per-assertion pass/fail. Deterministic assertions auto-grade;
    rubric assertions need a grader sub-agent.
-5. **Aggregate** — `python3 scripts/run_skill_evals.py aggregate {skill}
+5. **Aggregate** — `./scripts-run src/scripts/run_skill_evals aggregate {skill}
    --run {timestamp}` produces `runs/{timestamp}-benchmark.json` with
    pass-rate, timing, token deltas baseline-vs-with-skill.
-6. **Report** — `python3 scripts/run_skill_evals.py report {skill}
+6. **Report** — `./scripts-run src/scripts/run_skill_evals report {skill}
    --run {timestamp}` prints the diff. Iterate on the skill body
    until `with-skill` outperforms `baseline` on every scenario.
 
@@ -403,7 +403,7 @@ utility libs, or simple state managers.
 * Including baseline knowledge the model already has
 * Description too long or not a trigger
 * Renaming a heading to "Procedure:" without numbered steps or `###` sub-headings
-* **Always run `python3 scripts/skill_linter.py` before saving — 0 FAIL required**
+* **Always run `./scripts-run src/scripts/skill_linter` before saving — 0 FAIL required**
 
 ## Frugality Standards
 

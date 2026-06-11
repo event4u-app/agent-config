@@ -105,7 +105,7 @@ native `model:`. See ADR-035 and `road-to-model-capability-tiers.md`.
 | `skill:laravel` | skill | Augment + Claude only; rationale for absence on others |
 | `command:commit` | command | per-tool command surface divergence |
 
-Run: `python3 scripts/probe_projection_fidelity.py` — exits non-zero on any divergence. Report at `agents/runtime/reports/projection-fidelity.json`.
+Run: `./scripts-run src/scripts/probe_projection_fidelity` — exits non-zero on any divergence. Report at `agents/runtime/reports/projection-fidelity.json`.
 
 ## Known divergences (do not file as bugs)
 
