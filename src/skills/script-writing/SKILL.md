@@ -156,7 +156,7 @@ do **not** add `silent: true` and do **not** use `{{.QUIET_FLAG}}`.
 
 ### 5. Validate
 
-* Run `./scripts-run src/scripts/skill_linter .agent-src.uncondensed/skills/script-writing/SKILL.md` → 0 FAIL
+* Run `./scripts-run src/scripts/skill_linter src/skills/script-writing/SKILL.md` → 0 FAIL
 * Run `./scripts-run src/scripts/{your-script} --quiet` and the verbose path — exit code 0 on clean, non-zero on failure regardless of flag
 * If the script uses `_lib/script_output`, add a test under `tests/` patterned on `tests/test_script_output.py` — assert `silent` / `minimal` / `verbose` behave per § 2
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for the script list) — must exit 0 except for tolerated warnings
