@@ -1,0 +1,10 @@
+# Scalar zoo — everything is kept verbatim, never normalised.
+single: 'hello world'
+double: "with \"escapes\" kept raw"
+tilde: ~
+explicit_null: null
+none_word: None
+int_val: 42
+bool_true: true
+bool_off: off
+"quoted:key": value with : colon

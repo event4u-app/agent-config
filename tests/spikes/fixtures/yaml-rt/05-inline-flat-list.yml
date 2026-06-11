@@ -1,0 +1,4 @@
+# Inline flat lists kept verbatim.
+packs: [core, php, e2e]
+mixed: [1, "two", three]  # inline comment after a flow list
+empty: []

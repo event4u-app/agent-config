@@ -1,0 +1,8 @@
+# Four-space indent variant.
+outer:
+    middle:
+        leaf: value
+    sibling: 2
+other:
+    - item one
+    - item two
