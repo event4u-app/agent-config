@@ -86,14 +86,18 @@ four-operation split assigns to *rules/linters*, not the corpus).
 
 ## Procedure
 
-1. **Ground the values** — `design-intelligence` query gives the
+1. **Inspect the existing styling surface** — detect the stack (Tailwind
+   config, global CSS, component conventions) and survey current
+   hard-coded values, so the token set covers what the codebase
+   actually uses.
+2. **Ground the values** — `design-intelligence` query gives the
    WCAG-checked semantic color set + typography pairing for the product.
-2. **Author `tokens.json`** from the starter: fill primitives, point
+3. **Author `tokens.json`** from the starter: fill primitives, point
    semantics at them, add `dark.semantic` overrides.
-3. **Generate** CSS vars (and the Tailwind snippet when the stack is
+4. **Generate** CSS vars (and the Tailwind snippet when the stack is
    Tailwind — see [`tailwind-engineer`](../tailwind-engineer/SKILL.md)).
-4. **Validate** the codebase; convert violations to `var(--token)`.
-5. Re-run `validate` until clean — exit code 0 is the evidence.
+5. **Validate** the codebase; convert violations to `var(--token)`.
+6. Re-run `validate` until clean — exit code 0 is the evidence.
 
 ## Output format
 

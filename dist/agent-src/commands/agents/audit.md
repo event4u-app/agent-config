@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: agents:audit
+name: agents-audit
 pack: meta
 tier: 2
 cluster: agents

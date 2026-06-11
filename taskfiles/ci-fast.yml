@@ -573,6 +573,11 @@ tasks:
     desc: "Fail when a visible command is missing required intent/routes_to/replaces frontmatter or a routing eval (6.0.0-C Phase 2 Steps 4b+5)"
     cmd: ./scripts-run src/scripts/lint_command_routing {{.QUIET_FLAG}}
 
+  lint-skill-names:
+    silent: true
+    desc: "Fail when a command/skill name violates the Agent-Skills spec or differs from its path-derived slug (2026-06 Zed fix — colon names break Zed)"
+    cmd: python3 src/scripts/lint_agent_skill_names.py {{.QUIET_FLAG}}
+
   lint-new-skill-gate:
     silent: true
     desc: "Fail when a NEW skill lacks a triggers stub or >70%-overlaps an existing same-domain skill (6.0.0-C Phase 4 Step 8b; back catalogue grandfathered)"

@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: skills:discover
+name: skills-discover
 pack: meta
 tier: 2
 cluster: skills

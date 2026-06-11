@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: override:manage
+name: override-manage
 pack: meta
 tier: 2
 cluster: override

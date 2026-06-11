@@ -138,6 +138,9 @@ secret tool you already use into the process environment before you run
 
 ## Related
 
+- [`docs/mcp-registries.md`](mcp-registries.md) — where to *discover* MCP servers
+  (official registry / Glama / Smithery) and how to install one per agent, incl.
+  Augment's manual Import-from-JSON path.
 - [`.agent-src.uncondensed/skills/mcp/SKILL.md`](../.agent-src.uncondensed/skills/mcp/SKILL.md) — MCP server
   selection and usage patterns.
 - [`agents/roadmaps/archive/road-to-mcp.md`](../agents/roadmaps/archive/road-to-mcp.md) — archived roadmap that produced this feature.

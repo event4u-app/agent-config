@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: memory:add
+name: memory-add
 pack: meta
 tier: 2
 cluster: memory

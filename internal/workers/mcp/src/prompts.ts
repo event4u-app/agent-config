@@ -3,8 +3,12 @@
  *
  * Mirrors `scripts/mcp_server/prompts.py::to_mcp_prompt_meta` verbatim:
  *
- *   wire name  =  skill.<frontmatter-name>             (kind=skill)
- *   wire name  =  command.<frontmatter-name with : → .>   (kind=command)
+ *   wire name  =  skill.<frontmatter-name>      (kind=skill)
+ *   wire name  =  command.<frontmatter-name>    (kind=command)
+ *
+ * Command names are plain hyphen slugs since the 2026-06 Zed fix; the
+ * `: → .` rewrite in wireNameOf stays only as a tolerance shim for stale
+ * colon-named content.json blobs.
  *
  * The internal `uri` field on ContentEntry (`skill://<name>` /
  * `command://<name>`) is the blob lookup key, NOT the wire identifier.

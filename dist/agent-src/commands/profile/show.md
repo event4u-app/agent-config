@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: profile:show
+name: profile-show
 pack: meta
 tier: 2
 cluster: profile

@@ -26,15 +26,6 @@ from pathlib import Path
 
 def run_linter_json(ref: str | None, repo_root: Path) -> dict:
     """Run the linter and return parsed JSON. If ref is None, run on working tree."""
-    env_cmd = []
-    if ref:
-        # Run linter at a specific git ref using git stash + checkout
-        # Instead, use git show to avoid checkout — run on working tree after git stash
-        pass
-
-    cmd = [sys.executable, str(repo_root / "src" / "scripts" / "skill_linter.py"), "--all", "--format", "json",
-           "--repo-root", str(repo_root)]
-
     if ref:
         # Strategy: create a temp worktree at the ref, run linter there, clean up
         with tempfile.TemporaryDirectory(prefix="lint-baseline-") as tmpdir:
@@ -43,8 +34,25 @@ def run_linter_json(ref: str | None, repo_root: Path) -> dict:
                 capture_output=True, check=True
             )
             try:
+                # MUST be the baseline worktree's own copy of the linter:
+                # artefact discovery is anchored at the script's location
+                # (_lib/agent_src.py::ROOT = Path(__file__).parents[3]), NOT
+                # at --repo-root. Running the current branch's copy here
+                # linted the CURRENT tree a second time — with absolute
+                # display paths (relative_to(tmpdir) fails for them), so the
+                # two result sets shared zero keys and every repo-wide
+                # warning file surfaced as a "new file" on every PR
+                # (observed on PR #466).
+                baseline_linter = Path(tmpdir) / "src" / "scripts" / "skill_linter.py"
+                if not baseline_linter.is_file():
+                    # Pre-src-move baselines kept the linter under scripts/.
+                    baseline_linter = Path(tmpdir) / "scripts" / "skill_linter.py"
+                if not baseline_linter.is_file():
+                    print(f"Warning: no skill_linter.py in baseline '{ref}' — "
+                          f"baseline treated as empty.", file=sys.stderr)
+                    return {"results": [], "summary": {}}
                 result = subprocess.run(
-                    [sys.executable, str(repo_root / "src" / "scripts" / "skill_linter.py"),
+                    [sys.executable, str(baseline_linter),
                      "--all", "--format", "json", "--repo-root", tmpdir],
                     capture_output=True, text=True, cwd=tmpdir
                 )
@@ -55,6 +63,8 @@ def run_linter_json(ref: str | None, repo_root: Path) -> dict:
                     capture_output=True
                 )
     else:
+        cmd = [sys.executable, str(repo_root / "src" / "scripts" / "skill_linter.py"),
+               "--all", "--format", "json", "--repo-root", str(repo_root)]
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(repo_root))
         return json.loads(result.stdout) if result.stdout.strip() else {"results": [], "summary": {}}
 
@@ -214,6 +224,15 @@ def main() -> int:
 
     baseline_map = build_status_map(baseline_data)
     current_map = build_status_map(current_data)
+
+    # Sanity guard: two non-empty result sets that share not a single file
+    # mean the runs are not comparable (path-scheme mismatch, wrong tree, …).
+    # Reporting in that state would surface EVERY current issue as "new" —
+    # refuse instead of emitting a misleading report.
+    if baseline_map and current_map and not (set(baseline_map) & set(current_map)):
+        print("Error: baseline and current lint results share no files — "
+              "runs are not comparable; refusing to report.", file=sys.stderr)
+        return 2
 
     delta = compare(baseline_map, current_map)
 

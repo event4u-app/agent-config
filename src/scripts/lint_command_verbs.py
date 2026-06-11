@@ -35,6 +35,7 @@ VERBS_YML = ROOT / "src" / "config" / "discovery" / "command-verbs.yml"
 _CMD_PATH_RE = re.compile(r"\.agent-src\.uncondensed/commands/.+\.md$")
 NAME_RE = re.compile(r"^name:\s*(.*)$", re.MULTILINE)
 TIER_RE = re.compile(r"^tier:\s*(\d+)", re.MULTILINE)
+SUB_RE = re.compile(r"^sub:\s*(.*)$", re.MULTILINE)
 VISIBLE_TIERS = {0, 1}
 
 
@@ -73,13 +74,20 @@ def _git(args: list[str], *, tolerant: bool = False) -> str:
     return r.stdout
 
 
-def _parse(text: str) -> tuple[str | None, int]:
-    """(name, tier) from frontmatter text; tier defaults to 2 (internal)."""
+def _parse(text: str) -> tuple[str | None, int, str | None]:
+    """(name, tier, sub) from frontmatter text; tier defaults to 2 (internal).
+
+    `sub` is the cluster sub-name frontmatter field (`sub: ci` on
+    `fix/ci/command.md`) — since names are plain hyphen slugs, `sub:` is the
+    only reliable way to find the verb token of a nested cluster command.
+    """
     nm = NAME_RE.search(text)
     name = nm.group(1).strip().strip('"').strip("'") if nm else None
     tm = TIER_RE.search(text)
     tier = int(tm.group(1)) if tm else 2
-    return name, tier
+    sm = SUB_RE.search(text)
+    sub = sm.group(1).strip().strip('"').strip("'") if sm else None
+    return name, tier, sub
 
 
 def changed_command_files(baseline: str) -> dict[str, str]:
@@ -110,10 +118,13 @@ def all_visible_command_files() -> dict[str, str]:
     return out
 
 
-def leading_token(name: str) -> str:
-    """The verb token: cluster sub-name's head, or the bare name's head."""
-    sub = name.split(":")[-1]
-    return sub.split("-")[0]
+def leading_token(name: str, sub: str | None = None) -> str:
+    """The verb token: the `sub:` frontmatter head for cluster commands, or
+    the bare name's head. Command names are always hyphen slugs (Agent-Skills
+    spec, 2026-06 Zed fix) — the legacy `:` split stays only to tolerate
+    colon-named shapes in git history."""
+    base = sub if sub else name.split(":")[-1]
+    return base.split("-")[0]
 
 
 def check(relpath: str, kind: str, baseline: str, approved: set[str],
@@ -121,20 +132,20 @@ def check(relpath: str, kind: str, baseline: str, approved: set[str],
     abs_path = ROOT / relpath
     if not abs_path.exists():
         return []  # deleted
-    name, tier = _parse(abs_path.read_text(encoding="utf-8"))
+    name, tier, sub = _parse(abs_path.read_text(encoding="utf-8"))
     if name is None or tier not in VISIBLE_TIERS:
         return []  # internal / unnamed — not gated
     if kind == "M":
         # Only a PROMOTION into visibility counts as a new visible surface.
         prev = _git(["show", f"{baseline}:{relpath}"], tolerant=True)
         if prev:
-            _, prev_tier = _parse(prev)
+            _, prev_tier, _ = _parse(prev)
             if prev_tier in VISIBLE_TIERS:
                 return []  # already visible before — grandfathered
 
     if name in grandfathered:
         return []  # documented single-command exception — exempt from both rules
-    bare = name.split(":")[-1]
+    bare = sub if sub else name.split(":")[-1]
     vio: list[Violation] = []
     # Rule 1 — banned prefix (create-*).
     for bp in banned:
@@ -146,7 +157,7 @@ def check(relpath: str, kind: str, baseline: str, approved: set[str],
                                  f"a documented exception."))
             return vio  # banned message is the actionable one; don't pile on
     # Rule 2 — approved verb.
-    tok = leading_token(name)
+    tok = leading_token(name, sub)
     if tok not in approved:
         vio.append(Violation(relpath, "approved-verb",
                              f"leading token `{tok}` of `{name}` is not an "

@@ -4,7 +4,7 @@ name: roadmap
 disable-model-invocation: true
 pack: product-basic
 intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council"
-routes_to: [roadmap:create, roadmap:process-step, roadmap:process-phase, roadmap:process-full]
+routes_to: [roadmap-create, roadmap-process-step, roadmap-process-phase, roadmap-process-full]
 replaces: []
 tier: 1
 description: Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).

@@ -117,6 +117,7 @@ tasks:
       - task: lint-command-budget
       - task: lint-command-verbs
       - task: lint-command-routing
+      - task: lint-skill-names
       - task: lint-new-skill-gate
       - task: check-cluster-patterns
       - task: lint-orchestrator-auto-detect
@@ -241,6 +242,7 @@ tasks:
       - task: lint-command-budget
       - task: lint-command-verbs
       - task: lint-command-routing
+      - task: lint-skill-names
       - task: lint-new-skill-gate
       - task: check-cluster-patterns
       - task: lint-orchestrator-auto-detect

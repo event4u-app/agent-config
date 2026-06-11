@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: optimize:skills
+name: optimize-skills
 pack: meta
 tier: 2
 cluster: optimize

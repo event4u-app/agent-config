@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: agents:user-accept
+name: agents-user-accept
 pack: meta
 tier: 2
 cluster: agents
@@ -19,7 +19,7 @@ packs:
 # /agents user accept
 
 Apply a buffered observation from
-[`.agent-user.observations.jsonl`](../../../../../../docs/contracts/agent-user-schema.md#observation-buffer)
+[`.agent-user.observations.jsonl`](../../../../../../../docs/contracts/agent-user-schema.md#observation-buffer)
 to `.agent-user.md` after explicit confirmation.
 
 Use when:
@@ -118,6 +118,6 @@ Do NOT commit. Do NOT auto-chain to a second field.
 
 ## See also
 
-- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
+- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user review`](review.md), [`/agents user update`](update.md).

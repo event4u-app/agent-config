@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: judge:steps
+name: judge-steps
 pack: engineering-base
 tier: 2
 cluster: judge

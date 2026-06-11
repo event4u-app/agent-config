@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: module:explore
+name: module-explore
 pack: engineering-base
 tier: 2
 cluster: module
