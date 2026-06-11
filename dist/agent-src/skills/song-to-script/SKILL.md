@@ -238,6 +238,15 @@ Concrete checks (all must pass before the script is handed to
 
 ## Output format
 
+1. `script.md` opens with the derivation header —
+   `# <project> — derived from <song-file> (<mode> mode · cuts: <method>)`
+   — so the probe `method` stays visible downstream.
+2. One `## Scene N` block per cut carrying exactly the keys
+   `duration` · `mood` · `action` · `camera` · `dialogue` —
+   `scene-expander` consumes this verbatim; keep the keys exact.
+3. `dialogue:` stays empty unless operator-supplied lyrics cover the
+   section — detected vocal energy alone never fills it.
+
 ```markdown
 # <project> — derived from <song-file> (<mode> mode · cuts: <method>)
 
@@ -256,9 +265,6 @@ camera: handheld tighten
 dialogue:
   - "<subject>: \"<lyric line for this section, if any>\""
 ```
-
-`scene-expander` consumes this verbatim — keep the keys
-(`duration` · `mood` · `action` · `camera` · `dialogue`) exact.
 
 ## Gotcha
 
