@@ -93,7 +93,17 @@ describe('check_roadmap_trackable — replicated dashboard helpers', () => {
 
 const py3 = hasPython3();
 
-describe.skipIf(!py3)('check_roadmap_trackable — golden parity (python3 vs tsx)', () => {
+// check_roadmap_trackable.py does `sys.path.insert(.augment/scripts)` then
+// `from update_roadmap_progress import …` — a GENERATED projection that only
+// exists after `task sync`. The TS twin inlined that logic, so it runs
+// standalone; the Python original ImportError-crashes when .augment/ is absent
+// (e.g. the migration-gate job, which runs npm ci only — no `task sync`).
+// Golden parity can't compare against a crashing Python, so gate the suite on
+// the Python dependency being present (it is, in jobs that run `task sync`).
+const PY_AUGMENT_DEP = path.join(REPO_ROOT, '.augment', 'scripts', 'update_roadmap_progress.py');
+const pyRunnable = py3 && fs.existsSync(PY_AUGMENT_DEP);
+
+describe.skipIf(!pyRunnable)('check_roadmap_trackable — golden parity (python3 vs tsx)', () => {
     function expectMatch(args: readonly string[]) {
         const py = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
         const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
