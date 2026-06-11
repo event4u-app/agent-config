@@ -1,8 +1,14 @@
-# MCP Client Config — Self-hosted agent-config Worker
+# MCP Client Config — agent-config
 
-Connect any MCP-capable client to your own `agent-config-mcp` Cloudflare
-Worker. Read-only, identity-stable per release. Optional Bearer-token
-auth — see [§ Bearer auth](#bearer-auth) below.
+Connect any MCP-capable client to the `agent-config` read-only content
+surface. Two entry points — a **local stdio** server (`agent-config
+mcp-server`, no account, no network) and a **self-hosted Cloudflare Worker**
+(a shared HTTP endpoint). See [§ Two ways to connect](#two-ways-to-connect--pick-one)
+to choose; both are read-only and identity-stable per release.
+
+The Worker sections below assume the self-hosted path (optional Bearer-token
+auth — see [§ Bearer auth](#bearer-auth)). For the local path jump straight to
+[§ Local stdio (turnkey)](#local-stdio-turnkey--no-worker-no-account).
 
 > **No public endpoint.** This package ships the Worker source under
 > `internal/workers/mcp/`, but does **not** operate a shared hosted MCP server.
@@ -17,6 +23,26 @@ For URL shapes (latest vs. pinned `/v<X.Y.Z>`) see
 [`mcp-cloud-endpoints.md`](mcp-cloud-endpoints.md). For operator
 setup of your own deployment see [`mcp-cloud-setup.md`](mcp-cloud-setup.md).
 
+## Two ways to connect — pick one
+
+There are **two distinct entry points**, and it is easy to confuse them.
+Pick the one that matches your situation; the per-client sections below
+cover the **remote Worker**, and [§ Local stdio (turnkey)](#local-stdio-turnkey--no-worker-no-account)
+covers the local one.
+
+| | **Local stdio (turnkey)** | **Remote Worker (self-hosted)** |
+|---|---|---|
+| Command | `agent-config mcp-server` | `npx -y mcp-remote https://your-worker…` |
+| Needs | the npm package installed | your own deployed Cloudflare Worker |
+| Network / account | none — fully local & offline | a Cloudflare account + a deployed Worker |
+| Surface | read-only content (skills / commands / rules / guidelines) | same read-only content |
+| Best for | end-users configuring an agent; offline; no account; a Worker-outage fallback | a shared team endpoint reachable from anywhere |
+
+> **Don't mix them up.** The local entry runs a **command** (`agent-config
+> mcp-server`); the remote entry points at a **URL**. If you installed the
+> npm package and just want the content locally, use the local-stdio path —
+> you do **not** need a Worker.
+
 ## Transport note
 
 The Worker speaks JSON-RPC over HTTP POST. Clients that support
@@ -24,6 +50,10 @@ HTTP transport natively (Claude Code, Cursor) talk to it directly.
 Clients that only support stdio (Claude Desktop, Zed) need the
 [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge from
 npm — invoked via `npx`, no install required.
+
+The **local stdio** path is the opposite: it is natively stdio
+(`agent-config mcp-server`), so stdio-only clients need **no** bridge,
+and HTTP-native clients run it as a local command.
 
 ## Where settings live — `.agent-settings.yml` vs. MCP config
 
@@ -219,12 +249,107 @@ If the client shows the connector but no prompts / resources,
 re-probe the URL — a 5xx from the Worker indicates the deploy is
 mid-roll, retry after a minute.
 
-## Local stdio alternative
+## Local stdio (turnkey) — no Worker, no account
 
-If you have the repo cloned and prefer running the MCP server
-locally (faster startup, no network), the stdio kernel under
-`scripts/mcp_server/` is the same wire surface. Setup:
-`task mcp:setup`, run details in [`../mcp-server.md`](../mcp-server.md).
+Install the package, then point your client at the **`agent-config
+mcp-server`** command. It serves the bundled content (skills / commands as
+prompts; rules / guidelines as resources) over stdio — **read-only**, fully
+local, no network, no Cloudflare account, no repo clone. This is the local
+counterpart to the remote-Worker snippets above; the Worker templates are
+unchanged.
+
+```bash
+npm install -g @event4u/agent-config   # provides the `agent-config` binary
+```
+
+In every snippet below, `agent-config` is the globally-installed binary. If
+you prefer not to install globally, replace
+`"command": "agent-config", "args": ["mcp-server"]` with
+`"command": "npx", "args": ["-y", "@event4u/agent-config", "mcp-server"]`.
+
+### Claude Desktop
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
+`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "agent-config": {
+      "command": "agent-config",
+      "args": ["mcp-server"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop fully (Cmd+Q on macOS).
+
+### Claude Code
+
+Native stdio — one command (everything after `--` is the server command):
+
+```bash
+claude mcp add agent-config -- agent-config mcp-server
+claude mcp list
+```
+
+### Cursor
+
+`~/.cursor/mcp.json` (global) or `<repo>/.cursor/mcp.json` (project-local):
+
+```json
+{
+  "mcpServers": {
+    "agent-config": {
+      "command": "agent-config",
+      "args": ["mcp-server"]
+    }
+  }
+}
+```
+
+Reload Cursor (`Cmd+Shift+P → Reload Window`).
+
+### Zed
+
+`~/.config/zed/settings.json`:
+
+```json
+{
+  "context_servers": {
+    "agent-config": {
+      "source": "custom",
+      "command": "agent-config",
+      "args": ["mcp-server"]
+    }
+  }
+}
+```
+
+No `mcp-remote` bridge is needed — the local server is already stdio.
+
+### Verify the local server
+
+The server speaks the same wire surface; drive it directly to confirm:
+
+```bash
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+  | agent-config mcp-server
+# → {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"…","serverInfo":{"name":"agent-config-mcp",…}}}
+```
+
+The readiness note (`[mcp-server] … ready — N entries, read-only`) is printed
+on **stderr**; stdout carries only JSON-RPC. `tools/list` is empty and
+`tools/call` returns a `not_implemented` envelope — the local surface is
+read-only by design (execution is deferred; see
+[`../decisions/ADR-085-mcp-stdio-end-user-distribution-shape.md`](../decisions/ADR-085-mcp-stdio-end-user-distribution-shape.md)).
+
+> **Contributor variant.** If you have the repo cloned and want the
+> execution-capable Python kernel under `scripts/mcp_server/` instead, run
+> `task mcp:setup` then `task mcp:run` — details in
+> [`../mcp-server.md`](../mcp-server.md). That path is for development, not
+> end-user packaging.
 
 ## See also
 
