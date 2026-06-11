@@ -55,7 +55,10 @@ MAX_UNCONDENSED_BYTES = 5 * 1024 * 1024
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    # This file lives at src/scripts/pack_mcp_content.py — two parents up is
+    # src/, three is the repo root (broken parent count survived the
+    # scripts/ → src/scripts/ move and made pack() scan an empty tree).
+    return Path(__file__).resolve().parent.parent.parent
 
 
 def _git_sha(root: Path) -> str:
@@ -104,6 +107,8 @@ def _collect_entries(root: Path) -> tuple[dict[str, dict[str, Any]], list[str]]:
     commands, e = scan_commands(root)
     errors.extend(e)
     for c in commands:
+        # Command names are plain hyphen slugs since the 2026-06 Zed fix;
+        # the `: → .` rewrite stays only as a tolerance shim for stale trees.
         key = f"command://{c.name.replace(':', '.')}"
         uris[key] = {
             "uri": key,

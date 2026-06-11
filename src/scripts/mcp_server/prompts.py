@@ -248,9 +248,9 @@ def scan_commands(
     """Enumerate every `dist/agent-src/commands/**/*.md`.
 
     Same return contract as `scan_skills`. Command frontmatter `name:`
-    values use `:` as cluster/sub separator (e.g. `research:report`);
-    the value is preserved verbatim and translated to MCP wire form
-    in `to_mcp_prompt_meta`.
+    values are path-derived hyphen slugs (e.g. `research-report`,
+    enforced by command.schema.json); the value is preserved verbatim
+    and translated to MCP wire form in `to_mcp_prompt_meta`.
     """
     base = root or _project_root()
     cmd_root = base / "dist/agent-src" / "commands"
@@ -262,7 +262,7 @@ def scan_commands(
         if not path.is_file():
             continue
         rel = path.relative_to(cmd_root).with_suffix("")
-        fallback = str(rel).replace("/", ":")
+        fallback = str(rel).replace("/", "-")
         try:
             prompt = _load_file(path, kind="command", fallback_name=fallback)
         except OSError as exc:
@@ -306,11 +306,12 @@ def to_mcp_prompt_meta(prompt: SkillPrompt) -> dict[str, Any]:
     """Project a SkillPrompt into MCP `Prompt` constructor kwargs.
 
     Wire-name shape:
-        skill.<frontmatter-name>            (skills)
-        command.<frontmatter-name with : → .>  (commands)
-    Colons in command names (e.g. `research:report`) become `.` so
-    the wire identifier is a single-segment dotted path that survives
-    every MCP client we have tested.
+        skill.<frontmatter-name>     (skills)
+        command.<frontmatter-name>   (commands)
+    Command names are plain hyphen slugs (`research-report`) since the
+    2026-06 Zed fix — `command.schema.json` forbids colons. The legacy
+    `: → .` rewrite below stays only as a tolerance shim for stale
+    colon-named trees (pre-fix checkouts / installed copies).
 
     When the user-type axis is active (`PromptCache` resolves a
     non-empty `personal.user_type`), each prompt carries a
