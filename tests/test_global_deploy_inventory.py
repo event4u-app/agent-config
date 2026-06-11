@@ -226,6 +226,55 @@ def test_two_deploy_cycle_reaps_renamed_skill(tmp_path):
     assert (anchor / "skills" / "agents-review" / "SKILL.md").exists()
 
 
+# --- bootstrap_reap_tagged (pre-inventory installs) ----------------------
+
+TAG = "event4u/agent-config"
+
+
+def _tagged_md(path: Path, name: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"---\nname: {name}\npackage: {TAG}\n---\n\nbody\n", encoding="utf-8",
+    )
+
+
+def test_bootstrap_reaps_tagged_orphans_only(tmp_path):
+    anchor = tmp_path / "anchor"
+    # Tagged orphan (e.g. retired 2026-05-13 command-as-skill entry).
+    _tagged_md(anchor / "skills" / "dto-creator" / "SKILL.md", "dto-creator")
+    # Tagged file still shipped by the current bundle.
+    _tagged_md(anchor / "skills" / "kept" / "SKILL.md", "kept")
+    # User-authored skill: no package tag — must survive.
+    (anchor / "skills" / "my-zed-skill").mkdir(parents=True)
+    (anchor / "skills" / "my-zed-skill" / "SKILL.md").write_text(
+        "---\nname: my-zed-skill\n---\n\nmine\n", encoding="utf-8")
+    # Untagged loose file — must survive.
+    (anchor / "skills" / "notes.md").write_text("plain", encoding="utf-8")
+
+    deleted = inv.bootstrap_reap_tagged(
+        anchor, ["skills"], {"skills/kept/SKILL.md"}, TAG,
+    )
+
+    assert [p.parent.name for p in deleted] == ["dto-creator"]
+    assert not (anchor / "skills" / "dto-creator").exists()
+    assert (anchor / "skills" / "kept" / "SKILL.md").exists()
+    assert (anchor / "skills" / "my-zed-skill" / "SKILL.md").exists()
+    assert (anchor / "skills" / "notes.md").exists()
+
+
+def test_bootstrap_ignores_missing_dest_and_other_tags(tmp_path):
+    anchor = tmp_path / "anchor"
+    _tagged_md(anchor / "skills" / "foreign" / "SKILL.md", "foreign")
+    (anchor / "skills" / "foreign" / "SKILL.md").write_text(
+        "---\nname: foreign\npackage: someone/else\n---\n\nbody\n",
+        encoding="utf-8")
+    deleted = inv.bootstrap_reap_tagged(
+        anchor, ["skills", "rules"], set(), TAG,
+    )
+    assert deleted == []
+    assert (anchor / "skills" / "foreign" / "SKILL.md").exists()
+
+
 # --- integration: install._deploy_global_content reaps via inventory -----
 
 
@@ -273,6 +322,39 @@ def test_deploy_global_content_reaps_stale_entries(tmp_path, monkeypatch):
     assert (anchor / "skills" / "new-skill" / "SKILL.md").exists()
     assert (anchor / "skills" / "user-own" / "SKILL.md").exists(), \
         "user-authored entry in the shared anchor must survive"
+
+
+def test_deploy_global_content_bootstrap_reaps_pre_inventory_orphans(
+        tmp_path, monkeypatch):
+    import install  # noqa: WPS433 — sys.path prepared at module top
+
+    pkg = tmp_path / "pkg"
+    (pkg / "dist/agent-src/skills/current").mkdir(parents=True)
+    (pkg / "dist/agent-src/skills/current/SKILL.md").write_text(
+        "---\nname: current\n---\n\nbody\n", encoding="utf-8")
+    anchor = tmp_path / "anchor"
+    # Pre-inventory legacy state: tagged orphan + user-authored neighbour.
+    _tagged_md(anchor / "skills" / "dto-creator" / "SKILL.md", "dto-creator")
+    (anchor / "skills" / "user-own").mkdir(parents=True)
+    (anchor / "skills" / "user-own" / "SKILL.md").write_text(
+        "---\nname: user-own\n---\n\nmine\n", encoding="utf-8")
+
+    monkeypatch.setenv(inv.INVENTORY_ENV, str(tmp_path / "inv.json"))
+    monkeypatch.setitem(
+        install.USER_SCOPE_PATHS, "tooltest", str(anchor))
+    monkeypatch.setitem(
+        install.GLOBAL_DEPLOY_SOURCES, "tooltest",
+        [("dist/agent-src/skills", "skills")],
+    )
+
+    results = install._deploy_global_content(
+        {"tooltest"}, True, pkg, tmp_path / "installed.lock",
+    )
+    assert results["tooltest"][2] == "deployed"
+    assert not (anchor / "skills" / "dto-creator").exists(), \
+        "pre-inventory tagged orphan must be bootstrap-reaped on first run"
+    assert (anchor / "skills" / "user-own" / "SKILL.md").exists()
+    assert (anchor / "skills" / "current" / "SKILL.md").exists()
 
 
 if __name__ == "__main__":
