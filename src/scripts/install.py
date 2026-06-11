@@ -2918,11 +2918,26 @@ def _run_migrate_to_global(project_root: Path) -> int:
     """
     import importlib  # noqa: PLC0415 — local to keep startup lean.
 
+    # install.py is spawned two ways with different sys.path: the bash
+    # dispatcher sets PYTHONPATH=<package>/src (scripts._cli.* resolves),
+    # but the browser-wizard apply bridge spawns `python3 <install.py>`
+    # with NO PYTHONPATH (src/server/routes/wizard.ts), so sys.path[0] is
+    # only .../src/scripts. Without the bootstrap below the package-qualified
+    # import raises ImportError → "migrate unavailable" → the whole global
+    # install aborts and nothing is created. Insert the package root first,
+    # exactly like the _load_*_module helpers above.
+    pkg_root = str(Path(__file__).resolve().parents[1])
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+
     try:
         cmd_mod = importlib.import_module("scripts._cli.cmd_migrate")
-    except ImportError as exc:
-        warn(f"migrate unavailable: {exc}")
-        return 1
+    except ImportError:  # pragma: no cover — alt sys.path layout fallback
+        try:
+            cmd_mod = importlib.import_module("_cli.cmd_migrate")
+        except ImportError as exc:
+            warn(f"migrate unavailable: {exc}")
+            return 1
 
     return cmd_mod.main([], cwd=project_root, out=sys.stdout)
 

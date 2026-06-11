@@ -19,7 +19,7 @@
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { promises as fs, existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, delimiter } from 'node:path';
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
@@ -331,11 +331,26 @@ interface InstallerResult {
     readonly stderr: string;
 }
 
+/**
+ * Build the env for a spawned `src/scripts/*.py`. The package root's `src`
+ * dir (two levels up from the script — scripts live at `<pkg>/src/scripts/`)
+ * MUST be on PYTHONPATH so package-qualified imports (`scripts._cli.*`,
+ * `scripts._lib.*`) resolve. The bash dispatcher already does this
+ * (`PYTHONPATH=$PACKAGE_ROOT/src`); without parity here the wizard-apply
+ * subprocess loses the `scripts` package and aborts mid-install (the
+ * migrate-to-global path raises ImportError → nothing is created).
+ */
+function installerSpawnEnv(scriptPath: string): NodeJS.ProcessEnv {
+    const srcRoot = dirname(dirname(scriptPath));
+    const pythonPath = [srcRoot, process.env.PYTHONPATH].filter(Boolean).join(delimiter);
+    return { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', PYTHONPATH: pythonPath };
+}
+
 async function spawnInstaller(scriptPath: string, args: readonly string[]): Promise<InstallerResult> {
     return new Promise<InstallerResult>((resolve, reject) => {
         const child = spawn('python3', [scriptPath, ...args], {
             stdio: ['ignore', 'pipe', 'pipe'],
-            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1' },
+            env: installerSpawnEnv(scriptPath),
         });
         const stdoutChunks: Buffer[] = [];
         const stderrChunks: Buffer[] = [];
@@ -379,7 +394,7 @@ function streamInstaller(
     return new Promise<StreamResult>((resolve, reject) => {
         const child = spawn('python3', [scriptPath, ...args], {
             stdio: ['ignore', 'pipe', 'pipe'],
-            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1' },
+            env: installerSpawnEnv(scriptPath),
         });
         const onAbort = (): void => {
             child.kill('SIGTERM');
