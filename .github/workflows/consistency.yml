@@ -63,6 +63,15 @@ jobs:
           python-version: "3.12"
           cache: 'pip'
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: npm ci --no-audit --no-fund
+
       - name: Set up Task
         uses: ./.github/actions/setup-task
         with:
