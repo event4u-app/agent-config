@@ -1020,15 +1020,15 @@ def test_server_call_tool_stub_returns_envelope(tmp_path: Path, monkeypatch) -> 
     req = mcp_types.CallToolRequest(
         method="tools/call",
         params=mcp_types.CallToolRequestParams(
-            name="memory_lookup",
-            arguments={"types": ["ownership"]},
+            name="compile_router",
+            arguments={"dry_run": True},
         ),
     )
     result = asyncio.run(handler(req))
     assert result.root.isError is False
     payload = _json.loads(result.root.content[0].text)
     assert payload["code"] == "not_implemented"
-    assert payload["tool"] == "memory_lookup"
+    assert payload["tool"] == "compile_router"
     assert payload["transport"] == "stdio"
 
 

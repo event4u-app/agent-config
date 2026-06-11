@@ -521,11 +521,15 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "lint_skills": BuiltinTool(
         name="lint_skills",
         description=(
-            "Lint skill / rule / command / guideline / persona markdown "
-            "files. Returns the same JSON payload as "
-            "`scripts/skill_linter.py --format json`. Read-only — never "
-            "writes or spawns git. Pass `paths` to lint a subset, omit "
-            "for a full tree scan."
+            "Lint skill, rule, command, guideline, and persona markdown "
+            "files for frontmatter and structural errors. Use before "
+            "committing or opening a PR that adds or edits any of those "
+            "artifacts, to catch schema violations early. Read-only — "
+            "never writes files or spawns git. Returns the "
+            "`scripts/skill_linter.py --format json` payload: a `summary` "
+            "object (pass / pass_with_warnings / fail / total counts) and "
+            "a per-file `results` array with severity-tagged findings. "
+            "Pass `paths` to lint a subset; omit for a full tree scan."
         ),
         input_schema={
             "type": "object",
@@ -534,8 +538,9 @@ ALLOWLIST: dict[str, BuiltinTool] = {
                     "type": "array",
                     "items": {"type": "string"},
                     "description": (
-                        "Repo-relative paths to lint. Empty / missing → "
-                        "full tree scan via gather_all_candidate_files."
+                        "Repo-relative paths to lint (files or "
+                        "directories). Empty or missing → full tree scan "
+                        "via gather_all_candidate_files."
                     ),
                 },
             },
@@ -546,22 +551,30 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "chat_history_append": BuiltinTool(
         name="chat_history_append",
         description=(
-            "Append one entry to the consumer's chat-history JSONL "
-            "(`agents/runtime/.agent-chat-history`; "
-            "`agents/.agent-chat-history` accepted for back-compat). "
-            "Path-scoped — writes outside the allowlist raise "
-            "ValueError. Use `dry_run` to preview the payload without "
-            "touching the filesystem."
+            "Append one structured entry to the consumer project's "
+            "chat-history log (a JSONL file). Use to record a decision, "
+            "note, or phase marker that should persist into a later "
+            "session or be distilled by `mine_session`. Writes to the "
+            "filesystem (`agents/runtime/.agent-chat-history` by default; "
+            "`agents/.agent-chat-history` and `.agent-chat-history` "
+            "accepted for back-compat) and returns the written entry plus "
+            "its resolved target path. Path-scoped: a `path` outside the "
+            "allowlist, or any traversal escaping the project root, raises "
+            "an error before writing. Set `dry_run: true` to preview the "
+            "entry and target path without touching disk."
         ),
         input_schema={
             "type": "object",
             "properties": {
-                "text": {"type": "string"},
+                "text": {
+                    "type": "string",
+                    "description": "The entry body to record.",
+                },
                 "entry_type": {
                     "type": "string",
                     "description": (
-                        "Short ``t`` tag (e.g. note, decision). "
-                        "Defaults to ``note``."
+                        "Short ``t`` tag categorising the entry (e.g. "
+                        "note, decision, phase). Defaults to ``note``."
                     ),
                 },
                 "path": {
@@ -574,9 +587,28 @@ ALLOWLIST: dict[str, BuiltinTool] = {
                         "`.agent-chat-history` under consumer_root."
                     ),
                 },
-                "session": {"type": "string"},
-                "dry_run": {"type": "boolean", "default": False},
-                "min_schema_version": {"type": "integer"},
+                "session": {
+                    "type": "string",
+                    "description": (
+                        "Optional 16-char session id to group the entry "
+                        "under. Defaults to the current session."
+                    ),
+                },
+                "dry_run": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": (
+                        "When true, return the entry and resolved target "
+                        "path without writing to disk."
+                    ),
+                },
+                "min_schema_version": {
+                    "type": "integer",
+                    "description": (
+                        "Refuse to write if the on-disk history schema is "
+                        "older than this version."
+                    ),
+                },
             },
             "required": ["text"],
             "additionalProperties": False,
@@ -586,18 +618,46 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "chat_history_read": BuiltinTool(
         name="chat_history_read",
         description=(
-            "Read recent chat-history entries from "
-            "`agents/runtime/.agent-chat-history` "
-            "(`agents/.agent-chat-history` accepted for back-compat). "
-            "Filter by session, trailing-N, or entry-type. Read-only."
+            "Read recent entries back from the consumer project's "
+            "chat-history JSONL "
+            "(`agents/runtime/.agent-chat-history`; "
+            "`agents/.agent-chat-history` accepted for back-compat). Use "
+            "to recover context from an earlier session — decisions, "
+            "notes, phase markers — at the start of a new task. "
+            "Read-only. Returns the resolved file path plus a list of "
+            "matching entries (newest last). Combine `session`, `last`, "
+            "and `entry_type` to narrow the result."
         ),
         input_schema={
             "type": "object",
             "properties": {
-                "last": {"type": "integer", "minimum": 1},
-                "session": {"type": "string"},
-                "entry_type": {"type": "string"},
-                "path": {"type": "string"},
+                "last": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": (
+                        "Return only the most recent N entries, after "
+                        "other filters apply."
+                    ),
+                },
+                "session": {
+                    "type": "string",
+                    "description": "Filter to a single 16-char session id.",
+                },
+                "entry_type": {
+                    "type": "string",
+                    "description": (
+                        "Filter by the `t` tag (e.g. note, decision, "
+                        "phase)."
+                    ),
+                },
+                "path": {
+                    "type": "string",
+                    "description": (
+                        "Optional history-file path override; defaults to "
+                        "the standard chat-history location under the "
+                        "project root."
+                    ),
+                },
             },
             "additionalProperties": False,
         },
@@ -606,9 +666,14 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "memory_lookup": BuiltinTool(
         name="memory_lookup",
         description=(
-            "Hybrid memory retrieval over `agents/memory/<type>/*.yml` "
-            "and `agents/memory/intake/*.jsonl`. Returns the v1 "
-            "retrieval envelope. Read-only."
+            "Retrieve engineering-memory entries for one or more memory "
+            "types, optionally narrowed to specific anchor paths. Use "
+            "before editing a security-sensitive or historically buggy "
+            "file to surface prior incidents, ownership, and patterns "
+            "tied to it. Reads `agents/memory/<type>/*.yml` plus the "
+            "`agents/memory/intake/*.jsonl` signal log. Read-only. "
+            "Returns the v1 retrieval envelope: a `status` field plus "
+            "per-type `slices` carrying the matched entries."
         ),
         input_schema={
             "type": "object",
@@ -617,13 +682,37 @@ ALLOWLIST: dict[str, BuiltinTool] = {
                     "type": "array",
                     "items": {"type": "string"},
                     "minItems": 1,
+                    "description": (
+                        "Memory types to scan, e.g. `historical-patterns`, "
+                        "`incident-learnings`, `ownership`. At least one "
+                        "required."
+                    ),
                 },
                 "keys": {
                     "type": "array",
                     "items": {"type": "string"},
+                    "description": (
+                        "Optional anchor paths or globs to match entries "
+                        "against (e.g. a file you are about to edit)."
+                    ),
                 },
-                "limit": {"type": "integer", "minimum": 1, "default": 5},
-                "with_package": {"type": "boolean", "default": False},
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 5,
+                    "description": (
+                        "Maximum entries to return per type. Defaults to 5."
+                    ),
+                },
+                "with_package": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": (
+                        "When true, also include memory shipped with the "
+                        "agent-config package, not just the consumer "
+                        "project's own."
+                    ),
+                },
             },
             "required": ["types"],
             "additionalProperties": False,
@@ -633,9 +722,13 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "memory_status": BuiltinTool(
         name="memory_status",
         description=(
-            "Report whether the optional `@event4u/agent-memory` "
-            "package is reachable, and surface its routing metadata. "
-            "Read-only."
+            "Report whether the optional `@event4u/agent-memory` CLI is "
+            "installed and reachable, and surface its backend and routing "
+            "metadata. Use to decide whether memory-backed tools "
+            "(`memory_lookup`, `memory_signal`) will return real data "
+            "before relying on them. Read-only, takes no arguments. "
+            "Returns a `status` (`ok` / `absent`), the active `backend`, "
+            "and — when absent — the reason and the path probed."
         ),
         input_schema={
             "type": "object",
@@ -647,8 +740,11 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "list_skills": BuiltinTool(
         name="list_skills",
         description=(
-            "Enumerate every skill currently exposed as a prompt, with "
-            "name + description + source. Read-only manifest view."
+            "Enumerate every skill the server currently exposes as a "
+            "prompt, each with its name, description, and source. Use to "
+            "discover which skills are available before suggesting or "
+            "invoking one. Read-only manifest view, takes no arguments. "
+            "Returns a `count` plus a `skills` array."
         ),
         input_schema={
             "type": "object",
@@ -660,8 +756,11 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "list_commands": BuiltinTool(
         name="list_commands",
         description=(
-            "Enumerate every slash command currently exposed as a "
-            "prompt. Read-only manifest view."
+            "Enumerate every slash command the server currently exposes "
+            "as a prompt, each with its name and description. Use to "
+            "discover available commands before routing a user request to "
+            "one. Read-only manifest view, takes no arguments. Returns a "
+            "`count` plus a `commands` array."
         ),
         input_schema={
             "type": "object",
@@ -673,8 +772,12 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "list_rules": BuiltinTool(
         name="list_rules",
         description=(
-            "Enumerate every rule currently exposed as a resource. "
-            "Read-only manifest view."
+            "Enumerate every behavioral rule the server exposes as a "
+            "resource, each with its URI, name, and description. Use to "
+            "discover which rules are in effect, then fetch a body with "
+            "`read_resource_body` or `resources/read`. Read-only manifest "
+            "view, takes no arguments. Returns a `count` plus a `rules` "
+            "array."
         ),
         input_schema={
             "type": "object",
@@ -686,15 +789,24 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "read_resource_body": BuiltinTool(
         name="read_resource_body",
         description=(
-            "Fetch the rendered body of any resource URI (rule, "
-            "guideline, context) without going through "
-            "`resources/read`. Convenience for clients that want to "
-            "inline content into a tool call result."
+            "Fetch the rendered body of a single resource URI (rule, "
+            "guideline, or context document) in one call, without the "
+            "two-step `resources/list` + `resources/read` handshake. Use "
+            "when you already know the URI and want to inline its content "
+            "into a tool-call result. Read-only. Returns the resource "
+            "`uri`, `name`, `description`, and full text `body`."
         ),
         input_schema={
             "type": "object",
             "properties": {
-                "uri": {"type": "string"},
+                "uri": {
+                    "type": "string",
+                    "description": (
+                        "Resource URI to fetch, e.g. `rule://commit-policy`, "
+                        "`guideline://php/patterns/events`, or "
+                        "`context://authority/scope-mechanics`."
+                    ),
+                },
             },
             "required": ["uri"],
             "additionalProperties": False,
