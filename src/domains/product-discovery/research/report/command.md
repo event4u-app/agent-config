@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: research:report
+name: research-report
 pack: product-discovery
 tier: 2
 cluster: research

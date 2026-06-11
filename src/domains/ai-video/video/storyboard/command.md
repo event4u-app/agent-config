@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: video:storyboard
+name: video-storyboard
 pack: ai-video
 tier: 2
 cluster: video

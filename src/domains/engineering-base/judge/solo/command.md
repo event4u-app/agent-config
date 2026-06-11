@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: judge:solo
+name: judge-solo
 pack: engineering-base
 tier: 2
 cluster: judge

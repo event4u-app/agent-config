@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: optimize:agents-dir
+name: optimize-agents-dir
 pack: meta
 tier: 2
 cluster: optimize

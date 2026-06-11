@@ -4,7 +4,7 @@ name: optimize
 disable-model-invocation: true
 pack: meta
 intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir"
-routes_to: [optimize:skills, optimize:rtk, optimize:augmentignore, optimize:agents-dir]
+routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir]
 replaces: []
 tier: 1
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters

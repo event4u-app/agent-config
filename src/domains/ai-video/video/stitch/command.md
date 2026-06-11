@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: video:stitch
+name: video-stitch
 pack: ai-video
 tier: 2
 cluster: video

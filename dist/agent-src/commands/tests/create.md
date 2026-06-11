@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: tests:create
+name: tests-create
 pack: engineering-base
 tier: 2
 cluster: tests

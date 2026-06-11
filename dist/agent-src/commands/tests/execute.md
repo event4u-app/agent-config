@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: tests:execute
+name: tests-execute
 pack: engineering-base
 tier: 2
 cluster: tests

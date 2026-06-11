@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: council:default
+name: council-default
 pack: meta
 tier: 2
 cluster: council

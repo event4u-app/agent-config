@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 skills: [agent-docs-writing]
-name: optimize:augmentignore
+name: optimize-augmentignore
 pack: meta
 tier: 2
 cluster: optimize

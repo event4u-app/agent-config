@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: knowledge:ingest
+name: knowledge-ingest
 pack: product-discovery
 tier: 2
 cluster: knowledge

@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: fix:refs
+name: fix-refs
 pack: engineering-base
 tier: 2
 cluster: fix

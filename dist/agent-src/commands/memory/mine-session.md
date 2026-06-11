@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: memory:mine-session
+name: memory-mine-session
 pack: meta
 tier: 2
 cluster: memory

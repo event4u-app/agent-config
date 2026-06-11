@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: analytics:prune
+name: analytics-prune
 pack: meta
 tier: 2
 cluster: analytics

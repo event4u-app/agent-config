@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: agents:user-update
+name: agents-user-update
 pack: meta
 tier: 2
 cluster: agents
@@ -60,7 +60,7 @@ When called with `--validate` (or after the user confirms "done"):
 
 1. Read `.agent-user.md`.
 2. Parse frontmatter; check every required field per
-   [`agent-user-schema § Field reference`](../../../../../../docs/contracts/agent-user-schema.md#field-reference).
+   [`agent-user-schema § Field reference`](../../../../../../../docs/contracts/agent-user-schema.md#field-reference).
 3. Check file size ≤100 lines.
 4. Run the privacy-floor scan (same as `init` step 4): credentials,
    third-party PII, financial figures, health/legal status.
@@ -98,6 +98,6 @@ Do NOT commit. Do NOT chain to another `/agents user *` command.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../../docs/contracts/agent-user-schema.md).
+- Schema: [`agent-user-schema`](../../../../../../../docs/contracts/agent-user-schema.md).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user init`](init.md), [`/agents user show`](show.md), [`/agents user review`](review.md).

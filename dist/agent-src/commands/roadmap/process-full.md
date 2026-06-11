@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: roadmap:process-full
+name: roadmap-process-full
 pack: product-basic
 tier: 2
 cluster: roadmap
