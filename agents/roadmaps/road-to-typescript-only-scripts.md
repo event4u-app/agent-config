@@ -100,7 +100,7 @@ Council verdict: redesign natively in TS (venv logic becomes obsolete), but conf
 
 Largest CI-gate cluster; stateless CLIs — port in batches.
 
-- [ ] **Step 1:** Port the `check_*` family (44 files) in dependency-free batches: vitest 1:1 ports first, then the script, golden parity on the repo itself (the repo is the fixture — finding counts and messages must match), `.py` deleted per batch PR.
+- [x] **Step 1:** Port the `check_*` family (44 files) in dependency-free batches: vitest 1:1 ports first, then the script, golden parity on the repo itself (the repo is the fixture — finding counts and messages must match), `.py` deleted per batch PR.
 - [x] **Step 2:** Port the `lint_*` family (57 files) the same way, including `lint_roadmap_complexity.py`, `lint_framework_leakage.py`, `lint_media_policy_linkage.py`, and the reference checkers (`check_references.py`, `check_no_roadmap_refs.py`, `check_council_references.py`).
 - [ ] **Step 3:** Port `skill_linter.py` (3.7k LOC) as its own batch — it is the single highest-value gate: full vitest port of its pytest suite, golden parity = identical finding sets on the current repo snapshot, plus the error-parity corpus.
 - [ ] **Step 4:** Port `check_always_budget.py`, `check_portability.py`, `check_condensation.py`-adjacent validators and `validate_frontmatter.py` with their schemas (`scripts/schemas/`).
