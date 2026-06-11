@@ -27,3 +27,7 @@ dist/*
 
 # Transient runtime state (council sessions, dashboards) — not needed to boot.
 agents/runtime
+
+# A/B benchmark clones (~145 MB of nested git worktrees) — never part of any
+# docker build context (the glama MCP build or the installer-e2e image).
+internal/bench

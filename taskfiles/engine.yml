@@ -87,6 +87,14 @@ tasks:
     cmds:
       - bash src/scripts/ai-video/test-pipeline.sh
 
+  test-installer-e2e:
+    silent: true
+    desc: "Container e2e — builds the installer-e2e image and runs the installer + wizard apply scenarios inside it (needs Docker; multi-minute build)."
+    env:
+      AGENT_CONFIG_E2E_DOCKER: "1"
+    cmds:
+      - python3 -m pytest tests/test_e2e_container_install.py -v
+
   video:smoke-trace:
     silent: true
     desc: "Capture an adapter smoke trace. Dry-run by default (no spend); pass PROVIDER=<id> and LIVE=1 for the real round-trip (needs a key + real spend — maintainer Hard Floor)."
