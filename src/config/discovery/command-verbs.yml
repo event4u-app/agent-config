@@ -1,7 +1,9 @@
 # Controlled command-verb vocabulary (6.0.0-C Phase 2 Step 4; ADR-041).
 #
 # A VISIBLE command (tier 0/1) must have a leading token — the substring before
-# the first `-` in its name, or the cluster sub-name for `cluster:sub` commands —
+# the first `-` in its name, or the head of the `sub:` frontmatter field for
+# nested cluster commands (names are plain hyphen slugs since the 2026-06 Zed
+# fix; colon names are forbidden by command.schema.json) —
 # drawn from `approved_verbs`. Enforced FORWARD-ONLY by
 # scripts/lint_command_verbs.py: only commands added or promoted to visible
 # since the `main` baseline are checked; the existing surface is grandfathered.
