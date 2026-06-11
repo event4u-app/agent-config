@@ -16,6 +16,19 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Feedback wanted — multi-agent MCP config (demand probe, `ADR-086`)
+
+We are deciding whether to build a cross-agent MCP discovery / install helper.
+One question — answer in [Discussions](https://github.com/event4u-app/agent-config/discussions):
+
+> **Do you run more than one AI coding agent in the same project, and is keeping
+> MCP-server config in sync across them painful?**
+> (a) very painful · (b) somewhat · (c) single-agent, not applicable · (d) I already
+> self-script it.
+
+This gates the read-only MCP discovery helper (`agent-config mcp:search`) and the
+deferred auto-install question (`ADR-086`).
+
 ### Added — pack-scoped projection (opt-in, `road-to-6.0.0-b`)
 
 The projector can now write only the **active profile + packs'** artefacts into
