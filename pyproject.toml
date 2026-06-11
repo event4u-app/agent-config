@@ -23,3 +23,6 @@ addopts = "--import-mode=importlib"
 # (`scripts` = `src/scripts` namespace package); `.` keeps repo-root-relative
 # test imports working.
 pythonpath = ["src", "."]
+markers = [
+    "docker: opt-in test that builds/runs a Docker image (gate: AGENT_CONFIG_E2E_DOCKER=1)",
+]

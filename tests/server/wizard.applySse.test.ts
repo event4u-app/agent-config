@@ -21,7 +21,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createServer } from 'node:net';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 
 import { createApp } from '../../src/server/app.js';
@@ -342,5 +342,49 @@ describe('POST /api/v1/wizard/apply — P2 stream robustness', () => {
         expect(errorFrames[0]?.message).toBe('disk full');
         expect(errorFrames[0]?.recoverable).toBe(false);
         expect(frames.some((f) => f.type === 'done')).toBe(false);
+    });
+});
+
+describe('POST /api/v1/wizard/apply — spawn environment', () => {
+    let boot: SseBoot;
+
+    afterEach(async () => {
+        if (boot) await boot.cleanup();
+    });
+
+    // Regression for the browser-wizard "Finish writes nothing" bug: the
+    // wizard spawns install.py with no PYTHONPATH, so the package-qualified
+    // `scripts._cli.cmd_migrate` import failed → migrate-to-global aborted →
+    // empty install. The spawn helpers MUST seed PYTHONPATH=<packageRoot>/src
+    // (parity with _dispatch.bash) so `scripts.*` resolves in the child.
+    it('seeds PYTHONPATH=<packageRoot>/src on the spawned installer', async () => {
+        boot = await bootSseApp();
+        const envPath = join(boot.baseTmp, 'child-pythonpath');
+        // Fake installer: record the PYTHONPATH it received (atomic write so
+        // the reader never sees a partial file), then emit a terminal frame.
+        writeInstaller(boot.packageRoot, [
+            'import os, sys, json',
+            `ENVF = r"${envPath}"`,
+            'tmp = ENVF + ".tmp"',
+            'with open(tmp, "w") as f:',
+            '    f.write(os.environ.get("PYTHONPATH", ""))',
+            'os.replace(tmp, ENVF)',
+            'sys.stdout.write(json.dumps({"type":"done"}) + "\\n")',
+            'sys.stdout.flush()',
+            '',
+        ].join('\n'));
+
+        const res = await fetch(`${boot.baseUrl}/api/v1/wizard/apply`, {
+            method: 'POST',
+            headers: { ...authHeaders(boot.host), accept: 'text/event-stream' },
+            body: APPLY_BODY,
+        });
+        expect(res.status).toBe(200);
+        await collectFrames(res.body);
+
+        await waitForFile(envPath, 6_000);
+        const pythonPath = readFileSync(envPath, 'utf8');
+        const expectedSrc = join(boot.packageRoot, 'src');
+        expect(pythonPath.split(delimiter)).toContain(expectedSrc);
     });
 });
