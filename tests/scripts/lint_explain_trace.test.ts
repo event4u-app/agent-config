@@ -172,6 +172,24 @@ describe.skipIf(!py3)('lint_explain_trace — golden parity (python3 vs tsx)', (
         expect(ts.status).toBe(py.status);
     }
 
+    // Tolerant comparison for SCHEMA-VALIDATION findings: jsonschema's exact
+    // error prose is Python-version-dependent (local 3.9 vs CI 3.12 emit
+    // different wording/ordering), and post-migration there is no Python — the
+    // TS validator owns the wording. The stable contract is: same exit code +
+    // the same set of "<field-path>:" prefixes flagged. Byte-comparing
+    // jsonschema prose chases a moving target, so compare the stable projection.
+    function sameSchemaFindings(args: readonly string[], input?: string): void {
+        const py = runPy(args, input);
+        const ts = runTs(args, input);
+        expect(ts.status).toBe(py.status);
+        const prefixes = (s: string): string[] =>
+            s.split('\n')
+                .filter((l) => l.includes(':'))
+                .map((l) => l.slice(0, l.indexOf(':')).trim())
+                .sort();
+        expect(prefixes(ts.stdout + ts.stderr)).toEqual(prefixes(py.stdout + py.stderr));
+    }
+
     function write(name: string, obj: unknown): string {
         const p = path.join(tmp, name);
         fs.writeFileSync(p, JSON.stringify(obj));
@@ -196,8 +214,10 @@ describe.skipIf(!py3)('lint_explain_trace — golden parity (python3 vs tsx)', (
     it('additional-property failure matches byte-for-byte (exit 1)', () => {
         same([write('extra.json', { ...VALID_TRACE, extra: 1 })]);
     });
-    it('minLength / nested-item failures match byte-for-byte (exit 1)', () => {
-        same([write('nested.json', { ...VALID_TRACE, run_id: '', assumptions: [{}] })]);
+    it('minLength / nested-item failures flag the same fields (exit 1)', () => {
+        // Tolerant: jsonschema prose varies by Python version; assert the same
+        // exit code + the same flagged field-paths, not the exact wording.
+        sameSchemaFindings([write('nested.json', { ...VALID_TRACE, run_id: '', assumptions: [{}] })]);
     });
     it('no path / no --stdin invocation error matches (exit 2)', () => {
         same([]);

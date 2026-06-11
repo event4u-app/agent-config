@@ -54,12 +54,20 @@ describe('lint_featured_skills — behavioural spec (helpers)', () => {
         expect(commands.has('council:old')).toBe(true); // deprecation alias
     });
 
-    it('the real-repo discovery manifest loads as valid JSON with artefacts', () => {
-        const raw = fs.readFileSync(mod.MANIFEST, 'utf-8');
-        const data = JSON.parse(raw) as mod.Manifest;
-        const [skills] = mod.manifest_names(data);
-        expect(skills.size).toBeGreaterThan(0);
-    });
+    // The discovery manifest is a gitignored generated artifact (built by
+    // build_discovery_manifest). Jobs that only run `npm ci` + vitest (e.g. the
+    // migration-gate workflow) don't build it, so skip when it's absent —
+    // asserting on a missing generated file is an environment artifact, not a
+    // behavior check.
+    it.skipIf(!fs.existsSync(mod.MANIFEST))(
+        'the real-repo discovery manifest loads as valid JSON with artefacts',
+        () => {
+            const raw = fs.readFileSync(mod.MANIFEST, 'utf-8');
+            const data = JSON.parse(raw) as mod.Manifest;
+            const [skills] = mod.manifest_names(data);
+            expect(skills.size).toBeGreaterThan(0);
+        },
+    );
 
     it('LINK_RE captures (category, raw) pairs from a discovery-doc link', () => {
         // Pattern: [`/?<text>`](../dist/agent-src/(skills|commands)/<raw>.md)
