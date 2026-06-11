@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: council:analysis
+name: council-analysis
 pack: meta
 tier: 2
 cluster: council

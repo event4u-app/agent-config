@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: agents:user-review
+name: agents-user-review
 pack: meta
 tier: 2
 cluster: agents
@@ -85,7 +85,7 @@ One question per turn. Wait for the user's number.
 ### 4. Privacy-floor verify
 
 Before printing any observation's `evidence` text, scan it for the
-[exclusions list](../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+[exclusions list](../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 Match → replace the offending substring with `[redacted]` in the
 rendered output.
 
@@ -108,6 +108,6 @@ turn.
 
 ## See also
 
-- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
+- Schema + buffer contract: [`agent-user-schema § Observation buffer`](../../../../../../docs/contracts/agent-user-schema.md#observation-buffer).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user accept`](accept.md), [`/agents user update`](update.md).

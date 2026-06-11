@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: agents:user-review
+name: agents-user-review
 pack: meta
 tier: 2
 cluster: agents

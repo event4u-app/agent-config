@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: council:pr
+name: council-pr
 pack: meta
 tier: 2
 cluster: council

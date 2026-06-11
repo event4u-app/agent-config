@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: sync-gitignore:fix
+name: sync-gitignore-fix
 pack: engineering-base
 tier: 2
 cluster: sync-gitignore

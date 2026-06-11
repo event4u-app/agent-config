@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: council:debate
+name: council-debate
 pack: meta
 tier: 2
 cluster: council

@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: fix:portability
+name: fix-portability
 pack: engineering-base
 tier: 2
 cluster: fix

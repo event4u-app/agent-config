@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: profile:deactivate
+name: profile-deactivate
 pack: meta
 tier: 2
 cluster: profile

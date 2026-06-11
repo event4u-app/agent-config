@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: chat-history:import
+name: chat-history-import
 pack: meta
 tier: 2
 cluster: chat-history

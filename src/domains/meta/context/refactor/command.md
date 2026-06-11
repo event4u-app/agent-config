@@ -1,6 +1,6 @@
 ---
 model_tier: high
-name: context:refactor
+name: context-refactor
 pack: meta
 tier: 2
 cluster: context

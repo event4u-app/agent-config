@@ -1,6 +1,6 @@
 ---
 model_tier: medium
-name: agents:user-show
+name: agents-user-show
 pack: meta
 tier: 2
 cluster: agents
@@ -20,7 +20,7 @@ packs:
 # /agents user show
 
 Read-only render of the project-root `.agent-user.md` per
-[`docs/contracts/agent-user-schema.md`](../../../../../../../../docs/contracts/agent-user-schema.md).
+[`docs/contracts/agent-user-schema.md`](../../../../../../../../../docs/contracts/agent-user-schema.md).
 
 Use when:
 
@@ -110,6 +110,6 @@ Do NOT chain to other `/agents user *` commands. Do NOT commit.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../../../../docs/contracts/agent-user-schema.md).
+- Schema: [`agent-user-schema`](../../../../../../../../../docs/contracts/agent-user-schema.md).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user init`](init.md), [`/agents user update`](update.md).

@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: video:from-song
+name: video-from-song
 pack: ai-video
 tier: 2
 cluster: video

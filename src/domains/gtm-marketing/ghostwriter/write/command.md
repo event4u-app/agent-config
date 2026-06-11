@@ -1,6 +1,6 @@
 ---
 model_tier: inherit
-name: ghostwriter:write
+name: ghostwriter-write
 pack: gtm-marketing
 tier: 2
 cluster: ghostwriter
