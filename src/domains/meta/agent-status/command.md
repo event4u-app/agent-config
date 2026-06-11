@@ -70,10 +70,10 @@ implementation: [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs).
 Run two read-only Python helpers (both stdlib-only, both no-op safe if the
 JSONL is missing):
 
-- `python3 scripts/telegraph_stats.py --format json` — per-session +
+- `./scripts-run src/scripts/telegraph_stats --format json` — per-session +
   per-conversation + lifetime telegraph delta. Honors the suspended
   multiplier (see [`docs/contracts/telegraph-telemetry.md`](../../docs/contracts/telegraph-telemetry.md)) — delta reads `0` while suspended; display the version + ACTIVE/SUSPENDED state regardless.
-- `python3 scripts/cost_by_conversation.py --format json` — per-conversation
+- `./scripts-run src/scripts/cost_by_conversation --format json` — per-conversation
   total cost + model breakdown for the current conversation, sourced
   from the same `agents/cost-tracking/sessions.jsonl` ledger.
 

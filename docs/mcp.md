@@ -68,7 +68,7 @@ task mcp:check
 Or invoke the script directly (maintainer workflow, inside the package repo):
 
 ```bash
-python3 scripts/mcp_render.py [--source PATH] [--claude-desktop] [--check]
+./scripts-run src/scripts/mcp_render [--source PATH] [--claude-desktop] [--check]
 ```
 
 Default output paths:

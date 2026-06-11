@@ -37,7 +37,7 @@ removes `.cursor/` on next `task generate-tools`.
 |---|---|
 | Regenerate all enabled | `task generate-tools` ([`taskfiles/content.yml:63`](../../taskfiles/content.yml)) |
 | Clean output | `task clean-tools` ([`taskfiles/content.yml:69`](../../taskfiles/content.yml)) |
-| Direct script | `python3 scripts/condense.py --generate-tools` |
+| Direct script | `./scripts-run src/scripts/condense --generate-tools` |
 | Consumer install | `scripts/install.sh` (calls `--generate-tools` after `--project-augment`) |
 
 ## Invariants
@@ -107,8 +107,8 @@ with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
 Re-run the measurement after every change to the projection logic:
 
 ```bash
-python3 scripts/measure_projection_bytes.py --regenerate
-python3 scripts/measure_projection_bytes.py --json    # CI-friendly
+./scripts-run src/scripts/measure_projection_bytes --regenerate
+./scripts-run src/scripts/measure_projection_bytes --json    # CI-friendly
 ```
 
 ## Proving the pipeline

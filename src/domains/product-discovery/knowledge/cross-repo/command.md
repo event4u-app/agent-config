@@ -44,7 +44,7 @@ concept (≥ 1 term > 2 chars). A `--path-scope` glob narrows the search and is
 ### 2. Run the retrieval
 
 ```bash
-python3 scripts/cross_repo_retrieve.py "<query>" [--path-scope <glob>] [--max-chunks 8]
+./scripts-run src/scripts/cross_repo_retrieve "<query>" [--path-scope <glob>] [--max-chunks 8]
 ```
 
 The script reads opted-in siblings only, runs a targeted path-glob + content

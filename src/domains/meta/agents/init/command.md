@@ -156,7 +156,7 @@ module-aware skills (road-to-configurable-modules Phase B). Skips
 silently when the helper finds no candidates.
 
 ```bash
-python3 scripts/propose_modules_config.py --json
+./scripts-run src/scripts/propose_modules_config --json
 ```
 
 If the JSON `candidates` array is non-empty, render the proposed
@@ -178,7 +178,7 @@ contract). On skip, do nothing — the block stays opt-in.
 If `agents/` directory does not exist, suggest running `/optimize agents-dir --scaffold`.
 If `.agent-settings.yml` does not exist, suggest running `scripts/install` (then `/onboard` for first-run setup).
 If module candidates surfaced in Step 7 but the user skipped, note that
-`python3 scripts/propose_modules_config.py` can be re-run anytime.
+`./scripts-run src/scripts/propose_modules_config` can be re-run anytime.
 
 ## Rules
 

@@ -100,7 +100,7 @@ artifact**, not its auxiliary side-effects.
 
 ## § 4 — Skill assignment by domain
 
-Snapshot from B3 back-fill (regenerate via `python3 scripts/_emit_domain_table.py`).
+Snapshot from B3 back-fill (regenerate via `./scripts-run src/scripts/_emit_domain_table`).
 Source-of-truth for the assignment is each skill's `domain:` frontmatter —
 this table is a derived view, kept readable for reviewers.
 

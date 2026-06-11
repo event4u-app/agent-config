@@ -79,7 +79,7 @@ Helper commands:
 task sync             # src/ → dist/agent-src/, then project → .augment/
 task generate-tools   # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task test             # pytest tests/ + installer integration tests
-task lint-skills      # python3 scripts/skill_linter.py --all
+task lint-skills      # ./scripts-run src/scripts/skill_linter --all
 ```
 
 ## Branches, commits, and PRs

@@ -31,7 +31,7 @@ Use this skill when:
 
 Do NOT use when:
 
-- Linting only one file — call `python3 src/scripts/skill_linter.py <path>` directly
+- Linting only one file — call `./scripts-run src/scripts/skill_linter <path>` directly
 - Checking cross-references between files — use `check-refs` instead
 - Checking condensation freshness — use `bash scripts/condense.sh --check` instead
 
@@ -49,7 +49,7 @@ Invoke the skill through the runtime dispatcher so the `execution:` block in
 this skill's frontmatter governs the call:
 
 ```bash
-python3 scripts/runtime_dispatcher.py run --skill lint-skills
+./scripts-run src/scripts/runtime_dispatcher run --skill lint-skills
 ```
 
 The dispatcher resolves the request, the shell handler runs

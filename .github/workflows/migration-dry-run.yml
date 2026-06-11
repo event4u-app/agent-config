@@ -62,7 +62,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/migration
-          python3 src/scripts/plan_physical_move.py 2>&1 | tee dist/migration/dry-run.log
+          ./scripts-run src/scripts/plan_physical_move 2>&1 | tee dist/migration/dry-run.log
           # Emit a machine-readable summary for the comment step.
           python3 - <<'PY'
           import json, os, pathlib, sys

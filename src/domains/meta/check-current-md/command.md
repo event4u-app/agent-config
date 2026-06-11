@@ -36,7 +36,7 @@ Stop here.
 ### 2. Run the checker
 
 ```bash
-python3 scripts/check_md_language.py <path> [<path> …] --format json
+./scripts-run src/scripts/check_md_language <path> [<path> …] --format json
 ```
 
 Exit codes:
@@ -104,7 +104,7 @@ Edit only the source-of-truth file:
 After all fixes, re-run:
 
 ```bash
-python3 scripts/check_md_language.py <path> [<path> …]
+./scripts-run src/scripts/check_md_language <path> [<path> …]
 ```
 
 ### 6. Mark hashes (only if `.agent-src.uncondensed/` was edited)
@@ -112,7 +112,7 @@ python3 scripts/check_md_language.py <path> [<path> …]
 For each modified source file:
 
 ```bash
-python3 scripts/condense.py --mark-done "{relative_path}"
+./scripts-run src/scripts/condense --mark-done "{relative_path}"
 ```
 
 This keeps `.condensation-hashes.json` consistent with the new content.

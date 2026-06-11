@@ -554,7 +554,7 @@ Run the probe to confirm:
 
 ```bash
 task probe:skills
-# or directly: python3 scripts/probe_skill_registration.py
+# or directly: ./scripts-run src/scripts/probe_skill_registration
 ```
 
 The probe lists every registration across all six tools and flags

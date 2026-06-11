@@ -55,9 +55,9 @@ jobs:
         run: pip install pyyaml
 
       - name: Lint topics.yml
-        run: python3 src/scripts/lint_topics_yaml.py
+        run: ./scripts-run src/scripts/lint_topics_yaml
 
       - name: Detect drift (read-only)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 src/scripts/sync_github_metadata.py --strict
+        run: ./scripts-run src/scripts/sync_github_metadata --strict

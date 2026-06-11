@@ -56,7 +56,7 @@ jobs:
             echo "::warning::No PR context — skipping shape check (workflow_dispatch)"
             exit 0
           fi
-          python3 src/scripts/check_release_pr_shape.py --pr "$pr_num"
+          ./scripts-run src/scripts/check_release_pr_shape --pr "$pr_num"
 
   changelog-entry:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}

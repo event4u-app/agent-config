@@ -90,8 +90,8 @@ no silent edits, max two rounds.
 ### 3b. Path conventions in frontmatter and body — load-bearing
 
 Three different surfaces, three different rules. Mixing them up will
-either fail the schema (`python3 scripts/validate_frontmatter.py`) or
-fail `python3 scripts/lint_load_context.py`. Canonical reference:
+either fail the schema (`./scripts-run src/scripts/validate_frontmatter`) or
+fail `./scripts-run src/scripts/lint_load_context`. Canonical reference:
 [`templates/rule.md`](../../templates/rule.md) § Path conventions and
 [`docs/contracts/load-context-schema.md`](../../../docs/contracts/load-context-schema.md).
 
@@ -126,10 +126,10 @@ the PR or split by responsibility.
 
 ### 5. Validate
 
-* Run `python3 scripts/skill_linter.py src/rules/{name}.md`
+* Run `./scripts-run src/scripts/skill_linter src/rules/{name}.md`
   → must report **0 FAIL**.
 * Run `bash scripts/condense.sh --sync` to regenerate `dist/agent-src/rules/{name}.md`.
-* Run `python3 scripts/condense.py --generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
+* Run `./scripts-run src/scripts/condense --generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.
 
@@ -138,7 +138,7 @@ the PR or split by responsibility.
 After validation, before declaring the rule done, run:
 
 ```bash
-python3 scripts/measure_augment_budget.py --check
+./scripts-run src/scripts/measure_augment_budget --check
 ```
 
 If utilisation is `≥ 0.95` (or the check exits non-zero), **STOP** and
@@ -206,7 +206,7 @@ and body links (relative `../../docs/...`, rewriter handles depth).
 1. Complete rule file at `src/rules/{name}.md`
 2. Frontmatter fully populated, no placeholders left
 3. Linter output showing 0 FAIL
-4. Confirmation that `bash scripts/condense.sh --sync` + `python3 scripts/condense.py --generate-tools` ran clean
+4. Confirmation that `bash scripts/condense.sh --sync` + `./scripts-run src/scripts/condense --generate-tools` ran clean
 
 ## Gotchas
 
@@ -214,7 +214,7 @@ and body links (relative `../../docs/...`, rewriter handles depth).
 * Defaulting to `always` "just in case" — token cost is real, `auto` is default.
 * Description like "Rule about X" — it must describe *when*, not *what*.
 * Pasting a workflow into a rule — if it has numbered steps, split into a skill.
-* Forgetting to run `python3 scripts/condense.py --generate-tools` — downstream tools stay stale.
+* Forgetting to run `./scripts-run src/scripts/condense --generate-tools` — downstream tools stay stale.
 * Editing `dist/agent-src/rules/` or `.augment/rules/` directly — those are generated.
 
 ## Frugality Standards

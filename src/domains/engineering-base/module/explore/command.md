@@ -45,7 +45,7 @@ If both the `modules:` block and the fallback table yield nothing:
 
 ```
 ⚠️  No module system found (no Modules/, src/<Domain>/, packages/, internal/, or equivalent directory).
-   Run `python3 scripts/propose_modules_config.py` to surface candidates.
+   Run `./scripts-run src/scripts/propose_modules_config` to surface candidates.
 ```
 
 Stop.

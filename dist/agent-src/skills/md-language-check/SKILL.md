@@ -51,7 +51,7 @@ one turn → pass them all to a single invocation.
 ### 2. Run the checker
 
 ```bash
-python3 scripts/check_md_language.py <path> [<path> …] [--format json]
+./scripts-run src/scripts/check_md_language <path> [<path> …] [--format json]
 ```
 
 Exit codes:

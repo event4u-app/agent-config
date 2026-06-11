@@ -198,10 +198,10 @@ multi-paragraph explanation, extract it into a skill and call it.
 
 ### 5. Validate
 
-* Run `python3 scripts/skill_linter.py src/agent-src/commands/{name}.md`
+* Run `./scripts-run src/scripts/skill_linter src/agent-src/commands/{name}.md`
   → 0 FAIL.
 * Run `bash scripts/condense.sh --sync` → regenerates `dist/agent-src/commands/{name}.md`.
-* Run `python3 scripts/condense.py --generate-tools` → creates the Claude symlink at
+* Run `./scripts-run src/scripts/condense --generate-tools` → creates the Claude symlink at
   `.claude/skills/{name}/SKILL.md`.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.

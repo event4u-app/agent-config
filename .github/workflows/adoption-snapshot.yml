@@ -53,9 +53,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ inputs.no_network }}" = "true" ]; then
-            python3 src/scripts/adoption_snapshot.py --no-network
+            ./scripts-run src/scripts/adoption_snapshot --no-network
           else
-            python3 src/scripts/adoption_snapshot.py
+            ./scripts-run src/scripts/adoption_snapshot
           fi
 
       - name: Upload snapshot row as artifact

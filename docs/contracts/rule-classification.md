@@ -29,7 +29,7 @@ document is the disposition map P2 / P4 will execute against.
 | auto | 47 | 142 297 | ≤ 60 000 |
 | **total** | **56** | **174 700** | **≤ 85 000** |
 
-Source: `python3 scripts/measure_rule_budget.py`.
+Source: `./scripts-run src/scripts/measure_rule_budget`.
 
 ## § 3 — Disposition table
 
@@ -142,8 +142,8 @@ Reference / examples / mechanics. Body migrates into
 
 | check | command | acceptance |
 |---|---|---|
-| Coverage | `python3 scripts/measure_rule_budget.py` | 56 rules total → 9 kernel + 22 condense + 18 skill + 7 guideline |
-| Determinism | `python3 scripts/measure_rule_budget.py --json` × 2 | byte-identical output |
+| Coverage | `./scripts-run src/scripts/measure_rule_budget` | 56 rules total → 9 kernel + 22 condense + 18 skill + 7 guideline |
+| Determinism | `./scripts-run src/scripts/measure_rule_budget --json` × 2 | byte-identical output |
 | No-edits | `git diff --stat .agent-src.uncondensed/rules/` | clean (this is plan-only) |
 
 ## § 5 — Open questions

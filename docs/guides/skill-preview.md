@@ -18,7 +18,7 @@ Find a candidate with [`/skills:discover`](skill-discovery.md), then look before
 Under the hood:
 
 ```bash
-python3 scripts/skill_preview.py competitive-positioning
+./scripts-run src/scripts/skill_preview competitive-positioning
 ```
 
 ## 2. Read the summary

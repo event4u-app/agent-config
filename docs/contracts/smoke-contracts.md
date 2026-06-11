@@ -59,7 +59,7 @@ constant in the script body and the row below.
   is the **dispatch index** (priority table pointing at the other four
   authority rules); it is structurally exempt from the Iron-Law-fence
   requirement and listed in the script's `EXEMPT_FROM_FENCE` set.
-- **≤ 2 budget breaches** — `python3 scripts/measure_rule_budget.py
+- **≤ 2 budget breaches** — `./scripts-run src/scripts/measure_rule_budget
   --kernel-budget-check` currently reports 2 breaches
   (`kernel-bucket > 26000`, `no-cheap-questions > 4000`). The smoke
   asserts the count does not grow; reductions update `EXPECTED_BREACHES`

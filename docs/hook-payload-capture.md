@@ -55,7 +55,7 @@ ls -1 "$AGENT_HOOK_CAPTURE_DIR" | head
 
 # 5. Redact (replaces user-content fields with <REDACTED>;
 #    envelope keys preserved).
-python3 scripts/redact_hook_capture.py "$AGENT_HOOK_CAPTURE_DIR" --strict
+./scripts-run src/scripts/redact_hook_capture "$AGENT_HOOK_CAPTURE_DIR" --strict
 
 # 6. Pick the smallest representative file.
 ls -1Sr "$AGENT_HOOK_CAPTURE_DIR"/*.redacted.json | head -1
@@ -174,9 +174,9 @@ After pasting and flipping the checkbox:
 
 ```bash
 # Lint gates must stay green.
-python3 scripts/lint_hook_manifest.py
-python3 scripts/check_references.py
-python3 scripts/check_portability.py
+./scripts-run src/scripts/lint_hook_manifest
+./scripts-run src/scripts/check_references
+./scripts-run src/scripts/check_portability
 
 # Tests still green.
 python3 -m pytest tests/hooks/ -q

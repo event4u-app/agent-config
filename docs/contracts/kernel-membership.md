@@ -259,7 +259,7 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 
 | check | command | acceptance |
 |---|---|---|
-| Pilot reproducibility | `python3 scripts/_pilot_measure.py` | r-values, sum, SHAs identical across runs |
+| Pilot reproducibility | `./scripts-run src/scripts/_pilot_measure` | r-values, sum, SHAs identical across runs |
 | Iron-Law preservation | SHA-256 of fence-block content (whitespace-norm, case-fold) | all 3 pilots match originals |
 | Bucket projection | `r_median × sum(always)` | ≤ 25 000 chars |
 | Per-rule cap (P2.1) | `measure_rule_budget.py --kernel-budget-check` (P2 deliverable) | each ≤ 2 500 chars OR ADR |

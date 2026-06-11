@@ -11,7 +11,7 @@ keep-beta-until: 2026-08-12
 > agent (Codegen, Charlie, Cursor's Linear app, …) reads it verbatim —
 > no skill triggering, no script execution, no `.augment/` access.
 >
-> Source of tier data: `python3 scripts/audit_cloud_compatibility.py
+> Source of tier data: `./scripts-run src/scripts/audit_cloud_compatibility
 > --details` (47 rules: T1=20, T2=19, T3-S=8).
 >
 > Last refreshed: 2026-04-29.
@@ -135,7 +135,7 @@ persistence on cloud platforms; the rule is a no-op.
 ## Source of tier data
 
 ```
-python3 scripts/audit_cloud_compatibility.py --details --format json
+./scripts-run src/scripts/audit_cloud_compatibility --details --format json
 ```
 
 47 rules: T1=20, T2=19, T3-S=8. Counts in this document derive from the

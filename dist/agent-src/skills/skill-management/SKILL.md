@@ -42,7 +42,7 @@ Do not use when:
 7. Validate — condensed version must be: easier to scan, easier to trigger, at least as safe
 
 **Iron rule:** Condensation must NOT weaken validation or remove decision hints that prevent mistakes.
-**Linter gate:** After condensation, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
+**Linter gate:** After condensation, run `./scripts-run src/scripts/skill_linter` on the file — must be 0 FAIL.
 
 ### Mode: Decondense
 **Trigger:** "expand skill", "decondense skill", "make skill clearer"
@@ -56,7 +56,7 @@ Do not use when:
 7. Validate — expanded version must be: clearer, still executable, not noisy
 
 **Iron rule:** Expansion must NOT turn skills into documentation. Add context, not prose.
-**Linter gate:** After expansion, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
+**Linter gate:** After expansion, run `./scripts-run src/scripts/skill_linter` on the file — must be 0 FAIL.
 
 ### Mode: Refactor
 **Trigger:** "refactor skill", "improve skill", "fix skill structure"
@@ -68,7 +68,7 @@ Do not use when:
 5. Refine scope — ensure single responsibility, split if multiple workflows
 6. Compare before/after — must be clearer, at least as executable, not broader
 
-**Linter gate:** After refactoring, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
+**Linter gate:** After refactoring, run `./scripts-run src/scripts/skill_linter` on the file — must be 0 FAIL.
 
 **Independence check:** After refactoring, verify the skill is still executable without opening any guideline.
 If the refactor introduced guideline delegations ("see guideline X"), ensure the Procedure still works standalone.

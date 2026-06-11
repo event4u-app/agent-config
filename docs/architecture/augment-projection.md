@@ -34,7 +34,7 @@ After projection, those paths resolve through the symlinks in
 | Project self-projection | `task sync` (`project_to_augment()` step) — [`taskfiles/content.yml:4`](../../taskfiles/content.yml) |
 | Standalone project-augment | `task project-augment` — [`taskfiles/content.yml:23`](../../taskfiles/content.yml) |
 | Consumer install | `scripts/install.sh` (delegates to `scripts/install.py`) |
-| Direct script | `python3 scripts/condense.py --project-augment` |
+| Direct script | `./scripts-run src/scripts/condense --project-augment` |
 
 ## Invariants
 
