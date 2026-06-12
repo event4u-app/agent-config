@@ -212,3 +212,4 @@ agents/state/
 /.event4u-agent/chats/
 /.event4u-agent/
 /agents/notes/
+/*/agent-config.bridge.yml
