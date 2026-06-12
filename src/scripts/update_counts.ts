@@ -141,8 +141,10 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
     [
         'README.md',
         [
-            ['(Browse all )(\\d+)( commands\\])', 'commands'],
-            ['(package \\(rules \\+ )(\\d+)( skills)', 'skills'],
+            // Browse-content line: `… [all NNN commands](…)`. Raw file
+            // count (the hero `Commands-N` badge carries the *active*
+            // count and is owned by check_command_count_messaging.py).
+            ['(\\[all )(\\d+)( commands\\])', 'commands'],
             // Hero badges: shields.io URLs `Skills-NNN-<color>` etc.
             ['(/badge/Skills-)(\\d+)(-)', 'skills'],
             ['(/badge/Rules-)(\\d+)(-)', 'rules'],
@@ -154,7 +156,10 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
         'docs/getting-started.md',
         [
             ['(automatically by )(\\d+)( rules)', 'rules'],
-            ['(Browse all )(\\d+)( commands\\])', 'commands'],
+            // NOTE: the "Browse all N active commands" line here carries the
+            // *active* command count and is owned by
+            // check_command_count_messaging.py — intentionally not synced
+            // from this raw-file-count script (avoids double-ownership).
         ],
     ],
     [
