@@ -782,14 +782,22 @@ def execute(
         if resume and last_msg == f"release: {plan.target}" and not porcelain:
             _step(3, total, f"Last commit already `release: {plan.target}` and tree clean — skip")
         else:
-            _step(3, total, f"Commit `release: {plan.target}`")
             # `git add -A` stages the three primary bump files AND every
             # regenerated derived file (src/packs/*/pack.yaml + README.md,
             # dist/agent-src/, .augment/, tool projections). Listing them
             # explicitly would silently drift the moment a new generated
             # tree is added.
             run("git", "add", "-A")
-            run("git", "commit", "-m", f"release: {plan.target}")
+            # On resume the bump + era-split may already be committed (the
+            # era-split lands its own commit, so `last_msg` above no longer
+            # equals "release: X" and the skip guard misses). If nothing is
+            # staged, the release content is already in history — skipping
+            # beats failing `git commit` on an empty index.
+            if git("diff", "--cached", "--name-only", capture=True).strip():
+                _step(3, total, f"Commit `release: {plan.target}`")
+                run("git", "commit", "-m", f"release: {plan.target}")
+            else:
+                _step(3, total, "Release content already committed — skip empty commit")
 
     # ─── 4. push ────────────────────────────────────────────────────────────
     if pr_merged:
