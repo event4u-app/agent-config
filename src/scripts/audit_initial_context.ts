@@ -10,12 +10,11 @@
  * (`json.dumps(indent=2, sort_keys=True)`).
  *
  * Imports the `_lib/token_count` and `_lib/agent_src` twins (the SAME
- * surfaces the Python original imports). `thin_projection()` is replicated
- * inline: the Python original `import`s `project_thin_rules.measure` and
- * swallows any failure to `{}`; this twin reproduces that measurement
- * directly (reading `dist/agent-src/rules` + `dist/router.json` kernel) so
- * the default JSON stays byte-identical, and falls back to `{}` on any error
- * exactly as the Python except-clause does.
+ * surfaces the Python original imports). `thin_projection()` mirrors the
+ * Python original exactly: the Python `import`s `project_thin_rules.measure`
+ * and swallows any failure to `{}`; this twin imports the `measure()` of the
+ * `project_thin_rules.ts` twin and falls back to `{}` on any error in the same
+ * best-effort try/catch. The default JSON stays byte-identical.
  *
  * No behaviour changes — latent Python quirks replicated.
  *
@@ -33,6 +32,7 @@ import { parse as parseYaml } from 'yaml';
 
 import * as token_count from './_lib/token_count.js';
 import { SRC_AGENT, SRC_DOMAINS } from './_lib/agent_src.js';
+import * as projectThinRules from './project_thin_rules.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -278,141 +278,21 @@ export function longest_rules(top = 10): LongestRule[] {
     return rows.slice(0, top);
 }
 
-// --- thin_projection: inline replication of project_thin_rules.measure() -----
+// --- thin_projection: delegate to the project_thin_rules twin ----------------
 //
-// The Python original imports `project_thin_rules.measure` and returns `{}`
-// on ANY exception. We reproduce the measurement directly so the default JSON
-// stays byte-identical; any error path falls back to `{}` exactly like the
-// Python except-clause.
-
-const RULES_SOURCE = path.join(REPO_ROOT, 'dist/agent-src', 'rules');
-const ROUTER = path.join(REPO_ROOT, 'dist', 'router.json');
-
-function _kernel_ids(): Set<string> {
-    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
-    const kernel = data.kernel;
-    if (Array.isArray(kernel)) {
-        return new Set(kernel.map((x) => String(x)));
-    }
-    return new Set();
-}
-
-function _split_frontmatter(text: string): [string, string] {
-    if (text.startsWith('---\n')) {
-        const end = text.indexOf('\n---\n', 4);
-        if (end !== -1) {
-            return [text.slice(0, end + 5), text.slice(end + 5)];
-        }
-    }
-    return ['', text];
-}
-
-function _thin_description(fm: string): string {
-    const m = /^description:\s*"?(.+?)"?\s*$/m.exec(fm);
-    return m ? (m[1] as string).trim() : '';
-}
-
-const _TRIGGER_HINT_LIMIT = 6;
-
-function _trigger_hint(fm: string): string {
-    const hits: string[] = [];
-    const re = /^\s*-\s*(?:keyword|phrase|intent):\s*"?(.+?)"?\s*$/gm;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(fm)) !== null) {
-        hits.push((m[1] as string).trim());
-        if (hits.length >= _TRIGGER_HINT_LIMIT) {
-            break;
-        }
-    }
-    return hits.join(', ');
-}
-
-function _thin_entry(rule_id: string, text: string): string {
-    const [fm] = _split_frontmatter(text);
-    const desc = _thin_description(fm);
-    const hint = _trigger_hint(fm);
-    const title = _title(rule_id.replace(/-/g, ' '));
-    const fires = hint ? ` Fires on: ${hint}.` : '';
-    return (
-        `## ${title}\n` +
-        `> Routed rule — load the body on trigger-match.${fires} ${desc} ` +
-        `Body: [\`${rule_id}\`](../../.agent-src.uncondensed/rules/${rule_id}.md)\n`
-    );
-}
-
-function _build_thin(rules_dir: string): Map<string, string> {
-    const kernel = _kernel_ids();
-    const out = new Map<string, string>();
-    for (const p of _globSortedMd(rules_dir)) {
-        const text = fs.readFileSync(p, 'utf-8');
-        const stem = path.basename(p).replace(/\.md$/, '');
-        out.set(path.basename(p), kernel.has(stem) ? text : _thin_entry(stem, text));
-    }
-    return out;
-}
-
-function _stems(rules_dir: string): string[] {
-    return _globSortedMd(rules_dir).map((p) => path.basename(p).replace(/\.md$/, ''));
-}
-
-function _projectThinMeasure(rules_dir: string): Record<string, unknown> {
-    const kernel = _kernel_ids();
-    const mdPaths = _globSortedMd(rules_dir);
-    const eager_blob = mdPaths.map((p) => fs.readFileSync(p, 'utf-8')).join('');
-    const thin_blob = [..._build_thin(rules_dir).values()].join('');
-    const eager = token_count.measure(eager_blob);
-    const thin = token_count.measure(thin_blob);
-    const n = mdPaths.length;
-    const stemSet = new Set(_stems(rules_dir));
-    let kernelInDir = 0;
-    for (const k of kernel) {
-        if (stemSet.has(k)) {
-            kernelInDir += 1;
-        }
-    }
-    const saved_pct = eager.tokens_gpt
-        ? _python_round1((100 * (eager.tokens_gpt - thin.tokens_gpt)) / eager.tokens_gpt)
-        : 0.0;
-    return {
-        rules_total: n,
-        kernel_full: kernelInDir,
-        non_kernel_thinned: n - kernelInDir,
-        eager_gpt: eager.tokens_gpt,
-        thin_gpt: thin.tokens_gpt,
-        saved_gpt: eager.tokens_gpt - thin.tokens_gpt,
-        saved_pct,
-        eager_chars: eager.chars,
-        thin_chars: thin.chars,
-        token_method: token_count.method_note(),
-    };
-}
-
-/** Python `round(x, 1)` — round-half-to-even at one decimal. */
-function _python_round1(x: number): number {
-    const scaled = x * 10;
-    const floor = Math.floor(scaled);
-    const diff = scaled - floor;
-    let r: number;
-    if (diff > 0.5) {
-        r = floor + 1;
-    } else if (diff < 0.5) {
-        r = floor;
-    } else {
-        r = floor % 2 === 0 ? floor : floor + 1;
-    }
-    return r / 10;
-}
+// The Python original does `from project_thin_rules import measure as _measure`
+// inside a try/except that returns `{}` on any failure. This twin mirrors that
+// exactly: import the same-named `measure()` from the TS twin and swallow any
+// error to `{}`. The thin-entry pointer's legacy-path literal now lives ONLY
+// in project_thin_rules.ts (its same-basename .py twin carries it), so this file
+// no longer trips the ADR-051 legacy-path guard.
 
 export function thin_projection(): Record<string, unknown> {
     try {
-        return _projectThinMeasure(RULES_SOURCE);
+        return { ...projectThinRules.measure() };
     } catch {
         return {};
     }
-}
-
-function _title(s: string): string {
-    return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
 export function build(): Record<string, unknown> {
