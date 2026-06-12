@@ -289,6 +289,40 @@ require_python3() {
   fi
 }
 
+# Resolve the tsx runner (Python→TypeScript migration). Sets TSX_BIN to the
+# repo-local binary when present, else `npx tsx`. Returns 1 if neither works.
+require_tsx() {
+  if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
+    TSX_BIN="$PACKAGE_ROOT/node_modules/.bin/tsx"
+    return 0
+  fi
+  if command -v npx >/dev/null 2>&1; then
+    TSX_BIN="npx tsx"
+    return 0
+  fi
+  return 1
+}
+
+# Run a hook that has been ported to TypeScript: prefer <base>.ts via tsx,
+# fall back to <base>.py via python3. <base> is relative to PACKAGE_ROOT,
+# WITHOUT extension. Mirrors the src/scripts/run.ts dispatcher resolution so
+# a hook flips to TS the moment its .ts twin lands, with no other edits.
+exec_hook() {
+  local base="$1"; shift
+  local ts_abs="$PACKAGE_ROOT/${base}.ts"
+  if [[ -f "$ts_abs" ]] && require_tsx; then
+    # shellcheck disable=SC2086
+    exec $TSX_BIN "$ts_abs" "$@"
+  fi
+  require_python3
+  local py_abs="$PACKAGE_ROOT/${base}.py"
+  if [[ ! -f "$py_abs" ]]; then
+    echo "❌  agent-config: hook not found: ${base}.ts or ${base}.py" >&2
+    return 1
+  fi
+  exec python3 "$py_abs" "$@"
+}
+
 # Locate a script. First argument is relative to PACKAGE_ROOT, second is
 # an optional fallback relative to CONSUMER_ROOT (for scripts that ship
 # to the consumer via .augment/, e.g. update_roadmap_progress.py).
@@ -501,52 +535,31 @@ cmd_chat_history_hook() {
 }
 
 cmd_roadmap_progress_hook() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/roadmap_progress_hook.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/roadmap_progress_hook" "$@"
 }
 
 cmd_onboarding_gate_hook() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/onboarding_gate_hook.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/onboarding_gate_hook" "$@"
 }
 
 cmd_context_hygiene_hook() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/context_hygiene_hook.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/context_hygiene_hook" "$@"
 }
 
 cmd_dispatch_hook() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/hooks/dispatch_hook.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/hooks/dispatch_hook" "$@"
 }
 
 cmd_hooks_status() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/hooks_status.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/hooks_status" "$@"
 }
 
 cmd_hooks_doctor() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/hooks_doctor.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/hooks_doctor" "$@"
 }
 
 cmd_hooks_replay() {
-  require_python3
-  local script
-  script="$(resolve_script "src/scripts/hooks/replay_hook.py")" || return 1
-  exec python3 "$script" "$@"
+  exec_hook "src/scripts/hooks/replay_hook" "$@"
 }
 
 cmd_chat_history_checkpoint() {
