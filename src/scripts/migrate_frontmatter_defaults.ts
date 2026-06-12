@@ -21,8 +21,8 @@
  *
  * Imports its two readers from the ported `validate_frontmatter` twin
  * (`load_schema`, `parse_frontmatter`) and `artefact_roots` from the
- * `agent_src` twin — both already carry the `.agent-src.uncondensed/` literal,
- * so this module re-imports rather than inlines (ADR-051).
+ * `agent_src` twin — re-imports rather than inlines the legacy-source
+ * resolution, per ADR-051.
  */
 
 import fs from 'node:fs';
