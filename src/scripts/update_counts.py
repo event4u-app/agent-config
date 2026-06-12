@@ -80,8 +80,10 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
     (
         "README.md",
         [
-            (r"(Browse all )(\d+)( commands\])", "commands"),
-            (r"(package \(rules \+ )(\d+)( skills)", "skills"),
+            # Browse-content line: `… [all NNN commands](…)`. Raw file
+            # count (the hero `Commands-N` badge carries the *active*
+            # count and is owned by check_command_count_messaging.py).
+            (r"(\[all )(\d+)( commands\])", "commands"),
             # Hero badges: shields.io URLs `Skills-NNN-<color>` etc.
             # Format: https://img.shields.io/badge/<Label>-<N>-<hex>?style=flat-square
             (r"(/badge/Skills-)(\d+)(-)", "skills"),
@@ -106,7 +108,10 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
         "docs/getting-started.md",
         [
             (r"(automatically by )(\d+)( rules)", "rules"),
-            (r"(Browse all )(\d+)( commands\])", "commands"),
+            # NOTE: the "Browse all N active commands" line here carries the
+            # *active* command count and is owned by
+            # check_command_count_messaging.py — intentionally not synced
+            # from this raw-file-count script (avoids double-ownership).
         ],
     ),
     (
