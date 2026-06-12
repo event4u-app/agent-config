@@ -75,6 +75,31 @@ MAIN_BRANCH = "main"
 REMOTE = "origin"
 REPO_SLUG = "event4u-app/agent-config"
 
+# GitHub rejects bodies over these limits with a GraphQL "Body is too
+# long" error. The full entry always lands in CHANGELOG.md (committed in
+# the PR diff and attached to the tag), so an oversized body is capped
+# with a pointer rather than failing the release — a major bump can
+# render hundreds of commit bullets, well past the 65 536 PR-body limit.
+GH_PR_BODY_LIMIT = 65_536        # createPullRequest mutation hard limit
+GH_RELEASE_NOTES_LIMIT = 125_000  # release-notes body limit
+
+
+def _cap_body(text: str, limit: int, *, full_ref: str) -> str:
+    """Return ``text`` unchanged when within ``limit`` chars; otherwise
+    truncate at the last line boundary that fits and append a pointer to
+    ``full_ref`` so nothing is silently lost."""
+    if len(text) <= limit:
+        return text
+    notice = (
+        f"\n\n> _Changelog truncated to fit GitHub's "
+        f"{limit:,}-character body limit — full entry in {full_ref}._"
+    )
+    head = text[: limit - len(notice)]
+    nl = head.rfind("\n")
+    if nl > 0:
+        head = head[:nl]
+    return head + notice
+
 # Conventional Commit types and how they map into CHANGELOG sections.
 # Order in this tuple determines order in the rendered entry.
 SECTIONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
@@ -757,14 +782,22 @@ def execute(
         if resume and last_msg == f"release: {plan.target}" and not porcelain:
             _step(3, total, f"Last commit already `release: {plan.target}` and tree clean — skip")
         else:
-            _step(3, total, f"Commit `release: {plan.target}`")
             # `git add -A` stages the three primary bump files AND every
             # regenerated derived file (src/packs/*/pack.yaml + README.md,
             # dist/agent-src/, .augment/, tool projections). Listing them
             # explicitly would silently drift the moment a new generated
             # tree is added.
             run("git", "add", "-A")
-            run("git", "commit", "-m", f"release: {plan.target}")
+            # On resume the bump + era-split may already be committed (the
+            # era-split lands its own commit, so `last_msg` above no longer
+            # equals "release: X" and the skip guard misses). If nothing is
+            # staged, the release content is already in history — skipping
+            # beats failing `git commit` on an empty index.
+            if git("diff", "--cached", "--name-only", capture=True).strip():
+                _step(3, total, f"Commit `release: {plan.target}`")
+                run("git", "commit", "-m", f"release: {plan.target}")
+            else:
+                _step(3, total, "Release content already committed — skip empty commit")
 
     # ─── 4. push ────────────────────────────────────────────────────────────
     if pr_merged:
@@ -782,9 +815,14 @@ def execute(
         _step(5, total, f"PR already open: {pr_info.get('url')}")
     else:
         _step(5, total, "Open pull request")
+        pr_changelog = _cap_body(
+            plan.changelog_body,
+            GH_PR_BODY_LIMIT - 200,  # leave room for the prefix + footer
+            full_ref="`CHANGELOG.md` in this PR",
+        )
         pr_body = (
             f"Release {plan.target}.\n\n"
-            f"{plan.changelog_body}\n\n"
+            f"{pr_changelog}\n\n"
             "Created by `scripts/release.py`."
         )
         run(
@@ -835,7 +873,11 @@ def execute(
         _step(9, total, f"GitHub Release {plan.target} already exists — skip")
     else:
         _step(9, total, "Create GitHub Release (triggers publish-npm on the tag)")
-        notes = plan.changelog_body or f"Release {plan.target}"
+        notes = _cap_body(
+            plan.changelog_body or f"Release {plan.target}",
+            GH_RELEASE_NOTES_LIMIT,
+            full_ref="`CHANGELOG.md`",
+        )
         run(
             "gh", "release", "create", plan.target,
             "--title", plan.target,
