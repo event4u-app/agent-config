@@ -1,0 +1,270 @@
+// Tests for src/scripts/verify_before_complete_hook.ts (py2ts Phase 6 — hooks).
+//
+// 1:1 port of tests/test_verify_before_complete_hook.py (per-turn
+// verification tracker across six platform envelope shapes) plus a
+// golden-parity layer: python3 vs tsx fed identical envelope stdin + argv
+// in isolated tmp projects, asserting identical exit + identical state JSON
+// (wall-clock fields normalised). Parity skipped without python3.
+import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { run, STATE_FILE } from '../../../src/scripts/verify_before_complete_hook.js';
+
+const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
+const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_before_complete_hook.py');
+const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_before_complete_hook.ts');
+const TSX_BIN = path.join(
+    REPO_ROOT,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
+
+function hasPython3(): boolean {
+    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
+}
+
+function state(root: string): Record<string, unknown> {
+    return JSON.parse(fs.readFileSync(path.join(root, STATE_FILE), 'utf8'));
+}
+
+function envelope(
+    platform: string,
+    event: string,
+    payload: Record<string, unknown>,
+    session_id = 's1',
+): string {
+    return JSON.stringify({
+        schema_version: 1,
+        platform,
+        event,
+        native_event: event,
+        session_id,
+        workspace_root: '/work',
+        payload,
+    });
+}
+
+let tmp: string;
+beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-before-complete-'));
+    fs.mkdirSync(path.join(tmp, 'agents', 'runtime', 'state'), { recursive: true });
+});
+afterEach(() => {
+    fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+describe('verify_before_complete — tracker behaviour', () => {
+    it('session_start initialises state', () => {
+        expect(run(envelope('augment', 'session_start', {}), { consumer_root: tmp })).toBe(0);
+        const s = state(tmp);
+        expect(s['session_id']).toBe('s1');
+        expect(s['verified_this_turn']).toBe(false);
+        expect(s['verifications_this_turn']).toBe(0);
+        expect(s['last_verification']).toBe(null);
+    });
+
+    it('pytest command records verification', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        const payload = {
+            tool_name: 'launch-process',
+            tool_input: { command: '.venv/bin/python3 -m pytest tests/ -q' },
+        };
+        run(envelope('augment', 'post_tool_use', payload), { consumer_root: tmp });
+        const s = state(tmp);
+        expect(s['verified_this_turn']).toBe(true);
+        expect(s['verifications_this_turn']).toBe(1);
+        const lv = s['last_verification'] as Record<string, unknown>;
+        expect(lv['tool']).toBe('launch-process');
+        expect(String(lv['command'])).toContain('pytest');
+    });
+
+    it('non-verification command does not set flag', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        const payload = { tool_name: 'launch-process', tool_input: { command: 'ls -la' } };
+        run(envelope('augment', 'post_tool_use', payload), { consumer_root: tmp });
+        const s = state(tmp);
+        expect(s['verified_this_turn']).toBe(false);
+        expect(s['verifications_this_turn']).toBe(0);
+    });
+
+    it('user_prompt_submit resets turn counter', () => {
+        run(envelope('claude', 'session_start', {}), { consumer_root: tmp });
+        run(
+            envelope('claude', 'post_tool_use', {
+                tool_name: 'Bash',
+                tool_input: { command: 'task ci' },
+            }),
+            { consumer_root: tmp },
+        );
+        expect(state(tmp)['verified_this_turn']).toBe(true);
+        run(envelope('claude', 'user_prompt_submit', {}), { consumer_root: tmp });
+        const s = state(tmp);
+        expect(s['verified_this_turn']).toBe(false);
+        expect(s['verifications_this_turn']).toBe(0);
+        // session-scoped count survives the turn reset
+        expect(s['verifications_this_session']).toBe(1);
+    });
+
+    it('stop event records timestamp', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        run(envelope('augment', 'stop', {}), { consumer_root: tmp });
+        expect(state(tmp)['last_stop_at']).not.toBe(null);
+    });
+
+    it('session id change resets session counters', () => {
+        run(
+            envelope('augment', 'session_start', { tool_input: { command: 'pytest' } }, 's1'),
+            { consumer_root: tmp },
+        );
+        run(
+            envelope(
+                'augment',
+                'post_tool_use',
+                { tool_name: 'launch-process', tool_input: { command: 'pytest -q' } },
+                's1',
+            ),
+            { consumer_root: tmp },
+        );
+        expect(state(tmp)['verifications_this_session']).toBe(1);
+        run(envelope('augment', 'session_start', {}, 's2'), { consumer_root: tmp });
+        const s = state(tmp);
+        expect(s['session_id']).toBe('s2');
+        expect(s['verifications_this_session']).toBe(0);
+    });
+
+    it.each([
+        ['augment', 'launch-process', 'command'],
+        ['claude', 'Bash', 'command'],
+        ['cursor', 'RunShellCommand', 'command'],
+        ['cline', 'execute_shell', 'command'],
+        ['gemini', 'shell', 'command'],
+    ])('verification detected: %s / %s', (platform, tool, cmdKey) => {
+        run(envelope(platform, 'session_start', {}), { consumer_root: tmp });
+        const payload = { tool_name: tool, tool_input: { [cmdKey]: 'task ci' } };
+        run(envelope(platform, 'post_tool_use', payload), { consumer_root: tmp });
+        expect(state(tmp)['verified_this_turn']).toBe(true);
+    });
+
+    it('malformed stdin is silent no-op', () => {
+        expect(run('not json', { consumer_root: tmp })).toBe(0);
+        const target = path.join(tmp, STATE_FILE);
+        if (fs.existsSync(target)) {
+            JSON.parse(fs.readFileSync(target, 'utf8'));
+        }
+    });
+
+    it('empty stdin is silent no-op', () => {
+        expect(run('', { consumer_root: tmp })).toBe(0);
+    });
+
+    it('dispatcher envelope passes through', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        expect(state(tmp)['session_id']).toBe('s1');
+    });
+});
+
+// ── Golden parity vs python3 ─────────────────────────────────────────
+
+const py3 = hasPython3();
+
+interface RunResult {
+    status: number | null;
+    stdout: string;
+    stderr: string;
+    state: Record<string, unknown> | null;
+}
+
+function normalize(parsed: Record<string, unknown> | null): Record<string, unknown> | null {
+    if (!parsed) return parsed;
+    if ('checked_at' in parsed) parsed['checked_at'] = '<TS>';
+    if (parsed['turn_started_at'] != null) parsed['turn_started_at'] = '<TS>';
+    if (parsed['last_stop_at'] != null) parsed['last_stop_at'] = '<TS>';
+    const lv = parsed['last_verification'];
+    if (lv && typeof lv === 'object' && !Array.isArray(lv)) {
+        (lv as Record<string, unknown>)['at'] = '<TS>';
+    }
+    return parsed;
+}
+
+function runScript(cmd: string, args: string[], cwd: string, input: string): RunResult {
+    const res = spawnSync(cmd, args, { input, encoding: 'utf8', cwd, env: { ...process.env } });
+    const sf = path.join(cwd, STATE_FILE);
+    let parsed: Record<string, unknown> | null = null;
+    if (fs.existsSync(sf)) {
+        parsed = normalize(JSON.parse(fs.readFileSync(sf, 'utf8')));
+    }
+    return { status: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '', state: parsed };
+}
+
+describe.skipIf(!py3)('verify_before_complete — golden parity', () => {
+    const env = (event: string, payload: Record<string, unknown>, sid = 's1', platform = 'augment') =>
+        JSON.stringify({
+            schema_version: 1,
+            platform,
+            event,
+            native_event: event,
+            session_id: sid,
+            workspace_root: '/work',
+            payload,
+        });
+
+    function scenario(name: string, steps: string[], args: string[] = ['--platform', 'augment']): void {
+        it(name, () => {
+            const pyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vbc-py-'));
+            const tsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vbc-ts-'));
+            try {
+                let py: RunResult = { status: 0, stdout: '', stderr: '', state: null };
+                let ts: RunResult = { status: 0, stdout: '', stderr: '', state: null };
+                for (const input of steps) {
+                    py = runScript('python3', [PY_SCRIPT, ...args], pyDir, input);
+                    ts = runScript(TSX_BIN, [TS_SCRIPT, ...args], tsDir, input);
+                }
+                expect(ts.status).toBe(py.status);
+                expect(ts.stdout).toBe(py.stdout);
+                expect(ts.stderr).toBe(py.stderr);
+                expect(ts.state).toEqual(py.state);
+            } finally {
+                fs.rmSync(pyDir, { recursive: true, force: true });
+                fs.rmSync(tsDir, { recursive: true, force: true });
+            }
+        });
+    }
+
+    scenario('session_start only', [env('session_start', {})]);
+    scenario('pytest verification', [
+        env('session_start', {}),
+        env('post_tool_use', {
+            tool_name: 'launch-process',
+            tool_input: { command: '.venv/bin/python3 -m pytest -q' },
+        }),
+    ]);
+    scenario('task ci across claude Bash', [
+        env('session_start', {}, 's1', 'claude'),
+        env(
+            'post_tool_use',
+            { tool_name: 'Bash', tool_input: { command: 'task sync && task ci' } },
+            's1',
+            'claude',
+        ),
+    ]);
+    scenario('non-verification command', [
+        env('session_start', {}),
+        env('post_tool_use', { tool_name: 'launch-process', tool_input: { command: 'ls -la' } }),
+    ]);
+    scenario('stop event', [env('session_start', {}), env('stop', {})]);
+    scenario('session id change resets', [
+        env('session_start', {}, 's1'),
+        env('post_tool_use', { tool_name: 'launch-process', tool_input: { command: 'pytest -q' } }, 's1'),
+        env('session_start', {}, 's2'),
+    ]);
+    scenario('malformed stdin', ['not json']);
+    scenario('empty stdin', ['']);
+    scenario('verbose stderr line', [
+        env('post_tool_use', { tool_name: 'Bash', tool_input: { command: 'go test ./...' } }, 's3'),
+    ], ['--verbose']);
+});
