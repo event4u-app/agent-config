@@ -40,6 +40,18 @@ jobs:
           python-version: "3.12"
           cache: 'pip'
 
+      - uses: actions/setup-node@v4
+        # bench_drift_check / bench_baseline_ready / bench_run are now
+        # TypeScript; the dispatcher runs them via tsx.
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
       - uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
