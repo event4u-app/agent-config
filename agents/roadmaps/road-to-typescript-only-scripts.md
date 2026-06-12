@@ -88,8 +88,8 @@ Everything downstream imports these; they port first.
 
 Council verdict: redesign natively in TS (venv logic becomes obsolete), but config generation output stays golden-identical; must land before any consumer-shipped script migrates.
 
-- [ ] **Step 1:** Extract `install.py` behavior into a spec: enumerate generated files/configs, prompts, OS branches, scopes, error paths; capture a golden corpus of installer outputs (config files, directory trees) across representative scenarios using the existing pytest installer/e2e fixtures (`tests/fixtures/installer-e2e/`, ADR-087).
-- [ ] **Step 2:** Build the TS installer in `src/install/` (extending the existing TS install code): identical config generation (golden-verified), Node-version check with a clear error, multi-OS paths, and a dual-mode transition layer — detects Python-era artifacts (`.venv`, copied `.py` templates) and handles both worlds during the migration window.
+- [x] **Step 1:** Extract `install.py` behavior into a spec: enumerate generated files/configs, prompts, OS branches, scopes, error paths; capture a golden corpus of installer outputs (config files, directory trees) across representative scenarios using the existing pytest installer/e2e fixtures (`tests/fixtures/installer-e2e/`, ADR-087).
+- [x] **Step 2:** Build the TS installer in `src/install/` (extending the existing TS install code): identical config generation (golden-verified), Node-version check with a clear error, multi-OS paths, and a dual-mode transition layer — detects Python-era artifacts (`.venv`, copied `.py` templates) and handles both worlds during the migration window.
 - [x] **Step 3:** Port the installer test suites (pytest `tests/install/`, `tests/test_install_wizard_wiring.py`, container e2e per ADR-087) to vitest/TS-driven equivalents; keep the Docker e2e gate working against the TS installer. <!-- carve-out: new-gate-verification -->
 - [x] **Step 4:** Flip the consumer entry points (npx flow, `scripts/install.sh`, server/wizard `apply` path in `src/server/routes/wizard.ts`) to the TS installer; `install.py` stays in-tree as documented fallback until Phase 11 removes it.
 
@@ -102,8 +102,8 @@ Largest CI-gate cluster; stateless CLIs — port in batches.
 
 - [x] **Step 1:** Port the `check_*` family (44 files) in dependency-free batches: vitest 1:1 ports first, then the script, golden parity on the repo itself (the repo is the fixture — finding counts and messages must match), `.py` deleted per batch PR.
 - [x] **Step 2:** Port the `lint_*` family (57 files) the same way, including `lint_roadmap_complexity.py`, `lint_framework_leakage.py`, `lint_media_policy_linkage.py`, and the reference checkers (`check_references.py`, `check_no_roadmap_refs.py`, `check_council_references.py`).
-- [ ] **Step 3:** Port `skill_linter.py` (3.7k LOC) as its own batch — it is the single highest-value gate: full vitest port of its pytest suite, golden parity = identical finding sets on the current repo snapshot, plus the error-parity corpus.
-- [ ] **Step 4:** Port `check_always_budget.py`, `check_portability.py`, `check_condensation.py`-adjacent validators and `validate_frontmatter.py` with their schemas (`scripts/schemas/`).
+- [x] **Step 3:** Port `skill_linter.py` (3.7k LOC) as its own batch — it is the single highest-value gate: full vitest port of its pytest suite, golden parity = identical finding sets on the current repo snapshot, plus the error-parity corpus.
+- [x] **Step 4:** Port `check_always_budget.py`, `check_portability.py`, `check_condensation.py`-adjacent validators and `validate_frontmatter.py` with their schemas (`scripts/schemas/`).
 - [ ] **Step 5:** Verify the full CI pipeline (`task ci`) runs green end-to-end with zero Python linters left; finding counts on the repo are identical to the pre-phase baseline snapshot (capture the baseline before Step 1).
 
 **Exit criteria:** zero `.py` under the linter/check category; CI finding-count parity vs baseline documented in the dashboard; coverage ≥ baseline.
