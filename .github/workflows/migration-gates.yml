@@ -54,7 +54,14 @@ jobs:
         run: npx tsx src/scripts/parity/phase_gate.ts
 
       - name: Migration test suites
-        run: npx vitest run tests/scripts/ tests/parity/ tests/spikes/
+        # --no-file-parallelism: several golden-parity tests spawn python3/tsx
+        # against the LIVE working tree, and a few mutate-then-restore generated
+        # trees. Running test files concurrently lets one file's mutation race
+        # another file's subprocess read (observed: condense --list saw a
+        # transient partial tree → 427 vs 561). Serialize files so the
+        # working-tree-coupled golden tests never overlap. Tests within a file
+        # already run sequentially.
+        run: npx vitest run --no-file-parallelism tests/scripts/ tests/parity/ tests/spikes/
 
       - name: Typecheck
         run: npm run typecheck
