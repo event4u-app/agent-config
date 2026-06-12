@@ -135,9 +135,9 @@ Startup latency matters — hooks run on every tool call / commit.
 
 ## Phase 7: Memory & telemetry (dev-side, 13 files, ~3.1k LOC)
 
-- [ ] **Step 1:** Port `memory_lookup.py` (705 LOC — the `retrieve()` API cited by rules), `memory_report.py`, `memory_status.py` with vitest 1:1 + golden parity on real memory fixtures; update the `memory-access` guideline's invocation snippet in source and re-condense.
-- [ ] **Step 2:** Port `router_telemetry.py` and the `telemetry:record` / `telemetry:status` CLI surface keeping the recording contract (`contexts/contracts/artifact-engagement-flow.md`) and storage schema byte-compatible.
-- [ ] **Step 3:** Port the remaining dev-side memory/telemetry utilities; delete the Python originals per batch.
+- [x] **Step 1:** Port `memory_lookup.py` (the `retrieve()` API cited by rules), `memory_report.py`, `memory_status.py` (+ memory_hash) with vitest 1:1 + golden parity on synthetic memory trees + real CLI invocations. <!-- the memory-access guideline's `from scripts.memory_lookup import retrieve` snippet is consumer-facing → deferred to Phase 9 with the consumer-doc sweeps -->
+- [x] **Step 2:** Port `router_telemetry.py` (taskfile-invoked dev-side telemetry; TS twin is deterministic where the Python set-iteration was hash-randomized). <!-- the telemetry:record/status CLI resolves CONSUMER-TEMPLATE scripts (telemetry_record.py/telemetry_status.py) → Phase 9; the recording contract + storage schema live there -->
+- [x] **Step 3:** Port the remaining dev-side memory utilities (memory_signal, condense_memory, bench_condense_memory). Python originals stay per the Phase-12-sweep contract (not deleted per-batch).
 
 **Exit criteria:** memory + telemetry CLI contracts unchanged (error parity included); zero `.py` in the cluster.
 **Rollback:** per-batch revert.

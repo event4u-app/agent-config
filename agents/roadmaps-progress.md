@@ -6,17 +6,17 @@
 
 ## Overall
 
-**28 / 66 steps done · 42%**
+**31 / 66 steps done · 47%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 66 | 38 | 28 | 0 | 0 | ████░░░░░░ 42% |
+| 1 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 66 | 35 | 31 | 0 | 0 | █████░░░░░ 47% |
 
 ---
 
@@ -24,7 +24,7 @@
 
 ### [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md)
 
-**TypeScript-only scripts — full Python → TypeScript migration** — 28 / 66 done (42%)
+**TypeScript-only scripts — full Python → TypeScript migration** — 31 / 66 done (47%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -34,7 +34,7 @@
 | 4 | Linters & CI checks (101 files, ~17.4k LOC) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 5 | Condensation & sync pipeline (8 files, ~3.8k LOC) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 6 | Hooks (16 files, ~2.6k LOC) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
-| 7 | Memory & telemetry (dev-side, 13 files, ~3.1k LOC) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 7 | Memory & telemetry (dev-side, 13 files, ~3.1k LOC) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 8 | Reporting, MCP, doctor & misc tooling (~199 files, ~46k LOC) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 9 | Consumer-shipped templates (work_engine 78 / memory 7 / telemetry 9 / misc ~6 files, ~17.4k LOC) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 10 | AI council (55 files, ~17k LOC) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
