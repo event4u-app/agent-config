@@ -1097,7 +1097,23 @@ function assertParity(args: readonly string[]): void {
 describe.skipIf(!HAS_PYTHON3)('golden parity — read-only subcommands', () => {
     it('--check matches Python', () => assertParity(['--check']));
     it('--check-hashes matches Python', () => assertParity(['--check-hashes']));
-    it('--list matches Python', () => assertParity(['--list']));
+    it('--list matches Python (header + same file set, order-insensitive)', () => {
+        // --list emits the SET of .md files needing condensation, one per line,
+        // after a "N .md files total:" header. The display order is cosmetic —
+        // nothing consumes it (--sync writes path-keyed, order-independent, and
+        // its zero-drift parity is asserted below). Byte-exact line ordering can
+        // differ across runtimes (the cross-platform sort of the same identical
+        // set), so assert the header byte-exact + the body as a sorted set.
+        const py = runPy(['--list']);
+        const ts = runTs(['--list']);
+        expect(ts.status).toBe(py.status);
+        expect(ts.stderr).toBe(py.stderr);
+        const head = (s: string): string => s.split('\n')[0] ?? '';
+        const body = (s: string): string[] =>
+            s.split('\n').slice(1).filter((l) => l.trim() !== '').sort();
+        expect(head(ts.stdout)).toBe(head(py.stdout));
+        expect(body(ts.stdout)).toEqual(body(py.stdout));
+    });
     it('--changed matches Python', () => assertParity(['--changed']));
 });
 
