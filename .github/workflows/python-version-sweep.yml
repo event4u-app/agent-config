@@ -56,6 +56,18 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        # condense (the bootstrap step below) is now TypeScript; the
+        # dispatcher runs it via tsx.
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
       - name: Install test deps
         # Matches the tests.yml python-tests job — same deps so any
         # version-specific regression surfaces here too.
