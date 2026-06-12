@@ -48,6 +48,18 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Setup Node
+        # adoption_snapshot is now TypeScript; the dispatcher runs it via tsx.
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
       - name: Run adoption_snapshot.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
