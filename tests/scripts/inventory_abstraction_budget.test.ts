@@ -234,12 +234,20 @@ describe.skipIf(!py3)('inventory_abstraction_budget — golden parity (python3 v
         for (let i = 0; i < pRows.length; i++) {
             const pr = pRows[i] as string[];
             const tr = tRows[i] as string[];
-            const total = pr[2];
-            const distinct = pr[3];
-            const tieField = i > 0 && total === distinct; // all values distinct → 30-way tie
+            // `dominant_value` (col 4) is the first-inserted value among the
+            // max-count group (Python `Counter.most_common(1)`). The insertion
+            // order is the file-iteration order, and Python `Path.glob` is
+            // UNSORTED (OS readdir order) while the TS twin sorts — so on ANY
+            // top-frequency tie the two runtimes can pick a different tied
+            // value. This is unreconcilable (Python's own glob order is
+            // OS-nondeterministic). A tie at the top is impossible ONLY when
+            // the dominant value holds a strict majority (share > 50%); below
+            // that, skip col 4. See docs/migration/divergences/
+            // src-scripts-inventory_abstraction_budget.md.
+            const sharePct = i > 0 ? parseFloat(pr[5] ?? '0') : 100;
+            const dominantMayTie = i > 0 && !(sharePct > 50.0);
             for (let c = 0; c < pr.length; c++) {
-                if (c === 4 && tieField) {
-                    // dominant_value on a tie row — non-deterministic across runtimes.
+                if (c === 4 && dominantMayTie) {
                     continue;
                 }
                 expect(tr[c], `fm row ${i} col ${c}`).toBe(pr[c]);
