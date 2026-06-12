@@ -1,7 +1,7 @@
 /**
  * Baseline-cache helpers for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/_lib/bench_ab_cache.py` (ADR-089,
+ * TypeScript twin of `src/scripts/_lib/bench_ab_cache.py` (ADR-090,
  * Phase 2 Wave 2a). Public API mirrors the Python module exactly — same
  * exported names (deliberately snake_case), same cache-key shape and
  * `to_dict()` / `from_dict()` serialization, same freshness diagnosis.

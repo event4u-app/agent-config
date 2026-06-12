@@ -2,7 +2,7 @@
 /**
  * Sync `.agent-settings.yml` against the template + profile (additive merge).
  *
- * TypeScript twin of `src/scripts/sync_agent_settings.py` (ADR-089).
+ * TypeScript twin of `src/scripts/sync_agent_settings.py` (ADR-090).
  * Applies the section-aware merge rules documented in
  * `docs/guidelines/agent-infra/layered-settings.md`:
  *

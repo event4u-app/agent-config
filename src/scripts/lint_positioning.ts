@@ -2,7 +2,7 @@
 /**
  * Positioning consistency lint for event4u/agent-config.
  *
- * TypeScript twin of `src/scripts/lint_positioning.py` (ADR-089, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_positioning.py` (ADR-090, Phase 4 /
  * Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet` argparse flag,
  * exit codes (0 clean, 1 drift, 2 missing PyYAML — inert here since `yaml`
  * is always present), byte-identical stdout (success line) and stderr

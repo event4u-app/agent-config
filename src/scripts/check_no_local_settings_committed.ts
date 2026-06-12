@@ -3,7 +3,7 @@
  * Fail if any `.agent-settings.local.yml` is tracked by git.
  *
  * TypeScript twin of `src/scripts/check_no_local_settings_committed.py`
- * (ADR-089, Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY —
+ * (ADR-090, Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY —
  * no flags, exit codes (0 clean, 1 offenders), stdout, byte-identical
  * finding messages, same `git ls-files` scan and basename match. No
  * behaviour changes.

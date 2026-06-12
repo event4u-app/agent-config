@@ -1,7 +1,7 @@
 /**
  * Cost capture helper for the bench runner.
  *
- * TypeScript twin of `src/scripts/_lib/bench_cost.py` (ADR-089, Phase 2
+ * TypeScript twin of `src/scripts/_lib/bench_cost.py` (ADR-090, Phase 2
  * Wave 2a). Public API mirrors the Python module exactly — same exported
  * names (deliberately snake_case), same per-tier aggregation, same
  * recompute-from-rates fallback, same 6-decimal rounding, same JSON-identical

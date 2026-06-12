@@ -1,7 +1,7 @@
 /**
  * Verbosity-aware print router for scripts.
  *
- * TypeScript twin of `src/scripts/_lib/script_output.py` (ADR-089,
+ * TypeScript twin of `src/scripts/_lib/script_output.py` (ADR-090,
  * Phase 2 / Wave 2b). Mirrors the Python module's public API exactly —
  * same exported snake_case names, same resolution order, same level
  * semantics, same output channels (stdout vs stderr), same module-level

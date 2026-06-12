@@ -2,7 +2,7 @@
  * Claude Desktop skill ZIP bundler (Phase 4 of event4u-namespace roadmap).
  *
  * TypeScript twin of `src/scripts/_lib/claude_desktop_bundler.py`
- * (ADR-089 py2ts Phase 2 / Wave 1).
+ * (ADR-090 py2ts Phase 2 / Wave 1).
  *
  * Claude Desktop has no filesystem convention for skills; the Customize →
  * Skills UI accepts a ZIP per skill via the Upload button. This module

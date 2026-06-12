@@ -3,7 +3,7 @@
  * Release-PR shape checker — fail-closed gate for
  * `docs/contracts/release-pr-gating.md`.
  *
- * TypeScript twin of `src/scripts/check_release_pr_shape.py` (ADR-089,
+ * TypeScript twin of `src/scripts/check_release_pr_shape.py` (ADR-090,
  * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — mutually
  * exclusive `--pr` / `--files` (one required), `--files` accepts a
  * comma-separated list or `-` (stdin, one per line), exit codes

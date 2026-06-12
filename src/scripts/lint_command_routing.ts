@@ -2,7 +2,7 @@
 /**
  * Routing-metadata + routing-eval linter for visible commands.
  *
- * TypeScript twin of `src/scripts/lint_command_routing.py` (ADR-089, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_command_routing.py` (ADR-090, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same `--quiet` flag,
  * scan scope (src/domains/**\/command.md, legacy packages fallback), file
  * ordering, frontmatter parsing, finding messages, stdout/stderr split, and

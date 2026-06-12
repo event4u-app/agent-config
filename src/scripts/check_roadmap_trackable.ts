@@ -2,7 +2,7 @@
 /**
  * CI guard for the `roadmap-progress-sync` rule's trackability Iron Law.
  *
- * TypeScript twin of `src/scripts/check_roadmap_trackable.py` (ADR-089,
+ * TypeScript twin of `src/scripts/check_roadmap_trackable.py` (ADR-090,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--quiet` flag,
  * exit codes (0 all trackable, 1 violation, 1 missing roadmap dir),
  * byte-identical messages, stdout/stderr split, same scan order.

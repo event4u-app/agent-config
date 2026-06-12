@@ -2,7 +2,7 @@
 /**
  * Platform-agnostic hook for the `onboarding-gate` rule.
  *
- * TypeScript twin of `src/scripts/onboarding_gate_hook.py` (ADR-089 —
+ * TypeScript twin of `src/scripts/onboarding_gate_hook.py` (ADR-090 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
@@ -40,7 +40,7 @@ import { atomic_write_json } from "./hooks/state_io.js";
 export const SETTINGS_FILE = ".agent-settings.yml";
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — this is a latent
-// docstring/code divergence in the Python original (ADR-089 § replicate
+// docstring/code divergence in the Python original (ADR-090 § replicate
 // latent bugs), and `STATE_FILE` is what the test suite asserts against.
 export const STATE_DIR = path.join("agents", "state");
 export const STATE_FILE = path.join(STATE_DIR, "onboarding-gate.json");

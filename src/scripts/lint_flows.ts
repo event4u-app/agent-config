@@ -2,7 +2,7 @@
 /**
  * Validate-on-load linter for the first-class flow layer (`src/flows/*.yaml`).
  *
- * TypeScript twin of `src/scripts/lint_flows.py` (ADR-089, Phase 4 / Wave 4b
+ * TypeScript twin of `src/scripts/lint_flows.py` (ADR-090, Phase 4 / Wave 4b
  * — PORT). Mirrors the CLI contract EXACTLY — the `--quiet` flag (argparse,
  * so `-h`/`--help` exit 0 with a usage line), the same two-check-per-file
  * shape-vs-resolution split, byte-identical violation messages, the same

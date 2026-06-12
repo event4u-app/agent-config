@@ -2,7 +2,7 @@
 /**
  * Bite-sized task granularity gate for structural roadmaps (P1.5).
  *
- * TypeScript twin of `src/scripts/check_bite_sized_granularity.py` (ADR-089,
+ * TypeScript twin of `src/scripts/check_bite_sized_granularity.py` (ADR-090,
  * Phase 4 / Wave 4c). This module is a pure library (no CLI / main); the
  * Python module is imported as a test surface. The exported API mirrors the
  * Python public API EXACTLY:

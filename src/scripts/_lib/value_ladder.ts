@@ -1,7 +1,7 @@
 /**
  * Pure normaliser: raw bench reports → `value-v1` rung dicts.
  *
- * TypeScript twin of `src/scripts/_lib/value_ladder.py` (ADR-089 py2ts
+ * TypeScript twin of `src/scripts/_lib/value_ladder.py` (ADR-090 py2ts
  * Phase 2 / Wave 2a). Phase 1 Step 2 of the readable-value-dashboard roadmap.
  *
  * This module is **pure** — no I/O, no file reads, no clock. Inputs are
@@ -25,7 +25,7 @@
  *     }
  *
  * The public API deliberately keeps snake_case names to mirror the Python
- * module 1:1 (per ADR-089 — Python style is part of the contract).
+ * module 1:1 (per ADR-090 — Python style is part of the contract).
  */
 
 // ── Shared dict types ───────────────────────────────────────────────────

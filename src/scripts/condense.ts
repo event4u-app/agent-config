@@ -5,7 +5,7 @@
  * symlinks for the rest; opt into rule symlinks via
  * augment.rules_use_symlinks in .agent-settings.yml).
  *
- * TypeScript twin of `src/scripts/condense.py` (ADR-089 — Python→TS
+ * TypeScript twin of `src/scripts/condense.py` (ADR-090 — Python→TS
  * migration, Phase 5). Mirrors the Python CLI surface EXACTLY — every
  * subcommand (`--sync`, `--list`, `--changed`, `--check`, `--check-hashes`,
  * `--clean-hashes`, `--mark-done <path>`, `--mark-all-done`,
@@ -762,7 +762,7 @@ export function strip_frontmatter(content: string): string {
 
 // ── Path rewriter (P1 of road-to-path-fixes.md) ───────────────────────────
 // Kept byte-identical to check_condensation.ts::_rewritePaths (the two MUST
-// agree — see ADR-089 note). Mirrors condense.py::_rewrite_paths.
+// agree — see ADR-090 note). Mirrors condense.py::_rewrite_paths.
 
 const _LEGACY_SRC_PREFIX = '.agent-src.uncondensed/';
 const _PROJECTED_SRC_PREFIX = 'dist/agent-src/';

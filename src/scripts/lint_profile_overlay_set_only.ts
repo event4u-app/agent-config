@@ -2,7 +2,7 @@
 /**
  * lint_profile_overlay_set_only — freeze the set-only overlay invariant.
  *
- * TypeScript twin of `src/scripts/lint_profile_overlay_set_only.py` (ADR-089,
+ * TypeScript twin of `src/scripts/lint_profile_overlay_set_only.py` (ADR-090,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * flag from argv at module load, four YAML surfaces + sorted *.yml ordering,
  * finding messages (incl. Python `type(x).__name__` and `{x!r}` rendering),

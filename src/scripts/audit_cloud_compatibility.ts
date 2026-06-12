@@ -2,7 +2,7 @@
 /**
  * audit_cloud_compatibility.ts — tier each artefact for cloud distribution.
  *
- * TypeScript twin of `src/scripts/audit_cloud_compatibility.py` (ADR-089,
+ * TypeScript twin of `src/scripts/audit_cloud_compatibility.py` (ADR-090,
  * Phase 8 / Wave 8a). The CLI contract is mirrored EXACTLY — the flags
  * `--details` / `--tier` / `--cloud-action` / `--format` / `--iron-law`,
  * exit codes, the stdout/stderr split, byte-identical messages, AND

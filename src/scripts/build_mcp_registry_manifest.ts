@@ -2,7 +2,7 @@
 /**
  * Build `dist/mcp/registry-manifest.json` + the two rendered payloads.
  *
- * TypeScript twin of `src/scripts/build_mcp_registry_manifest.py` (ADR-089,
+ * TypeScript twin of `src/scripts/build_mcp_registry_manifest.py` (ADR-090,
  * Phase 5). The CLI contract is mirrored EXACTLY — every flag (`--write`,
  * `--strict`, `--quiet`), exit codes (0 = ok; 2 = `--strict` drift without
  * `--write`; 1 = missing discovery prereq via SystemExit), the stdout/stderr

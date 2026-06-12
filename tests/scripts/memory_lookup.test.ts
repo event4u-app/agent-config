@@ -1,7 +1,7 @@
 // Tests for src/scripts/memory_lookup.ts — file-based retrieval fallback.
 //
 // 1:1 port of tests/test_memory_lookup.py + tests/test_conflict_rule.py
-// (pytest → vitest, ADR-089 parity contract). The pytest suites import the
+// (pytest → vitest, ADR-090 parity contract). The pytest suites import the
 // module and call retrieve() / _apply_conflict_rule() / helpers directly;
 // these mirror that against the TS twin. The retrieve() contract (signature
 // + return shape) is cited by rules, so it is exercised directly. A trailing

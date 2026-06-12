@@ -2,7 +2,7 @@
 /**
  * Regression guard: no NEW `.agent-src.uncondensed/` references in `src/`.
  *
- * TypeScript twin of `src/scripts/check_no_new_legacy_path.py` (ADR-089,
+ * TypeScript twin of `src/scripts/check_no_new_legacy_path.py` (ADR-090,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--base`
  * / `--stdin` flags, exit codes (0 no new references, 1 a new reference,
  * 2 internal error), stdout split, byte-identical finding messages,

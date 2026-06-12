@@ -2,7 +2,7 @@
 /**
  * Platform-agnostic hook for the `verify-before-complete` rule.
  *
- * TypeScript twin of `src/scripts/verify_before_complete_hook.py` (ADR-089 —
+ * TypeScript twin of `src/scripts/verify_before_complete_hook.py` (ADR-090 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
@@ -40,7 +40,7 @@ import { atomic_write_json } from "./hooks/state_io.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
-// divergence in the Python original (ADR-089 § replicate latent bugs).
+// divergence in the Python original (ADR-090 § replicate latent bugs).
 export const STATE_FILE = path.join("agents", "state", "verify-before-complete.json");
 
 // Tool names across platforms whose `command` / `tool_input.command` field

@@ -8,7 +8,7 @@
  *   - the `tests/fixtures/sync_yaml_rt/` corpus (parse -> emit and full sync),
  *   - the synthetic merge / sync scenarios from the Python suite.
  *
- * The Python suite is the behavioral oracle (ADR-089). The differential
+ * The Python suite is the behavioral oracle (ADR-090). The differential
  * gate (skipped when python3 is absent) proves byte-identical behaviour.
  */
 import { execFileSync } from 'node:child_process';

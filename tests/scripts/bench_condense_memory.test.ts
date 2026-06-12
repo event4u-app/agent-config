@@ -1,7 +1,7 @@
 // Tests for src/scripts/bench_condense_memory.ts (Phase 2 / Step 11 offline bench).
 //
 // The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-089 parity contract): the pure transform layer
+// differential suite (ADR-090 parity contract): the pure transform layer
 // (`chars_to_tokens`, `aggregate`, `render_md`) is differential-tested against
 // a tiny python3 harness, and a golden-parity block runs the full bench
 // end-to-end under python3 vs tsx, asserting byte-identical generated reports

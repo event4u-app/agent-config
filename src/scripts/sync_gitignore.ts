@@ -2,7 +2,7 @@
 /**
  * Sync the `event4u/agent-config` block in a project's `.gitignore`.
  *
- * TypeScript twin of `src/scripts/sync_gitignore.py` (ADR-089, Phase 5). The
+ * TypeScript twin of `src/scripts/sync_gitignore.py` (ADR-090, Phase 5). The
  * CLI contract is mirrored EXACTLY — every flag (`--path`, `--template`,
  * `--dry-run`, `--replace`, `--cleanup-legacy`, `--quiet`), exit codes
  * (0 = no change / changed / dry-run; 2 = invalid args / template missing),

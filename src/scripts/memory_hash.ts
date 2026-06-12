@@ -2,7 +2,7 @@
 /**
  * Content-addressed hash for a curated memory entry.
  *
- * TypeScript twin of `src/scripts/memory_hash.py` (ADR-089, Phase 7 /
+ * TypeScript twin of `src/scripts/memory_hash.py` (ADR-090, Phase 7 /
  * dev-side memory CORE). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),
  * same canonical-JSON serialisation (sorted keys, no whitespace,

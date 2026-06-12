@@ -1,7 +1,7 @@
 /**
  * Centralized loader for `.agent-settings.yml` with user-global fallback.
  *
- * TypeScript twin of `src/scripts/_lib/agent_settings.py` (ADR-089,
+ * TypeScript twin of `src/scripts/_lib/agent_settings.py` (ADR-090,
  * Phase 2 / Wave 2a). Mirrors the Python module's public API exactly —
  * same exported snake_case names, same semantics, same cascade / anchor /
  * whitelist / merge behavior, same YAML load tolerance, same error types.

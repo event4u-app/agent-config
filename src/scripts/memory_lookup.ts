@@ -2,7 +2,7 @@
 /**
  * Hybrid retrieval — file-first with optional package augmentation.
  *
- * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-089, Phase 7 /
+ * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-090, Phase 7 /
  * dev-side memory CORE). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately,
  * especially `retrieve(...)` whose signature/return shape is cited by

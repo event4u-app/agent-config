@@ -2,7 +2,7 @@
 /**
  * Phase 5.2 roadmap-complexity linter.
  *
- * TypeScript twin of `src/scripts/lint_roadmap_complexity.py` (ADR-089,
+ * TypeScript twin of `src/scripts/lint_roadmap_complexity.py` (ADR-090,
  * Phase 4 / Wave 4b). Mirrors the CLI contract EXACTLY — `--quiet` is a
  * bare `sys.argv` membership check (computed at import, NOT argparse, so
  * there is no real `-h`/`--help`), the per-roadmap `✅`/`❌` lines, the

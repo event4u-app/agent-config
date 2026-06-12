@@ -3,7 +3,7 @@
  * Stale-manifest guard — re-builds the manifest in memory and diffs it
  * against the committed `dist/discovery/discovery-manifest.json`.
  *
- * TypeScript twin of `src/scripts/validate_discovery_manifest.py` (ADR-089,
+ * TypeScript twin of `src/scripts/validate_discovery_manifest.py` (ADR-090,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--quiet`
  * flag, exit codes (0 match, 1 drift / missing committed manifest),
  * stdout/stderr split, byte-identical messages, and the same `generated_at`

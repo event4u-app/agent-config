@@ -2,7 +2,7 @@
 /**
  * Fail when `package.json.version` and the project-template pin drift.
  *
- * TypeScript twin of `src/scripts/check_template_pin_drift.py` (ADR-089,
+ * TypeScript twin of `src/scripts/check_template_pin_drift.py` (ADR-090,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--allow-empty`
  * flag, exit codes (0 match / empty-allowed, 1 drift / missing / unreadable),
  * byte-identical messages, stdout/stderr split, same template-file

@@ -2,7 +2,7 @@
 /**
  * Trigger-coverage suite (roadmap Phase 2.1 / 2.2).
  *
- * TypeScript twin of `src/scripts/trigger_coverage.py` (ADR-089, Phase 8 /
+ * TypeScript twin of `src/scripts/trigger_coverage.py` (ADR-090, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--json` flag, exit codes
  * (0 pass / 1 miss / 2 missing-router-or-PyYAML), the stdout/stderr split,
  * byte-identical human + JSON report.

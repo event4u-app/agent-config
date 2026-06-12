@@ -2,7 +2,7 @@
 /**
  * Lint the hook concern budget against `src/scripts/hook_manifest.yaml`.
  *
- * TypeScript twin of `src/scripts/lint_hook_concern_budget.py` (ADR-089,
+ * TypeScript twin of `src/scripts/lint_hook_concern_budget.py` (ADR-090,
  * Phase 4 / Wave 4b). Mirrors the CLI contract EXACTLY — `--manifest` /
  * `--settings` / `--strict` argparse flags, exit codes (0 clean or warn-only,
  * 1 schema load failed, 2 hard-fail with violations), byte-identical

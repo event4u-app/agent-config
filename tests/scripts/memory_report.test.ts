@@ -1,7 +1,7 @@
 // Tests for src/scripts/memory_report.ts — quarterly + operational-store +
 // role-mode sections.
 //
-// 1:1 port of tests/test_memory_report.py (pytest → vitest, ADR-089 parity
+// 1:1 port of tests/test_memory_report.py (pytest → vitest, ADR-090 parity
 // contract). The pytest suite chdir's into tmp, monkeypatches MEMORY_ROOT /
 // INTAKE_ROOT and `memory_status.status`; the TS twin uses process.chdir +
 // the `_setMemoryRoot` / `_setIntakeRoot` seams + vi.spyOn on memory_status.

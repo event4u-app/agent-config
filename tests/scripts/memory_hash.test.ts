@@ -1,6 +1,6 @@
 // Tests for src/scripts/memory_hash.ts — content-addressed entry hash.
 //
-// 1:1 port of tests/test_memory_hash.py (pytest → vitest, ADR-089 parity
+// 1:1 port of tests/test_memory_hash.py (pytest → vitest, ADR-090 parity
 // contract). The pytest suite imports the module and calls hash_entry()
 // directly, so these mirror that by importing the TS twin. A trailing
 // golden-parity block runs python3 + tsx on identical inputs (hash_entry via
@@ -161,7 +161,7 @@ describe.skipIf(!HAVE_PYTHON)('memory_hash — golden parity', () => {
 
     // argparse derives the prog name from the script basename (`memory_hash.py`
     // vs `memory_hash`), so the prog token in usage + error lines is filename-
-    // dependent and NOT a parity contract (per ADR-089). Normalize the prog
+    // dependent and NOT a parity contract (per ADR-090). Normalize the prog
     // token away, then compare the (usage + error) body byte-for-byte.
     function errBody(stderr: string): string {
         return stderr.replace(/memory_hash\.py/g, 'memory_hash').trimEnd();

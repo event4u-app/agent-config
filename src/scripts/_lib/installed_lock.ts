@@ -1,7 +1,7 @@
 /**
  * Global-install lockfile at `~/.event4u/agent-config/installed.lock`.
  *
- * TypeScript twin of `src/scripts/_lib/installed_lock.py` (ADR-089 — Python→TS
+ * TypeScript twin of `src/scripts/_lib/installed_lock.py` (ADR-090 — Python→TS
  * migration, Phase 2 / Wave 2a). Public API mirrors the Python module exactly
  * (snake_case kept deliberately — fidelity over TS idiom), including the
  * byte-exact lockfile wire format and the tempfile + rename atomic write.

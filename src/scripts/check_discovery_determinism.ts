@@ -2,7 +2,7 @@
 /**
  * Determinism check — runs the discovery scanner twice and diffs the output.
  *
- * TypeScript twin of `src/scripts/check_discovery_determinism.py` (ADR-089,
+ * TypeScript twin of `src/scripts/check_discovery_determinism.py` (ADR-090,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
  * exit codes (0 deterministic, 1 drift), stdout/stderr split, byte-identical
  * messages, and the same `generated_at` normalization + sorted-key JSON
