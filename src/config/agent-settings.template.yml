@@ -530,6 +530,15 @@ hooks:
     tier1_concerns: []
     hard_fail: false
 
+  # PostToolUse prompt-injection scanner (road-to-security-pillar.md P3.2).
+  # Default-OFF. When enabled, scans tool output (file reads, web fetches, MCP
+  # responses) for injection signatures and WARNS in context (exit 2) — never
+  # blocks. Runtime backstop on top of the always-on untrusted-input-defense
+  # rule; detection is probabilistic. Opt in per project once you trust the
+  # signal-to-noise on your tool mix.
+  injection_scan:
+    enabled: false
+
 # --- Decision engine ---
 #
 # Controllable gates layered over the observability surface. Absent

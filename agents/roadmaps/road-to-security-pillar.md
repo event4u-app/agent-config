@@ -215,30 +215,30 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 
 ### P3.1 — `/security-audit-config` command
 
-- [ ] New command auditing the **consumer's assembled** agent config (their
+- [x] New command auditing the **consumer's assembled** agent config (their
       `CLAUDE.md`/`AGENTS.md`/`.cursor/rules`/skills/`settings.json`/MCP configs/
       hooks) by reusing the Phase-1 linters as a library. Emits an **A–F score +
       per-category breakdown** (Secrets · Permissions · Hooks · MCP · Agents/Rules),
       findings mapped to **OWASP ASI**, with the P1.5 confidence weighting so doc/
       example files don't tank the score.
-- [ ] Reuses `ai-council` + `judge-security-auditor` for the optional deep pass; no
+- [x] Reuses `ai-council` + `judge-security-auditor` for the optional deep pass; no
       new scoring rubric beyond the linters + OWASP mapping.
 
 ### P3.2 — PostToolUse injection-scanner hook (plugin)
 
-- [ ] New warn-in-context hook in the Claude Code plugin: regex bank over **file
+- [x] New warn-in-context hook in the Claude Code plugin: regex bank over **file
       reads / web fetches / MCP outputs** (the P1.1/P1.2 pattern sets); on match,
       inject a HIGH/MED/LOW **warning into context** — never block. Resolves the
       host-binary path per ADR-020 (hooks resolve the global binary; no npx-in-hook).
-- [ ] Default-off opt-in via `.agent-settings.yml`; documented as the runtime leg
+- [x] Default-off opt-in via `.agent-settings.yml`; documented as the runtime leg
       of defense-in-depth, explicitly probabilistic (detectors are evadable —
       arXiv 2504.11168).
-- [ ] Verify the hook fires on a seeded injection fixture and stays silent on clean
+- [x] Verify the hook fires on a seeded injection fixture and stays silent on clean
       output. <!-- carve-out: new-gate-verification -->
 
 ### P3.3 — Agent-security-review skill
 
-- [ ] New skill orchestrating a **red-team / blue-team / auditor** adversarial pass
+- [x] New skill orchestrating a **red-team / blue-team / auditor** adversarial pass
       over an agent's config + behaviour, reusing `ai-council` (debate) +
       `threat-modeling` + the Phase-1 linters. Output: prioritised attack-chain →
       defensive-gap list (Source S's one genuine value-add), HRR-bannered per the

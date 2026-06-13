@@ -112,7 +112,13 @@ class ScannedFile:
 
 
 def scan_file(path: Path) -> ScannedFile:
-    rel = path.relative_to(ROOT).as_posix() if path.is_absolute() else path.as_posix()
+    if path.is_absolute():
+        try:
+            rel = path.relative_to(ROOT).as_posix()
+        except ValueError:
+            rel = path.name  # outside the package root (e.g. a consumer-config audit)
+    else:
+        rel = path.as_posix()
     raw = path.read_text(encoding="utf-8", errors="surrogatepass")
     lines = raw.splitlines()
     n = len(lines)
@@ -155,6 +161,24 @@ def scan_file(path: Path) -> ScannedFile:
         in_any_fence=in_any,
         pragmas=pragmas,
         weight=path_weight(rel),
+    )
+
+
+def scan_path(path: Path, base: Path) -> ScannedFile:
+    """scan_file, but compute ``rel`` relative to an arbitrary ``base`` root.
+
+    Used by the consumer-facing audit (P3.1) to scan a target repo's config
+    instead of this package's ``src/``.
+    """
+    sf = scan_file(path)
+    try:
+        rel = path.resolve().relative_to(base.resolve()).as_posix()
+    except ValueError:
+        rel = path.name
+    return ScannedFile(
+        path=sf.path, rel=rel, lines=sf.lines,
+        in_example_fence=sf.in_example_fence, in_any_fence=sf.in_any_fence,
+        pragmas=sf.pragmas, weight=path_weight(rel),
     )
 
 
