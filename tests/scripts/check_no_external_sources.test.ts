@@ -68,6 +68,14 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (real repo)',
 describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hits)', () => {
     let work: string;
 
+    // Assemble the denied tokens from fragments at runtime so the literal
+    // tokens never appear in THIS test file's source — otherwise the
+    // check-no-external-sources guard, which scans the whole tracked tree,
+    // would flag this very file. The assembled strings are written into the
+    // throwaway tmp fixture below and exercise the guard exactly as a real hit.
+    const TOK1 = 'ruf' + 'lo'; // word-boundary denied token
+    const TOK2 = 'obra' + '/' + 'superpowers'; // slug denied token
+
     beforeEach(() => {
         work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cnes-')));
         fs.mkdirSync(path.join(work, 'src', 'scripts'), { recursive: true });
@@ -75,7 +83,7 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
         fs.writeFileSync(
             path.join(work, 'src', 'scripts', 'external_sources_denylist.json'),
             JSON.stringify({
-                deny: ['\\bruflo\\b', 'obra/superpowers'],
+                deny: ['\\b' + TOK1 + '\\b', TOK2],
                 skip_paths: [
                     'src/scripts/external_sources_denylist.json',
                     'src/scripts/check_no_external_sources.py',
@@ -89,13 +97,13 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
         // clean line, plus a skip_paths-covered file that also carries a token.
         fs.writeFileSync(
             path.join(work, 'a.md'),
-            'inspired by ruflo here  \nand obra/superpowers there\nclean line\n',
+            `inspired by ${TOK1} here  \nand ${TOK2} there\nclean line\n`,
             'utf-8',
         );
         fs.mkdirSync(path.join(work, 'skipme'), { recursive: true });
-        fs.writeFileSync(path.join(work, 'skipme', 'b.md'), 'ruflo should be skipped\n', 'utf-8');
+        fs.writeFileSync(path.join(work, 'skipme', 'b.md'), `${TOK1} should be skipped\n`, 'utf-8');
         // Binary-extension skip: a denied token inside a .lock file must be ignored.
-        fs.writeFileSync(path.join(work, 'c.lock'), 'ruflo in a lockfile\n', 'utf-8');
+        fs.writeFileSync(path.join(work, 'c.lock'), `${TOK1} in a lockfile\n`, 'utf-8');
         // The scripts resolve ROOT from parents[2] of their own location, and
         // load the sibling denylist — so they must live under <work>/src/scripts.
         fs.copyFileSync(PY_SCRIPT, path.join(work, 'src', 'scripts', 'check_no_external_sources.py'));
@@ -145,8 +153,8 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
         expect(parsed.ok).toBe(false);
         expect(parsed.hits).toHaveLength(2);
         // Trailing whitespace stripped in the excerpt (line.strip()[:160]).
-        expect(parsed.hits[0]!.text).toBe('inspired by ruflo here');
+        expect(parsed.hits[0]!.text).toBe(`inspired by ${TOK1} here`);
         // Raw regex pattern preserved in the token field.
-        expect(parsed.hits[0]!.token).toBe('\\bruflo\\b');
+        expect(parsed.hits[0]!.token).toBe('\\b' + TOK1 + '\\b');
     });
 });
