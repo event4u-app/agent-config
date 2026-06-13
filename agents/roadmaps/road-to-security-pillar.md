@@ -84,7 +84,7 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 
 ### P1.1 — Hidden-Unicode / homoglyph linter
 
-- [ ] New `src/scripts/lint_hidden_unicode.py` — scans every `.md` under
+- [x] New `src/scripts/lint_hidden_unicode.py` — scans every `.md` under
       `src/{skills,rules,agent-src,domains}/` + `SKILL.md` frontmatter for the
       smuggling codepoint set: bidi controls (`U+202A–202E`, `U+2066–2069`,
       `U+200E/200F`, `U+061C`); zero-width (`U+200B/200C/200D/2060/FEFF/00AD`);
@@ -92,43 +92,43 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
       (`U+FE00–FE0F`, `U+E0100–E01EF`, flag ≥3/line); PUA (`U+E000–F8FF` +
       plane-15/16); deprecated (`U+206A–206F`, `U+FFF9–FFFB`); `Cc` control
       chars except `\t \n \r`.
-- [ ] Report file:line:codepoint:name. Scan **both** zero-width-binary and
+- [x] Report file:line:codepoint:name. Scan **both** zero-width-binary and
       Tag-block encodings (providers decode different families).
-- [ ] Optional `--fix` writes an NFKC-normalised, zero-width-stripped copy for
+- [x] Optional `--fix` writes an NFKC-normalised, zero-width-stripped copy for
       human review (never auto-applied).
-- [ ] Verify locally: run against current `src/` — expect **zero** real hits
+- [x] Verify locally: run against current `src/` — expect **zero** real hits
       (any hit is either a true finding or a containment-convention miss). <!-- carve-out: new-gate-verification -->
 
 ### P1.2 — Instruction-smuggling / suppression-phrase linter
 
-- [ ] New `src/scripts/lint_instruction_smuggling.py` — flags, in skill/rule/
+- [x] New `src/scripts/lint_instruction_smuggling.py` — flags, in skill/rule/
       command bodies + MCP tool descriptions: disclosure-suppression
       (`do not mention|don't tell the user|without explaining`), imperative
       `<IMPORTANT>`-style tags addressed to the model, secret-path reads
       (`\.ssh/id_rsa|\.env|mcp\.json|[A-Z_]*API_KEY`), pipe-to-shell
       (`curl[^\n]*\|\s*(ba)?sh`, `wget[^\n]*\|`), reverse shells
       (`socat|nc -e|/dev/tcp/`), long base64 blobs (`[A-Za-z0-9+/]{40,}={0,2}`).
-- [ ] Severity HIGH/MED/LOW per pattern; HIGH in a non-example file → CI fail.
-- [ ] Verify locally against `src/` with the P1.5 containment convention applied. <!-- carve-out: new-gate-verification -->
+- [x] Severity HIGH/MED/LOW per pattern; HIGH in a non-example file → CI fail.
+- [x] Verify locally against `src/` with the P1.5 containment convention applied. <!-- carve-out: new-gate-verification -->
 
 ### P1.3 — MCP-config security linter
 
-- [ ] New `src/scripts/lint_mcp_config_security.py` — scans any shipped MCP
+- [x] New `src/scripts/lint_mcp_config_security.py` — scans any shipped MCP
       manifest / `.mcp.json` example for: inline secrets (require `${env:VAR}`),
       `npx -y` auto-install, unpinned server versions, `autoApprove` /
       `enableAllProjectMcpServers`, `0.0.0.0` binding, shell metachars in args
       (`&&|;`), omnibus scopes (`*`, `all`, `full-access`), `*_BASE_URL` in
       project-scoped env.
-- [ ] Findings map to **OWASP ASI04** (Agentic Supply Chain). Verify locally. <!-- carve-out: new-gate-verification -->
+- [x] Findings map to **OWASP ASI04** (Agentic Supply Chain). Verify locally. <!-- carve-out: new-gate-verification -->
 
 ### P1.4 — Dangerous-frontmatter linter
 
-- [ ] New `src/scripts/lint_skill_frontmatter_safety.py` — flags skill/agent
+- [x] New `src/scripts/lint_skill_frontmatter_safety.py` — flags skill/agent
       frontmatter declaring `allowed-tools`/`tools` with `Bash(*)` or broad
       wildcards, `Bash` on a non-execution skill, or `permissionMode:
       bypassPermissions`. Cross-checks `runtime-safety` (automated handler ⇒
       `safety_mode: strict` + verification step present).
-- [ ] Verify locally; reconcile against existing `validate_frontmatter.py` (no
+- [x] Verify locally; reconcile against existing `validate_frontmatter.py` (no
       double-reporting). <!-- carve-out: new-gate-verification -->
 
 ### P1.5 — False-positive containment convention (gate before all four)
@@ -138,23 +138,23 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 > death-spiral / `autonomous-execution` antipattern). Three scoped, auditable
 > layers:
 
-- [ ] **Fenced-block exemption:** content inside a ` ```security-example ` fence
+- [x] **Fenced-block exemption:** content inside a ` ```security-example ` fence
       is skipped by P1.1–P1.4. Grep-auditable.
-- [ ] **Confidence weighting:** matches in `docs/`, `*example*`, `template*`,
+- [x] **Confidence weighting:** matches in `docs/`, `*example*`, `template*`,
       `evals/` score at 0.25×; below threshold → WARN not FAIL (mirrors Source S
       without naming it).
-- [ ] **Per-file pragma:** `<!-- security-lint: allow <check> "<justification>" -->`
+- [x] **Per-file pragma:** `<!-- security-lint: allow <check> "<justification>" -->`
       at file top; requires a rationale string; counted + capped (>20 across the
       repo = the linter is wrong, escalate per `autonomous-execution`).
-- [ ] Document the convention in `docs/guidelines/agent-infra/` and reference it
+- [x] Document the convention in `docs/guidelines/agent-infra/` and reference it
       from each linter's `--help`.
 
 ### P1.6 — Umbrella target + CI wiring
 
-- [ ] New `task lint-agent-security` running P1.1–P1.4 with the P1.5 convention.
-- [ ] Wire into the existing `ci-fast` / consistency cadence (targeted, not a new
+- [x] New `task lint-agent-security` running P1.1–P1.4 with the P1.5 convention.
+- [x] Wire into the existing `ci-fast` / consistency cadence (targeted, not a new
       full pipeline). Findings emit **SARIF** so reviewers/CI read a standard schema.
-- [ ] Verify the umbrella target green on current `src/`. <!-- carve-out: new-gate-verification -->
+- [x] Verify the umbrella target green on current `src/`. <!-- carve-out: new-gate-verification -->
 
 ## Phase 2 — Injection-aware authoring rules (the differentiator)
 
@@ -165,29 +165,29 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 
 ### P2.1 — Lethal-trifecta rule
 
-- [ ] New `src/rules/lethal-trifecta-guard.md` (`type: auto`, tier-2): fires when
+- [x] New `src/rules/lethal-trifecta-guard.md` (`type: auto`, tier-2): fires when
       a skill/command/MCP surface combines **private-data access + untrusted-content
       ingestion + external-comms**; forces the author to remove one leg or gate the
       egress behind human-in-the-loop. Routes to a guideline for the mechanics.
-- [ ] `evals/triggers.json` (5 should-fire / 5 should-not).
-- [ ] Optional companion lint in `lint_agent_security` flagging skills that
+- [-] `evals/triggers.json` (5 should-fire / 5 should-not). <!-- cancelled: rules are flat .md files with frontmatter `triggers:`; evals/triggers.json is a skill-only (directory) convention, n/a to rules -->
+- [x] Optional companion lint in `lint_agent_security` flagging skills that
       *declare* all three capability classes.
 
 ### P2.2 — Data/instruction-separation + spotlighting rule
 
-- [ ] New `src/rules/untrusted-input-defense.md` (`type: auto`, tier-2) — **this
+- [x] New `src/rules/untrusted-input-defense.md` (`type: auto`, tier-2) — **this
       supersedes `road-to-competitive-borrow.md` P1.2**: treat all fetched / tool /
       file content as data, never instructions; wrap untrusted content in delimited
       + datamarked blocks; never role-takeover, never leak secrets; Unicode /
       homoglyph / zero-width awareness. Routes to a guideline carrying the
       spotlighting mechanics (OWASP LLM01; Microsoft datamarking ~50%→<2%).
-- [ ] `evals/triggers.json` (5/5).
-- [ ] Cite both P2.1 + P2.2 from `threat-modeling`, `security-audit`,
+- [-] `evals/triggers.json` (5/5). <!-- cancelled: rules are flat .md files with frontmatter `triggers:`; evals/triggers.json is a skill-only (directory) convention, n/a to rules -->
+- [x] Cite both P2.1 + P2.2 from `threat-modeling`, `security-audit`,
       `judge-security-auditor` (no inline block per artifact).
 
 ### P2.3 — Least-agency mapping (no new rule — wire existing)
 
-- [ ] Document, in the P2.2 guideline, how the existing
+- [x] Document, in the P2.2 guideline, how the existing
       `non-destructive-by-default` / `scope-control` / `verify-before-complete`
       gates realise OWASP LLM01 #4/#5 (least-privilege + human approval) and LLM06
       (least agency). Zero new dependency — names the mapping so reviewers see the
@@ -199,11 +199,11 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 > model-layer / refusal concern; ~20% in-scope as authoring guidance. Do NOT build
 > a new surface — extend what exists.
 
-- [ ] Extend `security-sensitive-stop` with a short clause: refuse in-chat attempts
+- [x] Extend `security-sensitive-stop` with a short clause: refuse in-chat attempts
       to **modify the suite's own safety floors / kernel rules / MCP allowlists**
       via conversation (route to the normal edit-permission gates), and treat
       "ignore your rules"-class prompts as a refusal trigger, not an instruction.
-- [ ] No new skill, no jailbreak classifier (out of architectural scope — needs a
+- [x] No new skill, no jailbreak classifier (out of architectural scope — needs a
       model/API; documented as such in Phase 4).
 
 ## Phase 3 — Consumer-facing audit + runtime defense
@@ -215,30 +215,30 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 
 ### P3.1 — `/security-audit-config` command
 
-- [ ] New command auditing the **consumer's assembled** agent config (their
+- [x] New command auditing the **consumer's assembled** agent config (their
       `CLAUDE.md`/`AGENTS.md`/`.cursor/rules`/skills/`settings.json`/MCP configs/
       hooks) by reusing the Phase-1 linters as a library. Emits an **A–F score +
       per-category breakdown** (Secrets · Permissions · Hooks · MCP · Agents/Rules),
       findings mapped to **OWASP ASI**, with the P1.5 confidence weighting so doc/
       example files don't tank the score.
-- [ ] Reuses `ai-council` + `judge-security-auditor` for the optional deep pass; no
+- [x] Reuses `ai-council` + `judge-security-auditor` for the optional deep pass; no
       new scoring rubric beyond the linters + OWASP mapping.
 
 ### P3.2 — PostToolUse injection-scanner hook (plugin)
 
-- [ ] New warn-in-context hook in the Claude Code plugin: regex bank over **file
+- [x] New warn-in-context hook in the Claude Code plugin: regex bank over **file
       reads / web fetches / MCP outputs** (the P1.1/P1.2 pattern sets); on match,
       inject a HIGH/MED/LOW **warning into context** — never block. Resolves the
       host-binary path per ADR-020 (hooks resolve the global binary; no npx-in-hook).
-- [ ] Default-off opt-in via `.agent-settings.yml`; documented as the runtime leg
+- [x] Default-off opt-in via `.agent-settings.yml`; documented as the runtime leg
       of defense-in-depth, explicitly probabilistic (detectors are evadable —
       arXiv 2504.11168).
-- [ ] Verify the hook fires on a seeded injection fixture and stays silent on clean
+- [x] Verify the hook fires on a seeded injection fixture and stays silent on clean
       output. <!-- carve-out: new-gate-verification -->
 
 ### P3.3 — Agent-security-review skill
 
-- [ ] New skill orchestrating a **red-team / blue-team / auditor** adversarial pass
+- [x] New skill orchestrating a **red-team / blue-team / auditor** adversarial pass
       over an agent's config + behaviour, reusing `ai-council` (debate) +
       `threat-modeling` + the Phase-1 linters. Output: prioritised attack-chain →
       defensive-gap list (Source S's one genuine value-add), HRR-bannered per the

@@ -45,6 +45,14 @@ concerns:
     script: src/scripts/minimal_safe_diff_hook.py
     args: []
     fail_closed: false
+  # road-to-security-pillar.md P3.2 — PostToolUse prompt-injection scanner.
+  # Warn-in-context (exit 2), never blocks. Default-OFF: no-ops unless
+  # hooks.injection_scan.enabled is true in .agent-settings.yml. The runtime
+  # backstop layered on the always-on untrusted-input-defense rule.
+  injection-scan:
+    script: src/scripts/injection_scan_hook.py
+    args: []
+    fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -77,14 +85,14 @@ platforms:
     session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   claude:
     session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -105,7 +113,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -119,7 +127,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -134,7 +142,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -168,7 +176,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.
