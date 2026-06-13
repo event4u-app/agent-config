@@ -34,6 +34,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import {
+    SCHEMA_VERSION as _CH_SCHEMA_VERSION,
+    append as _chAppendImpl,
+    init as _chInitImpl,
+    read_entries as _chReadEntriesImpl,
+    read_header as _chReadHeaderImpl,
+} from '../chat_history.js';
+import {
     type CatalogEntry,
     install_hint as _catalog_install_hint,
     load_catalog,
@@ -161,119 +168,21 @@ function _validateInTreePath(raw: string | null | undefined, consumerRoot: strin
 }
 
 // ---------------------------------------------------------------------
-// Minimal chat-history surface — faithful inline port of the five
-// functions tools.py lazily imports from scripts/chat_history.py
-// (SCHEMA_VERSION, init, append, read_header, read_entries). There is no
-// chat_history.ts twin yet; a .ts cannot import a .py, so the subset the
-// handlers depend on lives here. Behaviour mirrors the Python source
-// byte-for-byte on the JSONL it writes (ensure_ascii=False, trailing
-// newline, ISO-8601 second-precision `ts`).
+// Minimal chat-history surface — the five functions tools.py lazily
+// imports from scripts/chat_history.py (SCHEMA_VERSION, init, append,
+// read_header, read_entries) now come from the chat_history.ts twin
+// (the canonical single source of truth, byte-for-byte with the Python
+// writer: ensure_ascii=False default separators, trailing newline,
+// ISO-8601 second-precision `ts`). These thin shims keep the handler
+// call sites unchanged while delegating to the twin.
 // ---------------------------------------------------------------------
 
-const _CH_SCHEMA_VERSION = 4;
-const _CH_WS_RE = /\s+/g;
-
-/** ISO-8601 UTC, seconds precision — mirror Python `datetime.now(utc).isoformat(timespec="seconds")`. */
-function _chNow(): string {
-    // Python emits e.g. "2026-06-13T00:00:00+00:00"; replicate the +00:00 offset.
-    return new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00');
-}
-
-/** Mirror Python `json.dumps(obj, ensure_ascii=False)` for a flat entry/header dict. */
-function _chDumps(obj: Record<string, unknown>): string {
-    return JSON.stringify(obj);
-}
-
 function _chReadHeader(target: string): Record<string, unknown> | null {
-    let stat: fs.Stats;
-    try {
-        stat = fs.statSync(target);
-    } catch {
-        return null;
-    }
-    if (!stat.isFile() || stat.size === 0) {
-        return null;
-    }
-    let first: string;
-    try {
-        const raw = fs.readFileSync(target, 'utf-8');
-        first = raw.split('\n', 1)[0]?.trim() ?? '';
-    } catch {
-        return null;
-    }
-    if (!first) {
-        return null;
-    }
-    try {
-        const obj = JSON.parse(first) as unknown;
-        if (
-            obj === null ||
-            typeof obj !== 'object' ||
-            Array.isArray(obj) ||
-            (obj as Record<string, unknown>).t !== 'header'
-        ) {
-            return null;
-        }
-        return obj as Record<string, unknown>;
-    } catch {
-        return null;
-    }
-}
-
-function _chBuildHeader(freq: string): Record<string, unknown> {
-    return { t: 'header', v: _CH_SCHEMA_VERSION, started: _chNow(), freq };
+    return _chReadHeaderImpl(target);
 }
 
 function _chInit(target: string, freq = 'per_phase'): Record<string, unknown> {
-    const header = _chBuildHeader(freq);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, _chDumps(header) + '\n', { encoding: 'utf-8' });
-    return header;
-}
-
-/** Most recent body entry's `s`, or "<unknown>". Mirrors `_last_body_session_id`. */
-function _chLastBodySessionId(target: string): string {
-    const UNKNOWN = '<unknown>';
-    let stat: fs.Stats;
-    try {
-        stat = fs.statSync(target);
-    } catch {
-        return UNKNOWN;
-    }
-    if (!stat.isFile() || stat.size === 0) {
-        return UNKNOWN;
-    }
-    let lines: string[];
-    try {
-        lines = fs.readFileSync(target, 'utf-8').split('\n');
-    } catch {
-        return UNKNOWN;
-    }
-    for (let i = lines.length - 1; i >= 0; i--) {
-        const line = (lines[i] ?? '').trim();
-        if (!line) {
-            continue;
-        }
-        let obj: unknown;
-        try {
-            obj = JSON.parse(line);
-        } catch {
-            continue;
-        }
-        if (
-            obj === null ||
-            typeof obj !== 'object' ||
-            Array.isArray(obj) ||
-            (obj as Record<string, unknown>).t === 'header'
-        ) {
-            continue;
-        }
-        const sid = (obj as Record<string, unknown>).s;
-        if (typeof sid === 'string' && sid) {
-            return sid;
-        }
-    }
-    return UNKNOWN;
+    return _chInitImpl(freq, { path: target });
 }
 
 function _chAppend(
@@ -281,21 +190,7 @@ function _chAppend(
     target: string,
     session: string | null | undefined,
 ): void {
-    if (entry === null || typeof entry !== 'object' || !entry.t) {
-        throw new Error("entry must be a dict with non-empty 't' key");
-    }
-    if (entry.t === 'header') {
-        throw new Error('use init() to write the header, not append()');
-    }
-    if (entry.ts === undefined) {
-        entry.ts = _chNow();
-    }
-    if (session !== null && session !== undefined) {
-        entry.s = session;
-    } else if (!('s' in entry)) {
-        entry.s = _chLastBodySessionId(target);
-    }
-    fs.appendFileSync(target, _chDumps(entry) + '\n', { encoding: 'utf-8' });
+    _chAppendImpl(entry, { path: target, session });
 }
 
 /** Mirror `read_entries(last, path, session)` (the subset the read handler uses). */
@@ -304,48 +199,7 @@ function _chReadEntries(
     last: number | null | undefined,
     session: string | null | undefined,
 ): Record<string, unknown>[] {
-    let stat: fs.Stats;
-    try {
-        stat = fs.statSync(target);
-    } catch {
-        return [];
-    }
-    if (!stat.isFile()) {
-        return [];
-    }
-    let entries: Record<string, unknown>[] = [];
-    const rawLines = fs.readFileSync(target, 'utf-8').split('\n');
-    for (let i = 0; i < rawLines.length; i++) {
-        const line = (rawLines[i] ?? '').trim();
-        if (!line) {
-            continue;
-        }
-        let obj: unknown;
-        try {
-            obj = JSON.parse(line);
-        } catch {
-            continue;
-        }
-        if (
-            i === 0 &&
-            obj !== null &&
-            typeof obj === 'object' &&
-            !Array.isArray(obj) &&
-            (obj as Record<string, unknown>).t === 'header'
-        ) {
-            continue;
-        }
-        if (obj !== null && typeof obj === 'object' && !Array.isArray(obj)) {
-            entries.push(obj as Record<string, unknown>);
-        }
-    }
-    if (session !== null && session !== undefined) {
-        entries = entries.filter((e) => e.s === session);
-    }
-    if (last !== null && last !== undefined && last >= 0) {
-        entries = entries.slice(entries.length - last);
-    }
-    return entries;
+    return _chReadEntriesImpl({ path: target, last, session });
 }
 
 // ---------------------------------------------------------------------
