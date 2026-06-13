@@ -27,8 +27,16 @@ CI enforces command `tier`+`visibility` via `src/scripts/lint_command_tiers.py`
 **The only genuine redundancy** is command `tier` ⇄ `visibility` (two fields,
 same 3-level concept). ADR-090 (2026-06-13) made `visibility` the source of
 truth and `tier` a back-compat alias, **deferring** the `tier` drop (its
-"Option B") until the published discovery-manifest deprecation window closes.
-That window-closure is the only metadata-simplification still open.
+"Option B"). [ADR-092](../../../docs/decisions/ADR-092-defer-command-tier-alias-removal.md)
+(2026-06-13, AI council) closed that question as **deferred-with-forcing-function**:
+the discovery manifest is a published npm artifact that dual-emits the integer
+`tier`, external consumers are unknown, and the defer rests on a Runtime Risk
+that cannot be ruled out (assumption, not evidence). Integer-`tier` readers are
+all internal (`commands.ts` fallback, `audit_command_surface.py`,
+`build_discovery_manifest.py` dual-emit); `workspace_hosts.py` uses an
+unrelated host-inventory tier. Removal execution + the re-open mechanism
+(versioned manifest v2 / telemetry + time-boxed review) live in
+`road-to-tier-removal.md` (blocked).
 
 ## 2. Command & skill consolidation — already adjudicated, keep-verdicts
 
