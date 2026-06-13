@@ -12,7 +12,7 @@ this file mirrors that contract for runtime lookup. Linter:
 
 | Cluster | Phase | Sub-commands | Replaces                                                                                                                                        |
 |---|:-:|---|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/fix` | 1 | `ci` · `pr-comments` · `pr-bot-comments` · `pr-developer-comments` · `portability` · `refs` · `seeder` | `/fix-ci` · `/fix-pr-comments` · `/fix-pr-bot-comments` · `/fix-pr-developer-comments` · `/fix-portability` · `/fix-references` · `/fix-seeder` |
+| `/fix` | 1 | `ci` · `pr-comments` · `portability` · `refs` · `seeder` | `/fix-ci` · `/fix-pr-comments` · `/fix-portability` · `/fix-references` · `/fix-seeder` |
 | `/optimize` | 1 | `agents` · `augmentignore` · `rtk` · `skills` | `/optimize-agents` · `/optimize-augmentignore` · `/optimize-rtk-filters` · `/optimize-skills`                                                   |
 | `/feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` | `/feature-explore` · `/feature-plan` · `/feature-refactor` · `/feature-roadmap`                                                                 |
 | `/chat-history` | 2 | `show` | `/chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only`                                 |
