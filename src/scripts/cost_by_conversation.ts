@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Group cost-tracking sessions by conversation_id (Ruflo `conversation.mjs`
- * `5b71c7a` ref).
+ * Group cost-tracking sessions by conversation_id (the external runtime `conversation.mjs` `5b71c7a` ref).
  *
  * TypeScript twin of `src/scripts/cost_by_conversation.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8e). Public surface mirrors the Python

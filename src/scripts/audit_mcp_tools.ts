@@ -134,7 +134,7 @@ function _render(catalog: Catalog, handlers: Map<string, number>, cat_lines: Map
     lines.push('> [`scripts/mcp_server/consumer_tool_catalog.json`](../../scripts/mcp_server/consumer_tool_catalog.json).');
     lines.push('> Do **not** hand-edit; rerun `python3 scripts/audit_mcp_tools.py --write`.');
     lines.push('>');
-    lines.push('> Step-11 Phase 5 Step 3 (`step-11-ruflo-parity.md`).');
+    lines.push('> Step-11 Phase 5 Step 3 (an internal parity roadmap (local-only)).');
     lines.push('');
     lines.push('## Summary');
     lines.push('');

@@ -67,8 +67,8 @@ const REQUIRED_KEYS: ReadonlySet<string> = new Set([
 const VALID_STATUS: ReadonlySet<string> = new Set(['active', 'deprecated', 'archived']);
 const VALID_CONFIDENCE: ReadonlySet<string> = new Set(['low', 'medium', 'high']);
 // `priority` is optional (default `normal`); enum is the smallest set that
-// solves the tier-0 surfacing use case. See `road-to-dream-skill-adoption.md`
-// § B2 and the Phase 2 council brief for why the `high` tier was rejected.
+// solves the tier-0 surfacing use case. See the Phase 2 council brief for why
+// the `high` tier was rejected.
 const VALID_PRIORITY: ReadonlySet<string> = new Set(['critical', 'normal', 'low']);
 // Soft-cap on `priority: critical` entries per memory type. Tier-0 inflation
 // is the failure mode: when too many entries claim "always surface", the
@@ -104,7 +104,7 @@ const REDACTION_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
 // Date-discipline — relative-date phrases without an ISO YYYY-MM-DD anchor
 // within ±20 chars are rejected. Memory entries that say "yesterday" or
 // "last week" rot the moment the file is re-read on another day; the
-// anchor pins meaning. See `road-to-dream-skill-adoption.md` § A5.
+// anchor pins meaning.
 const RELATIVE_DATE_PATTERN =
     /\b(yesterday|today|tomorrow|last\s+(?:week|month|year)|next\s+(?:week|month|year)|this\s+(?:week|month|year))\b/gi;
 const ISO_DATE_PATTERN = /\b\d{4}-\d{2}-\d{2}\b/;

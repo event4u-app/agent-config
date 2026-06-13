@@ -4,7 +4,7 @@
 // exit, --preview writes nothing, redaction of user names, ≤5-fact cap, the
 // commit-intake JSONL shape, and the three signal classes from the direct
 // mine() call. Plus golden parity (python3 vs tsx) on the committed
-// dream-skill fixture. Intake writes target os.tmpdir(); the committed
+// mine-session fixture. Intake writes target os.tmpdir(); the committed
 // fixture is read-only.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -15,7 +15,7 @@ import { mine } from '../../src/scripts/mine_session.js';
 import { REPO_ROOT, hasPython3, runPy, runTs } from './_wave8g.js';
 
 const py3 = hasPython3();
-const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'dream-skill', 'session.jsonl');
+const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'mine-session', 'session.jsonl');
 
 const tmp: string[] = [];
 function mkTmp(): string {

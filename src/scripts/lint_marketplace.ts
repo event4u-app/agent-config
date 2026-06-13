@@ -7,7 +7,7 @@
  * roots, finding messages, stdout output, and exit codes.
  *
  * Validates the Claude Code Plugin Marketplace manifest against the canonical
- * shape used by anthropics/skills:
+ * manifest shape:
  *
  *   - Required top-level fields: name, owner, metadata, plugins
  *   - owner must have name + email
