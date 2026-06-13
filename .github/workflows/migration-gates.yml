@@ -8,12 +8,26 @@ name: Migration Gates
 #   - phase_gate.ts: sequencing (no later phase starts while an earlier
 #     one is pending) + zero tracked .py files in completed phases.
 #   - vitest: the migration test suites (tests/scripts, tests/parity,
-#     tests/spikes).
+#     tests/spikes), sharded across runners (see below).
 #   - typecheck: tsconfig.json + tsconfig.scripts.json.
 #   - migration_status.ts: dashboard table appended to the job summary.
 #
-# The `phase-gate` job is intended to become a required check on
-# `python2ts` branch protection.
+# Required checks on `python2ts` branch protection: this workflow now
+# emits FIVE check contexts — "Migration phase gate" plus
+# "Migration tests (shard 1..4)". All five must be required so a test
+# failure in any shard blocks merge (the phase-gate job no longer runs
+# the suite).
+#
+# Why sharding instead of one serial run: 245 of 250 migration test
+# files spawn python3/tsx subprocesses against the LIVE working tree,
+# and a few mutate-then-restore generated trees. Running test files
+# concurrently on ONE runner lets one file's mutation race another
+# file's subprocess read (observed: condense --list saw a transient
+# partial tree -> 427 vs 561), so `--no-file-parallelism` is mandatory
+# WITHIN a runner. `vitest --shard=k/N` instead partitions the file
+# list across N SEPARATE runner VMs, each with its own checkout and
+# filesystem -> serial within a shard (race-free), N shards in
+# parallel. ~12 min single-runner -> ~3-4 min wall-clock.
 
 on:
   pull_request:
@@ -32,7 +46,7 @@ jobs:
   phase-gate:
     name: Migration phase gate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -53,16 +67,6 @@ jobs:
       - name: Phase gate (sequencing + completed-phase cleanliness)
         run: npx tsx src/scripts/parity/phase_gate.ts
 
-      - name: Migration test suites
-        # --no-file-parallelism: several golden-parity tests spawn python3/tsx
-        # against the LIVE working tree, and a few mutate-then-restore generated
-        # trees. Running test files concurrently lets one file's mutation race
-        # another file's subprocess read (observed: condense --list saw a
-        # transient partial tree → 427 vs 561). Serialize files so the
-        # working-tree-coupled golden tests never overlap. Tests within a file
-        # already run sequentially.
-        run: npx vitest run --no-file-parallelism tests/scripts/ tests/parity/ tests/spikes/
-
       - name: Typecheck
         run: npm run typecheck
 
@@ -71,3 +75,46 @@ jobs:
           set -euo pipefail
           npx tsx src/scripts/migration_status.ts --out /tmp/migration-status.md
           cat /tmp/migration-status.md >> "$GITHUB_STEP_SUMMARY"
+
+  migration-tests:
+    name: Migration tests (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare working tree
+        # The suite was written for a single serial run where early test
+        # files build gitignored projections that later files consume. A
+        # fresh shard checkout lacks them, so build them deterministically
+        # up front: condense --sync produces `.augment/` (consumed by
+        # bench_per_tool's load_descriptions). Idempotent — does not dirty
+        # the tracked tree (.augment/ is gitignored). The
+        # `.agent-src.uncondensed/` scaffold is self-provisioned by the
+        # tests that need it (mkdir -p in their setup).
+        run: bash src/scripts/condense.sh --sync
+
+      - name: Migration test suites (shard ${{ matrix.shard }}/4)
+        # --no-file-parallelism keeps files serial WITHIN this shard
+        # (working-tree-coupled golden tests must never overlap).
+        # --shard partitions the file list across the 4 matrix runners;
+        # each runner has its own checkout/filesystem, so cross-shard
+        # parallelism is race-free.
+        run: >-
+          npx vitest run --no-file-parallelism
+          --shard=${{ matrix.shard }}/4
+          tests/scripts/ tests/parity/ tests/spikes/
