@@ -64,9 +64,9 @@ something we learned from, harvested, compared against, or copied.
 
 ## Backstop
 
-`task check-no-external-sources`
+The `check-no-external-sources` CI gate
 (`src/scripts/check_no_external_sources.py` + `external_sources_denylist.json`)
-runs in `task ci` / `ci-strict` and fails the build on any denied source token
+runs in the package CI pipeline and fails the build on any denied source token
 in a non-carve-out tracked file. The linter is a deterministic net, not a
 substitute for not writing the attribution in the first place.
 

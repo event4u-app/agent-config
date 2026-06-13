@@ -64,9 +64,9 @@ something we learned from, harvested, compared against, or copied.
 
 ## Backstop
 
-`task check-no-external-sources`
+The `check-no-external-sources` CI gate
 (`src/scripts/check_no_external_sources.py` + `external_sources_denylist.json`)
-runs in `task ci` / `ci-strict`, fails the build on any denied source token in
+runs in the package CI pipeline, fails the build on any denied source token in
 a non-carve-out tracked file. Deterministic net, not a substitute for not
 writing the attribution.
 
