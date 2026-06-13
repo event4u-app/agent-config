@@ -42,6 +42,8 @@ ADR_PACKS: frozenset[str] = frozenset({
     "product-discovery", "finance-basic", "finance-advanced",
     "gtm-sales", "gtm-marketing", "ops-people", "founder-strategy", "small-business",
     "construction", "ai-video", "fun", "meta", "git", "frontend-design",
+    # Carved out of meta in ADR-091 (capability-scoped packs).
+    "memory", "analytics", "product-reasoning",
 })
 
 # ADR-010 non-overlap reservations.
