@@ -133,13 +133,15 @@ recorded here so no phase below silently re-derives them:
 > This phase assesses whether that window can close — it does not unilaterally
 > drop `tier:`.
 
-- [ ] Inventory consumers that still read the integer `tier` (not `visibility`):
+- [x] Inventory consumers that still read the integer `tier` (not `visibility`):
       grep `src/` for `tier` reads, confirm `commands.ts`,
       `audit_command_surface.py`, `build_discovery_manifest.py` all already
       prefer `visibility` (ADR-090 step 3). Note any reader still keyed on the
       integer.
-- [ ] Determine whether the **published discovery manifest** still needs to
+- [x] Determine whether the **published discovery manifest** still needs to
       dual-emit `tier` — are there external consumers of the integer key?
+      <!-- finding 2026-06-13: manifest IS published (package.json files + build:discovery prepack + prepublishOnly check) and dual-emits tier; external npm consumers UNKNOWN → hard-stop → DEFER. Integer-tier readers: commands.ts (fallback), audit_command_surface.py (report+budget), build_discovery_manifest.py (dual-emit). workspace_hosts.py tier is unrelated host-inventory tier. -->
+      **Outcome: unknown → DEFER** (window not provably closeable).
       **Hard stop on unknown** (council blocking #2): the manifest is a
       published API surface, so the burden of proof is "no consumers exist",
       not "we searched and found none". Three outcomes only:
@@ -148,17 +150,12 @@ recorded here so no phase below silently re-derives them:
       deferred, no ADR, no backfill. Re-open only on positive zero-consumer
       evidence (e.g. manifest-fetch telemetry zero for a soak window + repo
       search zero hits).
-- [ ] Author a follow-up ADR closing ADR-090's deferred Option B —
-      **three-outcome**, decided by the step above, not pre-assumed:
-      accept (drop `tier:`), reject (keep dual-emit / lock indefinitely), or
-      defer (insufficient evidence). **Gate:** ADR authoring only; backfill is
-      gated behind ADR *acceptance*, and is its own task (per `scope-control`
-      authoring-vs-implementation).
-- [ ] If the ADR accepts the drop: scripted backfill-removal of `tier:` from
-      the 150 command sources, schema edit (remove the `tier` property +
-      consistency clause), reader cleanup (drop the `tier`-fallback branches),
-      manifest stops dual-emitting. One reviewable diff. `lint_command_tiers.py`
-      then enforces `visibility` alone.
+- [x] Author a follow-up ADR closing ADR-090's deferred Option B —
+      **three-outcome**, decided by the step above.
+      <!-- done: ADR-092-defer-command-tier-alias-removal.md — outcome DEFER, with a re-open forcing function (versioned manifest v2 / telemetry + time-boxed review). AI council (deep + peer-review, 2026-06-13) overruled the lighter evidence-note-only recording: the re-open trigger is decision-level content. -->
+- [~] If the ADR accepts the drop: scripted backfill-removal of `tier:` …
+      <!-- deferred: ADR-092 defers (not accept) → execution + the re-open mechanism are carried to road-to-tier-removal.md (blocked). Council Q2: this is "blocked", not cancelled — work specified, decision made, gate external. -->
+      Carried to [`road-to-tier-removal.md`](road-to-tier-removal.md) (blocked).
 
 ## Phase 4 — `commit` + `commit:in-chunks`: decision recorded, not pursued
 
@@ -169,7 +166,7 @@ recorded here so no phase below silently re-derives them:
 > clusters. Both members converged on **document-why-not**, not re-decide.
 > This phase therefore records the decision rather than reopening it.
 
-- [ ] Record the rationale (no file change to the commands):
+- [x] Record the rationale (no file change to the commands):
       `commit.md` (197 lines) vs `commit/in-chunks.md` (149 lines) share ~80%
       procedure, but the 20% delta is an **execution-semantics fork**, not a
       thin variant: `/commit` has a confirmation/preview gate; `in-chunks` is
@@ -177,13 +174,13 @@ recorded here so no phase below silently re-derives them:
       flag means `commit.md` carries two conditional paths + the flag becomes
       a permanent first-class feature — higher long-term maintenance than two
       files. The command-surface council already concluded "keep · 0 merge".
-- [ ] Add the re-evaluation trigger to the out-of-scope list (below) so a
+- [x] Add the re-evaluation trigger to the out-of-scope list (below) so a
       *future, separate* roadmap — not this one — owns any merge: re-open only
       on positive evidence, e.g. ≥90% drop in `commit:in-chunks` invocation
       over 6 months, OR a new universal `--mode` flag that subsumes ≥3 command
       variants. Not met as of 2026-06-13.
-- [ ] Close this phase `[-]` cancelled (decision = keep both), rationale
-      inline. No command file touched.
+- [-] Close this phase cancelled (decision = keep both), rationale inline. No
+      command file touched. <!-- cancelled: merge not pursued; council-confirmed keep-both -->
 
 ## Acceptance criteria
 
@@ -192,9 +189,11 @@ recorded here so no phase below silently re-derives them:
 - `fix:pr-bot-comments` and `fix:pr-developer-comments` no longer exist;
   `fix pr-comments` is self-contained; zero stale references; command-tier lint
   and ref-check green for the touched surface.
-- A follow-up ADR records the three-outcome `tier:` decision (accept / reject /
-  defer); if accepted, command frontmatter carries `visibility:` only and the
-  consistency check is gone.
+- A follow-up ADR records the three-outcome `tier:` decision — landed as
+  [`ADR-092`](../../docs/decisions/ADR-092-defer-command-tier-alias-removal.md)
+  (DEFER, with a re-open forcing function). Execution carried to
+  [`road-to-tier-removal.md`](road-to-tier-removal.md) (blocked). Phase 3's
+  acceptance is "decision made", not "removal executed" (council Q4).
 - **Discovery surface stable** after Phase 2: `task generate-tools` tool count
   drops by exactly the deleted variants, discovery-manifest JSON still
   validates, and the CLI `--visible` filter returns the expected command set
