@@ -9,6 +9,7 @@ Run: python3 -m pytest tests/test_global_deploy_inventory.py -q
 """
 
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -422,6 +423,111 @@ def test_deploy_reaps_tagged_orphan_absent_from_recorded_inventory(
     assert (anchor / "skills" / "current" / "SKILL.md").exists()
     assert (anchor / "skills" / "user-own" / "SKILL.md").exists(), \
         "user-authored entry in the shared anchor must survive"
+
+
+def test_deploy_reaps_both_inventory_and_tagged_orphans_in_one_pass(
+        tmp_path, monkeypatch):
+    """Union proof: one redeploy must reap BOTH an inventory-recorded file
+    the bundle dropped (``reap_stale`` path) AND a pre-inventory tagged
+    orphan the inventory never knew (``reap_tagged_orphans`` path).
+
+    Guards against a regression to the old exclusive ``if/else`` that ran
+    only one of the two paths per deploy.
+    """
+    import install  # noqa: WPS433 — sys.path prepared at module top
+
+    pkg = tmp_path / "pkg"
+    (pkg / "dist/agent-src/skills/keep").mkdir(parents=True)
+    (pkg / "dist/agent-src/skills/keep/SKILL.md").write_text(
+        "---\nname: keep\n---\n\nbody\n", encoding="utf-8")
+    (pkg / "dist/agent-src/skills/drop-me").mkdir(parents=True)
+    (pkg / "dist/agent-src/skills/drop-me/SKILL.md").write_text(
+        "---\nname: drop-me\n---\n\nbody\n", encoding="utf-8")
+    anchor = tmp_path / "anchor"
+    monkeypatch.setenv(inv.INVENTORY_ENV, str(tmp_path / "inv.json"))
+    monkeypatch.setitem(install.USER_SCOPE_PATHS, "tooltest", str(anchor))
+    monkeypatch.setitem(
+        install.GLOBAL_DEPLOY_SOURCES, "tooltest",
+        [("dist/agent-src/skills", "skills")],
+    )
+
+    # First deploy records keep + drop-me in the inventory.
+    install._deploy_global_content(
+        {"tooltest"}, True, pkg, tmp_path / "lock",
+    )
+    assert (anchor / "skills" / "drop-me" / "SKILL.md").exists()
+
+    # The bundle drops drop-me (a reap_stale target — it was recorded) ...
+    shutil.rmtree(pkg / "dist/agent-src/skills/drop-me")
+    # ... and a pre-inventory tagged orphan appears that no inventory ever
+    # recorded (a reap_tagged_orphans target).
+    _tagged_md(anchor / "skills" / "ghost" / "SKILL.md", "ghost")
+
+    install._deploy_global_content(
+        {"tooltest"}, True, pkg, tmp_path / "lock",
+    )
+    assert not (anchor / "skills" / "drop-me").exists(), \
+        "inventory-recorded drop must be reaped (reap_stale path)"
+    assert not (anchor / "skills" / "ghost").exists(), \
+        "pre-inventory tagged orphan must be reaped (reap_tagged_orphans path)"
+    assert (anchor / "skills" / "keep" / "SKILL.md").exists()
+
+
+def test_deploy_real_bundle_reaps_planted_orphan_and_is_idempotent(
+        tmp_path, monkeypatch):
+    """End-to-end against the REAL dist bundle: deploy actual
+    rules+commands+personas, plant a package-tagged orphan under a deployed
+    root, redeploy, and assert the orphan is reaped while real shipped files
+    survive — then a third pass is a clean no-op.
+
+    Catches packaging / deploy-plan regressions the synthetic tests cannot.
+    Bounded and fast (~0.2s for ~280 files) so it never blocks CI.
+    """
+    import install  # noqa: WPS433 — sys.path prepared at module top
+
+    repo_root = Path(__file__).resolve().parent.parent
+    if not (repo_root / "dist" / "agent-src" / "rules").is_dir():
+        pytest.skip("dist/agent-src bundle not built in this checkout")
+
+    anchor = tmp_path / "anchor"
+    monkeypatch.setenv(inv.INVENTORY_ENV, str(tmp_path / "inv.json"))
+    monkeypatch.setitem(install.USER_SCOPE_PATHS, "bundletest", str(anchor))
+    monkeypatch.setitem(
+        install.GLOBAL_DEPLOY_SOURCES, "bundletest",
+        [
+            ("dist/agent-src/rules", "rules"),
+            ("dist/agent-src/commands", "commands"),
+            ("dist/agent-src/personas", "personas"),
+        ],
+    )
+
+    install._deploy_global_content(
+        {"bundletest"}, True, repo_root, tmp_path / "lock",
+    )
+    real_files = list((anchor / "rules").glob("*.md"))
+    assert real_files, "real bundle should deploy rule files"
+    sentinel = real_files[0]
+
+    # Plant a package-tagged orphan under a deployed root (simulates a
+    # renamed/removed artefact from a prior version, e.g. create-pr).
+    orphan = anchor / "commands" / "__removed_in_next_version__.md"
+    orphan.write_text(
+        f"---\nname: gone\npackage: {install.PACKAGE_TAG_ID}\n---\n\nx\n",
+        encoding="utf-8",
+    )
+
+    install._deploy_global_content(
+        {"bundletest"}, True, repo_root, tmp_path / "lock",
+    )
+    assert not orphan.exists(), \
+        "planted tagged orphan must be reaped on redeploy of the real bundle"
+    assert sentinel.exists(), "real shipped file must survive reaping"
+
+    # Idempotent third pass: nothing left to reap, no error raised.
+    install._deploy_global_content(
+        {"bundletest"}, True, repo_root, tmp_path / "lock",
+    )
+    assert sentinel.exists()
 
 
 if __name__ == "__main__":
