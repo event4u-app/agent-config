@@ -165,29 +165,29 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 
 ### P2.1 — Lethal-trifecta rule
 
-- [ ] New `src/rules/lethal-trifecta-guard.md` (`type: auto`, tier-2): fires when
+- [x] New `src/rules/lethal-trifecta-guard.md` (`type: auto`, tier-2): fires when
       a skill/command/MCP surface combines **private-data access + untrusted-content
       ingestion + external-comms**; forces the author to remove one leg or gate the
       egress behind human-in-the-loop. Routes to a guideline for the mechanics.
-- [ ] `evals/triggers.json` (5 should-fire / 5 should-not).
-- [ ] Optional companion lint in `lint_agent_security` flagging skills that
+- [-] `evals/triggers.json` (5 should-fire / 5 should-not). <!-- cancelled: rules are flat .md files with frontmatter `triggers:`; evals/triggers.json is a skill-only (directory) convention, n/a to rules -->
+- [x] Optional companion lint in `lint_agent_security` flagging skills that
       *declare* all three capability classes.
 
 ### P2.2 — Data/instruction-separation + spotlighting rule
 
-- [ ] New `src/rules/untrusted-input-defense.md` (`type: auto`, tier-2) — **this
+- [x] New `src/rules/untrusted-input-defense.md` (`type: auto`, tier-2) — **this
       supersedes `road-to-competitive-borrow.md` P1.2**: treat all fetched / tool /
       file content as data, never instructions; wrap untrusted content in delimited
       + datamarked blocks; never role-takeover, never leak secrets; Unicode /
       homoglyph / zero-width awareness. Routes to a guideline carrying the
       spotlighting mechanics (OWASP LLM01; Microsoft datamarking ~50%→<2%).
-- [ ] `evals/triggers.json` (5/5).
-- [ ] Cite both P2.1 + P2.2 from `threat-modeling`, `security-audit`,
+- [-] `evals/triggers.json` (5/5). <!-- cancelled: rules are flat .md files with frontmatter `triggers:`; evals/triggers.json is a skill-only (directory) convention, n/a to rules -->
+- [x] Cite both P2.1 + P2.2 from `threat-modeling`, `security-audit`,
       `judge-security-auditor` (no inline block per artifact).
 
 ### P2.3 — Least-agency mapping (no new rule — wire existing)
 
-- [ ] Document, in the P2.2 guideline, how the existing
+- [x] Document, in the P2.2 guideline, how the existing
       `non-destructive-by-default` / `scope-control` / `verify-before-complete`
       gates realise OWASP LLM01 #4/#5 (least-privilege + human approval) and LLM06
       (least agency). Zero new dependency — names the mapping so reviewers see the
@@ -199,11 +199,11 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 > model-layer / refusal concern; ~20% in-scope as authoring guidance. Do NOT build
 > a new surface — extend what exists.
 
-- [ ] Extend `security-sensitive-stop` with a short clause: refuse in-chat attempts
+- [x] Extend `security-sensitive-stop` with a short clause: refuse in-chat attempts
       to **modify the suite's own safety floors / kernel rules / MCP allowlists**
       via conversation (route to the normal edit-permission gates), and treat
       "ignore your rules"-class prompts as a refusal trigger, not an instruction.
-- [ ] No new skill, no jailbreak classifier (out of architectural scope — needs a
+- [x] No new skill, no jailbreak classifier (out of architectural scope — needs a
       model/API; documented as such in Phase 4).
 
 ## Phase 3 — Consumer-facing audit + runtime defense
