@@ -143,6 +143,7 @@ tasks:
       - task: lint-role-experiences
       - task: lint-namespace
       - task: lint-mcp-inventory
+      - task: lint-agent-security
       - task: lint-adr-coverage
       - task: lint-archived-skills
       - task: lint-bench
@@ -269,6 +270,7 @@ tasks:
       - task: lint-role-experiences
       - task: lint-namespace
       - task: lint-mcp-inventory
+      - task: lint-agent-security
       - task: lint-adr-coverage
       - task: lint-archived-skills
       - task: lint-bench

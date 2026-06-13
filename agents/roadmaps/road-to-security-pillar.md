@@ -84,7 +84,7 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 
 ### P1.1 — Hidden-Unicode / homoglyph linter
 
-- [ ] New `src/scripts/lint_hidden_unicode.py` — scans every `.md` under
+- [x] New `src/scripts/lint_hidden_unicode.py` — scans every `.md` under
       `src/{skills,rules,agent-src,domains}/` + `SKILL.md` frontmatter for the
       smuggling codepoint set: bidi controls (`U+202A–202E`, `U+2066–2069`,
       `U+200E/200F`, `U+061C`); zero-width (`U+200B/200C/200D/2060/FEFF/00AD`);
@@ -92,43 +92,43 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
       (`U+FE00–FE0F`, `U+E0100–E01EF`, flag ≥3/line); PUA (`U+E000–F8FF` +
       plane-15/16); deprecated (`U+206A–206F`, `U+FFF9–FFFB`); `Cc` control
       chars except `\t \n \r`.
-- [ ] Report file:line:codepoint:name. Scan **both** zero-width-binary and
+- [x] Report file:line:codepoint:name. Scan **both** zero-width-binary and
       Tag-block encodings (providers decode different families).
-- [ ] Optional `--fix` writes an NFKC-normalised, zero-width-stripped copy for
+- [x] Optional `--fix` writes an NFKC-normalised, zero-width-stripped copy for
       human review (never auto-applied).
-- [ ] Verify locally: run against current `src/` — expect **zero** real hits
+- [x] Verify locally: run against current `src/` — expect **zero** real hits
       (any hit is either a true finding or a containment-convention miss). <!-- carve-out: new-gate-verification -->
 
 ### P1.2 — Instruction-smuggling / suppression-phrase linter
 
-- [ ] New `src/scripts/lint_instruction_smuggling.py` — flags, in skill/rule/
+- [x] New `src/scripts/lint_instruction_smuggling.py` — flags, in skill/rule/
       command bodies + MCP tool descriptions: disclosure-suppression
       (`do not mention|don't tell the user|without explaining`), imperative
       `<IMPORTANT>`-style tags addressed to the model, secret-path reads
       (`\.ssh/id_rsa|\.env|mcp\.json|[A-Z_]*API_KEY`), pipe-to-shell
       (`curl[^\n]*\|\s*(ba)?sh`, `wget[^\n]*\|`), reverse shells
       (`socat|nc -e|/dev/tcp/`), long base64 blobs (`[A-Za-z0-9+/]{40,}={0,2}`).
-- [ ] Severity HIGH/MED/LOW per pattern; HIGH in a non-example file → CI fail.
-- [ ] Verify locally against `src/` with the P1.5 containment convention applied. <!-- carve-out: new-gate-verification -->
+- [x] Severity HIGH/MED/LOW per pattern; HIGH in a non-example file → CI fail.
+- [x] Verify locally against `src/` with the P1.5 containment convention applied. <!-- carve-out: new-gate-verification -->
 
 ### P1.3 — MCP-config security linter
 
-- [ ] New `src/scripts/lint_mcp_config_security.py` — scans any shipped MCP
+- [x] New `src/scripts/lint_mcp_config_security.py` — scans any shipped MCP
       manifest / `.mcp.json` example for: inline secrets (require `${env:VAR}`),
       `npx -y` auto-install, unpinned server versions, `autoApprove` /
       `enableAllProjectMcpServers`, `0.0.0.0` binding, shell metachars in args
       (`&&|;`), omnibus scopes (`*`, `all`, `full-access`), `*_BASE_URL` in
       project-scoped env.
-- [ ] Findings map to **OWASP ASI04** (Agentic Supply Chain). Verify locally. <!-- carve-out: new-gate-verification -->
+- [x] Findings map to **OWASP ASI04** (Agentic Supply Chain). Verify locally. <!-- carve-out: new-gate-verification -->
 
 ### P1.4 — Dangerous-frontmatter linter
 
-- [ ] New `src/scripts/lint_skill_frontmatter_safety.py` — flags skill/agent
+- [x] New `src/scripts/lint_skill_frontmatter_safety.py` — flags skill/agent
       frontmatter declaring `allowed-tools`/`tools` with `Bash(*)` or broad
       wildcards, `Bash` on a non-execution skill, or `permissionMode:
       bypassPermissions`. Cross-checks `runtime-safety` (automated handler ⇒
       `safety_mode: strict` + verification step present).
-- [ ] Verify locally; reconcile against existing `validate_frontmatter.py` (no
+- [x] Verify locally; reconcile against existing `validate_frontmatter.py` (no
       double-reporting). <!-- carve-out: new-gate-verification -->
 
 ### P1.5 — False-positive containment convention (gate before all four)
@@ -138,23 +138,23 @@ smuggling / dangerous frontmatter; (C) only keyword-level handling of an
 > death-spiral / `autonomous-execution` antipattern). Three scoped, auditable
 > layers:
 
-- [ ] **Fenced-block exemption:** content inside a ` ```security-example ` fence
+- [x] **Fenced-block exemption:** content inside a ` ```security-example ` fence
       is skipped by P1.1–P1.4. Grep-auditable.
-- [ ] **Confidence weighting:** matches in `docs/`, `*example*`, `template*`,
+- [x] **Confidence weighting:** matches in `docs/`, `*example*`, `template*`,
       `evals/` score at 0.25×; below threshold → WARN not FAIL (mirrors Source S
       without naming it).
-- [ ] **Per-file pragma:** `<!-- security-lint: allow <check> "<justification>" -->`
+- [x] **Per-file pragma:** `<!-- security-lint: allow <check> "<justification>" -->`
       at file top; requires a rationale string; counted + capped (>20 across the
       repo = the linter is wrong, escalate per `autonomous-execution`).
-- [ ] Document the convention in `docs/guidelines/agent-infra/` and reference it
+- [x] Document the convention in `docs/guidelines/agent-infra/` and reference it
       from each linter's `--help`.
 
 ### P1.6 — Umbrella target + CI wiring
 
-- [ ] New `task lint-agent-security` running P1.1–P1.4 with the P1.5 convention.
-- [ ] Wire into the existing `ci-fast` / consistency cadence (targeted, not a new
+- [x] New `task lint-agent-security` running P1.1–P1.4 with the P1.5 convention.
+- [x] Wire into the existing `ci-fast` / consistency cadence (targeted, not a new
       full pipeline). Findings emit **SARIF** so reviewers/CI read a standard schema.
-- [ ] Verify the umbrella target green on current `src/`. <!-- carve-out: new-gate-verification -->
+- [x] Verify the umbrella target green on current `src/`. <!-- carve-out: new-gate-verification -->
 
 ## Phase 2 — Injection-aware authoring rules (the differentiator)
 
