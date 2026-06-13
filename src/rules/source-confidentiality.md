@@ -59,8 +59,30 @@ something we learned from, harvested, compared against, or copied.
 - To retain a real source link, encrypt it via
   `src/scripts/_lib/link_crypto.py` (key in the gitignored `.agent-settings.yml`
   under `secrets.link_encryption_key`, resolved project-then-global).
-- Pure harvest / comparison / competitive evidence stays **local-only**
-  (gitignored) — never tracked.
+- **Raw named evidence** that cannot be understood without the source names
+  (clone dumps, full competitor audits, scraped comparison tables) stays
+  **local-only** — gitignored (`agents/tmp/`, `agents/.harvest-local/`), never
+  tracked.
+
+## Harvest / comparison / borrow ROADMAPS go in `agents/roadmaps/` — anonymized, not hidden
+
+An actionable harvest / comparison / borrow **roadmap** belongs in the normal
+tracked `agents/roadmaps/` directory so the roadmap-progress dashboard tracks it
+and its completion is visible. Make it tracked-safe by **anonymizing**, not by
+hiding it in `agents/.harvest-local/`:
+
+- Reference sources as **Source A / B / C** (or a neutral descriptor like "an
+  external operator-runtime reference") — never the repo / org / author name.
+- Retain real links as `ENC1:` tokens (`link_crypto.py`) in a Provenance block —
+  maintainer-recoverable, opaque in the tree.
+- The borrow *items* are this package's own features; they never need the source
+  name in the first place.
+
+```
+A ROADMAP THAT CITES A SOURCE IS ANONYMIZED AND TRACKED IN agents/roadmaps/.
+IT IS NEVER HIDDEN IN .harvest-local/ JUST BECAUSE IT MENTIONS A SOURCE.
+.harvest-local/ IS FOR RAW EVIDENCE THAT CANNOT BE ANONYMIZED — NOT FOR PLANS.
+```
 
 ## Backstop
 
