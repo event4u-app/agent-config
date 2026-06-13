@@ -50,8 +50,8 @@ REQUIRED_KEYS = {
 VALID_STATUS = {"active", "deprecated", "archived"}
 VALID_CONFIDENCE = {"low", "medium", "high"}
 # `priority` is optional (default `normal`); enum is the smallest set that
-# solves the tier-0 surfacing use case. See `road-to-dream-skill-adoption.md`
-# § B2 and the Phase 2 council brief for why the `high` tier was rejected.
+# solves the tier-0 surfacing use case. See the Phase 2 council brief for why
+# the `high` tier was rejected.
 VALID_PRIORITY = {"critical", "normal", "low"}
 # Soft-cap on `priority: critical` entries per memory type. Tier-0 inflation
 # is the failure mode: when too many entries claim "always surface", the
@@ -85,7 +85,7 @@ REDACTION_PATTERNS = [
 # Date-discipline — relative-date phrases without an ISO YYYY-MM-DD anchor
 # within ±20 chars are rejected. Memory entries that say "yesterday" or
 # "last week" rot the moment the file is re-read on another day; the
-# anchor pins meaning. See `road-to-dream-skill-adoption.md` § A5.
+# anchor pins meaning.
 RELATIVE_DATE_PATTERN = re.compile(
     r"(?i)\b(yesterday|today|tomorrow|"
     r"last\s+(?:week|month|year)|"

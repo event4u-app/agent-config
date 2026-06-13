@@ -1,7 +1,7 @@
 # Harvest Policy — adopt now, defer-with-trigger, drop
 
 When an external repo (a competitor, a peer, a one-off reference like
-`ruvnet/ruflo`) surfaces an idea worth considering for this package, the
+an external reference) surfaces an idea worth considering for this package, the
 default disposition was binary: **adopt now** or **drop**. That binary
 made every speculative-but-promising idea either premature ("we'll need
 this someday so let's land it") or invisible ("not today, never written
@@ -93,10 +93,10 @@ roadmap with a one-line reason and the date.
   link goes 404 has lost its sunset path. Re-pin to a commit SHA on
   every plate review.
 
-## Example — Ruflo HTTP-bridge
+## Example — external HTTP-bridge reference
 
 Reference for the format above.
-[`road-to-ruflo-adoption.md`](../roadmaps/road-to-ruflo-adoption.md)
+an internal harvest roadmap (local-only)
 **P2.1**:
 
 - **Trigger condition.** Both must fire: (a)
@@ -107,8 +107,8 @@ Reference for the format above.
   load-bearing pieces) as a reference appendix in the existing
   `mcp-request-signing` guideline. The full Express bridge stays
   authoritative-link only.
-- **Sunset path.** `ruflo/src/mcp-bridge/index.js` (~1.6k LOC),
-  `plugins/ruflo-*/marketplace.json`, the `mcp__claude-flow__*` tool
+- **Sunset path.** the upstream bridge source (~1.6k LOC),
+  its plugin marketplace manifest, its MCP tool
   surface — never inlined.
 - **Owner / cadence.** Plate owner; reviewed each plate.
 

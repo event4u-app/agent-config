@@ -22,7 +22,7 @@
 | 4 | road-to-deep-research-adoption (Ph 2) | medium | low | s — 5-unit cap | gated on Ph 1 evidence |
 | 5 | road-to-event-driven-discipline | low | **high** — shrinks always-rule budget | m | infra leverage |
 | 6 | road-to-mcp-server (Ph 1) | **high** — distinguishing feature | low | m — MVP spike | strategic differentiator |
-| 7 | road-to-superpowers-harvest | medium | medium | s — bundled B+C+D | 5-unit cap, plate-fit |
+| 7 | external-suite harvest (internal, local-only) | medium | medium | s — bundled B+C+D | 5-unit cap, plate-fit |
 | 8 | road-to-better-skills-and-profiles | medium | medium — Wing 1 foundation | l — 35 steps | re-scoped, large |
 | 9 | road-to-distribution-and-adoption | **high** | low | l — 4 blocks | sibling of #2 |
 | 10 | road-to-productization | medium | low | xl — master roadmap | **gated** on #2 + #8 |
@@ -57,7 +57,7 @@ The 6-week plate caps total adoption-unit count. Recommended pair:
 
 Rationale for picking exactly two: Tier 1 is in flight; the plate-cap
 of 5 adoption units per six-week window applies to harvest-style work
-(Deep-Research Ph 2, Superpowers, Microck-style harvests). Proof and
+(Deep-Research Ph 2, external-suite harvests). Proof and
 chat-history are not harvests — they don't consume the cap, they
 unblock work that does.
 
@@ -80,7 +80,7 @@ In recommended order:
    architecture is the structural advantage; Phase 1 delivers a
    working stdio prompt fetch, nothing larger. High strategic-
    differentiation, low scope risk.
-7. **road-to-superpowers-harvest** — workflow-chain discipline; B+C+D
+7. **external-suite harvest (internal, local-only)** — workflow-chain discipline; B+C+D
    bundled into one adoption unit (council Round 1 finding). Counts
    against the 5-unit plate cap.
 

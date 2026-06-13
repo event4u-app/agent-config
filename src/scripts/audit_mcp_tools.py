@@ -7,7 +7,7 @@ registry at `scripts/mcp_server/tools.py`, emits
 claim is banned.
 
 Contract: step-11 Phase 5 Step 3
-(agents/roadmaps/step-11-ruflo-parity.md).
+(an internal parity roadmap (local-only)).
 
 Modes:
   --check    exit non-zero if the generated inventory drifts from
@@ -73,7 +73,7 @@ def _render(catalog: dict, handlers: dict[str, int], cat_lines: dict[str, int]) 
     lines.append("> [`scripts/mcp_server/consumer_tool_catalog.json`](../../scripts/mcp_server/consumer_tool_catalog.json).")
     lines.append("> Do **not** hand-edit; rerun `python3 scripts/audit_mcp_tools.py --write`.")
     lines.append(">")
-    lines.append("> Step-11 Phase 5 Step 3 (`step-11-ruflo-parity.md`).")
+    lines.append("> Step-11 Phase 5 Step 3 (an internal parity roadmap (local-only)).")
     lines.append("")
     lines.append("## Summary")
     lines.append("")

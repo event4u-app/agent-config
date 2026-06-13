@@ -302,17 +302,17 @@ Tests: 2621 (+0 since 1.36.0)
 * **check-refs:** skip agents/council-responses/ like council-sessions/ ([d18551e](https://github.com/event4u-app/agent-config/commit/d18551e896d747533f2aa4465b390b291c931c4a))
 * **check-refs:** skip agents/council-responses/ like council-sessions/ ([4faf5f8](https://github.com/event4u-app/agent-config/commit/4faf5f82c380222281b38213c38399187757840b))
 * **scope-control:** trim authoring section to fit kernel ceiling ([b436d0a](https://github.com/event4u-app/agent-config/commit/b436d0a8840b0498688ed9efe28eb76bbfc08a5a))
-* **roadmap:** suppress council-reference lint on dream-skill roadmap ([c355ca5](https://github.com/event4u-app/agent-config/commit/c355ca5d8b4e7e5f181f31efe057e2c0d5ff63eb))
+* **roadmap:** suppress council-reference lint on external-reference roadmap ([c355ca5](https://github.com/event4u-app/agent-config/commit/c355ca5d8b4e7e5f181f31efe057e2c0d5ff63eb))
 
 ### Documentation
 
-* **roadmap:** close out dream-skill adoption — Phase 3 cancelled-deferred, archive ([63bedd0](https://github.com/event4u-app/agent-config/commit/63bedd02c7686e183acadebff742423ab0c258a6))
+* **roadmap:** close out external-reference adoption — Phase 3 cancelled-deferred, archive ([63bedd0](https://github.com/event4u-app/agent-config/commit/63bedd02c7686e183acadebff742423ab0c258a6))
 * **roadmap:** mark Phase 2 partial shipped, B1 + Phase 3 deferred with rationale ([620d7f0](https://github.com/event4u-app/agent-config/commit/620d7f09372b866659f0a41f1690fdab904777bb))
 * **memory:** document priority enum and ts_week jitter convention ([f9f65d4](https://github.com/event4u-app/agent-config/commit/f9f65d4d9d699d7b65c496745e440f3fa7de1c54))
 
 ### Chores
 
-* **roadmap:** mark Phase 1 of dream-skill adoption complete ([b46ce4c](https://github.com/event4u-app/agent-config/commit/b46ce4ca7737fd9f4d29692837680023d3fbf68d))
+* **roadmap:** mark Phase 1 of external-reference adoption complete ([b46ce4c](https://github.com/event4u-app/agent-config/commit/b46ce4ca7737fd9f4d29692837680023d3fbf68d))
 * **meta:** regenerate ownership matrix after scope-control trim ([db14110](https://github.com/event4u-app/agent-config/commit/db14110b0aebf9acc178cd997d1e11d0d91fd382))
 * **meta:** regenerate ownership matrix ([a23604e](https://github.com/event4u-app/agent-config/commit/a23604ef031daf0ec5e9dfdce30baf3c0293340d))
 * **rules:** harden against unsolicited implementation + horizon opt-in ([00b5fa9](https://github.com/event4u-app/agent-config/commit/00b5fa96b93b41943559c4dac775069a2e14b0e3))
@@ -399,7 +399,7 @@ Tests: 2606 (+46 since 1.33.0)
 ### Features
 
 * **commands:** port /research:deep + /research:report as cluster sub-commands ([71f8141](https://github.com/event4u-app/agent-config/commit/71f8141a3c553ee5b35f31ffdd7ab33e9cb110e5))
-* **guidelines:** port 5w2h, six-hats, systems-thinking, first-principles, critical-thinking from ginobefun ([40ea866](https://github.com/event4u-app/agent-config/commit/40ea8662f4e7714aa66348aff5456b53a3045350))
+* **guidelines:** port 5w2h, six-hats, systems-thinking, first-principles, critical-thinking from an external reference ([40ea866](https://github.com/event4u-app/agent-config/commit/40ea8662f4e7714aa66348aff5456b53a3045350))
 
 ### Bug Fixes
 
@@ -438,10 +438,10 @@ Tests: 2560 (+0 since 1.32.0)
 
 ### Chores
 
-* **ownership:** regenerate matrix after superpowers-harvest landing ([faf4794](https://github.com/event4u-app/agent-config/commit/faf479470db9c83d17e8332dd3498df1e5f4c34b))
-* **index:** regenerate after superpowers-harvest landing ([946f3cc](https://github.com/event4u-app/agent-config/commit/946f3ccad54da3a3898d0aeb4474be0b87e66800))
+* **ownership:** regenerate matrix after external-reference harvest landing ([faf4794](https://github.com/event4u-app/agent-config/commit/faf479470db9c83d17e8332dd3498df1e5f4c34b))
+* **index:** regenerate after external-reference harvest landing ([946f3cc](https://github.com/event4u-app/agent-config/commit/946f3ccad54da3a3898d0aeb4474be0b87e66800))
 * **roadmap:** remove old roadmap path (already archived) ([18f281b](https://github.com/event4u-app/agent-config/commit/18f281bbeb51e93feef40146af3a3b5e5cb916f2))
-* **roadmap:** close superpowers-harvest — Phase 1 LANDED, P1.4b deferred ([a296106](https://github.com/event4u-app/agent-config/commit/a296106c6a846a54c3fe20728203fb3bbae7fffc))
+* **roadmap:** close external-reference harvest — Phase 1 LANDED, P1.4b deferred ([a296106](https://github.com/event4u-app/agent-config/commit/a296106c6a846a54c3fe20728203fb3bbae7fffc))
 
 Tests: 2560 (+74 since 1.31.0)
 
@@ -460,7 +460,7 @@ Tests: 2560 (+74 since 1.31.0)
 * **readme:** drop stale deprecation-shim sub-line; trim to 500-line cap ([5f92841](https://github.com/event4u-app/agent-config/commit/5f9284177323585ebb8b5fbca870f853c5c34ee0))
 * **check-portability:** allowlist agents-md-anatomy.md for task-invocation detector ([3301d19](https://github.com/event4u-app/agent-config/commit/3301d193ba55e95cdab47d8e3288a524ce7b8b90))
 * **ci:** sync condensation hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
-* **skills:** close 4 linter warnings on Microck-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
+* **skills:** close 4 linter warnings on external-reference-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
 
 ### Documentation
 
@@ -506,7 +506,7 @@ Tests: 2486
 * **readme:** drop stale deprecation-shim sub-line; trim to 500-line cap ([5f92841](https://github.com/event4u-app/agent-config/commit/5f9284177323585ebb8b5fbca870f853c5c34ee0))
 * **check-portability:** allowlist agents-md-anatomy.md for task-invocation detector ([3301d19](https://github.com/event4u-app/agent-config/commit/3301d193ba55e95cdab47d8e3288a524ce7b8b90))
 * **ci:** sync condensation hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
-* **skills:** close 4 linter warnings on Microck-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
+* **skills:** close 4 linter warnings on external-reference-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
 
 ### Documentation
 
@@ -535,28 +535,28 @@ Tests: 2471
 
 ### Features
 
-* **skills:** port 3 Microck skills under Sunset Policy (P2.2, P2.3, P2.5) ([78fdfeb](https://github.com/event4u-app/agent-config/commit/78fdfebf5f515e67072f9cb4a75ca7f56ca9b1b2))
-* **skills:** port error-handling-patterns from Microck under Sunset Policy (P1.5) ([c24589c](https://github.com/event4u-app/agent-config/commit/c24589c2c5e27e7182061660b98cca3d1e97fbae))
-* **skills:** port mcp-builder from Microck (P1.4) ([b192b38](https://github.com/event4u-app/agent-config/commit/b192b38c58245d7e8d33bdf5d577e41ba968cba5))
-* **skills:** port repomix from Microck (P1.3) ([825fd17](https://github.com/event4u-app/agent-config/commit/825fd175082b78fb2fd6250befb8cea86f1c3a0d))
-* **skills:** port testing-anti-patterns from Microck (P1.2) ([8bca47f](https://github.com/event4u-app/agent-config/commit/8bca47fab1db5811eada9bbb1f9545ebd1a68a4d))
-* **skills:** port defense-in-depth from Microck (P1.1) ([fb9bbb1](https://github.com/event4u-app/agent-config/commit/fb9bbb1e74890a63a1499a22ead0e79ab0a73ed6))
+* **skills:** port 3 external-reference skills under Sunset Policy (P2.2, P2.3, P2.5) ([78fdfeb](https://github.com/event4u-app/agent-config/commit/78fdfebf5f515e67072f9cb4a75ca7f56ca9b1b2))
+* **skills:** port error-handling-patterns from an external reference under Sunset Policy (P1.5) ([c24589c](https://github.com/event4u-app/agent-config/commit/c24589c2c5e27e7182061660b98cca3d1e97fbae))
+* **skills:** port mcp-builder from an external reference (P1.4) ([b192b38](https://github.com/event4u-app/agent-config/commit/b192b38c58245d7e8d33bdf5d577e41ba968cba5))
+* **skills:** port repomix from an external reference (P1.3) ([825fd17](https://github.com/event4u-app/agent-config/commit/825fd175082b78fb2fd6250befb8cea86f1c3a0d))
+* **skills:** port testing-anti-patterns from an external reference (P1.2) ([8bca47f](https://github.com/event4u-app/agent-config/commit/8bca47fab1db5811eada9bbb1f9545ebd1a68a4d))
+* **skills:** port defense-in-depth from an external reference (P1.1) ([fb9bbb1](https://github.com/event4u-app/agent-config/commit/fb9bbb1e74890a63a1499a22ead0e79ab0a73ed6))
 
 ### Bug Fixes
 
-* **refs:** point sibling roadmap link to archived microck-harvest ([92586a9](https://github.com/event4u-app/agent-config/commit/92586a9339e66b57121356ff644f2e3a706050e0))
+* **refs:** point sibling roadmap link to archived external-reference harvest ([92586a9](https://github.com/event4u-app/agent-config/commit/92586a9339e66b57121356ff644f2e3a706050e0))
 
 ### Documentation
 
-* **microck-harvest:** record P2/P3 verdicts in provenance + analysis ([5200097](https://github.com/event4u-app/agent-config/commit/5200097a42bca40df03f4ecb232fea269ce6aacf))
+* **external-reference-harvest:** record P2/P3 verdicts in provenance + analysis ([5200097](https://github.com/event4u-app/agent-config/commit/5200097a42bca40df03f4ecb232fea269ce6aacf))
 
 ### Chores
 
-* **microck-harvest:** regenerate ownership matrix for 3 new skills ([855e331](https://github.com/event4u-app/agent-config/commit/855e3310729b0f359425c3c3e75541d98162cab4))
-* **microck-harvest:** regenerate index + catalog for 153 skills ([1d5f265](https://github.com/event4u-app/agent-config/commit/1d5f2654fbf2997a1465e965097eff8bce9f7ca2))
-* **roadmap:** close + archive microck-harvest (Phase 2 + 3 \u2014 100%) ([48c18f0](https://github.com/event4u-app/agent-config/commit/48c18f07a68342782d7d079e2371a613ee7a7c2e))
-* **microck-harvest:** register 3 new skills in marketplace + counts (150 \u2192 153) ([0e8b351](https://github.com/event4u-app/agent-config/commit/0e8b3518853add4b28e1e45f5babc550eaa974d1))
-* **microck-harvest:** suite integration + Phase 1 closure (P1.6) ([6450e9d](https://github.com/event4u-app/agent-config/commit/6450e9deea5806f4f8bfcddf12df9eeeae37c9cb))
+* **external-reference-harvest:** regenerate ownership matrix for 3 new skills ([855e331](https://github.com/event4u-app/agent-config/commit/855e3310729b0f359425c3c3e75541d98162cab4))
+* **external-reference-harvest:** regenerate index + catalog for 153 skills ([1d5f265](https://github.com/event4u-app/agent-config/commit/1d5f2654fbf2997a1465e965097eff8bce9f7ca2))
+* **roadmap:** close + archive external-reference harvest (Phase 2 + 3 \u2014 100%) ([48c18f0](https://github.com/event4u-app/agent-config/commit/48c18f07a68342782d7d079e2371a613ee7a7c2e))
+* **external-reference-harvest:** register 3 new skills in marketplace + counts (150 \u2192 153) ([0e8b351](https://github.com/event4u-app/agent-config/commit/0e8b3518853add4b28e1e45f5babc550eaa974d1))
+* **external-reference-harvest:** suite integration + Phase 1 closure (P1.6) ([6450e9d](https://github.com/event4u-app/agent-config/commit/6450e9deea5806f4f8bfcddf12df9eeeae37c9cb))
 
 ## [1.28.0](https://github.com/event4u-app/agent-config/compare/1.27.0...1.28.0) (2026-05-09)
 
@@ -723,7 +723,7 @@ Tests: 2471
 * regenerate stale generated mirrors ([ea52e94](https://github.com/event4u-app/agent-config/commit/ea52e94415c4db5598e91d001e0fbeee10cae9be))
 * regenerate auto-generated artefacts ([fbe7d9e](https://github.com/event4u-app/agent-config/commit/fbe7d9ef137c9e584d7f88ce660afe29ab1a8d00))
 * bump skill/command/guideline counts and condensation hashes ([18f4fad](https://github.com/event4u-app/agent-config/commit/18f4fad2372fd4347210199986909319c24ea0ec))
-* archive ruflo-adoption, move telegraph-integration to skipped ([4c6c1eb](https://github.com/event4u-app/agent-config/commit/4c6c1eb1e00356421e0038704a82e1f10ac9a3e5))
+* archive external-adoption, move telegraph-integration to skipped ([4c6c1eb](https://github.com/event4u-app/agent-config/commit/4c6c1eb1e00356421e0038704a82e1f10ac9a3e5))
 
 ## [1.22.0](https://github.com/event4u-app/agent-config/compare/1.21.0...1.22.0) (2026-05-07)
 
@@ -751,8 +751,8 @@ Tests: 2471
 * **roadmap:** integrate R5 council verdict for telegraph-insurance ([38b26e2](https://github.com/event4u-app/agent-config/commit/38b26e2f00504a7c6c821c356964cb0cabefd905))
 * **roadmap:** incorporate R4 verdict + structural findings into telegraph integration ([c50f39b](https://github.com/event4u-app/agent-config/commit/c50f39bc9b08c8d59c4cf547aeec7fffbff38bc0))
 * **roadmap:** convert telegraph integration Phase 2 to hard cutover ([fb459be](https://github.com/event4u-app/agent-config/commit/fb459be70a093eea1814a38a3b1fec9cf9261363))
-* **harvest:** add Superpowers harvest roadmap, hardened by council R2 ([e559259](https://github.com/event4u-app/agent-config/commit/e559259f789014603067e87141d9feb815b480ab))
-* **harvest:** analyze obra/superpowers v5.1.0 for adoption candidates ([e89e0ee](https://github.com/event4u-app/agent-config/commit/e89e0eeadc4b76517b181c559422e88df5c8122a))
+* **harvest:** add external-reference harvest roadmap, hardened by council R2 ([e559259](https://github.com/event4u-app/agent-config/commit/e559259f789014603067e87141d9feb815b480ab))
+* **harvest:** analyze an external reference for adoption candidates ([e89e0ee](https://github.com/event4u-app/agent-config/commit/e89e0eeadc4b76517b181c559422e88df5c8122a))
 * **council:** document council_depth frontmatter convention in templates ([ba56412](https://github.com/event4u-app/agent-config/commit/ba56412c76204bbe49366bbceb62e4d31c994fc2))
 
 ### Chores
@@ -875,17 +875,17 @@ Tests: 2471
 * **roadmap:** add road-to-token-optimization + dashboard sync ([6348108](https://github.com/event4u-app/agent-config/commit/6348108162993e5947eea3d5612e43c4fdc18686))
 * **analysis:** add token-optimizer design comparison ([05462cf](https://github.com/event4u-app/agent-config/commit/05462cf17ebab4dd9c02b9683bc741e5be3c8a12))
 * **council:** add token-optimizer skill design Q&A ([eb6f9c3](https://github.com/event4u-app/agent-config/commit/eb6f9c3aad9c4ef20707181f8f3454f37f405761))
-* **roadmap:** add road-to-ruflo-adoption + dashboard sync ([009d94d](https://github.com/event4u-app/agent-config/commit/009d94d26c83c28dc0b2bac52b7109ff5f6a72d9))
-* **analysis:** add ruflo harvest comparison ([55d371c](https://github.com/event4u-app/agent-config/commit/55d371c1d427d20391f875430541d47b81fb9095))
-* **council:** add ruflo harvest prioritization Q&A ([7452d39](https://github.com/event4u-app/agent-config/commit/7452d3966bd6f7ce8e8f6e03e88a6bc6acb6fef8))
+* **roadmap:** add an external-reference adoption + dashboard sync ([009d94d](https://github.com/event4u-app/agent-config/commit/009d94d26c83c28dc0b2bac52b7109ff5f6a72d9))
+* **analysis:** add external harvest comparison ([55d371c](https://github.com/event4u-app/agent-config/commit/55d371c1d427d20391f875430541d47b81fb9095))
+* **council:** add external harvest prioritization Q&A ([7452d39](https://github.com/event4u-app/agent-config/commit/7452d3966bd6f7ce8e8f6e03e88a6bc6acb6fef8))
 * **roadmap:** add road-to-mobile-adoption + dashboard sync ([ca092df](https://github.com/event4u-app/agent-config/commit/ca092df913d00870d3227e212e507075462f0d87))
 * **analysis:** add mobile harvest comparison ([6791a78](https://github.com/event4u-app/agent-config/commit/6791a780276da3fccd100d6f5fd6b6e29c466673))
 * **council:** add mobile harvest prioritization Q&A ([48cc665](https://github.com/event4u-app/agent-config/commit/48cc6655927447e18fea455c89c7c7066c4ec9f6))
 * **roadmap:** add road-to-deep-research-adoption + dashboard sync ([9adc2d8](https://github.com/event4u-app/agent-config/commit/9adc2d8b0dd7ee0cdd2b919a4d776cab0f9f4b7a))
 * **analysis:** add deep-research harvest comparison ([4f5ead5](https://github.com/event4u-app/agent-config/commit/4f5ead50ee02de32016262fe6189208c7f9c6cbc))
 * **council:** add deep-research harvest prioritization Q&A ([1b08ea5](https://github.com/event4u-app/agent-config/commit/1b08ea5bdac158bb119f0851684f391e69e26c72))
-* add Microck deep-scan harvest analysis, council artifacts, and roadmap ([36baf23](https://github.com/event4u-app/agent-config/commit/36baf23ef898ab860163fcacfa9239a403032df0))
-* add Microck methodology comparison analysis ([1e34e78](https://github.com/event4u-app/agent-config/commit/1e34e788877a9f6101af5426587de63156e267dd))
+* add external-reference deep-scan harvest analysis, council artifacts, and roadmap ([36baf23](https://github.com/event4u-app/agent-config/commit/36baf23ef898ab860163fcacfa9239a403032df0))
+* add external-reference methodology comparison analysis ([1e34e78](https://github.com/event4u-app/agent-config/commit/1e34e788877a9f6101af5426587de63156e267dd))
 * add markitdown adoption analysis, council artifacts, and roadmap ([276b5d4](https://github.com/event4u-app/agent-config/commit/276b5d4374547386d407b1a01995620c90754363))
 * **suite:** lock identity as four-wing governed skill suite ([47c8211](https://github.com/event4u-app/agent-config/commit/47c8211ab7b42fa97352f747e2081fba82fe92b5))
 * **roadmap:** expand event-driven-discipline with platform tiers ([11edf9b](https://github.com/event4u-app/agent-config/commit/11edf9bb7666eaac18f7b8937437ff07db2b28f7))

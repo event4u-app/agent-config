@@ -1,6 +1,6 @@
 # Confidence-band API audit — 2026-05-09
 
-**Trigger:** P1.4a of `road-to-superpowers-harvest.md` (READY 2026-05-06).
+**Trigger:** P1.4a of an external-suite harvest roadmap (internal, local-only) (READY 2026-05-06).
 **Outcome:** `confidence_band` is **defined** inside `work_engine/scoring/`
 but **not exposed** as a queryable signal to rules. P1.4b kill-switch fires.
 
@@ -67,7 +67,7 @@ Reopen P1.4b when **any** of:
 
 ## Citation
 
-- Roadmap: `agents/roadmaps/archive/road-to-superpowers-harvest.md` § P1.4a, § Kill-switch
+- Roadmap: an external-suite harvest roadmap (internal, local-only) § P1.4a, § Kill-switch
 - Council convergence (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
   2026-05-07, Q3): both members AGREE on defer — no rule-side
   `confidence_band` API exists, so HARD-GATE wording would have to

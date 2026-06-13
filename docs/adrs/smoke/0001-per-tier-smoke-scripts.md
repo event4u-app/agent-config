@@ -1,14 +1,14 @@
 # ADR 0001 — Per-tier smoke scripts (kernel · router · schema · skills)
 
 > Area: `smoke` · Status: accepted · Date: 2026-05-16 · Type: retrospective
-> Roadmap: `agents/roadmaps/step-11-ruflo-parity.md` Phase 4 Step 3
+> Roadmap: an internal parity roadmap (local-only) Phase 4 Step 3
 > Supersedes: —
 
 ## Context
 
 The North-Star audit
-([`external-findings.md § 5`](../../../agents/evidence/audits/2026-05-14-north-star/external-findings.md))
-flagged "smoke contracts" as an absorbed Ruflo pattern: every
+(an internal findings note (local-only))
+flagged "smoke contracts" as an absorbed the external runtime pattern: every
 high-traffic tier needs a fast, deterministic, measurable check that
 runs in CI and surfaces regressions before they reach the rules /
 router / schema / skill linter pipelines.
@@ -95,5 +95,5 @@ baseline, CI-dispatched on path-trigger.
 - [`scripts/smoke/`](../../../src/scripts/smoke/) — four scripts.
 - [`.github/workflows/smoke.yml`](../../../.github/workflows/smoke.yml) — CI dispatch.
 - [`taskfiles/engine.yml`](../../../taskfiles/engine.yml) — local aggregator.
-- [`agents/evidence/audits/2026-05-14-north-star/external-findings.md`](../../../agents/evidence/audits/2026-05-14-north-star/external-findings.md) § 5 — origin pattern.
-- [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 3 (delivery) + Phase 4 Step 3 (this ADR).
+- an internal findings note (local-only) § 5 — origin pattern.
+- an internal parity roadmap (local-only) Phase 3 (delivery) + Phase 4 Step 3 (this ADR).

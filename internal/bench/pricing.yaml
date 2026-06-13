@@ -1,7 +1,7 @@
 # Model pricing for `task bench` cost capture — step-4 Phase 2 Step 2.
 #
 # USD per 1M tokens. Every row carries a `sourced_on` date per
-# external-findings.md § 2 (ruflo "measured-vs-claimed" pattern); stale
+# an internal findings note (external "measured-vs-claimed" pattern); stale
 # prices = stale numbers = no trust.
 #
 # Mirrors PRICING in scripts/cost/track.mjs (cost-track session reader).

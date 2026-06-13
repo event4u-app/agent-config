@@ -7,22 +7,21 @@
 
 ## Prerequisites
 
-- [x] Read [`agents/evidence/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md) — analysis exists and decisions 1.a-5.a are derived from it
+- [x] Read an internal (local-only) reference analysis — analysis exists and decisions 1.a-5.a are derived from it
 - [x] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a) — in the analysis file above
-- [x] Phase 1 of [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical; roadmap archived 2026-04-21)
+- [x] Phase 1 of an internal (local-only) roadmap shipped (commit ec79750 — marketplace manifest canonical; roadmap archived 2026-04-21)
 - [x] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/evidence/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
 - [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available (Phase 1 runner + fixtures shipped; Phase 2 live run unblocked 2026-04-22 — Q28 resolved)
 
 ## Context
 
-Gap analysis against `obra/superpowers`, `NeoLabHQ/context-engineering-kit`,
-and `mhattingpete/claude-skills-marketplace` revealed seven ADOPT items and
-four ADAPT items that are material to autonomy. This roadmap sequences them
-so each phase lands independently and builds on the previous.
+Gap analysis against several external reference suites revealed seven ADOPT
+items and four ADAPT items that are material to autonomy. This roadmap
+sequences them so each phase lands independently and builds on the previous.
 
 - **Feature:** none (infrastructure roadmap)
 - **Jira:** none
-- **Related analysis:** [`compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
+- **Related analysis:** an internal (local-only) reference analysis
 
 ## North Star — what "autonomous" means here
 
@@ -40,8 +39,7 @@ Observable, testable criteria. The agent:
    "start coding on first read".
 6. **Reflects after each non-trivial task** and captures reusable learnings.
 7. **Isolates parallel work in git worktrees** when tasks would clash.
-8. **Builds MCP servers** to the same depth as `obra/superpowers` /
-   `ComposioHQ` reference level.
+8. **Builds MCP servers** to the same depth as an external reference level.
 9. **Cites published research** where a skill implements a known pattern
    (Self-Refine, Reflexion, Chain-of-Verification, …).
 10. **Exposes its vision** in AGENTS.md so consumers understand the
@@ -55,7 +53,7 @@ maintainer and passes a judge-agent review on first attempt.
 
 > Scope: 1 developer-day. No production commitment. Decision 1.a.
 
-- [-] Read `mhattingpete/claude-skills-marketplace/execution-runtime` README + skill files *(Q34)*
+- [-] Read an external reference suite's execution-runtime README + skill files *(Q34)*
 - [-] Sketch a minimal Node/TS port: FastMCP-compatible server + `bulk-edit` tool that accepts (pattern, replacement, glob) and returns diff summary *(Q34)*
 - [-] Benchmark against three representative bulk operations in this repo: *(Q34)*
   - [-] Rename all occurrences of a frontmatter key across `.agent-src.uncondensed/skills/*.md`
@@ -75,11 +73,11 @@ Do not inline the runtime build into this roadmap.
 ## Phase 1: Developer-discipline core
 
 > Three new skills. Biggest single leverage point on autonomy.
-> **Approach:** inspired by external references (obra/superpowers and
-> others), but written from scratch in event4u's voice, structure, and
-> style. Concepts (TDD phases, root-cause debugging, verification gates)
-> are industry standard — no attribution required. See explicit decision
-> in `agents/evidence/analysis/compare-composiohq-awesome-claude-skills.md`.
+> **Approach:** inspired by external references, but written from scratch
+> in event4u's voice, structure, and style. Concepts (TDD phases,
+> root-cause debugging, verification gates) are industry standard — no
+> attribution required. See explicit decision in an internal (local-only)
+> reference analysis.
 
 ### 1.1 `test-driven-development`
 
@@ -112,7 +110,7 @@ Do not inline the runtime build into this roadmap.
 
 ### 1.4 Review-discipline cluster
 
-> Added mid-phase after a gap audit against `obra/superpowers` revealed that
+> Added mid-phase after a gap audit against an external reference suite revealed that
 > the developer-discipline triad has no counterpart for the review loop.
 > Three new skills, one per direction (receiving, requesting, shipping).
 > Same "inspired by, own voice" approach as 1.1–1.3.
@@ -150,7 +148,7 @@ Do not inline the runtime build into this roadmap.
 
 ### 2.2 New skill `subagent-orchestration`
 
-- [x] Inspired by `NeoLabHQ/context-engineering-kit/plugins/sadd` orchestration pattern — rewritten in event4u voice per `inspired-by-own-voice` decision
+- [x] Inspired by an external reference suite's orchestration pattern — rewritten in event4u voice per `inspired-by-own-voice` decision
 - [x] Describe the five orchestration modes as reference material: do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate
 - [x] Each mode has a short decision-table: when to use, when not to use, model pairing
 - [x] Explicit link to `.agent-settings` keys above (via `subagent-configuration` context)
@@ -300,7 +298,7 @@ real-task usage to validate. Tracked as Q34.)*
 
 ### 6.1 New skill `using-git-worktrees` ✅
 
-- [x] Port `obra/superpowers/skills/using-git-worktrees` — rewritten in
+- [x] Port an external reference suite's `using-git-worktrees` skill — rewritten in
       project voice per the "inspired by" policy (no verbatim copy)
 - [x] Adapt to the multi-tool reality: mention Augment Code, Claude Code,
       Cursor working in parallel worktrees — dedicated section
@@ -327,7 +325,7 @@ real-task usage to validate. Tracked as Q34.)*
 - [-] Current `mcp` skill covers usage (clients, tools, capabilities) *(Q34)*
 - [-] Rename to `mcp-usage` *(Q34)*
 - [-] Add new skill `mcp-builder` — 4 phases: scaffold, define tools, implement, ship *(Q34)*
-- [-] Include eval harness template (mirrors Composio's): golden-input/expected-output table *(Q34)*
+- [-] Include eval harness template (mirrors an external suite's): golden-input/expected-output table *(Q34)*
 
 ### 7.2 Language guides
 
@@ -435,7 +433,7 @@ designed to span multiple sessions by construction.
 |---|---|---|
 | Judge-agent gate (Phase 2-3) | [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 2 | Judges are natural evaluators for trigger evals |
 | Judge quality research | [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) Problem 2 (verdict: conditional go) | Judges on always-rules is the research PoC |
-| Marketplace distribution of new skills | [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) | Every new skill must land in `.claude-plugin/marketplace.json` |
+| Marketplace distribution of new skills | an internal (local-only) roadmap | Every new skill must land in `.claude-plugin/marketplace.json` |
 | Trim audit (optional) | `road-to-skill-catalog-trim.md` (future, Decision 2.c) | Non-blocking; opens after Phase 1 proves new skills ship clean |
 
 ## Acceptance Criteria (roadmap-level)
@@ -483,6 +481,6 @@ task ci
 
 ## Related
 
-- Analysis: [`compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
-- Sibling roadmaps: [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md), [`road-to-trigger-evals.md`](road-to-trigger-evals.md), [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md), [`archive/road-to-drafting-protocol.md`](archive/road-to-drafting-protocol.md)
-- Reference repos: `obra/superpowers`, `NeoLabHQ/context-engineering-kit`, `mhattingpete/claude-skills-marketplace`
+- Analysis: an internal (local-only) reference analysis
+- Sibling roadmaps: an internal (local-only) reference, [`road-to-trigger-evals.md`](road-to-trigger-evals.md), an internal (local-only) reference, [`archive/road-to-drafting-protocol.md`](archive/road-to-drafting-protocol.md)
+- Reference repos: several external reference suites

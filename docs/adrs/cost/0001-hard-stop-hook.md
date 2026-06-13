@@ -1,7 +1,7 @@
 # ADR 0001 — Hard-stop hook surface
 
 > Area: `cost` · Status: accepted · Date: 2026-05-16 · Type: retrospective
-> Roadmap: `agents/roadmaps/step-11-ruflo-parity.md` Phase 2 Step 3
+> Roadmap: an internal parity roadmap (local-only) Phase 2 Step 3
 
 ## Context
 
@@ -13,7 +13,7 @@ opts into `cost.enforcement: hard-stop` — without changing the
 default-on advisory experience.
 
 This package is a governance layer, not a runtime orchestrator (see
-[`step-11`](../../../agents/roadmaps/step-11-ruflo-parity.md) scope
+[`step-11`](../../../an internal parity roadmap (local-only)) scope
 boundary). The hook must therefore live at a **process-entry seam**,
 not inside the rule-loader, agent dispatcher, or per-tool-call
 interceptor — none of those exist in this codebase by design.
@@ -82,7 +82,7 @@ Wrap every tool call with a budget check.
 
 **Why rejected:** this package doesn't intercept tool calls. Building
 that would require a runtime engine — the explicit Non-goal of
-`step-11` (see scope boundary). This is the Ruflo-style runtime
+`step-11` (see scope boundary). This is the external-runtime-style runtime
 absorption we ruled out.
 
 ### Alt 4 — Single-shell-entry preflight (accepted)
@@ -110,5 +110,5 @@ governance-layer charter.
 - [`docs/contracts/cost-enforcement.md`](../../contracts/cost-enforcement.md) — contract surface.
 - [`scripts/cost/budget.mjs`](../../../src/scripts/cost/budget.mjs) — evaluator.
 - [`scripts/cost/preflight.mjs`](../../../src/scripts/cost/preflight.mjs) — this hook.
-- [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 2 Step 3 — origin.
-- [`agents/evidence/audits/2026-05-14-north-star/external-findings.md`](../../../agents/evidence/audits/2026-05-14-north-star/external-findings.md) § 2 row "hard stop" — upstream Ruflo pattern this absorbs.
+- an internal parity roadmap (local-only) Phase 2 Step 3 — origin.
+- an internal findings note (local-only) § 2 row "hard stop" — upstream the external runtime pattern this absorbs.

@@ -85,7 +85,7 @@ backfires (no depth to point at).
 - [~] **H2** — Skill-bundle landing pages. **Deferred 2026-05-11**:
       waits on sibling roadmap Block A personas; sibling roadmap not
       present in this branch.
-- [~] **H3** — Comparison page vs `alirezarezvani/claude-skills`.
+- [~] **H3** — Comparison page vs an external skill suite.
       **Deferred 2026-05-11**: waits on eval thresholds producing
       numbers (sibling roadmap not present).
 - [-] **H4** — Medium / dev.to articles, conference CFP. **Cancelled
@@ -220,7 +220,7 @@ timestamp.
 
 The checklist gates on engineering substrate shipped via the
 archived [`road-to-simplicity-and-everywhere.md`](archive/road-to-simplicity-and-everywhere.md)
-(in-tree prep) and, for the Smithery item, on
+(in-tree prep) and, for the external-registry item, on
 [`road-to-mcp-full-coverage.md`](road-to-mcp-full-coverage.md)
 Phase 3. See the "Post-merge addendum" of the archived roadmap for
 the lessons-learned that led to this split.

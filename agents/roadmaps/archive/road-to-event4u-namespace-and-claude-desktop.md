@@ -38,7 +38,7 @@ user-scope surface (`scripts/install.py` user-global deploy path):
 - **Source-of-truth:** `~/.event4u/agent-config/` (new). Tool anchors
   (`~/.claude/`, `~/.augment/`, etc.) remain as-is — they are host
   conventions, not ours to relocate.
-- **Reference repo audited:** `nextlevelbuilder/ui-ux-pro-max-skill`
+- **Reference repo audited:** an external reference suite
   (Phase 2.4 expansion already lifted 7 tool anchors from it). No
   Desktop-specific deployment pattern there to copy — they only ship
   filesystem anchors.

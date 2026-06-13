@@ -125,7 +125,7 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 ## Dependencies
 
-- Completed condensation roadmap (done — `telegraph-condense-integration.md`)
+- Completed condensation roadmap (done — internal, local-only)
 - No external packages needed
 
 ## Acceptance Criteria

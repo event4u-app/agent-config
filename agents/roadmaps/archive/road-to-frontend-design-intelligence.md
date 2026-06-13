@@ -3,13 +3,13 @@ status: active
 complexity: structural
 ---
 
-# Road to Frontend Design Intelligence — absorb `ui-ux-pro-max` into our orchestrated UI suite
+# Road to Frontend Design Intelligence — absorb an external design suite into our orchestrated UI suite
 
 > Adoption roadmap. Goal: pull the genuinely differentiated capability of
-> `nextlevelbuilder/ui-ux-pro-max-skill` (a queryable design-knowledge corpus +
+> an external reference suite (a queryable design-knowledge corpus +
 > a dependency-free BM25 reasoning engine) **into** our existing stack-dispatched
 > UI directive system, so a consumer installing our package no longer benefits
-> from also installing `ui-ux-pro-max`. We keep our orchestration (audit →
+> from also installing the external suite. We keep our orchestration (audit →
 > design → apply → review → polish, a11y gating, stack dispatch); we add their
 > grounded design intelligence and feed it into `directives/ui/design.py`.
 >
@@ -107,8 +107,8 @@ corpora stay deferred and evidence-gated.
 
 ## Source analysis (verified 2026-06-03, full-tree deep-dive — not README)
 
-Upstream repo: `nextlevelbuilder/ui-ux-pro-max-skill` @ `main`, ~86k stars,
-`skill.json` v2.5.0, npm `uipro-cli`. Mechanism deep-dived across SKILL.md, the
+Upstream: an external reference suite (deep-dived from its full tree, not its
+README). Mechanism deep-dived across SKILL.md, the
 three Python scripts, all CSVs, the 6 sub-skills, the CLI, and both license
 files. Key facts that drive this roadmap:
 
@@ -143,7 +143,7 @@ files. Key facts that drive this roadmap:
   source of truth) + `design-system/pages/<page>.md` (per-page overrides that
   override the master). Notable pattern; maps onto our `state.ui_design`.
 - **Sub-skills** beyond the core skill:
-  - `ui-styling` (Apache-2.0, vendored "claudekit") — shadcn/ui + Tailwind +
+  - `ui-styling` (Apache-2.0, a vendored third-party library) — shadcn/ui + Tailwind +
     **the only a11y reference**; ships `shadcn_add.py` (shells out to `npx
     shadcn@latest add` — the **only** subprocess/network surface in the whole
     suite) and `tailwind_config_gen.py` (pure templating).
@@ -158,8 +158,8 @@ files. Key facts that drive this roadmap:
     **Gemini image-model + Chrome-screenshot** generators (logo 55 styles, CIP
     50 deliverables, SVG icons via Gemini 3.1-pro, banners, social photos).
     Heavy external deps (`google-genai`, `pillow`, Node, Chrome, `GEMINI_API_KEY`).
-- **Licensing**: root **MIT** (Next Level Builder, 2024); `ui-styling/LICENSE.txt`
-  is **Apache-2.0** (vendored claudekit; frontmatter says MIT — file wins). Both
+- **Licensing**: root **MIT** (upstream author, 2024); the `ui-styling/LICENSE.txt`
+  is **Apache-2.0** (a vendored third-party library; frontmatter says MIT — file wins). Both
   permissive: commercial use + redistribution + modification allowed. Obligations:
   retain notices (both), mark modified files + ship the license (Apache-2.0).
 
@@ -188,7 +188,7 @@ font pairing, layout pattern, and anti-patterns drawn from an adopted, queryable
 design-knowledge corpus — instead of pure agent judgment. Stack guidance for
 Vue/Next/Svelte/Flutter/Angular exists. A design-tokens skill and chart/data-viz
 knowledge close the largest gaps. Net effect: **installing our package alone
-matches or beats `ui-ux-pro-max` for frontend**, with our orchestration,
+matches or beats the external suite for frontend**, with our orchestration,
 a11y gating, and stack dispatch on top.
 
 ## Branching strategy
@@ -236,8 +236,8 @@ knowledge, but the new skill must not *mandate* one stack).
       link the session JSON. <!-- done: docs/decisions/ADR-061-corpus-grounding-layer.md (accepted), INDEX regenerated; includes the 2026-06-07 fork resolutions (pack A2, google-fonts skip, --stack domain, brand defer) -->
 - [x] **Step 0.3:** Licensing foundation. Create a vendored-attribution NOTICE
       (e.g. `packages/<pack>/.agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md`)
-      recording: upstream repo + commit SHA + last-checked date, MIT (Next Level
-      Builder) for the corpus, Apache-2.0 + "claudekit" attribution for any
+      recording: upstream repo + commit SHA + last-checked date, MIT (upstream
+      author) for the corpus, Apache-2.0 + vendored-library attribution for any
       `ui-styling`-derived material. Plan to **mark modified files** (Apache-2.0
       §4b) and **ship the license copy** for Apache-derived assets. <!-- done: src/skills/design-intelligence/ATTRIBUTION.md @ upstream b7e3af80 (2026-06-07); Apache marking + license-copy obligations recorded -->
 - [x] **Step 0.4:** Run the `domain-adoption-policy` three gates **only for the
@@ -496,9 +496,9 @@ knowledge, but the new skill must not *mandate* one stack).
       <!-- done: new artefacts ride the standard pipeline with zero special-casing — sync green (check_condensation 0 errors, hashes in sync), non-md assets shipped via sync_non_md (locked by tests/test_skill_bundled_assets.py), discovery manifest lists corpus-grounding/design-intelligence/design-tokens. Local tool projections are intentionally disabled in this repo (agents/.agent-tools.yml tools: []); consumer projection runs the same generator as the existing 224 skills -->
 - [x] **Step 8.2:** Write a `competitive-positioning` doc (ours-vs-theirs verdict
       table) proving frontend parity-or-better, so a consumer no longer needs
-      `ui-ux-pro-max` alongside ours. Cite the adopted corpus + our orchestration
+      the external suite alongside ours. Cite the adopted corpus + our orchestration
       + a11y gating + stack dispatch as the combined advantage.
-      <!-- done: docs/case-studies/frontend-design-vs-ui-ux-pro-max.md — frame, 7 axes, verdict table (parity-plus on grounding; ours on orchestration/a11y/governance; theirs only on the gated generative suite), invariants, empty adoption queue, explicit unknowns -->
+      <!-- done: positioning case-study written (internal, local-only) — frame, 7 axes, verdict table (parity-plus on grounding; ours on orchestration/a11y/governance; theirs only on the gated generative suite), invariants, empty adoption queue, explicit unknowns -->
 - [x] **Step 8.3:** `upstream-contribute` consideration: we built on their MIT
       work; decide whether any improvements (BM25 dedupe, Python token gens, a11y
       enrichment) are worth proposing back upstream.
@@ -569,7 +569,7 @@ knowledge, but the new skill must not *mandate* one stack).
   `shadcn_add.py` (assisted execution, declared tools).
 - Corpus is project-agnostic; framework-neutrality + portability linters pass.
 - A competitive-positioning doc demonstrates frontend parity-or-better vs.
-  `ui-ux-pro-max`.
+  the external suite.
 - All quality gates pass on the PR (remote CI is the authoritative gate).
 
 ## Final integration validation (our repo, `universal-project-analysis`, 2026-06-03)
@@ -594,7 +594,7 @@ the bundled engine where the user actually works. Prove that first.
 - **License obligations.** MIT (corpus) → retain notice. Apache-2.0
   (`ui-styling`-derived) → retain notice, **mark modified files**, ship the
   license. Internal MIT-vs-Apache frontmatter mismatch on `ui-styling`: treat the
-  dedicated `LICENSE.txt` (Apache-2.0) as authoritative; attribute "claudekit".
+  dedicated `LICENSE.txt` (Apache-2.0) as authoritative; attribute the vendored third-party library.
 - **Corpus maintenance cost.** The CSVs are the real cost. Name a maintenance
   owner + refresh cadence (Gate 2). Pin upstream SHA per asset; CI `check-refs`
   catches 404s on refresh.

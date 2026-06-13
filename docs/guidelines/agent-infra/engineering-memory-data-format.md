@@ -50,7 +50,7 @@ rejects entries missing any required field.
 
 The `priority` field controls how aggressively `/memory:load` surfaces
 an entry. The three-tier enum is intentional — see
-`road-to-dream-skill-adoption.md` § B2 and the Phase 2 council brief
+an internal roadmap (local-only) § B2 and the Phase 2 council brief
 for why a fourth `high` tier was rejected.
 
 | Value | Meaning | Reader behaviour |

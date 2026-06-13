@@ -272,7 +272,7 @@ Run these three scans on the rendered output before the close-prompt. Each is a 
 
 Self-review is mechanical (gaps, leftovers, naming drift); persona voices and orchestration outputs handle reasoning critique. Both run; neither replaces the other.
 
-Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+Source: adapted from an external reference `writing-plans/SKILL.md` § Self-Review (v5.1.0).
 
 ## Close-prompt (mandatory final step)
 

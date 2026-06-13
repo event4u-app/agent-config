@@ -5,7 +5,7 @@ date: 2026-06-11
 decision: no-external-runtime-federation
 supersedes: —
 superseded_by: —
-phase: ruflo-coexistence
+phase: external-runtime-coexistence
 type: structural
 ---
 
@@ -14,30 +14,30 @@ type: structural
 ## Status
 
 **Accepted** · 2026-06-11. Lands with the closure of PR #262
-("ruflo coexistence bridge") as superseded.
+("external-runtime coexistence bridge") as superseded.
 
 ## Context
 
-[`ruvnet/ruflo`](https://github.com/ruvnet/ruflo) is a multi-agent
+An external multi-agent runtime is a multi-agent
 orchestration **runtime** (swarms, persistent memory / RAG, an MCP server,
 a hooks system, background workers). It also writes `.claude/` lifecycle
 hooks, so it shares a Claude Code project's `.claude/` directory with
 `event4u/agent-config`.
 
-PR #262 (authored 2026-05-27) proposed a "ruflo coexistence bridge" with four
+PR #262 (authored 2026-05-27) proposed an "external-runtime coexistence bridge" with four
 parts:
 
 1. **Plugin-scope hook delivery** — ship agent-config's Claude hooks via the
    plugin (`hooks/hooks.json`) instead of the shared `.claude/settings.json`
    hooks array, to stop colliding with neighbour tools' hook arrays.
-2. **`detect_ruflo` + `coexist`/`skip` mode + dispatcher skip-gate** — detect
-   ruflo, offer a one-time choice, optionally skip agent-config's own
+2. **`detect_external` + `coexist`/`skip` mode + dispatcher skip-gate** — detect
+   the external runtime, offer a one-time choice, optionally skip agent-config's own
    dispatcher so the two tools' hooks don't double-fire.
-3. **A detection-gated `ruflo-bridge` pack** (`ruflo-routing` rule +
-   `ruflo-orchestration` skill) documenting ruflo's MCP-tool surface and a
-   persona→agent-type map so the host agent can **drive ruflo's swarm**.
+3. **A detection-gated `external-runtime-bridge` pack** (`external-runtime-routing` rule +
+   `external-runtime-orchestration` skill) documenting the external runtime's MCP-tool surface and a
+   persona→agent-type map so the host agent can **drive the external runtime's swarm**.
 4. **A coexistence contract + an 8-phase roadmap** (later phases: shared
-   cross-tool memory, collision namespacing, git-layer enforcement of ruflo
+   cross-tool memory, collision namespacing, git-layer enforcement of the external runtime's
    swarm commits, docs).
 
 Two things happened on `main` after the PR was authored:
@@ -47,15 +47,14 @@ Two things happened on `main` after the PR was authored:
   `ensure_claude_bridge` writes only `enabledPlugins`, canonical id
   `agent-config@event4u`). agent-config no longer owns the `settings.json`
   hooks array, so it coexists with *any* neighbour tool's hooks generically —
-  ruflo included. The original hook-collision motivation is solved without
-  anything ruflo-specific.
-- **(B) A "ruflo adoption" decision was recorded** (cross-vendor council,
-  claude-sonnet-4-5 + gpt-4o, 2026-05-06; see archived
-  `road-to-ruflo-adoption` and [`docs/parity/ruflo.md`](../parity/ruflo.md)).
-  Verdict: harvest only **portable** patterns from ruflo (ADR methodology,
-  cost-tracker, HMAC signing) and **explicitly do not couple to ruflo's
+  the external runtime included. The original hook-collision motivation is solved without
+  anything external-runtime-specific.
+- **(B) An "external-runtime adoption" decision was recorded** (cross-vendor council,
+  claude-sonnet-4-5 + gpt-4o, 2026-05-06; see an internal parity record (local-only)).
+  Verdict: harvest only **portable** patterns from the external runtime (ADR methodology,
+  cost-tracker, HMAC signing) and **explicitly do not couple to the external runtime's
   runtime / swarm / MCP tools** — wording used: "out of suite identity".
-  Candidates requiring ruflo's runtime (`observe-trace`, `test-gaps`) were
+  Candidates requiring the external runtime (`observe-trace`, `test-gaps`) were
   dropped for that reason; an MCP/HTTP-bridge was only "deferred-with-trigger".
 
 PR #262's parts 2–4 are precisely the runtime coupling decision (B) rejected.
@@ -77,10 +76,10 @@ not a feature, smuggled in via an incremental PR.
 
 1. **agent-config does not bridge to, or drive, external tool runtimes.**
    It is a **content suite** (skills, rules, commands) for AI coding tools —
-   not a runtime coordinator. It ships no `ruflo-orchestration`,
+   not a runtime coordinator. It ships no `external-runtime-orchestration`,
    `cursor-orchestration`, `aider-routing`, `windsurf-bridge`, or equivalent
    artifact that calls another tool's runtime / swarm / MCP surface. This is a
-   **category** boundary, not a ruflo-specific one. Consistent with the
+   **category** boundary, not an external-runtime-specific one. Consistent with the
    "no app runtime" identity in
    [`package-self-orientation`](../contracts/package-self-orientation.md).
 
@@ -95,7 +94,7 @@ not a feature, smuggled in via an incremental PR.
 3. **Federation is a separate, explicit decision.** If agent-config should ever
    expand from skill-suite to a "federation platform" that orchestrates
    external orchestrators, that requires its **own** ADR answering, at minimum:
-   (a) should the suite take on that identity; (b) the generic design (ruflo +
+   (a) should the suite take on that identity; (b) the generic design (an external runtime +
    Cursor + Copilot + Windsurf, not one vendor); (c) the maintenance model for
    N external bridges; (d) the trust contract — who validates an external
    runtime's output, and how agent-config's safety floors
@@ -112,9 +111,9 @@ not a feature, smuggled in via an incremental PR.
   neighbour tool's installation, version, or MCP-tool stability.
 - The maintenance surface does not grow by one bridge per orchestrator, and
   behaviour does not vary by which neighbours are installed.
-- Users who run both agent-config and ruflo (or any neighbour) get hook
+- Users who run both agent-config and the external runtime (or any neighbour) get hook
   coexistence for free via plugin scope; they do not get agent-config-driven
-  ruflo orchestration.
+  external-runtime orchestration.
 - Future "let's just add detection / a bridge for tool X" PRs have a recorded
   boundary to point at, preventing re-litigation. They are redirected to the
   generic, protocol-level, ADR-gated path in (2)–(3).
@@ -124,7 +123,7 @@ not a feature, smuggled in via an incremental PR.
 - **Finish & merge PR #262 as-is** — rejected: reintroduces the runtime
   coupling decision (B) dropped, across an unvalidated trust boundary, and
   enacts a strategic pivot without an explicit decision.
-- **Repurpose to the defensive sliver only** (`detect_ruflo` + dispatcher
+- **Repurpose to the defensive sliver only** (`detect_external` + dispatcher
   skip-gate + a generalised neighbour-coexistence contract) — rejected as the
   default: the council found it wrong-layer (coordination belongs at the
   protocol layer, not in tool-specific detection code) and redundant given (A),
@@ -136,10 +135,10 @@ not a feature, smuggled in via an incremental PR.
 
 ## References
 
-- PR #262 — "feat: ruflo coexistence bridge" (closed as superseded, 2026-06-11).
-- [`docs/parity/ruflo.md`](../parity/ruflo.md) — ruflo parity verdict
+- PR #262 — "feat: external-runtime coexistence bridge" (closed as superseded, 2026-06-11).
+- An internal parity record (local-only) — external-runtime parity verdict
   (all patterns mechanism-covered; no runtime coupling).
-- Archived `road-to-ruflo-adoption` — the 2026-05-06 cross-vendor council
+- An internal parity record (local-only) — the 2026-05-06 cross-vendor council
   decision: harvest portable patterns, "out of suite identity" for the runtime.
 - [`package-self-orientation`](../contracts/package-self-orientation.md) —
   "no app runtime" identity.

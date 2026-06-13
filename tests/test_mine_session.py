@@ -1,7 +1,7 @@
 """Smoke tests for `scripts/mine_session.py` — Phase-1 single-host miner.
 
 Covers the four contract gates from
-`agents/roadmaps/road-to-dream-skill-adoption.md` § Phase 1 exit criteria:
+an internal roadmap (local-only) § Phase 1 exit criteria:
 opt-in transcript access, ≤ 5 normalised facts per cycle, redaction of
 user names, and `--preview` writes nothing.
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-FIXTURE = ROOT / "tests/fixtures/dream-skill/session.jsonl"
+FIXTURE = ROOT / "tests/fixtures/mine-session/session.jsonl"
 SCRIPT = ROOT / "src/scripts/mine_session.py"
 
 

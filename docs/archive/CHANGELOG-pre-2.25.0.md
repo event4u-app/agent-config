@@ -153,7 +153,7 @@ Tests: 4535 (+0 since 2.20.0)
 ### Features
 
 * **product:** step-15 product refinement — profiles + packs + presets + explain CLI ([59e7d6f](https://github.com/event4u-app/agent-config/commit/59e7d6f3ddce025e558da08c1da1b4c8155e68eb))
-* **parity:** step-11 ruflo parity — smoke + ADR + cost + namespace + MCP ([521b4c6](https://github.com/event4u-app/agent-config/commit/521b4c62f5fe266f5c18dfcca2abf4e06d97c217))
+* **parity:** step-11 external parity — smoke + ADR + cost + namespace + MCP ([521b4c6](https://github.com/event4u-app/agent-config/commit/521b4c62f5fe266f5c18dfcca2abf4e06d97c217))
 * **telegraph:** step-10 default-kill criterion + parity roadmap ([dd7ec3c](https://github.com/event4u-app/agent-config/commit/dd7ec3cae4f8839b28b4d3ff9dbdbb316ec5d035))
 * **bench:** step-4 measurement + benchmark infrastructure ([981d0cd](https://github.com/event4u-app/agent-config/commit/981d0cd1c48e2d23eede29bd86e833cd826ddfd9))
 * **skills:** step-2 skill inventory rationalization ([3fa651d](https://github.com/event4u-app/agent-config/commit/3fa651d2496e4fc483cd7ed452bb39f41dd39365))

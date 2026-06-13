@@ -1,13 +1,13 @@
 {
-  "schema": "parity-bench-ruflo-v1",
+  "schema": "parity-bench-external-v1",
   "status": "infrastructure_ready_awaiting_corpus_run",
-  "owner_roadmap": "agents/roadmaps/step-11-ruflo-parity.md",
-  "parity_doc": "docs/parity/ruflo.md",
+  "owner_roadmap": "agents/roadmaps/step-11-external-parity.md",
+  "parity_doc": "docs/parity/external.md",
   "parent_bench": "docs/parity/bench.json",
   "claim_under_test": {
     "source": "agents/evidence/audits/2026-05-14-north-star/external-findings.md § 2",
     "headline": "Average dollar cost per 25-prompt corpus run, separated by model tier (Haiku / Sonnet / Opus) and by token class (input / output / cache-read / cache-write).",
-    "comparison_target": "ruflo cost-tracker README (claimed upstream, not yet pulled into this repo)",
+    "comparison_target": "external cost-tracker README (claimed upstream, not yet pulled into this repo)",
     "type": "claimed_upstream_not_verified_in_repo"
   },
   "measurement_protocol": {
@@ -29,14 +29,14 @@
     "min_reports": 30,
     "earliest_flip": "2026-07-15",
     "arbiter_command": "task bench:baseline-ready",
-    "notes": "bench-ruflo.json flips status to 'baseline_ready' only after the parent bench.json flips. No independent soak window — same corpus, same arbiter."
+    "notes": "bench-external.json flips status to 'baseline_ready' only after the parent bench.json flips. No independent soak window — same corpus, same arbiter."
   },
   "redundancy_verdict": {
     "status": "pending",
-    "criterion": "Once bench.json soak completes, this verdict is set by comparing the dollar cost in current_window vs ruflo's published table.",
+    "criterion": "Once bench.json soak completes, this verdict is set by comparing the dollar cost in current_window vs the external runtime's published table.",
     "outcome_branches": {
-      "redundant": "Our cost-per-25-prompt-run sits within Ruflo's published range (or beats it). G5 redundancy gate row for cost surface flips green.",
-      "behind": "Our cost-per-run > Ruflo's. Follow-up issue filed; G5 stays open."
+      "redundant": "Our cost-per-25-prompt-run sits within the external runtime's published range (or beats it). G5 redundancy gate row for cost surface flips green.",
+      "behind": "Our cost-per-run > the external runtime's. Follow-up issue filed; G5 stays open."
     }
   },
   "fields_pending_first_run": [
@@ -52,7 +52,7 @@
   "decisions_pending": {},
   "_meta": {
     "created": "2026-05-16",
-    "created_by": "step-11-ruflo-parity.md Phase 6 Step 2",
-    "spec": "scripts/cost/track.mjs --bench-ruflo (planned wiring); for now the file is a methodology contract"
+    "created_by": "step-11-external-parity.md Phase 6 Step 2",
+    "spec": "scripts/cost/track.mjs --bench-external (planned wiring); for now the file is a methodology contract"
   }
 }

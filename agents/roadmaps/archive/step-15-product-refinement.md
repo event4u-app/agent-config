@@ -197,7 +197,7 @@ Sourced from review #7. Almost all items are 1-click / 1-PR / 1-edit.
   requires 1200×630 image upload via GitHub repo Settings → Social
   preview. Owner: maintainer. Cannot be landed via code edit.
 - [-] **0.4 MCP Registry submission** — **blocked on external action**:
-  PR against `punkpeye/awesome-mcp-servers` requires a fork + branch +
+  PR against an external MCP-server registry requires a fork + branch +
   PR on a third-party repo. Template ready at
   [`docs/setup/mcp-cloud-registry-listing.md`](../../docs/setup/mcp-cloud-registry-listing.md).
   Owner: maintainer.

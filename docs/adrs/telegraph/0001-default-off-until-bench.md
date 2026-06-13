@@ -1,7 +1,7 @@
 # ADR 0001 — Telegraph condensation default stays OFF until `task bench`
 
 > Area: `telegraph` · Status: accepted · Date: 2026-05-16 · Type: retrospective
-> Roadmap: `agents/roadmaps/step-11-ruflo-parity.md` Phase 4 Step 3
+> Roadmap: an internal parity roadmap (local-only) Phase 4 Step 3
 > Supersedes: —
 
 ## Context
@@ -55,7 +55,7 @@ Flip the default immediately; let consumers opt out.
 
 **Why rejected:** no measured baseline exists. The two pro voices'
 40 % claim is from informal turn-snippet comparisons, not the locked
-corpus. Default-on without measurement is exactly the Ruflo-style
+corpus. Default-on without measurement is exactly the external-runtime-style
 "trust me it's faster" pattern the audit calls out.
 
 ### Alt 2 — Default ON for cost-profile `lean`, OFF for `default` (rejected)
@@ -90,4 +90,4 @@ either ships default-on or gets deprecated. No middle state.
 - [`.agent-src.uncondensed/rules/telegraph-speak.md`](../../../.agent-src.uncondensed/rules/telegraph-speak.md) — dialect definition.
 - [`agents/roadmaps/step-4-measurement-and-benchmark.md`](../../../agents/roadmaps/step-4-measurement-and-benchmark.md) — bench owner.
 - [`agents/evidence/audits/2026-05-14-north-star/council-synthesis.md`](../../../agents/evidence/audits/2026-05-14-north-star/council-synthesis.md) § 7 — council split.
-- [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.
+- an internal parity roadmap (local-only) Phase 4 Step 3 — origin.

@@ -1,7 +1,7 @@
 # ADR 0001 — JSON Schema as the frontmatter source of truth
 
 > Area: `schema` · Status: accepted · Date: 2026-05-16 · Type: retrospective
-> Roadmap: `agents/roadmaps/step-11-ruflo-parity.md` Phase 4 Step 3
+> Roadmap: an internal parity roadmap (local-only) Phase 4 Step 3
 > Supersedes: —
 
 ## Context
@@ -99,4 +99,4 @@ JetBrains / any JSON-Schema-aware tool tomorrow.
 - [`scripts/schemas/persona.schema.json`](../../../src/scripts/schemas/persona.schema.json) — persona contract.
 - [`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md) — human-readable contract.
 - [`scripts/skill_linter.py`](../../../src/scripts/skill_linter.py) — primary validator.
-- [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.
+- an internal parity roadmap (local-only) Phase 4 Step 3 — origin.

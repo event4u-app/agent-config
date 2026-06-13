@@ -107,7 +107,7 @@ Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solv
 
 - Upstream protocol: https://modelcontextprotocol.io
 - Upstream SDKs: https://github.com/modelcontextprotocol/python-sdk · https://github.com/modelcontextprotocol/typescript-sdk
-- Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/mcp-builder/SKILL.md` (MIT, © 2025 Microck) — external `./reference/*.md` file links replaced with inline guidance + upstream URLs.
+- Adopted from: an external reference (MIT, © 2025 an external reference) — external `./reference/*.md` file links replaced with inline guidance + upstream URLs.
 - Cross-linked: [`mcp`](../mcp/SKILL.md), [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), [`api-design`](../api-design/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `mcp-builder`).
 - Iron-Law floor: `verify-before-complete`, `tool-safety`, `skill-quality`.

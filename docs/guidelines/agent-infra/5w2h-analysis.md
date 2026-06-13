@@ -257,4 +257,4 @@ Inversion → For each W / H, ask "what if it's missing?"
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/5w2h_analysis.md` · MIT License.
+Adapted from an external reference.

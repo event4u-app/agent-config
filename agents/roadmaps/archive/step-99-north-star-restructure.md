@@ -4,48 +4,48 @@ complexity: lightweight
 
 # Roadmap: North Star Restructure (meta · out-of-band · **breaking change**)
 
-> Execute the deferred roadmap-tree restructure produced by the 2026-05-14 north-star audit + council synthesis **and** the user-issued Total Dominance mandate (2026-05-14): rename 6 existing roadmaps into a new sequence, draft new roadmaps (skill inventory rationalization, measurement + benchmark, schema rigor, telegraph parity-plus, ruflo parity-plus), and produce a parity verdict that makes `telegraph`, `ruflo`, and `harmonist` redundant for our use case. Breaking changes are permitted; v3.0.0 is the target tag.
+> Execute the deferred roadmap-tree restructure produced by the 2026-05-14 north-star audit + council synthesis **and** the user-issued Total Dominance mandate (2026-05-14): rename 6 existing roadmaps into a new sequence, draft new roadmaps (skill inventory rationalization, measurement + benchmark, schema rigor, plus two external-reference parity-plus tracks), and produce a parity verdict that makes the three external reference suites redundant for our use case. Breaking changes are permitted; v3.0.0 is the target tag.
 
-**Measured-vs-claimed disclaimer:** This is a **meta-restructure roadmap** — it owns no measured outcome of its own. Every parity claim ([`step-10`](step-10-telegraph-parity.md), [`step-11`](step-11-ruflo-parity.md)) and rigor claim ([`step-5-schema-rigor.md`](step-5-schema-rigor.md)) belongs to the child roadmap that carries the disclaimer. G0–G5 gate verdicts here stay aspirational until each child roadmap closes its own acceptance gates with measured evidence.
+**Measured-vs-claimed disclaimer:** This is a **meta-restructure roadmap** — it owns no measured outcome of its own. Every parity claim (two sunset external-reference parity roadmaps, internal/local-only) and rigor claim ([`step-5-schema-rigor.md`](step-5-schema-rigor.md)) belongs to the child roadmap that carries the disclaimer. G0–G5 gate verdicts here stay aspirational until each child roadmap closes its own acceptance gates with measured evidence.
 
 ## Closure decision (2026-05-16, maintainer override)
 
 This meta-roadmap is **closed via partial-completion + sunset of the remaining G3 / G5 gates**:
 
 - **Renames + draft Wave shipped.** Phases 1–3 (renames, new draft roadmaps, parity-table outlines) all landed in the original Restructure Wave PRs through May 2026. step-1, step-3, step-6, step-7, step-8, step-9, step-11, step-12 all reached closure or sunset on their own dashboards.
-- **G3 (schema rigor) sunset** via [`step-5`](step-5-schema-rigor.md) closure — the full Harmonist parity suite is dropped on contributor-base-not-materialised grounds.
-- **G5 (parity verdict) sunset** via [`step-10`](step-10-telegraph-parity.md) closure — the parity table chase against telegraph's 65 % average is dropped; the published `telegraph-speak` rule + `condense` mechanism is the actual delivered surface.
+- **G3 (schema rigor) sunset** via [`step-5`](step-5-schema-rigor.md) closure — the full external-reference parity suite is dropped on contributor-base-not-materialised grounds.
+- **G5 (parity verdict) sunset** via a sunset external-reference parity roadmap (internal, local-only) closure — the parity table chase against the external reference's 65 % average is dropped; the published `telegraph-speak` rule + `condense` mechanism is the actual delivered surface.
 - **v3.0.0 tag deferred.** Tag is the maintainer's call, not autonomous. The Restructure Wave's breaking-change surface (introduction of `.agent-src.uncondensed/contexts/authority/` as the source-of-truth context bucket — with mirrored condensed copies under `.agent-src/contexts/authority/` — plus kernel-rule extraction and council/audit cross-cutting moves) is already shipped on `main`; a v3.0.0 cut belongs to a release decision, not this closure. Clarification (2026-05-16 archive-audit): the original wording said "rename of agents/settings/contexts/ to agents/settings/contexts/authority/" — that phrasing was misleading. The actual change was a new subdirectory under the canonical `.agent-src.uncondensed/contexts/` tree; `agents/settings/contexts/` is a separate project-local docs dir and was not renamed.
 
 All remaining `[ ]` checkboxes flip `[-]`. The G5 acceptance row stays explicitly unsatisfied. Parent roadmap closure runs (step-12, step-13 sunset) cascade through this meta-tracker.
 
 ## Prerequisites
 
-- [-] Read [`../../audits/2026-05-14-north-star/NEXT-ACTIONS.md`](../../audits/2026-05-14-north-star/NEXT-ACTIONS.md) — authoritative spec for renames + new drafts
-- [-] Read [`../../audits/2026-05-14-north-star/council-synthesis.md`](../../audits/2026-05-14-north-star/council-synthesis.md) §§ 6, 7, 9 for the reasoning behind the new step ordering and the condensation kill-criterion
-- [-] Read [`../../audits/2026-05-14-north-star/external-findings.md`](../../audits/2026-05-14-north-star/external-findings.md) §§ 1–3 for the full feature inventory of telegraph, ruflo, and harmonist — every row is in scope for Phase 6
+- [-] Read the internal (local-only) north-star NEXT-ACTIONS note — authoritative spec for renames + new drafts
+- [-] Read the internal (local-only) council-synthesis note §§ 6, 7, 9 for the reasoning behind the new step ordering and the condensation kill-criterion
+- [-] Read the internal (local-only) findings note §§ 1–3 for the full feature inventory of the three external reference suites — every row is in scope for Phase 6
 - [-] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
 
 ## Context
 
-This roadmap is **meta** — it restructures the other roadmaps. The `step-99-` prefix is a deliberate out-of-band marker so it sorts last in the dashboard and does not collide with the new step-1…step-N sequence it produces. After all phases close, this file and `NEXT-ACTIONS.md` both archive.
+This roadmap is **meta** — it restructures the other roadmaps. The `step-99-` prefix is a deliberate out-of-band marker so it sorts last in the dashboard and does not collide with the new step-1…step-N sequence it produces. After all phases close, this file and the internal (local-only) north-star NEXT-ACTIONS note both archive.
 
-- **Source of truth:** [`../../audits/2026-05-14-north-star/NEXT-ACTIONS.md`](../../audits/2026-05-14-north-star/NEXT-ACTIONS.md)
-- **Synthesis + verdicts:** [`../../audits/2026-05-14-north-star/council-synthesis.md`](../../audits/2026-05-14-north-star/council-synthesis.md)
-- **External feature inventory:** [`../../audits/2026-05-14-north-star/external-findings.md`](../../audits/2026-05-14-north-star/external-findings.md)
-- **Audit bundle:** [`../../audits/2026-05-14-north-star/`](../../audits/2026-05-14-north-star/)
+- **Source of truth:** an internal (local-only) north-star NEXT-ACTIONS note
+- **Synthesis + verdicts:** an internal (local-only) council-synthesis note
+- **External feature inventory:** an internal (local-only) findings note
+- **Audit bundle:** the internal (local-only) north-star audit bundle
 
 ## Domination Mandate (user override · 2026-05-14)
 
-The council synthesis recommended a **shrunk** scope for the schema rework (`model_tier` + `## Deep Reference` only, defer harmonist-full) on solo-maintainer grounds. The maintainer has **superseded** that verdict with an explicit Total Dominance directive: the package must cover the full feature set of three external repos so that they become unnecessary for our use case.
+The council synthesis recommended a **shrunk** scope for the schema rework (`model_tier` + `## Deep Reference` only, defer full schema parity) on solo-maintainer grounds. The maintainer has **superseded** that verdict with an explicit Total Dominance directive: the package must cover the full feature set of three external reference suites so that they become unnecessary for our use case.
 
-| Repo | Role in directive |
+| Reference | Role in directive |
 |---|---|
-| [`JuliusBrussee/caveman`](https://github.com/JuliusBrussee/caveman) | Token economy — measured, intensity-ladder, in-place condense, statusline |
-| [`ruvnet/ruflo`](https://github.com/ruvnet/ruflo) | Cost tracker, smoke contracts, per-plugin ADRs, topology, MCP citations |
-| [`GammaLabTechnologies/harmonist`](https://github.com/GammaLabTechnologies/harmonist) | Schema-driven registry, migrations, `distinguishes_from`, runtime hooks, correlation IDs |
+| External token-economy reference | Token economy — measured, intensity-ladder, in-place condense, statusline |
+| External cost-tracker reference | Cost tracker, smoke contracts, per-plugin ADRs, topology, MCP citations |
+| External schema-registry reference | Schema-driven registry, migrations, `distinguishes_from`, runtime hooks, correlation IDs |
 
-**Acceptance rule:** every row in [`external-findings.md`](../../audits/2026-05-14-north-star/external-findings.md) §§ 1–3 must end the project as either:
+**Acceptance rule:** every row in the internal (local-only) findings note §§ 1–3 must end the project as either:
 
 - `[x] covered` — we have an equivalent or stronger mechanism, cited file:line, OR
 - `[~] superseded` — we have a different mechanism that solves the same user problem better, with one-line justification, OR
@@ -53,7 +53,7 @@ The council synthesis recommended a **shrunk** scope for the schema rework (`mod
 
 Zero `[!]` rows at v3.0.0 tag = G5 green = redundancy achieved.
 
-**Breaking changes are permitted.** Field renames, file moves, schema version bumps, default flips — all in scope. Migration registry (harmonist pattern) must carry the load.
+**Breaking changes are permitted.** Field renames, file moves, schema version bumps, default flips — all in scope. Migration registry (external-reference schema pattern) must carry the load.
 
 ## Phase 1: Renames (6 × `git mv`) — superseded 2026-05-16
 
@@ -78,9 +78,9 @@ Each draft uses the `roadmap-writing` skill. None of these touch existing roadma
 
 - [x] **Step 1 — `step-2-skill-inventory-rationalization.md` (P0, NEW):** drafted 2026-05-16.
 - [x] **Step 2 — `step-4-measurement-and-benchmark.md` (P1):** drafted 2026-05-16.
-- [x] **Step 3 — `step-5-schema-rigor.md` (P3, **FULL SCOPE per Domination Mandate**):** drafted 2026-05-16 — full Harmonist suite per Domination Mandate (overrides the council's two-field minimum).
-- [x] **Step 4 — `step-10-telegraph-parity.md` (NEW · Domination Mandate):** drafted 2026-05-16 — covers every row of [`external-findings.md` § 1](../../audits/2026-05-14-north-star/external-findings.md).
-- [x] **Step 5 — `step-11-ruflo-parity.md` (NEW · Domination Mandate):** drafted 2026-05-16 — covers every row of [`external-findings.md` § 2](../../audits/2026-05-14-north-star/external-findings.md).
+- [x] **Step 3 — `step-5-schema-rigor.md` (P3, **FULL SCOPE per Domination Mandate**):** drafted 2026-05-16 — full external-reference schema suite per Domination Mandate (overrides the council's two-field minimum).
+- [x] **Step 4 — token-economy parity roadmap (NEW · Domination Mandate, internal/local-only):** drafted 2026-05-16 — covers every row of the internal (local-only) findings note § 1.
+- [x] **Step 5 — cost-tracker parity roadmap (NEW · Domination Mandate, internal/local-only):** drafted 2026-05-16 — covers every row of the internal (local-only) findings note § 2.
 
 ## Phase 3: Verification
 
@@ -95,18 +95,18 @@ After Phases 1 + 2 land. Each gate is a runnable check.
 
 This phase exists only to keep the parked decision visible. **No action items execute here — the gate is owned by `step-4-measurement-and-benchmark.md` Phase closeout.**
 
-- [x] **Step 1 — Park the kill-criterion in `docs/contracts/`:** drafted 2026-05-16 → [`condensation-default-kill-criterion.md`](../../docs/contracts/condensation-default-kill-criterion.md). Names the rule per [`council-synthesis.md` § 7](../../audits/2026-05-14-north-star/council-synthesis.md).
+- [x] **Step 1 — Park the kill-criterion in `docs/contracts/`:** drafted 2026-05-16 → [`condensation-default-kill-criterion.md`](../../docs/contracts/condensation-default-kill-criterion.md). Names the rule per an internal (local-only) council-synthesis note § 7.
 - [x] **Step 2 — Cross-reference from `step-4-measurement-and-benchmark.md`:** Phase 6 Step 2 of `step-4` now cites [`condensation-default-kill-criterion.md`](../../docs/contracts/condensation-default-kill-criterion.md) and the decision table. The closeout in `step-4` owns the verdict; this roadmap does not.
 
 ## Phase 5: External Parity Coverage (Domination Mandate)
 
 Produced after step-10 + step-11 + step-5 (full schema) ship their respective acceptance gates. **Output is verifiable, not narrative.** Each parity doc is a checkbox table cited row-by-row against `external-findings.md`.
 
-- [-] **Step 1 — `docs/parity/telegraph.md`:** One row per [`external-findings.md` § 1](../../audits/2026-05-14-north-star/external-findings.md) line. Each row: `[x] covered by <file:line>` · `[~] superseded by <approach>` · or `[!] gap` (+ follow-up issue number). Zero `[!]` rows required.
-- [-] **Step 2 — `docs/parity/ruflo.md`:** Same shape, against [`external-findings.md` § 2](../../audits/2026-05-14-north-star/external-findings.md). Zero `[!]` rows required.
-- [-] **Step 3 — `docs/parity/harmonist.md`:** Same shape, against [`external-findings.md` § 3](../../audits/2026-05-14-north-star/external-findings.md). Zero `[!]` rows required.
-- [-] **Step 4 — `docs/parity/README.md`:** Index over the three docs + composite scorecard refresh (replaces [`external-findings.md` § 5](../../audits/2026-05-14-north-star/external-findings.md)). Every "–" cell from the original scorecard must now be `+` or `=` with a cited mechanism.
-- [-] **Step 5 — `task bench` redundancy verdict:** Benchmark run produces tokens-saved / cost / selection-accuracy / quality numbers that match or beat telegraph's published table (avg 65 %, 22–87 % range) on our 25-prompt corpus. Numbers checked into `docs/parity/bench.json`.
+- [-] **Step 1 — `docs/parity/token-economy.md`:** One row per the internal (local-only) findings note § 1 line. Each row: `[x] covered by <file:line>` · `[~] superseded by <approach>` · or `[!] gap` (+ follow-up issue number). Zero `[!]` rows required.
+- [-] **Step 2 — `docs/parity/cost-tracker.md`:** Same shape, against the internal (local-only) findings note § 2. Zero `[!]` rows required.
+- [-] **Step 3 — `docs/parity/schema-registry.md`:** Same shape, against the internal (local-only) findings note § 3. Zero `[!]` rows required.
+- [-] **Step 4 — `docs/parity/README.md`:** Index over the three docs + composite scorecard refresh (replaces the internal (local-only) findings note § 5). Every "–" cell from the original scorecard must now be `+` or `=` with a cited mechanism.
+- [-] **Step 5 — `task bench` redundancy verdict:** Benchmark run produces tokens-saved / cost / selection-accuracy / quality numbers that match or beat the external token-economy reference's published table (avg 65 %, 22–87 % range) on our 25-prompt corpus. Numbers checked into `docs/parity/bench.json`.
 
 ## Phase 6: Closeout
 
@@ -114,7 +114,7 @@ After Phases 1–5 all close. This roadmap and its source spec both retire.
 
 - [-] **Step 1 — Confirm all new roadmaps + renames + parity docs are committed and on the default branch.**
 - [-] **Step 2 — Archive `step-99-north-star-restructure.md`:** `git mv` into `agents/roadmaps/archive/` with a one-line completion note appended (date + commit chain + tag).
-- [-] **Step 3 — Delete `agents/evidence/audits/2026-05-14-north-star/NEXT-ACTIONS.md`:** Pending-surface is no longer needed. The rest of the audit bundle (`external-findings.md`, `internal-audit.md`, `council-*.md`, `north-star-plan.md`) stays as historical record.
+- [-] **Step 3 — Delete the internal (local-only) north-star NEXT-ACTIONS note:** Pending-surface is no longer needed. The rest of the internal (local-only) audit bundle stays as historical record.
 - [-] **Step 4 — Regenerate `agents/roadmaps-progress.md`:** Dashboard should now show the post-restructure active set (step-1 → step-11 with step-2/4/5/10/11 newly created; step-99 archived).
 - [-] **Step 5 — Tag v3.0.0 "Senior-Dev Bar reached":** Only after G0–G5 all green. Tag commit references the parity index and the bench JSON.
 
@@ -129,7 +129,7 @@ Phase 1–6 all green. After closeout, the `step-1` → `step-11` sequence is th
 | **G2 — enforced laws** | step-3 + step-6 | `task ci:strict` blocks tag push on linter WARN > 0; runtime hooks behind measurement baseline |
 | **G3 — schema rigor (full)** | step-5 | 100 % skills declare `model_tier`; ≥ 80 % skills > 80 lines use `## Deep Reference`; `schema_version` + migration registry live; `distinguishes_from` + `disambiguation` populated where overlaps detected; `domains:` filter active |
 | **G4 — adoption ramp** | step-7 + step-8 + step-9 | Role bundles install; standalone-vs-supercharged table on every skill |
-| **G5 — external redundancy (Domination Mandate)** | step-10 + step-11 + Phase 5 | `docs/parity/{telegraph,ruflo,harmonist}.md` all zero `[!]` rows; `task bench` ≥ telegraph's published deltas; composite scorecard all `+` or `=` |
+| **G5 — external redundancy (Domination Mandate)** | step-10 + step-11 + Phase 5 | `docs/parity/{token-economy,cost-tracker,schema-registry}.md` all zero `[!]` rows; `task bench` ≥ the external token-economy reference's published deltas; composite scorecard all `+` or `=` |
 
 All six green = v3.0.0 tagged.
 

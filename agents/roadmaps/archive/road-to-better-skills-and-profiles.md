@@ -8,7 +8,7 @@ complexity: structural
 re-scoped 2026-05-01 to Thinking Layer only after AI #5 review.
 **Started:** 2026-05-01
 **Trigger:** Multi-AI review of the skill ecosystem (personas, stakeholder lens,
-per-skill tools, orchestration), benchmarked against `alirezarezvani/claude-skills`.
+per-skill tools, orchestration), benchmarked against `an external skill suite`.
 **Mode:** Block sequencing locked for Thinking Layer (B → A → C → D-pilot → F).
 Distribution/adoption/orchestration blocks (H · I · G · Q) moved to sibling
 roadmap `road-to-distribution-and-adoption.md` and stay **out-of-horizon**.
@@ -194,10 +194,10 @@ this phase.
 
 | # | Source / model | Date | Scope | Status |
 |---|---|---|---|---|
-| 1 | AI #1 (compared with `alirezarezvani/claude-skills`) | 2026-05-01 | Full PR #29 + repo structure + persona/skill comparison | Captured below |
+| 1 | AI #1 (compared with `an external skill suite`) | 2026-05-01 | Full PR #29 + repo structure + persona/skill comparison | Captured below |
 | 2 | AI #2 (deep comparison + roadmap-architect hat) | 2026-05-01 | Repo dimensions table, PR #29 critique, claude-skills weaknesses, proposed roadmap blocks A–F | Captured below (multi-part) |
 | 3 | AI #3 (positioning recommendation) | 2026-05-01 | One-paragraph strategic stance + top-3 next-improvement framing | Captured below |
-| 4 | Benchmark — `alirezarezvani/claude-skills` (deep read, not external AI) | 2026-05-01 | `ORCHESTRATION.md`, persona `TEMPLATE` + 3 reference personas, `SKILL-AUTHORING-STANDARD.md`, `SKILL_PIPELINE.md`, `/plugin-audit`, multi-tool `INSTALLATION.md` | Captured below |
+| 4 | Benchmark — `an external skill suite` (deep read, not external AI) | 2026-05-01 | `ORCHESTRATION.md`, persona `TEMPLATE` + 3 reference personas, `SKILL-AUTHORING-STANDARD.md`, `SKILL_PIPELINE.md`, `/plugin-audit`, multi-tool `INSTALLATION.md` | Captured below |
 | 5 | AI Council iter-1 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, mode=prompt, 12 OQs) | 2026-05-05 | Schema-lock (A-OQ1–A-OQ3), domain taxonomy (B-OQ1–B-OQ2), naming/integration collisions (C-OQ1–C-OQ2, F-OQ1–F-OQ2), Python pilot scoping (D-OQ1–D-OQ2), cross-cutting (CC-OQ1: AgentHub adoption · CC-OQ2: 178-step legacy cleanup) | Verdicts folded into checklist below |
 
 ## Council iter-1 verdicts (applied to checklist)
@@ -220,7 +220,7 @@ this phase.
 
 ## Raw feedback — AI #1
 
-**Comparison subject:** `alirezarezvani/claude-skills` (11.2k stars, 235 skills, 9 domains).
+**Comparison subject:** `an external skill suite` (11.2k stars, 235 skills, 9 domains).
 
 ### Strengths called out for agent-config
 
@@ -455,7 +455,7 @@ The next leverage point is **not "more skills"**. It is:
 
 Treat as **strategic-stance input**, not implementation guidance.
 
-## Raw benchmark — alirezarezvani/claude-skills (deep read)
+## Raw benchmark — an external skill suite (deep read)
 
 **Type:** External repository benchmark, not AI feedback. Goal per user:
 *"übernehmen (angepasst, nicht einfach kopieren), was wir brauchen können. Wir
@@ -740,7 +740,7 @@ governed alternative to claude-skills that engineering teams actually want.*
 ## Multi-client expansion — verified gap & action plan
 
 **Note:** Captured only. No phase scaffolding yet — promote to a separate roadmap (or new phase here) when the user signals.
-**Verified:** 2026-05-01 against `alirezarezvani/claude-skills` live README.
+**Verified:** 2026-05-01 against `an external skill suite` live README.
 
 ### Gap (verified)
 

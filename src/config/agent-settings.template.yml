@@ -610,3 +610,23 @@ update_check:
 # tenants that disable diagnostics surface-wide).
 explain:
   enable_last: true
+
+# ─── secrets ────────────────────────────────────────────────────────────────
+# Local-only secret material. This whole file is gitignored, so the key never
+# enters the tracked tree.
+#
+# link_encryption_key — symmetric key used to encrypt/decrypt stored
+# third-party package links (e.g. the source / author / pin fields in
+# agents/settings/contexts/skills-provenance.yml). Source-identifying values
+# are committed only as `ENC1:` tokens; this key is what reads them back.
+#
+# Resolution order (see src/scripts/_lib/link_crypto.py):
+#   1. this project file  → secrets.link_encryption_key
+#   2. user-global        → ~/.event4u/agent-config/agent-settings.yml
+# Decryption tries the project key first and falls back to the user-global
+# key. Keep the key in your user-global settings so encrypted provenance stays
+# recoverable across fresh clones.
+#
+# Generate one:  python3 src/scripts/_lib/link_crypto.py keygen
+# secrets:
+#   link_encryption_key: "<paste generated key here>"

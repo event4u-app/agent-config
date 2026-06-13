@@ -22,7 +22,7 @@ design mode): ship discovery read-only first, use it as the demand test.
 A real gate. If the demand signal is weak, the rational outcome is to stop here.
 
 - [x] **Step 1:** Add a one-question demand probe to the next release notes / changelog: "Do you use multiple AI coding agents in the same project, and is keeping MCP-server config in sync across them painful?" (very / somewhat / single-agent / self-scripted). Record where responses land. <!-- done: probe added to CHANGELOG.md ## [Unreleased] "Feedback wanted" callout; responses land in GitHub Discussions. -->
-- [x] **Step 2:** Verify Smithery's actual client coverage — does its CLI configure Augment / Windsurf / Cline / Copilot, or only Claude + Cursor? Capture the verbatim client list. If Smithery already covers our full agent set read-write, reassess whether even discovery is non-duplicative. <!-- done 2026-06-11: from smithery-ai/cli src/config/clients.ts (VALID_CLIENTS, 23 entries): Claude Code, VS Code, VS Code Insiders, Gemini CLI, Codex, Cursor, Claude Desktop, Witsy, Enconvo, Roo Code, BoltAI, Amazon Bedrock, Amazon Q, Tome, LibreChat, Windsurf, Cline, OpenCode, Goose, Antigravity, Kiro, Zed, Trae. Covers 5/6 of our agents read-WRITE (Claude Code, Cursor, Windsurf, Cline, VS Code/Copilot) — MISSING Augment. Smithery does install (write), not read-only discovery, and is single-registry (its own). Differentiation survives but duplication risk is material → council gate. -->
+- [x] **Step 2:** Verify the comparable external installer's actual client coverage — does its CLI configure Augment / Windsurf / Cline / Copilot, or only Claude + Cursor? Capture the verbatim client list. If that installer already covers our full agent set read-write, reassess whether even discovery is non-duplicative. <!-- done 2026-06-11: from the external installer's client config (VALID_CLIENTS, 23 entries): Claude Code, VS Code, VS Code Insiders, Gemini CLI, Codex, Cursor, Claude Desktop, Witsy, Enconvo, Roo Code, BoltAI, Amazon Bedrock, Amazon Q, Tome, LibreChat, Windsurf, Cline, OpenCode, Goose, Antigravity, Kiro, Zed, Trae. Covers 5/6 of our agents read-WRITE (Claude Code, Cursor, Windsurf, Cline, VS Code/Copilot) — MISSING Augment. The external installer does install (write), not read-only discovery, and is single-registry (its own). Differentiation survives but duplication risk is material → council gate. -->
 - [x] **Step 3:** Verify the official registry `/v0/servers` query contract and Glama API auth requirement (does the Glama `/api/mcp/v1` endpoint need a key?). Record the verified request shapes. <!-- done 2026-06-11 (live-checked): Official registry GET https://registry.modelcontextprotocol.io/v0/servers?search=<q>&limit=<n>&cursor=<c> → 200 NO AUTH; response {servers:[{server:<server.json>,_meta:{...registry/official:{status,publishedAt,updatedAt,isLatest}}}],metadata:{nextCursor,count}}. server.json fields: $schema,name,description,title,version,repository{url,source,subfolder},packages[]{registryType,registryBaseUrl,identifier,version,runtimeHint,transport{type},runtimeArguments[],environmentVariables[]{name,description,isRequired,isSecret,default}},remotes[]{type,url}. Glama GET https://glama.ai/api/mcp/v1/servers?first=<n>&after=<cursor> → 200 NO AUTH (key NOT required); response {pageInfo{endCursor,hasNextPage,...},servers[]{id,name,namespace,slug,description,attributes[],environmentVariablesJsonSchema(JSON-Schema),repository{url},spdxLicense{name,url},tools[],url}}. -->
 - [x] **Step 4:** Gate decision — surface findings as numbered options (proceed to Phase 1 / pause for more signal / stop per ADR-086 Option C). Do not enter Phase 1 without an explicit proceed. <!-- DECIDED 2026-06-11: STOP per ADR-086 Option C. AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, design mode) converged STOP — see "Gate outcome" below. No explicit proceed → Phases 1–3 cancelled. -->
 
@@ -34,19 +34,20 @@ on STOP per ADR-086 Option C**, on three grounds:
 
 1. **Demand gate failed** — zero responses to the demand probe; ADR-086 itself made
    "weak signal → stop" the gate condition.
-2. **Sequencing inversion** — Smithery already does the *harder* capability (install,
-   read-write) for **5 of our 6 target agents** (Claude Code, Cursor, Windsurf, Cline,
-   VS Code/Copilot; verified `src/config/clients.ts`). A read-only discovery tool for
-   the same 5 is strictly weaker; the lone gap is Augment.
+2. **Sequencing inversion** — a comparable external installer already does the *harder*
+   capability (install, read-write) for **5 of our 6 target agents** (Claude Code, Cursor,
+   Windsurf, Cline, VS Code/Copilot; verified from its client config). A read-only
+   discovery tool for the same 5 is strictly weaker; the lone gap is Augment.
 3. **Surviving value is doc-shaped, not tool-shaped** — registry-agnostic coverage is
    a comparison matrix (cheap doc), not a 500-line CLI. Building the CLI also creates
-   sunk-cost bias toward reimplementing (vs. wrapping) Smithery in any future Phase 2.
+   sunk-cost bias toward reimplementing (vs. wrapping) the external installer in any
+   future Phase 2.
 
 **Follow-up recommendations (not built here — net-new scope / external):**
-contribute Augment support to `smithery-ai/cli` (`VALID_CLIENTS`); ship a registry
-coverage-matrix doc (official / Glama / Smithery) to capture the registry-agnostic
-value. **Reopen criteria:** 5+ demand responses citing a need Smithery cannot serve,
-OR Smithery registry-locks / won't-fix Augment / shuts down.
+contribute Augment support upstream to the external installer's client list; ship a
+registry coverage-matrix doc (official / Glama / the external installer) to capture the
+registry-agnostic value. **Reopen criteria:** 5+ demand responses citing a need the
+external installer cannot serve, OR it registry-locks / won't-fix Augment / shuts down.
 
 ## Phase 1: Registry query + normalize to server.json (CANCELLED — gate STOP)
 
