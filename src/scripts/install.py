@@ -3424,19 +3424,28 @@ def _deploy_global_content(
         # partial copy can never trigger deletions.
         inv_mod = _inventory_mod()
         inventory = inv_mod.load_inventory()
+        reaped: list = []
+        # Inventory-diff path: deletes files THIS anchor recorded in a prior
+        # deploy that the current bundle dropped. Covers every file type, but
+        # only what a previous inventory actually recorded.
         if tool_id in inventory.get("tools", {}):
-            reaped = inv_mod.reap_stale(
+            reaped += inv_mod.reap_stale(
                 tool_id, anchor, current_files, inventory,
             )
-        else:
-            # First deploy after the upgrade — no inventory to diff against.
-            # Fall back to marker-based ownership: every previously deployed
-            # .md carries the injected `package:` tag (P5.1), so tagged
-            # orphans under the plan's destinations are provably ours.
-            reaped = inv_mod.bootstrap_reap_tagged(
-                anchor, [dest_sub for _, dest_sub in plan],
-                current_files, PACKAGE_TAG_ID,
-            )
+        # Tag-based sweep: runs on EVERY deploy, not just first-run. It is the
+        # only path that catches package-tagged `.md` orphans the inventory
+        # diff cannot see — files deployed by a pre-inventory installer (never
+        # recorded), or surviving a since-replaced inventory (e.g. post-6.0.0
+        # command renames like create-pr → pr/create). Ownership proof is the
+        # injected `package:` tag (P5.1), so untagged user files in shared
+        # anchors are never touched. Idempotent: a clean tree yields nothing.
+        # Order matters: reap_stale unlinks first, so this rglob cannot
+        # re-find an already-deleted path — do not reorder these two.
+        reaped += inv_mod.reap_tagged_orphans(
+            anchor, [dest_sub for _, dest_sub in plan],
+            current_files, PACKAGE_TAG_ID,
+        )
+        reaped = sorted(set(reaped))
         # Record the UNexpanded anchor (`~/.agents/`) so the inventory stays
         # byte-identical across homes (GUI/CLI parity) and home relocations.
         inv_mod.record_deploy(tool_id, anchor_raw, current_files, inventory)
