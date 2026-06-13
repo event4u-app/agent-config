@@ -47,8 +47,26 @@ function toolRowAsDict(t: ToolRow): Record<string, unknown> {
 /** Python error subclass marker so main() can mirror the FileNotFoundError branch. */
 class FileNotFoundLikeError extends Error {}
 
+// Python's stdlib sqlite3 emits nothing on stderr; node:sqlite is flagged
+// experimental on node 22 and prints an `ExperimentalWarning: SQLite …` line
+// to stderr on first import (stable / silent on node >= 23). Drop only that
+// specific warning so the twin's stderr stays byte-identical to the Python
+// original across node versions. Installed once, narrowly matched.
+let _sqliteWarningSilenced = false;
+function _silenceSqliteExperimentalWarning(): void {
+    if (_sqliteWarningSilenced) return;
+    _sqliteWarningSilenced = true;
+    const orig = process.emitWarning.bind(process);
+    process.emitWarning = ((warning: string | Error, ...rest: unknown[]): void => {
+        const text = typeof warning === 'string' ? warning : (warning?.message ?? '');
+        if (/SQLite is an experimental/i.test(text)) return;
+        (orig as (w: string | Error, ...a: unknown[]) => void)(warning, ...rest);
+    }) as typeof process.emitWarning;
+}
+
 /** Lazy `node:sqlite` import — keeps the module loadable on a runtime without it. */
 async function _loadSqlite(): Promise<typeof import('node:sqlite')> {
+    _silenceSqliteExperimentalWarning();
     try {
         return await import('node:sqlite');
     } catch (exc) {

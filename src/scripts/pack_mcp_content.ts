@@ -195,7 +195,7 @@ function _count_kinds(uris: Record<string, UriEntry>): Record<string, number> {
     for (const entry of Object.values(uris)) {
         const kind = entry.kind;
         if (kind in counts) {
-            counts[kind] += 1;
+            counts[kind] = (counts[kind] ?? 0) + 1;
         }
     }
     return counts;
