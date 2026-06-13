@@ -89,6 +89,17 @@ if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)';
         echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
         exit 1
     fi
+
+    # Empty-roadmap backstop — refuse 0-byte / whitespace-only roadmap files.
+    # An external "chore: add uncomitted roadmaps" auto-commit has twice staged
+    # 0-byte placeholders; this gate stops the class from landing.
+    if ! python3 src/scripts/lint_empty_roadmaps.py --quiet; then
+        echo ""
+        echo "❌  Commit blocked — empty (0-byte / whitespace-only) roadmap file staged."
+        python3 src/scripts/lint_empty_roadmaps.py || true
+        echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
+        exit 1
+    fi
 fi
 
 # Phase-0 pack gates (road-to-6.0.0-D) — pack.yaml schema + dependency/DAG +
