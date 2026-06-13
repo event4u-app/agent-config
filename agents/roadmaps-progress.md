@@ -6,10 +6,10 @@
 
 ## Overall
 
-**1 / 113 steps done · 1%**
+**2 / 116 steps done · 2%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-6.0.0-final-readiness.md](roadmaps/road-to-6.0.0-final-readiness.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 30 | 20 | 1 | 4 | 5 | ░░░░░░░░░░ 5% |
+| 2 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
 | 3 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -41,14 +41,14 @@
 
 ### [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md)
 
-**Competitive Borrow** — 1 / 21 done (5%)
+**Competitive Borrow** — 2 / 24 done (8%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Reality check (do NOT build these — already shipped) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 1 | Adopt-now plate (4 units + 1 rolling docs task) | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
+| 1 | Adopt-now plate (4 units + 1 rolling docs task) | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
 | 2 | out-of-horizon (deferred-with-trigger) | ⏭️ skipped | 0 | 0 | 4 | 0 | 0% |
-| 3 | Dropped (reject reason; not carried forward) | ⬜ not started | 4 | 0 | 0 | 5 | 0% |
+| 3 | Dropped (reject reason; not carried forward) | 🟡 in progress | 4 | 1 | 0 | 7 | 20% |
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)
 
