@@ -7,6 +7,7 @@ intent: "Open a pull request with a generated description and stripped attributi
 routes_to: [git-workflow]
 replaces: [create-pr]
 tier: 1
+visibility: advanced
 cluster: git-pr-create
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes

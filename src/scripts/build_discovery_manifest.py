@@ -318,6 +318,16 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         if category == "command" and isinstance(fm, dict):
             if fm.get("tier") is not None:
                 entry["tier"] = fm["tier"]
+            # ADR-092: `visibility:` is the named source of truth; the integer
+            # `tier:` is a back-compat alias. Dual-emit BOTH into the manifest
+            # (a published data contract) during the deprecation window so
+            # external consumers reading the integer key keep working. Prefer
+            # the explicit field; derive from tier when absent.
+            _vis = fm.get("visibility")
+            if _vis is None and fm.get("tier") is not None:
+                _vis = {0: "visible", 1: "advanced", 2: "internal"}.get(fm["tier"])
+            if _vis is not None:
+                entry["visibility"] = _vis
             for _k in ("intent", "routes_to", "replaces"):
                 if fm.get(_k) is not None:
                     entry[_k] = fm[_k]

@@ -2,7 +2,7 @@
 /**
  * Portability checker for agent-config packages.
  *
- * TypeScript twin of `src/scripts/check_portability.py` (ADR-090). Mirrors the
+ * TypeScript twin of `src/scripts/check_portability.py` (ADR-092). Mirrors the
  * Python CLI contract EXACTLY — same flags (`--format`, `--root`), same exit
  * codes (0 clean, 1 violations, 3 internal error), same stdout/stderr split,
  * same finding text, same scan scope and file-walk order. No behaviour

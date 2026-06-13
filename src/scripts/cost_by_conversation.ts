@@ -3,7 +3,7 @@
  * Group cost-tracking sessions by conversation_id (Ruflo `conversation.mjs`
  * `5b71c7a` ref).
  *
- * TypeScript twin of `src/scripts/cost_by_conversation.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/cost_by_conversation.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8e). Public surface mirrors the Python
  * module exactly: same CLI flags (`--input`, `--format`), same exit code (0),
  * same stdout, and byte-identical `json.dumps(..., indent=2)` output.

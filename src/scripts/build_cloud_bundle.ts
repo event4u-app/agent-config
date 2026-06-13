@@ -2,7 +2,7 @@
 /**
  * build_cloud_bundle.ts — package skills as Anthropic Skills ZIP bundles.
  *
- * TypeScript twin of `src/scripts/build_cloud_bundle.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/build_cloud_bundle.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the mutually-exclusive `--skill` / `--all` / `--check` flags,
  * `--out` / `--strict-budget` / `--clean`, exit codes, the stdout/stderr
@@ -15,7 +15,7 @@
  * `detect_cloud_marker` surfaces the Python original imports) for tier
  * classification.
  *
- * DIVERGENCE CANDIDATE (documented under the ADR-090 process):
+ * DIVERGENCE CANDIDATE (documented under the ADR-092 process):
  * the raw ZIP container bytes are NOT byte-identical to Python's
  * `zipfile.ZipFile(..., ZIP_DEFLATED)` output — the two differ in
  * deflate parameters, the fixed timestamp, the version/extra/external-attr

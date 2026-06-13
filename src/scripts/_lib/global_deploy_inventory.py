@@ -191,20 +191,30 @@ def reap_stale(
     return deleted
 
 
-def bootstrap_reap_tagged(
+def reap_tagged_orphans(
     anchor: Path,
     dest_subs: list[str],
     current_files: set[str],
     package_tag: str,
 ) -> list[Path]:
-    """First-run reaping for PRE-inventory installs (marker-based ownership).
+    """Marker-based reaping of package-tagged orphans — runs EVERY deploy.
 
-    Existing installs in the wild predate the inventory sidecar, so
-    :func:`reap_stale` has nothing to diff against on the first upgraded
-    deploy — the legacy mess (renamed skills, retired command-as-skill
-    entries, the 2026-05-13 colon-named shapes) would rot forever. Every
-    deployed ``.md`` however carries the injected ``package:`` frontmatter
-    tag (install P5.1), which is exactly the ownership proof reaping needs.
+    This is the self-healing reaping path, complementary to
+    :func:`reap_stale` (which can only diff against the *previous*
+    inventory). It is the **only** path with ownership proof independent
+    of inventory history: every deployed ``.md`` carries the injected
+    ``package:`` frontmatter tag (install P5.1), so a tagged file absent
+    from the current bundle is provably our orphan regardless of whether
+    any inventory ever recorded it.
+
+    Why it must run every deploy, not just on first-run: an install that
+    predates the inventory sidecar never recorded its files, so once a
+    tool *does* get an inventory entry, :func:`reap_stale` has no record
+    of those legacy files to diff against — they would rot forever (the
+    renamed skills, retired command-as-skill entries, 2026-05-13
+    colon-named shapes, and post-6.0.0 command renames like
+    ``create-pr`` → ``pr/create``). Running this sweep unconditionally
+    closes that gap; it is idempotent (a clean tree yields no deletions).
 
     Deletes ``.md`` files under ``<anchor>/<dest_sub>`` that (a) carry
     ``package: <package_tag>`` in their frontmatter and (b) are not in the

@@ -3,6 +3,7 @@ model_tier: medium
 name: bug-fix
 pack: engineering-base
 tier: 2
+visibility: internal
 skills: [bug-analyzer, pest-testing]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
 council_depth: deep

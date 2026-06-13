@@ -1,7 +1,7 @@
 /**
  * Block D pilot tools for skill discovery and persona auditing.
  *
- * TypeScript twin of `src/scripts/skill_tools/__init__.py` (ADR-090,
+ * TypeScript twin of `src/scripts/skill_tools/__init__.py` (ADR-092,
  * Phase 8 Wave 8h). The Python package marker carries only a module
  * docstring; this index mirrors it as the package entry comment.
  *

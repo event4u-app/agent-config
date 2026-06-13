@@ -2,7 +2,7 @@
 /**
  * Markdown language checker — enforces language-and-tone § ".md files are ALWAYS English".
  *
- * TypeScript twin of `src/scripts/check_md_language.py` (ADR-090, Phase 4 /
+ * TypeScript twin of `src/scripts/check_md_language.py` (ADR-092, Phase 4 /
  * Wave 4c). The CLI contract is mirrored EXACTLY — positional `paths`,
  * `--format` / `--quiet` flags, exit codes (0 clean, 1 violations, 3
  * internal error), stdout/stderr split, byte-identical finding messages,

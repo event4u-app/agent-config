@@ -3,6 +3,7 @@ model_tier: medium
 name: fix-refs
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: fix
 sub: refs
 skills: [check-refs]

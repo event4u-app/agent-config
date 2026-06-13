@@ -2,7 +2,7 @@
  * Suppress recently-shown suggestions per conversation.
  *
  * TypeScript twin of `src/scripts/command_suggester/cooldown.py`
- * (ADR-090 py2ts).
+ * (ADR-092 py2ts).
  *
  * Cooldown key is `(command_name, evidence)` so two distinct triggers
  * for the same command (e.g. `/commit` from "git status shows changes"
@@ -14,7 +14,7 @@
  * state). Phase 5 wires the per-conversation `disabled_for_conversation`
  * flag into the same store.
  *
- * Timing note (ADR-090 OS/clock determinism): the wall-clock comparison
+ * Timing note (ADR-092 OS/clock determinism): the wall-clock comparison
  * in `is_cooled_down` is time-dependent. Tests inject a fixed `now`
  * (the Python tests do the same via the `now=` kwarg); golden parity
  * never byte-compares a raw timestamp, only the structural decision.

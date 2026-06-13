@@ -3,6 +3,7 @@ model_tier: medium
 name: knowledge-ingest
 pack: product-discovery
 tier: 2
+visibility: internal
 cluster: knowledge
 sub: ingest
 description: Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.

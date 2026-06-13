@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: memory-learn-low-impact
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: memory
 sub: learn-low-impact
 skills: [ai-council, upstream-contribute]
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 # /memory learn-low-impact

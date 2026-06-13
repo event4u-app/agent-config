@@ -2,7 +2,7 @@
 /**
  * Permissions-audit entry-gate for the global install tree.
  *
- * TypeScript twin of `src/scripts/lint_global_paths.py` (ADR-090, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_global_paths.py` (ADR-092, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same policy source,
  * finding messages, finding order, stdout/stderr split, and exit codes.
  *

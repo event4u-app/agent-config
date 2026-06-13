@@ -3,6 +3,7 @@ model_tier: medium
 name: optimize-skills
 pack: meta
 tier: 2
+visibility: internal
 cluster: optimize
 sub: skills
 description: Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.

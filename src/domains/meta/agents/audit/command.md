@@ -3,6 +3,7 @@ model_tier: medium
 name: agents-audit
 pack: meta
 tier: 2
+visibility: internal
 cluster: agents
 sub: audit
 description: Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.

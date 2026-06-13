@@ -3,6 +3,7 @@ model_tier: medium
 name: agents-init
 pack: meta
 tier: 2
+visibility: internal
 cluster: agents
 sub: init
 description: Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.

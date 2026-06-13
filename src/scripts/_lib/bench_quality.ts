@@ -6,7 +6,7 @@
 // assertions against actual output. Without it, we emit `not_collected`
 // per docs/contracts/benchmark-report-schema.md § quality invariants.
 //
-// TypeScript twin of `src/scripts/_lib/bench_quality.py` (ADR-090 py2ts
+// TypeScript twin of `src/scripts/_lib/bench_quality.py` (ADR-092 py2ts
 // Phase 2 / Wave 2a). Scoring math, rubric/regex semantics, and the
 // `not_collected` shape are mirrored exactly; `quality_score` uses
 // Python's round-half-to-even on `round(passing/total, 4)`.

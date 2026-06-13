@@ -3,6 +3,7 @@ model_tier: medium
 name: profile-deactivate
 pack: meta
 tier: 2
+visibility: internal
 cluster: profile
 sub: deactivate
 description: Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns

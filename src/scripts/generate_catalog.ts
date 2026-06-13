@@ -2,7 +2,7 @@
 /**
  * Generate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter.
  *
- * TypeScript twin of `src/scripts/generate_catalog.py` (ADR-090, Phase 8
+ * TypeScript twin of `src/scripts/generate_catalog.py` (ADR-092, Phase 8
  * Wave 8a). Mirrors the Python CLI contract EXACTLY — same stdout lines,
  * same exit codes, byte-identical generated `llms.txt` + `docs/skills-catalog.md`.
  *

@@ -3,6 +3,7 @@ model_tier: medium
 name: sync-agent-settings
 pack: meta
 tier: 2
+visibility: internal
 skills: [sync-agent-settings]
 description: Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 suggestion:

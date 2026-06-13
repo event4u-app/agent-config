@@ -2,7 +2,7 @@
 /**
  * Guard: `CASCADE_ELIGIBLE_KINDS` / `USER_GLOBAL_OVERLAY_KINDS` ↔ docs.
  *
- * TypeScript twin of `src/scripts/check_overlay_cascade_subdirs.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_overlay_cascade_subdirs.py` (ADR-092,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags, exit
  * codes (0 clean, 1 drift, 3 internal error), stdout/stderr split,
  * byte-identical finding messages, and the same `docs/customization.md` table

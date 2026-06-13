@@ -2,7 +2,7 @@
 /**
  * Verify the post-move state matches the pre-move snapshot byte-for-byte.
  *
- * TypeScript twin of `src/scripts/verify_physical_move.py` (ADR-090, Phase 8 /
+ * TypeScript twin of `src/scripts/verify_physical_move.py` (ADR-092, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--snapshot`, `--json`
  * flags, exit codes (0 OK / 1 regression / 2 snapshot-missing), the
  * stdout/stderr split, byte-identical human + JSON output.

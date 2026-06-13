@@ -3,6 +3,7 @@ model_tier: medium
 name: knowledge-cross-repo
 pack: product-discovery
 tier: 2
+visibility: internal
 cluster: knowledge
 sub: cross-repo
 description: Targeted, read-only retrieval over opted-in linked-project siblings (ADR-032 Option A). Pulls a shared type / API contract / config without bulk-including sibling files.

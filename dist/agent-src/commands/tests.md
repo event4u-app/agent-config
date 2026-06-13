@@ -4,6 +4,7 @@ name: tests
 disable-model-invocation: true
 pack: engineering-base
 tier: 2
+visibility: internal
 description: Tests orchestrator — routes to create, execute
 cluster: tests
 type: orchestrator

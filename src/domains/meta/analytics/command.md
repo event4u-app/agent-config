@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: analytics
-pack: meta
+pack: analytics
 tier: 2
+visibility: internal
 description: Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
 cluster: analytics
 type: orchestrator
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - analytics
 ---
 
 # /analytics

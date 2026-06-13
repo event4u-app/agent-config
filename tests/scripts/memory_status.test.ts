@@ -1,6 +1,6 @@
 // Tests for src/scripts/memory_status.ts — backend detection.
 //
-// 1:1 port of tests/test_memory_status.py (pytest → vitest, ADR-090 parity
+// 1:1 port of tests/test_memory_status.py (pytest → vitest, ADR-092 parity
 // contract). The pytest suite monkeypatches `_find_cli`, `_CACHE_FILE`, and
 // `_HEALTH_TIMEOUT_SECONDS` on the module; the TS twin exposes the same
 // override surface via setter seams (ESM `export let` is read-only to

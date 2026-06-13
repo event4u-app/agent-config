@@ -3,7 +3,7 @@
  * Iron Law prominence checker — enforces that any rule file declaring an
  * "Iron Law" places it at the top of the file at H2 level.
  *
- * TypeScript twin of `src/scripts/check_iron_law_prominence.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_iron_law_prominence.py` (ADR-092,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — positional
  * paths (default `.agent-src.uncondensed/rules`), `--format` / `--quiet`
  * flags, exit codes (0 clean, 1 violations, 3 internal error),

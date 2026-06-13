@@ -1,7 +1,7 @@
 /**
  * Vendor-namespaced user-global path resolution.
  *
- * TypeScript twin of `src/scripts/_lib/user_global_paths.py` (ADR-090,
+ * TypeScript twin of `src/scripts/_lib/user_global_paths.py` (ADR-092,
  * Phase 2 / Wave 1 batch B). Mirrors the Python module's public API
  * exactly — same exported snake_case names, same semantics, same
  * path-resolution behavior. Single source of truth for "where does this

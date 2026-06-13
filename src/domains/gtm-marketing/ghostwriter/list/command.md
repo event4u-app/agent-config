@@ -3,6 +3,7 @@ model_tier: inherit
 name: ghostwriter-list
 pack: gtm-marketing
 tier: 2
+visibility: internal
 cluster: ghostwriter
 sub: list
 skills: [ghostwriter]

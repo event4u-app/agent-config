@@ -38,9 +38,14 @@ DOMAINS_DIR = REPO / "src" / "domains"
 COMMANDS_DIR_CONDENSED = REPO / "dist/agent-src" / "commands"
 
 VALID_TIERS = frozenset({"0", "1", "2"})
+# ADR-092: `visibility:` is the named source of truth; `tier:` is the
+# back-compat integer alias. Both are validated; when both are present they
+# MUST agree per this mapping.
+VALID_VISIBILITIES = frozenset({"visible", "advanced", "internal"})
+TIER_TO_VISIBILITY = {"0": "visible", "1": "advanced", "2": "internal"}
 
 
-def parse_tier(text: str) -> str | None:
+def parse_field(text: str, key: str) -> str | None:
     if not text.startswith("---\n"):
         return None
     end = text.find("\n---\n", 4)
@@ -50,8 +55,29 @@ def parse_tier(text: str) -> str | None:
         if ":" not in line:
             continue
         k, _, v = line.partition(":")
-        if k.strip() == "tier":
+        if k.strip() == key:
             return v.strip().strip('"').strip("'")
+    return None
+
+
+def parse_tier(text: str) -> str | None:
+    return parse_field(text, "tier")
+
+
+def visibility_error(text: str) -> str | None:
+    """Validate the visibility field (ADR-092). Returns an error string or None.
+
+    Requires a present + valid visibility, and consistency with the tier alias
+    whenever both are declared.
+    """
+    vis = parse_field(text, "visibility")
+    if vis is None:
+        return "missing visibility"
+    if vis not in VALID_VISIBILITIES:
+        return f"invalid visibility '{vis}'"
+    tier = parse_field(text, "tier")
+    if tier in TIER_TO_VISIBILITY and TIER_TO_VISIBILITY[tier] != vis:
+        return f"visibility '{vis}' disagrees with tier '{tier}' (expected '{TIER_TO_VISIBILITY[tier]}')"
     return None
 
 
@@ -77,31 +103,39 @@ def lint(commands_dir: Path, *, quiet: bool = False) -> int:
 
     missing: list[str] = []
     invalid: list[tuple[str, str]] = []
+    vis_errors: list[tuple[str, str]] = []
 
     for cmd in commands:
         rel = cmd.relative_to(commands_dir).as_posix()
-        tier = parse_tier(cmd.read_text(encoding="utf-8"))
+        text = cmd.read_text(encoding="utf-8")
+        tier = parse_tier(text)
         if tier is None:
             missing.append(rel)
         elif tier not in VALID_TIERS:
             invalid.append((rel, tier))
+        if (ve := visibility_error(text)) is not None:
+            vis_errors.append((rel, ve))
 
-    if missing or invalid:
+    if missing or invalid or vis_errors:
         print(
-            f"❌  lint_command_tiers: {len(missing)} missing, "
-            f"{len(invalid)} invalid (of {len(commands)} commands)",
+            f"❌  lint_command_tiers: {len(missing)} missing tier, "
+            f"{len(invalid)} invalid tier, {len(vis_errors)} visibility "
+            f"(of {len(commands)} commands)",
             file=sys.stderr,
         )
         for name in missing:
             print(f"    missing tier: {name}", file=sys.stderr)
         for name, tier in invalid:
             print(f"    invalid tier '{tier}': {name}", file=sys.stderr)
+        for name, err in vis_errors:
+            print(f"    {err}: {name}", file=sys.stderr)
         print(
-            f"    valid tiers: {sorted(VALID_TIERS)}",
+            f"    valid tiers: {sorted(VALID_TIERS)}; "
+            f"valid visibility: {sorted(VALID_VISIBILITIES)}",
             file=sys.stderr,
         )
         print(
-            "    contract: docs/contracts/command-surface-tiers.md",
+            "    contract: docs/contracts/command-surface-tiers.md (ADR-092)",
             file=sys.stderr,
         )
         return 1
@@ -109,7 +143,7 @@ def lint(commands_dir: Path, *, quiet: bool = False) -> int:
     if not quiet:
         print(
             f"✅  lint_command_tiers: {len(commands)} commands, "
-            f"all tier values valid"
+            f"all tier + visibility values valid"
         )
     return 0
 
@@ -123,30 +157,37 @@ def lint_domain_sources(*, quiet: bool = False) -> int:
             file=sys.stderr,
         )
         return 1
-    missing = [
-        c.relative_to(REPO).as_posix() for c in commands
-        if parse_tier(c.read_text(encoding="utf-8")) is None
-    ]
-    invalid = [
-        (c.relative_to(REPO).as_posix(), t) for c in commands
-        if (t := parse_tier(c.read_text(encoding="utf-8"))) is not None
-        and t not in VALID_TIERS
-    ]
-    if missing or invalid:
+    missing: list[str] = []
+    invalid: list[tuple[str, str]] = []
+    vis_errors: list[tuple[str, str]] = []
+    for c in commands:
+        rel = c.relative_to(REPO).as_posix()
+        text = c.read_text(encoding="utf-8")
+        tier = parse_tier(text)
+        if tier is None:
+            missing.append(rel)
+        elif tier not in VALID_TIERS:
+            invalid.append((rel, tier))
+        if (ve := visibility_error(text)) is not None:
+            vis_errors.append((rel, ve))
+    if missing or invalid or vis_errors:
         print(
-            f"❌  lint_command_tiers: {len(missing)} missing, "
-            f"{len(invalid)} invalid (of {len(commands)} domain commands)",
+            f"❌  lint_command_tiers: {len(missing)} missing tier, "
+            f"{len(invalid)} invalid tier, {len(vis_errors)} visibility "
+            f"(of {len(commands)} domain commands)",
             file=sys.stderr,
         )
         for name in missing:
             print(f"    missing tier: {name}", file=sys.stderr)
         for name, tier in invalid:
             print(f"    invalid tier '{tier}': {name}", file=sys.stderr)
+        for name, err in vis_errors:
+            print(f"    {err}: {name}", file=sys.stderr)
         return 1
     if not quiet:
         print(
             f"✅  lint_command_tiers: {len(commands)} domain commands, "
-            f"all tier values valid"
+            f"all tier + visibility values valid"
         )
     return 0
 

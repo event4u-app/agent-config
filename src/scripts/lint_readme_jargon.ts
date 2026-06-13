@@ -2,7 +2,7 @@
 /**
  * CI guard for README.md above-fold jargon density.
  *
- * TypeScript twin of `src/scripts/lint_readme_jargon.py` (ADR-090, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_readme_jargon.py` (ADR-092, Phase 4 /
  * Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet` flag, exit
  * codes (0 within budget, 1 over budget / missing), stdout/stderr split,
  * byte-identical finding messages, same noise-stripping order, same

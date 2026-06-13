@@ -1,8 +1,9 @@
 ---
 model_tier: inherit
 name: grill-me
-pack: meta
+pack: product-reasoning
 tier: 2
+visibility: internal
 description: Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 cluster: challenge-me
 type: orchestrator
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - product-reasoning
 ---
 
 # /grill-me

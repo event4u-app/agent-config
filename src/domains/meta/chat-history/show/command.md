@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: chat-history-show
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: chat-history
 sub: show
 skills: [chat-history]
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 <!-- cloud_safe: noop -->
 

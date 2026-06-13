@@ -2,7 +2,7 @@
 //
 // No pytest suite exists. The happy path shells out to the underlying .py
 // runner (a full, cost-/time-bearing bench run), so it is NOT golden-diffed
-// here per ADR-090's timing-non-determinism guidance — instead this suite
+// here per ADR-092's timing-non-determinism guidance — instead this suite
 // asserts the CLI surface (arg errors, exit codes, the corpus-missing branch)
 // and the cache-dispatch decision message, which derives from the already-
 // validated bench_ab_cache twin. argparse error PROSE (usage line, program

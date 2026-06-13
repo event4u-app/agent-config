@@ -1,7 +1,7 @@
 /**
  * Project-scope installed-tools manifest at `agents/installed-tools.lock`.
  *
- * TypeScript twin of `src/scripts/_lib/installed_tools.py` (ADR-090 — Python→TS
+ * TypeScript twin of `src/scripts/_lib/installed_tools.py` (ADR-092 — Python→TS
  * migration, Phase 2 / Wave 2a). Public API mirrors the Python module exactly
  * (snake_case kept deliberately — fidelity over TS idiom), including the
  * byte-exact YAML wire format the `_render` golden tests pin.
@@ -30,7 +30,7 @@
  * manifests with nested `files` / `merged_keys` arrays the manual path
  * silently drops those nested fields (documented degraded read in the Python
  * source). A consumer relying on `pyyaml`-backed full-v2 fidelity would see a
- * behavior change here. See ADR-090 § intentional-divergence.
+ * behavior change here. See ADR-092 § intentional-divergence.
  */
 import * as os from "node:os";
 import * as fsPath from "node:path";

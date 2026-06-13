@@ -1,7 +1,7 @@
 /**
  * Runtime pricing layer for the AI Council.
  *
- * TypeScript twin of `src/scripts/ai_council/pricing.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/ai_council/pricing.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8g; ported as a prerequisite of
  * `update_prices.ts`). Mirrors the Python public surface used by the
  * caller: `PRICES_FILE`, `load_prices`, `is_stale`, `_render_markdown`,

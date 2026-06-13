@@ -3,6 +3,7 @@ model_tier: medium
 name: orchestrate
 pack: meta
 tier: 2
+visibility: internal
 cluster: orchestrate
 skills: [subagent-orchestration]
 description: Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract

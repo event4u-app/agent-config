@@ -2,7 +2,7 @@
 /**
  * Tool Registry — manages available external tools and their permissions.
  *
- * TypeScript twin of `src/scripts/tool_registry.py` (ADR-090 — Python→TS
+ * TypeScript twin of `src/scripts/tool_registry.py` (ADR-092 — Python→TS
  * migration, Phase 8 / Wave 8e). The CLI contract is mirrored EXACTLY:
  * same flags (`--format text|json`, `--validate-tools [...]`), same exit
  * codes (0 on success / valid, 1 when validation finds errors), same

@@ -3,6 +3,7 @@ model_tier: high
 name: threat-model
 pack: engineering-base
 tier: 2
+visibility: internal
 skills: [threat-modeling, authz-review, security-sensitive-stop]
 description: Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 council_depth: deep

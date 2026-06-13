@@ -2,7 +2,7 @@
 /**
  * Generate `agents/index.md` (internal) and `docs/catalog.md` (public).
  *
- * TypeScript twin of `src/scripts/generate_index.py` (ADR-090, Phase 8 /
+ * TypeScript twin of `src/scripts/generate_index.py` (ADR-092, Phase 8 /
  * Wave 8a). The CLI contract is mirrored EXACTLY — the single `--check`
  * flag, exit codes (0 / 1 on drift), the stdout split, byte-identical
  * messages, AND byte-identical generated Markdown (both files are write

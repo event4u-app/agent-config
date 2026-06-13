@@ -3,6 +3,7 @@ model_tier: medium
 name: e2e-plan
 pack: engineering-base
 tier: 2
+visibility: internal
 skills: [playwright-testing]
 description: Explore the application and create a structured E2E test plan in Markdown
 suggestion:

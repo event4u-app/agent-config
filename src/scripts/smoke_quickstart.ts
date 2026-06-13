@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /** Structural smoke-test for the README Quickstart path.
  *
- * TypeScript twin of `src/scripts/smoke_quickstart.py` (ADR-090, Phase 8 /
+ * TypeScript twin of `src/scripts/smoke_quickstart.py` (ADR-092, Phase 8 /
  * Wave 8h). Mirrors the Python CLI contract EXACTLY — no flags, exit codes
  * (0 green, 1 one or more checks failed, 2 setup error), byte-identical
  * stdout/stderr (`::error::…` GitHub-annotation lines, the ✅/❌ summary). No

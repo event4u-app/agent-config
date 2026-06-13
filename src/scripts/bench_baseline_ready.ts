@@ -2,7 +2,7 @@
 /**
  * Baseline-closure check — step-4 Phase 3 Step 4.
  *
- * TypeScript twin of `src/scripts/bench_baseline_ready.py` (ADR-090 Python→TS
+ * TypeScript twin of `src/scripts/bench_baseline_ready.py` (ADR-092 Python→TS
  * migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY: flags
  * (`--corpus`, `--reports-dir`, `--baseline-file`, `--min-days`,
  * `--min-reports`, `--json`), exit codes (0 ready / 1 file error / 2 not

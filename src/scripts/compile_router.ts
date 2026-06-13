@@ -2,7 +2,7 @@
 /**
  * Compile rule frontmatter into `router.json`.
  *
- * TypeScript twin of `src/scripts/compile_router.py` (ADR-090, Phase 5). The
+ * TypeScript twin of `src/scripts/compile_router.py` (ADR-092, Phase 5). The
  * CLI contract is mirrored EXACTLY — the positional argv flags (`--pretty`,
  * `--check`), exit codes (0 = wrote / up-to-date; 1 = stale under --check), the
  * stdout/stderr split, byte-identical messages, AND byte-identical generated

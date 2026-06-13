@@ -2,7 +2,7 @@
 /**
  * Phase 0 baseline harness for road-to-trim-frugality-canon.
  *
- * TypeScript twin of `src/scripts/measure_frugality_savings.py` (ADR-090,
+ * TypeScript twin of `src/scripts/measure_frugality_savings.py` (ADR-092,
  * Phase 8 Wave 8a). Mirrors the Python CLI contract EXACTLY — exit code 0,
  * byte-identical stdout (`json.dumps(record, indent=2, ensure_ascii=False)`
  * + the `appended → …` line), and the byte-identical JSONL baseline row

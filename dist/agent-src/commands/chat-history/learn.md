@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: chat-history-learn
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: chat-history
 sub: learn
 skills: [learning-to-rule-or-skill]
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 <!-- cloud_safe: noop -->
 

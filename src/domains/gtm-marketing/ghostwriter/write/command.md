@@ -3,6 +3,7 @@ model_tier: inherit
 name: ghostwriter-write
 pack: gtm-marketing
 tier: 2
+visibility: internal
 cluster: ghostwriter
 sub: write
 description: Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.

@@ -2,7 +2,7 @@
 /**
  * One-screen adoption dashboard for the maintainer's weekly review.
  *
- * TypeScript twin of `src/scripts/adoption_status.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/adoption_status.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flags (`--json`, `--branch`), same exit codes (0 normal,
  * 1 on registry-read IO error), same byte-identical text + JSON output,

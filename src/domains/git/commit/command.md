@@ -7,6 +7,7 @@ intent: "Stage and commit changes in logical chunks with a Conventional Commits 
 routes_to: [git-workflow, conventional-commits-writing]
 replaces: [commit]
 tier: 0
+visibility: visible
 cluster: git-commit
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits

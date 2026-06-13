@@ -3,6 +3,7 @@ model_tier: medium
 name: profile-activate
 pack: meta
 tier: 2
+visibility: internal
 cluster: profile
 sub: activate
 description: Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence

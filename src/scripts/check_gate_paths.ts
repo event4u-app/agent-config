@@ -2,7 +2,7 @@
 /**
  * Gate path-integrity check (R2 of road-to-test-and-gate-integrity).
  *
- * TypeScript twin of `src/scripts/check_gate_paths.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_gate_paths.py` (ADR-092,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — no flags, exit
  * codes (0 all resolve, 1 missing / out-of-tree, 2 a gate failed to
  * import / lacks GATE_CORE_PATHS), byte-identical messages, stdout/stderr

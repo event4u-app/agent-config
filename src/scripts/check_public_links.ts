@@ -2,7 +2,7 @@
 /**
  * Public-link checker for the agent-config public surface.
  *
- * TypeScript twin of `src/scripts/check_public_links.py` (ADR-090, Phase 4 /
+ * TypeScript twin of `src/scripts/check_public_links.py` (ADR-092, Phase 4 /
  * Wave 4c). The CLI contract is mirrored EXACTLY — `--list` / `--json` /
  * `--strict` flags, exit codes (0 clean, 1 violations, 3 internal error),
  * stdout split, byte-identical finding messages, the same scan order and

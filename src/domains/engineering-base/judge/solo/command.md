@@ -3,6 +3,7 @@ model_tier: high
 name: judge-solo
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: judge
 sub: solo
 skills: [subagent-orchestration]

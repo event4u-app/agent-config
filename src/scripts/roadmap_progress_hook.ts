@@ -2,7 +2,7 @@
 /**
  * Platform-agnostic PostToolUse hook for the `roadmap-progress-sync` rule.
  *
- * TypeScript twin of `src/scripts/roadmap_progress_hook.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/roadmap_progress_hook.py` (ADR-092 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *

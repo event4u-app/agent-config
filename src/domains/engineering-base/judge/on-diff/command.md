@@ -3,6 +3,7 @@ model_tier: high
 name: judge-on-diff
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: judge
 sub: on-diff
 skills: [subagent-orchestration, verify-completion-evidence]

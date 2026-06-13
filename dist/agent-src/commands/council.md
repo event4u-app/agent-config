@@ -2,11 +2,12 @@
 model_tier: medium
 name: council
 disable-model-invocation: true
-pack: meta
+pack: product-reasoning
 intent: "Poll external AIs for a neutral second opinion (pr/design/optimize/analysis lenses)"
 routes_to: [council-default, council-pr, council-design, council-analysis]
 replaces: []
 tier: 1
+visibility: advanced
 description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
 cluster: council
 type: orchestrator
@@ -17,7 +18,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - product-reasoning
 ---
 
 # /council

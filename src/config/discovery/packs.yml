@@ -253,3 +253,32 @@
   domain: meta
   size_class: core
   always_on: true   # default pack — resolver includes it in every projection regardless of profile/workspace
+
+# Capability packs carved out of `meta` (ADR-091, logical re-tag). Opt-in
+# (always_on:false) maintainer capabilities; meta stays the always_on admin core.
+- id: memory
+  label: Memory
+  description: Cross-session memory and chat-history capabilities for the maintainer workspace.
+  workspaces: [agent-config-maintainer]
+  requires: [meta]
+  trust_level_default: core
+  domain: meta
+  size_class: small
+
+- id: analytics
+  label: Analytics
+  description: Cost and usage analytics surfaces for the maintainer workspace.
+  workspaces: [agent-config-maintainer]
+  requires: [meta]
+  trust_level_default: core
+  domain: meta
+  size_class: small
+
+- id: product-reasoning
+  label: Product Reasoning
+  description: Interactive reasoning surfaces (council, challenge-me, grill-me) — classified `product` in the flow surface-map.
+  workspaces: [agent-config-maintainer]
+  requires: [meta]
+  trust_level_default: core
+  domain: meta
+  size_class: medium

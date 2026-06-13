@@ -2,7 +2,7 @@
 /**
  * Cache-aware dispatch for `task bench:ab` arms.
  *
- * TypeScript twin of `src/scripts/bench_ab_cache_dispatch.py` (ADR-090
+ * TypeScript twin of `src/scripts/bench_ab_cache_dispatch.py` (ADR-092
  * Python→TS migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY:
  * positional `corpus` (`tracka` / `trackb`), the `REMAINDER` `extra` args
  * forwarded to the underlying runner, exit codes (1 corpus missing, else the

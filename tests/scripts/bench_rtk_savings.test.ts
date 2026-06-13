@@ -1,7 +1,7 @@
 // Tests for src/scripts/bench_rtk_savings.ts (Phase 2 Step 3 rtk savings bench).
 //
 // The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-090 parity contract).
+// differential suite (ADR-092 parity contract).
 //
 // TIMING / SUBPROCESS NON-DETERMINISM: the full bench runs real shell
 // commands (`git status`, `ls -la`, `grep`, …) whose byte output varies

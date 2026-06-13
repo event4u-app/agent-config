@@ -3,7 +3,7 @@
  * Abstraction-budget inventory — read-only discovery pass.
  *
  * TypeScript twin of `src/scripts/inventory_abstraction_budget.py`
- * (ADR-090 — Python→TS migration, Phase 8 / Wave 8c). Mirrors the
+ * (ADR-092 — Python→TS migration, Phase 8 / Wave 8c). Mirrors the
  * Python CLI contract EXACTLY — the `--quiet` flag, exit code (always
  * 0), the stdout/stderr split routed through the `script_output` twin,
  * byte-identical written artefacts (the Markdown report + two CSVs,

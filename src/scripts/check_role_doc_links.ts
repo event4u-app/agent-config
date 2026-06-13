@@ -2,7 +2,7 @@
 /**
  * Verify every skill link in role-based docs resolves to a real file.
  *
- * TypeScript twin of `src/scripts/check_role_doc_links.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_role_doc_links.py` (ADR-092,
  * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * flag, exit codes (0 all resolve, 1 broken links, 2 missing role doc),
  * stdout/stderr split, byte-identical finding messages, same scan + link

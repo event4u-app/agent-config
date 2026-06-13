@@ -2,7 +2,7 @@
 /**
  * Skill preview — non-destructive "what will this skill do?" summary.
  *
- * TypeScript twin of `src/scripts/skill_preview.py` (ADR-090 — Python→TS
+ * TypeScript twin of `src/scripts/skill_preview.py` (ADR-092 — Python→TS
  * migration, Phase 8 / Wave 8e). Public surface mirrors the Python module
  * exactly: `load_preview` / `render_plain` / `render_technical` / `PreviewError`,
  * the CLI flags (`name`, `--technical`, `--format text|json`), the exit codes

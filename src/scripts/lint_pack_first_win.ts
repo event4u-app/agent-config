@@ -2,7 +2,7 @@
 /**
  * Pack first-win linter.
  *
- * TypeScript twin of `src/scripts/lint_pack_first_win.py` (ADR-090,
+ * TypeScript twin of `src/scripts/lint_pack_first_win.py` (ADR-092,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `main()`
  * IGNORES argv entirely (any flag, including the `--quiet` the Taskfile
  * passes, is silently accepted), exit codes (0 clean, 1 violations),

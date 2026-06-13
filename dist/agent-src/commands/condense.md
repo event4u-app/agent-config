@@ -6,6 +6,7 @@ intent: "Condense src/ sources into the shipped dist/agent-src trees"
 routes_to: [skill-management]
 replaces: []
 tier: 1
+visibility: advanced
 skills: []
 description: Condense .md files from src/ into telegraph format and write to dist/agent-src/
 suggestion:

@@ -3,6 +3,7 @@ model_tier: inherit
 name: agents-optimize
 pack: meta
 tier: 2
+visibility: internal
 cluster: agents
 sub: optimize
 description: Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.

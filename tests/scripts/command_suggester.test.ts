@@ -1,6 +1,6 @@
 // Tests for src/scripts/command_suggester/* — the suggestion engine.
 //
-// 1:1 port of tests/test_command_suggester.py (pytest → vitest, ADR-090
+// 1:1 port of tests/test_command_suggester.py (pytest → vitest, ADR-092
 // parity contract). Coverage areas:
 //
 //  - match.ts    — phrase substring, structural bonus, token overlap, eligibility filter.

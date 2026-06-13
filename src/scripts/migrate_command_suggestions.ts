@@ -3,7 +3,7 @@
  * One-shot migration: inject the `suggestion:` frontmatter block into every
  * command under `.agent-src.uncondensed/commands/`.
  *
- * TypeScript twin of `src/scripts/migrate_command_suggestions.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/migrate_command_suggestions.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8e). Faithful twin: the legacy
  * `.agent-src.uncondensed/commands/` path is part of the original module's
  * contract and is reproduced verbatim. Public surface mirrors the Python module

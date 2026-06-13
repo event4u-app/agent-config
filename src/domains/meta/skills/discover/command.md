@@ -3,6 +3,7 @@ model_tier: medium
 name: skills-discover
 pack: meta
 tier: 2
+visibility: internal
 cluster: skills
 sub: discover
 description: Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.

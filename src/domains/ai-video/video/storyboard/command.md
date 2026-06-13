@@ -3,6 +3,7 @@ model_tier: inherit
 name: video-storyboard
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: video
 sub: storyboard
 description: Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.

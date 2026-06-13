@@ -2,7 +2,7 @@
 /**
  * Selection-accuracy scorer (council file 05, Phase 2.2).
  *
- * TypeScript twin of `src/scripts/score_skill_selection.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/score_skill_selection.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract EXACTLY:
  * flags (`--predictions`, `--baseline`, `--source`, `--out`), exit codes
  * (0 / 2 when neither --predictions nor --baseline given), byte-identical

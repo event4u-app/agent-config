@@ -27,9 +27,9 @@
       "reason": "no such skill — drop deferred to 6.1"
     },
     {
-      "pack": "meta",
+      "pack": "memory",
       "slug": "chat-history",
-      "reason": "command-routing target (commands/chat-history/*) listed under skills: — move to routes_to: in 6.1"
+      "reason": "command-routing target (commands/chat-history/*) listed under skills: — move to routes_to: in 6.1 (pack migrated meta→memory in ADR-092)"
     },
     {
       "pack": "meta",

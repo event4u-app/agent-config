@@ -2,7 +2,7 @@
 /**
  * Prototype contradiction linter (P1.1 of road-to-package-optimization).
  *
- * TypeScript twin of `src/scripts/prototype_lint_contradictions.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/prototype_lint_contradictions.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — no flags, exit codes (0 clean / 1 contradictions found), the
  * stdout JSON shape (`json.dump(report, indent=2)`, insertion order, NO

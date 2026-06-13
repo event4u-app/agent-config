@@ -3,7 +3,7 @@
  * Block D · D5 — eval gate runner.
  *
  * TypeScript twin of `src/scripts/skill_tools/run_block_d_eval.py`
- * (ADR-090, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * (ADR-092, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
  * flags (`--skills-dir`, `--personas-dir`, `--corpus-dir`, `--json`), exit
  * codes (0 pass / 1 fail), stdout split, byte-identical human summary AND
  * byte-identical JSON (`json.dump(..., indent=2)`, ensure_ascii default).

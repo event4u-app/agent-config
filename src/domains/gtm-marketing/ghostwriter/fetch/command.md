@@ -3,6 +3,7 @@ model_tier: inherit
 name: ghostwriter-fetch
 pack: gtm-marketing
 tier: 2
+visibility: internal
 cluster: ghostwriter
 sub: fetch
 description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.

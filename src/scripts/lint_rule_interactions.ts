@@ -2,7 +2,7 @@
 /**
  * Lint docs/contracts/rule-interactions.yml.
  *
- * TypeScript twin of `src/scripts/lint_rule_interactions.py` (ADR-090,
+ * TypeScript twin of `src/scripts/lint_rule_interactions.py` (ADR-092,
  * Phase 4 / Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet`
  * flag is a bare `sys.argv` membership check (NOT argparse, so there is no
  * real `-h`/`--help`), exit codes (1 on any failure, 0 clean), the

@@ -3,6 +3,7 @@ model_tier: medium
 name: override-create
 pack: meta
 tier: 2
+visibility: internal
 cluster: override
 sub: create
 description: Creates a project-level override for a shared skill, rule, or command.

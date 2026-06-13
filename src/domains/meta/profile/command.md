@@ -3,6 +3,7 @@ model_tier: medium
 name: profile
 pack: meta
 tier: 2
+visibility: internal
 description: Session-profile orchestrator — activate / deactivate / show the active packs for this session (recommendation-bias surface filter, no persistence)
 cluster: profile
 type: orchestrator

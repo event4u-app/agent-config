@@ -1,7 +1,7 @@
 /**
  * Round-trip YAML layer for `.agent-settings.yml` syncs.
  *
- * TypeScript twin of `src/scripts/sync_yaml_rt.py` (ADR-090). Self-
+ * TypeScript twin of `src/scripts/sync_yaml_rt.py` (ADR-092). Self-
  * contained, zero-dependency. Implements a narrow YAML subset with the
  * property *user-line preservation*: every line in the user input that
  * `parse` attaches to a `Node` is reproduced character-for-character by

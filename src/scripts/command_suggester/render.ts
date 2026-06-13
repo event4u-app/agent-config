@@ -2,7 +2,7 @@
  * Render ranked matches as a numbered-options block.
  *
  * TypeScript twin of `src/scripts/command_suggester/render.py`
- * (ADR-090 py2ts).
+ * (ADR-092 py2ts).
  *
  * Output strictly conforms to `user-interaction` Iron Law:
  *  - Every option is one numbered line.

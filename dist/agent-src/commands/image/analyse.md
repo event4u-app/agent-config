@@ -3,6 +3,7 @@ model_tier: high
 name: image-analyse
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: image
 sub: analyse
 description: Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.

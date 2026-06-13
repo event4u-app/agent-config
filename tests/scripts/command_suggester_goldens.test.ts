@@ -1,7 +1,7 @@
 // GT-CS goldens — end-to-end suggestion engine acceptance tests.
 //
 // 1:1 port of tests/test_command_suggester_goldens.py (pytest → vitest,
-// ADR-090 parity contract). Nine cases mirror the
+// ADR-092 parity contract). Nine cases mirror the
 // `road-to-context-aware-command-suggestion` acceptance criteria. Each runs
 // `load_commands → match → rank → apply_cooldown → render` against the real
 // `dist/agent-src/commands/` directory and asserts the structural invariants

@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: memory-add
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: memory
 sub: add
 description: Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 # /memory add

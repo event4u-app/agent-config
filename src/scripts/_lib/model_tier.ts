@@ -1,7 +1,7 @@
 /**
  * Shared `model_tier` → native Claude `model:` mapping (ADR-034 / ADR-035).
  *
- * TypeScript twin of `src/scripts/_lib/model_tier.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/_lib/model_tier.py` (ADR-092 —
  * Python→TS migration, Phase 2 / Wave 1). Public API mirrors the
  * Python module exactly (snake_case kept deliberately).
  *

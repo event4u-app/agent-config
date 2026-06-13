@@ -2,7 +2,7 @@
 /**
  * Lint `dist/mcp/registry-manifest.json` against its JSON Schema.
  *
- * TypeScript twin of `src/scripts/lint_mcp_registry_manifest.py` (ADR-090,
+ * TypeScript twin of `src/scripts/lint_mcp_registry_manifest.py` (ADR-092,
  * Phase 4 / Wave 4b). Mirrors the CLI contract EXACTLY — `--quiet` flag
  * (argparse, so a real `-h`/`--help` prints usage + exits 0), the
  * `❌  <msg>` failures on stderr, the `✅  mcp registry manifest OK

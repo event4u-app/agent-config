@@ -2,7 +2,7 @@
 /**
  * Pull the four public adoption signals into a single dated JSONL row.
  *
- * TypeScript twin of `src/scripts/adoption_snapshot.py` (ADR-090, Phase 8
+ * TypeScript twin of `src/scripts/adoption_snapshot.py` (ADR-092, Phase 8
  * Wave 8a). Mirrors the Python CLI contract EXACTLY — flags (`--out`,
  * `--no-network`), exit codes (0 / 1 / 2), stdout/stderr split, and the
  * byte-identical JSONL row (`json.dumps(row)` default separators,

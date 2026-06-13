@@ -2,7 +2,7 @@
 /**
  * Smoke-test path resolution against the package's own `.augment/` projection.
  *
- * TypeScript twin of `src/scripts/smoke_path_resolution.py` (ADR-090, Phase 8
+ * TypeScript twin of `src/scripts/smoke_path_resolution.py` (ADR-092, Phase 8
  * / Wave 8h). Mirrors the Python CLI contract EXACTLY — no flags, exit codes
  * (0 all entries resolve, 1 one or more misses, 3 no `.augment/rules/`),
  * byte-identical stdout/stderr. No behaviour changes.

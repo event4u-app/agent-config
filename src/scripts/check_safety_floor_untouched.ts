@@ -2,7 +2,7 @@
 /**
  * Safety-floor exclusion linter (Phase 2A.0 of road-to-structural-optimization).
  *
- * TypeScript twin of `src/scripts/check_safety_floor_untouched.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_safety_floor_untouched.py` (ADR-092,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--baseline`
  * / `--skip-if-no-baseline` flags, exit codes (0 clean/skipped, 1 floor
  * file modified, 3 internal error), stdout/stderr split, byte-identical

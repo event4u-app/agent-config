@@ -3,6 +3,7 @@ model_tier: medium
 name: fix-pr-developer-comments
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: fix
 sub: pr-developer-comments
 skills: [php-coder]

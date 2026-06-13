@@ -30,8 +30,6 @@ export interface CommandsExplainOptions {
     json?: boolean;
 }
 
-const VISIBLE_TIERS = new Set<number>([0, 1]);
-
 function loadOrReport(): DiscoveryManifest | null {
     try {
         return loadManifest();
@@ -65,6 +63,12 @@ function visibilityLabel(tier: number): string {
     return tier === 0 ? 'visible' : tier === 1 ? 'advanced' : 'internal';
 }
 
+// ADR-092: prefer the named `visibility` field; fall back to the integer
+// `tier` alias when the manifest entry predates the backfill.
+function visibilityOf(a: DiscoveryArtefact): string {
+    return a.visibility ?? visibilityLabel(tierOf(a));
+}
+
 function renderTable(cmds: readonly DiscoveryArtefact[]): string {
     const header = ['command', 'pack', 'tier', 'visibility', 'intent'];
     const rows: string[][] = cmds.map((c) => [
@@ -72,7 +76,7 @@ function renderTable(cmds: readonly DiscoveryArtefact[]): string {
         c.slug ?? c.name ?? '',
         c.pack ?? (c.packs[0] ?? '—'),
         String(tierOf(c)),
-        visibilityLabel(tierOf(c)),
+        visibilityOf(c),
         c.intent ?? '—',
     ]);
     const widths = header.map((h, i) =>
@@ -104,7 +108,7 @@ export function runCommandsLs(opts: CommandsLsOptions = {}): number {
             return 1;
         }
         cmds = resolveProfileView(profile, cmds, { expanded: Boolean(opts.expanded) });
-        if (opts.visible) cmds = cmds.filter((c) => VISIBLE_TIERS.has(tierOf(c)));
+        if (opts.visible) cmds = cmds.filter((c) => visibilityOf(c) !== 'internal');
         if (opts.json) {
             process.stdout.write(`${JSON.stringify({ profile: profile.id, expanded: Boolean(opts.expanded), commands: cmds }, null, 2)}\n`);
             return 0;
@@ -117,7 +121,7 @@ export function runCommandsLs(opts: CommandsLsOptions = {}): number {
         return 0;
     }
 
-    if (opts.visible) cmds = cmds.filter((c) => VISIBLE_TIERS.has(tierOf(c)));
+    if (opts.visible) cmds = cmds.filter((c) => visibilityOf(c) !== 'internal');
     // Filter on the canonical OWNER pack (`pack`), the budget/surfacing unit —
     // not the additive `packs` discovery tags.
     if (opts.pack) cmds = cmds.filter((c) => (c.pack ?? '') === opts.pack);
@@ -157,7 +161,8 @@ export function runCommandsExplain(name: string, opts: CommandsExplainOptions = 
     const lines = [
         `/${match.name}`,
         `  pack:        ${match.pack ?? (match.packs[0] ?? '—')}`,
-        `  tier:        ${tier} (${visibilityLabel(tier)})`,
+        `  visibility:  ${visibilityOf(match)}`,
+        `  tier:        ${tier} (alias)`,
         `  intent:      ${match.intent ?? '—'}`,
         `  routes_to:   ${(match.routes_to ?? []).join(', ') || '—'}`,
     ];

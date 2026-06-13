@@ -6,6 +6,7 @@ intent: "Generate a session-handoff summary to continue work in a fresh chat"
 routes_to: [agent-docs-writing]
 replaces: []
 tier: 0
+visibility: visible
 skills: [agent-docs-writing]
 description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 suggestion:

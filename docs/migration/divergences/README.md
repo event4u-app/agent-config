@@ -2,7 +2,7 @@
 
 This directory is the **divergence ledger** of the Python → TypeScript
 migration (see
-[ADR-090](../../decisions/ADR-090-python-to-typescript-migration.md)).
+[ADR-092](../../decisions/ADR-092-python-to-typescript-migration.md)).
 It is the single place where TypeScript-vs-Python behavior differences live.
 An undocumented difference is a regression by definition.
 

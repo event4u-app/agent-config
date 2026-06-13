@@ -2,7 +2,7 @@
 /**
  * Collect skill-activation signal from Claude Code session jsonl.
  *
- * TypeScript twin of `src/scripts/skill_usage_collect.py` (ADR-090, Phase 8 /
+ * TypeScript twin of `src/scripts/skill_usage_collect.py` (ADR-092, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--project-slug`, `--out`,
  * `--quiet` flags, exit codes, the stdout/stderr split, byte-identical
  * messages AND the byte-identical appended JSONL (`json.dumps(rec,

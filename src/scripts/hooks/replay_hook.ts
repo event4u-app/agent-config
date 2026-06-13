@@ -2,7 +2,7 @@
 /**
  * Fixture-driven hook replay — read-only dispatch through the runtime.
  *
- * TypeScript twin of `src/scripts/hooks/replay_hook.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/hooks/replay_hook.py` (ADR-092 —
  * Python→TS migration, Phase 6 / hooks core). Mirrors the Python CLI
  * contract exactly: same payload resolution, replay env flag, dispatcher
  * argument forwarding, `--json` summary shape, stdout/stderr split, and

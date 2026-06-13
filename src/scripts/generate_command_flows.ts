@@ -2,7 +2,7 @@
 /**
  * Generate `docs/command-flows.md` — the Flows primary view (road-to-6.1.0 Step 9).
  *
- * TypeScript twin of `src/scripts/generate_command_flows.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/generate_command_flows.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flag (`--check`), same exit codes, same stdout/stderr
  * split, same byte-identical generated `docs/command-flows.md`. WRITER —

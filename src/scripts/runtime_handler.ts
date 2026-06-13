@@ -2,7 +2,7 @@
 /**
  * Runtime Handler — executes a skill's declared command and captures the result.
  *
- * TypeScript twin of `src/scripts/runtime_handler.py` (ADR-090, Phase 8 /
+ * TypeScript twin of `src/scripts/runtime_handler.py` (ADR-092, Phase 8 /
  * Wave 8h). Library module imported by the still-Python `runtime_dispatcher`
  * (the `.py` stays in place); this `.ts` twin sits beside it. Mirrors the
  * Python public surface EXACTLY — `DEFAULT_ENV_ALLOWLIST`, `ExecutionResult`,

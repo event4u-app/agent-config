@@ -3,6 +3,7 @@ model_tier: high
 name: analyze-reference-repo
 pack: engineering-base
 tier: 2
+visibility: internal
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 suggestion:

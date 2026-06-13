@@ -68,5 +68,7 @@
   label: Maintainer
   description: Skills/rules/commands that maintain this package.
   example_roles: [Maintainer]
-  default_packs: [meta]
+  # memory / analytics / product-reasoning carved out of meta in ADR-091 — kept
+  # default for the maintainer (they were always-on via meta pre-split).
+  default_packs: [meta, memory, analytics, product-reasoning]
   optional_packs: []

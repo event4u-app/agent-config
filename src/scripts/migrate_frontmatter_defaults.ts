@@ -2,7 +2,7 @@
 /**
  * Migrate artefact frontmatter to omit fields equal to their schema default.
  *
- * TypeScript twin of `src/scripts/migrate_frontmatter_defaults.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/migrate_frontmatter_defaults.py` (ADR-092 —
  * Python→TS migration, Phase 8 / Wave 8e). Public surface mirrors the Python
  * module exactly: same CLI flags (`--dry-run`, `--deltas PATH`), same exit code
  * (0), same stdout summary, and byte-identical rewritten files + dry-run delta

@@ -2,7 +2,7 @@
 /**
  * Phase-6 checksum-stability gate (monorepo Phase 2, ADR-015).
  *
- * TypeScript twin of `src/scripts/check_artefact_checksums.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_artefact_checksums.py` (ADR-092,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — `--manifest`
  * / `--quiet` flags, exit codes (0 match, 1 drift / malformed / missing),
  * stdout/stderr split, byte-identical messages, the same per-artefact
@@ -17,7 +17,7 @@
  * schema-default injection reuse the existing `validate_frontmatter.ts`
  * twin (the SAME functions the Python imports).
  *
- * DIVERGENCE CANDIDATE (documented under the ADR-090 process): the recomputed
+ * DIVERGENCE CANDIDATE (documented under the ADR-092 process): the recomputed
  * checksum hashes a compact-JSON re-serialization of the parsed frontmatter
  * (`json.dumps(fm, sort_keys=True, ensure_ascii=False, separators=(",",":"))`).
  * Byte-parity with Python depends on PyYAML and the `yaml` npm package parsing

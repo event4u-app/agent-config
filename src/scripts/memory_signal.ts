@@ -2,7 +2,7 @@
 /**
  * Write-side helper: drop an engineering-memory signal.
  *
- * TypeScript twin of `src/scripts/memory_signal.py` (ADR-090, Phase 7 /
+ * TypeScript twin of `src/scripts/memory_signal.py` (ADR-092, Phase 7 /
  * dev-side memory). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),
  * same exit codes, stdout/stderr split, byte-identical messages, same
@@ -401,7 +401,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         } else if (a === '--force') {
             args.force = true;
         } else if (a === '-h' || a === '--help') {
-            // --help is not a parity contract (per ADR-090); emit the usage block.
+            // --help is not a parity contract (per ADR-092); emit the usage block.
             process.stdout.write(_USAGE);
             process.exit(0);
         } else {

@@ -1,7 +1,7 @@
 /**
  * Provision the roadmap-progress regenerator into a consumer.
  *
- * TypeScript twin of `src/scripts/_lib/install_regenerator.py` (ADR-090 —
+ * TypeScript twin of `src/scripts/_lib/install_regenerator.py` (ADR-092 —
  * Python→TS migration, Phase 2 / Wave 2a). Public API mirrors the Python
  * module exactly (snake_case kept deliberately).
  *

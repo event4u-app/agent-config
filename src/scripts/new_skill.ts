@@ -2,7 +2,7 @@
 /**
  * Interactive scaffolder for new skills under the packages/ layout.
  *
- * TypeScript twin of `src/scripts/new_skill.py` (ADR-090 — Python→TS
+ * TypeScript twin of `src/scripts/new_skill.py` (ADR-092 — Python→TS
  * migration, Phase 8 / Wave 8b). The CLI contract is mirrored EXACTLY —
  * the `--pack` / `--type` / `--name` / `--description` / `--workspace`
  * (repeatable) / `--force` flags, exit codes (0 ok · 1 file exists · 2

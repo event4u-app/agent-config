@@ -2,7 +2,7 @@
 /**
  * check_reply_consistency.ts — enforce user-interaction.md Iron Laws.
  *
- * TypeScript twin of `src/scripts/check_reply_consistency.py` (ADR-090,
+ * TypeScript twin of `src/scripts/check_reply_consistency.py` (ADR-092,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--stdin` /
  * `--file` / `--scan-dir` mutually-exclusive required group, `--strict`,
  * `-v`/`--verbose`, `--quiet`; exit codes (0 ok · 2 inline tag · 3 multi-rec ·

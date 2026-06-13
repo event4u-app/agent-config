@@ -6,6 +6,7 @@ intent: "Report the current agent session state, mode, and progress at a glance"
 routes_to: [agent-docs-writing]
 replaces: []
 tier: 0
+visibility: visible
 skills: [agent-docs-writing]
 description: Show current conversation stats — message count, token costs, task progress, next freshness check.
 suggestion:
