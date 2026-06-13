@@ -478,6 +478,36 @@ def test_stale_orphans_ok_when_clean(monkeypatch, tmp_path) -> None:
     assert result["status"] == "ok"
 
 
+def test_doctor_pipeline_surfaces_stale_orphans(
+    monkeypatch, tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    """End-to-end through ``main`` (--check + --json): the registered
+    ``stale-orphans`` check must report ``warn`` when a tagged orphan sits
+    under a recorded anchor. Locks the runner-dict wiring, not just the
+    bare check function.
+    """
+    anchor = tmp_path / "anchor"
+    _write_tagged_md(anchor / "commands" / "pr" / "create.md", "create")
+    _write_tagged_md(anchor / "commands" / "create-pr.md", "create-pr")  # orphan
+    _seed_inventory(tmp_path, monkeypatch, anchor, ["commands/pr/create.md"])
+
+    # Global-only consumer (bridge marker, no lockfile) so the no-manifest
+    # path runs the global checks — stale-orphans among them.
+    project = tmp_path / "proj"
+    (project / "agents").mkdir(parents=True)
+    (project / "agents" / ".event4u-bridge.yml").write_text(
+        "schema: 1\n", encoding="utf-8")
+
+    cmd_doctor.main([
+        f"--project={project}", "--check", "stale-orphans", "--json",
+    ])
+    payload = json.loads(capsys.readouterr().out)
+    check = {c["id"]: c for c in payload["checks"]}["stale-orphans"]
+    assert check["status"] == "warn"
+    assert "create-pr.md" in check["message"]
+    assert "agent-config global" in check["remedy"]
+
+
 def test_check_lockfile_freshness_drift(
     tmp_path: Path, capsys: pytest.CaptureFixture,
 ) -> None:
