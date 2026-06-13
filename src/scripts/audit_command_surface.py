@@ -58,10 +58,13 @@ DOCS_DIR = REPO_ROOT / "docs"
 # Per-size-class VISIBLE-command budgets (docs/contracts/capability-packs.md;
 # enforced as a CI gate by 6.0.0-C Phase 1). `internal` commands are uncapped.
 SIZE_BUDGETS = {"core": 8, "small": 2, "medium": 5, "large": 8, "platform": 10}
-# Proxy until the `visibility:` field lands (6.0.0-C Step 4b): a command counts
-# toward the budget when its tier surfaces it (tier 0 daily-driver / tier 1
-# power-user). tier 2 (or absent → defaults to 2) is internal/uncapped.
+# ADR-090: `visibility:` is the named source of truth (visible / advanced /
+# internal); the integer `tier:` is a back-compat alias. A command counts
+# toward the per-pack budget when it is surfaced — visibility in {visible,
+# advanced} (or, when only the alias is present, tier in {0,1}). `internal`
+# (or absent → defaults to internal) is uncapped.
 VISIBLE_TIERS = {0, 1}
+VISIBLE_VISIBILITIES = {"visible", "advanced"}
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 DESCRIPTION_RE = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)
@@ -69,6 +72,7 @@ ALIASES_RE = re.compile(r"^aliases:\s*(.*)$", re.MULTILINE)
 NAME_RE = re.compile(r"^name:\s*(.*)$", re.MULTILINE)
 CLUSTER_RE = re.compile(r"^cluster:\s*(.*)$", re.MULTILINE)
 TIER_RE = re.compile(r"^tier:\s*(\d+)", re.MULTILINE)
+VISIBILITY_RE = re.compile(r"^visibility:\s*(visible|advanced|internal)", re.MULTILINE)
 PACK_RE = re.compile(r"^pack:\s*(.*)$", re.MULTILINE)
 
 STOPWORDS = {
@@ -96,6 +100,7 @@ class Command:
     description: str
     aliases: List[str] = field(default_factory=list)
     tier: int | None = None
+    visibility: str | None = None
     cluster: str = ""
     pack: str = ""
     line_count: int = 0
@@ -120,6 +125,8 @@ def parse_frontmatter(text: str) -> dict:
         out["cluster"] = c.group(1).strip().strip('"').strip("'")
     if t := TIER_RE.search(block):
         out["tier"] = int(t.group(1))
+    if v := VISIBILITY_RE.search(block):
+        out["visibility"] = v.group(1)
     if pk := PACK_RE.search(block):
         out["pack"] = pk.group(1).strip().strip('"').strip("'")
     if a := ALIASES_RE.search(block):
@@ -204,6 +211,7 @@ def collect(root: Path) -> List[Command]:
             description=fm.get("description", ""),
             aliases=fm.get("aliases", []),
             tier=fm.get("tier"),
+            visibility=fm.get("visibility"),
             cluster=fm.get("cluster", ""),
             pack=fm.get("pack", ""),
             line_count=len(text.splitlines()),
@@ -394,7 +402,10 @@ def citation_count(name: str) -> int:
 
 
 def _is_visible(c: Command) -> bool:
-    # Absent tier defaults to 2 (internal) per command-surface-tiers.md.
+    # ADR-090: prefer the named visibility field; fall back to the tier alias.
+    # Absent both → internal per command-surface-tiers.md.
+    if c.visibility is not None:
+        return c.visibility in VISIBLE_VISIBILITIES
     return (c.tier if c.tier is not None else 2) in VISIBLE_TIERS
 
 
@@ -552,10 +563,12 @@ def grown_packs(baseline: str, commands: List[Command]) -> dict[str, list[str]]:
         cmd = by_relpath.get(relpath)
         if cmd is None or not cmd.pack:
             continue
-        if not _is_visible_tier(cmd.tier):
+        if not _is_visible(cmd):
             continue  # internal now — never counts toward a visible budget
         if relpath in modified and relpath not in added:
             # Modified file: only a *promotion* into visibility grows the surface.
+            # Baseline is historical (pre-ADR-090) so it carries only the tier
+            # alias — the tier proxy is the correct read for the old revision.
             if _is_visible_tier(_tier_at_ref(baseline, relpath)):
                 continue  # was already visible — not a new surface
         grew.setdefault(cmd.pack, []).append(cmd.name)

@@ -26,13 +26,24 @@ REPO = Path(__file__).resolve().parent.parent
 REAL_COMMANDS_DIR = REPO / ".agent-src.uncondensed" / "commands"
 
 
+_DERIVE = object()
+_TIER_TO_VIS = {"0": "visible", "1": "advanced", "2": "internal"}
+
+
 def _write_cmd(
     root: Path,
     rel: str,
     *,
     tier: str | None,
     name: str | None = None,
+    visibility: str | None | object = _DERIVE,
 ) -> Path:
+    # ADR-090: commands now require a `visibility:` field consistent with the
+    # `tier:` alias. The helper derives it from tier by default so existing
+    # call sites stay valid; pass visibility=None to omit it, or a literal to
+    # force a (possibly inconsistent) value.
+    if visibility is _DERIVE:
+        visibility = _TIER_TO_VIS.get(tier or "")
     path = root / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = ["---"]
@@ -40,6 +51,8 @@ def _write_cmd(
         lines.append(f"name: {name}")
     if tier is not None:
         lines.append(f"tier: {tier}")
+    if visibility is not None:
+        lines.append(f"visibility: {visibility}")
     lines += [
         "description: fixture command",
         "---",
@@ -93,6 +106,49 @@ def test_invalid_tier_fails(
     assert "2 invalid" in captured.err
     assert "wrong.md" in captured.err
     assert "alpha.md" in captured.err
+
+
+def test_missing_visibility_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # ADR-090: a valid tier but no visibility field must fail.
+    _write_cmd(tmp_path, "good.md", tier="0", name="good")
+    _write_cmd(tmp_path, "bad.md", tier="2", name="bad", visibility=None)
+
+    rc = lint(tmp_path)
+
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "1 visibility" in captured.err
+    assert "missing visibility: bad.md" in captured.err
+
+
+def test_visibility_tier_mismatch_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # ADR-090: visibility must agree with the tier alias when both are set.
+    _write_cmd(tmp_path, "good.md", tier="0", name="good")
+    _write_cmd(tmp_path, "wrong.md", tier="0", name="wrong", visibility="internal")
+
+    rc = lint(tmp_path)
+
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "disagrees with tier" in captured.err
+    assert "wrong.md" in captured.err
+
+
+def test_invalid_visibility_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _write_cmd(tmp_path, "good.md", tier="1", name="good")
+    _write_cmd(tmp_path, "bad.md", tier="1", name="bad", visibility="hidden")
+
+    rc = lint(tmp_path)
+
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "invalid visibility 'hidden'" in captured.err
 
 
 def test_empty_dir_fails(
