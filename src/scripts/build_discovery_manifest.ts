@@ -613,6 +613,24 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
             if (fm['tier'] !== undefined && fm['tier'] !== null) {
                 entry['tier'] = fm['tier'];
             }
+            // ADR-092: `visibility:` is the named source of truth; the integer
+            // `tier:` is a back-compat alias. Dual-emit BOTH into the manifest
+            // (a published data contract) during the deprecation window so
+            // external consumers reading the integer key keep working. Prefer
+            // the explicit field; derive from tier when absent.
+            const _tierToVis: Record<number, string> = { 0: 'visible', 1: 'advanced', 2: 'internal' };
+            let _vis: Json = fm['visibility'];
+            if (
+                (_vis === undefined || _vis === null) &&
+                fm['tier'] !== undefined &&
+                fm['tier'] !== null
+            ) {
+                // `.get(fm["tier"])` returns None when tier is not 0/1/2 → undefined here.
+                _vis = typeof fm['tier'] === 'number' ? _tierToVis[fm['tier']] : undefined;
+            }
+            if (_vis !== undefined && _vis !== null) {
+                entry['visibility'] = _vis;
+            }
             for (const k of ['intent', 'routes_to', 'replaces']) {
                 if (fm[k] !== undefined && fm[k] !== null) {
                     entry[k] = fm[k];

@@ -77,6 +77,49 @@ function writeSkill(repo: string, name: string, extra = ''): string {
     return p;
 }
 
+// ADR-092 visibility: a command artefact carrying `tier:` and optionally
+// `visibility:` frontmatter. `vis === undefined` omits the key (exercises the
+// tier→visibility derivation); a string value sets it explicitly.
+function writeCommand(
+    repo: string,
+    name: string,
+    { tier, vis }: { tier?: number; vis?: string } = {},
+): string {
+    const lines = [
+        '---',
+        `name: ${name}`,
+        'description: "fixture command"',
+    ];
+    if (tier !== undefined) {
+        lines.push(`tier: ${tier}`);
+    }
+    if (vis !== undefined) {
+        lines.push(`visibility: ${vis}`);
+    }
+    lines.push(
+        'workspaces:',
+        '  - engineering',
+        'packs:',
+        '  - engineering-base',
+        'lifecycle: active',
+        'trust:',
+        '  level: core',
+        '  confidence: high',
+        '  human_review_required: false',
+        'install:',
+        '  default: true',
+        '  removable: true',
+        '---',
+        '',
+        `# ${name}`,
+        '',
+    );
+    const p = path.join(repo, '.agent-src.uncondensed', 'commands', `${name}.md`);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, lines.join('\n'), 'utf-8');
+    return p;
+}
+
 function writeSkillWith(
     repo: string,
     name: string,
@@ -298,6 +341,44 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         expect((pack.by_trust_level as Record<string, number>).core).toBe(3);
     });
 
+    // ADR-092: explicit `visibility:` is the source of truth; the integer
+    // `tier:` derives one when visibility is absent ({0:visible, 1:advanced,
+    // 2:internal}); neither present → no key.
+    it('command emits explicit visibility verbatim', () => {
+        writeCommand(tmp, 'cmd-explicit', { tier: 2, vis: 'internal' });
+        const entry = build().artefacts.find((e) => e.path?.toString().endsWith('cmd-explicit.md'))!;
+        expect(entry.category).toBe('command');
+        expect(entry.tier).toBe(2);
+        expect(entry.visibility).toBe('internal');
+    });
+
+    it('command derives visibility from tier when visibility absent', () => {
+        writeCommand(tmp, 'cmd-derive-0', { tier: 0 });
+        writeCommand(tmp, 'cmd-derive-1', { tier: 1 });
+        writeCommand(tmp, 'cmd-derive-2', { tier: 2 });
+        const arts = build().artefacts;
+        const vis = (suffix: string): unknown =>
+            arts.find((e) => e.path?.toString().endsWith(suffix))!.visibility;
+        expect(vis('cmd-derive-0.md')).toBe('visible');
+        expect(vis('cmd-derive-1.md')).toBe('advanced');
+        expect(vis('cmd-derive-2.md')).toBe('internal');
+    });
+
+    it('command without tier or visibility omits the key', () => {
+        writeCommand(tmp, 'cmd-none');
+        const entry = build().artefacts.find((e) => e.path?.toString().endsWith('cmd-none.md'))!;
+        expect('tier' in entry).toBe(false);
+        expect('visibility' in entry).toBe(false);
+    });
+
+    it('out-of-range tier yields no derived visibility', () => {
+        // {0,1,2} only — tier 3 → Python dict .get returns None → key omitted.
+        writeCommand(tmp, 'cmd-tier3', { tier: 3 });
+        const entry = build().artefacts.find((e) => e.path?.toString().endsWith('cmd-tier3.md'))!;
+        expect(entry.tier).toBe(3);
+        expect('visibility' in entry).toBe(false);
+    });
+
     it('subviews are deterministic', () => {
         writeSkillWith(tmp, 's1', { pack: 'engineering-base' });
         writeSkillWith(tmp, 's2', { pack: 'engineering-base' });
@@ -342,6 +423,139 @@ function normalizeGeneratedAt(jsonText: string): string {
 
 const py3 = hasPython3();
 const runnable = py3 && fs.existsSync(COMMITTED);
+
+// --- Layer 3: visibility golden parity on a synthetic command fixture ------
+//
+// Self-contained: builds a tmp repo carrying command artefacts with explicit
+// `visibility:` AND tier-only (derive-path) frontmatter, then asserts the
+// python3 build and the tsx build emit a byte-identical manifest
+// (generated_at + scanner_version normalized — the latter hashes a different
+// file per runtime). This guarantees the ADR-092 visibility emission can never
+// silently regress in the TS twin, independent of whatever the real repo's
+// commands happen to carry. Skipped when python3 is unavailable.
+
+function makeVisFixture(tmp: string): { root: string; src: string } {
+    const vocab = path.join(tmp, 'config', 'discovery');
+    fs.mkdirSync(vocab, { recursive: true });
+    fs.writeFileSync(
+        path.join(vocab, 'workspaces.yml'),
+        '- id: engineering\n  label: "Engineering"\n  description: "devs"\n  default_packs: [engineering-base]\n',
+        'utf-8',
+    );
+    fs.writeFileSync(
+        path.join(vocab, 'packs.yml'),
+        '- id: engineering-base\n  label: "Engineering Base"\n  description: "core eng"\n  workspaces: [engineering]\n  trust_level_default: core\n',
+        'utf-8',
+    );
+    fs.writeFileSync(path.join(vocab, 'unassigned-artefacts.yml'), '[]\n', 'utf-8');
+    const src = path.join(tmp, '.agent-src.uncondensed');
+    fs.mkdirSync(path.join(src, 'commands'), { recursive: true });
+    const cmd = (name: string, tierLine: string, visLine: string): void => {
+        const body = [
+            '---',
+            `name: ${name}`,
+            'description: "fixture command"',
+            ...(tierLine ? [tierLine] : []),
+            ...(visLine ? [visLine] : []),
+            'workspaces:',
+            '  - engineering',
+            'packs:',
+            '  - engineering-base',
+            'lifecycle: active',
+            'trust:',
+            '  level: core',
+            '  confidence: high',
+            '  human_review_required: false',
+            'install:',
+            '  default: true',
+            '  removable: true',
+            '---',
+            '',
+            `# ${name}`,
+            '',
+        ].join('\n');
+        fs.writeFileSync(path.join(src, 'commands', `${name}.md`), body, 'utf-8');
+    };
+    cmd('cmd-explicit', 'tier: 2', 'visibility: internal'); // explicit wins
+    cmd('cmd-derive', 'tier: 1', ''); // derived → advanced
+    cmd('cmd-tier3', 'tier: 3', ''); // out of {0,1,2} → key omitted
+    cmd('cmd-none', '', ''); // neither → key omitted
+    return { root: tmp, src };
+}
+
+// Python driver: monkeypatch the module roots at the tmp fixture, build,
+// finalise, normalize the wall-clock + self-hash fields, print serialized JSON.
+const PY_VIS_DRIVER = [
+    'import sys, pathlib',
+    'sys.path.insert(0, sys.argv[3])',
+    'import build_discovery_manifest as m',
+    'root, src = sys.argv[1], sys.argv[2]',
+    'm.ROOT = pathlib.Path(root)',
+    'm.SRC = pathlib.Path(src)',
+    'm.VOCAB_DIR = pathlib.Path(root)/"config"/"discovery"',
+    'm.artefact_roots = lambda: [pathlib.Path(src)]',
+    'def _rl(rel):',
+    '    p = pathlib.Path(src)/rel.lstrip("/")',
+    '    return p if p.exists() else None',
+    'm.resolve_logical = _rl',
+    'mani, _ = m._build(False)',
+    'm._finalise_checksum(mani)',
+    'mani["generated_at"] = "<X>"',
+    'mani["scanner_version"] = "<X>"',
+    'sys.stdout.write(m._serialize(mani))',
+].join('\n');
+
+describe.skipIf(!py3)('build_discovery_manifest — visibility golden parity (synthetic)', () => {
+    let tmp: string;
+    let saved: ReturnType<typeof mod._getConfigForTest>;
+
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bdm-vis-'));
+        saved = mod._getConfigForTest();
+    });
+    afterEach(() => {
+        mod._setConfigForTest(saved);
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('command visibility emission is byte-identical python3 vs tsx', () => {
+        const { root, src } = makeVisFixture(tmp);
+        // tsx side: build in-process against the fixture, normalize the two
+        // non-deterministic / per-runtime fields, serialize identically.
+        mod._setConfigForTest({
+            ROOT: root,
+            SRC: src,
+            VOCAB_DIR: path.join(root, 'config', 'discovery'),
+            artefact_roots: () => [src],
+            resolve_logical: (rel: string) => {
+                const p = path.join(src, rel.replace(/\\/g, '/').replace(/^\/+/, ''));
+                return fs.existsSync(p) ? p : null;
+            },
+        });
+        const tsManifest = mod._build(false)[0];
+        mod._finalise_checksum(tsManifest);
+        tsManifest['generated_at'] = '<X>';
+        tsManifest['scanner_version'] = '<X>';
+        const tsOut = mod._serialize(tsManifest);
+
+        // python3 side: drive the real .py over the same fixture.
+        const scriptsDir = path.join(REPO_ROOT, 'src', 'scripts');
+        const py = spawnSync('python3', ['-c', PY_VIS_DRIVER, root, src, scriptsDir], big);
+        expect(py.stderr).toBe('');
+        expect(py.status).toBe(0);
+
+        // Byte-identical full manifest (incl. tier + visibility emission).
+        expect(tsOut).toBe(py.stdout);
+
+        // Belt-and-braces: assert the visibility values actually emitted.
+        const parsed = JSON.parse(tsOut) as { artefacts: Array<Record<string, unknown>> };
+        const byName = new Map(parsed.artefacts.map((a) => [a.name, a]));
+        expect(byName.get('cmd-explicit')!.visibility).toBe('internal');
+        expect(byName.get('cmd-derive')!.visibility).toBe('advanced');
+        expect('visibility' in byName.get('cmd-tier3')!).toBe(false);
+        expect('visibility' in byName.get('cmd-none')!).toBe(false);
+    });
+});
 
 describe.skipIf(!runnable)('build_discovery_manifest — golden parity (python3 vs tsx)', () => {
     it('manifest stdout is byte-identical (generated_at normalized)', () => {
