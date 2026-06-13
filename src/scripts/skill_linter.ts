@@ -146,8 +146,8 @@ const TRIGGER_WARNING_PATTERNS = [
 
 const ORDERED_STEP_PATTERN = /^(?:\s*|#{1,4}\s*)(\d+)\.\s+/gm;
 const SECTION_PATTERN = /^##\s+(.+?)\s*$/gm;
-const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---\n/;
-const DESCRIPTION_PATTERN = /^description:\s*"?(.*?)"?\s*$/m;
+export const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---\n/;
+export const DESCRIPTION_PATTERN = /^description:\s*"?(.*?)"?\s*$/m;
 const STATUS_PATTERN = /^status:\s*"?(active|deprecated|superseded)"?\s*$/m;
 const REPLACED_BY_PATTERN = /^replaced_by:\s*"?([\w-]+)"?\s*$/m;
 const TIER_PATTERN = /^tier:\s*"?([\w-]+)"?\s*$/m;
@@ -187,8 +187,8 @@ const KERNEL_RULE_IDS = new Set([
 ]);
 
 // --- Runtime execution metadata constants ---
-const VALID_EXECUTION_TYPES = new Set(['manual', 'assisted', 'automated']);
-const VALID_EXECUTION_HANDLERS = new Set(['none', 'shell', 'php', 'node', 'internal']);
+export const VALID_EXECUTION_TYPES = new Set(['manual', 'assisted', 'automated']);
+export const VALID_EXECUTION_HANDLERS = new Set(['none', 'shell', 'php', 'node', 'internal']);
 const VALID_EXECUTION_SAFETY_MODES = new Set(['strict']);
 const VALID_EXECUTION_FIELDS = new Set([
     'type',
@@ -604,7 +604,7 @@ export function extract_description(text: string): string | null {
     return m ? (m[1] as string).trim() : null;
 }
 
-const NAME_PATTERN = /^name:\s*"?(.*?)"?\s*$/m;
+export const NAME_PATTERN = /^name:\s*"?(.*?)"?\s*$/m;
 const DISABLE_MODEL_PATTERN = /^disable-model-invocation:\s*"?(true|false)"?\s*$/m;
 
 export function detect_artifact_type(p: string, text: string): ArtifactType {
@@ -991,9 +991,9 @@ function lint_router_frontmatter(
 
 // --- Execution block ---
 
-type ExecutionBlock = Record<string, string | number | string[]>;
+export type ExecutionBlock = Record<string, string | number | string[]>;
 
-function parseExecutionBlock(frontmatter: string): ExecutionBlock | null {
+export function parseExecutionBlock(frontmatter: string): ExecutionBlock | null {
     const lines = splitlines(frontmatter);
     let execStart: number | null = null;
     for (let i = 0; i < lines.length; i += 1) {
