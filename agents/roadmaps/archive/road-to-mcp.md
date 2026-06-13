@@ -45,7 +45,7 @@ A renderer emits each tool's concrete format. Unresolved placeholders fail
 loudly — never silent empty values.
 
 - [x] **1.1** `mcp.json` schema: `{ servers: { <name>: { command, args, env, cwd } } }` where string values accept `${env:VAR}`. Documented in [`docs/mcp.md`](../../docs/mcp.md).
-- [x] **1.2** Substitution resolver — regex + recursive walk over dict/list/str. Ported from [`kdcllc/agents_config` `app/agents_config/base.py`](https://github.com/kdcllc/agents_config/blob/master/app/agents_config/base.py) with one deliberate deviation: collects *all* missing vars before exiting, instead of raising on the first. Lives in [`scripts/mcp_render.py`](../../scripts/mcp_render.py).
+- [x] **1.2** Substitution resolver — regex + recursive walk over dict/list/str. Adapted from an external reference (an internal, local-only analysis records the upstream) with one deliberate deviation: collects *all* missing vars before exiting, instead of raising on the first. Lives in [`scripts/mcp_render.py`](../../scripts/mcp_render.py).
 - [x] **1.3** Renderer `scripts/mcp_render.py` emits:
       - `.cursor/mcp.json` (in-project, committed).
       - `.windsurf/mcp.json` (in-project, committed).
@@ -75,6 +75,6 @@ loudly — never silent empty values.
 ## References
 
 - Archived parent (explored & largely rejected): [`archive/road-to-ultimate.md`](archive/road-to-ultimate.md).
-- Substitution reference impl: https://github.com/kdcllc/agents_config/blob/master/app/agents_config/base.py
-- Source analysis: [`../analysis/compare-kdcllc-agents-config.md`](../analysis/compare-kdcllc-agents-config.md).
+- Substitution reference impl: an external reference (internal, local-only).
+- Source analysis: an internal (local-only) reference analysis.
 - Archived sibling (depth): [`archive/road-to-9.md`](archive/road-to-9.md).

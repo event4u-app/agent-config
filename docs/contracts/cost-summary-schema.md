@@ -9,7 +9,7 @@ Stable JSON contract for inter-tool consumption of cost-tracking data
 emitted by [`scripts/cost_summary.py`](../../src/scripts/cost_summary.py).
 Schema-versioned so downstream consumers can pin and migrate explicitly.
 
-Design reference: Ruflo `scripts/summary.mjs` (upstream cite). Our shape
+Design reference: the external runtime `scripts/summary.mjs` (upstream cite). Our shape
 diverges to align with the local `agents/cost-tracking/sessions.jsonl`
 fields and the telegraph-suspended-multiplier contract.
 

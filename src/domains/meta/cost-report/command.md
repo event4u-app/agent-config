@@ -125,8 +125,6 @@ Allowed values: `today`, `week`, `month`, `all` (default).
 
 ## Attribution
 
-Forked from
-[`ruvnet/ruflo`](https://github.com/ruvnet/ruflo)
-`plugins/ruflo-cost-tracker/scripts/{track,budget}.mjs`. The MCP
-`memory_store` dependency was replaced with a local JSONL append; the
-50/75/90/100% alert ladder and pricing tiers are preserved verbatim.
+Adapted from an external reference. The MCP `memory_store` dependency
+was replaced with a local JSONL append; the 50/75/90/100% alert ladder
+and pricing tiers are preserved verbatim.

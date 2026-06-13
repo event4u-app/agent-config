@@ -142,8 +142,8 @@ Each verdict is one paragraph. No multi-phase planning during research.
 
 - [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — parent concept,
   covers problem 1 for skills already
-- [`../road-to-anthropic-alignment.md`](../road-to-anthropic-alignment.md) — Phase 2
-  (pushy descriptions) feeds the same measurement question for rules
+- an internal alignment roadmap (local-only) — its pushy-descriptions phase
+  feeds the same measurement question for rules
 - [`../road-to-drafting-protocol.md`](../road-to-drafting-protocol.md) — Phase 3
   description-assist would benefit from any rule eval data this produces
 - `.agent-src/rules/rule-type-governance.md` — auto vs always classification

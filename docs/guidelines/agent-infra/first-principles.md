@@ -189,4 +189,4 @@ This exposes weak arguments and strengthens valid ones.
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/first_principles.md` · MIT License.
+Adapted from an external reference.

@@ -5,17 +5,16 @@ complexity: structural
 # Road to Multi-Package Coexistence
 
 **Status:** DRAFT — synthesised 2026-05-12 from a side-by-side analysis
-of `feat/global-content-deployment` (PR #121) against
-`nextlevelbuilder/ui-ux-pro-max-skill` (`init.ts`, `uninstall.ts`,
-`types/index.ts` direct fetch).
+of `feat/global-content-deployment` (PR #121) against an external reference
+suite (its `init.ts`, `uninstall.ts`, `types/index.ts` direct fetch).
 **Started:** 2026-05-12
 **Trigger:** PR #121 closed the functional-alignment gap (install,
 uninstall, sync, prune, versions, marketplace audit). The comparison
 surfaced the next architectural gap: **`agent-config` has no
 file-level ownership.** We know *which* tools we installed (lockfile
-v1), not *which files* we wrote. `ui-ux-pro-max-skill` sidesteps the
+v1), not *which files* we wrote. The external reference suite sidesteps the
 problem by installing every asset under a single namespace
-(`<root>/skills/ui-ux-pro-max/`). We can't adopt their namespace
+(`<root>/skills/<package-id>/`). We can't adopt their namespace
 without breaking the established top-level layout (`.cursor/rules/*.md`)
 — but we can match their robustness by recording every written path in
 the lockfile. Goal: make two independent agent-config-style packages
@@ -61,8 +60,8 @@ Cross from **tool-level ownership** to **file-level ownership**:
 - **Schema v2 is additive.** v1 readers keep working (missing `files[]`
   key tolerated). v2 writers populate the new fields. No forced
   migration — first re-install rewrites the manifest in v2 shape.
-- **No namespace-subfolder migration.** The reference repo's
-  `<root>/skills/ui-ux-pro-max/` pattern is not adopted. Top-level
+- **No namespace-subfolder migration.** The external reference suite's
+  `<root>/skills/<package-id>/` pattern is not adopted. Top-level
   layout stays. Namespace-as-opt-in lives in Phase 6 (deferred until
   a real consumer asks).
 - **Conflict-detection is hard-stop, not warn.** Existing file at
@@ -296,7 +295,7 @@ Phase 6 = deferred, not counted.
 Not implemented now. Captured here so the option is documented,
 not lost. A future `--namespace=<package-id>` install flag would
 deploy under `<root>/skills/<package-id>/` (matching the
-`ui-ux-pro-max-skill` layout) for skills only — bridges stay
+external reference suite's layout) for skills only — bridges stay
 top-level. Trigger: a real second agent-config-style package
 shipping in production and reporting a top-level collision that
 schema v2 + conflict detection cannot resolve cleanly.

@@ -527,7 +527,7 @@ Overlap notes:
 | skill | `framework` | 3 | 1 | `laravel` | 100% | N |
 | skill | `council_depth` | 4 | 1 | `deep` | 100% | N |
 | skill | `meta_skill` | 2 | 1 | `true` | 100% | N |
-| skill | `external_source` | 1 | 1 | `"https://github.com/ginobefun/deep-reading-analyst-skill/tre…` | 100% | N |
+| skill | `external_source` | 1 | 1 | `"<redacted-external-source>` | 100% | N |
 | skill | `execution.allowed_tools` | 26 | 3 | `[]` | 88% | N |
 | skill | `execution.handler` | 26 | 2 | `internal` | 69% | N |
 | skill | `execution.timeout_seconds` | 4 | 3 | `30` | 50% | N |

@@ -31,7 +31,7 @@
 | 5 | Employee workflows | fb26 P0 | `tracked` | `road-to-employee-product-and-external-proof` Phases 3 (role experiences) + 5 (document workflows: offer / mail / memo / brief / video-script). |
 | 6 | Simplicity / experience-first | fb24/26 | `tracked` | The `road-to-6.0.0-*` rebuild series — this is the 6.0.0 thesis, not a quick fix. |
 | 7 | Glama registry capture | fb25 | `closed-here` | Glama row added to `docs/distribution/registries.md` § MCP registries; status `⬜ open (human-owner: maintainer submits via the Glama claim flow)`. |
-| 8 | MCP-registry rows sweep | fb25 | `closed-here` | Swept: all three rows (punkpeye, mcp.so, mcpservers.org) still `⬜ open` / `pending` across `registries.md`, `registry-submissions.md`, `dist/mcp/registry-manifest.json`. No submissions landed; nothing stale. |
+| 8 | MCP-registry rows sweep | fb25 | `closed-here` | Swept: all three rows (external MCP registry, mcp.so, mcpservers.org) still `⬜ open` / `pending` across `registries.md`, `registry-submissions.md`, `dist/mcp/registry-manifest.json`. No submissions landed; nothing stale. |
 | 9 | Registry submissions | fb25 | `human-owner` | Third-party PRs / directory forms require the maintainer's GitHub identity (per `road-to-product-adoption` Phase 2 + `registries.md`). |
 | 10 | Recruit sessions | fb24–26 | `human-owner` | Maintainer-run, no autonomous surface. |
 | 11 | Release body populated | fb25 | `closed-here` (path) / `human-owner` (5.8.0 backfill) | Regular path verified correct — see Surfaced risks below. |

@@ -135,7 +135,7 @@ Telemetry / APM     → strip from request/response captures; allowlist headers.
 
 ## Provenance
 
-- Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/secrets-management/SKILL.md` (MIT, © 2025 Microck) — **Sunset Policy applied**: 346-line provider cookbook reduced to a ~140-line decision framework; per-provider deep-dives externalized to upstream docs below.
+- Adopted from: an external reference (MIT, © 2025 an external reference) — **Sunset Policy applied**: 346-line provider cookbook reduced to a ~140-line decision framework; per-provider deep-dives externalized to upstream docs below.
 - Externalized provider docs:
   - HashiCorp Vault: https://developer.hashicorp.com/vault/docs · https://developer.hashicorp.com/vault/docs/secrets/databases
   - AWS Secrets Manager: https://docs.aws.amazon.com/secretsmanager/ · rotation: https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html

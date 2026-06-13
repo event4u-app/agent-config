@@ -126,7 +126,7 @@ Exactly **one** layer translates internal errors to the egress format (HTTP stat
 
 ## Provenance
 
-- Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/error-handling-patterns/SKILL.md` (MIT, © 2025 Microck) — **Sunset Policy applied**: 636-line source reduced to a ~150-line decision framework; language catalogues externalized to the upstream resources below.
+- Adopted from: an external reference (MIT, © 2025 an external reference) — **Sunset Policy applied**: 636-line source reduced to a ~150-line decision framework; language catalogues externalized to the upstream resources below.
 - Externalized catalogues:
   - Python: https://docs.python.org/3/tutorial/errors.html · https://docs.python.org/3/library/exceptions.html
   - PHP / Laravel: https://laravel.com/docs/errors · https://www.php.net/manual/en/language.exceptions.php

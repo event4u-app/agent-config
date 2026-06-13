@@ -25,7 +25,7 @@ Make descriptions "pushy" — explicit about when to fire:
   adjectives, drop the second example phrasing, or collapse a list — do
   **not** drop the trigger vocabulary or the `even if ...` tail.
 
-Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
+Source: adapted from an external reference.
 
 **Litmus test:** Read the description cold, without the skill's body. If you
 cannot name at least two phrasings a user would realistically type that should

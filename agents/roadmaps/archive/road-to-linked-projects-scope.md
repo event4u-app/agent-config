@@ -12,7 +12,7 @@ resolution: go-option-a
 
 The Phase-0 spike confirmed Claude Code can already read/write a sibling unconditionally — so the feature's value is **not** capability, it is **proactivity**: the agent does not consider the sibling unless told, and the developer who most needs this is precisely the one who won't think to tell it. A manual doc note presupposes the very awareness the target user lacks. **Auto-detection is zero-knowledge** — it reads the relationship the developer already encoded by attaching the repo in their IDE.
 
-AI Council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 3 rounds + Karpathy peer-review, 2026-05-29) flipped an earlier NO-GO to **GO** on this reasoning, scoped to **Option A — passive awareness**:
+AI Council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 3 rounds + anonymous peer-review, 2026-05-29) flipped an earlier NO-GO to **GO** on this reasoning, scoped to **Option A — passive awareness**:
 
 - Detect the IDE-attached sibling, one-time opt-in, persist local-only.
 - Inject a **behavioral-directive** awareness note for in-scope siblings: *"when a change may affect this repo (API contract, shared types), proactively check cross-repo impact and warn; do not include sibling files unless explicitly requested."*

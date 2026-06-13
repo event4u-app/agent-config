@@ -263,7 +263,7 @@ Pair the catalog with a separate "Global install" subsection (same flags
 plus `--global`) and an "Other commands" subsection. Reference example:
 [`README.md § Pick specific AIs`](../../../README.md#pick-specific-ais) in
 this repository. Inspiration:
-[`ui-ux-pro-max-skill § Installation`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill#installation).
+[`an external reference suite § Installation`](https://github.com/an external reference suite#installation).
 
 Use the catalog when the package's primary install action varies by
 platform; use a matrix table (Tool / Rules / Skills / Commands) for

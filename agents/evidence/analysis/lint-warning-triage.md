@@ -1,7 +1,7 @@
 # Lint Warning Triage — 2026-05-09
 
 **Source:** `agents/evidence/analysis/lint-baseline-2026-05-09.txt` (108 warn, 0 fail).
-**Post-Phase-1:** 105 warn (Microck plate cleaned).
+**Post-Phase-1:** 105 warn (external-suite plate cleaned).
 **Post-Phase-2 P2.1:** 95 warn (cluster-head exemption + `### Step N`
 recognition).
 **Output:** 3-bucket classification per the roadmap

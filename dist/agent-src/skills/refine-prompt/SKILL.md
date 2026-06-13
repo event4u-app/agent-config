@@ -183,7 +183,7 @@ Before emitting the envelope, run these three scans. Each is a fast pass; failur
 2. **Placeholder / TODO scan** — the rendered envelope contains no `<placeholder>`, `TODO`, `FIXME`, `tbd`, `???`, `XXX` strings. The literal angle-bracket placeholders in the template (`<one sentence …>`, `<bullet>`) must be replaced with concrete text before emission.
 3. **Type / shape consistency** — every named file, module, route, or command in the AC matches the project's existing conventions. If the prompt names `auth.service.ts` but the codebase uses `AuthService.php`, surface the mismatch in *Assumptions* rather than adopting the prompt's spelling.
 
-Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+Source: adapted from an external reference `writing-plans/SKILL.md` § Self-Review (v5.1.0).
 
 ## Band-action mapping
 

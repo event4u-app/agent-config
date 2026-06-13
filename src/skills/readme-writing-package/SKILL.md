@@ -262,8 +262,8 @@ npx <package> init --tools=windsurf         # Windsurf
 Pair the catalog with a separate "Global install" subsection (same flags
 plus `--global`) and an "Other commands" subsection. Reference example:
 [`README.md § Pick specific AIs`](../../../README.md#pick-specific-ais) in
-this repository. Inspiration:
-[`ui-ux-pro-max-skill § Installation`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill#installation).
+this repository — or any well-structured external skill README that
+lists per-target install commands in a flat catalog.
 
 Use the catalog when the package's primary install action varies by
 platform; use a matrix table (Tool / Rules / Skills / Commands) for

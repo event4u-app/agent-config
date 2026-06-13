@@ -10,7 +10,7 @@ status: completed
 > About / Topics / `package.json` / external registries are
 > mismatched, drifted, or missing. This roadmap converts the
 > ad-hoc ops actions ("setze Topics in der GitHub-UI", "submit PR
-> to `punkpeye/awesome-mcp-servers`") into **checked-in, lintable
+> to an external MCP-server registry") into **checked-in, lintable
 > artefacts** so the visibility surface stops drifting from the
 > package's actual capability surface. It delivers three things:
 > (1) `.github/topics.yml` plus a sync action; (2) an MCP-registry
@@ -35,7 +35,7 @@ weak; it's that the **external signals** under-sell it:
 - The GitHub repo's *Topics* sidebar is empty or sparse, so the
   package never surfaces in `github.com/topics/ai-agent`,
   `topics/mcp`, `topics/claude-code` searches.
-- The MCP-registry listing (`punkpeye/awesome-mcp-servers` and the
+- The MCP-registry listing (an external MCP-server registry and the
   Cloudflare-hosted MCP catalogue we already ship a worker for) is
   not submitted, so the only growth lever for non-marketing-driven
   adoption stays cold.
@@ -94,7 +94,7 @@ The feedback condenses four very different actions into one
 ## Acceptance criteria (whole roadmap)
 
 - [x] `.github/topics.yml` exists, lists the agreed topics (Phase 1 fixes the list), and is the **only** source of truth — `task sync-github-topics` reads it and writes via the GitHub API (`PUT /repos/{owner}/{repo}/topics`)
-- [x] `dist/mcp/registry-manifest.json` exists, validates against `docs/contracts/mcp-registry-manifest.schema.json`, and is the input to two submission-PR templates: one for `punkpeye/awesome-mcp-servers` (Markdown row), one for the Cloudflare MCP catalogue (JSON entry)
+- [x] `dist/mcp/registry-manifest.json` exists, validates against `docs/contracts/mcp-registry-manifest.schema.json`, and is the input to two submission-PR templates: one for an external MCP-server registry (Markdown row), one for the Cloudflare MCP catalogue (JSON entry)
 - [x] `scripts/lint_positioning.py` exits 0 when the README tagline, the `package.json` `description`, and the rendered GitHub About text in `.github/about.yml` are mutually consistent; exits non-zero with a clear diff message otherwise
 - [x] `task visibility-check` runs the three linters above as one command, used in CI
 - [x] `npm pack --dry-run --json | jq '.[0].files[] | .path' | grep '^dist/mcp/'` returns ≥ 1 line — the MCP manifest ships in the tarball
@@ -211,23 +211,23 @@ The feedback condenses four very different actions into one
     }
   }
   ```
-- [x] `$defs/registry`: `{ id, label, listing_format ("markdown-row" | "json-entry"), submission_url, rendered_payload }`. Closed vocabulary for `id`: `awesome-mcp-servers` (Markdown row), `mcp-cloudflare-catalogue` (JSON entry). Adding a third registry requires a schema-version bump.
+- [x] `$defs/registry`: `{ id, label, listing_format ("markdown-row" | "json-entry"), submission_url, rendered_payload }`. Closed vocabulary for `id`: `external-mcp-registry` (Markdown row), `mcp-cloudflare-catalogue` (JSON entry). Adding a third registry requires a schema-version bump.
 - [x] Validate the schema against itself in CI:
   - [x] `python3 -c "import json,jsonschema;s=json.load(open('docs/contracts/mcp-registry-manifest.schema.json'));jsonschema.Draft202012Validator.check_schema(s)"` exits 0
 
 ### Step 2.2: Manifest builder
 
 - [x] **Create** `scripts/build_mcp_registry_manifest.py` (NEW, ≤ 200 LOC). Reads `package.json`, the discovery manifest (`dist/discovery/discovery-manifest.json` if the discovery roadmap has landed; otherwise count tools from `workers/mcp/src/`), and `.github/topics.yml`. Emits `dist/mcp/registry-manifest.json` plus two rendered payloads:
-  - `dist/mcp/awesome-mcp-servers.row.md` — a single Markdown table row to paste into the registry's README
+  - `dist/mcp/external-mcp-registry.row.md` — a single Markdown table row to paste into the registry's README
   - `dist/mcp/mcp-cloudflare-catalogue.json` — a single JSON object matching the upstream catalogue schema
 - [x] Both rendered payloads are deterministic; running the script twice produces byte-identical files. Same `--write / --strict / --quiet` shape as the discovery scanner from the sibling roadmap.
 
 ### Step 2.3: Submission-PR templates
 
-- [x] **Create** `docs/distribution/mcp-submission-checklist.md` (NEW, ≤ 80 lines). A short checklist for the maintainer at registry-submission time. Names the upstream PR target (`punkpeye/awesome-mcp-servers`), the exact file to edit in that repo (`README.md`'s "Server Frameworks / Agents" section — verify before each submission), and the command sequence:
+- [x] **Create** `docs/distribution/mcp-submission-checklist.md` (NEW, ≤ 80 lines). A short checklist for the maintainer at registry-submission time. Names the upstream PR target (an external MCP-server registry), the exact file to edit in that repo (`README.md`'s "Server Frameworks / Agents" section — verify before each submission), and the command sequence:
   ```bash
   python3 scripts/build_mcp_registry_manifest.py --write
-  cat dist/mcp/awesome-mcp-servers.row.md   # paste this row in the upstream PR
+  cat dist/mcp/external-mcp-registry.row.md   # paste this row in the upstream PR
   cat dist/mcp/mcp-cloudflare-catalogue.json # paste this object in the upstream PR
   ```
 - [x] Add a one-paragraph "Submitting to a new registry" subsection at the bottom describing the schema-bump required.
@@ -242,7 +242,7 @@ The feedback condenses four very different actions into one
 
 - [x] `python3 scripts/build_mcp_registry_manifest.py --write --strict` exits 0
 - [x] `dist/mcp/registry-manifest.json` validates against the schema (`python3 scripts/lint_mcp_registry_manifest.py --quiet` — NEW companion linter, ≤ 60 LOC)
-- [x] `dist/mcp/awesome-mcp-servers.row.md` is non-empty and parseable as a single Markdown table row
+- [x] `dist/mcp/external-mcp-registry.row.md` is non-empty and parseable as a single Markdown table row
 - [x] `npm pack --dry-run --json | jq '.[0].files[] | .path' | grep '^dist/mcp/'` returns ≥ 3 lines (JSON + two rendered payloads)
 
 ## Phase 3 — Positioning lint
@@ -328,7 +328,7 @@ The feedback condenses four very different actions into one
 **`strategist` — cost / yield and non-goal discipline**
 
 - [x] Cost/yield is correct: GitHub Topics + MCP-registry is the cheapest two-lever pair for non-paid discovery. Be **even more aggressive** about non-goals: Product Hunt, HN, npm-featured listings are explicitly deferred until topic + MCP traffic is measured for ≥ 1 release cycle after Phases 1-3 ship. Otherwise the maintainer gets pulled into a marketing PR before any data exists.
-- [x] The "visibility-as-code" framing is the durable win. Append one sentence to the Phase 1 docs: future surfaces (`awesome-claude-code`, `awesome-ai-agents`, etc.) follow the same contract — checked-in manifest, lint asserts agreement, sync action handles outward push, **never a UI edit**.
+- [x] The "visibility-as-code" framing is the durable win. Append one sentence to the Phase 1 docs: future surfaces (external community registries, etc.) follow the same contract — checked-in manifest, lint asserts agreement, sync action handles outward push, **never a UI edit**.
 
 **`security-engineer` — token-permission cost of the sync workflow**
 

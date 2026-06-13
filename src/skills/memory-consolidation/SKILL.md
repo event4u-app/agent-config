@@ -196,9 +196,8 @@ documented now so the second implementation is not a vacuum design.
 
 - Do NOT auto-trigger this skill on session end. The flow is manual,
   per-invocation, and confirmed.
-- Do NOT vendor patterns or text from `grandamenium/dream-skill` —
-  the upstream lacks a `LICENSE`. Concept and procedure structure are
-  the only adoption surface.
+- Do NOT vendor patterns or text from any external source. Concept and
+  procedure structure are the only adoption surface.
 - Do NOT promote a normalised fact whose `key` falls outside the
   repo root or names another consumer project.
 - Do NOT delete a stale curated entry without explicit user

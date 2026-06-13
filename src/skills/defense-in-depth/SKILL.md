@@ -152,6 +152,6 @@ BEFORE adding the 5th guard:
 
 ## Provenance
 
-- Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/defense-in-depth/SKILL.md` (MIT, © 2025 Microck).
+- Adopted from: an external reference (internal provenance, redacted).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `defense-in-depth`).
 - Iron-Law floor: `non-destructive-by-default`, `verify-before-complete`, `skill-quality`.

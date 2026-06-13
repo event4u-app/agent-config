@@ -324,6 +324,11 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: ./scripts-run src/scripts/check_portability
 
+  check-no-external-sources:
+    silent: true
+    desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep)
+    cmd: python3 src/scripts/check_no_external_sources.py
+
   check-module-management-neutral:
     silent: true
     desc: Verify module-management SKILL stays framework-neutral (Phase C of road-to-configurable-modules)

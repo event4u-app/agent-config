@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **534 artefacts** in this package.
+Maintainer-facing index of all **535 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -239,7 +239,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (79)
+## Rules (80)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -309,6 +309,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`skill-improvement-trigger`](../src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
 | rule | [`slash-command-routing-policy`](../src/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
+| rule | [`source-confidentiality`](../src/rules/source-confidentiality.md) | auto | Naming an external repo as something this package copied, harvested, compared against, or was inspired by — keep the tracked tree source-anonymous |
 | rule | [`source-of-truth`](../src/rules/source-of-truth.md) | auto | Editing files in dist/agent-src/, .augment/, .claude/, or .cursor/ — source of truth is src/; never edit a generated projection directly |
 | rule | [`strategy-safety-floor`](../src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision |
 | rule | [`symfony-routing`](../src/rules/symfony-routing.md) | auto | Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow |

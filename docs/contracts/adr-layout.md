@@ -4,7 +4,7 @@ stability: stable
 
 # ADR Layout — Per-area Directories
 
-> Status: accepted · 2026-05-16 · Roadmap: `step-11-ruflo-parity` Phase 4
+> Status: accepted · 2026-05-16 · Roadmap: an internal parity roadmap (local-only) Phase 4
 
 ## Scope
 
@@ -105,4 +105,4 @@ The skill's template, numbering logic, and validation hooks are identical for bo
 - [`docs/decisions/INDEX.md`](../decisions/INDEX.md) — flat surface index.
 - [`scripts/audit_adr_coverage.py`](../../src/scripts/audit_adr_coverage.py) — coverage gate.
 - [`scripts/adr/regenerate_index.py`](../../src/scripts/adr/regenerate_index.py) — index regenerator (works on both surfaces; pass `--dir`).
-- `step-11-ruflo-parity` Phase 4 — origin.
+- an internal parity roadmap (local-only) Phase 4 — origin.

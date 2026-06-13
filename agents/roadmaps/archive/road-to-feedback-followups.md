@@ -17,7 +17,7 @@ outdated. Aber erstelle eine roadmap mit dem was noch ist."
 
 Capture the still-open items from the multi-block feedback after the
 council notes were folded into mainline (1.21.0 density-gating, PR #62
-governance sweep, PR #64 Microck close). Outdated points (4× roadmap
+governance sweep, PR #64 external-suite close). Outdated points (4× roadmap
 refs, 6-week gate, PR #46 regressions superseded by density-gating)
 are NOT in scope — they are recorded as resolved and dropped.
 
@@ -43,9 +43,9 @@ later AC.
   commit the file. Records the `216 pass, 108 warn, 0 fail` baseline
   before any Phase-1 / Phase-2 changes.
 
-### Phase 1 — Microck-harvest skill cleanup (immediate)
+### Phase 1 — external-suite-harvest skill cleanup (immediate)
 
-PR #64 (Microck harvest) introduced 5 new linter warnings on adopted
+PR #64 (external-suite harvest) introduced 5 new linter warnings on adopted
 skills. Decision needed — fix, accept-with-record, or backlog.
 Tolerating silently breaks the no-warning-drift posture held since
 1.15.0. (Merge timing is a delivery decision and out of scope for

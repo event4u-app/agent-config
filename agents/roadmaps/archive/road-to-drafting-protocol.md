@@ -11,10 +11,10 @@
 > before writing a single line. The agent proposes actively; the human decides
 > everything. Zero autopilot, maximum collaboration.
 
-- **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
-- **Source analysis:** [`agents/evidence/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
+- **Source inspiration:** an external reference suite's skill-creator — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (auto-run loop, packaging, blind comparison)
+- **Source analysis:** an internal (local-only) reference analysis — revised scope after 2026-04-20 discussion
 - **Status:** Phase 1 + 2 + 3 + 4 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
-- **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
+- **Author:** Split out of a prior alignment track after narrow-rejection was revised
 
 ## Guiding principle
 
@@ -102,7 +102,7 @@ into `foo-basics` + `foo-advanced`."*
 
 ## Prerequisites
 
-- [x] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
+- [x] An internal (local-only) roadmap Phase 2
       merged — `skill-quality` rule carries the "pushy description" pattern, so
       the Draft phase has authoritative guidance to cite.
 - [x] `improve-before-implement` and `ask-when-uncertain` rules reviewed for
@@ -186,7 +186,7 @@ extended in `skill-writing`. Skill count 100 → 103.
 
 ## Phase 3 — Description assist (agent proposes, human approves) ✅ shipped 2026-04-21
 
-This is the **bounded** version of anthropic's `run_loop.py`: the agent
+This is the **bounded** version of an external reference suite's auto-run loop: the agent
 participates in description iteration, but every change is an approval-gated
 proposal. No Claude API calls. No silent edits.
 
@@ -254,10 +254,10 @@ Still proposal-gated. Still no autopilot.
 | Pattern | Why rejected |
 |---|---|
 | Auto-rewrite loop (Claude→Claude) | Every change must have a human approval step. Proposals only. |
-| Multiple-turn self-optimization (run_loop.py loop) | Max 2 propose-reject cycles, then stop. |
+| Multiple-turn self-optimization (auto-run loop) | Max 2 propose-reject cycles, then stop. |
 | Claude API call during drafting | Costs money, adds latency. The agent drafts from existing context. |
 | Blind A/B between two description variants | User can compare variants directly; no judge agent needed. |
-| `.skill` packaging of drafted artifacts | Out of scope; see `road-to-anthropic-alignment.md`. |
+| Packaging of drafted artifacts | Out of scope; see an internal (local-only) roadmap. |
 | Auto-commit of the drafted artifact | Drafts land in the working tree only. Commit is a separate user action. |
 
 ## Success criteria
@@ -284,8 +284,8 @@ Still proposal-gated. Still no autopilot.
 
 ## Related
 
-- [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — Phase 2 prerequisite (pushy description pattern)
+- An internal (local-only) roadmap — Phase 2 prerequisite (pushy description pattern)
 - [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — integrated in Phase 4
 - [`road-to-9.md`](road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`road-to-mcp.md`](road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
-- [`agents/evidence/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)
+- An internal (local-only) reference analysis — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)

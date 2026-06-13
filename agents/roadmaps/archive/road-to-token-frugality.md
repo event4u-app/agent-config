@@ -1101,7 +1101,7 @@ and provide empirical degradation data for F or G before re-opening.
 
 ## Predecessors
 
-- `agents/roadmaps/skipped/road-to-telegraph-integration.md` — earlier
+- An internal (local-only) predecessor roadmap — earlier
   telegraph rollout with broader scope; this roadmap reuses its
   three-switch toggle and adds `speak_scope` plus the wider
   verbosity layer.

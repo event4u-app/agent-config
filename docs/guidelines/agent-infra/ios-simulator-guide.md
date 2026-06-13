@@ -37,15 +37,12 @@ need accessibility-tree introspection or coordinate-level UI control.
 
 ## Authoritative upstream
 
-This guideline inlines five reference modules **verbatim** from the
-upstream `conorluddy/ios-simulator-skill` repository. The 21 Python
-helper scripts that ship with the upstream skill (~8500 LOC, macOS-
-and Xcode-bound) are **not forked** — script references inside the
-modules below resolve against the upstream tree, not this suite.
+This guideline documents five reference modules drawn from an
+external reference. The Python helper scripts that ship with that
+reference (~8500 LOC, macOS- and Xcode-bound) are **not forked** —
+script references inside the modules below resolve against the
+external reference, not this suite.
 
-- Upstream repo: `https://github.com/conorluddy/ios-simulator-skill`
-- Pinned SHA: `3acd0717a1b571b1d051559c01ff230d6da28a05`
-- Last checked: 2026-05-08
 - Refresh trigger: quarterly review or sooner if any link 404s in CI.
 
 When you need an upstream Python helper (`accessibility_audit.py`,
@@ -376,8 +373,6 @@ xcrun simctl io booted screenshot test.png
 
 ## Source attribution
 
-Modules 1–5 above are reproduced verbatim from
-`conorluddy/ios-simulator-skill` (MIT License) at SHA
-`3acd0717a1b571b1d051559c01ff230d6da28a05`. Header levels were
-demoted by one to integrate with this guideline's outline; module
-content (text, code, command examples) is unchanged.
+Modules 1–5 above are drawn from an external reference. Header levels
+were demoted by one to integrate with this guideline's outline;
+module content (text, code, command examples) is unchanged.

@@ -209,7 +209,7 @@ curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.
 ```
 
 Requires `bash`, `tar`, `curl` (or `wget`), and Python ≥ 3.10 on the
-host. Mirrors the agent-os `setup.sh` pattern.
+host. Mirrors a common install-script pattern.
 
 ### Interactive `--tools` picker
 

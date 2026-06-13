@@ -4,10 +4,10 @@
 > A small Python runner plus a per-skill `evals/triggers.json` file, so every
 > skill's description is proven with data instead of hoped into existence.
 
-- **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — description-optimization loop
-- **Source analysis:** [`agents/evidence/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
+- **Source inspiration:** an external skill suite's description-optimization loop
+- **Source analysis:** an internal (local-only) reference analysis (Finding §3 ADAPT)
 - **Status:** Archived 2026-04-23 — all agent-automatable work done (Phase 1 runner + Phase 3.5 output-schema enforcement). Phase 2 live execution is a manual user action tracked via `task test-triggers-live`, not a checkbox on this roadmap.
-- **Author:** Split out of `archive/road-to-anthropic-alignment.md` on 2026-04-20 for focus (parent archived 2026-04-21)
+- **Author:** Split out of an internal (local-only) sibling roadmap on 2026-04-20 for focus (parent archived 2026-04-21)
 - **Last updated:** 2026-04-23 — Phase 3.5 (Q26 output-template enforcement) shipped: `scripts/skill_linter.py` now validates per-skill `evals/output-schema.yml`; schemas seeded for `refine-ticket` and `estimate-ticket`; 9 new linter tests.
 
 ## Guiding principle
@@ -113,7 +113,7 @@ continue to rollout.
 
 ## Prerequisites
 
-- [x] [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) Phase 2
+- [x] An internal (local-only) sibling roadmap's Phase 2
       landed — pushy-description pattern in `skill-quality` rule, audit tool in
       place, **6 descriptions rewritten** (the 3 pilots + `developer-like-execution`,
       `git-workflow`, `conventional-commits-writing`) so the pilot evals measure
@@ -306,14 +306,14 @@ and stop. Do not expand scope.
 
 ## Explicitly rejected
 
-| Pattern from skill-creator | Why rejected here |
+| Pattern from the external reference suite | Why rejected here |
 |---|---|
-| HTML eval viewer (`generate_review.py`) | Too much UI. CLI + JSON suffices. |
+| HTML eval viewer | Too much UI. CLI + JSON suffices. |
 | Subagent-based parallel runs | Claude-Code-infrastructure-specific; not portable. |
 | Baseline-vs-skill A/B benchmarking | Trigger rate is a single-call measure, not a paired observation. |
 | Blind comparison with independent judge | Overkill for our scale (95 skills, one human reviewer). |
-| Full interactive skill-creator workflow | We maintain skills by hand under explicit governance. |
-| Automated description rewriting by Claude (the `run_loop.py` optimizer) | Keeps humans in the loop. Claude may propose — a human approves. |
+| Full interactive skill-authoring workflow | We maintain skills by hand under explicit governance. |
+| Automated description rewriting by Claude (the upstream optimizer loop) | Keeps humans in the loop. Claude may propose — a human approves. |
 | Coverage of all 95+ skills | Hard cap at 20. Maintenance cost compounds. |
 
 ## Open questions
@@ -324,8 +324,8 @@ and stop. Do not expand scope.
    a `added_on` field and a quarterly review cycle?
 3. **How do we avoid overfitting?** If we rewrite descriptions until evals pass,
    we may optimize against our own queries and still miss real-world phrasings.
-   Mitigation: 60% train / 40% held-out test split from day one (stolen from
-   skill-creator verbatim — this part is worth copying).
+   Mitigation: 60% train / 40% held-out test split from day one (adapted from
+   an external reference verbatim — this part is worth copying).
 
 ## Final status — 2026-04-23
 
@@ -352,7 +352,7 @@ separately rather than reopening this archived roadmap.
 ## Related
 
 - [`open-questions-2.md`](open-questions-2.md) — Q28 (resolved 2026-04-22)
-- [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions; archived 2026-04-21)
+- An internal (local-only) sibling roadmap — parent roadmap (Phases 1-2: marketplace + pushy descriptions; archived 2026-04-21)
 - [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
-- [`agents/evidence/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding
+- An internal (local-only) reference analysis — origin finding

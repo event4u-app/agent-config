@@ -144,4 +144,4 @@ secret tool you already use into the process environment before you run
 - [`.agent-src.uncondensed/skills/mcp/SKILL.md`](../.agent-src.uncondensed/skills/mcp/SKILL.md) — MCP server
   selection and usage patterns.
 - [`agents/roadmaps/archive/road-to-mcp.md`](../agents/roadmaps/archive/road-to-mcp.md) — archived roadmap that produced this feature.
-- Reference substitution implementation: [`kdcllc/agents_config`](https://github.com/kdcllc/agents_config/blob/master/app/agents_config/base.py).
+- Reference substitution implementation: an external reference.

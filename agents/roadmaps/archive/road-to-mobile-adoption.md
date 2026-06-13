@@ -11,7 +11,7 @@ gpt-4o, $0.0371 actual run).
 **Started:** 2026-05-06
 **Phase 1 + 3.1 completed:** 2026-05-08
 **Trigger:** User ask — "harvest the mobile skills from
-`Microck/ordinary-claude-skills` (mobile category) into the suite."
+an external skill suite (mobile category) into the suite."
 **Mode:** Conservative first-toe-in-mobile plate. Hard cap 5 per
 6-week plate; this plate uses **3 of 5 slots** intentionally. Phase 2
 is gated on Phase-1 evidence + cross-project demand signal. Phase 3
@@ -34,7 +34,7 @@ is volatile via authoritative links, defer what would rot in months.
   argument accepted: 917-line skill pinning RN 0.76-0.82+ / SDK 52+ /
   React 19 will rot before the next plate ships. Reopen after RN
   community consolidates around a stable surface.
-- **`ios-simulator-skill` is a guideline, not a skill — and the 21
+- **an external iOS-simulator reference is a guideline, not a skill — and the 21
   Python scripts are NEVER forked.** Authoritative-link only:
   upstream repo SHA + the 5 reference modules (`accessibility_checklist`,
   `idb_quick`, `simctl_quick`, `test_patterns`, `troubleshooting`)
@@ -75,7 +75,7 @@ authoritative links resolve in CI).
 
 - [x] **P1.1 — `react-native-setup` skill.** Adopted 211-line skill
   at `.agent-src.uncondensed/skills/react-native-setup/SKILL.md`.
-  SpecWeave-integration block stripped, "Assess current setup" section
+  Upstream-specific integration block stripped, "Assess current setup" section
   added to satisfy `missing_analysis_before_action`, description trimmed
   to ≤200 chars. `augment-portability` clean.
 
@@ -83,8 +83,7 @@ authoritative links resolve in CI).
   Authored at `docs/guidelines/agent-infra/ios-simulator-guide.md`
   (383 lines, fits the ≤300-target with the 5 inlined reference modules
   budgeted separately). Decision matrix + 5 reference modules verbatim
-  with attribution + SHA-pinned upstream link to
-  `conorluddy/ios-simulator-skill`.
+  with attribution + SHA-pinned upstream link to an external reference.
 
 - [x] **P1.3 — `mobile-e2e-strategy` skill (NET-NEW).** Authored at
   `.agent-src.uncondensed/skills/mobile-e2e-strategy/SKILL.md`. Detox
@@ -144,11 +143,11 @@ signal lands.
   `ios-simulator-guide` for drift, verify all authoritative links
   resolve in CI.
 
-- [-] **P3.3 — Microck mis-categorization re-scan.** Gated: belongs
-  in `road-to-microck-harvest.md`, not the mobile track. The 24
-  mis-categorized entries are a Microck-harvest concern; folding
+- [-] **P3.3 — External-suite mis-categorization re-scan.** Gated: belongs
+  in a separate external-suite harvest roadmap (internal, local-only), not the
+  mobile track. The 24 mis-categorized entries are a harvest concern; folding
   them into mobile would expand scope past the 5-slot plate cap.
-  Reopen as a separate harvest plate when the Microck roadmap
+  Reopen as a separate harvest plate when that harvest roadmap
   reaches that step.
 
 ## Risk register
@@ -165,8 +164,9 @@ signal lands.
 
 ## Provenance
 
-- Analysis: `agents/evidence/analysis/compare-mobile-harvest.md`
-- Microck source SHA: `8f5c83174f7aa683b4ddc7433150471983b93131`
-- Upstream sources: `aj-geddes/useful-ai-prompts` (flutter, dropped),
-  `conorluddy/ios-simulator-skill` (link-only), `jezweb/claude-skills`
-  (RN-expo, deferred), `anton-abyzov/specweave` (RN-setup, adopt)
+- Analysis: an internal (local-only) reference analysis.
+- Upstream source SHA: `8f5c83174f7aa683b4ddc7433150471983b93131`
+- Upstream sources (names redacted): an external prompt collection
+  (flutter, dropped), an external reference (ios-simulator, link-only),
+  an external skill suite (RN-expo, deferred), an external reference
+  (RN-setup, adopt)

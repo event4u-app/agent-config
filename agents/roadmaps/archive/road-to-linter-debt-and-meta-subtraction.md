@@ -113,7 +113,7 @@ The reviews' central thesis (meta-complexity, self-reference, "governance-theate
 | 2 | Tier-1/2 rule router | live (trigger-loaded) | **KEEP** — `docs/contracts/rule-router.md`. Removal = always-load everything (kernel-budget blowout). |
 | 3 | Roadmap dashboard (`update_roadmap_progress.py` + hook) | live (regenerated 8× this run) | **KEEP** — `rules/roadmap-progress-sync.md`. Removal = no progress visibility. |
 | 4 | Roadmap meta-linters (complexity / ci-steps / no-refs / trackable) | live (CI gates every PR) | **KEEP** — `rules/roadmap-ci-steps-policy.md` + sibling rules. Removal = malformed roadmaps merge. |
-| 5 | Roadmap one-shot audits (`measure_roadmap_trajectory`, `verify_roadmap_closure`) | **KC3** — unwired, unimported, only historical refs | **REMOVE ✂** (executed; 2 files / 439 LOC). Tombstone in `agents/evidence/reports/roadmap-trajectory.md`. Re-derivable on demand. |
+| 5 | Roadmap one-shot audits (`measure_roadmap_trajectory`, `verify_roadmap_closure`) | **KC3** — unwired, unimported, only historical refs | **REMOVE ✂** (executed; 2 files / 439 LOC). Tombstone recorded internally (local-only). Re-derivable on demand. |
 | 6 | Value dashboard (`lint_value_dashboard`, `render_value_md`) | live (CI taskfile + tests; shipped last release) | **KEEP** — `docs/contracts/value-dashboard-spec.md`. |
 | 7 | AI council | live (invoked 2× this run) | **KEEP** — `skills/ai-council/SKILL.md`. |
 | 8 | Telemetry / `artifact-engagement-recording` | default-off (opt-in validation window) | **KEEP** — `contexts/contracts/artifact-engagement-flow.md`. Removing now aborts the experiment before data exists; re-audit after the adoption window. |

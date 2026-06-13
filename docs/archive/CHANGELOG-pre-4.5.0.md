@@ -254,7 +254,7 @@ Tests: 5052 (+9 since 4.1.0)
 
 ### Refactoring
 
-* **naming:** rename compress→condense and caveman→telegraph across the suite ([6a72697](https://github.com/event4u-app/agent-config/commit/6a7269713c11dd10ae2b975d921207de2e0e08de))
+* **naming:** rename compress→condense and the external grammar→telegraph across the suite ([6a72697](https://github.com/event4u-app/agent-config/commit/6a7269713c11dd10ae2b975d921207de2e0e08de))
 * relocate .compression-hashes.json + .agent-tools.yml and rewrite path consumers ([6e545c8](https://github.com/event4u-app/agent-config/commit/6e545c8563aff3e0dc9c3c9b80148d4bc83c4337))
 * **internal:** move docker/ + schemas/ to internal/ umbrella ([5cf589b](https://github.com/event4u-app/agent-config/commit/5cf589bbefdaedf29e01a8b906f59176d690ed0e))
 

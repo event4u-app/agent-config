@@ -215,7 +215,7 @@
 ### Documentation
 
 * **adr:** ADR-089 — lean local plugin install via git-worktree source ([7b62054](https://github.com/event4u-app/agent-config/commit/7b620540913507b6b44daa5d1c14b5b28d6ed701))
-* **adr:** ADR-088 — no external runtime federation (close ruflo bridge premise) (#479) ([d8fb40d](https://github.com/event4u-app/agent-config/commit/d8fb40d6f3f111f35b041c12d9f1d55bcf5b6d17))
+* **adr:** ADR-088 — no external runtime federation (close external bridge premise) (#479) ([d8fb40d](https://github.com/event4u-app/agent-config/commit/d8fb40d6f3f111f35b041c12d9f1d55bcf5b6d17))
 * add Glama MCP server badge to README (#478) ([9edf13b](https://github.com/event4u-app/agent-config/commit/9edf13b09d8912de26be1709a3c6f06ab58f91b2))
 * **mcp:** add MCP registries & cross-tool install reference (ADR-086 follow-up) ([6c90a8f](https://github.com/event4u-app/agent-config/commit/6c90a8faee5361f50fc9ec651a25f972eef9dac3))
 * **adr:** reject ADR-086 at Phase-0 gate, archive mcp-discovery roadmap ([e1b61b3](https://github.com/event4u-app/agent-config/commit/e1b61b3bbdbf8d8d72f19d51ad7c0c89faf425ef))

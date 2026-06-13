@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **533 public artefacts** shipped by
+Consumer-facing catalog of all **534 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -239,7 +239,7 @@ are excluded.
 | skill | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (78)
+## Rules (79)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -309,6 +309,7 @@ are excluded.
 | rule | [`skill-improvement-trigger`](../dist/agent-src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../dist/agent-src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
 | rule | [`slash-command-routing-policy`](../dist/agent-src/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
+| rule | [`source-confidentiality`](../dist/agent-src/rules/source-confidentiality.md) | auto | Naming an external repo as something this package copied, harvested, compared against, or was inspired by — keep the tracked tree source-anonymous |
 | rule | [`strategy-safety-floor`](../dist/agent-src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision |
 | rule | [`symfony-routing`](../dist/agent-src/rules/symfony-routing.md) | auto | Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow |
 | rule | [`telegraph-speak`](../dist/agent-src/rules/telegraph-speak.md) | auto | When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers |

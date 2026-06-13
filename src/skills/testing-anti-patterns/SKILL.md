@@ -158,7 +158,7 @@ Gate: a feature is not complete until a failing-then-passing test cycle ran for 
 
 ## Provenance
 
-- Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/testing-anti-patterns/SKILL.md` (MIT, © 2025 Microck).
+- Adopted from: an external reference (internal provenance, redacted).
 - Cross-linked: [`pest-testing`](../pest-testing/SKILL.md), [`test-driven-development`](../test-driven-development/SKILL.md), [`judge-test-coverage`](../judge-test-coverage/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `testing-anti-patterns`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`.

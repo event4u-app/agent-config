@@ -80,7 +80,7 @@ INTENT
 | `agent-handoff` | `.claude/skills/agent-handoff/SKILL.md` | `handoff`, `fresh`, `chat`, `context` | Context envelope for fresh-chat continuation |
 | `direct-answers` | `.agent-src.uncondensed/rules/direct-answers.md` | `brevity`, `flattery`, `severity`, `tiered` | Iron-Law brevity floor (kernel) |
 | `markitdown` | upstream: github.com/microsoft/markitdown | `PDF`, `DOCX`, `HTML`, `convert` | Document → markdown converter (authoritative-link only) |
-| `/cost:report` | TBD — `road-to-ruflo-adoption.md § P1.2` | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |
+| `/cost:report` | TBD — an internal roadmap (local-only) § P1.2` | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |
 
 ## Output format
 
