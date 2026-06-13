@@ -146,7 +146,7 @@ A single blocking call (sync I/O, time.sleep, CPU-heavy parse, large JSON load) 
 
 ## Provenance
 
-- Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/async-python-patterns/SKILL.md` (MIT, © 2025 Microck) — **Sunset Policy applied**: 694-line cookbook source reduced to a ~140-line decision framework; pattern catalogues externalized to upstream docs below.
+- Adopted from: an external reference (MIT, © 2025 an external reference) — **Sunset Policy applied**: 694-line cookbook source reduced to a ~140-line decision framework; pattern catalogues externalized to upstream docs below.
 - Externalized cookbook:
   - asyncio core: https://docs.python.org/3/library/asyncio.html · https://docs.python.org/3/library/asyncio-task.html
   - TaskGroup (3.11+): https://docs.python.org/3/library/asyncio-task.html#task-groups

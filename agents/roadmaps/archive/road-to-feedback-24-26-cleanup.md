@@ -73,10 +73,10 @@ feedback's assumptions):
   MCP registries use (repo URL `https://github.com/event4u-app/agent-config`,
   description, tags `agent-governance`, `mcp`, `skills`). Mark status
   `⬜ open (human-owner: maintainer submits via the Glama claim flow)`.
-- [x] **Step 2:** Sweep the three existing MCP-registry rows (punkpeye, mcp.so,
-  mcpservers.org) for stale status text; if any submission timestamp landed
-  since the rows were written, capture it. No new submissions (those stay
-  human-owner per the existing roadmap).
+- [x] **Step 2:** Sweep the three existing MCP-registry rows (the target MCP
+  registry, mcp.so, mcpservers.org) for stale status text; if any submission
+  timestamp landed since the rows were written, capture it. No new submissions
+  (those stay human-owner per the existing roadmap).
   <!-- swept 2026-06-02: all three rows still ⬜ open / pending across registries.md,
   registry-submissions.md, and dist/mcp/registry-manifest.json — no PR URLs, no
   submission timestamps landed. No stale status, nothing to backfill. -->

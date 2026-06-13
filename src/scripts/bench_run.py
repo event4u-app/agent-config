@@ -3,7 +3,7 @@
 
 Wraps the selection-accuracy baseline collector (`scripts/bench_runner.py`),
 captures token / cost data from `agents/cost-tracking/sessions.jsonl` if
-present (per ruflo pattern, external-findings § 2), runs structural
+present (per external pattern, an internal findings note), runs structural
 quality assertions per prompt, and emits a versioned JSON + Markdown
 report under `internal/bench/reports/` per
 `docs/contracts/benchmark-report-schema.md`.

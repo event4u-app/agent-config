@@ -2,8 +2,8 @@
 
 > **Date:** 2026-04-21
 > **Tool:** [`scripts/audit_skill_descriptions.py`](../../scripts/audit_skill_descriptions.py)
-> **Source roadmap:** [`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md) Phase 2.2 (archived 2026-04-21)
-> **Pattern source:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
+> **Source roadmap:** an internal alignment roadmap (local-only) Phase 2.2 (archived 2026-04-21)
+> **Pattern source:** an external skill suite (internal reference, local-only)
 
 ## Snapshot
 
@@ -21,7 +21,7 @@ hedge phrases. This is good — the weakness is length/density, not shape.
 ## What "too-short" means here
 
 The threshold `< 150 chars` is the one in the roadmap, taken directly from
-anthropics/skills — long enough to list two concrete triggers plus context.
+An external skill suite — long enough to list two concrete triggers plus context.
 A skill flagged as `too-short` is not wrong; it is just **unambitious** and
 likely to lose to a longer peer when Claude picks between overlapping skills.
 
@@ -127,5 +127,5 @@ shift in the flagged count. History so far:
 
 - Rule: [`rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   § *Description Triggering*.
-- Parent analysis: [`compare-anthropics-skills.md`](compare-anthropics-skills.md).
+- Parent analysis: an internal (local-only) reference analysis.
 - Follow-up roadmap: [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md).

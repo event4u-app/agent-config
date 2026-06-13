@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-14
 > [`benchmark-report-schema.md`](contracts/benchmark-report-schema.md)
 
 Where the package's benchmark runs live, when they run, and what counts as
-a publishable report. Mirrors the Ruflo `docs/benchmarks/runs/<ISO>.json`
+a publishable report. Mirrors the the external runtime `docs/benchmarks/runs/<ISO>.json`
 discipline (upstream `5b71c7a`).
 
 ## Corpora

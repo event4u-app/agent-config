@@ -14,7 +14,7 @@ complexity: structural
 > level inside the same agent surface.
 
 **Reference repo (deep-read 2026-05-05):**
-[`coreyhaines31/marketingskills`](https://github.com/coreyhaines31/marketingskills)
+an external skill suite
 — 40 marketing skills, 80+ tool integrations, MIT-licensed, Agent
 Skills standard. Treated like AI #4 in the sibling roadmap: a
 **benchmark**, not a copy target. We import patterns and senior
@@ -44,7 +44,7 @@ three explicit boundaries:
 | **Maintainer-side RevOps** | Issue triage, contributor lifecycle, release-comms, adoption-funnel for the package itself | Sales-pipeline tooling, CRM integrations, enrichment APIs |
 
 The line we hold: **senior cognition and authoring discipline come in;
-channel-distribution surface stays out.** The marketingskills repo's
+channel-distribution surface stays out.** The external suite's
 40 skills become a *quarry*, not a *checklist*. Concretely: ~7–9
 senior skills land here, not 40.
 
@@ -64,13 +64,13 @@ sub-steps** (post-council Q6, sibling-velocity-honest: A1–A6 shipped
 at ~1 sub-step/sequence-step). Everything else is *ready to start*
 and follows ICE order after the foundation lands.
 
-## Patterns imported from `marketingskills` (locked)
+## Patterns imported from the external reference suite (locked)
 
 These five patterns are the actual transfer. Skill count is secondary.
 
 1. **Context-spine** — single source-of-truth doc that every role-skill
    references on entry, so users do not repeat foundational context.
-   Marketingskills uses a `product-marketing-context.md` doc under
+   The external suite uses a `product-marketing-context.md` doc under
    the consumer's `.agents/` directory (external repo). We
    generalize to a `context-spine` mechanic with three slots:
    `product-context`, `team-context`, `repo-context` — composable,
@@ -79,7 +79,7 @@ These five patterns are the actual transfer. Skill count is secondary.
    `## Related Skills` table that names the next skill by trigger.
    Replaces ad-hoc "see also" prose. Lintable via `lint-skills`.
 3. **Hypothesis loop** — ICE-scored backlog → run → playbook entry →
-   re-prioritize. Marketingskills uses this for A/B tests; we
+   re-prioritize. The external suite uses this for A/B tests; we
    generalize to *any* senior skill that proposes a change
    (refactor-architect, migration-architect, perf-investigator).
 4. **Tools-registry pattern** — central `tools/REGISTRY.md` with
@@ -113,7 +113,7 @@ move into a foundation slot.
   email-sequence, ad-creative, programmatic-SEO.
 - Sales-pipeline / CRM integrations (HubSpot / Salesforce / Apollo).
 - Enrichment-API integrations (Clearbit / ZoomInfo / Clay).
-- Composio MCP layer — we keep our own MCP allowlist via existing
+- Third-party MCP aggregation layer — we keep our own MCP allowlist via existing
   `mcp` skill and `tool-safety` rule.
 - Marketplace distribution to claude.ai web — separate decision under
   `road-to-distribution-and-adoption.md`.
@@ -133,7 +133,7 @@ scores real progress.
 - [x] **K1** — `context-spine` mechanic locked: contract doc under `docs/contracts/context-spine.md` (slot definitions, frontmatter field `context_spine: [product, team, repo]`, opt-in semantics, no implicit reads). **Tri-slot locked at 3 (council Q1, KEEP-3)**; slot additions require ≥ 2 shipped skills citing the need + ADR under `stable` policy.
 - [x] **K2** — `lint-skills` extended: validates (a) `## Related Skills` block presence + format on every senior skill, and (b) frontmatter `tier: senior` field on senior skills (council Q7 — frontmatter-field over `-senior` suffix; clean skill names, tier in metadata). **Shipped under suite-closure Phase 2.4** as `lint_senior_tier_blocks()` in `scripts/skill_linter.py` — checks `## Related Skills` (with `**WHEN to use this**` + `**WHEN NOT to use this**` two-list pattern), `## When the agent should load this`, `## Output`. Schema (`scripts/schemas/skill.schema.json`) extended with `tier: senior` enum. Block-level rollout, not auto-applied to existing 147 skills; canonical contract is `.agent-src.uncondensed/rules/skill-quality.md` § Senior-Tier Required Structure (suite-closure Phase 2 path-corrected the previous `docs/contracts/skill-quality.md` reference).
 - [x] **K3** — Cross-role glue: cite `docs/contracts/cross-wing-handoff.md` (suite-closure Phase 3.1) for the typed-handoff contract (initiator-skill → delegated-skill(input-shape) → output-artifact, lint rules, worktree boundary). Ship `docs/guidelines/cross-role-handoff.md` for the **wing-specific prose** only — when does a role hand off to another role, decision-tree, naming convention for `Related Skills` entries. **Includes the L4 / C8 composition boundary (council Q3)**: L4 fires when a request crosses two stakeholder lenses (engineering ↔ PO, PO ↔ ops, ops ↔ infra) and the trade-off is **not yet code**; C8 fires when the request **is already code** (PR open or draft branch); a C8 verdict that surfaces a stakeholder conflict (e.g. test-coverage fails but PO wants to ship) becomes input to L4 for escalation.
-- [x] **K4** — `docs/contracts/mental-models.md` reference doc landed: **ranked Top-30 cross-role models (council Q2)** — 1 first-principles, 2 JTBD, 3 Pareto 80/20, 4 second-order thinking, 5 opportunity cost, 6 theory of constraints, 7 MVP, 8 build-measure-learn, 9 hypothesis-driven development, 10 reversible/irreversible decisions, 11 DX as first-class concern, 12 Conway's Law, 13 Occam's Razor, 14 Meadows leverage points, 15 signal/noise, 16 leading vs lagging indicators, 17 churn as health metric, 18 pull vs push systems, 19 shift-left, 20 latency vs throughput, 21 fail-fast, 22 data-informed (not data-driven), 23 user story mapping, 24 Kano model, 25 RICE, 26 North Star metric, 27 outcome over output, 28 Eisenhower matrix, 29 pre-mortems, 30 bias toward action. Cut from marketingskills: channel-specific (CAC/LTV, ad-auction, SEO keyword), C-suite strategy (Blue Ocean, Porter's Five Forces), sales pipeline (BANT, MEDDIC). Each model: ≤ 8-line summary + 1 citation example from a shipped skill. Cited by senior skills, not auto-loaded. Hard cap 30 — additions require removing one (zero-sum, R23).
+- [x] **K4** — `docs/contracts/mental-models.md` reference doc landed: **ranked Top-30 cross-role models (council Q2)** — 1 first-principles, 2 JTBD, 3 Pareto 80/20, 4 second-order thinking, 5 opportunity cost, 6 theory of constraints, 7 MVP, 8 build-measure-learn, 9 hypothesis-driven development, 10 reversible/irreversible decisions, 11 DX as first-class concern, 12 Conway's Law, 13 Occam's Razor, 14 Meadows leverage points, 15 signal/noise, 16 leading vs lagging indicators, 17 churn as health metric, 18 pull vs push systems, 19 shift-left, 20 latency vs throughput, 21 fail-fast, 22 data-informed (not data-driven), 23 user story mapping, 24 Kano model, 25 RICE, 26 North Star metric, 27 outcome over output, 28 Eisenhower matrix, 29 pre-mortems, 30 bias toward action. Cut from the external suite: channel-specific (CAC/LTV, ad-auction, SEO keyword), C-suite strategy (Blue Ocean, Porter's Five Forces), sales pipeline (BANT, MEDDIC). Each model: ≤ 8-line summary + 1 citation example from a shipped skill. Cited by senior skills, not auto-loaded. Hard cap 30 — additions require removing one (zero-sum, R23).
 
 ### Block L — Senior PO / discovery / marketing skills
 
@@ -148,10 +148,10 @@ example. **No skill ships without all six.**
 
 - [x] **L** — Senior PO / discovery / marketing skills shipped (block marker; flips when L1–L8 are all done).
 - [x] **L1** — `customer-research` skill (`tier: senior`): discovery interviews, jobs-to-be-done framing, ICP synthesis, transcript-to-insight loop. Borrows hypothesis-loop pattern (P3) and mental-models JTBD/Pareto (K4). **Out:** persona-CRM enrichment, channel-targeting.
-- [x] **L2** — `release-comms` skill (`tier: senior`): changelog-to-narrative, what-changed-and-why-it-matters framing for our own releases (the package itself + consumer release notes). Adopts marketingskills' "value-not-feature" heuristic without the channel surface.
+- [x] **L2** — `release-comms` skill (`tier: senior`): changelog-to-narrative, what-changed-and-why-it-matters framing for our own releases (the package itself + consumer release notes). Adopts the external suite's "value-not-feature" heuristic without the channel surface.
 - [x] **L3** — `decision-record` skill (`tier: senior`): ADR-on-demand from a chat thread, includes context, options, decision, consequences, reversal-criteria. Replaces the ad-hoc ADR habit; cites mental-models second-order-thinking + theory-of-constraints.
 - [x] **L4** — `stakeholder-tradeoff` skill (`tier: senior`): forces explicit trade-off naming when a request crosses two stakeholder lenses (engineering ↔ PO, PO ↔ ops, etc.). Output: trade-off matrix + recommendation + dissent log. Composes `code-review-multi-lens` (sibling C8) when the trade-off becomes code-shaped — boundary prose lives in K3 / `docs/guidelines/cross-role-handoff.md`.
-- [x] **L5** — `discovery-interview` skill (`tier: senior`): interview-prep + question-bank + bias-audit + insight extraction. Subset of marketingskills' `customer-research-interviews`, scoped to product discovery (not market research).
+- [x] **L5** — `discovery-interview` skill (`tier: senior`): interview-prep + question-bank + bias-audit + insight extraction. Subset of the external suite's `customer-research-interviews`, scoped to product discovery (not market research).
 - [x] **L6** — `competitive-positioning` skill (`tier: senior`): package-vs-package comparison framework (the existing AI-#4-style deep reads, formalized). Inputs: target repo URL + our package + comparison axes. Output: sibling-roadmap-style "ours vs theirs" decisions table.
 - [x] **L7** — `voc-extract` skill (`tier: senior`, Voice of Customer): scans GitHub issues + PR discussions + Sentry error patterns and extracts recurring themes with citation per theme. **Bounded scope:** read-only on artefacts the host already has; no scrape, no SaaS API. **Chat-export sourcing (Discord / Slack) deferred to v2 pending privacy review (council Q5, SHIP-WITHOUT)** — see R30.
 - [x] **L8** — `launch-readiness` skill (`tier: senior`): pre-merge checklist + rollout plan + rollback criteria + ops handoff for any sibling-Block-A persona's release. Composes `finishing-a-development-branch` and `requesting-code-review`.
@@ -227,8 +227,8 @@ cross-references between roadmaps stay collision-free.
 | R20 | **Marketing scope creep** — Block L drifts from "senior cognition" into channel-marketing surface (paid-ads, SEO, email) under user pressure | L | M | H | "Out of scope" table at top is **load-bearing**; new L sub-steps require explicit citation + sibling-roadmap exemption; channel-shaped requests routed to a future `road-to-marketing-distribution.md` (not yet open) | (out-of-scope table) |
 | R21 | **Persona-spine bikeshed (Wave-2)** — Block N debates schema deviations to fit non-engineering identities, drains weeks before any persona ships | N | M | M | N is **schema-locked** to sibling A1; deviations require sibling-roadmap ADR, not Wave-2-only edits; N1 ships against unmodified schema as proof | A1 (sibling) |
 | R22 | **Context-spine sprawl** — K1 slot count grows from 3 (product/team/repo) to 8+ as new senior skills request dedicated slots | K1 | M | H | Slot count locked at 3 in the contract; new slots require a contract bump (`stable` policy) **and** ≥ 2 skill citations as evidence of need | K1 |
-| R23 | **Mental-models doc bloat** — K4 starts at ~25 models, swells to the full 60+ from marketingskills, becomes unreadable | K4 | M | M | K4 ships with hard cap of **30 models**; additions require removing one (zero-sum); each model has ≤ 8-line summary + 1 citation example | K4 |
-| R24 | **Marketing-skill copy temptation** — L sub-steps drift toward verbatim adaptation of marketingskills/* SKILL.md instead of senior-cognition extraction | L | H | H | Each L sub-step PR template requires a "what we kept / what we dropped" diff vs the source skill; reviewers reject sub-steps without it | L |
+| R23 | **Mental-models doc bloat** — K4 starts at ~25 models, swells to the full 60+ from the external suite, becomes unreadable | K4 | M | M | K4 ships with hard cap of **30 models**; additions require removing one (zero-sum); each model has ≤ 8-line summary + 1 citation example | K4 |
+| R24 | **Marketing-skill copy temptation** — L sub-steps drift toward verbatim adaptation of the external suite's SKILL.md files instead of senior-cognition extraction | L | H | H | Each L sub-step PR template requires a "what we kept / what we dropped" diff vs the source skill; reviewers reject sub-steps without it | L |
 | R25 | **Sibling A6 slip** — Wave-2 personas (N2–N4) blocked indefinitely if sibling A6 drags | N | L | M | N2–N4 are **explicitly outside the foundation set**; if A6 slips, N2–N4 are deferred until A6 is done, not held in limbo; N1 still ships against A1–A5 | (sibling) |
 | R26 | **Related-Skills lint false-positives** — K2 check trips on legitimate exceptions (rules, contexts, templates) | K2 | L | L | K2 scope is **senior skills only** (frontmatter `tier: senior` opt-in per Q7); rules/contexts/templates exempt by construction | K2 |
 | R27 | **Cross-role handoff explosion** — K3 decision-tree grows into a meta-skill that supersedes individual related-skills blocks | K3 | L | M | K3 is **reference doc**, not a skill; no auto-trigger; senior skills cite K3 in their related-skills block, not the reverse | K3 |

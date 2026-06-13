@@ -267,7 +267,7 @@ and `profile.id` reservations holds.
 Added pack id `frontend-design` to the closed vocabulary (grounded design
 intelligence — design-knowledge corpus + BM25 grounding engine, design tokens,
 stack best-practice and chart/typography knowledge, adopted from the MIT
-`nextlevelbuilder/ui-ux-pro-max-skill` corpus per ADR-061). Mirrored in
+an external reference corpus per ADR-061). Mirrored in
 [`src/config/discovery/packs.yml`](../../src/config/discovery/packs.yml) and the
 `ADR_PACKS` frozenset in
 [`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.py).

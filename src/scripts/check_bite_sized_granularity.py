@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Bite-sized task granularity gate for structural roadmaps (P1.5).
 
-Adopted from `obra/superpowers` `writing-plans/SKILL.md` § Task Structure +
-§ No Placeholders (v5.1.0). Complexity-gating is our addition (Council
+Adapted from an external reference. Complexity-gating is our addition (Council
 Round 1, Q4) — only roadmaps tagged `complexity: structural` in frontmatter
 are subject to the granularity rules; `complexity: lightweight` skips.
 

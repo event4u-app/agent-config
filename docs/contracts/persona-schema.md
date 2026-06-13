@@ -48,7 +48,7 @@ play (e.g. `qa` for testability, `backend-architect` for system
 boundaries). Specialists carry the 7-section spine because their
 narrower scope justifies — and benefits from — explicit Critical
 Rules and Workflows blocks (pattern adopted from
-`alirezarezvani/claude-skills`).
+an external skill suite).
 
 ## § 3 — Required sections per tier
 

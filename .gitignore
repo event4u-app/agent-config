@@ -213,3 +213,20 @@ agents/state/
 /.event4u-agent/
 /agents/notes/
 /*/agent-config.bridge.yml
+
+# Source-confidentiality: external-reference comparison/harvest evidence and
+# competitive-landscape audits are kept local-only. These files document which
+# third-party repos/tools served as a basis for ideas; they must not appear in
+# the public tree. Retained on disk for internal refresh, never committed.
+/agents/evidence/analysis/compare-*.md
+/agents/evidence/audits/2026-05-14-north-star/
+# Local-only retained source-reference material (pure-harvest / parity /
+# integration roadmaps moved here so their source-naming filenames never
+# appear in the tracked tree). Single neutral directory — never committed.
+/agents/.harvest-local/
+# Generated audit/trajectory reports that embed source roadmap
+# filenames as data values — local-only, regenerable.
+/agents/evidence/audits/2026-05-16-archive-phantom-scan.json
+/agents/evidence/audits/2026-05-16-archive-phantom-scan-v2.json
+/agents/evidence/reports/roadmap-trajectory.json
+/agents/evidence/reports/roadmap-trajectory.md

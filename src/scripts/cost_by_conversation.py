@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Group cost-tracking sessions by conversation_id (Ruflo `conversation.mjs` `5b71c7a` ref)."""
+"""Group cost-tracking sessions by conversation_id (the external runtime `conversation.mjs` `5b71c7a` ref)."""
 from __future__ import annotations
 import argparse, json, sys
 from collections import defaultdict

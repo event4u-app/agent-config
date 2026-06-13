@@ -1,6 +1,6 @@
 """Tests for scripts/check_bite_sized_granularity.py — P1.5.
 
-CI contract per `agents/roadmaps/road-to-superpowers-harvest.md` Phase 1
+CI contract per an internal roadmap (local-only) Phase 1
 verification table:
 
     P1.5 | pytest tests/test_bite_sized_granularity.py

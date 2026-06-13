@@ -58,7 +58,7 @@ Triggered when the user points to an external artifact (repo URL, `owner/repo`, 
 | **Repeat-the-guess after pushback** | User says "really look" → agent re-paraphrases the same surface read. Burns trust. | On any pushback that names the source again, restart from a tree listing, not from prior notes. |
 | **Cross-tool path inference from a single example** | One config file ≠ a convention. | Inspect ≥2 unrelated tool integrations before claiming a pattern is the project's universal anchor strategy. |
 
-**Case-zero anchor.** May 2026 — `nextlevelbuilder/ui-ux-pro-max-skill` was named as the source of truth for 23 AI-tool anchors. Three rounds of "we have no content for these tools" were reported from README inference. The actual `tool-configs/*.json` files in the reference repo gave the exact directory layout per tool in one fetch. Cost: ~2 hours of user frustration. Lesson: when an external source is named, the first action is `GET /repos/{o}/{r}/contents/{interesting-subtree}` — not paraphrase.
+**Case-zero anchor.** May 2026 — an external reference suite was named as the source of truth for 23 AI-tool anchors. Three rounds of "we have no content for these tools" were reported from README inference. The actual `tool-configs/*.json` files in the reference repo gave the exact directory layout per tool in one fetch. Cost: ~2 hours of user frustration. Lesson: when an external source is named, the first action is `GET /repos/{o}/{r}/contents/{interesting-subtree}` — not paraphrase.
 
 ## Escape hatch
 

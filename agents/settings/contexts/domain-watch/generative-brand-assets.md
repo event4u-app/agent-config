@@ -6,7 +6,7 @@
 
 ## What was evaluated (2026-06-07)
 
-The upstream `nextlevelbuilder/ui-ux-pro-max-skill` sub-skills `design`
+The upstream external reference suite's sub-skills `design`
 (v2.x monolith), `slides`, and `banner-design` — Gemini-image-model + Chrome
 screenshot generators (logo 55 styles, CIP 50 deliverables, SVG icons, banners,
 social photos). Heavy external deps: `google-genai`, `pillow`, Node, Chrome,

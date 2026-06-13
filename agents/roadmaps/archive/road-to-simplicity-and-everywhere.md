@@ -5,9 +5,8 @@ priority: highest
 
 # Road to Simplicity and Everywhere
 
-**Status:** READY FOR EXECUTION — drafted 2026-05-11 from competitor pattern
-audit (BMAD-METHOD, spec-kit, agent-os, Smithery, anthropics/skills,
-alirezarezvani/claude-skills) against current `scripts/install` and
+**Status:** READY FOR EXECUTION — drafted 2026-05-11 from a competitor pattern
+audit (several external skill/agent suites) against current `scripts/install` and
 `docs/installation.md` state. Marked highest-priority per user direction.
 **Started:** 2026-05-11
 **Trigger:** Current install matrix (Composer + npm + manual + 3 plugin
@@ -52,7 +51,7 @@ sections below show the as-shipped order, not the original plan.
 shipped **in-tree prep only** — `templates/marketing-copy.yml`,
 `.claude-plugin/marketplace.json`, `packages/create-agent-config/`
 source, GitHub-topic copy. The **external submissions themselves**
-(Anthropic queue, Cursor 2026 listing process, Smithery, `npm
+(Anthropic queue, Cursor 2026 listing process, an external registry, `npm
 publish`, `gh repo edit`) are permission-gated work that an
 autonomous agent cannot perform; S34–S38 are marked `[~]` / `[-]` in
 the body below for that reason. The actual submission work is
@@ -97,8 +96,8 @@ Concrete simplicity targets (each a "before / after" lever):
   an empty directory; no `composer require` prerequisite. *(today: must
   have a Composer/npm project first)*
 - **Multi-IDE picker** — `--tools claude-code,cursor,windsurf` style
-  flag, à la BMAD `--tools` and spec-kit `--agents`. *(today: all
-  surfaces installed unconditionally)*
+  flag, à la the `--tools` / `--agents` selectors several external suites
+  ship. *(today: all surfaces installed unconditionally)*
 - **Global per-user install** — `npx @event4u/agent-config global`
   seeds `~/.claude/skills/`, `~/.cursor/rules/imported/`,
   `~/.windsurf/rules/global/`, `~/.codeium/windsurf/global_workflows/`
@@ -159,7 +158,7 @@ Concrete simplicity targets (each a "before / after" lever):
   spec (25+ tools support it). CLAUDE.md, `.cursorrules`, `.windsurfrules`
   become overlays that link back to AGENTS.md.
 - **Anthropic plugin marketplace = canonical naming source.** Cursor /
-  Smithery / Skills Playground listings reference the Anthropic entry
+  external-registry / Skills Playground listings reference the Anthropic entry
   by stable slug to avoid drift.
 - **Backward compat is non-negotiable.** Every existing consumer (3+
   internal projects, unknown external) must keep working after every
@@ -216,7 +215,7 @@ narrow surface area; default-all would surprise users.
 - [x] **S8** — Add a `setup.sh` at repo root + raw-GitHub URL that does
       the same for shell-only users:
       `curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash -s -- --tools=claude-code`.
-      Mirrors agent-os pattern.
+      Mirrors a common external-suite pattern.
 - [x] **S9** — Interactive `--tools` picker (checkbox list) when stdin
       is a TTY and no flag passed; non-interactive falls back to `all`.
 - [x] **S10** — Document both entrypoints under `docs/installation.md`
@@ -363,7 +362,7 @@ broken paths.
 
 **Goal:** Users find the package by searching their tool's marketplace,
 not by reading our README. Anthropic marketplace, Cursor marketplace,
-Smithery (MCP), npm `create-` prefix, GitHub topics all populated.
+an external MCP registry, npm `create-` prefix, GitHub topics all populated.
 
 **Pre-conditions:** Phase 1–6 shipped (the product is ready before we
 advertise it).
@@ -384,7 +383,7 @@ impressions, hard to retract.
       single source for the listing copy). External submission is a
       manual action; tracked under `docs/setup/per-ide/cursor.md`
       § "Marketplace install".
-- [-] **S36** — Smithery (MCP server registry): submit once MCP Phase 3
+- [-] **S36** — external MCP server registry: submit once MCP Phase 3
       ships (gated cross-roadmap on `road-to-mcp-full-coverage.md`).
       **Deferred** — gate-blocked on `road-to-mcp-full-coverage` Phase 3.
 - [-] **S37** — npm: publish `@event4u/create-agent-config` (the Phase 2

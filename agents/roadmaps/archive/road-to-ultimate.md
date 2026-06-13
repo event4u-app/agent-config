@@ -4,8 +4,7 @@
 > sacrificing curation — external skill sources, MCP generation, globally
 > installable CLI, platform auto-detection, and opt-in upstream sync.
 
-Source: Competitive analysis of
-[`dongitran/ai-agent-config`](https://github.com/dongitran/ai-agent-config) (NPM
+Source: Competitive analysis of an external reference suite (NPM
 CLI, user-scoped config, bi-directional GitHub sync, MCP + Bitwarden) combined
 with the strategic goal of becoming *the* ultimate agent setup and governance
 package.
@@ -277,7 +276,6 @@ Patterns the competitor ships that we deliberately reject:
 - [`.agent-src.uncondensed/skills/mcp/SKILL.md`](../../.agent-src.uncondensed/skills/mcp/SKILL.md).
 - [`.agent-src.uncondensed/skills/upstream-contribute/SKILL.md`](../../.agent-src.uncondensed/skills/upstream-contribute/SKILL.md).
 - [`scripts/install.py`](../../scripts/install.py).
-- Source of competitive analysis:
-  [`agents/evidence/analysis/compare-dongitran-ai-agent-config.md`](../analysis/compare-dongitran-ai-agent-config.md)
+- Source of competitive analysis: an internal (local-only) reference analysis
   *(created by `/analyze-reference-repo` — see
   [`.agent-src.uncondensed/commands/analyze-reference-repo.md`](../../.agent-src.uncondensed/commands/analyze-reference-repo.md))*.

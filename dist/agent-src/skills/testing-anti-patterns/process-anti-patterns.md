@@ -61,7 +61,7 @@ the rationalization, then reject it:
 
 ## Provenance
 
-- Adapted from `obra/superpowers@v5.1.0` `testing/anti-patterns.md`.
+- Adapted from an external reference `testing/anti-patterns.md`.
 - Council convergence (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
   2026-05-07): both members ADOPT — the catalogue surfaces specific
   rationalization patterns that would otherwise leak past code review.

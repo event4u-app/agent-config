@@ -1848,7 +1848,7 @@ USER_SCOPE_PATHS = {
     "jetbrains":      "~/.config/JetBrains/",
     "kiro":           "~/.kiro/",
     # Phase 2.4 expansion — anchors lifted from
-    # nextlevelbuilder/ui-ux-pro-max-skill (cli/assets/templates/platforms/*.json)
+    # an external reference suite (cli/assets/templates/platforms/*.json)
     # so `--global` covers every tool that ships a markdown-skills convention.
     "qoder":          "~/.qoder/",
     "opencode":       "~/.opencode/",
@@ -1964,7 +1964,7 @@ PROJECT_BRIDGE_MARKERS = {
 #   ``_write_claude_desktop_marker`` rather than via this map.
 #
 # Tools that follow the markdown-skills convention (anchors lifted from
-# nextlevelbuilder/ui-ux-pro-max-skill) deploy the universal Anthropic-
+# an external reference suite) deploy the universal Anthropic-
 # shaped skill bundle — sourced from ``dist/agent-src/`` (the npm-shipped
 # canonical asset tree) — into ``<anchor>/skills/`` (or
 # ``<anchor>/steering/`` for kiro). ``dist/agent-src/rules`` is also copied
@@ -3943,7 +3943,7 @@ _VALID_TOOLS = {
     "claude-code", "claude-desktop", "cursor", "windsurf", "cline",
     "gemini-cli", "copilot", "augment", "aider", "codex", "roocode",
     "continue", "kilocode", "zed", "jetbrains", "kiro",
-    # Phase 2.4 expansion (nextlevelbuilder/ui-ux-pro-max-skill anchors).
+    # Phase 2.4 expansion (an external reference suite anchors).
     "qoder", "opencode", "trae", "antigravity", "codebuddy", "droid", "warp",
     "all",
 }

@@ -57,9 +57,9 @@ whether the skill is load-bearing or ghost infrastructure.
   append-line + 10-line `count_token_optimizer_usage.sh` = early-kill
   signal within one week.
 - **Phase 2 deferred-with-trigger.** Cost-telemetry feedback loop
-  (Sonnet candidate #3, ICE 280) reopens only on P1.2 of
-  `road-to-ruflo-adoption.md` shipping AND P1.4 telemetry showing
-  ≥5 consults/week sustained for 2 weeks.
+  (Sonnet candidate #3, ICE 280) reopens only on the `/cost:report`
+  command shipping (tracked in a separate, now-internal roadmap) AND
+  P1.4 telemetry showing ≥5 consults/week sustained for 2 weeks.
 
 ## Authoritative-Link Sunset path
 
@@ -132,8 +132,8 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 ## Phase 2 — Out-of-horizon (deferred-with-trigger)
 
 - [~] **P2.1 — Cost-telemetry feedback loop.** *Deferred-with-trigger by design.* Reopen only when **both**
-  triggers fire: (a) P1.2 of `road-to-ruflo-adoption.md` shipped and
-  `/cost:report` is producing JSONL, AND (b) P1.4 telemetry shows
+  triggers fire: (a) the `/cost:report` command shipped (tracked in a
+  separate, now-internal roadmap) and is producing JSONL, AND (b) P1.4 telemetry shows
   ≥5 token-optimizer consults/week sustained for 2 weeks. Adoption
   shape: extend `/cost:report` to surface "this session would have
   saved $X with rtk on commands Y/Z" in the next handoff. Citation
@@ -194,11 +194,11 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 
 - Council artefacts: `agents/council-questions/token-optimizer-design.md`,
   `agents/council-responses/token-optimizer-design.json`
-- Analysis: `agents/evidence/analysis/compare-token-optimizer-design.md`
+- Analysis: an internal (local-only) reference analysis
 - Existing assets cross-checked: `direct-answers`, `token-efficiency`,
   `cli-output-handling`, `rtk-output-filtering`, `markitdown`,
   `agent-handoff`, `condense.{sh,py}`, `check_condensation.py`
-- In-flight dependency: P1.2 of `road-to-ruflo-adoption.md`
-  (`/cost:report` command) — Phase 2 reopens depend on this
+- In-flight dependency: the `/cost:report` command (tracked in a
+  separate, now-internal roadmap) — Phase 2 reopens depend on this
 - Sunset Policy: `docs/contracts/STABILITY.md`
 - Hard Cap: 5 adoptions per 6-week plate (5/5 used here)

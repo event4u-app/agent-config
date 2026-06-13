@@ -24,7 +24,7 @@ no-shipped-claims: 0
 no-claims: 1
 ```
 
-JSON: [`agents/evidence/audits/2026-05-16-archive-phantom-scan-v2.json`](2026-05-16-archive-phantom-scan-v2.json).
+JSON: an internal scan output (local-only).
 
 ## Per-roadmap resolution
 
@@ -33,7 +33,7 @@ JSON: [`agents/evidence/audits/2026-05-16-archive-phantom-scan-v2.json`](2026-05
 | `step-2-skill-inventory-rationalization` | Type III phantom | verified | none — partial-completion closure clean |
 | `step-5-schema-rigor` | Type II phantom | verified | none — Council misread sunset prose as shipped claim |
 | `step-5-test-cleanup` | KEEP CLOSED + doc debt | verified | none — `road-to-test-consolidation` correctly described as "never materialised" |
-| `step-10-telegraph-parity` | — | verified | none |
+| an external-suite parity roadmap (internal) | — | verified | none |
 | `step-13-non-dev-community-validation` | DEFER with trigger | verified | none — sunset clean |
 | `step-14-mcp-runtime-stub` | KEEP CLOSED + cascade audit | no-claims | none — cascade parents verified clean |
 | **`step-15-product-refinement`** | **Type I phantom (REVOKE + forensic)** | **partial-phantom 17 % (corrected)** | closure prose edited — `/explain` claim retracted explicitly; `/onboard` wizard / `cost_profile` presets / MCP-Registry / profile system all confirmed live |
@@ -79,7 +79,7 @@ Interpretation: Council's "B-student drafts" framing was an artefact of pattern-
 | File | Purpose |
 |---|---|
 | `scripts/verify_roadmap_closure.py` | Sentiment-aware closure verifier — re-runnable for future closure waves |
-| `agents/evidence/audits/2026-05-16-archive-phantom-scan-v2.json` | Machine-readable scan output (171 roadmaps) |
+| an internal scan output (local-only) | Machine-readable scan output (171 roadmaps) |
 | `agents/evidence/audits/2026-05-16-pr168-closure-resolution.md` | This report |
 | `agents/runtime/council/questions/pr168-closure-audit.md` | Original Council prompt |
 | `agents/runtime/council/responses/pr168-closure-audit.json` | Sonnet 3.5 + GPT-4o raw responses |

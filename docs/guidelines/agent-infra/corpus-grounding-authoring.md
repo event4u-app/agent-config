@@ -84,7 +84,7 @@ selection*, architecture-pattern selection. Watch note:
 
 | Domain | Skill / manifest | Tier | Source pin |
 |---|---|---|---|
-| Frontend design | `design-intelligence/data/manifest.json` | conditional-grounding | ui-ux-pro-max @ b7e3af80 |
+| Frontend design | `design-intelligence/data/manifest.json` | conditional-grounding | external reference @ b7e3af80 |
 | Security / threat-modeling | `threat-modeling/data/manifest.json` | conditional-grounding | MITRE ATT&CK v16 + OWASP ASVS 4.0 (derived) |
 | API design | `api-design/data/manifest.json` | lookup-only | RFC 9110/9457 + field-standard practice (derived) |
 | DB-query tuning | `database/data/manifest.json` | lookup-only | PostgreSQL 16 / MySQL 8 docs (derived) |

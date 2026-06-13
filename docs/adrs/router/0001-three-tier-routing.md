@@ -1,7 +1,7 @@
 # ADR 0001 — Three-tier rule router (kernel · tier-1 · tier-2)
 
 > Area: `router` · Status: accepted · Date: 2026-05-16 · Type: retrospective
-> Roadmap: `agents/roadmaps/step-11-ruflo-parity.md` Phase 4 Step 3
+> Roadmap: an internal parity roadmap (local-only) Phase 4 Step 3
 > Supersedes: —
 
 ## Context
@@ -116,4 +116,4 @@ diff cleanly in PRs.
 - [`dist/router.json`](../../../dist/router.json) — compiled output.
 - [`scripts/compile_router.py`](../../../src/scripts/compile_router.py) — compiler.
 - [`scripts/schemas/rule.schema.json`](../../../src/scripts/schemas/rule.schema.json) — schema.
-- [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.
+- an internal parity roadmap (local-only) Phase 4 Step 3 — origin.

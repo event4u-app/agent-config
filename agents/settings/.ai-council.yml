@@ -293,7 +293,7 @@ consensus_scoring:
   lenses:
     - analysis
 
-# Peer-review pass (Phase 5 / F1, Karpathy anonymous review). After the
+# Peer-review pass (Phase 5 / F1, anonymous peer review). After the
 # final deliberation round and before synthesis, each member sees the
 # OTHER members' anonymised outputs (Response-A, Response-B, …) and
 # returns a critique focused on:

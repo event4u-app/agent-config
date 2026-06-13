@@ -167,7 +167,7 @@ complexity: lightweight  # default — skips bite-sized granularity
 ---
 ```
 
-Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Task Structure + § No Placeholders (v5.1.0); complexity-gating is our addition (Council Round 1, Q4 — mitigates UX pushback for senior engineers on well-scoped work).
+Source: adapted from an external reference; complexity-gating is our addition (Council Round 1, Q4 — mitigates UX pushback for senior engineers on well-scoped work).
 
 ## Self-review (3-scan checklist)
 
@@ -179,7 +179,7 @@ Before presenting any plan, run these three scans in order. Each is a fast pass 
 
 This scan is **separate from** adversarial-review (below). Self-review catches mechanical gaps (missing AC, leftover placeholders, mis-shaped types); adversarial-review challenges the plan's reasoning.
 
-Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+Source: adapted from an external reference.
 
 ## Adversarial self-review
 

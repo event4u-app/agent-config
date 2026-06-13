@@ -3,7 +3,7 @@ stability: beta
 keep-beta-until: 2026-08-14
 ---
 
-# Smoke Contracts — Phase 3 of step-11-ruflo-parity
+# Smoke Contracts — Phase 3 of an internal parity roadmap (local-only)
 
 > **Status:** active · **Owner:** step-11 Phase 3 · **Sibling:**
 > [`measurement-baseline.md`](measurement-baseline.md) (snapshot semantics)

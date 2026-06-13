@@ -28,11 +28,11 @@ Legend: **What** = the action · **Where** = file / URL · **How** = exact steps
 
 - [x] **Open the `awesome-mcp-servers` PR** (~30 min)
   - **What:** One-line listing for this package in the biggest MCP directory.
-  - **Where:** <https://github.com/punkpeye/awesome-mcp-servers> — fork it under YOUR GitHub identity (this is why it can't be autonomous).
+  - **Where:** an external MCP-server registry — fork it under YOUR GitHub identity (this is why it can't be autonomous).
   - **How:**
     1. Fork → edit `README.md`, add under the fitting category:
        `[event4u/agent-config](https://github.com/event4u-app/agent-config) — Skill / rule / command suite for AI coding tools (Claude Code, Augment, Cursor, Copilot, Windsurf) with kernel + router contracts, AI Council, explain-traces.`
-    2. Open the PR against `punkpeye/awesome-mcp-servers`. The prepared template text lives at `docs/distribution/registries.md` § MCP registries.
+    2. Open the PR against the external MCP-server registry. The prepared template text lives at `docs/distribution/registries.md` § MCP registries.
   - **Then:** give the agent the PR URL — it captures the link in `docs/distribution/registries.md` and flips Phase 0 Step 1.
 
 - [x] **Submit mcp.so + mcpservers.org entries** (~10 min each)

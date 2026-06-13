@@ -90,7 +90,7 @@ P2 roadmap reads — not the live `internal/bench/reports/` directory.
 
 ## Carve-outs
 
-- **Pricing freshness:** [`internal/bench/pricing.yaml`](../../bench/pricing.yaml) rows must carry `sourced_on: YYYY-MM-DD`. Stale prices = stale numbers = no trust (ruflo "measured-vs-claimed" pattern).
+- **Pricing freshness:** [`internal/bench/pricing.yaml`](../../bench/pricing.yaml) rows must carry `sourced_on: YYYY-MM-DD`. Stale prices = stale numbers = no trust (external "measured-vs-claimed" pattern).
 - **Subjective grading excluded:** quality scoring is mechanical via `quality_assertion`. No vibes.
 - **Cursor / Cline / Windsurf:** rules-only surfaces, no SKILL.md projection. `bench:projection` reports them as `not_applicable` — the gap is acknowledged, not silently dropped.
 

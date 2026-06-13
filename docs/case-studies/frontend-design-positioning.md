@@ -1,9 +1,9 @@
-# Competitive positioning — `frontend-design` pack vs. `ui-ux-pro-max`
+# Competitive positioning — `frontend-design` pack vs. an external reference suite
 
 > Ours-vs-theirs verdict per the `competitive-positioning` skill,
 > closing `road-to-frontend-design-intelligence` Phase 8. Evidence:
-> full-tree deep-dive of `nextlevelbuilder/ui-ux-pro-max-skill`
-> @ `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (2026-06-07) vs. this
+> full-tree deep-dive of an external reference suite
+> (2026-06-07) vs. this
 > repo post-adoption (ADR-061).
 
 ## 1. Frame
@@ -70,7 +70,7 @@ upstream capability (generative suite) is gated, not queued
 ## Net
 
 A consumer installing **our package alone** now gets the
-`ui-ux-pro-max` design knowledge **plus** orchestration, hard gates,
+external reference suite's design knowledge **plus** orchestration, hard gates,
 a11y method, token authoring without Node, and provenance discipline.
 The combination is unnecessary; the gated generative suite is the one
 deliberate exception.

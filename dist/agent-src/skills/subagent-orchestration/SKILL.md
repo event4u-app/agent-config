@@ -60,8 +60,8 @@ model pairing. Defaults come from
 Descriptive, not enforced. Documents the **expected agent-to-agent
 communication topology** so consumers can predict latency, failure
 modes, and where consensus is required. Cited from
-[`external-findings.md § 2`](../../../agents/runtime/council/sessions/audit-2026-05-14-north-star/external-findings.md) <!-- council-ref-allowed: ADR decision trace for topology anti-drift defaults -->
-row 7 (Ruflo's `hierarchical, 6–8 agents, raft consensus` anti-drift
+an internal findings note (local-only)
+row 7 (the external runtime's `hierarchical, 6–8 agents, raft consensus` anti-drift
 default).
 
 | Mode | Topology | Anti-drift default | Notes |
@@ -74,7 +74,7 @@ default).
 | judge-with-debate | `hierarchical-mesh` | 2 judges · 1 meta-judge | Judges debate (mesh edge); meta-judge reconciles (hierarchical). |
 | do-in-worktrees | `adaptive` | per-step topology of the underlying mode | Each worktree picks its own shape; chain is hierarchical. |
 
-**Anti-drift default** (Ruflo convention, descriptive only):
+**Anti-drift default** (the external runtime convention, descriptive only):
 `hierarchical, 6–8 agents, raft consensus`. Consumers free to
 override per orchestration — the table is the **starting point**,
 not a constraint. Topology is metadata for capacity planning, not

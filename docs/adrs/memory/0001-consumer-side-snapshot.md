@@ -1,7 +1,7 @@
 # ADR 0001 — Consumer-side snapshot of the agent-memory contract
 
 > Area: `memory` · Status: accepted · Date: 2026-05-16 · Type: retrospective
-> Roadmap: `agents/roadmaps/step-11-ruflo-parity.md` Phase 4 Step 3
+> Roadmap: an internal parity roadmap (local-only) Phase 4 Step 3
 > Supersedes: —
 
 ## Context
@@ -108,4 +108,4 @@ release, citable from every consumer skill that touches memory.
 - [`scripts/memory_status.py`](../../../src/scripts/memory_status.py) — three-state probe.
 - [`scripts/memory_lookup.py`](../../../src/scripts/memory_lookup.py) — retrieval envelope source.
 - [`agents/roadmaps/archive/agent-memory/`](../../../agents/roadmaps/archive/agent-memory/) — sibling-package spec.
-- [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.
+- an internal parity roadmap (local-only) Phase 4 Step 3 — origin.

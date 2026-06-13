@@ -8,7 +8,7 @@
 > mechanical execution.
 
 Source: GPT competitive analysis + SWOT (April 2026) comparing agent-config against
-anthropics/skills, cloudflare/skills, github/awesome-copilot, hoodini/ai-agents-skills.
+several external skill/agent suites.
 
 **Overall score: 8.5/10** — strongest at governance, linter maturity, and multi-agent
 distribution. Weakest at adoption friction, distribution elegance, and external discoverability.
@@ -71,33 +71,33 @@ that makes someone want to install this in 30 seconds. Move all system internals
 
 | System | Their strength | Their weakness | vs us |
 |---|---|---|---|
-| **anthropics/skills** | Official reference, simple install | No governance, no linter, no lifecycle | We are clearly stronger |
-| **cloudflare/skills** | Clear domain focus, good examples | Not a generic platform, no governance | We are broader, they are clearer |
-| **awesome-copilot** | Huge collection, high visibility | No consistency, no quality assurance | We are much cleaner |
-| **hoodini/ai-agents-skills** | Multi-agent, easy to use | No governance, no runtime, no lifecycle | We are much deeper |
+| **External reference suite A** | Official reference, simple install | No governance, no linter, no lifecycle | We are clearly stronger |
+| **External reference suite B** | Clear domain focus, good examples | Not a generic platform, no governance | We are broader, they are clearer |
+| **External reference suite C** | Huge collection, high visibility | No consistency, no quality assurance | We are much cleaner |
+| **External reference suite D** | Multi-agent, easy to use | No governance, no runtime, no lifecycle | We are much deeper |
 | **Plugin marketplaces** | Simple install, standardized | Little governance, little depth | They win adoption, we win quality |
 
 ### Detailed assessments
 
-**anthropics/skills** — Official reference repo for Agent Skills.
+**External reference suite A** — Official reference repo for Agent Skills.
 - Good: official character, simple install, clear structure.
 - Missing: governance, linter, lifecycle, feedback system.
 - They are: canonical reference. We are: opinionated operating model.
 - **Winner: us** (system depth).
 
-**cloudflare/skills** — Domain-specific skill repo for Cloudflare products.
+**External reference suite B** — Domain-specific skill repo for a cloud provider's products.
 - Good: clear focus, real use cases, good examples.
 - Missing: generic platform, governance layer.
 - They are: product skills. We are: platform.
 - **Winner: us** (strategically), **them** (clarity of purpose).
 
-**awesome-copilot** — Community collection of skills, agents, hooks, workflows.
+**External reference suite C** — Community collection of skills, agents, hooks, workflows.
 - Good: huge collection, high visibility, community-driven.
 - Missing: consistency, quality assurance, structure.
 - They are: inspiration. We are: execution system.
 - **Winner: us** (quality), **them** (reach).
 
-**hoodini/ai-agents-skills** — Curated multi-agent skill collection.
+**External reference suite D** — Curated multi-agent skill collection.
 - Good: multi-tool support, easy to use.
 - Missing: governance, linter, runtime, lifecycle.
 - They are: easy entry. We are: much more capable.
@@ -113,19 +113,19 @@ that makes someone want to install this in 30 seconds. Move all system internals
 
 ## Competitor README Learnings
 
-### Cloudflare/skills — Goldstandard for scanability
+### External reference suite B — Goldstandard for scanability
 - Lists *concrete* skills with one-line descriptions as a table
 - 4 installation methods shown side-by-side, no explanation needed
 - Zero system vocabulary — just: "Here are skills. Here's how to install them."
 - Skills are grouped by domain (Workers, AI, Pages, etc.)
 
-### Anthropic/skills — Goldstandard for simplicity
+### External reference suite A — Goldstandard for simplicity
 - Opens with "Skills teach Claude how to..." — instantly understandable
 - "Try in Claude Code / Claude.ai / API" as primary structure
 - "Creating a Basic Skill" section shows HOW, not just WHAT
 - Minimal README, maximum clarity
 
-### GitHub/awesome-copilot — Goldstandard for discoverability
+### External reference suite C — Goldstandard for discoverability
 - Website link prominent at the top
 - `llms.txt` for machine-readable access
 - Browse links in every table row
@@ -338,7 +338,7 @@ one-line description. We should show the best ones.
     - `/quality-fix` — Run and fix all quality checks
     - `/review-changes` — Self-review before creating a PR
     - `/jira-ticket` — Read ticket from branch, implement feature
-- [x] Link each skill/command name to its SKILL.md for browsability (like GitHub/awesome-copilot)
+- [x] Link each skill/command name to its SKILL.md for browsability (like an external reference suite)
 - [x] Add "→ Browse all 93 skills" link at the bottom of the table
 
 ---
@@ -498,7 +498,7 @@ Tasks:
 
 **SWOT link:** W4 (external examples), T2 (plugin ecosystem), O1 (marketplace)
 
-**Problem:** GitHub/awesome-copilot has website links, llms.txt, and browse links.
+**Problem:** an external reference suite has website links, llms.txt, and browse links.
 We have none of these.
 
 ### Tasks

@@ -7,7 +7,7 @@ out of capture-only 2026-05-02.
 **Started:** 2026-05-01
 **Trigger:** User-driven optimize pass: command count fragmentation, rule/skill
 naming overlap, Augmentcode 49k always-rule budget breach. Plus benchmark optimize-lens
-on `alirezarezvani/claude-skills` (governance shape, not skill depth). Identity
+on an external skill suite (governance shape, not skill depth). Identity
 drift surfaced 2026-05-01: package positioned as Laravel/PHP-first while substance
 is framework-agnostic.
 **Mode:** Phase 1 execution (F1, F3, F2-top-3, F4, F5, F6, F7) — sequencing
@@ -62,7 +62,7 @@ Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
 | # | Source | Date | Scope | Status |
 |---|---|---|---|---|
 | 1 | Hard data audit (this repo) | 2026-05-01 | Rule chars, command count, skill count, naming-overlap grep | Captured below |
-| 2 | Benchmark — `alirezarezvani/claude-skills` (optimize-lens) | 2026-05-01 | Top-level concepts, command count, always-active surface, discovery path | Captured below |
+| 2 | Benchmark — an external skill suite (optimize-lens) | 2026-05-01 | Top-level concepts, command count, always-active surface, discovery path | Captured below |
 | 3 | Identity audit (README, docs, github-topics) | 2026-05-01 | Laravel/PHP-first positioning vs framework-agnostic substance | Captured as Finding 7 |
 
 ## Hard data (verified)

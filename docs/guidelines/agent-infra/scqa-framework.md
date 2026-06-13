@@ -1,6 +1,6 @@
 ---
-external_source: "https://github.com/ginobefun/deep-reading-analyst-skill/tree/26cd7dc9920e025d39751e396e707399022e49ef/src/deep-reading-analyst/references/scqa_framework.md"
-refresh_trigger: "Upstream `ginobefun/deep-reading-analyst-skill` major rewrite of `references/scqa_framework.md` (new element added beyond S-C-Q-A, restructured examples, or SHA pin invalidated by file rename)."
+external_source: "redacted-external-source"
+refresh_trigger: "Upstream external reference major rewrite of the SCQA reference (new element added beyond S-C-Q-A, restructured examples)."
 sunset_criterion: "Replace with a 50-line pointer guideline if (a) the four-element decomposition is fully internalized in `agent-docs-writing` + `requesting-code-review` + `refine-prompt` + `refine-ticket` AND (b) the example library has been rewritten with project-native scenarios."
 adopted_under: "Reference-Guideline Sunset Policy — authoritative-link path. The bulk is reference content (examples ARE the framework); splitting kills the value. Full body adopted with SHA-pinned upstream URL above."
 ---
@@ -523,4 +523,4 @@ Take your own writing, reorganize using SCQA
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/scqa_framework.md` · MIT License.
+Adapted from an external reference.

@@ -9,12 +9,9 @@ Lands ahead of any HTTP-MCP transport so the security floor is in place
 when one becomes a real consumer use case (paired with the allowlist
 gate tracked in the active mcp-server plate under `agents/roadmaps/`).
 
-Adapted from
-[`ruvnet/ruflo`](https://github.com/ruvnet/ruflo) — commit
-[`1dd1db1`](https://github.com/ruvnet/ruflo/blob/1dd1db1ec2572ce68f6805dff98c177b5771cbf9/ruflo/src/mcp-bridge/mcp-stdio-kernel.js)
-`ruflo/src/mcp-bridge/mcp-stdio-kernel.js` — `CRYPTO_SEG`. The full
-Express bridge (`index.js`, ~1.6k LOC) stays authoritative-link only;
-this guideline forks the **primitive**, not the runtime.
+Adapted from an external reference — the request-signing primitive
+(`CRYPTO_SEG`). The full Express bridge (~1.6k LOC) stays out of
+scope; this guideline takes the **primitive**, not the runtime.
 
 ## When signing is mandatory
 
@@ -62,7 +59,7 @@ headers['X-MCP-Timestamp'] = String(sig.timestamp);
 headers['X-MCP-Nonce'] = sig.nonce;
 ```
 
-Header names are project-namespaced; the upstream Ruflo file uses
+Header names are project-namespaced; the upstream the external runtime file uses
 `X-RVF-*`, the convention here is `X-MCP-*`.
 
 ## Verification pattern (server-side counterpart)
@@ -114,7 +111,7 @@ plain `setInterval` sweep every minute is enough.
 - mcp-server plate under `agents/roadmaps/` — **Phase 6 F2 / F3** SSE
   transport, cloud bundle. These are the triggers that make this
   guideline load-bearing; until then it is reference material for the
-  deferred-with-trigger HTTP-bridge slot of the ruflo-adoption plate
+  deferred-with-trigger HTTP-bridge slot tracked
   (Phase 2 P2.1) under `agents/roadmaps/`.
 
 ## Operational notes
@@ -131,10 +128,10 @@ plain `setInterval` sweep every minute is enough.
 
 ## Out-of-scope
 
-- The full Express bridge in `ruflo/src/mcp-bridge/index.js` (~1.6k LOC,
-  HTTP routing, SSE streaming, auth proxying) — authoritative-link only,
+- The full Express bridge in the external reference (~1.6k LOC,
+  HTTP routing, SSE streaming, auth proxying) — out of scope,
   not forked. If we ever need an HTTP-MCP server, build on this
-  guideline + the host's web framework, not on Ruflo's runtime.
+  guideline + the host's web framework, not on the external runtime.
 - Asymmetric signing (Ed25519, ECDSA). HMAC-SHA256 is sufficient for
   shared-secret deployments. Asymmetric is only worth the complexity
   when keys cross trust boundaries the shared-secret model can't
@@ -142,14 +139,13 @@ plain `setInterval` sweep every minute is enough.
 
 ## Appendix — HTTP-bridge `stdio-kernel` pattern (reference)
 
-Portable shape of Ruflo's `mcp-stdio-kernel.js` (~250 LOC), on hand for
-the day a real HTTP-MCP consumer surfaces (`road-to-mcp-server.md`
-Phase 6 F2 / F3). Full file stays **authoritative-link only**:
-[`mcp-stdio-kernel.js`](https://github.com/ruvnet/ruflo/blob/1dd1db1ec2572ce68f6805dff98c177b5771cbf9/ruflo/src/mcp-bridge/mcp-stdio-kernel.js).
+Portable shape of an external reference's stdio kernel (~250 LOC), on
+hand for the day a real HTTP-MCP consumer surfaces (`road-to-mcp-server.md`
+Phase 6 F2 / F3). Full file stays **out of scope**.
 
 **Trigger to inline more:** both — (a) Phase 1 ships stdio prompt fetch
 in ≥1 confirmed client, (b) ≥1 consumer surfaces a concrete HTTP-MCP
-use case. Until then, this appendix + upstream link is the adoption.
+use case. Until then, this appendix is the reference.
 
 ### Pattern shape
 
@@ -178,22 +174,23 @@ Six load-bearing pieces:
    `method` in the boot-time allowlist (`road-to-mcp-server.md` **D4**).
    Non-allowlisted → JSON-RPC `-32601 Method not found`; no enumeration
    leak.
-6. **Backpressure** — bound the in-flight queue per kernel (Ruflo
+6. **Backpressure** — bound the in-flight queue per kernel (the external runtime
    uses 32); beyond it, return `429`. Otherwise a flood OOMs the child.
 
 ### Out of this appendix
 
 Express routes / middleware / SSE upgrade — host web framework.
-Ruflo marketplace + `mcp__claude-flow__*` tools — never adopted (see
-`road-to-ruflo-adoption.md` Sunset path). Multi-tenant routing —
-out-of-scope until a consumer surfaces a tenancy requirement.
+The external reference's marketplace + `mcp__claude-flow__*` tools —
+never adopted (see the related internal roadmap Sunset path).
+Multi-tenant routing — out-of-scope until a consumer surfaces a
+tenancy requirement.
 
 ### Citation hooks
 
 - `road-to-mcp-server.md` **Phase 6 F2 / F3** — SSE / cloud-bundle work
   starts here; the upstream link is the authoritative source.
-- `road-to-ruflo-adoption.md` **P2.1** — landed this appendix; full
-  bridge fork stays out-of-scope unless the dual trigger fires.
+- An internal roadmap (local-only) **P2.1** — landed this appendix;
+  full bridge fork stays out-of-scope unless the dual trigger fires.
 - [`mcp-cloud-scope.md`](../../contracts/mcp-cloud-scope.md) —
   operationalizes this pattern as a TypeScript Cloudflare Worker (no
   spawned stdio child; R2 blob replaces the child process). HMAC

@@ -36,7 +36,7 @@ points surfaced in production use:
    `~/.config/agent-config/claude-desktop/` and called it done. Claude
    Desktop does **not** auto-discover skills from any filesystem path
    — the user must upload each skill through **Settings → Customize →
-   Skills → Upload**. Research against `nextlevelbuilder/ui-ux-pro-max-skill`
+   Skills → Upload**. Research against an external reference suite
    and the Anthropic Skills API docs confirmed there is no public
    bulk-upload API for personal installs (the `/v1/skills` endpoint is
    workspace + code-execution gated).

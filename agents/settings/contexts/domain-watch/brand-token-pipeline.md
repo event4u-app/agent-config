@@ -8,7 +8,7 @@
 Upstream `brand` sub-skill scripts — `sync-brand-to-tokens.cjs`
 (algorithmic 50–900 color-scale generation from `brand-guidelines.md`)
 and `inject-brand-context.cjs` (prompt injection) — from
-`nextlevelbuilder/ui-ux-pro-max-skill` pinned at
+an external reference suite pinned at
 `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (the SHA pin prevents doc rot
 if upstream refactors; re-check the path on reopen).
 

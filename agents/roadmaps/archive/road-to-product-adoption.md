@@ -44,7 +44,7 @@ Catch first-run regressions on platforms maintainers don't use daily.
 
 Be findable when somebody is searching for what this package does, not when somebody already knows its name.
 
-- [~] **Step 1:** *Deferred (human-owner).* Submission to `punkpeye/awesome-mcp-servers` requires opening a PR in a third-party repo. Template + checklist landed in `docs/distribution/registries.md`. Track PR link when submitted.
+- [~] **Step 1:** *Deferred (human-owner).* Submission to an external MCP-server directory requires opening a PR in a third-party repo. Template + checklist landed in `docs/distribution/registries.md`. Track PR link when submitted.
 - [~] **Step 2:** *Deferred (human-owner).* `mcp.so` and `mcpservers.org` submissions go through directory forms with human verification. Templates in `docs/distribution/registries.md`.
 - [x] **Step 3:** Audited `.github/topics.yml` — 13 topics cover the three test queries via `notes:` / `equivalents:` (audience: `ai-agent` · `llm`; host: `claude-code` · `cursor` · `windsurf` · `copilot`; capability: `mcp` · `ai-video` · `skills` · `prompt-engineering` · `agent-governance`; language: `typescript` · `python`). No additions needed this pass. Quarterly re-audit cadence documented in `docs/distribution/registries.md` § Audit cadence.
 - [x] **Step 4:** Added `keywords` field to `package.json` mirroring `.github/topics.yml` `topics:` list — 13 keywords, five categories (audience, host agents, capability, language, governance). Previously missing.
@@ -90,7 +90,7 @@ Remove the speculative architecture overhang before it accumulates more carrying
 ## Acceptance Criteria
 
 - [x] Public smoke matrix green on 3 OS × 2 Node (six legs landed in Phase 1; the speculative "× 4 install paths" axis is collapsed into the headless `--yes --dry-run` leg, which exercises both the `setup.sh` curl path and the `scripts/agent-config init` npx-bin path in one leg per OS-Node cell — verified in `docs/distribution/public-install-smoke.md` § Roadmap deviations).
-- [-] At least three external registry / directory entries linking back to `README.md` — *human-owner.* Submission to `awesome-mcp-servers`, `mcp.so`, `mcpservers.org` requires PRs in third-party repos / form submissions. Templates + checklist landed in `docs/distribution/registries.md` (Phase 2 Steps 1, 2, 5). Tracked outside this roadmap; archival does not block on it.
+- [-] At least three external registry / directory entries linking back to `README.md` — *human-owner.* Submission to `mcp.so`, `mcpservers.org`, and an external MCP-server directory requires PRs in third-party repos / form submissions. Templates + checklist landed in `docs/distribution/registries.md` (Phase 2 Steps 1, 2, 5). Tracked outside this roadmap; archival does not block on it.
 - [-] Five walkthroughs published, all with screenshots, ≥ 3 externally reproduced — *human-owner.* Requires real provider keys, live wizard runs, screenshots of the chat surface, and recruited external reproducers. The autonomous pass cannot produce these artefacts. Phase 3 prose captures the gate; this AC is therefore cancelled at the roadmap level and follows Phase 3 to a successor roadmap when external reproducers are recruited.
 - [x] Telemetry opt-in shipped, off by default, privacy doc readable in ≤ 3 minutes (Phase 4 Steps 1–5 landed; `docs/distribution/telemetry-privacy.md` is the ≤ 3-minute read; `tests/telemetry-inertia.test.ts` proves the four-gate inertia).
 - [x] Drift inventory closed: every entry in `keep | park | remove` with a decision link.

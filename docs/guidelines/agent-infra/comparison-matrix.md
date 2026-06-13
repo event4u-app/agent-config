@@ -176,4 +176,4 @@ unresolved and needs more evidence.
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/comparison_matrix.md` · MIT License.
+Adapted from an external reference.

@@ -1,156 +1,122 @@
-# skills-provenance — externally-derived skill index
+# skills-provenance — externally-derived skill index (link-encrypted)
 #
 # Lists skills in this package whose body wraps, dispatches into, or is
 # materially derived from a third-party tool, repository, or methodology.
-# Pulled forward as the ADAPT #2 idea from
-# `agents/evidence/analysis/compare-microck-ordinary-claude-skills.md` so that
-# attribution and last-verified-with metadata stay in one auditable
-# place instead of polluting individual SKILL.md frontmatter.
+# Source-identifying fields are ENCRYPTED so the committed tree never reveals
+# which external packages were used; only the maintainer holding the key can
+# read them.
 #
-# Schema:
-#   <skill-name>:
-#     author:        <upstream maintainer / org>
-#     source:        <canonical repo or product URL>
-#     license:       <SPDX identifier>
-#     license_clean: <true|false>     # true = MIT/BSD/Apache-2.0/etc.
-#     kind:          <wrapper|methodology|fork|inspired_by>
-#     last_verified: <YYYY-MM-DD>
-#     pinned_to:     <upstream tag or sha at last verification>
-#     notes:         <one-line context if needed>
+# Schema (per <skill-name>):
+#   author_enc:     ENC1 token  → upstream maintainer / org
+#   source_enc:     ENC1 token  → canonical repo or product URL
+#   pinned_to_enc:  ENC1 token  → upstream tag / sha at last verification
+#   notes_enc:      ENC1 token  → free-text context (may name the source)
+#   license:        <SPDX identifier>            (plaintext — source-free)
+#   license_clean:  <true|false>                 (plaintext)
+#   kind:           <wrapper|methodology|fork|inspired_by>  (plaintext)
+#   last_verified:  <YYYY-MM-DD>                  (plaintext)
 #
-# Add an entry whenever a new skill ships that materially leans on an
-# external project. Re-verify entries when the upstream releases a
-# breaking minor; bump `last_verified` and `pinned_to` together. Drop
-# the entry when the skill is removed or when it has been rewritten
+# Decrypt a value:
+#   python3 src/scripts/_lib/link_crypto.py decrypt --value "ENC1:..."
+# Encrypt a new value when adding an entry:
+#   python3 src/scripts/_lib/link_crypto.py encrypt --value "https://..."
+#
+# Key (NEVER committed): secrets.link_encryption_key in .agent-settings.yml.
+# Resolution: project .agent-settings.yml first, then user-global
+#   ~/.event4u/agent-config/agent-settings.yml. Keep the key in your
+# user-global settings so this file stays recoverable across clones.
+#
+# Add an entry whenever a new skill ships that materially leans on an external
+# project; re-verify on upstream breaking minors and bump last_verified +
+# pinned_to_enc together. Drop the entry when the skill is removed or rewritten
 # from scratch with no upstream lineage.
 
 markitdown:
-  author: Microsoft (microsoft/markitdown maintainers)
-  source: https://github.com/microsoft/markitdown
+  author_enc: ENC1:ydmNDSW06DCe1Mhuq0sITlK3eLiwfg+6qEZ2rvKa6AM4K+iUEiOk0TWEsupwFRbHMk4P43UOnt5vspEbhaxdvOtg3HjtQfz2ERSEZtaFo1VZGxheKW++3P8SAWkXsVbyV8rdP1/copgYXo4Q
+  source_enc: ENC1:IcHshIK+0wsZA/kWSigsOwVugoTGgSAKMuGMbw6HrYJEUlzgVK4M+oOWaOQd9ZOjTp1waPsoCCJ1tXxrB4mmZhAdUTcyRcRVG4JqEX3TAtP+o0zcbXVOdvs98z6+Py8Kh1X0B953KQ==
+  pinned_to_enc: ENC1:hmtqMdhljCm3C3AoW8coPz5rm+jV53nS1Sjz1mnxbsDKGhdJNUY5/cY0hQQmtRKzAdF9iNrZpt2cF24O3KPJi2dFlKQyDo+hVgEGZRhTUNgwuQjHTcs=
+  notes_enc: ENC1:aeIk1UonblWb22BbrGUJ+0qxt9kynBQLDGLqoPiWij8/OyWIAzhWTyfs3Mu1KM4WG6duo99M2rKSGX4Z/nmFUU+XZ1hCKVuX5ITrPrRhx7wBC3ENEOC4/EdEi3LRuAUMc/1QVDjHVkH7A8FfI9bfYbm/QqJaUHzI802MU4dy3eY/iikv+p5AiufNpcygMc9bLZFqOZfJOMP9XHi+GVvE3zS12QXC8TpliCE7iu9pW1gK/DL7HdEakqPpkErd9NYxOqdStlnyi1A85CSYkQmjBWpDEDd7t/Dd0NB2U8jkBFMAPiX5x1c2T/kW6HIiFkM=
   license: MIT
   license_clean: true
   kind: wrapper
   last_verified: 2026-05-08
-  pinned_to: markitdown-mcp@0.0.1a4
-  notes: |
-    Peer-side MCP server install. Zero Python in this package.
-    Calibrated token claim grounded by `scripts/measure_markitdown_lift.py`
-    against `tests/fixtures/markitdown-corpus/`.
 
 defense-in-depth:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:UOXNF83hfb2g+UcOcgWw3aJByy7+DMDyenacb1bxb9AsMFCUoh1TznYACIJ7Hi7/XHhGHKk/rLD5HNc+exhzPFe2LLMk9Ji2S80JAJGALRVXHACb2qi1qn5rLcyLfITBr/X6Ljs43L+xlQsVgPA+g2Ocy/U=
+  source_enc: ENC1:DYc3uwx1UBZ3jI8Fep63NxlqHnmIkvRK7sz07RI108l2MsNBqxFTOEqbEnRQOH0ZJicbTuGZnVM4Y0dZowX3K8b48FXWOJytLmzM/IK59laea14U1hdqotGTJzeCUC56jNkhtjEd1uLGh9AzoVnSDaA=
+  pinned_to_enc: ENC1:CqRDmsKOoRvsJ6apNm6pUtYc9GOcbKTazKFAI4yvZM2T4AjRd6HYTAvRKt2PKoMDXWPBbWNcooNw7x0rhF37fxk00xlK8JgaeMQdxlsb0TxpxUSmXCd1NzqAaKklBz+04VBx3nhx/cc=
+  notes_enc: ENC1:+cN99EULylJkwNwSXKA1XYwtf8yisq81svQl2lOk+o2HJAUt9PF0yV9WnxUVXRWk2BxevOPA19/ApxHOBsiKTU6XfH+jnc5oRLh5ACS46s3toJ+g0SFUUE9d6qCrMTyhKcnuYDA/TAp3iEibI1kyULw80kOQLEZgDrDOR0Ed7zo+yEEMf+VukiG/dWA9xhMMRcUYXRjNIldvPPIDWW2xV4QX6NEqMKQFslEuuS8IEvpnudqgQwuVV9FK7/KWX5PV1P4rkQPatb6QaR6yOBjoYcfaRvM0LZLCwu6B+eXPmUSp54oUuZxAG0j4YDenJNQzVh8jzvpTHa/VpwTpwoaVyUQ/eYJcgWBwbUbyplhlRF5BiLVt9ZUVO5FN0T0znrewfociZon8Cp3veZWMH+CHx8c=
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-08
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    Four-layer validation pattern (entry / business-logic / environment / instrumentation)
-    plus gate function. Examples generalized from Microck-specific code paths to
-    Laravel-flavored PHP patterns. Adopted under road-to-microck-harvest § P1.1.
 
 testing-anti-patterns:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:fdQm6/cmOtdTam8kkj3jE7LejfrZvpPoehyJonjCQZF9syHvqUXFI25YwoJIVFjqMv9ATZHWwcxh6VK3c4GRrHA8B+zxTqkiVw/0Oz4YWOvH1pj/iI2fT0WfIHBTALFvEdCbPrCAr+Vuuq3mYhOMwXdIcqE=
+  source_enc: ENC1:dRSbx2J4+w6jkBMHJPt1gQHTo+q2W2KoSDh5affnZD87ADWWk6orG07pwRrBlNKsNDOv4EqdLTQyNICmE/Exsq86jajFYpW0fTOsga3v7qt90Q9DQCyAfz6KlqZJark60q818Rl7FIirNIfibmNHw6M=
+  pinned_to_enc: ENC1:WtRgE9+Rj07SckmBcRGJsAwJ6vXI7QSPIeECNQdmUx7Ec8pXjc/j1cdcr6YivCzFzwCzk7xYmeuCi4iPlksLqfy2R6OP6vy+JXZYV0A22yzXtl4cq6PqpuZz7C9BkcPYLqOI2HL7+uc=
+  notes_enc: ENC1:DlWQ2N2M6a/OWAQUNseh7R2axOltaitdSOaif+N4QQrIyFyan9OZJm2t1R4IsaSTKT5tj2SXt2g+PYdM7vXl6dz91dubvny6Uckf56kEFfI7zuR9lbx/B7+z/gm70H+QOqVmUoObAF5qUummJqyKsx7AMPQIEqa1KgkqezaQCD3utfktRrv5s4audelJIQfmPoLWn5K3jdFnZ7BepCQeOGq69mZKNAv91ZHMZrtVlqx32W9hewX/FAvaSMUbFT09AEBwOso3YG8q7aC27lOY8SPX3kyXvw/fjTjQPCxU3uLS8zNPxecNSpRYJzc=
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-08
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    Five Iron Laws + per-anti-pattern gate functions. Cross-linked to pest-testing,
-    test-driven-development, judge-test-coverage. Adopted under road-to-microck-harvest § P1.2.
 
 repomix-packer:
-  author: yamadashy (yamadashy/repomix maintainers)
-  source: https://github.com/yamadashy/repomix
+  author_enc: ENC1:uDuO6JGzIBlJfyDmUJ0lHzxt4QoeIfbETJKcFLvN3P1cyUBrMcg830P6ze9rvEJhV9dPh5fX5upT7gWqpBwOIfV7DI+de3m605XxWrVI7faqw3izO5mEeqjXDCK35/YcnUvCxJzUBjeV
+  source_enc: ENC1:/SkykVpYxNIIA7Mn6QF541FP+7AymKZXzCHg768Z0EZyb1k6PsHMcZgz3othMLlVo/rXbtkdp49c28C/m2Z++xxiJAUPQIHz1VcPSQrb7ec/sgBAqoFtGatRDg5Go7iztRkgAg==
+  pinned_to_enc: ENC1:ijYXZ45KrPQ9z/R0TxWYjFoPPXuI+4t+0Yqlsvd370mLz40w43dVFaTMNsY0Oz2zSWJmp5h87F5RDWVjQ6V+tXUiaafiyPjRxrUSgy5lcBpARIWInp5n
+  notes_enc: ENC1:UM1LbC5B4HK4o5nee39Z/TPUfCVzMYLMGjbi8VTSTS/Cdg7cXflaMNOLCh+gW/VcTPJeUgqUnZ4kjIASWgVuETXVIX3G+8xzE0Z0CoQXDf1F/+wguMFLRuHf6aJDNPLra6QEbGKhCd+Gyrs57zoQEtp9xKC8PVjx1mDeTIav6qG5u9KBsnowA3dxc4+S+mASVOx5zP/4WB8D925pi5cCloLrqHII4hLNPL2e2OS9Zpi0Ya7jNyPl0S6rAmzXfqpkKPFVtcDAN4McVCu0nLQQxAua2MFxudimjEoJHVgsm4FauPB45p63uFAAhlWNFs56sJQT3LZGndH5AbB7Hqpb3Ue4Vnxu6sjoU21RcytIA7ISjCQzEITguh013Agvy9YCncijDIhwZhaSJo3WWZ468tt82w+EkUsULSy4ldVAtuMEc05sUFSPruydHoRY70RAwh6UGhBvwh+ATLDB5zU3tqImcoGy52daQKtw6Z32uWbe2Ine7CE6ICyEGkgyFJ0AvN4kRNvH2bMZmP0o6iwYaTX5GXw+b5Cn571iNSZBYxTu9poo2xIuaf56vjLitxtr/Qu1utE8OOc47ylJD5HCnwR1zQ==
   license: MIT
   license_clean: true
   kind: wrapper
   last_verified: 2026-05-09
-  pinned_to: repomix CLI (peer-side)
-  notes: |
-    Peer-side CLI wrapper. Skill never installs the binary silently — surfaces npm/brew
-    recipes and stops. Wrapper structure adopted from Microck@8f5c831. Adopted under
-    road-to-microck-harvest § P1.3. Renamed from `repomix` to `repomix-packer`
-    on 2026-05-09 (road-to-feedback-followups § P1.1) to remove `bare_noun_name`
-    linter warning; the underlying CLI tool is still called `repomix`.
 
 mcp-builder:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:DMX4L/uFcurrCpxQdq0nQs1IK+jlfWyuVUSXpSc6WXHkcPVYoAqcIfkdNstq3DNL8dYFAfxlBsCwuXWMBQi0HIc+0uJvWWwKG4QSKRn1tQ3T/nFcE0u4LymZX/Obcdx5sdXRmEMDSgEh5nnoaXD39eKV5x0=
+  source_enc: ENC1:al+UrY+TDjeD9YZhhL3q136u3ZSM9v1OHW//lO7yU82dRDHuwMJngIgAFzp+4vGds8pRapkJPQjI3/rDJemKpQRIauoANepmFGh5dwpKh+W+QtOxP86Pf71yaeXQ90bJpRCPrOWqAHcclKCd5KufxaU=
+  pinned_to_enc: ENC1:i6AZtjDOdVsJC4vSpuEHWnxpEu7WBFrfZlCvfZUU8ObxX3MyngoYW76zKxTtPPIzFpuNaL3V3JGvhSossVSCva2Fpa0TJF6868IPDQdjtnB7vA5X/U+iJUONyH9TrCB5OygSTj43Fko=
+  notes_enc: ENC1:tUREuWFdPflQ01EFMnijn1SyKn2jRMA/E/a1Ol6aGqrLnZovmNCx/UHqHUG82zPPf8TpDoH+sMvOrg/3zWBBkhMUxNOHJO2I4uaooOgMBBGC0wjDUTMkTmNU+FSj9vh0GkjI7DqS4gZof9B2xTQCp+kqg6Ckj29OPvFlilQGl4p/MXJE80vQ/PH/wBrzsTIYvXUcLheXPpUk1vXwc/JDlgTCy9Bd7yM5Qy+DbWDntC4lXT7Sgjm4HEg1FSUm+mrmVm2ouF7Le95J27CyQ2yrLWK7gOBdjZ5IlFxoXlR7XQ4QcFmCdZcX9Caiy3+rHiVJcqvvL2S3wxIvzGmlcho1Ul8KcYS9SMXiBSqGkMdOQuEp7kjbeBBMEsebEVXzr2h0ySc63LIpJdsbFgWDHcO942+so7DnfRVD6TdNOJemNqVBl6xxgdvjWQ==
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-08
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    MCP server authoring guide (FastMCP / TS SDK), four-phase plan-implement-review-eval,
-    10-question evaluation harness. Microck's external ./reference/*.md file refs
-    replaced with inline guidance plus upstream SDK URLs. Adopted under
-    road-to-microck-harvest § P1.4.
 
 error-handling-patterns:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:T+nuG5Z4KCjBTroiuLKOmxI+oDOJh5Xzy+Z2PFzus5oxcGqgc5O49oZzoykxHWVy1NMbFhHs4ayS2QpidBdqB+dYPhiwCmFfc+1ihke2A3nYD8GrxeLlB3tBMH/6uy5fEf7S+O2L24NkeqWHKmuaundHKo8=
+  source_enc: ENC1:J2bI+py+iA9eSk2v3DR1Gkwz0mWnp9yHJHPTj5GiffNIZ4fwQi0O6Ym4OTAQfpRVOKwOjmFycSgmvEvfAZ2ESh18SiOiExmcLNs1/QGtVxWSE0gW2WJPAR16D9aQpIOfj/JvlZoJRuqiWx8xweJZatU=
+  pinned_to_enc: ENC1:bswwVmcK/WZu6Bm2rhP5e4S2Jg2Y3Yoi1swWDb6CWt/TJLz+lii+XgUzS0NnhPj1iuxz5+I2MYSR92LuZsJL32KcHENLdyJBXw50KQRvVuF/6CONquSiHDt2k2a/gfJSeYpF2BUD9xQ=
+  notes_enc: ENC1:7ydbJdAgexMVIQgELDbSqPMmrWXwTZmDk72XBJxFBvOd2REFHtauWut5k1pZvbuHJRGgPhJN5wkRgECsKL5jR8jVzeI+f5DLeEJtwBY/x4ioWXbuUtbjbJHzYV1QM/A3RpY74QU+DMCcrk6Gwf0tsmrlhyhAx4CIByPYF1qL0uLO9wUE3D8MnHp8Swc8xgYjlTq9/6IHdjkYVxSsyAMijKHNR50Q7P83ZUY3a8x/wivrziA/qEIOhDxZSSgzKloKhB7mNJBkmOe7KT7EkGNM4VE3B5V883KAzu5i6Cww5K363Lf8CLD78fQU6O9t2QqbAr0CLS6+2cql57eqWdjnTDcwn3tdDiFsOg/T7hFvveDsq6BE8i+bj6w3HEKIhinrtEejzjVyDKphOV4QAecFhNLWFIviq5HKHgct6/GA6sOb9sK/cjgcnDTmq8z+NMdcVzGAtdwl0GyHCt5hgb5mTMo5cp/hrArEvuFmusLXNmg11Kno8wqMEJlPuMeOD0s=
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-08
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    Sunset Policy applied: 636-line source condensed to a ~150-line decision framework;
-    language catalogues externalized to Python, PHP, JS/TS, Go, Rust upstream docs plus
-    Fowler/AWS resilience pattern references. refresh_trigger and sunset_criterion
-    set in skill frontmatter. Adopted under road-to-microck-harvest § P1.5.
 
 async-python-patterns:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:nl0b8y/ngKWN5UrGAPRMOYp1w5iw7K7/k2bpe3Wi8bLTWaDcDTxdM8gMXNFqYDMPpq8DTg2kZvBwnqIxgTrlwXEXf77fF/K/aXVTGnG2iJTZv8NWdDVggK8FiLhV02GIr1RIDKGdssuOtJE5nfWpMQsdpoo=
+  source_enc: ENC1:cl0Ed7iEJSkhgxPVtngwXU+yoUd+UikoY5hXa7eZYyYL1mGsTOXtd2CTxJWJeZoEU7EObIeQE+gU01OUf43W3uKlx3hhaq2539P5IbOt3gxpqux/a3cDxEpFG7qHESwNqREE7Qn8pxoRzActLwprHjY=
+  pinned_to_enc: ENC1:z1L1+cTgIIeClhzkiwhLuO/DnSSyriq1rPjHBnRV7/5G9joNbdYIsXQ5/HJBxJyxjn7svU3xXec9jDHKL/F/5JHKEKvqqQWIxk41geEOgedM/FSaBpviPzJinjPILTAzm5Odu8R6YCc=
+  notes_enc: ENC1:tYk+rKPP9E0INaHAxU7Bl7FgCUKOn9DIaLCYVSZfMNkbNuIq8bZ8c23T+en/1EUSuwDVAIVuajfCUqeD9MIciAJpX1a82PYnHOmzfj0pFgIJEHMQDXXMeh0fzbJZsuGMd8o/nlWs/SwPzcLoWxkp4UQmC3GtkkIu2nz2vh24HFMeaYbpahwENlRe/nQmK9Aw9ri8unr5Xm+niOyukqRdDWpnZ+X+zSrNXFMGOOcww3Dn96oK1LZVxvPAEJ8LrIttdH1kwFuVDY4QmFvv/kQbrUJKLFuYnn7mTPOlc4OYd2dsG130a4VkuP4xA9QATiCO5AqTOTnIkKYcBaSabAsuUqLsjJ9E6MDuEuknkImeAvkV2ARxsvf/vWrJSNNcTaDNCm1z7t6fN0i8O7ejINplBEEJ0LgkqA5fnY8UesyhJJNTyF7Zjrfuf1oJ6+rCDvkQmAPGme4FrcfWGjbxaEHiyFXWyHEf12Hl/wZCnvX9yRduzR3dWP4P4fRpkA8chfERTQ755u3f6ewWSc7zZl72PElvFD43HjNrenAO+LJ/YTHUUf69mPgZwG3DzWxI0r2f3jEoSQd9DqmE/1a08WQBNaYQbT+4ZHyWNkA/zqKSL+dgfcY0AUubhAzPWkW23BuQzmFTZjF7nMrfkn/PlwuuIl1WXKrrO5dG+207jkPLvg==
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-09
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    Sunset Policy applied: 694-line cookbook source condensed to a ~140-line decision
-    framework; gather/TaskGroup/wait_for/timeout/Semaphore primitives, sync↔async bridging,
-    cancellation discipline, event-loop blocking audit. Pattern catalogues externalized
-    to docs.python.org asyncio + anyio/trio + httpx/aiohttp + asyncpg/aiosqlite docs.
-    refresh_trigger and sunset_criterion set in skill frontmatter. Adopted under
-    road-to-microck-harvest § P2.2.
 
 secrets-management:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:SgGYIOENCC9FGExRlo2cHRW1No3ynikbsqUgKpk871p2yXiEpFpHPQZldZCFQVd2jytGu97IZwAofe8qKETnljqCgK0W0CLNBpujF74piEdoSjpOIG1cxcKpU8AG5qlkY7YfLyqHzKEB/h2171w7nJ1qzpg=
+  source_enc: ENC1:5kays4rJS87KcmTyMk9cUy0XkOF7A4YN1w1AHYxHZOvnHRP5A1gJI2NYE0dWyyHtSLFHgIImrvKm4DH9i41bPLUO4mHZ9mPRmDXihjSVut8aYCo6ru1OgyRsn61Adbjav2CyGaOMVkmplBHF6kV0Nhw=
+  pinned_to_enc: ENC1:pDLRrPvJtwRbkB2y5F/Fublr77kZ2uF36O7h256xb7tjFvTpVEtwN4yg4MB+I719tgwiIQCWT/vvSS67l4OSo0dLh8+f+LMvO1IpHNpTUkf4dFO/hZaXsXsYiFV/2QYh5UWVDK1dvq8=
+  notes_enc: ENC1:SZxH2UIBFWqmkj+8qXuYUMp16s89DsSeBZJI1taHOw9NJcEh1dtHJGafIipBUGwhY/fJCdXah/c3FLMEdr5Zb1Lg3mpiGx87siJ78FTpH+wJNafus6mNor6Am4M2qycMLvKcousT2scyqz0UJiZc1lOTrSXSJDeElZ9G5xbforIU79MA75hrKpVT1kSkoYjons5bBa2gifVLDN14549DhlGkJVJfMaNBFEED64fY7ColyeDlO5twruBddK1jXXBBBopT7MZbgr+dRiTAkRKStMqDO3Qcs9l8adhJcJ44isKg6/CWMvbS/AVO0V8FTfPHFqIcgVp8UIPbQuVuPSXxvVUlI5h0YORPRbLhcyiS8C8bgo+GzGD7W13C//RMM4qyn4npUHlVoA2C0LcD7N2vIKsXvsf0zb/lyUPtIlWTtlwpht9IbS2P2LwFE1FzTIeIXftprKeZY0e+qh6U9YVdS8wHIjU/XmeTUCQCdER6IPs1+tViq0U2ykycPfoYr7R51UfbVBLZxyT9N8r5xxWZWGROWn1RGpVeON81dpWvCJ54PWuaUIxHGqRQ5Uutox7xPnWB2Njq+Ghk1ThdAmCWhTilMmxn+sTBljMmPmMbd/PzSlFsuPCIDYqdiFJ7Ahj4b9QvzWUbTKu+QT8Ti50v9bRNUmj0EZ5JggW1OM8hMdmpv8VVgOOuKbct4ST1MQd6Ht9s3u6L3WSERFKY3U8D9XwDq7H8LYbtmjoShZcqId5Hr/at9zPYSXPtmlr6td08LuVn6KTkvQ==
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-09
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    Sunset Policy applied: 346-line provider cookbook condensed to a ~140-line decision
-    framework covering store selection (Vault / AWS Secrets Manager / Azure Key Vault /
-    GCP Secret Manager / GitHub-GitLab CI / External Secrets Operator), access patterns,
-    rotation contract, scanning gates (gitleaks / TruffleHog / SCM push-protection), and
-    egress controls. Per-provider deep-dives externalized to upstream docs.
-    refresh_trigger and sunset_criterion set in skill frontmatter. Adopted under
-    road-to-microck-harvest § P2.3.
 
 prompt-engineering-patterns:
-  author: Microck (Microck/ordinary-claude-skills maintainers)
-  source: https://github.com/Microck/ordinary-claude-skills
+  author_enc: ENC1:7AFUQ8439lVDcyWlu9QxGkVySZGNouanxp+8tZVYKZ44FxOXDORfjok3yxWs4C+cYbTRWhdirfQNuUJ6CvVDKWy9LqmhqijO5jNm3wQJ6lgcrzOndoZS/yZqaokAFASv5hW/rV644LSyhEP6/cKsj9S5cUM=
+  source_enc: ENC1:Dt9B8ZdtzRHZAF7uIRwwmu06ojHm3BANq3gfmO+mpj6Ul8iGBSTKTMm+yM71/A9EGbVjF80YZexzWeOhArNZyFE6ReiYJiIgZA0vti4enYLzf4g/WoCaMCGKNsF2k2PP52BEUcThYUQa0NzFl7cz2hQ=
+  pinned_to_enc: ENC1:08Z/e45jVUJQwQ9+CUMwg4XeGAvHN3U4WuPe9zexxhATi21t44WNgHJ//bQ3gq8qLWrEq0L3+uNWSIuS+upiNw4UaZeFtKeeam9d6vNYMsYrGt4Id58ZAq+9nDGszAE0G90E8eHi9XU=
+  notes_enc: ENC1:4/NTYtsYeTsG8eUaPp8lx23XRvkXdrv4vvcYg7YAkDu9FbxxCSquyX1++wbS9C9yMCbS74CB5n/3RmN0kMVTLNgMlObR57g9+C78CeHKkhvKKRbkRxZr2UIR8bA5iQ89IPbdmlaLu2T/WF7dYUSFuxvQLyzxNJwtJD1LpD0K2JQa5yPPKT4NM4F4Ac541ccODo93cL4cnFPvK5QRKFVNaS8x0SyVskKNXmQV7Nba+F87eYy88/pVb7MPMFaAObsGhuBznaN73DztvuLYupUutVM0zWoxwWPjkos+AudQ2RIbw/kyv3jPuV/N7sEX97ONK/9d3Wwi5hK/aSPxLFdunXpzw/JS7p4wGt1m3HIoSY3nBFA+lMf3Z65reCgQ2+FMapj+EPJz3hij/xDj6tC9x2V7HrUJF16JWvETlUMDrI8PedbGt5JK+dWftOwllBPtRtJkx4NSYo2PyvO4T/lwTpqTYs6s54CfBhGkV82vgVFVlyUuppDA60RqLclCcHj8mges5lgHkHZVGeu8CdnNXmt1/OfPDFi0+uF1WpIs3FBmTDmaTWSTSkdr/3quyRaS5JUFCsrrXV1ApFfqCLVRzqddxOuKomE2vj8+CrKsLf7FjUdm2LX57wKY1na8ZCzq
   license: MIT
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-09
-  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
-  notes: |
-    Production LLM prompt patterns (few-shot, chain-of-thought, system-prompt design,
-    template systems, self-verification). Restructured into a decision-framework shape;
-    Microck-specific `prompt_optimizer` Python snippets dropped (project-specific).
-    Distinct surface from local prompt-optimizer (end-user prompt polish) and
-    refine-prompt (engine-inbound ticket refinement). Adopted under
-    road-to-microck-harvest § P2.5.
-
