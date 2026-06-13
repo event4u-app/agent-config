@@ -65,9 +65,10 @@ def test_every_domains_command_round_trips():
 def test_iter_commands_covers_the_full_surface():
     """The flat command count is stable and non-zero across the move."""
     cmds = list(agent_src.iter_commands())
-    # 150 commands in the suite as of 6.0.0-D Phase 4; guard against a
-    # scanner regression silently dropping the src/domains homes.
-    assert len(cmds) >= 150
+    # 148 commands in the suite (150 minus the folded fix:pr-bot-comments +
+    # fix:pr-developer-comments); guard against a scanner regression silently
+    # dropping the src/domains homes.
+    assert len(cmds) >= 148
     assert all(p.name == "command.md" or "/commands/" in p.as_posix() for p in cmds)
 
 

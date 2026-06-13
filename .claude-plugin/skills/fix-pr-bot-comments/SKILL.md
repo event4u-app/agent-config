@@ -1,1 +1,0 @@
-../../../src/domains/engineering-base/fix/pr-bot-comments/command.md

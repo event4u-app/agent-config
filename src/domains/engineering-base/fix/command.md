@@ -8,7 +8,7 @@ routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability]
 replaces: []
 tier: 1
 visibility: advanced
-description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments
+description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments
 cluster: fix
 type: orchestrator
 auto_detect: true
@@ -35,9 +35,7 @@ with a single entry point + sub-command dispatch.
 | `/fix refs` | `commands/fix/refs.md` | Find and fix broken cross-references in `.augment/` and `agents/` |
 | `/fix portability` | `commands/fix/portability.md` | Find and fix project-specific references in shared `.augment/` files |
 | `/fix seeder` | `commands/fix/seeder.md` | Scan seeder data files for broken FK references |
-| `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to open review comments — **detects bot / human / both** and asks which when ambiguous; dedupes by comment id + reply marker |
-| `/fix pr-bot-comments` | `commands/fix/pr-bot-comments.md` | **Deprecated → `fix pr-comments`** (the "bots" answer to its prompt) |
-| `/fix pr-developer-comments` | `commands/fix/pr-developer-comments.md` | **Deprecated → `fix pr-comments`** (the "human" answer to its prompt) |
+| `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to all open review comments — **bot + human, classified per comment**; dedupes by comment id + reply marker |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -58,10 +56,11 @@ the `auto_detect` kill-switch, rollback). Detection table:
 | Project-specific leakage in shared package named | `fix/portability` | MEDIUM |
 | No clear signal, or ≥ 2 conflict | — | LOW → menu (interactive) / `ambiguous_routing` (CI) |
 
-`fix/pr-comments` is the single PR-review-comment surface: it absorbs the
-deprecated bot- and developer-only variants by detecting unanswered
-comments and asking "fix bot / human / both?" (deduped by id + reply
-marker). Auto-detection never routes to the deprecated variants.
+`fix/pr-comments` is the single PR-review-comment surface: it handles bot
+and human comments in one pass — classifying each unanswered comment by
+author type and applying the right detection + reply style (deduped by id +
+reply marker). The former bot-only and developer-only variants were folded
+into it and removed.
 
 ## Dispatch
 
