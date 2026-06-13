@@ -29,7 +29,7 @@
     {
       "pack": "memory",
       "slug": "chat-history",
-      "reason": "command-routing target (commands/chat-history/*) listed under skills: — move to routes_to: in 6.1 (pack migrated meta→memory in ADR-092)"
+      "reason": "command-routing target (commands/chat-history/*) listed under skills: — move to routes_to: in 6.1 (pack migrated meta→memory in ADR-094)"
     },
     {
       "pack": "meta",

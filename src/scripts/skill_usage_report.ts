@@ -2,7 +2,7 @@
 /**
  * Aggregate `agents/runtime/metrics/skill-usage.jsonl` into a per-skill report.
  *
- * TypeScript twin of `src/scripts/skill_usage_report.py` (ADR-092,
+ * TypeScript twin of `src/scripts/skill_usage_report.py` (ADR-094,
  * Phase 8 / Wave 8b). The public surface, CLI contract, exit code,
  * stdout text, and rendered markdown mirror the Python original EXACTLY
  * — same record grouping, same 30-day window math, same status

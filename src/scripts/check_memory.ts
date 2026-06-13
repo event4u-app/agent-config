@@ -2,7 +2,7 @@
 /**
  * Engineering Memory validator.
  *
- * TypeScript twin of `src/scripts/check_memory.py` (ADR-092, Phase 4 /
+ * TypeScript twin of `src/scripts/check_memory.py` (ADR-094, Phase 4 /
  * Wave 4a). The CLI contract mirrors the Python original EXACTLY — same
  * flags (`--path`, `--format`, `--append-only`, `--base`,
  * `--shadow-report`), same exit codes, same stdout/stderr split,

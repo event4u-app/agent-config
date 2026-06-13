@@ -2,7 +2,7 @@
 /**
  * Assert the two A/B clones differ only in the agent-config surface.
  *
- * TypeScript twin of `src/scripts/bench_ab_integrity.py` (ADR-092 py2ts
+ * TypeScript twin of `src/scripts/bench_ab_integrity.py` (ADR-094 py2ts
  * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
  * EXACTLY — `--verbose`, exit codes (0 clean / 1 missing-or-divergent /
  * 2 usage), and byte-identical stdout/stderr. No behaviour changes;

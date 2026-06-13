@@ -2,7 +2,7 @@
 /**
  * Refresh `agents/runtime/.agent-prices.md` from the LiteLLM model-prices feed.
  *
- * TypeScript twin of `src/scripts/update_prices.py` (ADR-092 — Python→TS
+ * TypeScript twin of `src/scripts/update_prices.py` (ADR-094 — Python→TS
  * migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY —
  * the `--check` / `--path` flags, exit codes (0 ok / 1 stale-or-missing in
  * --check), the stdout/stderr split, byte-identical messages, and the

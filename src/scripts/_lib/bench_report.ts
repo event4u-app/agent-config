@@ -4,7 +4,7 @@
 // docs/contracts/benchmark-report-schema.md. Filename format:
 // `internal/bench/reports/<UTC ISO-8601 with : -> ->-<corpus_id>.{json,md}`.
 //
-// TypeScript twin of `src/scripts/_lib/bench_report.py` (ADR-092 py2ts
+// TypeScript twin of `src/scripts/_lib/bench_report.py` (ADR-094 py2ts
 // Phase 2 / Wave 2a). Markdown / JSON rendering is byte-exact with the
 // Python original; the inline `:.2%` formatting replicates Python's
 // round-half-to-even semantics.

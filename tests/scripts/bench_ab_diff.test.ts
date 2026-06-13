@@ -1,7 +1,7 @@
 // Tests for src/scripts/bench_ab_diff.ts (Phase 2 Step 4 A/B report diff).
 //
 // The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-092 parity contract): the pure transform layer
+// differential suite (ADR-094 parity contract): the pure transform layer
 // (`compute_track_a_diff`, `compute_track_b_diff`, `render_markdown`) is
 // exercised directly, and a golden-parity block runs the full script
 // end-to-end under python3 vs tsx over fixtures written INSIDE the repo

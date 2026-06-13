@@ -1,7 +1,7 @@
 /**
  * Concern envelope helpers — read the dispatcher's stdin contract.
  *
- * TypeScript twin of `src/scripts/hooks/envelope.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/hooks/envelope.py` (ADR-094 —
  * Python→TS migration, Phase 6 / hooks core). Public API mirrors the
  * Python module exactly (snake_case kept deliberately — fidelity over
  * TS idiom).
@@ -32,7 +32,7 @@
  */
 
 // Free-form JSON values flow through every helper here; a documented
-// alias keeps the surface honest without `any` (ADR-092 § strict TS).
+// alias keeps the surface honest without `any` (ADR-094 § strict TS).
 export type JsonValue =
   | string
   | number

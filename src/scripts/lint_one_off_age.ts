@@ -2,7 +2,7 @@
 /**
  * One-off-script age linter.
  *
- * TypeScript twin of `src/scripts/lint_one_off_age.py` (ADR-092, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_one_off_age.py` (ADR-094, Phase 4 /
  * Wave 4b). Mirrors the CLI contract EXACTLY — `--format {text,json}` /
  * `--root` argparse flags, exit codes (0 clean incl. warnings, 1 hard
  * fail, 3 internal error), stdout/stderr split, byte-identical finding

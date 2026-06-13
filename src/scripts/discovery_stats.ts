@@ -2,7 +2,7 @@
 /**
  * Pretty-print the `stats` block from the committed discovery manifest.
  *
- * TypeScript twin of `src/scripts/discovery_stats.py` (ADR-092, Phase 8 /
+ * TypeScript twin of `src/scripts/discovery_stats.py` (ADR-094, Phase 8 /
  * Wave 8a). The CLI contract is mirrored EXACTLY — the single `--manifest`
  * flag (default `dist/discovery/discovery-manifest.json`), exit codes
  * (0 printed · 1 manifest missing or malformed), the stdout/stderr split,

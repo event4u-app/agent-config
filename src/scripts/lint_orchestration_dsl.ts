@@ -2,7 +2,7 @@
 /**
  * Lint `.agent-config/orchestrations/*.yaml` pipeline files.
  *
- * TypeScript twin of `src/scripts/lint_orchestration_dsl.py` (ADR-092,
+ * TypeScript twin of `src/scripts/lint_orchestration_dsl.py` (ADR-094,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--dir` /
  * `--file` flags, exit codes (0 clean, 1 hard failure, 2 file/schema-load
  * error), stdout/stderr split (all findings on stderr), byte-identical

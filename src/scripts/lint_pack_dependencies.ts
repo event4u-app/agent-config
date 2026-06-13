@@ -2,7 +2,7 @@
 /**
  * Pack dependency + pack-graph lints.
  *
- * TypeScript twin of `src/scripts/lint_pack_dependencies.py` (ADR-092,
+ * TypeScript twin of `src/scripts/lint_pack_dependencies.py` (ADR-094,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract exactly: same checks,
  * finding messages, stdout/stderr split, and exit codes.
  *

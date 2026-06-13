@@ -508,7 +508,7 @@ def test_build_members_cli_binary_missing_skips_member_with_reason(
         raise CliClientError(
             f"{factory_attr}: binary {binary_name!r} not found on PATH. "
             f"Install the provider CLI or set "
-            f"`members.{provider}.binary:` in agents/settings/.ai-council.yml."
+            f"`members.{provider}.binary:` in ~/.event4u/agent-config/.ai-council.yml."
         )
 
     monkeypatch.setattr(council_cli, factory_attr, _raise)

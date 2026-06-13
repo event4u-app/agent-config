@@ -6,7 +6,7 @@
  * wrong-key rejection, token shape, multi-key fallback, `is_token`,
  * `ValueError` on empty key / non-token / no-key.
  *
- * Part B — cross-runtime crypto parity (ADR-092): a token produced by the
+ * Part B — cross-runtime crypto parity (ADR-094): a token produced by the
  * Python original (`src/scripts/_lib/link_crypto.py`) decrypts under the TS
  * twin and vice versa, proving the PBKDF2 + HMAC-keystream + encrypt-then-MAC
  * scheme is byte-for-byte identical across runtimes. Skipped when python3 is

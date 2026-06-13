@@ -2,7 +2,7 @@
 /**
  * Sync `.github/topics.yml` + `.github/about.yml` to the GitHub repo.
  *
- * TypeScript twin of `src/scripts/sync_github_metadata.py` (ADR-092, Phase 5).
+ * TypeScript twin of `src/scripts/sync_github_metadata.py` (ADR-094, Phase 5).
  * The CLI contract is mirrored EXACTLY — every flag (`--apply`, `--strict`,
  * `--quiet`, `--repo`), exit codes (0 = synced / applied; 2 = drift under
  * `--strict` dry-run; 1 = error via SystemExit — missing token, unresolvable

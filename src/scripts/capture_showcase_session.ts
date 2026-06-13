@@ -2,7 +2,7 @@
 /**
  * capture_showcase_session.ts — wrap and measure showcase sessions.
  *
- * TypeScript twin of `src/scripts/capture_showcase_session.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/capture_showcase_session.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — the `capture` / `metrics` subcommands, every flag, exit codes
  * (0 success / 1 user error / 2 metric-gate pending), the stdout/stderr

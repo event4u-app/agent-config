@@ -2,7 +2,7 @@
 /**
  * Materialise the `with` and `without` clones for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_clone.py` (ADR-092 py2ts
+ * TypeScript twin of `src/scripts/bench_ab_clone.py` (ADR-094 py2ts
  * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
  * EXACTLY — `--refresh`, `--variant`, `--print-shape-hash`, exit codes,
  * stdout/stderr split, byte-identical written manifest

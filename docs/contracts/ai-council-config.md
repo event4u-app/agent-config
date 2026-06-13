@@ -3,16 +3,16 @@ stability: beta
 keep-beta-until: 2026-08-12
 ---
 
-# AI-Council Config (`agents/settings/.ai-council.yml`)
+# AI-Council Config (`.ai-council.yml`)
 
 **Purpose.** Lock the schema, validation, and precedence rules for the
 centralized council config file. Every phase of the AI-Council
 consolidation work reads from this file; the contract here is the
 boundary that prevents drift across the loader, the CLI, the
-orchestrator, and the `agents/settings/.ai-council.yml` file itself.
+orchestrator, and the `.ai-council.yml` file itself.
 
 **Audience.** Authors of `scripts/ai_council/config.py`, `council_cli.py`,
-`scripts/ai_council/orchestrator.py`, and the `agents/settings/.ai-council.yml`
+`scripts/ai_council/orchestrator.py`, and the `.ai-council.yml`
 starter. Also reviewers checking that new providers / advisors / debate
 features keep the schema intact.
 
@@ -21,10 +21,45 @@ a revision entry in the consuming roadmap.
 
 ## File location
 
-The single source of truth is **`agents/settings/.ai-council.yml`** at the
-project root. The legacy `ai_council.*` block under `.agent-settings.yml`
-is removed by Phase 0 Step 5 and replaced by a one-line breadcrumb
-pointing at this contract.
+The council is configured **once per user**, not per project. The config
+lives in the user-global namespace:
+
+```
+~/.event4u/agent-config/settings/.ai-council.yml
+```
+
+(with the legacy `~/.config/agent-config/settings/.ai-council.yml` read as a
+fallback during the v2.4 namespace transition). This is where a single
+developer enables members, pins models, and sets caps once — and the
+council then works in **every** project they open, with no per-project
+file to check in or accidentally commit. See
+[ADR-093](../decisions/ADR-093-ai-council-config-user-global.md).
+
+`scripts/ai_council/config.py:resolve_config_path` resolves the active
+file with this precedence (first match wins):
+
+1. **`$AI_COUNCIL_CONFIG`** — an explicit absolute path. Honoured even
+   when the target is absent (so a typo surfaces as "create it here"
+   rather than silently falling back). Primarily for tests / power users.
+2. **Project-local** `<project_root>/agents/settings/.ai-council.yml` —
+   only when a consumer project deliberately checks in its own council
+   config. This **overrides** the user-global file for that project.
+3. **User-global** `~/.event4u/agent-config/settings/.ai-council.yml` — the
+   canonical default described above.
+
+When none exists, the loader reports the user-global path as the place to
+create it. `agents/templates/.ai-council.yml.example` ships the documented
+shape to copy from. The legacy `ai_council.*` block under
+`.agent-settings.yml` remains removed (Phase 0 Step 5); a one-line
+breadcrumb there points at this contract.
+
+> **Why user-global, not project-tracked.** A council config checked into
+> the project tree (the pre-ADR-093 layout) (a) re-applied per-project
+> instead of per-developer, (b) risked being committed to a public repo,
+> and (c) was silently *not found* on cloud / headless / fresh-checkout
+> surfaces with no project copy — the council then refused with
+> "ai_council.enabled is false" even though the user had set it up. The
+> user-global location fixes all three.
 
 ## Top-level schema
 

@@ -2,7 +2,7 @@
 /**
  * Measure rule-bucket char counts (kernel + auto) for the rule-kernel roadmap.
  *
- * TypeScript twin of `src/scripts/measure_rule_budget.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/measure_rule_budget.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flags (`--json`, `--kernel-budget-check`,
  * `--trend-append`), same exit codes, same byte-identical stdout table /

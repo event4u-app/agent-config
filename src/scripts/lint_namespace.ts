@@ -3,7 +3,7 @@
  * Namespace linter. Enforces `<stem>-<intent>` kebab-case + reserved
  * names list across skills / rules / commands / personas.
  *
- * TypeScript twin of `src/scripts/lint_namespace.py` (ADR-092, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_namespace.py` (ADR-094, Phase 4 /
  * Wave 4b). The CLI contract is mirrored EXACTLY — `--name` / `--quiet`
  * flags, exit codes (0 clean, 1 issues / single-name fail), stdout/stderr
  * split (findings + BASELINE-on-failure to stderr; success BASELINE to

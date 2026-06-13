@@ -2,7 +2,7 @@
 /**
  * Cross-repo retrieval — read-only, targeted, opt-in (ADR-032 Option A).
  *
- * TypeScript twin of `src/scripts/cross_repo_retrieve.py` (ADR-092,
+ * TypeScript twin of `src/scripts/cross_repo_retrieve.py` (ADR-094,
  * Phase 8 / Wave 8g). Mirrors the Python contract EXACTLY — positional
  * `query` + `--path-scope` / `--max-chunks` / `--format` / `--root` flags,
  * the retrieval envelope shape, the text-table render, opt-in / large-sibling

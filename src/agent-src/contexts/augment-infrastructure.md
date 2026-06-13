@@ -105,7 +105,7 @@ Commands organized by workflow:
 | **Modules** | `module-create`, `module-explore` |
 | **Roadmaps** | `roadmap:create`, `roadmap:process-step`, `roadmap:process-phase`, `roadmap:process-full` |
 | **Quality** | `quality-fix`, `review-changes`, `prepare-for-review`, `update-form-request-messages`, `fix-seeder` |
-| **CI/PR** | `fix-ci`, `create-pr`, `create-pr-description`, `fix-pr-comments`, `fix-pr-bot-comments`, `fix-pr-developer-comments` |
+| **CI/PR** | `fix-ci`, `create-pr`, `create-pr-description`, `fix-pr-comments` |
 | **Testing** | `tests-create`, `tests-execute` |
 | **E2E** | `e2e-plan`, `e2e-heal` |
 | **Agents** | `agents-prepare`, `agents-audit`, `agents-cleanup`, `copilot-agents-optimize`, `agent-handoff`, `agent-status`, `optimize-agents`, `optimize-augmentignore`, `optimize-skills`, `optimize-rtk-filters` |

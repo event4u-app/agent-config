@@ -1,6 +1,6 @@
 // Tests for src/scripts/condense_memory.ts (Phase 2 of step-16-telegraph-substance).
 //
-// 1:1 port of tests/test_condense_memory.py (pytest → vitest, ADR-092 parity
+// 1:1 port of tests/test_condense_memory.py (pytest → vitest, ADR-094 parity
 // contract). A trailing golden-parity block runs python3 + tsx on identical
 // inputs and asserts byte-identical condensed bodies (modulo the per-run
 // `condensed_at:` timestamp) + backups + CLI messages, skipped without python3.

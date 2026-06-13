@@ -3,7 +3,7 @@
  * Lint guard: `module-management` SKILL must stay framework-neutral.
  *
  * TypeScript twin of `src/scripts/check_module_management_neutral.py`
- * (ADR-092, Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — no
+ * (ADR-094, Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — no
  * flags, exit codes (0 clean, 2 violation / missing file), byte-identical
  * messages and stdout/stderr split.
  *

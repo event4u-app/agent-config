@@ -7,7 +7,7 @@
 // reports byte-for-byte. The reports/ab + clones directories are snapshot +
 // restored so the test leaves zero git drift. The volatile fields are the
 // embedded UTC `stamp` (also in the report filename) and `duration_seconds`
-// (a wall-clock measurement); both are normalised per ADR-092's timing-
+// (a wall-clock measurement); both are normalised per ADR-094's timing-
 // non-determinism guidance. `wall_time_seconds` is 0.0 in dry-run mode (no
 // CLI invocation), so it stays deterministic and IS compared.
 import { spawnSync } from 'node:child_process';
@@ -151,7 +151,7 @@ describe.runIf(hasPython3())('bench_ab_task_runner — CLI surface parity', () =
 // serialization (JSON + Markdown) driven by a SYNTHETIC per_task list, so it
 // does NOT touch the flaky clone-rebuild shell-out path (bench_ab_clone.py
 // manages a gitignored scratch dir whose rmtree races in a worktree — that is
-// the "shells out to a real benchmark" surface ADR-092 says to keep out of
+// the "shells out to a real benchmark" surface ADR-094 says to keep out of
 // golden parity). Both implementations write into reports/ab; the new files
 // are removed and any pre-existing files restored, leaving zero git drift. The
 // only volatile fields are the embedded UTC stamp (also in the filename) and

@@ -43,7 +43,12 @@
     "\\bhoodini\\b",
     "dream-skill",
     "\\bsmithery\\b",
-    "claudekit"
+    "claudekit",
+    "affaan-m",
+    "agency-agents",
+    "msitarzewski",
+    "610ClaudeSubagents",
+    "ChrisRoyse"
   ],
   "skip_paths": [
     "src/scripts/check_no_external_sources.py",

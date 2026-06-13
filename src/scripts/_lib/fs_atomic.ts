@@ -1,7 +1,7 @@
 /**
  * Atomic file-write primitive shared by lockfile-schema-v2 writers.
  *
- * TypeScript twin of `src/scripts/_lib/fs_atomic.py` (ADR-092 — Python→TS
+ * TypeScript twin of `src/scripts/_lib/fs_atomic.py` (ADR-094 — Python→TS
  * migration, Phase 2 / Wave 1). Public API mirrors the Python module
  * exactly (snake_case kept deliberately — fidelity over TS idiom).
  *

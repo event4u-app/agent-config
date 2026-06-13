@@ -1,7 +1,7 @@
 /**
  * Detect module root directories from a project tree.
  *
- * TypeScript twin of `src/scripts/_lib/module_detection.py` (ADR-092,
+ * TypeScript twin of `src/scripts/_lib/module_detection.py` (ADR-094,
  * Phase 2 Wave 1 batch C). Public API mirrors the Python module exactly —
  * same exported snake_case names, same return shapes, same confidence
  * ladder, same read-only / tolerant contract.

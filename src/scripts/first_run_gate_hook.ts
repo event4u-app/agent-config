@@ -2,7 +2,7 @@
 /**
  * First-run gate — surface the marketplace-install-but-unscaffolded shape.
  *
- * TypeScript twin of `src/scripts/first_run_gate_hook.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/first_run_gate_hook.py` (ADR-094 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *

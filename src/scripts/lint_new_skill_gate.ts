@@ -2,7 +2,7 @@
 /**
  * Forward gate for NEW skills (6.0.0-C Phase 4 Step 8b).
  *
- * TypeScript twin of `src/scripts/lint_new_skill_gate.py` (ADR-092, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_new_skill_gate.py` (ADR-094, Phase 4 /
  * Wave 4b — PORT). Mirrors the CLI contract EXACTLY — the `--baseline` (default
  * `main`) and `--quiet` argparse flags, the git diff/status forward-only skill
  * detection, byte-identical violation messages, stdout-only output (no

@@ -3,7 +3,7 @@
  * Block D · D3 — audit_user_type_coverage.
  *
  * TypeScript twin of `src/scripts/skill_tools/audit_user_type_coverage.py`
- * (ADR-092, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * (ADR-094, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
  * flags (`--user-types-dir`, `--search-root`, `--json`), exit code (0
  * always), stdout split, byte-identical human table AND byte-identical JSON
  * (`json.dump(..., indent=2)`, ensure_ascii default).

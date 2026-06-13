@@ -4,7 +4,7 @@
  * dispatcher subcommand in `scripts/_dispatch.bash`.
  *
  * TypeScript twin of `src/scripts/lint_marketplace_install_completeness.py`
- * (ADR-092, Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY —
+ * (ADR-094, Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY —
  * `--hooks-json` / `--dispatch-bash` flags, exit codes (0 clean, 1 unknown
  * subcommand, 2 schema/file error), stdout/stderr split, byte-identical
  * finding messages, same command-extraction regexes and scan order.

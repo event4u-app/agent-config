@@ -2,7 +2,7 @@
 /**
  * Lint benchmark corpora under tests/eval/corpus-*.yaml.
  *
- * TypeScript twin of `src/scripts/lint_bench_corpus.py` (ADR-092, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_bench_corpus.py` (ADR-094, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same scan scope + glob
  * ordering, finding messages (including Python-repr rendering of bad values),
  * stdout/stderr split, and exit codes.

@@ -2,7 +2,7 @@
 /**
  * Thin CLI wrapper: emit the daily update-check banner to stderr.
  *
- * TypeScript twin of `src/scripts/check_update_banner.py` (ADR-092,
+ * TypeScript twin of `src/scripts/check_update_banner.py` (ADR-094,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--installed-version`,
  * `--cwd`, `--help`/`-h` flags; never raises, never exits non-zero;
  * banner (when emitted) goes to stderr; all other output suppressed.

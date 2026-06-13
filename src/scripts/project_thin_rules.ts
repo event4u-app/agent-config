@@ -2,7 +2,7 @@
 /**
  * Thin-projection of the rule layer (lean-initial-context build-out, Phase 3.1).
  *
- * TypeScript twin of `src/scripts/project_thin_rules.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/project_thin_rules.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the `--measure` / `--out` / `--json` flags, exit codes, the
  * stdout/stderr split, byte-identical messages, and byte-identical JSON

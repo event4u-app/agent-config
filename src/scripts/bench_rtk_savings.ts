@@ -2,7 +2,7 @@
 /**
  * Measure rtk's token savings on a fixed corpus of verbose CLI invocations.
  *
- * TypeScript twin of `src/scripts/bench_rtk_savings.py` (ADR-092 py2ts
+ * TypeScript twin of `src/scripts/bench_rtk_savings.py` (ADR-094 py2ts
  * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
  * EXACTLY — `--corpus`, `--out`, `--quiet`, exit codes, stdout/stderr
  * split, the one-line headline summary, and byte-identical written

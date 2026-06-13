@@ -2,7 +2,7 @@
 /**
  * README quality linter for agent-config repositories.
  *
- * TypeScript twin of `src/scripts/readme_linter.py` (ADR-092 — Python→TS
+ * TypeScript twin of `src/scripts/readme_linter.py` (ADR-094 — Python→TS
  * migration, Phase 8 / Wave 8b). The CLI contract is mirrored EXACTLY —
  * the positional `readme` arg, the `--root` / `--format` / `--strict`
  * flags, exit codes (0 pass · 1 warnings · 2 errors / strict-warnings ·

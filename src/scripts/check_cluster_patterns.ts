@@ -2,7 +2,7 @@
 /**
  * Cluster-pattern compliance check.
  *
- * TypeScript twin of `src/scripts/check_cluster_patterns.py` (ADR-092,
+ * TypeScript twin of `src/scripts/check_cluster_patterns.py` (ADR-094,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
  * exit codes (0 clean, 1 pattern violations, 3 internal error),
  * stdout/stderr split, byte-identical finding messages, the same
