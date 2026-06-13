@@ -159,6 +159,21 @@ jobs:
         # tests actually run instead of skipping (ADR-062 must-have #1).
         run: pip install pytest pytest-xdist pyyaml jsonschema cryptography
 
+      # py2ts (ADR-094): the bootstrap + dispatcher + ci-summary steps below
+      # invoke `./scripts-run`, which execs `tsx` whenever the target's `.ts`
+      # twin exists. condense / runtime_dispatcher / ci_summary are already
+      # ported, so this job needs node + node_modules — without it the
+      # scripts-run calls fail (exec tsx: no node_modules) once these twins
+      # reach main. (No-op on a tree where the targets are still .py: the
+      # scripts-run python fast-path skips tsx entirely.)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install node deps (for scripts-run tsx targets)
+        run: npm ci
+
       - name: Bootstrap generated projection (.augment/, .cursor/, …)
         # The Phase-2.4 install_global tests deploy content from
         # `.augment/rules`, `.cursor/rules`, etc. into a fake user-scope
