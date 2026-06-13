@@ -117,6 +117,13 @@ jobs:
       - name: Run skill linter (changed files only)
         run: python3 src/scripts/skill_linter.py --changed
 
+      - name: Validate command tier + visibility frontmatter
+        # ADR-090: lint_command_tiers is the sole enforcer of `visibility:`
+        # (presence, valid enum, tier/visibility consistency). It must run in
+        # CI on every PR — validate_frontmatter treats visibility as optional,
+        # so without this step a missing/invalid visibility would slip through.
+        run: task lint-command-tiers
+
       - name: Generate lint reports (full repo, informational)
         if: always()
         run: |
