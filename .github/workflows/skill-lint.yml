@@ -117,12 +117,18 @@ jobs:
       - name: Run skill linter (changed files only)
         run: python3 src/scripts/skill_linter.py --changed
 
-      - name: Validate command tier + visibility frontmatter
-        # ADR-090: lint_command_tiers is the sole enforcer of `visibility:`
-        # (presence, valid enum, tier/visibility consistency). It must run in
-        # CI on every PR — validate_frontmatter treats visibility as optional,
-        # so without this step a missing/invalid visibility would slip through.
-        run: task lint-command-tiers
+      - name: Validate command + rule tier/visibility frontmatter
+        # These two lints are the sole CI enforcers that every command declares
+        # a valid tier + visibility (ADR-090: presence, enum, tier/visibility
+        # consistency) and every rule declares a valid tier. They are otherwise
+        # only reachable via the local `task ci`/`ci-strict` meta-tasks, which
+        # no workflow invokes — and validate_frontmatter treats these fields as
+        # optional. Without this step a missing/invalid tier or visibility on a
+        # newly-created rule or command would slip through CI. The
+        # test_tier_visibility_ci_wired guard keeps this step from regressing.
+        run: |
+          task lint-command-tiers
+          task lint-rule-tiers
 
       - name: Generate lint reports (full repo, informational)
         if: always()
