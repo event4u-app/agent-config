@@ -43,6 +43,7 @@ SKIP_DIRS = [
     "agents/roadmaps/skipped",   # skipped roadmaps — abandoned plans w/ forward-refs that never shipped
     "agents/runtime",            # volatile / machine-generated artefacts (gitignored)
     "agents/tmp",                # transient working docs (gitignored) — pr-bodies, council questions, manual-step scratchpads
+    "agents/.harvest-local",     # deliberate gitignored evidence store (source-confidentiality) — refs to it can never resolve in CI
 ]
 
 # Per-file opt-out marker. When present in the first 10 lines of a .md
