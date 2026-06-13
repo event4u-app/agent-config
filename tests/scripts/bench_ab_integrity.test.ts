@@ -1,7 +1,7 @@
 // Tests for src/scripts/bench_ab_integrity.ts (Phase 1 Step 3 A/B clone check).
 //
 // The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-092 parity contract). The script hardcodes the
+// differential suite (ADR-094 parity contract). The script hardcodes the
 // gitignored clones path `internal/bench/ab/clones/`. We:
 //   - exercise the pure `is_under_allowed_path` predicate directly;
 //   - golden-test the missing-clone error path (no clones present) for

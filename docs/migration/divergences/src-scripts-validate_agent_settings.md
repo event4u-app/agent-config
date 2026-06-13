@@ -28,7 +28,7 @@ changed across `jsonschema` releases). The package ships no `ajv`/jsonschema
 dependency for the TS side and `package.json` is frozen for this wave, so the
 twin implements the exact constraint subset the shared schema uses (`type`
 object/string, string `enum`, `properties`, permissive `additionalProperties:
-true`) and approximates the message text. Per ADR-092 §4 the parity contract
+true`) and approximates the message text. Per ADR-094 §4 the parity contract
 for schema-validation findings is **exit code + flagged field-paths**, not
 byte-exact jsonschema prose.
 
@@ -54,5 +54,5 @@ consumer impact (CI greps the `::error file=…::<loc>:` location, not the tail)
 
 ## Approval
 
-- Reviewer: <pending — porting subagent, ADR-092 Phase 4 / Wave 4c>
+- Reviewer: <pending — porting subagent, ADR-094 Phase 4 / Wave 4c>
 - Date: 2026-06-11

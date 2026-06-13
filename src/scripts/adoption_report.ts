@@ -2,7 +2,7 @@
 /**
  * Roll up `adoption-snapshots.jsonl` into a Markdown trend report.
  *
- * TypeScript twin of `src/scripts/adoption_report.py` (ADR-092, Phase 8 /
+ * TypeScript twin of `src/scripts/adoption_report.py` (ADR-094, Phase 8 /
  * Wave 8a). The CLI contract is mirrored EXACTLY — the flags `--in` /
  * `--out` / `--weeks`, exit codes (0 written · 1 IO failure on read/write),
  * the stdout/stderr split, byte-identical messages, AND byte-identical

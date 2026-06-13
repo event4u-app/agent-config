@@ -1,6 +1,6 @@
 // Tests for src/scripts/memory_signal.ts — the write-side helper.
 //
-// 1:1 port of tests/test_memory_signal.py (pytest → vitest, ADR-092 parity
+// 1:1 port of tests/test_memory_signal.py (pytest → vitest, ADR-094 parity
 // contract). The pytest suite monkeypatches `INTAKE_ROOT`, `SETTINGS_FILE`,
 // `_backend_status`, and `_monthly_file`; the TS twin exposes the same
 // override surface via setter seams + the `_setBackendStatus` hook. A

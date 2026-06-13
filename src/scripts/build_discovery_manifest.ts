@@ -2,7 +2,7 @@
 /**
  * Release-time discovery scanner — produces discovery-manifest.json.
  *
- * TypeScript twin of `src/scripts/build_discovery_manifest.py` (ADR-092,
+ * TypeScript twin of `src/scripts/build_discovery_manifest.py` (ADR-094,
  * Phase 5). The CLI contract is mirrored EXACTLY — every flag (`--write`,
  * `--out`, `--summary`, `--deprecation-report`, `--trust-report`,
  * `--orphan-report`, `--workspaces-json`, `--packs-json`, `--strict`,
@@ -27,7 +27,7 @@
  *
  * No behaviour changes — latent Python quirks replicated.
  *
- * DIVERGENCE CANDIDATE (documented under the ADR-092 process):
+ * DIVERGENCE CANDIDATE (documented under the ADR-094 process):
  * `_scanner_version()` in the Python original hashes the scanner file's OWN
  * bytes (`Path(__file__).read_bytes()`). For the TS-built manifest to remain
  * byte-identical to the Python-built one — and to keep passing the

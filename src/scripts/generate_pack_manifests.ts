@@ -2,7 +2,7 @@
 /**
  * Generate `pack.yaml` + `README.md` for every pack home.
  *
- * TypeScript twin of `src/scripts/generate_pack_manifests.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/generate_pack_manifests.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flag (`--check`), same exit codes, same stdout/stderr
  * split, same byte-identical generated `pack.yaml` + `README.md`. WRITER

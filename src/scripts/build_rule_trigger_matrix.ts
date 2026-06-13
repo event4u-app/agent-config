@@ -2,7 +2,7 @@
 /**
  * Build agents/settings/contexts/rule-trigger-matrix.md.
  *
- * TypeScript twin of `src/scripts/build_rule_trigger_matrix.py` (ADR-092,
+ * TypeScript twin of `src/scripts/build_rule_trigger_matrix.py` (ADR-094,
  * Phase 8 / Wave 8g). Mirrors the Python contract EXACTLY — same generated
  * markdown (byte-identical), same `CLASSIFICATION` table, same stdout
  * (`✅  Wrote …` line) + stderr (unclassified-rule warning) split, exit codes

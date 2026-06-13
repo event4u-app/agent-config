@@ -2,7 +2,7 @@
 /**
  * Print the expected required-check set for the current branch.
  *
- * TypeScript twin of `src/scripts/print_required_checks.py` (ADR-092,
+ * TypeScript twin of `src/scripts/print_required_checks.py` (ADR-094,
  * Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY — `--branch`
  * / `--base` flags, PR-shape classification (release / docs-only / feature),
  * exit codes (0 ok, 1 release-shape OUT-OF-SHAPE fallback-to-feature, 2 usage),

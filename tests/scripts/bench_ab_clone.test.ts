@@ -1,7 +1,7 @@
 // Tests for src/scripts/bench_ab_clone.ts (Phase 1 Step 2 A/B clone builder).
 //
 // The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-092 parity contract). The script hardcodes the
+// differential suite (ADR-094 parity contract). The script hardcodes the
 // gitignored clones path `internal/bench/ab/clones/`; the golden-parity
 // blocks build there under python3 vs tsx and assert:
 //   - `--print-shape-hash` is byte-identical (validates json.dumps of the

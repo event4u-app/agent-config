@@ -1,7 +1,7 @@
 /**
  * Install / refresh the consumer-facing `./agent-config` wrapper.
  *
- * TypeScript twin of `src/scripts/_lib/cli_wrapper.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/_lib/cli_wrapper.py` (ADR-094 —
  * Python→TS migration, Phase 2 / Wave 1). Public API mirrors the
  * Python module exactly (snake_case kept deliberately).
  *

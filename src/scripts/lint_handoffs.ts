@@ -2,7 +2,7 @@
 /**
  * Lint cross-wing handoffs declared in senior-tier skills' `## Related Skills`.
  *
- * TypeScript twin of `src/scripts/lint_handoffs.py` (ADR-092, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_handoffs.py` (ADR-094, Phase 4 /
  * Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet` flag is a
  * bare `sys.argv` membership check (NOT argparse, so there is no real
  * `-h`/`--help`; `main(argv)` treats `argv[0]` as a skills-dir override,

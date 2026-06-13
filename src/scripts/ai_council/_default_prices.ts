@@ -1,7 +1,7 @@
 /**
  * Shipped baseline prices for the AI Council.
  *
- * TypeScript twin of `src/scripts/ai_council/_default_prices.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/ai_council/_default_prices.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8g; ported as a prerequisite of
  * `update_prices.ts`). Values + ordering + `as_rows()` semantics mirror the
  * Python original EXACTLY.

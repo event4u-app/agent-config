@@ -324,7 +324,7 @@ class GeminiClient(ExternalAIClient):
         if api_key is None:
             raise RuntimeError(
                 "GeminiClient requires explicit api_key or injected client. "
-                "Use `api_key_ref: env:GEMINI_API_KEY` in agents/settings/.ai-council.yml."
+                "Use `api_key_ref: env:GEMINI_API_KEY` in ~/.event4u/agent-config/settings/.ai-council.yml."
             )
         try:
             from google import genai  # type: ignore[import-not-found]
@@ -658,7 +658,7 @@ class CliClient(ExternalAIClient):
                 raise CliClientError(
                     f"{type(self).__name__}: binary {self.default_binary!r} "
                     f"not found on PATH. Install the provider CLI or set "
-                    f"`members.{self.name}.binary:` in agents/settings/.ai-council.yml."
+                    f"`members.{self.name}.binary:` in ~/.event4u/agent-config/settings/.ai-council.yml."
                 )
             self.binary = resolved
 

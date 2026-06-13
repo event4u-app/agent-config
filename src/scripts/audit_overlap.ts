@@ -3,7 +3,7 @@
  * Trigger-overlap analysis for the Rule-Governance pass (Phase 5.2 of
  * road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/audit_overlap.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/audit_overlap.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: no flags, exit codes (0 normal, 1 when the input audit JSON
  * is missing), byte-identical stdout/stderr split, and byte-identical

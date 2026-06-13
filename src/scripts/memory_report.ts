@@ -2,7 +2,7 @@
 /**
  * One-shot memory observability report.
  *
- * TypeScript twin of `src/scripts/memory_report.py` (ADR-092, Phase 7 /
+ * TypeScript twin of `src/scripts/memory_report.py` (ADR-094, Phase 7 /
  * dev-side memory). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),
  * same exit codes, stdout/stderr split, byte-identical messages, and

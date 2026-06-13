@@ -2,7 +2,7 @@
  * Read command frontmatter into `CommandSpec` instances.
  *
  * TypeScript twin of `src/scripts/command_suggester/loader.py`
- * (ADR-092 py2ts).
+ * (ADR-094 py2ts).
  *
  * Reuses the package's `validate_frontmatter.parse_frontmatter` twin
  * so the loader and the linter agree on what counts as well-formed.

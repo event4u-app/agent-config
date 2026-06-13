@@ -1,7 +1,7 @@
 /**
  * Locate artefact source roots across the monorepo physical layout.
  *
- * TypeScript twin of `src/scripts/_lib/agent_src.py` (ADR-092, Phase 2
+ * TypeScript twin of `src/scripts/_lib/agent_src.py` (ADR-094, Phase 2
  * Wave 2a). The public API mirrors the Python module EXACTLY — same
  * exported snake_case names, same root ordering, same logical-relpath
  * computation, same first-win precedence when a logical path resolves

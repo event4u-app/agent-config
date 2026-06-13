@@ -2,7 +2,7 @@
 /**
  * R3 Phase 4 mass-annotator — discovery frontmatter helper.
  *
- * TypeScript twin of `src/scripts/annotate_discovery.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/annotate_discovery.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — the `--pack` choice flag + positional `paths`, exit code (0),
  * the stdout/stderr split, byte-identical messages, and byte-identical

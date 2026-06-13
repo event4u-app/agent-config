@@ -3,7 +3,7 @@
  * Block D · D4 — suggest_skill_for_task.
  *
  * TypeScript twin of `src/scripts/skill_tools/suggest_skill_for_task.py`
- * (ADR-092, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * (ADR-094, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
  * flags (`--task`, `--skills-dir`, `--personas-dir`, `--top`, `--json`,
  * `--sample`), exit codes (0 / 2), stdout/stderr split, byte-identical
  * human output AND byte-identical JSON (`json.dump(..., indent=2)`,

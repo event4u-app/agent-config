@@ -2,7 +2,7 @@
 /**
  * Structural overlap detection across skills (description + triggers).
  *
- * TypeScript twin of `src/scripts/skill_overlap.py` (ADR-092, Phase 8 /
+ * TypeScript twin of `src/scripts/skill_overlap.py` (ADR-094, Phase 8 /
  * Wave 8b). The public surface, CLI contract, exit codes, stderr text,
  * stdout text, and rendered markdown mirror the Python original EXACTLY
  * — same custom frontmatter parser, same tokenizer + stopword set, same

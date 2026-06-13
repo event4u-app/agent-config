@@ -178,6 +178,8 @@ contract). On skip, do nothing — the block stays opt-in.
 
 If `agents/` directory does not exist, suggest running `/optimize agents-dir --scaffold`.
 If `.agent-settings.yml` does not exist, suggest running `scripts/install` (then `/onboard` for first-run setup).
+If module candidates surfaced in Step 7 but the user skipped, note that
+`python3 scripts/propose_modules_config.py` can be re-run anytime.
 
 ## Rules
 

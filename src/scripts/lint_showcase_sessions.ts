@@ -2,7 +2,7 @@
 /**
  * Showcase-sessions linter.
  *
- * TypeScript twin of `src/scripts/lint_showcase_sessions.py` (ADR-092,
+ * TypeScript twin of `src/scripts/lint_showcase_sessions.py` (ADR-094,
  * Phase 4 / Wave 4b). Gates `docs/showcase.md` ↔ `docs/showcase/sessions/`.
  * The CLI contract is mirrored EXACTLY — no flags (argv ignored), exit
  * codes (0 clean, 1 violations), stdout/stderr split, byte-identical

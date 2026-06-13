@@ -2,7 +2,7 @@
 /**
  * Lint a generated discovery-manifest.json against schema + checksum.
  *
- * TypeScript twin of `src/scripts/lint_discovery_manifest.py` (ADR-092,
+ * TypeScript twin of `src/scripts/lint_discovery_manifest.py` (ADR-094,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--manifest`
  * / `--quiet` flags, exit codes (0 / 1), stdout/stderr split, byte-identical
  * SUCCESS + vocab + determinism + checksum messages, same check order, and

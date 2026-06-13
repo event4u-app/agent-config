@@ -2,7 +2,7 @@
 /**
  * Phase 4.2 — Probe per-tool projection fidelity against the fixture.
  *
- * TypeScript twin of `src/scripts/probe_projection_fidelity.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/probe_projection_fidelity.py` (ADR-094 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: flags (`--fixture`, `--report`), exit codes (0 when no fail, 1
  * when any check fails, 2 when the YAML dependency is missing — replicated

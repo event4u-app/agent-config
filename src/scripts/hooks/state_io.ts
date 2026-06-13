@@ -1,7 +1,7 @@
 /**
  * Concurrency-safe state writes for hook concerns.
  *
- * TypeScript twin of `src/scripts/hooks/state_io.py` (ADR-092 —
+ * TypeScript twin of `src/scripts/hooks/state_io.py` (ADR-094 —
  * Python→TS migration, Phase 6 / hooks core). Public API mirrors the
  * Python module exactly (snake_case kept deliberately — fidelity over
  * TS idiom).

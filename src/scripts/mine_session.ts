@@ -2,7 +2,7 @@
 /**
  * Mine session transcripts for memory signals — Phase-1 single-host.
  *
- * TypeScript twin of `src/scripts/mine_session.py` (ADR-092 — Python→TS
+ * TypeScript twin of `src/scripts/mine_session.py` (ADR-094 — Python→TS
  * migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY —
  * every flag, exit code (0), the stdout/stderr split, byte-identical
  * messages, byte-identical preview Markdown, and byte-identical

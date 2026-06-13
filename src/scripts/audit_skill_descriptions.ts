@@ -2,7 +2,7 @@
 /**
  * Audit skill descriptions for triggering quality.
  *
- * TypeScript twin of `src/scripts/audit_skill_descriptions.py` (ADR-092,
+ * TypeScript twin of `src/scripts/audit_skill_descriptions.py` (ADR-094,
  * Phase 8 Wave 8a). Mirrors the Python CLI contract EXACTLY — flags
  * (`--root`, `--json`, `--full`), exit codes (0 / 2), stdout/stderr split,
  * byte-identical text table AND byte-identical JSON (`json.dumps(...,

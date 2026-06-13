@@ -1,5 +1,5 @@
 // Shared test helpers for the bench_ab_clone / bench_ab_integrity twins
-// (ADR-092 py2ts Phase 8 / Wave 8d). Committed as `_bench_ab.ts` so CI
+// (ADR-094 py2ts Phase 8 / Wave 8d). Committed as `_bench_ab.ts` so CI
 // (clean checkout) always sees it.
 //
 // Both scripts hardcode the clones path `internal/bench/ab/clones/`, so the
