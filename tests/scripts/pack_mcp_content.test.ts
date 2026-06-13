@@ -84,14 +84,26 @@ describe.skipIf(!HAVE_PYTHON)('pack_mcp_content — golden parity (python vs tsx
         expect(normBuiltAt(tsManifest)).toBe(normBuiltAt(pyManifest));
 
         // ── content.json.gz ─────────────────────────────────────────────
-        // Header bytes 0..23 must be byte-identical (magic, CM, FLG=FNAME,
-        // MTIME=0, XFL=2, OS=0xFF, embedded `content.json\0`). This is the
-        // load-bearing part of gzip parity that does NOT depend on built_at.
+        // The gzip HEADER + FNAME field must be byte-identical (magic, CM,
+        // FLG=FNAME, MTIME=0, XFL=2, OS=0xFF, embedded `content.json\0`) —
+        // all deterministic, rebuilt to match Python. Compare exactly up to
+        // the end of the NUL-terminated FNAME field; the DEFLATE body that
+        // follows is intentionally NOT byte-compared: zlib's compressed
+        // output differs across zlib versions (Python's zlib vs node's, and
+        // node 22 vs node 25) for the same input — a valid implementation
+        // detail, not a semantic difference. Parity of the COMPRESSED bytes
+        // is not a reasonable target; parity of the DECOMPRESSED content is
+        // (asserted below). See docs/migration/divergences/mcp-telemetry-node-sqlite.md
+        // sibling rationale (impl-detail divergences documented, semantic
+        // parity asserted).
         const pyGz = readFileSync(join(pyOut, 'content.json.gz'));
         const tsGz = readFileSync(join(tsOut, 'content.json.gz'));
-        expect(tsGz.subarray(0, 24).equals(pyGz.subarray(0, 24))).toBe(true);
-        // Decompressed body byte-identical modulo built_at — proves the
-        // DEFLATE stream encodes the same content the same way.
+        const headerEnd = pyGz.indexOf(0x00, 10) + 1; // 10-byte header + NUL-terminated FNAME → start of DEFLATE
+        expect(headerEnd).toBeGreaterThan(10);
+        expect(tsGz.subarray(0, headerEnd).equals(pyGz.subarray(0, headerEnd))).toBe(true);
+        // Decompressed body byte-identical modulo built_at — the real
+        // semantic parity (the DEFLATE stream encodes the same content,
+        // even when the compressed bytes differ across zlib versions).
         const pyGzText = gunzipSync(pyGz).toString('utf-8');
         const tsGzText = gunzipSync(tsGz).toString('utf-8');
         expect(normBuiltAt(tsGzText)).toBe(normBuiltAt(pyGzText));
