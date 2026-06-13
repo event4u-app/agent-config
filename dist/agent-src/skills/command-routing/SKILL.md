@@ -80,7 +80,7 @@ agents should not bypass the dispatcher.
 
 ## GitHub API: Replying to PR review comments
 
-When commands reply to PR review comments (e.g. `/fix-pr-bot-comments`):
+When commands reply to PR review comments (e.g. `/fix-pr-comments`):
 
 ### 1. Read the setting
 

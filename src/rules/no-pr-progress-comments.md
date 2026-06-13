@@ -48,10 +48,9 @@ Reading `.agent-settings.yml`:
 - The PR body / description in [`/create-pr`](../commands/pr/create.md) and
   in PATCH-after-create strip passes — that text *is* the PR.
 - Replies to individual review comments via
-  [`/fix:pr-comments`](../commands/fix/pr-comments.md),
-  [`/fix:pr-developer-comments`](../commands/fix/pr-developer-comments.md),
-  and [`/fix:pr-bot-comments`](../commands/fix/pr-bot-comments.md) —
-  the user invoked the command, that is the explicit ask.
+  [`/fix:pr-comments`](../commands/fix/pr-comments.md) (handles bot + human
+  reviewers in one pass) — the user invoked the command, that is the
+  explicit ask.
 - Comments the user explicitly requested this turn ("post a comment
   on PR #244 explaining the workflow-scope block").
 - Comments from a slash-command flow the user invoked

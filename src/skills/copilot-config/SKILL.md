@@ -15,7 +15,7 @@ packs:
 
 Use this skill when:
 - Editing `.github/copilot-instructions.md` to improve Copilot behavior
-- Dealing with Copilot PR review comments (via `/fix-pr-bot-comments`)
+- Dealing with Copilot PR review comments (via `/fix-pr-comments`)
 - Analyzing Copilot's review patterns to identify recurring false positives
 - Tuning Copilot's code suggestions for the project
 
@@ -101,7 +101,7 @@ Before creating a comment, Copilot must:
 
 ## Handling Copilot Bot Comments (as Augment Agent)
 
-When the user asks to fix Copilot's PR review comments (via `/fix-pr-bot-comments`):
+When the user asks to fix Copilot's PR review comments (via `/fix-pr-comments`):
 
 ### 1. Evaluate Each Comment
 
@@ -184,8 +184,7 @@ Copilot and Augment complement each other:
 ## Related
 
 - **File:** `.github/copilot-instructions.md` — Copilot configuration
-- **Command:** `/fix-pr-bot-comments` — fix bot review comments
-- **Command:** `/fix-pr-comments` — fix all review comments
+- **Command:** `/fix-pr-comments` — fix all review comments (bot + human)
 - **Skill:** `code-review` — PR review process and conventions
 
 
