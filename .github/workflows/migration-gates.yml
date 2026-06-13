@@ -58,7 +58,14 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # node 22 (>=22.5) so the mcp-telemetry twins' `node:sqlite` parity
+          # tests RUN here instead of skipping — those twins use the stdlib
+          # `node:sqlite` (faithful to Python's `sqlite3`, no npm dep). This
+          # bumps ONLY the migration gate; the package's consumer floor stays
+          # `node >=20.11` (package.json engines) — the telemetry scripts are
+          # dev-internal tooling (taskfiles/mcp.yml), never consumer runtime.
+          # See docs/migration/divergences/mcp-telemetry-node-sqlite.md.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -91,7 +98,14 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # node 22 (>=22.5) so the mcp-telemetry twins' `node:sqlite` parity
+          # tests RUN here instead of skipping — those twins use the stdlib
+          # `node:sqlite` (faithful to Python's `sqlite3`, no npm dep). This
+          # bumps ONLY the migration gate; the package's consumer floor stays
+          # `node >=20.11` (package.json engines) — the telemetry scripts are
+          # dev-internal tooling (taskfiles/mcp.yml), never consumer runtime.
+          # See docs/migration/divergences/mcp-telemetry-node-sqlite.md.
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
