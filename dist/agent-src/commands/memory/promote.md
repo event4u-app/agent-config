@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: memory-promote
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: memory
 sub: promote
 description: Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 # /memory promote

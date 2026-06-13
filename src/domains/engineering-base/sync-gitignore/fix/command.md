@@ -3,6 +3,7 @@ model_tier: medium
 name: sync-gitignore-fix
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: sync-gitignore
 sub: fix
 skills: [sync-gitignore]

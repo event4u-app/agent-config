@@ -3,6 +3,7 @@ model_tier: medium
 name: skill-preview
 pack: meta
 tier: 2
+visibility: internal
 cluster: skill
 sub: preview
 description: Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.

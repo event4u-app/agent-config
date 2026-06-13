@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: memory-load
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: memory
 sub: load
 description: Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 # /memory load

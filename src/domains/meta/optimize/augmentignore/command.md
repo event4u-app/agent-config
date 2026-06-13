@@ -4,6 +4,7 @@ skills: [agent-docs-writing]
 name: optimize-augmentignore
 pack: meta
 tier: 2
+visibility: internal
 cluster: optimize
 sub: augmentignore
 description: Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.

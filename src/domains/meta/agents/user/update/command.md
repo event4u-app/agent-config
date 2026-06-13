@@ -3,6 +3,7 @@ model_tier: medium
 name: agents-user-update
 pack: meta
 tier: 2
+visibility: internal
 cluster: agents
 sub: user
 description: Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.

@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: chat-history-import
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: chat-history
 sub: import
 description: Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 <!-- cloud_safe: noop -->
 

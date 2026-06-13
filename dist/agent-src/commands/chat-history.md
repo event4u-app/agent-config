@@ -2,8 +2,9 @@
 model_tier: medium
 name: chat-history
 disable-model-invocation: true
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 description: Chat-history orchestrator — routes to show, import, learn
 cluster: chat-history
 type: orchestrator
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 <!-- cloud_safe: noop -->

@@ -3,6 +3,7 @@ model_tier: high
 name: research-deep
 pack: product-discovery
 tier: 2
+visibility: internal
 cluster: research
 sub: deep
 description: "Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths."

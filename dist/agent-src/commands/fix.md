@@ -7,6 +7,7 @@ intent: "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability"
 routes_to: [fix-ci, fix-pr-comments, fix-refs, fix-seeder, fix-portability]
 replaces: []
 tier: 1
+visibility: advanced
 description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments
 cluster: fix
 type: orchestrator

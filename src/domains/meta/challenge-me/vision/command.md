@@ -1,8 +1,9 @@
 ---
 model_tier: inherit
 name: challenge-me-vision
-pack: meta
+pack: product-reasoning
 tier: 2
+visibility: internal
 cluster: challenge-me
 sub: vision
 description: "Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff."
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - product-reasoning
 ---
 
 # /challenge-me vision

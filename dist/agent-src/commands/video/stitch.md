@@ -3,6 +3,7 @@ model_tier: inherit
 name: video-stitch
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: video
 sub: stitch
 description: Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.

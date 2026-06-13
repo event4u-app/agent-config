@@ -3,6 +3,7 @@ model_tier: medium
 name: knowledge-forget
 pack: product-discovery
 tier: 2
+visibility: internal
 cluster: knowledge
 sub: forget
 description: Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.

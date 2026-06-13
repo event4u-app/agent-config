@@ -3,6 +3,7 @@ model_tier: inherit
 name: bug-investigate
 pack: engineering-base
 tier: 2
+visibility: internal
 skills: [bug-analyzer, sentry-integration]
 description: Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 council_depth: deep

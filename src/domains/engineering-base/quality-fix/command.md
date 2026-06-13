@@ -3,6 +3,7 @@ model_tier: medium
 name: quality-fix
 pack: engineering-base
 tier: 2
+visibility: internal
 skills: [quality-tools]
 description: Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 suggestion:

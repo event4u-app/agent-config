@@ -3,6 +3,7 @@ model_tier: medium
 name: knowledge-list
 pack: product-discovery
 tier: 2
+visibility: internal
 cluster: knowledge
 sub: list
 description: List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.

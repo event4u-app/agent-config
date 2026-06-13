@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: challenge-me
-pack: meta
+pack: product-reasoning
 tier: 2
+visibility: internal
 description: Challenge-me orchestrator — routes to vision, with-docs
 cluster: challenge-me
 type: orchestrator
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - product-reasoning
 ---
 
 # /challenge-me

@@ -64,7 +64,8 @@
         "product-basic", "product-discovery",
         "finance-basic", "finance-advanced",
         "gtm-sales", "gtm-marketing",
-        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta", "git", "frontend-design"
+        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta", "git", "frontend-design",
+        "memory", "analytics", "product-reasoning"
       ]
     },
     "lifecycle": {
@@ -134,7 +135,8 @@
         "category": { "type": "string", "enum": ["skill", "rule", "command", "template"] },
         "name": { "type": "string" },
         "pack": { "$ref": "#/$defs/pack_id", "description": "capability-packs.md — canonical OWNER pack (ownership/budget unit). Orthogonal to `packs` (discovery tags); the owner need not appear in `packs`." },
-        "tier": { "type": "integer", "enum": [0, 1, 2], "description": "6.0.0-C — command-surface tier surfaced on `category: command` artefacts so the CLI discovery surface reads the manifest, not a parallel catalog." },
+        "tier": { "type": "integer", "enum": [0, 1, 2], "description": "6.0.0-C — command-surface tier surfaced on `category: command` artefacts so the CLI discovery surface reads the manifest, not a parallel catalog. Back-compat alias of `visibility` since ADR-090; dual-emitted during the deprecation window." },
+        "visibility": { "type": "string", "enum": ["visible", "advanced", "internal"], "description": "ADR-090 — named command-surface visibility (visible↔tier 0, advanced↔tier 1, internal↔tier 2); the classifier source of truth. Dual-emitted alongside `tier` on `category: command` artefacts during the deprecation window." },
         "intent": { "type": "string", "description": "6.0.0-C — command routing metadata (one-line existence justification). Present on visible command artefacts." },
         "routes_to": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (skill/cluster-sub/command slugs the intent routes to)." },
         "replaces": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (prior names/aliases this command absorbs; may be empty)." },

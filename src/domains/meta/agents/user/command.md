@@ -3,6 +3,7 @@ model_tier: medium
 name: agents-user
 pack: meta
 tier: 2
+visibility: internal
 cluster: agents
 sub: user
 description: User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed.

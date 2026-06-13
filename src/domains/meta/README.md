@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 263
+- **artefacts**: 237
 
-## Commands (145)
+## Commands (119)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -24,32 +24,14 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-review`** — List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 - **`agents-user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
-- **`analytics`** — Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
-- **`analytics-prune`** — Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
-- **`analytics-show`** — Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
-- **`challenge-me`** — Challenge-me orchestrator — routes to vision, with-docs
-- **`challenge-me-vision`** — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff.
-- **`challenge-me-with-docs`** — Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch.
-- **`chat-history`** — Chat-history orchestrator — routes to show, import, learn
-- **`chat-history-import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
-- **`chat-history-learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
-- **`chat-history-show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
 - **`check-current-md`** — Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
 - **`condense`** — Condense .md files from src/ into telegraph format and write to dist/agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context-create`** — Analyze a codebase area and create a structured context document
 - **`context-refactor`** — Analyze, update, and extend an existing context document
-- **`cost-report`** — Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions.
-- **`council`** — Council orchestrator — routes to default, pr, design, optimize, analysis, debate
-- **`council-analysis`** — Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness.
-- **`council-debate`** — Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds.
-- **`council-default`** — Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare.
-- **`council-design`** — Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
-- **`council-optimize`** — Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
-- **`council-pr`** — Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
 - **`e2e-heal`** — Find, debug, and fix failing Playwright E2E tests
 - **`e2e-plan`** — Explore the application and create a structured E2E test plan in Markdown
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
@@ -73,7 +55,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`ghostwriter-list`** — List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
 - **`ghostwriter-show`** — Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only.
 - **`ghostwriter-write`** — Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
-- **`grill-me`** — Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 - **`image`** — Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.
 - **`image-analyse`** — Analyse a character image down to the smallest mole and diff it against a canon — per-feature spec, OCR tattoo text, severity-ranked drift report.
 - **`image-create`** — Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.
@@ -89,13 +70,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`knowledge-forget`** — Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
 - **`knowledge-ingest`** — Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
 - **`knowledge-list`** — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
-- **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
-- **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
-- **`memory-learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
-- **`memory-load`** — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
-- **`memory-mine-session`** — Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.
-- **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
-- **`memory-propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
 - **`mode`** — Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts)
 - **`module`** — Module orchestrator — routes to create, explore
 - **`module-create`** — Create a new module from .module-template with interactive setup

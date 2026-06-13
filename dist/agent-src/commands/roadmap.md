@@ -7,6 +7,7 @@ intent: "Roadmap dispatcher — create, process-step, process-phase, process-ful
 routes_to: [roadmap-create, roadmap-process-step, roadmap-process-phase, roadmap-process-full]
 replaces: []
 tier: 1
+visibility: advanced
 description: Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
 cluster: roadmap
 type: orchestrator

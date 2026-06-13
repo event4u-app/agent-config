@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: analytics-prune
-pack: meta
+pack: analytics
 tier: 2
+visibility: internal
 cluster: analytics
 sub: prune
 description: Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - analytics
 ---
 
 # /analytics prune

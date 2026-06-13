@@ -3,6 +3,7 @@ model_tier: inherit
 name: context-create
 pack: meta
 tier: 2
+visibility: internal
 cluster: context
 sub: create
 skills: [agent-docs-writing]

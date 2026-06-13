@@ -3,6 +3,7 @@ model_tier: inherit
 name: video-from-song
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: video
 sub: from-song
 description: Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Preview default; --mode commit gates the spend.

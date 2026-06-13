@@ -3,6 +3,7 @@ model_tier: high
 name: research-report
 pack: product-discovery
 tier: 2
+visibility: internal
 cluster: research
 sub: report
 description: "Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime."

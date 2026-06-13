@@ -3,6 +3,7 @@ model_tier: high
 name: feature-refactor
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: feature
 sub: refactor
 skills: [laravel, php-coder]

@@ -3,6 +3,7 @@ model_tier: inherit
 name: video-from-script
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: video
 sub: from-script
 description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Preview default; --mode commit spends behind the cost gate.

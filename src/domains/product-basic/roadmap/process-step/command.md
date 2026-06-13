@@ -3,6 +3,7 @@ model_tier: medium
 name: roadmap-process-step
 pack: product-basic
 tier: 2
+visibility: internal
 cluster: roadmap
 sub: process-step
 skills: [agent-docs-writing, ai-council, roadmap-management]
