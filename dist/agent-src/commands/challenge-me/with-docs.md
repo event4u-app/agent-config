@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: challenge-me-with-docs
-pack: meta
+pack: product-reasoning
 tier: 2
+visibility: internal
 cluster: challenge-me
 sub: with-docs
 description: "Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch."
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - product-reasoning
 ---
 
 # /challenge-me with-docs

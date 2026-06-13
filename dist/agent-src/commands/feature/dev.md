@@ -3,6 +3,7 @@ model_tier: inherit
 name: feature-dev
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: feature
 sub: dev
 description: Full 7-phase feature development workflow for complex features.

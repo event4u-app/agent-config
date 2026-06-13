@@ -3,6 +3,7 @@ model_tier: high
 name: image-verify
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: image
 sub: verify
 description: Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.

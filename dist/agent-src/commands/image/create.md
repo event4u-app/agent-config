@@ -3,6 +3,7 @@ model_tier: high
 name: image-create
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: image
 sub: create
 description: Generate a character image to spec — assemble a max-fidelity, anchors-first prompt from a Canon Spec; governance- and provider-gated, dry-run by default.

@@ -2,11 +2,12 @@
 model_tier: medium
 name: memory
 disable-model-invocation: true
-pack: meta
+pack: memory
 intent: "Manage the agent memory layer — add, load, promote, propose"
 routes_to: [memory-add, memory-load, memory-promote, memory-propose]
 replaces: []
 tier: 1
+visibility: advanced
 description: Memory orchestrator — routes to add, load, mine-session, promote, propose
 cluster: memory
 type: orchestrator
@@ -17,7 +18,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 # /memory

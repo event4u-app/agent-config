@@ -3,6 +3,7 @@ model_tier: inherit
 name: post-as-me
 pack: gtm-marketing
 tier: 2
+visibility: internal
 cluster: post-as
 sub: me
 skills: [post-as]

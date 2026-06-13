@@ -3,6 +3,7 @@ model_tier: inherit
 name: rule-compliance-audit
 pack: meta
 tier: 2
+visibility: internal
 skills: [rule-compliance-audit]
 description: Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 suggestion:

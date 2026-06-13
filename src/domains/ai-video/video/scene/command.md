@@ -3,6 +3,7 @@ model_tier: inherit
 name: video-scene
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: video
 sub: scene
 description: Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Preview mode default (no spend); --mode commit renders live behind the cost gate.

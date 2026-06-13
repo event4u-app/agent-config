@@ -3,6 +3,7 @@ model_tier: medium
 name: fix-portability
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: fix
 sub: portability
 skills: [check-refs]

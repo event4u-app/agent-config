@@ -7,6 +7,7 @@ intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir"
 routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir]
 replaces: []
 tier: 1
+visibility: advanced
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 cluster: optimize
 type: orchestrator

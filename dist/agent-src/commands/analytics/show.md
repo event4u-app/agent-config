@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: analytics-show
-pack: meta
+pack: analytics
 tier: 2
+visibility: internal
 cluster: analytics
 sub: show
 description: Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
@@ -14,7 +15,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - analytics
 ---
 
 # /analytics show

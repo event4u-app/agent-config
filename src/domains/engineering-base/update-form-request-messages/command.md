@@ -3,6 +3,7 @@ model_tier: medium
 name: update-form-request-messages
 pack: engineering-base
 tier: 2
+visibility: internal
 framework: laravel
 skills: [laravel-validation]
 description: "Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones."

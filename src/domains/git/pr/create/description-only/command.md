@@ -4,6 +4,7 @@ name: git-pr-create-description-only
 pack: git
 replaces: [create-pr-description-only, create-pr:description-only]
 tier: 2
+visibility: internal
 cluster: git-pr-create
 sub: description-only
 skills: [git-workflow]

@@ -4,6 +4,7 @@ name: context
 disable-model-invocation: true
 pack: meta
 tier: 2
+visibility: internal
 description: Context orchestrator — routes to create, refactor
 cluster: context
 type: orchestrator

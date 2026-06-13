@@ -3,6 +3,7 @@ model_tier: medium
 name: fix-seeder
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: fix
 sub: seeder
 skills: [eloquent]

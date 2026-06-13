@@ -3,6 +3,7 @@ model_tier: medium
 name: profile-show
 pack: meta
 tier: 2
+visibility: internal
 cluster: profile
 sub: show
 description: Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface)

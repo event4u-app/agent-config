@@ -3,6 +3,7 @@ model_tier: inherit
 name: image
 pack: ai-video
 tier: 2
+visibility: internal
 cluster: image
 description: Character-image fidelity orchestrator — analyse, create, and verify a character image against its canon. Routes to analyse, create, verify.
 type: orchestrator

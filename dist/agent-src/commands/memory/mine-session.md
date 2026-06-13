@@ -1,8 +1,9 @@
 ---
 model_tier: medium
 name: memory-mine-session
-pack: meta
+pack: memory
 tier: 2
+visibility: internal
 cluster: memory
 sub: mine-session
 description: Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - memory
 ---
 
 # /memory mine-session

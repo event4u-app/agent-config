@@ -1,8 +1,9 @@
 ---
 model_tier: inherit
 name: council-default
-pack: meta
+pack: product-reasoning
 tier: 2
+visibility: internal
 cluster: council
 sub: default
 skills: [ai-council]
@@ -13,7 +14,7 @@ suggestion:
 workspaces:
   - agent-config-maintainer
 packs:
-  - meta
+  - product-reasoning
 ---
 
 # /council default

@@ -3,6 +3,7 @@ model_tier: medium
 name: module-explore
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: module
 sub: explore
 skills: [laravel, symfony-workflow, php-coder]

@@ -3,6 +3,7 @@ model_tier: medium
 name: tests-execute
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: tests
 sub: execute
 skills: [pest-testing, quality-tools]

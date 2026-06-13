@@ -4,6 +4,7 @@ name: module
 disable-model-invocation: true
 pack: engineering-base
 tier: 2
+visibility: internal
 description: Module orchestrator — routes to create, explore
 cluster: module
 type: orchestrator

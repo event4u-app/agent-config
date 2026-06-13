@@ -3,6 +3,7 @@ model_tier: medium
 name: tests-create
 pack: engineering-base
 tier: 2
+visibility: internal
 cluster: tests
 sub: create
 skills: [pest-testing, quality-tools]
