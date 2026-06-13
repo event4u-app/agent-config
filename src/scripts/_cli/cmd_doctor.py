@@ -18,7 +18,7 @@ Drift categories (manifest ↔ filesystem):
   here; files without frontmatter are skipped (P5.1 contract).
 
 Health checks (see :data:`CHECK_IDS`):
-scope · manifest-integrity · lockfile-freshness · bridge-drift ·
+scope · stale-orphans · manifest-integrity · lockfile-freshness · bridge-drift ·
 mcp-mode · mcp-beta-readiness · offline-readiness · python-runtime ·
 tier-usage-readiness · council-cli · unsupported-combos ·
 wizard-state.
@@ -450,6 +450,7 @@ def _foreign_records(
 CHECK_IDS = (
     "scope",
     "global-binary",
+    "stale-orphans",
     "manifest-integrity",
     "lockfile-freshness",
     "bridge-drift",
@@ -473,6 +474,7 @@ CHECK_IDS = (
 GLOBAL_CHECK_IDS: frozenset[str] = frozenset({
     "scope",
     "global-binary",
+    "stale-orphans",
     "mcp-mode",
     "mcp-beta-readiness",
     "offline-readiness",
@@ -750,6 +752,81 @@ def _check_offline_readiness() -> dict[str, Any]:
         "id": "offline-readiness", "status": "ok",
         "message": "verified-offline install entrypoint present",
         "remedy": "",
+    }
+
+
+def _check_stale_orphans() -> dict[str, Any]:
+    """Surface package-tagged files on disk that the global-deploy inventory
+    no longer tracks — leftovers from a pre-inventory installer or a
+    since-removed / renamed artefact (e.g. ``create-pr`` → ``pr/create``).
+
+    Read-only: counts candidates per recorded anchor, never deletes. The
+    remedy is a global redeploy, whose always-run tag sweep
+    (``reap_tagged_orphans``) reconciles them. Scans only the package-owned
+    subtrees the inventory recorded (not the whole anchor), and counts a
+    file only when it carries this package's ``package:`` tag — user-authored
+    files in shared anchors never register.
+    """
+    try:  # package-style import (installed package / pytest)
+        from scripts._lib import global_deploy_inventory as gdi
+    except ImportError:  # pragma: no cover — script-style sys.path fallback
+        from _lib import global_deploy_inventory as gdi  # type: ignore[no-redef]
+
+    tools = gdi.load_inventory().get("tools", {})
+    if not isinstance(tools, dict) or not tools:
+        return {
+            "id": "stale-orphans", "status": "ok",
+            "message": "no global-deploy inventory yet — nothing to reconcile",
+            "remedy": "",
+        }
+    orphan_count = 0
+    sample: list[str] = []
+    for tool_id, entry in sorted(tools.items()):
+        if not isinstance(entry, dict):
+            continue
+        anchor_raw = entry.get("anchor")
+        recorded = entry.get("files")
+        if not isinstance(anchor_raw, str) or not isinstance(recorded, list):
+            continue
+        anchor = Path(anchor_raw).expanduser()
+        if not anchor.is_dir():
+            continue
+        recorded_set = {r for r in recorded if isinstance(r, str)}
+        # Bound the scan to the top-level subtrees the package actually owns.
+        owned_roots = {r.split("/", 1)[0] for r in recorded_set if "/" in r}
+        for root_name in sorted(owned_roots):
+            root = anchor / root_name
+            if not root.is_dir():
+                continue
+            for md in root.rglob("*.md"):
+                if md.is_dir():
+                    continue
+                try:
+                    rel = md.relative_to(anchor).as_posix()
+                except ValueError:
+                    continue
+                if rel in recorded_set:
+                    continue
+                tag = _read_inline_package_tag(md)
+                if isinstance(tag, _Sentinel) or tag != PACKAGE_TAG_ID:
+                    continue
+                orphan_count += 1
+                if len(sample) < 5:
+                    sample.append(f"{tool_id}:{rel}")
+    if orphan_count == 0:
+        return {
+            "id": "stale-orphans", "status": "ok",
+            "message": "no stale package-tagged files under recorded anchors",
+            "remedy": "",
+        }
+    return {
+        "id": "stale-orphans", "status": "warn",
+        "message": (
+            f"{orphan_count} stale package-tagged file(s) not tracked by the "
+            f"deploy inventory (e.g. {', '.join(sample)})"
+        ),
+        "remedy": "run `agent-config global` to reap them "
+                  "(the tag sweep reconciles on every deploy)",
     }
 
 
@@ -1179,6 +1256,7 @@ def _run_checks(
     runners: dict[str, Any] = {
         "scope": lambda: _check_scope(project_root),
         "global-binary": lambda: _check_global_binary(project_root),
+        "stale-orphans": _check_stale_orphans,
         "manifest-integrity": lambda: _check_manifest_integrity(manifest),
         "lockfile-freshness": lambda: _check_lockfile_freshness(manifest),
         "bridge-drift": lambda: _check_bridge_drift(
@@ -1257,6 +1335,7 @@ def _run_checks_no_manifest(
     runners: dict[str, Any] = {
         "scope": lambda: _check_scope(project_root),
         "global-binary": lambda: _check_global_binary(project_root),
+        "stale-orphans": _check_stale_orphans,
         "manifest-integrity": lambda: _skipped_manifest_check("manifest-integrity"),
         "lockfile-freshness": lambda: _skipped_manifest_check("lockfile-freshness"),
         "bridge-drift": lambda: _check_bridge_drift_no_manifest(bridge_present),

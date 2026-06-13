@@ -430,6 +430,54 @@ def test_check_scope_standalone(
     assert "standalone" in scope["message"]
 
 
+def _seed_inventory(tmp_path: Path, monkeypatch, anchor: Path,
+                    recorded: list[str]) -> None:
+    from scripts._lib import global_deploy_inventory as gdi
+    inv_file = tmp_path / "deployed-files.json"
+    monkeypatch.setenv(gdi.INVENTORY_ENV, str(inv_file))
+    inv = gdi.record_deploy("tooltest", str(anchor), set(recorded), {})
+    gdi.save_inventory(inv, inv_file)
+
+
+def _write_tagged_md(path: Path, name: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"---\nname: {name}\npackage: {cmd_doctor.PACKAGE_TAG_ID}\n---\n\nx\n",
+        encoding="utf-8",
+    )
+
+
+def test_stale_orphans_ok_when_no_inventory(monkeypatch, tmp_path) -> None:
+    from scripts._lib import global_deploy_inventory as gdi
+    monkeypatch.setenv(gdi.INVENTORY_ENV, str(tmp_path / "missing.json"))
+    result = cmd_doctor._check_stale_orphans()
+    assert result["status"] == "ok"
+
+
+def test_stale_orphans_warns_on_tagged_orphan(monkeypatch, tmp_path) -> None:
+    anchor = tmp_path / "anchor"
+    _write_tagged_md(anchor / "commands" / "pr" / "create.md", "create")     # recorded
+    _write_tagged_md(anchor / "commands" / "create-pr.md", "create-pr")       # orphan
+    # User-authored, untagged — must not register.
+    (anchor / "commands").mkdir(parents=True, exist_ok=True)
+    (anchor / "commands" / "mine.md").write_text(
+        "---\nname: mine\n---\n\nx\n", encoding="utf-8")
+    _seed_inventory(tmp_path, monkeypatch, anchor, ["commands/pr/create.md"])
+
+    result = cmd_doctor._check_stale_orphans()
+    assert result["status"] == "warn"
+    assert "create-pr.md" in result["message"]
+    assert "agent-config global" in result["remedy"]
+
+
+def test_stale_orphans_ok_when_clean(monkeypatch, tmp_path) -> None:
+    anchor = tmp_path / "anchor"
+    _write_tagged_md(anchor / "commands" / "pr" / "create.md", "create")
+    _seed_inventory(tmp_path, monkeypatch, anchor, ["commands/pr/create.md"])
+    result = cmd_doctor._check_stale_orphans()
+    assert result["status"] == "ok"
+
+
 def test_check_lockfile_freshness_drift(
     tmp_path: Path, capsys: pytest.CaptureFixture,
 ) -> None:
