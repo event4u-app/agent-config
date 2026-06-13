@@ -26,6 +26,22 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts._cli import cmd_doctor  # noqa: E402
+from scripts._lib import user_global_paths  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _sandbox_user_global(
+    tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Pin the user-global root to an empty tmp dir + clear the explicit
+    override, so council-config resolution never reads the developer's real
+    ``~/.event4u/agent-config/.ai-council.yml`` during the suite. Without
+    this, ``test_no_config_file_returns_ok`` would resolve the live global
+    file and report it as configured.
+    """
+    empty = tmp_path_factory.mktemp("event4u-global-empty")
+    monkeypatch.setenv(user_global_paths.EVENT4U_HOME_ENV, str(empty))
+    monkeypatch.delenv("AI_COUNCIL_CONFIG", raising=False)
 
 
 @dataclass(frozen=True)
