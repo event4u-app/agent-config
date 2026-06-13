@@ -267,7 +267,7 @@ describe("two-deploy cycle", () => {
   });
 });
 
-// --- bootstrap_reap_tagged (pre-inventory installs) ----------------------
+// --- reap_tagged_orphans (marker-based, runs every deploy) ---------------
 
 const TAG = "event4u/agent-config";
 
@@ -275,19 +275,23 @@ function tagged_md(p: string, name: string): void {
   write_file(p, `---\nname: ${name}\npackage: ${TAG}\n---\n\nbody\n`);
 }
 
-describe("bootstrap_reap_tagged", () => {
-  it("test_bootstrap_reaps_tagged_orphans_only", () => {
+describe("reap_tagged_orphans", () => {
+  it("test_reap_tagged_orphans_only", () => {
     const anchor = tp("anchor");
+    // Tagged orphan (e.g. retired 2026-05-13 command-as-skill entry).
     tagged_md(path.join(anchor, "skills", "dto-creator", "SKILL.md"), "dto-creator");
+    // Tagged file still shipped by the current bundle.
     tagged_md(path.join(anchor, "skills", "kept", "SKILL.md"), "kept");
+    // User-authored skill: no package tag — must survive.
     mkdirp(path.join(anchor, "skills", "my-zed-skill"));
     write_file(
       path.join(anchor, "skills", "my-zed-skill", "SKILL.md"),
       "---\nname: my-zed-skill\n---\n\nmine\n",
     );
+    // Untagged loose file — must survive.
     write_file(path.join(anchor, "skills", "notes.md"), "plain");
 
-    const deleted = inv.bootstrap_reap_tagged(
+    const deleted = inv.reap_tagged_orphans(
       anchor,
       ["skills"],
       new Set(["skills/kept/SKILL.md"]),
@@ -301,14 +305,27 @@ describe("bootstrap_reap_tagged", () => {
     expect(exists(path.join(anchor, "skills", "notes.md"))).toBe(true);
   });
 
-  it("test_bootstrap_ignores_missing_dest_and_other_tags", () => {
+  it("test_reap_tagged_orphans_is_idempotent", () => {
+    // Second pass over an already-clean tree deletes nothing and raises
+    // nothing — the always-run sweep must be safe to repeat every deploy.
+    const anchor = tp("anchor");
+    tagged_md(path.join(anchor, "skills", "kept", "SKILL.md"), "kept");
+    const current = new Set(["skills/kept/SKILL.md"]);
+    const first = inv.reap_tagged_orphans(anchor, ["skills"], current, TAG);
+    const second = inv.reap_tagged_orphans(anchor, ["skills"], current, TAG);
+    expect(first).toEqual([]);
+    expect(second).toEqual([]);
+    expect(exists(path.join(anchor, "skills", "kept", "SKILL.md"))).toBe(true);
+  });
+
+  it("test_reap_tagged_orphans_ignores_missing_dest_and_other_tags", () => {
     const anchor = tp("anchor");
     tagged_md(path.join(anchor, "skills", "foreign", "SKILL.md"), "foreign");
     write_file(
       path.join(anchor, "skills", "foreign", "SKILL.md"),
       "---\nname: foreign\npackage: someone/else\n---\n\nbody\n",
     );
-    const deleted = inv.bootstrap_reap_tagged(anchor, ["skills", "rules"], new Set(), TAG);
+    const deleted = inv.reap_tagged_orphans(anchor, ["skills", "rules"], new Set(), TAG);
     expect(deleted).toEqual([]);
     expect(exists(path.join(anchor, "skills", "foreign", "SKILL.md"))).toBe(true);
   });

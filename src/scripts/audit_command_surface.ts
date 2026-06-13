@@ -50,7 +50,13 @@ const SIZE_BUDGETS: Record<string, number> = {
     large: 8,
     platform: 10,
 };
+// ADR-092: `visibility:` is the named source of truth (visible / advanced /
+// internal); the integer `tier:` is a back-compat alias. A command counts
+// toward the per-pack budget when it is surfaced — visibility in {visible,
+// advanced} (or, when only the alias is present, tier in {0,1}). `internal`
+// (or absent → defaults to internal) is uncapped.
 const VISIBLE_TIERS: ReadonlySet<number> = new Set([0, 1]);
+const VISIBLE_VISIBILITIES: ReadonlySet<string> = new Set(['visible', 'advanced']);
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---/;
 const DESCRIPTION_RE = /^description:\s*"?(.*?)"?\s*$/m;
@@ -58,6 +64,7 @@ const ALIASES_RE = /^aliases:\s*(.*)$/m;
 const NAME_RE = /^name:\s*(.*)$/m;
 const CLUSTER_RE = /^cluster:\s*(.*)$/m;
 const TIER_RE = /^tier:\s*(\d+)/m;
+const VISIBILITY_RE = /^visibility:\s*(visible|advanced|internal)/m;
 const PACK_RE = /^pack:\s*(.*)$/m;
 
 const STOPWORDS: ReadonlySet<string> = new Set([
@@ -82,6 +89,7 @@ interface Command {
     description: string;
     aliases: string[];
     tier: number | null;
+    visibility: string | null;
     cluster: string;
     pack: string;
     line_count: number;
@@ -100,6 +108,7 @@ const COMMAND_FIELDS: readonly (keyof Command)[] = [
     'description',
     'aliases',
     'tier',
+    'visibility',
     'cluster',
     'pack',
     'line_count',
@@ -202,6 +211,7 @@ interface Frontmatter {
     name?: string;
     cluster?: string;
     tier?: number;
+    visibility?: string;
     pack?: string;
     aliases?: string[];
 }
@@ -229,6 +239,10 @@ export function parse_frontmatter(text: string): Frontmatter {
     const t = TIER_RE.exec(block);
     if (t) {
         out.tier = parseInt(t[1] as string, 10);
+    }
+    const v = VISIBILITY_RE.exec(block);
+    if (v) {
+        out.visibility = v[1] as string;
     }
     const pk = PACK_RE.exec(block);
     if (pk) {
@@ -361,6 +375,7 @@ export function collect(root: string): Command[] {
             description: fm.description ?? '',
             aliases: fm.aliases ?? [],
             tier: fm.tier ?? null,
+            visibility: fm.visibility ?? null,
             cluster: fm.cluster ?? '',
             pack: fm.pack ?? '',
             line_count: _splitlinesLen(text),
@@ -707,6 +722,11 @@ export function citation_count(name: string): number {
 }
 
 function _is_visible(c: Command): boolean {
+    // ADR-092: prefer the named visibility field; fall back to the tier alias.
+    // Absent both → internal per command-surface-tiers.md.
+    if (c.visibility !== null) {
+        return VISIBLE_VISIBILITIES.has(c.visibility);
+    }
     return VISIBLE_TIERS.has(c.tier !== null ? c.tier : 2);
 }
 
@@ -930,12 +950,15 @@ export function grown_packs(baseline: string, commands: Command[]): Map<string, 
         if (cmd === undefined || !cmd.pack) {
             continue;
         }
-        if (!_is_visible_tier(cmd.tier)) {
-            continue;
+        if (!_is_visible(cmd)) {
+            continue; // internal now — never counts toward a visible budget
         }
         if (modified.has(relpath) && !added.has(relpath)) {
+            // Modified file: only a *promotion* into visibility grows the surface.
+            // Baseline is historical (pre-ADR-092) so it carries only the tier
+            // alias — the tier proxy is the correct read for the old revision.
             if (_is_visible_tier(_tier_at_ref(baseline, relpath))) {
-                continue;
+                continue; // was already visible — not a new surface
             }
         }
         if (!grew.has(cmd.pack)) {

@@ -402,8 +402,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 //   yaml.safe_dump(value, sort_keys=True, allow_unicode=True)
 // for the value shapes this script emits: dicts (string keys), strings,
 // ints, bools, None, lists, and nested dicts. PyYAML's default block style,
-// 2-space indent, best_width=80 line wrapping (not triggered by the short
-// scalars here), and implicit-resolver-driven scalar quoting are mirrored.
+// 2-space indent, best_width=80 plain-scalar line folding (now triggered by
+// the two long pack descriptions on main), and implicit-resolver-driven
+// scalar quoting are mirrored.
+
+// PyYAML Emitter defaults: best_width=80, best_indent=2. A plain block scalar
+// folds at column 80 — when a single-space word boundary would push the
+// running column past 80, the space is replaced by a line break + the value
+// node's block indent (the continuation indent). Only PLAIN scalars fold here;
+// quoted scalars have their own folding rules (not exercised by pack data,
+// where no quoted value approaches 80 columns).
+const BEST_WIDTH = 80;
 
 export function _py_safe_dump(value: unknown): string {
     // Top-level document. PyYAML's emitter prints an empty mapping/sequence
@@ -411,6 +420,65 @@ export function _py_safe_dump(value: unknown): string {
     const out: string[] = [];
     _emitBlockNode(value, 0, out, true);
     return out.join('');
+}
+
+/**
+ * Fold a PLAIN scalar the way PyYAML's `Emitter.write_plain` does, starting
+ * at `startColumn` (the column of the scalar's first character) and breaking
+ * to `contIndent` (the value node's block indent) when a word boundary would
+ * push the running column past `best_width` (80).
+ *
+ * Faithful to PyYAML: a fold happens only at a SINGLE-space word boundary
+ * (`start + 1 === end`) once `column > best_width`; that one space is dropped
+ * and replaced by a newline + `contIndent` spaces. Multi-space runs are
+ * written literally (never the fold point). The first word is always emitted
+ * on the opening line — a fold can never produce an empty leading line nor
+ * break before the first space. The pack data carries no line breaks inside
+ * a scalar, so the break-run branch of `write_plain` is unreachable here.
+ *
+ * Returns the text fragment for the scalar (no trailing newline).
+ */
+function _foldPlainScalar(text: string, startColumn: number, contIndent: number): string {
+    if (text === '') {
+        return '';
+    }
+    let outStr = '';
+    let column = startColumn;
+    let spaces = false;
+    let start = 0;
+    let end = 0;
+    while (end <= text.length) {
+        const ch: string | null = end < text.length ? (text[end] as string) : null;
+        if (spaces) {
+            if (ch !== ' ') {
+                if (start + 1 === end && column > BEST_WIDTH) {
+                    // Fold: replace the single space with break + continuation
+                    // indent. PyYAML's writeIndent resets the column to the
+                    // indent and primes whitespace=false so the next word
+                    // attaches with no extra leading space.
+                    outStr += '\n' + ' '.repeat(contIndent);
+                    column = contIndent;
+                } else {
+                    const data = text.slice(start, end);
+                    column += data.length;
+                    outStr += data;
+                }
+                start = end;
+            }
+        } else {
+            if (ch === null || ch === ' ') {
+                const data = text.slice(start, end);
+                column += data.length;
+                outStr += data;
+                start = end;
+            }
+        }
+        if (ch !== null) {
+            spaces = ch === ' ';
+        }
+        end += 1;
+    }
+    return outStr;
 }
 
 /**
@@ -437,8 +505,12 @@ function _emitBlockNode(value: unknown, indent: number, out: string[], topLevel:
                 out.push(`${' '.repeat(indent)}${keyScalar}:\n`);
                 _emitBlockSeq(v, indent, out);
             } else {
-                // scalar, empty dict, or empty list → inline value
-                out.push(`${' '.repeat(indent)}${keyScalar}: ${_inlineValue(v)}\n`);
+                // scalar, empty dict, or empty list → inline value. A plain
+                // string value folds at best_width=80; the value's first char
+                // sits at column `indent + key + ": "`, continuation indent is
+                // the value node's block indent (`indent + 2`).
+                const startColumn = indent + keyScalar.length + 2;
+                out.push(`${' '.repeat(indent)}${keyScalar}: ${_scalarValueAt(v, startColumn, indent + 2)}\n`);
             }
         }
         return;
@@ -478,9 +550,31 @@ function _emitBlockSeq(seq: unknown[], indent: number, out: string[]): void {
             out.push(`${' '.repeat(indent)}-\n`);
             _emitBlockSeq(item, indent + 2, out);
         } else {
-            out.push(`${' '.repeat(indent)}- ${_inlineValue(item)}\n`);
+            // Plain string item folds at best_width=80; first char sits at
+            // column `indent + "- "`, continuation indent is `indent + 2`.
+            out.push(`${' '.repeat(indent)}- ${_scalarValueAt(item, indent + 2, indent + 2)}\n`);
         }
     }
+}
+
+/**
+ * Block-context representation of a scalar value at a known column. For a
+ * string that PyYAML would emit as a PLAIN scalar, fold it at best_width=80
+ * with `contIndent` continuation. Quoted scalars / numbers / bools / null /
+ * empty collections are not subject to plain folding here, so they fall back
+ * to the inline writer unchanged.
+ */
+function _scalarValueAt(value: unknown, startColumn: number, contIndent: number): string {
+    if (typeof value === 'string') {
+        const repr = _scalarRepr(value);
+        // A plain scalar is returned verbatim by _scalarRepr (no surrounding
+        // quote indicators). Only those fold; quoted reprs keep their own form.
+        if (repr === value) {
+            return _foldPlainScalar(value, startColumn, contIndent);
+        }
+        return repr;
+    }
+    return _inlineValue(value);
 }
 
 /** Inline (flow-on-one-line) representation of a scalar / empty collection. */

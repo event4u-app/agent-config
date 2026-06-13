@@ -83,8 +83,17 @@ const DOMAINS_DIR = path.join(REPO, "src", "domains");
 const COMMANDS_DIR_CONDENSED = path.join(REPO, "dist/agent-src", "commands");
 
 const VALID_TIERS: ReadonlySet<string> = new Set(["0", "1", "2"]);
+// ADR-092: `visibility:` is the named source of truth; `tier:` is the
+// back-compat integer alias. Both are validated; when both are present they
+// MUST agree per this mapping.
+const VALID_VISIBILITIES: ReadonlySet<string> = new Set(["visible", "advanced", "internal"]);
+const TIER_TO_VISIBILITY: Readonly<Record<string, string>> = {
+  "0": "visible",
+  "1": "advanced",
+  "2": "internal",
+};
 
-export function parse_tier(text: string): string | null {
+export function parse_field(text: string, key: string): string | null {
   if (!text.startsWith("---\n")) {
     return null;
   }
@@ -99,9 +108,34 @@ export function parse_tier(text: string): string | null {
     const idx = line.indexOf(":");
     const k = line.slice(0, idx);
     const v = line.slice(idx + 1);
-    if (k.trim() === "tier") {
+    if (k.trim() === key) {
       return stripQuotes(v.trim());
     }
+  }
+  return null;
+}
+
+export function parse_tier(text: string): string | null {
+  return parse_field(text, "tier");
+}
+
+/**
+ * Validate the visibility field (ADR-092). Returns an error string or null.
+ *
+ * Requires a present + valid visibility, and consistency with the tier alias
+ * whenever both are declared.
+ */
+export function visibility_error(text: string): string | null {
+  const vis = parse_field(text, "visibility");
+  if (vis === null) {
+    return "missing visibility";
+  }
+  if (!VALID_VISIBILITIES.has(vis)) {
+    return `invalid visibility '${vis}'`;
+  }
+  const tier = parse_field(text, "tier");
+  if (tier !== null && tier in TIER_TO_VISIBILITY && TIER_TO_VISIBILITY[tier] !== vis) {
+    return `visibility '${vis}' disagrees with tier '${tier}' (expected '${TIER_TO_VISIBILITY[tier]}')`;
   }
   return null;
 }
@@ -121,6 +155,12 @@ function stripChar(s: string, ch: string): string {
 // Mirror Python's `print(sorted(set))` list repr: ['0', '1', ...].
 function sortedTiersRepr(): string {
   const items = [...VALID_TIERS].sort();
+  return `[${items.map((s) => `'${s}'`).join(", ")}]`;
+}
+
+// Mirror Python's `print(sorted(VALID_VISIBILITIES))` list repr.
+function sortedVisibilitiesRepr(): string {
+  const items = [...VALID_VISIBILITIES].sort();
   return `[${items.map((s) => `'${s}'`).join(", ")}]`;
 }
 
@@ -145,21 +185,28 @@ export function lint(commands_dir: string, quiet = false): number {
 
   const missing: string[] = [];
   const invalid: Array<[string, string]> = [];
+  const vis_errors: Array<[string, string]> = [];
 
   for (const cmd of commands) {
     const rel = relPosix(cmd, commands_dir);
-    const tier = parse_tier(fs.readFileSync(cmd, "utf-8"));
+    const text = fs.readFileSync(cmd, "utf-8");
+    const tier = parse_tier(text);
     if (tier === null) {
       missing.push(rel);
     } else if (!VALID_TIERS.has(tier)) {
       invalid.push([rel, tier]);
     }
+    const ve = visibility_error(text);
+    if (ve !== null) {
+      vis_errors.push([rel, ve]);
+    }
   }
 
-  if (missing.length > 0 || invalid.length > 0) {
+  if (missing.length > 0 || invalid.length > 0 || vis_errors.length > 0) {
     process.stderr.write(
-      `❌  lint_command_tiers: ${missing.length} missing, ` +
-        `${invalid.length} invalid (of ${commands.length} commands)\n`,
+      `❌  lint_command_tiers: ${missing.length} missing tier, ` +
+        `${invalid.length} invalid tier, ${vis_errors.length} visibility ` +
+        `(of ${commands.length} commands)\n`,
     );
     for (const name of missing) {
       process.stderr.write(`    missing tier: ${name}\n`);
@@ -167,9 +214,15 @@ export function lint(commands_dir: string, quiet = false): number {
     for (const [name, tier] of invalid) {
       process.stderr.write(`    invalid tier '${tier}': ${name}\n`);
     }
-    process.stderr.write(`    valid tiers: ${sortedTiersRepr()}\n`);
+    for (const [name, err] of vis_errors) {
+      process.stderr.write(`    ${err}: ${name}\n`);
+    }
     process.stderr.write(
-      "    contract: docs/contracts/command-surface-tiers.md\n",
+      `    valid tiers: ${sortedTiersRepr()}; ` +
+        `valid visibility: ${sortedVisibilitiesRepr()}\n`,
+    );
+    process.stderr.write(
+      "    contract: docs/contracts/command-surface-tiers.md (ADR-092)\n",
     );
     return 1;
   }
@@ -177,7 +230,7 @@ export function lint(commands_dir: string, quiet = false): number {
   if (!quiet) {
     process.stdout.write(
       `✅  lint_command_tiers: ${commands.length} commands, ` +
-        "all tier values valid\n",
+        "all tier + visibility values valid\n",
     );
   }
   return 0;
@@ -194,19 +247,26 @@ export function lint_domain_sources(quiet = false): number {
   }
   const missing: string[] = [];
   const invalid: Array<[string, string]> = [];
+  const vis_errors: Array<[string, string]> = [];
   for (const c of commands) {
-    const t = parse_tier(fs.readFileSync(c, "utf-8"));
     const rel = relPosix(c, REPO);
+    const text = fs.readFileSync(c, "utf-8");
+    const t = parse_tier(text);
     if (t === null) {
       missing.push(rel);
     } else if (!VALID_TIERS.has(t)) {
       invalid.push([rel, t]);
     }
+    const ve = visibility_error(text);
+    if (ve !== null) {
+      vis_errors.push([rel, ve]);
+    }
   }
-  if (missing.length > 0 || invalid.length > 0) {
+  if (missing.length > 0 || invalid.length > 0 || vis_errors.length > 0) {
     process.stderr.write(
-      `❌  lint_command_tiers: ${missing.length} missing, ` +
-        `${invalid.length} invalid (of ${commands.length} domain commands)\n`,
+      `❌  lint_command_tiers: ${missing.length} missing tier, ` +
+        `${invalid.length} invalid tier, ${vis_errors.length} visibility ` +
+        `(of ${commands.length} domain commands)\n`,
     );
     for (const name of missing) {
       process.stderr.write(`    missing tier: ${name}\n`);
@@ -214,12 +274,15 @@ export function lint_domain_sources(quiet = false): number {
     for (const [name, tier] of invalid) {
       process.stderr.write(`    invalid tier '${tier}': ${name}\n`);
     }
+    for (const [name, err] of vis_errors) {
+      process.stderr.write(`    ${err}: ${name}\n`);
+    }
     return 1;
   }
   if (!quiet) {
     process.stdout.write(
       `✅  lint_command_tiers: ${commands.length} domain commands, ` +
-        "all tier values valid\n",
+        "all tier + visibility values valid\n",
     );
   }
   return 0;

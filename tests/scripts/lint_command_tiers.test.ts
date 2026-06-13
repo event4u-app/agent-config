@@ -62,11 +62,28 @@ describe('lint_command_tiers — ported pytest suite', () => {
         fs.rmSync(tmp, { recursive: true, force: true });
     });
 
+    // ADR-092: commands now require a `visibility:` field consistent with the
+    // `tier:` alias. The helper derives it from tier by default so existing
+    // call sites stay valid; pass visibility=null to omit it, or a literal to
+    // force a (possibly inconsistent) value. The `_DERIVE` sentinel mirrors the
+    // Python helper's default.
+    const DERIVE = Symbol('derive');
+    const TIER_TO_VIS: Record<string, string> = { '0': 'visible', '1': 'advanced', '2': 'internal' };
+
     function writeCmd(
         root: string,
         rel: string,
-        opts: { tier: string | null; name?: string | null },
+        opts: {
+            tier: string | null;
+            name?: string | null;
+            visibility?: string | null | typeof DERIVE;
+        },
     ): string {
+        let visibility: string | null | typeof DERIVE =
+            opts.visibility === undefined ? DERIVE : opts.visibility;
+        if (visibility === DERIVE) {
+            visibility = TIER_TO_VIS[opts.tier ?? ''] ?? null;
+        }
         const p = path.join(root, rel);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         const lines = ['---'];
@@ -75,6 +92,9 @@ describe('lint_command_tiers — ported pytest suite', () => {
         }
         if (opts.tier !== null) {
             lines.push(`tier: ${opts.tier}`);
+        }
+        if (visibility !== null) {
+            lines.push(`visibility: ${visibility}`);
         }
         lines.push('description: fixture command', '---', '', '# Fixture', '', 'Body.', '');
         fs.writeFileSync(p, lines.join('\n'), 'utf-8');
@@ -108,6 +128,34 @@ describe('lint_command_tiers — ported pytest suite', () => {
         expect(err).toContain('2 invalid');
         expect(err).toContain('wrong.md');
         expect(err).toContain('alpha.md');
+    });
+
+    it('test_missing_visibility_fails', () => {
+        // ADR-092: a valid tier but no visibility field must fail.
+        writeCmd(tmp, 'good.md', { tier: '0', name: 'good' });
+        writeCmd(tmp, 'bad.md', { tier: '2', name: 'bad', visibility: null });
+        const { rc, err } = captureLint(() => lct.lint(tmp));
+        expect(rc).toBe(1);
+        expect(err).toContain('1 visibility');
+        expect(err).toContain('missing visibility: bad.md');
+    });
+
+    it('test_visibility_tier_mismatch_fails', () => {
+        // ADR-092: visibility must agree with the tier alias when both are set.
+        writeCmd(tmp, 'good.md', { tier: '0', name: 'good' });
+        writeCmd(tmp, 'wrong.md', { tier: '0', name: 'wrong', visibility: 'internal' });
+        const { rc, err } = captureLint(() => lct.lint(tmp));
+        expect(rc).toBe(1);
+        expect(err).toContain('disagrees with tier');
+        expect(err).toContain('wrong.md');
+    });
+
+    it('test_invalid_visibility_fails', () => {
+        writeCmd(tmp, 'good.md', { tier: '1', name: 'good' });
+        writeCmd(tmp, 'bad.md', { tier: '1', name: 'bad', visibility: 'hidden' });
+        const { rc, err } = captureLint(() => lct.lint(tmp));
+        expect(rc).toBe(1);
+        expect(err).toContain("invalid visibility 'hidden'");
     });
 
     it('test_empty_dir_fails', () => {
