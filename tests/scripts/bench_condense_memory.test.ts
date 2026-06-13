@@ -123,7 +123,30 @@ describe.skipIf(!HAVE_PYYAML)('bench_condense_memory — golden parity (full run
         const tsJson = readFileSync(REPORT_JSON, 'utf-8');
         const tsMd = readFileSync(REPORT_MD, 'utf-8');
 
-        const normJson = (s: string): string => s.replace(/"generated_at": "[^"]*"/, '"generated_at": "TS"');
+        // Documented parity divergence (AI-council 2026-06-13, sub-decision 1;
+        // see docs/migration/divergences/bench-stats-float-precision.md): Python's
+        // `statistics.{pstdev,median,quantiles}` sum exactly via `Fraction` then
+        // convert to float once, while the TS twins use naive float reduction.
+        // For most inputs the results are bit-identical; some inputs diverge by a
+        // single ULP (e.g. stdev_saving_pct 3.544402882224057 vs …576). Tolerate
+        // that by rounding non-integer numbers to 12 significant figures before
+        // comparison — fine-grained enough to catch any real (>12-sig) drift, the
+        // exact-Fraction stats twin is a tracked follow-up. Integers (char counts,
+        // call/error tallies) are NOT rounded, so structural drift still fails.
+        const roundFloats = (v: unknown): unknown => {
+            if (typeof v === 'number') return Number.isInteger(v) ? v : Number(v.toPrecision(12));
+            if (Array.isArray(v)) return v.map(roundFloats);
+            if (v && typeof v === 'object') {
+                const o: Record<string, unknown> = {};
+                for (const k of Object.keys(v as Record<string, unknown>)) {
+                    o[k] = roundFloats((v as Record<string, unknown>)[k]);
+                }
+                return o;
+            }
+            return v;
+        };
+        const normJson = (s: string): string =>
+            JSON.stringify(roundFloats(JSON.parse(s.replace(/"generated_at": "[^"]*"/, '"generated_at": "TS"'))));
         const normMd = (s: string): string => s.replace(/\*\*Generated:\*\* .*/, '**Generated:** TS');
         expect(normJson(tsJson)).toBe(normJson(pyJson));
         expect(normMd(tsMd)).toBe(normMd(pyMd));

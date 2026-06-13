@@ -151,6 +151,7 @@ The long tail — value/adoption reporting (8 files), `mcp_server.py` (1.4k), `_
 - [ ] **Step 3:** Port `_cli/cmd_doctor.py` and `chat_history.py` with their suites.
 - [ ] **Step 4:** Triage the remaining misc scripts: port actively-used ones in batches; propose deletion (with evidence of zero call sites) for dead bench/one-shot scripts instead of porting — deletions surfaced explicitly per `non-destructive-by-default` (bulk-deletion commits need the diff surfaced).
 - [ ] **Step 5:** Update the migration dashboard; confirm `src/scripts/` is Python-free except `council_cli`/`ai_council` (Phase 10) and `install.py` (Phase 11).
+- [ ] **Step 6:** Bench-stats exact-fraction parity — replace the naive float `_pstdev` (and `median`/`quantiles` reductions) in `bench_condense_memory.ts` + `src/scripts/_lib/bench_telegraph.ts` with a BigInt-rational summation that mirrors Python's `statistics._ss`/`pstdev` exactly, so bench reports are byte-identical without the 12-sig-fig tolerance. Tracked from the documented divergence `docs/migration/divergences/bench-stats-float-precision.md`.
 
 **Exit criteria:** only the council cluster + installer remain as Python; all taskfile targets in this cluster run TS.
 **Rollback:** per-batch revert.
