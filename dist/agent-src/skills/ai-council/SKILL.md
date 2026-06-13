@@ -616,7 +616,7 @@ member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
 The default round count comes from `defaults.min_rounds` in
-`agents/settings/.ai-council.yml` (default `2` so members critique each other
+`~/.event4u/agent-config/settings/.ai-council.yml` (default `2` so members critique each other
 at least once before convergence). The host agent does **not** ask
 "how many rounds?" when the requested count is `<= min_rounds` —
 the settings owner already made that decision. Ask only when a
@@ -738,7 +738,7 @@ Activation — two equivalent paths:
 
 * CLI: `--peer-review` on `council:estimate` or `council:run`.
 * Config: `ai_council.peer_review.enabled: true` in
-  `agents/settings/.ai-council.yml`. Default is `false`.
+  `~/.event4u/agent-config/settings/.ai-council.yml`. Default is `false`.
 
 Mechanics:
 
@@ -782,7 +782,7 @@ swaps.
 | **Outsider** | `openai` | naive-but-sharp questions, beginner's-mind probes |
 | **Executor** | `anthropic` | what ships this quarter, what blocks delivery |
 
-Activation — edit `agents/settings/.ai-council.yml` and flip the advisor's
+Activation — edit `~/.event4u/agent-config/settings/.ai-council.yml` and flip the advisor's
 `enabled: true`. Optional `model: <name>` overrides the bound
 member's default model. An advisor referencing a disabled member
 fails closed at config load — never silently skipped.
