@@ -178,8 +178,7 @@ When reporting back to the user after handling review:
 ## When to hand over to another skill / command
 
 * Executing the fixes across many comments → [`fix-pr-comments`](../../commands/fix-pr-comments.md)
-  (handles both bot + developer), [`fix-pr-bot-comments`](../../commands/fix-pr-bot-comments.md),
-  [`fix-pr-developer-comments`](../../commands/fix-pr-developer-comments.md)
+  (handles both bot + human reviewers in one pass)
 * Running the full verification gate before pushing replies →
   [`verify-before-complete`](../verify-before-complete/SKILL.md)
 * Writing the commit message that references the review →

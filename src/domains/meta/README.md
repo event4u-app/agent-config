@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 238
+- **artefacts**: 236
 
-## Commands (119)
+## Commands (117)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -41,12 +41,10 @@ Artefacts that maintain this package (agent-config itself).
 - **`feature-plan`** — Interactively plan a feature — research, discuss, and create a structured feature document
 - **`feature-refactor`** — Refine and update an existing feature plan through interactive discussion
 - **`feature-roadmap`** — Generate implementation roadmap(s) from a feature plan and link them
-- **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments
+- **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments
 - **`fix-ci`** — Fetch CI errors from GitHub Actions and fix them
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
-- **`fix-pr-bot-comments`** — Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
 - **`fix-pr-comments`** — Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
-- **`fix-pr-developer-comments`** — Fix and reply to human reviewer comments on a GitHub PR
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files
 - **`fix-seeder`** — Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 - **`ghostwriter`** — Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).
