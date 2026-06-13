@@ -20,7 +20,7 @@ status: ready
 >
 > **Provenance:** competitor input ("Source S" below) is anonymised per
 > `source-confidentiality`; full names/URLs + the research dossier live untracked
-> in `agents/.harvest-local/security-pillar-evidence.md`. Public standards <!-- ref-ignore --> <!-- agents/.harvest-local/ is a deliberate gitignored evidence store (source-confidentiality); the path cannot resolve in CI -->
+> in `agents/.harvest-local/security-pillar-evidence.md`. Public standards
 > (OWASP) are named directly; attack classes are described generically.
 
 ## Goal
