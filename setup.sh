@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # setup.sh — One-liner installer for @event4u/agent-config (curl | bash entrypoint).
 #
-# Mirrors agent-os: downloads the latest GitHub tarball into a temp dir,
+# Downloads the latest GitHub tarball into a temp dir,
 # runs src/scripts/install with the user's tool selection, then cleans up.
 # Use this when Node.js is not available (otherwise prefer
 # `npx @event4u/agent-config init`).

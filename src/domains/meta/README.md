@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 237
+- **artefacts**: 238
 
 ## Commands (119)
 
@@ -132,7 +132,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (59)
+## Rules (60)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -184,6 +184,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained
 - **`slash-command-routing-policy`** — User types a slash command like /create-pr, /commit, or pastes command file content
+- **`source-confidentiality`** — Naming an external repo as something this package copied, harvested, compared against, or was inspired by — keep the tracked tree source-anonymous
 - **`source-of-truth`** — Editing files in dist/agent-src/, .augment/, .claude/, or .cursor/ — source of truth is src/; never edit a generated projection directly
 - **`telegraph-speak`** — When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers
 - **`token-efficiency`** — Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise

@@ -775,7 +775,7 @@ Phase 6 introduces five **advisor personas** that the council can adopt
 in *replace-mode*: an enabled advisor substitutes its bound member's
 plain call with the same provider running the advisor's persona prompt.
 Total call count stays the same as a plain run — only the system prompt
-swaps. Five advisors mirror the tenfoldmarc set, each a substantial
+swaps. Five advisors mirror an external advisor set, each a substantial
 persona file (not a tagline):
 
 | Advisor | Default bound member | Focus |
