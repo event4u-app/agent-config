@@ -1039,25 +1039,32 @@ def _check_council_cli(project_root: Path) -> dict[str, Any]:
       (when capped) usage is below ``warn_at``.
     - ``warn`` — at least one binary is missing OR usage crosses
       ``warn_at`` for at least one capped member.
-    - returns ``ok`` with "no council config" if
-      ``agents/settings/.ai-council.yml`` is absent (consumer project that
-      hasn't enabled the council yet).
+    - returns ``ok`` with "no council config" if no config is found in any
+      scope — user-global ``~/.event4u/agent-config/.ai-council.yml``, an
+      explicit ``$AI_COUNCIL_CONFIG``, or a project-local
+      ``agents/settings/.ai-council.yml`` — e.g. the council is not set up
+      yet.
     """
-    council_path = project_root / "agents" / "settings" / ".ai-council.yml"
-    if not council_path.exists():
-        return {
-            "id": "council-cli", "status": "ok",
-            "message": "no council config (agents/settings/.ai-council.yml not present)",
-            "remedy": "",
-        }
     try:
         from scripts.ai_council.clients import load_cli_call_counts
-        from scripts.ai_council.config import load_council_config
+        from scripts.ai_council.config import (
+            load_council_config, resolve_config_path,
+        )
     except Exception as exc:  # noqa: BLE001 — defensive: doctor must not crash
         return {
             "id": "council-cli", "status": "warn",
             "message": f"council deps unavailable ({type(exc).__name__})",
             "remedy": "install PyYAML and ensure scripts/ai_council is importable",
+        }
+    council_path = resolve_config_path(project_root)
+    if not council_path.exists():
+        return {
+            "id": "council-cli", "status": "ok",
+            "message": f"no council config ({council_path} not present)",
+            "remedy": (
+                "create the user-global council config at "
+                f"{council_path} (see docs/contracts/ai-council-config.md)"
+            ),
         }
     try:
         cfg = load_council_config(council_path)
@@ -1065,7 +1072,7 @@ def _check_council_cli(project_root: Path) -> dict[str, Any]:
         return {
             "id": "council-cli", "status": "warn",
             "message": f"council config invalid: {exc}",
-            "remedy": "fix agents/settings/.ai-council.yml and re-run doctor",
+            "remedy": f"fix {council_path} and re-run doctor",
         }
     cli_members: list[tuple[str, Any]] = [
         (name, m) for name, m in cfg.members.items()

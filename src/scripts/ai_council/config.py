@@ -456,6 +456,53 @@ class CouncilConfig:
     source_path: Path | None = None
 
 
+#: Shared dotfile name for the council config in any namespace (project or
+#: user-global). Same name in both scopes so a developer can move the file
+#: between them without renaming.
+COUNCIL_CONFIG_RELNAME = ".ai-council.yml"
+
+#: Env var pinning the council config to an explicit absolute path, ahead
+#: of the project → user-global search. Mirrors ``EVENT4U_CONFIG_HOME`` but
+#: targets the config file itself (tests / power users).
+COUNCIL_CONFIG_ENV = "AI_COUNCIL_CONFIG"
+
+
+def resolve_config_path(project_root: Path, *, env: dict | None = None) -> Path:
+    """Resolve which ``.ai-council.yml`` the council reads.
+
+    Precedence (first match wins):
+
+    1. ``$AI_COUNCIL_CONFIG`` — explicit absolute override (tests / power
+       users). Honoured even when the target is absent, so a typo surfaces
+       as "create it here" instead of a silent fallback.
+    2. Project-local ``<project_root>/agents/settings/.ai-council.yml`` — a
+       consumer project that checks in its own council config.
+    3. User-global ``~/.event4u/agent-config/.ai-council.yml`` (with the
+       legacy ``~/.config/agent-config/`` read-fallback) — the canonical
+       per-user location, configured once for every project the developer
+       works in.
+
+    Always returns a ``Path`` (never ``None``): when nothing exists yet it
+    returns the user-global write target, so callers' ``.exists()`` gate and
+    "create it at <path>" messaging both point at the global location.
+    """
+    env_map = env if env is not None else os.environ
+    override = env_map.get(COUNCIL_CONFIG_ENV)
+    if override:
+        return Path(override).expanduser()
+    project_path = (
+        project_root / "agents" / "settings" / COUNCIL_CONFIG_RELNAME
+    )
+    if project_path.exists():
+        return project_path
+    found = user_global_paths.resolve_with_fallback(
+        COUNCIL_CONFIG_RELNAME, env=env,
+    )
+    if found is not None:
+        return found
+    return user_global_paths.write_target(COUNCIL_CONFIG_RELNAME, env=env)
+
+
 def load_council_config(path: Path) -> CouncilConfig:
     """Load and validate the council YAML at ``path``."""
     if not path.exists():

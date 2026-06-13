@@ -35,13 +35,21 @@ import yaml
 # the council operates on: when invoked via the global `agent-config`
 # wrapper from a consumer project it is that project (anchor-walked from
 # CWD, or pinned via AGENT_CONFIG_PROJECT_ROOT / --root), NOT the package
-# install dir. Hardcoding the package dir here was the bug — settings and
-# `.ai-council.yml` were then read from the package (which has neither), so
-# `council:*` always refused with `ai_council.enabled is false`.
+# install dir.
+#
+# `AI_COUNCIL_FILE` is the council config the CLI reads. Resolution is
+# user-global-first (see `resolve_config_path`): an explicit
+# `$AI_COUNCIL_CONFIG` wins, else a project-local
+# `agents/settings/.ai-council.yml` if checked in, else the canonical
+# per-user `~/.event4u/agent-config/.ai-council.yml`. A single developer
+# configures the council once globally and it applies in every project —
+# the project no longer needs (or should keep) its own copy.
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT, _ = resolve_project_root(None)
 SETTINGS_FILE = project_settings_path(REPO_ROOT)
-AI_COUNCIL_FILE = REPO_ROOT / "agents" / "settings" / ".ai-council.yml"
+# `AI_COUNCIL_FILE` is resolved below, after `sys.path` is set up and
+# `resolve_config_path` is importable (it lives in `scripts.ai_council.config`,
+# which itself imports `scripts._lib`).
 
 # Canonical output dirs per ai-council § "Output path convention".
 # Enforced at write-time by `_validate_council_output_path` so shell-side
@@ -97,8 +105,14 @@ from scripts.ai_council.advisors import (  # noqa: E402
 from scripts.ai_council.cli_hints import format_install_hints  # noqa: E402
 from scripts.ai_council.config import (  # noqa: E402
     AdvisorConfig, CouncilConfig, CouncilConfigError,
-    load_council_config, resolve_api_key,
+    load_council_config, resolve_api_key, resolve_config_path,
 )
+
+# User-global-first resolution: explicit `$AI_COUNCIL_CONFIG`, else a
+# project-local `agents/settings/.ai-council.yml`, else the canonical
+# `~/.event4u/agent-config/.ai-council.yml`. Computed here (not at the
+# REPO_ROOT block above) so `resolve_config_path` is importable.
+AI_COUNCIL_FILE = resolve_config_path(REPO_ROOT)  # noqa: E402
 from scripts.ai_council.solo_dispatch import (  # noqa: E402
     AuthCache, select_solo_member,
 )
@@ -517,7 +531,7 @@ def _construct_api_member(
     if name == "gemini":
         if not api_key_ref:
             raise CouncilDisabledError(
-                "member 'gemini' requires api_key_ref in agents/settings/.ai-council.yml "
+                "member 'gemini' requires api_key_ref in ~/.event4u/agent-config/.ai-council.yml "
                 "(e.g. `env:GEMINI_API_KEY`) — no legacy fallback."
             )
         api_key = resolve_api_key(api_key_ref, scope="ai_council.members.gemini")
@@ -525,7 +539,7 @@ def _construct_api_member(
     if name == "xai":
         if not api_key_ref:
             raise CouncilDisabledError(
-                "member 'xai' requires api_key_ref in agents/settings/.ai-council.yml "
+                "member 'xai' requires api_key_ref in ~/.event4u/agent-config/.ai-council.yml "
                 "(e.g. `env:XAI_API_KEY`) — no legacy fallback."
             )
         api_key = resolve_api_key(api_key_ref, scope="ai_council.members.xai")
@@ -533,7 +547,7 @@ def _construct_api_member(
     if name == "perplexity":
         if not api_key_ref:
             raise CouncilDisabledError(
-                "member 'perplexity' requires api_key_ref in agents/settings/.ai-council.yml "
+                "member 'perplexity' requires api_key_ref in ~/.event4u/agent-config/.ai-council.yml "
                 "(e.g. `env:PERPLEXITY_API_KEY`) — no legacy fallback."
             )
         api_key = resolve_api_key(api_key_ref, scope="ai_council.members.perplexity")
@@ -1054,7 +1068,7 @@ def _emit_debate_estimate(
     if requested > max_rounds_cap:
         raise argparse.ArgumentTypeError(
             f"--rounds={requested} exceeds debate_max_rounds={max_rounds_cap}; "
-            f"raise the cap in agents/settings/.ai-council.yml or lower --rounds."
+            f"raise the cap in ~/.event4u/agent-config/.ai-council.yml or lower --rounds."
         )
     rounds = requested
     per_round_usd = sum(e.total_usd for e in estimates)
@@ -1613,7 +1627,7 @@ def cmd_run(
     # Phase 8 step 5 — opt-in cost disclosure for non-debate lenses.
     # Default mode is "off" for analysis / default (cheap enough that
     # the disclosure is friction); users opt in by setting
-    # `lenses.<name>.cost_disclosure.mode` in agents/settings/.ai-council.yml.
+    # `lenses.<name>.cost_disclosure.mode` in ~/.event4u/agent-config/.ai-council.yml.
     disc_mode, disc_threshold, disc_show = _resolve_cost_disclosure(
         ai_cfg, question.mode,
     )
@@ -1902,7 +1916,7 @@ def cmd_debate(
     if requested > max_rounds_cap:
         raise argparse.ArgumentTypeError(
             f"--rounds={requested} exceeds debate_max_rounds={max_rounds_cap}; "
-            f"raise the cap in agents/settings/.ai-council.yml or lower --rounds."
+            f"raise the cap in ~/.event4u/agent-config/.ai-council.yml or lower --rounds."
         )
     rounds = requested
 
@@ -1959,7 +1973,7 @@ def cmd_debate(
             f"❌  council:debate refused · high-end estimate "
             f"${debate_estimate.high_usd:.4f} exceeds "
             f"debate.max_cost_usd=${cap:.2f}. Lower --rounds, drop "
-            f"members, or raise the cap in agents/settings/.ai-council.yml.\n"
+            f"members, or raise the cap in ~/.event4u/agent-config/.ai-council.yml.\n"
         )
         return 4
 
@@ -2275,7 +2289,7 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "(anonymised) responses for blind spots before "
                         "synthesis. Adds N extra API calls. Opt-in per the "
                         "R2 verdict; also accepts ai_council.peer_review."
-                        "enabled: true in agents/settings/.ai-council.yml.")
+                        "enabled: true in ~/.event4u/agent-config/.ai-council.yml.")
 
 
 def cmd_shadow_report(args: argparse.Namespace) -> int:
@@ -2422,7 +2436,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Required to actually start the debate.")
     p_deb.add_argument("--rounds", type=int, default=None,
                        help="Number of debate rounds (default 2). Capped by "
-                            "ai_council.debate_max_rounds in agents/settings/.ai-council.yml.")
+                            "ai_council.debate_max_rounds in ~/.event4u/agent-config/.ai-council.yml.")
     p_deb.add_argument("--auto-continue", action="store_true",
                        default=False, dest="auto_continue",
                        help="Skip the between-round y/N prompt. The hard cap "
