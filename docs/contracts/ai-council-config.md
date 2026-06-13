@@ -25,10 +25,10 @@ The council is configured **once per user**, not per project. The config
 lives in the user-global namespace:
 
 ```
-~/.event4u/agent-config/.ai-council.yml
+~/.event4u/agent-config/settings/.ai-council.yml
 ```
 
-(with the legacy `~/.config/agent-config/.ai-council.yml` read as a
+(with the legacy `~/.config/agent-config/settings/.ai-council.yml` read as a
 fallback during the v2.4 namespace transition). This is where a single
 developer enables members, pins models, and sets caps once — and the
 council then works in **every** project they open, with no per-project
@@ -44,7 +44,7 @@ file with this precedence (first match wins):
 2. **Project-local** `<project_root>/agents/settings/.ai-council.yml` —
    only when a consumer project deliberately checks in its own council
    config. This **overrides** the user-global file for that project.
-3. **User-global** `~/.event4u/agent-config/.ai-council.yml` — the
+3. **User-global** `~/.event4u/agent-config/settings/.ai-council.yml` — the
    canonical default described above.
 
 When none exists, the loader reports the user-global path as the place to

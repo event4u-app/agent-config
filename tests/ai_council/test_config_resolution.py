@@ -21,6 +21,7 @@ from scripts._lib import user_global_paths  # noqa: E402
 from scripts.ai_council.config import (  # noqa: E402
     COUNCIL_CONFIG_ENV,
     COUNCIL_CONFIG_RELNAME,
+    COUNCIL_CONFIG_USER_GLOBAL_REL,
     resolve_config_path,
 )
 
@@ -33,6 +34,18 @@ def _sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv(user_global_paths.EVENT4U_HOME_ENV, str(global_root))
     monkeypatch.delenv(COUNCIL_CONFIG_ENV, raising=False)
     return global_root
+
+
+def _global_path(sandbox: Path) -> Path:
+    """User-global config path under the sandboxed root (settings/.ai-council.yml)."""
+    return sandbox / COUNCIL_CONFIG_USER_GLOBAL_REL
+
+
+def _write_global(sandbox: Path) -> Path:
+    p = _global_path(sandbox)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("enabled: true\n", encoding="utf-8")
+    return p
 
 
 def _project(tmp_path: Path) -> Path:
@@ -48,14 +61,13 @@ def _write_project_config(project_root: Path) -> Path:
 
 
 def test_global_used_when_no_project_file(tmp_path: Path, _sandbox: Path) -> None:
-    global_cfg = _sandbox / COUNCIL_CONFIG_RELNAME
-    global_cfg.write_text("enabled: true\n", encoding="utf-8")
+    global_cfg = _write_global(_sandbox)
     project = _project(tmp_path)  # no project config written
     assert resolve_config_path(project) == global_cfg
 
 
 def test_project_overrides_global(tmp_path: Path, _sandbox: Path) -> None:
-    (_sandbox / COUNCIL_CONFIG_RELNAME).write_text("enabled: true\n", encoding="utf-8")
+    _write_global(_sandbox)
     project = _project(tmp_path)
     project_cfg = _write_project_config(project)
     assert resolve_config_path(project) == project_cfg
@@ -64,7 +76,7 @@ def test_project_overrides_global(tmp_path: Path, _sandbox: Path) -> None:
 def test_env_override_wins(
     tmp_path: Path, _sandbox: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    (_sandbox / COUNCIL_CONFIG_RELNAME).write_text("enabled: true\n", encoding="utf-8")
+    _write_global(_sandbox)
     project = _project(tmp_path)
     _write_project_config(project)
     explicit = tmp_path / "custom" / "council.yml"
@@ -88,5 +100,5 @@ def test_falls_back_to_global_write_target_when_nothing_exists(
     # Neither project nor global config exists → returns the global write
     # target (non-existent) so callers point "create it here" at global.
     result = resolve_config_path(_project(tmp_path))
-    assert result == _sandbox / COUNCIL_CONFIG_RELNAME
+    assert result == _global_path(_sandbox)
     assert not result.exists()

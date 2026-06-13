@@ -52,7 +52,7 @@ the agent's framing.
 ### 2. Decide round count + auto-continue
 
 Default: 2 rounds (initial position + one rebuttal). Cap: the value of
-`defaults.debate_max_rounds` in `~/.event4u/agent-config/.ai-council.yml`
+`defaults.debate_max_rounds` in `~/.event4u/agent-config/settings/.ai-council.yml`
 (default 4). `--rounds N` overrides the default; values above the cap
 are rejected by the CLI.
 
@@ -130,6 +130,6 @@ session directory is the canonical audit trail.
 
 If `DebateCapExceeded` fires, the CLI exits with code 3 and the partial
 debate is persisted. Surface the partial-debate path to the user and
-ask whether to (a) raise the cap in `~/.event4u/agent-config/.ai-council.yml` and rerun,
+ask whether to (a) raise the cap in `~/.event4u/agent-config/settings/.ai-council.yml` and rerun,
 (b) stop here and render the partial result, or (c) start a new debate
 with a smaller scope.

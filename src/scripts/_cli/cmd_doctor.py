@@ -1040,7 +1040,7 @@ def _check_council_cli(project_root: Path) -> dict[str, Any]:
     - ``warn`` — at least one binary is missing OR usage crosses
       ``warn_at`` for at least one capped member.
     - returns ``ok`` with "no council config" if no config is found in any
-      scope — user-global ``~/.event4u/agent-config/.ai-council.yml``, an
+      scope — user-global ``~/.event4u/agent-config/settings/.ai-council.yml``, an
       explicit ``$AI_COUNCIL_CONFIG``, or a project-local
       ``agents/settings/.ai-council.yml`` — e.g. the council is not set up
       yet.

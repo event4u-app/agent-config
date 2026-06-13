@@ -456,10 +456,16 @@ class CouncilConfig:
     source_path: Path | None = None
 
 
-#: Shared dotfile name for the council config in any namespace (project or
-#: user-global). Same name in both scopes so a developer can move the file
-#: between them without renaming.
+#: Dotfile name for the council config in any scope.
 COUNCIL_CONFIG_RELNAME = ".ai-council.yml"
+
+#: User-global location, relative to ``event4u_root()`` — under ``settings/``
+#: alongside the other per-user config (``.agent-settings.yml``,
+#: ``.agent-user.yml``). This is exactly the path the browser setup wizard
+#: reads/writes (``<writeRoot>/settings/.ai-council.yml`` in
+#: ``src/server/routes/wizard.ts``), so a council configured in the wizard is
+#: the same file the CLI reads.
+COUNCIL_CONFIG_USER_GLOBAL_REL = "settings/.ai-council.yml"
 
 #: Env var pinning the council config to an explicit absolute path, ahead
 #: of the project → user-global search. Mirrors ``EVENT4U_CONFIG_HOME`` but
@@ -477,10 +483,10 @@ def resolve_config_path(project_root: Path, *, env: dict | None = None) -> Path:
        as "create it here" instead of a silent fallback.
     2. Project-local ``<project_root>/agents/settings/.ai-council.yml`` — a
        consumer project that checks in its own council config.
-    3. User-global ``~/.event4u/agent-config/.ai-council.yml`` (with the
-       legacy ``~/.config/agent-config/`` read-fallback) — the canonical
+    3. User-global ``~/.event4u/agent-config/settings/.ai-council.yml`` (with
+       the legacy ``~/.config/agent-config/`` read-fallback) — the canonical
        per-user location, configured once for every project the developer
-       works in.
+       works in, and the exact file the setup wizard reads/writes.
 
     Always returns a ``Path`` (never ``None``): when nothing exists yet it
     returns the user-global write target, so callers' ``.exists()`` gate and
@@ -496,11 +502,13 @@ def resolve_config_path(project_root: Path, *, env: dict | None = None) -> Path:
     if project_path.exists():
         return project_path
     found = user_global_paths.resolve_with_fallback(
-        COUNCIL_CONFIG_RELNAME, env=env,
+        COUNCIL_CONFIG_USER_GLOBAL_REL, env=env,
     )
     if found is not None:
         return found
-    return user_global_paths.write_target(COUNCIL_CONFIG_RELNAME, env=env)
+    return user_global_paths.write_target(
+        COUNCIL_CONFIG_USER_GLOBAL_REL, env=env,
+    )
 
 
 def load_council_config(path: Path) -> CouncilConfig:

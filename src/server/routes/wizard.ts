@@ -103,10 +103,11 @@ const STATE_REL = join('state', 'wizard-state.json');
 const SETTINGS_REL = join('settings', '.agent-settings.yml');
 const USER_IDENTITY_REL = join('settings', '.agent-user.yml');
 // road-to-wizard-ux-improvements § Phase 8 — AI Council config file. Lives
-// beside the other settings under <writeRoot>/settings/; seeded from the
-// package's hand-tuned reference when the target is absent (first run).
+// beside the other settings under <writeRoot>/settings/ — the same
+// user-global path the council CLI reads (ADR-093); seeded from the
+// package's hand-tuned example template when the target is absent (first run).
 const AI_COUNCIL_REL = join('settings', '.ai-council.yml');
-const PACKAGE_AI_COUNCIL_REL = join('agents', 'settings', '.ai-council.yml');
+const PACKAGE_AI_COUNCIL_REL = join('agents', 'templates', '.ai-council.yml.example');
 const AI_COUNCIL_PROVIDERS = ['anthropic', 'openai', 'gemini', 'xai', 'perplexity'] as const;
 // Only these two ship an interactive 0600-key installer; the rest use env vars.
 const AI_COUNCIL_KEY_INSTALL: Readonly<Record<string, string>> = {

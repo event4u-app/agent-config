@@ -58,7 +58,7 @@ one place that decides which file is read, with this precedence
 2. Project-local `<project_root>/agents/settings/.ai-council.yml` — a
    consumer project that deliberately checks in its own config; overrides
    the user-global file for that project only.
-3. User-global `~/.event4u/agent-config/.ai-council.yml` (legacy
+3. User-global `~/.event4u/agent-config/settings/.ai-council.yml` (legacy
    `~/.config/agent-config/` read-fallback) — the canonical default.
 
 When none exists, the resolver returns the user-global write target so
@@ -69,7 +69,7 @@ global location.
 tracked `agents/settings/.ai-council.yml` is removed from the repository; the
 documented shape ships as `agents/templates/.ai-council.yml.example` to copy
 from. The maintainer's live config now lives at
-`~/.event4u/agent-config/.ai-council.yml`.
+`~/.event4u/agent-config/settings/.ai-council.yml`.
 
 Project-local override is **kept** (not removed) so a consumer team can still
 pin a shared council config in their own repo — but it is no longer the
@@ -79,7 +79,7 @@ default, and this package no longer ships one in its tracked tree.
 
 - The council now resolves from the user-global file in every project,
   worktree, and CWD — verified: a worktree with no project copy resolves
-  `~/.event4u/agent-config/.ai-council.yml` and reports `members=2`.
+  `~/.event4u/agent-config/settings/.ai-council.yml` and reports `members=2`.
 - No council config can be silently committed to this (or any consumer)
   public repo by default.
 - `doctor council-cli` now names the user-global path in its
