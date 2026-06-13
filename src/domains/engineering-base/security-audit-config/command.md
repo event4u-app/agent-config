@@ -25,7 +25,7 @@ Audit a consumer's **assembled** agent configuration for the prompt-injection
 and supply-chain risks behind the "rules-file backdoor" and MCP tool-poisoning
 attack classes, and report an A–F score per category mapped to the OWASP Top 10
 for Agentic Applications. This is the consumer-facing counterpart to the
-suite's own self-audit gate (`task lint-agent-security`).
+suite's own `lint_agent_security` self-audit gate.
 
 ### 1. Run the static audit
 

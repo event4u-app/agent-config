@@ -24,8 +24,8 @@ packs:
 Audit a consumer's **assembled** agent config for the prompt-injection +
 supply-chain risks behind the "rules-file backdoor" and MCP tool-poisoning
 classes; report an A–F score per category mapped to the OWASP Top 10 for
-Agentic Applications. Consumer-facing counterpart to the suite's own self-audit
-gate (`task lint-agent-security`).
+Agentic Applications. Consumer-facing counterpart to the suite's own
+`lint_agent_security` self-audit gate.
 
 ### 1. Run the static audit
 
@@ -35,7 +35,7 @@ python3 src/scripts/security_audit_config.py --root <repo> --json
 
 (omit `--root` to audit the current repo). Reuses the Phase-1 detection library
 under the containment convention
-([`security-lint-containment`](../../docs/guidelines/agent-infra/security-lint-containment.md)),
+([`security-lint-containment`](../docs/guidelines/agent-infra/security-lint-containment.md)),
 so doc/example files don't tank the score. Scans instruction files (`CLAUDE.md`,
 `AGENTS.md`, `.cursor/rules`, `.github/copilot-instructions.md`, `.clinerules`,
 `.windsurfrules`), MCP configs (`.mcp.json`, `.cursor/mcp.json`,
