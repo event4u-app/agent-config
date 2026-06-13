@@ -74,6 +74,12 @@ describe.skipIf(!py3)('audit_skill_overlap — golden parity (python3 vs tsx)', 
 
     beforeEach(() => {
         release = acquireGlobalStateLock();
+        // The legacy-fallback symlink lives under `.agent-src.uncondensed/`,
+        // a gitignored dir. In the full serial run an earlier test creates it;
+        // when this file runs first in a vitest shard the parent is absent and
+        // symlinkSync fails ENOENT. Ensure the parent exists (self-provisioning,
+        // shard-safe).
+        fs.mkdirSync(path.dirname(SKILLS_LINK), { recursive: true });
         snapJson = fs.existsSync(OUT_JSON) ? fs.readFileSync(OUT_JSON, 'utf-8') : null;
         snapMd = fs.existsSync(OUT_MD) ? fs.readFileSync(OUT_MD, 'utf-8') : null;
     });

@@ -97,6 +97,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Prepare working tree
+        # The suite was written for a single serial run where early test
+        # files build gitignored projections that later files consume. A
+        # fresh shard checkout lacks them, so build them deterministically
+        # up front: condense --sync produces `.augment/` (consumed by
+        # bench_per_tool's load_descriptions). Idempotent — does not dirty
+        # the tracked tree (.augment/ is gitignored). The
+        # `.agent-src.uncondensed/` scaffold is self-provisioned by the
+        # tests that need it (mkdir -p in their setup).
+        run: bash src/scripts/condense.sh --sync
+
       - name: Migration test suites (shard ${{ matrix.shard }}/4)
         # --no-file-parallelism keeps files serial WITHIN this shard
         # (working-tree-coupled golden tests must never overlap).
