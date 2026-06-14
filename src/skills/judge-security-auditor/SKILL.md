@@ -167,6 +167,8 @@ Runtime boundary: the judge does not execute tools.
 - [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
   model-pairing rules (`subagents.judge_model` one tier above implementer).
 - [`security`](../security/SKILL.md) — broader security practices for implementers.
+- Prompt-injection / agent-config defense: [`untrusted-input-defense`](../../rules/untrusted-input-defense.md),
+  [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) — flag a diff that ships the full trifecta or treats untrusted content as instructions.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md),
   [`judge-code-quality`](../judge-code-quality/SKILL.md) — dispatched

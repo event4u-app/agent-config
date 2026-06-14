@@ -1,0 +1,51 @@
+{
+    "skill": "agent-security-review",
+    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for adversarial review of an agent's CONFIG/behaviour (rules, skills, MCP, hooks, permissions). Should-not-trigger covers the near-miss neighbours (code threat-model, code security-audit, the static config-audit command, privacy review, dependency CVE scan) whose vocabulary overlaps.",
+    "queries": [
+        {
+            "q": "red-team my agent setup — could someone weaponise my CLAUDE.md or MCP servers?",
+            "trigger": true
+        },
+        {
+            "q": "do an adversarial security review of this agent config and its skills",
+            "trigger": true
+        },
+        {
+            "q": "is this third-party skill pack safe to install, attacker's view?",
+            "trigger": true
+        },
+        {
+            "q": "prüfe meine Agent-Konfiguration adversarial auf Angriffsketten",
+            "trigger": true
+        },
+        {
+            "q": "what could an attacker do with my rules files, hooks and tool permissions?",
+            "trigger": true
+        },
+        {
+            "q": "threat-model this new payments endpoint before I build it",
+            "trigger": false,
+            "note": "code change threat model → threat-modeling"
+        },
+        {
+            "q": "find vulnerabilities in my application code",
+            "trigger": false,
+            "note": "code vulnerability hunt → security-audit"
+        },
+        {
+            "q": "give me an A-F score for my agent config",
+            "trigger": false,
+            "note": "static scored audit → /security-audit-config command, not the adversarial skill"
+        },
+        {
+            "q": "are we GDPR compliant with this data flow?",
+            "trigger": false,
+            "note": "regulatory-regime read → privacy-review"
+        },
+        {
+            "q": "scan my dependencies for known CVEs",
+            "trigger": false,
+            "note": "dependency CVE audit → security-audit dependency pass"
+        }
+    ]
+}

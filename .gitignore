@@ -6,10 +6,14 @@
 
 # Dependencies
 /vendor/
-/node_modules/
+# No trailing slash: matches the node_modules *directory* AND a stray
+# `node_modules` *symlink* (mode 120000). A `node_modules/` (dir-only)
+# pattern let a self-referential symlink slip into the tree once
+# (committed in 54de5a85, broke local `node dist/cli/...`).
+/node_modules
 # Unanchored — nested node_modules (workspaces, sub-packages) must
-# never enter the tree. Root /node_modules/ stays for clarity.
-node_modules/
+# never enter the tree, dir or symlink.
+node_modules
 # pnpm — repo uses npm (package-lock.json). Stray pnpm-lock.yaml from
 # accidental `pnpm install` runs must never enter the tree.
 pnpm-lock.yaml

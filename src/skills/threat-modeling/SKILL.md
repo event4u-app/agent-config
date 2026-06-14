@@ -206,3 +206,5 @@ run tests**.
   [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`security`](../security/SKILL.md),
   [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.
+- Prompt-injection / agent-config defense: [`untrusted-input-defense`](../../rules/untrusted-input-defense.md),
+  [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) — always-on authoring rules; consult when modelling injection abuse cases.

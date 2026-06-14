@@ -120,6 +120,7 @@ For each vulnerability:
 - **security** — complementary: security is about writing secure code, this is about finding holes
 - **universal-project-analysis** — provides context about packages and framework usage
 - **bug-analyzer** — some bugs have security implications (chain when found)
+- **untrusted-input-defense** / **lethal-trifecta-guard** (rules) — prompt-injection / agent-config defense; consult when the audited code ingests untrusted content or wires an autonomous egress path
 
 ## Gotcha
 
