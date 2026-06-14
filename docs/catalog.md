@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **542 public artefacts** shipped by
+Consumer-facing catalog of all **540 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -329,7 +329,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (149)
+## Commands (147)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -354,10 +354,8 @@ are excluded.
 | command | [`challenge-me`](../dist/agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`challenge-me-vision`](../dist/agent-src/commands/challenge-me/vision.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../dist/agent-src/commands/challenge-me/with-docs.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
-| command | [`chat-history`](../dist/agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, import, learn |
+| command | [`chat-history`](../dist/agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view. |
 | command | [`chat-history-import`](../dist/agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
-| command | [`chat-history-learn`](../dist/agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
-| command | [`chat-history-show`](../dist/agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
 | command | [`check-current-md`](../dist/agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`git-commit`](../dist/agent-src/commands/commit.md) | cluster: git-commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | command | [`git-commit-in-chunks`](../dist/agent-src/commands/commit/in-chunks.md) | cluster: git-commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
@@ -411,10 +409,10 @@ are excluded.
 | command | [`knowledge-ingest`](../dist/agent-src/commands/knowledge/ingest.md) | cluster: knowledge | Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`. |
 | command | [`knowledge-list`](../dist/agent-src/commands/knowledge/list.md) | cluster: knowledge | List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction. |
 | command | [`memory`](../dist/agent-src/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, mine-session, promote, propose |
-| command | [`memory-add`](../dist/agent-src/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
+| command | [`memory-add`](../dist/agent-src/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns) |
 | command | [`memory-learn-low-impact`](../dist/agent-src/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
 | command | [`memory-load`](../dist/agent-src/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
-| command | [`memory-mine-session`](../dist/agent-src/commands/memory/mine-session.md) | cluster: memory | Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter. |
+| command | [`memory-mine-session`](../dist/agent-src/commands/memory/mine-session.md) | cluster: memory | The single session-mining command — mine the cross-host chat-history log (or a host transcript) for memory signals AND/OR rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-by-d… |
 | command | [`memory-promote`](../dist/agent-src/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
 | command | [`memory-propose`](../dist/agent-src/commands/memory/propose.md) | cluster: memory | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
 | command | [`mode`](../dist/agent-src/commands/mode.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |

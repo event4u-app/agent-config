@@ -139,6 +139,7 @@ counters only. No prompt bodies, no response bodies.
 
 ## Cross-references
 
+- **Boundary:** [`workspace-boundary`](workspace-boundary.md) — what the workspace owns vs. does **not** own ([`ADR-095`](../decisions/ADR-095-workspace-boundary-contract.md)), enforced by the import-edge linter.
 - ADRs: [`022`](../decisions/ADR-022-daily-workspace-decomposition.md) · [`023`](../decisions/ADR-023-host-agent-protocol.md) · [`024`](../decisions/ADR-024-workspace-v0-feature-floor.md) · [`025`](../decisions/ADR-025-workspace-chrome.md).
 - Host-agent protocol: [`host-agent-protocol`](host-agent-protocol.md).
 - GUI substrate: [`gui-wizard`](gui-wizard.md).

@@ -33,8 +33,6 @@ AREAS: dict[str, dict[str, str]] = {
                 "scope":    "router.json shape, tier semantics, dispatch precedence."},
     "smoke":   {"contract": "smoke-contracts.md",
                 "scope":    "Per-tier smoke contracts, baseline locks, regression gates."},
-    "memory":  {"contract": "agent-memory-contract.md",
-                "scope":    "Memory MCP, propose / promote / poison flow, runtime-trust scoring."},
 }
 
 NAMED = re.compile(r"^(\d{4})-([a-z0-9-]+)\.md$")

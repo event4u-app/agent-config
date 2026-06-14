@@ -87,6 +87,5 @@ Removing a skill is breaking. It must be announced in `STABILITY.md` with a depr
 ## Related
 
 - [`STABILITY.md`](STABILITY.md) — public-identifier stability surface.
-- [`agent-memory-contract.md`](agent-memory-contract.md) — companion contract for the cross-cutting memory layer.
 - [`docs/getting-started-by-role.md`](../getting-started-by-role.md) — consumer-facing role docs that reference these skills.
 - [`tests/eval/corpus-non-dev.yaml`](../../tests/eval/corpus-non-dev.yaml) — empirical test corpus.

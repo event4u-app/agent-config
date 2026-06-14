@@ -326,19 +326,14 @@ async def _memory_lookup_handler(
     arguments: dict[str, Any],
     consumer_root: Path,
 ) -> dict[str, Any]:
-    """Phase 3 L2 — hybrid memory retrieval over ``agents/memory/``.
+    """Phase 3 L2 — file-backed memory retrieval over ``agents/memory/``.
 
     Wraps ``scripts/memory_lookup.retrieve_v1`` to keep the v1 envelope
-    on the wire. File-only fallback by default; ``with_package=true``
-    enables the optional ``@event4u/agent-memory`` provider when
-    reachable.
+    on the wire. Retrieval is entirely file-backed (no external backend).
     """
     import os  # noqa: PLC0415
 
-    from scripts.memory_lookup import (  # noqa: PLC0415
-        package_operational_provider,
-        retrieve_v1,
-    )
+    from scripts.memory_lookup import retrieve_v1  # noqa: PLC0415
 
     types = arguments.get("types")
     if not isinstance(types, list) or not types or not all(
@@ -352,10 +347,6 @@ async def _memory_lookup_handler(
     if not isinstance(limit_raw, int) or limit_raw < 1:
         raise ValueError("'limit' must be a positive integer")
 
-    provider = None
-    if arguments.get("with_package"):
-        provider = package_operational_provider()
-
     prev_cwd = Path.cwd()
     try:
         os.chdir(consumer_root)
@@ -363,7 +354,6 @@ async def _memory_lookup_handler(
             types=list(types),
             keys=list(keys),
             limit=limit_raw,
-            operational_provider=provider,
         )
     finally:
         os.chdir(prev_cwd)
@@ -387,9 +377,7 @@ async def _memory_status_handler(
         result = status()
     finally:
         os.chdir(prev_cwd)
-    payload = asdict(result)
-    payload["features"] = list(result.features)
-    return payload
+    return asdict(result)
 
 
 # Module-level prompt / resource caches reused across handler calls so
@@ -704,15 +692,6 @@ ALLOWLIST: dict[str, BuiltinTool] = {
                         "Maximum entries to return per type. Defaults to 5."
                     ),
                 },
-                "with_package": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": (
-                        "When true, also include memory shipped with the "
-                        "agent-config package, not just the consumer "
-                        "project's own."
-                    ),
-                },
             },
             "required": ["types"],
             "additionalProperties": False,
@@ -722,13 +701,10 @@ ALLOWLIST: dict[str, BuiltinTool] = {
     "memory_status": BuiltinTool(
         name="memory_status",
         description=(
-            "Report whether the optional `@event4u/agent-memory` CLI is "
-            "installed and reachable, and surface its backend and routing "
-            "metadata. Use to decide whether memory-backed tools "
-            "(`memory_lookup`, `memory_signal`) will return real data "
-            "before relying on them. Read-only, takes no arguments. "
-            "Returns a `status` (`ok` / `absent`), the active `backend`, "
-            "and — when absent — the reason and the path probed."
+            "Report the memory backend status. Memory is entirely "
+            "file-backed (`agents/memory/`); there is no external backend. "
+            "Read-only, takes no arguments. Returns a `status` (`file`), "
+            "the active `backend` (`file`), and a short `reason`."
         ),
         input_schema={
             "type": "object",

@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
-"""Hybrid retrieval — file-first with optional package augmentation.
+"""File-first memory retrieval.
 
 Implements the shared `retrieve(types, keys, limit)` abstraction used
 by skills. Reads YAML under `agents/memory/<type>/` (curated, hand-
 reviewed) and JSONL under `agents/memory/intake/*.jsonl` (agent-written,
-append-only, supersede-chain aware).
+append-only, supersede-chain aware), plus user-ingested `knowledge`
+chunks and opted-in `cross-repo` matches.
 
-When the `@event4u/agent-memory` package is present (see
-`scripts/memory_status.py`), callers can pass the result of
-:func:`package_operational_provider` to route additional retrieval
-through the package's semantic CLI. Repo entries always win on
-conflict — see `_apply_conflict_rule`.
+Retrieval is entirely repo-side and file-backed — there is no external
+backend. (The former optional `@event4u/agent-memory` package routing
+was removed; see `docs/decisions/` for the agent-memory removal ADR.)
 
 Usage:
     python3 scripts/memory_lookup.py --types domain-invariants,ownership \\
         --key "app/Http/Controllers/Foo" --limit 5
     python3 scripts/memory_lookup.py --types incident-learnings --format json
-    python3 scripts/memory_lookup.py --types ownership --key billing --auto
 
-    from scripts.memory_lookup import retrieve, package_operational_provider
-    hits = retrieve(
-        types=["ownership"], keys=["app/Http"], limit=3,
-        operational_provider=package_operational_provider(),
-    )
+    from scripts.memory_lookup import retrieve
+    hits = retrieve(types=["ownership"], keys=["app/Http"], limit=3)
 """
 
 from __future__ import annotations
@@ -30,31 +25,43 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
-import os
-import subprocess
 import sys
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Iterable, Union
 
 MEMORY_ROOT = Path("agents/memory")
 INTAKE_ROOT = MEMORY_ROOT / "intake"
+KNOWLEDGE_ROOT = MEMORY_ROOT / "knowledge"
 
 CURATED_TYPES = {
     "ownership",
     "historical-patterns",
     "domain-invariants",
-    "architecture-decisions",
     "incident-learnings",
     "product-rules",
 }
+
+# `knowledge` is its own type: user-ingested local documents that live
+# under `agents/memory/knowledge/<ingest-id>/chunks/*.md`. They are
+# repo-side (file-backed) but not "curated" and not intake.
+KNOWLEDGE_TYPE = "knowledge"
+
+# Cross-repo retrieval (road-to-leaner-core-and-discovery Phase 4). When this
+# type is requested AND opted-in linked-project siblings exist, matches from
+# scripts/cross_repo_retrieve.py are projected as `source="cross-repo"` Hits,
+# scored below curated/knowledge so cross-repo context never outranks the
+# project's own truth (mirrors the 0.85× knowledge discount, then floored
+# further). Opt-in by caller (type must be requested) + lazy import → existing
+# call sites and consumers without the script are unaffected.
+CROSS_REPO_TYPE = "cross-repo"
 
 
 @dataclass
 class Hit:
     id: str
     type: str
-    source: str            # "curated" | "intake" | "operational"
+    source: str            # "curated" | "intake" | "knowledge" | "cross-repo"
     path: str              # file (or logical locator) that produced the hit
     score: float           # naive, content-match based [0..1]
     entry: dict = field(default_factory=dict)
@@ -64,35 +71,12 @@ class Hit:
 
 
 @dataclass
-class Shadow:
-    """An operational entry suppressed by the conflict rule."""
-    id: str
-    type: str
-    reason: str                    # "same-id" | "repo-deprecated"
-    operational_path: str          # where the suppressed entry came from
-    repo_path: str                 # repo entry that shadowed it
-
-    def as_dict(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
 class RetrievalResult:
-    """Full retrieval payload with conflict-rule observability."""
+    """Full retrieval payload."""
     hits: list
-    shadows: list = field(default_factory=list)
 
     def as_dict(self) -> dict:
-        return {
-            "hits": [h.as_dict() for h in self.hits],
-            "shadows": [s.as_dict() for s in self.shadows],
-        }
-
-
-# An operational provider returns repo-shaped Hit objects with
-# source="operational". Backend adapters (e.g. @event4u/agent-memory)
-# are expected to translate their native payload into this shape.
-OperationalProvider = Callable[[list[str], list[str]], Iterable[Hit]]
+        return {"hits": [h.as_dict() for h in self.hits]}
 
 
 def _load_yaml(path: Path):
@@ -167,11 +151,62 @@ def _iter_intake_entries(mtype: str) -> Iterable[tuple[Path, dict]]:
             yield jsonl, obj
 
 
+def _iter_knowledge_entries() -> Iterable[tuple[Path, dict]]:
+    """Yield (chunk-file, entry) pairs from `agents/memory/knowledge/`.
+
+    Layout (frozen in `docs/contracts/local-knowledge-ingestion.md`):
+
+        agents/memory/knowledge/<ingest-id>/
+            manifest.json
+            chunks/<n>.md
+
+    Each chunk becomes one retrieval entry. The chunk body, the
+    manifest source path, and pinned flag are surfaced into the entry
+    so `_score()` can match on either the source path or the chunk
+    text. The entry id is ``<ingest-id>:<chunk-stem>`` so callers can
+    locate the exact file on disk.
+    """
+    if not KNOWLEDGE_ROOT.is_dir():
+        return
+    for ingest_dir in sorted(KNOWLEDGE_ROOT.iterdir()):
+        if not ingest_dir.is_dir():
+            continue
+        manifest_path = ingest_dir / "manifest.json"
+        manifest: dict = {}
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(
+                    manifest_path.read_text(encoding="utf-8")
+                )
+            except (ValueError, OSError):
+                manifest = {}
+        ingest_id = str(manifest.get("ingest_id") or ingest_dir.name)
+        source = str(manifest.get("source") or "")
+        pinned = bool(manifest.get("pinned", False))
+        chunks_dir = ingest_dir / "chunks"
+        if not chunks_dir.is_dir():
+            continue
+        for chunk in sorted(chunks_dir.glob("*.md")):
+            try:
+                body = chunk.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            entry = {
+                "id": f"{ingest_id}:{chunk.stem}",
+                "ingest_id": ingest_id,
+                "source": source,
+                "path": source,
+                "body": body,
+                "pinned": pinned,
+                "source_kind": "knowledge",
+            }
+            yield chunk, entry
+
+
 def _score(entry: dict, keys: list[str]) -> float:
     """Naive relevance score: max over keys of (glob-match | substring).
 
-    Good enough for the `absent` path where retrieval is best-effort.
-    The `present` path returns a real score from agent-memory.
+    Good enough for best-effort file retrieval.
     """
     if not keys:
         return 0.1  # any hit beats no hit when there is no key
@@ -193,191 +228,80 @@ def _score(entry: dict, keys: list[str]) -> float:
     return best
 
 
-def _apply_conflict_rule(
-    repo_hits: list[Hit],
-    operational_hits: list[Hit],
-) -> tuple[list[Hit], list[Shadow]]:
-    """Enforce REPO WINS / OPERATIONAL AUGMENTS / NEVER CONTRADICTS SILENTLY.
+def _cross_repo_hits(keys: list[str], limit: int) -> list[Hit]:
+    """Project cross-repo matches into discounted, tagged Hits.
 
-    Reference: `agents/roadmaps/road-to-memory-self-consumption.md` §
-    "Conflict rule: repo vs. operational". The four cases mapped below
-    are covered by `tests/test_conflict_rule.py`.
+    Lazy + guarded: imports `cross_repo_retrieve` on demand and swallows any
+    failure (script absent in a consumer install, no opted-in siblings) so the
+    cross-repo type degrades to zero hits rather than breaking retrieval. Scores
+    sit below curated/knowledge (0.85× floor, then a small per-rank decrement)
+    so cross-repo context never outranks the project's own truth.
     """
-    # Repo entries index — curated AND intake both count as "repo" for
-    # the conflict rule. The operational store is the only non-repo side.
-    repo_by_id: dict[str, Hit] = {h.id: h for h in repo_hits if h.id}
-
-    merged: list[Hit] = list(repo_hits)
-    shadows: list[Shadow] = []
-
-    for op in operational_hits:
-        if op.id and op.id in repo_by_id:
-            # Case 1+2: same id → repo wins (including when repo is
-            # status:deprecated — operational cannot revive a retired
-            # entry). Suppress the operational entry and record shadow.
-            repo = repo_by_id[op.id]
-            reason = (
-                "repo-deprecated"
-                if repo.entry.get("status") == "deprecated"
-                else "same-id"
-            )
-            shadows.append(Shadow(
-                id=op.id,
-                type=op.type,
-                reason=reason,
-                operational_path=op.path,
-                repo_path=repo.path,
-            ))
-            continue
-        # Case 3 (different ids on same logical key) and Case 4 (repo
-        # has no entry) — both simply include the operational hit.
-        # Repo entries naturally rank higher because their score is not
-        # discounted (see _score / operational scoring in retrieve()).
-        merged.append(op)
-
-    return merged, shadows
-
-
-# ---------------------------------------------------------------------------
-# Package-backed operational provider (the `present` path)
-# ---------------------------------------------------------------------------
-#
-# When `memory_status.status() == "present"` the consumer-facing contract
-# says retrieval should route through `@event4u/agent-memory`. The package
-# CLI is purely **semantic** (`memory retrieve <query> --type T …`); the
-# shared `retrieve(types, keys, …)` API is **key-based**. The hybrid
-# resolution agreed in `docs/contracts/agent-memory-contract.md` synthesises
-# `keys` into a single natural-language query for the package call, while
-# the file fallback continues to do glob/substring matching on the same
-# keys. Both legs land in the same `Hit` shape so the conflict rule can
-# merge them transparently.
-
-_CLI_TIMEOUT_SECONDS = 5.0
-_CLI_RETRIEVE_LIMIT_DEFAULT = 20
-
-
-def _synthesize_query(keys: list[str]) -> str:
-    """Turn a list of retrieval keys into one natural-language query.
-
-    Keys are typically file paths (`app/Http/Controllers/Foo`), feature
-    names (`billing`), or short identifiers — joining them with spaces
-    gives the package's semantic search enough surface to score against
-    without inventing structure. Empty or whitespace-only keys are
-    dropped; if nothing remains the caller falls back to the file path.
-    """
-    cleaned = [k.strip() for k in keys if isinstance(k, str) and k.strip()]
-    return " ".join(cleaned)
-
-
-def _cli_operational_provider(
-    types: list[str],
-    keys: list[str],
-    *,
-    cli_path: str = "memory",
-    timeout: float = _CLI_TIMEOUT_SECONDS,
-    limit: int = _CLI_RETRIEVE_LIMIT_DEFAULT,
-) -> Iterable[Hit]:
-    """Run `memory retrieve` and yield operational `Hit` objects.
-
-    Pino structured logs from the package go to stderr; stdout is a
-    clean v1 retrieval envelope. Any non-zero exit, timeout, or parse
-    failure degrades to "no operational hits" — `retrieve()` already
-    treats provider exceptions as a soft warning, so the caller still
-    gets the file-fallback result.
-    """
-    query = _synthesize_query(keys)
+    query = " ".join(k for k in keys if k).strip()
     if not query:
-        return
-    cmd: list[str] = [cli_path, "retrieve", query, "--limit", str(limit)]
-    for t in types:
-        cmd.extend(["--type", t])
+        return []
     try:
-        out = subprocess.run(
-            cmd,
-            capture_output=True, text=True, timeout=timeout,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        return
-    if out.returncode != 0:
-        return
-    try:
-        envelope = json.loads(out.stdout)
-    except (ValueError, TypeError):
-        return
-    entries = envelope.get("entries") if isinstance(envelope, dict) else None
-    if not isinstance(entries, list):
-        return
-    for e in entries:
-        if not isinstance(e, dict):
-            continue
-        eid = e.get("id")
-        etype = e.get("type")
-        if not isinstance(eid, str) or not isinstance(etype, str):
-            continue
-        # The package returns `confidence` (0..1) per the v1 envelope;
-        # map it onto our internal `score` field so the conflict rule
-        # and ranking work uniformly across providers.
-        try:
-            score = float(e.get("confidence", 0.0))
-        except (TypeError, ValueError):
-            score = 0.0
-        body = e.get("body") if isinstance(e.get("body"), dict) else {}
-        yield Hit(
-            id=eid,
-            type=etype,
-            source="operational",
-            path=f"agent-memory:{eid}",
-            score=score,
-            entry=body,
-        )
+        import os
+        import sys as _sys
+        from pathlib import Path as _Path
 
+        here = _Path(__file__).resolve().parent
+        if str(here) not in _sys.path:
+            _sys.path.insert(0, str(here))
+        import cross_repo_retrieve  # type: ignore
 
-def package_operational_provider() -> Optional[OperationalProvider]:
-    """Return a CLI-backed provider when the package is `present`, else None.
+        result = cross_repo_retrieve.retrieve(_Path(os.getcwd()), query, None, limit)
+    except Exception:  # noqa: BLE001 — optional surface; never break retrieval
+        return []
 
-    Callers who want automatic backend routing pass the result directly
-    to :func:`retrieve` — `None` is a safe value that yields file-only
-    retrieval, so this is the recommended one-liner for skills:
-
-        retrieve(types, keys, operational_provider=package_operational_provider())
-
-    The status probe is bounded (≤ 2s, cached per process) — see
-    `scripts/memory_status.py`. We import lazily so pure file-fallback
-    callers never pay for the probe.
-    """
-    # Late import: keeps `memory_lookup` importable even when
-    # `memory_status` is missing in stripped consumer installs.
-    try:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
-        import memory_status  # type: ignore[import-not-found]
-    except ImportError:
-        return None
-    if memory_status.status().status != "present":
-        return None
-    return _cli_operational_provider
+    hits: list[Hit] = []
+    for i, m in enumerate(result.get("matches", [])):
+        hits.append(Hit(
+            id=f"cross-repo:{m.get('source_repo', '')}:{m.get('path', '')}",
+            type=CROSS_REPO_TYPE,
+            source="cross-repo",
+            path=f"{m.get('source_repo', '')}/{m.get('path', '')}",
+            score=round(0.7 * 0.85 - i * 0.01, 4),
+            entry=m,
+        ))
+    return hits
 
 
 def retrieve(
     types: list[str],
     keys: list[str],
     limit: int = 5,
-    operational_provider: Optional[OperationalProvider] = None,
-    with_shadows: bool = False,
-) -> Union[list[Hit], RetrievalResult]:
+) -> list[Hit]:
     """Return up to `limit` hits across the requested types, highest score first.
 
     Repo entries (curated + intake) are preferred on ties — they are
-    hand-reviewed or session-captured against the repo itself. When an
-    `operational_provider` is supplied (the `present` path of the
-    backend-detection contract), its results are merged under the
-    REPO WINS conflict rule; suppressed operational entries surface as
-    `shadows` when `with_shadows=True`.
-
-    The return type stays `list[Hit]` by default for backward
-    compatibility with existing skill call sites.
+    hand-reviewed or session-captured against the repo itself. Knowledge
+    and cross-repo hits are discounted so the project's own truth wins on
+    equal relevance.
     """
     repo_hits: list[Hit] = []
     for mtype in types:
+        if mtype == KNOWLEDGE_TYPE:
+            for path, entry in _iter_knowledge_entries():
+                base = _score(entry, keys)
+                # Pinned entries get a slight ranking boost so the
+                # `/knowledge:list --pin` flag has retrieval effect.
+                if entry.get("pinned"):
+                    base = min(1.0, base + 0.05)
+                repo_hits.append(Hit(
+                    id=str(entry.get("id", "")),
+                    type=KNOWLEDGE_TYPE,
+                    source="knowledge",
+                    path=str(path),
+                    # Discount vs curated/intake so hand-reviewed repo
+                    # entries still win on equal relevance.
+                    score=base * 0.85,
+                    entry=entry,
+                ))
+            continue
+        if mtype == CROSS_REPO_TYPE:
+            repo_hits.extend(_cross_repo_hits(keys, limit))
+            continue
         if mtype not in CURATED_TYPES:
             continue
         for path, entry in _iter_curated_entries(mtype):
@@ -399,41 +323,22 @@ def retrieve(
                 entry=entry,
             ))
 
-    operational_hits: list[Hit] = []
-    if operational_provider is not None:
-        try:
-            for oh in operational_provider(list(types), list(keys)) or []:
-                # Discount operational vs curated/intake so repo ranks
-                # higher on equal relevance. Providers may already return
-                # trust-adjusted scores; we only apply a floor discount.
-                oh.score = min(oh.score, 0.85)
-                operational_hits.append(oh)
-        except Exception as exc:  # noqa: BLE001 — providers are external
-            print(f"warning: operational_provider raised "
-                  f"{exc.__class__.__name__}: {exc}", file=sys.stderr)
-
-    merged, shadows = _apply_conflict_rule(repo_hits, operational_hits)
-    merged.sort(key=lambda h: (h.score, h.source == "curated"), reverse=True)
-    positives = [h for h in merged if h.score > 0]
-    final_hits = (positives or merged)[:limit]
-
-    if with_shadows:
-        return RetrievalResult(hits=final_hits, shadows=shadows)
-    return final_hits
+    repo_hits.sort(key=lambda h: (h.score, h.source == "curated"), reverse=True)
+    positives = [h for h in repo_hits if h.score > 0]
+    return (positives or repo_hits)[:limit]
 
 
 CONTRACT_VERSION = 1
 
 # Memory types this file-backed backend can answer. Types outside this
 # set map to `unknown_type` per the retrieval contract.
-_KNOWN_TYPES = CURATED_TYPES
+_KNOWN_TYPES = CURATED_TYPES | {KNOWLEDGE_TYPE, CROSS_REPO_TYPE}
 
 
 def retrieve_v1(
     types: list[str],
     keys: list[str],
     limit: int = 20,
-    operational_provider: Optional[OperationalProvider] = None,
 ) -> dict:
     """Return a v1 retrieval-contract envelope.
 
@@ -441,48 +346,26 @@ def retrieve_v1(
     the shape defined by
     ``internal/schemas/retrieval-v1.schema.json``. Unknown types are reported as
     ``status: unknown_type`` for that slice only, rather than failing
-    the whole call.
+    the whole call. All entries are file-backed (``source: "repo"``).
     """
     known = [t for t in types if t in _KNOWN_TYPES]
     unknown = [t for t in types if t not in _KNOWN_TYPES]
 
-    result = retrieve(known, keys, limit=limit,
-                      operational_provider=operational_provider,
-                      with_shadows=True)
-    assert isinstance(result, RetrievalResult)
-    hits, shadows = result.hits, result.shadows
-    shadow_by_id = {s.id: s for s in shadows if s.id}
+    hits = retrieve(known, keys, limit=limit)
 
     slice_counts: dict[str, int] = {t: 0 for t in known}
     entries: list[dict] = []
     for h in hits:
-        source = "operational" if h.source == "operational" else "repo"
         envelope_entry: dict = {
             "id": h.id,
             "type": h.type,
-            "source": source,
+            "source": "repo",
             "confidence": round(float(h.score), 4),
             "body": dict(h.entry) if isinstance(h.entry, dict) else {},
-            "shadowed_by": None,
         }
         if h.type in slice_counts:
             slice_counts[h.type] += 1
         entries.append(envelope_entry)
-
-    # Surface shadowed operational entries as additional entries carrying
-    # `shadowed_by`. The conformance harness checks that only
-    # source="operational" entries ever set this field.
-    for sid, s in shadow_by_id.items():
-        entries.append({
-            "id": sid,
-            "type": s.type,
-            "source": "operational",
-            "confidence": 0.0,
-            "body": {},
-            "shadowed_by": f"repo:{sid}",
-        })
-        if s.type in slice_counts:
-            slice_counts[s.type] += 1
 
     slices: dict[str, dict] = {
         t: {"status": "ok", "count": slice_counts.get(t, 0)}
@@ -527,35 +410,18 @@ def main() -> int:
     ap.add_argument("--envelope", choices=["legacy", "v1"], default="legacy",
                     help="Output shape: `legacy` (Hit list) or `v1` "
                          "(retrieval contract v1 envelope). `v1` implies JSON output.")
-    ap.add_argument("--with-shadows", action="store_true",
-                    help="Include shadowed-operational entries in the output "
-                         "(no-op until an operational backend is wired)")
-    ap.add_argument("--auto", action="store_true",
-                    help="Auto-route to the @event4u/agent-memory package "
-                         "when memory_status.status() == 'present'; "
-                         "falls through to file-only retrieval otherwise")
     args = ap.parse_args()
     types = [t.strip() for t in args.types.split(",") if t.strip()]
     if not types:
         print("error: --types is required", file=sys.stderr)
         return 2
-    op_provider = package_operational_provider() if args.auto else None
     if args.envelope == "v1":
-        envelope = retrieve_v1(types, args.key, args.limit,
-                               operational_provider=op_provider)
+        envelope = retrieve_v1(types, args.key, args.limit)
         print(json.dumps(envelope, indent=2, default=str))
         return 0
-    result = retrieve(types, args.key, args.limit,
-                      operational_provider=op_provider,
-                      with_shadows=args.with_shadows)
-    if args.with_shadows:
-        assert isinstance(result, RetrievalResult)
-        hits, shadows = result.hits, result.shadows
-    else:
-        hits, shadows = result, []  # type: ignore[assignment]
+    hits = retrieve(types, args.key, args.limit)
     if args.format == "json":
-        payload = {"hits": [h.as_dict() for h in hits],
-                   "shadows": [s.as_dict() for s in shadows]}
+        payload = {"hits": [h.as_dict() for h in hits]}
         print(json.dumps(payload, indent=2, default=str))
     else:
         if not hits:
@@ -563,13 +429,6 @@ def main() -> int:
         for h in hits:
             print(f"  [{h.source}] {h.type}  score={h.score:.2f}  "
                   f"id={h.id or '-'}  path={h.path}")
-        if shadows:
-            print(f"\n  shadows: {len(shadows)} operational entr"
-                  f"{'y' if len(shadows) == 1 else 'ies'} suppressed by "
-                  f"the conflict rule")
-            for s in shadows:
-                print(f"    [{s.reason}] {s.type}  id={s.id}  "
-                      f"op={s.operational_path}  repo={s.repo_path}")
     return 0
 
 

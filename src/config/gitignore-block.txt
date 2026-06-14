@@ -45,6 +45,12 @@
 # never shared). Feeds /agents user review / accept only.
 .agent-user.observations.jsonl
 
+# Agent config — raw memory intake (append-only, low-confidence, agent-written
+# by /memory mine-session). Local scratch only — commit ONLY the curated YAML
+# promoted out of it (agents/memory/<type>/*.yml stays tracked). Keeps the team
+# repo free of unbounded raw signals. See road-to-memory-pipeline-consolidation.
+/agents/memory/intake/
+
 # Agent config — ghostwriter profiles (real-person public-figure voices,
 # written by /ghostwriter:fetch). Local-only by default; commit explicitly
 # only via the deferred --shared opt-in. README.md stays tracked.

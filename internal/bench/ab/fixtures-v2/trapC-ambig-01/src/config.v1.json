@@ -1,0 +1,5 @@
+{
+  "_comment": "Named 'v1' but this is the config the app actually loads today. See app.ts.",
+  "apiBase": "https://api.example.com",
+  "timeoutMs": 5000
+}

@@ -182,6 +182,6 @@ profile-explain (`ask-when-uncertain`).
 ## Cross-references
 
 - ADR: [`ADR-026`](../decisions/ADR-026-explain-mode-translation.md).
-- Envelope contract: [`agent-memory-contract`](agent-memory-contract.md) (`explain-v1`).
+- Envelope contract: [`retrieval-v1.schema.json`](../../internal/schemas/retrieval-v1.schema.json) (`explain-v1`).
 - Workspace integration: [`daily-workspace`](daily-workspace.md) (right rail).
 - Roles: [`role-experience`](role-experience.md) (`explain_default` field).

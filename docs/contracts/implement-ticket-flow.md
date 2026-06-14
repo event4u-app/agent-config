@@ -34,7 +34,7 @@ in Phase 0 and recorded in a short ADR once decided.
 - A runtime implementation spec.
 - A DSL for user-authored flows (explicitly out of scope).
 - A memory retrieval spec — that lives in
-  [`agent-memory-contract.md`](agent-memory-contract.md).
+  [`../guidelines/agent-infra/memory-access.md`](../guidelines/agent-infra/memory-access.md).
 
 ## The linear flow
 
@@ -262,17 +262,16 @@ boundary writes. Full reference: [`work-engine-hooks.md`](work-engine-hooks.md).
 Bounded per the top-level roadmap rule:
 
 - **Max 12 hits total.**
-- **Four allowed types:** `domain-invariants`,
-  `architecture-decisions`, `incident-learnings`,
-  `historical-patterns`. All four exist in the
-  [templates directory](../../.agent-src.uncondensed/templates/agents/memory/).
+- **Three allowed types:** `domain-invariants`, `incident-learnings`,
+  `historical-patterns`. (Architectural rationale lives in ADRs —
+  `docs/decisions/` — not in curated memory.)
 - **Keys:** files touched by the plan, symbols referenced by the
   ticket.
 - **Decision-change rule:** a memory hit that did not change an
   outcome is dropped from the report. If none changed an outcome,
   the `memory` section of the report is omitted — not padded.
 - Follows the retrieval shape in
-  [`agent-memory-contract.md`](agent-memory-contract.md).
+  [`../guidelines/agent-infra/memory-access.md`](../guidelines/agent-infra/memory-access.md).
 
 ## Persona policies
 
@@ -619,7 +618,7 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 - `tests/golden/` — capture sandbox, recipes, and Capture Packs
 - [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
 - [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates
-- [`agent-memory-contract.md`](agent-memory-contract.md)
+- [`../guidelines/agent-infra/memory-access.md`](../guidelines/agent-infra/memory-access.md)
 - [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md)
 - [`../../.agent-src.uncondensed/rules/user-interaction.md`](../../.agent-src.uncondensed/rules/user-interaction.md)
 - [`../../.agent-src.uncondensed/rules/scope-control.md`](../../.agent-src.uncondensed/rules/scope-control.md)

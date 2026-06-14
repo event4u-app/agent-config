@@ -3462,6 +3462,52 @@ def _deploy_global_content(
     return results
 
 
+def _preview_global_reap(
+    tools: set[str], package_root: Path,
+) -> dict[str, list[str]]:
+    """Read-only preview of the stale files a global deploy of ``tools`` WOULD
+    reap — the ``--dry-run`` surface for the upgrade-cleanup reaper.
+
+    Mirrors the per-tool anchor / plan / ``current_files`` resolution of
+    :func:`_deploy_global_content`, but writes nothing: it computes the
+    expected file set straight from the package source (no copy) and calls
+    both reaper paths in ``dry_run`` mode. Returns ``{tool_id: [abs path, …]}``
+    for every tool with at least one would-reap path (tools with none are
+    omitted). The selection logic is the live reaper's, so the preview is
+    exact — what it lists is exactly what a real deploy would delete.
+    """
+    inv_mod = _inventory_mod()
+    inventory = inv_mod.load_inventory()
+    preview: dict[str, list[str]] = {}
+    for tool_id in sorted(tools):
+        plan = GLOBAL_DEPLOY_SOURCES.get(tool_id)
+        if plan is None:
+            continue
+        anchor_raw = USER_SCOPE_PATHS.get(tool_id)
+        if not anchor_raw:
+            continue
+        anchor = Path(anchor_raw).expanduser()
+        current_files: set[str] = set()
+        for src_rel, dest_sub in plan:
+            src = package_root / src_rel
+            current_files |= inv_mod.expected_deploy_files(
+                src, Path(dest_sub) if dest_sub else Path(""),
+            )
+        would_reap: list = []
+        if tool_id in inventory.get("tools", {}):
+            would_reap += inv_mod.reap_stale(
+                tool_id, anchor, current_files, inventory, dry_run=True,
+            )
+        would_reap += inv_mod.reap_tagged_orphans(
+            anchor, [dest_sub for _, dest_sub in plan],
+            current_files, PACKAGE_TAG_ID, dry_run=True,
+        )
+        paths = sorted({str(p) for p in would_reap})
+        if paths:
+            preview[tool_id] = paths
+    return preview
+
+
 def _verify_deploy_targets(
     anchor: Path, plan: list[tuple[str, str]],
 ) -> list[str]:
@@ -4611,6 +4657,26 @@ def _dry_run_summary(opts: argparse.Namespace) -> int:
         print("  wizard:      Would auto-launch (pass --no-ui to suppress).")
     else:
         print(f"  wizard:      Suppressed ({why_not}).")
+    # Upgrade-cleanup reaper preview (global scope only): list exactly what a
+    # real deploy would remove, BEFORE any deletion. Read-only — the reaper
+    # runs in dry_run mode. A clean tree prints "nothing to reap".
+    if opts.global_install:
+        try:
+            preview = _preview_global_reap(
+                _parse_tools(opts.tools or "all"),
+                _resolve_package_root_for_global(),
+            )
+        except Exception:  # preview must never break the dry-run summary
+            preview = {}
+        total = sum(len(v) for v in preview.values())
+        print()
+        if total == 0:
+            print("  reap (cleanup): nothing to reap — no stale deployed files.")
+        else:
+            print(f"  reap (cleanup): would remove {total} stale file(s):")
+            for tool_id in sorted(preview):
+                for path in preview[tool_id]:
+                    print(f"      {tool_id}: {path}")
     print()
     return 0
 

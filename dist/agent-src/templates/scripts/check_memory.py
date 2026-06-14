@@ -50,8 +50,7 @@ REQUIRED_KEYS = {
 VALID_STATUS = {"active", "deprecated", "archived"}
 VALID_CONFIDENCE = {"low", "medium", "high"}
 KNOWN_TYPES = {
-    "domain-invariants", "architecture-decisions",
-    "incident-learnings", "product-rules",
+    "domain-invariants", "incident-learnings", "product-rules",
 }
 
 # Redaction heuristics — plain-regex, deliberately conservative.

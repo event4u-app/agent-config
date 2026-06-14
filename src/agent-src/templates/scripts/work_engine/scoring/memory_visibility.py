@@ -35,7 +35,6 @@ ICON = "\U0001F9E0"  # 🧠
 DEFAULT_MAX_INLINE_IDS = 5
 DEFAULT_ASKED_TYPES = (
     "domain-invariants",
-    "architecture-decisions",
     "incident-learnings",
     "historical-patterns",
 )

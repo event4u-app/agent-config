@@ -6,7 +6,7 @@ tier: 2
 visibility: internal
 cluster: memory
 sub: mine-session
-description: Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.
+description: Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
 skills: [memory-consolidation, file-editor]
 suggestion:
   eligible: false
@@ -19,10 +19,23 @@ packs:
 
 # /memory mine-session
 
-Runs the **GATHER SIGNAL** phase of the [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md)
-loop against the current host's transcripts and surfaces normalised
-project-scoped facts as a preview. No file is written without
-`--commit-intake`. No transcript is read without
+The **single session-mining command**. Runs the **GATHER SIGNAL** phase of
+the [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md) loop
+against the **cross-host chat-history JSONL log**
+(`agents/runtime/.agent-chat-history`, written by platform hooks on every
+host) — falling back to the per-host Claude-Code transcript when the log is
+absent — and surfaces normalised project-scoped facts as a preview.
+
+`--mode` selects the output:
+
+- **`signals`** (default) — normalised facts → intake preview / `--commit-intake`.
+- **`proposals`** — frames the facts as candidate rule/skill learnings, then
+  run [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md)
+  on each seed to draft proposals. **This folds in the former
+  `/chat-history learn`.**
+- **`both`** — render signals + proposal seeds together.
+
+No file is written without `--commit-intake`. No source is read without
 `--confirm-transcript-access`.
 
 ## When to use
@@ -42,11 +55,13 @@ and confirmed.
 
 | Flag | Default | Purpose |
 |---|---|---|
+| `--mode <signals\|proposals\|both>` | `signals` | Output selector. `signals` → intake facts; `proposals` → proposal seeds for `learning-to-rule-or-skill`; `both` → both. |
+| `--source <auto\|chat-history\|claude-code>` | `auto` | `auto` prefers the cross-host chat-history log, then the Claude-Code transcript. |
 | `--since <ISO-date>` | 14 days ago | Only mine turns at or after this date. Re-anchors relative phrases like "yesterday" with `YYYY-MM-DD`. |
 | `--confirm-transcript-access` | off | Opt-in gate. Without it, the miner reads zero turns and prints the opt-in hint. Per-invocation, not persistent. |
-| `--preview` | on | Render normalised facts to stdout. No file write. Default behaviour. |
-| `--commit-intake` | off | Mutually exclusive with `--preview`. Append normalised facts to `agents/memory/intake/<primary-tag>.jsonl`. |
-| `--host <claude-code\|cursor\|augment>` | auto-detect | Force the `TranscriptAdapter`. Phase 1 ships `claude-code` only; others print `not-supported-on-this-host` and exit. |
+| `--preview` | on | Render to stdout. No file write. Default behaviour. |
+| `--commit-intake` | off | `signals` only. Append normalised facts to `agents/memory/intake/<primary-tag>.jsonl`. |
+| `--host <name>` | auto-detect | Labels the source host. The chat-history log is cross-host, so any host mines via it; `claude-code` additionally resolves the local transcript fallback. |
 
 ## Steps
 
@@ -91,6 +106,17 @@ If the normalised count exceeds 5, **stop after the 5th** and print:
 ```
 
 This is the strict-gate exit per the skill's exit criteria.
+
+**Failure-mode review lens** (adapted from MemSkill, Apache-2.0). Before
+emitting a fact, ask which failure it prevents — and drop it if it prevents
+none:
+
+- **Storage failure** — a durable fact the next agent will need was never
+  written. Capture it.
+- **Retrieval failure** — the fact exists but its `key` / anchor path won't
+  match how a future skill queries. Fix the anchor, don't duplicate.
+- **Quality failure** — the fact is too vague or narrative to act on. Sharpen
+  it to one durable PATTERN / INVARIANT / GOTCHA, or drop it.
 
 ### 4. Render preview
 
@@ -154,5 +180,5 @@ Confirm:
   `TranscriptAdapter` matches the current host.
 - [`memory:promote`](promote.md) — lifts validated intake lines into
   curated YAML.
-- [`agent-memory-contract`](../../../docs/contracts/agent-memory-contract.md) —
-  intake JSONL schema, including the `tags` field.
+- [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md) —
+  file-backed retrieval contract for curated + intake entries.

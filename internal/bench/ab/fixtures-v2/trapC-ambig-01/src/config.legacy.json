@@ -1,0 +1,5 @@
+{
+  "_comment": "The original config from the 2023 prototype. Nothing imports this anymore.",
+  "apiBase": "https://old-prototype.example.com",
+  "timeoutMs": 1000
+}

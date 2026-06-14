@@ -112,6 +112,6 @@ glossary YAMLs translate forward.
 ## Cross-references
 
 - Contract: [`docs/contracts/explain-modes.md`](../contracts/explain-modes.md).
-- Envelope: [`docs/contracts/agent-memory-contract.md`](../contracts/agent-memory-contract.md).
+- Envelope: [`internal/schemas/retrieval-v1.schema.json`](../../internal/schemas/retrieval-v1.schema.json).
 - Workspace: [`ADR-025`](ADR-025-workspace-chrome.md), [`docs/contracts/daily-workspace.md`](../contracts/daily-workspace.md).
 - Roles: [`docs/contracts/role-experience.md`](../contracts/role-experience.md).

@@ -4,9 +4,9 @@ Phase 6 of ``agents/roadmaps/road-to-product-ui-track.md`` retired the
 Phase 3 deferral stub once design / apply / review / polish landed. Two
 slots remain semantically empty for the UI track:
 
-- ``memory`` — the UI track does not consult the four memory types the
-  backend retrieves over (``domain-invariants``, ``architecture-decisions``,
-  ``incident-learnings``, ``historical-patterns``). UI work pivots on the
+- ``memory`` — the UI track does not consult the memory types the
+  backend retrieves over (``domain-invariants``, ``incident-learnings``,
+  ``historical-patterns``). UI work pivots on the
   audit findings in ``state.ui_audit`` instead, which the audit gate has
   already populated by the time this handler runs.
 - ``plan`` — :mod:`.design` produces the locked design brief that

@@ -242,3 +242,7 @@ internal/bench/reports/ab/.sysprompt-*.txt
 # committed visible result (per the line-130 "per-run outputs are not tracked" intent)
 internal/bench/reports/ab/*-ab-trackb-*.json
 internal/bench/reports/ab/*-ab-trackb-*.md
+# bench:ab v2 scratch
+internal/bench/ab/fixtures-v2/*/node_modules/
+internal/bench/ab/v2-clones/
+internal/bench/reports/ab-v2/
