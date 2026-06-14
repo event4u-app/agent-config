@@ -1,7 +1,7 @@
 /**
  * Hook event surface for `work_engine`.
  *
- * TypeScript twin of `work_engine/hooks/events.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/hooks/events.py` (ADR-096 py2ts —
  * work_engine.hooks subpackage). Mirrors the Python `str`-Enum 1:1: each
  * value is the event name verbatim, so round-trips stay trivial for
  * telemetry and JSON tracing.

@@ -3,7 +3,7 @@
  * corpus-grounding · bm25_search — retrieval layer (interface v1).
  *
  * TypeScript twin of `src/skills/corpus-grounding/scripts/bm25_search.py`
- * (ADR-094 Python→TS migration). Pure-stdlib BM25 ranking over CSV corpora
+ * (ADR-096 Python→TS migration). Pure-stdlib BM25 ranking over CSV corpora
  * plus a structured pre-filter (`filters`) applied BEFORE ranking. Retrievers
  * are selected by name (`bm25` / `structured` / `hybrid`) — never
  * network-by-default; embeddings are intentionally absent until a measured
@@ -13,7 +13,7 @@
  * Python-parity primitives it needs (float math, `len()` as code-point count,
  * `csv.DictReader` quoting, Python `re` semantics, `json.dumps` byte-parity)
  * are inlined here. The public names below mirror the Python module 1:1
- * (Python style is part of the contract, ADR-094).
+ * (Python style is part of the contract, ADR-096).
  *
  * Interface-stability contract: see SKILL.md § Interface contract (v1).
  * Breaking changes to public names below require a major bump there.

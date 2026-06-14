@@ -2,7 +2,7 @@
  * `MemoryVisibilityHook` — emit the visibility line on save.
  *
  * TypeScript twin of `work_engine/hooks/builtin/memory_visibility.py`
- * (ADR-094 py2ts — work_engine.hooks.builtin subpackage). Implements the
+ * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Implements the
  * producer side of `docs/contracts/memory-visibility-v1.md`: derive
  * `asks/hits/ids` from `state.memory` and thread the rendered line into
  * `state.report`.

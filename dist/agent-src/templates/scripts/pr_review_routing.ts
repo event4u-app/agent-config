@@ -3,7 +3,7 @@
  * PR review-routing classifier.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/pr_review_routing.py`
- * (ADR-094). Byte-for-byte behavioural parity: same CLI flags, same
+ * (ADR-096). Byte-for-byte behavioural parity: same CLI flags, same
  * glob→regex translation, same ownership / pattern matching, same role
  * merge + sort order, same Markdown routing block, same severity level,
  * same exit codes, same stdout/stderr split.

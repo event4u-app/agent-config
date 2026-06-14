@@ -1,7 +1,7 @@
 /**
  * Concrete observability hooks shipped with the engine.
  *
- * TypeScript twin of `work_engine/hooks/builtin/__init__.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/hooks/builtin/__init__.py` (ADR-096 py2ts —
  * work_engine.hooks.builtin subpackage). Phase 4 hooks: low-risk, default-off,
  * observe-only. Each hook exposes a `register(registry)` method so the
  * registry stays the single source of truth for event → callback wiring.
