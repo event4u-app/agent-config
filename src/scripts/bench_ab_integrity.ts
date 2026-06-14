@@ -37,8 +37,9 @@ const CLONES = path.join(AB_ROOT, 'clones');
 
 // Surfaces where divergence is expected (variant-bearing).
 const ALLOWED_DELTA_PATHS: readonly string[] = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md'];
-// Variant-distinguishing manifest written by bench_ab_clone.
-const ALLOWED_DELTA_FILES: readonly string[] = ['.bench-ab-manifest.json'];
+// Variant-distinguishing files written by bench_ab_clone (the manifest and the
+// RDP-toggle settings file — both legitimately differ between variants).
+const ALLOWED_DELTA_FILES: readonly string[] = ['.bench-ab-manifest.json', '.agent-settings.yml'];
 
 export function is_under_allowed_path(rel: string): boolean {
     // Python: Path(rel).parts; head = parts[0].
