@@ -8,6 +8,10 @@
  * `docs/benchmark.md`. The renderer is deterministic — it does not run any
  * bench; it only formats existing reports.
  *
+ * Renders the 3-condition value bench: `without` → `with` (package value) and
+ * `with` → `with-rdp` (RDP reasoning lift), with the third `with-rdp` column in
+ * the Track B tables.
+ *
  * If no reports exist yet, the script writes a placeholder document — never
  * errors out, so the file is always a real description of the bench state.
  *
@@ -99,6 +103,12 @@ export function safe_load(p: string | null): Obj {
     }
 }
 
+/** Latest Track B report for the third condition (`with-rdp`), or {}. */
+export function latest_trackb_with_rdp(): Obj {
+    const reports = _globSorted(REPORTS_DIR, '-ab-trackb-with-rdp.json');
+    return reports.length ? safe_load(reports[reports.length - 1] as string) : {};
+}
+
 // --- value access helpers (Python dict.get with default {}/0) ---------------
 
 function _obj(v: Json | undefined): Obj {
@@ -122,27 +132,75 @@ function _orZero(v: Json | undefined): number {
     return 0;
 }
 
+/** Python truthiness for a single JSON value (None/""/0/0.0/[]/{} are falsy). */
+function _pyTruthy(v: Json | undefined): boolean {
+    if (v === null || v === undefined) return false;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v !== 0 && !Number.isNaN(v);
+    if (typeof v === 'string') return v.length > 0;
+    if (Array.isArray(v)) return v.length > 0;
+    return Object.keys(v).length > 0;
+}
+
+/** Python `a or b` where a is a possibly-falsy value and b is the str fallback. */
+function _pyStrOr(a: Json | undefined, fallback: string): string {
+    return _pyTruthy(a) ? _pyStr(a as Json) : fallback;
+}
+
+/** Python `a or b or c or d` chain — return the first truthy, else last. */
+function _orFirst(...vals: (Json | undefined)[]): Json {
+    for (let i = 0; i < vals.length - 1; i += 1) {
+        if (_pyTruthy(vals[i])) {
+            return vals[i] as Json;
+        }
+    }
+    return (vals[vals.length - 1] ?? null) as Json;
+}
+
 // --- Python-format parity --------------------------------------------------
 
-/** Format `x` to `ndigits` decimals using round-half-to-even (CPython). */
+/**
+ * Format `x` to `ndigits` decimals using round-half-to-even on the EXACT value
+ * of the IEEE-754 double — byte-for-byte parity with CPython `format(x, '.Nf')`.
+ *
+ * CPython rounds the true decimal value of the stored double (David Gay dtoa),
+ * not a naive `x * 10**N`. A naive scaled-float rounder diverges on values
+ * whose product lands just below `.5` in float (e.g. `12.345 * 100` stores as
+ * `1234.4999…`, but the true value of `12.345` is `12.34500…0064`, so `.2f`
+ * is `12.35`, not `12.34`). `toFixed(40)` yields the exact decimal expansion of
+ * the double; round-half-even on that string via BigInt reproduces CPython.
+ */
 function _pyFixed(x: number, ndigits: number): string {
     if (!Number.isFinite(x)) {
         return String(x);
     }
     const neg = x < 0 || Object.is(x, -0);
     const abs = Math.abs(x);
-    const factor = Math.pow(10, ndigits);
-    const scaled = abs * factor;
-    const floor = Math.floor(scaled);
-    const frac = scaled - floor;
-    const tol = Math.max(Math.abs(scaled), 1) * 2 ** -40;
-    let rounded: number;
-    if (Math.abs(frac - 0.5) <= tol) {
-        rounded = floor % 2 === 0 ? floor : floor + 1;
-    } else {
-        rounded = Math.round(scaled);
+    // Exact decimal expansion of the double (toFixed is correctly rounded; 40
+    // places is well past the ~17 significant digits a double can carry, so the
+    // tail is the true value, not an artefact).
+    const exact = abs.toFixed(40);
+    const dot = exact.indexOf('.');
+    const intPart = dot === -1 ? exact : exact.slice(0, dot);
+    const fracPart = dot === -1 ? '' : exact.slice(dot + 1);
+    // Digits we keep, plus the remainder used to decide rounding.
+    const kept = (intPart + fracPart.slice(0, ndigits).padEnd(ndigits, '0')).replace(/^0+(?=\d)/, '');
+    const rest = fracPart.slice(ndigits); // digits past the cut
+    let value = BigInt(kept === '' ? '0' : kept);
+    // Round-half-to-even on `rest`.
+    if (rest.length > 0) {
+        const firstRest = rest.charCodeAt(0) - 48; // 0..9
+        const hasMore = /[1-9]/.test(rest.slice(1));
+        if (firstRest > 5 || (firstRest === 5 && hasMore)) {
+            value += 1n;
+        } else if (firstRest === 5 && !hasMore) {
+            // Exactly half → round to even.
+            if (value % 2n === 1n) {
+                value += 1n;
+            }
+        }
     }
-    let intStr = String(rounded);
+    let intStr = value.toString();
     let result: string;
     if (ndigits === 0) {
         result = intStr;
@@ -155,6 +213,11 @@ function _pyFixed(x: number, ndigits: number): string {
         result = `${whole}.${dec}`;
     }
     return neg ? `-${result}` : result;
+}
+
+export function _delta_pct(a: number | null, b: number | null): string {
+    // fmt_pct((a or 0) - (b or 0))
+    return fmt_pct((a ?? 0) - (b ?? 0));
 }
 
 export function fmt_pct(value: number | null): string {
@@ -173,35 +236,115 @@ export function fmt_num(value: number | null, places = 2): string {
     return _pyFixed(value, places);
 }
 
-export function render_headline(trackA: Obj, trackB: Obj): string {
-    const aResults = _getObj(_getObj(trackA, 'with'), 'results');
-    const aWithout = _getObj(_getObj(trackA, 'without'), 'results');
-    const bResults = _getObj(_getObj(trackB, 'with'), 'results');
-    const bWithout = _getObj(_getObj(trackB, 'without'), 'results');
-    const aWithAcc = _num(aResults['trigger_accuracy']);
-    const aWoAcc = _num(aWithout['trigger_accuracy']);
-    const bWithComp = _num(bResults['completion_rate']);
-    const bWoComp = _num(bWithout['completion_rate']);
-    const lines = [
+export function fmt_int(value: number | null): string {
+    if (value === null) {
+        return '—';
+    }
+    // f"{int(value):,}" — int() truncates toward zero, then grouped by commas.
+    return _pyThousands(_pyIntTrunc(value));
+}
+
+export function _delta_num(a: number | null, b: number | null, places = 3): string {
+    // d = (a or 0) - (b or 0); f"{d:+.{places}f}"
+    const d = (a ?? 0) - (b ?? 0);
+    const body = _pyFixed(d, places);
+    // f"{d:+...}" forces a leading sign; _pyFixed already emits '-' for negatives.
+    return body.startsWith('-') ? body : `+${body}`;
+}
+
+/** Python int(x): truncate toward zero. */
+function _pyIntTrunc(x: number): number {
+    return x < 0 ? Math.ceil(x) : Math.floor(x);
+}
+
+/** Python `f"{n:,}"` — group integer digits in threes with commas. */
+function _pyThousands(n: number): string {
+    const neg = n < 0;
+    const digits = String(Math.abs(n));
+    let out = '';
+    for (let i = 0; i < digits.length; i += 1) {
+        if (i > 0 && (digits.length - i) % 3 === 0) {
+            out += ',';
+        }
+        out += digits[i];
+    }
+    return neg ? `-${out}` : out;
+}
+
+export function render_headline(trackA: Obj, trackB: Obj, trackBRdp: Obj = {}): string {
+    const wo = _getObj(_getObj(trackB, 'without'), 'results');
+    const wi = _getObj(_getObj(trackB, 'with'), 'results');
+    const rd = _getObj(trackBRdp, 'results');
+    // mode = wi.get("mode") or wo.get("mode") or rd.get("mode") or "—"
+    const mode = _pyStrOr(wi['mode'], _pyStrOr(wo['mode'], _pyStrOr(rd['mode'], '—')));
+    // total = wi.get("total") or wo.get("total") or rd.get("total") or 0
+    const total = _orFirst(wi['total'], wo['total'], rd['total'], 0);
+    const dry = mode !== 'live';
+    const lines: string[] = [
         '## Headline',
         '',
-        '> **Track A confirms surface availability** — a precondition, not an impact metric. ' +
-            'For the impact view (cost-ladder + behaviour with vs. without), see ' +
-            '[`docs/value.md`](value.md).',
-        '',
-        '| Metric | with | without | delta |',
-        '|---|---|---|---|',
-        `| Track A surface-availability | ${fmt_pct(aWithAcc)} | ${fmt_pct(aWoAcc)} | ` +
-            `${fmt_pct((aWithAcc ?? 0) - (aWoAcc ?? 0))} _(structural — files present)_ |`,
-        `| Track B completion-rate  | ${fmt_pct(bWithComp)} | ${fmt_pct(bWoComp)} | ` +
-            `${fmt_pct((bWithComp ?? 0) - (bWoComp ?? 0))} |`,
-        `| Track B mean wall-time   | ${fmt_num(_num(bResults['mean_wall_time']))}s ` +
-            `| ${fmt_num(_num(bWithout['mean_wall_time']))}s | ` +
-            `${fmt_num(_orZero(bResults['mean_wall_time']) - _orZero(bWithout['mean_wall_time']))}s |`,
-        `| Track B ask-vs-act ratio | ${fmt_num(_num(bResults['ask_vs_act_ratio']), 3)} ` +
-            `| ${fmt_num(_num(bWithout['ask_vs_act_ratio']), 3)} | — |`,
+        '> **Lift of agent-config on the host model — NOT a model-vs-model benchmark.** ' +
+            'This measures what the package + the RDP reasoning lift do to a *fixed* host ' +
+            'model on a neutral fixture; it is not comparable to public SWE-bench / ' +
+            'Fable-5 model scores (different question entirely).',
         '',
     ];
+    if (dry) {
+        lines.push(
+            '> ⚠️ **DRY RUN — no model calls were made; every cell is 0/N by construction.** ' +
+                'This shows the *shape* the real numbers will fill. Run `task bench:ab:live` ' +
+                '(billable) for actual results.',
+            '',
+        );
+    }
+    const errBits: string[] = [];
+    for (const [name, res] of [
+        ['without', wo],
+        ['with', wi],
+        ['with-rdp', rd],
+    ] as [string, Obj][]) {
+        const e = _orZero(res['errored']);
+        if (e) {
+            errBits.push(`${name}: ${e}/${_pyStr(res['total'] ?? 0)}`);
+        }
+    }
+    lines.push(
+        `> ⚠️ **Low statistical power: corpus N=${_pyStr(total)} (< 40).** Directional only; ` +
+            'per-cell N is shown below. The `long × mechanical` cell is intentionally ' +
+            'empty (documented hole, not an error).',
+        '',
+    );
+    if (errBits.length) {
+        lines.push(
+            '> ⚠️ **Some tasks errored (rate-limit / budget-cap / timeout) and are ' +
+                'excluded from the hit-rate** — they are NOT content failures. Errored ' +
+                `counts — ${errBits.join('; ')}. Hit-rate is computed over completed tasks only.`,
+            '',
+        );
+    }
+    lines.push(
+        '_Host model + inference config (temp / top-p / max-tokens) are recorded in ' +
+            'Methodology and must be cited with any quoted number._',
+        '',
+        '### Table 1 — Package value (without → with)',
+        '',
+        '| Metric | without | with | delta |',
+        '|---|---|---|---|',
+        `| Success / hit-rate | ${fmt_pct(_num(wo['completion_rate']))} | ${fmt_pct(_num(wi['completion_rate']))} | ${_delta_pct(_num(wi['completion_rate']), _num(wo['completion_rate']))} |`,
+        `| Mean wall-time | ${fmt_num(_num(wo['mean_wall_time']))}s | ${fmt_num(_num(wi['mean_wall_time']))}s | ${fmt_num(_orZero(wi['mean_wall_time']) - _orZero(wo['mean_wall_time']))}s |`,
+        `| Ask-vs-act ratio | ${fmt_num(_num(wo['ask_vs_act_ratio']), 3)} | ${fmt_num(_num(wi['ask_vs_act_ratio']), 3)} | ${_delta_num(_num(wi['ask_vs_act_ratio']), _num(wo['ask_vs_act_ratio']))} |`,
+        `| Total tokens | ${fmt_int(_num(wo['total_tokens']))} | ${fmt_int(_num(wi['total_tokens']))} | ${fmt_int(_orZero(wi['total_tokens']) - _orZero(wo['total_tokens']))} |`,
+        '',
+        '### Table 2 — RDP reasoning lift (with → with-rdp)',
+        '',
+        '| Metric | with | with-rdp | delta |',
+        '|---|---|---|---|',
+        `| Success / hit-rate | ${fmt_pct(_num(wi['completion_rate']))} | ${fmt_pct(_num(rd['completion_rate']))} | ${_delta_pct(_num(rd['completion_rate']), _num(wi['completion_rate']))} |`,
+        `| Mean wall-time | ${fmt_num(_num(wi['mean_wall_time']))}s | ${fmt_num(_num(rd['mean_wall_time']))}s | ${fmt_num(_orZero(rd['mean_wall_time']) - _orZero(wi['mean_wall_time']))}s |`,
+        `| Ask-vs-act ratio | ${fmt_num(_num(wi['ask_vs_act_ratio']), 3)} | ${fmt_num(_num(rd['ask_vs_act_ratio']), 3)} | ${_delta_num(_num(rd['ask_vs_act_ratio']), _num(wi['ask_vs_act_ratio']))} |`,
+        `| Total tokens | ${fmt_int(_num(wi['total_tokens']))} | ${fmt_int(_num(rd['total_tokens']))} | ${fmt_int(_orZero(rd['total_tokens']) - _orZero(wi['total_tokens']))} |`,
+        '',
+    );
     return lines.join('\n');
 }
 
@@ -254,42 +397,104 @@ export function render_track_a(trackA: Obj): string {
     return lines.join('\n');
 }
 
-export function render_track_b(trackB: Obj): string {
+export function render_track_b(trackB: Obj, trackBRdp: Obj = {}): string {
     const lines: string[] = ['## Track B — Task completion', ''];
-    const withData = _getObj(_getObj(trackB, 'with'), 'results');
-    const withoutData = _getObj(_getObj(trackB, 'without'), 'results');
-    const modeRaw = withData['mode'] ?? withoutData['mode'] ?? '—';
-    const mode = _pyStr(modeRaw);
+    const wo = _getObj(_getObj(trackB, 'without'), 'results');
+    const wi = _getObj(_getObj(trackB, 'with'), 'results');
+    const rd = _getObj(trackBRdp, 'results');
+    // mode = wi.get("mode") or wo.get("mode") or rd.get("mode") or "—"
+    const mode = _pyStrOr(wi['mode'], _pyStrOr(wo['mode'], _pyStrOr(rd['mode'], '—')));
     lines.push(`- Mode: \`${mode}\``);
-    if (Object.keys(withData).length === 0 && Object.keys(withoutData).length === 0) {
-        lines.push('');
-        lines.push('_No Track B reports yet. Run `task bench:ab:track-b`._');
-        lines.push('');
+    // if not (wo or wi or rd):
+    if (!(_pyTruthy(wo) || _pyTruthy(wi) || _pyTruthy(rd))) {
+        lines.push('', '_No Track B reports yet. Run `task bench:ab:track-b`._', '');
         return lines.join('\n');
     }
     lines.push(
-        `- with → **${fmt_pct(_num(withData['completion_rate']))}** ` +
-            `(${_getCount(withData, 'passed')}/${_getCount(withData, 'total')})`,
-        `- without → **${fmt_pct(_num(withoutData['completion_rate']))}** ` +
-            `(${_getCount(withoutData, 'passed')}/${_getCount(withoutData, 'total')})`,
+        `- without → **${fmt_pct(_num(wo['completion_rate']))}** (${_getCount(wo, 'passed')}/${_getCount(wo, 'total')})`,
+        `- with → **${fmt_pct(_num(wi['completion_rate']))}** (${_getCount(wi, 'passed')}/${_getCount(wi, 'total')})`,
+        `- with-rdp → **${fmt_pct(_num(rd['completion_rate']))}** (${_getCount(rd, 'passed')}/${_getCount(rd, 'total')})`,
         '',
-        'Per-category:',
+        '### Per 2×2 cell (success-rate per condition; per-cell N in parens)',
         '',
-        '| Category | with | without | delta |',
-        '|---|---|---|---|',
+        '| Cell (duration × cognitive) | N | without | with | with-rdp |',
+        '|---|---|---|---|---|',
     );
-    const withCats = _getObj(withData, 'per_category');
-    const withoutCats = _getObj(withoutData, 'per_category');
-    const cats = [...new Set([...Object.keys(withCats), ...Object.keys(withoutCats)])].sort(
+    const woC = _getObj(wo, 'per_cell');
+    const wiC = _getObj(wi, 'per_cell');
+    const rdC = _getObj(rd, 'per_cell');
+    // cells = sorted(set(wo_c) | set(wi_c) | set(rd_c)) or [<defaults>]
+    let cells = [...new Set([...Object.keys(woC), ...Object.keys(wiC), ...Object.keys(rdC)])].sort(
         (a, b) => (a < b ? -1 : a > b ? 1 : 0),
     );
+    if (cells.length === 0) {
+        cells = [
+            'short/reasoning-heavy',
+            'short/mechanical',
+            'long/reasoning-heavy',
+            'long/mechanical',
+        ];
+    }
+    for (const cell of cells) {
+        // n = (wi_c.get(cell) or wo_c.get(cell) or rd_c.get(cell) or {}).get("total", 0)
+        const cellObj = _firstTruthyObj(wiC[cell], woC[cell], rdC[cell]);
+        const n = _getCount(cellObj, 'total');
+        lines.push(
+            `| ${cell} | ${n} | ${fmt_pct(_num(_getObj(woC, cell)['completion_rate']))} ` +
+                `| ${fmt_pct(_num(_getObj(wiC, cell)['completion_rate']))} ` +
+                `| ${fmt_pct(_num(_getObj(rdC, cell)['completion_rate']))} |`,
+        );
+    }
+    lines.push(
+        '',
+        '### Per 2×2 cell — mean tokens per condition',
+        '',
+        '| Cell (duration × cognitive) | without | with | with-rdp |',
+        '|---|---|---|---|',
+    );
+    for (const cell of cells) {
+        lines.push(
+            `| ${cell} | ${fmt_int(_num(_getObj(woC, cell)['mean_tokens']))} ` +
+                `| ${fmt_int(_num(_getObj(wiC, cell)['mean_tokens']))} ` +
+                `| ${fmt_int(_num(_getObj(rdC, cell)['mean_tokens']))} |`,
+        );
+    }
+    lines.push(
+        '',
+        '_`short × mechanical` mean-tokens across conditions answers "are short ' +
+            'tasks more expensive?"; `long × reasoning-heavy` answers "do long tasks ' +
+            'get cheaper / better?"._',
+        '',
+        '### Per category',
+        '',
+        '| Category | without | with | with-rdp |',
+        '|---|---|---|---|',
+    );
+    const woCat = _getObj(wo, 'per_category');
+    const wiCat = _getObj(wi, 'per_category');
+    const rdCat = _getObj(rd, 'per_category');
+    const cats = [
+        ...new Set([...Object.keys(woCat), ...Object.keys(wiCat), ...Object.keys(rdCat)]),
+    ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     for (const cat of cats) {
-        const w = _orZero(_getObj(withCats, cat)['completion_rate']);
-        const wo = _orZero(_getObj(withoutCats, cat)['completion_rate']);
-        lines.push(`| ${cat} | ${fmt_pct(w)} | ${fmt_pct(wo)} | ${fmt_pct(w - wo)} |`);
+        lines.push(
+            `| ${cat} | ${fmt_pct(_num(_getObj(woCat, cat)['completion_rate']))} ` +
+                `| ${fmt_pct(_num(_getObj(wiCat, cat)['completion_rate']))} ` +
+                `| ${fmt_pct(_num(_getObj(rdCat, cat)['completion_rate']))} |`,
+        );
     }
     lines.push('');
     return lines.join('\n');
+}
+
+/** Python `(a or b or c or {})` for chained dict fallback → Obj. */
+function _firstTruthyObj(...vals: (Json | undefined)[]): Obj {
+    for (const v of vals) {
+        if (_pyTruthy(v)) {
+            return _obj(v);
+        }
+    }
+    return {};
 }
 
 export function render_methodology(trackA: Obj, trackB: Obj): string {
@@ -391,11 +596,13 @@ export function render(quiet = false): number {
     const [bWith, bWithout] = latest_pair('ab-trackb');
     const trackA: Obj = { with: safe_load(aWith), without: safe_load(aWithout) };
     const trackB: Obj = { with: safe_load(bWith), without: safe_load(bWithout) };
+    const trackBRdp = latest_trackb_with_rdp();
     const haveData = Boolean(
         Object.keys(_obj(trackA['with'])).length ||
             Object.keys(_obj(trackA['without'])).length ||
             Object.keys(_obj(trackB['with'])).length ||
-            Object.keys(_obj(trackB['without'])).length,
+            Object.keys(_obj(trackB['without'])).length ||
+            Object.keys(trackBRdp).length,
     );
     if (!haveData) {
         fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
@@ -413,9 +620,9 @@ export function render(quiet = false): number {
         '> Generated by `scripts/render_benchmark_md.py`. Source of truth: ' +
             '`internal/bench/reports/ab/`. Re-render anytime with `task bench:ab:diff`.',
         '',
-        render_headline(trackA, trackB),
+        render_headline(trackA, trackB, trackBRdp),
         render_track_a(trackA),
-        render_track_b(trackB),
+        render_track_b(trackB, trackBRdp),
         render_methodology(trackA, trackB),
         render_history(),
     ];
