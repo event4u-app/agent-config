@@ -53,7 +53,7 @@ and cites the script, Taskfile target, and test file that prove
 the pipeline.
 
 ```
-.agent-src.uncondensed/   ──Pipeline A──▶  dist/agent-src/
+src/                      ──Pipeline A──▶  dist/agent-src/
                                               │
                                               ├──Pipeline B──▶  .augment/
                                               │
@@ -82,7 +82,7 @@ For every tool the package supports, **filesystem** is the canonical channel tha
 Cross-references inside `dist/agent-src/rules/*.md` are written
 **relative to `dist/agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
 `../docs/guidelines/agent-infra/foo.md`). Source files under
-`.agent-src.uncondensed/rules/` use **logical names** without a
+`src/rules/` use **logical names** without a
 directory prefix (e.g. `contexts/execution/foo.md`); the
 condense-time path rewriter in `scripts/condense.py` translates
 them to the relative form when writing into `dist/agent-src/`. Hardcoding
@@ -223,7 +223,7 @@ Planned scope: `php` / `node` handlers, tool-registry wiring for
 > `refine → score → plan → implement → test → verify → report` loop,
 > persists state in `.work-state.json`, and routes UI-shaped work
 > through the product UI track. Lives at
-> [`templates/scripts/work_engine/`](../.agent-src.uncondensed/templates/scripts/work_engine/);
+> [`templates/scripts/work_engine/`](../src/agent-src/templates/scripts/work_engine/);
 > shipped to consumer projects via `scripts/install.py`.
 
 > **Status: beta.** The contract (directive sets, halt budgets,
@@ -277,7 +277,7 @@ The Runtime Dispatcher and Tool Adapters activate only under the
 cost profile. The default `minimal` profile ships rules, skills, and
 commands and nothing else. All settings and their profile defaults
 are documented in
-[`.agent-src.uncondensed/templates/agent-settings.md`](../.agent-src.uncondensed/templates/agent-settings.md).
+[`src/agent-src/templates/agent-settings.md`](../src/agent-src/templates/agent-settings.md).
 
 ---
 
@@ -326,7 +326,7 @@ file. The first 4000 characters are the budget; keep
 high-priority rules (Scope Control, Known False Positives) up top.
 
 Installed (copy-if-missing) by `scripts/install.sh` from
-`.agent-src.uncondensed/templates/`. Consumers can edit it freely;
+`src/agent-src/templates/`. Consumers can edit it freely;
 the installer never overwrites.
 
 The mechanical floor is `scripts/check_condensed_paths.py`, wired into

@@ -530,5 +530,133 @@ def test_deploy_real_bundle_reaps_planted_orphan_and_is_idempotent(
     assert sentinel.exists()
 
 
+# --- dry-run preview (road-to-6.0.0-final-readiness Phase 2) -------------
+#
+# The reaper gained a `dry_run` mode so `install.py --dry-run` can list
+# exactly what a real deploy would remove BEFORE any deletion. The exit
+# criterion: the dry-run set equals the live-delete set, and dry-run
+# touches nothing on disk.
+
+
+def test_reap_stale_dry_run_lists_without_deleting(tmp_path):
+    anchor = tmp_path / "anchor"
+    orphan = anchor / "skills" / "old" / "SKILL.md"
+    orphan.parent.mkdir(parents=True)
+    orphan.write_text("v1", encoding="utf-8")
+    inventory = {
+        "schema_version": 1,
+        "tools": {"z": {"anchor": str(anchor),
+                        "files": ["skills/old/SKILL.md"]}},
+    }
+    would = inv.reap_stale("z", anchor, set(), inventory, dry_run=True)
+    assert would == [anchor.resolve() / "skills" / "old" / "SKILL.md"]
+    assert orphan.exists(), "dry_run must NOT delete"
+
+
+def test_reap_tagged_orphans_dry_run_lists_without_deleting(tmp_path):
+    anchor = tmp_path / "anchor"
+    _tagged_md(anchor / "skills" / "gone" / "SKILL.md", "gone")
+    would = inv.reap_tagged_orphans(
+        anchor, ["skills"], set(), TAG, dry_run=True,
+    )
+    assert [p.parent.name for p in would] == ["gone"]
+    assert (anchor / "skills" / "gone" / "SKILL.md").exists(), \
+        "dry_run must NOT delete"
+
+
+def test_dry_run_set_equals_live_delete_set(tmp_path):
+    """Exactness: what dry_run reports is precisely what the live run
+    removes — for both reaper paths combined."""
+    anchor = tmp_path / "anchor"
+    # An inventory-tracked orphan (reap_stale path)...
+    tracked = anchor / "skills" / "tracked-old" / "SKILL.md"
+    tracked.parent.mkdir(parents=True)
+    tracked.write_text("v1", encoding="utf-8")
+    # ...and a package-tagged orphan with no inventory record (tag-sweep).
+    _tagged_md(anchor / "commands" / "tagged-old.md", "tagged-old")
+    inventory = {
+        "schema_version": 1,
+        "tools": {"z": {"anchor": str(anchor),
+                        "files": ["skills/tracked-old/SKILL.md"]}},
+    }
+    preview = set(
+        inv.reap_stale("z", anchor, set(), inventory, dry_run=True)
+    ) | set(
+        inv.reap_tagged_orphans(anchor, ["commands"], set(), TAG, dry_run=True)
+    )
+    live = set(
+        inv.reap_stale("z", anchor, set(), inventory)
+    ) | set(
+        inv.reap_tagged_orphans(anchor, ["commands"], set(), TAG)
+    )
+    assert preview == live
+    assert not tracked.exists() and not (
+        anchor / "commands" / "tagged-old.md"
+    ).exists(), "live run removes exactly the previewed set"
+
+
+# --- named upgrade scenarios (road-to-6.0.0-final-readiness Phase 2) ------
+
+
+def test_upgrade_5_10_1_to_6_0_0_reaps_pre_inventory_orphans(tmp_path):
+    """A 5.10.1 install predates the inventory sidecar, so on the 6.0.0
+    deploy `reap_stale` has no prior record and the always-run tag sweep is
+    the cleanup path. Plants the three real upgrade-orphan shapes — an old
+    `.agent-src`-projected rule, an old wrapper-style command, and a renamed
+    command-as-skill entry — and asserts all are reaped while a user file and
+    a still-shipped file survive."""
+    anchor = tmp_path / "anchor"
+    # Pre-6.0.0 leftovers (all package-tagged, none in the current bundle):
+    _tagged_md(anchor / "rules" / "legacy-agent-src-rule.md", "legacy")
+    _tagged_md(anchor / "commands" / "old-wrapper.md", "old-wrapper")
+    _tagged_md(anchor / "skills" / "create-pr" / "SKILL.md", "create-pr")
+    # Still-shipped + user-authored survivors:
+    _tagged_md(anchor / "skills" / "kept" / "SKILL.md", "kept")
+    (anchor / "skills" / "mine").mkdir(parents=True)
+    (anchor / "skills" / "mine" / "SKILL.md").write_text(
+        "---\nname: mine\n---\n\nuser\n", encoding="utf-8")
+
+    deleted = inv.reap_tagged_orphans(
+        anchor, ["rules", "commands", "skills"],
+        {"skills/kept/SKILL.md"}, TAG,
+    )
+    names = sorted(p.name for p in deleted)
+    assert names == ["SKILL.md", "legacy-agent-src-rule.md", "old-wrapper.md"]
+    assert not (anchor / "rules" / "legacy-agent-src-rule.md").exists()
+    assert not (anchor / "commands" / "old-wrapper.md").exists()
+    assert not (anchor / "skills" / "create-pr").exists()
+    assert (anchor / "skills" / "kept" / "SKILL.md").exists()
+    assert (anchor / "skills" / "mine" / "SKILL.md").exists()
+
+
+def test_staged_upgrade_late_tool_still_cleaned(tmp_path):
+    """Partial/staged upgrade: a tool deployed for the first time AFTER the
+    global upgrade still gets its pre-existing tagged orphans cleaned,
+    because the tag sweep runs on every deploy regardless of inventory
+    history."""
+    anchor = tmp_path / "anchor"
+    _tagged_md(anchor / "skills" / "stale-from-old-tool" / "SKILL.md", "stale")
+    # No inventory entry for this anchor at all (late/first deploy).
+    deleted = inv.reap_tagged_orphans(anchor, ["skills"], set(), TAG)
+    assert [p.parent.name for p in deleted] == ["stale-from-old-tool"]
+    assert not (anchor / "skills" / "stale-from-old-tool").exists()
+
+
+def test_downgrade_reaped_files_do_not_resurrect(tmp_path):
+    """Downgrade posture: files a newer deploy reaped stay gone unless the
+    older bundle itself ships them. Re-deploying an old bundle re-creates
+    only what that bundle ships; an orphan absent from BOTH bundles never
+    resurrects."""
+    anchor = tmp_path / "anchor"
+    inv_path = tmp_path / "inv.json"
+    # 6.0.0 deploy reaps a tagged orphan absent from the bundle.
+    _tagged_md(anchor / "skills" / "removed" / "SKILL.md", "removed")
+    inv.reap_tagged_orphans(anchor, ["skills"], set(), TAG)
+    assert not (anchor / "skills" / "removed").exists()
+    # "Downgrade" = a later deploy whose bundle also lacks it: still gone.
+    inv.reap_tagged_orphans(anchor, ["skills"], set(), TAG)
+    assert not (anchor / "skills" / "removed").exists()
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))

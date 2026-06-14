@@ -66,7 +66,7 @@ is platform operation, not a user-work flow.)
 </p>
 
 <p align="center">
-  <sub>Distribution: <code>npm install @event4u/agent-config</code> · npm-primary per <a href="docs/decisions/ADR-033-distribution-identity-npm-primary.md">ADR-033</a>. Major bumps follow <a href="CONTRIBUTING.md#versioning-policy">semver</a>; each ships a <a href="CHANGELOG.md#breaking--v400-unified-setup-road-to-unified-setup"><code>### Breaking</code></a> entry — all majors indexed in <a href="BREAKING_CHANGES.md">BREAKING_CHANGES.md</a>.</sub>
+  <sub>Distribution: <code>npm install @event4u/agent-config</code>. Major bumps follow <a href="CONTRIBUTING.md#versioning-policy">semver</a>; each ships a <a href="CHANGELOG.md#breaking--v400-unified-setup-road-to-unified-setup"><code>### Breaking</code></a> entry — all majors indexed in <a href="BREAKING_CHANGES.md">BREAKING_CHANGES.md</a>.</sub>
 </p>
 
 ---

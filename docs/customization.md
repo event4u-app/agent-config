@@ -242,7 +242,7 @@ to `false` in `.agent-settings.yml` to silence post-task analysis without
 changing the profile.
 
 The authoritative matrix of all matrix-controlled settings lives in
-[`.agent-src.uncondensed/templates/agent-settings.md`](../.agent-src.uncondensed/templates/agent-settings.md).
+[`src/agent-src/templates/agent-settings.md`](../src/agent-src/templates/agent-settings.md).
 
 ### Chat-history defaults per profile
 
@@ -280,7 +280,7 @@ output. Iron-Law gates (`commit-policy`, `scope-control` git-ops,
 | `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. |
 
 The cross-rule index for these defaults lives in
-[`.agent-src.uncondensed/contexts/contracts/frugality-charter.md`](../.agent-src.uncondensed/contexts/contracts/frugality-charter.md).
+[`src/agent-src/contexts/contracts/frugality-charter.md`](../src/agent-src/contexts/contracts/frugality-charter.md).
 Writer skills (`skill-writing`, `rule-writing`, `command-writing`,
 `guideline-writing`, `roadmap-writing`, `persona-writing`,
 `agent-docs-writing`, `context-authoring`, `conventional-commits-writing`,
@@ -410,7 +410,7 @@ tarball and is the source of truth consumed by:
 > When you read "the Laravel pack", picture a filter over the shared
 > artefact tree — not a separate npm package. The day ADR-011's
 > extraction trigger flips, the same scan output drives the split;
-> until then, every artefact lives under `.agent-src.uncondensed/`.
+> until then, every artefact lives under `src/`.
 
 Alongside the JSON manifest, the scanner writes
 `dist/discovery/discovery-manifest.json.sha256` — a sidecar hash that

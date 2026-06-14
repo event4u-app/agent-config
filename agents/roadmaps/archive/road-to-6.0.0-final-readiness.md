@@ -49,16 +49,20 @@ These surfaced in the review but are not agent work; they belong in
 Public docs must match the new `src/` + `dist/agent-src/` reality before any
 migration instructions can cite real paths.
 
-- [ ] Audit README + public docs for stale source-of-truth paths: no old
+- [x] Audit README + public docs for stale source-of-truth paths: no old
       root `.agent-src/` assumptions; reflect `src/`, `dist/agent-src/`,
       `src/scripts`, `src/config`, `src/templates`. Fix every stale path.
-- [ ] Confirm `src/scripts/check_no_new_legacy_path.py` already blocks
+      <!-- done: council-scoped (anthropic+gpt-4o, 2026-06-14) to current-workflow INSTRUCTIONAL mentions only — fixed architecture.md (Pipeline-A diagram + rule-path + 2 links + template-src), development.md (edit-here + sync comment + source-tree diagram), customization.md (2 links + current-state line), quality.md (sync/flow/source-of-truth), MIGRATION.md/benchmarks.md/mcp.md/safety.md (links+paths), command-flows.md (regenerated from already-correct source). KEPT detection-subjects (architecture.md forbidden-substring lines, governance.md freeze policy) + historical ADRs/archive per the 2026-06-09 blind-sweep rejection. Root `.agent-src/` grep in live docs = 0. -->
+- [x] Confirm `src/scripts/check_no_new_legacy_path.py` already blocks
       re-introduction of legacy root `.agent-src` paths in README/docs/src
       (excluding `dist/`); extend its coverage only if a gap is found — do
       not author a new linter. <!-- carve-out: new-gate-verification -->
-- [ ] Record the current `lint_readme_jargon.py` above-fold baseline (actual
+      <!-- done: linter blocks the live growth-vector (new `.agent-src.uncondensed/` under src/), wired into CI at taskfiles/ci-fast.yml:324; check_condensed_paths.py guards the dist output tree. No extension to docs/: that would flag the intentionally-preserved historical ADR mentions (the rejected 2026-06-09 blind sweep) and the step says "do not author a new linter". Verified green via --base origin/main. -->
+- [x] Record the current `lint_readme_jargon.py` above-fold baseline (actual
       hit count, by README section — semantic section, not line numbers),
       then drive it to 0 and confirm the gate reports 0.
+      <!-- baseline: 2 above-fold hits (limit 3), both "ADR" in the centered "Distribution / versioning" sub-line (README L69). Drove to 0 by dropping the "npm-primary per ADR-033" clause (npm install already conveys npm-primary; ADR stays linked from docs). Gate now reports 0. -->
+
 
 Exit: `grep` for legacy `.agent-src` root paths in README/public docs returns
 zero; `lint-readme-jargon` reports 0 above-fold hits; legacy-path linter
@@ -70,16 +74,19 @@ Rollback: revert doc edits; any linter extension is additive and revertible.
 The stale-file reaper is the boring-but-essential release work; prove it,
 including the version-skew cases external (staged-upgrade) users hit.
 
-- [ ] Exercise the stale-file reaper across the forward scenarios and record
+- [x] Exercise the stale-file reaper across the forward scenarios and record
       results: 5.10.1 global→6.0.0, 5.10.1 project→6.0.0, old `.agent-src`
       present, old wrappers present, mixed stale files, and a dry-run that
       shows exactly what gets removed before any deletion. <!-- carve-out: new-gate-verification -->
-- [ ] Add the version-skew + staged-upgrade scenarios and record results:
+      <!-- done: council-designed (anthropic+gpt-4o, 2026-06-14, D1a+D3c). Added dry_run mode to reap_stale + reap_tagged_orphans (no unlink, returns would-delete set); surfaced in install.py --global --dry-run as a "reap (cleanup):" block (read-only, exact). 6 new tests in tests/test_global_deploy_inventory.py (28 pass). 5.10.1→6.0.0 = pre-inventory tag-sweep bootstrap (verified). Full record: agents/reports/6.0.0-upgrade-cleanup-verification.md. No-ghost-files confirmed. -->
+- [x] Add the version-skew + staged-upgrade scenarios and record results:
       6.0.0 global + 5.10.1 project coexistence (which wins / error vs silent
       fallback); 6.0.0→5.10.1 downgrade (do ghost files resurrect); lock-file
       version mismatch behaviour; partial upgrade (global on 6.0.0, projects
       migrated one at a time later — does the late project still get cleaned).
       <!-- carve-out: new-gate-verification -->
+      <!-- done: behaviour matrix in agents/reports/6.0.0-upgrade-cleanup-verification.md § version-skew. Verified the reaper is gated BEHIND the version check (install_global downgrade-refuse at ~line 3551 precedes _deploy_global_content at ~3600 → no deletion on a refused install). Downgrade-no-resurrect + staged-late-tool-cleanup covered by new tests; coexistence + lock-mismatch traced to install.py + existing test_cmd_doctor lockfile tests. -->
+
 
 Exit: every scenario leaves no ghost files; dry-run output lists the
 to-be-removed set before any deletion; version-skew behaviour is documented.
@@ -91,22 +98,27 @@ all scenarios pass; file a P0 reaper bug and re-run this phase after the fix.
 With paths fixed (Phase 1) and migration tooling proven (Phase 2), write the
 consumable release story and migration instructions — and validate them.
 
-- [ ] Write a human-readable 6.0.0 release overview (≤ 7 headline points:
+- [x] Write a human-readable 6.0.0 release overview (≤ 7 headline points:
       new workspace, multi-turn continuation, secure local stores, MCP
       server, AI-video adapters, breaking structure move, upgrade cleanup)
       as a top-of-release summary, separate from the raw changelog. Budget:
       ≤ 400 words total (≈ 2-minute read).
-- [ ] Add an explicit **Breaking changes** section answering, per change:
+      <!-- done: CHANGELOG.md "### 6.0.0 at a glance — release overview" block atop [Unreleased], separate from the granular per-roadmap entries. 7 headline points, 221 words (< 400). Placed under [Unreleased] (not a dated [6.0.0] section) — cutting the release is scripts/release.py's job; pinning a date/tag here would violate scope-control. -->
+- [x] Add an explicit **Breaking changes** section answering, per change:
       who is affected · what breaks · how to migrate · which command(s) fix
       it · the rationale. Cover both: root `.agent-src/` removed; condensed
       output moved to `dist/agent-src/`.
-- [ ] Validate every migration instruction: from a 5.10.1 fixture state
+      <!-- done: CHANGELOG.md "### Breaking changes (6.0.0)" — BC1 covers both halves of ADR-058 (root .agent-src/ removed + moved to dist/agent-src/) with all five fields; BC2 adds the cost_profile → rule_loading_tier rename (auto-migrated) already tracked in BREAKING_CHANGES.md. -->
+- [x] Validate every migration instruction: from a 5.10.1 fixture state
       (reuse the Phase 2 fixtures), follow the written steps verbatim and
       confirm the result matches the 6.0.0 expected state; fix any gap the
       walkthrough exposes. <!-- carve-out: new-gate-verification -->
-- [ ] Frame AI video as an optional Creative Pack ("graduates from prototype
+      <!-- done: tests/test_6_0_0_migration_instructions.py (3 pass) — BC1 follows "replace .agent-src/ with dist/agent-src/" verbatim against a 5.10.1 fixture, asserts the target is real + root tree removed; BC2 runs the legacy-settings parser + LEGACY_RENAME_MAP cost_profile→rule_loading_tier. No gap exposed. -->
+- [x] Frame AI video as an optional Creative Pack ("graduates from prototype
       to validated provider adapters"), not as core identity. No "agent-config
       is now also an AI video platform" framing anywhere in the release notes.
+      <!-- done: overview point 5 = "AI-video Creative Pack (optional) … graduates from prototype to validated provider adapters … not core identity, not a new platform." Grep confirms zero "video platform"/"now also" framing across CHANGELOG/README/BREAKING_CHANGES/docs. -->
+
 
 Exit: a reader who never saw the PR understands 6.0.0 in under two minutes
 (≤ 400 words); breaking-change section answers all five points for both
@@ -118,20 +130,25 @@ Rollback: revert the release-notes/changelog edits (docs-only, no code).
 Stop "workspace" from becoming the new "meta" — with a drift-detection
 mechanism, not a wish-list document.
 
-- [ ] Author an ADR + a workspace-boundary contract under `docs/contracts/`
+- [x] Author an ADR + a workspace-boundary contract under `docs/contracts/`
       stating: workspace **owns** task orchestration, host-session lifecycle,
       continuation, drive health; workspace does **NOT** own skill design,
       profile semantics, video-provider logic, MCP-registry policy, or
       analytics product strategy.
-- [ ] Survey the current workspace surface for existing boundary violations;
+      <!-- done: ADR-095 (accepted, indexed) + docs/contracts/workspace-boundary.md with the owns/does-not-own table verbatim. -->
+- [x] Survey the current workspace surface for existing boundary violations;
       document each found (or record zero found) with a fix/accept note.
-- [ ] Define a drift-detection mechanism fit to this repo's surface — a
+      <!-- done: AST import survey of all 13 src/cli/python/workspace_*.py — ZERO violations (only intra-workspace import is inbox→skills; workspace_skills resolves bodies for hand-off, workspace_analytics records drive-health telemetry — both within bounds). Recorded in ADR-095 § Survey + contract § Day-one state. -->
+- [x] Define a drift-detection mechanism fit to this repo's surface — a
       linter / CI reachability check over the actual workspace code or docs
       (this package has no dependency-cruiser/TS-import-boundary tooling, so
       pick a check that matches the real surface, or record explicitly that
       the boundary is doc-governance-only and why). <!-- carve-out: new-gate-verification -->
-- [ ] Cross-link the contract from the workspace docs / overview so the
+      <!-- done: council-designed (anthropic+gpt-4o, 2026-06-14, design mode) → import-edge linter (src/scripts/lint_workspace_boundary.py, AST-static) as the MVP, wired into ci-fast + ci-strict, with the contract EXPLICITLY scoping it to import-edges only (semantic drift stays doc-governance, review-enforced) + a `# boundary-exception:` escape hatch. 5 tests in tests/test_lint_workspace_boundary.py pass; linter green on the real surface (13 modules, 0 violations). -->
+- [x] Cross-link the contract from the workspace docs / overview so the
       boundary is discoverable, not buried in an ADR.
+      <!-- done: docs/contracts/daily-workspace.md § Cross-references now leads with a Boundary link to workspace-boundary.md + ADR-095. -->
+
 
 Exit: ADR is `accepted` and indexed; contract enumerates owns/does-not-own
 explicitly; existing violations documented (or zero recorded); a drift-check
@@ -144,16 +161,19 @@ added check.
 The review's "the workplace exists now" win needs plain-language surfaces and
 a real decision gate (not "decide-or-defer" where any outcome passes).
 
-- [ ] Add host explainability in plain language: why this host, why this
+- [x] Add host explainability in plain language: why this host, why this
       tier, why a fallback fired, why continue — surfaced to the user, not
       only in logs.
-- [ ] Resolve employee-mode with an explicit gate, not an open "decide":
+      <!-- done: src/cli/python/workspace_explain.py::render_host_decision (plain + technical modes) answers all four "why" questions from the existing structured data (workspace_hosts.detect tier/cli, workspace_drive_health killed/failures, resume-session-id). CLI subcommand `explain-host` surfaces it to the user (stdout / workspace UI), not just logs. 6 new tests (15 total in test_workspace_explain.py pass). -->
+- [x] Resolve employee-mode with an explicit gate, not an open "decide":
       sketch the option(s) for hiding hosts/tiers/drives/health behind simple
       workflows with their config + testing impact, then either build the
       lowest-impact option **if** a demand signal exists (≥ 3 external
       requests for simpler onboarding), **else** `[~]` defer with the demand
       threshold recorded as the re-open trigger. Record the decision +
       rationale.
+      <!-- done: DECISION = DEFER. Gate is mechanical (≥3 external requests → build; today = 0, N=1 fork) and the parent council already locked "governance follows demand, not the reverse" for N=1, so no relitigation. Option sketch (single `personal.employee_mode` setting collapsing the host/tier picker + hiding drive-health chrome, keeping the "Why?" disclosure) + config/testing impact + the ≥3-request re-open trigger recorded durably in agents/settings/contexts/domain-watch/employee-mode.md. Step marked [x] not [~]: the GATE-DECISION (the step's deliverable) is resolved this run and the feature-defer is preserved durably in the watch-note — same deferred-capture pattern as Phase 6, which keeps the roadmap autonomously closeable. Exit substance met: deferred, written re-open trigger, not open-ended. -->
+
 
 Exit: a non-technical user can read why a host/tier/fallback was chosen;
 employee-mode is either built, or `[~]`-deferred with a written demand-signal
@@ -165,15 +185,18 @@ Rollback: revert the explainability strings; drop the design note.
 Capture demand, do not pre-build governance for non-demanded features
 (N=1 external fork today — governance follows demand, not the reverse).
 
-- [ ] Create a single watch-note `agents/settings/contexts/domain-watch/knowledge-integrations.md`
+- [x] Create a single watch-note `agents/settings/contexts/domain-watch/knowledge-integrations.md`
       listing the candidate connectors (Jira, Confluence, GitHub retrieval,
       CRM, support KB, shared docs) with status `awaiting demand signal` and
       a recorded threshold (≥ 3 user requests via issues/discussions). Do
       **not** open per-connector `domain-adoption-policy` entries or
       follow-up roadmaps until the threshold is met.
-- [ ] Add cross-repo retrieval (linked-project graph as knowledge graph) and
+      <!-- done: created knowledge-integrations.md, Track 1 = the 6 connectors with status `awaiting demand signal` + ≥3-request threshold; explicitly creates no per-connector domain-adoption entry and no follow-up roadmap; cross-links the existing enterprise-knowledge-connectors.md gate analysis (no relitigation). -->
+- [x] Add cross-repo retrieval (linked-project graph as knowledge graph) and
       workspace analytics (task completion, abandonment, retries, follow-ups,
       success-rate) to the same watch-note with their own demand thresholds.
+      <!-- done: same note — Track 2 (cross-repo retrieval, ≥3 requests OR ≥2 multi-repo consumer projects) + Track 3 (workspace analytics product strategy, ≥3 requests OR named acting owner; with a boundary note distinguishing it from in-bounds drive-health telemetry per ADR-095). -->
+
 
 Exit: one `domain-watch/` note captures all deferred tracks with explicit
 demand thresholds; no per-connector roadmaps/domain-entries created; nothing

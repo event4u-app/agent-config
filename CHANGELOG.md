@@ -16,6 +16,71 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### 6.0.0 at a glance — release overview
+
+> A reader who never saw the PRs should understand 6.0.0 in under two
+> minutes. Seven headlines here; migration steps in **Breaking changes**
+> below; granular per-roadmap detail in the entries further down.
+
+6.0.0 is the release that turns agent-config into a **workplace**, not just a
+rule pack:
+
+1. **Workspace.** A task-orchestration layer owns the host-session lifecycle,
+   continuation, and drive health — the engine behind `/work` and
+   `/implement-ticket`.
+2. **Multi-turn continuation.** A long task survives across turns: the
+   workspace resumes where it left off instead of restarting cold.
+3. **Secure local stores.** Session state and sensitive local data live in an
+   encrypted-at-rest store under `~/.event4u/agent-config/`, not loose files.
+4. **MCP server.** agent-config exposes its skills and commands over MCP, so
+   MCP-aware hosts can reach them directly.
+5. **AI-video Creative Pack (optional).** The AI-video surface graduates from
+   prototype to validated provider adapters, shipped as an **opt-in Creative
+   Pack** — not core identity, not a new platform.
+6. **Breaking — condensed output relocated.** The repo-root `.agent-src/` tree
+   is removed; condensed output now lives at `dist/agent-src/` ([ADR-058]).
+7. **Upgrade cleanup.** Upgrading reaps stale deployed files (renamed/removed
+   skills and commands) so old installs don't rot; `agent-config --dry-run`
+   previews exactly what gets removed before any deletion.
+
+Pack-scoped projection (opt-in) and the TypeScript CLI + local-server
+foundation also land — both non-breaking by default.
+
+### Breaking changes (6.0.0)
+
+**1. Condensed output moved: root `.agent-src/` → `dist/agent-src/`** ([ADR-058])
+
+- **Who is affected:** consumers whose scripts or tool configs hard-code
+  `.agent-src/…` paths (plugin-marketplace clones, custom symlinks, CI globs).
+  Default installs are **not** affected — regenerated projections pick up the
+  new location automatically.
+- **What breaks:** the repo-root `.agent-src/` tree is removed, so any
+  hard-coded `.agent-src/<x>` path no longer resolves.
+- **How to migrate:** replace `.agent-src/` with `dist/agent-src/` in any
+  path you hard-code.
+- **Which command:** `agent-config install` (consumers) — or `task sync` +
+  `task generate-tools` (this repo) — regenerates projections at the new
+  location; the upgrade reaper removes the stale root tree. No manual path
+  edits beyond your own hard-codes.
+- **Rationale:** the root tree conflated source and build output; moving
+  condensed output under `dist/` makes "generated, do not edit" unambiguous
+  and keeps the repo root clean.
+
+**2. Settings key renamed: `cost_profile` → `rule_loading_tier`**
+
+- **Who is affected:** anyone with a hand-edited `cost_profile` in
+  `.agent-settings.yml`.
+- **What breaks:** nothing immediately — `cost_profile` is read as a fallback
+  during the grace period. The colliding memory-cadence meaning moved to its
+  own `memory.cadence` key (`auto`/`always`/`never`).
+- **How to migrate:** automatic.
+- **Which command:** `agent-config install` / `setup` migrates existing
+  settings on the next run. No manual action required.
+- **Rationale:** one key carried two unrelated meanings (rule-loading footprint
+  vs. memory-line cadence); splitting them removes the collision.
+
+[ADR-058]: docs/decisions/ADR-058-condensed-output-relocation-to-dist.md
+
 ### Feedback wanted — multi-agent MCP config (demand probe, `ADR-086`)
 
 We are deciding whether to build a cross-agent MCP discovery / install helper.
