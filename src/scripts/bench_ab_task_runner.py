@@ -38,6 +38,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -60,6 +61,46 @@ REPORTS_DIR = REPO_ROOT / "internal" / "bench" / "reports" / "ab"
 
 # How far we descend into a clone when snapshotting. The fixture is shallow.
 SNAPSHOT_MAX_DEPTH = 6
+
+# --- Activation (proven mechanism) ---
+# agent-config is a GLOBAL Claude Code plugin (enabledPlugins in ~/.claude
+# settings), so plain `claude --print` already runs WITH the package. The clean
+# control is `--setting-sources project,local`, which excludes the user settings
+# where `enabledPlugins` lives → plugin OFF, but auth survives. Measured proof:
+# plain --print = ~35.5k input tokens; --setting-sources project,local = ~11.9k
+# → the ~24k delta IS the package's always-on footprint. So:
+#   without  = `--setting-sources project,local`  (plugin OFF, base model)
+#   with     = plain `--print`                     (the real installed plugin = package)
+#   with-rdp = plain `--print` + RDP rules injected (RDP not yet in the release plugin)
+# (`--bare` is NOT used — it disables auth too.)
+RDP_EXTRA_FILES = (
+    REPO_ROOT / "src" / "rules" / "notes-first-reasoning.md",
+    REPO_ROOT / "src" / "agent-src" / "contexts" / "execution" / "rdp-gate.md",
+)
+
+
+def _concat_rules(paths) -> str:
+    parts: list[str] = []
+    for p in paths:
+        try:
+            parts.append(p.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+    return "\n\n---\n\n".join(parts)
+
+
+def system_prompt_for(variant: str) -> str | None:
+    """Extra rules injected on top of the plugin. Only `with-rdp` injects (the RDP
+    artifacts aren't in the released plugin yet); `with` uses the real plugin,
+    `without` runs plugin-off."""
+    if variant == "with-rdp":
+        return _concat_rules([p for p in RDP_EXTRA_FILES if p.exists()])
+    return None
+
+
+def setting_sources_for(variant: str) -> str | None:
+    """`without` excludes user settings to drop the global plugin (auth survives)."""
+    return "project,local" if variant == "without" else None
 
 
 def utc_stamp() -> str:
@@ -106,7 +147,7 @@ def reset_clone(variant: str) -> Path:
         raise RuntimeError("cannot load bench_ab_clone helper")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.clone(variant, refresh=True)  # type: ignore[attr-defined]
+    return module.clone(variant, refresh=True, quiet=True)  # type: ignore[attr-defined]
 
 
 def claude_executable() -> str | None:
@@ -114,13 +155,28 @@ def claude_executable() -> str | None:
     override = os.environ.get("CLAUDE_CLI")
     if override:
         return override
-    if shutil.which("claude") is not None:
-        return "claude"
-    return None
+    # Resolve to an absolute path so the subprocess (run with cwd=clone_root)
+    # cannot miss it on a PATH/cwd quirk — the failure that showed up as a
+    # spurious "claude CLI not found" on a later arm of the first full run.
+    return shutil.which("claude")
 
 
-def run_live(task: dict, clone_root: Path, *, timeout_s: int) -> dict:
-    """Invoke claude in print/one-shot mode against the task prompt."""
+def run_live(
+    task: dict,
+    clone_root: Path,
+    *,
+    timeout_s: int,
+    sysprompt_file: "Path | None" = None,
+    setting_sources: "str | None" = None,
+    max_budget: "float | None" = None,
+    model: "str | None" = None,
+) -> dict:
+    """Invoke claude in print/one-shot mode against the task prompt.
+
+    `setting_sources` (e.g. "project,local") drops the global plugin for the
+    `without` arm while keeping auth. `sysprompt_file` injects extra rules
+    (the `with-rdp` arm). `with` passes neither → the real installed plugin.
+    """
     binary = claude_executable()
     if binary is None:
         return {
@@ -129,9 +185,33 @@ def run_live(task: dict, clone_root: Path, *, timeout_s: int) -> dict:
             "transcript": "",
             "exit_code": None,
             "wall_time_seconds": 0.0,
+            "tokens": 0,
+            "tokens_breakdown": {},
+            "errored": True,
         }
     prompt = task.get("prompt", "")
-    cmd = [binary, "--print", "--", prompt]
+    # --output-format json yields a `usage` block for token counts. The global
+    # plugin is dropped per-arm via --setting-sources (NOT --bare, which kills auth).
+    # bypassPermissions on EVERY arm: the clone is a throwaway fixture, and this
+    # equalizes file-edit capability across arms (else `without`, which excludes
+    # user settings, would lack edit perms and fail tasks for the wrong reason).
+    cmd = [binary, "--print", "--output-format", "json", "--permission-mode", "bypassPermissions"]
+    if model:
+        # Pin ONE model across every arm. The session default here is Opus-4.8-1M,
+        # whose ~$1.78 first-turn cache-creation trips any sane budget cap instantly
+        # and makes a full corpus run blow the account quota. Holding the model
+        # constant is also a validity requirement: the bench measures the package
+        # LIFT on a fixed host, not model-vs-model.
+        cmd += ["--model", model]
+    if max_budget:
+        # Caps per-task API spend so one runaway agentic loop can't exhaust the
+        # account quota (the failure mode that starved later arms on the first run).
+        cmd += ["--max-budget-usd", str(max_budget)]
+    if setting_sources:
+        cmd += ["--setting-sources", setting_sources]
+    if sysprompt_file is not None:
+        cmd += ["--append-system-prompt-file", str(sysprompt_file)]
+    cmd += ["--", prompt]
     started = time.monotonic()
     try:
         proc = subprocess.run(
@@ -149,14 +229,76 @@ def run_live(task: dict, clone_root: Path, *, timeout_s: int) -> dict:
             "transcript": (exc.stdout or "") + "\n[TIMEOUT]",
             "exit_code": -1,
             "wall_time_seconds": round(time.monotonic() - started, 3),
+            "tokens": 0,
+            "tokens_breakdown": {},
+            "errored": True,
         }
     duration = time.monotonic() - started
+    # Parse the JSON envelope: `result` is the model text; `usage` holds tokens.
+    transcript = proc.stdout
+    tokens = 0
+    is_error = False
+    err_reason = "ok"
+    breakdown = {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+    }
+    try:
+        obj = json.loads(proc.stdout)
+        is_error = bool(obj.get("is_error"))
+        transcript = obj.get("result") or obj.get("text") or proc.stdout
+        usage = obj.get("usage") or {}
+        breakdown = {
+            k: int(usage.get(k, 0) or 0)
+            for k in (
+                "input_tokens",
+                "output_tokens",
+                "cache_read_input_tokens",
+                "cache_creation_input_tokens",
+            )
+        }
+        tokens = sum(breakdown.values())
+        # The top-level `usage` block is zeroed on a budget-capped / errored run
+        # (and unreliable even on some completions). `modelUsage` carries the
+        # authoritative per-model counts — sum it as the fallback so token deltas
+        # survive even when a task hits its cap mid-flight.
+        if tokens == 0:
+            mu = obj.get("modelUsage") or {}
+            agg = {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "cache_creation_input_tokens": 0,
+            }
+            for stats in mu.values():
+                agg["input_tokens"] += int(stats.get("inputTokens", 0) or 0)
+                agg["output_tokens"] += int(stats.get("outputTokens", 0) or 0)
+                agg["cache_read_input_tokens"] += int(
+                    stats.get("cacheReadInputTokens", 0) or 0
+                )
+                agg["cache_creation_input_tokens"] += int(
+                    stats.get("cacheCreationInputTokens", 0) or 0
+                )
+            mu_total = sum(agg.values())
+            if mu_total > 0:
+                breakdown = agg
+                tokens = mu_total
+        # Surface WHY a task errored (budget cap vs. other) without leaking $.
+        if is_error:
+            err_reason = obj.get("subtype") or "error"
+    except (json.JSONDecodeError, AttributeError, ValueError):
+        transcript = proc.stdout
     return {
         "mode": "live",
-        "reason": "ok",
-        "transcript": proc.stdout + "\n" + proc.stderr,
+        "reason": err_reason if is_error else ("ok" if proc.returncode == 0 else f"exit {proc.returncode}"),
+        "transcript": str(transcript) + "\n" + proc.stderr,
         "exit_code": proc.returncode,
         "wall_time_seconds": round(duration, 3),
+        "tokens": tokens,
+        "tokens_breakdown": breakdown,
+        "errored": is_error or proc.returncode != 0,
     }
 
 
@@ -198,22 +340,184 @@ def count_ask_events(transcript: str) -> dict[str, int]:
     return {"asked": asked, "acted_with_commit": acted, "ratio": ratio}
 
 
+PROGRESS_PATH = REPORTS_DIR / ".progress.json"
+
+
+def _write_progress(state: dict) -> None:
+    """Mirror live state to .progress.json for `task bench:ab:watch` (best-effort)."""
+    try:
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        PROGRESS_PATH.write_text(json.dumps(state, indent=2) + "\n")
+    except OSError:
+        pass
+
+
+class Progress:
+    """Live per-task progress. stdlib-only, TTY-aware, log-safe.
+
+    style: auto (bar if stderr is a TTY, else one plain line per task) | bar |
+    plain | none. Mirrors state to .progress.json regardless of style.
+    """
+
+    BAR_WIDTH = 24
+
+    def __init__(self, total: int, *, mode: str, style: str = "auto", stream=sys.stderr) -> None:
+        self.total = max(total, 1)
+        self.mode = mode
+        self.stream = stream
+        self.done = 0
+        self.started = time.monotonic()
+        if style in ("bar", "plain", "none"):
+            self.kind = style
+        else:  # auto
+            self.kind = "bar" if getattr(stream, "isatty", lambda: False)() else "plain"
+        self._cur = ""
+        self._task_started = 0.0
+        self._hb_stop: "threading.Event | None" = None
+        self._hb_thread: "threading.Thread | None" = None
+
+    def _elapsed(self, since: float) -> str:
+        s = int(time.monotonic() - since)
+        return f"{s // 60}m{s % 60:02d}s" if s >= 60 else f"{s}s"
+
+    def _bar(self) -> str:
+        filled = int(self.BAR_WIDTH * self.done / self.total)
+        return "█" * filled + "░" * (self.BAR_WIDTH - filled)
+
+    def _render_bar(self, suffix: str = "") -> None:
+        line = f"\r[{self._bar()}] {self.done}/{self.total} · {self._cur} · {self._elapsed(self.started)}{suffix}"
+        self.stream.write(line.ljust(90)[:160])
+        self.stream.flush()
+
+    def _start_heartbeat(self) -> None:
+        if self.kind != "bar" or self.mode != "live":
+            return
+        self._hb_stop = threading.Event()
+
+        def _tick() -> None:
+            assert self._hb_stop is not None
+            while not self._hb_stop.wait(1.0):
+                self._render_bar(suffix=f" · {self._elapsed(self._task_started)}…")
+
+        self._hb_thread = threading.Thread(target=_tick, daemon=True)
+        self._hb_thread.start()
+
+    def _stop_heartbeat(self) -> None:
+        if self._hb_stop is not None:
+            self._hb_stop.set()
+        if self._hb_thread is not None:
+            self._hb_thread.join(timeout=2.0)
+        self._hb_stop = self._hb_thread = None
+
+    def start_task(self, variant: str, idx: int, count: int, task_id: str) -> None:
+        self._cur = f"{variant} {idx}/{count} · {task_id}"
+        self._task_started = time.monotonic()
+        _write_progress({
+            "mode": self.mode, "variant": variant, "task_idx": idx, "task_count": count,
+            "total_done": self.done, "total": self.total, "current_id": task_id,
+            "started_at": utc_stamp(), "last_result": None,
+        })
+        if self.kind == "none":
+            return
+        if self.kind == "bar":
+            self._render_bar(suffix=" · running…" if self.mode == "live" else "")
+            self._start_heartbeat()
+        elif self.mode == "live":  # plain: a start marker so a long task isn't mistaken for a hang
+            self.stream.write(f"[{self.done + 1}/{self.total}] ▶ {self._cur}\n")
+            self.stream.flush()
+
+    def end_task(self, *, passed: bool, wall: float, variant: str, task_id: str) -> None:
+        self._stop_heartbeat()
+        self.done += 1
+        mark = "✓" if passed else "✗"
+        _write_progress({
+            "mode": self.mode, "variant": variant, "total_done": self.done,
+            "total": self.total, "current_id": task_id, "updated_at": utc_stamp(),
+            "last_result": "pass" if passed else "fail",
+        })
+        if self.kind == "none":
+            return
+        if self.kind == "bar":
+            self._render_bar(suffix=f" · {mark}")
+        else:
+            self.stream.write(f"[{self.done}/{self.total}] {mark} {variant} · {task_id} · {wall:.1f}s\n")
+            self.stream.flush()
+
+    def variant_done(self, line: str) -> None:
+        """Print a per-variant summary line without corrupting an active bar."""
+        if self.kind == "bar":
+            self.stream.write("\n")
+        self.stream.write(line if line.endswith("\n") else line + "\n")
+        self.stream.flush()
+
+    def finish(self) -> None:
+        if self.kind == "bar":
+            self.stream.write("\n")
+        if self.kind != "none":
+            self.stream.write(
+                f"bench progress: {self.done}/{self.total} tasks · total {self._elapsed(self.started)}\n"
+            )
+            self.stream.flush()
+
+
 def per_category_aggregate(per_task: list[dict]) -> dict[str, dict]:
     by_cat: dict[str, list[dict]] = {}
     for entry in per_task:
         by_cat.setdefault(entry.get("category", "unknown"), []).append(entry)
     out: dict[str, dict] = {}
     for cat, entries in by_cat.items():
-        passed = sum(1 for e in entries if e.get("score", {}).get("passed"))
+        done = [e for e in entries if not e.get("errored")]
+        passed = sum(1 for e in done if e.get("score", {}).get("passed"))
         total = len(entries)
+        completed = len(done)
         out[cat] = {
             "passed": passed,
             "total": total,
-            "completion_rate": round(passed / total, 4) if total else 0,
+            "completed": completed,
+            "errored": total - completed,
+            "completion_rate": round(passed / completed, 4) if completed else 0,
             "mean_wall_time": round(
-                sum(e.get("wall_time_seconds", 0) for e in entries) / total, 3
+                sum(e.get("wall_time_seconds", 0) for e in done) / completed, 3
             )
-            if total
+            if completed
+            else 0,
+            "mean_tokens": round(sum(e.get("tokens", 0) for e in done) / completed)
+            if completed
+            else 0,
+        }
+    return out
+
+
+def per_cell_aggregate(per_task: list[dict]) -> dict[str, dict]:
+    """Aggregate by the 2×2 (duration × cognitive) cell — the value-benchmark axis.
+
+    Compared across conditions this answers "are short tasks more expensive?"
+    (cell `short/mechanical`) and "do long tasks get cheaper / better?"
+    (cell `long/reasoning-heavy`). Cell key is `"<duration>/<cognitive>"`.
+    """
+    by_cell: dict[str, list[dict]] = {}
+    for entry in per_task:
+        cell = f"{entry.get('duration', 'untagged')}/{entry.get('cognitive', 'untagged')}"
+        by_cell.setdefault(cell, []).append(entry)
+    out: dict[str, dict] = {}
+    for cell, entries in by_cell.items():
+        done = [e for e in entries if not e.get("errored")]
+        passed = sum(1 for e in done if e.get("score", {}).get("passed"))
+        total = len(entries)
+        completed = len(done)
+        out[cell] = {
+            "passed": passed,
+            "total": total,
+            "completed": completed,
+            "errored": total - completed,
+            "completion_rate": round(passed / completed, 4) if completed else 0,
+            "mean_wall_time": round(
+                sum(e.get("wall_time_seconds", 0) for e in done) / completed, 3
+            )
+            if completed
+            else 0,
+            "mean_tokens": round(sum(e.get("tokens", 0) for e in done) / completed)
+            if completed
             else 0,
         }
     return out
@@ -233,22 +537,35 @@ def write_report(
         target_shape_hash=bench_ab_cache.target_shape_hash(),
     )
     total = len(per_task)
-    passed = sum(1 for e in per_task if e.get("score", {}).get("passed"))
+    done = [e for e in per_task if not e.get("errored")]
+    completed = len(done)
+    errored = total - completed
+    passed = sum(1 for e in done if e.get("score", {}).get("passed"))
     results = {
         "mode": mode,
-        "completion_rate": round(passed / total, 4) if total else 0,
+        # Hit-rate is over COMPLETED tasks only — errored (rate-limit / budget /
+        # timeout / CLI-fail) tasks are excluded so a transient quota trip does
+        # not read as a content failure of the package.
+        "completion_rate": round(passed / completed, 4) if completed else 0,
         "passed": passed,
+        "completed": completed,
+        "errored": errored,
         "total": total,
         "per_category": per_category_aggregate(per_task),
+        "per_cell": per_cell_aggregate(per_task),
         "mean_wall_time": round(
-            sum(e.get("wall_time_seconds", 0) for e in per_task) / total, 3
+            sum(e.get("wall_time_seconds", 0) for e in done) / completed, 3
         )
-        if total
+        if completed
+        else 0,
+        "total_tokens": sum(e.get("tokens", 0) for e in done),
+        "mean_tokens": round(sum(e.get("tokens", 0) for e in done) / completed)
+        if completed
         else 0,
         "ask_vs_act_ratio": round(
-            sum(e.get("ask_events", {}).get("ratio", 0) for e in per_task) / total, 3
+            sum(e.get("ask_events", {}).get("ratio", 0) for e in done) / completed, 3
         )
-        if total
+        if completed
         else 0,
         "per_task": per_task,
     }
@@ -269,7 +586,7 @@ def write_report(
         f"# Track B · {variant} · {mode}\n\n"
         f"- Stamp: `{stamp}`\n"
         f"- Completion rate: **{results['completion_rate'] * 100:.1f}%**"
-        f" ({passed}/{total})\n"
+        f" ({passed}/{completed} completed; {errored} errored of {total})\n"
         f"- Mean wall-time: {results['mean_wall_time']}s\n"
         f"- Ask vs. act ratio: {results['ask_vs_act_ratio']}\n"
         f"\n## Per-category\n\n"
@@ -283,14 +600,43 @@ def write_report(
     return path
 
 
-def run_variant(variant: str, tasks: list[dict], *, mode: str, timeout_s: int) -> dict:
+def run_variant(
+    variant: str,
+    tasks: list[dict],
+    *,
+    mode: str,
+    timeout_s: int,
+    max_budget: "float | None" = None,
+    model: "str | None" = None,
+    progress: "Progress | None" = None,
+) -> dict:
     started = time.monotonic()
+    # Build the injected rule corpus once per variant (live only).
+    sp_file: "Path | None" = None
+    if mode == "live":
+        sp_text = system_prompt_for(variant)
+        if sp_text:
+            REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+            sp_file = REPORTS_DIR / f".sysprompt-{variant}.txt"
+            sp_file.write_text(sp_text, encoding="utf-8")
     per_task: list[dict] = []
-    for task in tasks:
-        clone_root = reset_clone(variant)
+    for i, task in enumerate(tasks):
+        if progress is not None:
+            progress.start_task(variant, i + 1, len(tasks), str(task.get("id")))
+        # Fixture-only working dir, identical for every arm — the package is NOT
+        # in the clone files; activation is the injected system prompt (sp_file).
+        clone_root = reset_clone("without")
         pre = snapshot_clone(clone_root)
         if mode == "live":
-            run_result = run_live(task, clone_root, timeout_s=timeout_s)
+            run_result = run_live(
+                task,
+                clone_root,
+                timeout_s=timeout_s,
+                sysprompt_file=sp_file,
+                setting_sources=setting_sources_for(variant),
+                max_budget=max_budget,
+                model=model,
+            )
         else:
             run_result = run_dry(task, clone_root, variant)
         post = snapshot_clone(clone_root)
@@ -305,21 +651,42 @@ def run_variant(variant: str, tasks: list[dict], *, mode: str, timeout_s: int) -
             {
                 "id": task.get("id"),
                 "category": task.get("category"),
+                "duration": task.get("duration"),
+                "cognitive": task.get("cognitive"),
                 "score": score,
+                # `errored` = the run did not complete on merit (rate-limit,
+                # budget-cap, timeout, CLI failure). Distinct from a content
+                # fail (`score.passed == False`). Errored tasks are excluded
+                # from the hit-rate so a transient quota trip can't masquerade
+                # as the package "not working".
+                "errored": bool(run_result.get("errored", False)),
                 "wall_time_seconds": run_result.get("wall_time_seconds", 0.0),
+                "tokens": run_result.get("tokens", 0),
+                "tokens_breakdown": run_result.get("tokens_breakdown", {}),
                 "exit_code": run_result.get("exit_code"),
                 "mode": run_result.get("mode", mode),
                 "reason": run_result.get("reason", ""),
                 "ask_events": count_ask_events(run_result.get("transcript", "")),
             }
         )
+        if progress is not None:
+            progress.end_task(
+                passed=bool(score.get("passed")),
+                wall=float(run_result.get("wall_time_seconds", 0.0) or 0.0),
+                variant=variant,
+                task_id=str(task.get("id")),
+            )
     duration = time.monotonic() - started
     path = write_report(variant, mode=mode, per_task=per_task, duration=duration)
-    sys.stdout.write(
+    summary = (
         f"bench_ab_task_runner: {variant} ({mode}) → "
         f"{sum(1 for e in per_task if e['score']['passed'])}/{len(per_task)} "
-        f"passed — {path.relative_to(REPO_ROOT)}\n"
+        f"passed — {path.relative_to(REPO_ROOT)}"
     )
+    if progress is not None:
+        progress.variant_done(summary)
+    else:
+        sys.stdout.write(summary + "\n")
     return {"path": path, "per_task": per_task, "duration": duration}
 
 
@@ -327,9 +694,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Track B tasks per variant.")
     parser.add_argument(
         "--variant",
-        choices=("with", "without", "both"),
+        choices=("with", "without", "with-rdp", "both", "all"),
         default="both",
-        help="Which variant to run (default: both).",
+        help="with | without | with-rdp | both (=with+without, back-compat "
+        "default) | all (=the 3-condition value-benchmark set).",
     )
     parser.add_argument(
         "--mode",
@@ -346,6 +714,48 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=120,
         help="Live mode: per-task timeout in seconds (default 120).",
     )
+    parser.add_argument(
+        "--progress",
+        choices=("auto", "bar", "plain", "none"),
+        default="auto",
+        help="Live display: auto (TTY→bar, else plain line-per-task) | bar | plain | none.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Run only the first N tasks per variant (0 = all). For cheap smoke tests.",
+    )
+    parser.add_argument(
+        "--tasks",
+        default="",
+        help=(
+            "Comma-separated task IDs to run (e.g. trackb-bugfix-01,trackb-refactor-01). "
+            "Overrides --limit. Use to span the 2×2 cells in a bounded run instead of "
+            "taking the first-N in file order."
+        ),
+    )
+    parser.add_argument(
+        "--model",
+        default="claude-sonnet-4-6",
+        help=(
+            "Pin ONE model across all arms (live mode). Default claude-sonnet-4-6 — "
+            "capable enough to complete the coding tasks, ~2.3x cheaper per turn than "
+            "the Opus-4.8-1M session default whose cache-creation blows the quota. "
+            "Empty string = inherit the session default (expensive)."
+        ),
+    )
+    parser.add_argument(
+        "--budget",
+        type=float,
+        default=2.0,
+        help=(
+            "Live mode: per-task API spend cap in USD (passed to "
+            "`claude --max-budget-usd`). Stops a runaway agentic loop from "
+            "exhausting the account quota and starving later arms. 0 = uncapped. "
+            "Default 2.0."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -359,9 +769,38 @@ def main(argv: list[str] | None = None) -> int:
     if not tasks:
         sys.stderr.write("bench_ab_task_runner: corpus has no tasks\n")
         return 1
-    variants = ("with", "without") if args.variant == "both" else (args.variant,)
+    if args.tasks.strip():
+        wanted = [s.strip() for s in args.tasks.split(",") if s.strip()]
+        by_id = {t.get("id"): t for t in tasks}
+        missing = [w for w in wanted if w not in by_id]
+        if missing:
+            sys.stderr.write(
+                f"bench_ab_task_runner: unknown task id(s): {', '.join(missing)}\n"
+            )
+            return 1
+        tasks = [by_id[w] for w in wanted]
+    elif args.limit and args.limit > 0:
+        tasks = tasks[: args.limit]
+    if args.variant == "both":
+        variants = ("with", "without")
+    elif args.variant == "all":
+        variants = ("with", "without", "with-rdp")
+    else:
+        variants = (args.variant,)
+    max_budget = args.budget if args.budget and args.budget > 0 else None
+    model = args.model or None
+    progress = Progress(len(variants) * len(tasks), mode=args.mode, style=args.progress)
     for variant in variants:
-        run_variant(variant, tasks, mode=args.mode, timeout_s=args.timeout)
+        run_variant(
+            variant,
+            tasks,
+            mode=args.mode,
+            timeout_s=args.timeout,
+            max_budget=max_budget,
+            model=model,
+            progress=progress,
+        )
+    progress.finish()
     return 0
 
 

@@ -1,0 +1,34 @@
+{
+  "suite": "reasoning-discipline-protocol",
+  "description": "RDP-level trigger fixtures. Schema is compatible with the per-skill evals/triggers.json convention ({q, trigger, note}) plus two additive fields: `discipline` (which RDP component should/shouldn't engage) and `host` (the host's agent-self-assessed reasoning strength: `standard` or `strong` — table-free, per ADR-035; NOT the skill's `model_tier`). `trigger:true` = the discipline SHOULD engage; `false` = it should stay gated off (no gap, strong-reasoning host, or trivial task). Per-skill triggers.json files are seeded from these rows when each skill lands (Phases 4-6). Live scoring uses src/scripts/skill_trigger_eval.py (model calls, Phase 7); validate_fixtures.py checks shape cost-free now.",
+  "queries": [
+    {"q": "add a feature to the dashboard so users can see their activity", "trigger": true, "discipline": "grounding", "host": "standard", "note": "vague, multi-unknown -> explore env/constraints before designing"},
+    {"q": "wire up the payment webhook end to end for our long-running billing job", "trigger": true, "discipline": "grounding", "host": "standard", "note": "long-horizon + unknown surface -> ground first"},
+    {"q": "rename the variable `usr` to `user` in this function", "trigger": false, "discipline": "grounding", "host": "standard", "note": "trivial, fully specified -> no grounding"},
+
+    {"q": "make the export faster", "trigger": true, "discipline": "intent", "host": "standard", "note": "literal != goal; infer goal, give ONE recommendation (no multi-framing survey)"},
+    {"q": "make the export faster", "trigger": false, "discipline": "intent", "host": "strong", "note": "L13: a strong-reasoning host self-infers intent; the scaffold stays light/off"},
+    {"q": "add a `--json` flag to the export command (output the same fields as the table)", "trigger": false, "discipline": "intent", "host": "standard", "note": "goal already explicit -> no intent scaffold"},
+
+    {"q": "build a multi-tenant reporting pipeline with caching and access control", "trigger": true, "discipline": "complexity_first", "host": "standard", "note": "multi-component, uncertain hardest part -> resolve load-bearing unknown first (RDP derivation, not Fable-documented)"},
+    {"q": "add a unit test for the existing slugify() helper", "trigger": false, "discipline": "complexity_first", "host": "standard", "note": "single linear step -> no risk-first decomposition"},
+
+    {"q": "the auth test passes locally but fails in CI intermittently — figure out why", "trigger": true, "discipline": "notes_first", "host": "standard", "note": "multi-hypothesis debugging -> hypotheses + killed-beliefs in notes, not response"},
+    {"q": "format this JSON file", "trigger": false, "discipline": "notes_first", "host": "standard", "note": "no hypotheses to track"},
+
+    {"q": "write the migration that drops the legacy `accounts` table and backfills from `users`", "trigger": true, "discipline": "verifier", "host": "standard", "note": "L12: stateful + irreversible -> structural gate fires the fresh-context verifier"},
+    {"q": "rewrite this auth middleware to branch on three plan types with different rate limits", "trigger": true, "discipline": "verifier", "host": "standard", "note": "L12: branching logic + >=3 constraints -> verifier gate"},
+    {"q": "summarize this 20k-token meeting transcript", "trigger": false, "discipline": "verifier", "host": "standard", "note": "L12: long but linear aggregation, low drift -> verifier does NOT fire (token count is not the signal)"},
+    {"q": "fix the typo in the README heading", "trigger": false, "discipline": "verifier", "host": "standard", "note": "below token floor + no structural complexity -> no verifier"},
+
+    {"q": "i think the slow query is the N+1 on orders — investigate and fix", "trigger": true, "discipline": "prediction", "host": "standard", "note": "falsifiable claim about a cause -> log prediction + confidence + result + lesson"},
+    {"q": "list the files in the src directory", "trigger": false, "discipline": "prediction", "host": "standard", "note": "no falsifiable claim"},
+
+    {"q": "should we use the Action pattern or a Service class for this workflow?", "trigger": true, "discipline": "decision", "host": "standard", "note": "choice among alternatives with tradeoffs -> decision ledger (escalate to ADR only if cross-task/structural)"},
+    {"q": "use the existing UserRepository to load the user", "trigger": false, "discipline": "decision", "host": "standard", "note": "no alternatives to weigh -> no ledger entry"},
+
+    {"q": "refactor the entire billing module to be cleaner", "trigger": true, "discipline": "orchestrator", "host": "standard", "note": "complex + ambiguous on a standard host -> orchestrator sequences the chain"},
+    {"q": "refactor the entire billing module to be cleaner", "trigger": false, "discipline": "orchestrator", "host": "strong", "note": "L10: a strong-reasoning host self-coordinates -> orchestrator stays light/off (agent self-assessed, no model table)"},
+    {"q": "bump the patch version in package.json", "trigger": false, "discipline": "orchestrator", "host": "standard", "note": "L10: trivial task -> orchestrator off regardless of host"}
+  ]
+}

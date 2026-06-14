@@ -4,14 +4,31 @@
 
 ## Headline
 
-> **Track A confirms surface availability** — a precondition, not an impact metric. For the impact view (cost-ladder + behaviour with vs. without), see [`docs/value.md`](value.md).
+> **Lift of agent-config on the host model — NOT a model-vs-model benchmark.** This measures what the package + the RDP reasoning lift do to a *fixed* host model on a neutral fixture; it is not comparable to public SWE-bench / Fable-5 model scores (different question entirely).
 
-| Metric | with | without | delta |
+> ⚠️ **Low statistical power: corpus N=3 (< 40).** Directional only; per-cell N is shown below. The `long × mechanical` cell is intentionally empty (documented hole, not an error).
+
+> ⚠️ **Some tasks errored (rate-limit / budget-cap / timeout) and are excluded from the hit-rate** — they are NOT content failures. Errored counts — with-rdp: 1/3. Hit-rate is computed over completed tasks only.
+
+_Host model + inference config (temp / top-p / max-tokens) are recorded in Methodology and must be cited with any quoted number._
+
+### Table 1 — Package value (without → with)
+
+| Metric | without | with | delta |
 |---|---|---|---|
-| Track A surface-availability | 100.0% | 0.0% | 100.0% _(structural — files present)_ |
-| Track B completion-rate  | 0.0% | 0.0% | 0.0% |
-| Track B mean wall-time   | 0.00s | 0.00s | 0.00s |
-| Track B ask-vs-act ratio | 0.000 | 0.000 | — |
+| Success / hit-rate | 100.0% | 100.0% | 0.0% |
+| Mean wall-time | 64.75s | 49.54s | -15.20s |
+| Ask-vs-act ratio | 0.000 | 0.000 | +0.000 |
+| Total tokens | 3,378,985 | 1,972,224 | -1,406,761 |
+
+### Table 2 — RDP reasoning lift (with → with-rdp)
+
+| Metric | with | with-rdp | delta |
+|---|---|---|---|
+| Success / hit-rate | 100.0% | 100.0% | 0.0% |
+| Mean wall-time | 49.54s | 68.08s | 18.54s |
+| Ask-vs-act ratio | 0.000 | 0.000 | +0.000 |
+| Total tokens | 1,972,224 | 1,157,033 | -815,191 |
 
 ## Track A — Behavioural eval
 
@@ -35,19 +52,35 @@ Per-target presence (sample):
 
 ## Track B — Task completion
 
-- Mode: `dry-run`
-- with → **0.0%** (0/13)
-- without → **0.0%** (0/13)
+- Mode: `live`
+- without → **100.0%** (3/3)
+- with → **100.0%** (3/3)
+- with-rdp → **100.0%** (2/3)
 
-Per-category:
+### Per 2×2 cell (success-rate per condition; per-cell N in parens)
 
-| Category | with | without | delta |
+| Cell (duration × cognitive) | N | without | with | with-rdp |
+|---|---|---|---|---|
+| long/reasoning-heavy | 1 | 100.0% | 100.0% | 100.0% |
+| short/mechanical | 1 | 100.0% | 100.0% | 100.0% |
+| short/reasoning-heavy | 1 | 100.0% | 100.0% | 0.0% |
+
+### Per 2×2 cell — mean tokens per condition
+
+| Cell (duration × cognitive) | without | with | with-rdp |
 |---|---|---|---|
-| bugfix | 0.0% | 0.0% | 0.0% |
-| feature | 0.0% | 0.0% | 0.0% |
-| refactor | 0.0% | 0.0% | 0.0% |
-| testadd | 0.0% | 0.0% | 0.0% |
-| uiaudit | 0.0% | 0.0% | 0.0% |
+| long/reasoning-heavy | 441,652 | 490,413 | 497,811 |
+| short/mechanical | 868,007 | 659,988 | 659,222 |
+| short/reasoning-heavy | 2,069,326 | 821,823 | 0 |
+
+_`short × mechanical` mean-tokens across conditions answers "are short tasks more expensive?"; `long × reasoning-heavy` answers "do long tasks get cheaper / better?"._
+
+### Per category
+
+| Category | without | with | with-rdp |
+|---|---|---|---|
+| bugfix | 100.0% | 100.0% | 100.0% |
+| refactor | 100.0% | 100.0% | 100.0% |
 
 ## Methodology
 
@@ -62,7 +95,7 @@ Cache key for the latest run:
 - `claude_cli_version`: `2.1.150 (Claude Code)`
 - `target_shape_hash`: `3f2f67cebfbb5fff`
 
-- **Last rendered:** `2026-05-28T13:55:30+00:00`
+- **Last rendered:** `2026-06-14T10:52:09+00:00`
 
 ## History
 
@@ -74,4 +107,8 @@ Last 5 runs (per corpus):
 
 ### `ab-trackb`
 
-- `2026-05-28T13-47-41Z` → 0.0%
+- `2026-06-14T10-38-22Z` → 100.0%
+- `2026-06-14T10-32-09Z` → 100.0%
+- `2026-06-14T10-24-25Z` → 0.0%
+- `2026-06-14T10-02-21Z` → 61.5%
+- `2026-05-28T14-00-34Z` → 84.6%

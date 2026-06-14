@@ -234,3 +234,11 @@ agents/state/
 /agents/evidence/audits/2026-05-16-archive-phantom-scan-v2.json
 /agents/evidence/reports/roadmap-trajectory.json
 /agents/evidence/reports/roadmap-trajectory.md
+
+# bench live-progress runtime file
+internal/bench/reports/ab/.progress.json
+internal/bench/reports/ab/.sysprompt-*.txt
+# bench:ab per-run outputs are scratch artefacts — docs/benchmark.md is the
+# committed visible result (per the line-130 "per-run outputs are not tracked" intent)
+internal/bench/reports/ab/*-ab-trackb-*.json
+internal/bench/reports/ab/*-ab-trackb-*.md

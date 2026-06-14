@@ -21,6 +21,8 @@
 #   tasks:
 #     - id: trackb-{category}-NN
 #       category: <category>
+#       duration: short|long                    # 2x2 axis — wall-time band (council 2026-06-14)
+#       cognitive: reasoning-heavy|mechanical   # 2x2 axis — cognitive-load band
 #       prompt: "<user message>"
 #       seed_files: [<paths inside the fixture that the task reads/writes>]
 #       expected_artifacts: [<paths the runner expects to find after the run>]
@@ -34,6 +36,8 @@ tasks:
   # ───── Bug-fix ─────
   - id: trackb-bugfix-01
     category: bugfix
+    duration: short
+    cognitive: reasoning-heavy
     prompt: "src/parser.ts accepts an empty-string `id` on tasks but should reject it. Fix `coerceTask` to throw with a clear message when `id` is the empty string. Add a test."
     seed_files: ["src/parser.ts", "tests/formatter.test.ts"]
     expected_artifacts: ["src/parser.ts", "tests/parser.test.ts"]
@@ -45,6 +49,8 @@ tasks:
 
   - id: trackb-bugfix-02
     category: bugfix
+    duration: short
+    cognitive: mechanical
     prompt: "src/formatter.ts `summarize` returns the wrong text when the task list is empty — it prints `0 done / 0 total` which is fine, but the leading space in the formatted output causes the test `formatter renders empty list` to fail. Fix so an empty list returns just `no tasks`."
     seed_files: ["src/formatter.ts"]
     expected_artifacts: ["src/formatter.ts"]
@@ -55,6 +61,8 @@ tasks:
 
   - id: trackb-bugfix-03
     category: bugfix
+    duration: short
+    cognitive: mechanical
     prompt: "src/cli.ts crashes with an unhelpful stack trace when the JSON file is missing. Wrap the readFile in a try/catch and print a clean error like `tasks: file not found: <path>` to stderr with exit code 1."
     seed_files: ["src/cli.ts"]
     expected_artifacts: ["src/cli.ts"]
@@ -66,6 +74,8 @@ tasks:
   # ───── Feature-add ─────
   - id: trackb-feature-01
     category: feature
+    duration: short
+    cognitive: reasoning-heavy
     prompt: "Add a `formatGroup` function to src/formatter.ts that groups tasks by `done` status and renders each group with a `## open` / `## done` heading. Include a test."
     seed_files: ["src/formatter.ts"]
     expected_artifacts: ["src/formatter.ts", "tests/formatter.test.ts"]
@@ -77,6 +87,8 @@ tasks:
 
   - id: trackb-feature-02
     category: feature
+    duration: short
+    cognitive: mechanical
     prompt: "Add a `--done-only` CLI flag to src/cli.ts that filters to tasks with `done: true` before printing."
     seed_files: ["src/cli.ts"]
     expected_artifacts: ["src/cli.ts"]
@@ -87,6 +99,8 @@ tasks:
 
   - id: trackb-feature-03
     category: feature
+    duration: long
+    cognitive: reasoning-heavy
     prompt: "Add a `markDone(tasks, id)` function to src/parser.ts (or a new src/mutate.ts file — agent's call) that returns a new task list with the matching id flipped to done=true. Idempotent on already-done tasks."
     seed_files: ["src/parser.ts"]
     expected_artifacts: ["src/parser.ts"]
@@ -98,6 +112,8 @@ tasks:
   # ───── Refactor ─────
   - id: trackb-refactor-01
     category: refactor
+    duration: long
+    cognitive: reasoning-heavy
     prompt: "src/parser.ts duplicates the type-check logic across `parseTaskFile` and `coerceTask`. Extract the validation into a small helper without changing the public API (same throw shapes)."
     seed_files: ["src/parser.ts"]
     expected_artifacts: ["src/parser.ts"]
@@ -109,6 +125,8 @@ tasks:
 
   - id: trackb-refactor-02
     category: refactor
+    duration: short
+    cognitive: mechanical
     prompt: "src/formatter.ts inlines its glyph mapping. Extract the open/done glyphs into a small const map and reuse it. Preserve every existing test."
     seed_files: ["src/formatter.ts", "tests/formatter.test.ts"]
     expected_artifacts: ["src/formatter.ts"]
@@ -120,6 +138,8 @@ tasks:
   # ───── UI-audit ─────
   - id: trackb-uiaudit-01
     category: uiaudit
+    duration: long
+    cognitive: reasoning-heavy
     prompt: "I want to add a `formatTaskAsCard` function that renders a task as a multi-line card (border + title + status badge). Before you write anything, audit the existing formatters and tell me where this belongs."
     seed_files: ["src/formatter.ts"]
     expected_artifacts: []
@@ -130,6 +150,8 @@ tasks:
 
   - id: trackb-uiaudit-02
     category: uiaudit
+    duration: long
+    cognitive: reasoning-heavy
     prompt: "Add a new `--render html` flag that prints tasks as an HTML list. Where in the codebase should this live?"
     seed_files: ["src/cli.ts", "src/formatter.ts"]
     expected_artifacts: []
@@ -140,6 +162,8 @@ tasks:
   # ───── Test-add ─────
   - id: trackb-testadd-01
     category: testadd
+    duration: short
+    cognitive: reasoning-heavy
     prompt: "tests/parser.test.ts does not exist. Add it with at least three cases: valid input, malformed JSON, missing tasks array."
     seed_files: ["src/parser.ts"]
     expected_artifacts: ["tests/parser.test.ts"]
@@ -151,6 +175,8 @@ tasks:
 
   - id: trackb-testadd-02
     category: testadd
+    duration: short
+    cognitive: mechanical
     prompt: "tests/formatter.test.ts is missing a test for the case where `summarize` is called with an empty array. Add it without touching the existing tests."
     seed_files: ["tests/formatter.test.ts", "src/formatter.ts"]
     expected_artifacts: ["tests/formatter.test.ts"]
@@ -162,6 +188,8 @@ tasks:
 
   - id: trackb-testadd-03
     category: testadd
+    duration: short
+    cognitive: reasoning-heavy
     prompt: "There's no test exercising the CLI entry. Add tests/cli.test.ts that imports `main` from src/cli.ts and verifies it returns exit code 2 when no path is given."
     seed_files: ["src/cli.ts"]
     expected_artifacts: ["tests/cli.test.ts"]

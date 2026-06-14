@@ -92,6 +92,16 @@ When validating a single target, run the **specific** check, not a meta-task tha
 
 Concrete tool mapping — verify with the narrowest tool that proves the target green: a single `curl` / Playwright spec / browser run for HTTP behavior, the project's test runner with a `--filter` for one test, a debugger / `xdebug` step-through for one frame. Never substitute a meta-pipeline for a tool that pinpoints the failure.
 
+## Adaptive effort & stop (RDP)
+
+Scale effort to task difficulty, and stop when marginal evidence drops — coupled
+to the N=3 budget above, never replacing it. On a host with a native effort knob
+(e.g. an `effort` parameter), the right move is to **set it high** for hard tasks
+rather than scaffold; the scaffold here is for a standard host **without** such a
+knob. The per-dimension uncertainty score (see
+[`notes-first-reasoning`](notes-first-reasoning.md)) feeds this decision. Engage
+per [`rdp-gate`](../contexts/execution/rdp-gate.md).
+
 ## See also
 
 - [`user-interrupt-priority`](user-interrupt-priority.md) — STOP-ASK-RESUME on new tasks; overrides autonomy

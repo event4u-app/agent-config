@@ -140,6 +140,17 @@ Phase 1 implementation lives in
 adoption roadmap adds a second host adapter; the contract above is
 documented now so the second implementation is not a vacuum design.
 
+## In-task notes → cross-run lessons (RDP)
+
+The Reasoning Discipline Protocol writes an **in-task** session-notes file
+(hypotheses, killed beliefs, predictions, decisions, uncertainty — structure in
+[`notes-first-reasoning`](../../rules/notes-first-reasoning.md)). That file is
+ephemeral working state, not curated memory. This skill is the **promotion path**:
+when an in-task killed-belief, calibrated prediction, or decision *generalises*
+beyond the task, consolidate it here as a durable cross-run lesson (one lesson per
+file, with why it mattered). Apply the same signal-vs-noise discipline — most
+in-task notes stay in-task and are discarded with the task.
+
 ## Related Skills
 
 **WHEN to use this**
