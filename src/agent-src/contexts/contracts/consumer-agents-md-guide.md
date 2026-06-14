@@ -38,10 +38,10 @@ covers). Default: leave AGENTS.md thin and put detail under `agents/`.
 ```markdown
 ## Development Setup
 
-​```bash
+```bash
 {{dev_start_command}}    # make start / docker compose up / npm run dev / php artisan serve
 {{dev_test_command}}     # make test / docker compose exec app bash / npm test / php artisan test
-​```
+```
 
 ### Environment files
 

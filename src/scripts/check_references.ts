@@ -170,6 +170,7 @@ const EXAMPLE_PATH_PATTERNS: RegExp[] = [
     /agents\/proposals\//, // consumer-project self-improvement proposals
     /agents\/drafts\//, // consumer-project artefact drafts
     /agents\/\.event4u-bridge\.yml/, // consumer-project bridge marker (ADR-020)
+    /agents\/\.harvest-local\//, // gitignored harvest-evidence store (source-confidentiality)
     /guidelines\/php-/, // flattened override naming convention
     /rules\/no-commit/, // example rule in commands
     /skills\/[\w-]+\.md/, // short skill refs in examples (not SKILL.md path)

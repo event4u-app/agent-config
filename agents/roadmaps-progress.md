@@ -6,11 +6,19 @@
 
 ## Overall
 
-**34 / 217 steps done · 16%**
+**65 / 215 steps done · 30%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   16%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-security-pillar.md](roadmaps/road-to-security-pillar.md) | 32 | 3 | 7 |
 
 ## Open roadmaps
 
@@ -20,7 +28,7 @@
 | 2 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
 | 3 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-security-pillar.md](roadmaps/road-to-security-pillar.md) | 6 | 42 | 33 | 1 | 3 | 5 | ░░░░░░░░░░ 3% |
+| 5 | [road-to-security-pillar.md](roadmaps/road-to-security-pillar.md) | 6 | 42 | 0 | 32 | 3 | 7 | ██████████ 100% |
 | 6 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 36 | 31 | 0 | 0 | █████░░░░░ 46% |
 
@@ -76,14 +84,14 @@
 
 ### [road-to-security-pillar.md](roadmaps/road-to-security-pillar.md)
 
-**security pillar — supply-chain integrity + injection-aware authoring** — 1 / 34 done (3%)
+**security pillar — supply-chain integrity + injection-aware authoring** — 32 / 32 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Reality check (do NOT rebuild — already shipped) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 1 | Self-audit: supply-chain integrity of our own corpus (v1 primary) | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
-| 2 | Injection-aware authoring rules (the differentiator) | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
-| 3 | Consumer-facing audit + runtime defense | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Self-audit: supply-chain integrity of our own corpus (v1 primary) | ✅ done | 0 | 18 | 0 | 0 | 100% |
+| 2 | Injection-aware authoring rules (the differentiator) | ✅ done | 0 | 7 | 0 | 2 | 100% |
+| 3 | Consumer-facing audit + runtime defense | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 4 | Deferred-with-trigger (out of horizon) | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
 | 5 | Dropped (reject reason; not carried forward) | ⏭️ skipped | 0 | 0 | 0 | 5 | 0% |
 

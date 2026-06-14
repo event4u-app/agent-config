@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 236
+- **artefacts**: 237
 
-## Commands (117)
+## Commands (118)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -108,6 +108,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`roadmap-process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
 - **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
+- **`security-audit-config`** — Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10
 - **`set-cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
 - **`skill`** — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
 - **`skill-preview`** — Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.

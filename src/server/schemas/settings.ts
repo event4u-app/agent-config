@@ -257,6 +257,11 @@ export const settingsSchema = z.object({
                 'When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges.',
             ),
         }),
+        injection_scan: z.object({
+            enabled: z.boolean().default(false).describe(
+                'PostToolUse prompt-injection scanner (road-to-security-pillar.md P3.2). Default off. When on, scans tool output (file reads, web fetches, MCP responses) for injection signatures and WARNS in context (never blocks). Runtime backstop on top of the always-on untrusted-input-defense rule; detection is probabilistic.',
+            ),
+        }).default({}),
     }),
     decision_engine: z.object({
         surface_traces: z.boolean().default(false).describe(
