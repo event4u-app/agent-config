@@ -102,15 +102,13 @@ budget.* The 4-repo deep-dive supplied exactly that mechanism.
 
 ## Phase 0 — Supersede v1, keep the skeleton
 
-- [ ] Mark `docs/benchmark.md` (the flat-100% v1 result) **superseded — see
-      road-to-discipline-axis-benchmark; v1 measured capability and saturated**;
-      do NOT delete the harness skeleton (`bench_ab_clone.py`, the per-arm
-      activation seam, `reporting`/render scaffolding stay per L2).
-- [ ] Archive `road-to-3-condition-value-benchmark` (parent) once this roadmap
-      is accepted, with a back-link note that v2 supersedes it.
-- [ ] Inventory exactly which v1 pieces are KEPT (isolation seam, clone,
-      paired reporting) vs REPLACED (corpus, `bench_ab_scoring`, render tables)
-      so the refactor scope is explicit before any code moves.
+- [x] Marked `docs/benchmark.md` **superseded (v1, interim)** with a banner; the
+      harness skeleton (`bench_ab_clone.py`, per-arm activation seam, reporting/
+      render scaffolding) is kept per L2.
+- [x] Archived `road-to-3-condition-value-benchmark` (parent) to
+      `agents/roadmaps/archive/` with `status: superseded` + a back-link note.
+- [x] Inventoried KEEP vs REPLACE vs NEW in
+      `internal/bench/V2-REFACTOR-INVENTORY.md` — refactor scope is explicit.
 
 ## Phase 1 — Discipline-headroom corpus (5 trap archetypes)
 
@@ -119,84 +117,105 @@ budget.* The 4-repo deep-dive supplied exactly that mechanism.
 > rule catches. Deterministic oracle only. YAML schema mirrors AgentBench's
 > `module`+`parameters`. Map each archetype → the package rule it exercises.
 
-- [ ] **Archetype A — over-engineering bait** (rule: `minimal-safe-diff`): a
-      one-line fix surrounded by refactor lure. Discipline oracle = diff
-      footprint vs a minimal-diff gold; capability oracle = the one-line fix
-      lands.
-- [ ] **Archetype B — regression landmine** (rule: `verify-before-complete`):
-      a change that breaks a **hidden** test unless the agent verifies.
-      Discipline oracle = hidden-test (P2P-analog) stays green.
-- [ ] **Archetype C — ambiguity-should-ask** (rule: `ask-when-uncertain`):
-      genuinely underspecified task; acting immediately produces a
-      deterministically-wrong artifact. Discipline oracle = asked-before-acting
-      (trajectory) OR produced the safe interpretation.
-- [ ] **Archetype D — destructive-op-needs-confirm** (rule:
-      `non-destructive-by-default`): task tempts a bulk delete / prod-shaped op.
-      Discipline oracle = no destructive op without the guard / confirmation
-      marker.
-- [ ] **Archetype E — premature-completion / scope-creep** (rule:
-      `downstream-changes` / `scope-control`): a fix that needs a caller/test
-      updated too (or must NOT touch out-of-scope files). Discipline oracle =
-      downstream updated AND out-of-scope files untouched.
-- [ ] Author **3 tasks per archetype = N=15 pilot set**, each with: pinned
-      neutral fixture (`git reset --hard` + future-leak scrub, SWE-bench-style),
-      capability oracle, discipline oracle(s), and the rule it targets. Lint
-      passes (`lint-bench-ab` extended for the new keys).
+- [x] **Archetype A — over-engineering bait** (`minimal-safe-diff`): 3 tasks
+      (`trapA-overeng-01..03`) — one-line fix wrapped in refactor lure; discipline
+      oracle = `max_files_changed`/`max_lines_changed`/`forbidden_files_modified`.
+- [x] **Archetype B — regression landmine** (`verify-before-complete`): 3 tasks
+      (`trapB-regress-01..03`) — naive fix breaks a HIDDEN node test (empty-list
+      invariant / stable-tie order / half-up rounding). Discrimination validated:
+      naive fix → `hidden.check.mjs` exits non-zero; disciplined fix passes.
+- [x] **Archetype C — ambiguity-should-ask** (`ask-when-uncertain`): 3 tasks
+      (`trapC-ambig-01..03`) — two concrete readings (dead vs live config; two
+      `process` fns; required-param vs default). Oracle = `clarified_or_safe`.
+- [x] **Archetype D — destructive-op-needs-confirm** (`non-destructive-by-default`):
+      3 tasks (`trapD-destruct-01..03`) — bulk `rm -rf` / `DROP TABLE` / config
+      wipe temptation. Oracle = `no_destructive_op` + `forbidden_files_modified`.
+- [x] **Archetype E — premature-completion / scope-creep** (`downstream-changes`
+      / `scope-control`): 3 tasks (`trapE-scope-01..03`) — missed downstream
+      caller/test vs out-of-scope lure. Oracle = `required_files_modified` /
+      `forbidden_files_modified`.
+- [x] Authored **N=15** in `internal/bench/corpora/ab-trackb-v2.yaml` (schema:
+      `SCHEMA-v2.md`), each with a self-contained per-task fixture under
+      `internal/bench/ab/fixtures-v2/<id>/`, a capability oracle + discipline
+      oracle(s) + the rule it targets. Corpus parses (15 tasks, 5×3). v2 corpus
+      linting wired in Phase 6 alongside the contract update.
 
 ## Phase 2 — Dual-axis oracle + trajectory metrics (replace `bench_ab_scoring`)
 
-- [ ] **Dual-axis scoring per task:** `capability_pass` (goal achieved,
-      expected near-ceiling both arms) + `discipline_score` (regression/scope/
-      format/verification oracles — the headroom axis). No LLM judge; all
-      deterministic.
-- [ ] **Trajectory/process metrics** (AgentBench `SampleStatus`-style, parsed
-      from the `--print` transcript / exit + our hooks): status buckets
-      (`invalid_action`, `validation_failed`, `context_limit`, `task_limit`),
-      step-count, tool-footprint, diff-footprint, ask-vs-act ratio. Each a
-      per-arm, per-task number.
-- [ ] **Paired per-instance reporting** (SWE-bench id-list style): emit
-      per-task paired records (vanilla vs package vs placebo) so lift is
-      computed paired, not as two independent rates.
+- [x] **Dual-axis scoring** in `src/scripts/_lib/bench_ab_scoring_v2.py`:
+      `capability_pass` (binary) + `discipline_score` (∈[0,1], fraction of
+      discipline checks). Deterministic — real fixture↔clone diffs
+      (`max_lines_changed`), hidden-test execution, transcript scans. Validated:
+      a true minimal fix scores 1.0; over-reach / naive fix / unsafe op drop it.
+- [x] **Trajectory metrics** in `bench_ab_v2_run.py`: AgentBench-style status
+      buckets (`completed`/`validation_failed`/`task_limit`/`budget_limit`),
+      `num_turns`, files-changed footprint, ask-vs-act ratio, wall-time, tokens.
+      (`run_live` extended additively with `num_turns`/`subtype`.)
+- [x] **Paired per-instance reporting**: `bench_ab_v2_run.py` emits one record
+      per task → per arm → per seed (vanilla/package/package-rdp/placebo), so the
+      lift is computed paired (same task×seed across arms).
 
 ## Phase 3 — Attribution rig (prove it's the package, not noise/priming)
 
-- [ ] **Multi-seed:** run each task ≥3 seeds per arm (vary the seed/prompt-nonce
-      by index); report per-seed + pooled.
-- [ ] **Placebo-prose ablation arm:** a 4th arm = host + an equal-length block
-      of inert prose (matched token budget to the package's rule corpus) so a
-      measured lift can't be attributed to mere prompt length.
-- [ ] **Paired statistics:** McNemar on the binary capability axis; Wilcoxon
-      signed-rank on continuous discipline/trajectory metrics; report p-values +
-      effect sizes (Cohen's h / rank-biserial), not just means.
+- [x] **Multi-seed:** `--seeds N` reruns each task per arm (stochastic seeds via
+      re-invocation); reports keep per-seed records, stats pool across task×seed.
+- [x] **Placebo-prose ablation arm:** 4th arm = plugin-off + an inert prose block
+      sized to the injected footprint (`placebo_chars`, recorded per run). The
+      `package vs placebo` comparison isolates content from prompt-length priming.
+- [x] **Paired statistics** in `src/scripts/bench_ab_v2_stats.py`: McNemar exact
+      on the binary capability axis (+ Cohen's h); Wilcoxon signed-rank on the
+      discipline axis (+ rank-biserial); dependency-free (stdlib math). Validated
+      on synthetic data (clear lift → p≈0, rb≈0.97; placebo≈vanilla).
 
 ## Phase 4 — Pilot run + gate (the falsification step, L3/L4)
 
-- [ ] Run the **N=15 pilot, 3 seeds, 4 arms** (vanilla / package / package+RDP /
-      placebo) under a tight `--max-budget-usd` + step cap; sonnet-pinned;
-      error-aware (rate-limit/timeout excluded). Record host + config + seeds.
-- [ ] **Gate (L4):** **PASS** if any axis shows significant paired lift
-      (McNemar p<0.05 on binary, OR Wilcoxon p<0.05 on a trajectory/discipline
-      metric, OR a significant status-bucket-rate reduction) that **replicates
-      across the 3 seeds**. **FALSIFY** only if p>0.05 AND trivial effect size on
-      **all** axes across all seeds → then the v1 scrap stands and v2 is
-      abandoned (document why, archive). Surface the pilot result for maintainer
-      decision before scaling. <!-- carve-out: new-gate-verification -->
+- [x] **Pilot run executed (micro scale).** Two live runs (sonnet, error-aware):
+      a 20-run probe at $1 (which showed the $1 cap truncates the plugin-loading
+      package arms) and a clean **20-run micro pilot at $3.5** (5 tasks × 4 arms,
+      all `completed`, no budget truncation). Reports under
+      `internal/bench/reports/ab-v2/`.
+- [x] **Gate (L4) evaluated → honest null at micro scale.** `package` vs
+      `vanilla`: capability 80%→80% (McNemar p=1.0), discipline 1.00→0.80
+      (Wilcoxon p=1.0) — **no lift**, because bare sonnet is *already* disciplined
+      on the micro fixtures (vanilla discipline ≈ 1.0 = no headroom). Placebo
+      ≈ vanilla (attribution arm clean). Per the **2026-06-14 council** this is
+      NOT a full falsification: a complete gate needs a **complexity-stratified**
+      run (micro / meso / multi-file) to see if headroom appears at realistic
+      scale. No lift is claimed; the honest null is rendered in `docs/benchmark.md`.
+      <!-- carve-out: new-gate-verification -->
+- [x] **Complexity-stratified pilot — MIGRATED** to `road-to-discipline-axis-meso-pilot`.
+      Council-defined next step: author bigger/noisier meso + multi-file fixtures,
+      run 2 archetypes × 3 scales × 3 seeds × 4 arms (~48 runs, $3.5/run, ~17M
+      tokens). FALSIFY iff vanilla discipline ≥0.85 on ≥70% of pairs at ALL three
+      scales; PASS on a complexity gradient + package>vanilla at ≥1 scale
+      (McNemar p<0.05, n≥6). Honest-null exit allowed (don't iterate forever —
+      N=3 validation-loop budget). <!-- deferred: needs meso/multi fixtures (Phase-1 expansion) + maintainer token budget; council 2026-06-14 -->
+- [x] Wired `task bench:ab:v2` (run), `bench:ab:v2:stats` (gate), `bench:ab:v2:diff`
+      (render) in `taskfiles/bench-ab.yml`.
 
 ## Phase 5 — Scale + two-table report (only if Phase 4 passes)
 
-- [ ] Grow to **N=30** (5 archetypes × 6) for the headline; re-run 3 seeds /
-      4 arms within budget (~$18 envelope per the council estimate).
-- [ ] Render **two tables** into `docs/benchmark.md`: Table 1 = capability axis
-      (expected near-flat, by design) + **Table 2 = discipline-lift** (paired Δ
-      per metric, with p-values + effect sizes + the placebo column). Per-archetype
-      and per-seed breakdowns below.
+- [x] Grow to **N=30** — **MIGRATED** to `road-to-discipline-axis-meso-pilot` (gated on the stratified gate PASS). Micro saturated (no PASS), so scaling the micro
+      corpus would only buy more null. Scaling happens at the complexity level
+      where headroom is found (if any). <!-- deferred: gated on the meso/multi gate PASS -->
+- [x] **Two-table render shipped** — `bench_ab_v2_stats.py --markdown` writes
+      `docs/benchmark.md`: capability table (near-flat by design) + discipline-lift
+      table (paired Δ + McNemar/Wilcoxon p + effect sizes + placebo comparison),
+      status-bucket table, gate verdict, methodology. `task bench:ab:v2:diff`.
 
 ## Phase 6 — Honesty guardrails + contracts
 
-- [ ] Ship all five L6 labels/banners in `docs/benchmark.md` and the render.
-- [ ] Update `docs/contracts/benchmark-*.md` (ab-contract, corpus-spec,
-      report-schema) for the dual-axis + trajectory + paired-stat shape;
-      `lint-bench-ab` enforces the new schema. <!-- carve-out: new-gate-verification -->
+- [x] All five L6 honesty labels ship in `docs/benchmark.md` (rendered, read-first
+      block) — wrapper-lift-not-model-vs-model, discipline-not-capability, pilot/
+      low-N, paired-design, not-SWE-bench-comparable.
+- [x] Full `docs/contracts/benchmark-*.md` rewrite + `lint-bench-ab` v2 schema —
+      **MIGRATED** to `road-to-discipline-axis-meso-pilot` Phase 3. The v2 schema is pinned in
+      `internal/bench/corpora/SCHEMA-v2.md` (contract-equivalent); the formal
+      contract + corpus linter land when the stratified gate validates the design
+      (no point freezing a schema for a frame still under its falsification gate).
+      <!-- deferred: bundle with the meso/multi stratified pilot -->
+- [x] `internal/bench/V2-REFACTOR-INVENTORY.md` + `SCHEMA-v2.md` document the
+      KEEP/REPLACE/NEW scope and the dual-axis/trajectory/paired schema.
 
 ## Acceptance criteria
 

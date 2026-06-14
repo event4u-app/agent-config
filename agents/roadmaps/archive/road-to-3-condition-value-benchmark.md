@@ -1,7 +1,17 @@
 ---
 complexity: structural
-status: ready
+status: superseded
+superseded_by: road-to-discipline-axis-benchmark
 ---
+
+> **SUPERSEDED (2026-06-14) by `road-to-discipline-axis-benchmark`.** This v1
+> frame used a single binary-capability oracle and its live run came back a flat
+> ~100% in every arm (it measured capability, shared by both arms, not the
+> package's discipline). A council scrapped the frame; a follow-up council
+> rebuilt it around a **discipline axis** (process/trajectory scoring with
+> headroom, paired stats, placebo ablation). The harness skeleton this roadmap
+> built (isolation seam, clone, paired reporting, cost-control) is **kept** by
+> v2 — only the corpus + oracle + metrics are replaced. Archived for history.
 
 # Roadmap: 3-condition value benchmark — show the package + RDP lift in numbers
 

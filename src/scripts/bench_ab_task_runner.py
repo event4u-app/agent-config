@@ -239,6 +239,8 @@ def run_live(
     tokens = 0
     is_error = False
     err_reason = "ok"
+    num_turns = 0
+    subtype = ""
     breakdown = {
         "input_tokens": 0,
         "output_tokens": 0,
@@ -285,6 +287,8 @@ def run_live(
             if mu_total > 0:
                 breakdown = agg
                 tokens = mu_total
+        num_turns = int(obj.get("num_turns", 0) or 0)
+        subtype = str(obj.get("subtype") or "")
         # Surface WHY a task errored (budget cap vs. other) without leaking $.
         if is_error:
             err_reason = obj.get("subtype") or "error"
@@ -299,6 +303,8 @@ def run_live(
         "tokens": tokens,
         "tokens_breakdown": breakdown,
         "errored": is_error or proc.returncode != 0,
+        "num_turns": num_turns,
+        "subtype": subtype,
     }
 
 

@@ -35,11 +35,12 @@ TRACK_B_PATH = REPO_ROOT / "internal" / "bench" / "corpora" / "ab-trackb.yaml"
 DOCS_PATH = REPO_ROOT / "docs" / "benchmark.md"
 
 REQUIRED_SECTIONS = (
-    "## Headline",
-    "## Track A",
-    "## Track B",
+    # docs/benchmark.md is the v2 discipline-axis report (rendered by
+    # bench_ab_v2_stats.py --markdown). The v1 Headline/Track-A/Track-B/History
+    # structure was retired with the v1 binary-capability frame.
+    "## Honesty labels",
+    "## Gate verdict",
     "## Methodology",
-    "## History",
 )
 
 TRACK_A_CATEGORIES = {"rule", "skill"}
