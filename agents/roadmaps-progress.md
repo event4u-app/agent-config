@@ -6,7 +6,7 @@
 
 ## Overall
 
-**2 / 139 steps done · 1%**
+**2 / 134 steps done · 1%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
@@ -16,7 +16,7 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-6.0.0-final-readiness.md](roadmaps/road-to-6.0.0-final-readiness.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
 | 3 | [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md) | 7 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,18 +28,16 @@
 
 ## Per-roadmap phase breakdown
 
-### [road-to-6.0.0-final-readiness.md](roadmaps/road-to-6.0.0-final-readiness.md)
+### [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md)
 
-**Road to 6.0.0 final-readiness & product coherence** — 0 / 17 done (0%)
+**Capability discoverability — disposition of "fable-feedback-3"** — 0 / 12 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Structure-truth & jargon audit | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Upgrade-cleanup verification | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Release communication | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Workspace boundary contract [structural] | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Employee-experience legibility | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 6 | Deferred heavyweight tracks | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Unblockers (cheap, do first) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | `capabilities:index` (the spine, highest leverage) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Evidence-gated gap-closers (build only on documented pain) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Rejected / already-shipped register (do NOT build) | ⬜ not started | 4 | 0 | 0 | 5 | 0% |
 
 ### [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md)
 
