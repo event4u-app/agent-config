@@ -142,29 +142,30 @@ budget.* The 4-repo deep-dive supplied exactly that mechanism.
 
 ## Phase 2 — Dual-axis oracle + trajectory metrics (replace `bench_ab_scoring`)
 
-- [ ] **Dual-axis scoring per task:** `capability_pass` (goal achieved,
-      expected near-ceiling both arms) + `discipline_score` (regression/scope/
-      format/verification oracles — the headroom axis). No LLM judge; all
-      deterministic.
-- [ ] **Trajectory/process metrics** (AgentBench `SampleStatus`-style, parsed
-      from the `--print` transcript / exit + our hooks): status buckets
-      (`invalid_action`, `validation_failed`, `context_limit`, `task_limit`),
-      step-count, tool-footprint, diff-footprint, ask-vs-act ratio. Each a
-      per-arm, per-task number.
-- [ ] **Paired per-instance reporting** (SWE-bench id-list style): emit
-      per-task paired records (vanilla vs package vs placebo) so lift is
-      computed paired, not as two independent rates.
+- [x] **Dual-axis scoring** in `src/scripts/_lib/bench_ab_scoring_v2.py`:
+      `capability_pass` (binary) + `discipline_score` (∈[0,1], fraction of
+      discipline checks). Deterministic — real fixture↔clone diffs
+      (`max_lines_changed`), hidden-test execution, transcript scans. Validated:
+      a true minimal fix scores 1.0; over-reach / naive fix / unsafe op drop it.
+- [x] **Trajectory metrics** in `bench_ab_v2_run.py`: AgentBench-style status
+      buckets (`completed`/`validation_failed`/`task_limit`/`budget_limit`),
+      `num_turns`, files-changed footprint, ask-vs-act ratio, wall-time, tokens.
+      (`run_live` extended additively with `num_turns`/`subtype`.)
+- [x] **Paired per-instance reporting**: `bench_ab_v2_run.py` emits one record
+      per task → per arm → per seed (vanilla/package/package-rdp/placebo), so the
+      lift is computed paired (same task×seed across arms).
 
 ## Phase 3 — Attribution rig (prove it's the package, not noise/priming)
 
-- [ ] **Multi-seed:** run each task ≥3 seeds per arm (vary the seed/prompt-nonce
-      by index); report per-seed + pooled.
-- [ ] **Placebo-prose ablation arm:** a 4th arm = host + an equal-length block
-      of inert prose (matched token budget to the package's rule corpus) so a
-      measured lift can't be attributed to mere prompt length.
-- [ ] **Paired statistics:** McNemar on the binary capability axis; Wilcoxon
-      signed-rank on continuous discipline/trajectory metrics; report p-values +
-      effect sizes (Cohen's h / rank-biserial), not just means.
+- [x] **Multi-seed:** `--seeds N` reruns each task per arm (stochastic seeds via
+      re-invocation); reports keep per-seed records, stats pool across task×seed.
+- [x] **Placebo-prose ablation arm:** 4th arm = plugin-off + an inert prose block
+      sized to the injected footprint (`placebo_chars`, recorded per run). The
+      `package vs placebo` comparison isolates content from prompt-length priming.
+- [x] **Paired statistics** in `src/scripts/bench_ab_v2_stats.py`: McNemar exact
+      on the binary capability axis (+ Cohen's h); Wilcoxon signed-rank on the
+      discipline axis (+ rank-biserial); dependency-free (stdlib math). Validated
+      on synthetic data (clear lift → p≈0, rb≈0.97; placebo≈vanilla).
 
 ## Phase 4 — Pilot run + gate (the falsification step, L3/L4)
 

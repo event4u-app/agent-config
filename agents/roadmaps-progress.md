@@ -6,10 +6,10 @@
 
 ## Overall
 
-**11 / 192 steps done · 6%**
+**17 / 192 steps done · 9%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-6.0.0-final-readiness.md](roadmaps/road-to-6.0.0-final-readiness.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-agent-memory-removal.md](roadmaps/road-to-agent-memory-removal.md) | 6 | 25 | 25 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
-| 4 | [road-to-discipline-axis-benchmark.md](roadmaps/road-to-discipline-axis-benchmark.md) | 7 | 21 | 12 | 9 | 0 | 0 | ████░░░░░░ 43% |
+| 4 | [road-to-discipline-axis-benchmark.md](roadmaps/road-to-discipline-axis-benchmark.md) | 7 | 21 | 6 | 15 | 0 | 0 | ███████░░░ 71% |
 | 5 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-memory-pipeline-consolidation.md](roadmaps/road-to-memory-pipeline-consolidation.md) | 8 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -68,14 +68,14 @@
 
 ### [road-to-discipline-axis-benchmark.md](roadmaps/road-to-discipline-axis-benchmark.md)
 
-**discipline-axis benchmark (v2) — measure the lift, not the capability** — 9 / 21 done (43%)
+**discipline-axis benchmark (v2) — measure the lift, not the capability** — 15 / 21 done (71%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Supersede v1, keep the skeleton | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | Discipline-headroom corpus (5 trap archetypes) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Dual-axis oracle + trajectory metrics (replace `bench_ab_scoring`) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Attribution rig (prove it's the package, not noise/priming) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Dual-axis oracle + trajectory metrics (replace `bench_ab_scoring`) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Attribution rig (prove it's the package, not noise/priming) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Pilot run + gate (the falsification step, L3/L4) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 5 | Scale + two-table report (only if Phase 4 passes) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 6 | Honesty guardrails + contracts | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
