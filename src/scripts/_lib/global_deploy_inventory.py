@@ -136,11 +136,18 @@ def reap_stale(
     anchor: Path,
     current_files: set[str],
     inventory: dict,
+    dry_run: bool = False,
 ) -> list[Path]:
     """Delete previously-deployed files that the current deploy dropped.
 
     Returns the absolute paths actually deleted. Mutates nothing in
     ``inventory`` — callers record the new state via :func:`record_deploy`.
+
+    ``dry_run=True`` computes and returns the would-delete set (only paths
+    that currently exist on disk) WITHOUT unlinking anything or pruning
+    empty directories — the preview surface for ``install.py --dry-run``.
+    The selection logic (orphan diff, containment proof, directory guard)
+    is identical to the live path, so the preview is exact.
     """
     entry = inventory.get("tools", {}).get(tool_id)
     if not isinstance(entry, dict):
@@ -169,6 +176,11 @@ def reap_stale(
             continue
         if target.is_dir() and not target.is_symlink():
             continue  # never delete directories
+        if dry_run:
+            # Preview: report only what is actually on disk and would go.
+            if target.exists() or target.is_symlink():
+                deleted.append(target)
+            continue
         try:
             target.unlink()
         except FileNotFoundError:
@@ -196,6 +208,7 @@ def reap_tagged_orphans(
     dest_subs: list[str],
     current_files: set[str],
     package_tag: str,
+    dry_run: bool = False,
 ) -> list[Path]:
     """Marker-based reaping of package-tagged orphans — runs EVERY deploy.
 
@@ -221,6 +234,10 @@ def reap_tagged_orphans(
     current expected file set; then prunes empty directories. Untagged
     files (user-authored skills in shared anchors) are never touched.
     Returns the absolute paths deleted.
+
+    ``dry_run=True`` returns the would-delete set (tagged orphans actually
+    present on disk) WITHOUT unlinking or pruning — the preview surface for
+    ``install.py --dry-run``. Selection logic is identical to the live path.
     """
     anchor_resolved = anchor.expanduser().resolve()
     deleted: list[Path] = []
@@ -251,6 +268,9 @@ def reap_tagged_orphans(
             if not any(
                 line.strip() == needle for line in block.splitlines()
             ):
+                continue
+            if dry_run:
+                deleted.append(md)
                 continue
             try:
                 md.unlink()
