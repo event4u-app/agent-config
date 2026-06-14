@@ -5,7 +5,7 @@
 Cost and usage analytics surfaces for the maintainer workspace.
 
 - **id**: `analytics`
-- **version**: `6.0.0`
+- **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: meta
 - **artefacts**: 4
