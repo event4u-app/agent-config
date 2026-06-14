@@ -192,6 +192,7 @@ tasks:
       - task: lint-readme
       - task: lint-readme-size
       - task: lint-readme-jargon
+      - task: lint-workspace-boundary
       - task: lint-featured-skills
       - task: lint-pack-first-win
 
@@ -317,5 +318,6 @@ tasks:
       - task: lint-readme-strict
       - task: lint-readme-size
       - task: lint-readme-jargon
+      - task: lint-workspace-boundary
       - task: lint-featured-skills
       - task: lint-pack-first-win
