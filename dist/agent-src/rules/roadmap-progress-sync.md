@@ -37,58 +37,76 @@ IS A RULE VIOLATION, NOT AN OVERSIGHT.
 
 `/roadmap:process-step`, `/roadmap:process-phase`, `/roadmap:process-full`, and any other multi-step autonomous run flip the box for step N **before** moving on to step N+1. The checkbox itself is the real-time monitor — the markdown file is the source of truth, the dashboard is a derived view.
 
-`command:` triggers in this rule's frontmatter load it the moment any `/roadmap:process-*` command fires and keep it loaded for the whole run — independent of whether the agent is editing files under `agents/roadmaps/`. The loop carries its own deterministic flip-guard at [`roadmap-process-loop § 5b`](../contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic) — defense-in-depth, not a substitute for the inline flip.
+The `command:` triggers in this rule's frontmatter ensure it loads the moment one of the `/roadmap:process-*` commands is invoked and stays loaded for the whole run — independent of whether the agent is currently editing files under `agents/roadmaps/`. The loop carries its own deterministic flip-guard at [`roadmap-process-loop § 5b`](../contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic) — defense-in-depth, not a substitute for the inline flip.
 
-**Step counts as done** when code/doc saved AND verification cited in step passed (fresh output, this reply or earlier).
+**Step counts as done** when its code/doc change is written and saved AND the verification cited in the step has passed (fresh output in this reply or an earlier one).
 
-**Glyph semantics** — single source of truth, aligned with `scripts/update_roadmap_progress.py` and [`roadmap-management`](../skills/roadmap-management/SKILL.md):
+**Glyph semantics — single source of truth.** Keep aligned with the dashboard counter in `scripts/update_roadmap_progress.py` and the closure-table in [`roadmap-management`](../skills/roadmap-management/SKILL.md):
 
-| Glyph | Meaning | Counter |
+| Glyph | Meaning | Counts towards |
 |---|---|---|
-| `[ ]` | open — planned, not done | `count_open` |
-| `[x]` | done — landed + verified | `count_done` |
-| `[~]` | deferred — planned, not happening **this** run; blocks archive (Iron Law 3) | `count_deferred` |
-| `[-]` | cancelled — scope dropped | `count_cancelled` |
+| `[ ]` | open — planned, not yet done | `count_open` |
+| `[x]` | done — work landed + verified | `count_done` |
+| `[~]` | deferred — planned but not happening **this** run; resolution required before archive (Iron Law 3) | `count_deferred` |
+| `[-]` | cancelled — scope dropped, won't happen at all | `count_cancelled` |
 
-`[~]` is **not** "in-progress". Mid-reply work-in-flight has no checkbox change until step lands — normal `[ ] → [x]`.
+`[~]` is **not** an "in-progress" indicator. Mid-reply work-in-flight has no checkbox change until the step lands; that's a normal `[ ] → [x]` transition.
 
-**Dashboard regen cadence — opt-in batching.** Checkbox flip is non-batchable. **Subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` (`per_step` default · `every_5_steps` · `phase_boundary`). Run end, phase boundary, any file-shape touch (rename / phase add / archive — Iron Law 1) always force immediate regen regardless of cadence.
+**Dashboard regen cadence — opt-in batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` in `.agent-settings.yml` (`per_step` default · `every_5_steps` · `phase_boundary`). Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen regardless of cadence.
 
 ## Iron Law 3 — no silent archive with unresolved deferred items
 
 ```
 A ROADMAP WITH `[~]` DEFERRED ITEMS NEVER AUTO-ARCHIVES SILENTLY.
-SURFACE EVERY DEFERRED STEP. ASK USER WHAT HAPPENS TO THE PLAN.
+SURFACE EVERY DEFERRED STEP. ASK THE USER WHAT HAPPENS TO THE PLAN.
 A SILENT ARCHIVE THAT BURIES PLANNED-FOR-LATER WORK
 IS A RULE VIOLATION, NOT A CONVENIENCE.
 ```
 
-When closure check fires (`count_open == 0` and `count_deferred > 0`), agent MUST:
+When the closure check fires (`count_open == 0` and `count_deferred > 0`), the agent MUST:
 
-1. Enumerate every `[~]` step (phase + step text + any inline `<!-- deferred: ... -->` annotation).
+1. Enumerate every `[~]` step in the roadmap (phase + step text + any inline `<!-- deferred: ... -->` annotation).
 2. Present numbered options (per [`user-interaction`](user-interaction.md)) — at minimum:
-   1. **Follow-up roadmap (draft)** — spawn `agents/roadmaps/road-to-<slug>.md` with `status: draft`, `parent_roadmap: <this-slug>`, deferred steps lifted verbatim into phases. Draft hidden from dashboard until flipped to `ready`.
-   2. **Follow-up roadmap (ready, blocked)** — spawn with `status: ready` (default), `parent_roadmap: <this-slug>`, plus body note `> Blocked until <condition>`. Dashboard surfaces it; execution waits.
-   3. **Keep in this archive** — confirm deferred items stay searchable in archived file; no follow-up. Records explicit decision-to-drop in same reply.
+   1. **Follow-up roadmap (draft)** — spawn `agents/roadmaps/road-to-<slug>.md` with `status: draft` frontmatter, `parent_roadmap: <this-slug>`, and the deferred steps lifted verbatim into phases. Draft stays hidden from the dashboard until the user flips it to `ready`.
+   2. **Follow-up roadmap (ready, blocked)** — spawn the file with `status: ready` (default), frontmatter `parent_roadmap: <this-slug>` plus a body note (`> Blocked until <condition>`) so the dashboard surfaces it but execution waits.
+   3. **Keep in this archive** — confirm the deferred items stay searchable in the archived file; no follow-up roadmap. Choosing this records an explicit decision-to-drop in the same reply.
    4. **Restore selected items to `[ ]`** — finish them in this roadmap before archive.
-   5. **Convert selected items to `[-]` cancelled** — drop with rationale recorded inline.
-3. Only after user resolves deferrals does `git mv` to `archive/` run. Dashboard regen happens after resolution.
+   5. **Convert selected items to `[-]` cancelled** — drop them with rationale recorded inline.
+3. Only after the user resolves the deferrals does the `git mv` to `archive/` run. The dashboard regen happens after the resolution, not before.
 
-Migration mechanics (file naming, frontmatter, body shape, parent back-link) live in [`roadmap-management § Spawn follow-up from deferred items`](../skills/roadmap-management/SKILL.md). Rule owns obligation; skill owns procedure.
+The migration mechanics (file naming, frontmatter pattern, body shape, parent-back-link) live in [`roadmap-management § Spawn follow-up from deferred items`](../skills/roadmap-management/SKILL.md). This rule owns the obligation; the skill owns the procedure.
 
-## Merge-gated criteria — the only sanctioned "near-complete, unarchived" state
+## PR-gate — a completed roadmap archives in its own PR, never post-merge
 
-Near-complete roadmap may hold its **last** `[ ]` item open on purpose while its closing PR is in flight, so inbound ADR / report / sibling links keep resolving until archive. `count_open > 0` keeps it out of the auto-archive backstop — so annotate the item machine-readably: `<!-- merge-gated: pr=<n> … -->` on the checkbox line or its immediately-following comment.
+A roadmap that reaches `count_open == 0 && count_deferred == 0` is **complete**
+and is archived **in the same PR that completes it** — deterministically, by a
+script, before the PR exists. There is no "hold the last item open + archive
+manually after merge" step (that step got forgotten and left finished roadmaps
+rotting unarchived in the trunk — the exact failure this gate makes impossible).
 
 ```
-THE MOMENT THE GATING PR MERGES → FLIP [ ] → [x], git mv TO archive/,
-MIGRATE INBOUND REFS, REGEN DASHBOARD — ALL THE SAME RESPONSE (Iron Law 1).
-A MERGE-GATED ROADMAP LEFT < 100% AFTER ITS PR MERGED IS A RULE VIOLATION.
+COMPLETED ROADMAP → ARCHIVED IN THE PR THAT COMPLETES IT.
+NEVER MERGED-BUT-UNARCHIVED INTO THE TRUNK.
+/create-pr RUNS THE ARCHIVAL SWEEP BEFORE THE PR EXISTS.
+NO merge-gated PLACEHOLDER ITEM. NO AGENT-SET ANNOTATION.
 ```
 
-Example: `- [ ] task ci green on the new structure. <!-- merge-gated: pr=365 archives + ref-migrates the moment PR #365 merges -->`
+The sweep — `scripts/archive_completed_roadmaps.py`, invoked by
+[`/create-pr` § 1c](../commands/pr/create.md) — archives every roadmap that is
+complete **and** touched in this branch (`git log origin/main..HEAD`), `git mv`s
+it to `archive/`, migrates inbound `agents/roadmaps/<x>.md` references to the
+archive path in the **same branch** (so links never break — this was the only
+real reason the old design deferred archival), regenerates the dashboard, and
+stages it. Completion is read from the checkbox counts; no marker is required.
 
-`update_roadmap_progress.py` surfaces every fully-merge-gated roadmap (every open item annotated) in a dedicated **⏳ Merge-gated — pending post-merge archival** dashboard section + stderr warning every run (write path AND `--check`). Not a hard-fail — open gating PR is legitimate. Loud always-on surfacing is the backstop: merge-gated roadmap can never again hide inside a partial progress bar.
+**Backstop:** `update_roadmap_progress.py --check` hard-fails when a roadmap
+hits `count_open == 0` while still under `agents/roadmaps/`. Because
+`/create-pr` archives before the push, the PR branch is green; a push that
+bypasses the sweep red-flags in CI — the forcing function that makes
+"finished roadmap left unarchived in the trunk" structurally impossible. Legacy
+`merge-gated` annotations are archived by the next `/create-pr` like any other
+completed roadmap; the dashboard still surfaces any stranded
+complete-but-unarchived roadmap so it can never hide inside a partial progress bar.
 
 ## Pre-send self-check — MANDATORY
 
@@ -103,12 +121,11 @@ Before sending any reply that landed roadmap work:
    - Any file-shape touch (rename / phase add / archive) → yes, regardless of cadence.
    If yes and not run yet → run `./agent-config roadmap:progress`, then continue.
 4. Did `count_open` reach 0?
-   - **No, but every open item is `merge-gated`** → complete pending its PR. PR merged → flip + `git mv` to `archive/` + migrate refs + regen, same reply. Still open → leave it; dashboard surfaces it under ⏳ Merge-gated.
    - **No (real open work remains)** → continue normally.
-   - **Yes + `count_deferred == 0`** → `git mv` to `archive/` and regen again — same reply.
-   - **Yes + `count_deferred > 0`** → STOP. Run Iron Law 3 deferred-resolution flow (surface items + numbered options + wait). Archive only after resolution.
+   - **Yes + `count_deferred == 0`** → the roadmap is **complete**. Archive it — `git mv` to `archive/` + migrate inbound refs + regen, same reply — or let the next `/create-pr` § 1c sweep do it deterministically. Either way it must never be pushed to the trunk unarchived (§ PR-gate; the `--check` backstop enforces it).
+   - **Yes + `count_deferred > 0`** → STOP. Run the Iron Law 3 deferred-resolution flow (surface items + numbered options + wait). Archive only after resolution.
 
-Any "no" at step 2 → reply is incomplete. Do not send. Skipped step 3 regen fine when cadence permits — checkbox truth lives in markdown file. Skipping deferred-resolution gate at step 4 is **never** acceptable; it is the canonical "lost-information" failure mode this rule exists to prevent.
+Any "no" at step 2 → reply is incomplete. Do not send. A skipped step 3 regen is fine when cadence permits — checkbox truth lives in the markdown file. Skipping the deferred-resolution gate at step 4 is **never** acceptable; it is the canonical "lost-information" failure mode this rule exists to prevent.
 
 Long-form mechanics (failure-mode catalog, Copilot fallback, `[~]` vs `[ ]` semantics, hook + CI defence-in-depth) live in `guideline:agent-infra/roadmap-progress-mechanics`.
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
