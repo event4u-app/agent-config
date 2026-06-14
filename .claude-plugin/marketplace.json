@@ -64,8 +64,6 @@
         "./.claude-plugin/skills/challenge-me-with-docs",
         "./.claude-plugin/skills/chat-history",
         "./.claude-plugin/skills/chat-history-import",
-        "./.claude-plugin/skills/chat-history-learn",
-        "./.claude-plugin/skills/chat-history-show",
         "./.claude-plugin/skills/check-current-md",
         "./.claude-plugin/skills/condense",
         "./.claude-plugin/skills/context",

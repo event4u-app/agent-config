@@ -6,23 +6,32 @@
 
 ## Overall
 
-**2 / 179 steps done · 1%**
+**57 / 181 steps done · 31%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
 ```
+
+## ⏳ Merge-gated — pending post-merge archival
+
+Every open item in these roadmaps is `merge-gated`: held open on purpose while a closing PR is in flight, so inbound references keep resolving until the file archives. **The moment the gating PR merges**, flip the merge-gated box → `[x]`, `git mv` the roadmap to `archive/`, migrate inbound refs, and regenerate this dashboard — all in the same response (per `roadmap-progress-sync` Iron Law 1). Do NOT leave it lingering at < 100%.
+
+| Roadmap | Done | Merge-gated open | Gating PR |
+|---|---:|---:|---|
+| [road-to-agent-memory-removal.md](roadmaps/road-to-agent-memory-removal.md) | 25 | 1 | — |
+| [road-to-memory-pipeline-consolidation.md](roadmaps/road-to-memory-pipeline-consolidation.md) | 30 | 1 | — |
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-6.0.0-final-readiness.md](roadmaps/road-to-6.0.0-final-readiness.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-agent-memory-removal.md](roadmaps/road-to-agent-memory-removal.md) | 6 | 25 | 25 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-agent-memory-removal.md](roadmaps/road-to-agent-memory-removal.md) | 6 | 26 | 1 | 25 | 0 | 0 | ██████████ 96% |
 | 3 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
 | 4 | [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md) | 3 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-memory-pipeline-consolidation.md](roadmaps/road-to-memory-pipeline-consolidation.md) | 8 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-memory-pipeline-consolidation.md](roadmaps/road-to-memory-pipeline-consolidation.md) | 8 | 31 | 1 | 30 | 0 | 0 | ██████████ 97% |
 | 8 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -44,16 +53,16 @@
 
 ### [road-to-agent-memory-removal.md](roadmaps/road-to-agent-memory-removal.md)
 
-**Road to agent-memory removal** — 0 / 25 done (0%)
+**Road to agent-memory removal** — 25 / 26 done (96%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Strip Layer-2 from memory scripts | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Drop MCP package routing | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Remove contract, settings keys, and cross-references | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Supersede decision records + delete archived specs | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Adopt MemSkill write-time discipline (Layer-1 quality) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | Verify clean + regenerate | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Strip Layer-2 from memory scripts | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Drop MCP package routing | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Remove contract, settings keys, and cross-references | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Supersede decision records + delete archived specs | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | Adopt MemSkill write-time discipline (Layer-1 quality) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 6 | Verify clean + regenerate | 🟡 in progress | 1 | 7 | 0 | 0 | 88% |
 
 ### [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md)
 
@@ -100,18 +109,18 @@
 
 ### [road-to-memory-pipeline-consolidation.md](roadmaps/road-to-memory-pipeline-consolidation.md)
 
-**Road to memory-pipeline consolidation & scope** — 0 / 30 done (0%)
+**Road to memory-pipeline consolidation & scope** — 30 / 31 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Unified mining engine reads the JSONL log | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | Fold `/chat-history learn` into `/memory mine --mode=proposals` | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Drop `/chat-history show`, keep `import` + log + hooks | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Single GATHER source + docs | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Gitignore intake (commit only curated) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Narrow curated types to the defensible slice | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 7 | Size bounding without a decay engine | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 8 | Verify + regenerate | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+| 1 | Unified mining engine reads the JSONL log | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | Fold `/chat-history learn` into `/memory mine --mode=proposals` | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Drop `/chat-history show`, keep `import` + log + hooks | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | Single GATHER source + docs | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | Gitignore intake (commit only curated) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 6 | Narrow curated types (REVISED by tie-break council → Option C) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 7 | Size bounding without a decay engine | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 8 | Verify + regenerate | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 

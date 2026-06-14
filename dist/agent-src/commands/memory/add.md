@@ -6,7 +6,7 @@ tier: 2
 visibility: internal
 cluster: memory
 sub: add
-description: Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
+description: Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
 skills: [file-editor]
 suggestion:
   eligible: true
@@ -42,9 +42,10 @@ the first write and for every subsequent addition.
 > Which memory type is this entry for?
 >
 > 1. domain-invariants  — architectural boundaries, module rules
-> 2. architecture-decisions — ADR-style decisions with alternatives
-> 3. incident-learnings — post-mortem patterns with guardrails
-> 4. product-rules — intentional business constraints
+> 2. incident-learnings — post-mortem patterns with guardrails
+> 3. product-rules — intentional business constraints
+>
+> (Architecture decisions belong in ADRs — `docs/decisions/` — not memory.)
 ```
 
 If the user cannot pick one confidently, stop and ask what the entry

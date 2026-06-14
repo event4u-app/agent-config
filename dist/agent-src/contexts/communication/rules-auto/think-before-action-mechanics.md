@@ -42,12 +42,12 @@ behavior. Cannot → read more.
 
 ## Consult memory before editing
 
-Prior decisions and invariants live in the memory layer. Via
-[`memory-access`](../../../../../docs/guidelines/agent-infra/memory-access.md),
-call `retrieve(types=["architecture-decisions", "domain-invariants"], keys=<touched paths>, limit=3)`.
-A matching `architecture-decision` explains *why* the current shape
-exists; a matching `domain-invariant` is a hard constraint. Cite the
-`id` if a match influences the plan.
+Invariants live in the memory layer; architectural rationale lives in ADRs.
+Via [`memory-access`](../../../../../docs/guidelines/agent-infra/memory-access.md),
+call `retrieve(types=["domain-invariants"], keys=<touched paths>, limit=3)` —
+a matching `domain-invariant` is a hard constraint. For *why* the current
+shape exists, check the ADR index `docs/decisions/INDEX.md`. Cite the `id` /
+ADR number if a match influences the plan.
 
 ## Verify with real tools
 
