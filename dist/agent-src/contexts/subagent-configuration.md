@@ -59,4 +59,5 @@ The commands read `.agent-settings.yml` fresh on each run.
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the skill
 - [`model-recommendations`](model-recommendations.md) — tier definitions
+- `guideline:agent-infra/model-recommendation` § Orchestrator → subagent model routing — per-subtask model right-sizing (downgrade easy work, keep strong model for hard)
 - [`/do-and-judge`](../commands/do-and-judge.md), [`/do-in-steps`](../commands/do-in-steps.md), [`/judge`](../commands/judge.md) — commands that read these keys
