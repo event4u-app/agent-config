@@ -2,7 +2,7 @@
 /**
  * Input-side memory condensation — Phase 2 of step-16-telegraph-substance.
  *
- * TypeScript twin of `src/scripts/condense_memory.py` (ADR-094, Phase 7 /
+ * TypeScript twin of `src/scripts/condense_memory.py` (ADR-096, Phase 7 /
  * dev-side memory). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),
  * same exit codes, stdout/stderr split, byte-identical messages, and

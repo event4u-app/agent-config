@@ -2,7 +2,7 @@
 /**
  * Diff two A/B reports (one per variant) into a comparison artefact.
  *
- * TypeScript twin of `src/scripts/bench_ab_diff.py` (ADR-094 py2ts
+ * TypeScript twin of `src/scripts/bench_ab_diff.py` (ADR-096 py2ts
  * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
  * EXACTLY — positional args, `--out-dir`, exit codes, stdout/stderr
  * split, and byte-identical written JSON (`json.dumps(indent=2)` +

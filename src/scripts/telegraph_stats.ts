@@ -2,7 +2,7 @@
 /**
  * Telegraph per-session / per-conversation / lifetime token-delta lens.
  *
- * TypeScript twin of `src/scripts/telegraph_stats.py` (ADR-094 — Python→TS
+ * TypeScript twin of `src/scripts/telegraph_stats.py` (ADR-096 — Python→TS
  * migration, Phase 8 / Wave 8e). Public surface mirrors the Python module
  * exactly: same CLI flags (`--input`, `--format`), same exit code (0), same
  * stdout, and byte-identical `json.dumps(..., indent=2)` output.

@@ -1,7 +1,7 @@
 /**
  * Manual pruner for council artefacts.
  *
- * TypeScript twin of `src/scripts/council_prune.py` (ADR-094 — Python→TS
+ * TypeScript twin of `src/scripts/council_prune.py` (ADR-096 — Python→TS
  * migration, Phase 1).
  *
  * Deletes council files older than `ai_council.session_retention_days`

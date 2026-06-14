@@ -2,7 +2,7 @@
 /**
  * Platform-agnostic PostToolUse hook for the `context-hygiene` rule.
  *
- * TypeScript twin of `src/scripts/context_hygiene_hook.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/context_hygiene_hook.py` (ADR-096 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
@@ -39,7 +39,7 @@ import { atomic_write_json } from "./hooks/state_io.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — this is a latent
-// docstring/code divergence in the Python original (ADR-094 § replicate
+// docstring/code divergence in the Python original (ADR-096 § replicate
 // latent bugs), and `STATE_FILE` is what the test suite asserts against.
 export const STATE_DIR = path.join("agents", "state");
 export const STATE_FILE = path.join(STATE_DIR, "context-hygiene.json");

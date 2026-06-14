@@ -2,7 +2,7 @@
 /**
  * Council CLI — `./agent-config council:{estimate,run,render}`.
  *
- * TypeScript twin of `council_cli.py` (py2ts Phase 1, ADR-094). Wraps
+ * TypeScript twin of `council_cli.py` (py2ts Phase 1, ADR-096). Wraps
  * `ai_council/orchestrator` for non-interactive callers. Subcommands:
  *
  *   estimate  Bundle + estimate per-member cost (no API call, no spend).

@@ -2,7 +2,7 @@
 /**
  * Context-file path & orphan checker.
  *
- * TypeScript twin of `src/scripts/check_context_paths.py` (ADR-094,
+ * TypeScript twin of `src/scripts/check_context_paths.py` (ADR-096,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--format`
  * (text/json) and `--root` flags, exit codes (0 clean, 1 violations,
  * 3 internal error), byte-identical messages, stdout-only output, same

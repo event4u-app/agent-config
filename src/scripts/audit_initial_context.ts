@@ -2,7 +2,7 @@
 /**
  * Initial-context token audit (roadmap `road-to-lean-initial-context`).
  *
- * TypeScript twin of `src/scripts/audit_initial_context.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/audit_initial_context.py` (ADR-096 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the `--json` / `--write` / `--fail-if-over-budget` flags,
  * exit codes (0 ok / advisory · 1 over-budget), the stdout/stderr split,

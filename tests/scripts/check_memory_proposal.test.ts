@@ -70,7 +70,7 @@ describe('check_memory_proposal — promotion gate (ported pytest)', () => {
         writeIntake([
             {
                 id: 'sig-fd',
-                entry_type: 'architecture-decisions',
+                entry_type: 'domain-invariants',
                 path: 'app/X.php',
                 body: 'use service Y',
                 future_decisions: [

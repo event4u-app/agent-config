@@ -1,7 +1,7 @@
 /**
  * `work_engine.hooks` — cross-cutting lifecycle hooks for the engine.
  *
- * TypeScript twin of `work_engine/hooks/__init__.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/hooks/__init__.py` (ADR-096 py2ts —
  * work_engine.hooks subpackage). Public surface:
  *
  * - `HookEvent` — ten lifecycle events, two layers.

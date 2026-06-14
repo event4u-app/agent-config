@@ -1,6 +1,6 @@
 // Shared helpers for the agent-security corpus linters (road-to-security-pillar.md P1).
 //
-// TypeScript twin of `src/scripts/_lib/security_lint.py` (ADR-094 — Python→TS
+// TypeScript twin of `src/scripts/_lib/security_lint.py` (ADR-096 — Python→TS
 // migration). Public API mirrors the Python module exactly (snake_case kept
 // deliberately) so the two dependent linters — lint_hidden_unicode and
 // lint_instruction_smuggling — depend on one source of truth.

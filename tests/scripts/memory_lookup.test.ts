@@ -1,13 +1,12 @@
 // Tests for src/scripts/memory_lookup.ts — file-based retrieval fallback.
 //
-// 1:1 port of tests/test_memory_lookup.py + tests/test_conflict_rule.py
-// (pytest → vitest, ADR-094 parity contract). The pytest suites import the
-// module and call retrieve() / _apply_conflict_rule() / helpers directly;
-// these mirror that against the TS twin. The retrieve() contract (signature
-// + return shape) is cited by rules, so it is exercised directly. A trailing
-// golden-parity block runs python3 + tsx — retrieve() via a python3 -c
-// driver and the CLI surfaces on identical fixtures — asserting byte-exact
-// output, skipped without python3.
+// 1:1 port of tests/test_memory_lookup.py (pytest → vitest, ADR-094 parity
+// contract). The pytest suite imports the module and calls retrieve() /
+// retrieve_v1() directly; these mirror that against the TS twin. The
+// retrieve() contract (signature + return shape) is cited by rules, so it is
+// exercised directly. A trailing golden-parity block runs python3 + tsx —
+// retrieve() via a python3 -c driver and the CLI surfaces on identical
+// fixtures — asserting byte-exact output, skipped without python3.
 import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -15,7 +14,6 @@ import { dirname, join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ml from '../../src/scripts/memory_lookup.js';
-import * as ms from '../../src/scripts/memory_status.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
@@ -27,7 +25,7 @@ function pythonAvailable(): boolean {
 }
 const HAVE_PYTHON = pythonAvailable();
 
-const { Hit, RetrievalResult } = ml;
+const { Hit } = ml;
 
 // dedent helper mirroring textwrap.dedent.
 function dedent(s: string): string {
@@ -62,8 +60,6 @@ afterEach(() => {
     ml._setMemoryRoot(join('agents', 'memory'));
     ml._setIntakeRoot(join('agents', 'memory', 'intake'));
     ml._setKnowledgeRoot(join('agents', 'memory', 'knowledge'));
-    ms._setFindCli(null);
-    delete process.env[ms._CACHE_ENV];
     rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -180,88 +176,6 @@ describe('memory_lookup.ts — retrieve()', () => {
         expect(hits.length).toBe(3);
     });
 
-    // --- operational provider helpers ------------------------------------
-
-    it('synthesize_query joins keys', () => {
-        expect(ml._synthesize_query(['app/Http', 'billing'])).toBe('app/Http billing');
-    });
-
-    it('synthesize_query drops empty and non-strings', () => {
-        expect(ml._synthesize_query(['', '  ', 'real', null, 42])).toBe('real');
-    });
-
-    it('synthesize_query returns empty when all keys empty', () => {
-        expect(ml._synthesize_query(['', '  '])).toBe('');
-    });
-
-    function fakeMemoryCli(body: string): string {
-        const fake = join(tmp, 'memory');
-        writeFileSync(fake, body);
-        chmodSync(fake, 0o755);
-        return fake;
-    }
-
-    it('cli operational provider happy path', () => {
-        const envelope = {
-            contract_version: 1,
-            status: 'ok',
-            entries: [
-                {
-                    id: 'op-1',
-                    type: 'ownership',
-                    source: 'operational',
-                    confidence: 0.72,
-                    body: { path: 'app/Http/Foo.php', owner: 'team-x' },
-                },
-            ],
-        };
-        const fake = fakeMemoryCli(`#!/bin/sh\necho '{"level":30,"msg":"Database connected"}' >&2\ncat <<'EOF'\n${JSON.stringify(envelope)}\nEOF\n`);
-        const hits = [...ml._cli_operational_provider(['ownership'], ['billing'], { cli_path: fake })];
-        expect(hits.length).toBe(1);
-        expect(hits[0]?.id).toBe('op-1');
-        expect(hits[0]?.source).toBe('operational');
-        expect(hits[0]?.score).toBe(0.72);
-        expect((hits[0]?.entry as Record<string, unknown>)['owner']).toBe('team-x');
-    });
-
-    it('cli operational provider drops empty query', () => {
-        const fake = fakeMemoryCli('#!/bin/sh\nexit 1\n');
-        const hits = [...ml._cli_operational_provider(['ownership'], [], { cli_path: fake })];
-        expect(hits).toEqual([]);
-    });
-
-    it('cli operational provider handles nonzero exit', () => {
-        const fake = fakeMemoryCli("#!/bin/sh\necho 'boom' >&2\nexit 3\n");
-        const hits = [...ml._cli_operational_provider(['ownership'], ['billing'], { cli_path: fake })];
-        expect(hits).toEqual([]);
-    });
-
-    it('cli operational provider handles garbage stdout', () => {
-        const fake = fakeMemoryCli("#!/bin/sh\necho 'not json at all'\n");
-        const hits = [...ml._cli_operational_provider(['ownership'], ['billing'], { cli_path: fake })];
-        expect(hits).toEqual([]);
-    });
-
-    it('package_operational_provider returns null when absent', () => {
-        ms._setFindCli(() => '');
-        delete process.env[ms._CACHE_ENV];
-        expect(ml.package_operational_provider()).toBeNull();
-    });
-
-    it('package_operational_provider returns callable when present', () => {
-        const fake = join(tmp, 'memory');
-        writeFileSync(fake, '#!/bin/sh\nexit 0\n');
-        chmodSync(fake, 0o755);
-        ms._setFindCli(() => fake);
-        ms._setCacheFile(join(tmp, '.agent-memory', 'status.cache'));
-        delete process.env[ms._CACHE_ENV];
-        ms._setHealthTimeout(30.0);
-        const provider = ml.package_operational_provider();
-        expect(provider).not.toBeNull();
-        expect(typeof provider).toBe('function');
-        ms._setHealthTimeout(2.0);
-    });
-
     // --- knowledge namespace ---------------------------------------------
 
     function writeKnowledgeIngest(ingestId: string, source: string, chunks: string[], pinned = false): void {
@@ -341,76 +255,6 @@ describe('memory_lookup.ts — retrieve()', () => {
         writeFileSync(join(stray, 'random.txt'), 'noise', 'utf-8');
         const hits = ml.retrieve(['knowledge'], ['noise']);
         expect(hits).toEqual([]);
-    });
-});
-
-// =========================================================================
-// 1:1 port of test_conflict_rule.py
-// =========================================================================
-
-describe('memory_lookup.ts — conflict rule', () => {
-    function repo(eid: string, status = 'active', score = 0.8, source = 'curated', p = 'agents/memory/ownership/repo.yml') {
-        return new Hit(eid, 'ownership', source, p, score, { id: eid, status, path: 'app/Foo.php' });
-    }
-    function op(eid: string, status = 'active', score = 0.8) {
-        return new Hit(eid, 'ownership', 'operational', 'operational://agent-memory', score, {
-            id: eid,
-            status,
-            path: 'app/Foo.php',
-        });
-    }
-
-    it('case 1: same id repo wins and operational shadowed', () => {
-        const [merged, shadows] = ml._apply_conflict_rule([repo('own-foo', 'active')], [op('own-foo', 'active')]);
-        expect(merged.map((h) => h.id)).toEqual(['own-foo']);
-        expect(merged.every((h) => h.source !== 'operational')).toBe(true);
-        expect(shadows.length).toBe(1);
-        expect(shadows[0]?.id).toBe('own-foo');
-        expect(shadows[0]?.reason).toBe('same-id');
-    });
-
-    it('case 2: repo deprecated blocks operational active', () => {
-        const [merged, shadows] = ml._apply_conflict_rule([repo('own-bar', 'deprecated')], [op('own-bar', 'active')]);
-        expect(merged.length).toBe(1);
-        expect((merged[0]?.entry as Record<string, unknown>)['status']).toBe('deprecated');
-        expect(['curated', 'intake']).toContain(merged[0]?.source);
-        expect(shadows.length).toBe(1);
-        expect(shadows[0]?.reason).toBe('repo-deprecated');
-    });
-
-    it('case 3: different ids on same logical key both returned', () => {
-        const [merged, shadows] = ml._apply_conflict_rule([repo('own-baz-v1', 'active', 0.8)], [op('own-baz-v2', 'active', 0.85)]);
-        expect(merged.map((h) => h.id).sort()).toEqual(['own-baz-v1', 'own-baz-v2']);
-        expect(shadows).toEqual([]);
-    });
-
-    it('case 4: repo empty operational returned', () => {
-        const [merged, shadows] = ml._apply_conflict_rule([], [op('own-qux')]);
-        expect(merged.length).toBe(1);
-        expect(merged[0]?.source).toBe('operational');
-        expect(shadows).toEqual([]);
-    });
-
-    it('retrieve with operational provider and shadows', () => {
-        process.chdir(tmp); // no agents/memory here → only provider hits
-        ml._setMemoryRoot(join('agents', 'memory'));
-        ml._setIntakeRoot(join('agents', 'memory', 'intake'));
-        ml._setKnowledgeRoot(join('agents', 'memory', 'knowledge'));
-        const provider: ml.OperationalProvider = () => [op('own-foo'), op('own-brand-new')];
-        const result = ml.retrieve(['ownership'], ['app/Foo'], 10, provider, true);
-        expect(result).toBeInstanceOf(RetrievalResult);
-        const rr = result as InstanceType<typeof RetrievalResult>;
-        const ids = new Set(rr.hits.map((h) => h.id));
-        expect(ids.has('own-foo')).toBe(true);
-        expect(ids.has('own-brand-new')).toBe(true);
-        expect(rr.shadows).toEqual([]);
-    });
-
-    it('retrieve default return type stays list[Hit]', () => {
-        process.chdir(tmp);
-        ml._setMemoryRoot(join('agents', 'memory'));
-        const result = ml.retrieve(['ownership'], ['nonexistent-key'], 1);
-        expect(Array.isArray(result)).toBe(true);
     });
 });
 
@@ -547,6 +391,17 @@ describe.skipIf(!HAVE_PYTHON)('memory_lookup — golden parity', () => {
 function _normalizeForCompare(value: unknown): unknown {
     if (value && typeof value === 'object' && 'pyStr' in value && typeof (value as { pyStr: unknown }).pyStr === 'string') {
         return (value as { pyStr: string }).pyStr;
+    }
+    // Unwrap the PyFloat marker (the `score` field) to its numeric value, since
+    // the Python driver dumps the underlying float as a JSON number.
+    if (
+        value &&
+        typeof value === 'object' &&
+        'value' in value &&
+        Object.keys(value as Record<string, unknown>).length === 1 &&
+        typeof (value as { value: unknown }).value === 'number'
+    ) {
+        return (value as { value: number }).value;
     }
     if (Array.isArray(value)) {
         return value.map(_normalizeForCompare);

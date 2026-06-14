@@ -2,7 +2,7 @@
 /**
  * Backfill / migrate `model_tier` on every skill and command (ADR-035).
  *
- * TypeScript twin of `src/scripts/backfill_model_tier.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/backfill_model_tier.py` (ADR-096 —
  * Python→TS migration, Phase 8 / Wave 8e). The CLI contract is mirrored
  * EXACTLY: same flag (`--dry-run`), same exit code (0), same byte-identical
  * stdout report, and byte-identical frontmatter rewrites of every skill +

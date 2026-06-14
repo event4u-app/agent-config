@@ -3,7 +3,7 @@
  * Always-rule budget gate (Phases 7.1 + 7.4 of road-to-pr-34-followups,
  * extended by Phase 0.2 of road-to-structural-optimization).
  *
- * TypeScript twin of `src/scripts/check_always_budget.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/check_always_budget.py` (ADR-096 —
  * Python→TS migration, Phase 4 / Wave 4a). Mirrors the Python CLI
  * contract exactly: flags (`--quiet`, `--no-trend`), exit codes
  * (0 = pass/warn, 1 = fail, 3 = internal error), stdout/stderr split,

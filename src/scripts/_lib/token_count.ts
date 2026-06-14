@@ -1,7 +1,7 @@
 /**
  * Real-tokenizer counting for the budget tooling (roadmap 0B.1).
  *
- * TypeScript twin of `src/scripts/_lib/token_count.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/_lib/token_count.py` (ADR-096 —
  * Python→TS migration, Phase 2 / Wave 1). Public API mirrors the
  * Python module exactly (snake_case kept deliberately).
  *

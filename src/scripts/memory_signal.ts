@@ -2,7 +2,7 @@
 /**
  * Write-side helper: drop an engineering-memory signal.
  *
- * TypeScript twin of `src/scripts/memory_signal.py` (ADR-094, Phase 7 /
+ * TypeScript twin of `src/scripts/memory_signal.py` (ADR-096, Phase 7 /
  * dev-side memory). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),
  * same exit codes, stdout/stderr split, byte-identical messages, same
@@ -11,10 +11,10 @@
  * divergence candidates in the porting report, not fixed.
  *
  * Shared by producers (`/bug-fix`, `/do-and-judge`, `/propose-memory`,
- * incident role exit). Routes to the optional `agent-memory` package when
- * `memory_status.status() == "present"`; otherwise appends an intake
- * line under `agents/memory/intake/signals-YYYY-MM.jsonl` — append-only
- * JSONL with `merge=union` (see `road-to-memory-merge-safety.md`).
+ * incident role exit). Appends an intake line under
+ * `agents/memory/intake/signals-YYYY-MM.jsonl` — append-only JSONL with
+ * `merge=union` (see `road-to-memory-merge-safety.md`). Memory is entirely
+ * file-backed (no external backend).
  *
  * Rate limiting:
  * - Per-path, per-type, within a rolling window (default 7 days).
@@ -33,9 +33,6 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
-import { load_agent_settings } from './_lib/agent_settings.js';
-import * as memory_status from './memory_status.js';
-
 // Mutable so tests can repoint at a tmp tree (monkeypatch parity).
 export let INTAKE_ROOT = path.join('agents', 'memory', 'intake');
 export let SETTINGS_FILE = '.agent-settings.yml';
@@ -53,7 +50,6 @@ export const VALID_TYPES: ReadonlySet<string> = new Set([
     'incident-learnings',
     'ownership',
     'domain-invariants',
-    'architecture-decisions',
     'product-rules',
 ]);
 export const RATE_LIMIT_WINDOW_DAYS = 7;
@@ -67,45 +63,6 @@ function _isDir(p: string): boolean {
         return fs.statSync(p).isDirectory();
     } catch {
         return false;
-    }
-}
-
-/**
- * Read `memory.intake.skip_when_present` from `.agent-settings.yml`.
- *
- * Default: false — intake JSONL is always written as debug trail even
- * when the `agent-memory` backend is present (see
- * `road-to-memory-merge-safety.md` Phase 3).
- */
-export function _skip_intake_when_present(): boolean {
-    const data = load_agent_settings({ project_path: SETTINGS_FILE });
-    const mem = (data as Record<string, unknown>)['memory'];
-    if (!_isPlainObject(mem)) {
-        return false;
-    }
-    const intake = mem['intake'];
-    if (!_isPlainObject(intake)) {
-        return false;
-    }
-    return Boolean(intake['skip_when_present']);
-}
-
-// Overridable backend-status indirection. Production code calls
-// `_backendStatusImpl()`; tests install a stub via `_setBackendStatus`
-// (pytest monkeypatches the `_backend_status` module function directly).
-let _backendStatusImpl: () => string = () => _backend_status();
-export function _setBackendStatus(fn: (() => string) | null): void {
-    _backendStatusImpl = fn ?? (() => _backend_status());
-}
-
-/** Return the current backend status: 'present' | 'absent' | 'unknown'. */
-export function _backend_status(): string {
-    try {
-        // Mirror the Python `try: import memory_status` guard — any probe
-        // failure degrades to 'unknown' rather than surfacing an exception.
-        return memory_status.status().status;
-    } catch {
-        return 'unknown';
     }
 }
 
@@ -295,12 +252,6 @@ export function emit(
             }
         }
     }
-    // Backend routing: when the `agent-memory` package is present AND the
-    // consumer opted out of the debug trail, skip the JSONL write.
-    if (_backendStatusImpl() === 'present' && _skip_intake_when_present()) {
-        record['_backend'] = 'package-only';
-        return record;
-    }
     fs.mkdirSync(INTAKE_ROOT, { recursive: true });
     const target = _monthly_file();
     fs.appendFileSync(target, `${_jsonDumpsUnicode(record)}\n`, 'utf-8');
@@ -353,7 +304,7 @@ const _PROG = 'memory_signal.py';
 // wraps it onto its own line; reproduce byte-for-byte.
 const _USAGE =
     'usage: memory_signal.py [-h] --type\n' +
-    '                        {architecture-decisions,domain-invariants,historical-patterns,incident-learnings,ownership,product-rules}\n' +
+    '                        {domain-invariants,historical-patterns,incident-learnings,ownership,product-rules}\n' +
     '                        --path PATH --body BODY [--origin ORIGIN]\n' +
     '                        [--extra EXTRA] [--force]\n';
 
@@ -401,7 +352,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         } else if (a === '--force') {
             args.force = true;
         } else if (a === '-h' || a === '--help') {
-            // --help is not a parity contract (per ADR-094); emit the usage block.
+            // --help is not a parity contract (per ADR-096); emit the usage block.
             process.stdout.write(_USAGE);
             process.exit(0);
         } else {

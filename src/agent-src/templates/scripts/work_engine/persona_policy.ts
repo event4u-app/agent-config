@@ -1,9 +1,9 @@
 /**
  * Persona policy — behavioural parameters resolved from `state.persona`.
  *
- * TypeScript twin of `work_engine/persona_policy.py` (ADR-094 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/persona_policy.py` (ADR-096 py2ts Phase 1 —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-094 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-096 — Python style is part of the contract).
  *
  * Three personas ship today, each keyed by the string already carried
  * on `DeliveryState.persona` (see

@@ -1,9 +1,9 @@
 /**
  * Frontend-stack detection from project manifests.
  *
- * TypeScript twin of `work_engine/stack/detect.py` (ADR-094 py2ts). Leaf
+ * TypeScript twin of `work_engine/stack/detect.py` (ADR-096 py2ts). Leaf
  * module — stdlib only, NO intra-`work_engine` imports — so the public API
- * names stay snake_case to mirror the Python module 1:1 (per ADR-094: Python
+ * names stay snake_case to mirror the Python module 1:1 (per ADR-096: Python
  * style is part of the contract).
  *
  * The detector reads `composer.json` and `package.json` from a project

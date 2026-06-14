@@ -2,7 +2,7 @@
 /**
  * Mechanical carve-out validator for telegraph-condensed replies.
  *
- * TypeScript twin of `src/scripts/validate_telegraph_carveouts.py` (ADR-094,
+ * TypeScript twin of `src/scripts/validate_telegraph_carveouts.py` (ADR-096,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — two positional
  * `pre` / `post` file args, exit codes (0 preserved, 1 drift, 2 missing
  * file), stdout/stderr split, byte-identical messages, the same carve-out

@@ -2,7 +2,7 @@
 /**
  * Block D · D1 meta-linter for `scripts/skill_tools/*.py`.
  *
- * TypeScript twin of `src/scripts/lint_skill_tools.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_skill_tools.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--json`
  * / `--quiet` / `--tools-dir` flags, exit codes (0 clean, 1 violations,
  * 2 usage / missing-dir), stdout split (JSON or human), byte-identical

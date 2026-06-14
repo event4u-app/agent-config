@@ -1,23 +1,28 @@
 #!/usr/bin/env node
 /**
- * Mine session transcripts for memory signals — Phase-1 single-host.
+ * Mine a session for memory signals — the engine behind `/memory mine`.
  *
- * TypeScript twin of `src/scripts/mine_session.py` (ADR-094 — Python→TS
+ * TypeScript twin of `src/scripts/mine_session.py` (ADR-096 — Python→TS
  * migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY —
  * every flag, exit code (0), the stdout/stderr split, byte-identical
  * messages, byte-identical preview Markdown, and byte-identical
  * `json.dumps(..., ensure_ascii=False)` intake JSONL lines.
  *
- * Implements the GATHER SIGNAL phase of the `memory-consolidation` skill
- * against Claude-Code-format JSONL transcripts. Default behaviour is
- * `--preview` (stdout only). `--commit-intake` appends one JSONL line per
- * fact to `agents/memory/intake/<type>.jsonl`.
+ * Implements the GATHER SIGNAL phase of the `memory-consolidation` skill.
+ * The canonical, **cross-host** source is the chat-history JSONL log
+ * (`agents/runtime/.agent-chat-history`, written by platform hooks for every
+ * host); the per-host Claude-Code transcript (`~/.claude/projects/*.jsonl`)
+ * is a fallback when the log is absent.
+ *
+ * `--mode`: `signals` (default) extracts normalised facts → intake preview /
+ * `--commit-intake`; `proposals` frames the facts as candidate rule/skill
+ * learnings (the `/memory mine` command then runs `learning-to-rule-or-skill`
+ * on them); `both` renders both.
  *
  * Strict gates: opt-in transcript access (`--confirm-transcript-access`
  * required per invocation), ≤ 5 normalised facts per cycle, redaction
  * applied to every yielded text. See
- * `.agent-src.uncondensed/commands/memory/mine-session.md` for the authored
- * spec.
+ * `src/domains/meta/memory/mine-session/command.md` for the authored spec.
  *
  * Auto-resolved transcript discovery (`rglob` sorted by mtime) is
  * intrinsically non-deterministic; golden parity supplies a fixed
@@ -33,6 +38,7 @@ const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/mine_session.py → parent.parent.parent == repo root.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const INTAKE_ROOT = path.join('agents', 'memory', 'intake');
+export const CHAT_HISTORY_LOG = path.join('agents', 'runtime', '.agent-chat-history');
 export const DEFAULT_WINDOW_DAYS = 14;
 export const MAX_FACTS = 5;
 
@@ -95,7 +101,7 @@ function _keyOf(text: string): string {
     return m ? (m[0] as string) : 'unknown';
 }
 
-function* _iterClaudeCodeJsonl(p: string): Generator<Record<string, Json>> {
+export function* _iterClaudeCodeJsonl(p: string): Generator<Record<string, Json>> {
     const text = fs.readFileSync(p, 'utf-8');
     for (let line of text.split('\n')) {
         line = line.trim();
@@ -110,7 +116,39 @@ function* _iterClaudeCodeJsonl(p: string): Generator<Record<string, Json>> {
     }
 }
 
+/**
+ * Yield body entries from the cross-host chat-history JSONL log.
+ *
+ * Skips the `{"t": "header"}` line. Each body entry carries a flat `text`
+ * field, a `ts` timestamp, a `t` role (user/agent/tool/phase), and a session
+ * tag `s` — see `scripts/chat_history.py`.
+ */
+function* _iterChatHistory(p: string): Generator<Record<string, Json>> {
+    const text = fs.readFileSync(p, 'utf-8');
+    for (let line of text.split('\n')) {
+        line = line.trim();
+        if (!line) {
+            continue;
+        }
+        let obj: Json;
+        try {
+            obj = JSON.parse(line);
+        } catch {
+            continue;
+        }
+        if (obj !== null && typeof obj === 'object' && !Array.isArray(obj) && obj.t !== 'header') {
+            yield obj as Record<string, Json>;
+        }
+    }
+}
+
 function _turnText(turn: Record<string, Json>): string {
+    // Chat-history log entries carry a flat `text` string.
+    const flat = turn.text;
+    if (typeof flat === 'string') {
+        return flat;
+    }
+    // Claude-Code transcript shape: message.content (str or block list).
     const msg = (turn.message as Record<string, Json> | undefined) ?? {};
     const content = msg.content;
     if (typeof content === 'string') {
@@ -198,16 +236,27 @@ function _sessionId(transcript: string): string {
     return crypto.createHash('sha256').update(resolved).digest('hex').slice(0, 16);
 }
 
-/** Return up to MAX_FACTS normalised facts (preview shape). */
-export function mine(transcript: string, since: Date, extraPatterns: RegExp[]): Array<Record<string, Json>> {
-    const turnsInWindow = [..._iterClaudeCodeJsonl(transcript)].filter((t) => _withinWindow(_turnTs(t), since));
+/**
+ * Return up to MAX_FACTS normalised facts (preview shape).
+ *
+ * `entries` is any iterable of turn-shaped dicts (chat-history log body
+ * entries or Claude-Code transcript turns). `sessionId` is the fallback tag
+ * when an entry carries no `s` field.
+ */
+export function mine(
+    entries: Iterable<Record<string, Json>>,
+    since: Date,
+    extraPatterns: RegExp[],
+    sessionId: string,
+): Array<Record<string, Json>> {
+    const turnsInWindow = [...entries].filter((t) => _withinWindow(_turnTs(t), since));
     const facts: Array<Record<string, Json>> = [];
-    const sessionId = _sessionId(transcript);
     for (const turn of turnsInWindow) {
         const text = _turnText(turn);
         if (!text) {
             continue;
         }
+        const sid = (turn.s as string | undefined) || sessionId;
         for (const [tag, family] of SIGNAL_FAMILIES) {
             if (!_search(family, text)) {
                 continue;
@@ -222,7 +271,7 @@ export function mine(transcript: string, since: Date, extraPatterns: RegExp[]): 
                 key: _keyOf(text),
                 observation: obs,
                 source: 'agent',
-                session_id: sessionId,
+                session_id: sid,
                 tags: [tag],
             });
             break;
@@ -286,16 +335,58 @@ export function commitIntake(facts: Array<Record<string, Json>>, intakeRoot: str
     return written;
 }
 
-function _resolveTranscript(host: string, override: string | null): string | null {
-    if (override) {
-        return override;
+/**
+ * Frame mined facts as candidate rule/skill learnings.
+ *
+ * The `/memory mine` command feeds these into `learning-to-rule-or-skill`;
+ * this engine only surfaces the seeds — it does not author proposals.
+ */
+export function renderProposalSeeds(
+    facts: Array<Record<string, Json>>,
+    project: string,
+    window: string,
+): string {
+    if (facts.length === 0) {
+        return (
+            `## Proposal seeds — ${project} · ${window}\n\n` +
+            '_No signals matched — nothing to propose._\n'
+        );
     }
+    const lines: string[] = [
+        `## Proposal seeds — ${project} · ${window}`,
+        '',
+        'Run `learning-to-rule-or-skill` on each durable seed below:',
+        '',
+    ];
+    facts.forEach((f, idx) => {
+        lines.push(`${idx + 1}. **${f.type}** · \`${f.key}\` — ${f.observation}`);
+    });
+    return lines.join('\n') + '\n';
+}
+
+/**
+ * Return [path, kind]. kind ∈ {chat-history, claude-code}.
+ *
+ * Default `source=auto` prefers the cross-host chat-history log, then falls
+ * back to the per-host Claude-Code transcript.
+ */
+function _resolveSource(source: string, host: string, override: string | null): [string | null, string] {
+    if (override) {
+        return [override, host === 'claude-code' ? 'claude-code' : 'chat-history'];
+    }
+    if ((source === 'auto' || source === 'chat-history') && _exists(CHAT_HISTORY_LOG)) {
+        return [CHAT_HISTORY_LOG, 'chat-history'];
+    }
+    if (source === 'chat-history') {
+        return [null, 'chat-history'];
+    }
+    // claude-code fallback
     if (host !== 'claude-code') {
-        return null;
+        return [null, host];
     }
     const home = path.join(os.homedir(), '.claude', 'projects');
     if (!_isDir(home)) {
-        return null;
+        return [null, 'claude-code'];
     }
     // sorted(home.rglob("*.jsonl"), key=mtime, reverse=True)[0]
     const candidates: Array<[string, number]> = [];
@@ -317,10 +408,10 @@ function _resolveTranscript(host: string, override: string | null): string | nul
     };
     walk(home);
     if (candidates.length === 0) {
-        return null;
+        return [null, 'claude-code'];
     }
     candidates.sort((a, b) => b[1] - a[1]);
-    return candidates[0]![0];
+    return [candidates[0]![0], 'claude-code'];
 }
 
 function _isDir(p: string): boolean {
@@ -393,11 +484,16 @@ interface Args {
     confirm_transcript_access: boolean;
     preview: boolean;
     commit_intake: boolean;
+    mode: string;
+    source: string;
     host: string;
     transcript: string | null;
     intake_root: string;
     project: string;
 }
+
+const MODE_CHOICES = ['signals', 'proposals', 'both'];
+const SOURCE_CHOICES = ['auto', 'chat-history', 'claude-code'];
 
 export function parseArgs(argv: string[]): Args {
     const args: Args = {
@@ -405,6 +501,8 @@ export function parseArgs(argv: string[]): Args {
         confirm_transcript_access: false,
         preview: true,
         commit_intake: false,
+        mode: 'signals',
+        source: 'auto',
         host: 'claude-code',
         transcript: null,
         intake_root: INTAKE_ROOT,
@@ -417,6 +515,16 @@ export function parseArgs(argv: string[]): Args {
             process.exit(2);
         }
         return v;
+    };
+    const choice = (value: string, name: string, choices: string[]): string => {
+        if (!choices.includes(value)) {
+            const choicesStr = choices.map((c) => `'${c}'`).join(', ');
+            process.stderr.write(
+                `argument ${name}: invalid choice: '${value}' (choose from ${choicesStr})\n`,
+            );
+            process.exit(2);
+        }
+        return value;
     };
     const ix = { v: 0 };
     for (ix.v = 0; ix.v < argv.length; ix.v++) {
@@ -431,6 +539,14 @@ export function parseArgs(argv: string[]): Args {
             args.preview = true;
         } else if (a === '--commit-intake') {
             args.commit_intake = true;
+        } else if (a === '--mode') {
+            args.mode = choice(take(ix, '--mode'), '--mode', MODE_CHOICES);
+        } else if (a.startsWith('--mode=')) {
+            args.mode = choice(a.slice('--mode='.length), '--mode', MODE_CHOICES);
+        } else if (a === '--source') {
+            args.source = choice(take(ix, '--source'), '--source', SOURCE_CHOICES);
+        } else if (a.startsWith('--source=')) {
+            args.source = choice(a.slice('--source='.length), '--source', SOURCE_CHOICES);
         } else if (a === '--host') {
             args.host = take(ix, '--host');
         } else if (a.startsWith('--host=')) {
@@ -458,36 +574,30 @@ export function parseArgs(argv: string[]): Args {
 export function main(argv: string[] | null = null): number {
     const ns = parseArgs(argv ?? process.argv.slice(2));
 
-    if (ns.commit_intake && !ns.preview) {
-        ns.preview = false;
-    }
-    if (ns.commit_intake && ns.preview) {
+    if (ns.commit_intake) {
         ns.preview = false; // commit-intake wins
     }
 
     if (!ns.confirm_transcript_access) {
         process.stdout.write(
-            '> Mining reads your session transcript files. Re-run with\n' +
+            '> Mining reads your session log / transcript. Re-run with\n' +
                 '> --confirm-transcript-access to proceed. The flag is per-invocation\n' +
                 '> and not persisted.\n',
         );
         return 0;
     }
 
-    if (ns.host !== 'claude-code') {
+    const [srcPath, kind] = _resolveSource(ns.source, ns.host, ns.transcript);
+    if (srcPath === null || !_exists(srcPath)) {
         process.stdout.write(
-            `> No TranscriptAdapter for host=${ns.host}. Phase 1 supports: claude-code.\n` +
-                '> Use /memory propose to record signals manually.\n',
+            '> No session source found (no chat-history log, no ' +
+                'Claude-Code transcript). Use /memory propose to record ' +
+                'signals manually.\n',
         );
         return 0;
     }
 
-    const transcript = _resolveTranscript(ns.host, ns.transcript);
-    if (transcript === null || !_exists(transcript)) {
-        process.stdout.write('> No transcript found for host=claude-code. Use /memory propose.\n');
-        return 0;
-    }
-
+    const entries = kind === 'chat-history' ? _iterChatHistory(srcPath) : _iterClaudeCodeJsonl(srcPath);
     let since: Date;
     if (ns.since) {
         // datetime.fromisoformat(ns.since).replace(tzinfo=utc) — a bare date
@@ -498,20 +608,29 @@ export function main(argv: string[] | null = null): number {
     } else {
         since = new Date(Date.now() - DEFAULT_WINDOW_DAYS * 24 * 3600 * 1000);
     }
-    const facts = mine(transcript, since, []);
+    const facts = mine(entries, since, [], _sessionId(srcPath));
     const window = `since ${_dateIso(since)}`;
 
-    if (!ns.commit_intake) {
-        process.stdout.write(renderPreview(facts, ns.project, window, ns.host));
+    if (ns.commit_intake) {
+        const written = commitIntake(facts, ns.intake_root);
+        const filesTouched = new Set(facts.map((f) => f.type as string)).size;
+        process.stdout.write(
+            `✅ Appended ${written} intake lines across ${filesTouched} ` +
+                'files.\n   Next: /memory promote to lift validated lines ' +
+                'into curated YAML.\n',
+        );
         return 0;
     }
 
-    const written = commitIntake(facts, ns.intake_root);
-    const filesTouched = new Set(facts.map((f) => f.type as string)).size;
-    process.stdout.write(
-        `✅ Appended ${written} intake lines across ${filesTouched} files.\n` +
-            '   Next: /memory promote to lift validated lines into curated YAML.\n',
-    );
+    // Preview mode — render per --mode.
+    const out: string[] = [];
+    if (ns.mode === 'signals' || ns.mode === 'both') {
+        out.push(renderPreview(facts, ns.project, window, kind));
+    }
+    if (ns.mode === 'proposals' || ns.mode === 'both') {
+        out.push(renderProposalSeeds(facts, ns.project, window));
+    }
+    process.stdout.write(out.join('\n'));
     return 0;
 }
 

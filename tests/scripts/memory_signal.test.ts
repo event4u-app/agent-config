@@ -1,11 +1,11 @@
 // Tests for src/scripts/memory_signal.ts — the write-side helper.
 //
 // 1:1 port of tests/test_memory_signal.py (pytest → vitest, ADR-094 parity
-// contract). The pytest suite monkeypatches `INTAKE_ROOT`, `SETTINGS_FILE`,
-// `_backend_status`, and `_monthly_file`; the TS twin exposes the same
-// override surface via setter seams + the `_setBackendStatus` hook. A
-// trailing golden-parity block runs python3 + tsx and asserts byte-identical
-// behaviour (structural, since id/ts vary per run), skipped without python3.
+// contract). Memory is file-backed (no external backend); the pytest suite
+// monkeypatches `INTAKE_ROOT` and `_monthly_file`, and the TS twin exposes the
+// same override surface via setter seams. A trailing golden-parity block runs
+// python3 + tsx and asserts byte-identical behaviour (structural, since id/ts
+// vary per run), skipped without python3.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -30,14 +30,9 @@ let tmp: string;
 beforeEach(() => {
     tmp = mkdtempSync(join(tmpdir(), 'memsig-'));
     sig._setIntakeRoot(join(tmp, 'agents', 'memory', 'intake'));
-    sig._setSettingsFile(join(tmp, '.agent-settings.yml'));
-    // Default backend probe → absent (the pytest default has no CLI on PATH).
-    sig._setBackendStatus(() => 'absent');
 });
 afterEach(() => {
     sig._setIntakeRoot(join('agents', 'memory', 'intake'));
-    sig._setSettingsFile('.agent-settings.yml');
-    sig._setBackendStatus(null);
     rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -139,41 +134,12 @@ describe('memory_signal.ts — emit()', () => {
         expect((rec as { path: string }).path).toBe('app/x');
     });
 
-    it('skip_when_present true suppresses jsonl', () => {
-        writeFileSync(join(tmp, '.agent-settings.yml'), 'memory:\n  intake:\n    skip_when_present: true\n', 'utf-8');
-        sig._setBackendStatus(() => 'present');
-        const rec = sig.emit('historical-patterns', 'app/Foo.php', 'x');
-        expect(rec).not.toBeNull();
-        expect((rec as Record<string, unknown>)['_backend']).toBe('package-only');
-        const root = join(tmp, 'agents', 'memory', 'intake');
-        const hasFiles =
-            existsSync(root) && readdirSync(root).some((n) => n.startsWith('signals-') && n.endsWith('.jsonl'));
-        expect(hasFiles).toBe(false);
-    });
-
-    it('skip_when_present false still writes', () => {
-        writeFileSync(join(tmp, '.agent-settings.yml'), 'memory:\n  intake:\n    skip_when_present: false\n', 'utf-8');
-        sig._setBackendStatus(() => 'present');
-        const rec = sig.emit('historical-patterns', 'app/Bar.php', 'y');
-        expect(rec).not.toBeNull();
-        expect('_backend' in (rec as Record<string, unknown>)).toBe(false);
-        expect(readAllLines().length).toBeGreaterThan(0);
-    });
-
-    it('backend absent writes regardless', () => {
-        sig._setBackendStatus(() => 'absent');
+    it('emit always writes intake', () => {
+        // Memory is file-backed: emit always appends intake (no package route).
         const rec = sig.emit('product-rules', 'app/Baz.php', 'z');
         expect(rec).not.toBeNull();
         expect('_backend' in (rec as Record<string, unknown>)).toBe(false);
         expect(readAllLines().length).toBeGreaterThan(0);
-    });
-
-    it('missing settings file defaults to writing', () => {
-        // No settings file → never skip.
-        sig._setBackendStatus(() => 'present');
-        const rec = sig.emit('ownership', 'app/x', 'team-y');
-        expect(rec).not.toBeNull();
-        expect('_backend' in (rec as Record<string, unknown>)).toBe(false);
     });
 });
 

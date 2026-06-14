@@ -2,7 +2,7 @@
 /**
  * Sensitive-path denylist — refuses files that almost certainly hold secrets or PII.
  *
- * TypeScript twin of `src/scripts/validate_safe_paths.py` (ADR-094, Phase 4 /
+ * TypeScript twin of `src/scripts/validate_safe_paths.py` (ADR-096, Phase 4 /
  * Wave 4c). The public API and CLI contract are mirrored EXACTLY — same
  * exported snake_case names (`is_sensitive`, `assert_safe`,
  * `SensitivePathError`), same denylist regex / component set / token list,

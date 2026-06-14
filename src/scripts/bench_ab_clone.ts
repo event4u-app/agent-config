@@ -2,7 +2,7 @@
 /**
  * Materialise the `with`, `without`, and `with-rdp` clones for the value bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_clone.py` (ADR-094 py2ts
+ * TypeScript twin of `src/scripts/bench_ab_clone.py` (ADR-096 py2ts
  * Phase 8 / Wave 8d). The CLI contract mirrors the Python original
  * EXACTLY — `--refresh`, `--variant`, `--print-shape-hash`, exit codes,
  * stdout/stderr split, byte-identical written manifest

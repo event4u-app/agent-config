@@ -1,6 +1,6 @@
 // P1.2 — instruction-smuggling / suppression-phrase linter (road-to-security-pillar.md).
 //
-// TypeScript twin of `src/scripts/lint_instruction_smuggling.py` (ADR-094 —
+// TypeScript twin of `src/scripts/lint_instruction_smuggling.py` (ADR-096 —
 // Python→TS migration). Behaviour mirrors the Python module byte-for-byte.
 //
 // Detects instructions smuggled into rule/skill/command bodies (and MCP tool

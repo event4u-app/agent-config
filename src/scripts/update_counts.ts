@@ -2,7 +2,7 @@
 /**
  * Sync package-content counts (skills/rules/commands/guidelines) across docs.
  *
- * TypeScript twin of `src/scripts/update_counts.py` (ADR-094, Phase 5). The
+ * TypeScript twin of `src/scripts/update_counts.py` (ADR-096, Phase 5). The
  * CLI contract is mirrored EXACTLY — the single `--check` flag, exit codes
  * (0 = synced / updated; 1 = stale under --check, missing target), the
  * stdout/stderr split, and byte-identical messages AND byte-identical rewritten

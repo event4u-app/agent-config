@@ -1,7 +1,7 @@
 /**
  * Neutrality system prompts for the council.
  *
- * TypeScript twin of `src/scripts/ai_council/prompts.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/ai_council/prompts.py` (ADR-096 —
  * Python→TS migration, Phase 1). Council members must NOT see the host
  * agent's reasoning, internal state, or framing language. Each prompt asks
  * for an independent critique on the artefact's own merits.

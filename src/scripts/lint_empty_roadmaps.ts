@@ -2,7 +2,7 @@
 /**
  * Hard-Gate linter: no empty roadmap files under `agents/roadmaps/`.
  *
- * TypeScript twin of `src/scripts/lint_empty_roadmaps.py` (ADR-094 migration).
+ * TypeScript twin of `src/scripts/lint_empty_roadmaps.py` (ADR-096 migration).
  * Byte-identical CLI contract: same stdout, same exit codes (0 = clean,
  * 1 = at least one empty roadmap). `--quiet` is a bare argv membership check
  * (computed at import, NOT argparse), mirroring the Python original.

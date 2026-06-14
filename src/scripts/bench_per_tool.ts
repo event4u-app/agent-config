@@ -2,7 +2,7 @@
 /**
  * Per-tool projection-fidelity bench — step-4 Phase 4.
  *
- * TypeScript twin of `src/scripts/bench_per_tool.py` (ADR-094 Python→TS
+ * TypeScript twin of `src/scripts/bench_per_tool.py` (ADR-096 Python→TS
  * migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY: flags
  * (`--corpus`, `--top-k`, `--threshold`, `--json`, `--write-report`), exit
  * codes (0 / 1 below-threshold / 2 corpus not found), byte-identical

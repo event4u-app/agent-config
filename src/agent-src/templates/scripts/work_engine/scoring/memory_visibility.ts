@@ -1,9 +1,9 @@
 /**
  * Producer-side helpers for the memory-visibility line.
  *
- * TypeScript twin of `work_engine/scoring/memory_visibility.py` (ADR-094 py2ts
+ * TypeScript twin of `work_engine/scoring/memory_visibility.py` (ADR-096 py2ts
  * Phase 1 — work_engine scoring subpackage). Public API names stay snake_case
- * to mirror the Python module 1:1 (per ADR-094 — Python style is part of the
+ * to mirror the Python module 1:1 (per ADR-096 — Python style is part of the
  * contract).
  *
  * Implements the v1 line shape from
@@ -41,7 +41,6 @@ export const ICON = '\u{1F9E0}'; // 🧠
 export const DEFAULT_MAX_INLINE_IDS = 5;
 export const DEFAULT_ASKED_TYPES: readonly string[] = [
     'domain-invariants',
-    'architecture-decisions',
     'incident-learnings',
     'historical-patterns',
 ];

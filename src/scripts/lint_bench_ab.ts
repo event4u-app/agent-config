@@ -2,7 +2,7 @@
 /**
  * Validate the A/B bench corpora + `docs/benchmark.md` shape.
  *
- * TypeScript twin of `src/scripts/lint_bench_ab.py` (ADR-094, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_bench_ab.py` (ADR-096, Phase 4 /
  * Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet` flag, exit
  * codes (0 success, 1 first violation), stdout/stderr split, byte-identical
  * finding messages (including the `lint_bench_ab: <relpath>: <msg>` prefix
@@ -28,11 +28,12 @@ const TRACK_B_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-tr
 const DOCS_PATH = path.join(REPO_ROOT, 'docs', 'benchmark.md');
 
 const REQUIRED_SECTIONS = [
-    '## Headline',
-    '## Track A',
-    '## Track B',
+    // docs/benchmark.md is the v2 discipline-axis report (rendered by
+    // bench_ab_v2_stats.py --markdown). The v1 Headline/Track-A/Track-B/History
+    // structure was retired with the v1 binary-capability frame.
+    '## Honesty labels',
+    '## Gate verdict',
     '## Methodology',
-    '## History',
 ] as const;
 
 const TRACK_A_CATEGORIES = new Set(['rule', 'skill']);

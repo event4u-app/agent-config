@@ -80,7 +80,6 @@ describe('scoring/memory_visibility — constants', () => {
         expect(DEFAULT_MAX_INLINE_IDS).toBe(5);
         expect([...DEFAULT_ASKED_TYPES]).toEqual([
             'domain-invariants',
-            'architecture-decisions',
             'incident-learnings',
             'historical-patterns',
         ]);
@@ -105,11 +104,11 @@ describe('scoring/memory_visibility — summarise_visibility', () => {
             { rule_id: 'b', type: 'incident-learnings' },
             { id: 3, type: 'incident-learnings' }, // int id
         ];
-        expect(summarise_visibility(memory)).toEqual({ asks: 4, hits: 2, ids: ['a', 'b', '3'] });
+        expect(summarise_visibility(memory)).toEqual({ asks: 3, hits: 2, ids: ['a', 'b', '3'] });
     });
     it('falls back to ids-present hit when no type field', () => {
         const memory = [{ id: 'x' }, { id: 'y' }];
-        expect(summarise_visibility(memory)).toEqual({ asks: 4, hits: 1, ids: ['x', 'y'] });
+        expect(summarise_visibility(memory)).toEqual({ asks: 3, hits: 1, ids: ['x', 'y'] });
     });
     it('custom asked_types changes asks count', () => {
         expect(summarise_visibility([{ id: 'a' }], { asked_types: ['t1', 't2'] })).toEqual({

@@ -2,7 +2,7 @@
 /**
  * link_crypto — encrypt/decrypt stored third-party package links.
  *
- * TypeScript twin of `src/scripts/_lib/link_crypto.py` (ADR-094). The public
+ * TypeScript twin of `src/scripts/_lib/link_crypto.py` (ADR-096). The public
  * API is mirrored EXACTLY — `encrypt`, `decrypt`, `is_token`, `project_key`,
  * `global_key`, `resolve_keys`, plus the CLI (`encrypt` / `decrypt` / `keygen`
  * / `keystatus`). The crypto scheme is replicated byte-for-byte against the

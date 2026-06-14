@@ -12,7 +12,7 @@
 // run is cheaper than a missed strategic decision); the educate path
 // exists exactly to let the user override a wrong `unnecessary` verdict.
 //
-// Parity notes (ADR-094):
+// Parity notes (ADR-096):
 // - Trigger tables are plain objects whose insertion order mirrors the
 //   Python dict literal — `_count_matches` relies on that order for
 //   tie-breaking (first-defined bucket wins).

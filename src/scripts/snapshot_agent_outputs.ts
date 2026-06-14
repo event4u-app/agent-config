@@ -2,7 +2,7 @@
 /**
  * Snapshot the agent-config build outputs for byte-identity verification.
  *
- * TypeScript twin of `src/scripts/snapshot_agent_outputs.py` (ADR-094,
+ * TypeScript twin of `src/scripts/snapshot_agent_outputs.py` (ADR-096,
  * Phase 8 / Wave 8b). Mirrors the CLI contract EXACTLY — the `--out` flag,
  * exit codes, the stdout/stderr split, byte-identical stdout AND the
  * byte-identical written snapshot JSON (`json.dumps(indent=2,

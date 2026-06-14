@@ -1,17 +1,18 @@
 /**
- * `memory` step — bounded retrieval over the four allowed types.
+ * `memory` step — bounded retrieval over the three allowed types.
  *
- * TypeScript twin of `work_engine/directives/backend/memory.py` (ADR-094
+ * TypeScript twin of `work_engine/directives/backend/memory.py` (ADR-096
  * py2ts Phase 1 — work_engine directive sets). Public API names stay
- * snake_case to mirror the Python module 1:1 (per ADR-094 — Python style is
+ * snake_case to mirror the Python module 1:1 (per ADR-096 — Python style is
  * part of the contract).
  *
  * Contract (see
  * `docs/contracts/implement-ticket-flow.md#memory-retrieval-contract`):
  *
- * - Four allowed types: `domain-invariants`, `architecture-decisions`,
- *   `incident-learnings`, `historical-patterns`.
- * - Hard cap of **12** hits total across the four types.
+ * - Three allowed types: `domain-invariants`, `incident-learnings`,
+ *   `historical-patterns`. (Architectural rationale lives in ADRs —
+ *   `docs/decisions/` — not in curated memory.)
+ * - Hard cap of **12** hits total across the three types.
  * - Keys derive from the ticket — title tokens plus acceptance-criterion
  *   tokens plus any already-known `files` hint. Tokenisation is
  *   deliberately naive (whitespace split, lower-cased) so the retrieval
@@ -28,10 +29,9 @@
 import { type Any, DeliveryState, Outcome, StepResult } from '../../delivery_state.js';
 import { retrieve as _real_retrieve } from '../../../memory_lookup.js';
 
-/** The four types allowed by the flow contract. No aliases, no extras. */
+/** The three types allowed by the flow contract. No aliases, no extras. */
 export const MEMORY_TYPES: ReadonlyArray<string> = [
     'domain-invariants',
-    'architecture-decisions',
     'incident-learnings',
     'historical-patterns',
 ];

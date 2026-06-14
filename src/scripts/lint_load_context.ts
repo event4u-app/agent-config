@@ -2,7 +2,7 @@
 /**
  * Lint the `load_context:` / `load_context_eager:` frontmatter schema.
  *
- * TypeScript twin of `src/scripts/lint_load_context.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_load_context.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
  * flag (positional `--quiet` detection in argv, like the Python
  * `"--quiet" in sys.argv`), exit codes (0 clean / warnings-only, 1 errors),

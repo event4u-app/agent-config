@@ -2,7 +2,7 @@
 /**
  * Drift detector for the bench corpus — step-4 Phase 3 Step 2.
  *
- * TypeScript twin of `src/scripts/bench_drift_check.py` (ADR-094, Phase 8 /
+ * TypeScript twin of `src/scripts/bench_drift_check.py` (ADR-096, Phase 8 /
  * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
  * flags, same exit codes (0 no-drift/warmup, 1 read error, 2 drift), same
  * stdout/stderr split, byte-identical `--json` payload

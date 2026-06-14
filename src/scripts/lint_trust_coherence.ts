@@ -2,7 +2,7 @@
 /**
  * Lint trust/safety coherence across the discovery manifest.
  *
- * TypeScript twin of `src/scripts/lint_trust_coherence.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_trust_coherence.py` (ADR-096,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * / `--manifest` / `--router` / `--compiled-src` flags, finding messages,
  * stdout/stderr split (errors + summary on stderr; success on stdout),

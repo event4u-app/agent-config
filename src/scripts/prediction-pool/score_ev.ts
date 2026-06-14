@@ -2,7 +2,7 @@
 /**
  * Exact-score EV optimiser for prediction-pool-optimizer.
  *
- * TypeScript twin of `src/scripts/prediction-pool/score_ev.py` (ADR-094,
+ * TypeScript twin of `src/scripts/prediction-pool/score_ev.py` (ADR-096,
  * Phase 8). The CLI contract is mirrored EXACTLY — the positional `matches`
  * JSON file, `--lh` / `--la` / `--exact` / `--diff` / `--tendency` /
  * `--max-tip` / `--top` / `--json`, exit codes, the stdout/stderr split, and

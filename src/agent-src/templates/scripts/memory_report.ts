@@ -3,11 +3,12 @@
  * One-shot memory observability report.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_report.py`
- * (ADR-094, consumer-template memory). The public API and CLI contract
+ * (ADR-096, consumer-template memory). The public API and CLI contract
  * mirror the Python original EXACTLY — same exported names (snake_case
  * kept deliberately), same exit codes, stdout/stderr split, byte-identical
- * messages, and byte-identical generated output (text report + `--format
- * json`, matching json.dumps(indent=2, default=str)). No behaviour changes —
+ * messages, and
+ * byte-identical generated output (text report + `--format json`,
+ * matching json.dumps(indent=2, default=str)). No behaviour changes —
  * latent Python bugs are replicated and flagged as divergence candidates.
  *
  * Shows:
@@ -50,12 +51,29 @@ const CURATED_TYPES: readonly string[] = [
     'ownership',
     'historical-patterns',
     'domain-invariants',
-    'architecture-decisions',
     'incident-learnings',
     'product-rules',
 ];
 
-// --- PyYAML date/timestamp parity (mirrors memory_status sibling tree) -------
+// Role-mode marker grepped from session captures / reports / handoffs.
+// Matches `<!-- role-mode: <slug> | contract: ... -->` on any single line.
+const _MODE_MARKER_PATTERN = /<!--\s*role-mode:\s*([a-z0-9][a-z0-9-]*)\s*\|\s*contract:[^>]*-->/g;
+const _MODE_SCAN_DIRS: readonly string[] = [
+    path.join('agents', 'sessions'),
+    path.join('agents', 'runtime', 'reports'),
+    path.join('agents', 'handoffs'),
+    path.join('agents', 'learnings'),
+];
+const _KNOWN_MODES: ReadonlySet<string> = new Set([
+    'developer',
+    'reviewer',
+    'tester',
+    'po',
+    'incident',
+    'planner',
+]);
+
+// --- PyYAML date/timestamp parity (mirrors memory_lookup.ts) ----------------
 
 const PYYAML_DATE_ONLY_RE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const PYYAML_TIMESTAMP_RE =
@@ -69,8 +87,23 @@ class PyTimestamp {
     }
 }
 
+/**
+ * Marker for a Python `float` so json.dumps renders integer-valued floats as
+ * `0.0`, not `0`. JS has no int/float distinction; this preserves the
+ * `staleness_rate` (always a float via round()) byte-for-byte.
+ */
+class PyFloat {
+    constructor(readonly value: number) {}
+}
+
 function _isPlainObject(v: unknown): v is Record<string, unknown> {
-    return typeof v === 'object' && v !== null && !Array.isArray(v) && !(v instanceof PyTimestamp);
+    return (
+        typeof v === 'object' &&
+        v !== null &&
+        !Array.isArray(v) &&
+        !(v instanceof PyTimestamp) &&
+        !(v instanceof PyFloat)
+    );
 }
 
 function _isFile(p: string): boolean {
@@ -166,12 +199,12 @@ function _iter_curated_entries(): CuratedTuple[] {
         const single = path.join(MEMORY_ROOT, `${mtype}.yml`);
         if (_isFile(single)) {
             const data = _load_yaml(single);
-            // Python: `for e in data.get("entries") or []`.
             const entries = data['entries'];
-            const iterable = Array.isArray(entries) ? entries : [];
-            for (const e of iterable) {
-                if (_isPlainObject(e)) {
-                    out.push([single, mtype, e]);
+            if (Array.isArray(entries)) {
+                for (const e of entries) {
+                    if (_isPlainObject(e)) {
+                        out.push([single, mtype, e]);
+                    }
                 }
             }
         }
@@ -316,7 +349,7 @@ interface StaleRow {
     overdue_days: number;
 }
 
-/** Mirror dt.date.today() as the host local date. */
+/** Mirror dt.date.today() as a UTC-naive "local" date — uses host local date. */
 function _todayDate(): { y: number; m: number; d: number } {
     const now = new Date();
     return { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() };
@@ -359,8 +392,7 @@ function _staleness_report(): StaleRow[] {
         // Python: isinstance(lv, (str, dt.date)) — a PyTimestamp marks a parsed
         // YAML date; a string is a string. review_after must be an int (not bool).
         const lvIsDateLike = typeof lv === 'string' || lv instanceof PyTimestamp;
-        const reviewIsInt =
-            typeof review_after === 'number' && Number.isInteger(review_after) && typeof review_after !== 'boolean';
+        const reviewIsInt = typeof review_after === 'number' && Number.isInteger(review_after) && typeof review_after !== 'boolean';
         if (!lvIsDateLike || !reviewIsInt) {
             continue;
         }
@@ -387,10 +419,171 @@ function _staleness_report(): StaleRow[] {
     return stale;
 }
 
+function _quarter_of(d: unknown): string {
+    let parsed: { y: number; m: number } | null = null;
+    if (typeof d === 'string') {
+        const pd = _parseIsoDate(d.slice(0, 10));
+        if (pd === null) {
+            return 'unknown';
+        }
+        parsed = pd;
+    } else if (d instanceof PyTimestamp) {
+        const pd = _parseIsoDate(d.pyStr.slice(0, 10));
+        if (pd === null) {
+            return 'unknown';
+        }
+        parsed = pd;
+    } else {
+        return 'unknown';
+    }
+    return `${parsed.y}Q${Math.floor((parsed.m - 1) / 3) + 1}`;
+}
+
+interface QuarterlyStats {
+    accepted_by_quarter: Record<string, number>;
+    retired_by_quarter: Record<string, number>;
+    // Python `float` — preserved via PyFloat so JSON renders `0.0` not `0`.
+    staleness_rate: PyFloat;
+    curated_total: number;
+    curated_overdue: number;
+}
+
+function _quarterly_stats(): QuarterlyStats {
+    const accepted = new Map<string, number>();
+    for (const [, , entry] of _iter_curated_entries()) {
+        const created = entry['created'] ?? entry['last_validated'];
+        if (created !== undefined && created !== null) {
+            const q = _quarter_of(created);
+            accepted.set(q, (accepted.get(q) ?? 0) + 1);
+        }
+    }
+    const retired = new Map<string, number>();
+    if (_isDir(INTAKE_ROOT)) {
+        for (const jsonl of _globJsonl(INTAKE_ROOT)) {
+            for (const obj of _readJsonl(jsonl)) {
+                if (obj['type'] !== 'supersede') {
+                    continue;
+                }
+                const ts = obj['ts'];
+                if (typeof ts === 'string') {
+                    const q = _quarter_of(ts);
+                    retired.set(q, (retired.get(q) ?? 0) + 1);
+                }
+            }
+        }
+    }
+    const total = _iter_curated_entries().length;
+    const overdue = _staleness_report().length;
+    const rate = total ? overdue / total : 0.0;
+    return {
+        accepted_by_quarter: _mapToObj(accepted),
+        retired_by_quarter: _mapToObj(retired),
+        staleness_rate: new PyFloat(_pyRound3(rate)),
+        curated_total: total,
+        curated_overdue: overdue,
+    };
+}
+
+/** Mirror Python round(x, 3) — banker's rounding to 3 decimals. */
+function _pyRound3(x: number): number {
+    const factor = 1000;
+    const scaled = x * factor;
+    const floor = Math.floor(scaled);
+    const diff = scaled - floor;
+    let rounded: number;
+    if (Math.abs(diff - 0.5) < 1e-9) {
+        rounded = floor % 2 === 0 ? floor : floor + 1;
+    } else {
+        rounded = Math.round(scaled);
+    }
+    return rounded / factor;
+}
+
+interface RoleModeStats {
+    total_markers: number;
+    files_scanned: number;
+    by_mode: Record<string, number>;
+    unknown_modes: string[];
+}
+
+export function _role_mode_stats(): RoleModeStats {
+    const counts = new Map<string, number>();
+    let files_scanned = 0;
+    const unknown_modes = new Set<string>();
+    for (const root of _MODE_SCAN_DIRS) {
+        if (!_exists(root)) {
+            continue;
+        }
+        for (const md of _rglobMd(root)) {
+            let text: string;
+            try {
+                text = fs.readFileSync(md, 'utf-8');
+            } catch {
+                continue;
+            }
+            files_scanned += 1;
+            _MODE_MARKER_PATTERN.lastIndex = 0;
+            let m: RegExpExecArray | null;
+            // eslint-disable-next-line no-cond-assign
+            while ((m = _MODE_MARKER_PATTERN.exec(text)) !== null) {
+                const slug = (m[1] as string).toLowerCase();
+                counts.set(slug, (counts.get(slug) ?? 0) + 1);
+                if (!_KNOWN_MODES.has(slug)) {
+                    unknown_modes.add(slug);
+                }
+            }
+        }
+    }
+    let total = 0;
+    for (const v of counts.values()) {
+        total += v;
+    }
+    return {
+        total_markers: total,
+        files_scanned,
+        by_mode: _mapToObj(counts),
+        unknown_modes: [...unknown_modes].sort(),
+    };
+}
+
+function _exists(p: string): boolean {
+    try {
+        fs.statSync(p);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function _rglobMd(root: string): string[] {
+    const found: string[] = [];
+    const walk = (dir: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const ent of entries) {
+            const full = path.join(dir, ent.name);
+            if (ent.isDirectory()) {
+                walk(full);
+            } else if (ent.isFile() && ent.name.endsWith('.md')) {
+                found.push(full);
+            }
+        }
+    };
+    walk(root);
+    found.sort();
+    return found;
+}
+
 interface Report {
-    backend: { status: string; backend: string; reason: string; cli_path: string };
+    backend: { status: string; backend: string; reason: string };
     intake: IntakeStats;
     staleness: StaleRow[];
+    quarterly: QuarterlyStats;
+    role_modes: RoleModeStats;
 }
 
 export function build_report(): Report {
@@ -400,10 +593,11 @@ export function build_report(): Report {
             status: st.status,
             backend: st.backend,
             reason: st.reason,
-            cli_path: st.cli_path,
         },
         intake: _intake_stats(),
         staleness: _staleness_report(),
+        quarterly: _quarterly_stats(),
+        role_modes: _role_mode_stats(),
     };
 }
 
@@ -431,12 +625,44 @@ function _print_text(report: Report): void {
             out.push(`  (+${stale.length - 5} more)`);
         }
     }
+    const q = report.quarterly;
+    out.push(`Quarterly: staleness-rate=${_pyPercent1(q.staleness_rate.value)} (${q.curated_overdue}/${q.curated_total})`);
+    if (Object.keys(q.accepted_by_quarter).length > 0) {
+        const acc = _sortedEntries(q.accepted_by_quarter)
+            .map(([k, v]) => `${k}:${v}`)
+            .join(', ');
+        out.push(`  accepted: ${acc}`);
+    }
+    if (Object.keys(q.retired_by_quarter).length > 0) {
+        const ret = _sortedEntries(q.retired_by_quarter)
+            .map(([k, v]) => `${k}:${v}`)
+            .join(', ');
+        out.push(`  retired:  ${ret}`);
+    }
+    const rm = report.role_modes;
+    if (rm.files_scanned) {
+        out.push(`Role modes: ${rm.total_markers} marker(s) in ${rm.files_scanned} file(s)`);
+        if (Object.keys(rm.by_mode).length > 0) {
+            const modes = _sortedEntries(rm.by_mode)
+                .map(([k, v]) => `${k}:${v}`)
+                .join(', ');
+            out.push(`  by mode: ${modes}`);
+        }
+        if (rm.unknown_modes.length > 0) {
+            out.push(`  unknown: ${rm.unknown_modes.join(', ')} (not in the six reserved slugs)`);
+        }
+    }
     process.stdout.write(out.map((line) => `${line}\n`).join(''));
 }
 
 /** sorted(dict.items()) — by key, lexically. */
 function _sortedEntries(obj: Record<string, number>): [string, number][] {
     return Object.entries(obj).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+}
+
+/** Mirror Python f"{x:.1%}" — percentage with one decimal. */
+function _pyPercent1(x: number): string {
+    return `${(x * 100).toFixed(1)}%`;
 }
 
 // --- JSON output (json.dumps(report, indent=2, default=str)) ----------------
@@ -462,6 +688,9 @@ function _dumpsIndent(value: unknown, indent: number, depth: number): string {
     }
     if (value instanceof PyTimestamp) {
         return _jsonStrAscii(value.pyStr);
+    }
+    if (value instanceof PyFloat) {
+        return _jsonFloat(value.value);
     }
     if (Array.isArray(value)) {
         if (value.length === 0) {
@@ -489,6 +718,17 @@ function _jsonNum(n: number): string {
         return n > 0 ? 'Infinity' : '-Infinity';
     }
     return String(n);
+}
+
+/** Render a Python float — integer-valued floats keep a `.0` suffix (repr(float)). */
+function _jsonFloat(n: number): string {
+    if (!Number.isFinite(n)) {
+        if (Number.isNaN(n)) {
+            return 'NaN';
+        }
+        return n > 0 ? 'Infinity' : '-Infinity';
+    }
+    return Number.isInteger(n) ? `${n}.0` : String(n);
 }
 
 function _jsonStrAscii(s: string): string {

@@ -1,7 +1,7 @@
 /**
  * `contract` step — locks data_model + api_surface before any UI work.
  *
- * TypeScript twin of `directives/mixed/contract.py` (ADR-094 py2ts). Public
+ * TypeScript twin of `directives/mixed/contract.py` (ADR-096 py2ts). Public
  * API names stay snake_case to mirror the Python module 1:1.
  *
  * In the `mixed` directive set the `plan` slot is the contract step. It

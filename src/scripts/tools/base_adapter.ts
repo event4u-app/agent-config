@@ -9,7 +9,7 @@
  *
  * No real API calls are made by the base — adapters return structured results.
  *
- * TypeScript twin of `src/scripts/tools/base_adapter.py` (ADR-094 — Python→TS
+ * TypeScript twin of `src/scripts/tools/base_adapter.py` (ADR-096 — Python→TS
  * migration, Phase 1 / tools adapter cluster). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom):
  * the `ToolAction` / `ToolResult` value shapes, `ToolResult.to_dict()` with

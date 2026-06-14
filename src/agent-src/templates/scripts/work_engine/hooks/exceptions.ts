@@ -1,7 +1,7 @@
 /**
  * Hook control-flow signals.
  *
- * TypeScript twin of `work_engine/hooks/exceptions.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/hooks/exceptions.py` (ADR-096 py2ts —
  * work_engine.hooks subpackage). Class names stay 1:1 with the Python module.
  *
  * Three-tier error contract (locked by roadmap P1):

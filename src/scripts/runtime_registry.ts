@@ -2,7 +2,7 @@
 /**
  * Runtime Registry — discovers skills with execution metadata.
  *
- * TypeScript twin of `src/scripts/runtime_registry.py` (ADR-094, Phase 8 /
+ * TypeScript twin of `src/scripts/runtime_registry.py` (ADR-096, Phase 8 /
  * Wave 8h). Mirrors the Python CLI contract EXACTLY — `--root`, `--format`
  * (text|json), `--validate` flags, exit codes (0 ok / valid, 1 invalid),
  * byte-identical stdout/stderr, and byte-identical `json.dumps(indent=2)`

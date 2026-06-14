@@ -2,7 +2,7 @@
  * Shared plumbing for chat-history hooks.
  *
  * TypeScript twin of `work_engine/hooks/builtin/_chat_history_base.py`
- * (ADR-094 py2ts — work_engine.hooks.builtin subpackage). Subprocess-driven
+ * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Subprocess-driven
  * so the work-engine package stays decoupled from `scripts/chat_history.py`'s
  * internals. The `runner` injection point is the test seam — production passes
  * the default runner, tests pass a fake.

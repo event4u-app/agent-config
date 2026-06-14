@@ -2,7 +2,7 @@
 /**
  * Inventory frontmatter keys across all agent artefacts.
  *
- * TypeScript twin of `src/scripts/inventory_frontmatter.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/inventory_frontmatter.py` (ADR-096 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: no flags, exit code 0, byte-identical Markdown stdout. No
  * behaviour changes — latent bugs (line-based frontmatter parse, the

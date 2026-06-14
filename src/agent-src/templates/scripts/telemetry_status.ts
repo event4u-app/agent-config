@@ -2,7 +2,7 @@
 /**
  * `./agent-config telemetry:status` — read-only status report.
  *
- * TypeScript twin of `telemetry_status.py` (ADR-094). Byte-for-byte parity on
+ * TypeScript twin of `telemetry_status.py` (ADR-096). Byte-for-byte parity on
  * stdout / stderr / exit code for both text and JSON formats. Safe even when
  * telemetry is disabled — never creates the log, never validates, never writes.
  */

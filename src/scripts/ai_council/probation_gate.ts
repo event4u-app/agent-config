@@ -1,7 +1,7 @@
 /**
  * Probation promote-and-prune for `agents/decisions/low-impact-decisions.md`.
  *
- * TypeScript twin of `src/scripts/ai_council/probation_gate.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/ai_council/probation_gate.py` (ADR-096 —
  * Python→TS migration, Phase 1; ai_council FOUNDATION wave). Public surface
  * mirrors the Python module exactly (snake_case kept deliberately):
  * `WINDOW_DAYS`, `PROMOTION_THRESHOLD`, `GateRun`, `run_gate`.

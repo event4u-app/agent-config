@@ -1,5 +1,5 @@
 // External-AI clients for the council — byte-identical TypeScript twin of
-// `src/scripts/ai_council/clients.py` (py2ts migration, ADR-094).
+// `src/scripts/ai_council/clients.py` (py2ts migration, ADR-096).
 //
 // Mirrors the contract from `scripts/skill_trigger_eval.py`:
 // - Tokens come exclusively from `~/.event4u/agent-config/<provider>.key`

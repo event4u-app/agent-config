@@ -1,7 +1,7 @@
 /**
  * `stitch` step — integration verification across the contract / UI seam.
  *
- * TypeScript twin of `directives/mixed/stitch.py` (ADR-094 py2ts). Public API
+ * TypeScript twin of `directives/mixed/stitch.py` (ADR-096 py2ts). Public API
  * names stay snake_case to mirror the Python module 1:1.
  *
  * In the `mixed` directive set the `test` slot is the integration boundary.

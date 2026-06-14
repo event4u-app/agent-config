@@ -1,7 +1,7 @@
 /**
  * `apply` step — single-file edit path for the `ui-trivial` set.
  *
- * TypeScript twin of `directives/ui_trivial/apply.py` (ADR-094 py2ts).
+ * TypeScript twin of `directives/ui_trivial/apply.py` (ADR-096 py2ts).
  * Public API names stay snake_case to mirror the Python module 1:1.
  *
  * The short-circuit path for micro UI edits that provably cannot warrant the

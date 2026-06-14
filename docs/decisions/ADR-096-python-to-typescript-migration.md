@@ -1,5 +1,5 @@
 ---
-adr: 094
+adr: 096
 status: accepted
 date: 2026-06-11
 decision: python-to-typescript-migration
@@ -9,7 +9,7 @@ phase: py2ts · migration-infrastructure
 type: structural
 ---
 
-# ADR-094 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
+# ADR-096 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
 
 ## Status
 

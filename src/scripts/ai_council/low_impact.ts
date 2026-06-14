@@ -19,7 +19,7 @@
 // never reach this module — they route to `user` at the config layer.
 // This module is only consulted for the `low_impact` class.
 //
-// Parity notes (ADR-094):
+// Parity notes (ADR-096):
 // - The four transparency markers are reproduced byte-for-byte (the
 //   `fast-path-marker-visibility` Iron Law). English, no emoji, leading `> `.
 // - `int(cfg.max_tokens * _INPUT_RATIO)` → `Math.trunc` (Python `int()`

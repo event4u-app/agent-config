@@ -1,6 +1,6 @@
 // P3.1 — consumer-facing agent-config security audit (road-to-security-pillar.md).
 //
-// TypeScript twin of `src/scripts/security_audit_config.py` (ADR-094 —
+// TypeScript twin of `src/scripts/security_audit_config.py` (ADR-096 —
 // Python→TS migration). Behaviour mirrors the Python module byte-for-byte.
 //
 // Points the Phase-1 detection logic at a *consumer's assembled* agent config —
