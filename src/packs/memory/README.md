@@ -18,6 +18,6 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
 - **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
 - **`memory-learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
 - **`memory-load`** — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
-- **`memory-mine-session`** — The single session-mining command — mine the cross-host chat-history log (or a host transcript) for memory signals AND/OR rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-by-default, opt-in access. Folds in the former /chat-history learn.
+- **`memory-mine-session`** — Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
 - **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
 - **`memory-propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
