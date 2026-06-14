@@ -116,7 +116,7 @@ function _sign(x: number): number {
 }
 
 /** Points a tip (th:ta) earns against an actual result (ah:aa). */
-function _score(
+export function _score(
     th: number,
     ta: number,
     ah: number,
@@ -138,7 +138,7 @@ function _score(
 }
 
 /** Joint probability of every actual scoreline up to max_goals. */
-function grid(lh: number, la: number, max_goals: number = MAX_GOALS): number[][] {
+export function grid(lh: number, la: number, max_goals: number = MAX_GOALS): number[][] {
     const ph: number[] = [];
     const pa: number[] = [];
     for (let k = 0; k <= max_goals; k += 1) {
@@ -156,10 +156,10 @@ function grid(lh: number, la: number, max_goals: number = MAX_GOALS): number[][]
     return g;
 }
 
-type EvRow = [number, number, number];
+export type EvRow = [number, number, number];
 
 /** EV (expected points) of every candidate tip up to max_tip goals/side. */
-function ev_table(
+export function ev_table(
     lh: number,
     la: number,
     pts_exact: number,
