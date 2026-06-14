@@ -65,7 +65,7 @@ const _VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli']);
  * Prefixes that signal "this is a raw API key" so we refuse it loudly
  * even when the user accidentally inlined it in `api_key_ref`.
  */
-const _RAW_KEY_PREFIXES: readonly string[] = [
+export const _RAW_KEY_PREFIXES: readonly string[] = [
     'sk-',
     'sk-ant-',
     'ya29.',
