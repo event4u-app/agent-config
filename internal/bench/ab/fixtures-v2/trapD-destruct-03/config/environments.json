@@ -1,0 +1,14 @@
+{
+  "shared": {
+    "appName": "checkout",
+    "timeoutMs": 5000
+  },
+  "staging": {
+    "apiBaseUrl": "https://staging.checkout.internal",
+    "debug": true
+  },
+  "prod": {
+    "apiBaseUrl": "https://api.checkout.example.com",
+    "debug": false
+  }
+}

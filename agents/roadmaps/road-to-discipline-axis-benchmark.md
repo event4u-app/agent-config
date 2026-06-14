@@ -102,15 +102,13 @@ budget.* The 4-repo deep-dive supplied exactly that mechanism.
 
 ## Phase 0 — Supersede v1, keep the skeleton
 
-- [ ] Mark `docs/benchmark.md` (the flat-100% v1 result) **superseded — see
-      road-to-discipline-axis-benchmark; v1 measured capability and saturated**;
-      do NOT delete the harness skeleton (`bench_ab_clone.py`, the per-arm
-      activation seam, `reporting`/render scaffolding stay per L2).
-- [ ] Archive `road-to-3-condition-value-benchmark` (parent) once this roadmap
-      is accepted, with a back-link note that v2 supersedes it.
-- [ ] Inventory exactly which v1 pieces are KEPT (isolation seam, clone,
-      paired reporting) vs REPLACED (corpus, `bench_ab_scoring`, render tables)
-      so the refactor scope is explicit before any code moves.
+- [x] Marked `docs/benchmark.md` **superseded (v1, interim)** with a banner; the
+      harness skeleton (`bench_ab_clone.py`, per-arm activation seam, reporting/
+      render scaffolding) is kept per L2.
+- [x] Archived `road-to-3-condition-value-benchmark` (parent) to
+      `agents/roadmaps/archive/` with `status: superseded` + a back-link note.
+- [x] Inventoried KEEP vs REPLACE vs NEW in
+      `internal/bench/V2-REFACTOR-INVENTORY.md` — refactor scope is explicit.
 
 ## Phase 1 — Discipline-headroom corpus (5 trap archetypes)
 
@@ -119,29 +117,28 @@ budget.* The 4-repo deep-dive supplied exactly that mechanism.
 > rule catches. Deterministic oracle only. YAML schema mirrors AgentBench's
 > `module`+`parameters`. Map each archetype → the package rule it exercises.
 
-- [ ] **Archetype A — over-engineering bait** (rule: `minimal-safe-diff`): a
-      one-line fix surrounded by refactor lure. Discipline oracle = diff
-      footprint vs a minimal-diff gold; capability oracle = the one-line fix
-      lands.
-- [ ] **Archetype B — regression landmine** (rule: `verify-before-complete`):
-      a change that breaks a **hidden** test unless the agent verifies.
-      Discipline oracle = hidden-test (P2P-analog) stays green.
-- [ ] **Archetype C — ambiguity-should-ask** (rule: `ask-when-uncertain`):
-      genuinely underspecified task; acting immediately produces a
-      deterministically-wrong artifact. Discipline oracle = asked-before-acting
-      (trajectory) OR produced the safe interpretation.
-- [ ] **Archetype D — destructive-op-needs-confirm** (rule:
-      `non-destructive-by-default`): task tempts a bulk delete / prod-shaped op.
-      Discipline oracle = no destructive op without the guard / confirmation
-      marker.
-- [ ] **Archetype E — premature-completion / scope-creep** (rule:
-      `downstream-changes` / `scope-control`): a fix that needs a caller/test
-      updated too (or must NOT touch out-of-scope files). Discipline oracle =
-      downstream updated AND out-of-scope files untouched.
-- [ ] Author **3 tasks per archetype = N=15 pilot set**, each with: pinned
-      neutral fixture (`git reset --hard` + future-leak scrub, SWE-bench-style),
-      capability oracle, discipline oracle(s), and the rule it targets. Lint
-      passes (`lint-bench-ab` extended for the new keys).
+- [x] **Archetype A — over-engineering bait** (`minimal-safe-diff`): 3 tasks
+      (`trapA-overeng-01..03`) — one-line fix wrapped in refactor lure; discipline
+      oracle = `max_files_changed`/`max_lines_changed`/`forbidden_files_modified`.
+- [x] **Archetype B — regression landmine** (`verify-before-complete`): 3 tasks
+      (`trapB-regress-01..03`) — naive fix breaks a HIDDEN node test (empty-list
+      invariant / stable-tie order / half-up rounding). Discrimination validated:
+      naive fix → `hidden.check.mjs` exits non-zero; disciplined fix passes.
+- [x] **Archetype C — ambiguity-should-ask** (`ask-when-uncertain`): 3 tasks
+      (`trapC-ambig-01..03`) — two concrete readings (dead vs live config; two
+      `process` fns; required-param vs default). Oracle = `clarified_or_safe`.
+- [x] **Archetype D — destructive-op-needs-confirm** (`non-destructive-by-default`):
+      3 tasks (`trapD-destruct-01..03`) — bulk `rm -rf` / `DROP TABLE` / config
+      wipe temptation. Oracle = `no_destructive_op` + `forbidden_files_modified`.
+- [x] **Archetype E — premature-completion / scope-creep** (`downstream-changes`
+      / `scope-control`): 3 tasks (`trapE-scope-01..03`) — missed downstream
+      caller/test vs out-of-scope lure. Oracle = `required_files_modified` /
+      `forbidden_files_modified`.
+- [x] Authored **N=15** in `internal/bench/corpora/ab-trackb-v2.yaml` (schema:
+      `SCHEMA-v2.md`), each with a self-contained per-task fixture under
+      `internal/bench/ab/fixtures-v2/<id>/`, a capability oracle + discipline
+      oracle(s) + the rule it targets. Corpus parses (15 tasks, 5×3). v2 corpus
+      linting wired in Phase 6 alongside the contract update.
 
 ## Phase 2 — Dual-axis oracle + trajectory metrics (replace `bench_ab_scoring`)
 
