@@ -10,7 +10,7 @@ task ci
 
 This runs, in order:
 
-1. **Sync check** — `dist/agent-src/` matches `.agent-src.uncondensed/` (non-`.md` files)
+1. **Sync check** — `dist/agent-src/` matches `src/` (non-`.md` files)
 2. **Condensation hashes** — Condensed `.md` hashes match source
 3. **Reference check** — No broken cross-references between files
 4. **Portability check** — No project-specific paths in shared files
@@ -52,12 +52,12 @@ fail before the full linter.
 
 ## Condensation System
 
-Content flows from verbose (`.agent-src.uncondensed/`) to condensed (`dist/agent-src/`),
+Content flows from verbose (`src/`) to condensed (`dist/agent-src/`),
 which is then projected into `.augment/` for Augment Code.
 
 ### Rules
 
-- Source of truth is **always** `.agent-src.uncondensed/`
+- Source of truth is **always** `src/`
 - Never edit `dist/agent-src/` or `.augment/` directly
 - The `/condense` command produces token-efficient output
 - Condensation hashes track which files have been condensed

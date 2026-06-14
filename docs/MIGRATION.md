@@ -112,7 +112,7 @@ If your project commits state files (uncommon but supported):
 - Stability level: `work_engine` is **beta** — see
   [`docs/contracts/STABILITY.md`](contracts/STABILITY.md).
 - Source of truth for the migrator:
-  [`templates/scripts/work_engine/migration/v0_to_v1.py`](../.agent-src.uncondensed/templates/scripts/work_engine/migration/v0_to_v1.py).
+  [`templates/scripts/work_engine/migration/v0_to_v1.py`](../src/agent-src/templates/scripts/work_engine/migration/v0_to_v1.py).
 
 ## Older versions
 

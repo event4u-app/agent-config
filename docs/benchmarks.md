@@ -37,7 +37,7 @@ one without the other.
 | Trigger | Required corpus | Required artefact |
 |---|---|---|
 | Pre-release bake (any `vX.Y.0`) | `dev` + `telegraph` | both reports refreshed |
-| Edit to `.agent-src.uncondensed/rules/telegraph-speak.md` | `telegraph` | report refreshed in same PR |
+| Edit to `src/rules/telegraph-speak.md` | `telegraph` | report refreshed in same PR |
 | Edit to `scripts/bench_run.py` `--telegraph` arm | `telegraph` | report refreshed in same PR |
 | Edit to `internal/bench/corpora/telegraph/prompts.yaml` | `telegraph` | report refreshed, version bumped (`telegraph-vN+1`) |
 | Edit to `scripts/_lib/bench_telegraph*.py` | `telegraph` | report refreshed in same PR |
