@@ -70,7 +70,7 @@ benchmark or kernel-promotion question (those live in the sibling roadmaps).
 
 - `reasoning.*` settings appear in the `docs/customization.md` Available-settings
   table with defaults + descriptions.
-- `docs/contracts/reasoning-discipline-protocol.md` exists, is one-screen,
+- `docs/contracts/reasoning-discipline-protocol.md` exists, is one-screen, <!-- ref-ignore -->
   user-facing, and cross-linked both ways with the dossier; `check-refs` passes.
 - GUI visibility of `reasoning.*` is confirmed (shown, or wiring fix filed).
 - No live (non-archive) doc still advertises heavy/light RDP content variants.
