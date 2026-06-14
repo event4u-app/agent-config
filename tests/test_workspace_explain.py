@@ -130,3 +130,59 @@ def test_human_relative_invalid_ts(mod):
     out = mod._human_relative("not-a-ts")
     assert out == "not-a-ts"
     assert mod._human_relative("") == "(unavailable)"
+
+
+# --- host-decision explainability (road-to-6.0.0-final-readiness Phase 5) --
+
+
+def _detect(**o):
+    base = {"host": "claude-code", "known": True, "inventory_tier": 1,
+            "cli": "claude", "cli_present": True, "effective_tier": 1,
+            "mode": "driven"}
+    base.update(o)
+    return base
+
+
+def test_host_plain_tier1_explains_why_host_and_tier(mod):
+    md = mod.render_host_decision(_detect())["markdown"]
+    assert "## Why this host" in md and "`claude-code` is your active host" in md
+    assert "## Why this tier" in md and "Tier 1" in md
+    # No fallback section when nothing fell back.
+    assert "## Why a fallback fired" not in md
+    assert "## Why continue" not in md
+
+
+def test_host_plain_tier1_demotion_explains_fallback(mod):
+    det = _detect(cli_present=False, effective_tier=3, mode="tier1-drive-pending")
+    md = mod.render_host_decision(det)["markdown"]
+    assert "Tier 3" in md
+    assert "## Why a fallback fired" in md
+    assert "isn't on your PATH" in md and "claude" in md
+
+
+def test_host_plain_killswitch_explains_fallback(mod):
+    md = mod.render_host_decision(
+        _detect(), health={"killed": True, "consecutive_failures": 5},
+    )["markdown"]
+    assert "## Why a fallback fired" in md
+    assert "kill-switch" in md and "5 consecutive failures" in md
+
+
+def test_host_plain_continue_section(mod):
+    md = mod.render_host_decision(
+        _detect(), resume_session_id="sess-abc",
+    )["markdown"]
+    assert "## Why continue" in md and "sess-abc" in md
+
+
+def test_host_unknown_host_treated_as_handoff(mod):
+    det = _detect(host="mystery", known=False, inventory_tier=None,
+                  cli=None, cli_present=False, effective_tier=3)
+    md = mod.render_host_decision(det)["markdown"]
+    assert "not in the known-host list" in md and "Tier 3" in md
+
+
+def test_host_technical_mode_keeps_raw_fields(mod):
+    out = mod.render_host_decision(_detect(), mode="technical")
+    assert out["mode"] == "technical"
+    assert "effective_tier=1" in out["markdown"]
