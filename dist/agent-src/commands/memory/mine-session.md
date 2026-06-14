@@ -6,7 +6,7 @@ tier: 2
 visibility: internal
 cluster: memory
 sub: mine-session
-description: The single session-mining command — mine the cross-host chat-history log (or a host transcript) for memory signals AND/OR rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-by-default, opt-in access. Folds in the former /chat-history learn.
+description: Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
 skills: [memory-consolidation, file-editor]
 suggestion:
   eligible: false
