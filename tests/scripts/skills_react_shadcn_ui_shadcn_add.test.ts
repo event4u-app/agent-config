@@ -153,9 +153,19 @@ describe.runIf(hasPython3())('shadcn_add — golden parity (python3 vs tsx)', ()
 
     it('no components (and no --all/--list) → print_help to stdout + exit 1', () => {
         const d = seed(null);
-        // --help text is not part of the byte contract, but exit-code + the
-        // stdout/stderr split must match (print_help → stdout, then exit 1).
-        assertParity([], d, 1);
+        // print_help emits argparse usage prose, which is COLUMNS- and
+        // Python-version-dependent (width wrapping) — NOT a byte contract
+        // (passed on local python3, diverged on the CI runner's). Assert the
+        // exit code + the stdout/stderr split (help → stdout, empty stderr) +
+        // a stable usage-line token, not byte-identical prose. Convention:
+        // run_skill_evals / score_ev / airgap twins.
+        const ts = runTs([], d);
+        const py = runPy([], d);
+        expect(ts.status).toBe(py.status);
+        expect(ts.status).toBe(1);
+        expect(ts.stderr).toBe(py.stderr);
+        expect(ts.stdout).toMatch(/usage:\s+shadcn_add/u);
+        expect(py.stdout).toMatch(/usage:\s+shadcn_add/u);
     });
 
     it('unrecognized flag → byte-identical usage + error + exit 2', () => {
