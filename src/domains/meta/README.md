@@ -5,7 +5,7 @@
 Artefacts that maintain this package (agent-config itself).
 
 - **id**: `meta`
-- **version**: `6.0.0`
+- **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
 - **artefacts**: 240

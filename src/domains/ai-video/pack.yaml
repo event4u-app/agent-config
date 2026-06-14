@@ -16,4 +16,4 @@ requires: []
 size_class: large
 suggests: []
 trust_level_default: experimental
-version: 6.0.0
+version: 6.1.0

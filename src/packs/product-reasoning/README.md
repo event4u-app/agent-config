@@ -5,7 +5,7 @@
 Interactive reasoning surfaces (council, challenge-me, grill-me) — classified `product` in the flow surface-map.
 
 - **id**: `product-reasoning`
-- **version**: `6.0.0`
+- **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: meta
 - **artefacts**: 11
