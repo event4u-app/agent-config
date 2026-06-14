@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **227 skills** available in this package, in alphabetical order.
+All **228 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -13,6 +13,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`adr-create`](../dist/agent-src/skills/adr-create/SKILL.md) | Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'. |
 | [`adversarial-review`](../dist/agent-src/skills/adversarial-review/SKILL.md) | ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review. |
 | [`agent-docs-writing`](../dist/agent-src/skills/agent-docs-writing/SKILL.md) | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
+| [`agent-security-review`](../dist/agent-src/skills/agent-security-review/SKILL.md) | Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit. |
 | [`agents-md-thin-root`](../dist/agent-src/skills/agents-md-thin-root/SKILL.md) | Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block. |
 | [`ai-council`](../dist/agent-src/skills/ai-council/SKILL.md) | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
 | [`analysis-autonomous-mode`](../dist/agent-src/skills/analysis-autonomous-mode/SKILL.md) | ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work. |
