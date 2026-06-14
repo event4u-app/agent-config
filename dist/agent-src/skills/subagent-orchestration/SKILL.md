@@ -49,6 +49,13 @@ judge is a fresh pair of eyes. If `.agent-settings.yml` resolves to
 identical implementer and judge models, surface the mismatch before
 running — do not silently continue.
 
+## RDP: parallel async dispatch by default
+
+Within the Reasoning Discipline Protocol, dispatch independent subtasks to
+parallel subagents **by default** and keep working while they run (async), rather
+than blocking on each return — intervene only if one goes off track. Engage per
+[`rdp-gate`](../../contexts/execution/rdp-gate.md).
+
 ## The seven modes
 
 Each mode has a decision row: when to use, when not, and the expected
@@ -60,7 +67,7 @@ model pairing. Defaults come from
 Descriptive, not enforced. Documents the **expected agent-to-agent
 communication topology** so consumers can predict latency, failure
 modes, and where consensus is required. Cited from
-an internal findings note (local-only)
+an internal findings note (local-only) <!-- council-ref-allowed: ADR decision trace for topology anti-drift defaults -->
 row 7 (the external runtime's `hierarchical, 6–8 agents, raft consensus` anti-drift
 default).
 

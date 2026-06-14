@@ -77,5 +77,5 @@ inside a `security-example` fence, and not covered by a matching pragma.
 ## See also
 
 - `src/scripts/_lib/security_lint.py` — the shared implementation.
-- [`road-to-security-pillar.md`](../../../agents/roadmaps/road-to-security-pillar.md) P1.5 — the council-locked decision behind this convention.
+- `road-to-security-pillar` P1.5 (archived roadmap) — the council-locked decision behind this convention.
 - [`autonomous-execution`](../../../src/rules/autonomous-execution.md) — the allowlist-growth antipattern this convention avoids.

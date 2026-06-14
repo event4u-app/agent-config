@@ -32,9 +32,11 @@ ALLOWED_DELTA_PATHS = (
     "AGENTS.md",
     "CLAUDE.md",
 )
-# Variant-distinguishing manifest written by bench_ab_clone.
+# Variant-distinguishing files written by bench_ab_clone (the manifest and the
+# RDP-toggle settings file — both legitimately differ between variants).
 ALLOWED_DELTA_FILES = (
     ".bench-ab-manifest.json",
+    ".agent-settings.yml",
 )
 
 

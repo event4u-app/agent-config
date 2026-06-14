@@ -1,0 +1,16 @@
+{
+  "skill": "complexity-first-planning",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers multi-component / uncertain work where a load-bearing unknown must be resolved first; should-not covers trivial / linear / fully-sequenced work and neighbors (feature breakdown, simple tests).",
+  "queries": [
+    {"q": "build a multi-tenant reporting pipeline with caching and access control — where do I start?", "trigger": true},
+    {"q": "we need to migrate auth to OAuth and we're not sure the legacy token format maps cleanly", "trigger": true},
+    {"q": "stage this feature so we fail fast on the riskiest part", "trigger": true},
+    {"q": "the plan depends on the new vector DB actually handling our query latency — sequence the work", "trigger": true},
+    {"q": "which part of this 6-step build should we tackle first?", "trigger": true},
+    {"q": "add a unit test for the existing slugify() helper", "trigger": false, "note": "single linear step — no load-bearing unknown"},
+    {"q": "rename this method across the codebase", "trigger": false, "note": "mechanical, fully specified"},
+    {"q": "break this epic into tickets", "trigger": false, "note": "feature-planning breakdown, not risk-first ordering"},
+    {"q": "fix the typo in the README", "trigger": false, "note": "trivial"},
+    {"q": "implement steps 1 through 4 in the order I listed", "trigger": false, "note": "user already fixed the sequence"}
+  ]
+}

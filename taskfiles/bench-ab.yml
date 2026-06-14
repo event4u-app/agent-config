@@ -101,6 +101,76 @@ tasks:
       - ./scripts-run src/scripts/bench_ab_task_runner --variant both --mode live
       - task: bench:ab:diff
 
+  bench:ab:value:
+    silent: true
+    desc: |
+      3-condition VALUE benchmark (without | with | with-rdp), live mode —
+      the one that fills docs/benchmark.md's two tables (Package value +
+      RDP lift) with real numbers. Cost-bearing: ~3 × N `claude --print`
+      calls. Measures the LIFT of agent-config on the host model, not
+      model-vs-model. See agents/roadmaps/road-to-3-condition-value-benchmark.md.
+
+      Defaults (set in bench_ab_task_runner.py): pins claude-sonnet-4-6 across
+      all arms, caps per-task spend (--budget 2.0), error-aware reporting.
+      WARNING: the full 13-task corpus × 3 arms (39 live runs) can trip the
+      account usage limit. For a quota-safe demonstrator that spans every
+      populated 2×2 cell, use `task bench:ab:value:quick` (9 runs).
+    cmds:
+      # Only the fixture clone is needed: activation is per-arm at invocation time
+      # (without = --setting-sources project,local → plugin off; with = real
+      # plugin; with-rdp = + injected RDP rules), not via clone files. The runner
+      # resets a fixture working dir per task itself.
+      - python3 src/scripts/bench_ab_clone.py --variant without --refresh
+      - python3 src/scripts/bench_ab_task_runner.py --variant all --mode live
+      - task: bench:ab:diff
+
+  bench:ab:value:quick:
+    silent: true
+    desc: |
+      Bounded 3-condition value benchmark — one task per POPULATED 2×2 cell
+      (short/reasoning-heavy + short/mechanical + long/reasoning-heavy) × 3 arms
+      = 9 live runs. The cheap, quota-safe demonstrator: pins one model
+      (claude-sonnet-4-6, NOT the Opus-1M session default whose cache-creation
+      blows the quota), caps per-task spend (--budget), and is error-aware
+      (a rate-limit / budget trip is excluded from the hit-rate, never read as a
+      content fail). Use this to prove the harness end-to-end without the full
+      39-run corpus tripping the usage limit.
+    cmds:
+      - python3 src/scripts/bench_ab_clone.py --variant without --refresh
+      - python3 src/scripts/bench_ab_task_runner.py --variant all --mode live --tasks trackb-bugfix-01,trackb-bugfix-02,trackb-refactor-01 --budget 4.0 --timeout 300
+      - task: bench:ab:diff
+
+  bench:ab:watch:
+    silent: true
+    desc: |
+      Tail the live bench progress (internal/bench/reports/ab/.progress.json) in a
+      second terminal while `bench:ab:value` / `bench:ab:live` runs. Ctrl-C stops.
+    cmd: |
+      python3 - <<'PY'
+      import json, time, pathlib, sys
+      p = pathlib.Path("internal/bench/reports/ab/.progress.json")
+      sys.stderr.write(f"watching {p} … Ctrl-C to stop\n")
+      try:
+          while True:
+              s = {}
+              if p.exists():
+                  try:
+                      s = json.loads(p.read_text())
+                  except Exception:
+                      s = {}
+              sys.stdout.write(
+                  "\r{}/{} · {} · {} · {}        ".format(
+                      s.get("total_done", 0), s.get("total", "?"),
+                      s.get("variant", ""), s.get("current_id", ""),
+                      s.get("last_result") or "running",
+                  )
+              )
+              sys.stdout.flush()
+              time.sleep(1)
+      except KeyboardInterrupt:
+          sys.stdout.write("\n")
+      PY
+
   lint-bench-ab:
     silent: true
     desc: |

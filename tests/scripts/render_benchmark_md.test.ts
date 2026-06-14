@@ -67,10 +67,16 @@ describe('render_benchmark_md — pure formatters', () => {
         expect(out).toContain('- Mode: `—`');
         expect(out).toContain('_No Track B reports yet. Run `task bench:ab:track-b`._');
     });
-    it('render_headline includes the delta table header', () => {
-        const out = rb.render_headline({ with: {}, without: {} }, { with: {}, without: {} });
-        expect(out).toContain('| Metric | with | without | delta |');
-        expect(out).toContain('| Track A surface-availability | — | — |');
+    it('render_headline emits both delta tables (package value + RDP lift)', () => {
+        // Post main-sync (`with-rdp` 3-condition arm): render_headline takes a
+        // 3rd track_b_rdp arg and emits Table 1 (without → with) + Table 2
+        // (with → with-rdp). Literals derived from the new .py output, not the
+        // pre-sync headline.
+        const out = rb.render_headline({ with: {}, without: {} }, { with: {}, without: {} }, {});
+        expect(out).toContain('### Table 1 — Package value (without → with)');
+        expect(out).toContain('| Metric | without | with | delta |');
+        expect(out).toContain('### Table 2 — RDP reasoning lift (with → with-rdp)');
+        expect(out).toContain('| Metric | with | with-rdp | delta |');
     });
 });
 

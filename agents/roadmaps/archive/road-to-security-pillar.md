@@ -1,7 +1,15 @@
 ---
 complexity: structural
-status: ready
+status: archived
 ---
+
+> **Archived 2026-06-14.** Phases 1–3 shipped + merged (PR #521); all CI green.
+> Phase 4 (P4.1 garak/promptfoo scaffolding · P4.2 optional classifier · P4.3
+> security-pack slice) was resolved **keep-deferred** by maintainer decision —
+> the triggers (demand signal / named owner / CI-tooling decision per
+> `domain-adoption-policy`; P4.3 also accepts explicit user direction) are not
+> met, so the items stay here as `[~]`, triggers intact. Revive by spawning a
+> fresh roadmap when a trigger fires; do not build speculatively. Phase 5 dropped.
 
 # Roadmap: security pillar — supply-chain integrity + injection-aware authoring
 

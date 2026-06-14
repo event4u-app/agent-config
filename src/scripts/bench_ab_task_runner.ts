@@ -56,6 +56,52 @@ const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab');
 // How far we descend into a clone when snapshotting. The fixture is shallow.
 const SNAPSHOT_MAX_DEPTH = 6;
 
+// --- Activation (proven mechanism) ---
+// agent-config is a GLOBAL Claude Code plugin (enabledPlugins in ~/.claude
+// settings), so plain `claude --print` already runs WITH the package. The clean
+// control is `--setting-sources project,local`, which excludes the user settings
+// where `enabledPlugins` lives → plugin OFF, but auth survives. Measured proof:
+// plain --print = ~35.5k input tokens; --setting-sources project,local = ~11.9k
+// → the ~24k delta IS the package's always-on footprint. So:
+//   without  = `--setting-sources project,local`  (plugin OFF, base model)
+//   with     = plain `--print`                     (the real installed plugin = package)
+//   with-rdp = plain `--print` + RDP rules injected (RDP not yet in the release plugin)
+// (`--bare` is NOT used — it disables auth too.)
+const RDP_EXTRA_FILES: readonly string[] = [
+    path.join(REPO_ROOT, 'src', 'rules', 'notes-first-reasoning.md'),
+    path.join(REPO_ROOT, 'src', 'agent-src', 'contexts', 'execution', 'rdp-gate.md'),
+];
+
+function _concat_rules(paths: readonly string[]): string {
+    const parts: string[] = [];
+    for (const p of paths) {
+        try {
+            parts.push(fs.readFileSync(p, 'utf-8'));
+        } catch {
+            // OSError → skip (matches Python `except OSError: continue`).
+            continue;
+        }
+    }
+    return parts.join('\n\n---\n\n');
+}
+
+/**
+ * Extra rules injected on top of the plugin. Only `with-rdp` injects (the RDP
+ * artifacts aren't in the released plugin yet); `with` uses the real plugin,
+ * `without` runs plugin-off.
+ */
+export function system_prompt_for(variant: string): string | null {
+    if (variant === 'with-rdp') {
+        return _concat_rules(RDP_EXTRA_FILES.filter((p) => fs.existsSync(p)));
+    }
+    return null;
+}
+
+/** `without` excludes user settings to drop the global plugin (auth survives). */
+export function setting_sources_for(variant: string): string | null {
+    return variant === 'without' ? 'project,local' : null;
+}
+
 export function utc_stamp(): string {
     // datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     const d = new Date();
@@ -122,7 +168,7 @@ export function reset_clone(variant: string): string {
         '    raise RuntimeError("cannot load bench_ab_clone helper")',
         'module = importlib.util.module_from_spec(spec)',
         'spec.loader.exec_module(module)',
-        `sys.stdout.write(str(module.clone(${JSON.stringify(variant)}, refresh=True)))`,
+        `sys.stdout.write(str(module.clone(${JSON.stringify(variant)}, refresh=True, quiet=True)))`,
     ].join('\n');
     const out = execFileSync('python3', ['-c', driver], {
         encoding: 'utf-8',
@@ -137,10 +183,17 @@ export function claude_executable(): string | null {
     if (override) {
         return override;
     }
-    if (_which('claude') !== null) {
-        return 'claude';
-    }
-    return null;
+    // Resolve to an absolute path so the subprocess (run with cwd=clone_root)
+    // cannot miss it on a PATH/cwd quirk — the failure that showed up as a
+    // spurious "claude CLI not found" on a later arm of the first full run.
+    return _which('claude');
+}
+
+interface TokensBreakdown {
+    input_tokens: number;
+    output_tokens: number;
+    cache_read_input_tokens: number;
+    cache_creation_input_tokens: number;
 }
 
 interface RunResult {
@@ -149,10 +202,33 @@ interface RunResult {
     transcript: string;
     exit_code: number | null;
     wall_time_seconds: number;
+    tokens?: number;
+    /** Empty object `{}` on dry-run (key absent in Python); breakdown otherwise. */
+    tokens_breakdown?: TokensBreakdown | Record<string, never>;
+    errored?: boolean;
 }
 
-/** Invoke claude in print/one-shot mode against the task prompt. */
-export function run_live(task: Record<string, unknown>, cloneRoot: string, timeoutS: number): RunResult {
+interface RunLiveOpts {
+    sysprompt_file?: string | null;
+    setting_sources?: string | null;
+    max_budget?: number | null;
+    model?: string | null;
+}
+
+/**
+ * Invoke claude in print/one-shot mode against the task prompt.
+ *
+ * `setting_sources` (e.g. "project,local") drops the global plugin for the
+ * `without` arm while keeping auth. `sysprompt_file` injects extra rules
+ * (the `with-rdp` arm). `with` passes neither → the real installed plugin.
+ */
+export function run_live(
+    task: Record<string, unknown>,
+    cloneRoot: string,
+    timeoutS: number,
+    opts: RunLiveOpts = {},
+): RunResult {
+    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null } = opts;
     const binary = claude_executable();
     if (binary === null) {
         return {
@@ -161,41 +237,155 @@ export function run_live(task: Record<string, unknown>, cloneRoot: string, timeo
             transcript: '',
             exit_code: null,
             wall_time_seconds: 0.0,
+            tokens: 0,
+            tokens_breakdown: {},
+            errored: true,
         };
     }
     const prompt = (task['prompt'] as string) ?? '';
+    // --output-format json yields a `usage` block for token counts. The global
+    // plugin is dropped per-arm via --setting-sources (NOT --bare, which kills auth).
+    // bypassPermissions on EVERY arm: the clone is a throwaway fixture, and this
+    // equalizes file-edit capability across arms (else `without`, which excludes
+    // user settings, would lack edit perms and fail tasks for the wrong reason).
+    const cmd = ['--print', '--output-format', 'json', '--permission-mode', 'bypassPermissions'];
+    if (model) {
+        // Pin ONE model across every arm. The session default here is Opus-4.8-1M,
+        // whose ~$1.78 first-turn cache-creation trips any sane budget cap instantly
+        // and makes a full corpus run blow the account quota. Holding the model
+        // constant is also a validity requirement: the bench measures the package
+        // LIFT on a fixed host, not model-vs-model.
+        cmd.push('--model', model);
+    }
+    if (max_budget) {
+        // Caps per-task API spend so one runaway agentic loop can't exhaust the
+        // account quota (the failure mode that starved later arms on the first run).
+        cmd.push('--max-budget-usd', _pyStrNum(max_budget));
+    }
+    if (setting_sources) {
+        cmd.push('--setting-sources', setting_sources);
+    }
+    if (sysprompt_file !== null) {
+        cmd.push('--append-system-prompt-file', sysprompt_file);
+    }
+    cmd.push('--', prompt);
     const started = _monotonic();
-    const result = spawnSync(binary, ['--print', '--', prompt], {
+    const result = spawnSync(binary, cmd, {
         cwd: cloneRoot,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
     });
-    if (result.error && (result.error as NodeJS.ErrnoException & { killed?: boolean }).code === 'ETIMEDOUT') {
+    const isTimeout =
+        (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
+        (result.signal === 'SIGTERM' && Boolean(result.error));
+    if (isTimeout) {
         return {
             mode: 'live',
             reason: `timeout after ${timeoutS}s`,
             transcript: (result.stdout ?? '') + '\n[TIMEOUT]',
             exit_code: -1,
             wall_time_seconds: _pyRound(_monotonic() - started, 3),
-        };
-    }
-    if (result.signal === 'SIGTERM' && result.error) {
-        // spawnSync timeout surfaces as signal SIGTERM with an error.
-        return {
-            mode: 'live',
-            reason: `timeout after ${timeoutS}s`,
-            transcript: (result.stdout ?? '') + '\n[TIMEOUT]',
-            exit_code: -1,
-            wall_time_seconds: _pyRound(_monotonic() - started, 3),
+            tokens: 0,
+            tokens_breakdown: {},
+            errored: true,
         };
     }
     const duration = _monotonic() - started;
+    // Parse the JSON envelope: `result` is the model text; `usage` holds tokens.
+    const stdout = result.stdout ?? '';
+    const stderr = result.stderr ?? '';
+    const returncode = result.status ?? -1;
+    let transcript: string = stdout;
+    let tokens = 0;
+    let isError = false;
+    let errReason = 'ok';
+    let breakdown: TokensBreakdown = {
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
+    };
+    try {
+        const obj = JSON.parse(stdout) as Record<string, unknown>;
+        // Python: `except (json.JSONDecodeError, AttributeError, ValueError)`.
+        // JSON.parse of a non-object (string/number/array) parses fine but then
+        // `.get` calls would AttributeError in Python — guard by requiring an object.
+        if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+            throw new TypeError('not a JSON object');
+        }
+        isError = Boolean(obj['is_error']);
+        // transcript = obj.get("result") or obj.get("text") or proc.stdout
+        const resultText = obj['result'];
+        const textField = obj['text'];
+        transcript = _pyTruthyStr(resultText)
+            ? (resultText as string)
+            : _pyTruthyStr(textField)
+              ? (textField as string)
+              : stdout;
+        const usage = (_isPlainObj(obj['usage']) ? (obj['usage'] as Record<string, unknown>) : {}) as Record<
+            string,
+            unknown
+        >;
+        breakdown = {
+            input_tokens: _intOrZero(usage['input_tokens']),
+            output_tokens: _intOrZero(usage['output_tokens']),
+            cache_read_input_tokens: _intOrZero(usage['cache_read_input_tokens']),
+            cache_creation_input_tokens: _intOrZero(usage['cache_creation_input_tokens']),
+        };
+        tokens =
+            breakdown.input_tokens +
+            breakdown.output_tokens +
+            breakdown.cache_read_input_tokens +
+            breakdown.cache_creation_input_tokens;
+        // The top-level `usage` block is zeroed on a budget-capped / errored run
+        // (and unreliable even on some completions). `modelUsage` carries the
+        // authoritative per-model counts — sum it as the fallback so token deltas
+        // survive even when a task hits its cap mid-flight.
+        if (tokens === 0) {
+            const mu = (_isPlainObj(obj['modelUsage']) ? (obj['modelUsage'] as Record<string, unknown>) : {}) as Record<
+                string,
+                unknown
+            >;
+            const agg: TokensBreakdown = {
+                input_tokens: 0,
+                output_tokens: 0,
+                cache_read_input_tokens: 0,
+                cache_creation_input_tokens: 0,
+            };
+            for (const stats of Object.values(mu)) {
+                const s = (_isPlainObj(stats) ? (stats as Record<string, unknown>) : {}) as Record<string, unknown>;
+                agg.input_tokens += _intOrZero(s['inputTokens']);
+                agg.output_tokens += _intOrZero(s['outputTokens']);
+                agg.cache_read_input_tokens += _intOrZero(s['cacheReadInputTokens']);
+                agg.cache_creation_input_tokens += _intOrZero(s['cacheCreationInputTokens']);
+            }
+            const muTotal =
+                agg.input_tokens +
+                agg.output_tokens +
+                agg.cache_read_input_tokens +
+                agg.cache_creation_input_tokens;
+            if (muTotal > 0) {
+                breakdown = agg;
+                tokens = muTotal;
+            }
+        }
+        // Surface WHY a task errored (budget cap vs. other) without leaking $.
+        if (isError) {
+            const subtype = obj['subtype'];
+            errReason = _pyTruthyStr(subtype) ? (subtype as string) : 'error';
+        }
+    } catch {
+        transcript = stdout;
+    }
     return {
         mode: 'live',
-        reason: 'ok',
-        transcript: (result.stdout ?? '') + '\n' + (result.stderr ?? ''),
-        exit_code: result.status ?? -1,
+        reason: isError ? errReason : returncode === 0 ? 'ok' : `exit ${returncode}`,
+        transcript: `${transcript}\n${stderr}`,
+        exit_code: returncode,
         wall_time_seconds: _pyRound(duration, 3),
+        tokens,
+        tokens_breakdown: breakdown,
+        errored: isError || returncode !== 0,
     };
 }
 
@@ -241,6 +431,142 @@ export function count_ask_events(transcript: string): AskEvents {
     return { asked, acted_with_commit: acted, ratio: 0, ratioIsInt: true };
 }
 
+const PROGRESS_PATH = path.join(REPORTS_DIR, '.progress.json');
+
+/** Mirror live state to .progress.json for `task bench:ab:watch` (best-effort). */
+function _write_progress(state: Record<string, Json>): void {
+    try {
+        fs.mkdirSync(REPORTS_DIR, { recursive: true });
+        fs.writeFileSync(PROGRESS_PATH, _jsonDumps(state, 2) + '\n');
+    } catch {
+        // OSError → swallow (best-effort, matches Python `except OSError: pass`).
+    }
+}
+
+interface ProgressStream {
+    write(s: string): void;
+    isatty?: () => boolean;
+}
+
+/**
+ * Live per-task progress. stdlib-only, TTY-aware, log-safe.
+ *
+ * style: auto (bar if stderr is a TTY, else one plain line per task) | bar |
+ * plain | none. Mirrors state to .progress.json regardless of style.
+ *
+ * Node parity note: Python uses a 1s heartbeat thread to refresh the bar mid
+ * task. Node is single-threaded and the work here (spawnSync) is synchronous
+ * and blocking, so a timer would never fire during a task anyway — the
+ * heartbeat is therefore a no-op here. It only affects live-TTY cosmetics, not
+ * any written artifact (.progress.json content is identical), so parity holds
+ * on every byte-compared surface.
+ */
+export class Progress {
+    static readonly BAR_WIDTH = 24;
+
+    total: number;
+    mode: string;
+    stream: ProgressStream;
+    done = 0;
+    started: number;
+    kind: 'bar' | 'plain' | 'none';
+    private _cur = '';
+    private _task_started = 0.0;
+
+    constructor(total: number, mode: string, style = 'auto', stream?: ProgressStream) {
+        this.total = Math.max(total, 1);
+        this.mode = mode;
+        this.stream = stream ?? { write: (s: string): void => void process.stderr.write(s), isatty: () => process.stderr.isTTY === true };
+        this.started = _monotonic();
+        if (style === 'bar' || style === 'plain' || style === 'none') {
+            this.kind = style;
+        } else {
+            // auto
+            const isatty = this.stream.isatty ? this.stream.isatty() : false;
+            this.kind = isatty ? 'bar' : 'plain';
+        }
+    }
+
+    private _elapsed(since: number): string {
+        const s = Math.trunc(_monotonic() - since);
+        return s >= 60 ? `${Math.trunc(s / 60)}m${String(s % 60).padStart(2, '0')}s` : `${s}s`;
+    }
+
+    private _bar(): string {
+        const filled = Math.trunc((Progress.BAR_WIDTH * this.done) / this.total);
+        return '█'.repeat(filled) + '░'.repeat(Progress.BAR_WIDTH - filled);
+    }
+
+    private _render_bar(suffix = ''): void {
+        const line = `\r[${this._bar()}] ${this.done}/${this.total} · ${this._cur} · ${this._elapsed(this.started)}${suffix}`;
+        // Python: line.ljust(90)[:160]
+        this.stream.write(_ljust(line, 90).slice(0, 160));
+    }
+
+    start_task(variant: string, idx: number, count: number, taskId: string): void {
+        this._cur = `${variant} ${idx}/${count} · ${taskId}`;
+        this._task_started = _monotonic();
+        _write_progress({
+            mode: this.mode,
+            variant,
+            task_idx: idx,
+            task_count: count,
+            total_done: this.done,
+            total: this.total,
+            current_id: taskId,
+            started_at: utc_stamp(),
+            last_result: null,
+        });
+        if (this.kind === 'none') {
+            return;
+        }
+        if (this.kind === 'bar') {
+            this._render_bar(this.mode === 'live' ? ' · running…' : '');
+            // heartbeat: no-op under Node's blocking model (see class note).
+        } else if (this.mode === 'live') {
+            this.stream.write(`[${this.done + 1}/${this.total}] ▶ ${this._cur}\n`);
+        }
+    }
+
+    end_task(passed: boolean, wall: number, variant: string, taskId: string): void {
+        this.done += 1;
+        const mark = passed ? '✓' : '✗';
+        _write_progress({
+            mode: this.mode,
+            variant,
+            total_done: this.done,
+            total: this.total,
+            current_id: taskId,
+            updated_at: utc_stamp(),
+            last_result: passed ? 'pass' : 'fail',
+        });
+        if (this.kind === 'none') {
+            return;
+        }
+        if (this.kind === 'bar') {
+            this._render_bar(` · ${mark}`);
+        } else {
+            this.stream.write(`[${this.done}/${this.total}] ${mark} ${variant} · ${taskId} · ${_pyFixed(wall, 1)}s\n`);
+        }
+    }
+
+    variant_done(line: string): void {
+        if (this.kind === 'bar') {
+            this.stream.write('\n');
+        }
+        this.stream.write(line.endsWith('\n') ? line : line + '\n');
+    }
+
+    finish(): void {
+        if (this.kind === 'bar') {
+            this.stream.write('\n');
+        }
+        if (this.kind !== 'none') {
+            this.stream.write(`bench progress: ${this.done}/${this.total} tasks · total ${this._elapsed(this.started)}\n`);
+        }
+    }
+}
+
 interface ScoreResultJson {
     passed: boolean;
     checks: Array<{ name: string; ok: boolean; reason: string }>;
@@ -249,53 +575,95 @@ interface ScoreResultJson {
 interface PerTaskEntry {
     id: unknown;
     category: unknown;
+    duration?: unknown;
+    cognitive?: unknown;
     score: ScoreResultJson;
+    errored?: boolean;
     wall_time_seconds: number;
+    tokens?: number;
+    tokens_breakdown?: TokensBreakdown | Record<string, never>;
     exit_code: number | null;
     mode: string;
     reason: string;
     ask_events: AskEvents;
 }
 
-interface CategoryAgg {
+interface BucketAgg {
     passed: number;
     total: number;
+    completed: number;
+    errored: number;
     completion_rate: number;
     completion_rate_int: boolean;
     mean_wall_time: number;
     mean_wall_time_int: boolean;
+    mean_tokens: number; // always an int (Python round(...) with no ndigits)
 }
 
-export function per_category_aggregate(perTask: PerTaskEntry[]): Array<[string, CategoryAgg]> {
+/** Python truthiness for `not e.get("errored")` — missing / falsy → done. */
+function _isDone(e: PerTaskEntry): boolean {
+    return !_pyTruthy(e.errored);
+}
+
+function _bucketAgg(entries: PerTaskEntry[]): BucketAgg {
+    const done = entries.filter(_isDone);
+    const passed = done.filter((e) => e.score.passed).length;
+    const total = entries.length;
+    const completed = done.length;
+    const sumWall = done.reduce((acc, e) => acc + (e.wall_time_seconds ?? 0), 0);
+    const sumTokens = done.reduce((acc, e) => acc + (e.tokens ?? 0), 0);
+    return {
+        passed,
+        total,
+        completed,
+        errored: total - completed,
+        completion_rate: completed ? _pyRound(passed / completed, 4) : 0,
+        completion_rate_int: !completed,
+        mean_wall_time: completed ? _pyRound(sumWall / completed, 3) : 0,
+        mean_wall_time_int: !completed,
+        mean_tokens: completed ? _pyRoundInt(sumTokens / completed) : 0,
+    };
+}
+
+export function per_category_aggregate(perTask: PerTaskEntry[]): Array<[string, BucketAgg]> {
     // Group preserving first-seen category order (Python dict.setdefault).
     const byCat = new Map<string, PerTaskEntry[]>();
     for (const entry of perTask) {
-        // Python: entry.get("category", "unknown") — missing key OR None? The
-        // .get default fires only when the key is absent; a present null stays
-        // null. The corpus always sets category, so a string is expected.
-        const key =
-            entry.category === undefined ? 'unknown' : (entry.category as string);
+        // Python: entry.get("category", "unknown") — the .get default fires only
+        // when the key is absent; a present value (incl. null) stays.
+        const key = entry.category === undefined ? 'unknown' : (entry.category as string);
         if (!byCat.has(key)) {
             byCat.set(key, []);
         }
         byCat.get(key)!.push(entry);
     }
-    const out: Array<[string, CategoryAgg]> = [];
+    const out: Array<[string, BucketAgg]> = [];
     for (const [cat, entries] of byCat) {
-        const passed = entries.filter((e) => e.score.passed).length;
-        const total = entries.length;
-        const sumWall = entries.reduce((acc, e) => acc + (e.wall_time_seconds ?? 0), 0);
-        out.push([
-            cat,
-            {
-                passed,
-                total,
-                completion_rate: total ? _pyRound(passed / total, 4) : 0,
-                completion_rate_int: !total,
-                mean_wall_time: total ? _pyRound(sumWall / total, 3) : 0,
-                mean_wall_time_int: !total,
-            },
-        ]);
+        out.push([cat, _bucketAgg(entries)]);
+    }
+    return out;
+}
+
+/**
+ * Aggregate by the 2×2 (duration × cognitive) cell — the value-benchmark axis.
+ *
+ * Cell key is `"<duration>/<cognitive>"`. Missing tags fall back to "untagged"
+ * (Python `entry.get('duration', 'untagged')`).
+ */
+export function per_cell_aggregate(perTask: PerTaskEntry[]): Array<[string, BucketAgg]> {
+    const byCell = new Map<string, PerTaskEntry[]>();
+    for (const entry of perTask) {
+        const dur = entry.duration === undefined ? 'untagged' : _pyStr(entry.duration);
+        const cog = entry.cognitive === undefined ? 'untagged' : _pyStr(entry.cognitive);
+        const cell = `${dur}/${cog}`;
+        if (!byCell.has(cell)) {
+            byCell.set(cell, []);
+        }
+        byCell.get(cell)!.push(entry);
+    }
+    const out: Array<[string, BucketAgg]> = [];
+    for (const [cell, entries] of byCell) {
+        out.push([cell, _bucketAgg(entries)]);
     }
     return out;
 }
@@ -320,16 +688,24 @@ export function write_report(
         bench_ab_cache.target_shape_hash(),
     );
     const total = perTask.length;
-    const passed = perTask.filter((e) => e.score.passed).length;
+    const done = perTask.filter(_isDone);
+    const completed = done.length;
+    const errored = total - completed;
+    const passed = done.filter((e) => e.score.passed).length;
     const perCategory = per_category_aggregate(perTask);
-    const completionRate = total ? _pyRound(passed / total, 4) : 0;
-    const completionRateInt = !total;
-    const sumWall = perTask.reduce((acc, e) => acc + (e.wall_time_seconds ?? 0), 0);
-    const meanWall = total ? _pyRound(sumWall / total, 3) : 0;
-    const meanWallInt = !total;
-    const sumRatio = perTask.reduce((acc, e) => acc + (e.ask_events?.ratio ?? 0), 0);
-    const askVsAct = total ? _pyRound(sumRatio / total, 3) : 0;
-    const askVsActInt = !total;
+    const perCell = per_cell_aggregate(perTask);
+
+    // Hit-rate is over COMPLETED tasks only — errored tasks excluded.
+    const completionRate = completed ? _pyRound(passed / completed, 4) : 0;
+    const completionRateInt = !completed;
+    const sumWall = done.reduce((acc, e) => acc + (e.wall_time_seconds ?? 0), 0);
+    const meanWall = completed ? _pyRound(sumWall / completed, 3) : 0;
+    const meanWallInt = !completed;
+    const sumTokens = done.reduce((acc, e) => acc + (e.tokens ?? 0), 0);
+    const meanTokens = completed ? _pyRoundInt(sumTokens / completed) : 0; // int
+    const sumRatio = done.reduce((acc, e) => acc + (e.ask_events?.ratio ?? 0), 0);
+    const askVsAct = completed ? _pyRound(sumRatio / completed, 3) : 0;
+    const askVsActInt = !completed;
 
     const stamp = utc_stamp();
 
@@ -338,7 +714,7 @@ export function write_report(
         `# Track B · ${variant} · ${mode}\n\n` +
         `- Stamp: \`${stamp}\`\n` +
         `- Completion rate: **${_pyFixed(completionRate * 100, 1)}%**` +
-        ` (${passed}/${total})\n` +
+        ` (${passed}/${completed} completed; ${errored} errored of ${total})\n` +
         `- Mean wall-time: ${meanWallInt ? '0' : _pyNumStr(meanWall)}s\n` +
         `- Ask vs. act ratio: ${askVsActInt ? '0' : _pyNumStr(askVsAct)}\n` +
         `\n## Per-category\n\n` +
@@ -352,13 +728,19 @@ export function write_report(
         '\n';
 
     // Build the JSON payload mirroring the Python `results` + `payload` dicts.
+    // Field order is significant for byte-parity (Python dict insertion order).
     const resultsJson: Json = {
         mode,
         completion_rate: completionRateInt ? 0 : new PyFloat(completionRate),
         passed,
+        completed,
+        errored,
         total,
-        per_category: _perCategoryJson(perCategory),
+        per_category: _bucketJson(perCategory),
+        per_cell: _bucketJson(perCell),
         mean_wall_time: meanWallInt ? 0 : new PyFloat(meanWall),
+        total_tokens: sumTokens, // int
+        mean_tokens: meanTokens, // int
         ask_vs_act_ratio: askVsActInt ? 0 : new PyFloat(askVsAct),
         per_task: perTask.map((e) => _perTaskJson(e)),
     };
@@ -385,20 +767,48 @@ interface RunVariantResult {
     duration: number;
 }
 
+interface RunVariantOpts {
+    max_budget?: number | null;
+    model?: string | null;
+    progress?: Progress | null;
+}
+
 export function run_variant(
     variant: string,
     tasks: CorpusTask[],
     mode: string,
     timeoutS: number,
+    opts: RunVariantOpts = {},
 ): RunVariantResult {
+    const { max_budget = null, model = null, progress = null } = opts;
     const started = _monotonic();
+    // Build the injected rule corpus once per variant (live only).
+    let spFile: string | null = null;
+    if (mode === 'live') {
+        const spText = system_prompt_for(variant);
+        if (spText) {
+            fs.mkdirSync(REPORTS_DIR, { recursive: true });
+            spFile = path.join(REPORTS_DIR, `.sysprompt-${variant}.txt`);
+            fs.writeFileSync(spFile, spText, 'utf-8');
+        }
+    }
     const perTask: PerTaskEntry[] = [];
-    for (const task of tasks) {
-        const cloneRoot = reset_clone(variant);
+    tasks.forEach((task, i) => {
+        if (progress !== null) {
+            progress.start_task(variant, i + 1, tasks.length, _pyStr(task.id));
+        }
+        // Fixture-only working dir, identical for every arm — the package is NOT
+        // in the clone files; activation is the injected system prompt (spFile).
+        const cloneRoot = reset_clone('without');
         const pre = snapshot_clone(cloneRoot);
         let runResult: RunResult;
         if (mode === 'live') {
-            runResult = run_live(task as Record<string, unknown>, cloneRoot, timeoutS);
+            runResult = run_live(task as Record<string, unknown>, cloneRoot, timeoutS, {
+                sysprompt_file: spFile,
+                setting_sources: setting_sources_for(variant),
+                max_budget,
+                model,
+            });
         } else {
             runResult = run_dry(task as Record<string, unknown>, cloneRoot, variant);
         }
@@ -412,22 +822,40 @@ export function run_variant(
         perTask.push({
             id: task.id,
             category: task.category,
+            duration: task['duration'],
+            cognitive: task['cognitive'],
             score: { passed: score.passed, checks: score.checks },
+            // `errored` = the run did not complete on merit (rate-limit,
+            // budget-cap, timeout, CLI failure). Distinct from a content fail.
+            errored: Boolean(runResult.errored ?? false),
             wall_time_seconds: runResult.wall_time_seconds ?? 0.0,
+            tokens: runResult.tokens ?? 0,
+            tokens_breakdown: runResult.tokens_breakdown ?? {},
             exit_code: runResult.exit_code,
             mode: runResult.mode ?? mode,
             reason: runResult.reason ?? '',
             ask_events: count_ask_events(runResult.transcript ?? ''),
         });
-    }
+        if (progress !== null) {
+            progress.end_task(
+                Boolean(score.passed),
+                Number(runResult.wall_time_seconds ?? 0.0) || 0.0,
+                variant,
+                _pyStr(task.id),
+            );
+        }
+    });
     const duration = _monotonic() - started;
     const reportPath = write_report(variant, mode, perTask, duration);
-    const passedCount = perTask.filter((e) => e.score.passed).length;
-    process.stdout.write(
+    const summary =
         `bench_ab_task_runner: ${variant} (${mode}) → ` +
-            `${passedCount}/${perTask.length} ` +
-            `passed — ${_relPosix(reportPath, REPO_ROOT)}\n`,
-    );
+        `${perTask.filter((e) => e.score.passed).length}/${perTask.length} ` +
+        `passed — ${_relPosix(reportPath, REPO_ROOT)}`;
+    if (progress !== null) {
+        progress.variant_done(summary);
+    } else {
+        process.stdout.write(summary + '\n');
+    }
     return { path: reportPath, per_task: perTask, duration };
 }
 
@@ -435,19 +863,47 @@ interface Args {
     variant: string;
     mode: string;
     timeout: number;
+    progress: string;
+    limit: number;
+    tasks: string;
+    model: string;
+    budget: number;
 }
 
+const VARIANT_CHOICES = ['with', 'without', 'with-rdp', 'both', 'all'];
+const PROGRESS_CHOICES = ['auto', 'bar', 'plain', 'none'];
+
 function parse_args(argv: string[]): Args {
-    const args: Args = { variant: 'both', mode: 'dry-run', timeout: 120 };
+    const args: Args = {
+        variant: 'both',
+        mode: 'dry-run',
+        timeout: 120,
+        progress: 'auto',
+        limit: 0,
+        tasks: '',
+        model: 'claude-sonnet-4-6',
+        budget: 2.0,
+    };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i]!;
-        if (a === '--variant') args.variant = _choice(argv[++i] ?? '', '--variant', ['with', 'without', 'both']);
+        if (a === '--variant') args.variant = _choice(argv[++i] ?? '', '--variant', VARIANT_CHOICES);
         else if (a.startsWith('--variant='))
-            args.variant = _choice(a.slice('--variant='.length), '--variant', ['with', 'without', 'both']);
+            args.variant = _choice(a.slice('--variant='.length), '--variant', VARIANT_CHOICES);
         else if (a === '--mode') args.mode = _choice(argv[++i] ?? '', '--mode', ['dry-run', 'live']);
         else if (a.startsWith('--mode=')) args.mode = _choice(a.slice('--mode='.length), '--mode', ['dry-run', 'live']);
         else if (a === '--timeout') args.timeout = _pyInt(argv[++i] ?? '', '--timeout');
         else if (a.startsWith('--timeout=')) args.timeout = _pyInt(a.slice('--timeout='.length), '--timeout');
+        else if (a === '--progress') args.progress = _choice(argv[++i] ?? '', '--progress', PROGRESS_CHOICES);
+        else if (a.startsWith('--progress='))
+            args.progress = _choice(a.slice('--progress='.length), '--progress', PROGRESS_CHOICES);
+        else if (a === '--limit') args.limit = _pyInt(argv[++i] ?? '', '--limit');
+        else if (a.startsWith('--limit=')) args.limit = _pyInt(a.slice('--limit='.length), '--limit');
+        else if (a === '--tasks') args.tasks = argv[++i] ?? '';
+        else if (a.startsWith('--tasks=')) args.tasks = a.slice('--tasks='.length);
+        else if (a === '--model') args.model = argv[++i] ?? '';
+        else if (a.startsWith('--model=')) args.model = a.slice('--model='.length);
+        else if (a === '--budget') args.budget = _pyFloat(argv[++i] ?? '', '--budget');
+        else if (a.startsWith('--budget=')) args.budget = _pyFloat(a.slice('--budget='.length), '--budget');
         else {
             process.stderr.write(`bench_ab_task_runner: error: unrecognized arguments: ${a}\n`);
             process.exitCode = 2;
@@ -467,15 +923,44 @@ export function main(argv: string[] | null = null): number {
         return 1;
     }
     const data = (_yamlSafeLoad(fs.readFileSync(CORPUS_PATH, 'utf-8')) as { tasks?: CorpusTask[] }) ?? {};
-    const tasks = data.tasks ?? [];
+    let tasks = data.tasks ?? [];
     if (tasks.length === 0) {
         process.stderr.write('bench_ab_task_runner: corpus has no tasks\n');
         return 1;
     }
-    const variants = args.variant === 'both' ? ['with', 'without'] : [args.variant];
-    for (const variant of variants) {
-        run_variant(variant, tasks, args.mode, args.timeout);
+    if (args.tasks.trim()) {
+        const wanted = args.tasks
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+        const byId = new Map<string, CorpusTask>();
+        for (const t of tasks) {
+            byId.set(_pyStr(t.id), t);
+        }
+        const missing = wanted.filter((w) => !byId.has(w));
+        if (missing.length) {
+            process.stderr.write(`bench_ab_task_runner: unknown task id(s): ${missing.join(', ')}\n`);
+            return 1;
+        }
+        tasks = wanted.map((w) => byId.get(w)!);
+    } else if (args.limit && args.limit > 0) {
+        tasks = tasks.slice(0, args.limit);
     }
+    let variants: string[];
+    if (args.variant === 'both') {
+        variants = ['with', 'without'];
+    } else if (args.variant === 'all') {
+        variants = ['with', 'without', 'with-rdp'];
+    } else {
+        variants = [args.variant];
+    }
+    const maxBudget = args.budget && args.budget > 0 ? args.budget : null;
+    const model = args.model || null;
+    const progress = new Progress(variants.length * tasks.length, args.mode, args.progress);
+    for (const variant of variants) {
+        run_variant(variant, tasks, args.mode, args.timeout, { max_budget: maxBudget, model, progress });
+    }
+    progress.finish();
     return 0;
 }
 
@@ -487,36 +972,76 @@ class PyFloat {
 
 type Json = null | boolean | number | string | PyFloat | Json[] | { [k: string]: Json };
 
-function _perCategoryJson(perCategory: Array<[string, CategoryAgg]>): { [k: string]: Json } {
+/** Serialize per-category / per-cell aggregates (same BucketAgg shape). */
+function _bucketJson(buckets: Array<[string, BucketAgg]>): { [k: string]: Json } {
     const out: { [k: string]: Json } = {};
-    for (const [cat, info] of perCategory) {
-        out[cat] = {
+    for (const [key, info] of buckets) {
+        out[key] = {
             passed: info.passed,
             total: info.total,
+            completed: info.completed,
+            errored: info.errored,
             completion_rate: info.completion_rate_int ? 0 : new PyFloat(info.completion_rate),
             mean_wall_time: info.mean_wall_time_int ? 0 : new PyFloat(info.mean_wall_time),
+            mean_tokens: info.mean_tokens, // int
         };
     }
     return out;
 }
 
+/**
+ * Serialize a per_task entry. Python's `write_report` stores the `per_task`
+ * list verbatim (it does NOT reshape it), so the JSON carries EXACTLY the keys
+ * each entry dict was built with, in insertion order. `run_variant` builds the
+ * full 13-key shape; a caller (e.g. the golden test) may pass a reduced dict.
+ * Only emit keys that are present so byte-parity holds for both shapes.
+ */
 function _perTaskJson(e: PerTaskEntry): Json {
+    const out: { [k: string]: Json } = {};
+    out['id'] = _toJson(e.id);
+    out['category'] = _toJson(e.category);
+    if ('duration' in e) {
+        out['duration'] = _toJson(e.duration);
+    }
+    if ('cognitive' in e) {
+        out['cognitive'] = _toJson(e.cognitive);
+    }
+    out['score'] = {
+        passed: e.score.passed,
+        checks: e.score.checks.map((c) => ({ name: c.name, ok: c.ok, reason: c.reason })),
+    };
+    if ('errored' in e) {
+        out['errored'] = _pyTruthy(e.errored);
+    }
+    out['wall_time_seconds'] = new PyFloat(e.wall_time_seconds);
+    if ('tokens' in e) {
+        out['tokens'] = e.tokens ?? 0; // int
+    }
+    if ('tokens_breakdown' in e) {
+        out['tokens_breakdown'] = _tokensBreakdownJson(e.tokens_breakdown);
+    }
+    out['exit_code'] = e.exit_code === null ? null : e.exit_code;
+    out['mode'] = e.mode;
+    out['reason'] = e.reason;
+    out['ask_events'] = {
+        asked: e.ask_events.asked,
+        acted_with_commit: e.ask_events.acted_with_commit,
+        ratio: e.ask_events.ratioIsInt ? 0 : new PyFloat(e.ask_events.ratio),
+    };
+    return out;
+}
+
+/** `tokens_breakdown` is `{}` (run_live skip/timeout/dry-run absent) / a 4-int map. */
+function _tokensBreakdownJson(b: TokensBreakdown | Record<string, never> | undefined): Json {
+    if (b === undefined || Object.keys(b).length === 0) {
+        return {};
+    }
+    const tb = b as TokensBreakdown;
     return {
-        id: _toJson(e.id),
-        category: _toJson(e.category),
-        score: {
-            passed: e.score.passed,
-            checks: e.score.checks.map((c) => ({ name: c.name, ok: c.ok, reason: c.reason })),
-        },
-        wall_time_seconds: new PyFloat(e.wall_time_seconds),
-        exit_code: e.exit_code === null ? null : e.exit_code,
-        mode: e.mode,
-        reason: e.reason,
-        ask_events: {
-            asked: e.ask_events.asked,
-            acted_with_commit: e.ask_events.acted_with_commit,
-            ratio: e.ask_events.ratioIsInt ? 0 : new PyFloat(e.ask_events.ratio),
-        },
+        input_tokens: tb.input_tokens,
+        output_tokens: tb.output_tokens,
+        cache_read_input_tokens: tb.cache_read_input_tokens,
+        cache_creation_input_tokens: tb.cache_creation_input_tokens,
     };
 }
 
@@ -581,38 +1106,49 @@ function _jsonDumps(obj: Json, indent: number): string {
     return enc(obj, 0);
 }
 
+/**
+ * Python `round(value, ndigits)` — round-half-to-even on the EXACT IEEE-754
+ * value (matches CPython, which rounds the true decimal expansion, not a naive
+ * `value * 10**n`). E.g. `round(0.333/2, 3)` → 0.167 (the stored double is
+ * 0.16650…091, strictly above half), where naive half-even gives 0.166.
+ * Returns a number whose own shortest-repr matches what Python's repr produces
+ * for the rounded value (so json.dumps / str() parity holds).
+ */
 function _pyRound(value: number, ndigits: number): number {
     if (!Number.isFinite(value)) return value;
-    const factor = Math.pow(10, ndigits);
-    const scaled = value * factor;
-    const floor = Math.floor(scaled);
-    const diff = scaled - floor;
-    let rounded: number;
-    const eps = 1e-9;
-    if (Math.abs(diff - 0.5) < eps) {
-        rounded = floor % 2 === 0 ? floor : floor + 1;
-    } else {
-        rounded = Math.round(scaled);
-    }
-    return rounded / factor;
+    return Number(_pyFixed(value, ndigits));
 }
 
+/**
+ * `format(x, '.Nf')` parity with CPython: round-half-to-even on the EXACT value
+ * of the IEEE-754 double, not a naive `x * 10**N` (which diverges on products
+ * landing just below `.5`, e.g. `12.345 * 100` → 12.34 naive vs 12.35 CPython).
+ * `toFixed(40)` yields the exact decimal expansion; BigInt half-even on that
+ * string reproduces CPython byte-for-byte.
+ */
 function _pyFixed(x: number, ndigits: number): string {
     if (!Number.isFinite(x)) return String(x);
     const neg = x < 0 || Object.is(x, -0);
     const abs = Math.abs(x);
-    const factor = Math.pow(10, ndigits);
-    const scaled = abs * factor;
-    const floor = Math.floor(scaled);
-    const frac = scaled - floor;
-    const tol = Math.max(Math.abs(scaled), 1) * 2 ** -40;
-    let rounded: number;
-    if (Math.abs(frac - 0.5) <= tol) {
-        rounded = floor % 2 === 0 ? floor : floor + 1;
-    } else {
-        rounded = Math.round(scaled);
+    const exact = abs.toFixed(40);
+    const dot = exact.indexOf('.');
+    const intPart = dot === -1 ? exact : exact.slice(0, dot);
+    const fracPart = dot === -1 ? '' : exact.slice(dot + 1);
+    const kept = (intPart + fracPart.slice(0, ndigits).padEnd(ndigits, '0')).replace(/^0+(?=\d)/, '');
+    const rest = fracPart.slice(ndigits);
+    let value = BigInt(kept === '' ? '0' : kept);
+    if (rest.length > 0) {
+        const firstRest = rest.charCodeAt(0) - 48;
+        const hasMore = /[1-9]/.test(rest.slice(1));
+        if (firstRest > 5 || (firstRest === 5 && hasMore)) {
+            value += 1n;
+        } else if (firstRest === 5 && !hasMore) {
+            if (value % 2n === 1n) {
+                value += 1n;
+            }
+        }
     }
-    let intStr = String(rounded);
+    let intStr = value.toString();
     let result: string;
     if (ndigits === 0) {
         result = intStr;
@@ -625,6 +1161,67 @@ function _pyFixed(x: number, ndigits: number): string {
         result = `${whole}.${dec}`;
     }
     return neg ? `-${result}` : result;
+}
+
+/** Python `round(x)` with no ndigits → nearest int, round-half-to-even. */
+function _pyRoundInt(x: number): number {
+    if (!Number.isFinite(x)) return x;
+    const floor = Math.floor(x);
+    const frac = x - floor;
+    const eps = Math.max(Math.abs(x), 1) * 2 ** -40;
+    if (Math.abs(frac - 0.5) <= eps) {
+        return floor % 2 === 0 ? floor : floor + 1;
+    }
+    return Math.round(x);
+}
+
+/** Python truthiness of an arbitrary JS value (None/false/0/""/[]/{} falsy). */
+function _pyTruthy(v: unknown): boolean {
+    if (v === null || v === undefined) return false;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v !== 0 && !Number.isNaN(v);
+    if (typeof v === 'string') return v.length > 0;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === 'object') return Object.keys(v).length > 0;
+    return Boolean(v);
+}
+
+/** Python `x or fallback` guard for a string-typed value (truthy → string). */
+function _pyTruthyStr(v: unknown): boolean {
+    return typeof v === 'string' && v.length > 0;
+}
+
+/** Python `int(x or 0)` for a usage-count field — non-int / falsy → 0. */
+function _intOrZero(v: unknown): number {
+    if (typeof v === 'number' && Number.isFinite(v)) return Math.trunc(v);
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    return 0;
+}
+
+function _isPlainObj(v: unknown): boolean {
+    return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
+/** Python `str(float)` for the --max-budget-usd argv value (e.g. 2.0 → "2.0"). */
+function _pyStrNum(x: number): string {
+    return Number.isInteger(x) ? `${x}.0` : String(x);
+}
+
+/** argparse `type=float` — accept int/float literals; on failure exit 2. */
+function _pyFloat(s: string, flag: string): number {
+    const trimmed = s.trim();
+    const n = Number(trimmed);
+    if (trimmed === '' || Number.isNaN(n)) {
+        process.stderr.write(`bench_ab_task_runner: error: argument ${flag}: invalid float value: '${s}'\n`);
+        process.exitCode = 2;
+        throw new ArgExit();
+    }
+    return n;
+}
+
+/** Python str.ljust(width) — right-pad with spaces to at least `width`. */
+function _ljust(s: string, width: number): string {
+    return s.length >= width ? s : s + ' '.repeat(width - s.length);
 }
 
 /** Render a float the way Python `f"{x}"` / `str(x)` would (e.g. 0.0 → "0.0"). */

@@ -102,6 +102,18 @@ The agent is a thought partner, not a gatekeeper. After presenting concerns:
 - **Never validate simple tasks** — only features, architecture, significant changes
 - **Never validate after the user already explained their reasoning**
 
+## Verify with concrete tools, not prose
+
+If the challenge requires you to confirm current behavior before proposing an alternative, use a concrete probe — a `curl` against the endpoint, a Playwright spec, a debugger / `xdebug` step-through, or the project's test runner with a targeted filter. Asserting current behavior from memory is not validation.
+
+## Intent inference (RDP, standard host)
+
+When the literal request and the underlying goal may differ, **state the inferred
+goal in one line and give ONE recommendation** — do not spread 2–3 framings (that
+is the overplanning [`direct-answers`](direct-answers.md) suppresses). Standard
+host only; a strong-reasoning host self-infers, so skip it there. Engage per
+[`rdp-gate`](../contexts/execution/rdp-gate.md).
+
 ## Creating new agent artifacts
 
 When the request is to create or significantly rewrite a skill, rule, command,
