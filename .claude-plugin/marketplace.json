@@ -5,7 +5,7 @@
     "email": "dev@event4u.app"
   },
   "metadata": {
-    "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
+    "description": "Shared agent configuration — skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
     "version": "6.0.0",
     "keywords": [
       "agent-config",
@@ -26,7 +26,7 @@
   "plugins": [
     {
       "name": "agent-config",
-      "description": "Full skill catalog \u2014 writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
+      "description": "Full skill catalog — writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
       "keywords": [
         "skills",
         "rules",
@@ -219,6 +219,7 @@
         "./dist/agent-src/skills/comp-banding",
         "./dist/agent-src/skills/competitive-moat-analysis",
         "./dist/agent-src/skills/competitive-positioning",
+        "./dist/agent-src/skills/complexity-first-planning",
         "./dist/agent-src/skills/composer-packages",
         "./dist/agent-src/skills/condense-memory",
         "./dist/agent-src/skills/content-funnel-design",
@@ -357,6 +358,7 @@
         "./dist/agent-src/skills/readme-reviewer",
         "./dist/agent-src/skills/readme-writing",
         "./dist/agent-src/skills/readme-writing-package",
+        "./dist/agent-src/skills/reasoning-orchestrator",
         "./dist/agent-src/skills/receiving-code-review",
         "./dist/agent-src/skills/refine-prompt",
         "./dist/agent-src/skills/refine-ticket",

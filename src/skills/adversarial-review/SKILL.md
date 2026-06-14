@@ -117,6 +117,15 @@ Only surface trade-offs or concerns that need the user's input.
 - **api-design** — review API design for consistency and breaking changes.
 - **security** — review security-sensitive changes for attack surface.
 
+## RDP: fresh-context verifier as the default gate (structural)
+
+Within the Reasoning Discipline Protocol the fresh-context verifier subagent is
+the **default** final gate — but, because it is a full extra inference pass, it
+fires only on the **structural-complexity** signal: ≥ 2 of {branching/conditional
+logic, ≥ 3 explicit must/must-not constraints, stateful operations,
+irreversibility} **and** estimated work ≥ ~1k tokens. Token length alone never
+triggers it. See [`rdp-gate`](../../contexts/execution/rdp-gate.md) (L12).
+
 ## Auto-trigger keywords
 
 - adversarial review

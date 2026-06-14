@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 237
+- **artefacts**: 240
 
 ## Commands (118)
 
@@ -131,7 +131,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (60)
+## Rules (61)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -168,6 +168,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`no-decorative-emojis-in-git-surfaces`** — Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend
 - **`no-pr-progress-comments`** — Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true
 - **`no-roadmap-references`** — Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings
+- **`notes-first-reasoning`** — Reasoning-heavy work (debugging, multi-hypothesis, weighing alternatives) — keep hypotheses/predictions/decisions in session notes, response carries conclusions + evidence only
 - **`onboarding-gate`** — First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
@@ -194,7 +195,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 
-## Skills (58)
+## Skills (60)
 
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -205,6 +206,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`check-refs`** — Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 - **`command-routing`** — Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
 - **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
+- **`complexity-first-planning`** — Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.
 - **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
 - **`context-authoring`** — Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
 - **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
@@ -237,6 +239,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`readme-reviewer`** — Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues.
 - **`readme-writing`** — Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience.
 - **`readme-writing-package`** — Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding.
+- **`reasoning-orchestrator`** — Use for complex / ambiguous / long-horizon work — coordinate the reasoning chain ground→intent→notes→gather→audit→verify; composes existing skills, never duplicates them.
 - **`refine-prompt`** — Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work "…"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
 - **`repomix-packer`** — Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
