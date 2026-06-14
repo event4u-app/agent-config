@@ -41,16 +41,21 @@ def test_opt_in_required_no_transcript_read(tmp_path: Path) -> None:
     assert not out_root.exists()
 
 
-def test_unsupported_host_exits_clean(tmp_path: Path) -> None:
-    """Non-claude-code host prints the not-supported hint and exits 0."""
+def test_cross_host_mines_via_override(tmp_path: Path) -> None:
+    """Mining is cross-host now — any host mines via the override source.
+
+    The former 'No TranscriptAdapter for host=X' rejection is gone: the
+    chat-history JSONL log is written by hooks on every host, so mining no
+    longer special-cases claude-code.
+    """
     result = run([
         "--confirm-transcript-access",
         "--host", "cursor",
         "--transcript", str(FIXTURE),
     ])
     assert result.returncode == 0
-    assert "No TranscriptAdapter for host=cursor" in result.stdout
-    assert "claude-code" in result.stdout
+    assert "No TranscriptAdapter" not in result.stdout
+    assert "Mining preview" in result.stdout
 
 
 def test_preview_default_writes_nothing(tmp_path: Path) -> None:
@@ -129,10 +134,11 @@ def test_commit_intake_appends_jsonl(tmp_path: Path) -> None:
 
 def test_mine_function_returns_three_signal_classes() -> None:
     """Direct call: corrections, conventions, invariants all surface."""
-    from scripts.mine_session import mine
+    from scripts.mine_session import mine, _iter_claude_code_jsonl
 
     since = dt.datetime(2026, 5, 1, tzinfo=dt.timezone.utc)
-    facts = mine(FIXTURE, since, extra_patterns=[])
+    facts = mine(_iter_claude_code_jsonl(FIXTURE), since,
+                 extra_patterns=[], session_id="testsess")
     types = {f["type"] for f in facts}
     # The fixture seeds preference (convention), correction (gotcha),
     # decision (invariant), and a recurring path → pattern.

@@ -133,11 +133,12 @@ If important information is missing:
 - Identify likely cause and smallest correct change
 - **Consult memory — invariants and prior decisions.** Via
   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md), call
-  `retrieve(types=["domain-invariants", "architecture-decisions"], keys=<touched paths>, limit=3)`.
+  `retrieve(types=["domain-invariants"], keys=<touched paths>, limit=3)`.
   A matching `domain-invariant` is a hard constraint — violating it = regression,
-  surface the conflict to the user before proceeding. A matching
-  `architecture-decision` explains *why* the current shape exists; plan around
-  it, do not silently overturn it. Cite matching `id`s in the plan.
+  surface the conflict to the user before proceeding. For architectural rationale
+  (*why* the current shape exists), check the ADR index
+  [`docs/decisions/INDEX.md`](../../../docs/decisions/INDEX.md); plan around it, do
+  not silently overturn it. Cite matching `id`s / ADR numbers in the plan.
   See [`engineering-memory-data-format`](../../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
   for the schema.
 

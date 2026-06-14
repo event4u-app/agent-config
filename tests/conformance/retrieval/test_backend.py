@@ -94,11 +94,8 @@ def test_retrieve_v1_all_unknown_types_is_error(tmp_path, monkeypatch):
     assert envelope["entries"] == []
 
 
-def test_health_envelope_is_valid(monkeypatch):
-    # Ensure status is detected as `absent` in the test environment so the
-    # probe is deterministic and never blocks on an installed CLI.
-    monkeypatch.setattr(memory_status, "_find_cli", lambda: "")
-    monkeypatch.delenv(memory_status._CACHE_ENV, raising=False)
+def test_health_envelope_is_valid():
+    # Memory is entirely file-backed — health() is constant.
     envelope = memory_status.health(refresh=True)
     validate_health(envelope)
     assert envelope["contract_version"] == 1
@@ -118,11 +115,8 @@ def test_cli_retrieve_v1_output_is_valid(tmp_path):
     validate_retrieve(envelope)
 
 
-def test_cli_health_output_is_valid(tmp_path, monkeypatch):
+def test_cli_health_output_is_valid(tmp_path):
     """CLI path: `python3 scripts/memory_status.py --health` emits a valid envelope."""
-    # Neutralise any test-local status cache so the file reflects the
-    # real (absent) probe rather than a stale session state.
-    monkeypatch.setenv("AGENT_MEMORY_STATUS", "")
     out = subprocess.check_output(
         [sys.executable, str(SCRIPTS / "memory_status.py"),
          "--health", "--refresh"],
@@ -132,17 +126,3 @@ def test_cli_health_output_is_valid(tmp_path, monkeypatch):
     envelope = json.loads(out)
     validate_health(envelope)
     assert envelope["contract_version"] == 1
-
-
-def test_retrieve_v1_survives_operational_provider_exception(tmp_path, monkeypatch):
-    """An operational backend that raises does not crash the envelope."""
-    _chdir(monkeypatch, tmp_path)
-
-    def boom(_types, _keys):
-        raise RuntimeError("backend went away")
-
-    envelope = memory_lookup.retrieve_v1(
-        ["ownership"], ["x"],
-        operational_provider=boom,
-    )
-    validate_retrieve(envelope)

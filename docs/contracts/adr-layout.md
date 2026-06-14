@@ -42,7 +42,6 @@ Reserved areas (bootstrap pass — step-11 Phase 4 Step 3):
 | `schema` | Frontmatter schemas, v2 rigor, lint behaviour | [`schema-versioning.md`](schema-versioning.md) (when published) |
 | `router` | `router.json` shape, tier semantics, dispatch precedence | [`rule-router.md`](rule-router.md) |
 | `smoke` | Per-tier smoke contracts, baseline locks | [`smoke-contracts.md`](smoke-contracts.md) |
-| `memory` | Memory MCP, propose / promote / poison flow | [`agent-memory-contract.md`](agent-memory-contract.md) |
 
 ## Frontmatter
 

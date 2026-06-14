@@ -41,11 +41,10 @@ in the entry count and the signal-to-noise degrades fast on large types.
 > Which memory type should I load in full?
 >
 > 1. domain-invariants
-> 2. architecture-decisions
-> 3. incident-learnings
-> 4. product-rules
-> 5. historical-patterns
-> 6. ownership
+> 2. incident-learnings
+> 3. product-rules
+> 4. historical-patterns
+> 5. ownership
 ```
 
 ### 1b. Surface the Tier-0 critical slice

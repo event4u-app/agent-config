@@ -2,10 +2,10 @@
 """Write-side helper: drop an engineering-memory signal.
 
 Shared by producers (`/bug-fix`, `/do-and-judge`, `/propose-memory`,
-incident role exit). Routes to the optional `agent-memory` package when
-`memory_status.status() == "present"`; otherwise appends an intake
-line under `agents/memory/intake/signals-YYYY-MM.jsonl` — append-only
-JSONL with `merge=union` (see `road-to-memory-merge-safety.md`).
+incident role exit). Appends an intake line under
+`agents/memory/intake/signals-YYYY-MM.jsonl` — append-only JSONL with
+`merge=union` (see `road-to-memory-merge-safety.md`). Memory is entirely
+file-backed (no external backend).
 
 Rate limiting:
 - Per-path, per-type, within a rolling window (default 7 days).
@@ -37,47 +37,9 @@ VALID_TYPES = {
     "incident-learnings",
     "ownership",
     "domain-invariants",
-    "architecture-decisions",
     "product-rules",
 }
 RATE_LIMIT_WINDOW_DAYS = 7
-
-
-def _skip_intake_when_present() -> bool:
-    """Read `memory.intake.skip_when_present` from `.agent-settings.yml`.
-
-    Default: False — intake JSONL is always written as debug trail even
-    when the `agent-memory` backend is present (see
-    `road-to-memory-merge-safety.md` Phase 3).
-
-    Centralized loader (road-to-portable-dev-preferences P3): tolerance
-    contract handles missing file / malformed YAML / no PyYAML uniformly.
-    """
-    try:
-        from scripts._lib.agent_settings import load_agent_settings
-    except ImportError:  # pragma: no cover — script-style invocation
-        import sys as _sys
-        from pathlib import Path as _Path
-        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
-        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
-
-    data = load_agent_settings(project_path=SETTINGS_FILE)
-    mem = data.get("memory")
-    if not isinstance(mem, dict):
-        return False
-    intake = mem.get("intake")
-    if not isinstance(intake, dict):
-        return False
-    return bool(intake.get("skip_when_present", False))
-
-
-def _backend_status() -> str:
-    """Return the current backend status: 'present' | 'absent' | 'unknown'."""
-    try:
-        import memory_status  # type: ignore
-        return memory_status.status().status
-    except Exception:
-        return "unknown"
 
 
 def _now_iso() -> str:
@@ -137,10 +99,8 @@ def emit(entry_type: str, path: str, body: str,
          force: bool = False) -> dict[str, Any] | None:
     """Append a signal entry. Returns the written record, or None when skipped.
 
-    On `present` backend, routing to the package is a no-op here today —
-    the package adapter is wired in `road-to-agent-memory-integration.md`
-    Phase 3. For now, the file path is the single source of truth so
-    merge-safety is preserved in every mode.
+    The intake JSONL file is the single source of truth — memory is
+    entirely file-backed (no external backend).
     """
     if entry_type not in VALID_TYPES:
         raise ValueError(f"unknown memory type: {entry_type}")
@@ -160,13 +120,6 @@ def emit(entry_type: str, path: str, body: str,
         # Reserved keys stay intact; extras only fill unclaimed slots.
         for k, v in extra.items():
             record.setdefault(k, v)
-    # Backend routing: when the `agent-memory` package is present AND
-    # the consumer opted out of the debug trail, skip the JSONL write.
-    # Otherwise the intake file stays the source of truth (and, when a
-    # backend is present, a replayable debug trail).
-    if _backend_status() == "present" and _skip_intake_when_present():
-        record["_backend"] = "package-only"
-        return record
     INTAKE_ROOT.mkdir(parents=True, exist_ok=True)
     target = _monthly_file()
     with target.open("a", encoding="utf-8") as fh:

@@ -84,11 +84,12 @@ For each comment classified as blocking/important:
   for a reason
 * **Consult memory for prior context.** Via
   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md),
-  call `retrieve(types=["historical-patterns", "architecture-decisions"],
+  call `retrieve(types=["historical-patterns"],
   keys=<files in the review>, limit=3)`. A registered historical pattern
-  may confirm the reviewer's concern (accept) or an architecture
-  decision may explain why the current shape is intentional (push back
-  with the cited `id`).
+  may confirm the reviewer's concern (accept). For architectural rationale
+  ("why is the current shape intentional?"), check the ADR index
+  [`docs/decisions/INDEX.md`](../../../docs/decisions/INDEX.md) — push back
+  with the cited ADR number.
 
 ### 4. Decide: accept, push back, or escalate
 

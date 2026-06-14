@@ -90,13 +90,15 @@ miner is too loose; tighten patterns and re-run before promoting.
 
    A fact may carry **two** tags; the promoter resolves via tag
    intersection, not by file extension. See
-   [`docs/contracts/agent-memory-contract.md`](../../../docs/contracts/agent-memory-contract.md)
-   for the curated YAML schemas.
+   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)
+   for the file-backed retrieval contract over the curated YAML.
 
 2. Append each fact as one JSONL line to
    `agents/memory/intake/<primary-tag>.jsonl` with required fields
    per the contract: `ts`, `type`, `key`, `observation`, `source:
    agent`, `session_id`, plus the new optional `tags: [<one>, <two>]`.
+   Intake is **gitignored, local scratch** — only entries promoted to
+   curated YAML (next phase) become team-shared (committed).
 3. Default to `--preview` mode: render the JSONL block to stdout and
    stop. Only `--commit-intake` writes the file.
 
@@ -109,13 +111,45 @@ validates against the contract.
    archive the consumed JSONL lines into
    `agents/memory/intake/.archive/YYYY-Www.jsonl` — week-bucketed,
    not day-bucketed (defeats session-context inference attacks).
-2. If a curated entry's `last_validated` field is older than 90 days
-   AND no signal in the last 30 days touched its `key`, mark it
-   stale in the consolidation report — but do **not** auto-delete.
-   Pruning is a human-confirmed action.
+2. **Delete `status: archived` curated entries.** Once an entry is
+   marked `archived` (by review or supersession), remove it from the hot
+   file — **git history is the cold archive** (`git log -- <file>`
+   recovers it). This keeps the committed memory small without a decay
+   engine. Do not keep an `agents/memory/archive/` directory.
+3. If an *active* curated entry's `last_validated` is older than 90 days
+   AND no signal in the last 30 days touched its `key`, mark it stale in
+   the consolidation report — but do **not** auto-delete a still-active
+   entry. Only `archived` entries are deleted; staleness is a flag, not a
+   delete trigger.
 
-**Exit gate:** report cites ≥ 0 promotions, ≥ 0 stale flags, 0
-auto-deletes.
+**Exit gate:** report cites ≥ 0 promotions, ≥ 0 stale flags, and the
+count of `archived` entries deleted (git history retains them).
+
+## Write-time curation discipline
+
+Memory quality comes from what you write, not from a heavy store. Apply
+these at GATHER + CONSOLIDATE (adapted from MemSkill's memory-operation
+skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`):
+
+- **Dedupe before insert.** Compare against retrieved entries; never add a
+  fact already covered. Split distinct facts into separate entries.
+- **Merge on refresh, preserve what still holds.** When a fact updates an
+  existing entry, merge into one item and keep the details that remain true.
+- **Delete only on explicit contradiction.** Remove a curated entry only when
+  evidence directly contradicts or cancels it. If uncertain, keep it.
+- **Prefer no-op under uncertainty.** A chunk with no new, corrective, or
+  actionable information records nothing — silence beats speculation.
+- **Skip trivial / fleeting / speculative content.** Capture durable,
+  reusable facts, not transcripts or one-off chatter.
+- **One durable fact per entry.** No narrative blobs — each entry is a single
+  PATTERN / CONVENTION / INVARIANT / GOTCHA the next agent can act on.
+
+This is **meta-memory**: the skill of *how to remember* (what to extract,
+keep, forget) — distinct from the remembered content. The store stays simple
+and file-backed; the discipline lives here. Do **not** add
+INSERT/UPDATE/DELETE/NOOP operation machinery (append-only JSONL + curated
+YAML need no such ops) and do **not** import any retrieval / decay / trust
+engine.
 
 ## TranscriptAdapter contract
 
@@ -134,11 +168,13 @@ The miner is host-agnostic by design. A `TranscriptAdapter` for host
   identifier the consumer project lists in
   `.agent-settings.yml` under `memory.redact_patterns`.
 
-Phase 1 implementation lives in
-`/memory:mine-session` (single host: Claude Code,
-`~/.claude/projects/*/sessions/*.jsonl`). Phase 3 of the
-adoption roadmap adds a second host adapter; the contract above is
-documented now so the second implementation is not a vacuum design.
+The GATHER implementation lives in the single mining command
+`/memory:mine-session` (`scripts/mine_session.py`). It reads the
+**cross-host** chat-history JSONL log (`agents/runtime/.agent-chat-history`,
+written by platform hooks on every host), falling back to the per-host
+Claude-Code transcript when the log is absent. `--mode=[signals|proposals|both]`
+selects intake signals and/or rule/skill proposal seeds — the latter folds in
+the former `/chat-history learn`.
 
 ## In-task notes → cross-run lessons (RDP)
 

@@ -12,8 +12,7 @@
         "path": "app/Http/Controllers/UserController.php",
         "evidence": "Seen in PR #1204 and PR #1387"
       },
-      "last_validated": "2026-04-21T00:00:00Z",
-      "shadowed_by": null
+      "last_validated": "2026-04-21T00:00:00Z"
     }
   ],
   "slices": {

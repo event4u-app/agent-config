@@ -8,18 +8,16 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
 - **version**: `6.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: meta
-- **artefacts**: 11
+- **artefacts**: 9
 
-## Commands (11)
+## Commands (9)
 
-- **`chat-history`** — Chat-history orchestrator — routes to show, import, learn
+- **`chat-history`** — Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view.
 - **`chat-history-import`** — Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
-- **`chat-history-learn`** — Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
-- **`chat-history-show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
 - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
-- **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
+- **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
 - **`memory-learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
 - **`memory-load`** — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
-- **`memory-mine-session`** — Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.
+- **`memory-mine-session`** — Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
 - **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
 - **`memory-propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.

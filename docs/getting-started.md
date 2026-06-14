@@ -167,9 +167,9 @@ Your agent now understands slash commands:
 | `/optimize skills` | Audit skills, find duplicates, run linter |
 | `/feature plan` | Interactively plan a feature |
 | `/quality-fix` | Run and fix all quality checks |
-| `/chat-history` | Inspect the persistent chat-history log (read-only `show`) |
+| `/chat-history import` | Pull a prior session into the current chat (resume) |
 
-→ [Browse all 149 active commands](../dist/agent-src/commands/)
+→ [Browse all 147 active commands](../dist/agent-src/commands/)
 
 ---
 
@@ -188,7 +188,7 @@ Logging is **hook-only**: a structural Augment hook fires on
 transparently if the fingerprint does not match (fresh chat) and
 otherwise appended to.
 
-Run `/chat-history` (a.k.a. `/chat-history show`) any time to inspect
+Use your host's native transcript / session view any time to inspect
 the log size, last entries, and current fingerprint. For the rare case
 where auto-adopt misfires (corrupted file, hook misconfiguration), run
 `./agent-config chat-history:adopt` as the manual recovery lever.

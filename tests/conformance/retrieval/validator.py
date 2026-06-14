@@ -20,7 +20,6 @@ _HEALTH_STATUSES = {"ok", "degraded", "error"}
 _DT_RE = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+\-]\d{2}:\d{2})$"
 )
-_SHADOWED_BY_RE = re.compile(r"^repo:")
 
 
 class ValidationError(AssertionError):
@@ -50,31 +49,23 @@ def _entry(entry: Any, path: str) -> None:
     _no_extras(
         entry, path,
         "id", "type", "source", "confidence",
-        "trust", "body", "last_validated", "shadowed_by",
+        "body", "last_validated",
     )
     if not isinstance(entry["id"], str) or not entry["id"]:
         _fail(f"{path}.id", "must be non-empty string")
     if not isinstance(entry["type"], str) or not entry["type"]:
         _fail(f"{path}.type", "must be non-empty string")
-    if entry["source"] not in ("repo", "operational"):
+    if entry["source"] != "repo":
         _fail(f"{path}.source", f"got {entry['source']!r}")
     conf = entry["confidence"]
     if not isinstance(conf, (int, float)) or not 0 <= conf <= 1:
         _fail(f"{path}.confidence", f"must be in [0,1], got {conf!r}")
-    if "trust" in entry:
-        t = entry["trust"]
-        if not isinstance(t, (int, float)) or not 0 <= t <= 1:
-            _fail(f"{path}.trust", f"must be in [0,1], got {t!r}")
     if not isinstance(entry["body"], dict):
         _fail(f"{path}.body", "must be object")
     if "last_validated" in entry:
         lv = entry["last_validated"]
         if not isinstance(lv, str) or not _DT_RE.match(lv):
             _fail(f"{path}.last_validated", f"must be RFC3339, got {lv!r}")
-    if "shadowed_by" in entry:
-        sb = entry["shadowed_by"]
-        if sb is not None and not (isinstance(sb, str) and _SHADOWED_BY_RE.match(sb)):
-            _fail(f"{path}.shadowed_by", f"must be null or `repo:<id>`, got {sb!r}")
 
 
 def _slice_status(slc: Any, path: str) -> None:

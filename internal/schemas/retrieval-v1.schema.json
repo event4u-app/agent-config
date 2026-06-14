@@ -38,14 +38,8 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "type": { "type": "string", "minLength": 1 },
-        "source": { "enum": ["repo", "operational"] },
+        "source": { "enum": ["repo"] },
         "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "trust": {
-          "description": "Only in `present` mode. Operational backends set this; repo entries omit it.",
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
         "body": {
           "type": "object",
           "description": "Type-specific payload. Shape is the responsibility of the memory type, not this contract."
@@ -53,13 +47,6 @@
         "last_validated": {
           "type": "string",
           "format": "date-time"
-        },
-        "shadowed_by": {
-          "oneOf": [
-            { "type": "null" },
-            { "type": "string", "pattern": "^repo:" }
-          ],
-          "description": "Non-null when an operational entry is suppressed by a repo entry. Value encodes the winning repo id as `repo:<id>`."
         }
       }
     },

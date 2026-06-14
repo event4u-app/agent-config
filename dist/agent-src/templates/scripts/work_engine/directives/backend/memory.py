@@ -1,11 +1,12 @@
-"""``memory`` step — bounded retrieval over the four allowed types.
+"""``memory`` step — bounded retrieval over the three allowed types.
 
 Contract (see
 ``docs/contracts/implement-ticket-flow.md#memory-retrieval-contract``):
 
-- Four allowed types: ``domain-invariants``, ``architecture-decisions``,
-  ``incident-learnings``, ``historical-patterns``.
-- Hard cap of **12** hits total across the four types.
+- Three allowed types: ``domain-invariants``, ``incident-learnings``,
+  ``historical-patterns``. (Architectural rationale lives in ADRs —
+  ``docs/decisions/`` — not in curated memory.)
+- Hard cap of **12** hits total across the three types.
 - Keys derive from the ticket — title tokens plus acceptance-criterion
   tokens plus any already-known ``files`` hint. Tokenisation is
   deliberately naive (whitespace split, lower-cased) so the retrieval
@@ -27,11 +28,10 @@ from ...delivery_state import DeliveryState, Outcome, StepResult
 
 MEMORY_TYPES: tuple[str, ...] = (
     "domain-invariants",
-    "architecture-decisions",
     "incident-learnings",
     "historical-patterns",
 )
-"""The four types allowed by the flow contract. No aliases, no extras."""
+"""The three types allowed by the flow contract. No aliases, no extras."""
 
 MAX_HITS: int = 12
 """Hard cap per the roadmap — never raise without amending the contract."""

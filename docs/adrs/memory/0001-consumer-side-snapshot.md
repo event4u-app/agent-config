@@ -1,6 +1,14 @@
 # ADR 0001 — Consumer-side snapshot of the agent-memory contract
 
-> Area: `memory` · Status: accepted · Date: 2026-05-16 · Type: retrospective
+> **Superseded by [ADR-094](../../decisions/ADR-094-agent-memory-layer-removal.md)
+> (2026-06-14).** The `@event4u/agent-memory` package and its consumer-side
+> contract snapshot were removed; memory is now entirely file-backed. The
+> dead links below (the contract doc and the archived sibling-package specs)
+> point at files that no longer exist and are kept as plain text for the
+> historical record. Retained as a retrospective record of the original
+> decision.
+
+> Area: `memory` · Status: superseded · Date: 2026-05-16 · Type: retrospective
 > Roadmap: an internal parity roadmap (local-only) Phase 4 Step 3
 > Supersedes: —
 
@@ -10,7 +18,7 @@
 provides MCP-server semantic-retrieval plus a v1 retrieval envelope
 (`id`, `type`, `source`, `confidence`, `body`, …). The spec-side
 source-of-truth lives in
-[`agents/roadmaps/archive/agent-memory/`](../../../agents/roadmaps/archive/agent-memory/);
+`agents/roadmaps/archive/agent-memory/`;
 the implementation lives in the sibling repo.
 
 The question this ADR records is: **what surface does `agent-config`
@@ -20,7 +28,7 @@ two repos can drift between releases?
 ## Decision
 
 **Maintain a consumer-side snapshot at
-[`docs/contracts/agent-memory-contract.md`](../../contracts/agent-memory-contract.md)** —
+`docs/contracts/agent-memory-contract.md`** —
 a point-in-time pin of the interface `agent-config`'s wired code
 **currently assumes**.
 
@@ -104,8 +112,8 @@ release, citable from every consumer skill that touches memory.
 
 ## References
 
-- [`docs/contracts/agent-memory-contract.md`](../../contracts/agent-memory-contract.md) — the consumer-side snapshot.
+- `docs/contracts/agent-memory-contract.md` — the consumer-side snapshot.
 - [`scripts/memory_status.py`](../../../src/scripts/memory_status.py) — three-state probe.
 - [`scripts/memory_lookup.py`](../../../src/scripts/memory_lookup.py) — retrieval envelope source.
-- [`agents/roadmaps/archive/agent-memory/`](../../../agents/roadmaps/archive/agent-memory/) — sibling-package spec.
+- `agents/roadmaps/archive/agent-memory/` — sibling-package spec.
 - an internal parity roadmap (local-only) Phase 4 Step 3 — origin.

@@ -126,8 +126,6 @@ commands:
     - analytics/show
     - chat-history
     - chat-history/import
-    - chat-history/learn
-    - chat-history/show
     - check-current-md
     - condense
     - context

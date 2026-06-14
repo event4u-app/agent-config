@@ -508,9 +508,10 @@ commands:
 
 # --- Memory ---
 #
-# Engineering memory consolidation behaviour. See
-# docs/contracts/agent-memory-contract.md for the on-disk shape and
-# .augment/skills/memory-consolidation/ for the four-phase loop.
+# Engineering memory consolidation behaviour. Memory is entirely
+# file-backed (agents/memory/). See docs/guidelines/agent-infra/memory-access.md
+# for the retrieval contract and .augment/skills/memory-consolidation/ for
+# the four-phase loop.
 memory:
   # Cadence for the "🧠 Memory: <hits>/<asks>" visibility line emitted
   # after a memory-consulting step (see docs/contracts/memory-visibility-v1.md).

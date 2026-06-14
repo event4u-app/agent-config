@@ -63,7 +63,7 @@ Run grep/search for the exact symbol, column, or event name. Enumerate:
 | DB references | Foreign keys, indexes, views, triggers on the column |
 | Config / docs | YAML, JSON, Markdown that name the symbol |
 
-### 3. Inspect indirect deps
+### 3. Inspect indirect dependencies
 
 For each direct dependency, identify second-order fan-out:
 
@@ -89,16 +89,17 @@ For every dependency, mark:
 ### 5. Consult engineering memory
 
 Via [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md) call
-`retrieve(types=["architecture-decisions", "ownership"],
+`retrieve(types=["ownership"],
 keys=<changed paths + changed symbol>, limit=5)`. Surface:
 
-- **Architecture decisions** that constrain the planned change — cite
-  `id` and the decision verbatim so the report is self-auditing.
+- **Architecture decisions** that constrain the planned change — check the
+  ADR index [`docs/decisions/INDEX.md`](../../../docs/decisions/INDEX.md) and
+  cite the ADR number + the decision verbatim so the report is self-auditing.
 - **Ownership** matches — add these as `owner hint` candidates when
   the direct grep had no result.
 
 Memory entries are supplementary, never authoritative: a grep miss is
-still a grep miss. Do not infer deps from memory alone.
+still a grep miss. Do not infer dependencies from memory alone.
 
 ## Validation
 
@@ -109,8 +110,8 @@ Before finalizing the report, confirm:
 3. Second-order fan-out is bounded — any runaway chain is flagged, not expanded
 4. Every `external` reach has at least one named owner hint or an explicit
    "owner unknown — ask"
-5. You have NOT invented deps that grep did not find
-6. You have NOT merged direct and indirect deps — they are listed separately
+5. You have NOT invented dependencies that grep did not find
+6. You have NOT merged direct and indirect dependencies — they are listed separately
 
 ## Output format
 
@@ -150,10 +151,10 @@ Open questions:
 Required fields (ordered):
 
 1. **Skill** and **Change** — one-line edit summary
-2. **Direct deps** — grouped by class, each with file:line citations and exact counts
-3. **Indirect deps** — 2nd-order only, bounded
+2. **Direct dependencies** — grouped by class, each with file:line citations and exact counts
+3. **Indirect dependencies** — 2nd-order only, bounded
 4. **Reach summary** — counts per reach level
-5. **Risk surfaces** — deps grouped by risk type
+5. **Risk surfaces** — dependencies grouped by risk type
 6. **Open questions** — unresolved items with grep evidence
 
 Runtime confirmation (e.g. *"actually run the test suite to see what breaks"*,
@@ -179,7 +180,7 @@ does not execute code, run tests, or touch the network**.
 * NEVER return `safe` out of politeness when external reach exists — mark it clearly
 * NEVER silently fall back to "module-level impact" when grep shows cross-module callers
 * NEVER claim a dependency without a file:line citation from grep output
-* NEVER chase deps past 2nd order without explicit scope approval — flag and stop
+* NEVER chase dependencies past 2nd order without explicit scope approval — flag and stop
 
 ## References
 

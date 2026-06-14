@@ -20,7 +20,6 @@ RETRIEVE_FIXTURES = [
     "02-single-type-hit.json",
     "03-multi-type-partial.json",
     "04-error-all-slices.json",
-    "05-shadowed-by.json",
 ]
 HEALTH_FIXTURES = [
     "06-health-ok.json",
@@ -115,9 +114,9 @@ def test_validator_rejects_confidence_out_of_range() -> None:
     assert "confidence" in str(exc.value)
 
 
-def test_validator_rejects_bad_shadowed_by_format() -> None:
-    env = _load("05-shadowed-by.json")
-    env["entries"][1]["shadowed_by"] = "operational:xyz"
+def test_validator_rejects_operational_source() -> None:
+    env = _load("02-single-type-hit.json")
+    env["entries"][0]["source"] = "operational"
     with pytest.raises(ValidationError) as exc:
         validate_retrieve(env)
-    assert "shadowed_by" in str(exc.value)
+    assert "source" in str(exc.value)

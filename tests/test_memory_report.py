@@ -1,4 +1,4 @@
-"""Tests for scripts/memory_report.py — quarterly + operational-store sections."""
+"""Tests for scripts/memory_report.py — quarterly + role-mode sections."""
 
 from __future__ import annotations
 
@@ -78,28 +78,6 @@ def test_quarterly_retired_counted_from_supersede(tmp_path, monkeypatch):
     assert report["quarterly"]["retired_by_quarter"] == {
         "2026Q1": 1, "2026Q2": 1,
     }
-
-
-def test_operational_store_null_when_backend_absent(monkeypatch):
-    monkeypatch.setattr(memory_report.memory_status, "status",
-                        lambda: type("S", (), {
-                            "status": "absent", "backend": "file",
-                            "reason": "not on PATH", "cli_path": "",
-                        })())
-    report = memory_report.build_report()
-    assert report["operational_store"] is None
-
-
-def test_operational_store_present_returns_stub(monkeypatch):
-    monkeypatch.setattr(memory_report.memory_status, "status",
-                        lambda: type("S", (), {
-                            "status": "present", "backend": "agent-memory",
-                            "reason": "", "cli_path": "/usr/bin/am",
-                        })())
-    report = memory_report.build_report()
-    assert report["operational_store"]["enabled"] is True
-    assert "note" in report["operational_store"]
-
 
 
 def _write_scan_file(tmp_path: Path, rel: str, body: str) -> None:

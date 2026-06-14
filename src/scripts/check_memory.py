@@ -63,9 +63,28 @@ CRITICAL_WARN_THRESHOLD = 10
 # from the generic `stale:` info so reviewers see it before merge.
 CRITICAL_STALE_DAYS = 90
 KNOWN_TYPES = {
-    "domain-invariants", "architecture-decisions",
-    "incident-learnings", "product-rules",
+    "domain-invariants", "incident-learnings", "product-rules",
 }
+
+# Per-type soft entry cap (size-bounding without a decay engine). Over-cap →
+# warning, never a hard fail: the right answer to bloat is a consolidation pass
+# (prune archived, merge duplicates), not CI failure. See
+# road-to-memory-pipeline-consolidation.md Phase 7.
+PER_TYPE_CAPS = {
+    "ownership": 50,
+    "domain-invariants": 150,
+    "product-rules": 100,
+    "incident-learnings": 150,
+    "historical-patterns": 150,
+}
+DEFAULT_TYPE_CAP = 150
+# One-durable-fact-per-entry: a content field longer than this reads as a
+# transcript / narrative blob, not a single durable fact → warning.
+ONE_FACT_MAX_CHARS = 600
+ONE_FACT_FIELDS = ("rule", "pattern", "statement", "observation",
+                   "body", "decision", "note")
+# Per-type entry tally, populated during validation, consumed by main().
+_TYPE_COUNTS: dict = {}
 
 # Redaction heuristics — plain-regex, deliberately conservative.
 # False positives are fixed by quoting the line differently; false
@@ -186,11 +205,26 @@ def _validate_entry(
                 str(path), 0, "warning",
                 f"critical-stale: last_validated {crit_age} days ago "
                 f"(critical SLA is {CRITICAL_STALE_DAYS} days)", eid))
+    # One-durable-fact-per-entry: reject transcript/narrative blobs. A single
+    # content field over ONE_FACT_MAX_CHARS is the bloat signal.
+    for fld in ONE_FACT_FIELDS:
+        val = entry.get(fld)
+        if isinstance(val, str) and len(val) > ONE_FACT_MAX_CHARS:
+            findings.append(Finding(
+                str(path), 0, "warning",
+                f"one-fact: `{fld}` is {len(val)} chars (limit "
+                f"{ONE_FACT_MAX_CHARS}) — split into separate durable facts, "
+                f"not a narrative blob", eid))
+            break
     # Tier-0 inflation tracking — increment per memory type. The aggregate
     # warning is emitted in main() after all files are validated.
     if critical_counts is not None and priority == "critical" and entry.get("status") == "active":
         mtype = _memory_type(path)
         critical_counts[mtype] = critical_counts.get(mtype, 0) + 1
+    # Per-type entry-count tracking — aggregate cap warning in main().
+    if critical_counts is not None:
+        mt = _memory_type(path)
+        _TYPE_COUNTS[mt] = _TYPE_COUNTS.get(mt, 0) + 1
 
 
 def _check_redaction(path: Path, findings: List[Finding]):
@@ -326,59 +360,6 @@ def _check_append_only(base: Optional[str], findings: List[Finding]) -> None:
                                         f"line(s) removed or modified (ref={ref})"))
 
 
-def _shadow_report(fmt: str) -> int:
-    """Report per-type shadow counts from the conflict rule.
-
-    Ships today as scaffolding: without a wired operational backend the
-    counts are all zero (there is nothing on the operational side to
-    suppress). Once agent-memory is present locally, re-running this
-    command will surface real shadows under the same shape — so the
-    downstream consumer (dashboards, weekly cron) never changes.
-    """
-    # Inline import so `check_memory.py` stays importable when someone
-    # runs it on a tree without scripts/ on sys.path (e.g., packaging).
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from scripts.memory_lookup import CURATED_TYPES, RetrievalResult, retrieve
-
-    per_type: dict = {}
-    total_shadows = 0
-    for mtype in sorted(CURATED_TYPES):
-        result = retrieve(types=[mtype], keys=[], limit=1000, with_shadows=True)
-        assert isinstance(result, RetrievalResult)
-        per_type[mtype] = {
-            "hits": len(result.hits),
-            "shadows": len(result.shadows),
-        }
-        total_shadows += len(result.shadows)
-
-    # Best-effort backend-status probe — avoid a hard dependency on
-    # memory_status.py in case it is absent.
-    backend = "unknown"
-    try:
-        from scripts.memory_status import status as _memory_status  # type: ignore
-        backend = _memory_status().status
-    except Exception:  # noqa: BLE001
-        pass
-
-    if fmt == "json":
-        print(json.dumps({
-            "backend": backend,
-            "total_shadows": total_shadows,
-            "per_type": per_type,
-        }, indent=2))
-        return 0
-
-    print(f"Shadow report — backend: {backend}")
-    print(f"  Total operational entries shadowed: {total_shadows}")
-    for mtype, stats in per_type.items():
-        print(f"    {mtype:25s}  hits={stats['hits']:>4}  "
-              f"shadows={stats['shadows']}")
-    if backend == "absent":
-        print("\n  ℹ️  operational backend absent — shadow counts will "
-              "stay zero until @event4u/agent-memory is installed.")
-    return 0
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--path", default="agents/memory", help="Root path to scan")
@@ -388,12 +369,7 @@ def main() -> int:
                          "via git diff against the base ref")
     ap.add_argument("--base", default=None,
                     help="Base ref for --append-only (default: GITHUB_BASE_REF or origin/main)")
-    ap.add_argument("--shadow-report", action="store_true",
-                    help="Report per-type shadow counts from the repo-vs-operational "
-                         "conflict rule (observability scaffolding for weekly cron)")
     args = ap.parse_args()
-    if args.shadow_report:
-        return _shadow_report(args.format)
     root = Path(args.path)
     findings: List[Finding] = []
     if args.append_only:
@@ -408,6 +384,7 @@ def main() -> int:
             print(f"ℹ️  {root} not found — nothing to validate")
         return 0
     critical_counts: dict = {}
+    _TYPE_COUNTS.clear()
     for yml in sorted(root.rglob("*.yml")):
         _validate_file(yml, findings, critical_counts)
     # Tier-0 inflation warning — soft cap on `priority: critical` per type.
@@ -420,6 +397,15 @@ def main() -> int:
                 f"tier-0 inflation: {count} active 'priority: critical' "
                 f"entries (threshold {CRITICAL_WARN_THRESHOLD}) — review "
                 f"whether all still warrant always-surface treatment"))
+    # Per-type entry-count cap (size-bounding, Phase 7). Warn, never block —
+    # over-cap signals a consolidation pass is due (prune archived, merge dups).
+    for mtype, count in sorted(_TYPE_COUNTS.items()):
+        cap = PER_TYPE_CAPS.get(mtype, DEFAULT_TYPE_CAP)
+        if count > cap:
+            findings.append(Finding(
+                f"agents/memory/{mtype}", 0, "warning",
+                f"entry-cap: {count} entries (soft cap {cap}) — run a "
+                f"consolidation pass (prune archived, merge duplicates)"))
     return _emit(findings, args.format)
 
 
