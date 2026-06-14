@@ -164,4 +164,4 @@ pre-existing, unrelated, and remote-CI-only-regenerated.
       memory framework, skill, or ML dependency added.
 - [x] `check-refs` green; `task ci` change-scoped gates green (lone pre-existing
       `.claude/`-symlink red is unrelated; remote CI regenerates it). <!-- merge-gated: archives with the memory-layer-cleanup PR; ADR-094 + the consolidation roadmap reference this file until then -->
-- [ ] Open the memory-layer-cleanup PR. <!-- merge-gated: this roadmap archives + ref-migrates the moment the PR merges -->
+- [x] Open the memory-layer-cleanup PR (#540, merged 2026-06-14).

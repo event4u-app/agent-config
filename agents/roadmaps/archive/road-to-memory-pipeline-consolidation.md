@@ -217,4 +217,4 @@ two reds are pre-existing + unrelated.
 - [x] Per-type entry caps + archived-entry deletion + one-fact schema in force.
 - [x] `check-refs` + `lint-skills` green; `task ci` change-scoped gates green
       (two pre-existing unrelated reds documented in Phase 8). <!-- merge-gated: archives with the memory-layer-cleanup PR; the removal roadmap + ADR-094 reference this file until then -->
-- [ ] Open the memory-layer-cleanup PR (covers both memory roadmaps). <!-- merge-gated: this roadmap archives + ref-migrates the moment the PR merges -->
+- [x] Open the memory-layer-cleanup PR (#540, covers both memory roadmaps; merged 2026-06-14).

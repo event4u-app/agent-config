@@ -86,8 +86,8 @@ package competed, and its PostgreSQL + MCP runtime contradicted the suite's
 
 ## References
 
-- `agents/roadmaps/road-to-agent-memory-removal.md` — the executing roadmap.
-- `agents/roadmaps/road-to-memory-pipeline-consolidation.md` — follow-on
+- `agents/roadmaps/archive/road-to-agent-memory-removal.md` — the executing roadmap (archived).
+- `agents/roadmaps/archive/road-to-memory-pipeline-consolidation.md` — follow-on
   mining consolidation + size bounding.
 - `docs/adrs/memory/0001-consumer-side-snapshot.md` — superseded by this ADR.
 - `docs/guidelines/agent-infra/memory-access.md` — the surviving file-backed
