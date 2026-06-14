@@ -260,6 +260,38 @@ pipelines:
   # want a silent agent; `custom` profile ignores this default entirely.
   skill_improvement: true
 
+# --- Reasoning Discipline Protocol (RDP) ---
+#
+# Transplants the *operating discipline* of a frontier reasoning model
+# (ground -> intent -> notes -> gather -> audit -> verify) onto any host model.
+# It transfers discipline, never capability. Cost-gated so it only engages where
+# it pays. Rationale: docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
+reasoning:
+  # Master switch (true, false). false = the whole layer is inert (zero overhead).
+  enabled: true
+
+  # Auto benefit-gating (true, false). Engages only where it pays, using
+  # table-free signals (ADR-035 forbids any runtime model->band lookup table):
+  #   - task signal: trivial / short / fully-specified tasks -> OFF
+  #   - host reasoning strength (agent self-assessed, no maintained list): a
+  #     strong-reasoning host applies the discipline lightly / as suggestion;
+  #     a standard host applies it fully.
+  # One constraint-light scaffold ships; standard hosts expand it on request.
+  # false = gate on task-signal + toggles only (skip the self-assessment touch).
+  auto_gate: true
+
+  # Per-component switches. Each fires only when `enabled` AND the auto_gate test passes.
+  components:
+    orchestrator: true       # sequences the chain; the single coordination point
+    notes_first: true        # reasoning in session notes, never echoed in the response
+    grounding: true          # explore environment / close info-gaps before designing
+    intent: true             # infer the underlying goal before solving the literal ask
+    complexity_first: true   # risk-first: resolve the load-bearing unknown first (RDP derivation, not Fable-documented)
+    verifier_default: true   # fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor)
+    prediction_tracking: true # log prediction + confidence + outcome + lesson (calibration loop)
+    decision_ledger: true    # log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable
+    uncertainty_budget: true # per-dimension uncertainty score; feeds adaptive effort
+
 # --- Roadmap execution ---
 #
 # Controls when /roadmap execute runs the project's quality pipeline

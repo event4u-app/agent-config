@@ -140,6 +140,17 @@ Phase 1 implementation lives in
 adoption roadmap adds a second host adapter; the contract above is
 documented now so the second implementation is not a vacuum design.
 
+## In-task notes → cross-run lessons (RDP)
+
+The Reasoning Discipline Protocol writes an **in-task** session-notes file
+(hypotheses, killed beliefs, predictions, decisions, uncertainty — structure in
+[`notes-first-reasoning`](../../rules/notes-first-reasoning.md)). That file is
+ephemeral working state, not curated memory. This skill is the **promotion path**:
+when an in-task killed-belief, calibrated prediction, or decision *generalises*
+beyond the task, consolidate it here as a durable cross-run lesson (one lesson per
+file, with why it mattered). Apply the same signal-vs-noise discipline — most
+in-task notes stay in-task and are discarded with the task.
+
 ## Related Skills
 
 **WHEN to use this**
@@ -196,9 +207,8 @@ documented now so the second implementation is not a vacuum design.
 
 - Do NOT auto-trigger this skill on session end. The flow is manual,
   per-invocation, and confirmed.
-- Do NOT vendor patterns or text from any external source —
-  the upstream lacks a `LICENSE`. Concept and procedure structure are
-  the only adoption surface.
+- Do NOT vendor patterns or text from any external source. Concept and
+  procedure structure are the only adoption surface.
 - Do NOT promote a normalised fact whose `key` falls outside the
   repo root or names another consumer project.
 - Do NOT delete a stale curated entry without explicit user

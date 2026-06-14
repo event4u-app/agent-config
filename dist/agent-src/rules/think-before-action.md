@@ -27,7 +27,7 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Always analyze before coding or modifying anything.
 - Never guess behavior — verify using code, data, or tools.
 - Prefer targeted inspection (jq, debugger, logs) over brute-force.
-- Always verify results after changes (API, UI, tests).
+- Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface — `curl` / Playwright / browser for HTTP and UI, debugger / `xdebug` for runtime frames, the project's test runner for behavior.
 - When behavior can be defined → prefer test-first / TDD.
 - Unclear requirements → precise clarification question, not hidden assumptions.
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless explicitly changed.
@@ -39,3 +39,11 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 The five-step Understand → Analyze → Plan → Implement → Verify workflow, the minimum read set (symbol, callers, tests, abstractions, data), the memory-consult step, the verification matrix, the output-reduction patterns, the no-blind-retries protocol, and the "open files are context, not intent" clause all live in [`contexts/communication/rules-auto/think-before-action-mechanics.md`](../contexts/communication/rules-auto/think-before-action-mechanics.md). The rule above is the obligation surface; the mechanics file is the lookup material.
 
 If analysis is skipped → results are unreliable.
+
+## Environment grounding (RDP)
+
+On a vague or long-horizon task, ground before designing: enumerate the
+constraints, available tools, and information gaps, then **close the gaps by
+query/test** before proposing a solution — don't design against assumptions.
+Engage per [`rdp-gate`](../contexts/execution/rdp-gate.md) (skip on trivial
+tasks; light touch on a strong-reasoning host).

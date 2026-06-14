@@ -29,6 +29,11 @@ Do NOT use when:
 
 ## Procedure: Adversarial review
 
+1. **Inspect the artifact** — Read the plan, diff, or draft you are about to critique; note its scope, assumptions, and the explicit asks before attacking.
+2. **Attack** — Run Step 1 below as the grumpy senior engineer.
+3. **Defend** — Run Step 2 as the balanced engineer; classify each criticism as must-fix / defer / reject.
+4. **Revise** — Run Step 3 to fold valid fixes back in and surface only the trade-offs the user needs to decide.
+
 ### Step 1: Attack (Grumpy Senior Engineer)
 
 Assume your plan/fix is flawed. Ask yourself:
@@ -111,6 +116,15 @@ Only surface trade-offs or concerns that need the user's input.
 - **laravel-migration** (or framework-native equivalent) — review migration for data safety.
 - **api-design** — review API design for consistency and breaking changes.
 - **security** — review security-sensitive changes for attack surface.
+
+## RDP: fresh-context verifier as the default gate (structural)
+
+Within the Reasoning Discipline Protocol the fresh-context verifier subagent is
+the **default** final gate — but, because it is a full extra inference pass, it
+fires only on the **structural-complexity** signal: ≥ 2 of {branching/conditional
+logic, ≥ 3 explicit must/must-not constraints, stateful operations,
+irreversibility} **and** estimated work ≥ ~1k tokens. Token length alone never
+triggers it. See [`rdp-gate`](../../contexts/execution/rdp-gate.md) (L12).
 
 ## Auto-trigger keywords
 

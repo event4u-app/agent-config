@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **228 skills** available in this package, in alphabetical order.
+All **230 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -41,6 +41,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`comp-banding`](../dist/agent-src/skills/comp-banding/SKILL.md) | Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'. |
 | [`competitive-moat-analysis`](../dist/agent-src/skills/competitive-moat-analysis/SKILL.md) | Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'. |
 | [`competitive-positioning`](../dist/agent-src/skills/competitive-positioning/SKILL.md) | Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'. |
+| [`complexity-first-planning`](../dist/agent-src/skills/complexity-first-planning/SKILL.md) | Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first. |
 | [`composer-packages`](../dist/agent-src/skills/composer-packages/SKILL.md) | Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'. |
 | [`condense-memory`](../dist/agent-src/skills/condense-memory/SKILL.md) | Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup. |
 | [`content-funnel-design`](../dist/agent-src/skills/content-funnel-design/SKILL.md) | Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'. |
@@ -179,6 +180,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`readme-reviewer`](../dist/agent-src/skills/readme-reviewer/SKILL.md) | Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues. |
 | [`readme-writing`](../dist/agent-src/skills/readme-writing/SKILL.md) | Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience. |
 | [`readme-writing-package`](../dist/agent-src/skills/readme-writing-package/SKILL.md) | Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding. |
+| [`reasoning-orchestrator`](../dist/agent-src/skills/reasoning-orchestrator/SKILL.md) | Use for complex / ambiguous / long-horizon work — coordinate the reasoning chain ground→intent→notes→gather→audit→verify; composes existing skills, never duplicates them. |
 | [`receiving-code-review`](../dist/agent-src/skills/receiving-code-review/SKILL.md) | Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'. |
 | [`"refine-prompt"`](../dist/agent-src/skills/"refine-prompt"/SKILL.md) | Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'. |
 | [`"refine-ticket"`](../dist/agent-src/skills/"refine-ticket"/SKILL.md) | Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt. |
