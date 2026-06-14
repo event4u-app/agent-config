@@ -169,32 +169,53 @@ budget.* The 4-repo deep-dive supplied exactly that mechanism.
 
 ## Phase 4 — Pilot run + gate (the falsification step, L3/L4)
 
-- [ ] Run the **N=15 pilot, 3 seeds, 4 arms** (vanilla / package / package+RDP /
-      placebo) under a tight `--max-budget-usd` + step cap; sonnet-pinned;
-      error-aware (rate-limit/timeout excluded). Record host + config + seeds.
-- [ ] **Gate (L4):** **PASS** if any axis shows significant paired lift
-      (McNemar p<0.05 on binary, OR Wilcoxon p<0.05 on a trajectory/discipline
-      metric, OR a significant status-bucket-rate reduction) that **replicates
-      across the 3 seeds**. **FALSIFY** only if p>0.05 AND trivial effect size on
-      **all** axes across all seeds → then the v1 scrap stands and v2 is
-      abandoned (document why, archive). Surface the pilot result for maintainer
-      decision before scaling. <!-- carve-out: new-gate-verification -->
+- [x] **Pilot run executed (micro scale).** Two live runs (sonnet, error-aware):
+      a 20-run probe at $1 (which showed the $1 cap truncates the plugin-loading
+      package arms) and a clean **20-run micro pilot at $3.5** (5 tasks × 4 arms,
+      all `completed`, no budget truncation). Reports under
+      `internal/bench/reports/ab-v2/`.
+- [x] **Gate (L4) evaluated → honest null at micro scale.** `package` vs
+      `vanilla`: capability 80%→80% (McNemar p=1.0), discipline 1.00→0.80
+      (Wilcoxon p=1.0) — **no lift**, because bare sonnet is *already* disciplined
+      on the micro fixtures (vanilla discipline ≈ 1.0 = no headroom). Placebo
+      ≈ vanilla (attribution arm clean). Per the **2026-06-14 council** this is
+      NOT a full falsification: a complete gate needs a **complexity-stratified**
+      run (micro / meso / multi-file) to see if headroom appears at realistic
+      scale. No lift is claimed; the honest null is rendered in `docs/benchmark.md`.
+      <!-- carve-out: new-gate-verification -->
+- [x] **Complexity-stratified pilot — MIGRATED** to `road-to-discipline-axis-meso-pilot`.
+      Council-defined next step: author bigger/noisier meso + multi-file fixtures,
+      run 2 archetypes × 3 scales × 3 seeds × 4 arms (~48 runs, $3.5/run, ~17M
+      tokens). FALSIFY iff vanilla discipline ≥0.85 on ≥70% of pairs at ALL three
+      scales; PASS on a complexity gradient + package>vanilla at ≥1 scale
+      (McNemar p<0.05, n≥6). Honest-null exit allowed (don't iterate forever —
+      N=3 validation-loop budget). <!-- deferred: needs meso/multi fixtures (Phase-1 expansion) + maintainer token budget; council 2026-06-14 -->
+- [x] Wired `task bench:ab:v2` (run), `bench:ab:v2:stats` (gate), `bench:ab:v2:diff`
+      (render) in `taskfiles/bench-ab.yml`.
 
 ## Phase 5 — Scale + two-table report (only if Phase 4 passes)
 
-- [ ] Grow to **N=30** (5 archetypes × 6) for the headline; re-run 3 seeds /
-      4 arms within budget (~$18 envelope per the council estimate).
-- [ ] Render **two tables** into `docs/benchmark.md`: Table 1 = capability axis
-      (expected near-flat, by design) + **Table 2 = discipline-lift** (paired Δ
-      per metric, with p-values + effect sizes + the placebo column). Per-archetype
-      and per-seed breakdowns below.
+- [x] Grow to **N=30** — **MIGRATED** to `road-to-discipline-axis-meso-pilot` (gated on the stratified gate PASS). Micro saturated (no PASS), so scaling the micro
+      corpus would only buy more null. Scaling happens at the complexity level
+      where headroom is found (if any). <!-- deferred: gated on the meso/multi gate PASS -->
+- [x] **Two-table render shipped** — `bench_ab_v2_stats.py --markdown` writes
+      `docs/benchmark.md`: capability table (near-flat by design) + discipline-lift
+      table (paired Δ + McNemar/Wilcoxon p + effect sizes + placebo comparison),
+      status-bucket table, gate verdict, methodology. `task bench:ab:v2:diff`.
 
 ## Phase 6 — Honesty guardrails + contracts
 
-- [ ] Ship all five L6 labels/banners in `docs/benchmark.md` and the render.
-- [ ] Update `docs/contracts/benchmark-*.md` (ab-contract, corpus-spec,
-      report-schema) for the dual-axis + trajectory + paired-stat shape;
-      `lint-bench-ab` enforces the new schema. <!-- carve-out: new-gate-verification -->
+- [x] All five L6 honesty labels ship in `docs/benchmark.md` (rendered, read-first
+      block) — wrapper-lift-not-model-vs-model, discipline-not-capability, pilot/
+      low-N, paired-design, not-SWE-bench-comparable.
+- [x] Full `docs/contracts/benchmark-*.md` rewrite + `lint-bench-ab` v2 schema —
+      **MIGRATED** to `road-to-discipline-axis-meso-pilot` Phase 3. The v2 schema is pinned in
+      `internal/bench/corpora/SCHEMA-v2.md` (contract-equivalent); the formal
+      contract + corpus linter land when the stratified gate validates the design
+      (no point freezing a schema for a frame still under its falsification gate).
+      <!-- deferred: bundle with the meso/multi stratified pilot -->
+- [x] `internal/bench/V2-REFACTOR-INVENTORY.md` + `SCHEMA-v2.md` document the
+      KEEP/REPLACE/NEW scope and the dual-axis/trajectory/paired schema.
 
 ## Acceptance criteria
 
