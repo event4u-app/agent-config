@@ -6,6 +6,7 @@
   },
   "include": [
     "src/scripts/**/*.ts",
+    "src/agent-src/templates/scripts/**/*.ts",
     "tests/scripts/**/*.ts",
     "tests/parity/**/*.ts",
     "tests/spikes/**/*.ts",
