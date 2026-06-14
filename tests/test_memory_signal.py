@@ -115,50 +115,11 @@ def test_extra_cannot_overwrite_reserved():
     assert rec["path"] == "app/x"
 
 
-
-def test_skip_when_present_true_suppresses_jsonl(monkeypatch, tmp_path):
-    pytest.importorskip("yaml")
-    monkeypatch.setattr(memory_signal, "SETTINGS_FILE",
-                        tmp_path / ".agent-settings.yml")
-    (tmp_path / ".agent-settings.yml").write_text(
-        "memory:\n  intake:\n    skip_when_present: true\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(memory_signal, "_backend_status", lambda: "present")
-    rec = memory_signal.emit("historical-patterns", "app/Foo.php", "x")
-    assert rec is not None
-    assert rec["_backend"] == "package-only"
-    # No JSONL file must exist.
-    assert not (tmp_path / "agents/memory/intake").exists() or \
-           not list((tmp_path / "agents/memory/intake").glob("signals-*.jsonl"))
-
-
-def test_skip_when_present_false_still_writes(monkeypatch, tmp_path):
-    pytest.importorskip("yaml")
-    monkeypatch.setattr(memory_signal, "SETTINGS_FILE",
-                        tmp_path / ".agent-settings.yml")
-    (tmp_path / ".agent-settings.yml").write_text(
-        "memory:\n  intake:\n    skip_when_present: false\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(memory_signal, "_backend_status", lambda: "present")
-    rec = memory_signal.emit("historical-patterns", "app/Bar.php", "y")
-    assert rec is not None
-    assert "_backend" not in rec
-    assert _read_all_lines()  # file exists, has a line
-
-
-def test_backend_absent_writes_regardless(monkeypatch, tmp_path):
-    monkeypatch.setattr(memory_signal, "_backend_status", lambda: "absent")
+def test_emit_always_writes_intake(monkeypatch, tmp_path):
+    # Memory is file-backed: emit always appends intake (no package route).
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(memory_signal, "INTAKE_ROOT",
+                        tmp_path / "agents/memory/intake")
     rec = memory_signal.emit("product-rules", "app/Baz.php", "z")
-    assert rec is not None
-    assert "_backend" not in rec
-    assert _read_all_lines()
-
-
-def test_missing_settings_file_defaults_to_writing(monkeypatch):
-    # No settings file → never skip
-    monkeypatch.setattr(memory_signal, "_backend_status", lambda: "present")
-    rec = memory_signal.emit("ownership", "app/x", "team-y")
     assert rec is not None
     assert "_backend" not in rec

@@ -115,7 +115,7 @@ source of truth and weaken it. Canonical contracts:
 |---|---|
 | Decision-Engine gates (`min_confidence`, `block_on_risk`, `require_memory_hits`, `on_block`) | [`decision-engine-gates.md`](decision-engine-gates.md) |
 | Decision-trace shape (what the engine emits per phase) | [`decision-trace-v1.md`](decision-trace-v1.md) |
-| Memory contract (entries, scopes, retention) | [`agent-memory-contract.md`](agent-memory-contract.md) |
+| Memory contract (entries, scopes, retention) | [`../guidelines/agent-infra/memory-access.md`](../guidelines/agent-infra/memory-access.md) |
 | Memory visibility in the trace (`affected` keys) | [`memory-visibility-v1.md`](memory-visibility-v1.md) |
 | AI-Council consultation flow | [`../skills/ai-council/SKILL.md`](../../.agent-src.uncondensed/skills/ai-council/SKILL.md) |
 

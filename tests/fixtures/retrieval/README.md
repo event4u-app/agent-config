@@ -14,7 +14,6 @@ each fixture against
 | `02-single-type-hit.json` | `ok` | Single memory type, single repo entry. Minimum viable hit. |
 | `03-multi-type-partial.json` | `partial` | Two slices, one timed out. Demonstrates partial semantics. |
 | `04-error-all-slices.json` | `error` | Every slice failed. `entries` is empty. |
-| `05-shadowed-by.json` | `ok` | Operational entry suppressed by a repo entry. `shadowed_by` populated. |
 | `06-health-ok.json` | (health) | `health()` envelope — `contract_version` + feature flags. |
 
 ## Adding a fixture

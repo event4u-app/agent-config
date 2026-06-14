@@ -1,1 +1,0 @@
-../../../src/domains/meta/chat-history/learn/command.md

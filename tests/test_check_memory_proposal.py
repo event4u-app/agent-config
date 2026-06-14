@@ -53,7 +53,7 @@ def test_single_path_requires_future_decisions():
 
 def test_future_decisions_satisfies_weak_evidence():
     _write_intake([
-        {"id": "sig-fd", "entry_type": "architecture-decisions",
+        {"id": "sig-fd", "entry_type": "domain-invariants",
          "path": "app/X.php", "body": "use service Y",
          "future_decisions": [
              {"decision": "A", "expected_by": "2026-05-01", "owner": "t1"},

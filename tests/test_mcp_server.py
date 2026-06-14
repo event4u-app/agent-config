@@ -1464,14 +1464,14 @@ def test_l3_chat_history_read_filters_by_entry_type(tmp_path: Path) -> None:
 
 
 def test_l3_memory_status_shape(tmp_path: Path) -> None:
-    """L3 — `memory_status` returns the v1 status envelope keys."""
+    """L3 — `memory_status` returns the file-backed status keys."""
     cache = ToolCache()
     result = asyncio.run(
         cache.dispatch("memory_status", {}, consumer_root=tmp_path)
     )
-    assert {"status", "backend", "reason", "elapsed_ms", "features"} <= set(result)
-    assert result["status"] in {"absent", "misconfigured", "present"}
-    assert isinstance(result["features"], list)
+    assert {"status", "backend", "reason", "elapsed_ms"} <= set(result)
+    assert result["status"] == "file"
+    assert result["backend"] == "file"
 
 
 def test_l3_memory_lookup_returns_v1_envelope(tmp_path: Path) -> None:

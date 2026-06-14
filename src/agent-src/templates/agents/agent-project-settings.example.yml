@@ -116,9 +116,9 @@ modules:
 
 # --- Memory layer (optional) ---
 #
-# Opt-in signal for the @event4u/agent-memory companion package and
-# the repo-shared curated-memory files. If omitted, memory features
-# stay inert — no writes, no reads, no nagging.
+# Opt-in signal for the repo-shared, file-backed curated-memory files
+# under `agents/memory/`. If omitted, memory features stay inert —
+# no writes, no reads, no nagging.
 memory:
   # Enable curated memory files under `agents/memory/` as part of
   # this repo's dogfooding of its own memory conventions. Only flip
@@ -278,7 +278,7 @@ locked_keys: []
 # files live here when memory.dogfood is true. These paths are for
 # reference only — no enforcement is done from this file.
 references:
-  architecture_decisions: agents/memory/architecture-decisions/
+  # Architecture decisions live in ADRs (docs/decisions/), not curated memory.
   domain_invariants: agents/memory/domain-invariants/
   incident_learnings: agents/memory/incident-learnings/
   product_rules: agents/memory/product-rules/

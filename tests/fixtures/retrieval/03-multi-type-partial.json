@@ -10,20 +10,17 @@
       "body": {
         "pattern": "missing_authorization",
         "path": "app/Http/Controllers/Admin"
-      },
-      "shadowed_by": null
+      }
     },
     {
       "id": "01HZKM9X0000000000000000H2",
       "type": "historical-patterns",
-      "source": "operational",
+      "source": "repo",
       "confidence": 0.61,
-      "trust": 0.55,
       "body": {
         "pattern": "logger_called_without_context"
       },
-      "last_validated": "2026-04-19T11:42:17Z",
-      "shadowed_by": null
+      "last_validated": "2026-04-19T11:42:17Z"
     }
   ],
   "slices": {

@@ -22,7 +22,6 @@ that prefer one file per type.
 | Type | Single-file path | Sharded path |
 |---|---|---|
 | Domain invariants | `agents/memory/domain-invariants.yml` | `agents/memory/domain-invariants/<hash>.yml` |
-| Architecture decisions | `agents/memory/architecture-decisions.yml` | `agents/memory/architecture-decisions/<hash>.yml` |
 | Incident learnings | `agents/memory/incident-learnings.yml` | `agents/memory/incident-learnings/<hash>.yml` |
 | Product rules | `agents/memory/product-rules.yml` | `agents/memory/product-rules/<hash>.yml` |
 
@@ -103,9 +102,6 @@ templates for the full shape:
 
 - [`domain-invariants.example.yml`](../../templates/agents/memory/domain-invariants.example.yml)
   adds `rule`, `boundary`, `scope.paths`, `violation_contract`.
-- [`architecture-decisions.example.yml`](../../templates/agents/memory/architecture-decisions.example.yml)
-  adds `title`, `context`, `decision`, `alternatives_rejected`,
-  `trade_offs`, `paths`, `superseded_by`.
 - [`incident-learnings.example.yml`](../../templates/agents/memory/incident-learnings.example.yml)
   adds `pattern`, `trigger_conditions`, `consequence`, `guardrail`,
   `enforcement`, `severity`.

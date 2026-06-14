@@ -63,7 +63,7 @@ stability: stable
 - Rule-Interaction matrix marked rule-only by design;
   [`rule-interactions.md`](rule-interactions.md) § "Out of scope —
   orchestration surfaces" points at `decision-engine-gates`,
-  `decision-trace-v1`, `agent-memory-contract`, `memory-visibility-v1`,
+  `decision-trace-v1`, `memory-visibility-v1`,
   and the `ai-council` skill for Council × Memory × Work-Engine
   interactions (P5.2).
 - `type: orchestrator` frontmatter tag exempts cluster routers from

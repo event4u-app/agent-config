@@ -5,13 +5,13 @@ disable-model-invocation: true
 pack: memory
 tier: 2
 visibility: internal
-description: Chat-history orchestrator — routes to show, import, learn
+description: Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view.
 cluster: chat-history
 type: orchestrator
 suggestion:
   eligible: true
-  trigger_description: "show chat-history status, inspect agents/runtime/.agent-chat-history log, import a prior session into the current chat, mine a prior session for project-improving learnings"
-  trigger_context: "user wants to inspect the persistent agents/runtime/.agent-chat-history log, pull a prior session in verbatim, or extract learnings from a prior session"
+  trigger_description: "import a prior session into the current chat, resume a previous session, pull a prior session in verbatim"
+  trigger_context: "user wants to pull a prior session from the agents/runtime/.agent-chat-history log into the current chat verbatim and optionally resume it"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -22,40 +22,41 @@ packs:
 
 # /chat-history
 
-Top-level orchestrator for the `/chat-history` family. After the
-hook-only reduction (`road-to-chat-history-hook-only`) writes and
-overflow handling are driven entirely by platform hooks +
-`scripts/chat_history.py` internals; the surfaced sub-commands are
-read-only on the log itself. Sessions coexist in one log file —
-each entry self-tags via the `s` field — so there is no ownership
-layer to recover from.
+Top-level orchestrator for the `/chat-history` family. Writes and overflow
+handling are driven entirely by platform hooks + `scripts/chat_history.py`
+internals (`road-to-chat-history-hook-only`); the surfaced sub-command is
+read-only on the cross-host log (`agents/runtime/.agent-chat-history`).
+Sessions coexist in one log file — each entry self-tags via the `s` field —
+so there is no ownership layer to recover from.
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/chat-history show` | `commands/chat-history/show.md` | Inspect the log — size, entries, header, last entries |
-| `/chat-history import` | `commands/chat-history/import.md` | List prior sessions, pick one, render its entries verbatim — selective cross-session import |
-| `/chat-history learn` | `commands/chat-history/learn.md` | List prior sessions, pick one, mine it for project-improving learnings via `learning-to-rule-or-skill` |
+| `/chat-history import` | `commands/chat-history/import.md` | List prior sessions, pick one, render its entries verbatim — selective cross-session import + resume |
+
+**Consolidated elsewhere** (see `road-to-memory-pipeline-consolidation.md`):
+
+- **Mining a session for learnings** — use
+  [`/memory mine-session --mode=proposals`](../memory/mine-session/command.md)
+  (the former `/chat-history learn`; now the single mining command, reading the
+  same cross-host log).
+- **Inspecting the raw log** (size, entries, header) — use the host's native
+  transcript / session view; the bespoke `/chat-history show` was dropped as
+  redundant.
 
 ## Dispatch
 
 1. Parse the user's argument: `/chat-history <sub-command> [args]`.
-2. Look up the sub-command in the table above.
-3. Load the body of the routed file and follow its `## Steps`
-   section verbatim with the remaining args.
-4. If the sub-command is unknown or missing (including the bare
-   `/chat-history` invocation), route to `show` — the safe,
-   current-session inspector default. `import` and `learn` are
-   opt-in only.
+2. The only sub-command is `import`. Bare `/chat-history` (or an unknown
+   sub-command) → route to `import`.
+3. Load `commands/chat-history/import.md` and follow its `## Steps` verbatim
+   with the remaining args.
 
 ## Rules
 
-- **Do NOT commit, push, or open a PR** — `show` and `import` are
-  read-only; `learn` writes proposal drafts under
-  `agents/proposals/` only and does not commit them.
-- **Do NOT chain sub-commands.** One `/chat-history <sub>` per turn.
-- **`import` and `learn` cross the session boundary** — only run
-  them when the user explicitly asked for cross-session reading.
-  The default read path (filtered to current session) stays in
-  effect for every other tool.
+- **Do NOT commit, push, or open a PR** — `import` is read-only (it renders a
+  prior session into the current chat; it writes nothing).
+- **Do NOT chain sub-commands.** One `/chat-history import` per turn.
+- **`import` crosses the session boundary** — only run it when the user
+  explicitly asked for cross-session reading.
