@@ -1,6 +1,6 @@
 ---
 type: "auto"
-tier: "tier-2"
+tier: "2b"
 description: "Reasoning-heavy work (debugging, multi-hypothesis, weighing alternatives) — keep hypotheses/predictions/decisions in session notes, response carries conclusions + evidence only"
 triggers:
   - keyword: "debug"

@@ -41,7 +41,15 @@ coordinates); on a standard host run the full chain.
 Do NOT use for trivial / linear / fully-specified tasks (the gate filters these),
 and do not let it duplicate the work of the skills it coordinates.
 
-## The chain it enforces
+## When the agent should load this
+
+- A task is complex / ambiguous / long-horizon and the host is a standard model.
+- The reasoning steps are interdependent and a skipped link (grounding,
+  verification) would compound downstream.
+- Several discipline skills would otherwise fire piecemeal — load this to make
+  them act as one ordered chain instead of a buffet of optional steps.
+
+## Procedure — the chain it enforces
 
 Each link **delegates** to the artifact that owns it (no duplication):
 
@@ -78,7 +86,34 @@ notes file; the response leads with the outcome + its evidence.
 - Create a new flow or a standalone pack — this is a skill invoked within existing flows.
 - Run the full chain on a strong-reasoning host or a trivial task — the gate says light/off.
 
-## See also
+## Gotchas
 
-- [`rdp-gate`](../../contexts/execution/rdp-gate.md) — the table-free engagement gate (L17).
-- [`frontier-reasoning-operating-profile`](../../../../docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md) — the sourced rationale.
+- **Buffet collapse.** Without the orchestrator, the discipline skills fire
+  independently and the chain's *order* is lost (verification before grounding,
+  notes never written). The whole value is the ordered handoff — running the
+  links out of sequence is the failure this skill prevents.
+- **Duplication creep.** Inlining a delegated step's logic here (re-doing the
+  grounding instead of pointing at `think-before-action`) silently forks the
+  behavior; the two copies then drift. Always delegate, never re-implement.
+- **Wrong host, full chain.** Running every link on a strong-reasoning host wastes
+  tokens and reads as nagging — the gate says light/suggestion there. Forcing the
+  full chain regardless of host is a cost regression, not rigor.
+
+## Related Skills
+
+**WHEN to use this**
+
+- A complex / ambiguous / long-horizon task on a standard host where the reasoning
+  links are interdependent.
+- Several discipline skills would otherwise fire piecemeal and need ordering.
+
+**WHEN NOT to use this**
+
+- Trivial / linear / fully-specified tasks — the
+  [`rdp-gate`](../../contexts/execution/rdp-gate.md) filters these.
+- A single discipline step in isolation — invoke that skill/rule directly
+  ([`think-before-action`](../../rules/think-before-action.md),
+  [`verify-before-complete`](../../rules/verify-before-complete.md)) instead of the
+  whole chain.
+- Needing the rationale behind the protocol — read
+  [`frontier-reasoning-operating-profile`](../../../../docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md).
