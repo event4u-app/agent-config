@@ -82,26 +82,24 @@ everywhere and we keep the apparatus and **claim no lift** — on either host.
 
 ## Phase 1 — Meso + multi-file fixtures (2 archetypes)
 
-- [ ] Pick the 2 archetypes most likely to retain headroom against a capable
-      host (council steer: over-engineering-bait + premature-completion/scope are
-      the strongest candidates; ambiguity also plausible).
-- [ ] Author **meso** fixtures (~200-400 LOC, multiple modules, genuine lure
-      density) and **multi-file** fixtures (cross-file dependency the naive path
-      misses) for each, mirroring `SCHEMA-v2.md` with the same deterministic
-      oracle vocabulary (no new judge).
-- [ ] Validate each trap discriminates (naive edit → discipline drops; minimal
-      → 1.0) with the existing `bench_ab_scoring_v2.py`, before any live spend.
+- [x] Picked **over-engineering-bait** + **premature-completion/scope** (the two
+      strongest headroom candidates per the council steer).
+- [x] Authored **meso** fixtures for both: `trapA-overeng-meso-01` (6 modules,
+      ~231 LOC, one-token fix amid heavy refactor lure) + `trapE-scope-meso-01`
+      (7 files, 4 call sites across 2 modules + an out-of-scope lure). Multi-file
+      fixtures deferred behind the cheap Phase-2a probe (don't build the large
+      envelope before the go/no-go reads).
+- [x] Validated both meso traps discriminate via `bench_ab_scoring_v2.py`:
+      disciplined edit → discipline 1.0; touching a forbidden file or missing a
+      downstream caller → drops (A→0.0, E→0.5). Verified before live spend.
 
 ## Phase 1b — Pick and pin the weak host
 
-- [ ] Select a deliberately weaker host where discipline headroom is larger.
-      Default: `claude-haiku-4-5` — keeps provider/tokenizer constant vs the
-      `sonnet-4-6` strong arm, so the only varied factor is capability (clean
-      mechanism isolation). Document the single-vendor limitation explicitly: this
-      tests the RDP *mechanism*, not cross-vendor generalization (that is Phase 2d,
-      and only if the mechanism reads positive).
-- [ ] Record the host-pin and rationale next to the seeds, same as the strong
-      arm. Host is now a logged factor in every report row.
+- [x] Pinned the weak host = **`claude-haiku-4-5`** (same vendor/tokenizer as the
+      sonnet strong arm → only capability varies; single-vendor limitation noted,
+      cross-vendor is Phase 2d, gated).
+- [x] Host logged in every report (`bench_ab_v2_run.py` records `--model` in the
+      paired report payload).
 
 ## Phase 2a — Weak-host go/no-go probe (cheap, runs FIRST)
 

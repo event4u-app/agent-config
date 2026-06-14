@@ -6,10 +6,10 @@
 
 ## Overall
 
-**2 / 134 steps done · 1%**
+**7 / 134 steps done · 5%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
-| 3 | [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md) | 7 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md) | 7 | 17 | 12 | 5 | 0 | 0 | ███░░░░░░░ 29% |
 | 4 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -52,12 +52,12 @@
 
 ### [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md)
 
-**discipline-axis benchmark — complexity-stratified pilot (meso/multi + weak host)** — 0 / 17 done (0%)
+**discipline-axis benchmark — complexity-stratified pilot (meso/multi + weak host)** — 5 / 17 done (29%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Meso + multi-file fixtures (2 archetypes) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1b | Pick and pin the weak host | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Meso + multi-file fixtures (2 archetypes) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1b | Pick and pin the weak host | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2a | Weak-host go/no-go probe (cheap, runs FIRST) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2b | Strong-host stratification (threshold-crossing branch) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2c | Cost axis in the render (third table) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
