@@ -6,6 +6,8 @@ parent_roadmap: road-to-3-condition-value-benchmark
 
 # Roadmap: discipline-axis benchmark (v2) — measure the lift, not the capability
 
+<!-- check-refs: skip --> <!-- dense with external-repo file citations (SWE-bench / GAIA / AgentBench) from the deep-dive; those paths intentionally do not resolve in this repo -->
+
 > **Complexity:** structural — replaces the corpus + oracle + metrics of the
 > `bench:ab` harness (keeps the isolation seam, clone, and reporting skeleton)
 > with a discipline-headroom design. Supersedes
