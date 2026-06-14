@@ -107,12 +107,19 @@ function norm(s: string): string {
 }
 
 describe.skipIf(!py3)('airgap — CLI golden parity (deterministic surfaces)', () => {
-    it('--help is byte-identical (modulo prog extension) + exit 0', () => {
+    it('--help exits 0 on both + emits the usage line (prose not byte-compared)', () => {
+        // argparse --help prose is COLUMNS- and Python-version-dependent
+        // (width wrapping, `options:` vs `optional arguments:`) — NOT a byte
+        // parity contract, per the established sibling-twin convention
+        // (run_skill_evals / score_ev). Assert exit 0 on both and that each
+        // emits a `usage:` line for the airgap prog; the byte-compared
+        // surfaces are the --timeout / unrecognized-arg error paths below.
         const ts = runTsScript('ai_council/airgap', ['--help']);
         const py = runPyScript('ai_council/airgap', ['--help']);
         expect(ts.status).toBe(0);
         expect(py.status).toBe(0);
-        expect(norm(ts.stdout)).toBe(py.stdout);
+        expect(ts.stdout).toMatch(/usage:\s+airgap/u);
+        expect(py.stdout).toMatch(/usage:\s+airgap/u);
     });
 
     it('invalid --timeout → usage + error on stderr, exit 2', () => {
