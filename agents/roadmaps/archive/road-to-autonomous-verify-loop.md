@@ -30,43 +30,47 @@ UI-product rubric.
 
 ## Phase 1 — PoC: prove the loop is runtime-free
 
-- [ ] PoC: a `generate → run playwright-testing/quality-tools → judge →
+- [x] PoC: a `generate → run playwright-testing/quality-tools → judge →
       revise → re-judge` cycle expressed as **multi-turn agent reasoning** (the
       "loop" is the conversation, not executing code), bounded by the N=3 cap and
       a numeric pass-threshold, with the generator and judge as **separate**
-      roles (generator cannot self-approve).
-- [ ] Decision doc (`agents/evidence/`): is the loop expressible with no
+      roles (generator cannot self-approve). <!-- worked trace in agents/evidence/analysis/verify-repair-loop-phase1-gate.md -->
+- [x] Decision doc (`agents/evidence/`): is the loop expressible with no
       persistent cross-session state and no daemon (honoring
       `docs/contracts/no-runtime-boundary.md` from `road-to-mission-mode`)? If
-      not → stop and re-scope; if yes → Phase 2.
+      not → stop and re-scope; if yes → Phase 2. <!-- PROCEED — runtime-free for unit/quality scope; Playwright stays deferred -->
+
 
 ## Phase 2 — Productize the verify→repair skill
 
-- [ ] New skill (e.g. `verify-repair-loop`) composing the existing `judge-*`
+- [x] New skill (e.g. `verify-repair-loop`) composing the existing `judge-*`
       cluster + `playwright-testing` + `quality-tools`: run verdict → if FAIL and
       attempts < N, surface the verdict + a revision, re-run; plateau early-stop;
-      generator/judge role separation enforced.
-- [ ] `evals/triggers.json` (5 should / 5 should-not) + a behavior eval.
-- [ ] Wire as an opt-in step in `/review-changes` and a candidate phase inside
-      `road-to-mission-mode`'s verification step (NOT auto-on).
+      generator/judge role separation enforced. <!-- src/skills/verify-repair-loop/SKILL.md — Architecture C (staged numeric gate → judge), 7 council safeguards -->
+- [x] `evals/triggers.json` (5 should / 5 should-not) + a behavior eval. <!-- triggers.json + output-schema.yml (locks Iron Law/Procedure/Validation/Output/Do NOT) -->
+- [x] Wire as an opt-in step in `/review-changes` and a candidate phase inside
+      `road-to-mission-mode`'s verification step (NOT auto-on). <!-- review-changes step 6 + See also; mission/upgrade step 5 candidate phase -->
+
 
 ---
 
 ## Deferred (trigger-gated)
 
-- [~] **Live-app Playwright as the canonical verdict source** (Source-E's
+- [-] **Live-app Playwright as the canonical verdict source** (Source-E's
       strongest idea). **Trigger:** `road-to-mission-mode` ships a mission whose
       output is UI-observable AND `playwright-testing` is wired into a consumer's
-      CI. Until then the loop uses test/quality verdicts, not live-app.
+      CI. Until then the loop uses test/quality verdicts, not live-app. <!-- moved to follow-up road-to-live-app-verdict.md (status: draft, trigger-gated) — Iron Law 3 resolved, not dropped -->
+
 
 ## Acceptance criteria
 
-- [ ] Phase 1 PoC decision doc recorded (runtime-free proof) before Phase 2.
-- [ ] `verify-repair-loop` skill ships with role separation + N=3 cap + numeric
-      threshold + eval stub; opt-in, never auto-on.
-- [ ] No daemon / persistent runtime introduced (no-runtime-boundary honored).
-- [ ] Sequenced after `road-to-mission-mode` Phase 1; if missions ship
-      plan-first, this roadmap may stay deferred.
+- [x] Phase 1 PoC decision doc recorded (runtime-free proof) before Phase 2. <!-- agents/evidence/analysis/verify-repair-loop-phase1-gate.md -->
+- [x] `verify-repair-loop` skill ships with role separation + N=3 cap + numeric
+      threshold + eval stub; opt-in, never auto-on. <!-- subagent-dispatched judge = real separation; threshold+regression-guard+plateau; opt-in wiring only -->
+- [x] No daemon / persistent runtime introduced (no-runtime-boundary honored). <!-- loop = multi-turn reasoning; state in conversation / re-read file -->
+- [x] Sequenced after `road-to-mission-mode` Phase 1; if missions ship
+      plan-first, this roadmap may stay deferred. <!-- mission Phase-1 gate G1 = gated end-to-end → verify-loop needed; built -->
+
 
 ## Council notes (2026-06-15, deep + peer-review)
 

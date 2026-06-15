@@ -29,15 +29,6 @@
 
 ## Per-roadmap phase breakdown
 
-### [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md)
-
-**Autonomous verify→repair loop (GAN-adapted, council-gated)** — 0 / 9 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | PoC: prove the loop is runtime-free | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Productize the verify→repair skill | ⬜ not started | 7 | 0 | 1 | 0 | 0% |
-
 ### [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md)
 
 **Capability discoverability — disposition of "fable-feedback-3"** — 0 / 12 done (0%)

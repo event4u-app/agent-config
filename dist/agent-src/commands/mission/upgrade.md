@@ -105,6 +105,15 @@ Read `src/missions/upgrade/laravel-10-to-11.yaml` (or the matching version). Lis
 
 Write a structured prompt to `prompt.txt` describing the mission phases (`analyze` → `plan` → `implement` → `test` → `verify` → `report`) referencing the catalog entries the engine should address.
 
+**Candidate phase (opt-in, never auto-on):** the `test` → `verify` step MAY use
+[`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) when the upgrade's
+catalog fixes are test-driven — a bounded generate→run→revise→re-run loop gated by
+a numeric threshold (then a judge confirms), reusing the same N=3 cap. Use
+test/quality verdicts only; the live-app Playwright verdict stays deferred. The
+loop is multi-turn reasoning, not a runtime — honors
+[`no-runtime-boundary`](../../docs/contracts/no-runtime-boundary.md) exactly as the
+mission does.
+
 Handle exit codes per the `/work` contract:
 
 | Exit | Meaning | Action |
