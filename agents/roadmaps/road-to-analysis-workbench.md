@@ -52,10 +52,10 @@ runtime, no auto-promote to curated memory, no self-modifying agent loop in v1.
 
 ## Prerequisites
 
-- [ ] Confirm no slug collision for the `/analyze` cluster against the existing
+- [x] Confirm no slug collision for the `/analyze` cluster against the existing
       standalone `project-analyze` / `analyze-reference-repo` commands; pick the
       final namespace (`analyze` cluster vs `incident` cluster) and record it.
-- [ ] Confirm `domain-adoption-policy` does **not** fire: analysis is an
+- [x] Confirm `domain-adoption-policy` does **not** fire: analysis is an
       already-open domain (AC ships incident-commander, risk-officer,
       decision-record, systematic-debugging) — no new toolchain, runtime, or
       language → this is a within-domain content pack, like `product-discovery`.
@@ -96,7 +96,7 @@ runtime, no auto-promote to curated memory, no self-modifying agent loop in v1.
 
 The policy layer the skills depend on. No code, no runtime.
 
-- [ ] Write `docs/contracts/analysis-memory-loop.md` — the produce→propose→
+- [x] Write `docs/contracts/analysis-memory-loop.md` — the produce→propose→
       promote→retrieve contract every analysis skill references:
       (a) analysis flows draft a **redacted** `incident-learnings` /
       `historical-patterns` / decision candidate to `/memory propose` intake
@@ -107,17 +107,17 @@ The policy layer the skills depend on. No code, no runtime.
       `frequency`/`supersedes` update to the existing entry rather than a new one;
       (d) **time-decay**: every candidate carries `last_validated` +
       `review_after_days` + `applicable_scope` (already in the schema).
-- [ ] Define the **incident-commander → blameless-post-mortem handoff** in the
+- [x] Define the **incident-commander → blameless-post-mortem handoff** in the
       same contract: the skeleton may carry an EMPTY/`TBD` root cause; the
       post-mortem skill ACCEPTS the incomplete skeleton, invokes
       `root-cause-frameworks` to fill the gap, and marks the post-mortem `draft`
       if root cause stays unresolved (no rejection of incomplete skeletons).
-- [ ] Record the **framework-neutrality clarification** as a one-line note in
+- [x] Record the **framework-neutrality clarification** as a one-line note in
       the contract + the new skills' frontmatter rationale: `framework-neutrality`
       governs *tech stacks* (Laravel/React), not *management frameworks*
       (5-whys/fishbone are method names, allowed). Name the SKILL generically
       (`root-cause-frameworks`) and reference the methods inside.
-- [ ] Capture the home/scope/orchestration decisions as an ADR (`adr-create`):
+- [x] Capture the home/scope/orchestration decisions as an ADR (`adr-create`):
       one cross-workspace opt-in pack; suggester not auto-triage; internal-skill-
       heavy (no persona, no visible-command cost); not a new domain.
 
