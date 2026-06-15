@@ -198,7 +198,7 @@ auto-triage, NOT a new runtime.
       `corrective-action-design` → memory candidate). Branching/backtracking is
       the agent re-invoking a sub-command at a human gate — no state-machine
       daemon.
-- [~] `incident-pattern-analysis` (internal skill): <!-- deferred: council D5 — scope-creep / cohort-analysis reliant; revisit once incident-learnings has volume --> cohort / correlation /
+- [-] `incident-pattern-analysis` (internal skill): <!-- deferred→closed: council D5 — scope-creep / cohort-analysis reliant; re-open via harvest once incident-learnings has volume --> cohort / correlation /
       trigger-event mapping over the now-populated `incident-learnings` memory
       (dedup-aware); separates correlation from causation; surfaces recurring
       classes. Reuses `memory-consolidation` retrieval, adds the analysis lens.
@@ -224,21 +224,25 @@ auto-triage, NOT a new runtime.
 
 ## Deferred (trigger-gated)
 
-> Not started until a trigger fires; `[~]` = deferred, not abandoned.
+> Closed with the roadmap (maintainer 2026-06-15): these trigger-gated
+> candidates are marked `[-]` so the roadmap archives complete, but the trigger
+> + scope text below stays searchable in the archive. A future harvest re-opens
+> any item as fresh work once its trigger fires — dropped from *this* plan, not
+> abandoned as an idea.
 
-- [~] **AI-specific RCA — `prompt-failure-rca` + `agent-failure-rca`.**
+- [-] **AI-specific RCA — `prompt-failure-rca` + `agent-failure-rca`.**
       **Trigger:** `road-to-security-hardening` lands (threat model + git-discipline
       hook). Read-only first: source from `/memory mine-session` over chat
       history, produce a human-readable RCA + a memory candidate. The
       `learning-to-rule-or-skill` **auto-improvement / self-modify** path stays
       deferred behind that even then (council: "self-modify before the threat
       model is malpractice"; never auto-apply).
-- [~] **`fault-tree-analysis` (AND/OR-gate decomposition).** **Trigger:** ≥ 2
+- [-] **`fault-tree-analysis` (AND/OR-gate decomposition).** **Trigger:** ≥ 2
       consumer requests for probabilistic failure-chain decomposition beyond what
       `root-cause-frameworks` produces. Until then, contributing-factors covers it.
-- [~] **`--method` flag on `root-cause-frameworks`.** **Trigger:** selection
+- [-] **`--method` flag on `root-cause-frameworks`.** **Trigger:** selection
       telemetry shows the default multi-method sequence stalls and users re-run.
-- [~] **State-machine orchestrator for non-linear flows.** **Trigger:** the
+- [-] **State-machine orchestrator for non-linear flows.** **Trigger:** the
       `/analyze` human-gated re-invocation proves insufficient AND ≥ 3 flows need
       branching a prose dispatcher cannot express. Until then, no new runtime
       (no-runtime boundary holds).
@@ -268,7 +272,7 @@ auto-triage, NOT a new runtime.
 - [x] No new runtime, no cross-session persistent state, no self-modifying agent
       loop introduced in the core phases.
 
-- [ ] **Merge gate:** PR CI green end-to-end + roadmap archived on merge. <!-- merge-gated: pr=558 -->
+- [x] **Merge gate:** PR CI green end-to-end + roadmap archived on merge. <!-- merge-gated: pr=558 merged (a918f38b); archiving now -->
 
 ## Council notes (2026-06-15, deep + peer-review)
 

@@ -135,3 +135,7 @@ For each vulnerability:
 - Do NOT assume frameworks handle everything — verify middleware and config
 - Do NOT confuse code quality issues with security vulnerabilities
 - Do NOT skip dependency checking — known CVEs are real risks
+
+## See also
+
+- [`docs/threat-model.md`](../../docs/threat-model.md) — package attack surface and trust boundary documentation.

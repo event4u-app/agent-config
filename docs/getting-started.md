@@ -129,7 +129,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 83 rules. No configuration needed.
+This is enforced automatically by 84 rules. No configuration needed.
 
 ---
 
@@ -169,7 +169,7 @@ Your agent now understands slash commands:
 | `/quality-fix` | Run and fix all quality checks |
 | `/chat-history import` | Pull a prior session into the current chat (resume) |
 
-→ [Browse all 153 active commands](../dist/agent-src/commands/)
+→ [Browse all 154 active commands](../dist/agent-src/commands/)
 
 ---
 

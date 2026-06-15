@@ -1,0 +1,139 @@
+# MINIMAL proof catalog (5 of N) — full catalog is deferred Phase 2B per council;
+# this proves schema expressiveness. Source: laravel.com/docs/11.x/upgrade.
+version: "1.0"
+framework: laravel
+from: "10"
+to: "11"
+
+breaking_changes:
+
+  - id: php-82-minimum
+    title: "PHP 8.2 is the minimum required runtime"
+    severity: critical
+    detection:
+      description: >
+        Check the PHP version declared in composer.json and the running PHP binary.
+        Laravel 11 drops support for PHP 8.0 and 8.1.
+      command: "php -r \"echo PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . PHP_EOL;\""
+      notes: >
+        If the output is below 8.2, the project cannot run Laravel 11.
+        Update the server or container image before proceeding.
+    fix:
+      description: >
+        Update the php constraint in composer.json to require ^8.2, then
+        reinstall dependencies. If the runtime itself is below 8.2, upgrade the
+        PHP binary/container separately before running composer install.
+      command: "composer require php:^8.2 --no-update"
+    verification:
+      description: Confirm composer.json now requires PHP 8.2+ and the lock file is consistent.
+      command: "composer validate --strict"
+    references:
+      - "https://laravel.com/docs/11.x/upgrade#php-8-2-minimum-version"
+
+  - id: doctrine-dbal-removal
+    title: "doctrine/dbal is no longer a required dependency"
+    severity: high
+    detection:
+      description: >
+        Laravel 11 rewrites the schema builder to native PDO calls and no longer
+        pulls in doctrine/dbal. Projects that call DB::getDoctrineConnection()
+        or use Doctrine type registration will break at runtime.
+      command: "composer show doctrine/dbal 2>/dev/null || echo 'not installed'"
+      notes: >
+        If doctrine/dbal appears in vendor, check your application code and any
+        custom service providers for DB::getDoctrineConnection() or
+        $table->addColumn() calls that relied on the Doctrine type system.
+    fix:
+      description: >
+        If your code uses doctrine/dbal directly, add it as an explicit
+        dependency. Otherwise remove any Doctrine type registrations from your
+        AppServiceProvider and replace DB::getDoctrineConnection() usages with
+        native PDO or DB::getPdo().
+      command: "composer require doctrine/dbal --no-update"
+      notes: >
+        Only run the composer require if you confirmed you actually need the
+        package. If you do not need it, delete the DB::getDoctrineConnection()
+        call sites instead.
+    verification:
+      description: Confirm the application boots and no Doctrine-related errors appear in the log.
+      command: "php artisan about"
+    references:
+      - "https://laravel.com/docs/11.x/upgrade#doctrine-dbal-removal"
+
+  - id: automatic-password-rehash
+    title: "Passwords are automatically rehashed on login when the algorithm cost changes"
+    severity: medium
+    detection:
+      description: >
+        Laravel 11 adds automatic password rehashing when the hashing
+        algorithm's cost factor changes. If the project customises hashing
+        config (config/hashing.php, bcrypt rounds) and relies on passwords
+        NOT being rehashed mid-session, this is a behavioral change.
+      command: "php artisan config:show hashing"
+      notes: >
+        Check for a custom 'rehash_on_login' or 'bcrypt.rounds' value.
+        Most projects are unaffected; the change is usually beneficial.
+    fix:
+      description: >
+        If automatic rehashing must be disabled (e.g. performance or test
+        isolation), set 'rehash_on_login' to false in config/hashing.php.
+        Otherwise no change is required — the default behavior is correct.
+      command: "php artisan config:clear"
+    verification:
+      description: Confirm authentication routes still pass and no hashing errors appear.
+      command: "php artisan test --filter AuthenticationTest"
+    references:
+      - "https://laravel.com/docs/11.x/upgrade#automatic-password-rehash"
+
+  - id: str-number-helpers
+    title: "New Str and Number helper methods may conflict with custom macros"
+    severity: low
+    detection:
+      description: >
+        Laravel 11 adds new static methods to Str and Number facades.
+        If the project registers custom macros with the same names
+        (e.g. Str::macro('wrap', ...)), a naming collision will throw a
+        BadMethodCallException at runtime.
+      command: "php -r \"require 'vendor/autoload.php'; echo implode(PHP_EOL, array_keys(Illuminate\\Support\\Str::getFacadeRoot()->getMacros())) . PHP_EOL;\""
+      notes: >
+        Compare the list against Laravel 11 Str / Number additions:
+        Str::wrap(), Str::isJson(), Number::pairs(), etc. A collision
+        only matters if you registered the macro with the same signature.
+    fix:
+      description: >
+        Rename any conflicting macros in the AppServiceProvider or the
+        relevant service provider where the macro is registered.
+      command: "php artisan about"
+      notes: Rename the macro call sites as well as the registration.
+    verification:
+      description: Confirm no BadMethodCallException appears when the Str/Number helpers are exercised.
+      command: "php artisan test --filter HelperTest"
+    references:
+      - "https://laravel.com/docs/11.x/upgrade#new-str-and-number-helpers"
+
+  - id: application-structure-slim
+    title: "Default application skeleton is slimmer (config/, routes/, console/kernel.php moved)"
+    severity: medium
+    detection:
+      description: >
+        Laravel 11 ships a slimmer skeleton: app/Http/Kernel.php,
+        app/Console/Kernel.php, and many config files are removed from new
+        installs. Existing applications retain their files, but any tooling or
+        CI step that assumes the old skeleton shape may fail.
+      command: "git diff --name-only HEAD 2>/dev/null | grep -E '(Kernel|console\\.php)' || echo 'no drift'"
+      notes: >
+        This check is informational for existing projects — the slim skeleton
+        only applies to fresh Laravel 11 installs. Running 'php artisan
+        app:install' merges the new skeleton into an existing project.
+    fix:
+      description: >
+        For existing projects, no automated migration is required. Run
+        'php artisan about' to confirm the application boots with the existing
+        kernel files. If you want the slim skeleton, follow the official
+        upgrade guide's optional skeleton migration steps.
+      command: "php artisan about"
+    verification:
+      description: Confirm the application boots, routes resolve, and the console kernel is recognized.
+      command: "php artisan route:list --compact"
+    references:
+      - "https://laravel.com/docs/11.x/upgrade#application-structure"

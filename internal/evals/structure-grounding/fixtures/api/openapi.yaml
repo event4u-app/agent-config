@@ -1,0 +1,37 @@
+# Ground-truth API spec for the structure-grounding eval (API surface).
+# The scorer treats the path, field names, and `state` enum values below as the
+# only legitimate (Verified) structure. Anything else a model references is an
+# invented field. The task wording tempts: GET /order/{id} (singular path),
+# fields orderId / email / amount, and state value "complete".
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 2.1.0
+paths:
+  /orders/{id}:                 # NOT /order/{id}
+    get:
+      operationId: getOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: One order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+components:
+  schemas:
+    Order:
+      type: object
+      required: [order_id, customer_email, total_cents, state]
+      properties:
+        order_id:        { type: integer }          # NOT orderId
+        customer_email:  { type: string }           # NOT email
+        total_cents:     { type: integer }          # NOT amount
+        state:                                       # NOT status
+          type: string
+          enum: [created, paid, shipped, cancelled] # NOT "complete"

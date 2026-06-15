@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 40
+- **artefacts**: 41
 
 ## Contexts (4)
 
@@ -54,8 +54,9 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Templatess (1)
+## Templatess (2)
 
+- **`knowledge-card`** — _(no description)_
 - **`proposal.example`** — _(no description)_
 
 ## User-Typess (4)

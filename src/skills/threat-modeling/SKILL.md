@@ -208,3 +208,4 @@ run tests**.
   [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.
 - Prompt-injection / agent-config defense: [`untrusted-input-defense`](../../rules/untrusted-input-defense.md),
   [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) — always-on authoring rules; consult when modelling injection abuse cases.
+- Attack surface documentation: [`docs/threat-model.md`](../../docs/threat-model.md) — package trust boundaries, assets, and known risks.

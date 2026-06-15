@@ -25,6 +25,7 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 ```
 
 - Always analyze before coding or modifying anything.
+- **External or expensive structure in the read set** (DB schema, API/GraphQL shape, vendor-package surface, an unconfirmed DTO/Model/Entity) → discover the real source and emit an Evidence Report **before** planning, per [`source-discovery`](source-discovery-gate.md). No structural claim without evidence.
 - Never guess behavior — verify using code, data, or tools.
 - Prefer targeted inspection (jq, debugger, logs) over brute-force.
 - Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface — `curl` / Playwright / browser for HTTP and UI, debugger / `xdebug` for runtime frames, the project's test runner for behavior.

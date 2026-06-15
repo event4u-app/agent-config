@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/mission.schema.json",
+  "title": "Mission manifest",
+  "$comment": "Minimal stub — council-signed-off Phase 0 fields only. Missions add NO control-flow primitives (no loops, conditionals, or async). Extended after the Phase 1 PoC confirms what is actually needed. Keep in sync with docs/contracts/no-runtime-boundary.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mission", "inputs", "phases"],
+  "properties": {
+    "mission": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique mission id (kebab-case slug). Must match the directory name under src/missions/."
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Named parameters the mission accepts (e.g. {target_version: {type: string}}). Keys are kebab-case identifiers; values describe the expected input.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["string", "integer", "boolean"],
+            "description": "Scalar type of the input value."
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable label shown to the user at mission invocation."
+          },
+          "default": {
+            "description": "Default value when the input is omitted."
+          },
+          "required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this input must be supplied by the caller."
+          }
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "description": "Ordered sequence of /work directive names this mission executes. Each name must be one of the recognised /work directives.",
+      "minItems": 1,
+      "uniqueItems": false,
+      "items": {
+        "type": "string",
+        "enum": ["refine", "memory", "analyze", "plan", "implement", "test", "verify", "report"],
+        "description": "A /work directive name. The mission executes these in order via the existing gated /work engine."
+      }
+    },
+    "catalog": {
+      "type": "string",
+      "description": "Relative path (from the mission root) to a YAML file listing breaking changes for this mission (e.g. catalogs/laravel-10-11.yml). Optional — missions without a catalog are framework-agnostic.",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.ya?ml$"
+    },
+    "verification": {
+      "type": "object",
+      "description": "Quality gate the mission must pass before the user is asked to review. Optional — defaults to the /work engine's built-in verify directive.",
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Shell command to run for verification (e.g. 'php artisan test'). Single-shot; output is returned to the agent for interpretation."
+        },
+        "success_pattern": {
+          "type": "string",
+          "description": "Regex the command stdout must match for the gate to pass."
+        },
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, a failing gate halts the mission and surfaces the failure to the user."
+        }
+      }
+    },
+    "size_tier": {
+      "type": "string",
+      "enum": ["trivial", "small", "standard", "large"],
+      "description": "Estimated scope of the mission. Surfaced to the user at invocation so they can set expectations. Does not affect execution — missions do not auto-select /work budget based on this value.",
+      "default": "standard"
+    }
+  }
+}

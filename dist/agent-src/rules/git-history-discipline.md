@@ -146,3 +146,4 @@ A previous session squashed a pushed branch, the push hook failed at the token b
 - [`commit-policy`](commit-policy.md) — commits are the user's call; rewriting them is a stronger version of the same restriction.
 - [`token-efficiency`](token-efficiency.md) — Iron Law on burning the user's tokens for cosmetic gain.
 - [`skill:git-workflow`](../skills/git-workflow/SKILL.md) — Safe Squash-After-Push protocol and Divergent-State Recovery decision tree.
+- `git … --no-verify` / `core.hooksPath` overrides — deterministically blocked by the `block-no-verify` PreToolUse guard (`src/scripts/hooks/block_no_verify.py`, registered in `hook_manifest.yaml`).

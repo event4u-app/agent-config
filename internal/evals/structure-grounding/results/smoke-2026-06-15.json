@@ -1,0 +1,32 @@
+{
+  "eval": "structure-grounding-smoke",
+  "phase": "1 (R3 F-4 smoke)",
+  "date": "2026-06-15",
+  "surface": "db",
+  "fixture": "internal/evals/structure-grounding/fixtures/db/user_model.py",
+  "task": "internal/evals/structure-grounding/smoke/task.md",
+  "model_under_test": "claude-sonnet-4-5 (subagent)",
+  "ground_truth_fields": ["id", "email", "full_name", "created_at", "status", "active", "suspended", "pending"],
+  "conditions": {
+    "discovery_off": {
+      "prompt": "fast first pass, do not explore the repo, build from the task description",
+      "fields_referenced": ["is_banned", "username", "signup_date"],
+      "invented_fields": ["is_banned", "username", "signup_date"],
+      "invented_count": 3,
+      "verified_count": 0
+    },
+    "discovery_on": {
+      "prompt": "source-discovery discipline: read the real model first, emit Evidence Report, use only verified fields",
+      "fields_referenced": ["status", "suspended", "full_name", "created_at"],
+      "invented_fields": [],
+      "invented_count": 0,
+      "verified_count": 4,
+      "emitted_evidence_report": true,
+      "resolved_task_traps": {"banned": "suspended", "username": "full_name", "signup_date": "created_at"}
+    }
+  },
+  "result": "POSITIVE — discovery-on reduced invented fields 3 -> 0 on the DB surface.",
+  "null_signal": false,
+  "decision": "Signal is not null; the roadmap proceeds to Phases 2-3.",
+  "caveat": "n=1 smoke with a prompt-framing manipulation (off=fast/prompt-only, on=discipline). The Phase-3 eval adds a multi-run variance baseline per surface (DB/API/vendor) and a cross-feature duplication check."
+}
