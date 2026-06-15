@@ -145,6 +145,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (experimental — beta gates: docs/contracts/mcp-beta-criteria.md)
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
+  capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
+                             (capability area → coverage → backing skills/commands → gaps).
+                             Pass --check to fail if stale (for CI). Reads src/ (package repo).
   settings:check             Validate .agent-settings.yml against the YAML-subset contract
                              (docs/contracts/settings-sync-yaml-subset.md). Read-only.
                              Exit 0 clean, 1 finding(s), 2 file absent / unreadable.
@@ -382,6 +385,13 @@ cmd_roadmap_progress_check() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
   exec python3 "$script" --check "$@"
+}
+
+cmd_capabilities_index() {
+  require_python3
+  local script
+  script="$(resolve_script "src/scripts/generate_capabilities_index.py")"
+  exec python3 "$script" "$@"
 }
 
 cmd_first_run() {
@@ -944,6 +954,7 @@ main() {
     use)                     cmd_use "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
+    capabilities:index)      cmd_capabilities_index "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
     keys:install-anthropic)  cmd_keys_install_anthropic "$@" ;;
     keys:install-openai)     cmd_keys_install_openai "$@" ;;
