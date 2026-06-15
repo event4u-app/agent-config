@@ -185,20 +185,20 @@ cost. Each ends by drafting a memory candidate per the Phase 0 contract.
 One visible command. A prose dispatcher cluster (like `council:*`), NOT
 auto-triage, NOT a new runtime.
 
-- [ ] `/analyze` (visible orchestrator): classifies the input by keywords, then
+- [x] `/analyze` (visible orchestrator): classifies the input by keywords, then
       **proposes** a weighted framework path with numbered options and lets the
       user pick — e.g. "70% outage → post-mortem + timeline + RCA; 30% security →
       fault-tree + threat-model; [1] outage [2] security [3] both [4] custom".
       Never silently auto-selects (council: taxonomy ≠ methodology; complex
       incidents span types). Logs the user's selection for later calibration.
-- [ ] Internal sub-commands routed by `/analyze` (uncapped):
+- [x] Internal sub-commands routed by `/analyze` (uncapped):
       `analyze:postmortem`, `analyze:premortem`, `analyze:decision`,
       `analyze:near-miss`, `analyze:incident` (the full outage flow:
       incident-commander → timeline → `root-cause-frameworks` →
       `corrective-action-design` → memory candidate). Branching/backtracking is
       the agent re-invoking a sub-command at a human gate — no state-machine
       daemon.
-- [ ] `incident-pattern-analysis` (internal skill): cohort / correlation /
+- [~] `incident-pattern-analysis` (internal skill): <!-- deferred: council D5 — scope-creep / cohort-analysis reliant; revisit once incident-learnings has volume --> cohort / correlation /
       trigger-event mapping over the now-populated `incident-learnings` memory
       (dedup-aware); separates correlation from causation; surfaces recurring
       classes. Reuses `memory-consolidation` retrieval, adds the analysis lens.

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**17 / 205 steps done · 8%**
+**19 / 204 steps done · 9%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 6 | 30 | 13 | 13 | 4 | 0 | █████░░░░░ 50% |
+| 1 | [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 6 | 30 | 10 | 15 | 5 | 0 | ██████░░░░ 60% |
 | 2 | [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md) | 2 | 10 | 9 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md) | 4 | 7 | 3 | 4 | 0 | 0 | ██████░░░░ 57% |
@@ -35,7 +35,7 @@
 
 ### [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md)
 
-**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 13 / 26 done (50%)
+**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 15 / 25 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -43,7 +43,7 @@
 | 1 | Memory-loop hardening (the spine — build before the skills) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Core analysis skills (internal, minimal cut) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Forward-looking + decision skills, integrated into planning surfaces | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | Orchestration: the `/analyze` confidence-weighted suggester | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Orchestration: the `/analyze` confidence-weighted suggester | ✅ done | 0 | 2 | 1 | 0 | 100% |
 | 5 | Pack assembly + discovery wiring | ⬜ not started | 10 | 0 | 4 | 0 | 0% |
 
 ### [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md)
