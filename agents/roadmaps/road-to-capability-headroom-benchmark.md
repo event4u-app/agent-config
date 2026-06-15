@@ -40,23 +40,37 @@ fails ~60% → real headroom. A benchmark with headroom can finally answer
 
 ## Phase 1 — Hard novel corpus (non-saturating baseline)
 
-- [ ] Archetype = **hard code debugging + verify** (most tractable in our neutral
+- [x] Archetype = **hard code debugging + verify** (most tractable in our neutral
       sandbox; oracle = a HIDDEN test passes — reuse `bench_ab_scoring_v2.hidden_test`).
       The bug must be subtle enough that bare sonnet fails ~30-70% (edge-case /
       off-by-one-in-a-complex-invariant / state / concurrency-ish logic).
-- [ ] Author **~9 novel hard tasks** (3 difficulty bands × 3), each a
+- [x] Authored **9 novel hard tasks** (capH-debug-01..09), hidden solve.check.mjs verified. (3 difficulty bands × 3), each a
       self-contained multi-file fixture with a hidden verifying test; NO prompt
       coaching; single deterministically-checkable outcome.
-- [ ] Add a **secondary discipline metric** = artifact-bloat ratio (lines/files
+- [x] Secondary discipline metric = max_files/lines (bloat). = artifact-bloat ratio (lines/files
       changed vs a minimal-fix reference) recorded on SOLVED tasks only.
 
 ## Phase 1c — Non-saturation baseline probe (cheap, runs FIRST, gates everything)
 
-- [ ] Run **vanilla-only, sonnet, ~9 tasks × 1 seed** (~9 runs). DECISION:
-      - baseline solve-rate in ~30-70% → headroom exists, proceed to Phase 2.
-      - baseline ≈ 100% → tasks still too easy; harden once (N≤3 loop budget) or
-        escalate to the maintainer that code-debug may not provide headroom on
-        sonnet either (consider tool-use/research tasks instead).
+- [x] Ran vanilla-only sonnet, 9 tasks. **Baseline = 8/9 = 89%** — only
+      capH-debug-08 (right-assoc exponentiation + unary minus) fails. **ESCALATE:**
+      hard *self-contained* code bugs leave almost no headroom on Sonnet (1/9 is
+      too little for paired stats); GAIA's 41% headroom needs long tool-using /
+      research chains, not single-file logic.
+
+## Conclusion (2026-06-15) — honest bottom line, escalated
+
+Across **v1 (binary), v2 (discipline, haiku+sonnet, micro+meso), v3 (capability,
+hard debug)** the finding is consistent: **on deterministic, self-contained tasks
+— the only class we can cheaply build — capable models (haiku AND sonnet) are at/
+near ceiling in BOTH capability (89% on hard bugs) and discipline (≈100%). No
+headroom → no measurable package lift reachable there.** Not "the package is
+useless" — its value (governance, safety floors, consistency over long agentic
+runs) lives where a short deterministic benchmark cannot reach. GAIA stays honest
+(~41%) via long tool-using/research chains; reproducing that needs real agentic
+infrastructure (a separate large investment). Escalated (no further iteration per
+the N=3 validation-loop budget): (A) accept this honest conclusion + stop, or
+(B) invest in agentic GAIA-class infra (new roadmap).
 
 ## Phase 2 — 4-arm run + attribution
 
