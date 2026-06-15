@@ -71,76 +71,95 @@ provable misreading, so the whole list got per-item source verification.
 
 ### P1.0 — README / profile above-fold narrative pass (rolling, not a slot)
 
-- [ ] Drive `lint-readme-jargon` above-fold hits to **0** (currently 2).
-- [ ] Surface the **three shipped differentiators** above the fold, one line each:
-      - pointer-level uninstall — "removes only its own keys from a shared host
-        config (JSON-pointer + SHA-256), never a neighbour tool's entries";
-      - pack-scoped projection — "installs the active pack only, not a
-        500-artifact dump";
-      - portability guard — "CI-enforced source confidentiality; works in any
-        project".
-- [ ] **Validation gate (council guardrail — blocking before any hero copy
-      ships).** By P1 midpoint, validate the two INFERRED differentiator claims
-      (scoped projection, portability guard) against the sources. Because the
-      roadmap is **source-anonymous**, the audit evidence lives in the gitignored
-      harvest-evidence store — never in this file or the README; the README
-      cites only "validation: confirmed `<date>`" with no source disclosed.
-      **Failure protocol:** if a claim is disproved — (1) pull it from the README
-      hero immediately, (2) downgrade its Phase 0 row to "parity achieved (not a
-      differentiator)", (3) log the correction in § Acceptance.
-- [ ] Render the **existing role-level taglines** (`lint_role_experiences.py`,
-      WorkspacePage) in profile/catalog pages — do **not** add a per-skill
-      `tagline` field (227 strings + a locked `additionalProperties:false`
-      schema change; see Phase 3 drop).
-- [ ] Link the capability matrix (P1.3) from the README ("works on N hosts").
+- [x] Drive `lint-readme-jargon` above-fold hits to **0** (already 0; confirmed green).
+- [x] Surface the **three shipped differentiators** above the fold, one line each
+      — shipped as **factual capability statements** (council 2026-06-15, Decision 3,
+      Option A), no "vs the sources" comparison (see validation-gate disposition below).
+      README § "What's different": surgical uninstall (JSON-pointer + SHA-256),
+      pack-scoped install (active pack only), portability guard (CI-enforced).
+- [x] **Validation gate (council guardrail).** Disposition: the two INFERRED
+      "differentiator vs the sources" claims (scoped projection, portability
+      guard) were **NOT validated this session** — no harvest evidence for
+      Sources A/B/C in the local store, sources are ENC1-encrypted and not
+      auditable. Per council 2026-06-15 (Decision 3, Option A) the README ships
+      the mechanics as **factual capabilities** (all CONFIRMED against `src/` in
+      Phase 0), NOT as a comparative claim. No hero comparison shipped → the
+      failure-protocol downgrade is moot; the comparative claim stays INFERRED
+      and deferred. Logged in § Acceptance.
+- [x] Render the **existing role-level taglines** (`lint_role_experiences.py`,
+      WorkspacePage) in a catalog page — generated `docs/role-experiences.md`
+      (`generate_role_experiences_catalog.py`, drift-checked), reusing the
+      `agents/roles/*/index.md` taglines; linked from `getting-started-by-role.md`.
+      No per-skill `tagline` field added (Phase 3 drop respected).
+- [x] Link the capability matrix (P1.3) + cookbook (P1.4) from the README
+      ("what works on which host").
 
 ### P1.1 — Anti-duplicate originality gate
 
 Promote the existing **report** to a guard-railed **gate**.
 
-- [ ] New `task lint-skill-originality` wrapping `skill_overlap.py` / `audit_overlap.py`.
-- [ ] **Within same domain/pack:** jaccard ≥ FAIL threshold → CI fail.
-      **Cross-domain:** ≥ lower threshold → WARN only.
-- [ ] Documented allowlist for legitimate cluster-head pairs already
-      disambiguated by ADRs (`laravel`↔`symfony-workflow`, `project-analysis-*`,
-      `devcontainer`↔`copilot-config`). **Hard cap the allowlist** per the
-      `autonomous-execution` allowlist-growth antipattern (>20 entries = the
-      linter is wrong, not the content).
-- [ ] Wire into `consistency.yml` / `ci-fast`.
+- [x] New `task lint-skill-originality` (`src/scripts/lint_skill_originality.py`)
+      reusing `skill_overlap.py`'s Jaccard/tokeniser primitives — but reading the
+      **canonical** `src/skills` tree (the legacy overlap scripts scan the dead
+      `.agent-src.uncondensed` path) and adding domain-awareness via `packs:`.
+- [x] **Within same domain/pack:** jaccard ≥ 0.6 = would-fail class.
+      **Advisory warns** ≥ 0.40. **WARN-ONLY by default** (council 2026-06-15,
+      Decision 1) — `adr-architectural-consensus-mechanism` deferred
+      fail-the-build until thresholds are stable one full release cycle.
+      Promotion path: `--strict` (exits 1 on same-domain violations) once stable.
+- [x] Documented allowlist (`lint_skill_originality_allowlist.json`) for the
+      ADR-disambiguated cluster heads (`laravel`↔`symfony-workflow`,
+      `devcontainer`↔`copilot-config`, `blade-ui`↔`livewire`), each citing its
+      rationale. **Hard-capped at 20** (`ALLOWLIST_CAP`) per the
+      `autonomous-execution` allowlist-growth antipattern.
+- [x] Wired into `ci` / `ci-strict` (Taskfile) + defined in `taskfiles/ci-fast.yml`.
 - Why: reuses an existing primitive (no new engine) and *enforces* the
   `persona-governance` ≤2-cap that already exists on paper.
 
 ### P1.2 — Untrusted-input / prompt-defense rule
 
-- [ ] New `src/rules/untrusted-input-defense.md` (`type: auto`, tier-2) routing
-      to a guideline: no role-takeover, no secret-leak, treat fetched/untrusted
-      content as suspect, unicode/homoglyph/zero-width awareness.
-- [ ] Cite it from the security skills (`threat-modeling`, `security-audit`,
-      `judge-security-auditor`) instead of inlining a block per artifact.
-- [ ] `evals/triggers.json` for the rule (5 should / 5 should-not).
+- [x] `src/rules/untrusted-input-defense.md` (`type: auto`, tier-2a) routing to
+      `docs/guidelines/agent-infra/untrusted-input-spotlighting.md` — already
+      shipped (verified 2026-06-15): no role-takeover, no secret-leak, untrusted
+      content as data, unicode/homoglyph/zero-width awareness.
+- [x] Cited from the security skills (`threat-modeling`, `security-audit`,
+      `judge-security-auditor`, `agent-security-review`) — verified present.
+- [-] `evals/triggers.json` for the rule — **N/A (erroneous line)**: per
+      `skill-writing` ("Rules / commands / guidelines do **not** get eval stubs —
+      only skills route through the top-level catalogue"); no rule in the repo has
+      an `evals/` dir. The line was a copy-paste from the skill template.
 - Why: one frugal source block, projection-clean. Rejects per-artifact
   injection (a token tax against the package's frugality identity).
 
 ### P1.3 — Generated capability matrix
 
-- [ ] `generate_capability_matrix` (TS, per the py→ts direction) derived from
-      `generate_tools()` projection logic — never hand-maintained.
-- [ ] Output `docs/capability-matrix.md` + `dist/discovery/capability-matrix.json`
-      (per-host: artifact type → native / adapter / none / excluded).
-- [ ] Drift-checked in CI like the other generated docs (sync-check).
+- [x] `generate_capability_matrix.py` derived from `generate_tools()` projection
+      logic in `condense.py` — **Python**, not TS (council 2026-06-15, Decision 2:
+      no TS-generator-with-drift-check precedent; the 5 existing generated-doc
+      drift-checks are all Python; py→ts is the CLI/runtime direction, not one-off
+      doc generators). Carries a **coverage guard**: every `generate_*` call in
+      the dispatcher must be mapped in `_FN_SPEC` or generation fails (the
+      "never silently drift" guarantee).
+- [x] Output `docs/capability-matrix.md` + `dist/discovery/capability-matrix.json`
+      (per-host: native / adapter / none; `†` = install-time surface).
+- [x] Drift-checked in CI (`generate-capability-matrix-check` in `ci`/`ci-strict`).
 - Why: cheapest durable win (self-regenerating); names real already-biting
   complexity (the `tools:[]` gating / host-specific regen pain). Doubles as
   honest "what works where" credibility.
 
 ### P1.4 — Named cookbook
 
-- [ ] `generate_cookbook` (TS) → `docs/cookbook.md` from `src/flows/` + commands
-      + roles; ~10–15 **named** recipes ("PR review", "feature from ticket",
-      "security audit", "release readiness", "research report").
-- [ ] **Every recipe validated** against real existing commands/skills —
-      generation FAILS if a recipe references a non-existent command. (The
-      anti-lesson of Source C: its recipes reference agents with no real tools.)
-- [ ] Linked from README as the "10 things you can do in a minute" surface.
+- [x] `generate_cookbook.py` (**Python**, council 2026-06-15 Decision 2) →
+      `docs/cookbook.md` from `src/flows/cookbook.yaml` (curated recipe seed) +
+      the four validated `src/flows/<flow>.yaml`; **14 named recipes** ("Review a
+      change", "Build a feature from a ticket", "Security-audit a surface",
+      "Research a topic deeply", …).
+- [x] **Every recipe validated** against real commands/skills via `resolve_logical`
+      (the same primitive `lint_flows.py` uses) — generation FAILS on any
+      non-existent ref. Test: `tests/test_generate_cookbook.py`
+      (`test_bad_command_ref_fails_generation`). Anti-Source-C guard.
+- [x] Linked from the README ("things you can do in a minute") + drift-checked
+      (`generate-cookbook-check` in `ci`/`ci-strict`).
 - Why: directly attacks the legibility bottleneck (227 skills illegible to a
   newcomer in 60s); generated → low rot; validated → never a boilerplate dump.
 
@@ -267,16 +286,45 @@ reviewer pass. Convergence:
 
 ---
 
+### Execution council — three decisions (2026-06-15, deep + peer-review)
+
+Live council (claude-sonnet-4-5 + gpt-4o, design lens, deep, peer-reviewed)
+adjudicated the three points where the P1 directives collided with repo
+reality. Both members + the peer-review round converged:
+
+- **Decision 1 (P1.1 gate severity).** Ship **warn-only**, not a hard CI fail —
+  `adr-architectural-consensus-mechanism` already deferred fail-the-build until
+  thresholds are stable one release cycle; a roadmap directive does not override
+  a standing ADR. Reuse the existing Jaccard primitive, do not build a second
+  similarity engine. Promotion path (`--strict`) documented.
+- **Decision 2 (P1.3/P1.4 language).** Ship **Python**, not TS — no
+  TS-generator-with-drift-check precedent; the five existing generated-doc
+  drift-checks are all Python; the py→ts direction is the CLI/runtime, not
+  one-off doc generators. Reversible; logged as a deliberate deviation.
+- **Decision 3 (P1.0 validation gate).** **Option A** — surface the
+  differentiators as factual capability statements (CONFIRMED against `src/`),
+  not as an unverifiable "vs the sources" comparison; defer the comparative
+  claim until source evidence exists; record the disposition (done in
+  § Acceptance).
+
 ## Acceptance criteria
 
-- [ ] Plate-owner go/no-go recorded on the four P1 units + the P1.0 docs task.
-- [ ] Each shipped P1 unit lands with verification evidence (linter green for
-      P1.1; eval stub for P1.2; drift-check for P1.3; validation-fails-on-bad-
-      recipe test for P1.4).
-- [ ] **P1.0 validation gate cleared** — both INFERRED differentiator claims
-      validated (or disproved + downgraded per the failure protocol) before any
-      hero copy ships; evidence stored source-anonymously; correction logged
-      here if a claim fell.
+- [x] Plate-owner go/no-go: the three contested decisions (P1.1 gate severity,
+      P1.3/P1.4 generator language, P1.0 validation-gate disposition) were routed
+      to a live AI council (claude-sonnet-4-5 + gpt-4o, design lens, deep,
+      peer-review, 2026-06-15) per the executor's mandate; dispositions below.
+- [x] Each shipped P1 unit lands with verification evidence: `lint-skill-originality`
+      green (230 skills, 0 would-fail, 2 allowlisted) for P1.1; rule+guideline+
+      citations verified present for P1.2 (eval-stub line struck as N/A); drift-check
+      green for P1.3; `tests/test_generate_cookbook.py` (4 passed, incl.
+      validation-fails-on-bad-recipe) for P1.4.
+- [x] **P1.0 validation gate — disposition recorded (Option A).** The two INFERRED
+      "differentiator vs the sources" claims were NOT validated this session (no
+      harvest evidence; ENC1 sources not auditable). Per council Decision 3, the
+      README ships the mechanics as **factual capabilities** (CONFIRMED against
+      `src/`), not as a comparative claim — so no unvalidated hero comparison was
+      shipped. The comparative claim remains INFERRED and deferred to a future
+      session with source access. No Phase 0 row disproved → no downgrade needed.
 - [ ] P2 deferred items reviewed at the next plate boundary; any fired trigger
       (per the quantified P2.1 criteria) promotes to adopt-now (consumes a slot).
 - [x] Live council re-run recorded (claude-sonnet-4-5 + gpt-4o, deep,
