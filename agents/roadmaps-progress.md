@@ -6,10 +6,10 @@
 
 ## Overall
 
-**37 / 191 steps done · 19%**
+**57 / 190 steps done · 30%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   19%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md) | 4 | 7 | 3 | 4 | 0 | 0 | ██████░░░░ 57% |
-| 3 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
+| 3 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 1 | 22 | 4 | 8 | ██████████ 96% |
 | 4 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -53,14 +53,14 @@
 
 ### [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md)
 
-**Competitive Borrow** — 2 / 24 done (8%)
+**Competitive Borrow** — 22 / 23 done (96%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Reality check (do NOT build these — already shipped) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 1 | Adopt-now plate (4 units + 1 rolling docs task) | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
+| 1 | Adopt-now plate (4 units + 1 rolling docs task) | ✅ done | 0 | 17 | 0 | 1 | 100% |
 | 2 | out-of-horizon (deferred-with-trigger) | ⏭️ skipped | 0 | 0 | 4 | 0 | 0% |
-| 3 | Dropped (reject reason; not carried forward) | 🟡 in progress | 4 | 1 | 0 | 7 | 20% |
+| 3 | Dropped (reject reason; not carried forward) | 🟡 in progress | 1 | 4 | 0 | 7 | 80% |
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)
 

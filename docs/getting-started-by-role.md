@@ -4,6 +4,8 @@
 
 `agent-config` ships ~210 skills, ~67 rules, and ~124 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
 
+> **Taglines at a glance →** [`docs/role-experiences.md`](role-experiences.md) — the one-line pitch per role experience, in one table.
+
 > **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, ready-made setup, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). The wizard writes `.agent-settings.yml`, `.augment/`, and `.claude/` atomically; nothing leaves your disk.
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates.

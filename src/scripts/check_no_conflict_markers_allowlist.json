@@ -1,0 +1,4 @@
+{
+  "_comment": "Tracked files that LEGITIMATELY contain conflict-marker examples (e.g. a skill/doc teaching merge-conflict resolution). Hard-capped at 20 (check_no_conflict_markers.py ALLOWLIST_CAP). Prefer a per-line `conflict-marker-check: ignore` comment over an allowlist entry; use this only for files where many example markers appear. Each entry is a repo-relative path.",
+  "files": []
+}

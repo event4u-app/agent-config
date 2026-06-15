@@ -285,6 +285,36 @@ tasks:
     desc: "road-to-6.1.0 Step 9 — fail if docs/command-flows.md is stale vs surface-map.yaml + src/flows/*.yaml"
     cmd: ./scripts-run src/scripts/generate_command_flows --check
 
+  generate-capability-matrix:
+    silent: true
+    desc: "road-to-competitive-borrow P1.3 — (re)generate docs/capability-matrix.md + dist/discovery/capability-matrix.json from condense.py generate_tools() projection logic"
+    cmd: python3 src/scripts/generate_capability_matrix.py {{.CLI_ARGS}}
+
+  generate-capability-matrix-check:
+    silent: true
+    desc: "road-to-competitive-borrow P1.3 — fail if the capability matrix is stale vs the generate_tools() projection logic"
+    cmd: python3 src/scripts/generate_capability_matrix.py --check
+
+  generate-cookbook:
+    silent: true
+    desc: "road-to-competitive-borrow P1.4 — (re)generate docs/cookbook.md from src/flows/cookbook.yaml + the four user-work flows (validates every command/skill ref)"
+    cmd: python3 src/scripts/generate_cookbook.py {{.CLI_ARGS}}
+
+  generate-cookbook-check:
+    silent: true
+    desc: "road-to-competitive-borrow P1.4 — fail if docs/cookbook.md is stale or references a non-existent command/skill"
+    cmd: python3 src/scripts/generate_cookbook.py --check
+
+  generate-role-experiences-catalog:
+    silent: true
+    desc: "road-to-competitive-borrow P1.0 — (re)generate docs/role-experiences.md from agents/roles/*/index.md taglines"
+    cmd: python3 src/scripts/generate_role_experiences_catalog.py {{.CLI_ARGS}}
+
+  generate-role-experiences-catalog-check:
+    silent: true
+    desc: "road-to-competitive-borrow P1.0 — fail if docs/role-experiences.md is stale vs the role taglines"
+    cmd: python3 src/scripts/generate_role_experiences_catalog.py --check
+
   lint-namespace-collisions:
     silent: true
     desc: "road-to-6.0.0-D Phase 0 — every skill/rule/command name unique within its namespace (single flat library)"
