@@ -422,6 +422,7 @@
         "./dist/agent-src/skills/using-git-worktrees",
         "./dist/agent-src/skills/validate-feature-fit",
         "./dist/agent-src/skills/verify-completion-evidence",
+        "./dist/agent-src/skills/verify-repair-loop",
         "./dist/agent-src/skills/video-director",
         "./dist/agent-src/skills/vision-articulation",
         "./dist/agent-src/skills/voc-extract",
