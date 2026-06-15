@@ -26,6 +26,7 @@ task ci                # full pipeline — green before PR
 - **Personas** — 11 review lenses (6 + 5): [`docs/personas.md`](docs/personas.md).
 - **Discovery** — workspaces / packs manifest: [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md) + [`customization`](docs/customization.md#workspaces--packs-discovery).
 - **Root layout** — `src/` = source; root keeps workspace tooling per [`ADR-050`](docs/decisions/ADR-050-workspace-vs-package-root-boundary.md); toggle: `agents/.agent-tools.yml`.
+- **Security** — disclosure policy [`SECURITY.md`](SECURITY.md); attack surface [`docs/threat-model.md`](docs/threat-model.md).
 
 ## Emergency triage — read this when nothing else is reachable
 

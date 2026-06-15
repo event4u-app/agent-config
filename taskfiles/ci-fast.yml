@@ -346,6 +346,11 @@ tasks:
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
     cmd: python3 src/scripts/check_no_conflict_markers.py {{.QUIET_FLAG}}
 
+  lint-workflow-security:
+    silent: true
+    desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
+    cmd: python3 src/scripts/lint_workflow_security.py {{.QUIET_FLAG}}
+
   check-no-new-legacy-path:
     silent: true
     desc: "Regression guard — no NEW .agent-src.uncondensed/ references added under src/ (ADR-051)"
