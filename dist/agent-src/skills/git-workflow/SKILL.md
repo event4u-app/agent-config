@@ -23,6 +23,39 @@ Do NOT use when:
 - Code writing or review (use `php-coder` or `code-review` skill)
 - CI/CD pipeline changes (use `github-ci` skill)
 
+## Live remote state first — never from memory
+
+```
+BEFORE ANY MERGE / PUSH / PR / BRANCH ACTION — OR ANY CLAIM OR QUESTION
+ABOUT THEIR STATE — QUERY THE LIVE REMOTE. NEVER FROM MEMORY OR
+CONVERSATION HISTORY. A PR MAY ALREADY BE MERGED OR CLOSED REMOTELY.
+ASKING WHAT `gh pr view` ANSWERS IS A CHEAP QUESTION — CHECK, DON'T ASK.
+```
+
+Local branch view + conversation memory both go stale the moment anyone else — a
+maintainer, a parallel agent, an auto-merge rule — acts on the remote. Acting or
+asking on stale state is the recurring failure this kills (canonical: asking
+"shall I merge these 4 PRs?" when all four were already merged remotely). Run
+first, **every time**:
+
+```bash
+git fetch origin --quiet
+gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+# state: OPEN | MERGED | CLOSED — act only on the live value
+```
+
+- **A state question is self-answering** — never ask "is it merged?",
+  "mergeable?", "did it push?", "still open?". `gh pr view` / `git fetch` answers
+  it; asking is a cheap question (per `no-cheap-questions`).
+- **`MERGED` / `CLOSED`** → nothing to merge or push; report the live state and
+  stop.
+- **Before merging** → re-fetch + re-read `state` + `mergeStateStatus` in the
+  **same turn**; never merge on a status seen earlier in the conversation.
+- **"Based on main" / "current"** → prove it with
+  `git rev-list --count HEAD..origin/main` (after `git fetch`); non-zero ⇒ behind
+  and **not** current — merge `main` in before opening a PR (see
+  [`/create-pr`](../../commands/pr/create.md) § 1b).
+
 ## Conventions
 
 → See guideline `docs/guidelines/php/git.md` for branch naming, commit messages, PR conventions.
