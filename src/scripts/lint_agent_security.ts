@@ -2,7 +2,7 @@
 /**
  * P1.6 — umbrella runner for the agent-security self-audit linters.
  *
- * TypeScript twin of `src/scripts/lint_agent_security.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/lint_agent_security.py` (ADR-200 —
  * Python→TS migration). Mirrors the CLI contract EXACTLY: the `--sarif PATH`
  * / `--quiet` flags, the per-linter glyph lines, the aggregated summary, the
  * byte-identical SARIF report (`json.dumps(indent=2)` parity), and the exit

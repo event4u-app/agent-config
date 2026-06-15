@@ -2,7 +2,7 @@
 /**
  * CI guard for the `ai-council` skill's output-path convention.
  *
- * TypeScript twin of `src/scripts/check_council_layout.py` (ADR-096,
+ * TypeScript twin of `src/scripts/check_council_layout.py` (ADR-200,
  * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * flag (positional anywhere in argv), exit codes (0 clean, 1 violations),
  * stdout, byte-identical finding messages, same `agents/` scan,

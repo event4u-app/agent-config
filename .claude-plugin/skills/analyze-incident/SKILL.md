@@ -1,0 +1,1 @@
+../../../src/domains/analysis-workbench/analyze/incident/command.md

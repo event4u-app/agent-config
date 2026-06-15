@@ -3,7 +3,7 @@
  * One-shot memory observability report.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_report.py`
- * (ADR-096, consumer-template memory). The public API and CLI contract
+ * (ADR-200, consumer-template memory). The public API and CLI contract
  * mirror the Python original EXACTLY — same exported names (snake_case
  * kept deliberately), same exit codes, stdout/stderr split, byte-identical
  * messages, and

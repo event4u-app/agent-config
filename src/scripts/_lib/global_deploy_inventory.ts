@@ -1,7 +1,7 @@
 /**
  * Per-tool inventory of files written by global deploys — and stale reaping.
  *
- * TypeScript twin of `src/scripts/_lib/global_deploy_inventory.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/_lib/global_deploy_inventory.py` (ADR-200 —
  * Python→TS migration, Phase 2 / Wave 2a). Public API mirrors the Python
  * module exactly (snake_case kept deliberately), including the JSON
  * serialization shape (`indent=2, sort_keys=True` + trailing newline) and the

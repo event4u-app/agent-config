@@ -2,7 +2,7 @@
 /**
  * bench:ab v2 — paired statistics (Phase 3).
  *
- * TypeScript twin of `src/scripts/bench_ab_v2_stats.py` (ADR-096 Python→TS
+ * TypeScript twin of `src/scripts/bench_ab_v2_stats.py` (ADR-200 Python→TS
  * migration). Mirrors the CLI contract EXACTLY: positional `report` arg, the
  * `--json` / `--markdown PATH` flags, exit codes (0 ok / 1 no report found),
  * byte-identical stdout/stderr, byte-identical analysis JSON, and byte-identical

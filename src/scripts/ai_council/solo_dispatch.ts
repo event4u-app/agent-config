@@ -1,7 +1,7 @@
 /**
  * Solo-member dispatch — step-9 P9 (U2).
  *
- * TypeScript twin of `src/scripts/ai_council/solo_dispatch.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/solo_dispatch.py` (ADR-200 —
  * Python→TS migration, Phase 1). Picks the first enabled, auth-valid member
  * from `routing.solo_member_fallback_chain` so low-impact decisions can
  * optionally route to a single member instead of the full council. The

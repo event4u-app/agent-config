@@ -248,3 +248,106 @@ def test_knowledge_skips_dir_without_manifest(tmp_path, monkeypatch):
     (stray / "random.txt").write_text("noise", encoding="utf-8")
     hits = memory_lookup.retrieve(["knowledge"], ["noise"])
     assert hits == []
+
+
+# ---------------------------------------------------------------------------
+# Supersession / staleness tests (Phase 1 — analysis-workbench)
+# ---------------------------------------------------------------------------
+
+def _write_ownership_yaml(tmp_path, entries: list[dict]) -> None:
+    """Write a single-file curated ownership YAML."""
+    import yaml  # type: ignore
+    mdir = tmp_path / "agents/memory"
+    mdir.mkdir(parents=True, exist_ok=True)
+    (mdir / "ownership.yml").write_text(
+        yaml.dump({"version": 1, "entries": entries}),
+        encoding="utf-8",
+    )
+
+
+def test_superseded_entry_excluded_from_retrieve(tmp_path, monkeypatch):
+    """retrieve() must not return curated entries with status=superseded."""
+    _chdir(monkeypatch, tmp_path)
+    _write_ownership_yaml(tmp_path, [
+        {
+            "id": "own-active",
+            "status": "active",
+            "path": "app/Http/Controllers/Billing/**",
+            "owner": "team-payments",
+        },
+        {
+            "id": "own-superseded",
+            "status": "superseded",
+            "path": "app/Http/Controllers/Billing/**",
+            "owner": "team-payments",
+        },
+    ])
+    hits = memory_lookup.retrieve(["ownership"], ["billing"])
+    hit_ids = [h.id for h in hits]
+    assert "own-active" in hit_ids
+    assert "own-superseded" not in hit_ids
+
+
+def test_stale_entry_excluded_from_retrieve_appears_in_skipped(tmp_path, monkeypatch):
+    """Stale entries must be absent from retrieve() results but present in
+    retrieve_with_meta()["skipped"] with reason="stale"."""
+    import datetime as _dt
+    _chdir(monkeypatch, tmp_path)
+    today = _dt.date(2026, 6, 15)
+    # Entry validated 200 days ago, review_after_days=90 → STALE
+    stale_date = today - _dt.timedelta(days=200)
+    _write_ownership_yaml(tmp_path, [
+        {
+            "id": "own-stale",
+            "status": "active",
+            "path": "app/Http/Controllers/Billing/**",
+            "owner": "team-payments",
+            "last_validated": str(stale_date),
+            "review_after_days": 90,
+        },
+        {
+            "id": "own-fresh",
+            "status": "active",
+            "path": "app/Http/Controllers/Billing/**",
+            "owner": "team-payments",
+            "last_validated": str(today),
+            "review_after_days": 90,
+        },
+    ])
+    # retrieve() must not include the stale entry
+    hits = memory_lookup.retrieve(["ownership"], ["billing"])
+    hit_ids = [h.id for h in hits]
+    assert "own-stale" not in hit_ids
+    assert "own-fresh" in hit_ids
+
+    # retrieve_with_meta() must list the stale entry in skipped
+    result = memory_lookup.retrieve_with_meta(
+        ["ownership"], ["billing"], _today=today
+    )
+    skipped_ids = {s["id"] for s in result["skipped"]}
+    skipped_reasons = {s["id"]: s["reason"] for s in result["skipped"]}
+    assert "own-stale" in skipped_ids
+    assert skipped_reasons["own-stale"] == "stale"
+    result_ids = [h.id for h in result["results"]]
+    assert "own-fresh" in result_ids
+
+
+def test_find_duplicate_returns_match_above_threshold_none_below(tmp_path, monkeypatch):
+    """find_duplicate returns a Hit when score >= threshold, None otherwise."""
+    _chdir(monkeypatch, tmp_path)
+    _write_ownership_yaml(tmp_path, [
+        {
+            "id": "own-billing",
+            "status": "active",
+            "path": "app/Http/Controllers/Billing/**",
+            "owner": "team-payments",
+        },
+    ])
+    # Key that matches → score should be high enough for default threshold 0.6
+    hit = memory_lookup.find_duplicate(["ownership"], ["billing"])
+    assert hit is not None
+    assert hit.id == "own-billing"
+
+    # Key with no relation to the entry → score below threshold
+    no_hit = memory_lookup.find_duplicate(["ownership"], ["unrelated-xyz-qwerty"])
+    assert no_hit is None

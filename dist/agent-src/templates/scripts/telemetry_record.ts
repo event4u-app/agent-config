@@ -2,7 +2,7 @@
 /**
  * `./agent-config telemetry:record` — append one engagement event.
  *
- * TypeScript twin of `telemetry_record.py` (ADR-096). Byte-for-byte parity on
+ * TypeScript twin of `telemetry_record.py` (ADR-200). Byte-for-byte parity on
  * stdout / stderr / exit code and on the written JSONL line.
  *
  * Default-off: when `enabled: false` (default) the script exits 0 silently and

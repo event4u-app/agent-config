@@ -11,7 +11,7 @@
 //
 // Cost-touch: 10 prompts × 3 arms × claude-sonnet-4-5 (~$3/M in, ~$15/M out).
 //
-// TypeScript twin of `src/scripts/_lib/bench_telegraph.py` (ADR-096
+// TypeScript twin of `src/scripts/_lib/bench_telegraph.py` (ADR-200
 // py2ts Phase 2 / Wave 2a). Public API mirrored exactly — snake_case
 // names kept deliberately. Numeric helpers replicate Python's
 // round-half-to-even (banker's rounding) and the `statistics` module

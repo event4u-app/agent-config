@@ -2,7 +2,7 @@
 /**
  * bench:ab v2 — discipline-axis runner (Phases 2-4).
  *
- * TypeScript twin of `src/scripts/bench_ab_v2_run.py` (ADR-096 Python→TS
+ * TypeScript twin of `src/scripts/bench_ab_v2_run.py` (ADR-200 Python→TS
  * migration). Mirrors the CLI contract EXACTLY: flags (`--arms`, `--seeds`,
  * `--tasks`, `--limit`, `--model`, `--budget`, `--timeout`, `--mode`), exit
  * codes (0 ok / 1 unknown arm or missing CLI), byte-identical stdout/stderr,

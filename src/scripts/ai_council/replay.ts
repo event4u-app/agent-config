@@ -12,7 +12,7 @@
 // documented in `docs/contracts/ai-council-config.md` under
 // "Decision-replay schema".
 //
-// Parity notes (ADR-096):
+// Parity notes (ADR-200):
 // - `" ".join(text.split())` collapses any run of Unicode whitespace to a
 //   single space and drops leading/trailing whitespace — `_pyJoinSplit`
 //   mirrors Python `str.split()` (no-arg) + `" ".join(...)`.

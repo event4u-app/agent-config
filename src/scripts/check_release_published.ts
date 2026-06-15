@@ -2,7 +2,7 @@
 /**
  * Release-published drift gate.
  *
- * TypeScript twin of `src/scripts/check_release_published.py` (ADR-096,
+ * TypeScript twin of `src/scripts/check_release_published.py` (ADR-200,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--strict`,
  * `--check-npm`, `--require-main` flags, exit codes (0 pass/no-op,
  * 1 drift, 3 internal error), byte-identical messages, stdout/stderr split,

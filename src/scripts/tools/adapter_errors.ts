@@ -1,7 +1,7 @@
 /**
  * Shared error types for tool adapters.
  *
- * TypeScript twin of `src/scripts/tools/adapter_errors.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/tools/adapter_errors.py` (ADR-200 —
  * Python→TS migration, Phase 1 / tools adapter cluster). Public API mirrors
  * the Python module exactly (snake_case kept deliberately — fidelity over TS
  * idiom): the `AdapterErrorType` string enum, the `AdapterError` value shape

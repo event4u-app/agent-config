@@ -1,7 +1,7 @@
 /**
  * `HookRunner` — single emit point for hook callbacks.
  *
- * TypeScript twin of `work_engine/hooks/runner.py` (ADR-096 py2ts —
+ * TypeScript twin of `work_engine/hooks/runner.py` (ADR-200 py2ts —
  * work_engine.hooks subpackage). Implements the three-tier error contract
  * documented in `exceptions.ts`:
  *

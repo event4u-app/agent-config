@@ -2,7 +2,7 @@
 /**
  * Lint slash-command frontmatter for the `tier:` key.
  *
- * TypeScript twin of `src/scripts/lint_command_tiers.py` (ADR-096, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_command_tiers.py` (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same scan scope, file
  * ordering, finding messages, stdout/stderr split, and exit codes
  * (return-code bitwise-OR accumulation across the domain + per-root +

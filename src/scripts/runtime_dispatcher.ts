@@ -2,7 +2,7 @@
 /**
  * Runtime Dispatcher — resolves execution type and drives real handler execution.
  *
- * TypeScript twin of `src/scripts/runtime_dispatcher.py` (ADR-096). Mirrors the
+ * TypeScript twin of `src/scripts/runtime_dispatcher.py` (ADR-200). Mirrors the
  * Python public surface and CLI contract EXACTLY — `ExecutionRequest`,
  * `DispatchResult`, `dispatch`, `run`, the `resolve` / `run` subcommands, the
  * legacy flat `--skill` flag, `--format text|json`, `--root`, `--cwd`,

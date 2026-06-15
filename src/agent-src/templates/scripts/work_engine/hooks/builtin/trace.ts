@@ -1,7 +1,7 @@
 /**
  * `TraceHook` — emit one stderr line per hook event.
  *
- * TypeScript twin of `work_engine/hooks/builtin/trace.py` (ADR-096 py2ts —
+ * TypeScript twin of `work_engine/hooks/builtin/trace.py` (ADR-200 py2ts —
  * work_engine.hooks.builtin subpackage). Registers on every `HookEvent`;
  * output goes to a configurable stream (default `process.stderr`) so tests can
  * capture it.

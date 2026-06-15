@@ -2,7 +2,7 @@
 /**
  * Session-profile staleness notice — `session_start` hook.
  *
- * TypeScript twin of `src/scripts/profile_staleness_hook.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/profile_staleness_hook.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
@@ -18,7 +18,7 @@
  * notice is derived from the overlay file), emits at most one stderr line,
  * returns 0 on every path.
  *
- * NOTE (ADR-096): the Python original imports `scripts.config.session_profiles`,
+ * NOTE (ADR-200): the Python original imports `scripts.config.session_profiles`,
  * which is UNPORTED. The only entry point this hook touches is
  * `session_profiles.stale_notice(root)`, a fail-open read of the overlay file
  * (`agents/settings/.agent-settings.local.yml` → `runtime.active_packs`) plus a

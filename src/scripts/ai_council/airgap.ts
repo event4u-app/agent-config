@@ -1,7 +1,7 @@
 /**
  * Airgap detection for the AI Council installer / first-run (step-9 P11 · U1).
  *
- * TypeScript twin of `src/scripts/ai_council/airgap.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/airgap.py` (ADR-200 —
  * Python→TS migration, Phase 1; ai_council FOUNDATION wave). Public surface
  * mirrors the Python module exactly (snake_case kept deliberately):
  * `COUNCIL_PROBE_HOSTS`, `DEFAULT_TIMEOUT_S`, `AIRGAP_BANNER`,

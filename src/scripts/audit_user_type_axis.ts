@@ -2,7 +2,7 @@
 /**
  * Audit the user-type axis frontmatter coverage (step-9 Phase 4).
  *
- * TypeScript twin of `src/scripts/audit_user_type_axis.py` (ADR-096,
+ * TypeScript twin of `src/scripts/audit_user_type_axis.py` (ADR-200,
  * Phase 8 / Wave 8a). The CLI contract is mirrored EXACTLY — the single
  * `--quiet` flag, exit code (1 when orphans exist, else 0), the stdout
  * split, byte-identical stdout summary, AND byte-identical generated

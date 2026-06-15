@@ -3,7 +3,7 @@
  * MT19937) — the subset the prediction-pool simulators need for
  * byte-identical output.
  *
- * py2ts migration (ADR-096): the simulators `poisson_sim` and `pool_winsim`
+ * py2ts migration (ADR-200): the simulators `poisson_sim` and `pool_winsim`
  * call `random.Random(seed)` and consume ONLY `rng.random()` and (poisson_sim)
  * `rng.shuffle(...)`. Reproducing CPython's stream bit-for-bit is the only way
  * those twins emit identical simulation output. This is a NEW library — there

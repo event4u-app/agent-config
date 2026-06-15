@@ -2,7 +2,7 @@
 /**
  * Universal hook dispatcher — single entry point for every platform.
  *
- * TypeScript twin of `src/scripts/hooks/dispatch_hook.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/hooks/dispatch_hook.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks core). Mirrors the Python CLI
  * contract exactly: same manifest default, event vocabulary, envelope
  * shape, concern invocation, exit-code reduction, feedback-dir writes,
@@ -43,7 +43,7 @@ import {
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
 
 // Free-form JSON values flow through every helper here; a documented
-// alias keeps the surface honest without `any` (ADR-096 § strict TS).
+// alias keeps the surface honest without `any` (ADR-200 § strict TS).
 export type JsonValue =
   | string
   | number

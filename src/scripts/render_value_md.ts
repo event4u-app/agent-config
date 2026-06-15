@@ -2,7 +2,7 @@
 /**
  * Render `docs/value.md` from the latest `value-v1` JSON report.
  *
- * TypeScript twin of `src/scripts/render_value_md.py` (ADR-096, Phase 8
+ * TypeScript twin of `src/scripts/render_value_md.py` (ADR-200, Phase 8
  * / Wave 8b). The public surface and rendered output mirror the Python
  * original EXACTLY — same module-level path constants (exposed through a
  * mutable test seam so the pytest `monkeypatch.setattr` injection ports

@@ -1,7 +1,7 @@
 /**
  * `report` step — one-line delivery summary for the trivial path.
  *
- * TypeScript twin of `directives/ui_trivial/report.py` (ADR-096 py2ts).
+ * TypeScript twin of `directives/ui_trivial/report.py` (ADR-200 py2ts).
  * Public API names stay snake_case to mirror the Python module 1:1.
  *
  * The trivial summary captures what the operator needs: which file, how many

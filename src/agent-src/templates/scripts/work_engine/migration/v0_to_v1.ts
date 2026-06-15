@@ -1,9 +1,9 @@
 /**
  * Migrate a v0 `DeliveryState` JSON file to the v1 schema.
  *
- * TypeScript twin of `work_engine/migration/v0_to_v1.py` (ADR-096 py2ts
+ * TypeScript twin of `work_engine/migration/v0_to_v1.py` (ADR-200 py2ts
  * Phase 1 — work_engine TOP/integration layer). Public API names stay
- * snake_case to mirror the Python module 1:1 (per ADR-096 — Python style is
+ * snake_case to mirror the Python module 1:1 (per ADR-200 — Python style is
  * part of the contract).
  *
  * The v0 era used `.implement-ticket-state.json` and stored the ticket
@@ -219,7 +219,7 @@ export function migrate_file(
  * Exits `0` on success, `2` on any {@link SchemaError} so the
  * invoking shell can branch on the failure category. Returns the exit
  * code (the caller sets `process.exitCode`, never `process.exit`, per
- * ADR-096).
+ * ADR-200).
  */
 export function main(argv: string[] | null = null): number {
     const args = _parse_args(argv ?? process.argv.slice(2));
@@ -251,7 +251,7 @@ export function main(argv: string[] | null = null): number {
 // The Python source uses `argparse` with a single optional positional
 // (`source`, default `.implement-ticket-state.json`) plus `--destination`
 // and `--no-backup`. argparse `--help`/error prose is not a parity surface
-// (ADR-096); the parser mirrors argparse's runtime behaviour: long-option
+// (ADR-200); the parser mirrors argparse's runtime behaviour: long-option
 // prefix abbreviation, `--flag=value` / `--flag value` forms, the store_true
 // `--no-backup`, `-h`/`--help` exit-0, exit-2 on every error path.
 
@@ -278,7 +278,7 @@ const _HELP_FLAGS = ['--help'];
 
 function _usage(): string {
     // Compact one-line usage marker; the exact wrapping/prose is not a parity
-    // surface (ADR-096 — argparse usage/help text is not byte-compared).
+    // surface (ADR-200 — argparse usage/help text is not byte-compared).
     return `usage: ${_PROG} [-h] [--destination DESTINATION] [--no-backup] [source]`;
 }
 

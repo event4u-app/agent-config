@@ -259,6 +259,91 @@ describe('memory_lookup.ts — retrieve()', () => {
 });
 
 // =========================================================================
+// Supersession / staleness — 1:1 port of the Phase-1 additions in
+// test_memory_lookup.py (test_superseded_entry_excluded_from_retrieve,
+// test_stale_entry_excluded_from_retrieve_appears_in_skipped,
+// test_find_duplicate_returns_match_above_threshold_none_below).
+// =========================================================================
+
+describe('memory_lookup.ts — supersession & staleness', () => {
+    function writeOwnership(entries: Record<string, unknown>[]): void {
+        const body = entries
+            .map((e) =>
+                Object.entries(e)
+                    .map(([k, v], i) => `${i === 0 ? '  - ' : '    '}${k}: ${typeof v === 'string' ? `"${v}"` : String(v)}`)
+                    .join('\n'),
+            )
+            .join('\n');
+        write(join(tmp, 'agents/memory/ownership.yml'), `version: 1\nentries:\n${body}\n`);
+    }
+
+    it('superseded entry excluded from retrieve()', () => {
+        chdirInto(tmp);
+        writeOwnership([
+            { id: 'own-active', status: 'active', path: 'app/Http/Controllers/Billing/**', owner: 'team-payments' },
+            { id: 'own-superseded', status: 'superseded', path: 'app/Http/Controllers/Billing/**', owner: 'team-payments' },
+        ]);
+        const hits = ml.retrieve(['ownership'], ['billing']) as InstanceType<typeof Hit>[];
+        const hitIds = hits.map((h) => h.id);
+        expect(hitIds).toContain('own-active');
+        expect(hitIds).not.toContain('own-superseded');
+    });
+
+    it('stale entry excluded from retrieve() but present in retrieve_with_meta().skipped', () => {
+        chdirInto(tmp);
+        const today = new Date(Date.UTC(2026, 5, 15));
+        // Entry validated 200 days ago, review_after_days=90 → STALE.
+        const stale = new Date(today.getTime() - 200 * 86_400_000);
+        const iso = (d: Date): string =>
+            `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+        writeOwnership([
+            {
+                id: 'own-stale',
+                status: 'active',
+                path: 'app/Http/Controllers/Billing/**',
+                owner: 'team-payments',
+                last_validated: iso(stale),
+                review_after_days: 90,
+            },
+            {
+                id: 'own-fresh',
+                status: 'active',
+                path: 'app/Http/Controllers/Billing/**',
+                owner: 'team-payments',
+                last_validated: iso(today),
+                review_after_days: 90,
+            },
+        ]);
+        // retrieve() (real today, which is ≥ 2026-06-15 → the 200-day-old entry stays stale)
+        const hits = ml.retrieve(['ownership'], ['billing']) as InstanceType<typeof Hit>[];
+        const hitIds = hits.map((h) => h.id);
+        expect(hitIds).not.toContain('own-stale');
+        expect(hitIds).toContain('own-fresh');
+
+        // retrieve_with_meta() lists the stale entry in skipped with the injected today.
+        const result = ml.retrieve_with_meta(['ownership'], ['billing'], 5, today);
+        const skippedIds = new Set(result.skipped.map((s) => s.id));
+        const skippedReasons = Object.fromEntries(result.skipped.map((s) => [s.id, s.reason]));
+        expect(skippedIds.has('own-stale')).toBe(true);
+        expect(skippedReasons['own-stale']).toBe('stale');
+        expect(result.results.map((h) => h.id)).toContain('own-fresh');
+    });
+
+    it('find_duplicate returns a match at/above threshold, null below', () => {
+        chdirInto(tmp);
+        writeOwnership([
+            { id: 'own-billing', status: 'active', path: 'app/Http/Controllers/Billing/**', owner: 'team-payments' },
+        ]);
+        const hit = ml.find_duplicate(['ownership'], ['billing']);
+        expect(hit).not.toBeNull();
+        expect(hit?.id).toBe('own-billing');
+
+        const noHit = ml.find_duplicate(['ownership'], ['unrelated-xyz-qwerty']);
+        expect(noHit).toBeNull();
+    });
+});
+
+// =========================================================================
 // golden parity vs python3
 // =========================================================================
 
@@ -378,6 +463,82 @@ describe.skipIf(!HAVE_PYTHON)('memory_lookup — golden parity', () => {
         );
         const pyParsed = (JSON.parse(py) as Array<Record<string, unknown>>).map((d) => _normalizeForCompare(d));
         expect(JSON.parse(tsJson)).toEqual(pyParsed);
+    });
+
+    // retrieve_with_meta() — differential the {results, skipped} envelope
+    // (staleness + supersession) against the python3 driver with a fixed
+    // _today so the stale-age math is deterministic.
+    function seedSupersessionTree(root: string): void {
+        write(
+            join(root, 'agents/memory/ownership.yml'),
+            `
+        version: 1
+        entries:
+          - id: own-active
+            status: active
+            path: "app/Http/Controllers/Billing/**"
+            owner: team-payments
+          - id: own-superseded
+            status: superseded
+            path: "app/Http/Controllers/Billing/**"
+            owner: team-payments
+          - id: own-stale
+            status: active
+            path: "app/Http/Controllers/Billing/**"
+            owner: team-payments
+            last_validated: 2025-01-01
+            review_after_days: 90
+    `,
+        );
+    }
+
+    function pyRetrieveWithMetaJson(types: string[], keys: string[], limit: number, isoToday: string): string {
+        const driver = [
+            'import sys, json, datetime',
+            'sys.path.insert(0, sys.argv[1])',
+            'import memory_lookup as m',
+            'types = json.loads(sys.argv[2]); keys = json.loads(sys.argv[3]); limit = int(sys.argv[4])',
+            'today = datetime.date.fromisoformat(sys.argv[5])',
+            'r = m.retrieve_with_meta(types, keys, limit, _today=today)',
+            'out = {"results": [h.as_dict() for h in r["results"]], "skipped": r["skipped"]}',
+            'print(json.dumps(out, sort_keys=True, default=str))',
+        ].join('; ');
+        const r = spawnSync(
+            'python3',
+            [
+                '-c',
+                driver,
+                join(REPO_ROOT, 'src', 'scripts'),
+                JSON.stringify(types),
+                JSON.stringify(keys),
+                String(limit),
+                isoToday,
+            ],
+            { cwd: goldenTmp, encoding: 'utf8' },
+        );
+        return r.stdout.trim();
+    }
+
+    it('retrieve_with_meta() {results, skipped} parity via python driver', () => {
+        seedSupersessionTree(goldenTmp);
+        const isoToday = '2026-06-15';
+        const py = pyRetrieveWithMetaJson(['ownership'], ['billing'], 5, isoToday);
+
+        const prev = process.cwd();
+        process.chdir(goldenTmp);
+        ml._setMemoryRoot(join('agents', 'memory'));
+        ml._setIntakeRoot(join('agents', 'memory', 'intake'));
+        ml._setKnowledgeRoot(join('agents', 'memory', 'knowledge'));
+        const today = new Date(Date.UTC(2026, 5, 15));
+        const result = ml.retrieve_with_meta(['ownership'], ['billing'], 5, today);
+        process.chdir(prev);
+
+        const tsNormalized = {
+            results: result.results.map((h) => _normalizeForCompare(h.as_dict())),
+            skipped: result.skipped.map((s) => _normalizeForCompare(s)),
+        };
+        const pyParsed = _normalizeForCompare(JSON.parse(py));
+        expect(tsNormalized).toEqual(pyParsed);
     });
 });
 

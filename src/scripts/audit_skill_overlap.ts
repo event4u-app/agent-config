@@ -2,7 +2,7 @@
 /**
  * Skill-family content-overlap analysis (6.0.0-C Phase 4 Step 8).
  *
- * TypeScript twin of `src/scripts/audit_skill_overlap.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/audit_skill_overlap.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the Python CLI
  * contract EXACTLY — the `--threshold` / `--quiet` flags, exit codes
  * (0 ok / 3 no skills), the stdout/stderr split, byte-identical stdout

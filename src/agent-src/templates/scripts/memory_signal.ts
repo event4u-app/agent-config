@@ -3,7 +3,7 @@
  * Write-side helper: drop an engineering-memory signal.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_signal.py`
- * (ADR-096, consumer-template memory). The public API and CLI contract
+ * (ADR-200, consumer-template memory). The public API and CLI contract
  * mirror the Python original EXACTLY — same exported names (snake_case kept
  * deliberately), same exit codes, stdout/stderr split, byte-identical
  * messages, same append-only JSONL shape and rate-limit behaviour. No
@@ -357,7 +357,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         } else if (a === '--force') {
             args.force = true;
         } else if (a === '-h' || a === '--help') {
-            // --help is not a parity contract (per ADR-096); emit the usage block.
+            // --help is not a parity contract (per ADR-200); emit the usage block.
             process.stdout.write(_USAGE);
             process.exit(0);
         } else {

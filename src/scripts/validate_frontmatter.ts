@@ -2,7 +2,7 @@
 /**
  * validate_frontmatter.ts — frontmatter validator (Draft-07 subset).
  *
- * TypeScript twin of `src/scripts/validate_frontmatter.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/validate_frontmatter.py` (ADR-200 —
  * Python→TS migration, Phase 4 / Wave 4a). The public surface, CLI flags,
  * exit codes, stdout/stderr split, and finding-message strings mirror the
  * Python original byte-for-byte. The Python original is deleted in the same

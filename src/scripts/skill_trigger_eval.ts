@@ -2,7 +2,7 @@
 /**
  * Skill trigger evaluation runner.
  *
- * TypeScript twin of `src/scripts/skill_trigger_eval.py` (ADR-096,
+ * TypeScript twin of `src/scripts/skill_trigger_eval.py` (ADR-200,
  * Phase 8 / Wave 8b). The public surface, CLI contract, exit codes,
  * stdout/stderr split, byte-for-byte messages, the on-disk key gate
  * (0600 + `sk-ant-` prefix), the controlling-terminal confirmation gate,

@@ -2,7 +2,7 @@
 /**
  * Measure presence of the eight Phase-3.1 judge patterns across all skills.
  *
- * TypeScript twin of `src/scripts/measure_patterns.py` (ADR-096 — Python→TS
+ * TypeScript twin of `src/scripts/measure_patterns.py` (ADR-200 — Python→TS
  * migration, Phase 8 / Wave 8c). Mirrors the CLI contract EXACTLY: flags
  * (`--json`, `--tier`, `--diff-baseline`), exit codes (0 / 3 when the skills
  * dir is missing), byte-identical stdout/stderr. No behaviour changes.

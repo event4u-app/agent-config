@@ -1,6 +1,6 @@
 // P1.1 — hidden-Unicode / smuggling-codepoint linter (road-to-security-pillar.md).
 //
-// TypeScript twin of `src/scripts/lint_hidden_unicode.py` (ADR-096 —
+// TypeScript twin of `src/scripts/lint_hidden_unicode.py` (ADR-200 —
 // Python→TS migration). Behaviour mirrors the Python module byte-for-byte.
 //
 // Detects the invisible-character class used by the "rules-file backdoor"

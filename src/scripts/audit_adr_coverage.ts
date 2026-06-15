@@ -3,7 +3,7 @@
  * Audit per-area ADR coverage against docs/contracts/ and the canonical
  * AREAS inventory. Contract: docs/contracts/adr-layout.md.
  *
- * TypeScript twin of `src/scripts/audit_adr_coverage.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/audit_adr_coverage.py` (ADR-200, Phase 8 /
  * Wave 8a). The CLI contract is mirrored EXACTLY — the mutually exclusive
  * `--check` / `--regen-area-readme AREA` group (default `--report`), exit
  * codes, the stdout/stderr split, byte-identical messages, AND byte-identical

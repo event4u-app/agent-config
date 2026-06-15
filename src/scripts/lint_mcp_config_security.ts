@@ -1,6 +1,6 @@
 // P1.3 — MCP-config security linter (road-to-security-pillar.md). OWASP ASI04.
 //
-// TypeScript twin of `src/scripts/lint_mcp_config_security.py` (ADR-096 —
+// TypeScript twin of `src/scripts/lint_mcp_config_security.py` (ADR-200 —
 // Python→TS migration). Behaviour mirrors the Python module byte-for-byte.
 //
 // Scans shipped MCP configuration — named config files (`*.mcp.json`,

@@ -1,7 +1,7 @@
 /**
  * `audit` step — mandatory pre-step for the UI directive set.
  *
- * TypeScript twin of `directives/ui/audit.py` (ADR-096 py2ts). Public API
+ * TypeScript twin of `directives/ui/audit.py` (ADR-200 py2ts). Public API
  * names stay snake_case to mirror the Python module 1:1.
  *
  * Routes on `state.ui_audit` shape: first-pass delegation, greenfield decision,

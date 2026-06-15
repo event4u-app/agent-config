@@ -2,7 +2,7 @@
  * `ChatHistoryHaltAppendHook` — capture halt surfaces in the log.
  *
  * TypeScript twin of `work_engine/hooks/builtin/chat_history_halt_append.py`
- * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Fires on `on_halt`.
+ * (ADR-200 py2ts — work_engine.hooks.builtin subpackage). Fires on `on_halt`.
  * Records a `--type decision` entry with the step name and any pending
  * questions so a fresh chat can resume from the persisted log alone.
  */

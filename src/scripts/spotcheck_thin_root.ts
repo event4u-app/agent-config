@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /** Phase 6.6 platform spot-check via AI council.
  *
- * TypeScript twin of `src/scripts/spotcheck_thin_root.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/spotcheck_thin_root.py` (ADR-200, Phase 8 /
  * Wave 8h). Mirrors the Python contract — no flags, exit 0, the two
  * `Running … / ✅  Wrote …` stderr lines, and byte-identical written
  * `thin-root-platform-spotcheck.md` / `.json`. No behaviour changes.

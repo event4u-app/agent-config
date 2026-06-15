@@ -2,7 +2,7 @@
 /**
  * Render `docs/benchmark.md` from the latest paired A/B bench reports.
  *
- * TypeScript twin of `src/scripts/render_benchmark_md.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/render_benchmark_md.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--quiet` flag, exit code,
  * the stdout/stderr split, byte-identical stdout AND byte-identical rendered
  * `docs/benchmark.md`. The renderer is deterministic — it does not run any

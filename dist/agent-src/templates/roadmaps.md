@@ -78,6 +78,26 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     dashboard surfaces roadmap, readers honor body convention.
     Authoring contract: [`roadmap-writing § 7`](../skills/roadmap-writing/SKILL.md);
     spawn procedure: [`roadmap-management § Spawn follow-up`](../skills/roadmap-management/SKILL.md).
+18. **Source-derived roadmaps carry a gap-table + provenance; internally
+    originated roadmaps carry neither.** Fires **only** when a roadmap
+    originates from an external input (suggestion, competitive/capability
+    harvest, external LLM ideation thread) or adopts external capabilities
+    into the suite. Does **not** fire for ordinary internally-originated
+    roadmaps — those add no Provenance block, no gap-table ritual. When it
+    fires:
+    - **(a) Gap-table before drafting.** Audit each proposed item against
+      the existing skill / command / rule surface; keep only verified gaps
+      — `KEEP` (genuine gap) / `FOLD` (into existing artefact) / `CUT`
+      (already covered). Plan integrates, doesn't dump.
+    - **(b) `## Provenance` block** — source by a **neutral descriptor**
+      (never the raw competitor / tool name, per
+      [`source-confidentiality`](../rules/source-confidentiality.md));
+      retain the real link as an `ENC1:` token via
+      `src/scripts/_lib/link_crypto.py encrypt --value <url>`.
+    - **(c) Council convergence inlined** with date + members — never a
+      session filepath ([`no-roadmap-references`](../rules/no-roadmap-references.md)).
+    Authoring contract:
+    [`roadmap-writing § 8`](../skills/roadmap-writing/SKILL.md).
 
 ---
 
@@ -167,6 +187,13 @@ complexity: lightweight
 ## Notes
 
 {Optional: edge cases, decisions, links to related docs.}
+
+<!-- ## Provenance — INCLUDE ONLY for source-derived / harvest / capability-adoption
+     roadmaps (rule 18). OMIT entirely for internally-originated roadmaps —
+     do NOT ship an empty Provenance section.
+- Source: <neutral descriptor> (anonymized per source-confidentiality);
+  link via `src/scripts/_lib/link_crypto.py decrypt`: ENC1:<token>
+- Council: <members>, <date>, <depth>; convergence inlined above. -->
 ```
 
 ---

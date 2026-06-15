@@ -2,7 +2,7 @@
 /**
  * Lint structural reachability of media governance policies.
  *
- * TypeScript twin of `src/scripts/lint_media_policy_linkage.py` (ADR-096,
+ * TypeScript twin of `src/scripts/lint_media_policy_linkage.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract EXACTLY — `--quiet`
  * flag read from argv at module load, scan roots + policy ordering (policies
  * sorted; scan files via rglob), finding messages, output channel (all on

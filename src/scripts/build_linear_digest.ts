@@ -2,7 +2,7 @@
 /**
  * build_linear_digest.ts — build the Linear AI rules digest.
  *
- * TypeScript twin of `src/scripts/build_linear_digest.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/build_linear_digest.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8b). The CLI contract is mirrored
  * EXACTLY — the `--max-bytes` / `--out-dir` / `--strict-missing` flags,
  * exit codes (0 ok · 2 over-budget · 3 missing rule file · 4

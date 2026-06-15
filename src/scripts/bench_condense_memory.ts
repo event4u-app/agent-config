@@ -2,7 +2,7 @@
 /**
  * Offline bench for input-side memory condensation (Phase 2 / Step 11).
  *
- * TypeScript twin of `src/scripts/bench_condense_memory.py` (ADR-096,
+ * TypeScript twin of `src/scripts/bench_condense_memory.py` (ADR-200,
  * Phase 7 / dev-side memory). The public API and CLI contract mirror the
  * Python original EXACTLY — same exit code, stdout/stderr, byte-identical
  * generated reports (`internal/bench/reports/telegraph-v2.{json,md}`,

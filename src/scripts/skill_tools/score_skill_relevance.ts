@@ -3,7 +3,7 @@
  * Block D · D2 — score_skill_relevance.
  *
  * TypeScript twin of `src/scripts/skill_tools/score_skill_relevance.py`
- * (ADR-096, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
+ * (ADR-200, Phase 8 Wave 8h). Mirrors the Python CLI contract EXACTLY —
  * flags (`--task`, `--skills-dir`, `--top`, `--json`, `--sample`), exit
  * codes (0 / 2), stdout/stderr split, byte-identical human table AND
  * byte-identical JSON (`json.dump(..., indent=2)`, ensure_ascii default).

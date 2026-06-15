@@ -3,7 +3,7 @@
  * File-backed memory status (no external backend).
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_status.py`
- * (ADR-096, consumer-template memory; byte-identical to the dev-side
+ * (ADR-200, consumer-template memory; byte-identical to the dev-side
  * `src/scripts/memory_status.py`). The public API and CLI contract mirror
  * the Python original EXACTLY — same exported names (snake_case kept
  * deliberately), same exit codes, stdout/stderr split, byte-identical
@@ -151,7 +151,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         } else if (a === '--health') {
             args.health = true;
         } else if (a === '-h' || a === '--help') {
-            // --help is not a parity contract (per ADR-096); emit the usage block.
+            // --help is not a parity contract (per ADR-200); emit the usage block.
             process.stdout.write(_USAGE);
             throw new _ExitError(0);
         } else {

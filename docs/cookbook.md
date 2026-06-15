@@ -105,6 +105,13 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 - **Commands:** `/estimate-ticket`
 - **Skills:** `estimate-ticket`
 
+### Run a blame-free post-mortem that teaches the next change
+
+*An incident, near-miss, or risky plan needs analysis that closes the learning loop.*
+
+- **Commands:** `/analyze`
+- **Skills:** `blameless-post-mortem`, `root-cause-frameworks`
+
 ## The four work flows
 
 Broader than a single recipe — the end-to-end shapes most work follows.

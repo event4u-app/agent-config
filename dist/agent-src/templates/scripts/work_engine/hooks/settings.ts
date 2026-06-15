@@ -1,7 +1,7 @@
 /**
  * Read `hooks.*` from `.agent-settings.yml` into {@link HookSettings}.
  *
- * TypeScript twin of `work_engine/hooks/settings.py` (ADR-096 py2ts —
+ * TypeScript twin of `work_engine/hooks/settings.py` (ADR-200 py2ts —
  * work_engine.hooks subpackage). Mirror of the chat-history settings pattern:
  *
  * - The YAML read goes through `work_engine/_lib/agent_settings.load_agent_settings`,

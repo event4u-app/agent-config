@@ -2,7 +2,7 @@
 /**
  * File-first memory retrieval.
  *
- * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-096). The public
+ * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-200). The public
  * API and CLI contract mirror the Python original EXACTLY — same exported
  * names (snake_case kept deliberately, especially `retrieve(...)` whose
  * signature/return shape is cited by rules), same exit codes, stdout/stderr
@@ -98,6 +98,14 @@ export const KNOWLEDGE_TYPE = 'knowledge';
 // projected as `source="cross-repo"` Hits, scored below curated/knowledge.
 // Opt-in by caller + lazy import → existing call sites unaffected.
 export const CROSS_REPO_TYPE = 'cross-repo';
+
+const _CURATED_STATUS_EXCLUDE: ReadonlySet<string> = new Set(['deprecated', 'archived', 'superseded']);
+
+/** Mirror Python `entry.get("status") in _CURATED_STATUS_EXCLUDE`. */
+function _statusExcluded(entry: Record<string, unknown>): boolean {
+    const status = entry['status'];
+    return typeof status === 'string' && _CURATED_STATUS_EXCLUDE.has(status);
+}
 
 export type HitSource = 'curated' | 'intake' | 'knowledge' | 'cross-repo';
 
@@ -244,8 +252,57 @@ function _pad2(v: string): string {
  * <hash>.yml` — one entry per file) and the single-file layout
  * (`agents/memory/<type>.yml` or `<type>/entries.yml` with an `entries:`
  * list), so consumers can adopt either.
+ *
+ * Entries with status in `_CURATED_STATUS_EXCLUDE` are silently skipped —
+ * they are yielded only by `_iter_curated_entries_all` (used by
+ * `retrieve_with_meta` to populate the `skipped` list).
  */
 function* _iter_curated_entries(mtype: string): Generator<[string, Record<string, unknown>]> {
+    const type_dir = path.join(MEMORY_ROOT, mtype);
+    const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
+    if (_isFile(single_file)) {
+        const data = _load_yaml(single_file);
+        const entries = _isPlainObject(data) ? data['entries'] : null;
+        for (const e of Array.isArray(entries) ? entries : []) {
+            if (_isPlainObject(e)) {
+                if (_statusExcluded(e)) {
+                    continue;
+                }
+                yield [single_file, e];
+            }
+        }
+    }
+    if (_isDir(type_dir)) {
+        for (const yml of _rglobYmlSorted(type_dir)) {
+            const dataRaw = _load_yaml(yml);
+            const data = dataRaw == null ? {} : dataRaw;
+            const entries = _isPlainObject(data) ? data['entries'] : undefined;
+            if (Array.isArray(entries)) {
+                for (const e of entries) {
+                    if (_isPlainObject(e)) {
+                        if (_statusExcluded(e)) {
+                            continue;
+                        }
+                        yield [yml, e];
+                    }
+                }
+            } else if (_isPlainObject(data) && data['id']) {
+                // Flat, one-entry-per-file layout (content-addressed).
+                if (_statusExcluded(data)) {
+                    continue;
+                }
+                yield [yml, data];
+            }
+        }
+    }
+}
+
+/**
+ * Like `_iter_curated_entries` but yields ALL entries, including
+ * deprecated/archived/superseded ones. Used by `retrieve_with_meta` to build
+ * the `skipped` list.
+ */
+function* _iter_curated_entries_all(mtype: string): Generator<[string, Record<string, unknown>]> {
     const type_dir = path.join(MEMORY_ROOT, mtype);
     const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
     if (_isFile(single_file)) {
@@ -269,7 +326,6 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
                     }
                 }
             } else if (_isPlainObject(data) && data['id']) {
-                // Flat, one-entry-per-file layout (content-addressed).
                 yield [yml, data];
             }
         }
@@ -444,16 +500,88 @@ function _cross_repo_hits(keys: string[], limit: number): Hit[] {
     return [];
 }
 
+/** A skipped-entry record, mirroring the Python `skipped` dict shape. */
+export interface SkippedEntry {
+    id: string;
+    type: string;
+    reason: string;
+    details: string;
+}
+
 /**
- * Return up to `limit` hits across the requested types, highest score first.
- *
- * Repo entries (curated + intake) are preferred on ties — they are
- * hand-reviewed or session-captured against the repo itself. Knowledge
- * and cross-repo hits are discounted so the project's own truth wins on
- * equal relevance.
+ * Mirror `datetime.date.today()` as a UTC-midnight Date. Used as the default
+ * `_today` so the day-difference math in `_isStale` is timezone-stable.
  */
-export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
+function _today(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+/** Parse a `YYYY-MM-DD` string the way `datetime.date.fromisoformat` does. */
+function _parseIsoDate(s: string): Date | null {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) {
+        return null;
+    }
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) {
+        return null;
+    }
+    const date = new Date(Date.UTC(y, mo - 1, d));
+    // Reject overflow (e.g. 2026-02-31 → March), matching fromisoformat's strictness.
+    if (date.getUTCFullYear() !== y || date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d) {
+        return null;
+    }
+    return date;
+}
+
+/** Recover the `str(lv)` form Python sees for a curated `last_validated`. */
+function _pyStrDateLike(lv: unknown): string {
+    if (lv instanceof PyTimestamp) {
+        return lv.pyStr;
+    }
+    return _pyStr(lv);
+}
+
+/**
+ * Return true when the entry's `last_validated` age exceeds `review_after_days`.
+ *
+ * Both fields are optional; if either is absent or malformed the entry is
+ * treated as **not stale** (conservative — unknown freshness != stale).
+ * Mirrors Python `_is_stale`: `str(lv)` → `date.fromisoformat` → day diff.
+ */
+function _isStale(entry: Record<string, unknown>, today: Date): boolean {
+    const lv = entry['last_validated'];
+    const rad = entry['review_after_days'];
+    // Python: `not lv or not isinstance(rad, int)`. PyYAML ints land as JS
+    // numbers; booleans are int in Python but excluded here as the common path.
+    if (!lv || typeof rad !== 'number' || !Number.isInteger(rad)) {
+        return false;
+    }
+    const validated = _parseIsoDate(_pyStrDateLike(lv));
+    if (validated === null) {
+        return false;
+    }
+    const days = Math.round((today.getTime() - validated.getTime()) / 86_400_000);
+    return days > rad;
+}
+
+/**
+ * Core retrieval loop shared by {@link retrieve} and {@link retrieve_with_meta}.
+ *
+ * Returns `[hits, skipped]` where `hits` is the ranked result list and
+ * `skipped` lists curated entries excluded due to staleness or supersession.
+ * Status-excluded entries are filtered upstream in `_iter_curated_entries`;
+ * all entries (including deprecated/superseded ones) are scanned via
+ * `_iter_curated_entries_all` so they can appear in `skipped`, but only
+ * active, non-stale entries flow through `_iter_curated_entries` in the
+ * normal path.
+ */
+function _retrieve_internal(types: string[], keys: string[], limit: number, today: Date): [Hit[], SkippedEntry[]] {
     const repo_hits: Hit[] = [];
+    const skipped: SkippedEntry[] = [];
     for (const mtype of types) {
         if (mtype === KNOWLEDGE_TYPE) {
             for (const [p, entry] of _iter_knowledge_entries()) {
@@ -487,8 +615,35 @@ export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
         if (!CURATED_TYPES.has(mtype)) {
             continue;
         }
+        // Curated entries: status filtering happens inside _iter_curated_entries.
+        // We additionally filter stale entries here and track them in skipped.
         for (const [p, entry] of _iter_curated_entries(mtype)) {
+            void p;
+            if (_isStale(entry, today)) {
+                const lv = 'last_validated' in entry ? _pyStrDateLike(entry['last_validated']) : 'unknown';
+                const rad = 'review_after_days' in entry ? _pyStr(entry['review_after_days']) : '?';
+                skipped.push({
+                    id: String(entry['id'] ?? ''),
+                    type: mtype,
+                    reason: 'stale',
+                    details: `last_validated=${lv}, review_after_days=${rad}`,
+                });
+                continue;
+            }
             repo_hits.push(new Hit(String(entry['id'] ?? ''), mtype, 'curated', String(p), _score(entry, keys), entry));
+        }
+        // Capture superseded/deprecated entries in skipped (for retrieve_with_meta).
+        for (const [p, entry] of _iter_curated_entries_all(mtype)) {
+            void p;
+            const status = 'status' in entry && entry['status'] !== undefined ? entry['status'] : 'active';
+            if (typeof status === 'string' && _CURATED_STATUS_EXCLUDE.has(status)) {
+                skipped.push({
+                    id: String(entry['id'] ?? ''),
+                    type: mtype,
+                    reason: 'superseded',
+                    details: `status=${_pyStr(status)}`,
+                });
+            }
         }
         for (const [p, entry] of _iter_intake_entries(mtype)) {
             repo_hits.push(
@@ -506,7 +661,65 @@ export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
 
     _sortMerged(repo_hits);
     const positives = repo_hits.filter((h) => h.score > 0);
-    return (positives.length > 0 ? positives : repo_hits).slice(0, limit);
+    const hits = (positives.length > 0 ? positives : repo_hits).slice(0, limit);
+    return [hits, skipped];
+}
+
+/**
+ * Return up to `limit` hits across the requested types, highest score first.
+ *
+ * Repo entries (curated + intake) are preferred on ties — they are
+ * hand-reviewed or session-captured against the repo itself. Knowledge
+ * and cross-repo hits are discounted so the project's own truth wins on
+ * equal relevance.
+ *
+ * Curated entries with status `deprecated`, `archived`, or `superseded` are
+ * excluded. Stale entries (age > `review_after_days`) are also excluded. Use
+ * {@link retrieve_with_meta} to see skipped entries.
+ */
+export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
+    const [hits] = _retrieve_internal(types, keys, limit, _today());
+    return hits;
+}
+
+/**
+ * Like {@link retrieve} but returns a dict with `results` and `skipped`.
+ *
+ * `skipped` lists curated entries excluded due to staleness or supersession,
+ * each with `id`, `type`, `reason` (`"stale"` | `"superseded"`), and `details`.
+ * Callers should surface stale entries to the user — silently ignoring them
+ * violates the `analysis-memory-loop` contract (§ 4).
+ *
+ * `today` may be injected for deterministic testing (the Python keyword arg
+ * is `_today`; a JS `Date` at UTC midnight or `null` for the real today).
+ */
+export function retrieve_with_meta(
+    types: string[],
+    keys: string[],
+    limit = 5,
+    today: Date | null = null,
+): { results: Hit[]; skipped: SkippedEntry[] } {
+    const day = today ?? _today();
+    const [hits, skipped] = _retrieve_internal(types, keys, limit, day);
+    return { results: hits, skipped };
+}
+
+/**
+ * Return the top hit if its score meets `threshold`, else `null`.
+ *
+ * Used by analysis skills for the dedup pre-check described in
+ * `analysis-memory-loop` § 2. A return value indicates an existing entry that
+ * should be reinforced or superseded rather than creating a new one.
+ *
+ * `today` may be injected for deterministic testing.
+ */
+export function find_duplicate(types: string[], keys: string[], threshold = 0.6, today: Date | null = null): Hit | null {
+    const result = retrieve_with_meta(types, keys, 1, today);
+    const hits = result.results;
+    if (hits.length > 0 && (hits[0] as Hit).score >= threshold) {
+        return hits[0] as Hit;
+    }
+    return null;
 }
 
 /**

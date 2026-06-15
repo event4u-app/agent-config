@@ -1,6 +1,6 @@
 // P1.4 — dangerous-frontmatter linter (road-to-security-pillar.md).
 //
-// TypeScript twin of `src/scripts/lint_skill_frontmatter_safety.py` (ADR-096 —
+// TypeScript twin of `src/scripts/lint_skill_frontmatter_safety.py` (ADR-200 —
 // Python→TS migration). Behaviour mirrors the Python module byte-for-byte.
 //
 // Enforces the execution-safety contract from the `runtime-safety` rule at the

@@ -1,7 +1,7 @@
 /**
  * Engagement report renderer (Phase 4 Step 2).
  *
- * TypeScript twin of `report_renderer.py` (ADR-096). Byte-for-byte parity on
+ * TypeScript twin of `report_renderer.py` (ADR-200). Byte-for-byte parity on
  * both formats: same quartile bucketing, same markdown table, same JSON
  * (`json.dumps(sort_keys=True, indent=2)`), same redaction re-validation,
  * same Python float / fixed-decimal rendering (round-half-to-even).

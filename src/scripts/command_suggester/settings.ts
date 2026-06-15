@@ -2,7 +2,7 @@
  * Read `commands.suggestion.*` from `.agent-settings.yml` into `Settings`.
  *
  * TypeScript twin of `src/scripts/command_suggester/settings.py`
- * (ADR-096 py2ts). Mirror of the chat-history pattern:
+ * (ADR-200 py2ts). Mirror of the chat-history pattern:
  *
  *  - Default-permissive: a missing file or missing section returns
  *    `Settings()` defaults (suggestion layer enabled). Only an explicit

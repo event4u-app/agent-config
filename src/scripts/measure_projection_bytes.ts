@@ -2,7 +2,7 @@
 /**
  * Measure per-tool projection bytes.
  *
- * TypeScript twin of `src/scripts/measure_projection_bytes.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/measure_projection_bytes.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract EXACTLY:
  * flags (`--json`, `--regenerate`), exit codes (0 / 2 when `task` is missing
  * for --regenerate), byte-identical stdout/stderr. No behaviour changes.

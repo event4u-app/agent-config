@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **540 public artefacts** shipped by
+Consumer-facing catalog of all **550 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (230)
+## Skills (234)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -30,6 +30,7 @@ are excluded.
 | skill | [`authz-review`](../dist/agent-src/skills/authz-review/SKILL.md) |  | Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows. |
 | skill | [`aws-infrastructure`](../dist/agent-src/skills/aws-infrastructure/SKILL.md) |  | Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS. |
 | skill | [`blade-ui`](../dist/agent-src/skills/blade-ui/SKILL.md) |  | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic. |
+| skill | [`blameless-post-mortem`](../dist/agent-src/skills/blameless-post-mortem/SKILL.md) |  | Use after an incident or outage is resolved — blame-free facilitation, root cause, corrective actions, memory write-back — even for a near-miss. Consumes the incident-commander skeleton. |
 | skill | [`blast-radius-analyzer`](../dist/agent-src/skills/blast-radius-analyzer/SKILL.md) |  | Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency. |
 | skill | [`bug-analyzer`](../dist/agent-src/skills/bug-analyzer/SKILL.md) |  | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
 | skill | [`build-buy-partner`](../dist/agent-src/skills/build-buy-partner/SKILL.md) |  | Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'. |
@@ -63,6 +64,7 @@ are excluded.
 | skill | [`dcf-modeling`](../dist/agent-src/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
 | skill | [`deal-qualification-meddic`](../dist/agent-src/skills/deal-qualification-meddic/SKILL.md) |  | Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'. |
 | skill | [`decision-record`](../dist/agent-src/skills/decision-record/SKILL.md) |  | Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`. |
+| skill | [`decision-review`](../dist/agent-src/skills/decision-review/SKILL.md) |  | Use to audit a past architectural decision — did the chosen option hold up, what assumptions drifted, should the ADR be superseded? Backward review only; does not lock new choices. |
 | skill | [`deep-reading-analyst`](../dist/agent-src/skills/deep-reading-analyst/SKILL.md) |  | Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary. |
 | skill | [`defense-in-depth`](../dist/agent-src/skills/defense-in-depth/SKILL.md) |  | Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one. |
 | skill | [`dependency-upgrade`](../dist/agent-src/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic. |
@@ -163,6 +165,7 @@ are excluded.
 | skill | [`po-discovery`](../dist/agent-src/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | skill | [`positioning-strategy`](../dist/agent-src/skills/positioning-strategy/SKILL.md) |  | Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'. |
 | skill | [`prediction-pool-optimizer`](../dist/agent-src/skills/prediction-pool-optimizer/SKILL.md) |  | Optimize prediction-pool tips (kicktipp etc.): rules + multi-book consensus odds → expected-points-max answer for every question, scores AND bonus. Triggers 'optimize my pool tips', 'predict'. |
+| skill | [`premortem`](../dist/agent-src/skills/premortem/SKILL.md) |  | Use before committing to a heavy or irreversible plan — imagine it's 6 months later and this failed; enumerate why, score each mode, derive early-warning signals and preventive guardrails. |
 | skill | [`privacy-review`](../dist/agent-src/skills/privacy-review/SKILL.md) |  | Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'. |
 | skill | [`project-analysis-core`](../dist/agent-src/skills/project-analysis-core/SKILL.md) |  | Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`. |
 | skill | [`project-analysis-hypothesis-driven`](../dist/agent-src/skills/project-analysis-hypothesis-driven/SKILL.md) |  | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
@@ -196,6 +199,7 @@ are excluded.
 | skill | [`risk-officer`](../dist/agent-src/skills/risk-officer/SKILL.md) |  | Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'. |
 | skill | [`roadmap-management`](../dist/agent-src/skills/roadmap-management/SKILL.md) |  | Use when the user says \"create roadmap\", \"show roadmap\", or \"execute roadmap\". Creates, reads, and manages roadmap files with phase tracking. |
 | skill | [`roadmap-writing`](../dist/agent-src/skills/roadmap-writing/SKILL.md) |  | Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'. |
+| skill | [`root-cause-frameworks`](../dist/agent-src/skills/root-cause-frameworks/SKILL.md) |  | Use when tracing the root cause of a resolved incident or recurring bug — 5-whys chain, fishbone categorisation, contributing-factors split — even if the user says 'why does this keep breaking?'. |
 | skill | [`rtk-output-filtering`](../dist/agent-src/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
 | skill | [`rule-refactor`](../dist/agent-src/skills/rule-refactor/SKILL.md) |  | Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule. |
 | skill | [`rule-writing`](../dist/agent-src/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
@@ -273,7 +277,7 @@ are excluded.
 | rule | [`fast-path-marker-visibility`](../dist/agent-src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase |
 | rule | [`finance-safety-floor`](../dist/agent-src/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required |
 | rule | [`framework-neutrality-in-generic-skills`](../dist/agent-src/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers |
-| rule | [`git-history-discipline`](../dist/agent-src/rules/git-history-discipline.md) | auto | Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn |
+| rule | [`git-history-discipline`](../dist/agent-src/rules/git-history-discipline.md) | auto | Git history ops — never rebase/squash/amend without request; never drop/exclude/force-over commits you didn't author (parallel / shared-PR work); once pushed, re-push same turn |
 | rule | [`guidelines`](../dist/agent-src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../dist/agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../dist/agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation |
@@ -329,7 +333,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (147)
+## Commands (153)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -349,6 +353,12 @@ are excluded.
 | command | [`analytics-prune`](../dist/agent-src/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../dist/agent-src/commands/analytics/show.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
 | command | [`analyze-reference-repo`](../dist/agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
+| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks. |
+| command | [`analyze-decision`](../dist/agent-src/commands/analyze/decision.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
+| command | [`analyze-incident`](../dist/agent-src/commands/analyze/incident.md) | cluster: analyze | Full incident flow — live coordination via incident-commander, then RCA via root-cause-frameworks, then blame-free write-up via blameless-post-mortem, ending with an incident-learnings memory candida… |
+| command | [`analyze-near-miss`](../dist/agent-src/commands/analyze/near-miss.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
+| command | [`analyze-postmortem`](../dist/agent-src/commands/analyze/postmortem.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
+| command | [`analyze-premortem`](../dist/agent-src/commands/analyze/premortem.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`bug-fix`](../dist/agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../dist/agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
 | command | [`challenge-me`](../dist/agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
@@ -412,7 +422,7 @@ are excluded.
 | command | [`memory-add`](../dist/agent-src/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns) |
 | command | [`memory-learn-low-impact`](../dist/agent-src/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
 | command | [`memory-load`](../dist/agent-src/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
-| command | [`memory-mine-session`](../dist/agent-src/commands/memory/mine-session.md) | cluster: memory | The single session-mining command — mine the cross-host chat-history log (or a host transcript) for memory signals AND/OR rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-by-d… |
+| command | [`memory-mine-session`](../dist/agent-src/commands/memory/mine-session.md) | cluster: memory | Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-default, opt-in. Folds in /chat-history learn. |
 | command | [`memory-promote`](../dist/agent-src/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
 | command | [`memory-propose`](../dist/agent-src/commands/memory/propose.md) | cluster: memory | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
 | command | [`mode`](../dist/agent-src/commands/mode.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |

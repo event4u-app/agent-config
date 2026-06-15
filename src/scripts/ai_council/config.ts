@@ -1,7 +1,7 @@
 /**
  * Council configuration loader — single source of truth.
  *
- * TypeScript twin of `src/scripts/ai_council/config.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/config.py` (ADR-200 —
  * Python→TS migration, Phase 12). Mirrors the Python module's public
  * surface and validation behaviour byte-for-byte: same exported
  * snake_case names, same defaults, same error messages, same precedence.

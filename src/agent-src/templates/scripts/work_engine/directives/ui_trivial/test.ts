@@ -1,7 +1,7 @@
 /**
  * `test` step — smoke-test delegate for the `ui-trivial` set.
  *
- * TypeScript twin of `directives/ui_trivial/test.py` (ADR-096 py2ts). Public
+ * TypeScript twin of `directives/ui_trivial/test.py` (ADR-200 py2ts). Public
  * API names stay snake_case to mirror the Python module 1:1.
  *
  * The trivial path runs "apply + smoke-test only". The handler is the smaller

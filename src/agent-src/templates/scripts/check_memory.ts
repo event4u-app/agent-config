@@ -3,7 +3,7 @@
  * Engineering Memory validator.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/check_memory.py`
- * (ADR-096, Phase 1 — consumer-shipped template). Adapted from the dev-side
+ * (ADR-200, Phase 1 — consumer-shipped template). Adapted from the dev-side
  * `src/scripts/check_memory.ts` twin: the template `.py` is the leaner
  * consumer surface — it has NO `--shadow-report`, NO `priority`/date-discipline/
  * critical-stale/tier-0-inflation checks. Those are stripped here so this twin

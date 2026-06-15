@@ -2,7 +2,7 @@
 /**
  * Bench orchestrator — step-4 measurement-and-benchmark Phase 2.
  *
- * TypeScript twin of `src/scripts/bench_run.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/bench_run.py` (ADR-200, Phase 8 /
  * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
  * flags, exit codes, stdout/stderr split, byte-identical headline / Markdown
  * stdout and byte-identical written report JSON

@@ -1,9 +1,9 @@
 /**
  * Command-line entry point for `/implement-ticket`.
  *
- * TypeScript twin of `work_engine/cli.py` (ADR-096 py2ts Phase 1 — work_engine
+ * TypeScript twin of `work_engine/cli.py` (ADR-200 py2ts Phase 1 — work_engine
  * TOP/integration layer). Public API names stay snake_case to mirror the Python
- * module 1:1 (per ADR-096 — Python style is part of the contract).
+ * module 1:1 (per ADR-200 — Python style is part of the contract).
  *
  * Minimal Option-A transport: the script loads a persisted state file, runs the
  * dispatcher once, writes the updated state back, and prints either the delivery

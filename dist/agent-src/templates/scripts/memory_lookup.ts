@@ -3,7 +3,7 @@
  * File-first memory retrieval.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_lookup.py`
- * (ADR-096, consumer-shipped template; byte-identical to the dev-side
+ * (ADR-200, consumer-shipped template; byte-identical to the dev-side
  * `src/scripts/memory_lookup.py`). The public API and CLI contract mirror
  * the Python original EXACTLY — same exported names (snake_case kept
  * deliberately, especially `retrieve(...)` whose

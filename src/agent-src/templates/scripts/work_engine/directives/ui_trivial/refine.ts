@@ -1,7 +1,7 @@
 /**
  * `refine` step — intent gate for the `ui-trivial` directive set.
  *
- * TypeScript twin of `directives/ui_trivial/refine.py` (ADR-096 py2ts).
+ * TypeScript twin of `directives/ui_trivial/refine.py` (ADR-200 py2ts).
  * Public API names stay snake_case to mirror the Python module 1:1.
  *
  * `ui-trivial` is reachable only when the intent classifier (or an explicit

@@ -2,7 +2,7 @@
 /**
  * Engineering Memory validator.
  *
- * TypeScript twin of `src/scripts/check_memory.py` (ADR-096, Phase 4 /
+ * TypeScript twin of `src/scripts/check_memory.py` (ADR-200, Phase 4 /
  * Wave 4a). The CLI contract mirrors the Python original EXACTLY — same
  * flags (`--path`, `--format`, `--append-only`, `--base`), same exit
  * codes, same stdout/stderr split,
@@ -64,7 +64,7 @@ const REQUIRED_KEYS: ReadonlySet<string> = new Set([
     'last_validated',
     'review_after_days',
 ]);
-const VALID_STATUS: ReadonlySet<string> = new Set(['active', 'deprecated', 'archived']);
+const VALID_STATUS: ReadonlySet<string> = new Set(['active', 'deprecated', 'archived', 'superseded']);
 const VALID_CONFIDENCE: ReadonlySet<string> = new Set(['low', 'medium', 'high']);
 // `priority` is optional (default `normal`); enum is the smallest set that
 // solves the tier-0 surfacing use case. See the Phase 2 council brief for why

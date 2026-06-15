@@ -1,9 +1,9 @@
 /**
  * State-file I/O helpers for the CLI entry point.
  *
- * TypeScript twin of `work_engine/state_io.py` (ADR-096 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/state_io.py` (ADR-200 py2ts Phase 1 —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-096 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-200 — Python style is part of the contract).
  *
  * Extracted from `cli.py` in P2.3 of `road-to-post-pr29-optimize.md`. Holds
  * the format-preserving load/save pair, the v0 legacy serialiser, the JSON
@@ -237,7 +237,7 @@ export function _read_json(p: string): JsonValue {
 //
 // The Python source imports `migrate_payload` from
 // `work_engine.migration.v0_to_v1`. A `.ts` twin may not import a `.py`
-// (ADR-096), and the full `v0_to_v1` module (with its CLI / `migrate_file`
+// (ADR-200), and the full `v0_to_v1` module (with its CLI / `migrate_file`
 // surface) lands in a later phase. The `migrate_payload` slice `_load` needs
 // is reproduced here verbatim so the load path stays byte-identical; when the
 // `v0_to_v1.ts` twin lands it can re-export this or replace it 1:1.

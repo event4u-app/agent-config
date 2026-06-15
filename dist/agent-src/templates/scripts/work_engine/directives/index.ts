@@ -1,7 +1,7 @@
 /**
  * Directive-set bundles consumed by the dispatcher.
  *
- * TypeScript twin of `work_engine/directives/__init__.py` (ADR-096 py2ts
+ * TypeScript twin of `work_engine/directives/__init__.py` (ADR-200 py2ts
  * Phase 1 — work_engine TOP/integration layer). The `__init__.py` → `index.ts`
  * mapping mirrors the hooks subpackage convention.
  *

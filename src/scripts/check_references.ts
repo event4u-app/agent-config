@@ -2,7 +2,7 @@
 /**
  * Cross-reference checker for agent-config repositories.
  *
- * TypeScript twin of `src/scripts/check_references.py` (ADR-096, Phase 4 /
+ * TypeScript twin of `src/scripts/check_references.py` (ADR-200, Phase 4 /
  * Wave 4a). The CLI contract is mirrored EXACTLY — same `--format` /
  * `--root` flags, same exit codes (0 clean, 1 broken refs, 3 internal
  * error), same stdout/stderr split, byte-identical finding messages,

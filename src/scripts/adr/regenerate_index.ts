@@ -5,7 +5,7 @@
  * non-numbered ADRs into an Unnumbered table, hard-fails on duplicate
  * numbers, filename/frontmatter mismatch, or broken supersedes links.
  *
- * TypeScript twin of `src/scripts/adr/regenerate_index.py` (ADR-096, Phase 8).
+ * TypeScript twin of `src/scripts/adr/regenerate_index.py` (ADR-200, Phase 8).
  * The CLI contract is mirrored EXACTLY — `--dir` (default `docs/adr/`),
  * `--check`, exit codes (0 / 1 / 2), the stdout/stderr split, byte-identical
  * messages, AND byte-identical generated `INDEX.md`. No behaviour changes —
