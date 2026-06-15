@@ -144,6 +144,16 @@ MERGEABLE_KEYS: tuple[str, ...] = (
     "personal.bot_icon",
     "personal.autonomy",
     "telegraph.speak_scope",
+    # Knowledge-card global cross-project sharing is a USER-GLOBAL setting
+    # (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
+    # ~/.event4u/agent-config/agent-settings.yml values are honoured.
+    "knowledge.global_sharing.enabled",
+    "knowledge.global_sharing.allowed_tiers",
+    "knowledge.global_sharing.redaction.enabled",
+    "knowledge.global_sharing.redaction.halt_on_trigger",
+    "knowledge.global_sharing.auto_promote_threshold",
+    "knowledge.global_sharing.freshness.hypothesis_after_days",
+    "knowledge.global_sharing.freshness.stale_after_days",
 )
 
 _DEFAULTS: dict[str, Any] = {}
