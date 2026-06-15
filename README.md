@@ -8,6 +8,16 @@
 
 Six role-shaped entry paths, one shared **skills + rules + commands** layer that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member — without locking you to a single model or vendor.
 
+### What's different
+
+Three things this package ships that a README scan slides right past:
+
+- **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
+- **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
+- **Portability guard** — works in any project; source confidentiality is CI-enforced.
+
+See exactly [what works on which host](docs/capability-matrix.md), or jump to [things you can do in a minute](docs/cookbook.md).
+
 ### Pick your profile — six entry paths
 
 `agent-config setup` writes `profile.id` to `.agent-settings.yml`; each

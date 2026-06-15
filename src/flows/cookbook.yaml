@@ -1,0 +1,85 @@
+# Cookbook recipe seed — road-to-competitive-borrow P1.4.
+#
+# Named "10 things you can do in a minute" recipes. The COMMAND and SKILL refs
+# here are the only hand-curated part; `scripts/generate_cookbook.py` renders
+# docs/cookbook.md from this file + the four src/flows/<flow>.yaml definitions
+# and VALIDATES every ref via `resolve_logical` — generation FAILS if any
+# recipe names a command or skill that does not exist (the anti-cargo-cult
+# guard; a competitor's cookbook referencing tools with no real backing is the
+# failure mode this prevents).
+#
+# Refs are LOGICAL command paths (the command `name:` with `:` → `/`), the same
+# shape src/flows/*.yaml use. Adding a recipe → add real refs here; a typo or a
+# renamed command fails the build.
+version: 1
+
+recipes:
+  - title: "Review a change before it ships"
+    when: "You have a diff and want a real review, not a rubber-stamp."
+    commands: [review-changes, judge, quality-fix]
+    skills: [code-review, adversarial-review]
+
+  - title: "Fix a red CI run"
+    when: "CI is failing and you want the failure pinpointed and fixed."
+    commands: [fix/ci]
+    skills: [systematic-debugging]
+
+  - title: "Build a feature from a ticket"
+    when: "You have a ticket and want it refined, estimated, and implemented."
+    commands: [refine-ticket, estimate-ticket, implement-ticket]
+    skills: [feature-planning, test-driven-development]
+
+  - title: "Plan a feature before writing code"
+    when: "The ask is fuzzy and you want a bounded plan first."
+    commands: [feature/explore, feature/plan]
+    skills: [feature-planning, complexity-first-planning]
+
+  - title: "Security-audit a surface"
+    when: "You touched auth / billing / tenancy and want abuse cases first."
+    commands: [threat-model, judge/solo]
+    skills: [threat-modeling, security-audit]
+
+  - title: "Open a pull request"
+    when: "The work is done and you want a clean PR ready for review."
+    commands: [prepare-for-review, pr/create]
+    skills: [requesting-code-review, conventional-commits-writing]
+
+  - title: "Research a topic deeply"
+    when: "You need a multi-source, fact-checked report, not a guess."
+    commands: [research/deep, research/report]
+    skills: [deep-reading-analyst]
+
+  - title: "Investigate and fix a bug"
+    when: "Something is broken and you want root cause before the patch."
+    commands: [bug-investigate, bug-fix]
+    skills: [systematic-debugging, bug-analyzer]
+
+  - title: "Get a second opinion from the AI council"
+    when: "A design call is genuinely contested and you want independent models."
+    commands: [council/design, council/debate]
+    skills: [ai-council]
+
+  - title: "Process a roadmap autonomously"
+    when: "You have a roadmap and want it worked end-to-end."
+    commands: [roadmap/create, roadmap/process-full]
+    skills: [roadmap-management]
+
+  - title: "Refactor with a safety net"
+    when: "You want to restructure code without changing behaviour."
+    commands: [feature/refactor, review-changes, judge]
+    skills: [code-refactoring, test-driven-development]
+
+  - title: "Commit in logical chunks"
+    when: "You have a messy working tree and want clean, scoped commits."
+    commands: [commit/in-chunks]
+    skills: [conventional-commits-writing]
+
+  - title: "Analyze an unfamiliar project"
+    when: "You just opened a repo and want a fast structural read."
+    commands: [project-analyze, project-health]
+    skills: [project-analyzer]
+
+  - title: "Estimate a ticket"
+    when: "You need a defensible estimate with the reasoning shown."
+    commands: [estimate-ticket]
+    skills: [estimate-ticket]

@@ -1,0 +1,20 @@
+{
+  "_comment": "Legitimate skill pairs already disambiguated by an ADR or routing rule. Hard-capped at 20 entries (lint_skill_originality.py ALLOWLIST_CAP). Exceeding the cap is a signal the linter is wrong, not the content — tighten the heuristic, do not grow this list (autonomous-execution allowlist-growth antipattern). Each entry MUST cite the disambiguating ADR/rule in `reason`. Cross-domain pairs sit below the same-domain FAIL gate already; they are documented here so the advisory-warn tier reads as 'known-legit' rather than noise.",
+  "pairs": [
+    {
+      "skill_a": "laravel",
+      "skill_b": "symfony-workflow",
+      "reason": "Cluster head disambiguated by laravel-routing / symfony-routing rules (adr-architectural-consensus-mechanism). Shared PHP-framework trigger vocabulary; distinct skills by design."
+    },
+    {
+      "skill_a": "devcontainer",
+      "skill_b": "copilot-config",
+      "reason": "Cluster head disambiguated by devcontainer-routing / copilot-routing rules (adr-architectural-consensus-mechanism). Dev-environment vs Copilot-AI tuning."
+    },
+    {
+      "skill_a": "blade-ui",
+      "skill_b": "livewire",
+      "reason": "Laravel view-stack siblings within engineering-base; distinct surfaces (Blade templating vs Livewire components) per persona-governance ≤2-per-domain."
+    }
+  ]
+}

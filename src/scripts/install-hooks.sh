@@ -36,6 +36,12 @@ if ! ./scripts-run src/scripts/check_command_count_messaging; then
     fail=1
 fi
 
+echo "🔍 Checking for leftover conflict markers / unmerged paths..."
+if ! python3 src/scripts/check_no_conflict_markers.py --quiet; then
+    echo "❌  Conflict markers or unmerged paths present. Resolve them (e.g. 'git checkout HEAD -- <file>' or finish the merge), then re-push."
+    fail=1
+fi
+
 if [ $fail -ne 0 ]; then
     echo ""
     echo "   Push blocked — fix the failures above and re-push."
