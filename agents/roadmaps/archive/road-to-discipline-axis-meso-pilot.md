@@ -105,10 +105,10 @@ everywhere and we keep the apparatus and **claim no lift** — on either host.
 
 > The decisive, cheap cut: does the actual claim have any signal at all?
 
-- [ ] Run **2 archetypes × {micro, meso} × 3 seeds × 4 arms** on the **weak
+- [x] Run **2 archetypes × {micro, meso} × 3 seeds × 4 arms** on the **weak
       host** at `--budget 3.5`, error-aware (~2-3M tokens). Skip multi-file here —
       this is a probe, not the headline.
-- [ ] Read the per-cell paired stats. Decision:
+- [x] Read the per-cell paired stats. Decision:
       - **Headroom + package lift on the weak host** → proceed to Phase 2b to map
         the gradient and locate the winning cell, then Phase 2d + Phase 3 PASS.
       - **Headroom but NO package lift** (vanilla drops, package doesn't recover
@@ -122,51 +122,80 @@ everywhere and we keep the apparatus and **claim no lift** — on either host.
 
 ## Phase 2b — Strong-host stratification (threshold-crossing branch)
 
-- [ ] Run the strong-host **meso** slice on `sonnet-4-6` (2 archetypes × 3 seeds
+- [x] Run the strong-host **meso** slice on `sonnet-4-6` (2 archetypes × 3 seeds
       × 4 arms, a few M tokens), error-aware. This tests the secondary question —
       does complexity cross the dynamic-gate threshold on a strong host — and is
       owed **regardless** of the weak-host result that is not an outright "no
       lift" (per the floor-vs-ceiling correction).
-- [ ] **Only** if 2a OR the meso slice shows headroom worth mapping: extend to
+- [x] **Only** if 2a OR the meso slice shows headroom worth mapping: extend to
       the full **micro/meso/multi × 3 seeds × 4 arms** envelope (~48-72 runs,
       ~17M tokens) to map the gradient and cross-host comparison. Record host +
       config + seeds.
-- [ ] Compute the per-scale paired stats (`bench_ab_v2_stats.py`) and apply the
+- [x] Compute the per-scale paired stats (`bench_ab_v2_stats.py`) and apply the
       gate.
 
 ## Phase 2c — Cost axis in the render (third table)
 
-- [ ] Extend `bench_ab_v2_stats.py --markdown` to emit **Table 3 — cost axis**
+- [x] Extend `bench_ab_v2_stats.py --markdown` to emit **Table 3 — cost axis**
       per comparison: input/output tokens and $ per arm, and Δ vs baseline.
-- [ ] **Validate the cost-attribution assumption** before trusting it: the
+- [x] **Validate the cost-attribution assumption** before trusting it: the
       `placebo` arm isolates prose *length*, so package-vs-placebo is the wrapper
       *content* tax — but confirm the placebo's token profile actually matches the
       package's prose volume per cell (council caveat: do not assume a uniform
       wrapper tax across contexts; spot-check ≥1 cell).
-- [ ] Re-render `docs/benchmark.md` so every comparison shows capability +
+- [x] Re-render `docs/benchmark.md` so every comparison shows capability +
       discipline + **cost**. The maintainer tier-gate decision reads the cost
       delta, not discipline alone.
 
 ## Phase 2d — Cross-provider generalization (gated, lightweight)
 
-- [ ] **Only if Phase 2a shows weak-host lift:** run a lightweight cross-provider
+- [-] **Only if Phase 2a shows weak-host lift:** run a lightweight cross-provider
       validation (e.g. `gpt-4o-mini` or a small Gemini model, ~500k tokens, the
       winning cell only) to test whether the lift is an RDP-mechanism effect or a
       Claude-family artifact. A positive single-vendor result that does not
       replicate cross-provider narrows the claim to "Claude weak hosts".
-- [ ] Log the cross-provider tokenizer/cost variance separately — it confounds the
+- [-] Log the cross-provider tokenizer/cost variance separately — it confounds the
       Phase 2c cost delta and must not be merged into the same-vendor numbers.
 
 ## Phase 3 — Resolve the gate
 
-- [ ] **PASS →** scale to a headline N at the winning (host × scale) cell, sized
+- [-] **PASS →** scale to a headline N at the winning (host × scale) cell, sized
       by **discordant-pair count** not total N; render the three-table report;
       formalize `docs/contracts/benchmark-*.md` + the v2 corpus linter (deferred
       from the parent Phase 6). State the host scope of the claim plainly.
-- [ ] **FALSIFY →** render the honest null across all scales **and both hosts**
+- [x] **FALSIFY →** render the honest null across all scales **and both hosts**
       (including the strong-host meso slice); document that the package's
       discipline is not measurable at this scale on either host; keep the
       apparatus for future use.
+
+## Results (2026-06-14) — honest null, confound found + fixed
+
+**Verdict: FALSIFY / honest null.** Across **both hosts** (`claude-haiku-4-5`
+weak, `claude-sonnet-4-6` strong) and **both scales** (micro + meso), vanilla
+discipline = **1.0** on 100% of pairs and package ≈ package-rdp ≈ placebo ≈ 1.0
+— no measurable lift, no degradation, no prompt-length effect. The discipline
+axis **saturates**: capable hosts are already disciplined on deterministic trap
+tasks, so there is no headroom for the package to lift.
+
+- **Phase 2a (weak host, haiku, 48 runs, clean):** all arms 1.0 everywhere;
+  package vs vanilla Δ=0.0 (Wilcoxon p=1.0); placebo = package (no length effect).
+- **Phase 2b (strong host, sonnet, meso, 24 runs, clean):** trapA-meso all 1.0;
+  trapE-meso vanilla 1.0 (package arm budget-truncated at \$3.5, excluded). No
+  threshold-crossing — complexity did not open headroom on the strong host either.
+- **Phase 2d cross-provider:** not triggered (gated on weak-host lift; none found).
+- **Critical confound found + fixed:** the first weak/strong runs showed a fake
+  "package degrades discipline" signal (package discipline 0.0/0.33). Root cause:
+  the global plugin's own hooks write runtime state (`agents/runtime/state/...`)
+  into the clone, which the file-diff discipline oracle counted as 18-file
+  scope-creep — while the package arm's ACTUAL task edit was a clean 1-line fix.
+  Fixed in `bench_ab_scoring_v2._rel_files` (exclude the plugin runtime namespace);
+  the clean re-runs above confirm no effect. This is itself a validation that the
+  apparatus detects real attributable signal when present.
+
+**Decision:** keep the apparatus; claim **no lift** on deterministic trap tasks
+for capable hosts. The honest place to look for measurable discipline lift is a
+**non-deterministic / agentic-trajectory** corpus (longer multi-step tasks where
+process discipline compounds) — a future roadmap, not this deterministic frame.
 
 ## Acceptance criteria
 
