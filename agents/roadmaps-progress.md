@@ -18,7 +18,7 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 
 | Roadmap | Done | Merge-gated open | Gating PR |
 |---|---:|---:|---|
-| [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 25 | 1 | — |
+| [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 25 | 1 | #558 |
 
 ## Open roadmaps
 

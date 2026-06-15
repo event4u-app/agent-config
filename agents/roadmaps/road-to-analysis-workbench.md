@@ -268,7 +268,7 @@ auto-triage, NOT a new runtime.
 - [x] No new runtime, no cross-session persistent state, no self-modifying agent
       loop introduced in the core phases.
 
-- [ ] **Merge gate:** PR CI green end-to-end + roadmap archived on merge. <!-- merge-gated: pr=TBD -->
+- [ ] **Merge gate:** PR CI green end-to-end + roadmap archived on merge. <!-- merge-gated: pr=558 -->
 
 ## Council notes (2026-06-15, deep + peer-review)
 
