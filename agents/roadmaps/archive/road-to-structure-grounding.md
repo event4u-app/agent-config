@@ -86,10 +86,11 @@ system.
   layer (pointer-CI + eval; the self-log honestly framed as instrumentation),
   fresh local discovery (no persistent index), remote-only trust-tiered cards,
   and the project-committed anti-hallucination layer.
-- **Gated v2 (Phase 4 — instrument, measure, decide):** the per-user **global**
-  card scope, the **usage registry**, "where did I use X", and promotion —
-  built only if v1 shows real cross-project reuse. Killing the global layer
-  never kills the cards.
+- **Gated v2 (Phase 4) — KILLED 2026-06-15:** the per-user **global** card
+  scope, the **usage registry**, "where did I use X", and promotion were gated
+  on v1 showing real cross-project reuse. The operator exercised the kill
+  option directly; v2 will **not** be built (see Phase 4 + ADR-098). Killing
+  the global layer never killed the cards — v1 ships independently.
 - **Follow-up (not this roadmap):** full evidence-quality metrics (P8); a
   persistent local resolution index (only if `rg`-latency is measured to hurt).
 
@@ -144,11 +145,19 @@ system.
 - [x] **Verification matrix wiring:** after acting on discovered structure, verify with the real tool (curl / Playwright / debugger / test runner / DB query) per `think-before-action`; any "Assumed (from card)" / `trust: low` line used without this-session confirmation is a violation surfaced post-task.
 - [x] **Full anti-hallucination eval (R3 F-4):** ≥1 fixture **per surface** (DB / API / vendor), each with a multi-run discovery-off **variance baseline** vs discovery-on; plus a **cross-feature duplication check** (R4 P7: if >1 session discovers the same external structure without a card, flag "should-have-been-card-worthy"); plus **minimal evidence counters** (R4 P8 seed: evidence_count / assumptions / verified — counters only, full metrics are a follow-up). Lands `evals/` fixtures; cite results — acceptance #6 rests on this, not n=1.
 
-## Phase 4 — Global scope, registry, promotion (gated v2 — instrument, measure, decide)
-- [x] **Instrument only (v1-safe):** a minimal local usage counter for committed cards (which card, which repo-slug — never local paths/contents). Repo identity, not path; a monorepo = one project. No global write, no promotion yet. Privacy floor per `source-confidentiality` + `low-impact-corpus-privacy-floor`.
-- [ ] **Measure the right thing (R3 F-5):** over 4–6 weeks, measure **cross-project** reuse — the only signal that justifies the **global** layer. Note that within-project card value (negative facts, committed) is already delivered in v1 and is **independent**: a near-zero cross-project number kills *global*, not the cards.
-- [ ] **Decide against kill-criteria:** near-zero → **kill** global + registry + promotion, record in the ADR, stop (value stood in the discipline + project cards — acceptable). Real reuse → **spawn a follow-up roadmap** with council prerequisites: pointer-CI (incl. strict-mode) green, global cards are leads/negative-facts only (never build inputs), promotion **manual** (no auto "≥2", no score weights), a `forget`/inspect command, global store under the install `global` scope (`~/.event4u/agent-config/knowledge/`).
-- [ ] Surface the decision + numbers to the user as the gate latch (no silent build-out).
+## Phase 4 — Global scope, registry, promotion (gated v2 — KILLED 2026-06-15)
+
+> **v2 killed by operator decision 2026-06-15.** The global / registry /
+> promotion layer will **not** be built. The v1 discipline + committed
+> project cards are the durable value and ship independently; the measurement
+> window was waived (the operator exercised the kill option directly rather
+> than wait 4–6 weeks). The usage-counter instrument is retired. Recorded in
+> ADR-098.
+
+- [x] **Instrument only (v1-safe):** a minimal local usage counter for committed cards (which card, which repo-slug — never local paths/contents). Repo identity, not path; a monorepo = one project. No global write, no promotion yet. Privacy floor per `source-confidentiality` + `low-impact-corpus-privacy-floor`. <!-- retired 2026-06-15 with the v2 kill; knowledge_card_usage.py removed -->
+- [-] **Measure the right thing (R3 F-5):** over 4–6 weeks, measure **cross-project** reuse — the only signal that justifies the **global** layer. <!-- cancelled: operator killed v2 directly, no measurement window -->
+- [x] **Decide against kill-criteria:** **DECIDED 2026-06-15 — KILL** global + registry + promotion (value stood in the discipline + project cards — acceptable per the kill path). Recorded in ADR-098. No follow-up roadmap spawned.
+- [x] Surface the decision + numbers to the user as the gate latch (no silent build-out). <!-- surfaced + decided this session -->.
 
 ## Phase 5 — ADR, guardrails, sync
 - [x] Record an ADR (via `adr-create`): the evidence-first invariant; the Evidence Report + the **Verified vs Assumed-from-card** rule; the card trust-tiering model; cards remote-only with local-always-fresh + no persistent index; the **DB-not-in-codebase** boundary (incl. schemaless clause); the **honest enforcement reality** (self-log = instrumentation; teeth = pointer-CI + eval); `anti-hallucination` kept over `invariant`; negative-fact = current-state-fact (not a decision); the discipline ships as a core extension; the global/registry **gate** + kill-criteria.
