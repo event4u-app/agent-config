@@ -111,6 +111,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Pin Python parity deps
+        # lint_missions.py REQUIRES jsonschema (exits 1 without it) and embeds
+        # jsonschema's version-specific ValidationError.message verbatim in its
+        # findings. The ambient runner version floats, so the python3-vs-tsx
+        # golden-parity comparison is only deterministic when jsonschema is
+        # pinned to the version the .ts twin was built against (4.25.1). pyyaml
+        # is the other hard dep the .py twins read frontmatter with.
+        run: python3 -m pip install --quiet --break-system-packages 'jsonschema==4.25.1' pyyaml
+
       - name: Prepare working tree
         # The suite was written for a single serial run where early test
         # files build gitignored projections that later files consume. A
