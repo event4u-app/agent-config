@@ -39,11 +39,21 @@ import bench_ab_scoring_v2 as scoring  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bench_ab_task_runner as v1  # noqa: E402
 
+import tempfile  # noqa: E402
+
 REPO_ROOT = v1.REPO_ROOT
 CORPUS_PATH = REPO_ROOT / "internal" / "bench" / "corpora" / "ab-trackb-v2.yaml"
 FIXTURES_ROOT = REPO_ROOT / "internal" / "bench" / "ab"
 REPORTS_DIR = REPO_ROOT / "internal" / "bench" / "reports" / "ab-v2"
-WORK_ROOT = REPO_ROOT / "internal" / "bench" / "ab" / "v2-clones"
+# CRITICAL (2026-06-15): clones MUST live OUTSIDE the agent-config repo. A clone
+# under the repo lets Claude discover the repo's own project surface (CLAUDE.md /
+# AGENTS.md / .claude/rules+skills) walking up from the cwd — so the `vanilla`
+# arm (--setting-sources project,local) silently inherited ~126k tokens of the
+# package via PROJECT scope (measured: 150k in-repo vs 24k in /tmp). That made
+# vanilla ≈ package and invalidated every prior null. A /tmp clone has no
+# agent-config ancestor → vanilla is truly plain; `package` still activates via
+# the USER-scope global plugin regardless of cwd.
+WORK_ROOT = Path(tempfile.gettempdir()) / "agent-config-bench-v2-clones"
 
 # Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
 ARMS = {
