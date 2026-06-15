@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 166 steps done · 0%**
+**27 / 166 steps done · 16%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   16%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-harvest-small-enhancements.md](roadmaps/road-to-harvest-small-enhancements.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-structure-grounding.md](roadmaps/road-to-structure-grounding.md) | 6 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-structure-grounding.md](roadmaps/road-to-structure-grounding.md) | 6 | 30 | 3 | 27 | 0 | 0 | █████████░ 90% |
 | 9 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -108,16 +108,16 @@
 
 ### [road-to-structure-grounding.md](roadmaps/road-to-structure-grounding.md)
 
-**Evidence-first structure discovery** — 0 / 30 done (0%)
+**Evidence-first structure discovery** — 27 / 30 done (90%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Enforcement foundations (what makes the discipline real — honestly) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 1 | The evidence-discipline rule + discovery skill (anchored) + early eval | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 2 | Surface coverage (local read-fresh; remote cached) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Anti-stale verification + full anti-hallucination eval | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Global scope, registry, promotion (gated v2 — instrument, measure, decide) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | ADR, guardrails, sync | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | Enforcement foundations (what makes the discipline real — honestly) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 1 | The evidence-discipline rule + discovery skill (anchored) + early eval | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 2 | Surface coverage (local read-fresh; remote cached) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 3 | Anti-stale verification + full anti-hallucination eval | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Global scope, registry, promotion (gated v2 — instrument, measure, decide) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 5 | ADR, guardrails, sync | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 

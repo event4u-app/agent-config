@@ -494,9 +494,16 @@
       "lines": [
         55,
         56,
-        79
+        80
       ],
       "reason": "Cross-stack target-directory examples (Laravel / Symfony) for module-scoped context docs — comparative example, no mandate"
+    },
+    {
+      "file": "src/skills/source-discovery/SKILL.md",
+      "lines": [
+        95
+      ],
+      "reason": "Cross-stack local-first example — names node_modules AND vendor side by side (JS + PHP) for vendor-package discovery; comparative, no mandate"
     },
     {
       "file": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",

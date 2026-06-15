@@ -670,6 +670,11 @@ tasks:
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: python3 src/scripts/check_no_roadmap_refs.py
 
+  check-knowledge-cards:
+    silent: true
+    desc: "Knowledge-card pointer-CI — size ≤ 150, mandatory authoritative pointer, trust tagging, multi-evidence consistency (evidence-first structure discovery / ADR-097)"
+    cmd: python3 src/scripts/check_knowledge_cards.py
+
   check-no-local-settings:
     silent: true
     desc: .agent-settings.local.yml (per-machine override layer) must never be committed
