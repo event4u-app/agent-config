@@ -118,6 +118,8 @@ Working on the package itself? [Development](#development) covers the
 opt-in measurement loop. Source-of-truth tree is
 `src/` (`src/skills`, `src/rules`, `src/agent-src/`); never hand-edit `.augment/` or `dist/agent-src/`.
 
+**Security.** Disclosure policy: [`SECURITY.md`](SECURITY.md). Threat model: [`docs/threat-model.md`](docs/threat-model.md).
+
 ---
 
 ## Quickstart
