@@ -39,6 +39,15 @@
   domain: engineering
   size_class: small
 
+- id: analysis-workbench
+  label: Analysis Workbench
+  description: RCA, post-mortem, premortem, and decision-review as an integrated learning loop.
+  workspaces: [engineering]
+  requires: [engineering-base]
+  trust_level_default: professional
+  domain: engineering
+  size_class: medium
+
 - id: php
   label: PHP
   description: PHP-language patterns (framework-free).

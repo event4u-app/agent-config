@@ -325,8 +325,13 @@ reality. Both members + the peer-review round converged:
       `src/`), not as a comparative claim — so no unvalidated hero comparison was
       shipped. The comparative claim remains INFERRED and deferred to a future
       session with source access. No Phase 0 row disproved → no downgrade needed.
-- [ ] P2 deferred items reviewed at the next plate boundary; any fired trigger
-      (per the quantified P2.1 criteria) promotes to adopt-now (consumes a slot).
+- [x] **Plate closed (2026-06-15).** P1 shipped (PR #551, merged). The four P2
+      deferred-with-trigger items (P2.1 readiness-audit funnel, P2.2 selective
+      install, P2.3 cross-host parity report, P2.4 security pack slice) remain
+      trigger-gated and are **preserved in this archived file** (Iron Law 3
+      "keep-in-archive" resolution, user-approved). They are carried forward to be
+      re-evaluated under the broader ECC competitive-harvest analysis — any fired
+      trigger there promotes the item into the relevant harvest plate.
 - [x] Live council re-run recorded (claude-sonnet-4-5 + gpt-4o, deep,
       2026-06-13) — dispositions folded into Goal / Phase 0 / P1.0 / P2.1 /
       Phase 3 above. Supersedes the four-lens substitute panel.

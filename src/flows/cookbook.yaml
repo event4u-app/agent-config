@@ -83,3 +83,8 @@ recipes:
     when: "You need a defensible estimate with the reasoning shown."
     commands: [estimate-ticket]
     skills: [estimate-ticket]
+
+  - title: "Run a blame-free post-mortem that teaches the next change"
+    when: "An incident, near-miss, or risky plan needs analysis that closes the learning loop."
+    commands: [analyze]
+    skills: [blameless-post-mortem, root-cause-frameworks]
