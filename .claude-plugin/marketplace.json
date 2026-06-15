@@ -5,7 +5,7 @@
     "email": "dev@event4u.app"
   },
   "metadata": {
-    "description": "Shared agent configuration — skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
+    "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
     "version": "6.1.0",
     "keywords": [
       "agent-config",
@@ -26,7 +26,7 @@
   "plugins": [
     {
       "name": "agent-config",
-      "description": "Full skill catalog — writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
+      "description": "Full skill catalog \u2014 writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
       "keywords": [
         "skills",
         "rules",
@@ -130,6 +130,7 @@
         "./.claude-plugin/skills/memory-mine-session",
         "./.claude-plugin/skills/memory-promote",
         "./.claude-plugin/skills/memory-propose",
+        "./.claude-plugin/skills/mission-upgrade",
         "./.claude-plugin/skills/mode",
         "./.claude-plugin/skills/module",
         "./.claude-plugin/skills/module-create",
@@ -396,6 +397,7 @@
         "./dist/agent-src/skills/skill-reviewer",
         "./dist/agent-src/skills/skill-writing",
         "./dist/agent-src/skills/song-to-script",
+        "./dist/agent-src/skills/source-discovery",
         "./dist/agent-src/skills/sql-writing",
         "./dist/agent-src/skills/stakeholder-tradeoff",
         "./dist/agent-src/skills/subagent-orchestration",

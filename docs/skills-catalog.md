@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **234 skills** available in this package, in alphabetical order.
+All **235 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -214,6 +214,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`skill-reviewer`](../dist/agent-src/skills/skill-reviewer/SKILL.md) | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
 | [`skill-writing`](../dist/agent-src/skills/skill-writing/SKILL.md) | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
 | [`song-to-script`](../dist/agent-src/skills/song-to-script/SKILL.md) | Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'. |
+| [`source-discovery`](../dist/agent-src/skills/source-discovery/SKILL.md) | Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields. |
 | [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |

@@ -346,6 +346,16 @@ tasks:
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
     cmd: python3 src/scripts/check_no_conflict_markers.py {{.QUIET_FLAG}}
 
+  lint-workflow-security:
+    silent: true
+    desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
+    cmd: python3 src/scripts/lint_workflow_security.py {{.QUIET_FLAG}}
+
+  lint-missions:
+    silent: true
+    desc: "Validate src/missions/*/mission.yaml against mission.schema.json + catalogs against mission-catalog.schema.json (command safe-prefix allowlist) — road-to-mission-mode P2A"
+    cmd: python3 src/scripts/lint_missions.py {{.QUIET_FLAG}}
+
   check-no-new-legacy-path:
     silent: true
     desc: "Regression guard — no NEW .agent-src.uncondensed/ references added under src/ (ADR-051)"
@@ -659,6 +669,11 @@ tasks:
     silent: true
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: ./scripts-run src/scripts/check_no_roadmap_refs
+
+  check-knowledge-cards:
+    silent: true
+    desc: "Knowledge-card pointer-CI — size ≤ 150, mandatory authoritative pointer, trust tagging, multi-evidence consistency (evidence-first structure discovery / ADR-097)"
+    cmd: python3 src/scripts/check_knowledge_cards.py
 
   check-no-local-settings:
     silent: true

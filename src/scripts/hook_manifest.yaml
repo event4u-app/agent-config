@@ -53,6 +53,17 @@ concerns:
     script: src/scripts/injection_scan_hook.py
     args: []
     fail_closed: false
+  # road-to-security-hardening Phase 3 — PreToolUse guard turning the
+  # git-history-discipline Iron Law into a deterministic gate. Blocks
+  # `git … --no-verify` / `-n` and `git -c core.hooksPath=…` (which would
+  # bypass the pre-commit/pre-push hooks). MUST be pre_tool_use: --no-verify
+  # skips git hooks by definition, so a git hook cannot catch it. fail_closed:
+  # a parse failure on a git-containing command blocks (the guard must not be
+  # the bypass). No agent-accessible env override (council 2026-06-15).
+  block-no-verify:
+    script: src/scripts/hooks/block_no_verify.py
+    args: []
+    fail_closed: true
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -85,6 +96,7 @@ platforms:
     session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
+    pre_tool_use:     [block-no-verify]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   claude:
@@ -92,6 +104,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    pre_tool_use:     [block-no-verify]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -113,6 +126,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    pre_tool_use:     [block-no-verify]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the

@@ -74,17 +74,17 @@ the N=3 validation-loop budget): (A) accept this honest conclusion + stop, or
 
 ## Phase 2 — 4-arm run + attribution
 
-- [ ] Run vanilla / package / package-rdp / placebo × the corpus × ≥3 seeds,
+- [-] Run vanilla / package / package-rdp / placebo × the corpus × ≥3 seeds,
       budget-capped, error-aware. Primary = solve-rate (McNemar paired);
-      secondary = artifact-bloat on solved tasks (Wilcoxon).
-- [ ] PASS = package solve-rate > placebo (p<0.05, ≥6 discordant pairs) AND no
-      bloat increase. Else honest null. Cost reported per arm (L10).
+      secondary = artifact-bloat on solved tasks (Wilcoxon). <!-- cancelled: Phase 1c gate showed 89% baseline / no headroom → 4-arm run cannot reach a measurable lift; honest null accepted (maintainer, 2026-06-15) -->
+- [-] PASS = package solve-rate > placebo (p<0.05, ≥6 discordant pairs) AND no
+      bloat increase. Else honest null. Cost reported per arm (L10). <!-- cancelled: no non-saturating baseline to run against; honest null accepted (maintainer, 2026-06-15) -->
 
 ## Phase 3 — Render + resolve + scale
 
-- [ ] Extend the render: Table 1 = solve-rate (the lift), Table 2 = artifact-bloat
+- [-] Extend the render: Table 1 = solve-rate (the lift), Table 2 = artifact-bloat
       (secondary), Table 3 = cost. Honesty labels + "efficiency not intelligence"
-      framing. Scale N only if Phase 2 shows a lift.
+      framing. Scale N only if Phase 2 shows a lift. <!-- cancelled: depends on Phase 2 which is cancelled; honest null accepted (maintainer, 2026-06-15) -->
 
 ## Acceptance criteria
 
