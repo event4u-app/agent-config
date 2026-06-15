@@ -177,6 +177,7 @@ tasks:
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
+      - task: generate-capabilities-index-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
@@ -315,6 +316,7 @@ tasks:
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
+      - task: generate-capabilities-index-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
