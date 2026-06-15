@@ -158,6 +158,61 @@ The follow-up roadmap is **not** authored from scratch — the
 deferred steps are copied verbatim (with their phase context). This
 preserves the plan exactly as the author originally wrote it.
 
+### 8. Source-derived & capability-adoption roadmaps (conditional)
+
+This section fires **only** when the roadmap originates from an
+external input or adopts capabilities into the suite:
+
+- a competitive / capability harvest, an external suggestion, or an
+  external LLM ideation thread, **or**
+- a decision to integrate/adopt new skills, commands, or a pack, **or**
+- a plan whose design has genuinely contested, not-yet-resolved
+  trade-offs.
+
+For an ordinary internally-originated roadmap, **skip this section** —
+§§ 0–7 are the whole job. Do not bolt a Provenance block or a
+gap-table onto a plan that needs neither (template rule 18).
+
+When it fires, add these four moves to the §§ 0–7 procedure:
+
+**A. Gap-table before drafting (don't adopt — integrate).** Audit each
+proposed item against the *existing* skill / command / rule surface and
+classify it `KEEP` (verified gap), `FOLD` (into a named existing
+artefact), or `CUT` (already covered). Only `KEEP` items become
+roadmap scope; `FOLD`/`CUT` are recorded so the cut is auditable. A
+negative grep is not proof — open the nearest existing artefacts (per
+[`think-before-action`](../../rules/think-before-action.md) and, for an
+external source, [`external-reference-deep-dive`](../../rules/external-reference-deep-dive.md)).
+
+**B. Resolve contested design in the council *first*, then author.**
+The default council flow (`/roadmap:ai-council`) *challenges a finished
+roadmap*. For a contested or source-derived plan, run the council
+**up front** on the design questions (`/council:design`, or the
+[`ai-council`](../ai-council/SKILL.md) skill), converge, **then** write
+the roadmap encoding the verdicts — so the plan ships already-decided,
+not as open questions in prose. One run, converge; do not relitigate.
+
+**C. Encode the decision so it survives.**
+- Inline council convergence under a `## Council notes (<date>, <depth>)`
+  block — members + date, **never** a session filepath
+  ([`no-roadmap-references`](../../rules/no-roadmap-references.md)).
+- Add a `## Provenance` block — source by a **neutral descriptor**
+  (never the raw competitor/tool name,
+  [`source-confidentiality`](../../rules/source-confidentiality.md));
+  retain the real link as an `ENC1:` token via
+  `src/scripts/_lib/link_crypto.py encrypt --value <url>`.
+- Save the locked decision to memory (project type, "don't relitigate")
+  so a future session does not re-derive it.
+
+**D. Make "integration, not dump" a testable acceptance criterion.**
+The AC must encode the anti-dump litmus, decidably: visible commands
+within the pack's `size_class` budget; each new visible command reuses
+≥ 2 existing skills; no new artefact duplicates an existing one;
+governance preflight recorded — `domain-adoption-policy` (does it open a
+new domain?), `persona-governance` (new personas?),
+`framework-neutrality`, `size-enforcement` — with the disposition
+stated in the roadmap.
+
 ## Output format
 
 A single Markdown file at `agents/roadmaps/{name}.md`:
@@ -196,6 +251,11 @@ to every roadmap you author.
 3. Are checkboxes present in every non-intro phase?
 4. Are exit criteria decidable, or vibe-based ("looks good")?
 5. Is content duplicated from another roadmap (supersession instead)?
+6. *Source-derived/adoption only (§ 8):* is there a `KEEP`/`FOLD`/`CUT`
+   gap-table behind the scope, a `## Provenance` block with an `ENC1:`
+   link, inlined council convergence, and an anti-dump acceptance
+   criterion? (Internally-originated roadmap → these must be **absent**,
+   not empty.)
 
 ## Do NOT
 
@@ -223,6 +283,15 @@ to every roadmap you author.
 * Use ALL-CAPS Iron-Law fenced blocks — those belong in
   [`kernel-membership`](../../../docs/contracts/kernel-membership.md)-listed
   rules, not roadmaps.
+* Adopt items from an external source / harvest **without a
+  `KEEP`/`FOLD`/`CUT` gap-table** against the existing surface (§ 8) —
+  that is a skill dump, not integration.
+* Add a `## Provenance` block (or gap-table) to an **internally
+  originated** roadmap — § 8 is conditional; an empty Provenance section
+  is noise (template rule 18).
+* Name the raw competitor / tool in a tracked roadmap, or paste a raw
+  source link — anonymize + `ENC1:`-encrypt
+  ([`source-confidentiality`](../../rules/source-confidentiality.md)).
 
 ## Gotchas
 
@@ -242,6 +311,15 @@ to every roadmap you author.
   "merge PR #X" or "commit phase Y" couple roadmap closure to git
   operations the user has not authorized. Roadmap completion is
   decoupled from delivery; ship-the-PR is its own decision.
+- **Adopting an external suggestion verbatim** — a harvest/suggestion
+  roadmap that copies the source's proposed item list without the § 8
+  `KEEP`/`FOLD`/`CUT` audit becomes a skill dump: items that already
+  exist get rebuilt, items that should fold into an existing artefact
+  spawn a duplicate. The gap-table is the integration discipline.
+- **Council-as-afterthought** — running the council only *after* a
+  contested roadmap is written wastes the convergence: the plan still
+  reads as open questions. For source-derived/contested plans, council
+  *first* (§ 8.B), then author the verdicts.
 
 ## Examples
 
