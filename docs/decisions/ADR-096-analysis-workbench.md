@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 **Accepted** · 2026-06-15. Lands Phase 0 of
-[`road-to-analysis-workbench`](../../agents/roadmaps/road-to-analysis-workbench.md).
+[`road-to-analysis-workbench`](../../agents/roadmaps/archive/road-to-analysis-workbench.md).
 Routed through AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
 two rounds, 2026-06-15).
 
