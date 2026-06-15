@@ -109,6 +109,36 @@ THE TEETH ARE POINTER-CI (DETERMINISTIC) + THE ANTI-HALLUCINATION EVAL (EMPIRICA
   content-compare) + the multi-evidence git-ancestry consistency check +
   the per-surface anti-hallucination eval with a variance baseline.
 
+## Global layer (v2 — cross-project card sharing, ADR-100)
+
+An *expensive* (remote) card may be promoted from project-local
+`agents/knowledge/` to a per-user **file-first** global store at
+`~/.event4u/agent-config/knowledge/` (no daemon / DB / vector index / decay —
+the 2026-06-14 Layer-2 sunset's core is preserved). It is **storage, not
+governed** like a committed card: unversioned, a cache, never a source of
+truth — the per-card provenance footer is its audit trail. Gated by the
+user-global `knowledge.global_sharing` setting (default ON for the safe tiers,
+`enabled: false` fully no-ops the layer — v1 unaffected).
+
+- **A global card is a distillation, not a copy.** Its `trust: durable` core is
+  **negative facts + pointers**; positive structure is an explicit per-line
+  **hypothesis** — the same shape as a committed card, never positive structure
+  copied as a build input.
+- **Leads-only consumption.** A global card loaded in a consuming project enters
+  the Evidence Report under **"Assumed (from card · GLOBAL, unverified)"** — its
+  positive structure must be re-confirmed against the live source *this session*
+  before use (version skew, schema drift). Negative facts + pointers are usable
+  as leads. Global-sourced positive structure is **never** "Verified".
+- **Origin-tier scoping is the privacy floor.** `public` (registry / GitHub /
+  docs) auto-shareable; `vendor` (Stripe / AWS / …) shareable **post-redaction**;
+  `proprietary` (in-house DB / private API / client schemas) **manual-only,
+  default-off regardless of `enabled`** — no client-A schema leaks into client-B.
+- **Redaction on write.** Promotion runs the `low-impact-corpus-privacy-floor`
+  + `source-confidentiality` pattern set and **halts** on any hit — never
+  silent-shares, never auto-rewrites.
+- **Promotion is hybrid.** A `public`/`vendor` card seen in ≥`auto_promote_threshold`
+  distinct repos triggers a one-tap **suggestion**; never a silent write.
+
 ## See also
 
 - [`source-discovery`](../../rules/source-discovery-gate.md) — the obligation surface.

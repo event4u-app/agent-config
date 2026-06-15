@@ -675,6 +675,16 @@ tasks:
     desc: "Knowledge-card pointer-CI — size ≤ 150, mandatory authoritative pointer, trust tagging, multi-evidence consistency (evidence-first structure discovery / ADR-097)"
     cmd: python3 src/scripts/check_knowledge_cards.py
 
+  knowledge-global:
+    silent: true
+    desc: "Global knowledge-card store surface (ADR-100). Usage: task knowledge-global -- <list|show|trace|forget|promote|validate> [args]. Default: list."
+    cmd: python3 src/scripts/knowledge_global_cli.py {{.CLI_ARGS | default "list"}}
+
+  knowledge-global-validate:
+    silent: true
+    desc: "Validate the untracked global knowledge-card store (offline; --check-urls for live pointer check)."
+    cmd: python3 src/scripts/knowledge_global_cli.py validate {{.CLI_ARGS}}
+
   check-no-local-settings:
     silent: true
     desc: .agent-settings.local.yml (per-machine override layer) must never be committed

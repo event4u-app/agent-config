@@ -120,6 +120,11 @@ def _build_provenance(args: argparse.Namespace) -> str:
         parts.append(f"source={args.source}")
     if args.version:
         parts.append(f"version={args.version}")
+    # GLOBAL-origin leads (cross-project global store) are flagged so the
+    # lead-only enforcement can detect a GLOBAL positive-structure line used
+    # without this-session re-confirmation (road-to-structure-grounding-v2 P4).
+    if args.bucket == "assumed" and getattr(args, "origin", "local") == "global":
+        parts.append("origin=GLOBAL")
     if args.bucket == "gaps":
         if args.searched:
             parts.append(f"searched={args.searched}")
@@ -262,6 +267,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("--observed-at", default="", dest="observed_at",
                        help="ISO8601 timestamp (default: now UTC).")
     p_add.add_argument("--version", default="", help="Source version if applicable.")
+    p_add.add_argument(
+        "--origin", default="local", choices=["local", "global"],
+        help="Card origin for the assumed bucket. 'global' tags the line "
+             "'origin=GLOBAL' (a GLOBAL, unverified lead — positive structure "
+             "must be re-confirmed against the live source this session).",
+    )
     p_add.add_argument("--searched", default="", help="Gaps: comma-list of searched locations.")
     p_add.add_argument("--not-searched", default="", dest="not_searched",
                        help="Gaps: comma-list of un-searched locations.")

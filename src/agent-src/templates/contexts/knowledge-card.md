@@ -1,6 +1,12 @@
 ---
 type: anti-hallucination
 trust: durable
+# tier — origin classification for global cross-project sharing (ADR-100).
+# public = registry/GitHub/docs · vendor = known SaaS API · proprietary =
+# in-house DB / private API / client schema (manual-only, never auto-shared).
+# Optional for project-local cards; required (plus a provenance footer) once a
+# card is promoted to the global store. Resolve via knowledge_global.classify_tier.
+tier: "<public | vendor | proprietary>"
 origin: "<brief description — e.g. npm package / remote API / legacy DB>"
 url: "<canonical upstream URL>"
 ref: "<pinned version tag or commit SHA — never blind main>"

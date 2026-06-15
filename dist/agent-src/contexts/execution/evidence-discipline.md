@@ -109,6 +109,31 @@ THE TEETH ARE POINTER-CI (DETERMINISTIC) + THE ANTI-HALLUCINATION EVAL (EMPIRICA
   content-compare) + the multi-evidence git-ancestry consistency check +
   the per-surface anti-hallucination eval with a variance baseline.
 
+## Global layer (v2 — cross-project card sharing, ADR-100)
+
+Expensive (remote) card promotable from project-local `agents/knowledge/` to a
+per-user **file-first** store `~/.event4u/agent-config/knowledge/` (no daemon /
+DB / vector / decay — Layer-2 sunset core preserved). **Storage, not governed**:
+unversioned, a cache, never source of truth — provenance footer = audit trail.
+Gated by user-global `knowledge.global_sharing` (default ON, safe tiers;
+`enabled: false` no-ops the layer, v1 unaffected).
+
+- **Distillation, not a copy.** `trust: durable` core = negative facts +
+  pointers; positive structure = per-line **hypothesis**, never a build input.
+- **Leads-only consumption.** Global card → Evidence Report under **"Assumed
+  (from card · GLOBAL, unverified)"** — positive structure re-confirmed vs live
+  source *this session* before use (version skew / schema drift). Never
+  "Verified" on the global card alone. Negative facts + pointers = usable leads.
+- **Origin-tier scoping = privacy floor.** `public` (registry/GitHub/docs)
+  auto-shareable; `vendor` (Stripe/AWS) shareable **post-redaction**;
+  `proprietary` (in-house DB/API, client schemas) **manual-only, default-off
+  regardless of `enabled`** — no client-A schema into client-B.
+- **Redaction on write.** Promotion runs `low-impact-corpus-privacy-floor` +
+  `source-confidentiality` and **halts** on any hit — never silent-shares, never
+  auto-rewrites.
+- **Promotion hybrid.** `public`/`vendor` card seen in ≥`auto_promote_threshold`
+  distinct repos → one-tap **suggestion**; never silent.
+
 ## See also
 
 - [`source-discovery`](../../rules/source-discovery-gate.md) — the obligation surface.

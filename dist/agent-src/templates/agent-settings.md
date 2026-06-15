@@ -519,6 +519,13 @@ the canonical narrative lives in
 | `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
 | `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
 | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
+| `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100). `false` fully no-ops the layer; v1 project-local cards unaffected. |
+| `knowledge.global_sharing.allowed_tiers` | list of `public`,`vendor`,`proprietary` | `[public, vendor]` | Origin tiers auto-eligible to cross a project boundary. `proprietary` is manual-only regardless (the gate hard-codes it). |
+| `knowledge.global_sharing.redaction.enabled` | `true`, `false` | `true` | Run the privacy-floor + source-confidentiality scan before any card goes global. |
+| `knowledge.global_sharing.redaction.halt_on_trigger` | `true`, `false` | `true` | Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite. |
+| `knowledge.global_sharing.auto_promote_threshold` | integer | `2` | Distinct-repo count that triggers a promotion **suggestion** (never a silent write). |
+| `knowledge.global_sharing.freshness.hypothesis_after_days` | integer | `90` | Global card older than this is lead-only (positive structure re-confirmed before use). |
+| `knowledge.global_sharing.freshness.stale_after_days` | integer | `180` | Global card older than this is skipped until re-verified. |
 
 ### Rename-Map (migration)
 
