@@ -125,6 +125,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `meta` | Artefacts that maintain *this* package (`agent-config` itself). |
 | `git` | Git workflow — commit, pull requests, branch sync. Carries `slug_prefix: git` (ADR-044 §A3); `requires: engineering-base`. Added 2026-06-04 for 6.0.0-D Step 12 Class B1 (`commit`→`git-commit`, `create-pr`→`git-pr-create`). |
 | `frontend-design` | Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge. `requires: engineering-base`; `suggests: react, nextjs`. Added 2026-06-07 (ADR-061). |
+| `analysis-workbench` | RCA, post-mortem, premortem, decision-review as an integrated learning loop. `requires: engineering-base`; opt-in under the `engineering` workspace. Added 2026-06-15 (ADR-096). |
 
 Amendments to the pack list require an ADR-013 amendment and the
 matching `src/config/discovery/packs.yml` row in the same PR.

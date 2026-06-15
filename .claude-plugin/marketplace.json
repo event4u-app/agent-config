@@ -5,7 +5,7 @@
     "email": "dev@event4u.app"
   },
   "metadata": {
-    "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
+    "description": "Shared agent configuration — skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
     "version": "6.1.0",
     "keywords": [
       "agent-config",
@@ -26,7 +26,7 @@
   "plugins": [
     {
       "name": "agent-config",
-      "description": "Full skill catalog \u2014 writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
+      "description": "Full skill catalog — writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
       "keywords": [
         "skills",
         "rules",
@@ -203,6 +203,7 @@
         "./dist/agent-src/skills/authz-review",
         "./dist/agent-src/skills/aws-infrastructure",
         "./dist/agent-src/skills/blade-ui",
+        "./dist/agent-src/skills/blameless-post-mortem",
         "./dist/agent-src/skills/blast-radius-analyzer",
         "./dist/agent-src/skills/bug-analyzer",
         "./dist/agent-src/skills/build-buy-partner",
@@ -369,6 +370,7 @@
         "./dist/agent-src/skills/risk-officer",
         "./dist/agent-src/skills/roadmap-management",
         "./dist/agent-src/skills/roadmap-writing",
+        "./dist/agent-src/skills/root-cause-frameworks",
         "./dist/agent-src/skills/rtk-output-filtering",
         "./dist/agent-src/skills/rule-refactor",
         "./dist/agent-src/skills/rule-writing",

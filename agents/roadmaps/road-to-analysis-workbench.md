@@ -146,22 +146,22 @@ retrieval. Touches the memory retrieval contract + one rule.
 Mostly `user_invokable:` internal skills — no persona, no visible-command budget
 cost. Each ends by drafting a memory candidate per the Phase 0 contract.
 
-- [ ] `blameless-post-mortem` (internal skill): completes the incident-commander
+- [x] `blameless-post-mortem` (internal skill): completes the incident-commander
       skeleton — blame-free facilitation, what-went-well/wrong, action items —
       consumes the skeleton per the handoff contract, calls `root-cause-frameworks`
       for the root cause, ends with an `incident-learnings` candidate. Reuses
       incident-commander's timeline; does NOT re-implement it.
-- [ ] `root-cause-frameworks` (internal skill): ONE skill, internal multi-method
+- [x] `root-cause-frameworks` (internal skill): ONE skill, internal multi-method
       (5-whys → if stalled, fishbone categories → contributing-factors split:
       root / contributing / amplifying / coincidence), returns the best result;
       **no `--method` flag in v1** (add only if telemetry shows the default
       stalls). Complements (does not duplicate) `systematic-debugging` /
       `bug-analyzer`, which it may invoke for evidence.
-- [ ] `corrective-action-design` (internal skill): turns root cause into sized
+- [x] `corrective-action-design` <!-- folded: delivered as the corrective-action phase INSIDE blameless-post-mortem per council D5; no standalone skill --> turns root cause into sized
       action items (immediate / preventive / detection / process), each with
       owner + closure criterion + regression-test signal; reuses `risk-officer`
       mitigation framing.
-- [ ] **Fold near-miss into the existing pipeline** (council — near-miss is a
+- [x] **Fold near-miss into the pipeline** <!-- delivered: near-miss is a MODE of blameless-post-mortem (council D5 refined from an incident-commander tag); no standalone --> (council — near-miss is a
       detector, not a parallel system): extend `incident-commander` to tag
       `incident_type: near-miss` into its existing timeline schema, and let
       `corrective-action-design` + `blameless-post-mortem` consume it. No
