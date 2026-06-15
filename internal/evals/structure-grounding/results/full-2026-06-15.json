@@ -1,0 +1,50 @@
+{
+  "eval": "structure-grounding-full",
+  "phase": "3 (R3 F-4 full, per-surface variance baseline)",
+  "date": "2026-06-15",
+  "model_under_test": "claude-sonnet-4-5 (subagents)",
+  "metric": "invented_fields = structural names referenced that are not in the fixture ground-truth set",
+  "surfaces": {
+    "db": {
+      "fixture": "fixtures/db/user_model.py",
+      "ground_truth": ["id", "email", "full_name", "created_at", "status", "active", "suspended", "pending"],
+      "discovery_off_variance": [
+        {"fields": ["is_banned", "username", "signup_date"], "invented": 3},
+        {"fields": ["username", "created_at", "status", "banned"], "invented": 2},
+        {"fields": ["username", "created_at", "is_banned"], "invented": 2}
+      ],
+      "discovery_off_invented_mean": 2.33,
+      "discovery_on": {"fields": ["status", "suspended", "full_name", "created_at"], "invented": 0, "counters": {"verified": 4, "assumptions": 0, "gaps_resolved": 3}}
+    },
+    "api": {
+      "fixture": "fixtures/api/openapi.yaml",
+      "ground_truth": ["/orders/{id}", "order_id", "customer_email", "total_cents", "state", "created", "paid", "shipped", "cancelled"],
+      "discovery_off_variance": [
+        {"fields": ["/orders/{id}", "amount", "status"], "invented": 2},
+        {"fields": ["/orders/{order_id}", "total_amount", "fulfillment_status"], "invented": 2},
+        {"fields": ["/orders/{id}", "amount", "state"], "invented": 1}
+      ],
+      "discovery_off_invented_mean": 1.67,
+      "discovery_on": {"fields": ["/orders/{id}", "total_cents", "state", "created", "paid", "shipped", "cancelled"], "invented": 0, "counters": {"verified": 7, "assumptions": 0, "gaps_resolved": 6}}
+    },
+    "vendor": {
+      "fixture": "fixtures/vendor/dateguru/index.d.ts",
+      "ground_truth": ["formatISO", "addDays", "diffDays", "parse"],
+      "discovery_off_variance": [
+        {"fields": ["addBusinessDays"], "invented": 1},
+        {"fields": ["addBusinessDays", "format"], "invented": 2},
+        {"fields": ["parseISO", "addBusinessDays"], "invented": 2}
+      ],
+      "discovery_off_invented_mean": 1.67,
+      "discovery_on": {"fields": ["addDays", "formatISO"], "invented": 0, "counters": {"verified": 2, "assumptions": 0, "gaps_flagged": 3}, "note": "ON correctly flagged 'business days' as absent and composed it from addDays + native Date, instead of inventing addBusinessDays."}
+    }
+  },
+  "cross_feature_duplication_check": {
+    "description": "R4 P7 — structure rediscovered across >1 run without a card should be flagged card-worthy.",
+    "finding": "The vendor surface (dateguru: external package, >3 methods intended) was rediscovered across all runs. Per the card-worthiness threshold it IS card-worthy — a real session would persist a committed card; repeated cardless rediscovery is the 'should-have-been-card-worthy' signal."
+  },
+  "summary": "On every surface (DB / API / vendor) discovery-on reduced invented fields to 0; discovery-off averaged 1.67-2.33 invented names per run with real variance.",
+  "null_signal": false,
+  "decision": "Positive across all three surfaces. Acceptance #6 met.",
+  "caveats": ["n=3 off / n=1 on per surface — signals, not benchmarks.", "off/on prompt framing isolates the core source-first vs prompt-only claim.", "Re-run on model upgrades; counters are the P8 seed, full evidence-quality metrics are a follow-up."]
+}
