@@ -14,6 +14,8 @@ suggestion:
   eligible: true
   trigger_description: "upgrade Laravel to version X, Laravel 10 to 11 upgrade, bump framework major version"
   trigger_context: "composer.json present with a laravel/framework constraint and user asks for a major version bump"
+workspaces:
+  - agent-config-maintainer
 packs:
   - engineering-base
 disable-model-invocation: true
