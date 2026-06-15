@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/mission-catalog.schema.json",
+  "title": "Mission breaking-change catalog",
+  "$comment": "Versionable, CI-testable catalog of breaking changes for a named mission upgrade path. Validated by src/scripts/lint_missions.py. Commands in fix/detection blocks are restricted to a safe-prefix allowlist — schema validation replaces a runtime security audit (council, 2026-06-15).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "framework", "from", "to", "breaking_changes"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "Catalog schema version (major.minor). Bump minor for additive entries, major for structural changes."
+    },
+    "framework": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Framework slug (e.g. 'laravel', 'symfony', 'nextjs')."
+    },
+    "from": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Source major version (integer string, e.g. '10')."
+    },
+    "to": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Target major version (integer string, e.g. '11'). Must be greater than 'from'."
+    },
+    "breaking_changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/breaking_change"
+      },
+      "description": "Ordered list of breaking changes. The mission engine iterates these in order during the fix phase."
+    }
+  },
+  "definitions": {
+    "safe_command": {
+      "type": "string",
+      "pattern": "^(composer|php|php artisan|git|sed|rector|vendor/bin/[a-zA-Z0-9._/-]+)( .+)?$",
+      "description": "Shell command string restricted to safe prefixes: composer, php, php artisan, git, sed, rector, vendor/bin/*. Schema validation is the security gate — the linter enforces this pattern on every command field (council, 2026-06-15)."
+    },
+    "command_block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable explanation of this step."
+        },
+        "command": {
+          "$ref": "#/definitions/safe_command"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional additional guidance, caveats, or context."
+        }
+      }
+    },
+    "breaking_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "severity", "detection", "fix", "verification"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Unique slug within this catalog (used as a checkpoint key in .work-state.json)."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "One-line description of the breaking change."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "description": "Impact severity. 'critical' = breaks boot or data integrity; 'high' = broad API breakage; 'medium' = targeted fixup; 'low' = behavioral nuance."
+        },
+        "detection": {
+          "$ref": "#/definitions/command_block",
+          "description": "How to detect whether this change affects the project."
+        },
+        "fix": {
+          "$ref": "#/definitions/command_block",
+          "description": "How to apply the fix (may reference a Rector rule or manual step)."
+        },
+        "verification": {
+          "$ref": "#/definitions/command_block",
+          "description": "How to verify the fix is complete and correct."
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Upstream documentation or upgrade guide URLs."
+        },
+        "rector_rule": {
+          "type": "string",
+          "description": "Optional Rector rule class name that automates this fix (e.g. 'RenameClassRector')."
+        }
+      }
+    }
+  }
+}
