@@ -25,6 +25,7 @@ async-python-patterns: Use when writing Python asyncio code — picking between 
 authz-review: Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows.
 aws-infrastructure: Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS.
 blade-ui: Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic.
+blameless-post-mortem: Use after an incident or outage is resolved — blame-free facilitation, root cause, corrective actions, memory write-back — even for a near-miss. Consumes the incident-commander skeleton.
 blast-radius-analyzer: Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 bug-analyzer: Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 build-buy-partner: Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'.
@@ -58,6 +59,7 @@ database: Use when working with database architecture, MariaDB/MySQL tuning, ind
 dcf-modeling: Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'.
 deal-qualification-meddic: Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'.
 decision-record: Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`.
+decision-review: Use to audit a past architectural decision — did the chosen option hold up, what assumptions drifted, should the ADR be superseded? Backward review only; does not lock new choices.
 deep-reading-analyst: Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary.
 defense-in-depth: Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one.
 dependency-upgrade: Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic.
@@ -158,6 +160,7 @@ playwright-testing: Use when writing Playwright E2E tests — browser automation
 po-discovery: Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'.
 positioning-strategy: Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'.
 prediction-pool-optimizer: Optimize prediction-pool tips (kicktipp etc.): rules + multi-book consensus odds → expected-points-max answer for every question, scores AND bonus. Triggers 'optimize my pool tips', 'predict'.
+premortem: Use before committing to a heavy or irreversible plan — imagine it's 6 months later and this failed; enumerate why, score each mode, derive early-warning signals and preventive guardrails.
 privacy-review: Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'.
 project-analysis-core: Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`.
 project-analysis-hypothesis-driven: Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'.
@@ -191,6 +194,7 @@ rice-prioritization: Use when ranking competing initiatives for a roadmap, break
 risk-officer: Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
 roadmap-management: Use when the user says \"create roadmap\", \"show roadmap\", or \"execute roadmap\". Creates, reads, and manages roadmap files with phase tracking.
 roadmap-writing: Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
+root-cause-frameworks: Use when tracing the root cause of a resolved incident or recurring bug — 5-whys chain, fishbone categorisation, contributing-factors split — even if the user says 'why does this keep breaking?'.
 rtk-output-filtering: Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
 rule-refactor: Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
 rule-writing: Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
