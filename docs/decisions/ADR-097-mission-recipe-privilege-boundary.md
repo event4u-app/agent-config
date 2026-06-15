@@ -118,4 +118,4 @@ execution blocks.
 - `src/scripts/schemas/mission.schema.json` — trusted mission manifest schema
 - `.agent-src.uncondensed/rules/lethal-trifecta-guard.md` — runtime defense layer
 - `.agent-src.uncondensed/rules/security-sensitive-stop.md` — review gate for `user_invokable` additions
-- `agents/roadmaps/road-to-mission-mode.md` § Phase 0 — authoring context
+- `agents/roadmaps/archive/road-to-mission-mode.md` § Phase 0 — authoring context

@@ -41,18 +41,18 @@ persisted `.work-state.json` engine.
 
 ## Phase 0 — Boundary + manifest + security split (authoring-only)
 
-- [ ] Write `docs/contracts/no-runtime-boundary.md` — the definition every
+- [x] Write `docs/contracts/no-runtime-boundary.md` — the definition every
       mission decision references. **Allowed:** codegen, file I/O,
       multi-turn prompting, git-as-state (AC shells out to git constantly — a
       mission `git commit -m "mission:upgrade step=11 status=ok"` is structured
       logging, not a daemon). **Prohibited:** background processes, cross-session
       persistent state, event loops, polling. **Gray (council-review):**
       conditional branching on prior outputs, file-state within one invocation.
-- [ ] Draft a **minimal mission-manifest stub** schema
+- [x] Draft a **minimal mission-manifest stub** schema
       (`src/scripts/schemas/mission.schema.json`): `mission`, `inputs`,
       `phases` only. NO advanced features yet (no loop, no size policy) — extend
       after the PoC reveals what is actually needed.
-- [ ] Decide + document the **trusted-mission vs user-recipe security split**
+- [x] Decide + document the **trusted-mission vs user-recipe security split**
       (privilege-escalation risk, council): shipped missions are trusted (may
       invoke skills directly); user/cookbook recipes are sandboxed (may invoke
       missions, not inject skills between mission steps unless a skill is
@@ -64,14 +64,14 @@ A ~2-day validation experiment (council: "PoC measures implementation risk;
 the architectural ambiguity is already collapsed"). Deliverable is evidence + a
 decision, not shippable product.
 
-- [ ] Implement `/mission:upgrade` for **Laravel 10 → 11 ONLY** as a manifest +
+- [x] Implement `/mission:upgrade` for **Laravel 10 → 11 ONLY** as a manifest +
       thin `/work` invocation. Drive the existing gated `/work` engine; no new
       state machine.
-- [ ] **Rollback = git** (council): the rollback unit is git commits on a
+- [x] **Rollback = git** (council): the rollback unit is git commits on a
       provisional branch (`mission/upgrade-…`); a mid-flight failure within the
       N=3 budget reverts the last step, never auto-PRs. Prove revert is
       observable (`git revert` / branch reset), no `.mission-state/` daemon.
-- [ ] **Decision doc** (`agents/evidence/`): can the mission be expressed with
+- [x] **Decision doc** (`agents/evidence/`): can the mission be expressed with
       ≤ ~200 LoC calling ONLY existing skills + `/work`? Do missions need
       control-flow (conditional / loop / nested sub-mission) beyond a linear
       gated sequence? If yes → scope the minimal control-flow addition; if no →
@@ -81,70 +81,53 @@ decision, not shippable product.
 
 Only after the Phase 1 gate. Ship the one proven mission well before the others.
 
-- [ ] Productize `/mission:upgrade` for single major-version steps (10→11,
+- [x] Productize `/mission:upgrade` for single major-version steps (10→11,
       11→12 as separate invocations the user sequences) under `/work`'s gates.
-- [ ] **Versionable breaking-change catalog** as YAML data (council — better
+- [x] **Versionable breaking-change catalog** as YAML data (council — better
       than Source-E, which has none): `src/missions/upgrade/laravel-*.yaml`
       listing breaking changes per major, so the mission validates against
       structured, diffable, CI-testable data — not prose buried in a skill.
-- [ ] **Surface the size-tier** (Source-E ADAPT): the mission states its
+      <!-- 2A: schema + minimal 5-entry proof catalog shipped; full catalog content = Phase 2B, deferred per the council gate (agents/evidence/analysis/mission-mode-phase1-gate.md). -->
+- [x] **Surface the size-tier** (Source-E ADAPT): the mission states its
       `trivial|small|standard|large` classification in one line so the user can
       override; security-trigger / public-API touch forces ≥ standard.
-- [ ] ADOPT Source-E's `laravel-verification` phase-sequencing (build → typecheck
+- [x] ADOPT Source-E's `laravel-verification` phase-sequencing (build → typecheck
       → lint → test → coverage gate) as the mission's verification phase, reusing
       AC's `quality-tools` + `verify-completion-evidence`.
-- [ ] Provisional-branch pattern for the (optional) multi-step chain: commits
+- [x] Provisional-branch pattern for the (optional) multi-step chain: commits
       land on `mission/upgrade-in-progress`; the final merge to the working
       branch requires user confirmation (preserves no-auto-PR).
-- [ ] A named cookbook recipe + `src/flows/` entry for the mission so it shows
+- [x] A named cookbook recipe + `src/flows/` entry for the mission so it shows
       up in the generated cookbook; a verification test asserts the mission's
       command/skill refs resolve (reuse the `generate_cookbook` validation
       pattern).
 
-## Phase 3 — Mission catalogue expansion
+## Follow-up — catalogue + content (spun out)
 
-Each mission is a recipe on the proven engine; add once the flagship is solid.
-
-- [ ] `/mission:phpstan-raise` — raise Larastan/PHPStan level with fixes (not a
-      baseline dump), reusing the `quality-tools` + PHP skills.
-- [ ] `/mission:n-plus-one-audit` — Eloquent N+1 detection + eager-load fixes
-      (reuse `eloquent`, `performance-analysis`).
-- [ ] `/mission:pest-migrate` — PHPUnit → Pest incremental (reuse `pest-testing`).
-- [ ] `/mission:fat-controller-cleanup` — extract controller logic to
-      actions/services/requests (reuse `php-service`, `architecture-review-lens`).
-- [ ] `/mission:dead-code-removal` — ADOPT Source-E's `refactor-clean`
-      tiered/test-verified deletion loop (reuse `tech-debt-tracker`,
-      `code-refactoring`); never deletes without test-green proof.
-
----
-
-## Deferred (trigger-gated)
-
-> Not started until a trigger fires; `[~]` = deferred, not abandoned.
-
-- [~] **Stack-generic missions** (PHP-version upgrade, Symfony-component upgrade,
-      Next.js/React contract audit). **Trigger:** the Laravel missions land +
-      ≥ 2 consumer requests for a non-Laravel mission.
-- [~] **Control-flow DSL for missions.** **Trigger:** Phase 1 gate proves a
-      linear gated sequence is insufficient AND ≥ 3 missions need branching/loops
-      that a manifest cannot express. Until then, missions stay linear (the
-      `/work` engine owns the loop/retry within a phase).
+Per the Phase 1 council gate, the catalogue + full-content work is **spun out**
+to [`road-to-mission-catalogue`](road-to-mission-catalogue.md) (status `ready`,
+blocked until the flagship infrastructure is validated on a live Laravel repo).
+It carries: Phase 2B (full Laravel 10→11 breaking-change catalog), the five
+catalogue missions (`phpstan-raise`, `n-plus-one-audit`, `pest-migrate`,
+`fat-controller-cleanup`, `dead-code-removal`), stack-generic missions, and the
+control-flow DSL — each trigger-gated there. This roadmap (Phase 0/1/2A — the
+flagship infrastructure) is complete.
 
 ---
 
 ## Acceptance criteria
 
-- [ ] `docs/contracts/no-runtime-boundary.md` + mission-manifest stub schema +
+- [x] `docs/contracts/no-runtime-boundary.md` + mission-manifest stub schema +
       trusted-mission/user-recipe ADR landed (Phase 0).
-- [ ] Phase 1 PoC decision doc recorded (LoC + control-flow findings); the
+- [x] Phase 1 PoC decision doc recorded (LoC + control-flow findings); the
       gate decision is explicit before any Phase 2 work.
-- [ ] `/mission:upgrade` (Laravel single-step) ships gated, git-rollback,
+- [x] `/mission:upgrade` (Laravel single-step) ships gated, git-rollback,
       breaking-change catalog as YAML, size-tier surfaced, with a resolving
       cookbook entry + verification test. **Never auto-PRs/-pushes.**
-- [ ] Phase 3 missions land only after the flagship is proven; each reuses
-      existing skills (no new per-language agents — `persona-governance` +
-      `framework-neutrality` hold).
-- [ ] No daemon, no cross-session persistent state introduced
+- [x] Catalogue + content work spun out to `road-to-mission-catalogue` (status
+      ready, blocked-until-validated); reuse-existing-skills + no-new-per-language-
+      agents constraints carried there (`persona-governance` + `framework-neutrality`).
+- [x] No daemon, no cross-session persistent state introduced
       (`no-runtime-boundary` honored throughout).
 
 ## Council notes (2026-06-15, two rounds, deep + peer-review)
