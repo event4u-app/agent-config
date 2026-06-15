@@ -205,17 +205,17 @@ auto-triage, NOT a new runtime.
 
 ## Phase 5 — Pack assembly + discovery wiring
 
-- [ ] Register `analysis-workbench` in `src/config/discovery/packs.yml`
+- [x] Register `analysis-workbench` in `src/config/discovery/packs.yml`
       (cross-workspace opt-in; `size_class: medium` → ≤5 visible commands; not
       `always_on`); add the discovery frontmatter (`workspaces`, `packs`,
       `lifecycle`, `trust`, `install`) to every new skill + the `/analyze`
       command; write `FIRST_WIN.md`.
-- [ ] Decide the **lean-subset suggestion** (not auto-include): which 3–4
+- [x] **Lean-subset** <!-- council D4: decision-review is the universal entry, documented in FIRST_WIN.md; no extra per-skill auto-include machinery built (avoids new surface). Rest opt-in via the pack. --> the lean subset (not auto-include): which 3–4
       skills (`blameless-post-mortem`, `root-cause-frameworks`,
       `corrective-action-design`, memory write-back) are `suggests:` for the
       engineering workspace, with the rest opt-in via the pack. No global
       auto-include (developer flow stays light).
-- [ ] Regenerate the manifest (`generate_pack_manifests.py`) + cookbook entry +
+- [x] Regenerate the manifest (`generate_pack_manifests.py`) + cookbook entry +
       a verification test asserting every `/analyze` sub-command's skill refs
       resolve (reuse the `generate_cookbook` validation pattern). Run
       `lint-skills` + frontmatter + discovery linters once locally.

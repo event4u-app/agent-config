@@ -6,17 +6,17 @@
 
 ## Overall
 
-**19 / 204 steps done · 9%**
+**22 / 204 steps done · 11%**
 
 ```text
-████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   11%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 6 | 30 | 10 | 15 | 5 | 0 | ██████░░░░ 60% |
+| 1 | [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 6 | 30 | 7 | 18 | 5 | 0 | ███████░░░ 72% |
 | 2 | [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md) | 2 | 10 | 9 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md) | 4 | 7 | 3 | 4 | 0 | 0 | ██████░░░░ 57% |
@@ -35,7 +35,7 @@
 
 ### [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md)
 
-**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 15 / 25 done (60%)
+**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 18 / 25 done (72%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -44,7 +44,7 @@
 | 2 | Core analysis skills (internal, minimal cut) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Forward-looking + decision skills, integrated into planning surfaces | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | Orchestration: the `/analyze` confidence-weighted suggester | ✅ done | 0 | 2 | 1 | 0 | 100% |
-| 5 | Pack assembly + discovery wiring | ⬜ not started | 10 | 0 | 4 | 0 | 0% |
+| 5 | Pack assembly + discovery wiring | 🟡 in progress | 7 | 3 | 4 | 0 | 30% |
 
 ### [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md)
 
