@@ -4,7 +4,7 @@ status: accepted
 date: 2026-06-15
 decision: evidence-first-structure-discovery
 supersedes: —
-superseded_by: —
+superseded_by: ADR-100 (Decision-10 only)
 phase: structure-grounding
 type: structural
 ---
@@ -106,6 +106,15 @@ run; discovery-on drove it to 0 on every surface.
     feed the now-abandoned promotion gate). No follow-up roadmap is spawned. The
     durable value stood in the v1 discipline + committed project cards, exactly
     as the kill path anticipated. The roadmap is closed/archived.
+
+    **REVERSED 2026-06-15 → see [ADR-100](ADR-100-global-knowledge-card-sharing.md).**
+    The operator reversed this kill the same day: the global cross-project layer
+    **is** built — but **file-first** (lazy-read plain files, no daemon / DB /
+    vector / decay), which preserves the Layer-2 sunset's *core* (no runtime)
+    rather than re-opening it. Promotion stays **hybrid** (suggest ≥2 + manual
+    confirm, never silent), global cards are **leads / negative-facts only**, and
+    **origin-tier scoping** keeps proprietary structure manual-only. **This
+    Decision-10 is superseded by ADR-100; the rest of ADR-098 stands.**
 
 ## Consequences
 
