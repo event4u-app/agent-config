@@ -96,6 +96,18 @@ tasks:
       Feeds step-2-skill-inventory-rationalization Phase 2 Step 3.
     cmd: python3 src/scripts/skill_overlap.py {{.QUIET_FLAG}}
 
+  lint-skill-originality:
+    silent: true
+    desc: |
+      Anti-duplicate originality gate (road-to-competitive-borrow P1.1).
+      Scans src/skills/*/SKILL.md description+trigger Jaccard; same-domain
+      (shared packs:) pairs >= 0.6 are the would-fail class, advisory warns
+      >= 0.40. WARN-ONLY by default per adr-architectural-consensus-mechanism
+      (fail-the-build deferred until thresholds stable one full release cycle).
+      Allowlist: src/scripts/lint_skill_originality_allowlist.json (capped 20).
+      Promotion path: add --strict once thresholds are confirmed stable.
+    cmd: python3 src/scripts/lint_skill_originality.py {{.QUIET_FLAG}}
+
   lint-archived-skills:
     silent: true
     desc: |
