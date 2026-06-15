@@ -2,14 +2,18 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn"
+description: "Git history ops — never rebase/squash/amend without request; never drop/exclude/force-over commits you didn't author (parallel / shared-PR work); once pushed, re-push same turn"
 triggers:
   - intent: "rebase the branch"
   - intent: "squash commits"
   - intent: "clean up commit history"
   - intent: "fold this into the previous commit"
   - intent: "tidy history after pushing"
+  - intent: "reseat the branch base"
+  - intent: "exclude these commits from the branch"
   - keyword: "git rebase"
+  - keyword: "rebase --onto"
+  - keyword: "reset --hard"
   - keyword: "fixup"
   - keyword: "--amend"
   - keyword: "force-push"
@@ -18,6 +22,8 @@ triggers:
   - phrase: "branch diverged"
   - phrase: "pull --rebase failed"
   - phrase: "ahead and behind"
+  - phrase: "unexpected commits on the branch"
+  - phrase: "commits I did not create"
 routes_to:
   - "skill:git-workflow"
 workspaces:
@@ -48,6 +54,42 @@ ANY REWRITE OF PUSHED HISTORY MUST PAIR WITH AN IMMEDIATE RE-PUSH
 IN THE SAME TURN — OR DON'T REWRITE.
 NEVER END A SESSION WITH REWRITTEN-BUT-UNPUSHED LOCAL HISTORY.
 ```
+
+## Iron Law — Inherited & shared-branch commits (never drop without asking)
+
+```
+COMMITS YOU DID NOT AUTHOR THIS SESSION ARE NOT YOURS TO DROP.
+NEVER EXCLUDE, RESET-AWAY, REBASE-OUT, OR FORCE-PUSH OVER A COMMIT
+THAT ALREADY EXISTS ON A BRANCH (LOCAL OR REMOTE) — WITHOUT ASKING
+THE USER THIS TURN. PARALLEL WORK IS THE DEFAULT, NOT THE EXCEPTION.
+```
+
+The user often works in parallel with the agent, and multiple agents may
+share one PR branch. A commit that looks "unrelated" or "stray" may be
+deliberate in-flight work the user expects to keep. Reseating a branch onto a
+different base, `git reset --hard`-ing away inherited commits, force-pushing
+over a branch you did not create, or branching from a base with unexpected
+commits and then "cleaning" them out all **silently discard work** — the exact
+failure this law prevents.
+
+Before ANY of these, STOP and ask (one numbered-options prompt per
+[`user-interaction`](user-interaction.md)):
+
+- reseating a branch's base (`git rebase --onto`, `git reset --hard <other-base>`)
+  in a way that drops commits already on the branch;
+- excluding / not-carrying-forward commits that were on the branch when you
+  started this session;
+- force-pushing (or `push <local>:<remote>`-replacing) a branch that carries
+  commits you did not author;
+- branching from a base with unexpected commits, then resetting them away.
+
+**Preserve-first is necessary but not sufficient.** Even when you keep the
+commits reachable (a save-branch / tag), you still **ask before** the branch
+the user sees loses them — "I preserved them locally" is not a substitute for
+the question, because the user may be mid-edit on the shared branch and a
+force-push would clobber their in-flight work regardless of your local backup.
+
+When in doubt about whether a commit is yours to touch: it is not. Ask.
 
 ## When rewrite is allowed
 
@@ -93,10 +135,14 @@ A previous session squashed a pushed branch, the push hook failed at the token b
 - "A linter caught an issue in commit 2 — let me fold the fix in." → don't. Add `fix(scope): …` on top.
 - "I want to drop the WIP commit before pushing." → ask the user first.
 - "Squash-merge when I open the PR will clean it anyway." → also true, also irrelevant — let the merge strategy do that work, not you.
+- "My branch inherited some unrelated commits — I'll reseat it on `origin/main` so my PR is clean." → **don't, ask first.** They may be the user's parallel work or another agent's. Preserve them and ask which base the user wants.
+- "The remote branch has commits I didn't author and no PR — I'll just force-push over it." → don't. No-PR is not no-owner; ask before replacing a branch you did not create.
 
 ## See also
 
 - [`scope-control`](scope-control.md) — git-ops permission gate ("rebase" already named in the canonical list).
+- [`non-destructive-by-default`](non-destructive-by-default.md) — `reset --hard past unpushed work` and force-push are Hard-Floor triggers; the shared-branch Iron Law above is their commit-level companion.
+- [`user-interaction`](user-interaction.md) — the one-question-per-turn shape for the shared-branch ask.
 - [`commit-policy`](commit-policy.md) — commits are the user's call; rewriting them is a stronger version of the same restriction.
 - [`token-efficiency`](token-efficiency.md) — Iron Law on burning the user's tokens for cosmetic gain.
 - [`skill:git-workflow`](../skills/git-workflow/SKILL.md) — Safe Squash-After-Push protocol and Divergent-State Recovery decision tree.

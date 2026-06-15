@@ -1,9 +1,9 @@
 /**
  * Diff resolver — wrap a unified-diff payload as an {@link Input} envelope.
  *
- * TypeScript twin of `work_engine/resolvers/diff.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/resolvers/diff.py` (ADR-096 py2ts —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-094 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-096 — Python style is part of the contract).
  *
  * The resolver is the R3 Phase 1 entry point for the "improve this screen via
  * diff/PR" surface: a user (or `/work` adapter) hands the engine a patch text,

@@ -34,7 +34,7 @@ MEMORY_ROOT = Path("agents/memory")
 INTAKE_ROOT = MEMORY_ROOT / "intake"
 CURATED_TYPES = (
     "ownership", "historical-patterns", "domain-invariants",
-    "architecture-decisions", "incident-learnings", "product-rules",
+    "incident-learnings", "product-rules",
 )
 
 # Role-mode marker grepped from session captures / reports / handoffs.
@@ -204,24 +204,6 @@ def _quarterly_stats() -> dict:
     }
 
 
-def _operational_store_stats(backend_status: str) -> dict | None:
-    """Optional operational-store stats when the backend reports `present`.
-
-    Detection-only for now: the `agent-memory` CLI adapter is the owner
-    of real counts. We surface the status and a clear stub marker so a
-    future PR can replace the stub with CLI output without changing the
-    report schema shape.
-    """
-    if backend_status != "present":
-        return None
-    return {
-        "enabled": True,
-        "counts": {"entries": None, "recent_writes": None},
-        "note": "full operational-store probing is owned by the "
-                "agent-memory CLI adapter; stats stubbed here",
-    }
-
-
 def _role_mode_stats() -> dict:
     """Count structured mode markers across session/report/handoff dirs.
 
@@ -263,13 +245,11 @@ def build_report() -> dict:
             "status": status.status,
             "backend": status.backend,
             "reason": status.reason,
-            "cli_path": status.cli_path,
         },
         "intake": _intake_stats(),
         "staleness": _staleness_report(),
         "quarterly": _quarterly_stats(),
         "role_modes": _role_mode_stats(),
-        "operational_store": _operational_store_stats(status.status),
     }
 
 
@@ -316,8 +296,6 @@ def _print_text(report: dict) -> None:
         if rm.get("unknown_modes"):
             print(f"  unknown: {', '.join(rm['unknown_modes'])} "
                   "(not in the six reserved slugs)")
-    if report["operational_store"]:
-        print("Operational-store: present (stats via agent-memory CLI)")
 
 
 def main() -> int:

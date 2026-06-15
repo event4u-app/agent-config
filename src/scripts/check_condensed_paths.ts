@@ -2,7 +2,7 @@
 /**
  * Validate condensed-output paths in `dist/agent-src/rules/*.md`.
  *
- * TypeScript twin of `src/scripts/check_condensed_paths.py` (ADR-094). Mirrors
+ * TypeScript twin of `src/scripts/check_condensed_paths.py` (ADR-096). Mirrors
  * the Python CLI contract EXACTLY — same `--quiet` flag, same exit codes
  * (0 clean, 1 violations, 3 internal error), same stdout/stderr split, same
  * finding text, same forbidden-substring set, same frontmatter parsing, same

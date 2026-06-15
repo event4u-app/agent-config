@@ -2,7 +2,7 @@
 /**
  * Lint ghostwriter profile sources.
  *
- * TypeScript twin of `src/scripts/lint_ghostwriter_source.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_ghostwriter_source.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
  * detected by argv membership, exit codes (0 / 1), stdout/stderr split,
  * byte-identical messages, same scan scope (`*.md` sorted in each tier),

@@ -1,36 +1,31 @@
 #!/usr/bin/env tsx
 /**
- * Hybrid retrieval — file-first with optional package augmentation.
+ * File-first memory retrieval.
  *
- * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-094, Phase 7 /
- * dev-side memory CORE). The public API and CLI contract mirror the Python
- * original EXACTLY — same exported names (snake_case kept deliberately,
- * especially `retrieve(...)` whose signature/return shape is cited by
- * rules), same exit codes, stdout/stderr split, byte-identical messages,
- * same memory-file scan + ranking + JSON output. No behaviour changes —
- * latent Python bugs are replicated and flagged as divergence candidates.
+ * TypeScript twin of `src/scripts/memory_lookup.py` (ADR-096). The public
+ * API and CLI contract mirror the Python original EXACTLY — same exported
+ * names (snake_case kept deliberately, especially `retrieve(...)` whose
+ * signature/return shape is cited by rules), same exit codes, stdout/stderr
+ * split, byte-identical messages, same memory-file scan + ranking + JSON
+ * output. No behaviour changes — latent Python bugs are replicated and
+ * flagged as divergence candidates.
  *
  * Implements the shared `retrieve(types, keys, limit)` abstraction used
  * by skills. Reads YAML under `agents/memory/<type>/` (curated, hand-
  * reviewed) and JSONL under `agents/memory/intake/*.jsonl` (agent-written,
- * append-only, supersede-chain aware).
+ * append-only, supersede-chain aware), plus user-ingested `knowledge`
+ * chunks and opted-in `cross-repo` matches.
  *
- * When the `@event4u/agent-memory` package is present (see
- * `./memory_status.ts`), callers can pass the result of
- * {@link package_operational_provider} to route additional retrieval
- * through the package's semantic CLI. Repo entries always win on
- * conflict — see {@link _apply_conflict_rule}.
+ * Retrieval is entirely repo-side and file-backed — there is no external
+ * backend. (The former optional `@event4u/agent-memory` package routing
+ * was removed; see `docs/decisions/` for the agent-memory removal ADR.)
  *
  * Usage:
  *     memory_lookup --types domain-invariants,ownership --key "app/Http/Controllers/Foo" --limit 5
  *     memory_lookup --types incident-learnings --format json
- *     memory_lookup --types ownership --key billing --auto
  *
- *     import { retrieve, package_operational_provider } from './memory_lookup.js';
- *     const hits = retrieve(
- *         ['ownership'], ['app/Http'], 3,
- *         package_operational_provider(),
- *     );
+ *     import { retrieve } from './memory_lookup.js';
+ *     const hits = retrieve(['ownership'], ['app/Http'], 3);
  */
 
 import { spawnSync } from 'node:child_process';
@@ -40,7 +35,6 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import YAML, { parseDocument } from 'yaml';
 
-import * as memory_status from './memory_status.js';
 
 // PyYAML implicit timestamp resolver. PyYAML's `safe_load` turns a plain
 // `YYYY-MM-DD` scalar into a `datetime.date` (str → `YYYY-MM-DD`) and a full
@@ -58,6 +52,16 @@ class PyTimestamp {
     toString(): string {
         return this.pyStr;
     }
+}
+
+/**
+ * Marker for a Python `float` so json.dumps renders integer-valued floats as
+ * `0.0`/`1.0`, not `0`/`1`. The Hit `score` and the v1 `confidence` are always
+ * Python floats; JS has no int/float distinction, so this preserves byte-for-byte
+ * parity for whole-number scores.
+ */
+class PyFloat {
+    constructor(readonly value: number) {}
 }
 
 // Mutable so tests can repoint them at a tmp tree (monkeypatch parity).
@@ -80,15 +84,13 @@ export const CURATED_TYPES: ReadonlySet<string> = new Set([
     'ownership',
     'historical-patterns',
     'domain-invariants',
-    'architecture-decisions',
     'incident-learnings',
     'product-rules',
 ]);
 
 // `knowledge` is its own type: user-ingested local documents that live
 // under `agents/memory/knowledge/<ingest-id>/chunks/*.md`. They are
-// repo-side (file-backed) but not "curated" and not intake — the conflict
-// rule still treats them as repo entries against operational.
+// repo-side (file-backed) but not "curated" and not intake.
 export const KNOWLEDGE_TYPE = 'knowledge';
 
 // Cross-repo retrieval. When this type is requested AND opted-in
@@ -97,7 +99,7 @@ export const KNOWLEDGE_TYPE = 'knowledge';
 // Opt-in by caller + lazy import → existing call sites unaffected.
 export const CROSS_REPO_TYPE = 'cross-repo';
 
-export type HitSource = 'curated' | 'intake' | 'operational' | 'knowledge' | 'cross-repo';
+export type HitSource = 'curated' | 'intake' | 'knowledge' | 'cross-repo';
 
 export class Hit {
     id: string;
@@ -129,64 +131,21 @@ export class Hit {
             type: this.type,
             source: this.source,
             path: this.path,
-            score: this.score,
+            // score is a Python float — render `0.0` not `0` for whole numbers.
+            score: new PyFloat(this.score),
             entry: this.entry,
         };
     }
 }
 
-/** An operational entry suppressed by the conflict rule. */
-export class Shadow {
-    id: string;
-    type: string;
-    reason: string; // "same-id" | "repo-deprecated"
-    operational_path: string;
-    repo_path: string;
-
-    constructor(id: string, type: string, reason: string, operational_path: string, repo_path: string) {
-        this.id = id;
-        this.type = type;
-        this.reason = reason;
-        this.operational_path = operational_path;
-        this.repo_path = repo_path;
-    }
-
-    as_dict(): Record<string, unknown> {
-        return {
-            id: this.id,
-            type: this.type,
-            reason: this.reason,
-            operational_path: this.operational_path,
-            repo_path: this.repo_path,
-        };
-    }
-}
-
-/** Full retrieval payload with conflict-rule observability. */
-export class RetrievalResult {
-    hits: Hit[];
-    shadows: Shadow[];
-
-    constructor(hits: Hit[], shadows: Shadow[] = []) {
-        this.hits = hits;
-        this.shadows = shadows;
-    }
-
-    as_dict(): Record<string, unknown> {
-        return {
-            hits: this.hits.map((h) => h.as_dict()),
-            shadows: this.shadows.map((s) => s.as_dict()),
-        };
-    }
-}
-
-// An operational provider returns repo-shaped Hit objects with
-// source="operational". Backend adapters (e.g. @event4u/agent-memory)
-// are expected to translate their native payload into this shape.
-export type OperationalProvider = (types: string[], keys: string[]) => Iterable<Hit>;
-
 function _isPlainObject(v: unknown): v is Record<string, unknown> {
-    return typeof v === 'object' && v !== null && !Array.isArray(v) && !(v instanceof PyTimestamp);
+    return (
+        typeof v === 'object' &&
+        v !== null &&
+        !Array.isArray(v) &&
+        !(v instanceof PyTimestamp) &&
+        !(v instanceof PyFloat)
+    );
 }
 
 function _isFile(p: string): boolean {
@@ -460,159 +419,15 @@ export function _score(entry: Record<string, unknown>, keys: string[]): number {
 }
 
 /**
- * Enforce REPO WINS / OPERATIONAL AUGMENTS / NEVER CONTRADICTS SILENTLY.
- *
- * The four cases mapped below are covered by `tests/test_conflict_rule.py`.
- */
-export function _apply_conflict_rule(repo_hits: Hit[], operational_hits: Hit[]): [Hit[], Shadow[]] {
-    // Repo entries index — curated AND intake both count as "repo" for the
-    // conflict rule. The operational store is the only non-repo side.
-    const repo_by_id = new Map<string, Hit>();
-    for (const h of repo_hits) {
-        if (h.id) {
-            // dict comprehension {h.id: h} — later wins on duplicate ids.
-            repo_by_id.set(h.id, h);
-        }
-    }
-
-    const merged: Hit[] = [...repo_hits];
-    const shadows: Shadow[] = [];
-
-    for (const op of operational_hits) {
-        if (op.id && repo_by_id.has(op.id)) {
-            // Case 1+2: same id → repo wins (including when repo is
-            // status:deprecated — operational cannot revive a retired
-            // entry). Suppress the operational entry and record shadow.
-            const repo = repo_by_id.get(op.id) as Hit;
-            const reason = repo.entry['status'] === 'deprecated' ? 'repo-deprecated' : 'same-id';
-            shadows.push(new Shadow(op.id, op.type, reason, op.path, repo.path));
-            continue;
-        }
-        // Case 3 (different ids on same logical key) and Case 4 (repo has
-        // no entry) — both simply include the operational hit. Repo entries
-        // naturally rank higher because their score is not discounted.
-        merged.push(op);
-    }
-
-    return [merged, shadows];
-}
-
-// ---------------------------------------------------------------------------
-// Package-backed operational provider (the `present` path)
-// ---------------------------------------------------------------------------
-
-const _CLI_TIMEOUT_SECONDS = 5.0;
-const _CLI_RETRIEVE_LIMIT_DEFAULT = 20;
-
-/**
- * Turn a list of retrieval keys into one natural-language query.
- *
- * Keys are typically file paths, feature names, or short identifiers —
- * joining them with spaces gives the package's semantic search enough
- * surface to score against. Empty / whitespace-only keys are dropped; if
- * nothing remains the caller falls back to the file path.
- */
-export function _synthesize_query(keys: unknown[]): string {
-    const cleaned = keys.filter((k): k is string => typeof k === 'string' && k.trim() !== '').map((k) => k.trim());
-    return cleaned.join(' ');
-}
-
-/**
- * Run `memory retrieve` and yield operational `Hit` objects.
- *
- * Pino structured logs from the package go to stderr; stdout is a clean v1
- * retrieval envelope. Any non-zero exit, timeout, or parse failure degrades
- * to "no operational hits".
- */
-export function* _cli_operational_provider(
-    types: string[],
-    keys: string[],
-    opts: { cli_path?: string; timeout?: number; limit?: number } = {},
-): Generator<Hit> {
-    const cli_path = opts.cli_path ?? 'memory';
-    const timeout = opts.timeout ?? _CLI_TIMEOUT_SECONDS;
-    const limit = opts.limit ?? _CLI_RETRIEVE_LIMIT_DEFAULT;
-    const query = _synthesize_query(keys);
-    if (!query) {
-        return;
-    }
-    const cmd = ['retrieve', query, '--limit', String(limit)];
-    for (const t of types) {
-        cmd.push('--type', t);
-    }
-    let out: ReturnType<typeof spawnSync>;
-    try {
-        out = spawnSync(cli_path, cmd, { encoding: 'utf-8', timeout: Math.round(timeout * 1000) });
-    } catch {
-        return;
-    }
-    if (out.error || (out.signal === 'SIGTERM' && out.status === null)) {
-        return;
-    }
-    if ((out.status ?? 1) !== 0) {
-        return;
-    }
-    let envelope: unknown;
-    try {
-        envelope = JSON.parse(out.stdout as string);
-    } catch {
-        return;
-    }
-    const entries = _isPlainObject(envelope) ? envelope['entries'] : null;
-    if (!Array.isArray(entries)) {
-        return;
-    }
-    for (const e of entries) {
-        if (!_isPlainObject(e)) {
-            continue;
-        }
-        const eid = e['id'];
-        const etype = e['type'];
-        if (typeof eid !== 'string' || typeof etype !== 'string') {
-            continue;
-        }
-        // The package returns `confidence` (0..1) per the v1 envelope; map it
-        // onto our internal `score` field so the conflict rule and ranking
-        // work uniformly across providers.
-        let score: number;
-        const conf = e['confidence'];
-        const f = Number(conf ?? 0.0);
-        score = Number.isFinite(f) ? f : 0.0;
-        if (conf === null || conf === undefined) {
-            score = 0.0;
-        }
-        const bodyRaw = e['body'];
-        const body = _isPlainObject(bodyRaw) ? bodyRaw : {};
-        yield new Hit(eid, etype, 'operational', `agent-memory:${eid}`, score, body);
-    }
-}
-
-/**
- * Return a CLI-backed provider when the package is `present`, else null.
- *
- * Callers who want automatic backend routing pass the result directly to
- * {@link retrieve} — null is a safe value that yields file-only retrieval.
- */
-export function package_operational_provider(): OperationalProvider | null {
-    // The status probe is bounded (≤ 2s, cached per process). memory_status
-    // is a sibling twin imported at module load — its absence in a stripped
-    // consumer install would be a build error here, mirroring the Python
-    // late-import-guarded contract (the import never fails in this repo).
-    if (memory_status.status().status !== 'present') {
-        return null;
-    }
-    return (types: string[], keys: string[]) => _cli_operational_provider(types, keys);
-}
-
-/**
  * Project cross-repo matches into discounted, tagged Hits.
  *
  * Lazy + guarded: the Python original imports `cross_repo_retrieve` on
  * demand and swallows any failure (script absent, no opted-in siblings) so
- * the cross-repo type degrades to zero hits. The TypeScript twin of
- * `cross_repo_retrieve` is unported in this phase, so this always degrades
- * to zero hits — flagged as a divergence candidate. Scores sit below
- * curated/knowledge (0.85× floor, then a small per-rank decrement).
+ * the cross-repo type degrades to zero hits rather than breaking retrieval.
+ * The TypeScript twin of `cross_repo_retrieve` is unported in this phase, so
+ * this always degrades to zero hits — flagged as a divergence candidate.
+ * Scores sit below curated/knowledge (0.85× floor, then a small per-rank
+ * decrement) so cross-repo context never outranks the project's own truth.
  */
 function _cross_repo_hits(keys: string[], limit: number): Hit[] {
     const query = keys
@@ -622,9 +437,9 @@ function _cross_repo_hits(keys: string[], limit: number): Hit[] {
     if (!query) {
         return [];
     }
-    // cross_repo_retrieve is Python-only in Phase 7 — no TS twin yet, so the
-    // optional surface degrades to zero hits exactly as the Python `except`
-    // branch would when the script is absent in a consumer install.
+    // cross_repo_retrieve has no TS twin yet, so the optional surface degrades
+    // to zero hits exactly as the Python `except` branch would when the script
+    // is absent in a consumer install.
     void limit;
     return [];
 }
@@ -633,21 +448,11 @@ function _cross_repo_hits(keys: string[], limit: number): Hit[] {
  * Return up to `limit` hits across the requested types, highest score first.
  *
  * Repo entries (curated + intake) are preferred on ties — they are
- * hand-reviewed or session-captured against the repo itself. When an
- * `operational_provider` is supplied, its results are merged under the
- * REPO WINS conflict rule; suppressed operational entries surface as
- * `shadows` when `with_shadows=true`.
- *
- * The return type stays `Hit[]` by default for backward compatibility with
- * existing skill call sites (cited by rules — keep the contract).
+ * hand-reviewed or session-captured against the repo itself. Knowledge
+ * and cross-repo hits are discounted so the project's own truth wins on
+ * equal relevance.
  */
-export function retrieve(
-    types: string[],
-    keys: string[],
-    limit = 5,
-    operational_provider: OperationalProvider | null = null,
-    with_shadows = false,
-): Hit[] | RetrievalResult {
+export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
     const repo_hits: Hit[] = [];
     for (const mtype of types) {
         if (mtype === KNOWLEDGE_TYPE) {
@@ -699,37 +504,13 @@ export function retrieve(
         }
     }
 
-    const operational_hits: Hit[] = [];
-    if (operational_provider !== null) {
-        try {
-            const produced = operational_provider([...types], [...keys]) || [];
-            for (const oh of produced) {
-                // Discount operational vs curated/intake so repo ranks higher
-                // on equal relevance. Providers may already return
-                // trust-adjusted scores; we only apply a floor discount.
-                oh.score = Math.min(oh.score, 0.85);
-                operational_hits.push(oh);
-            }
-        } catch (exc) {
-            process.stderr.write(
-                `warning: operational_provider raised ${_excClassName(exc)}: ${_excMessage(exc)}\n`,
-            );
-        }
-    }
-
-    const [merged, shadows] = _apply_conflict_rule(repo_hits, operational_hits);
-    _sortMerged(merged);
-    const positives = merged.filter((h) => h.score > 0);
-    const final_hits = (positives.length > 0 ? positives : merged).slice(0, limit);
-
-    if (with_shadows) {
-        return new RetrievalResult(final_hits, shadows);
-    }
-    return final_hits;
+    _sortMerged(repo_hits);
+    const positives = repo_hits.filter((h) => h.score > 0);
+    return (positives.length > 0 ? positives : repo_hits).slice(0, limit);
 }
 
 /**
- * Mirror `merged.sort(key=lambda h: (h.score, h.source == "curated"),
+ * Mirror `repo_hits.sort(key=lambda h: (h.score, h.source == "curated"),
  * reverse=True)` — stable descending by (score, isCurated).
  */
 function _sortMerged(merged: Hit[]): void {
@@ -767,25 +548,13 @@ const _KNOWN_TYPES: ReadonlySet<string> = new Set([...CURATED_TYPES, KNOWLEDGE_T
  * Wraps {@link retrieve} and projects the internal `Hit` shape into the
  * shape defined by `internal/schemas/retrieval-v1.schema.json`. Unknown
  * types are reported as `status: unknown_type` for that slice only, rather
- * than failing the whole call.
+ * than failing the whole call. All entries are file-backed (`source: "repo"`).
  */
-export function retrieve_v1(
-    types: string[],
-    keys: string[],
-    limit = 20,
-    operational_provider: OperationalProvider | null = null,
-): Record<string, unknown> {
+export function retrieve_v1(types: string[], keys: string[], limit = 20): Record<string, unknown> {
     const known = types.filter((t) => _KNOWN_TYPES.has(t));
     const unknown = types.filter((t) => !_KNOWN_TYPES.has(t));
 
-    const result = retrieve(known, keys, limit, operational_provider, true) as RetrievalResult;
-    const { hits, shadows } = result;
-    const shadow_by_id = new Map<string, Shadow>();
-    for (const s of shadows) {
-        if (s.id) {
-            shadow_by_id.set(s.id, s);
-        }
-    }
+    const hits = retrieve(known, keys, limit);
 
     const slice_counts: Record<string, number> = {};
     for (const t of known) {
@@ -793,36 +562,18 @@ export function retrieve_v1(
     }
     const entries: Record<string, unknown>[] = [];
     for (const h of hits) {
-        const source = h.source === 'operational' ? 'operational' : 'repo';
         const envelope_entry: Record<string, unknown> = {
             id: h.id,
             type: h.type,
-            source,
-            confidence: _round4(h.score),
+            source: 'repo',
+            // confidence = round(float(score), 4) — always a Python float.
+            confidence: new PyFloat(_round4(h.score)),
             body: _isPlainObject(h.entry) ? { ...h.entry } : {},
-            shadowed_by: null,
         };
         if (h.type in slice_counts) {
             slice_counts[h.type] = (slice_counts[h.type] as number) + 1;
         }
         entries.push(envelope_entry);
-    }
-
-    // Surface shadowed operational entries as additional entries carrying
-    // `shadowed_by`. The conformance harness checks that only
-    // source="operational" entries ever set this field.
-    for (const [sid, s] of shadow_by_id.entries()) {
-        entries.push({
-            id: sid,
-            type: s.type,
-            source: 'operational',
-            confidence: 0.0,
-            body: {},
-            shadowed_by: `repo:${sid}`,
-        });
-        if (s.type in slice_counts) {
-            slice_counts[s.type] = (slice_counts[s.type] as number) + 1;
-        }
     }
 
     const slices: Record<string, Record<string, unknown>> = {};
@@ -866,8 +617,6 @@ interface ParsedArgs {
     limit: number;
     format: 'text' | 'json';
     envelope: 'legacy' | 'v1';
-    with_shadows: boolean;
-    auto: boolean;
 }
 
 function _parseArgs(argv: string[]): ParsedArgs {
@@ -877,8 +626,6 @@ function _parseArgs(argv: string[]): ParsedArgs {
         limit: 5,
         format: 'text',
         envelope: 'legacy',
-        with_shadows: false,
-        auto: false,
     };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
@@ -904,10 +651,6 @@ function _parseArgs(argv: string[]): ParsedArgs {
             args.envelope = _checkChoice(a.slice('--envelope='.length), ['legacy', 'v1'], '--envelope') as
                 | 'legacy'
                 | 'v1';
-        } else if (a === '--with-shadows') {
-            args.with_shadows = true;
-        } else if (a === '--auto') {
-            args.auto = true;
         } else if (a === '-h' || a === '--help') {
             _printUsage();
             process.exit(0);
@@ -945,7 +688,7 @@ function _checkChoice(value: string | undefined, choices: string[], flag: string
 function _printUsage(): void {
     process.stdout.write(
         'usage: memory_lookup [-h] [--types TYPES] [--key KEY] [--limit LIMIT] ' +
-            '[--format {text,json}] [--envelope {legacy,v1}] [--with-shadows] [--auto]\n',
+            '[--format {text,json}] [--envelope {legacy,v1}]\n',
     );
 }
 
@@ -959,27 +702,15 @@ export function main(): number {
         process.stderr.write('error: --types is required\n');
         return 2;
     }
-    const op_provider = args.auto ? package_operational_provider() : null;
     if (args.envelope === 'v1') {
-        const envelope = retrieve_v1(types, args.key, args.limit, op_provider);
+        const envelope = retrieve_v1(types, args.key, args.limit);
         process.stdout.write(`${pyJsonDumps(envelope, 2)}\n`);
         return 0;
     }
-    const result = retrieve(types, args.key, args.limit, op_provider, args.with_shadows);
-    let hits: Hit[];
-    let shadows: Shadow[];
-    if (args.with_shadows) {
-        const rr = result as RetrievalResult;
-        hits = rr.hits;
-        shadows = rr.shadows;
-    } else {
-        hits = result as Hit[];
-        shadows = [];
-    }
+    const hits = retrieve(types, args.key, args.limit);
     if (args.format === 'json') {
         const payload = {
             hits: hits.map((h) => h.as_dict()),
-            shadows: shadows.map((s) => s.as_dict()),
         };
         process.stdout.write(`${pyJsonDumps(payload, 2)}\n`);
     } else {
@@ -991,18 +722,6 @@ export function main(): number {
                 `  [${h.source}] ${h.type}  score=${_fixed2(h.score)}  ` +
                     `id=${h.id || '-'}  path=${h.path}\n`,
             );
-        }
-        if (shadows.length > 0) {
-            process.stdout.write(
-                `\n  shadows: ${shadows.length} operational entr` +
-                    `${shadows.length === 1 ? 'y' : 'ies'} suppressed by ` +
-                    'the conflict rule\n',
-            );
-            for (const s of shadows) {
-                process.stdout.write(
-                    `    [${s.reason}] ${s.type}  id=${s.id}  ` + `op=${s.operational_path}  repo=${s.repo_path}\n`,
-                );
-            }
         }
     }
     return 0;
@@ -1140,20 +859,6 @@ function _pyRepr(s: string): string {
     return out + quote;
 }
 
-function _excClassName(exc: unknown): string {
-    if (exc instanceof Error) {
-        return exc.constructor.name;
-    }
-    return 'Error';
-}
-
-function _excMessage(exc: unknown): string {
-    if (exc instanceof Error) {
-        return exc.message;
-    }
-    return String(exc);
-}
-
 // ---------------------------------------------------------------------------
 // filesystem helpers — mirror pathlib glob/rglob/iterdir ordering
 // ---------------------------------------------------------------------------
@@ -1258,6 +963,9 @@ function _dumpsIndent(value: unknown, indent: number, depth: number): string {
         // default=str on a datetime → PyYAML str() form (already computed).
         return _jsonStrAscii(value.pyStr);
     }
+    if (value instanceof PyFloat) {
+        return _jsonFloat(value.value);
+    }
     if (Array.isArray(value)) {
         if (value.length === 0) {
             return '[]';
@@ -1285,6 +993,17 @@ function _jsonNum(n: number): string {
         return n > 0 ? 'Infinity' : '-Infinity';
     }
     return String(n);
+}
+
+/** Render a Python float — integer-valued floats keep a `.0` suffix (repr(float)). */
+function _jsonFloat(n: number): string {
+    if (!Number.isFinite(n)) {
+        if (Number.isNaN(n)) {
+            return 'NaN';
+        }
+        return n > 0 ? 'Infinity' : '-Infinity';
+    }
+    return Number.isInteger(n) ? `${n}.0` : String(n);
 }
 
 /** JSON string with standard escapes (ensure_ascii handled by caller pass). */

@@ -3,7 +3,7 @@
  * PostToolUse prompt-injection scanner — warn-in-context
  * (road-to-security-pillar.md P3.2).
  *
- * TypeScript twin of `src/scripts/injection_scan_hook.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/injection_scan_hook.py` (ADR-096 —
  * Python→TS migration). Public API mirrors the Python module exactly
  * (snake_case kept deliberately — fidelity over TS idiom). Match the
  * Python `re` semantics, the `.agent-settings.yml` mini-parser, the

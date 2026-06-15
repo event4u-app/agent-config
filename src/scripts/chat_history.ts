@@ -1,6 +1,6 @@
 // Persistent chat-history log for crash recovery.
 //
-// TypeScript twin of `src/scripts/chat_history.py` (ADR-094 — Python→TS
+// TypeScript twin of `src/scripts/chat_history.py` (ADR-096 — Python→TS
 // migration). Public API mirrors the Python module exactly (snake_case kept
 // deliberately) so callers — including the MCP tools layer
 // (`src/scripts/mcp_server/tools.ts`) — depend on one source of truth.

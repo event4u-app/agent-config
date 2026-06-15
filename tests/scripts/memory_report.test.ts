@@ -1,5 +1,4 @@
-// Tests for src/scripts/memory_report.ts — quarterly + operational-store +
-// role-mode sections.
+// Tests for src/scripts/memory_report.ts — quarterly + role-mode sections.
 //
 // 1:1 port of tests/test_memory_report.py (pytest → vitest, ADR-094 parity
 // contract). The pytest suite chdir's into tmp, monkeypatches MEMORY_ROOT /
@@ -50,16 +49,13 @@ afterEach(() => {
     rmSync(tmp, { recursive: true, force: true });
 });
 
-function stubStatus(fields: { status: string; backend: string; reason: string; cli_path: string }): void {
-    vi.spyOn(memory_status, 'status').mockReturnValue(
-        new memory_status.Result(
-            fields.status as memory_status.Status,
-            fields.backend,
-            fields.reason,
-            0,
-            fields.cli_path,
-        ),
-    );
+function stubStatus(fields: { status: string; backend: string; reason: string }): void {
+    vi.spyOn(memory_status, 'status').mockReturnValue({
+        status: fields.status,
+        backend: fields.backend,
+        reason: fields.reason,
+        elapsed_ms: 0,
+    });
 }
 
 function writeCurated(mtype: string, hashName: string, entryYaml: string): void {
@@ -88,7 +84,7 @@ describe('memory_report.ts — _quarter_of via build_report quarterly', () => {
     // _quarter_of is private; covered through quarterly aggregation + the
     // golden-parity block. The four boundary dates are exercised here.
     it('groups dates correctly through accepted_by_quarter', () => {
-        stubStatus({ status: 'absent', backend: 'file', reason: '', cli_path: '' });
+        stubStatus({ status: 'absent', backend: 'file', reason: '' });
         writeCurated('domain-invariants', 'a', 'id: a\ncreated: 2026-01-15\nrule: x\nstatus: active\n');
         writeCurated('domain-invariants', 'b', 'id: b\ncreated: 2026-04-01\nrule: y\nstatus: active\n');
         writeCurated('domain-invariants', 'c', 'id: c\ncreated: 2026-09-30\nrule: z\nstatus: active\n');
@@ -103,9 +99,9 @@ describe('memory_report.ts — _quarter_of via build_report quarterly', () => {
     });
 });
 
-describe('memory_report.ts — build_report quarterly + operational', () => {
+describe('memory_report.ts — build_report quarterly', () => {
     it('accepted counted by created date', () => {
-        stubStatus({ status: 'absent', backend: 'file', reason: '', cli_path: '' });
+        stubStatus({ status: 'absent', backend: 'file', reason: '' });
         writeCurated('domain-invariants', 'aaa', 'id: one\ncreated: 2026-01-10\nrule: x\nstatus: active\n');
         writeCurated('domain-invariants', 'bbb', 'id: two\ncreated: 2026-04-05\nrule: y\nstatus: active\n');
         const r = report.build_report();
@@ -113,25 +109,11 @@ describe('memory_report.ts — build_report quarterly + operational', () => {
     });
 
     it('retired counted from supersede', () => {
-        stubStatus({ status: 'absent', backend: 'file', reason: '', cli_path: '' });
+        stubStatus({ status: 'absent', backend: 'file', reason: '' });
         writeIntakeSupersede('2026-03', '2026-03-15T10:00:00+00:00');
         writeIntakeSupersede('2026-05', '2026-05-02T09:00:00+00:00');
         const r = report.build_report();
         expect(r.quarterly.retired_by_quarter).toEqual({ '2026Q1': 1, '2026Q2': 1 });
-    });
-
-    it('operational store null when backend absent', () => {
-        stubStatus({ status: 'absent', backend: 'file', reason: 'not on PATH', cli_path: '' });
-        const r = report.build_report();
-        expect(r.operational_store).toBeNull();
-    });
-
-    it('operational store present returns stub', () => {
-        stubStatus({ status: 'present', backend: 'agent-memory', reason: '', cli_path: '/usr/bin/am' });
-        const r = report.build_report();
-        expect(r.operational_store).not.toBeNull();
-        expect((r.operational_store as { enabled: boolean }).enabled).toBe(true);
-        expect('note' in (r.operational_store as unknown as Record<string, unknown>)).toBe(true);
     });
 });
 
@@ -168,7 +150,7 @@ describe('memory_report.ts — _role_mode_stats', () => {
     });
 
     it('build_report includes role modes', () => {
-        stubStatus({ status: 'absent', backend: 'file', reason: '', cli_path: '' });
+        stubStatus({ status: 'absent', backend: 'file', reason: '' });
         writeScanFile('agents/learnings/l1.md', '<!-- role-mode: planner | contract: goal -->\n');
         const r = report.build_report();
         expect(r.role_modes.total_markers).toBe(1);

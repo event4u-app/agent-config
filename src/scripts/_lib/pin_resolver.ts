@@ -1,7 +1,7 @@
 /**
  * Pin-aware version resolver for the `agent-config` dispatcher.
  *
- * TypeScript twin of `src/scripts/_lib/pin_resolver.py` (ADR-094,
+ * TypeScript twin of `src/scripts/_lib/pin_resolver.py` (ADR-096,
  * Phase 2 / Wave 1 batch B). The dispatcher consults this module
  * **before** doing any work. If `.agent-settings.yml` carries a
  * non-empty `agent_config_version` pin and the currently running

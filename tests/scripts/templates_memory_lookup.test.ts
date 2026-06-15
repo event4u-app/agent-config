@@ -1,17 +1,13 @@
 // Golden-parity tests for src/agent-src/templates/scripts/memory_lookup.ts.
 //
-// CONSUMER-shipped template twin. The template `.py` is the leaner consumer
-// surface — NO `knowledge` / `cross-repo` types, NO `_iter_knowledge_entries`,
-// NO `_cross_repo_hits`; `memory_status` is a guarded late import that degrades
-// to file-only retrieval when absent (which it is in the template tree). Tests
-// differential python3 vs tsx on the template files. MEMORY_ROOT / INTAKE_ROOT
-// are `agents/memory[/intake]` relative to CWD, so both processes run with `cwd`
-// set to a tmp fixture tree. ADR-094 parity contract: byte-identical
-// stdout/stderr/exit. argparse prog token (memory_lookup.py vs memory_lookup) is
-// filename-derived, not parity. `--auto` resolves no operational backend in the
-// template (no memory_status twin) so it degrades to file-only — same as python3
-// where the sibling `memory_status` status probe returns "absent" (no installed
-// @event4u/agent-memory npm pkg) under the tmp cwd.
+// CONSUMER-shipped template twin. Retrieval is entirely file-backed (no
+// external backend); the template `.py` is byte-identical to the dev-side
+// `src/scripts/memory_lookup.py` and supports `knowledge` / `cross-repo`
+// types. Tests differential python3 vs tsx on the template files.
+// MEMORY_ROOT / INTAKE_ROOT are `agents/memory[/intake]` relative to CWD, so
+// both processes run with `cwd` set to a tmp fixture tree. ADR-094 parity
+// contract: byte-identical stdout/stderr/exit. argparse prog token
+// (memory_lookup.py vs memory_lookup) is filename-derived, not parity.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -42,12 +38,8 @@ function runTs(args: readonly string[], cwd: string): Run {
     return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? -1 };
 }
 function runPy(args: readonly string[], cwd: string): Run {
-    // Plain python3 — `--auto` imports the sibling `memory_status.py`, whose
-    // bounded status probe returns "absent" (no @event4u/agent-memory npm pkg
-    // installed under the tmp cwd) → `package_operational_provider()` returns
-    // None → file-only retrieval. The TS template ships no `memory_status` twin,
-    // so its guarded `createRequire('./memory_status.js')` throws → null → also
-    // file-only. Both degrade identically. (`-I` would break PyYAML import.)
+    // Plain python3 — retrieval is entirely file-backed, so the .py and .ts
+    // twins produce identical output over the same fixture tree.
     const r = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd });
     return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? -1 };
 }
@@ -147,16 +139,6 @@ describe.skipIf(!HAVE_PYTHON)('templates/memory_lookup — golden parity', () =>
     it('v1 envelope parity (known + unknown type)', () => {
         writeMem('ownership.yml', `entries:\n${CURATED_ENTRY.join('\n')}\n`);
         bothEqual(['--types', 'ownership,bogus-type', '--key', 'billing', '--envelope', 'v1']);
-    });
-
-    it('--with-shadows parity (no operational backend → empty shadows)', () => {
-        writeMem('ownership.yml', `entries:\n${CURATED_ENTRY.join('\n')}\n`);
-        bothEqual(['--types', 'ownership', '--key', 'billing', '--with-shadows', '--format', 'json']);
-    });
-
-    it('--auto with absent backend parity (file-only)', () => {
-        writeMem('ownership.yml', `entries:\n${CURATED_ENTRY.join('\n')}\n`);
-        bothEqual(['--types', 'ownership', '--key', 'billing', '--auto']);
     });
 
     it('limit clamps result count parity', () => {

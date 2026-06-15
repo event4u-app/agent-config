@@ -2,7 +2,7 @@
 /**
  * Hard-Gate linter for the `roadmap-ci-steps-policy` rule.
  *
- * TypeScript twin of `src/scripts/lint_roadmap_ci_steps.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_roadmap_ci_steps.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
  * detected by argv membership (no argparse), exit codes (0 / 1),
  * stdout/stderr split, byte-identical messages, same scan scope

@@ -1,9 +1,9 @@
 /**
  * State machine stub for the `/orchestrate` command.
  *
- * TypeScript twin of `work_engine/orchestration.py` (ADR-094 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/orchestration.py` (ADR-096 py2ts Phase 1 —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-094 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-096 — Python style is part of the contract).
  *
  * Reads a pipeline file conforming to
  * `docs/contracts/orchestration-dsl-v1.md` and produces an ordered

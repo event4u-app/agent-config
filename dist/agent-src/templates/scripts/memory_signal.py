@@ -2,10 +2,10 @@
 """Write-side helper: drop an engineering-memory signal.
 
 Shared by producers (`/bug-fix`, `/do-and-judge`, `/propose-memory`,
-incident role exit). Routes to the optional `agent-memory` package when
-`memory_status.status() == "present"`; otherwise appends an intake
-line under `agents/memory/intake/signals-YYYY-MM.jsonl` — append-only
-JSONL with `merge=union` (see `road-to-memory-merge-safety.md`).
+incident role exit). Appends an intake line under
+`agents/memory/intake/signals-YYYY-MM.jsonl` — append-only JSONL with
+`merge=union` (see `road-to-memory-merge-safety.md`). Memory is entirely
+file-backed (no external backend).
 
 Rate limiting:
 - Per-path, per-type, within a rolling window (default 7 days).
@@ -31,12 +31,12 @@ from pathlib import Path
 from typing import Any
 
 INTAKE_ROOT = Path("agents/memory/intake")
+SETTINGS_FILE = Path(".agent-settings.yml")
 VALID_TYPES = {
     "historical-patterns",
     "incident-learnings",
     "ownership",
     "domain-invariants",
-    "architecture-decisions",
     "product-rules",
 }
 RATE_LIMIT_WINDOW_DAYS = 7
@@ -99,10 +99,8 @@ def emit(entry_type: str, path: str, body: str,
          force: bool = False) -> dict[str, Any] | None:
     """Append a signal entry. Returns the written record, or None when skipped.
 
-    On `present` backend, routing to the package is a no-op here today —
-    the package adapter is wired in `road-to-agent-memory-integration.md`
-    Phase 3. For now, the file path is the single source of truth so
-    merge-safety is preserved in every mode.
+    The intake JSONL file is the single source of truth — memory is
+    entirely file-backed (no external backend).
     """
     if entry_type not in VALID_TYPES:
         raise ValueError(f"unknown memory type: {entry_type}")

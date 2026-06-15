@@ -1,7 +1,7 @@
 /**
  * Lightweight project-context detector for the council handoff preamble.
  *
- * TypeScript twin of `src/scripts/ai_council/project_context.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/ai_council/project_context.py` (ADR-096 —
  * Python→TS migration, Phase 1). Reads the bare minimum from the repo root —
  * `composer.json`, `package.json`, root `README.md` — and returns a neutral
  * `ProjectContext`. All fields are optional; missing data is `null` and the

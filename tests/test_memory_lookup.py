@@ -133,124 +133,6 @@ def test_limit_applied(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Package-backed operational provider (the `present` path)
-# ---------------------------------------------------------------------------
-
-
-def test_synthesize_query_joins_keys():
-    assert memory_lookup._synthesize_query(
-        ["app/Http", "billing"]
-    ) == "app/Http billing"
-
-
-def test_synthesize_query_drops_empty_and_non_strings():
-    assert memory_lookup._synthesize_query(
-        ["", "  ", "real", None, 42]  # type: ignore[list-item]
-    ) == "real"
-
-
-def test_synthesize_query_returns_empty_when_all_keys_empty():
-    assert memory_lookup._synthesize_query(["", "  "]) == ""
-
-
-def _fake_memory_cli(tmp_path: Path, body: str) -> Path:
-    """Create an executable shell script that mimics the `memory` CLI."""
-    import stat
-    fake = tmp_path / "memory"
-    fake.write_text(body)
-    fake.chmod(fake.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-    return fake
-
-
-def test_cli_operational_provider_happy_path(tmp_path):
-    envelope = {
-        "contract_version": 1,
-        "status": "ok",
-        "entries": [
-            {
-                "id": "op-1",
-                "type": "ownership",
-                "source": "operational",
-                "confidence": 0.72,
-                "body": {"path": "app/Http/Foo.php", "owner": "team-x"},
-            },
-        ],
-    }
-    fake = _fake_memory_cli(tmp_path, f"""#!/bin/sh
-echo '{{"level":30,"msg":"Database connected"}}' >&2
-cat <<'EOF'
-{json.dumps(envelope)}
-EOF
-""")
-    hits = list(memory_lookup._cli_operational_provider(
-        ["ownership"], ["billing"], cli_path=str(fake),
-    ))
-    assert len(hits) == 1
-    assert hits[0].id == "op-1"
-    assert hits[0].source == "operational"
-    assert hits[0].score == 0.72
-    assert hits[0].entry["owner"] == "team-x"
-
-
-def test_cli_operational_provider_drops_empty_query(tmp_path):
-    fake = _fake_memory_cli(tmp_path, "#!/bin/sh\nexit 1\n")
-    # Empty keys → no query → provider yields nothing without invoking CLI.
-    hits = list(memory_lookup._cli_operational_provider(
-        ["ownership"], [], cli_path=str(fake),
-    ))
-    assert hits == []
-
-
-def test_cli_operational_provider_handles_nonzero_exit(tmp_path):
-    fake = _fake_memory_cli(tmp_path, "#!/bin/sh\necho 'boom' >&2\nexit 3\n")
-    # Failure mode is silent: caller gets file-fallback only.
-    hits = list(memory_lookup._cli_operational_provider(
-        ["ownership"], ["billing"], cli_path=str(fake),
-    ))
-    assert hits == []
-
-
-def test_cli_operational_provider_handles_garbage_stdout(tmp_path):
-    fake = _fake_memory_cli(tmp_path,
-                            "#!/bin/sh\necho 'not json at all'\n")
-    hits = list(memory_lookup._cli_operational_provider(
-        ["ownership"], ["billing"], cli_path=str(fake),
-    ))
-    assert hits == []
-
-
-def test_package_operational_provider_returns_none_when_absent(monkeypatch):
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
-    import memory_status  # noqa: E402
-    monkeypatch.setattr(memory_status, "_find_cli", lambda: "")
-    monkeypatch.delenv(memory_status._CACHE_ENV, raising=False)
-    assert memory_lookup.package_operational_provider() is None
-
-
-def test_package_operational_provider_returns_callable_when_present(
-    monkeypatch, tmp_path,
-):
-    import stat
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "scripts"))
-    import memory_status  # noqa: E402
-    fake = tmp_path / "memory"
-    fake.write_text("#!/bin/sh\nexit 0\n")
-    fake.chmod(fake.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-    monkeypatch.setattr(memory_status, "_find_cli", lambda: str(fake))
-    monkeypatch.setattr(memory_status, "_CACHE_FILE",
-                        tmp_path / ".agent-memory" / "status.cache")
-    monkeypatch.delenv(memory_status._CACHE_ENV, raising=False)
-    # Raise the probe timeout so a fork+exec under pytest-xdist load on
-    # macOS stays inside budget (default 2s gets hit under heavy parallel
-    # CPU pressure).
-    monkeypatch.setattr(memory_status, "_HEALTH_TIMEOUT_SECONDS", 30.0)
-    provider = memory_lookup.package_operational_provider()
-    assert provider is not None
-    assert callable(provider)
-
-
-
-# ---------------------------------------------------------------------------
 # Knowledge namespace (Phase 2 — local-knowledge-ingestion contract)
 # ---------------------------------------------------------------------------
 
@@ -351,7 +233,7 @@ def test_knowledge_v1_envelope_maps_to_repo(tmp_path, monkeypatch):
         e for e in envelope["entries"] if e["type"] == "knowledge"
     ]
     assert len(knowledge_entries) == 1
-    # Schema enum is {repo, operational} — knowledge projects to repo.
+    # All file-backed entries project to source "repo".
     assert knowledge_entries[0]["source"] == "repo"
     # Body carries the source_kind tag so the host model can
     # distinguish user-ingested knowledge from curated repo entries.

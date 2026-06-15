@@ -2,7 +2,7 @@
 /**
  * Gate script for memory promotion (intake → curated).
  *
- * TypeScript twin of `src/scripts/check_memory_proposal.py` (ADR-094,
+ * TypeScript twin of `src/scripts/check_memory_proposal.py` (ADR-096,
  * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — mutually
  * exclusive `--intake-id` / `--proposal` (one required), `--format`
  * (text|json), `--quiet`, exit codes (0 pass, 1 gate failure / not-found,
@@ -27,7 +27,6 @@ const VALID_TYPES: ReadonlySet<string> = new Set([
     'incident-learnings',
     'ownership',
     'domain-invariants',
-    'architecture-decisions',
     'product-rules',
 ]);
 const REQUIRED_INTAKE = ['id', 'entry_type', 'path', 'body'] as const;

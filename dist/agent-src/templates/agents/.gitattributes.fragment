@@ -11,6 +11,5 @@ agents/memory/intake/*.jsonl merge=union eol=lf
 agents/memory/ownership/*.yml              text eol=lf
 agents/memory/historical-patterns/*.yml    text eol=lf
 agents/memory/domain-invariants/*.yml      text eol=lf
-agents/memory/architecture-decisions/*.yml text eol=lf
 agents/memory/incident-learnings/*.yml     text eol=lf
 agents/memory/product-rules/*.yml          text eol=lf

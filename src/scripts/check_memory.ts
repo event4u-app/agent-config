@@ -2,10 +2,10 @@
 /**
  * Engineering Memory validator.
  *
- * TypeScript twin of `src/scripts/check_memory.py` (ADR-094, Phase 4 /
+ * TypeScript twin of `src/scripts/check_memory.py` (ADR-096, Phase 4 /
  * Wave 4a). The CLI contract mirrors the Python original EXACTLY — same
- * flags (`--path`, `--format`, `--append-only`, `--base`,
- * `--shadow-report`), same exit codes, same stdout/stderr split,
+ * flags (`--path`, `--format`, `--append-only`, `--base`), same exit
+ * codes, same stdout/stderr split,
  * byte-identical finding messages, same scan scope and ordering. No
  * behaviour changes — latent bugs are replicated and flagged in the
  * porting report, not fixed.
@@ -81,10 +81,28 @@ const CRITICAL_WARN_THRESHOLD = 10;
 const CRITICAL_STALE_DAYS = 90;
 const KNOWN_TYPES: ReadonlySet<string> = new Set([
     'domain-invariants',
-    'architecture-decisions',
     'incident-learnings',
     'product-rules',
 ]);
+
+// Per-type soft entry cap (size-bounding without a decay engine). Over-cap →
+// warning, never a hard fail: the right answer to bloat is a consolidation pass
+// (prune archived, merge duplicates), not CI failure. See
+// road-to-memory-pipeline-consolidation.md Phase 7.
+const PER_TYPE_CAPS: Readonly<Record<string, number>> = {
+    ownership: 50,
+    'domain-invariants': 150,
+    'product-rules': 100,
+    'incident-learnings': 150,
+    'historical-patterns': 150,
+};
+const DEFAULT_TYPE_CAP = 150;
+// One-durable-fact-per-entry: a content field longer than this reads as a
+// transcript / narrative blob, not a single durable fact → warning.
+const ONE_FACT_MAX_CHARS = 600;
+const ONE_FACT_FIELDS = ['rule', 'pattern', 'statement', 'observation', 'body', 'decision', 'note'] as const;
+// Per-type entry tally, populated during validation, consumed by main().
+const _TYPE_COUNTS: Record<string, number> = {};
 
 // Redaction heuristics — plain-regex, deliberately conservative.
 // False positives are fixed by quoting the line differently; false
@@ -266,6 +284,15 @@ function _isInteger(v: unknown): v is number {
     return typeof v === 'number' && Number.isInteger(v);
 }
 
+/** Mirror Python len(str) — code-point count, not UTF-16 unit count. */
+function _pyLen(s: string): number {
+    let n = 0;
+    for (const _ of s) {
+        n += 1;
+    }
+    return n;
+}
+
 function _memoryType(p: string): string {
     // Supports `memory/<type>.yml`, `memory/<type>/<hash>.yml`, and
     // `memory/<type>.example.yml` template filenames.
@@ -369,11 +396,33 @@ function _validateEntry(
             );
         }
     }
+    // One-durable-fact-per-entry: reject transcript/narrative blobs. A single
+    // content field over ONE_FACT_MAX_CHARS is the bloat signal.
+    for (const fld of ONE_FACT_FIELDS) {
+        const val = entry[fld];
+        if (typeof val === 'string' && _pyLen(val) > ONE_FACT_MAX_CHARS) {
+            findings.push(
+                new Finding(
+                    p,
+                    0,
+                    'warning',
+                    `one-fact: \`${fld}\` is ${_pyLen(val)} chars (limit ${ONE_FACT_MAX_CHARS}) — split into separate durable facts, not a narrative blob`,
+                    eidStr,
+                ),
+            );
+            break;
+        }
+    }
     // Tier-0 inflation tracking — increment per memory type. The aggregate
     // warning is emitted in main() after all files are validated.
     if (criticalCounts !== null && priority === 'critical' && entry['status'] === 'active') {
         const mtype = _memoryType(p);
         criticalCounts[mtype] = (criticalCounts[mtype] ?? 0) + 1;
+    }
+    // Per-type entry-count tracking — aggregate cap warning in main().
+    if (criticalCounts !== null) {
+        const mt = _memoryType(p);
+        _TYPE_COUNTS[mt] = (_TYPE_COUNTS[mt] ?? 0) + 1;
     }
 }
 
@@ -594,66 +643,11 @@ function _checkAppendOnly(base: string | null, findings: Finding[]): void {
     }
 }
 
-/**
- * Report per-type shadow counts from the conflict rule.
- *
- * The Python original imports `scripts.memory_lookup` (and optionally
- * `scripts.memory_status`) which are unported in this phase. The shadow
- * report ships as scaffolding with all-zero counts; the importer is replaced
- * here with the same zero-shadow scaffold so the CLI surface stays identical
- * until those modules are ported. Flagged as a divergence candidate.
- */
-function _shadowReport(fmt: string): number {
-    // CURATED_TYPES mirrors scripts.memory_lookup.CURATED_TYPES. The four
-    // curated memory types; backend absent → zero hits, zero shadows.
-    const curatedTypes = [
-        'architecture-decisions',
-        'domain-invariants',
-        'historical-patterns',
-        'incident-learnings',
-        'ownership',
-        'product-rules',
-    ];
-    const perType: Record<string, { hits: number; shadows: number }> = {};
-    let totalShadows = 0;
-    for (const mtype of [...curatedTypes].sort()) {
-        perType[mtype] = { hits: 0, shadows: 0 };
-        totalShadows += 0;
-    }
-    // Backend label. The Python original derives this from
-    // scripts.memory_status (unported in Phase 4) — see the divergence doc.
-    // Typed as string so the `absent` branch below stays reachable for when
-    // a real probe lands.
-    const backend: string = 'unknown';
-
-    if (fmt === 'json') {
-        process.stdout.write(
-            `${pyJsonDumps({ backend, total_shadows: totalShadows, per_type: perType }, 2)}\n`,
-        );
-        return 0;
-    }
-
-    process.stdout.write(`Shadow report — backend: ${backend}\n`);
-    process.stdout.write(`  Total operational entries shadowed: ${totalShadows}\n`);
-    for (const [mtype, stats] of Object.entries(perType)) {
-        process.stdout.write(
-            `    ${mtype.padEnd(25)}  hits=${String(stats.hits).padStart(4)}  shadows=${stats.shadows}\n`,
-        );
-    }
-    if (backend === 'absent') {
-        process.stdout.write(
-            '\n  ℹ️  operational backend absent — shadow counts will stay zero until @event4u/agent-memory is installed.\n',
-        );
-    }
-    return 0;
-}
-
 interface ParsedArgs {
     path: string;
     format: string;
     append_only: boolean;
     base: string | null;
-    shadow_report: boolean;
 }
 
 /** Minimal argparse-compatible parser for this script's surface. */
@@ -663,7 +657,6 @@ function _parseArgs(argv: string[]): ParsedArgs {
         format: 'text',
         append_only: false,
         base: null,
-        shadow_report: false,
     };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
@@ -681,8 +674,6 @@ function _parseArgs(argv: string[]): ParsedArgs {
             args.base = argv[++i] as string;
         } else if (a.startsWith('--base=')) {
             args.base = a.slice('--base='.length);
-        } else if (a === '--shadow-report') {
-            args.shadow_report = true;
         } else if (a === '-h' || a === '--help') {
             _printUsage();
             process.exit(0);
@@ -706,15 +697,12 @@ function _checkChoice(value: string | undefined, choices: string[], flag: string
 
 function _printUsage(): void {
     process.stdout.write(
-        'usage: check_memory [-h] [--path PATH] [--format {text,json}] [--append-only] [--base BASE] [--shadow-report]\n',
+        'usage: check_memory [-h] [--path PATH] [--format {text,json}] [--append-only] [--base BASE]\n',
     );
 }
 
 function main(): number {
     const args = _parseArgs(process.argv.slice(2));
-    if (args.shadow_report) {
-        return _shadowReport(args.format);
-    }
     const root = args.path;
     const findings: Finding[] = [];
     if (args.append_only) {
@@ -733,6 +721,9 @@ function main(): number {
         return 0;
     }
     const criticalCounts: Record<string, number> = {};
+    for (const key of Object.keys(_TYPE_COUNTS)) {
+        delete _TYPE_COUNTS[key];
+    }
     for (const yml of _rglobYmlSorted(root)) {
         _validateFile(yml, findings, criticalCounts);
     }
@@ -747,6 +738,21 @@ function main(): number {
                     0,
                     'warning',
                     `tier-0 inflation: ${count} active 'priority: critical' entries (threshold ${CRITICAL_WARN_THRESHOLD}) — review whether all still warrant always-surface treatment`,
+                ),
+            );
+        }
+    }
+    // Per-type entry-count cap (size-bounding, Phase 7). Warn, never block —
+    // over-cap signals a consolidation pass is due (prune archived, merge dups).
+    for (const [mtype, count] of Object.entries(_TYPE_COUNTS).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+        const cap = PER_TYPE_CAPS[mtype] ?? DEFAULT_TYPE_CAP;
+        if (count > cap) {
+            findings.push(
+                new Finding(
+                    `agents/memory/${mtype}`,
+                    0,
+                    'warning',
+                    `entry-cap: ${count} entries (soft cap ${cap}) — run a consolidation pass (prune archived, merge duplicates)`,
                 ),
             );
         }

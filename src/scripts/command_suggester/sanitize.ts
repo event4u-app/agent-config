@@ -2,7 +2,7 @@
  * Sanitize matcher input to prevent self-echo and quoted-code triggering.
  *
  * TypeScript twin of `src/scripts/command_suggester/sanitize.py`
- * (ADR-094 py2ts).
+ * (ADR-096 py2ts).
  *
  * The suggestion engine scores against the user's raw message and the
  * last 2 turns of context. Two adversarial inputs would otherwise

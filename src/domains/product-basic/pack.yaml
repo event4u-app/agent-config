@@ -14,4 +14,4 @@ size_class: medium
 suggests:
 - product-discovery
 trust_level_default: professional
-version: 6.0.0
+version: 6.1.0

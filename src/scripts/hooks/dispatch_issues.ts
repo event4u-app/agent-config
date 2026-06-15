@@ -1,7 +1,7 @@
 /**
  * Append-only log of dispatch-time issues — Phase 1 of `road-to-hooks-actually-fire-in-consumers`.
  *
- * TypeScript twin of `src/scripts/hooks/dispatch_issues.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/hooks/dispatch_issues.py` (ADR-096 —
  * Python→TS migration, Phase 6 / hooks core). Public API mirrors the
  * Python module exactly (snake_case kept deliberately — fidelity over
  * TS idiom).

@@ -5,7 +5,7 @@
  * set. Write actions remain scaffold-only (never auto-executed). Falls back to
  * scaffold data when no credentials are present.
  *
- * TypeScript twin of `src/scripts/tools/jira_adapter.py` (ADR-094 — Python→TS
+ * TypeScript twin of `src/scripts/tools/jira_adapter.py` (ADR-096 — Python→TS
  * migration, Phase 1 / tools adapter cluster). Public API mirrors the Python
  * module exactly (snake_case kept deliberately): the
  * `read_ticket` / `search_tickets` / `add_comment` / `transition_ticket`

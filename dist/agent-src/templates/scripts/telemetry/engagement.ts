@@ -1,7 +1,7 @@
 /**
  * Engagement event schema and JSONL appender (Phase 1).
  *
- * TypeScript twin of `engagement.py` (ADR-094). Byte-for-byte parity:
+ * TypeScript twin of `engagement.py` (ADR-096). Byte-for-byte parity:
  * same schema, same validation messages, same JSONL serialization
  * (`json.dumps(sort_keys=True, separators=(",",":"))`), same redaction
  * floor, same `EngagementSchemaError` semantics.

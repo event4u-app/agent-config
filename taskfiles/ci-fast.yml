@@ -285,6 +285,16 @@ tasks:
       (road-to-role-first-onboarding Phase 2 Step 3).
     cmd: ./scripts-run src/scripts/lint_readme_jargon {{.QUIET_FLAG}}
 
+  lint-workspace-boundary:
+    silent: true
+    desc: |
+      Enforce the workspace import-edge boundary (ADR-095 /
+      docs/contracts/workspace-boundary.md): no src/cli/python/workspace_*.py
+      module may import an owner-module of a not-owned domain (skill design,
+      profile/pack semantics, video providers, MCP registry, analytics product
+      strategy). Import-edge only; semantic drift stays doc-governance.
+    cmd: python3 src/scripts/lint_workspace_boundary.py {{.QUIET_FLAG}}
+
   lint-pack-first-win:
     silent: true
     desc: |

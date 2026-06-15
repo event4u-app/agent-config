@@ -2,7 +2,7 @@
 /**
  * Commit-subject linter.
  *
- * TypeScript twin of `src/scripts/lint_commit_subjects.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_commit_subjects.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--base`
  * / `--head` / `--quiet` flags, exit codes (0 clean / advisory, 1
  * violations), stdout/stderr split, byte-identical finding messages

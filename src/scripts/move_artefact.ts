@@ -2,7 +2,7 @@
 /**
  * Move a single artefact between packs via `git mv` (history-preserving).
  *
- * TypeScript twin of `src/scripts/move_artefact.py` (ADR-094, Phase 8 /
+ * TypeScript twin of `src/scripts/move_artefact.py` (ADR-096, Phase 8 /
  * Wave 8b). The public surface, CLI contract, exit codes, stdout/stderr
  * split, byte-for-byte messages, and the `git mv` semantics mirror the
  * Python original EXACTLY. The frontmatter rewrite reproduces PyYAML's

@@ -2,7 +2,7 @@
 /**
  * design-tokens · tokens — DTCG token toolchain (generate / validate / embed).
  *
- * TypeScript twin of `src/skills/design-tokens/scripts/tokens.py` (ADR-094
+ * TypeScript twin of `src/skills/design-tokens/scripts/tokens.py` (ADR-096
  * py2ts). The CLI contract is mirrored EXACTLY — the subcommands
  * `generate` / `validate` / `embed`, their flags, exit codes, the
  * stdout/stderr split, byte-identical messages, AND byte-identical generated

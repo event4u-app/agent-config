@@ -81,6 +81,30 @@ Never improvise the base or silently proceed when the branch is behind
 and overlap exists. The 10-second fetch beats hours of rebase
 reconciliation after the parent PR lands.
 
+### 1c. PR-gate — archive completed roadmaps (MANDATORY)
+
+A roadmap that reached 100% (`count_open == 0 && count_deferred == 0`) must
+land **already archived** in this PR — never merged-but-unarchived into the
+trunk (that rot is exactly what the PR-gate replaces; see
+[`roadmap-progress-sync`](../../../rules/roadmap-progress-sync.md) § PR-gate).
+Run the deterministic sweep:
+
+```bash
+python3 .augment/scripts/archive_completed_roadmaps.py   # --changed-only (default)
+```
+
+It `git mv`s each completed roadmap (that this branch touched, per
+`git log origin/main..HEAD`) into `agents/roadmaps/archive/`, rewrites inbound
+`agents/roadmaps/<x>.md` references to the archive path, regenerates the
+dashboard, and stages all of it. No agent-set annotation is involved —
+completion is read from the checkbox counts.
+
+- **It staged changes → commit them onto this branch** (`chore(roadmaps):
+  archive completed roadmaps`) and include them in the push, so the PR carries
+  the archival. Do **not** create the PR with completed-but-unarchived roadmaps
+  in the working tree.
+- **It reported nothing → proceed.** No completed roadmap in this branch.
+
 ### 2. Generate PR content
 
 Run `/create-pr:description-only` Steps 1–4 to generate the PR title and body.

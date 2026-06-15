@@ -1,7 +1,7 @@
 /**
  * Consensus scoring for the analysis lens (Phase 4 / F3).
  *
- * TypeScript twin of `src/scripts/ai_council/consensus.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/ai_council/consensus.py` (ADR-096 —
  * Python→TS migration, Phase 1). After the final deliberation round, members
  * score each other's findings. The renderer ranks findings by consensus and
  * surfaces a "Minority Views" section for sub-threshold items so they remain

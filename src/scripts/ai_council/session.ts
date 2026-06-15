@@ -1,7 +1,7 @@
 /**
  * Session persistence for council consultations (D2).
  *
- * TypeScript twin of `src/scripts/ai_council/session.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/ai_council/session.py` (ADR-096 —
  * Python→TS migration, Phase 1).
  *
  * Every `/council` call that completes (success or partial) writes an

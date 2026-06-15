@@ -1,7 +1,7 @@
 /**
  * CLI-layer error type used by the dispatcher entry point.
  *
- * TypeScript twin of `work_engine/errors.py` (ADR-094 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/errors.py` (ADR-096 py2ts Phase 1 —
  * work_engine foundation). Lives in its own module so the helper modules
  * (`state_io`, `input_builders`, etc.) can raise it without depending on
  * `cli.ts`, which would create an import cycle.

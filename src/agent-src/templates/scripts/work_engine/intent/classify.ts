@@ -1,9 +1,9 @@
 /**
  * Heuristic intent classifier — see `work_engine.intent` for context.
  *
- * TypeScript twin of `work_engine/intent/classify.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/intent/classify.py` (ADR-096 py2ts —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-094 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-096 — Python style is part of the contract).
  *
  * The classifier walks a small priority ladder against the lower-cased
  * prompt + optional ticket title. First match wins; `backend-coding` is

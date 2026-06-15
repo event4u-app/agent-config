@@ -165,6 +165,95 @@ def render(envelope: dict, *, mode: str = "plain",
     }
 
 
+def render_host_decision(detection: dict, *, health: dict | None = None,
+                         resume_session_id: str | None = None,
+                         mode: str = "plain") -> dict:
+    """Plain-language "why" for the host-drive decision (Phase 5).
+
+    Surfaces the four questions the 6.0.0 review asked to be legible to the
+    USER, not only the logs: **why this host · why this tier · why a fallback
+    fired · why continue**. Pure function over the structured inputs:
+
+    - ``detection`` — a ``workspace_hosts.detect()`` result.
+    - ``health`` — an optional ``workspace_drive_health`` status dict
+      (``consecutive_failures``, ``killed``).
+    - ``resume_session_id`` — set when this run continues a prior session.
+
+    ``technical`` mode keeps the raw fields; ``plain`` mode (default) renders
+    full sentences a non-technical operator can read.
+    """
+    plain = mode != "technical"
+    host = detection.get("host", "(unknown)")
+    known = detection.get("known", False)
+    inv_tier = detection.get("inventory_tier")
+    eff_tier = detection.get("effective_tier", 3)
+    cli = detection.get("cli")
+    cli_present = detection.get("cli_present", False)
+    health = health or {}
+    killed = bool(health.get("killed"))
+    fails = int(health.get("consecutive_failures") or 0)
+
+    if not plain:
+        lines = [
+            "## Host decision (technical)",
+            f"host={host} known={known} inventory_tier={inv_tier} "
+            f"effective_tier={eff_tier} cli={cli} cli_present={cli_present} "
+            f"killed={killed} consecutive_failures={fails} "
+            f"resume_session_id={resume_session_id or '-'}",
+        ]
+        return {"markdown": "\n".join(lines) + "\n", "mode": "technical",
+                "host": host}
+
+    lines: list[str] = []
+    lines.append("## Why this host")
+    lines.append(f"`{host}` is your active host." if known else
+                 f"`{host}` is not in the known-host list, so it is treated "
+                 "as a hand-off host.")
+    lines.append("")
+    lines.append("## Why this tier")
+    if eff_tier == 1:
+        lines.append(
+            f"Running at **Tier 1** — `{host}` drives the work directly "
+            f"because its CLI (`{cli}`) is installed and on your PATH."
+        )
+    else:
+        lines.append(
+            f"Running at **Tier 3** — `{host}` hands work off through the "
+            "inbox rather than driving it directly."
+        )
+    lines.append("")
+
+    # "Why a fallback fired" — only when a demotion or a kill actually happened.
+    fallback: list[str] = []
+    if known and inv_tier == 1 and not cli_present:
+        fallback.append(
+            f"`{host}` would normally drive at Tier 1, but its CLI "
+            f"(`{cli}`) isn't on your PATH — so it dropped to Tier 3 "
+            "hand-off. Install the CLI to get direct driving back."
+        )
+    if killed:
+        fallback.append(
+            f"The drive kill-switch is **on** for `{host}` after {fails} "
+            "consecutive failures. New launches run as a probe — one success "
+            "closes the switch automatically."
+        )
+    if fallback:
+        lines.append("## Why a fallback fired")
+        lines.extend(fallback)
+        lines.append("")
+
+    if resume_session_id:
+        lines.append("## Why continue")
+        lines.append(
+            f"Resuming your previous session (`{resume_session_id}`) instead "
+            "of starting fresh, so the task keeps its context across turns."
+        )
+        lines.append("")
+
+    return {"markdown": "\n".join(lines).rstrip() + "\n", "mode": "plain",
+            "host": host}
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="workspace_explain")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -172,11 +261,27 @@ def main(argv: list[str] | None = None) -> int:
     s_render.add_argument("--mode", choices=("plain", "technical"), default="plain")
     s_render.add_argument("--envelope-file", required=True)
     s_render.add_argument("--glossary")
+    s_host = sub.add_parser("explain-host")
+    s_host.add_argument("--mode", choices=("plain", "technical"), default="plain")
+    s_host.add_argument("--detection-file", required=True,
+                        help="JSON from workspace_hosts.detect()")
+    s_host.add_argument("--health-file", help="JSON from workspace_drive_health status")
+    s_host.add_argument("--resume-session-id")
     args = p.parse_args(argv)
     if args.cmd == "render":
         env = json.loads(Path(args.envelope_file).read_text(encoding="utf-8"))
         gloss = load_glossary(Path(args.glossary)) if args.glossary else None
         out = render(env, mode=args.mode, glossary=gloss)
+        print(json.dumps(out, sort_keys=True))
+        return 0
+    if args.cmd == "explain-host":
+        detection = json.loads(Path(args.detection_file).read_text(encoding="utf-8"))
+        health = (json.loads(Path(args.health_file).read_text(encoding="utf-8"))
+                  if args.health_file else None)
+        out = render_host_decision(
+            detection, health=health,
+            resume_session_id=args.resume_session_id, mode=args.mode,
+        )
         print(json.dumps(out, sort_keys=True))
         return 0
     return 2

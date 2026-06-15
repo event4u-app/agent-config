@@ -2,7 +2,7 @@
 /**
  * Bench runner for the eval corpora — step-4 measurement-and-benchmark Phase 1.
  *
- * TypeScript twin of `src/scripts/bench_runner.py` (ADR-094 Python→TS
+ * TypeScript twin of `src/scripts/bench_runner.py` (ADR-096 Python→TS
  * migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY: flags
  * (`--corpus`, `--top-k`, `--json`), exit codes (0 PASS / 1 FAIL / 2 corpus
  * not found), byte-identical stdout/stderr, and byte-identical JSON

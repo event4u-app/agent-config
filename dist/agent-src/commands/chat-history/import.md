@@ -32,15 +32,15 @@ This is the opt-in counterpart to the read-path filter (Phase 3 of
 `road-to-chat-history-session-isolation`): default reads stay
 session-scoped; `import` is the explicit surface for crossing the
 session boundary. For project-improving learnings derived from a
-prior session, see [`/chat-history learn`](learn.md).
+prior session, see [`/memory mine-session --mode=proposals`](../memory/mine-session/command.md).
 
 ## When NOT to use
 
-- Inspect the current session — that is the default of
-  `/chat-history show` plus `scripts/chat_history.py read`.
+- Inspect the current session — use the host's native transcript /
+  session view, or `scripts/chat_history.py read`.
 - Generate a learning proposal from a prior session — use
-  [`/chat-history learn`](learn.md), which orchestrates
-  `learning-to-rule-or-skill` on the picked session.
+  [`/memory mine-session --mode=proposals`](../memory/mine-session/command.md),
+  which frames the session's signals and runs `learning-to-rule-or-skill`.
 - Bulk-import all sessions — out of scope for v1. One session per
   invocation; multi-pick is v2.
 - Search prior sessions by content — out of scope for v1; no fuzzy
@@ -165,8 +165,7 @@ instruction.
 
 ## See also
 
-- [`/chat-history learn`](learn.md) — pick a prior session and turn it into a project-improving proposal via `learning-to-rule-or-skill`
-- [`/chat-history show`](show.md) — current-session inspector
+- [`/memory mine-session --mode=proposals`](../memory/mine-session/command.md) — pick a prior session and turn it into a project-improving proposal via `learning-to-rule-or-skill` (the former `/chat-history learn`)
 - [`chat-history-platform-hooks`](../../../agents/settings/contexts/chat-history-platform-hooks.md) — read contract, isolation default, opt-in cross-session path
 - [`scripts/chat_history.py`](../../../scripts/chat_history.py) — `sessions` and `read --session` CLI surface
 - [`user-interaction`](../../rules/user-interaction.md) — numbered-options Iron Law

@@ -7,9 +7,7 @@ keep-beta-until: 2026-08-12
 
 **Purpose.** Pin the format of the user-facing visibility line that
 every memory-using `/work` and `/implement-ticket` run prints, so the
-user can tell what the agent retrieved and what it ignored.
-Complements [`agent-memory-contract.md`](agent-memory-contract.md):
-that doc describes the **CLI surface and backend states**; this doc
+user can tell what the agent retrieved and what it ignored. This doc
 describes the **operator-facing surface** the engine emits per turn.
 
 **Scope.** Defines the line shape, the privacy floor, and the opt-out
@@ -156,8 +154,6 @@ compat extensions.
 
 ## Cross-references
 
-- CLI surface and backend states:
-  [`agent-memory-contract.md`](agent-memory-contract.md).
 - Decision-trace JSON consumes the same counts:
   [`decision-trace-v1.md`](decision-trace-v1.md).
 - Privacy regression test path:

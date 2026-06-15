@@ -11,7 +11,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { mine } from '../../src/scripts/mine_session.js';
+import { mine, _iterClaudeCodeJsonl } from '../../src/scripts/mine_session.js';
 import { REPO_ROOT, hasPython3, runPy, runTs } from './_wave8g.js';
 
 const py3 = hasPython3();
@@ -42,11 +42,15 @@ describe('mine_session — CLI gates (1:1 port, via tsx)', () => {
         expect(fs.existsSync(outRoot)).toBe(false);
     });
 
-    it('unsupported host exits clean', () => {
+    it('cross-host mines via the override source', () => {
+        // Mining is cross-host now — any host mines via the override source.
+        // The former 'No TranscriptAdapter for host=X' rejection is gone: the
+        // chat-history JSONL log is written by hooks on every host, so mining
+        // no longer special-cases claude-code.
         const r = runTsScript(['--confirm-transcript-access', '--host', 'cursor', '--transcript', FIXTURE]);
         expect(r.status).toBe(0);
-        expect(r.stdout).toContain('No TranscriptAdapter for host=cursor');
-        expect(r.stdout).toContain('claude-code');
+        expect(r.stdout).not.toContain('No TranscriptAdapter');
+        expect(r.stdout).toContain('Mining preview');
     });
 
     it('--preview default writes nothing', () => {
@@ -143,7 +147,7 @@ describe('mine_session — CLI gates (1:1 port, via tsx)', () => {
 describe('mine_session.mine — direct call (1:1 port)', () => {
     it('returns the three signal classes', () => {
         const since = new Date(Date.UTC(2026, 4, 1));
-        const facts = mine(FIXTURE, since, []);
+        const facts = mine(_iterClaudeCodeJsonl(FIXTURE), since, [], 'testsess');
         const types = new Set(facts.map((f) => f.type as string));
         for (const expected of ['convention', 'gotcha', 'invariant']) {
             expect([...types], `types=${[...types].join(',')}`).toContain(expected);

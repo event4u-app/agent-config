@@ -2,7 +2,7 @@
 /**
  * Track B — task runner for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_task_runner.py` (ADR-094 Python→TS
+ * TypeScript twin of `src/scripts/bench_ab_task_runner.py` (ADR-096 Python→TS
  * migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY: flags
  * (`--variant`, `--mode`, `--timeout`), exit codes (0 ok / 1 corpus missing or
  * empty), byte-identical stdout/stderr, and byte-identical written JSON + md
@@ -206,6 +206,8 @@ interface RunResult {
     /** Empty object `{}` on dry-run (key absent in Python); breakdown otherwise. */
     tokens_breakdown?: TokensBreakdown | Record<string, never>;
     errored?: boolean;
+    num_turns?: number;
+    subtype?: string;
 }
 
 interface RunLiveOpts {
@@ -299,6 +301,8 @@ export function run_live(
     let tokens = 0;
     let isError = false;
     let errReason = 'ok';
+    let numTurns = 0;
+    let subtype = '';
     let breakdown: TokensBreakdown = {
         input_tokens: 0,
         output_tokens: 0,
@@ -369,10 +373,12 @@ export function run_live(
                 tokens = muTotal;
             }
         }
+        numTurns = _intOrZero(obj['num_turns']);
+        subtype = _pyStrOrEmpty(obj['subtype']);
         // Surface WHY a task errored (budget cap vs. other) without leaking $.
         if (isError) {
-            const subtype = obj['subtype'];
-            errReason = _pyTruthyStr(subtype) ? (subtype as string) : 'error';
+            const subtypeRaw = obj['subtype'];
+            errReason = _pyTruthyStr(subtypeRaw) ? (subtypeRaw as string) : 'error';
         }
     } catch {
         transcript = stdout;
@@ -386,6 +392,8 @@ export function run_live(
         tokens,
         tokens_breakdown: breakdown,
         errored: isError || returncode !== 0,
+        num_turns: numTurns,
+        subtype,
     };
 }
 
@@ -1189,6 +1197,11 @@ function _pyTruthy(v: unknown): boolean {
 /** Python `x or fallback` guard for a string-typed value (truthy → string). */
 function _pyTruthyStr(v: unknown): boolean {
     return typeof v === 'string' && v.length > 0;
+}
+
+/** Python `str(x or "")` — falsy → "", else `str(value)`. */
+function _pyStrOrEmpty(v: unknown): string {
+    return _pyTruthy(v) ? _pyStr(v) : '';
 }
 
 /** Python `int(x or 0)` for a usage-count field — non-int / falsy → 0. */

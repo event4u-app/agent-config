@@ -17,7 +17,7 @@
 // Phase 5.1 of `road-to-cloudflare-mcp-hosting.md`. Governed by
 // `docs/contracts/mcp-cloud-scope.md` §A0-cloud.
 //
-// TS twin of mcp_parity_smoke.py (ADR-094 — Python→TS migration). Mirrors the
+// TS twin of mcp_parity_smoke.py (ADR-096 — Python→TS migration). Mirrors the
 // Python wire surface byte-for-byte: stdout lines, the ✅ / ❌ / ⏭️ markers, the
 // argparse usage / error text (exit 2), and the exit codes. Imports resolve to
 // the already-ported mcp_server/{catalog,prompts,resources,tools}.ts twins —

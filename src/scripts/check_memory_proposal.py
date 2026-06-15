@@ -36,7 +36,7 @@ from typing import Any
 INTAKE_ROOT = Path("agents/memory/intake")
 VALID_TYPES = {
     "historical-patterns", "incident-learnings", "ownership",
-    "domain-invariants", "architecture-decisions", "product-rules",
+    "domain-invariants", "product-rules",
 }
 REQUIRED_INTAKE = ("id", "entry_type", "path", "body")
 PATTERN_MIN_PATHS = 2

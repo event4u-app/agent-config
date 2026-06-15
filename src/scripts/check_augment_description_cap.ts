@@ -3,7 +3,7 @@
  * Auto-rule description-length CI gate (Phase 1.3 of
  * road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/check_augment_description_cap.py` (ADR-094,
+ * TypeScript twin of `src/scripts/check_augment_description_cap.py` (ADR-096,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags, exit
  * codes (0 pass, 1 over-cap), stdout/stderr split, byte-identical finding
  * messages, same scan scope (`.agent-src.uncondensed/rules/*.md`) and file

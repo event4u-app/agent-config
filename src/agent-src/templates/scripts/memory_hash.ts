@@ -3,7 +3,7 @@
  * Content-addressed hash for a curated memory entry.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_hash.py`
- * (ADR-094, Phase 1 — consumer-shipped template; logic is byte-identical to
+ * (ADR-096, Phase 1 — consumer-shipped template; logic is byte-identical to
  * the dev-side `src/scripts/memory_hash.ts` twin because the template `.py`
  * is identical to the dev-side `.py`). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),

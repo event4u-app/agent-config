@@ -5,7 +5,7 @@
 Framework-neutral engineering hygiene — git, tests, reviews.
 
 - **id**: `engineering-base`
-- **version**: `6.0.0`
+- **version**: `6.1.0`
 - **owner**: engineering
 - **requires**: —
 - **artefacts**: 89
@@ -17,7 +17,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`docker-commands`** — Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
 - **`engineering-safety-floor`** — Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers
-- **`git-history-discipline`** — Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn
+- **`git-history-discipline`** — Git history ops — never rebase/squash/amend without request; never drop/exclude/force-over commits you didn't author (parallel / shared-PR work); once pushed, re-push same turn
 - **`improve-before-implement`** — Before implementing features or architectural changes — validate request against existing code, challenge weak requirements, suggest improvements
 - **`lethal-trifecta-guard`** — Authoring a skill/command/tool that mixes private-data access + untrusted-content ingestion + external comms — break one leg of the lethal trifecta before shipping
 - **`linked-projects-onboarding-gate`** — IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes

@@ -1,7 +1,7 @@
 /**
  * `HookRegistry` — insertion-ordered map from event to callbacks.
  *
- * TypeScript twin of `work_engine/hooks/registry.py` (ADR-094 py2ts —
+ * TypeScript twin of `work_engine/hooks/registry.py` (ADR-096 py2ts —
  * work_engine.hooks subpackage). Phase 1 ships insertion-ordered
  * registration only.
  *

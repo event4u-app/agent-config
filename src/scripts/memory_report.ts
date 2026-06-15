@@ -2,7 +2,7 @@
 /**
  * One-shot memory observability report.
  *
- * TypeScript twin of `src/scripts/memory_report.py` (ADR-094, Phase 7 /
+ * TypeScript twin of `src/scripts/memory_report.py` (ADR-096, Phase 7 /
  * dev-side memory). The public API and CLI contract mirror the Python
  * original EXACTLY — same exported names (snake_case kept deliberately),
  * same exit codes, stdout/stderr split, byte-identical messages, and
@@ -50,7 +50,6 @@ const CURATED_TYPES: readonly string[] = [
     'ownership',
     'historical-patterns',
     'domain-invariants',
-    'architecture-decisions',
     'incident-learnings',
     'product-rules',
 ];
@@ -499,25 +498,6 @@ function _pyRound3(x: number): number {
     return rounded / factor;
 }
 
-interface OperationalStore {
-    enabled: boolean;
-    counts: { entries: null; recent_writes: null };
-    note: string;
-}
-
-function _operational_store_stats(backend_status: string): OperationalStore | null {
-    if (backend_status !== 'present') {
-        return null;
-    }
-    return {
-        enabled: true,
-        counts: { entries: null, recent_writes: null },
-        note:
-            'full operational-store probing is owned by the ' +
-            'agent-memory CLI adapter; stats stubbed here',
-    };
-}
-
 interface RoleModeStats {
     total_markers: number;
     files_scanned: number;
@@ -598,12 +578,11 @@ function _rglobMd(root: string): string[] {
 }
 
 interface Report {
-    backend: { status: string; backend: string; reason: string; cli_path: string };
+    backend: { status: string; backend: string; reason: string };
     intake: IntakeStats;
     staleness: StaleRow[];
     quarterly: QuarterlyStats;
     role_modes: RoleModeStats;
-    operational_store: OperationalStore | null;
 }
 
 export function build_report(): Report {
@@ -613,13 +592,11 @@ export function build_report(): Report {
             status: st.status,
             backend: st.backend,
             reason: st.reason,
-            cli_path: st.cli_path,
         },
         intake: _intake_stats(),
         staleness: _staleness_report(),
         quarterly: _quarterly_stats(),
         role_modes: _role_mode_stats(),
-        operational_store: _operational_store_stats(st.status),
     };
 }
 
@@ -673,9 +650,6 @@ function _print_text(report: Report): void {
         if (rm.unknown_modes.length > 0) {
             out.push(`  unknown: ${rm.unknown_modes.join(', ')} (not in the six reserved slugs)`);
         }
-    }
-    if (report.operational_store) {
-        out.push('Operational-store: present (stats via agent-memory CLI)');
     }
     process.stdout.write(out.map((line) => `${line}\n`).join(''));
 }

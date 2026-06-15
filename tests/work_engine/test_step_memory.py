@@ -91,14 +91,13 @@ def test_memory_returns_success_and_records_hits(_capture_retrieve) -> None:
     assert state.memory[0]["type"] == "domain-invariants"
 
 
-def test_memory_forwards_only_the_four_allowed_types(_capture_retrieve) -> None:
+def test_memory_forwards_only_the_three_allowed_types(_capture_retrieve) -> None:
     state = DeliveryState(ticket=_ticket())
 
     memory_step.run(state)
 
     assert _capture_retrieve["types"] == [
         "domain-invariants",
-        "architecture-decisions",
         "incident-learnings",
         "historical-patterns",
     ]

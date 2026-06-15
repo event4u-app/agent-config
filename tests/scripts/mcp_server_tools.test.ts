@@ -394,15 +394,18 @@ describe('tools — L3 handler shapes', () => {
         expect((result.entries as Record<string, unknown>[])[0]!.t).toBe('tool');
     });
 
-    it('memory_status returns the v1 status envelope keys', async () => {
+    it('memory_status returns the file-backend status envelope keys', async () => {
+        // Memory is entirely file-backed now (no external backend): the
+        // handler returns asdict(Result()) → {status, backend, reason,
+        // elapsed_ms}, all constant; `status` is always "file".
         const root = tmp();
         const cache = new ToolCache();
         const result = await cache.dispatch('memory_status', {}, root);
-        for (const key of ['status', 'backend', 'reason', 'elapsed_ms', 'features']) {
+        for (const key of ['status', 'backend', 'reason', 'elapsed_ms']) {
             expect(key in result).toBe(true);
         }
-        expect(['absent', 'misconfigured', 'present']).toContain(result.status);
-        expect(Array.isArray(result.features)).toBe(true);
+        expect(result.status).toBe('file');
+        expect(result.backend).toBe('file');
     });
 
     it('memory_lookup returns the v1 retrieval envelope', async () => {

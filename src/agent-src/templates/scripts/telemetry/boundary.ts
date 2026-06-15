@@ -1,7 +1,7 @@
 /**
  * Boundary detection + concurrent-safe recording (Phase 2).
  *
- * TypeScript twin of `boundary.py` (ADR-094). Byte-for-byte parity on the
+ * TypeScript twin of `boundary.py` (ADR-096). Byte-for-byte parity on the
  * written JSONL and on the `BoundarySession` coalescing semantics.
  *
  * 1. `BoundarySession` — in-process coalescing. Multiple `add_*` calls

@@ -2,7 +2,7 @@
 /**
  * Context-spine usage linter.
  *
- * TypeScript twin of `src/scripts/lint_context_spine_usage.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_context_spine_usage.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
  * detected by argv membership (no argparse), exit codes (0 clean,
  * 1 violations / no files), stdout/stderr split, byte-identical messages,

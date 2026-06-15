@@ -2,7 +2,7 @@
 /**
  * check_no_external_sources — block readable inspiration/harvest source names.
  *
- * TypeScript twin of `src/scripts/check_no_external_sources.py` (ADR-094). The
+ * TypeScript twin of `src/scripts/check_no_external_sources.py` (ADR-096). The
  * CLI contract is mirrored EXACTLY — the `--json` flag, exit codes (0 = clean,
  * 1 = at least one denied token in a non-skipped tracked file, 2 = usage /
  * config error), the stdout split, byte-identical text + JSON report

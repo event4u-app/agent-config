@@ -1,9 +1,9 @@
 /**
  * `implement` step — gate + Option-A delegation for applying the plan.
  *
- * TypeScript twin of `work_engine/directives/backend/implement.py` (ADR-094
+ * TypeScript twin of `work_engine/directives/backend/implement.py` (ADR-096
  * py2ts Phase 1 — work_engine directive sets). Public API names stay
- * snake_case to mirror the Python module 1:1 (per ADR-094 — Python style is
+ * snake_case to mirror the Python module 1:1 (per ADR-096 — Python style is
  * part of the contract).
  *
  * The step never edits files. Editing is delegated to the agent via

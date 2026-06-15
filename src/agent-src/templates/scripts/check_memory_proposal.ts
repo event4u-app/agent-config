@@ -3,7 +3,7 @@
  * Gate script for memory promotion (intake → curated).
  *
  * TypeScript twin of `src/agent-src/templates/scripts/check_memory_proposal.py`
- * (ADR-094, Phase 1 — consumer-shipped template). Adapted from the dev-side
+ * (ADR-096, Phase 1 — consumer-shipped template). Adapted from the dev-side
  * `src/scripts/check_memory_proposal.ts` twin: the template `.py` is identical
  * EXCEPT it lacks the dev-side `--quiet` flag (gate-passed line always prints),
  * so this twin drops `--quiet` to match the template surface exactly.
@@ -31,7 +31,6 @@ const VALID_TYPES: ReadonlySet<string> = new Set([
     'incident-learnings',
     'ownership',
     'domain-invariants',
-    'architecture-decisions',
     'product-rules',
 ]);
 const REQUIRED_INTAKE = ['id', 'entry_type', 'path', 'body'] as const;

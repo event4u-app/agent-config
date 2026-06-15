@@ -2,7 +2,7 @@
 /**
  * Detect lint regressions between the current branch and a baseline.
  *
- * TypeScript twin of `src/scripts/lint_regression.py` (ADR-094,
+ * TypeScript twin of `src/scripts/lint_regression.py` (ADR-096,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--baseline`
  * / `--format` / `--repo-root` flags, exit codes (0 clean, 1 regressions /
  * new-files, 2 bad baseline / disjoint-result guard), stdout/stderr split,

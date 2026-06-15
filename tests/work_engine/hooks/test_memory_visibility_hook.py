@@ -39,7 +39,7 @@ def test_emits_visibility_line_on_before_save() -> None:
         {"id": "mem_2", "type": "incident-learnings"},
     ]
     runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
-    assert work.report.startswith("\U0001F9E0 Memory: 2/4 \u00b7 ids=[mem_1, mem_2]")
+    assert work.report.startswith("\U0001F9E0 Memory: 2/3 \u00b7 ids=[mem_1, mem_2]")
 
 
 def test_appends_after_existing_report_with_blank_line() -> None:
@@ -87,7 +87,7 @@ def test_auto_cadence_emits_at_threshold() -> None:
     runner, work = _runner(MemoryVisibilityHook(memory_cadence="auto"))
     work.memory = [{"id": "mem_1", "type": "domain-invariants"}]
     runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
-    assert "\U0001F9E0 Memory: 1/4 \u00b7 ids=[mem_1]" in work.report
+    assert "\U0001F9E0 Memory: 1/3 \u00b7 ids=[mem_1]" in work.report
 
 
 def test_silent_when_work_is_none() -> None:

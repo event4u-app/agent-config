@@ -28,9 +28,11 @@ function hasPython3(): boolean {
 
 describe('lint_bench_ab — exported contract', () => {
     it('carries the required doc sections', () => {
-        expect(ba.REQUIRED_SECTIONS).toContain('## Track A');
-        expect(ba.REQUIRED_SECTIONS).toContain('## Track B');
-        expect(ba.REQUIRED_SECTIONS.length).toBe(5);
+        // docs/benchmark.md is the v2 discipline-axis report; the v1
+        // Headline/Track-A/Track-B/History structure was retired.
+        expect(ba.REQUIRED_SECTIONS).toContain('## Honesty labels');
+        expect(ba.REQUIRED_SECTIONS).toContain('## Gate verdict');
+        expect(ba.REQUIRED_SECTIONS.length).toBe(3);
     });
     it('resolves the bench corpus paths under internal/bench', () => {
         expect(ba.TRACK_A_PATH.includes(path.join('internal', 'bench'))).toBe(true);

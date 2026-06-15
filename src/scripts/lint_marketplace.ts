@@ -2,7 +2,7 @@
 /**
  * Lint .claude-plugin/marketplace.json for the event4u/agent-config package.
  *
- * TypeScript twin of `src/scripts/lint_marketplace.py` (ADR-094, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_marketplace.py` (ADR-096, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: same cwd-relative scan
  * roots, finding messages, stdout output, and exit codes.
  *

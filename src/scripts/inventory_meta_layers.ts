@@ -2,7 +2,7 @@
 /**
  * Meta-layer / concept-surface inventory — read-only discovery pass.
  *
- * TypeScript twin of `src/scripts/inventory_meta_layers.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/inventory_meta_layers.py` (ADR-096 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract EXACTLY:
  * flag (`--quiet`), exit code 0, byte-identical stdout, and the byte-identical
  * written `meta-layer-inventory.md` (`\n`-joined) + `meta-layer-inventory.csv`

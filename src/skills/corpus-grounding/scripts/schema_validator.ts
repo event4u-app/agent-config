@@ -3,7 +3,7 @@
  * corpus-grounding · schema_validator — manifest contract (interface v1).
  *
  * TypeScript twin of `src/skills/corpus-grounding/scripts/schema_validator.py`
- * (ADR-094 Python→TS migration). Validates a domain's plug-in manifest
+ * (ADR-096 Python→TS migration). Validates a domain's plug-in manifest
  * (`manifest.json`) against the schema-agnostic contract from ADR-061 §3. Each
  * domain declares its OWN axes — the validator checks structure + provenance
  * discipline, never a uniform schema.

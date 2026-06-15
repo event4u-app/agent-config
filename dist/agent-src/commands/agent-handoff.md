@@ -115,10 +115,10 @@ do not auto-execute.
   fingerprint derived from the platform `session_id` (schema v4, see
   [`chat-history-platform-hooks`](../../agents/settings/contexts/chat-history-platform-hooks.md)).
   Works only on the same machine and same repo, but captures every
-  phase / decision any session logged. Inspect with `/chat-history show`;
-  pull prior-session context into the current chat verbatim with
-  `/chat-history import`; mine a prior session for project-improving
-  learnings with `/chat-history learn`.
+  phase / decision any session logged. Pull prior-session context into
+  the current chat verbatim with `/chat-history import`; mine a prior
+  session for project-improving learnings with
+  `/memory mine-session --mode=proposals`.
 
 Prefer `/agent-handoff` for planned context switches across tools or
 machines; use `/chat-history import` after a crash or fresh-chat reopen

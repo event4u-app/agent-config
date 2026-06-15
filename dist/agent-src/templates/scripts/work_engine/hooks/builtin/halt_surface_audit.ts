@@ -2,7 +2,7 @@
  * `HaltSurfaceAuditHook` — defense-in-depth around halt surfaces.
  *
  * TypeScript twin of `work_engine/hooks/builtin/halt_surface_audit.py`
- * (ADR-094 py2ts — work_engine.hooks.builtin subpackage). Fires on `on_halt`
+ * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Fires on `on_halt`
  * and re-asserts that every halt carries a non-empty user-facing surface,
  * mirroring the dispatcher's `_validate_step_result`.
  *

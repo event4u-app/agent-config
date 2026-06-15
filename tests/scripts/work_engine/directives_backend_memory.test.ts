@@ -94,10 +94,9 @@ afterEach(() => {
 });
 
 describe('directives/backend/memory — constants', () => {
-    it('exposes the four memory types and the 12-hit cap', () => {
+    it('exposes the three memory types and the 12-hit cap', () => {
         expect([...MEMORY_TYPES]).toEqual([
             'domain-invariants',
-            'architecture-decisions',
             'incident-learnings',
             'historical-patterns',
         ]);

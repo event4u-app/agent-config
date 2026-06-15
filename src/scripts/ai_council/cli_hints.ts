@@ -1,7 +1,7 @@
 /**
  * Per-provider CLI install hints for `mode: cli` members (step-9 P2).
  *
- * TypeScript twin of `src/scripts/ai_council/cli_hints.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/ai_council/cli_hints.py` (ADR-096 —
  * Python→TS migration, Phase 1; ai_council FOUNDATION wave). Public surface
  * mirrors the Python module exactly (snake_case kept deliberately):
  * `INSTALL_HINTS`, `hint_for`, `format_install_hints`.

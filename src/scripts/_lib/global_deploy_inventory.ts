@@ -1,7 +1,7 @@
 /**
  * Per-tool inventory of files written by global deploys — and stale reaping.
  *
- * TypeScript twin of `src/scripts/_lib/global_deploy_inventory.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/_lib/global_deploy_inventory.py` (ADR-096 —
  * Python→TS migration, Phase 2 / Wave 2a). Public API mirrors the Python
  * module exactly (snake_case kept deliberately), including the JSON
  * serialization shape (`indent=2, sort_keys=True` + trailing newline) and the
@@ -97,6 +97,16 @@ function resolve_path(p: string): string {
       }
     }
     return abs;
+  }
+}
+
+/** Python `Path.exists()` — follows symlinks; False for a dangling symlink. */
+function path_exists(p: string): boolean {
+  try {
+    fs.statSync(p);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -315,12 +325,19 @@ function as_posix(p: string): string {
  *
  * Returns the absolute paths actually deleted. Mutates nothing in `inventory`
  * — callers record the new state via {@link record_deploy}.
+ *
+ * `dry_run=true` computes and returns the would-delete set (only paths that
+ * currently exist on disk) WITHOUT unlinking anything or pruning empty
+ * directories — the preview surface for `install.py --dry-run`. The selection
+ * logic (orphan diff, containment proof, directory guard) is identical to the
+ * live path, so the preview is exact.
  */
 export function reap_stale(
   tool_id: string,
   anchor: string,
   current_files: Set<string>,
   inventory: Inventory,
+  dry_run = false,
 ): string[] {
   const tools = (inventory["tools"] as Record<string, unknown> | undefined) ?? {};
   const entry = tools[tool_id];
@@ -364,6 +381,13 @@ export function reap_stale(
     if (lst && lst.isDirectory() && !lst.isSymbolicLink()) {
       continue; // never delete directories
     }
+    if (dry_run) {
+      // Preview: report only what is actually on disk and would go.
+      if (path_exists(target) || (lst !== null && lst.isSymbolicLink())) {
+        deleted.push(target);
+      }
+      continue;
+    }
     try {
       fs.unlinkSync(target);
     } catch {
@@ -401,12 +425,17 @@ export function reap_stale(
  * expected file set; then prunes empty directories. Untagged files
  * (user-authored skills in shared anchors) are never touched. Returns the
  * absolute paths deleted.
+ *
+ * `dry_run=true` returns the would-delete set (tagged orphans actually present
+ * on disk) WITHOUT unlinking or pruning — the preview surface for
+ * `install.py --dry-run`. Selection logic is identical to the live path.
  */
 export function reap_tagged_orphans(
   anchor: string,
   dest_subs: string[],
   current_files: Set<string>,
   package_tag: string,
+  dry_run = false,
 ): string[] {
   const anchor_resolved = resolve_path(expanduser(anchor));
   const deleted: string[] = [];
@@ -455,6 +484,10 @@ export function reap_tagged_orphans(
       const block = head.slice(0, end !== -1 ? end : head.length);
       const hit = splitlines(block).some((line) => line.trim() === needle);
       if (!hit) {
+        continue;
+      }
+      if (dry_run) {
+        deleted.push(md);
         continue;
       }
       try {

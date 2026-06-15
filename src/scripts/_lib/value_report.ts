@@ -1,7 +1,7 @@
 /**
  * Assemble `value-v1` JSON from on-disk raw bench reports.
  *
- * TypeScript twin of `src/scripts/_lib/value_report.py` (ADR-094 py2ts
+ * TypeScript twin of `src/scripts/_lib/value_report.py` (ADR-096 py2ts
  * Phase 2 / Wave 2a). Phase 1 Step 3 of the readable-value-dashboard roadmap.
  *
  * Reads:
@@ -22,7 +22,7 @@
  * `pending` rung or behaviour metric, never a crash.
  *
  * The public API deliberately keeps snake_case names to mirror the Python
- * module 1:1 (per ADR-094 — Python style is part of the contract).
+ * module 1:1 (per ADR-096 — Python style is part of the contract).
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

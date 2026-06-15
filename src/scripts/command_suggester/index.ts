@@ -2,7 +2,7 @@
  * Context-aware command suggestion engine.
  *
  * TypeScript twin of `src/scripts/command_suggester/__init__.py`
- * (ADR-094 py2ts).
+ * (ADR-096 py2ts).
  *
  * Public API exposed for the always-on `command-suggestion` rule and for
  * tests. The engine is deterministic and read-only: it scores

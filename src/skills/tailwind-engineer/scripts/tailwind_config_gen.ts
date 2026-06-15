@@ -13,7 +13,7 @@
  * Supports colors, fonts, spacing, breakpoints, and plugin recommendations.
  *
  * TypeScript twin of `src/skills/tailwind-engineer/scripts/tailwind_config_gen.py`
- * (ADR-094). The CLI contract is mirrored EXACTLY — snake_case-free flags
+ * (ADR-096). The CLI contract is mirrored EXACTLY — snake_case-free flags
  * (`--framework`, `--js`, `--output`, `--colors`, `--fonts`, `--spacing`,
  * `--breakpoints`, `--plugins`, `--validate-only`), exit codes (0 / 1 / 2),
  * the stdout/stderr split, byte-identical messages, AND byte-identical

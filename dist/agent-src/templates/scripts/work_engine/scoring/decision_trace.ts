@@ -1,9 +1,9 @@
 /**
  * Confidence-band + risk-class heuristics for decision-trace v1.
  *
- * TypeScript twin of `work_engine/scoring/decision_trace.py` (ADR-094 py2ts
+ * TypeScript twin of `work_engine/scoring/decision_trace.py` (ADR-096 py2ts
  * Phase 1 — work_engine scoring subpackage). Public API names stay snake_case
- * to mirror the Python module 1:1 (per ADR-094 — Python style is part of the
+ * to mirror the Python module 1:1 (per ADR-096 — Python style is part of the
  * contract).
  *
  * These heuristics back the JSON envelope emitted by

@@ -2,7 +2,7 @@
 /**
  * session_start concern — keep the project-local `./agent-config` fresh.
  *
- * TypeScript twin of `src/scripts/wrapper_freshness_hook.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/wrapper_freshness_hook.py` (ADR-096 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *

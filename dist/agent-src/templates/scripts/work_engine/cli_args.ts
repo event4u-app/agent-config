@@ -1,9 +1,9 @@
 /**
  * Argument parser and state-file constants for the CLI entry point.
  *
- * TypeScript twin of `work_engine/cli_args.py` (ADR-094 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/cli_args.py` (ADR-096 py2ts Phase 1 —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-094 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-096 — Python style is part of the contract).
  *
  * Extracted from `cli.py` in P2.3 of `road-to-post-pr29-optimize.md`.
  * Behaviour-preserving: the parser shape, default values, and exit-code
@@ -17,7 +17,7 @@
  * `--flag value` forms, `store_true` flags, `-h`/`--help` exit-0, and exit-2
  * on every error path (unknown flag, ambiguous abbreviation, missing value,
  * explicit value on a store_true flag). `--help` prose is intentionally NOT
- * a parity surface (ADR-094 — argparse help text is not byte-compared).
+ * a parity surface (ADR-096 — argparse help text is not byte-compared).
  */
 
 // Paths are kept as plain strings here (the Python source wraps them in
@@ -101,7 +101,7 @@ const HELP_FLAGS = ['--help'];
 
 function usage(): string {
     // Compact one-line usage marker; the exact wrapping/prose is not a parity
-    // surface (ADR-094 — argparse usage/help text is not byte-compared).
+    // surface (ADR-096 — argparse usage/help text is not byte-compared).
     return `usage: ${PROG} [-h] [options]`;
 }
 
@@ -153,7 +153,7 @@ function resolveLong(name: string): OptionSpec | 'help' {
  *
  * Mirrors `argparse.ArgumentParser.parse_args`: on `-h`/`--help` it prints
  * a help marker to stdout and exits 0; on any error it prints to stderr and
- * exits 2 (via `process.exitCode`, never `process.exit`, per ADR-094).
+ * exits 2 (via `process.exitCode`, never `process.exit`, per ADR-096).
  * Returns the parsed namespace on success.
  */
 export function parse_args(argv: string[]): ParsedArgs {

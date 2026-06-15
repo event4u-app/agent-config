@@ -1,7 +1,7 @@
 /**
  * Pass-through handler for UI directive slots that have no work.
  *
- * TypeScript twin of `directives/ui/_passthrough.py` (ADR-094 py2ts). Public
+ * TypeScript twin of `directives/ui/_passthrough.py` (ADR-096 py2ts). Public
  * API names stay snake_case to mirror the Python module 1:1 (Python style is
  * part of the contract). The handler is intentionally pure and
  * side-effect-free: it neither reads nor writes `state`.
@@ -10,7 +10,7 @@
  * apply / review / polish landed. Two slots remain semantically empty for the
  * UI track:
  *
- * - `memory` — the UI track does not consult the four memory types the
+ * - `memory` — the UI track does not consult the memory types the
  *   backend retrieves over. UI work pivots on the audit findings in
  *   `state.ui_audit` instead.
  * - `plan` — `.design` produces the locked design brief that `.apply`

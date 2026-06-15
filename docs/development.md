@@ -8,7 +8,7 @@
 
 ## Editing content
 
-1. **Always edit in `.agent-src.uncondensed/`** — never in `dist/agent-src/` or `.augment/` directly
+1. **Always edit in `src/`** — never in `dist/agent-src/` or `.augment/` directly
 2. Run `task sync` to copy non-`.md` files
 3. Use the `/condense` command to condense changed `.md` files
 4. Run `task ci` to verify everything passes before pushing
@@ -33,7 +33,7 @@ task consistency-fix           # Regenerate all derived outputs from source
 ### Sync & Condensation
 
 ```bash
-task sync                      # .agent-src.uncondensed/ → dist/agent-src/, then project → .augment/
+task sync                      # src/ → dist/agent-src/, then project → .augment/
 task sync-changed              # List .md files changed since last condensation
 task sync-check                # Check if dist/agent-src/ is in sync (for CI)
 task sync-check-hashes         # Verify condensed .md hashes match source
@@ -202,13 +202,11 @@ tests/
 └── consistency.yml            ← Sync + hash + tool verification
 src/templates/consumer-settings/   ← Settings templates for consumer projects
 
-.agent-src.uncondensed/         ← Source of truth (human-readable, verbose)
+src/                            ← Source of truth (human-readable, verbose)
 ├── rules/                     ← Behavior rules
 ├── skills/                    ← Skill definitions (SKILL.md per skill)
-├── commands/                  ← Slash command definitions
-├── guidelines/                ← Coding guidelines by language
-├── templates/                 ← Document scaffolds
-└── contexts/                  ← System knowledge documents
+├── domains/                   ← Slash command definitions (per pack)
+└── agent-src/                 ← Contexts, templates, profiles, personas, …
 
 dist/agent-src/                    ← Condensed output (token-efficient, shipped)
 ├── (same structure)           ← Condensed .md + copied non-.md files

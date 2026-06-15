@@ -1,7 +1,7 @@
 /**
  * `design` step — produces the design brief that locks microcopy.
  *
- * TypeScript twin of `directives/ui/design.py` (ADR-094 py2ts). Public API
+ * TypeScript twin of `directives/ui/design.py` (ADR-096 py2ts). Public API
  * names stay snake_case to mirror the Python module 1:1.
  *
  * The design step turns the audit findings into a structured design brief that

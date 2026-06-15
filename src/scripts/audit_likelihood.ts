@@ -3,7 +3,7 @@
  * Activation-likelihood heuristic for the Rule-Governance pass
  * (Phase 5.3 of road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/audit_likelihood.py` (ADR-094 —
+ * TypeScript twin of `src/scripts/audit_likelihood.py` (ADR-096 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the Python CLI
  * contract EXACTLY — no flags, exit codes (0 ok / 1 missing audit
  * JSON), the stdout/stderr split, byte-identical stdout messages, and

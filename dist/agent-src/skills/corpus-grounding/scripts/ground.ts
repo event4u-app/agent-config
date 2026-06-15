@@ -3,7 +3,7 @@
  * corpus-grounding · ground — CLI entry point (interface v1).
  *
  * TypeScript twin of `src/skills/corpus-grounding/scripts/ground.py`
- * (ADR-094 Python→TS migration). Mirrors the Python CLI contract: subcommands
+ * (ADR-096 Python→TS migration). Mirrors the Python CLI contract: subcommands
  * (search / ground / validate), snake_case flags, exit codes, the
  * stdout/stderr split, and byte-identical JSON (json.dumps indent=2,
  * ensure_ascii=False) and markdown rendering.
@@ -130,7 +130,7 @@ interface Args {
 /**
  * Minimal argparse-compatible parser for the documented surface. argparse
  * usage/error text (exit 2) is intentionally NOT reproduced byte-for-byte
- * (per ADR-094 test guidance — `--help` and argparse rejections are excluded
+ * (per ADR-096 test guidance — `--help` and argparse rejections are excluded
  * from byte-parity); the success + documented-error paths are exact.
  */
 function _parseArgs(argv: string[]): Args {

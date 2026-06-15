@@ -65,8 +65,7 @@
         "properties": {
           "types": {"type": "array", "items": {"type": "string"}, "minItems": 1, "description": "Memory types to scan, e.g. `historical-patterns`, `incident-learnings`, `ownership`. At least one required."},
           "keys": {"type": "array", "items": {"type": "string"}, "description": "Optional anchor paths or globs to match entries against (e.g. a file you are about to edit)."},
-          "limit": {"type": "integer", "minimum": 1, "default": 5, "description": "Maximum entries to return per type. Defaults to 5."},
-          "with_package": {"type": "boolean", "default": false, "description": "When true, also include memory shipped with the agent-config package, not just the consumer project's own."}
+          "limit": {"type": "integer", "minimum": 1, "default": 5, "description": "Maximum entries to return per type. Defaults to 5."}
         },
         "required": ["types"],
         "additionalProperties": false
@@ -90,7 +89,7 @@
     },
     {
       "name": "memory_status",
-      "description": "Report whether the optional `@event4u/agent-memory` CLI is installed and reachable, and surface its backend and routing metadata. Use to decide whether memory-backed tools (`memory_lookup`, `memory_signal`) will return real data before relying on them. Read-only, takes no arguments. Returns a `status` (`ok` / `absent`), the active `backend`, and — when absent — the reason and the path probed.",
+      "description": "Report the memory backend status. Memory is entirely file-backed (`agents/memory/`); there is no external backend. Read-only, takes no arguments. Returns a `status` (`file`), the active `backend` (`file`), and a short `reason`.",
       "side_effect": "ro",
       "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}

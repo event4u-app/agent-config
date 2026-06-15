@@ -3,7 +3,7 @@
  * Write-side helper: drop an engineering-memory signal.
  *
  * TypeScript twin of `src/agent-src/templates/scripts/memory_signal.py`
- * (ADR-094, consumer-template memory). The public API and CLI contract
+ * (ADR-096, consumer-template memory). The public API and CLI contract
  * mirror the Python original EXACTLY — same exported names (snake_case kept
  * deliberately), same exit codes, stdout/stderr split, byte-identical
  * messages, same append-only JSONL shape and rate-limit behaviour. No
@@ -11,10 +11,10 @@
  * divergence candidates in the porting report, not fixed.
  *
  * Shared by producers (`/bug-fix`, `/do-and-judge`, `/propose-memory`,
- * incident role exit). Routes to the optional `agent-memory` package when
- * `memory_status.status() == "present"`; otherwise appends an intake
- * line under `agents/memory/intake/signals-YYYY-MM.jsonl` — append-only
- * JSONL with `merge=union` (see `road-to-memory-merge-safety.md`).
+ * incident role exit). Appends an intake line under
+ * `agents/memory/intake/signals-YYYY-MM.jsonl` — append-only JSONL with
+ * `merge=union` (see `road-to-memory-merge-safety.md`). Memory is entirely
+ * file-backed (no external backend).
  *
  * Rate limiting:
  * - Per-path, per-type, within a rolling window (default 7 days).
@@ -35,10 +35,14 @@ import { pathToFileURL } from 'node:url';
 
 // Mutable so tests can repoint at a tmp tree (monkeypatch parity).
 export let INTAKE_ROOT = path.join('agents', 'memory', 'intake');
+export let SETTINGS_FILE = '.agent-settings.yml';
 
-/** Test-only setter mirroring pytest monkeypatch on the module constant. */
+/** Test-only setters mirroring pytest monkeypatch on the module constants. */
 export function _setIntakeRoot(p: string): void {
     INTAKE_ROOT = p;
+}
+export function _setSettingsFile(p: string): void {
+    SETTINGS_FILE = p;
 }
 
 export const VALID_TYPES: ReadonlySet<string> = new Set([
@@ -46,7 +50,6 @@ export const VALID_TYPES: ReadonlySet<string> = new Set([
     'incident-learnings',
     'ownership',
     'domain-invariants',
-    'architecture-decisions',
     'product-rules',
 ]);
 export const RATE_LIMIT_WINDOW_DAYS = 7;
@@ -306,7 +309,7 @@ const _PROG = 'memory_signal.py';
 // wraps it onto its own line; reproduce byte-for-byte.
 const _USAGE =
     'usage: memory_signal.py [-h] --type\n' +
-    '                        {architecture-decisions,domain-invariants,historical-patterns,incident-learnings,ownership,product-rules}\n' +
+    '                        {domain-invariants,historical-patterns,incident-learnings,ownership,product-rules}\n' +
     '                        --path PATH --body BODY [--origin ORIGIN]\n' +
     '                        [--extra EXTRA] [--force]\n';
 
@@ -354,7 +357,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         } else if (a === '--force') {
             args.force = true;
         } else if (a === '-h' || a === '--help') {
-            // --help is not a parity contract (per ADR-094); emit the usage block.
+            // --help is not a parity contract (per ADR-096); emit the usage block.
             process.stdout.write(_USAGE);
             process.exit(0);
         } else {

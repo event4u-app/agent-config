@@ -377,11 +377,10 @@ async function _chatHistoryReadHandler(
 }
 
 /**
- * Phase 3 L2 — hybrid memory retrieval over `agents/memory/`.
+ * Phase 3 L2 — file-backed memory retrieval over `agents/memory/`.
  *
  * Wraps `scripts/memory_lookup.retrieve_v1` to keep the v1 envelope on
- * the wire. File-only fallback by default; `with_package=true` enables
- * the optional `@event4u/agent-memory` provider when reachable.
+ * the wire. Retrieval is entirely file-backed (no external backend).
  */
 async function _memoryLookupHandler(
     args: Record<string, unknown>,
@@ -411,11 +410,6 @@ async function _memoryLookupHandler(
         throw new Error("'limit' must be a positive integer");
     }
 
-    let provider = null;
-    if (_pyTruthy(args.with_package)) {
-        provider = memoryLookup.package_operational_provider();
-    }
-
     // Mirror the Python `os.chdir(consumer_root)` scoping: memory_lookup
     // resolves `agents/memory` relative to CWD, so the consumer root is
     // applied via a chdir window that is always restored.
@@ -427,7 +421,6 @@ async function _memoryLookupHandler(
             [...(types as string[])],
             [...(keys as string[])],
             limitRaw,
-            provider,
         );
     } finally {
         process.chdir(prevCwd);
@@ -450,9 +443,10 @@ async function _memoryStatusHandler(
     } finally {
         process.chdir(prevCwd);
     }
-    const payload = memoryStatus.asdict(result) as unknown as Record<string, unknown>;
-    payload.features = [...result.features];
-    return payload;
+    // Python `asdict(result)` over the constant file-backend dataclass →
+    // {status, backend, reason, elapsed_ms}. memory_status.ts.status()
+    // already returns that plain object, so it IS the dict.
+    return result as unknown as Record<string, unknown>;
 }
 
 // Module-level prompt / resource caches reused across handler calls so
@@ -743,14 +737,6 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                     default: 5,
                     description: 'Maximum entries to return per type. Defaults to 5.',
                 },
-                with_package: {
-                    type: 'boolean',
-                    default: false,
-                    description:
-                        'When true, also include memory shipped with the ' +
-                        'agent-config package, not just the consumer ' +
-                        "project's own.",
-                },
             },
             required: ['types'],
             additionalProperties: false,
@@ -760,13 +746,10 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     memory_status: {
         name: 'memory_status',
         description:
-            'Report whether the optional `@event4u/agent-memory` CLI is ' +
-            'installed and reachable, and surface its backend and routing ' +
-            'metadata. Use to decide whether memory-backed tools ' +
-            '(`memory_lookup`, `memory_signal`) will return real data ' +
-            'before relying on them. Read-only, takes no arguments. ' +
-            'Returns a `status` (`ok` / `absent`), the active `backend`, ' +
-            'and — when absent — the reason and the path probed.',
+            'Report the memory backend status. Memory is entirely ' +
+            'file-backed (`agents/memory/`); there is no external backend. ' +
+            'Read-only, takes no arguments. Returns a `status` (`file`), ' +
+            'the active `backend` (`file`), and a short `reason`.',
         input_schema: {
             type: 'object',
             properties: {},

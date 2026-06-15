@@ -36,8 +36,9 @@ not yet justify a human reviewer's attention.
 
 Do NOT use when:
 
-- The entry is a **decision** — go to [`/memory-add`](memory-add.md)
-  with `architecture-decisions` or `product-rules`.
+- The entry is a **product decision** — go to [`/memory-add`](memory-add.md)
+  with `product-rules`. (Architecture decisions belong in ADRs —
+  `docs/decisions/` — not memory.)
 - The finding contradicts an existing curated entry — open a
   supersede-chain discussion instead.
 
@@ -52,8 +53,7 @@ Do NOT use when:
 > 2. incident-learnings  — a post-mortem guardrail
 > 3. ownership           — a path → team mapping
 > 4. domain-invariants   — a module boundary rule
-> 5. architecture-decisions — a decision to revisit
-> 6. product-rules       — an intentional constraint
+> 5. product-rules       — an intentional constraint
 ```
 
 ### 2. Gather minimum fields

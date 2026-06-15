@@ -2,7 +2,7 @@
  * Compile the human-edited low-impact corpus Markdown to a YAML lockfile.
  *
  * TypeScript twin of `src/scripts/ai_council/compile_corpus.py`
- * (ADR-094 — Python→TS migration, Phase 1).
+ * (ADR-096 — Python→TS migration, Phase 1).
  *
  * Step-10 — see `agents/roadmaps/step-10-corpus-yaml-lockfile.md`.
  *

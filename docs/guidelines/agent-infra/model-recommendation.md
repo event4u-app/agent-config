@@ -37,6 +37,35 @@ default `suggest`) live, then:
   per-vendor table. Never auto-act where the surface can't.
 - **`auto_switch: off`.** Inert. No native key, no suggestion.
 
+## Orchestrator → subagent model routing
+
+The main loop can't self-switch its own model — the user owns the session model
+(`/model`). But the orchestrator **does** own the model of every subagent it
+spawns (the `Agent` tool's `model:`, a Workflow agent's `model:`, or
+`subagents.implementer_model`). Right-sizing those is where tier-routing actually
+bites for token cost.
+
+**Judge per subtask — never blanket-downgrade.** The orchestrator assesses each
+delegated subtask's difficulty and matches the model to it. A cheap model on a
+hard subtask costs *more* (rework, wrong output) than it saves; a strong model on
+a trivial sweep burns budget for nothing. The goal is the **optimal**
+distribution, not the cheapest one.
+
+- **Downgrade** mechanical / narrow / well-specified work — code or file search,
+  broad reading, boilerplate or format-conversion edits, deterministic
+  transforms — to `medium` (or `lite` when genuinely trivial).
+- **Keep the strong (`high`) model** for ambiguous, cross-cutting, design,
+  security, or correctness-critical subtasks, and for any work needing deep
+  reasoning. When difficulty is unclear, keep the stronger model.
+- **Keep `high` for the orchestrator's own synthesis, judgment, and final
+  verification** of subagent output — the same reason the judge runs one tier up
+  (`subagent-configuration.md`).
+
+**Default is not free.** `subagents.implementer_model` defaults to the *session*
+model, so subagents inherit the session tier (e.g. `high`) unless the orchestrator
+sets `model:` per call or the user sets a baseline. Delegation alone does not lower
+cost — the explicit per-task model choice does.
+
 ## The suggestion (non-auto surfaces)
 
 Ask **last** — after context / domain clarification, never before the task is
