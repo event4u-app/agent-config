@@ -146,6 +146,13 @@ Produce one combined report:
   ask before fixing 🟡 findings, report 🟢 as suggestions
 - If all five returned `apply` → the diff is ready; report and stop
 
+**Opt-in (never auto-on):** when the `revise` findings are *test-driven*
+(failing checks, not subjective craft) and you want bounded auto-repair before
+re-review, hand off to
+[`verify-repair-loop`](../skills/verify-repair-loop/SKILL.md) — a
+generate→run→revise→re-run loop gated by a numeric threshold, then a judge
+confirms. Surface as a single follow-up line; do not auto-invoke.
+
 ### 7. Quality tools (verbosity-gated)
 
 Per `verbosity.routine_confirmations` (default `false`):
@@ -201,6 +208,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 - [`/prepare-for-review`](prepare-for-review.md) — updates `main` and merges the full base-branch chain into the target branch (used by step 1)
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — dispatch and model-pairing rules
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
+- [`verify-repair-loop`](../skills/verify-repair-loop/SKILL.md) — opt-in test-verdict-gated iterate-to-green loop (step 6 hand-off); judge confirms after the numeric gate
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
 - [`code-review`](../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
 - [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)

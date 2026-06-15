@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 240
+- **artefacts**: 241
 
 ## Commands (118)
 
@@ -195,7 +195,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 
-## Skills (60)
+## Skills (61)
 
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -257,6 +257,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`subagent-orchestration`** — Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml.
 - **`token-optimizer`** — Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action.
 - **`upstream-contribute`** — Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package.
+- **`verify-repair-loop`** — Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
 
 ## Templatess (1)
 
