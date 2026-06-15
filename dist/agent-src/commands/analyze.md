@@ -7,7 +7,7 @@ intent: "Analysis dispatcher — classify input by keywords, propose a weighted 
 routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident]
 replaces: []
 tier: 1
-visibility: visible
+visibility: advanced
 description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks.
 cluster: analyze
 type: orchestrator
@@ -112,11 +112,11 @@ and ask which one was intended. One question, no guessing.
 - **Memory loop applies** — every sub-command that produces an
   analysis output MUST draft a memory candidate via
   `/memory propose` per
-  [`docs/contracts/analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md).
+  [`docs/contracts/analysis-memory-loop.md`](../docs/contracts/analysis-memory-loop.md).
 
 ## See also
 
-- [`docs/contracts/analysis-memory-loop.md`](../../docs/contracts/analysis-memory-loop.md) — produce → propose → promote → retrieve contract
+- [`docs/contracts/analysis-memory-loop.md`](../docs/contracts/analysis-memory-loop.md) — produce → propose → promote → retrieve contract
 - [`blameless-post-mortem`](../../../skills/blameless-post-mortem/SKILL.md) — post-mortem + near-miss skill
 - [`root-cause-frameworks`](../../../skills/root-cause-frameworks/SKILL.md) — RCA engine
 - [`premortem`](../../../skills/premortem/SKILL.md) — forward-looking imagined-failure skill

@@ -7,7 +7,7 @@ intent: "Analysis dispatcher — classify input by keywords, propose a weighted 
 routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident]
 replaces: []
 tier: 1
-visibility: visible
+visibility: advanced
 description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, or incident frameworks.
 cluster: analyze
 type: orchestrator
