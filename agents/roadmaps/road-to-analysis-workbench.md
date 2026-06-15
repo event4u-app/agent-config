@@ -126,18 +126,18 @@ The policy layer the skills depend on. No code, no runtime.
 Make the loop sound first, so every skill writes into a loop that won't poison
 retrieval. Touches the memory retrieval contract + one rule.
 
-- [ ] Add **supersession** to `incident-learnings` (and the curated-memory
+- [x] Add **supersession** to `incident-learnings` (and the curated-memory
       check): a `supersedes: <id>` field + a `status: superseded` value that
       `retrieve()` skips while git history retains the audit trail. Append-only
       audit + correction-via-supersession (council N — append-only ≠ no
       correction). Update `scripts/check_memory.py` / the schema accordingly.
-- [ ] Add a **staleness guard** to `security-sensitive-stop`'s retrieve guidance:
+- [x] Add a **staleness guard** to `security-sensitive-stop`'s retrieve guidance:
       when a hit's `last_validated` is older than `review_after_days`, surface it
       as `stale — validate before applying`; when `applicable_scope` no longer
       matches the current system, skip it. (Schema already has the fields; this
       wires enforcement.) Edit follows the kernel-rule-edit slow-rollout rule if
       `security-sensitive-stop` is kernel.
-- [ ] Add a **dedup pre-check** helper the analysis skills call before drafting a
+- [x] Add a **dedup pre-check** helper the analysis skills call before drafting a
       candidate (`retrieve()` same key-space → propose update vs new). Cover with
       a unit test (new-gate verification, run once locally).
 

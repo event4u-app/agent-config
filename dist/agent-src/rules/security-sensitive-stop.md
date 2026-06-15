@@ -55,12 +55,14 @@ STOP writing code. Run the matching analysis skill first:
 this surface. Via [`memory-access`](../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
-from scripts.memory_lookup import retrieve
-priors = retrieve(
+from scripts.memory_lookup import retrieve_with_meta
+result = retrieve_with_meta(
     types=["incident-learnings", "historical-patterns"],
     keys=<touched file paths>,
     limit=3,
 )
+priors = result["results"]
+# result["skipped"] lists stale or superseded entries — surface them to the user.
 ```
 
 A prior security incident on the same path is the cheapest possible
