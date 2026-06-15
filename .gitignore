@@ -50,6 +50,11 @@ __pycache__/
 /agents/tmp/
 /agents/tmp.old/
 
+# Evidence-discipline ephemeral session cache (Evidence Reports, raw probe /
+# introspection dumps, absence-search logs). Overwritten each task; never
+# committed. Committed knowledge cards live in tracked `agents/knowledge/`.
+/agents/memory/knowledge/session/
+
 # Playwright
 /.playwright-mcp/*
 /test-results/

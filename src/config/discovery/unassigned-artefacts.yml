@@ -32,6 +32,8 @@
   reason: scaffold for project data-sensitivity context
 - path: .agent-src.uncondensed/templates/contexts/deployment-order.md
   reason: scaffold for project deployment-order context
+- path: src/agent-src/templates/contexts/knowledge-card.md
+  reason: fill-in skeleton for committed knowledge cards (evidence-first structure discovery / ADR-097); frontmatter is the example shape a filled card carries, not a runtime artefact
 - path: .agent-src.uncondensed/templates/contexts/observability.md
   reason: scaffold for project observability context
 - path: .agent-src.uncondensed/templates/contexts/tenant-boundaries.md
