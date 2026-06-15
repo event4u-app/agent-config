@@ -104,6 +104,22 @@ the installed version — never blind `main`.** Reuse
 
 Resolve and read the actual class fresh (Step 0). In-codebase → local, no card.
 
+### E. Global cards — leads only (v2, ADR-100)
+
+When `knowledge.global_sharing.enabled` (user-global, default on), a matching
+card may exist in the per-user file-first store
+(`~/.event4u/agent-config/knowledge/`), promoted from another project. **Lead,
+never a build input**:
+
+- Load **negative facts + pointers** as leads (`trust: durable`).
+- Load **positive structure** under **"Assumed (from card · GLOBAL,
+  unverified)"** — record via `evidence_report.py add --bucket assumed --origin
+  global …` and **re-confirm vs the live source this session** before use
+  (version skew / schema drift). Never "Verified" on the global card alone.
+- `public`/`vendor` seen in ≥ `auto_promote_threshold` distinct repos → one-tap
+  promotion **suggestion** (never silent); `proprietary` is manual-only. Record
+  sightings via `_lib/knowledge_global_promote.py record-seen`.
+
 ## Missing structure → fixed extension workflow
 
 When the field/endpoint/table you need is **not** there:
