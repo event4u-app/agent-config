@@ -22,6 +22,30 @@ as `event4u/agent-config` / `@event4u/agent-config`. No application
 runtime. Installed via `scripts/install.sh` (Bash) and
 `scripts/install.py` (Python bridge).
 
+## Authoring-time vs. runtime — the scope line
+
+The package is an **authoring-time orchestration toolkit, not an agent
+runtime.** This single distinction decides what belongs in the package
+and what is out of charter — cite it instead of re-deriving the boundary
+per proposal.
+
+- **Authoring-time (in scope).** Code that runs during prompt
+  construction or in response to an explicit user command, assembling
+  context / skills for the agent to *review* — e.g. `compile_router.py`
+  (deploy-time routing table) and `work_engine` (assembles directives
+  when the user types `/work`; the **agent**, not the engine, decides
+  whether to execute the next step — there is no `while not
+  task_complete:` LLM loop in `dispatcher.py`).
+- **Runtime (out of scope).** Code that executes autonomously *during
+  agent operation*, making decisions or LLM calls without per-step human
+  approval — auto-retry loops, autonomous tool-calling, self-modifying
+  skill selection.
+
+When a proposal (a competitor surface, an external-LLM suggestion, a new
+skill idea) would require the package to *run* an agent loop, it crosses
+this line and is rejected on scope, not on merit. Durable application:
+`road-to-capability-discoverability.md` (disposition of "fable-feedback-3").
+
 ## The four wings
 
 Four wings compose via [`cross-wing-handoff.md`](cross-wing-handoff.md)
