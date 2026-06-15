@@ -700,6 +700,7 @@ AUGMENT_DISPATCHER_BINDINGS = (
     ("session_start", "SessionStart"),
     ("session_end",   "SessionEnd"),
     ("stop",          "Stop"),
+    ("pre_tool_use",  "PreToolUse"),
     ("post_tool_use", "PostToolUse"),
 )
 

@@ -40,6 +40,16 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BIN=\"$CLAUDE_PROJECT_DIR/agent-config\"; [ -x \"$BIN\" ] || BIN=agent-config; \"$BIN\" dispatch:hook --platform claude --event pre_tool_use --native-event PreToolUse --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "hooks": [
