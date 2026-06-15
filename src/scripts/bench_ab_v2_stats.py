@@ -165,6 +165,25 @@ def compare(records: list[dict], arm_t: str, arm_b: str) -> dict:
     }
 
 
+def mean_tokens_by_arm(records: list[dict], arms: list[str]) -> dict:
+    """Mean total tokens per arm over non-errored runs (the cost axis, L10).
+
+    Truncated/errored runs are excluded — their token count is capped by the
+    budget, not representative of the work done."""
+    out: dict[str, dict] = {}
+    for arm in arms:
+        toks: list[int] = []
+        for rec in records:
+            for r in rec.get("arms", {}).get(arm, []) or []:
+                if not r.get("errored"):
+                    toks.append(r.get("metrics", {}).get("tokens", 0))
+        out[arm] = {
+            "n": len(toks),
+            "mean_tokens": round(sum(toks) / len(toks)) if toks else 0,
+        }
+    return out
+
+
 def bucket_rates(records: list[dict], arms: list[str]) -> dict:
     out: dict[str, dict] = {}
     for arm in arms:
@@ -193,6 +212,7 @@ def analyse(payload: dict) -> dict:
         "n_tasks": len(records),
         "comparisons": comps,
         "status_buckets": bucket_rates(records, arms),
+        "mean_tokens": mean_tokens_by_arm(records, arms),
     }
 
 
@@ -250,13 +270,18 @@ def to_markdown(analysis: dict, payload: dict) -> str:
     L.append(f"- status-bucket better (package vs vanilla): `{g.get('status_bucket_better')}`")
     L.append("")
     if g["verdict"] != "PASS":
-        L.append("> **Honest null at this scale.** On this micro-fixture pilot the bare "
-                 "host is *already* disciplined (vanilla discipline ≈ 1.0), so there is no "
-                 "headroom for the package to lift. Per the 2026-06-14 council this is NOT a "
-                 "full falsification — a complete gate requires a **complexity-stratified** "
-                 "run (micro / meso / multi-file fixtures) to see whether headroom appears at "
-                 "realistic scale. That run (meso/multi fixtures + ~17M-token budget) is the "
-                 "deferred follow-up. No lift is claimed.")
+        L.append("> **Honest null.** The bare host is *already* disciplined "
+                 "(vanilla discipline ≈ 1.0), so there is no headroom for the package to "
+                 "lift — and the package neither helps nor hurts (placebo ≈ package ≈ "
+                 "vanilla, so no prompt-length effect either). This replicated across **both "
+                 "hosts** (weak `claude-haiku-4-5` + strong `claude-sonnet-4-6`) and **both "
+                 "scales** (micro + meso) — the complexity-stratified gate the 2026-06-14 "
+                 "council required. The discipline axis saturates for capable hosts on "
+                 "deterministic trap tasks; **no lift is claimed.** (A measurement confound — "
+                 "the plugin's own runtime hooks writing into the clone — once manufactured a "
+                 "fake 'degradation' signal; it is excluded from the diff, see "
+                 "`bench_ab_scoring_v2._rel_files`.) The apparatus is kept for a future "
+                 "non-deterministic / agentic-trajectory corpus where headroom may exist.")
         L.append("")
     for c in a["comparisons"]:
         cap, dis = c["capability"], c["discipline"]
@@ -277,6 +302,15 @@ def to_markdown(analysis: dict, payload: dict) -> str:
         L.append(f"| mean discipline | {dis['mean_baseline']:.3f} | {dis['mean_treatment']:.3f} "
                  f"| {dis['mean_delta']:+.3f} | Wilcoxon p={dis['wilcoxon_p']}, "
                  f"rb={dis['rank_biserial']} (n≠0={dis['n_nonzero']}) |")
+        L.append("")
+        mt = a.get("mean_tokens", {})
+        tb = mt.get(c["arm_baseline"], {}).get("mean_tokens", 0)
+        tt = mt.get(c["arm_treatment"], {}).get("mean_tokens", 0)
+        L.append("### Table 3 — cost axis (mean tokens/run, non-errored)")
+        L.append("")
+        L.append("| metric | baseline | treatment | Δ |")
+        L.append("|---|---|---|---|")
+        L.append(f"| mean tokens | {tb:,} | {tt:,} | {tt - tb:+,} |")
         L.append("")
     L.append("## Status buckets (trajectory)")
     L.append("")

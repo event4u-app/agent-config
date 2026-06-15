@@ -29,11 +29,35 @@ def _read(path: Path) -> str:
         return ""
 
 
+# Namespaces written by the agent-config plugin's own hooks/dispatcher when the
+# `package`/`package-rdp` arms run (the global plugin is active). These are NOT
+# task edits — counting them as `files_changed` confounds the discipline oracle
+# (a clean minimal fix looked like an 18-file scope-creep). Excluded from the
+# diff so only the task fixture surface is scored. Fixtures never use these dirs.
+_NON_TASK_PREFIXES = (
+    ".git", "node_modules", "agents", ".claude", ".augment", ".cursor",
+    ".clinerules", ".agent-memory", ".dispatcher",
+)
+_NON_TASK_FILES = {
+    ".agent-settings.yml", ".agent-settings", ".agent-user.yml", ".windsurfrules",
+    "GEMINI.md",
+}
+
+
 def _rel_files(root: Path) -> set[str]:
     out: set[str] = set()
     for p in root.rglob("*"):
-        if p.is_file() and ".git" not in p.parts and "node_modules" not in p.parts:
-            out.add(p.relative_to(root).as_posix())
+        if not p.is_file():
+            continue
+        parts = p.relative_to(root).parts
+        if parts[0] in _NON_TASK_PREFIXES or any(
+            seg.startswith(".agent") or seg == ".dispatcher" for seg in parts
+        ):
+            continue
+        rel = p.relative_to(root).as_posix()
+        if rel in _NON_TASK_FILES:
+            continue
+        out.add(rel)
     return out
 
 

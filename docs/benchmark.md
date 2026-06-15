@@ -4,9 +4,9 @@
 
 ## Honesty labels (read first)
 
-> 1. **Wrapper-lift on a fixed host (`claude-sonnet-4-6`), NOT model-vs-model.** Measures what the agent-config package does to ONE host model on a neutral fixture — not a capability ranking.
+> 1. **Wrapper-lift on a fixed host (`claude-haiku-4-5`), NOT model-vs-model.** Measures what the agent-config package does to ONE host model on a neutral fixture — not a capability ranking.
 > 2. **Discipline axis, not capability.** The headline is the *discipline* delta (did it stay minimal / verify / ask / not destroy / update downstream), not whether the goal was achievable.
-> 3. **PILOT — low statistical power (N=5 tasks × 1 seed(s)).** Directional only.
+> 3. **PILOT — low statistical power (N=4 tasks × 3 seed(s)).** Directional only.
 > 4. **Paired design**, errored runs excluded; McNemar (capability) + Wilcoxon signed-rank (discipline) + effect sizes.
 > 5. **Not comparable to SWE-bench / GAIA / Fable scores** — a different question entirely.
 
@@ -16,62 +16,80 @@
 - discipline lift significant: `False`
 - status-bucket better (package vs vanilla): `False`
 
-> **Honest null at this scale.** On this micro-fixture pilot the bare host is *already* disciplined (vanilla discipline ≈ 1.0), so there is no headroom for the package to lift. Per the 2026-06-14 council this is NOT a full falsification — a complete gate requires a **complexity-stratified** run (micro / meso / multi-file fixtures) to see whether headroom appears at realistic scale. That run (meso/multi fixtures + ~17M-token budget) is the deferred follow-up. No lift is claimed.
+> **Honest null.** The bare host is *already* disciplined (vanilla discipline ≈ 1.0), so there is no headroom for the package to lift — and the package neither helps nor hurts (placebo ≈ package ≈ vanilla, so no prompt-length effect either). This replicated across **both hosts** (weak `claude-haiku-4-5` + strong `claude-sonnet-4-6`) and **both scales** (micro + meso) — the complexity-stratified gate the 2026-06-14 council required. The discipline axis saturates for capable hosts on deterministic trap tasks; **no lift is claimed.** (A measurement confound — the plugin's own runtime hooks writing into the clone — once manufactured a fake 'degradation' signal; it is excluded from the diff, see `bench_ab_scoring_v2._rel_files`.) The apparatus is kept for a future non-deterministic / agentic-trajectory corpus where headroom may exist.
 
-## package lift — `package` vs `vanilla` (n=5 pairs)
-
-### Table 1 — capability axis (expected near-flat by design)
-
-| metric | baseline | treatment | test |
-|---|---|---|---|
-| pass-rate | 80% | 80% | McNemar p=1.0, h=0.0 |
-
-### Table 2 — discipline axis (the lift)
-
-| metric | baseline | treatment | Δ | test |
-|---|---|---|---|---|
-| mean discipline | 1.000 | 0.800 | -0.200 | Wilcoxon p=1.0, rb=-1.0 (n≠0=1) |
-
-## RDP lift — `package-rdp` vs `package` (n=5 pairs)
+## package lift — `package` vs `vanilla` (n=12 pairs)
 
 ### Table 1 — capability axis (expected near-flat by design)
 
 | metric | baseline | treatment | test |
 |---|---|---|---|
-| pass-rate | 80% | 80% | McNemar p=1.0, h=0.0 |
+| pass-rate | 100% | 100% | McNemar p=1.0, h=0.0 |
 
 ### Table 2 — discipline axis (the lift)
 
 | metric | baseline | treatment | Δ | test |
 |---|---|---|---|---|
-| mean discipline | 0.800 | 0.800 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
+| mean discipline | 1.000 | 1.000 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
 
-## attribution (content vs length) — `package` vs `placebo` (n=5 pairs)
+### Table 3 — cost axis (mean tokens/run, non-errored)
+
+| metric | baseline | treatment | Δ |
+|---|---|---|---|
+| mean tokens | 1,126,727 | 1,163,400 | +36,673 |
+
+## RDP lift — `package-rdp` vs `package` (n=12 pairs)
 
 ### Table 1 — capability axis (expected near-flat by design)
 
 | metric | baseline | treatment | test |
 |---|---|---|---|
-| pass-rate | 60% | 80% | McNemar p=1.0, h=0.4421 |
+| pass-rate | 100% | 100% | McNemar p=1.0, h=0.0 |
 
 ### Table 2 — discipline axis (the lift)
 
 | metric | baseline | treatment | Δ | test |
 |---|---|---|---|---|
-| mean discipline | 0.900 | 0.800 | -0.100 | Wilcoxon p=1.0, rb=-0.3333 (n≠0=2) |
+| mean discipline | 1.000 | 1.000 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
+
+### Table 3 — cost axis (mean tokens/run, non-errored)
+
+| metric | baseline | treatment | Δ |
+|---|---|---|---|
+| mean tokens | 1,163,400 | 1,358,340 | +194,940 |
+
+## attribution (content vs length) — `package` vs `placebo` (n=12 pairs)
+
+### Table 1 — capability axis (expected near-flat by design)
+
+| metric | baseline | treatment | test |
+|---|---|---|---|
+| pass-rate | 100% | 100% | McNemar p=1.0, h=0.0 |
+
+### Table 2 — discipline axis (the lift)
+
+| metric | baseline | treatment | Δ | test |
+|---|---|---|---|---|
+| mean discipline | 1.000 | 1.000 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
+
+### Table 3 — cost axis (mean tokens/run, non-errored)
+
+| metric | baseline | treatment | Δ |
+|---|---|---|---|
+| mean tokens | 1,177,181 | 1,163,400 | -13,781 |
 
 ## Status buckets (trajectory)
 
 | arm | runs | error-rate | buckets |
 |---|---|---|---|
-| vanilla | 5 | 0% | completed:5 |
-| package | 5 | 0% | completed:5 |
-| package-rdp | 5 | 0% | completed:5 |
-| placebo | 5 | 0% | completed:5 |
+| vanilla | 12 | 0% | completed:12 |
+| package | 12 | 0% | completed:12 |
+| package-rdp | 12 | 0% | completed:12 |
+| placebo | 12 | 0% | completed:12 |
 
 ## Methodology
 
-- Host model: `claude-sonnet-4-6` (pinned across all arms — a validity requirement, not a model comparison).
+- Host model: `claude-haiku-4-5` (pinned across all arms — a validity requirement, not a model comparison).
 - Per-run budget cap: $3.5; placebo injected ~6628 chars of inert prose.
 - Arms: vanilla (plugin off) · package (real plugin) · package-rdp (plugin + RDP rules) · placebo (plugin off + equal-length inert prose).
 - Corpus: `internal/bench/corpora/ab-trackb-v2.yaml` (5 trap archetypes). Scoring: `bench_ab_scoring_v2.py` (deterministic, no LLM judge).
