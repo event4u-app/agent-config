@@ -17,7 +17,7 @@
   "commands/analyze-reference-repo.md": "6ae3036c3d9ca62568a780618393dcc1326d19140c8257f7acc16bb17070c537",
   "commands/analyze.md": "38d9ac68d60d7dccd3dc376f4e6f0a12747805ae3239202bc3d1931f7ba0ecf2",
   "commands/analyze/decision.md": "8132602b38daa830d842146209a6c3824cc57afc6520edc4e8764df3200e3895",
-  "commands/analyze/incident.md": "36035bf8bcc85583a1856ca6e8947cd154290bb576df8ee13b15cfcb1d6dbc9a",
+  "commands/analyze/incident.md": "e564aab9a36bab1beb8ea37e4025258fafbd7fa12f698a20eb7972d989609fa3",
   "commands/analyze/near-miss.md": "09761eb5d21ce4be802d1d49e005334127ff073df76fdd5028a08a148f7054e5",
   "commands/analyze/postmortem.md": "426ca04372c8d7ad4cb457a9af3eb4affb4a3dd9788077501632295556777887",
   "commands/analyze/premortem.md": "ac309faba2ca501980223aea3c220624243a3ab86ea2fcb736aceda19211bba0",

@@ -7,7 +7,7 @@ visibility: internal
 cluster: analyze
 sub: incident
 skills: [incident-commander, root-cause-frameworks, blameless-post-mortem]
-description: Full incident flow — live coordination via incident-commander, then RCA via root-cause-frameworks, then blame-free write-up via blameless-post-mortem, ending with an incident-learnings memory candidate.
+description: Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate.
 suggestion:
   eligible: true
   trigger_description: "production is down, active incident, Vorfall, Prod ist down, full incident analysis"
