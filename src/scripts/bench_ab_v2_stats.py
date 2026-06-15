@@ -277,10 +277,15 @@ def to_markdown(analysis: dict, payload: dict) -> str:
                  "axis (Wilcoxon p<0.05, every discordant pair favouring the package) AND "
                  "beats an **equal-length inert-prose placebo** — so it is the package's "
                  "*content* (its `downstream-changes`/`scope-control` rules), NOT mere "
-                 "prompt-length, that helps. **Honest scope:** weak host only (a strong host "
-                 "is already near-ceiling here, see the prior null); the discipline axis, not "
-                 "capability (both arms achieve the primary change); this task family, not a "
-                 "universal claim. It improves *solution discipline*, not model intelligence.")
+                 "prompt-length, that helps. **Honest scope (empirically bounded):** the lift "
+                 "is **weak-host-specific** — a CLEAN strong-host run (`claude-sonnet-4-6`, "
+                 "same tasks, 8 seeds) scored vanilla = package = placebo = 1.00 (no headroom, "
+                 "package redundant). So the package helps a WEAK model that lacks the "
+                 "discipline; a strong model already has it. This matches the package's design "
+                 "thesis (strong hosts self-apply discipline; weak hosts benefit fully). "
+                 "Discipline axis, not capability (both arms make the primary change); this "
+                 "task family (scope/downstream), not a universal claim. It improves *solution "
+                 "discipline*, not model intelligence.")
         L.append("")
     if g["verdict"] != "PASS":
         L.append("> **Honest null.** The bare host is *already* disciplined "

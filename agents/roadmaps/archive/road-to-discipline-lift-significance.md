@@ -38,7 +38,7 @@ shows it); deterministic oracle; cost per arm.
       placebo) on the discordant tasks × ≥3 seeds for significance + attribution.
 - [x] No new tasks needed — the trapE (scope/downstream) family + more seeds in the productive archetype(s) (the family where
       plain models actually fail — downstream/scope showed it first), then re-run.
-- [ ] Confirm on sonnet (strong host) — deferred; strong host was near-ceiling in the prior null, so the claim is scoped to weak hosts for now (strong host) for the discordant tasks — does
+- [x] Confirmed on sonnet (strong host, clean harness, trapE family, 8 seeds): vanilla = package = placebo = **1.00** — no headroom; the lift is **weak-host-specific** (strong hosts already have the discipline).
       the lift hold, or is it weak-host-scoped? State the host scope plainly.
 
 ## Phase 3 — Render + resolve
@@ -68,9 +68,10 @@ axis (not capability; both arms make the primary change). Plain haiku leaves the
 downstream caller un-updated / scope-creeps ~2/3 of the time; the package
 corrects it to 100%.
 
-**Honest scope:** weak host (`claude-haiku-4-5`) — a strong host (sonnet) was
-near-ceiling here (prior null), so the claim is **weak-host-scoped** until a
-strong-host re-test; this specific discipline family; *solution discipline*, not
+**Honest scope (empirically bounded):** weak host (`claude-haiku-4-5`). A CLEAN
+strong-host run (sonnet, same trapE tasks, 8 seeds) scored vanilla = package =
+placebo = 1.00 — no headroom, package redundant. So the lift is **weak-host-
+specific**, confirming the design thesis (strong hosts self-apply discipline); this specific discipline family; *solution discipline*, not
 model intelligence. The earlier universal null was the harness contamination
 (vanilla loaded the package via project scope), which the maintainer correctly
 suspected.
