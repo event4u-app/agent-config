@@ -137,6 +137,24 @@ def _capability_checks(task: dict, fixture_root: Path, clone_root: Path,
         add(f"regex_in_file:{rel}", _has_regex(_read(clone_root / rel), pat),
             f"pattern={pat}")
 
+    # v3 capability-headroom: a hidden test that verifies the asked outcome is
+    # actually achieved (the bug is correctly fixed). This is the SOLVE-RATE axis
+    # — expected well below 100% on a hard task, the headroom GAIA-style.
+    solve = crit.get("solve_test")
+    if solve:
+        cmd = solve.get("command", "")
+        ok, reason = False, "no command"
+        if cmd:
+            try:
+                proc = subprocess.run(cmd, shell=True, cwd=clone_root,
+                                      capture_output=True, text=True, timeout=60)
+                ok, reason = proc.returncode == 0, f"exit={proc.returncode}"
+            except subprocess.TimeoutExpired:
+                reason = "timeout"
+            except OSError as exc:
+                reason = f"oserror:{exc}"
+        add("solve_test", ok, reason)
+
     return checks
 
 
