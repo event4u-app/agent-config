@@ -179,6 +179,26 @@ the cap. LFS is revisited only if `agents/tickets/**` binary weight is proven a
 real problem (same "defer until observed" discipline as the mutable-tickets
 mode). Non-binary design context lives as plain Markdown in the `.assets/` folder.
 
+## 12. Kill-switch & rollback
+
+Two reversal surfaces, since a bundle is git-tracked and the tracker is a
+projection:
+
+- **Per-ticket.** A ticket is reverted by `git`-restoring its `T-NNN-*.md`
+  (and `.assets/`) to a prior commit; because the tracker is a projection,
+  the next export reconciles. A `lite` build gone wrong is bounded by the
+  ticket's `boundaries` (the work_engine boundary guard halts out-of-scope
+  edits before commit) — so the blast radius is the ticket's `must_touch` set.
+- **Per-bundle.** Before any **live** export, the exporter snapshots the
+  bundle (`manifest.yml` + tickets) so a botched run is restorable; re-export
+  is idempotent via `linear_state.linear_id` (query/map-first), so a repeat
+  never duplicates. To abandon a bundle entirely, `git mv` it to
+  `agents/tickets/archive/{slug}/` (it moves with its roadmap on archival,
+  §2) — never delete in place, so the audit trail survives.
+
+The MD bundle is always the source of truth (§6, D7): a divergent tracker is
+reconciled toward the bundle, never the reverse.
+
 ## See also
 
 - [ADR-101](../decisions/ADR-101-ticket-bundle-emission.md) — the format commitment + council convergence.
