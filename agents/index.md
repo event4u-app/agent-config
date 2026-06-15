@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **553 artefacts** in this package.
+Maintainer-facing index of all **554 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -336,7 +336,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (153)
+## Commands (154)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -428,6 +428,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`memory-mine-session`](../src/domains/meta/memory/mine-session/command.md) | cluster: memory | Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-default, opt-in. Folds in /chat-history learn. |
 | command | [`memory-promote`](../src/domains/meta/memory/promote/command.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
 | command | [`memory-propose`](../src/domains/meta/memory/propose/command.md) | cluster: memory | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
+| command | [`mission-upgrade`](../src/domains/engineering-base/mission/upgrade/command.md) |  | Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs. |
 | command | [`mode`](../src/domains/meta/mode/command.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |
 | command | [`module`](../src/domains/engineering-base/module/command.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module-create`](../src/domains/engineering-base/module/create/command.md) | cluster: module | Create a new module from .module-template with interactive setup |

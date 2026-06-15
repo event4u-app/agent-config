@@ -83,6 +83,7 @@ tasks:
       - task: check-refs
       - task: check-no-conflict-markers
       - task: lint-workflow-security
+      - task: lint-missions
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources
@@ -219,6 +220,7 @@ tasks:
       - task: check-refs
       - task: check-no-conflict-markers
       - task: lint-workflow-security
+      - task: lint-missions
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources

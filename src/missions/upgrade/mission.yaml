@@ -1,0 +1,40 @@
+mission: upgrade
+# Upgrade a Laravel application one major version (e.g. 10 → 11) using the
+# breaking-change catalog as structured knowledge. Runs via the gated /work
+# engine on a provisional branch — never auto-commits, never auto-PRs.
+
+inputs:
+  target_version:
+    type: string
+    description: "Target major version to upgrade to (e.g. '11')"
+    required: true
+  framework:
+    type: string
+    description: "Framework slug — defaults to 'laravel' (auto-detected from composer.json)"
+    required: false
+    default: laravel
+
+# Phases executed in order by the gated /work engine.
+# Each is a /work directive name. The engine's confidence-band + N=3 +
+# persisted .work-state.json govern retry and halt semantics.
+phases:
+  - analyze    # Detect which breaking changes apply to this project
+  - plan       # Sequence the fixes with file-level evidence
+  - implement  # Apply fixes from the catalog (one breaking_change at a time)
+  - test       # Run the project test suite after each fix batch
+  - verify     # Run the full verification gate (build → typecheck → lint → test)
+  - report     # Summarise applied changes and remaining manual steps
+
+# Relative path from this file to the breaking-change catalog.
+catalog: laravel-10-to-11.yaml
+
+# Verification gate run after all implement steps complete.
+# The mission surfaces the result to the user before any commit is proposed.
+verification:
+  command: "php artisan test"
+  success_pattern: "OK \\(.*tests"
+  required: true
+
+# Surfaced to the user at invocation so they can set scope expectations.
+# 'standard' is the floor — an upgrade touches public API and config.
+size_tier: standard

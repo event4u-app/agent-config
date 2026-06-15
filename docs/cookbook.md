@@ -112,6 +112,13 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 - **Commands:** `/analyze`
 - **Skills:** `blameless-post-mortem`, `root-cause-frameworks`
 
+### Upgrade a Laravel app one major version
+
+*You want a gated, catalog-driven Laravel major-version upgrade (10→11) on a provisional branch — never auto-PR.*
+
+- **Commands:** `/mission/upgrade`
+- **Skills:** `dependency-upgrade`
+
 ## The four work flows
 
 Broader than a single recipe — the end-to-end shapes most work follows.

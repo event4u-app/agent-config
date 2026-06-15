@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **552 public artefacts** shipped by
+Consumer-facing catalog of all **553 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -335,7 +335,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (153)
+## Commands (154)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -427,6 +427,7 @@ are excluded.
 | command | [`memory-mine-session`](../dist/agent-src/commands/memory/mine-session.md) | cluster: memory | Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-default, opt-in. Folds in /chat-history learn. |
 | command | [`memory-promote`](../dist/agent-src/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
 | command | [`memory-propose`](../dist/agent-src/commands/memory/propose.md) | cluster: memory | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
+| command | [`mission-upgrade`](../dist/agent-src/commands/mission/upgrade.md) |  | Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs. |
 | command | [`mode`](../dist/agent-src/commands/mode.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |
 | command | [`module`](../dist/agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module-create`](../dist/agent-src/commands/module/create.md) | cluster: module | Create a new module from .module-template with interactive setup |

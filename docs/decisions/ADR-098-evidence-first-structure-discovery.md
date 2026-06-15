@@ -1,5 +1,5 @@
 ---
-adr: 097
+adr: 098
 status: accepted
 date: 2026-06-15
 decision: evidence-first-structure-discovery
@@ -9,7 +9,7 @@ phase: structure-grounding
 type: structural
 ---
 
-# ADR-097 — Evidence-first structure discovery
+# ADR-098 — Evidence-first structure discovery
 
 ## Status
 

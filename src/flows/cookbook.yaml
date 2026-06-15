@@ -88,3 +88,8 @@ recipes:
     when: "An incident, near-miss, or risky plan needs analysis that closes the learning loop."
     commands: [analyze]
     skills: [blameless-post-mortem, root-cause-frameworks]
+
+  - title: "Upgrade a Laravel app one major version"
+    when: "You want a gated, catalog-driven Laravel major-version upgrade (10→11) on a provisional branch — never auto-PR."
+    commands: [mission/upgrade]
+    skills: [dependency-upgrade]
