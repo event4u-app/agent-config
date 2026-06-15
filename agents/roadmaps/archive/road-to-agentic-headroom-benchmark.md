@@ -52,15 +52,15 @@ confounds (prompt-coaching, plugin-hook file pollution, budget-truncation).
 
 ## Phase 1 — Build a small multi-module task class + CHEAP baseline go/no-go
 
-- [ ] Author **3-4 sealed multi-module "mini-project" debug/feature tasks**: a
+- [x] Authored **3 sealed multi-module "mini-project" debug/feature tasks**: a
       small repo (5-10 plain-ESM modules) with a HELD-OUT integration test suite
       (`node tests/integration.check.mjs`) the agent never sees; the bug's root
       cause is several hops from the symptom (navigation + multi-edit, ~20-40
       tool calls). Novel, deterministic. Reuse the `solve_test` oracle.
-- [ ] Add the **trajectory catastrophe metric**: a second hidden test asserting
+- [x] Added the **trajectory catastrophe metric**: a second hidden test asserting
       pre-existing invariants stay green (regression), + a forbidden-op / scope
       guard, scored from the post-state.
-- [ ] **Cheap baseline probe (decisive, FIRST):** vanilla-only, the chosen
+- [x] **Cheap baseline probe ran (decisive):** vanilla-only, the chosen
       host(s), 3-4 tasks × 1-2 seeds. Read baseline solve-rate against the gate:
       - >70% → FALSIFY direction (still capability-ceiling); consider a weaker
         host or longer horizon ONCE (N≤3 loop budget), else stop + report null.
@@ -70,7 +70,7 @@ confounds (prompt-coaching, plugin-hook file pollution, budget-truncation).
 
 ## Phase 1b — Host choice (adversarial, council Q5)
 
-- [ ] Be adversarial: sonnet solved 8/9 hard bugs + stayed disciplined
+- [x] Weak host tested (per the adversarial branch): sonnet solved 8/9 hard bugs + stayed disciplined
       everywhere. If the Phase-1 baseline on sonnet is >70%, run the probe on a
       **weaker host** (`claude-haiku-4-5`) and/or a **longer horizon** where even
       sonnet's "probably done" judgment demonstrably degrades. Pick the (host ×
@@ -78,17 +78,51 @@ confounds (prompt-coaching, plugin-hook file pollution, budget-truncation).
 
 ## Phase 2 — 4-arm run + attribution (only if Phase 1 shows headroom)
 
-- [ ] vanilla / package / package-rdp / placebo × the task class × ≥3 seeds,
+- [-] vanilla / package / package-rdp / placebo × the task class × ≥3 seeds,
       budget-capped, error-aware. Primary = solve-rate (McNemar paired);
       secondary = regression/catastrophe rate (paired). Cost per arm (L10).
-- [ ] Apply the gate. PASS = ≥5pp solve-rate lift over placebo (≥6 discordant
+- [-] Apply the gate. PASS = ≥5pp solve-rate lift over placebo (≥6 discordant
       pairs) OR a significant catastrophe-rate reduction; else honest null.
 
 ## Phase 3 — Render + resolve + scale
 
-- [ ] Render: Table 1 solve-rate, Table 2 catastrophe/regression rate, Table 3
+- [-] Render: Table 1 solve-rate, Table 2 catastrophe/regression rate, Table 3
       cost; honesty labels; "efficiency / fewer compounding failures, not
       intelligence" framing. Scale N only on a PASS.
+
+## Result (2026-06-15) — robust null; the one apparent flip was NOISE
+
+**Phase 1 baseline (sonnet, 3 long multi-module tasks): 3/3 = 100%.** Bare Sonnet
+navigated 8-18 tool calls across 8-10 modules and solved every multi-hop bug with
+full discipline → FALSIFY direction (>70%). The optimistic council prediction
+(~45-55% baseline) was empirically wrong for Sonnet.
+
+**Phase 1b weak host (haiku):** a first apparent signal — vanilla 2/3 (67%) vs
+package 3/3 on a single seed; vanilla "failed" agL-debug-01. **De-noise (3 fresh
+seeds): vanilla solved agL-debug-01 3/3.** The lone failure was stochastic noise;
+it vanished on replication. No real lift.
+
+**Final, robust conclusion across v1/v2/v3/v4** (multiple hosts haiku+sonnet,
+scales micro→meso→hard→long-agentic, multiple seeds, the predicted best-case
+weak-host+long-horizon regime, the placebo + de-noise discipline):
+
+> **There is no replicable, measurable agent-config package lift on any
+> deterministic task we can practically build — capability or discipline, on a
+> weak or strong host, short or long horizon. The single apparent flip died on
+> replication.**
+
+This is NOT "the package is useless." It is a precise, hard-won boundary: the
+package's value (governance, safety floors, consistency, catastrophe-prevention,
+and qualities that don't reduce to solve-rate on solvable tasks) is **not
+measurable by a deterministic solve/discipline benchmark**. A real signal would
+need tasks that are hard for *process* reasons a capable model genuinely and
+*replicably* botches — which, on everything we built, it does not.
+
+**Recommendation: STOP the benchmark investment.** Do not scale (scaling would
+chase the noise the de-noise just killed). Keep the apparatus. If the package's
+value is to be evidenced, it is via a fundamentally different method (e.g.
+audited real-world incident-avoidance / longitudinal usage outcomes), not a
+deterministic task benchmark.
 
 ## Acceptance criteria
 
