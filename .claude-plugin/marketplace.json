@@ -259,6 +259,7 @@
         "./dist/agent-src/skills/docker",
         "./dist/agent-src/skills/editorial-calendar",
         "./dist/agent-src/skills/eloquent",
+        "./dist/agent-src/skills/emit-tickets",
         "./dist/agent-src/skills/error-handling-patterns",
         "./dist/agent-src/skills/estimate-ticket",
         "./dist/agent-src/skills/existing-ui-audit",

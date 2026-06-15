@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 241
+- **artefacts**: 243
 
-## Commands (118)
+## Commands (119)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -104,6 +104,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`roadmap`** — Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
 - **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
 - **`roadmap-create`** — Interactively create a new roadmap file in agents/roadmaps/
+- **`roadmap-materialize`** — Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/
 - **`roadmap-process-full`** — Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
 - **`roadmap-process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
 - **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
@@ -195,7 +196,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 
-## Skills (61)
+## Skills (62)
 
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -215,6 +216,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`decision-record`** — Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`.
 - **`description-assist`** — Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 - **`doc-coauthoring`** — Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
+- **`emit-tickets`** — Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
 - **`file-editor`** — Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
 - **`guideline-writing`** — Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
 - **`jira-integration`** — Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
