@@ -212,6 +212,13 @@ Pairs with [`context-hygiene § Read-Loop Detection`](../../rules/context-hygien
 Prefer the cheapest tool that resolves the question. A `dd()` at the
 right line beats five minutes of IDE breakpoints.
 
+**Known failure signature?** If the symptom has a recognisable shape — a
+tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
+test, or works-locally-fails-in-CI — consult the symptom → cause → first-check
+lookup in [`failure-signatures`](../../../docs/guidelines/agent-infra/failure-signatures.md)
+to shortcut Phase 2 (Isolate) with the highest-probability first check. It
+supplements the loop; it does not replace it.
+
 ## Condition-based waiting (intermittent bugs)
 
 Intermittent tests and race conditions usually stem from waiting on

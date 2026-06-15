@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-06-15 | commit: 57588489 | files: 1 -->
 # verify-repair-loop — Phase 1 gate decision (runtime-free PoC)
 
 **Roadmap:** `road-to-autonomous-verify-loop.md` · **Phase 1** (PoC + decision gate).

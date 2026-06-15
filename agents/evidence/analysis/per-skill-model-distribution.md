@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-30 | commit: 57588489 | files: 0 -->
 # Per-skill model-tier distribution (road-to-model-capability-tiers.md Phase 6)
 
 > Measurement deliverable for the vendor-neutral capability tiers (ADR-035,
