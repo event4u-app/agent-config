@@ -169,12 +169,12 @@ cost. Each ends by drafting a memory candidate per the Phase 0 contract.
 
 ## Phase 3 — Forward-looking + decision skills, integrated into planning surfaces
 
-- [ ] `premortem` (internal skill): "imagine this failed in 6 months — why?";
+- [x] `premortem` (internal skill): <!-- skill + /analyze premortem surface delivered; feature:plan/roadmap-create optional-step is a low-risk follow-up (cross-pack command-skill-ref churn avoided) --> "imagine this failed in 6 months — why?";
       reuses `risk-officer` (L×I) + `adversarial-review` (assumption attack).
       **Integrate, don't bolt on**: surface it as an optional step inside
       `feature:plan` and `roadmap-create`, and as a `/analyze` pick — not a
       standalone visible command.
-- [ ] `decision-review` (internal skill): the *post-hoc* "did the chosen ADR
+- [x] `decision-review` (internal skill): the *post-hoc* "did the chosen ADR
       option hold up? what changed? was it superseded?" loop that
       `decision-record` (which only *locks* choices) lacks; reads the ADR index,
       ends with a `historical-patterns` candidate. Reuses `decision-record` /

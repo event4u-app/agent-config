@@ -6,17 +6,17 @@
 
 ## Overall
 
-**15 / 205 steps done · 7%**
+**17 / 205 steps done · 8%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
+███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 6 | 30 | 15 | 11 | 4 | 0 | ████░░░░░░ 42% |
+| 1 | [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 6 | 30 | 13 | 13 | 4 | 0 | █████░░░░░ 50% |
 | 2 | [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md) | 2 | 10 | 9 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md) | 4 | 7 | 3 | 4 | 0 | 0 | ██████░░░░ 57% |
@@ -35,14 +35,14 @@
 
 ### [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md)
 
-**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 11 / 26 done (42%)
+**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 13 / 26 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Contracts + integration boundary (authoring-only) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Memory-loop hardening (the spine — build before the skills) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Core analysis skills (internal, minimal cut) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Forward-looking + decision skills, integrated into planning surfaces | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Forward-looking + decision skills, integrated into planning surfaces | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | Orchestration: the `/analyze` confidence-weighted suggester | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Pack assembly + discovery wiring | ⬜ not started | 10 | 0 | 4 | 0 | 0% |
 
