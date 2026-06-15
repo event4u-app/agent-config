@@ -1,0 +1,20 @@
+{
+  "_comment": "Legitimate workflow security findings. Hard-capped at 20 entries (lint_workflow_security.py ALLOWLIST_CAP). Exceeding the cap signals the linter is wrong, not the content — tighten the heuristic, do not grow this list (autonomous-execution allowlist-growth antipattern). Each entry MUST cite why the finding is acceptable in `reason`.",
+  "findings": [
+    {
+      "workflow": "bench-drift.yml",
+      "rule": "mutable-action-tag",
+      "reason": "marocchino/sticky-pull-request-comment@v2 — sticky PR comment for bench drift reporting; no code execution, output-only action. SHA-pinning tracked in road-to-security-hardening P3."
+    },
+    {
+      "workflow": "skill-lint.yml",
+      "rule": "mutable-action-tag",
+      "reason": "marocchino/sticky-pull-request-comment@v2 — sticky PR comment for skill-lint reporting; same rationale as bench-drift.yml. SHA-pinning tracked in road-to-security-hardening P3."
+    },
+    {
+      "workflow": "cloud-release.yml",
+      "rule": "mutable-action-tag",
+      "reason": "softprops/action-gh-release@v2 — creates GitHub releases; runs only on push to main (not on pull_request_target), no untrusted input. SHA-pinning tracked in road-to-security-hardening P3."
+    }
+  ]
+}

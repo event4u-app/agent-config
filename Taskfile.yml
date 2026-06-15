@@ -82,6 +82,7 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: lint-workflow-security
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources
@@ -216,6 +217,7 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: lint-workflow-security
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-no-external-sources

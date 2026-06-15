@@ -99,4 +99,4 @@ Authorization and tenancy bugs are often invisible in logs and fire silently
 until an auditor or attacker finds them. The cheapest moment to catch them
 is before the first edit — this rule makes that the default path.
 
-See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md).
+See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md) · [`docs/threat-model.md`](../../docs/threat-model.md).
