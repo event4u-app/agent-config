@@ -379,3 +379,41 @@ tasks:
       max_files_changed: 1
       max_lines_changed: 6
     notes: "Kahn: undeclared prereq never gets inDegree entry → phantom cycle; cycle-check tweaks regress."
+
+  # --- Long-horizon agentic multi-module debug tasks (road-to-agentic-headroom-benchmark) ---
+  - id: agL-debug-01
+    archetype: agentic-debug
+    rule: verify-before-complete
+    scale: agentic
+    fixture: fixtures-v2/agL-debug-01
+    prompt: "src/ is a small event-sourced order engine. With this sequence — placeOrder('a', 1000); placeOrder('b', 2000); refundOrder('a') — ordersTotal() returns 0, and orderStatus('b') reports 'refunded' even though 'b' was never refunded. Expected: 'a' is refunded, 'b' stays open, and ordersTotal() is 2000. Fix the bug."
+    capability_oracle:
+      solve_test: { command: "node tests/integration.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["tests/integration.check.mjs", "tests/regression.check.mjs", "src/README.md"]
+      hidden_test: { command: "node tests/regression.check.mjs", must_pass: true }
+    notes: "Root cause in state.mjs (shared BASE_STATE ref mutated in place by reducers); symptom 2 hops away in engine/projection. Local symptom-site patch fails."
+  - id: agL-debug-02
+    archetype: agentic-debug
+    rule: verify-before-complete
+    scale: agentic
+    fixture: fixtures-v2/agL-debug-02
+    prompt: "src/index.mjs turns data/timesheet.csv into per-project invoice totals (run `node src/index.mjs`). The borealis and cobalt invoice amounts come out too high — borealis prints 270.00 USD but should be 135.00, and cobalt prints 870.00 but should be 750.00 — while atlas is correct and every project's minutes are right. Fix the source so all per-project invoice amounts are correct."
+    capability_oracle:
+      solve_test: { command: "node tests/integration.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["tests/integration.check.mjs", "tests/regression.check.mjs", "data/timesheet.csv"]
+      hidden_test: { command: "node tests/regression.check.mjs", must_pass: true }
+    notes: "Module-level lastRate carry-over in coerce.mjs; root cause 4 hops upstream of the aggregate symptom; symptom-site patch breaks explicit-rate rows."
+  - id: agL-debug-03
+    archetype: agentic-debug
+    rule: verify-before-complete
+    scale: agentic
+    fixture: fixtures-v2/agL-debug-03
+    prompt: "The double-entry ledger in this project has a consistency bug. Reproduce it: open a ledger (src/index.mjs createLedger), post two balanced postings, then run a speculative reversal of the first posting inside ledger.transaction(() => { ledger.reverse(1); return ABORT; }). After the block aborts, reporting.verifyAgainst(recomputeBalances(journal)) reports drift between the cached balance index and a fresh recompute, even though the trial balance still nets to zero. Find the root cause and fix it so that aborting a transaction leaves the journal and the cached balances exactly as they were before the transaction opened — across nested savepoints. Do not change the public behavior of committed postings or reversals."
+    capability_oracle:
+      solve_test: { command: "node tests/integration.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["src/ledger.mjs", "src/reporting.mjs", "tests/integration.check.mjs", "tests/regression.check.mjs"]
+      hidden_test: { command: "node tests/regression.check.mjs", must_pass: true }
+    notes: "Off-by-one savepoint-boundary skip in store.mjs rollback (i>mark vs i>=mark); symptom = cache/journal drift in reporting 2 hops away; two symptom-site trap fixes fail one oracle each."
