@@ -12,14 +12,6 @@
 ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   15%
 ```
 
-## ⏳ Merge-gated — pending post-merge archival
-
-Every open item in these roadmaps is `merge-gated`: held open on purpose while a closing PR is in flight, so inbound references keep resolving until the file archives. **The moment the gating PR merges**, flip the merge-gated box → `[x]`, `git mv` the roadmap to `archive/`, migrate inbound refs, and regenerate this dashboard — all in the same response (per `roadmap-progress-sync` Iron Law 1). Do NOT leave it lingering at < 100%.
-
-| Roadmap | Done | Merge-gated open | Gating PR |
-|---|---:|---:|---|
-| [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md) | 25 | 1 | #558 |
-
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
@@ -40,19 +32,6 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 
 ## Per-roadmap phase breakdown
 
-### [road-to-analysis-workbench.md](roadmaps/road-to-analysis-workbench.md)
-
-**Analysis Workbench — RCA / post-mortem / premortem as an integrated learning loop (not a skill dump)** — 25 / 26 done (96%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Contracts + integration boundary (authoring-only) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Memory-loop hardening (the spine — build before the skills) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Core analysis skills (internal, minimal cut) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Forward-looking + decision skills, integrated into planning surfaces | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | Orchestration: the `/analyze` confidence-weighted suggester | ✅ done | 0 | 2 | 1 | 0 | 100% |
-| 5 | Pack assembly + discovery wiring | 🟡 in progress | 1 | 10 | 4 | 0 | 91% |
-
 ### [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md)
 
 **Autonomous verify→repair loop (GAN-adapted, council-gated)** — 0 / 9 done (0%)
@@ -72,17 +51,6 @@ Every open item in these roadmaps is `merge-gated`: held open on purpose while a
 | 2 | `capabilities:index` (the spine, highest leverage) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Evidence-gated gap-closers (build only on documented pain) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Rejected / already-shipped register (do NOT build) | ⬜ not started | 4 | 0 | 0 | 5 | 0% |
-
-### [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md)
-
-**capability-headroom benchmark (v3) — GAIA-honest, can it finally show a lift?** — 4 / 7 done (57%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Hard novel corpus (non-saturating baseline) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 1c | Non-saturation baseline probe (cheap, runs FIRST, gates everything) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 2 | 4-arm run + attribution | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Render + resolve + scale | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)
 
