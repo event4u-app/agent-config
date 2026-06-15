@@ -116,6 +116,7 @@ For each vulnerability:
 - **security** — complementary: security is about writing secure code, this is about finding holes
 - **universal-project-analysis** — provides context about packages and framework usage
 - **bug-analyzer** — some bugs have security implications (chain when found)
+- **untrusted-input-defense** / **lethal-trifecta-guard** (rules) — prompt-injection / agent-config defense; consult when the audited code ingests untrusted content or wires an autonomous egress path
 
 ## Gotcha
 
@@ -130,3 +131,7 @@ For each vulnerability:
 - Do NOT assume frameworks handle everything — verify middleware and config
 - Do NOT confuse code quality issues with security vulnerabilities
 - Do NOT skip dependency checking — known CVEs are real risks
+
+## See also
+
+- [`docs/threat-model.md`](../../docs/threat-model.md) — package attack surface and trust boundary documentation.

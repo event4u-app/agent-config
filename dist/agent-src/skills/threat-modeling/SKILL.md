@@ -205,3 +205,4 @@ run tests**.
   [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`security`](../security/SKILL.md),
   [`security-audit`](../security-audit/SKILL.md) — sibling review / impl skills.
+- Attack surface documentation: [`docs/threat-model.md`](../../docs/threat-model.md) — package trust boundaries, assets, and known risks.
