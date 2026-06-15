@@ -58,6 +58,7 @@ Do not use this skill when:
 | An always-true constraint ("never X", "always Y") | **Rule** | Create/update rule |
 | A repeatable workflow with steps and validation | **Skill** | Create/update skill |
 | A coding convention or reference material | **Guideline** | Create/update guideline |
+| A reusable **fix/refactor recipe** for a specific problem (problem → before → after → verification) | **Pattern** | Create/update `src/patterns/<slug>.md` (see [`src/patterns/README.md`](../../patterns/README.md)) |
 | Baseline model knowledge or standard tool usage | **Nothing** | Do not create anything |
 | A refinement of existing guidance | **Update** | Extend the existing file |
 
@@ -67,6 +68,8 @@ Do not use this skill when:
 * One-off or too narrow → do not create anything yet
 * Standard tool knowledge (jq, docker, git basics) → **Nothing** — the model knows this
 * If unsure between skill and guideline: does it need step-by-step decisions? → Skill. Just conventions? → Guideline
+* If unsure between guideline and pattern: is it *"how to write code in X"* (prose convention)? → Guideline. Is it *"I have problem P — here's the proven recipe + a verification step + how reliable it is"*? → **Pattern**
+* When a related workflow fires, **surface** a matching `src/patterns/` recipe (never auto-apply) — the human decides whether to use it
 
 ## Procedure
 
@@ -129,17 +132,18 @@ Choose one:
 ### 4. Check for overlap — search protocol (mandatory)
 
 A grep that returns zero hits is **not** proof of no overlap. Knowledge in
-this package is distributed across **four surfaces** — `skills/`, `rules/`,
-`docs/guidelines/`, `commands/`. Skip any of them and recall drops to ~25 %.
-Run all four steps before declaring "no overlap":
+this package is distributed across **five surfaces** — `skills/`, `rules/`,
+`docs/guidelines/`, `commands/`, `src/patterns/`. Skip any of them and recall
+drops. Run all the steps before declaring "no overlap":
 
-**Step 1 — list all four surfaces.** Directory taxonomy is free evidence:
+**Step 1 — list all five surfaces.** Directory taxonomy is free evidence:
 
 ```bash
-ls .agent-src.uncondensed/skills/ \
-   .agent-src.uncondensed/rules/ \
+ls src/skills/ \
+   src/rules/ \
    docs/guidelines/ \
-   .agent-src.uncondensed/commands/
+   dist/agent-src/commands/ \
+   src/patterns/
 ```
 
 Sub-directories matter — `docs/guidelines/php/patterns/`, `docs/guidelines/agent-infra/`,
@@ -155,7 +159,7 @@ artifact may name the *symptom*, not the cure.
 | Problem-words | `discriminator`, `enum.*match`, `switch.*on`, `if.*else.*chain` |
 
 ```bash
-grep -rl -E "<solution-words>|<problem-words>" .agent-src.uncondensed/
+grep -rl -E "<solution-words>|<problem-words>" src/ docs/guidelines/
 ```
 
 **Step 3 — taxonomy scan.** For any topic with a likely sub-folder

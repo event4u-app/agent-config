@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-21 | commit: 57588489 | files: 1 -->
 # Council synthesis — road-to-feedback-followups
 
 **Date:** 2026-05-09

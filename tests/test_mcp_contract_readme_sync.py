@@ -32,12 +32,12 @@ DEFERRED_SUFFIX = "-deferred"
 
 def _readme_mcp_section() -> str:
     """README MCP section — the band between the MCP heading and the
-    Optional-memory section. Everything outside this band is unrelated
-    to the cloud contract.
+    next section (Deployment posture). Everything outside this band is
+    unrelated to the cloud contract.
     """
     text = README_PATH.read_text(encoding="utf-8")
     start_match = re.search(r"^###\s+Self-hosted MCP on Cloudflare", text, re.MULTILINE)
-    end_match = re.search(r"^###\s+Optional: persistent agent memory", text, re.MULTILINE)
+    end_match = re.search(r"^###\s+Deployment posture", text, re.MULTILINE)
     if not start_match or not end_match:
         raise AssertionError(
             "MCP section anchors not found in README — bidirectional drift "

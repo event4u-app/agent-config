@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-29 | commit: 57588489 | files: 0 -->
 # Hooks marketplace-install gap — evidence trail
 
 **Source roadmap:** `agents/roadmaps/road-to-hooks-actually-fire-in-consumers.md`

@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **234 skills** available in this package, in alphabetical order.
+All **236 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -214,6 +214,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`skill-reviewer`](../dist/agent-src/skills/skill-reviewer/SKILL.md) | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
 | [`skill-writing`](../dist/agent-src/skills/skill-writing/SKILL.md) | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
 | [`song-to-script`](../dist/agent-src/skills/song-to-script/SKILL.md) | Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'. |
+| [`source-discovery`](../dist/agent-src/skills/source-discovery/SKILL.md) | Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields. |
 | [`sql-writing`](../dist/agent-src/skills/sql-writing/SKILL.md) | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | [`stakeholder-tradeoff`](../dist/agent-src/skills/stakeholder-tradeoff/SKILL.md) | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
@@ -238,6 +239,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`using-git-worktrees`](../dist/agent-src/skills/using-git-worktrees/SKILL.md) | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
 | [`"validate-feature-fit"`](../dist/agent-src/skills/"validate-feature-fit"/SKILL.md) | Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit |
 | [`verify-completion-evidence`](../dist/agent-src/skills/verify-completion-evidence/SKILL.md) | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
+| [`verify-repair-loop`](../dist/agent-src/skills/verify-repair-loop/SKILL.md) | Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'. |
 | [`video-director`](../dist/agent-src/skills/video-director/SKILL.md) | Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'. |
 | [`vision-articulation`](../dist/agent-src/skills/vision-articulation/SKILL.md) | Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'. |
 | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
