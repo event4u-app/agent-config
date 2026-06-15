@@ -247,26 +247,28 @@ auto-triage, NOT a new runtime.
 
 ## Acceptance criteria
 
-- [ ] Phase 0 contract (`analysis-memory-loop.md`) + ADR landed; the
+- [x] Phase 0 contract (`analysis-memory-loop.md`) + ADR landed; the
       handoff, dedup, time-decay, supersession, and framework-neutrality
       decisions are written down before any skill is built.
-- [ ] Memory loop is sound: supersession + staleness guard + dedup pre-check
+- [x] Memory loop is sound: supersession + staleness guard + dedup pre-check
       ship with tests green; `security-sensitive-stop` skips/flags stale hits.
-- [ ] Every analysis flow ends by drafting a **redacted** candidate to
+- [x] Every analysis flow ends by drafting a **redacted** candidate to
       `/memory propose` intake; **none** auto-promote to curated memory
       (`check_memory.py` redaction stays green).
-- [ ] "Rounded workflow" is met, testably (council N6): ≤ 5 visible commands in
+- [x] "Rounded workflow" is met, testably (council N6): ≤ 5 visible commands in
       the pack; every visible command calls ≥ 2 existing skills (proves reuse);
       no new command duplicates > 30% of an existing one (proves not-a-dump).
-- [ ] `persona-governance` + `framework-neutrality` + `minimal-safe-diff` +
+- [x] `persona-governance` + `framework-neutrality` + `minimal-safe-diff` +
       `size-enforcement` hold: new capabilities are internal skills (no new
       personas), no stack named in a generic skill, incident-commander /
       risk-officer / decision-record extended rather than duplicated.
-- [ ] `/analyze` proposes + lets the user pick (no silent auto-triage); a
+- [x] `/analyze` proposes + lets the user pick (no silent auto-triage); a
       verification test confirms its sub-command skill refs resolve; cookbook +
       generated manifest regenerated.
-- [ ] No new runtime, no cross-session persistent state, no self-modifying agent
+- [x] No new runtime, no cross-session persistent state, no self-modifying agent
       loop introduced in the core phases.
+
+- [ ] **Merge gate:** PR CI green end-to-end + roadmap archived on merge. <!-- merge-gated: pr=TBD -->
 
 ## Council notes (2026-06-15, deep + peer-review)
 
