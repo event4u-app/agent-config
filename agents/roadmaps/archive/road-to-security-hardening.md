@@ -33,32 +33,32 @@ will run against (council, 2026-06-15).
 
 The policy layer the rest of the set depends on. Authoring-only, no runtime.
 
-- [ ] Write `docs/threat-model.md` documenting AC's attack surface + mitigations:
+- [x] Write `docs/threat-model.md` documenting AC's attack surface + mitigations:
       (a) malicious skill/rule contribution (mitigation: PR review +
       `lint_agent_security`); (b) supply-chain compromise of AC's own deps
       (lockfiles + documented update policy); (c) hostile repo environment
       (existing `.git/hooks`, malicious `.env`); (d) the lethal-trifecta surface
       already governed by `lethal-trifecta-guard`. Each row: surface → current
       control → gap → mitigation.
-- [ ] Write `SECURITY.md` (repo root) — vulnerability disclosure policy, a
+- [x] Write `SECURITY.md` (repo root) — vulnerability disclosure policy, a
       trust-boundary statement, supported-version response posture, and a
       contact path. Link it from README + AGENTS.md.
-- [ ] Cross-link `docs/threat-model.md` from `security-audit` /
+- [x] Cross-link `docs/threat-model.md` from `security-audit` /
       `threat-modeling` skills and the `security-sensitive-stop` rule (see-also
       only; no behavior change to those artifacts).
 
 ## Phase 2 — Workflow-security CI linter
 
-- [ ] New `src/scripts/lint_workflow_security.py` scanning `.github/workflows/*`
+- [x] New `src/scripts/lint_workflow_security.py` scanning `.github/workflows/*`
       for the high-risk patterns: `pull_request_target` / `workflow_run` with an
       untrusted checkout, `permissions: write-all`, and dependency install
       without `--ignore-scripts` where the workflow runs untrusted PR code.
-- [ ] WARN-first with a documented promotion path (mirror the
+- [x] WARN-first with a documented promotion path (mirror the
       `lint-skill-originality` warn-only-then-strict pattern); existing
       workflows are grandfathered, new/changed steps are checked.
-- [ ] `tests/test_lint_workflow_security.py` — a fixture workflow with each
+- [x] `tests/test_lint_workflow_security.py` — a fixture workflow with each
       risky pattern asserts a finding; a clean workflow passes.
-- [ ] Wire `lint-workflow-security` into `taskfiles/ci-fast.yml` + the `ci` /
+- [x] Wire `lint-workflow-security` into `taskfiles/ci-fast.yml` + the `ci` /
       `ci-strict` orchestrators.
 
 ## Phase 3 — `block-no-verify` git-discipline hook
@@ -66,26 +66,29 @@ The policy layer the rest of the set depends on. Authoring-only, no runtime.
 Turns the `git-history-discipline` Iron Law from prose into a deterministic gate
 (ADAPT of Source-E's `scripts/hooks/block-no-verify.js`).
 
-- [ ] Add a PreToolUse-style guard (Python, consistent with
+- [x] Add a PreToolUse-style guard (Python, consistent with
       `context_hygiene_hook.py`) that exit-blocks `git … --no-verify` and
       `git -c core.hooksPath=…` overrides, with a clear bypass message. Tokenize
       the command properly (no naive substring match).
-- [ ] Wire it into the package's own hook installer (`install-hooks.sh`) and the
-      Claude-plugin hook manifest, documented as opt-in for consumers.
-- [ ] `tests/test_block_no_verify.py` — blocks `commit --no-verify`,
+- [x] Registered as a `pre_tool_use` concern in `src/scripts/hook_manifest.yaml`
+      (claude / cowork / augment) → fires via the Claude-plugin hooks (`hooks/hooks.json`,
+      generic gen) + the augment dispatcher (`install.py` binding). **Correction:**
+      NOT a git hook in `install-hooks.sh` — `--no-verify` bypasses git hooks by
+      definition (council-confirmed), so the guard must be PreToolUse.
+- [x] `tests/test_block_no_verify.py` — blocks `commit --no-verify`,
       `push --no-verify`, hooksPath override; allows normal commits.
 
 ---
 
 ## Acceptance criteria
 
-- [ ] `docs/threat-model.md` + `SECURITY.md` exist, linked from README/AGENTS.md;
+- [x] `docs/threat-model.md` + `SECURITY.md` exist, linked from README/AGENTS.md;
       `check-public-links` / `check-refs` stay green.
-- [ ] `lint_workflow_security.py` ships warn-only with tests green and is wired
+- [x] `lint_workflow_security.py` ships warn-only with tests green and is wired
       into CI; promotion-to-strict path documented.
-- [ ] `block-no-verify` guard ships with tests + is installed by the hook
+- [x] `block-no-verify` guard ships with tests + is installed by the hook
       installer; the `git-history-discipline` rule cites it as its enforcement.
-- [ ] This roadmap completes before any `road-to-mission-mode` Phase ≥ 1 work
+- [x] This roadmap completes before any `road-to-mission-mode` Phase ≥ 1 work
       starts (hard dependency, council 2026-06-15).
 
 ## Council notes (2026-06-15, deep + peer-review)
