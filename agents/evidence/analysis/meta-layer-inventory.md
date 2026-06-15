@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-30 | commit: 57588489 | files: 0 -->
 # Meta-Layer / Concept-Surface Inventory
 
 > Read-only discovery output for `agents/roadmaps/road-to-leaner-core-and-discovery.md` Phase 1.

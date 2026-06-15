@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-27 | commit: 57588489 | files: 3 -->
 # Analysis — external feedback rounds 9–13 triage (for roadmap routing)
 
 ## Goal

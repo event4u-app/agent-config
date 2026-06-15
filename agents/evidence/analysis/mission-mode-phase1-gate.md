@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-06-15 | commit: 57588489 | files: 2 -->
 # Mission-Mode Phase 1 — gate decision (G1)
 
 **Date:** 2026-06-15 · **Verdict:** ✅ APPROVE — missions are thin recipes on `/work`.
