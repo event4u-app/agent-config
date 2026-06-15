@@ -166,6 +166,7 @@
         "./.claude-plugin/skills/roadmap",
         "./.claude-plugin/skills/roadmap-ai-council",
         "./.claude-plugin/skills/roadmap-create",
+        "./.claude-plugin/skills/roadmap-materialize",
         "./.claude-plugin/skills/roadmap-process-full",
         "./.claude-plugin/skills/roadmap-process-phase",
         "./.claude-plugin/skills/roadmap-process-step",
