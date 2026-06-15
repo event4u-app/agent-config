@@ -6,7 +6,7 @@
 
 ## Overall
 
-**38 / 201 steps done · 19%**
+**37 / 191 steps done · 19%**
 
 ```text
 ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   19%
@@ -17,8 +17,8 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
-| 3 | [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md) | 7 | 17 | 12 | 5 | 0 | 0 | ███░░░░░░░ 29% |
+| 2 | [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md) | 4 | 7 | 3 | 4 | 0 | 0 | ██████░░░░ 57% |
+| 3 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
 | 4 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -40,6 +40,17 @@
 | 3 | Evidence-gated gap-closers (build only on documented pain) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Rejected / already-shipped register (do NOT build) | ⬜ not started | 4 | 0 | 0 | 5 | 0% |
 
+### [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md)
+
+**capability-headroom benchmark (v3) — GAIA-honest, can it finally show a lift?** — 4 / 7 done (57%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Hard novel corpus (non-saturating baseline) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1c | Non-saturation baseline probe (cheap, runs FIRST, gates everything) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 2 | 4-arm run + attribution | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Render + resolve + scale | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
 ### [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md)
 
 **Competitive Borrow** — 2 / 24 done (8%)
@@ -50,20 +61,6 @@
 | 1 | Adopt-now plate (4 units + 1 rolling docs task) | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
 | 2 | out-of-horizon (deferred-with-trigger) | ⏭️ skipped | 0 | 0 | 4 | 0 | 0% |
 | 3 | Dropped (reject reason; not carried forward) | 🟡 in progress | 4 | 1 | 0 | 7 | 20% |
-
-### [road-to-discipline-axis-meso-pilot.md](roadmaps/road-to-discipline-axis-meso-pilot.md)
-
-**discipline-axis benchmark — complexity-stratified pilot (meso/multi + weak host)** — 5 / 17 done (29%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Meso + multi-file fixtures (2 archetypes) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 1b | Pick and pin the weak host | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 2a | Weak-host go/no-go probe (cheap, runs FIRST) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2b | Strong-host stratification (threshold-crossing branch) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2c | Cost axis in the render (third table) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2d | Cross-provider generalization (gated, lightweight) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Resolve the gate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)
 

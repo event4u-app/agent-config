@@ -1,0 +1,7 @@
+project,person,minutes,rate_cents,billable
+atlas,ari,120,,true
+atlas,ben,60,18000,true
+borealis,cleo,90,,true
+borealis,dana,30,,false
+cobalt,eli,240,,true
+cobalt,fin,45,20000,true
