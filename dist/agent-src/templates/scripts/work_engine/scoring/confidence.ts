@@ -1,9 +1,9 @@
 /**
  * Confidence scoring for prompt-driven execution (R2 Phase 3 Step 2).
  *
- * TypeScript twin of `work_engine/scoring/confidence.py` (ADR-096 py2ts
+ * TypeScript twin of `work_engine/scoring/confidence.py` (ADR-200 py2ts
  * Phase 1 — work_engine scoring subpackage). Public API names stay snake_case
- * to mirror the Python module 1:1 (per ADR-096 — Python style is part of the
+ * to mirror the Python module 1:1 (per ADR-200 — Python style is part of the
  * contract).
  *
  * The scorer judges whether a reconstructed prompt is good enough for the
@@ -349,7 +349,7 @@ function _pySplitWhitespace(s: string): string[] {
  * Python 3 `round(x, ndigits)` — round-half-to-even (banker's rounding) on
  * the exact decimal expansion of the IEEE-754 double. Same algorithm as
  * `value_ladder.ts::pyRound` / `report_renderer.ts::_pyRound`. Inlined to
- * keep the consumer-shipped module free of cross-tree imports (ADR-096 §7).
+ * keep the consumer-shipped module free of cross-tree imports (ADR-200 §7).
  */
 function _pyRound(value: number, ndigits = 0): number {
     if (!Number.isFinite(value) || value === 0) {

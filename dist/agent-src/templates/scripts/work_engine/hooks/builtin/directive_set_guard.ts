@@ -2,7 +2,7 @@
  * `DirectiveSetGuardHook` — catch CLI / state directive-set drift.
  *
  * TypeScript twin of `work_engine/hooks/builtin/directive_set_guard.py`
- * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Fires on
+ * (ADR-200 py2ts — work_engine.hooks.builtin subpackage). Fires on
  * `HookEvent.BEFORE_DISPATCH`. Compares the resolved `set_name` against the
  * `directive_set` field on the persisted `WorkState`. Mismatch →
  * {@link HookError} (non-fatal: the runner warns), so a flow that silently

@@ -13,7 +13,7 @@
  * Wraps shadcn CLI for programmatic component installation.
  *
  * TypeScript twin of `src/skills/react-shadcn-ui/scripts/shadcn_add.py`
- * (ADR-096). The CLI contract is mirrored EXACTLY — positional components,
+ * (ADR-200). The CLI contract is mirrored EXACTLY — positional components,
  * `--all`, `--overwrite`, `--dry-run`, `--list`, `--project-root`, exit codes
  * (0 / 1), the stdout/stderr split, byte-identical messages, AND the exact
  * `npx shadcn@latest …` command shape. No behaviour changes — latent Python

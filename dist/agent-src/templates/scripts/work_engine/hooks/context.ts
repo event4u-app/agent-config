@@ -1,7 +1,7 @@
 /**
  * `HookContext` — payload carried into every hook callback.
  *
- * TypeScript twin of `work_engine/hooks/context.py` (ADR-096 py2ts —
+ * TypeScript twin of `work_engine/hooks/context.py` (ADR-200 py2ts —
  * work_engine.hooks subpackage). One class for both layers. Most fields are
  * `null` for any given event; the per-event subset is documented below and
  * locked by the roadmap's hook event surface table. Hooks must tolerate

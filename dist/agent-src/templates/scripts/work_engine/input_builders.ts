@@ -1,9 +1,9 @@
 /**
  * File-based input builders and the load-or-build dispatch helper.
  *
- * TypeScript twin of `work_engine/input_builders.py` (ADR-096 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/input_builders.py` (ADR-200 py2ts Phase 1 —
  * work_engine TOP/integration layer). Public API names stay snake_case to
- * mirror the Python module 1:1 (per ADR-096 — Python style is part of the
+ * mirror the Python module 1:1 (per ADR-200 — Python style is part of the
  * contract).
  *
  * Extracted from `cli.py` in P2.3 of `road-to-post-pr29-optimize.md`. Owns the

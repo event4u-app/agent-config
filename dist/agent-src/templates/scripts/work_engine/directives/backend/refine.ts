@@ -1,9 +1,9 @@
 /**
  * `refine` step — deterministic gate in front of the refinement skills.
  *
- * TypeScript twin of `work_engine/directives/backend/refine.py` (ADR-096
+ * TypeScript twin of `work_engine/directives/backend/refine.py` (ADR-200
  * py2ts Phase 1 — work_engine directive sets). Public API names stay
- * snake_case to mirror the Python module 1:1 (per ADR-096 — Python style is
+ * snake_case to mirror the Python module 1:1 (per ADR-200 — Python style is
  * part of the contract).
  *
  * The step never calls an LLM. It inspects `state.ticket` (which carries

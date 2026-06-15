@@ -1,10 +1,10 @@
 /**
  * Backend directive set — step handlers for the backend-coding flow.
  *
- * TypeScript twin of `work_engine/directives/backend/__init__.py` (ADR-096
+ * TypeScript twin of `work_engine/directives/backend/__init__.py` (ADR-200
  * py2ts Phase 1 — work_engine TOP/integration layer). The `__init__.py` →
  * `index.ts` mapping mirrors the hooks subpackage convention. Public API
- * names stay snake_case to mirror the Python module 1:1 (per ADR-096).
+ * names stay snake_case to mirror the Python module 1:1 (per ADR-200).
  *
  * Each module exposes a single `run` callable that matches the `Step`
  * protocol defined in `../../delivery_state`. The dispatcher wires them into

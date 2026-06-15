@@ -2,7 +2,7 @@
  * `StateShapeValidationHook` — round-trip the v1 envelope on load and save.
  *
  * TypeScript twin of `work_engine/hooks/builtin/state_shape_validation.py`
- * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Fires on
+ * (ADR-200 py2ts — work_engine.hooks.builtin subpackage). Fires on
  * `AFTER_LOAD` and `BEFORE_SAVE`. For each event, serialises the live
  * `WorkState` through `state.to_dict` and re-validates via `state.from_dict`.
  * A `SchemaError` from either side is reported as a {@link HookError} so the

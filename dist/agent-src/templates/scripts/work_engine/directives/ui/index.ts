@@ -1,10 +1,10 @@
 /**
  * UI directive set — every slot wired to a working handler.
  *
- * TypeScript twin of `work_engine/directives/ui/__init__.py` (ADR-096 py2ts
+ * TypeScript twin of `work_engine/directives/ui/__init__.py` (ADR-200 py2ts
  * Phase 1 — work_engine TOP/integration layer). The `__init__.py` → `index.ts`
  * mapping mirrors the hooks subpackage convention. Public API names stay
- * snake_case to mirror the Python module 1:1 (per ADR-096).
+ * snake_case to mirror the Python module 1:1 (per ADR-200).
  *
  * The eight-step shape mirrors `work_engine.directives.backend`:
  *

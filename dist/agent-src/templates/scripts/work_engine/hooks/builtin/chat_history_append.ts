@@ -2,7 +2,7 @@
  * `ChatHistoryAppendHook` — phase-boundary persistence.
  *
  * TypeScript twin of `work_engine/hooks/builtin/chat_history_append.py`
- * (ADR-096 py2ts — work_engine.hooks.builtin subpackage). Fires on
+ * (ADR-200 py2ts — work_engine.hooks.builtin subpackage). Fires on
  * `after_step`. Appends a `--type phase` entry whenever a step closed with
  * `Outcome.SUCCESS`. Failures bubble up as {@link HookError} so the runner
  * converts them to warnings — append errors must not break the main flow.

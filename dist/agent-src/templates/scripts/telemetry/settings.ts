@@ -1,7 +1,7 @@
 /**
  * Shared settings reader for the `telemetry:*` CLI commands.
  *
- * TypeScript twin of `settings.py` (ADR-096). Reads the
+ * TypeScript twin of `settings.py` (ADR-200). Reads the
  * `telemetry.artifact_engagement` namespace from `.agent-settings.yml`.
  * Tolerates a missing file, a missing section, and a missing YAML parser —
  * the default-off doctrine means "everything unparseable means disabled".

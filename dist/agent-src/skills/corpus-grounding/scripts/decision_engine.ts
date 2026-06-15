@@ -3,7 +3,7 @@
  * corpus-grounding · decision_engine — reasoning layer (interface v1).
  *
  * TypeScript twin of `src/skills/corpus-grounding/scripts/decision_engine.py`
- * (ADR-096 Python→TS migration). Manifest-parameterised conditional grounding
+ * (ADR-200 Python→TS migration). Manifest-parameterised conditional grounding
  * (ADR-061 §3 tier 2): multi-domain search per the manifest's reasoning plan,
  * decision-rule evaluation (JSON conditionals + an optional dynamically-loaded
  * escape hatch where JSON caps out), best-match selection, and a

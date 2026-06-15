@@ -1,7 +1,7 @@
 /**
  * Schema v1 of the universal-engine work state.
  *
- * TypeScript twin of `work_engine/state.py` (ADR-096 py2ts). Byte-for-byte
+ * TypeScript twin of `work_engine/state.py` (ADR-200 py2ts). Byte-for-byte
  * serialization parity with the Python original is the contract: field order,
  * defaults, validation order, and error text are all part of the wire format
  * the dispatcher and the freeze-guard replay depend on.

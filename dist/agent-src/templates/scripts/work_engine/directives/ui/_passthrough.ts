@@ -1,7 +1,7 @@
 /**
  * Pass-through handler for UI directive slots that have no work.
  *
- * TypeScript twin of `directives/ui/_passthrough.py` (ADR-096 py2ts). Public
+ * TypeScript twin of `directives/ui/_passthrough.py` (ADR-200 py2ts). Public
  * API names stay snake_case to mirror the Python module 1:1 (Python style is
  * part of the contract). The handler is intentionally pure and
  * side-effect-free: it neither reads nor writes `state`.
