@@ -16,10 +16,11 @@ packs:
 
 > **Grounded corpus (Tier-1 consultation):** symptom → index/strategy
 > decisions come grounded — `ground.py search --manifest
-> <skills-root>/database/data/manifest.json "<symptom>"` → root cause,
-> strategy, good-code sketch, anti-pattern, verification probe (EXPLAIN
-> expectation). Corpus: [`data/query-tuning.csv`](data/query-tuning.csv)
-> (PostgreSQL 16 / MySQL 8-derived).
+> <skills-root>/database/data/manifest.json "<symptom>"` returns root
+> cause, strategy, good-code sketch, anti-pattern, and the verification
+> probe (EXPLAIN expectation). Corpus:
+> [`data/query-tuning.csv`](data/query-tuning.csv) (PostgreSQL 16 /
+> MySQL 8-derived).
 
 ## When to use
 
@@ -78,6 +79,27 @@ Re-run `EXPLAIN` and confirm improved plan.
 | Wrong table prefix | Customer tables may have prefixes |
 | Wrong connection | `api_database` vs `customer_database` — verify |
 | Inventing pivot tables | Check if they actually exist |
+
+### Dump to the Evidence Report (source-discovery)
+
+When the task touches schema-driven work, this dump **is** the DB surface of the
+[`source-discovery`](../source-discovery/SKILL.md) discipline. Record it to the
+gitignored session cache with provenance, framework-neutral (MySQL / Postgres /
+SQLite; ORM-agnostic):
+
+- Capture **tables, columns, types, primary/foreign/unique keys, indexes,
+  relations**, and the derived **filter/sort/group-ability** — each with
+  `observed_at` / `source` (`migration:line` or the introspection command).
+- **In-codebase = local, read fresh, no card.** A schema defined by repo
+  migrations / models / ORM / app code (including schemaless stores the app
+  controls — Mongoose / Prisma / Firestore rules) is always resolved locally and
+  re-read each task. The **migration is intended truth, the live DB is actual** —
+  surface any divergence as a drift signal.
+- **Only negative facts graduate to a committed card** (`agents/knowledge/`):
+  "searched, column/table does not exist" after an exhausted search. Positive
+  structure stays in the session Evidence Report, re-read fresh — never a card.
+- A **DB-not-in-codebase** (vendor SaaS / partner / legacy, schema not in the
+  repo and not app-controlled) is the only DB that may be card-worthy.
 
 ## Conventions
 

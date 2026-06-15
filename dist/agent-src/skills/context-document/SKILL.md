@@ -48,7 +48,7 @@ Unlike feature plans (future-focused) or roadmaps (task-focused), contexts are
 ├── skills-and-commands.md
 └── documentation-hierarchy.md
 
-agents/settings/contexts/                         # Project-wide contexts
+agents/settings/contexts/                                # Project-wide contexts
 ├── {context-name}.md
 
 {module_root}/{Module}/{agent_folder}/settings/contexts/ # Module-scoped contexts
@@ -66,9 +66,10 @@ agents/settings/contexts/                         # Project-wide contexts
 |---|---|---|
 | **Module** | Single module's structure and purpose | `client-software.md` |
 | **Domain** | Business domain across modules | `import-pipeline.md` |
-| **Service** | Complex service with its deps | `customer-service.md` |
+| **Service** | Complex service with its dependencies | `customer-service.md` |
 | **Integration** | External API/system integration | `probaus-api.md` |
 | **Infrastructure** | DevOps or infrastructure concern | `queue-system.md` |
+| **Knowledge card** | Trust-tiered cache of *expensive* (remote) structural evidence — negative facts + pointers durable, positive structure a hypothesis | `lodash.md`, `stripe-api.md` |
 
 ## Where to store contexts
 
@@ -77,7 +78,24 @@ agents/settings/contexts/                         # Project-wide contexts
 | About the `.augment/` system itself | `.augment/contexts/` (shared package) |
 | Project-wide or cross-module | `agents/settings/contexts/` |
 | Module-specific | `{module_root}/{Module}/{agent_folder}/settings/contexts/` (resolved via `modules.root_paths` + `modules.agent_folder`; Laravel example: `app/Modules/{Module}/agents/settings/contexts/`) |
+| **Knowledge card** (committed) | `agents/knowledge/<source>.md` — fill from the `knowledge-card` template |
+| **Evidence Report / probe dumps / absence log** (ephemeral) | `agents/memory/knowledge/session/` (gitignored, overwritten each task) |
 | If unsure | Ask the user |
+
+### Knowledge cards — a specialized, evidence-disciplined context type
+
+A **knowledge card** extends this mechanism for the evidence-first discipline; it
+is **not** a second system. Unlike a normal context (a present-state snapshot a
+human curates), a card is governed: it is a cache of *expensive* remote evidence,
+**never a source of truth and never a build input**. Its trusted core is its
+**negative facts + pointers** (`trust: durable`); its positive structure is a
+per-line, last-verified **hypothesis** that loads as "Assumed (from card)" and
+must be re-confirmed against the live source before use. Cards pass the
+`check_knowledge_cards.py` pointer-CI (size ≤ 150, mandatory authoritative
+pointer, trust tagging, multi-evidence consistency). See
+[`source-discovery`](../source-discovery/SKILL.md) for when a structure is
+card-worthy and [`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md)
+for the full model.
 
 ### Shared vs. project-specific contexts
 
