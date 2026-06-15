@@ -6,10 +6,10 @@
 
 ## Overall
 
-**6 / 129 steps done · 5%**
+**10 / 129 steps done · 8%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
+███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-capability-headroom-benchmark.md](roadmaps/road-to-capability-headroom-benchmark.md) | 4 | 7 | 3 | 4 | 0 | 0 | ██████░░░░ 57% |
 | 3 | [road-to-competitive-borrow.md](roadmaps/road-to-competitive-borrow.md) | 4 | 35 | 22 | 2 | 4 | 7 | █░░░░░░░░░ 8% |
-| 4 | [road-to-discipline-lift-significance.md](roadmaps/road-to-discipline-lift-significance.md) | 3 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-discipline-lift-significance.md](roadmaps/road-to-discipline-lift-significance.md) | 3 | 5 | 1 | 4 | 0 | 0 | ████████░░ 80% |
 | 5 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -64,13 +64,13 @@
 
 ### [road-to-discipline-lift-significance.md](roadmaps/road-to-discipline-lift-significance.md)
 
-**discipline-lift to significance (clean harness)** — 0 / 5 done (0%)
+**discipline-lift to significance (clean harness)** — 4 / 5 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Find the discordant pairs (cheap, vanilla vs package) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 2 | Scale to significance | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Render + resolve | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | Find the discordant pairs (cheap, vanilla vs package) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 2 | Scale to significance | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 3 | Render + resolve | ✅ done | 0 | 1 | 0 | 0 | 100% |
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)
 

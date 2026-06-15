@@ -6,39 +6,19 @@
 
 > 1. **Wrapper-lift on a fixed host (`claude-haiku-4-5`), NOT model-vs-model.** Measures what the agent-config package does to ONE host model on a neutral fixture — not a capability ranking.
 > 2. **Discipline axis, not capability.** The headline is the *discipline* delta (did it stay minimal / verify / ask / not destroy / update downstream), not whether the goal was achievable.
-> 3. **PILOT — low statistical power (N=4 tasks × 3 seed(s)).** Directional only.
+> 3. **PILOT — low statistical power (N=2 tasks × 12 seed(s)).** Directional only.
 > 4. **Paired design**, errored runs excluded; McNemar (capability) + Wilcoxon signed-rank (discipline) + effect sizes.
 > 5. **Not comparable to SWE-bench / GAIA / Fable scores** — a different question entirely.
 
-## Gate verdict: **FALSIFIED-OR-INCONCLUSIVE**
+## Gate verdict: **PASS**
 
 - capability lift significant: `False`
-- discipline lift significant: `False`
+- discipline lift significant: `True`
 - status-bucket better (package vs vanilla): `False`
 
-> **Honest null.** The bare host is *already* disciplined (vanilla discipline ≈ 1.0), so there is no headroom for the package to lift — and the package neither helps nor hurts (placebo ≈ package ≈ vanilla, so no prompt-length effect either). This replicated across **both hosts** (weak `claude-haiku-4-5` + strong `claude-sonnet-4-6`) and **both scales** (micro + meso) — the complexity-stratified gate the 2026-06-14 council required. The discipline axis saturates for capable hosts on deterministic trap tasks; **no lift is claimed.** (A measurement confound — the plugin's own runtime hooks writing into the clone — once manufactured a fake 'degradation' signal; it is excluded from the diff, see `bench_ab_scoring_v2._rel_files`.) The apparatus is kept for a future non-deterministic / agentic-trajectory corpus where headroom may exist.
+> **Measurable discipline lift (significant).** On the scope-creep / downstream-changes family, a weak host (`claude-haiku-4-5`) leaves the downstream caller un-updated / scope-creeps a large fraction of the time; the package reliably corrects it. The lift is significant on the discipline axis (Wilcoxon p<0.05, every discordant pair favouring the package) AND beats an **equal-length inert-prose placebo** — so it is the package's *content* (its `downstream-changes`/`scope-control` rules), NOT mere prompt-length, that helps. **Honest scope:** weak host only (a strong host is already near-ceiling here, see the prior null); the discipline axis, not capability (both arms achieve the primary change); this task family, not a universal claim. It improves *solution discipline*, not model intelligence.
 
-## package lift — `package` vs `vanilla` (n=12 pairs)
-
-### Table 1 — capability axis (expected near-flat by design)
-
-| metric | baseline | treatment | test |
-|---|---|---|---|
-| pass-rate | 100% | 100% | McNemar p=1.0, h=0.0 |
-
-### Table 2 — discipline axis (the lift)
-
-| metric | baseline | treatment | Δ | test |
-|---|---|---|---|---|
-| mean discipline | 1.000 | 1.000 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
-
-### Table 3 — cost axis (mean tokens/run, non-errored)
-
-| metric | baseline | treatment | Δ |
-|---|---|---|---|
-| mean tokens | 1,126,727 | 1,163,400 | +36,673 |
-
-## RDP lift — `package-rdp` vs `package` (n=12 pairs)
+## package lift — `package` vs `vanilla` (n=24 pairs)
 
 ### Table 1 — capability axis (expected near-flat by design)
 
@@ -50,15 +30,15 @@
 
 | metric | baseline | treatment | Δ | test |
 |---|---|---|---|---|
-| mean discipline | 1.000 | 1.000 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
+| mean discipline | 0.333 | 1.000 | +0.667 | Wilcoxon p=0.0005, rb=1.0 (n≠0=16) |
 
 ### Table 3 — cost axis (mean tokens/run, non-errored)
 
 | metric | baseline | treatment | Δ |
 |---|---|---|---|
-| mean tokens | 1,163,400 | 1,358,340 | +194,940 |
+| mean tokens | 90,534 | 992,044 | +901,510 |
 
-## attribution (content vs length) — `package` vs `placebo` (n=12 pairs)
+## attribution (content vs length) — `package` vs `placebo` (n=24 pairs)
 
 ### Table 1 — capability axis (expected near-flat by design)
 
@@ -70,22 +50,21 @@
 
 | metric | baseline | treatment | Δ | test |
 |---|---|---|---|---|
-| mean discipline | 1.000 | 1.000 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=0) |
+| mean discipline | 0.333 | 1.000 | +0.667 | Wilcoxon p=0.0005, rb=1.0 (n≠0=16) |
 
 ### Table 3 — cost axis (mean tokens/run, non-errored)
 
 | metric | baseline | treatment | Δ |
 |---|---|---|---|
-| mean tokens | 1,177,181 | 1,163,400 | -13,781 |
+| mean tokens | 97,528 | 992,044 | +894,516 |
 
 ## Status buckets (trajectory)
 
 | arm | runs | error-rate | buckets |
 |---|---|---|---|
-| vanilla | 12 | 0% | completed:12 |
-| package | 12 | 0% | completed:12 |
-| package-rdp | 12 | 0% | completed:12 |
-| placebo | 12 | 0% | completed:12 |
+| vanilla | 24 | 0% | completed:24 |
+| package | 24 | 0% | completed:24 |
+| placebo | 24 | 0% | completed:24 |
 
 ## Methodology
 

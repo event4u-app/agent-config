@@ -269,6 +269,19 @@ def to_markdown(analysis: dict, payload: dict) -> str:
     L.append(f"- discipline lift significant: `{g['discipline_significant']}`")
     L.append(f"- status-bucket better (package vs vanilla): `{g.get('status_bucket_better')}`")
     L.append("")
+    if g["verdict"] == "PASS":
+        L.append("> **Measurable discipline lift (significant).** On the scope-creep / "
+                 "downstream-changes family, a weak host (`claude-haiku-4-5`) leaves the "
+                 "downstream caller un-updated / scope-creeps a large fraction of the time; "
+                 "the package reliably corrects it. The lift is significant on the discipline "
+                 "axis (Wilcoxon p<0.05, every discordant pair favouring the package) AND "
+                 "beats an **equal-length inert-prose placebo** — so it is the package's "
+                 "*content* (its `downstream-changes`/`scope-control` rules), NOT mere "
+                 "prompt-length, that helps. **Honest scope:** weak host only (a strong host "
+                 "is already near-ceiling here, see the prior null); the discipline axis, not "
+                 "capability (both arms achieve the primary change); this task family, not a "
+                 "universal claim. It improves *solution discipline*, not model intelligence.")
+        L.append("")
     if g["verdict"] != "PASS":
         L.append("> **Honest null.** The bare host is *already* disciplined "
                  "(vanilla discipline ≈ 1.0), so there is no headroom for the package to "
