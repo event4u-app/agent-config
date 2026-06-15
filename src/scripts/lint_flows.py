@@ -49,7 +49,9 @@ CLOSED_FLOWS = {"discovery", "implementation", "review", "delivery"}
 # Companion files under src/flows/ that are NOT flow definitions (validated by
 # their own linters). surface-map.yaml = the command→flow classification index
 # (road-to-6.1.0 Step 9), checked by scripts/lint_command_flow_coverage.py.
-_NON_FLOW_FILES = {"surface-map.yaml"}
+# cookbook.yaml = the named-recipe seed (road-to-competitive-borrow P1.4),
+# validated by scripts/generate_cookbook.py (every ref via resolve_logical).
+_NON_FLOW_FILES = {"surface-map.yaml", "cookbook.yaml"}
 
 _REF_FIELDS = ("entry_points", "default_path", "commands")
 
