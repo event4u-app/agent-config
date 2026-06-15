@@ -23,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
 import fnmatch
 import json
 import sys
@@ -90,6 +91,9 @@ def _load_yaml(path: Path):
         return yaml.safe_load(fh) or {}
 
 
+_CURATED_STATUS_EXCLUDE = {"deprecated", "archived", "superseded"}
+
+
 def _iter_curated_entries(mtype: str) -> Iterable[tuple[Path, dict]]:
     """Yield (file, entry) pairs for curated files of `mtype`.
 
@@ -97,6 +101,41 @@ def _iter_curated_entries(mtype: str) -> Iterable[tuple[Path, dict]]:
     <hash>.yml` — one entry per file) and the single-file layout
     (`agents/memory/<type>.yml` or `<type>/entries.yml` with an
     ``entries:`` list), so consumers can adopt either.
+
+    Entries with status in ``_CURATED_STATUS_EXCLUDE`` are silently
+    skipped — they are yielded only by :func:`_iter_curated_entries_all`
+    (used by :func:`retrieve_with_meta` to populate the ``skipped`` list).
+    """
+    type_dir = MEMORY_ROOT / mtype
+    single_file = MEMORY_ROOT / f"{mtype}.yml"
+    if single_file.is_file():
+        data = _load_yaml(single_file)
+        for e in data.get("entries") or []:
+            if isinstance(e, dict):
+                if e.get("status") in _CURATED_STATUS_EXCLUDE:
+                    continue
+                yield single_file, e
+    if type_dir.is_dir():
+        for yml in sorted(type_dir.rglob("*.yml")):
+            data = _load_yaml(yml) or {}
+            entries = data.get("entries")
+            if isinstance(entries, list):
+                for e in entries:
+                    if isinstance(e, dict):
+                        if e.get("status") in _CURATED_STATUS_EXCLUDE:
+                            continue
+                        yield yml, e
+            elif isinstance(data, dict) and data.get("id"):
+                # Flat, one-entry-per-file layout (content-addressed).
+                if data.get("status") in _CURATED_STATUS_EXCLUDE:
+                    continue
+                yield yml, data
+
+
+def _iter_curated_entries_all(mtype: str) -> Iterable[tuple[Path, dict]]:
+    """Like :func:`_iter_curated_entries` but yields ALL entries, including
+    deprecated/archived/superseded ones.  Used by :func:`retrieve_with_meta`
+    to build the ``skipped`` list.
     """
     type_dir = MEMORY_ROOT / mtype
     single_file = MEMORY_ROOT / f"{mtype}.yml"
@@ -114,7 +153,6 @@ def _iter_curated_entries(mtype: str) -> Iterable[tuple[Path, dict]]:
                     if isinstance(e, dict):
                         yield yml, e
             elif isinstance(data, dict) and data.get("id"):
-                # Flat, one-entry-per-file layout (content-addressed).
                 yield yml, data
 
 
@@ -267,19 +305,43 @@ def _cross_repo_hits(keys: list[str], limit: int) -> list[Hit]:
     return hits
 
 
-def retrieve(
+def _is_stale(entry: dict, today: datetime.date) -> bool:
+    """Return True when the entry's ``last_validated`` age exceeds ``review_after_days``.
+
+    Both fields are optional; if either is absent or malformed the entry is
+    treated as **not stale** (conservative — unknown freshness ≠ stale).
+    """
+    lv = entry.get("last_validated")
+    rad = entry.get("review_after_days")
+    if not lv or not isinstance(rad, int):
+        return False
+    try:
+        validated = datetime.date.fromisoformat(str(lv))
+    except ValueError:
+        return False
+    return (today - validated).days > rad
+
+
+def _retrieve_internal(
     types: list[str],
     keys: list[str],
-    limit: int = 5,
-) -> list[Hit]:
-    """Return up to `limit` hits across the requested types, highest score first.
+    limit: int,
+    _today: datetime.date,
+) -> tuple[list[Hit], list[dict]]:
+    """Core retrieval loop shared by :func:`retrieve` and :func:`retrieve_with_meta`.
 
-    Repo entries (curated + intake) are preferred on ties — they are
-    hand-reviewed or session-captured against the repo itself. Knowledge
-    and cross-repo hits are discounted so the project's own truth wins on
-    equal relevance.
+    Returns ``(hits, skipped)`` where ``hits`` is the ranked result list and
+    ``skipped`` is a list of ``{"id", "type", "reason", "details"}`` dicts for
+    curated entries that were excluded due to staleness. (Status-excluded entries
+    are filtered upstream in :func:`_iter_curated_entries`; *all* entries including
+    deprecated/superseded ones are scanned here via ``_iter_curated_entries_all``
+    so they can appear in ``skipped`` when ``retrieve_with_meta`` is the caller,
+    but only active, non-stale entries are passed through ``_iter_curated_entries``
+    in the normal path.)
     """
     repo_hits: list[Hit] = []
+    skipped: list[dict] = []
+
     for mtype in types:
         if mtype == KNOWLEDGE_TYPE:
             for path, entry in _iter_knowledge_entries():
@@ -304,7 +366,19 @@ def retrieve(
             continue
         if mtype not in CURATED_TYPES:
             continue
+        # Curated entries: status filtering happens inside _iter_curated_entries.
+        # We additionally filter stale entries here and track them in skipped.
         for path, entry in _iter_curated_entries(mtype):
+            if _is_stale(entry, _today):
+                lv = entry.get("last_validated", "unknown")
+                rad = entry.get("review_after_days", "?")
+                skipped.append({
+                    "id": str(entry.get("id", "")),
+                    "type": mtype,
+                    "reason": "stale",
+                    "details": f"last_validated={lv}, review_after_days={rad}",
+                })
+                continue
             repo_hits.append(Hit(
                 id=str(entry.get("id", "")),
                 type=mtype,
@@ -313,6 +387,16 @@ def retrieve(
                 score=_score(entry, keys),
                 entry=entry,
             ))
+        # Capture superseded/deprecated entries in skipped (for retrieve_with_meta).
+        for path, entry in _iter_curated_entries_all(mtype):
+            status = entry.get("status", "active")
+            if status in _CURATED_STATUS_EXCLUDE:
+                skipped.append({
+                    "id": str(entry.get("id", "")),
+                    "type": mtype,
+                    "reason": "superseded",
+                    "details": f"status={status}",
+                })
         for path, entry in _iter_intake_entries(mtype):
             repo_hits.append(Hit(
                 id=str(entry.get("id", "")),
@@ -325,7 +409,70 @@ def retrieve(
 
     repo_hits.sort(key=lambda h: (h.score, h.source == "curated"), reverse=True)
     positives = [h for h in repo_hits if h.score > 0]
-    return (positives or repo_hits)[:limit]
+    hits = (positives or repo_hits)[:limit]
+    return hits, skipped
+
+
+def retrieve(
+    types: list[str],
+    keys: list[str],
+    limit: int = 5,
+) -> list[Hit]:
+    """Return up to `limit` hits across the requested types, highest score first.
+
+    Repo entries (curated + intake) are preferred on ties — they are
+    hand-reviewed or session-captured against the repo itself. Knowledge
+    and cross-repo hits are discounted so the project's own truth wins on
+    equal relevance.
+
+    Curated entries with status ``deprecated``, ``archived``, or
+    ``superseded`` are excluded. Stale entries (age > ``review_after_days``)
+    are also excluded. Use :func:`retrieve_with_meta` to see skipped entries.
+    """
+    hits, _ = _retrieve_internal(types, keys, limit, _today=datetime.date.today())
+    return hits
+
+
+def retrieve_with_meta(
+    types: list[str],
+    keys: list[str],
+    limit: int = 5,
+    _today: datetime.date | None = None,
+) -> dict:
+    """Like :func:`retrieve` but returns a dict with ``results`` and ``skipped``.
+
+    ``skipped`` lists curated entries excluded due to staleness or supersession,
+    each with ``id``, ``type``, ``reason`` (``"stale"`` | ``"superseded"``), and
+    ``details``. Callers should surface stale entries to the user — silently
+    ignoring them violates the :mod:`analysis-memory-loop` contract (§ 4).
+
+    ``_today`` may be injected for deterministic testing.
+    """
+    if _today is None:
+        _today = datetime.date.today()
+    hits, skipped = _retrieve_internal(types, keys, limit, _today=_today)
+    return {"results": hits, "skipped": skipped}
+
+
+def find_duplicate(
+    types: list[str],
+    keys: list[str],
+    threshold: float = 0.6,
+    _today: datetime.date | None = None,
+) -> Hit | None:
+    """Return the top hit if its score meets ``threshold``, else ``None``.
+
+    Used by analysis skills for the dedup pre-check described in
+    ``analysis-memory-loop`` § 2. A return value indicates an existing entry
+    that should be reinforced or superseded rather than creating a new one.
+
+    ``_today`` may be injected for deterministic testing.
+    """
+    result = retrieve_with_meta(types, keys, limit=1, _today=_today)
+    hits = result.get("results", [])
+    if hits and hits[0].score >= threshold:
+        return hits[0]
+    return None
 
 
 CONTRACT_VERSION = 1

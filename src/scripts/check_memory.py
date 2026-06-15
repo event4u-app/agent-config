@@ -47,7 +47,7 @@ REQUIRED_KEYS = {
     "id", "status", "confidence", "source",
     "owner", "last_validated", "review_after_days",
 }
-VALID_STATUS = {"active", "deprecated", "archived"}
+VALID_STATUS = {"active", "deprecated", "archived", "superseded"}
 VALID_CONFIDENCE = {"low", "medium", "high"}
 # `priority` is optional (default `normal`); enum is the smallest set that
 # solves the tier-0 surfacing use case. See the Phase 2 council brief for why

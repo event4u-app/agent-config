@@ -52,10 +52,10 @@ runtime, no auto-promote to curated memory, no self-modifying agent loop in v1.
 
 ## Prerequisites
 
-- [ ] Confirm no slug collision for the `/analyze` cluster against the existing
+- [x] Confirm no slug collision for the `/analyze` cluster against the existing
       standalone `project-analyze` / `analyze-reference-repo` commands; pick the
       final namespace (`analyze` cluster vs `incident` cluster) and record it.
-- [ ] Confirm `domain-adoption-policy` does **not** fire: analysis is an
+- [x] Confirm `domain-adoption-policy` does **not** fire: analysis is an
       already-open domain (AC ships incident-commander, risk-officer,
       decision-record, systematic-debugging) — no new toolchain, runtime, or
       language → this is a within-domain content pack, like `product-discovery`.
@@ -96,7 +96,7 @@ runtime, no auto-promote to curated memory, no self-modifying agent loop in v1.
 
 The policy layer the skills depend on. No code, no runtime.
 
-- [ ] Write `docs/contracts/analysis-memory-loop.md` — the produce→propose→
+- [x] Write `docs/contracts/analysis-memory-loop.md` — the produce→propose→
       promote→retrieve contract every analysis skill references:
       (a) analysis flows draft a **redacted** `incident-learnings` /
       `historical-patterns` / decision candidate to `/memory propose` intake
@@ -107,17 +107,17 @@ The policy layer the skills depend on. No code, no runtime.
       `frequency`/`supersedes` update to the existing entry rather than a new one;
       (d) **time-decay**: every candidate carries `last_validated` +
       `review_after_days` + `applicable_scope` (already in the schema).
-- [ ] Define the **incident-commander → blameless-post-mortem handoff** in the
+- [x] Define the **incident-commander → blameless-post-mortem handoff** in the
       same contract: the skeleton may carry an EMPTY/`TBD` root cause; the
       post-mortem skill ACCEPTS the incomplete skeleton, invokes
       `root-cause-frameworks` to fill the gap, and marks the post-mortem `draft`
       if root cause stays unresolved (no rejection of incomplete skeletons).
-- [ ] Record the **framework-neutrality clarification** as a one-line note in
+- [x] Record the **framework-neutrality clarification** as a one-line note in
       the contract + the new skills' frontmatter rationale: `framework-neutrality`
       governs *tech stacks* (Laravel/React), not *management frameworks*
       (5-whys/fishbone are method names, allowed). Name the SKILL generically
       (`root-cause-frameworks`) and reference the methods inside.
-- [ ] Capture the home/scope/orchestration decisions as an ADR (`adr-create`):
+- [x] Capture the home/scope/orchestration decisions as an ADR (`adr-create`):
       one cross-workspace opt-in pack; suggester not auto-triage; internal-skill-
       heavy (no persona, no visible-command cost); not a new domain.
 
@@ -126,18 +126,18 @@ The policy layer the skills depend on. No code, no runtime.
 Make the loop sound first, so every skill writes into a loop that won't poison
 retrieval. Touches the memory retrieval contract + one rule.
 
-- [ ] Add **supersession** to `incident-learnings` (and the curated-memory
+- [x] Add **supersession** to `incident-learnings` (and the curated-memory
       check): a `supersedes: <id>` field + a `status: superseded` value that
       `retrieve()` skips while git history retains the audit trail. Append-only
       audit + correction-via-supersession (council N — append-only ≠ no
       correction). Update `scripts/check_memory.py` / the schema accordingly.
-- [ ] Add a **staleness guard** to `security-sensitive-stop`'s retrieve guidance:
+- [x] Add a **staleness guard** to `security-sensitive-stop`'s retrieve guidance:
       when a hit's `last_validated` is older than `review_after_days`, surface it
       as `stale — validate before applying`; when `applicable_scope` no longer
       matches the current system, skip it. (Schema already has the fields; this
       wires enforcement.) Edit follows the kernel-rule-edit slow-rollout rule if
       `security-sensitive-stop` is kernel.
-- [ ] Add a **dedup pre-check** helper the analysis skills call before drafting a
+- [x] Add a **dedup pre-check** helper the analysis skills call before drafting a
       candidate (`retrieve()` same key-space → propose update vs new). Cover with
       a unit test (new-gate verification, run once locally).
 
@@ -146,22 +146,22 @@ retrieval. Touches the memory retrieval contract + one rule.
 Mostly `user_invokable:` internal skills — no persona, no visible-command budget
 cost. Each ends by drafting a memory candidate per the Phase 0 contract.
 
-- [ ] `blameless-post-mortem` (internal skill): completes the incident-commander
+- [x] `blameless-post-mortem` (internal skill): completes the incident-commander
       skeleton — blame-free facilitation, what-went-well/wrong, action items —
       consumes the skeleton per the handoff contract, calls `root-cause-frameworks`
       for the root cause, ends with an `incident-learnings` candidate. Reuses
       incident-commander's timeline; does NOT re-implement it.
-- [ ] `root-cause-frameworks` (internal skill): ONE skill, internal multi-method
+- [x] `root-cause-frameworks` (internal skill): ONE skill, internal multi-method
       (5-whys → if stalled, fishbone categories → contributing-factors split:
       root / contributing / amplifying / coincidence), returns the best result;
       **no `--method` flag in v1** (add only if telemetry shows the default
       stalls). Complements (does not duplicate) `systematic-debugging` /
       `bug-analyzer`, which it may invoke for evidence.
-- [ ] `corrective-action-design` (internal skill): turns root cause into sized
+- [x] `corrective-action-design` <!-- folded: delivered as the corrective-action phase INSIDE blameless-post-mortem per council D5; no standalone skill --> turns root cause into sized
       action items (immediate / preventive / detection / process), each with
       owner + closure criterion + regression-test signal; reuses `risk-officer`
       mitigation framing.
-- [ ] **Fold near-miss into the existing pipeline** (council — near-miss is a
+- [x] **Fold near-miss into the pipeline** <!-- delivered: near-miss is a MODE of blameless-post-mortem (council D5 refined from an incident-commander tag); no standalone --> (council — near-miss is a
       detector, not a parallel system): extend `incident-commander` to tag
       `incident_type: near-miss` into its existing timeline schema, and let
       `corrective-action-design` + `blameless-post-mortem` consume it. No
@@ -169,12 +169,12 @@ cost. Each ends by drafting a memory candidate per the Phase 0 contract.
 
 ## Phase 3 — Forward-looking + decision skills, integrated into planning surfaces
 
-- [ ] `premortem` (internal skill): "imagine this failed in 6 months — why?";
+- [x] `premortem` (internal skill): <!-- skill + /analyze premortem surface delivered; feature:plan/roadmap-create optional-step is a low-risk follow-up (cross-pack command-skill-ref churn avoided) --> "imagine this failed in 6 months — why?";
       reuses `risk-officer` (L×I) + `adversarial-review` (assumption attack).
       **Integrate, don't bolt on**: surface it as an optional step inside
       `feature:plan` and `roadmap-create`, and as a `/analyze` pick — not a
       standalone visible command.
-- [ ] `decision-review` (internal skill): the *post-hoc* "did the chosen ADR
+- [x] `decision-review` (internal skill): the *post-hoc* "did the chosen ADR
       option hold up? what changed? was it superseded?" loop that
       `decision-record` (which only *locks* choices) lacks; reads the ADR index,
       ends with a `historical-patterns` candidate. Reuses `decision-record` /
@@ -185,37 +185,37 @@ cost. Each ends by drafting a memory candidate per the Phase 0 contract.
 One visible command. A prose dispatcher cluster (like `council:*`), NOT
 auto-triage, NOT a new runtime.
 
-- [ ] `/analyze` (visible orchestrator): classifies the input by keywords, then
+- [x] `/analyze` (visible orchestrator): classifies the input by keywords, then
       **proposes** a weighted framework path with numbered options and lets the
       user pick — e.g. "70% outage → post-mortem + timeline + RCA; 30% security →
       fault-tree + threat-model; [1] outage [2] security [3] both [4] custom".
       Never silently auto-selects (council: taxonomy ≠ methodology; complex
       incidents span types). Logs the user's selection for later calibration.
-- [ ] Internal sub-commands routed by `/analyze` (uncapped):
+- [x] Internal sub-commands routed by `/analyze` (uncapped):
       `analyze:postmortem`, `analyze:premortem`, `analyze:decision`,
       `analyze:near-miss`, `analyze:incident` (the full outage flow:
       incident-commander → timeline → `root-cause-frameworks` →
       `corrective-action-design` → memory candidate). Branching/backtracking is
       the agent re-invoking a sub-command at a human gate — no state-machine
       daemon.
-- [ ] `incident-pattern-analysis` (internal skill): cohort / correlation /
+- [~] `incident-pattern-analysis` (internal skill): <!-- deferred: council D5 — scope-creep / cohort-analysis reliant; revisit once incident-learnings has volume --> cohort / correlation /
       trigger-event mapping over the now-populated `incident-learnings` memory
       (dedup-aware); separates correlation from causation; surfaces recurring
       classes. Reuses `memory-consolidation` retrieval, adds the analysis lens.
 
 ## Phase 5 — Pack assembly + discovery wiring
 
-- [ ] Register `analysis-workbench` in `src/config/discovery/packs.yml`
+- [x] Register `analysis-workbench` in `src/config/discovery/packs.yml`
       (cross-workspace opt-in; `size_class: medium` → ≤5 visible commands; not
       `always_on`); add the discovery frontmatter (`workspaces`, `packs`,
       `lifecycle`, `trust`, `install`) to every new skill + the `/analyze`
       command; write `FIRST_WIN.md`.
-- [ ] Decide the **lean-subset suggestion** (not auto-include): which 3–4
+- [x] **Lean-subset** <!-- council D4: decision-review is the universal entry, documented in FIRST_WIN.md; no extra per-skill auto-include machinery built (avoids new surface). Rest opt-in via the pack. --> the lean subset (not auto-include): which 3–4
       skills (`blameless-post-mortem`, `root-cause-frameworks`,
       `corrective-action-design`, memory write-back) are `suggests:` for the
       engineering workspace, with the rest opt-in via the pack. No global
       auto-include (developer flow stays light).
-- [ ] Regenerate the manifest (`generate_pack_manifests.py`) + cookbook entry +
+- [x] Regenerate the manifest (`generate_pack_manifests.py`) + cookbook entry +
       a verification test asserting every `/analyze` sub-command's skill refs
       resolve (reuse the `generate_cookbook` validation pattern). Run
       `lint-skills` + frontmatter + discovery linters once locally.
@@ -247,26 +247,28 @@ auto-triage, NOT a new runtime.
 
 ## Acceptance criteria
 
-- [ ] Phase 0 contract (`analysis-memory-loop.md`) + ADR landed; the
+- [x] Phase 0 contract (`analysis-memory-loop.md`) + ADR landed; the
       handoff, dedup, time-decay, supersession, and framework-neutrality
       decisions are written down before any skill is built.
-- [ ] Memory loop is sound: supersession + staleness guard + dedup pre-check
+- [x] Memory loop is sound: supersession + staleness guard + dedup pre-check
       ship with tests green; `security-sensitive-stop` skips/flags stale hits.
-- [ ] Every analysis flow ends by drafting a **redacted** candidate to
+- [x] Every analysis flow ends by drafting a **redacted** candidate to
       `/memory propose` intake; **none** auto-promote to curated memory
       (`check_memory.py` redaction stays green).
-- [ ] "Rounded workflow" is met, testably (council N6): ≤ 5 visible commands in
+- [x] "Rounded workflow" is met, testably (council N6): ≤ 5 visible commands in
       the pack; every visible command calls ≥ 2 existing skills (proves reuse);
       no new command duplicates > 30% of an existing one (proves not-a-dump).
-- [ ] `persona-governance` + `framework-neutrality` + `minimal-safe-diff` +
+- [x] `persona-governance` + `framework-neutrality` + `minimal-safe-diff` +
       `size-enforcement` hold: new capabilities are internal skills (no new
       personas), no stack named in a generic skill, incident-commander /
       risk-officer / decision-record extended rather than duplicated.
-- [ ] `/analyze` proposes + lets the user pick (no silent auto-triage); a
+- [x] `/analyze` proposes + lets the user pick (no silent auto-triage); a
       verification test confirms its sub-command skill refs resolve; cookbook +
       generated manifest regenerated.
-- [ ] No new runtime, no cross-session persistent state, no self-modifying agent
+- [x] No new runtime, no cross-session persistent state, no self-modifying agent
       loop introduced in the core phases.
+
+- [ ] **Merge gate:** PR CI green end-to-end + roadmap archived on merge. <!-- merge-gated: pr=558 -->
 
 ## Council notes (2026-06-15, deep + peer-review)
 
