@@ -121,6 +121,7 @@ tasks:
       - task: lint-command-routing
       - task: lint-skill-names
       - task: lint-new-skill-gate
+      - task: lint-skill-originality
       - task: check-cluster-patterns
       - task: lint-orchestrator-auto-detect
       - task: lint-rule-interactions
@@ -170,6 +171,9 @@ tasks:
       - task: lint-flows
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
+      - task: generate-capability-matrix-check
+      - task: generate-cookbook-check
+      - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
@@ -250,6 +254,7 @@ tasks:
       - task: lint-command-routing
       - task: lint-skill-names
       - task: lint-new-skill-gate
+      - task: lint-skill-originality
       - task: check-cluster-patterns
       - task: lint-orchestrator-auto-detect
       - task: lint-rule-interactions
@@ -299,6 +304,9 @@ tasks:
       - task: lint-flows
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
+      - task: generate-capability-matrix-check
+      - task: generate-cookbook-check
+      - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
       - task: ci-cloud-bundle
       - task: ci-linear-digest
