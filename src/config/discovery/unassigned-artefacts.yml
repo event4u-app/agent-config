@@ -24,6 +24,8 @@
   reason: scaffold for project .agent-settings.yml
 - path: .agent-src.uncondensed/templates/command.md
   reason: scaffold for new slash-command authoring
+- path: src/agent-src/templates/tickets.md
+  reason: scaffold template for ticket-bundle tickets (ADR-101); carries no runtime frontmatter — emit-tickets fills it in per ticket
 - path: .agent-src.uncondensed/templates/contexts.md
   reason: scaffold index for project contexts/
 - path: .agent-src.uncondensed/templates/contexts/auth-model.md

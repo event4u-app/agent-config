@@ -9,7 +9,7 @@
 **0 / 98 steps done · 0%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   15%
 ```
 
 ## Open roadmaps
@@ -68,6 +68,20 @@
 | 1 | Settings discoverability | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | User-facing RDP contract | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Surfacing confirmations (verify-only) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+### [road-to-ticket-bundles.md](roadmaps/road-to-ticket-bundles.md)
+
+**Ticket bundles — high-tier plans, lite-tier builds** — 22 / 34 done (65%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Foundation — format, schema, ADR-101, asset policy | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 1 | Two independent probes (the build-pilot is the GATE) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 2 | Materialize — `emit-tickets` skill + `/roadmap:materialize` | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Build-readiness gate + manifest validation | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Builder consumption — `work_engine` reads bundles | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 5 | Linear export (GraphQL, idempotent) — gated on token + the 1b spike | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 6 | Traceability spine + status sync + dashboard | 🟡 in progress | 9 | 1 | 0 | 0 | 10% |
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 
