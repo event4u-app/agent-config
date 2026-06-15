@@ -106,6 +106,23 @@ Guidelines are reference — not execution.
 
 ---
 
+## Knowledge cards
+
+Committed knowledge cards (`agents/knowledge/<source>.md`) are a size-bounded,
+evidence-disciplined context type:
+
+- Hard bound: **≤ 150 lines** — a card is a thin distillation, never a mirror.
+- **Mandatory** `links.authoritative` pointer (path or URL).
+- Enforced by `check_knowledge_cards.py` (pointer-resolution CI + size +
+  trust-tag + multi-evidence git-ancestry consistency; `--strict` adds a
+  content-compare). Durable content = negative facts + pointers; positive
+  structure is a per-line, last-verified hypothesis.
+
+See [`source-discovery`](../../../src/skills/source-discovery/SKILL.md) and the
+`evidence-discipline` context for the full model.
+
+---
+
 # Component responsibilities
 
 ## Rules
