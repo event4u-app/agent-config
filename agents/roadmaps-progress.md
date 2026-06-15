@@ -6,7 +6,7 @@
 
 ## Overall
 
-**0 / 136 steps done · 0%**
+**0 / 144 steps done · 0%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
@@ -16,13 +16,13 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-autonomous-verify-loop.md](roadmaps/road-to-autonomous-verify-loop.md) | 2 | 10 | 9 | 0 | 1 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-harvest-orchestration.md](roadmaps/road-to-harvest-orchestration.md) | 4 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-harvest-small-enhancements.md](roadmaps/road-to-harvest-small-enhancements.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-capability-discoverability.md](roadmaps/road-to-capability-discoverability.md) | 4 | 17 | 12 | 0 | 0 | 5 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-harvest-orchestration.md](roadmaps/road-to-harvest-orchestration.md) | 4 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-harvest-small-enhancements.md](roadmaps/road-to-harvest-small-enhancements.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-rdp-discoverability.md](roadmaps/road-to-rdp-discoverability.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-structure-grounding-v2.md](roadmaps/road-to-structure-grounding-v2.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 8 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -95,6 +95,19 @@
 | 1 | Settings discoverability | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | User-facing RDP contract | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Surfacing confirmations (verify-only) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+### [road-to-structure-grounding-v2.md](roadmaps/road-to-structure-grounding-v2.md)
+
+**Structure-grounding v2 — global cross-project card sharing** — 0 / 17 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Setting + global store + tier detection | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Tier-scoped sharing + redaction (the privacy crux) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Hybrid promotion + leads-only trust | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Command surface + provenance | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | Guardrails | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Kill-switch, ADR, sync | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 
