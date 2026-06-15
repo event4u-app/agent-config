@@ -282,6 +282,35 @@ export const settingsSchema = z.object({
             'Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive.',
         ),
     }),
+    knowledge: z.object({
+        global_sharing: z.object({
+            enabled: z.boolean().default(true).describe(
+                'Master switch for the file-first global knowledge-card store (ADR-100). User-global setting — keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer; project-local cards (v1) are unaffected.',
+            ),
+            allowed_tiers: z.array(z.string()).default(['public', 'vendor']).describe(
+                'Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares.',
+            ),
+            redaction: z.object({
+                enabled: z.boolean().default(true).describe(
+                    'Run the privacy-floor + source-confidentiality scan before any card goes global.',
+                ),
+                halt_on_trigger: z.boolean().default(true).describe(
+                    'Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite.',
+                ),
+            }).default({}),
+            auto_promote_threshold: z.number().int().min(1).default(2).describe(
+                'Distinct-repo count at which a public/vendor card triggers a promotion suggestion (never a silent write).',
+            ),
+            freshness: z.object({
+                hypothesis_after_days: z.number().int().min(0).default(90).describe(
+                    'A global card older than this is lead-only (positive structure must be re-confirmed before use).',
+                ),
+                stale_after_days: z.number().int().min(0).default(180).describe(
+                    'A global card older than this is skipped until re-verified.',
+                ),
+            }).default({}),
+        }).default({}),
+    }).default({}),
     hooks: z.object({
         concern_budget: z.object({
             max_per_event: z.number().int().min(1).default(8).describe(
