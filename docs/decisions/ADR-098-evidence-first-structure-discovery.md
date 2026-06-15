@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 Accepted (2026-06-15). Council-gated, four rounds (claude-sonnet-4-5 + gpt-4o,
-design mode). Implements `agents/roadmaps/road-to-structure-grounding.md` v1.
+design mode). Implements `agents/roadmaps/archive/road-to-structure-grounding.md` v1.
 
 ## Context
 
@@ -99,16 +99,25 @@ run; discovery-on drove it to 0 on every surface.
     `forget`/inspect command, store under the install `global` scope). Killing
     the global layer never kills the cards.
 
+    **RESOLVED 2026-06-15 — v2 KILLED.** The operator exercised the kill option
+    directly rather than wait out the measurement window: the global / registry
+    / promotion layer will **not** be built, and the v1-safe usage counter
+    (`knowledge_card_usage.py`) is **retired/removed** (its only purpose was to
+    feed the now-abandoned promotion gate). No follow-up roadmap is spawned. The
+    durable value stood in the v1 discipline + committed project cards, exactly
+    as the kill path anticipated. The roadmap is closed/archived.
+
 ## Consequences
 
 - A new tier-2b `auto` rule (`source-discovery-gate`) + skill (`source-discovery`)
   fire before coding/DB/API/vendor work, with a gate-skip for trivial work.
 - A new committed-card home (`agents/knowledge/`) + gitignored session cache
-  (`agents/memory/knowledge/session/`); a `knowledge-card` template; three new
-  scripts (`evidence_report.py`, `check_knowledge_cards.py`, `knowledge_card_usage.py`).
+  (`agents/memory/knowledge/session/`); a `knowledge-card` template; two new
+  scripts (`evidence_report.py`, `check_knowledge_cards.py`). A third v1-safe
+  usage counter shipped initially but was **retired with the 2026-06-15 v2 kill**.
 - A new CI gate (`check-knowledge-cards`) enforces card referential integrity.
-- The roadmap stays active after v1: Phase 4's measure/decide/surface steps
-  remain open future work (no premature archival).
+- v1 is complete; the gated v2 (global layer / registry / promotion) was
+  **killed 2026-06-15** (Decision 10) and the roadmap archived.
 
 ## Alternatives
 
@@ -125,12 +134,12 @@ run; discovery-on drove it to 0 on every surface.
 
 ## References
 
-- `agents/roadmaps/road-to-structure-grounding.md` — the roadmap (R1–R4 council
+- `agents/roadmaps/archive/road-to-structure-grounding.md` — the roadmap (R1–R4 council
   convergence inlined in its header).
 - `src/rules/source-discovery-gate.md`, `src/skills/source-discovery/SKILL.md`,
   `src/agent-src/contexts/execution/evidence-discipline.md`.
-- `src/scripts/check_knowledge_cards.py`, `evidence_report.py`,
-  `knowledge_card_usage.py`.
+- `src/scripts/check_knowledge_cards.py`, `evidence_report.py` (the v2 usage
+  counter was retired with the 2026-06-15 kill).
 - `internal/evals/structure-grounding/` — smoke + per-surface eval fixtures and
   results.
 - ADR-035 (model-tier ≠ host band), the 2026-06-14 Layer-2 sunset decision.
