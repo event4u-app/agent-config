@@ -97,6 +97,7 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
+      - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
       - task: lint-profile-overlay-set-only
@@ -234,6 +235,7 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
+      - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
       - task: lint-profile-overlay-set-only

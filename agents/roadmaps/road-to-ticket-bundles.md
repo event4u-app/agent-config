@@ -148,17 +148,17 @@ churns velocity and multiplies bundles).
 - [x] **Step 1:** Write `src/scripts/lint_ticket_buildable.py` (hard DoR gate): a ticket is build-ready only with runnable, isolation-testable acceptance (no "TBD"/"figure out"), exact `must_touch` paths, non-empty `boundaries`, resolved `adr_refs` (path + sha), linked assets for UI tickets (or explicit `assets: none`), and the granularity floor. A failing `lite` ticket blocks export or auto-escalates to `medium`. <!-- ticket: T-005 -->
 - [x] **Step 2:** Write `lint_manifest_graph`: `dependency_graph` is **acyclic** (no topological layering in v1), every `blocked_by` resolves, every `adr_refs.path` exists, no orphaned assets, `_registry.yml` matches the bundles on disk.
 - [x] **Step 3:** Write `lint_ticket_stale` with **split severity** (avoids stale-churn killing velocity): `adr_refs[].sha` drift = **hard** `not build-ready` (ADRs are semantic decisions, rare) → resolution = re-emit bundle; `source_refs[].sha` drift = **warn only** (source files churn constantly; a warning, not a block).
-- [ ] **Step 4:** Wire `task lint-tickets` (buildable + graph + stale) into the lint cadence.
+- [x] **Step 4:** Wire `task lint-tickets` (buildable + graph + stale) into the lint cadence.
 
 **Exit criteria:** linters exist + wired; a deliberately-broken ticket fails each gate; a forced cycle fails; this roadmap's dogfood bundle passes all gates. <!-- carve-out: new-gate-verification -->
 **Rollback:** disable the linters in the Taskfile; format unaffected.
 
 ## Phase 4: Builder consumption — `work_engine` reads bundles
 
-- [ ] **Step 1:** Add `implement-ticket` input-path-5: a local ticket-bundle path. Map bundle frontmatter+body to the existing work-state envelope `input.data = {id, title, body, acceptance_criteria}` — **no engine schema fork** (the envelope is already a subset). <!-- ticket: T-007 -->
-- [ ] **Step 2:** Add a boundary guard in the dispatcher's `apply-plan`/`review-changes` directives: validate the changeset against `boundaries`; any file outside `must_touch`∪`may_touch` halts with an escalation surface.
-- [ ] **Step 3:** Add dependency-driven selection: pick the next ticket whose `blocked_by` are all `done` in `manifest.yml`; never out-of-order.
-- [ ] **Step 4:** Pre-build staleness gate: refuse a ticket whose `adr_refs` sha drifted (semantic) with "re-emit bundle"; a `source_refs` drift only warns and proceeds (split severity, Phase 3 Step 3).
+- [x] **Step 1:** Add `implement-ticket` input-path-5: a local ticket-bundle path. Map bundle frontmatter+body to the existing work-state envelope `input.data = {id, title, body, acceptance_criteria}` — **no engine schema fork** (the envelope is already a subset). <!-- ticket: T-007 -->
+- [x] **Step 2:** Add a boundary guard in the dispatcher's `apply-plan`/`review-changes` directives: validate the changeset against `boundaries`; any file outside `must_touch`∪`may_touch` halts with an escalation surface.
+- [x] **Step 3:** Add dependency-driven selection: pick the next ticket whose `blocked_by` are all `done` in `manifest.yml`; never out-of-order.
+- [x] **Step 4:** Pre-build staleness gate: refuse a ticket whose `adr_refs` sha drifted (semantic) with "re-emit bundle"; a `source_refs` drift only warns and proceeds (split severity, Phase 3 Step 3).
 
 **Exit criteria:** `/implement-ticket <bundle-path>` drives one dogfood ticket end-to-end; an out-of-boundary edit is caught; an out-of-order pick is refused; golden work_engine fixtures still pass.
 **Rollback:** revert the input-path + guard; `implement-ticket` keeps its 4 existing paths.
@@ -166,7 +166,7 @@ churns velocity and multiplies bundles).
 ## Phase 5: Linear export (GraphQL, idempotent) — gated on token + the 1b spike
 
 - [x] **Step 1:** Write `src/scripts/build_ticket_export.py`: bundle → Linear via GraphQL. Idempotency is **query/map-first**, NOT a native upsert (Linear has no documented external-key dedup): look up `linear_id` for `T-NNN` in `manifest.linear_state` → if present, skip/verify (v1 immutable: create-once, no content update); if absent, `issueCreate` and record the returned `linear_id`. Implement the resumable batch partial-failure protocol from the 1b spike. <!-- ticket: T-004 -->
-- [ ] **Step 2:** Map phases → parent issues, tickets → children; frontmatter → priority/estimate/labels; body → issue description (Markdown); images uploaded per the 1b-resolved rule (auth-gated storage, not raw URLs for private repos).
+- [x] **Step 2:** Map phases → parent issues, tickets → children; frontmatter → priority/estimate/labels; body → issue description (Markdown); images uploaded per the 1b-resolved rule (auth-gated storage, not raw URLs for private repos).
 - [ ] **Step 3:** Add `agent-config tickets:export --target linear` (default) and an optional `--target csv` one-shot bootstrap clearly labeled non-idempotent.
 - [ ] **Step 4:** Drift check: flag when a Linear issue and its MD ticket diverge (MD is truth); surface the delta.
 
@@ -178,7 +178,7 @@ churns velocity and multiplies bundles).
 - [ ] **Step 1:** Cross-link discipline: each ticket carries `roadmap` + `adr_refs`; each materialized roadmap step carries `<!-- ticket: T-NNN -->`. Add `lint-roadmap-materialized` (every materialized phase has ≥ 1 ticket; markers resolve both ways).
 - [ ] **Step 2:** Status projection (MD is truth): a sync step projects ticket `status` onto the roadmap checkbox and (when exported) the Linear issue. Define the writeback direction explicitly so dashboard + tracker never become rival truths.
 - [ ] **Step 3:** Teach `update_roadmap_progress.py` to read `agents/tickets/_registry.yml` (one scan) so co-existing bundles are counted without touching the flat-roadmap path.
-- [ ] **Step 4:** Document the per-ticket + per-bundle kill-switch/rollback (versioned snapshot of the bundle before export) in the format contract.
+- [x] **Step 4:** Document the per-ticket + per-bundle kill-switch/rollback (versioned snapshot of the bundle before export) in the format contract.
 
 **Exit criteria:** flipping a ticket `status` updates the roadmap checkbox + dashboard via the registry; `lint-roadmap-materialized` passes; kill-switch documented.
 **Rollback:** drop the sync step; tickets and roadmap stay independently usable.

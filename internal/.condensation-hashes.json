@@ -69,7 +69,7 @@
   "commands/image/analyse.md": "97bc8c34082299fc048da44857081f9a0a02771f5cb4200bef72f643bfc6ea87",
   "commands/image/create.md": "4ddfb0f8f7bfd8b216f7398a54c3a1bcae0bd83e508f7cbc17943468fb71c29b",
   "commands/image/verify.md": "a70f86134c8722048a558f1d37d203d9a3aac3f9e0006185f2280e293b651331",
-  "commands/implement-ticket.md": "8692660ec503df71154e19109699951db31863afde7592ee6c66280792a80c55",
+  "commands/implement-ticket.md": "c4b87760da953dfc143bd14eb80583e267bef46188545d4279a22e7a40d4c853",
   "commands/jira-ticket.md": "b8786cf238b523262db7bc722b46be11e7dbb1552c43bdf8f14b1a70adfea601",
   "commands/judge.md": "446416190751283110216472859205ef31b18b66f6185bdb26aec73f410a742b",
   "commands/judge/on-diff.md": "3b0f4eeed81c44c0d8cff36ea448a6756480d10b928b8c20f413fa0252994178",
