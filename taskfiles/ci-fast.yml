@@ -426,6 +426,11 @@ tasks:
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: python3 src/scripts/lint_empty_roadmaps.py {{.QUIET_FLAG}}
 
+  lint-tickets:
+    silent: true
+    desc: Build-readiness gate for ticket bundles — DoR floor, acyclic manifest graph, traceability spine, asset cap, split-severity staleness (ADR-101)
+    cmd: python3 src/scripts/lint_ticket_buildable.py
+
   lint-commit-subjects:
     silent: true
     desc: Reject sloppy commit subjects (< 10 chars after Conventional-Commits prefix, or blocklist tokens wip/leftover/temp/tmp/fixup) feeding the auto-generated changelog (ADR-033 + road-to-distribution-identity Phase 3)
