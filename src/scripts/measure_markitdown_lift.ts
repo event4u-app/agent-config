@@ -2,7 +2,7 @@
 /**
  * Measure markitdown's token-saving lift on the bundled corpus.
  *
- * TypeScript twin of `src/scripts/measure_markitdown_lift.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/measure_markitdown_lift.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract EXACTLY:
  * flags (`--convert`, `--binary`), exit codes (0 baseline / 2 corpus missing /
  * 3 --convert without the binary on PATH), byte-identical stdout/stderr. No

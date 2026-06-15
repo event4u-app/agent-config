@@ -1,5 +1,5 @@
 ---
-adr: 096
+adr: 200
 status: accepted
 date: 2026-06-11
 decision: python-to-typescript-migration
@@ -9,7 +9,9 @@ phase: py2ts · migration-infrastructure
 type: structural
 ---
 
-# ADR-096 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
+# ADR-200 — Full Python → TypeScript migration: execution model, branch strategy, dispatcher, parity gates
+
+> Provisional number 200 (reserved, out-of-band). main ADRs grow sequentially; the migration ADR is renumbered to a high reserved slot to stop recurring collisions on the long-lived `python2ts` branch. Final number is assigned at the `python2ts`→`main` merge.
 
 ## Status
 

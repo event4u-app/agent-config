@@ -1,9 +1,9 @@
 /**
  * Linear step dispatcher for `/implement-ticket`.
  *
- * TypeScript twin of `work_engine/dispatcher.py` (ADR-096 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/dispatcher.py` (ADR-200 py2ts Phase 1 —
  * work_engine TOP/integration layer). Public API names stay snake_case to
- * mirror the Python module 1:1 (per ADR-096 — Python style is part of the
+ * mirror the Python module 1:1 (per ADR-200 — Python style is part of the
  * contract).
  *
  * The dispatcher holds no business logic. It walks the fixed eight-step order
@@ -36,7 +36,7 @@ import { KNOWN_DIRECTIVE_SETS } from './state.js';
 
 // Static directive-set registry. The Python source uses `import_module` to load
 // `work_engine.directives.<pkg>` dynamically; a `.ts` twin may not import a
-// `.py` and resolves statically instead (ADR-096). The map is keyed by the
+// `.py` and resolves statically instead (ADR-200). The map is keyed by the
 // *wire* name (the `_PACKAGE_NAME_OVERRIDES` translation is folded into the
 // keys here, e.g. `ui-trivial` → the `ui_trivial` module).
 import * as _backend from './directives/backend/index.js';

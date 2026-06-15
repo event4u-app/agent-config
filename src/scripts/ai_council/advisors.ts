@@ -1,7 +1,7 @@
 /**
  * Thinking-style advisors — replace-mode call planning (Phase 6).
  *
- * TypeScript twin of `src/scripts/ai_council/advisors.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/advisors.py` (ADR-200 —
  * Python→TS migration, Phase 1). When `agents/settings/.ai-council.yml`
  * enables an advisor (e.g. `contrarian` bound to `member: anthropic`), the
  * orchestrator REPLACES the matching plain-member call with an

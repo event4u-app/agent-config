@@ -1,7 +1,7 @@
 /**
  * `apply` step — stack-dispatched UI implementation.
  *
- * TypeScript twin of `directives/ui/apply.py` (ADR-096 py2ts). Public API
+ * TypeScript twin of `directives/ui/apply.py` (ADR-200 py2ts). Public API
  * names stay snake_case to mirror the Python module 1:1.
  *
  * The apply step turns the locked design brief into actual files. Routes on

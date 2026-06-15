@@ -2,7 +2,7 @@
  * Privacy floor for `agents/decisions/low-impact-decisions.md` (Phase 12).
  *
  * TypeScript twin of `src/scripts/ai_council/redact_low_impact_entry.py`
- * (ADR-096 — Python→TS migration, Phase 1). Security-sensitive: the
+ * (ADR-200 — Python→TS migration, Phase 1). Security-sensitive: the
  * redaction regexes and refusal markers are matched byte-for-byte against
  * the Python original.
  *

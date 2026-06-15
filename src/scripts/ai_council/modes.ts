@@ -1,7 +1,7 @@
 /**
  * Mode resolution for council members (Phase 2b).
  *
- * TypeScript twin of `src/scripts/ai_council/modes.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/modes.py` (ADR-200 —
  * Python→TS migration, Phase 1). Pure resolver — never touches the
  * filesystem or environment. Callers pass in already-loaded values from
  * `.agent-settings.yml`.

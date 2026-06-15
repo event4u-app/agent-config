@@ -1,7 +1,7 @@
 /**
  * `DecisionGateHook` — refuse to advance when an opt-in gate fires.
  *
- * TypeScript twin of `work_engine/hooks/builtin/decision_gate.py` (ADR-096
+ * TypeScript twin of `work_engine/hooks/builtin/decision_gate.py` (ADR-200
  * py2ts — work_engine.hooks.builtin subpackage). Bridges
  * `work_engine/scoring/decision_engine` into the dispatcher hook bus. Reads
  * the gate config from {@link DecisionEngineSettings} and fires on

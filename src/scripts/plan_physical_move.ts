@@ -2,7 +2,7 @@
 /**
  * Plan + apply the physical monorepo migration (Phase 4).
  *
- * TypeScript twin of `src/scripts/plan_physical_move.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/plan_physical_move.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--apply`, `--out` flags,
  * exit codes (0 clean dry-run / 1 dry-run-with-conflicts / 2 refuse-apply /
  * 3 source-missing / 4 git-mv-failed), the stdout/stderr split, byte-identical

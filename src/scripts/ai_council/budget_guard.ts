@@ -1,7 +1,7 @@
 /**
  * Per-day rolling cost-budget guard for the council (D3).
  *
- * TypeScript twin of `src/scripts/ai_council/budget_guard.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/budget_guard.py` (ADR-200 —
  * Python→TS migration, Phase 1; ai_council FOUNDATION wave). Mirrors the
  * Python public surface exactly (snake_case kept deliberately):
  * `LEDGER_FILENAME`, `LEDGER_PATH`, `ROLLING_WINDOW_HOURS`, `SpendEntry`,

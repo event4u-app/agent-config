@@ -2,7 +2,7 @@
 /**
  * Fail when an artefact carries a frontmatter field equal to its schema default.
  *
- * TypeScript twin of `src/scripts/lint_frontmatter_boilerplate.py` (ADR-096,
+ * TypeScript twin of `src/scripts/lint_frontmatter_boilerplate.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the Python CLI contract exactly: `--quiet`,
  * scan scope + ordering (skills / rules / commands / personas via
  * `artefact_roots()`), finding messages, stdout/stderr split, exit codes

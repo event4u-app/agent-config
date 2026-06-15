@@ -2,7 +2,7 @@
  * Rank scored matches into the final candidate list.
  *
  * TypeScript twin of `src/scripts/command_suggester/rank.py`
- * (ADR-096 py2ts).
+ * (ADR-200 py2ts).
  *
  * Pipeline:
  * 1. Drop commands whose name is in `settings.blocklist`.

@@ -2,7 +2,7 @@
 /**
  * Enforce cross-pack reference boundaries.
  *
- * TypeScript twin of `src/scripts/lint_pack_boundaries.py` (ADR-096, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_pack_boundaries.py` (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the Python CLI contract exactly: `--format text|json`,
  * `--quiet`, same scan scope (packages/*\/.agent-src.uncondensed/), file
  * ordering, link regex, resolution semantics, finding messages, stdout/stderr

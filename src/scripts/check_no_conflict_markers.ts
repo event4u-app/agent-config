@@ -2,7 +2,7 @@
 /**
  * Fail the build on leftover merge/stash conflict state.
  *
- * TypeScript twin of `src/scripts/check_no_conflict_markers.py` (ADR-096). The
+ * TypeScript twin of `src/scripts/check_no_conflict_markers.py` (ADR-200). The
  * CLI contract is mirrored EXACTLY — the `--quiet` flag (argparse, so
  * `-h`/`--help` exit 0 with a usage line, an unrecognized arg exits 2), exit
  * codes (0 = clean, 1 = conflicted index OR markers found, 2 = allowlist over

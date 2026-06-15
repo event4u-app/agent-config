@@ -2,7 +2,7 @@
 /**
  * Print the runtime hook matrix per `docs/contracts/hook-architecture-v1.md`.
  *
- * TypeScript twin of `src/scripts/hooks_status.py` (ADR-096 — Python→TS
+ * TypeScript twin of `src/scripts/hooks_status.py` (ADR-200 — Python→TS
  * migration, Phase 6 / hooks). Public API mirrors the Python module
  * exactly (snake_case kept deliberately — fidelity over TS idiom). Ported
  * here as a dependency of `hooks_doctor.ts`, which wraps `collect`,

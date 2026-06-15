@@ -2,7 +2,7 @@
 /**
  * Phase 3.4 demo-shape linter — wrong / right / why per demo.
  *
- * TypeScript twin of `src/scripts/lint_examples.py` (ADR-096, Phase 4 /
+ * TypeScript twin of `src/scripts/lint_examples.py` (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet` flag is a
  * bare `sys.argv` membership check (NOT argparse, so there is no real
  * `-h`/`--help`), the same `glob` (non-recursive) over

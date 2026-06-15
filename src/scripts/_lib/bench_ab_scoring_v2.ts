@@ -1,7 +1,7 @@
 /**
  * Dual-axis deterministic scoring for the bench:ab v2 discipline-axis benchmark.
  *
- * TypeScript twin of `src/scripts/_lib/bench_ab_scoring_v2.py` (ADR-096
+ * TypeScript twin of `src/scripts/_lib/bench_ab_scoring_v2.py` (ADR-200
  * Python→TS migration). Public API mirrors the Python module EXACTLY — same
  * exported name (`score_task_v2`, deliberately snake_case), same check
  * ordering, same JSON-identical result shape, same scoring math.

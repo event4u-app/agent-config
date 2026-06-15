@@ -2,7 +2,7 @@
  * Confidence gate for solo-member dispatch (step-9 P13).
  *
  * TypeScript twin of `src/scripts/ai_council/confidence_gate.py`
- * (ADR-096 — Python→TS migration, Phase 1). Defense-in-depth on top of
+ * (ADR-200 — Python→TS migration, Phase 1). Defense-in-depth on top of
  * shadow-mode SLO: when a single member's response signals uncertainty,
  * presents unresolved alternatives, or refuses, the dispatcher escalates
  * to the full council on the current invocation.

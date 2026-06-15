@@ -2,7 +2,7 @@
 /**
  * Release-trunk-sync CI gate (road-to-productization P1.3).
  *
- * TypeScript twin of `src/scripts/check_release_trunk_sync.py` (ADR-096,
+ * TypeScript twin of `src/scripts/check_release_trunk_sync.py` (ADR-200,
  * Phase 4 / Wave 4c). The CLI contract is mirrored EXACTLY — no flags,
  * exit codes (0 pass/no-op, 1 main too far behind, 3 internal error),
  * stdout, byte-identical `::warning::` / `::error::` messages, the same

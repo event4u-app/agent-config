@@ -1,9 +1,9 @@
 /**
  * Decision-engine gates — schema, validation, and per-phase evaluation.
  *
- * TypeScript twin of `work_engine/scoring/decision_engine.py` (ADR-096 py2ts
+ * TypeScript twin of `work_engine/scoring/decision_engine.py` (ADR-200 py2ts
  * Phase 1 — work_engine scoring subpackage). Public API names stay snake_case
- * to mirror the Python module 1:1 (per ADR-096 — Python style is part of the
+ * to mirror the Python module 1:1 (per ADR-200 — Python style is part of the
  * contract).
  *
  * Reads the optional `decision_engine:` block from `.agent-settings.yml`.

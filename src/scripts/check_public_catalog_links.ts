@@ -2,7 +2,7 @@
 /**
  * Public-catalog link checker (regression guard for road-to-pr-34-followups 1.1).
  *
- * TypeScript twin of `src/scripts/check_public_catalog_links.py` (ADR-096,
+ * TypeScript twin of `src/scripts/check_public_catalog_links.py` (ADR-200,
  * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--quiet` flag,
  * exit codes (0 clean, 1 violations / missing catalog), byte-identical
  * messages, stdout-only output, same link regex / resolution / truncation

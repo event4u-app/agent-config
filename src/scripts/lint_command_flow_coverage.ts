@@ -2,7 +2,7 @@
 /**
  * Command → flow coverage lint (the Flows primary view).
  *
- * TypeScript twin of `src/scripts/lint_command_flow_coverage.py` (ADR-096,
+ * TypeScript twin of `src/scripts/lint_command_flow_coverage.py` (ADR-200,
  * Phase 4 / Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet`
  * argparse flag, exit codes (0 clean, 1 violations, 3 internal error),
  * byte-identical stdout/stderr lines, the same violation ordering

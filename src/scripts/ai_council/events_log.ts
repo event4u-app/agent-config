@@ -1,7 +1,7 @@
 /**
  * Persistent council events log (step-8 phase 3).
  *
- * TypeScript twin of `src/scripts/ai_council/events_log.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/ai_council/events_log.py` (ADR-200 —
  * Python→TS migration, Phase 1). Appends one JSON line per council event to
  * `<project_root>/agents/runtime/council/events.log`. Schema v1 carries the
  * minimum needed to answer the "why did the council skip / block this?"

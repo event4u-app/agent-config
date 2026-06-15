@@ -1,7 +1,7 @@
 /**
  * Pass-through handler for slots the trivial path skips.
  *
- * TypeScript twin of `directives/ui_trivial/_skipped.py` (ADR-096 py2ts).
+ * TypeScript twin of `directives/ui_trivial/_skipped.py` (ADR-200 py2ts).
  * Public API names stay snake_case to mirror the Python module 1:1.
  *
  * The `ui-trivial` directive set short-circuits the audit / design / review /

@@ -1,9 +1,9 @@
 /**
  * `DeliveryState` — the only object shared between orchestrator steps.
  *
- * TypeScript twin of `work_engine/delivery_state.py` (ADR-096 py2ts Phase 1 —
+ * TypeScript twin of `work_engine/delivery_state.py` (ADR-200 py2ts Phase 1 —
  * work_engine foundation). Public API names stay snake_case to mirror the
- * Python module 1:1 (per ADR-096 — Python style is part of the contract).
+ * Python module 1:1 (per ADR-200 — Python style is part of the contract).
  *
  * The shape mirrors `docs/contracts/implement-ticket-flow.md`. No step
  * may invent fields not declared here; extensions require a roadmap

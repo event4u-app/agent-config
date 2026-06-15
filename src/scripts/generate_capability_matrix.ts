@@ -2,7 +2,7 @@
 /**
  * Generate the cross-host capability matrix (road-to-competitive-borrow P1.3).
  *
- * TypeScript twin of `src/scripts/generate_capability_matrix.py` (ADR-096).
+ * TypeScript twin of `src/scripts/generate_capability_matrix.py` (ADR-200).
  * Mirrors the Python CLI contract EXACTLY — the `--check` / `--quiet` flags,
  * exit codes (0 / 1 / 2), stdout/stderr split, the byte-identical
  * `docs/capability-matrix.md` (heading prose, the host-header table, the glyph

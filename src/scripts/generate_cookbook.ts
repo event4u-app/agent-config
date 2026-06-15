@@ -2,7 +2,7 @@
 /**
  * Generate the named cookbook (road-to-competitive-borrow P1.4).
  *
- * TypeScript twin of `src/scripts/generate_cookbook.py` (ADR-096). Mirrors the
+ * TypeScript twin of `src/scripts/generate_cookbook.py` (ADR-200). Mirrors the
  * Python CLI contract EXACTLY — the `--check` / `--quiet` flags, exit codes
  * (0 / 1 / 2), stdout/stderr split, and the byte-identical generated
  * `docs/cookbook.md` (heading prose, the named-recipe sections, the four

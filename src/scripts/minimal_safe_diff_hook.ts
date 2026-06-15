@@ -2,7 +2,7 @@
 /**
  * Platform-agnostic hook for the `minimal-safe-diff` rule.
  *
- * TypeScript twin of `src/scripts/minimal_safe_diff_hook.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/minimal_safe_diff_hook.py` (ADR-200 —
  * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
@@ -39,7 +39,7 @@ import { atomic_write_json } from "./hooks/state_io.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
-// divergence in the Python original (ADR-096 § replicate latent bugs).
+// divergence in the Python original (ADR-200 § replicate latent bugs).
 export const STATE_FILE = path.join("agents", "state", "minimal-safe-diff.json");
 export const SETTINGS_FILE = ".agent-settings.yml";
 export const DEFAULT_THRESHOLD = 5;

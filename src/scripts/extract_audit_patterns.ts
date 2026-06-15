@@ -2,7 +2,7 @@
 /**
  * Mine repeated phase patterns from `agents/runtime/state/audit/*.jsonl`.
  *
- * TypeScript twin of `src/scripts/extract_audit_patterns.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/extract_audit_patterns.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8g). Mirrors the Python CLI contract
  * EXACTLY — the `--audit-dir` / `--month` / `--min-count` / `--json` flags,
  * exit codes (0 ok / 2 min-count below floor), the stdout/stderr split,

@@ -2,7 +2,7 @@
 /**
  * Coverage forcing-function — WARN-only (R3 of road-to-test-and-gate-integrity).
  *
- * TypeScript twin of `src/scripts/check_test_coverage_diff.py` (ADR-096,
+ * TypeScript twin of `src/scripts/check_test_coverage_diff.py` (ADR-200,
  * Phase 4 / Wave 4c). Mirrors the Python CLI contract EXACTLY — `--base-ref`
  * flag, always exit 0 (warn-only by contract), stdout, byte-identical
  * messages, the git name-status read, the pragma scan, and the `evaluate`

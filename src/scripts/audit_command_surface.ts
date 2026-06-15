@@ -2,7 +2,7 @@
 /**
  * Command-surface inventory + overlap detection + usage signal.
  *
- * TypeScript twin of `src/scripts/audit_command_surface.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/audit_command_surface.py` (ADR-200, Phase 8 /
  * Wave 8b). Mirrors the CLI contract EXACTLY — the `--root`, `--budget`,
  * `--check-new`, `--baseline`, `--quiet` flags, exit codes (0 ok / 1 budget
  * violation / 2 root-missing / 3 git error), the stdout/stderr split,

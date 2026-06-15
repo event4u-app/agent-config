@@ -3,7 +3,7 @@
  * Measure the Augment workspace-guidelines budget (Phase 1.1 of
  * road-to-augment-limit-fit).
  *
- * TypeScript twin of `src/scripts/measure_augment_budget.py` (ADR-096,
+ * TypeScript twin of `src/scripts/measure_augment_budget.py` (ADR-200,
  * Phase 8 Wave 8a). Mirrors the Python CLI contract EXACTLY — flags
  * (`--json`, `--trend-append`, `--check`), exit codes (0 / 1 / 3),
  * byte-identical stdout (text summary + `json.dumps(indent=2,

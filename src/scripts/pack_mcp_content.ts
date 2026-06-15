@@ -23,7 +23,7 @@
 //
 // Governed by `docs/contracts/mcp-cloud-scope.md` §A0-cloud invariant 5.
 //
-// TS twin of pack_mcp_content.py (py2ts migration, ADR-096). Byte-identical
+// TS twin of pack_mcp_content.py (py2ts migration, ADR-200). Byte-identical
 // twin: same five scanners, same wire shape, same compact-JSON / indent=2
 // manifest serialization, same gzip archival copy (mtime=0, level 9, with
 // Python's OS=0xFF header byte). The .py stays the deploy entrypoint until

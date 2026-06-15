@@ -2,7 +2,7 @@
 /**
  * Controlled-verb linter for visible commands.
  *
- * TypeScript twin of `src/scripts/lint_command_verbs.py` (ADR-096,
+ * TypeScript twin of `src/scripts/lint_command_verbs.py` (ADR-200,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--baseline`
  * / `--all` / `--quiet` flags, exit codes (0 clean, 1 violations, 3
  * internal error), stdout/stderr split, byte-identical finding messages,

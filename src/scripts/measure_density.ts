@@ -2,7 +2,7 @@
 /**
  * Measure structural density across the artifact corpus.
  *
- * TypeScript twin of `src/scripts/measure_density.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/measure_density.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract
  * EXACTLY: flags (`--json`, `--snapshot`), exit code 0, byte-identical
  * stdout (report or `json.dumps(sort_keys=True, indent=2)`), and the same

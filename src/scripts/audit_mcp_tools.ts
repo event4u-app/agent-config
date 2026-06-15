@@ -2,7 +2,7 @@
 /**
  * MCP-tool inventory generator.
  *
- * TypeScript twin of `src/scripts/audit_mcp_tools.py` (ADR-096 — Python→TS
+ * TypeScript twin of `src/scripts/audit_mcp_tools.py` (ADR-200 — Python→TS
  * migration, Phase 8 / Wave 8b). The CLI contract is mirrored EXACTLY —
  * the mutually-exclusive `--check` / `--write` flags, `--quiet`, exit codes
  * (0 ok / in-sync · 1 drift), the stdout/stderr split, byte-identical

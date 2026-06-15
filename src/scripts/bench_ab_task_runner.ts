@@ -2,7 +2,7 @@
 /**
  * Track B — task runner for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_task_runner.py` (ADR-096 Python→TS
+ * TypeScript twin of `src/scripts/bench_ab_task_runner.py` (ADR-200 Python→TS
  * migration, Phase 8 / Wave 8d). Mirrors the CLI contract EXACTLY: flags
  * (`--variant`, `--mode`, `--timeout`), exit codes (0 ok / 1 corpus missing or
  * empty), byte-identical stdout/stderr, and byte-identical written JSON + md

@@ -2,7 +2,7 @@
 /**
  * Skill-count reduction measurement — step-12 Phase 3 L74 deliverable.
  *
- * TypeScript twin of `src/scripts/measure_skill_reduction.py` (ADR-096 —
+ * TypeScript twin of `src/scripts/measure_skill_reduction.py` (ADR-200 —
  * Python→TS migration, Phase 8 / Wave 8c). Mirrors the CLI contract EXACTLY:
  * flag (`--json`), exit codes (0 pass / 1 fail / 2 no-skills), byte-identical
  * stdout (report or `json.dumps(indent=2)`) and stderr. No behaviour changes.

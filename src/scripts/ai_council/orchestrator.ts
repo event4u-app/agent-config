@@ -1,6 +1,6 @@
 // Council orchestrator — fan out one question to multiple members.
 //
-// py2ts twin of orchestrator.py (ADR-096). Byte-for-byte parity with the
+// py2ts twin of orchestrator.py (ADR-200). Byte-for-byte parity with the
 // Python original: member dispatch order, sequential cost gating, the overrun
 // callback contract, multi-round debate / peer-review / consensus passes, and
 // the Markdown render assembly are all mirrored exactly.

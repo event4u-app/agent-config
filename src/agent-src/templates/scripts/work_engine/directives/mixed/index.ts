@@ -1,10 +1,10 @@
 /**
  * Mixed (backend + UI) directive set.
  *
- * TypeScript twin of `work_engine/directives/mixed/__init__.py` (ADR-096 py2ts
+ * TypeScript twin of `work_engine/directives/mixed/__init__.py` (ADR-200 py2ts
  * Phase 1 — work_engine TOP/integration layer). The `__init__.py` → `index.ts`
  * mapping mirrors the hooks subpackage convention. Public API names stay
- * snake_case to mirror the Python module 1:1 (per ADR-096).
+ * snake_case to mirror the Python module 1:1 (per ADR-200).
  *
  * `mixed` is the directive set for tickets that touch both layers. Its plan
  * slot locks the backend contract (data shape + API surface) before any UI

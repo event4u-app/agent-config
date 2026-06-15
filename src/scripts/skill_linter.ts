@@ -2,7 +2,7 @@
 /**
  * skill_linter.ts — minimal skill/rule linter for agent-config repositories.
  *
- * TypeScript twin of `src/scripts/skill_linter.py` (ADR-096, Phase 4 Wave 4a).
+ * TypeScript twin of `src/scripts/skill_linter.py` (ADR-200, Phase 4 Wave 4a).
  * The public CLI contract is mirrored EXACTLY: same flags (`--all`,
  * `--changed`, `--format`, `--pairs`, `--duplicates`, `--condensation-quality`,
  * `--strict-warnings`, `--report`, `--repo-root`, `--quiet`, positional paths),

@@ -2,7 +2,7 @@
 /**
  * Persist a `modules:` block into `.agent-project-settings.yml`.
  *
- * TypeScript twin of `src/scripts/apply_modules_config.py` (ADR-096,
+ * TypeScript twin of `src/scripts/apply_modules_config.py` (ADR-200,
  * Phase 8 / Wave 8g). Mirrors the Python CLI contract EXACTLY — `--project`
  * / `--input-file` / `--decline` / `--acknowledge-only` flags, JSON payload
  * shape + validation, comment-preserving line-patch (byte-identical written

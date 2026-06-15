@@ -2,7 +2,7 @@
 /**
  * Top-level orchestrator for the package-impact A/B bench.
  *
- * TypeScript twin of `src/scripts/bench_ab_run.py` (ADR-096, Phase 8 /
+ * TypeScript twin of `src/scripts/bench_ab_run.py` (ADR-200, Phase 8 /
  * Wave 8d). The CLI contract mirrors the Python original EXACTLY — same
  * `--variant {with,without}` / `--corpus` / `--non-interactive` /
  * `--reuse-cache` flags, same exit codes, stdout-only messages, and

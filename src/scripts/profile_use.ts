@@ -2,7 +2,7 @@
 /**
  * `agent-config use --profile=<id>` — switch the active experience.
  *
- * TypeScript twin of `src/scripts/profile_use.py` (ADR-096 — Python→TS
+ * TypeScript twin of `src/scripts/profile_use.py` (ADR-200 — Python→TS
  * migration, Phase 8 / Wave 8e). The CLI contract is mirrored EXACTLY:
  * same flags (`--profile=<id>` / `--profile <id>`), same exit codes
  * (0 success, 2 on missing/unknown profile), same byte-identical

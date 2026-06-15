@@ -3,7 +3,7 @@
  * Atomic-command linter for the command-collapse policy.
  *
  * TypeScript twin of `src/scripts/lint_no_new_atomic_commands.py`
- * (ADR-096, Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY —
+ * (ADR-200, Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY —
  * `--baseline` / `--all` flags, exit codes (0 clean, 1 violations,
  * 3 internal error), stdout/stderr split, byte-identical messages, the
  * same git invocations (`git diff --name-only --diff-filter=A

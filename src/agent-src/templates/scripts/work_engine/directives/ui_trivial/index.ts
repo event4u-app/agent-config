@@ -1,10 +1,10 @@
 /**
  * UI-trivial directive set — single-file ≤5-line micro-edit path.
  *
- * TypeScript twin of `work_engine/directives/ui_trivial/__init__.py` (ADR-096
+ * TypeScript twin of `work_engine/directives/ui_trivial/__init__.py` (ADR-200
  * py2ts Phase 1 — work_engine TOP/integration layer). The `__init__.py` →
  * `index.ts` mapping mirrors the hooks subpackage convention. Public API names
- * stay snake_case to mirror the Python module 1:1 (per ADR-096).
+ * stay snake_case to mirror the Python module 1:1 (per ADR-200).
  *
  * The eight-step shape mirrors `work_engine.directives.backend` /
  * `work_engine.directives.ui` — eight slots, fixed order, no branching:

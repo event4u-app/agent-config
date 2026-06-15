@@ -1,7 +1,7 @@
 /**
  * Detect IDE-attached sibling projects (linked-projects scope, Option A).
  *
- * TypeScript twin of `src/scripts/_lib/linked_projects.py` (ADR-096,
+ * TypeScript twin of `src/scripts/_lib/linked_projects.py` (ADR-200,
  * Phase 2 Wave 1 batch C). Public API mirrors the Python module exactly —
  * same exported snake_case names, same entry dict shape (`path` /
  * `detected_via` / `large`, JSON-identical), same parsing tolerances.

@@ -1,7 +1,7 @@
 /**
  * `ui` step — delegates to the UI track once the contract is locked.
  *
- * TypeScript twin of `directives/mixed/ui.py` (ADR-096 py2ts). Public API
+ * TypeScript twin of `directives/mixed/ui.py` (ADR-200 py2ts). Public API
  * names stay snake_case to mirror the Python module 1:1.
  *
  * In the `mixed` directive set the `implement` slot is the UI handoff. It

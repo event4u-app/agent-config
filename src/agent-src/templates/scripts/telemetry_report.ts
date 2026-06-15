@@ -2,7 +2,7 @@
 /**
  * `./agent-config telemetry:report` — aggregate the engagement log.
  *
- * TypeScript twin of `telemetry_report.py` (ADR-096). Byte-for-byte parity on
+ * TypeScript twin of `telemetry_report.py` (ADR-200). Byte-for-byte parity on
  * stdout / stderr / exit code for both markdown and JSON formats.
  *
  * Exit codes:

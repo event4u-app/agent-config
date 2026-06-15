@@ -2,7 +2,7 @@
 /**
  * CI guard for the `agents/` top-level layout.
  *
- * TypeScript twin of `src/scripts/lint_agents_layout.py` (ADR-096,
+ * TypeScript twin of `src/scripts/lint_agents_layout.py` (ADR-200,
  * Phase 4 / Wave 4b). The CLI contract is mirrored EXACTLY — `--quiet`
  * / `--strict` flags (parsed by membership test, like the Python which
  * scans `sys.argv[1:]`), exit codes (0 clean / warnings, 1 unknown
