@@ -265,7 +265,9 @@ pipelines:
 # Transplants the *operating discipline* of a frontier reasoning model
 # (ground -> intent -> notes -> gather -> audit -> verify) onto any host model.
 # It transfers discipline, never capability. Cost-gated so it only engages where
-# it pays. Rationale: docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
+# it pays. User guide (what it does / when it fires / how to turn it off):
+# docs/contracts/reasoning-discipline-protocol.md
+# Rationale + sources: docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
 reasoning:
   # Master switch (true, false). false = the whole layer is inert (zero overhead).
   enabled: true

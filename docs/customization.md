@@ -190,6 +190,9 @@ is recovered on the next server boot.
 | `ai_council.cost_budget.max_total_usd` | `0.0` | Per-invocation USD ceiling. `0` disables (token caps still apply). |
 | `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.event4u/agent-config/council-spend.jsonl` (mode 0600). |
 | `ai_council.session_retention_days` | `14` | Auto-prune for `agents/runtime/council/sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
+| `reasoning.enabled` | `true` | Master switch for the Reasoning Discipline Protocol (RDP). `false` = the whole layer is inert (zero overhead). See [`docs/contracts/reasoning-discipline-protocol.md`](contracts/reasoning-discipline-protocol.md). |
+| `reasoning.auto_gate` | `true` | Benefit-gates RDP on table-free signals (task signal + host self-assessment) so it engages only where it pays. `false` = gate on task-signal + toggles only (skip the host self-assessment). |
+| `reasoning.components.<name>` | `true` | Per-component switches — `orchestrator`, `notes_first`, `grounding`, `intent`, `complexity_first`, `verifier_default`, `prediction_tracking`, `decision_ledger`, `uncertainty_budget`. Each fires only when `reasoning.enabled` **and** the `auto_gate` test passes. |
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
@@ -199,6 +202,14 @@ and `./agent-config keys:install-openai` — they prompt on `/dev/tty`, write to
 vars. Pre-2.4 installs at `~/.config/agent-config/<provider>.key` are still
 honoured by the loaders as a fallback. The `/council` command refuses to run
 if the key file's permissions drift.
+
+The `reasoning.*` group controls the **Reasoning Discipline Protocol (RDP)** —
+a cost-gated layer that transplants the *operating discipline* of a frontier
+reasoning model onto any host model (it transfers discipline, never capability).
+For what it does, when it engages, and how to switch it off, see the user-facing
+contract [`docs/contracts/reasoning-discipline-protocol.md`](contracts/reasoning-discipline-protocol.md);
+the sourced rationale lives in the design dossier
+[`docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md`](guidelines/agent-infra/frontier-reasoning-operating-profile.md).
 
 ### Cost profiles
 
