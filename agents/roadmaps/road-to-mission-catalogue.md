@@ -18,7 +18,7 @@ trigger-gated.
 > validated on a live Laravel repo (the Phase 2B trigger). Until each trigger fires, items stay planned-but-blocked. This
 > roadmap is `ready`; each item carries its own trigger.
 
-## Deferred-with-trigger work
+## Phase 1 — Deferred-with-trigger content + catalogue (each item trigger-gated)
 
 - [ ] **Phase 2B — full Laravel 10→11 breaking-change catalog.** Expand
       `src/missions/upgrade/laravel-10-to-11.yaml` from the 5-entry proof catalog

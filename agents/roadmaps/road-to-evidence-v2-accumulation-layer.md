@@ -1,15 +1,18 @@
 ---
 complexity: standard
-status: draft
+status: ready
 parent_roadmap: evidence-v2-project-intelligence
 ---
 
 # Roadmap: Evidence v2 — Accumulation Layer (deferred from project-intelligence)
 
-> **Draft.** Hidden from the dashboard until flipped to `status: ready`. Spawned
-> from the two `[~]` deferred steps of the completed
-> `road-to-evidence-v2-project-intelligence.md` (archived). Do **not** start this
-> until its two preconditions are met (see Gate).
+> **Active (2026-06-16).** Spend authorized. Spawned from the two `[~]` deferred
+> steps of the completed `road-to-evidence-v2-project-intelligence.md`
+> (archived). The remaining hard gate is **evidence**: the accumulation layer is
+> still **not built** until a *valid, re-designed* eval (see the council note
+> below) passes — a null/saturated signal kills the layer (v2 then ships as
+> Class A + the B/C spec + static-consensus). The first executable step is the
+> eval redesign, **not** the layer.
 
 **Trigger:** The Evidence v2 base layer shipped Class A (standards-from-config),
 the Class-B static-consensus path + storage split, and the full Class-C safety

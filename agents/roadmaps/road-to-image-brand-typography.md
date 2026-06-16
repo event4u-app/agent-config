@@ -113,7 +113,7 @@ operation each piece is.
   `schema_validator.py`) — the shared layer Track B's brand corpus plugs into.
   **No forked engine** (ADR-061 §2).
 - [`src/scripts/skill_trigger_eval.py`](../../src/scripts/skill_trigger_eval.py)
-  + `task test-triggers[-live]` in [`taskfiles/engine.yml`](../../taskfiles/engine.yml).
+    + `task test-triggers[-live]` in [`taskfiles/engine.yml`](../../taskfiles/engine.yml).
 - [`src/cli/registry.ts`](../../src/cli/registry.ts) + commander wiring in
   `src/cli/agent-config.ts` (ADR-012 TS CLI shell) — host for `eval:record`.
 - [`docs/decisions/ADR-061-corpus-grounding-layer.md`](../../docs/decisions/ADR-061-corpus-grounding-layer.md)
@@ -130,82 +130,82 @@ independent and provides the logo/asset path Phase B consumes.
 ### A.1 The load-bearing refactor
 
 - [x] Extract the shared adapter substrate out of `src/scripts/ai-video/` into a
-      neutral `src/scripts/media/` (adapter-contract, provider-registry schema,
-      lifecycle states, smoke harness); `ai-video` and `ai-image` both depend on
-      it. Gate with a parity test that the moved video adapters still pass their
-      smoke runs. Broaden `provider-lifecycle-discipline`'s `path_prefix` from
-      `scripts/ai-video/adapters/` to `scripts/media/`.
-      <!-- done 2026-06-16: Option-B behavior-preserving relocate (council
-      claude-sonnet-4-5 + gpt-4o, 3-round design debate). Moved adapter-common /
-      redact / load-config / telemetry / adapter-contract.md / fixtures → src/scripts/media/lib/;
-      all 12 adapters + staying libs + 94 refs repointed; MEDIA_* aliases added as
-      the forward-neutral surface; rule path_prefix +scripts/media/lib/. Video
-      parity green (5605 pass). DEFERRED to a Phase-A follow-up: (a) AIV_*→MEDIA_*
-      internal rename, (b) generalizing+relocating smoke-trace.sh (still hardcoded
-      to ai-video adapters/out-dir) — both cosmetic/high-churn, kept in place to
-      hold the shipped video pipeline stable. -->
+  neutral `src/scripts/media/` (adapter-contract, provider-registry schema,
+  lifecycle states, smoke harness); `ai-video` and `ai-image` both depend on
+  it. Gate with a parity test that the moved video adapters still pass their
+  smoke runs. Broaden `provider-lifecycle-discipline`'s `path_prefix` from
+  `scripts/ai-video/adapters/` to `scripts/media/`.
+  <!-- done 2026-06-16: Option-B behavior-preserving relocate (council
+  claude-sonnet-4-5 + gpt-4o, 3-round design debate). Moved adapter-common /
+  redact / load-config / telemetry / adapter-contract.md / fixtures → src/scripts/media/lib/;
+  all 12 adapters + staying libs + 94 refs repointed; MEDIA_* aliases added as
+  the forward-neutral surface; rule path_prefix +scripts/media/lib/. Video
+  parity green (5605 pass). DEFERRED to a Phase-A follow-up: (a) AIV_*→MEDIA_*
+  internal rename, (b) generalizing+relocating smoke-trace.sh (still hardcoded
+  to ai-video adapters/out-dir) — both cosmetic/high-churn, kept in place to
+  hold the shipped video pipeline stable. -->
 - [ ] *(Phase-A follow-up, deferred from A.1)* Rename the substrate internals
-      `AIV_*` → `MEDIA_*` and generalize+relocate `smoke-trace.sh` into
-      `src/scripts/media/` (parameterize ADAPTER_DIR / OUT_DIR per domain). Ships
-      with A.2 when the first image adapters exercise the neutral surface.
+  `AIV_*` → `MEDIA_*` and generalize+relocate `smoke-trace.sh` into
+  `src/scripts/media/` (parameterize ADAPTER_DIR / OUT_DIR per domain). Ships
+  with A.2 when the first image adapters exercise the neutral surface.
 
 ### A.2 Pack + providers
 
 - [ ] New pack `pack-ai-image` mirroring `ai-video`'s manifest shape
-      (`trust_level_default: experimental`, `size_class: large`, `FIRST_WIN.md`,
-      `time_to_first_value_minutes`); `requires: []`, `suggests: [ai-video]`.
-      Ship in `balanced` + `full`; `minimal` stays text-only.
-      <!-- deferred: a pack with zero skills/commands is empty/invalid (artefact_count=0);
-      the manifest + generated-surface cascade ships WITH A.3's skills/commands. -->
+  (`trust_level_default: experimental`, `size_class: large`, `FIRST_WIN.md`,
+  `time_to_first_value_minutes`); `requires: []`, `suggests: [ai-video]`.
+  Ship in `balanced` + `full`; `minimal` stays text-only.
+  <!-- deferred: a pack with zero skills/commands is empty/invalid (artefact_count=0);
+  the manifest + generated-surface cascade ships WITH A.3's skills/commands. -->
 - [ ] Promote/extend adapters under the moved substrate, each per
-      `provider-lifecycle-discipline` (scaffold → live-validated → stable, with
-      smoke evidence):
-      <!-- 2026-06-16: the 4 NEW adapters shipped at scaffold tier (dry-run +
-      domain-neutral smoke harness proves the media/ substrate drives a new
-      image domain end-to-end; live submit/poll/fetch honestly "not wired").
-      openai-images retarget deferred — it is live-adapter surgery on a shipped
-      `stable` video adapter, not a scaffold (council 2026-06-16). -->
-  - [ ] `openai-images` — retarget to GPT Image 2; **remove the DALL·E branch**.
-  - [x] `gemini-image` — Nano Banana family + Imagen 4. (scaffold tier)
-  - [x] `ideogram` — text-in-image default (logos/banners). (scaffold tier)
-  - [x] `flux` — photorealism (via fal/replicate to start is acceptable). (scaffold tier)
-  - [x] `recraft` — vector/SVG output (true `<path>` logos/icons; raster models
-        can't emit usable vector brand marks). Decision 1's vector path. (scaffold tier)
+  `provider-lifecycle-discipline` (scaffold → live-validated → stable, with
+  smoke evidence):
+  <!-- 2026-06-16: the 4 NEW adapters shipped at scaffold tier (dry-run +
+  domain-neutral smoke harness proves the media/ substrate drives a new
+  image domain end-to-end; live submit/poll/fetch honestly "not wired").
+  openai-images retarget deferred — it is live-adapter surgery on a shipped
+  `stable` video adapter, not a scaffold (council 2026-06-16). -->
+    - [ ] `openai-images` — retarget to GPT Image 2; **remove the DALL·E branch**.
+    - [x] `gemini-image` — Nano Banana family + Imagen 4. (scaffold tier)
+    - [x] `ideogram` — text-in-image default (logos/banners). (scaffold tier)
+    - [x] `flux` — photorealism (via fal/replicate to start is acceptable). (scaffold tier)
+    - [x] `recraft` — vector/SVG output (true `<path>` logos/icons; raster models
+      can't emit usable vector brand marks). Decision 1's vector path. (scaffold tier)
 
 ### A.3 Skills, commands, rules, persona
 
 - [ ] Skills: `image-generation` (Method — provider-agnostic blueprint →
-      provider translation; ref-image/seed reuse for character consistency),
-      `image-provider-routing` (Grounding — corpus + decision rules selecting a
-      model from job shape: needs-text? photoreal? budget? 4K?), `image-editing`
-      (Method — inpaint/edit/variation where supported),
-      `prompt-engineering-image` (Method/Reference — per-provider prompt grammar).
+  provider translation; ref-image/seed reuse for character consistency),
+  `image-provider-routing` (Grounding — corpus + decision rules selecting a
+  model from job shape: needs-text? photoreal? budget? 4K?), `image-editing`
+  (Method — inpaint/edit/variation where supported),
+  `prompt-engineering-image` (Method/Reference — per-provider prompt grammar).
 - [ ] **Brand-asset generation skills** (decision 1 — ADOPTED, overturns §9; ride
-      on the adapters above, not a second stack): `logo-generation`,
-      `brand-asset-generation` (banner / social / CIP) — structured prompting +
-      brand-token injection + provider routing; vector via the `recraft` adapter or
-      LLM-authored SVG for simple marks. Harvest MIT patterns from
-      `designrique/ai-graphic-design-skill` + `neonwatty/logo-designer-skill`.
-      Consume brand tokens **from pack-brand** when present (brand-compliant
-      output); raw generation works without it (graceful, like the greenfield seed).
+  on the adapters above, not a second stack): `logo-generation`,
+  `brand-asset-generation` (banner / social / CIP) — structured prompting +
+  brand-token injection + provider routing; vector via the `recraft` adapter or
+  LLM-authored SVG for simple marks. Harvest MIT patterns from
+  `designrique/ai-graphic-design-skill` + `neonwatty/logo-designer-skill`.
+  Consume brand tokens **from pack-brand** when present (brand-compliant
+  output); raw generation works without it (graceful, like the greenfield seed).
 - [ ] Commands: `/image:create`, `/image:edit`, `/image:variations`,
-      `/image:provider`, `/image:logo`. Tier per the command-surface conventions.
+  `/image:provider`, `/image:logo`. Tier per the command-surface conventions.
 - [ ] Rules — adapt, don't duplicate: extend `media-governance-routing` /
-      `media-sync-ground-truth` `routes_to` to the new skills; add one **new**
-      rule `image-likeness-and-rights` (real faces, trademark, model-license) as
-      a child of the media-governance floor.
+  `media-sync-ground-truth` `routes_to` to the new skills; add one **new**
+  rule `image-likeness-and-rights` (real faces, trademark, model-license) as
+  a child of the media-governance floor.
 - [ ] Persona: add `design-director` (composition, art direction, brand-aligned
-      visual judgment — serves A and B) within the `persona-governance` cap;
-      reuse `ai-video-technical-director` / `hollywood-director` for the
-      cinematic crossover.
+  visual judgment — serves A and B) within the `persona-governance` cap;
+  reuse `ai-video-technical-director` / `hollywood-director` for the
+  cinematic crossover.
 
 ### A.4 Quality gates
 
 - [ ] ATTRIBUTION for any vendored prompt corpora; per-adapter smoke evidence
-      (local-only, gitignored) + lifecycle marker; cost note in each adapter
-      header; a provider-registry **freshness** check (prices/models are
-      Reference, re-checked on cadence, never frozen). Trigger-evals authored
-      (the spec) but *recorded* in Phase D.
+  (local-only, gitignored) + lifecycle marker; cost note in each adapter
+  header; a provider-registry **freshness** check (prices/models are
+  Reference, re-checked on cadence, never frozen). Trigger-evals authored
+  (the spec) but *recorded* in Phase D.
 
 **Exit criteria:** `/image:*` runs against the extracted `scripts/media/`
 substrate, multi-provider, governed; video adapters still pass parity smoke;
@@ -223,32 +223,32 @@ Phase B.1; the full font catalogue is **Reference** (Google Fonts API on
 demand). Icons split the same way.
 
 - [ ] Reclassify typography: rename `typography.csv` → `font-pairings-reference.csv`
-      and move it to the `corpus-grounding` **Reference** layer with a freshness
-      contract (re-review when Google Fonts adds families > ~10M downloads). For
-      the catalogue (decision 8): don't re-vendor the 745 KB CSV **and** don't rely
-      on the live API — pin the MIT `google-font-metadata` mirror or a slim top-N
-      slice (usage + pairing coverage + ≥ 10/category) as the deterministic offline
-      Reference; the `font-lookup` path reads that, not a live key-gated call.
+  and move it to the `corpus-grounding` **Reference** layer with a freshness
+  contract (re-review when Google Fonts adds families > ~10M downloads). For
+  the catalogue (decision 8): don't re-vendor the 745 KB CSV **and** don't rely
+  on the live API — pin the MIT `google-font-metadata` mirror or a slim top-N
+  slice (usage + pairing coverage + ≥ 10/category) as the deterministic offline
+  Reference; the `font-lookup` path reads that, not a live key-gated call.
 - [ ] New skill `iconography` (Method): resolve a requested icon to a concrete
-      **Iconify** name and emit the embedding — CSS class for the Font Awesome /
-      web-font path; inline SVG or component for the SVG path — respecting the
-      stack (`react-shadcn-ui`, `blade-ui`, `tailwind-engineer` pull from it).
-      Default open sets: Lucide / Heroicons / Phosphor / Tabler; brand/provider
-      marks via lobe-icons. Add an `icon-system` **Grounding** domain (icon-set ↔
-      style/stack/brand fit) to `design-intelligence`'s manifest.
+  **Iconify** name and emit the embedding — CSS class for the Font Awesome /
+  web-font path; inline SVG or component for the SVG path — respecting the
+  stack (`react-shadcn-ui`, `blade-ui`, `tailwind-engineer` pull from it).
+  Default open sets: Lucide / Heroicons / Phosphor / Tabler; brand/provider
+  marks via lobe-icons. Add an `icon-system` **Grounding** domain (icon-set ↔
+  style/stack/brand fit) to `design-intelligence`'s manifest.
 - [ ] New skill `typography-system` (Method, stage-1 = **style path**): take a
-      style constraint from `design-intelligence`'s existing idiom corpus, query
-      `font-pairings-reference.csv`, derive scale/line-height/weights, emit DTCG
-      type tokens through `design-tokens`. The brand-aware stage-2 (archetype →
-      pairing-filter) is added in Phase B.4 — `typography-system` degrades
-      gracefully without a brand layer.
+  style constraint from `design-intelligence`'s existing idiom corpus, query
+  `font-pairings-reference.csv`, derive scale/line-height/weights, emit DTCG
+  type tokens through `design-tokens`. The brand-aware stage-2 (archetype →
+  pairing-filter) is added in Phase B.4 — `typography-system` degrades
+  gracefully without a brand layer.
 - [ ] Rule (adapt): extend `ui-audit-gate` `routes_to` with the new skills. New
-      light rule `icon-consistency` (Validation): one icon system per project
-      unless the brand defines otherwise (encodes the "every AI UI looks like
-      default Lucide" anti-pattern).
+  light rule `icon-consistency` (Validation): one icon system per project
+  unless the brand defines otherwise (encodes the "every AI UI looks like
+  default Lucide" anti-pattern).
 - [ ] No new pack — these belong in the existing `frontend-design` pack.
-      Trigger-evals authored (spec) but recorded in Phase D; icon-system grounding
-      rows carry confidence + evidence-gap (ADR-061 §3).
+  Trigger-evals authored (spec) but recorded in Phase D; icon-system grounding
+  rows carry confidence + evidence-gap (ADR-061 §3).
 
 **Exit criteria:** fonts/icons live data is Reference (freshness-checked, never
 frozen); `typography-system` emits type tokens via the style path;
@@ -265,76 +265,76 @@ identity → system → application → governance.
 ### B.1 Brand corpus (second corpus-grounding instance)
 
 - [ ] A manifest + CSVs under a new `brand` skill plugged into the **existing**
-      `src/skills/corpus-grounding` engine — no forked engine. Domains: brand
-      archetypes (the 12), voice-and-tone matrices, naming patterns,
-      colour-psychology by industry, logo-style ↔ industry fit, messaging
-      frameworks. **Plus** `typography-principles.csv` (archetype → pairing-filter
-      Grounding: e.g. `corporate-authoritative → geometric+slab`, with confidence
-      + evidence) — the Grounding layer that upgrades Phase C's `typography-system`.
-      Source to adopt under the usual gates: the upstream `brand` + `design-system`
-      sub-skills already SHA-pinned in `design-intelligence/ATTRIBUTION.md`
-      (Apache-2.0; §4b file marking). This is the "adopt on first consumer demand"
-      ADR-061 §8 named.
+  `src/skills/corpus-grounding` engine — no forked engine. Domains: brand
+  archetypes (the 12), voice-and-tone matrices, naming patterns,
+  colour-psychology by industry, logo-style ↔ industry fit, messaging
+  frameworks. **Plus** `typography-principles.csv` (archetype → pairing-filter
+  Grounding: e.g. `corporate-authoritative → geometric+slab`, with confidence
+  + evidence) — the Grounding layer that upgrades Phase C's `typography-system`.
+  Source to adopt under the usual gates: the upstream `brand` + `design-system`
+  sub-skills already SHA-pinned in `design-intelligence/ATTRIBUTION.md`
+  (Apache-2.0; §4b file marking). This is the "adopt on first consumer demand"
+  ADR-061 §8 named.
 
 ### B.2 Designer workflow → skills
 
 - [ ] `brand-audit` (Method) — brand audit + references (+ `existing-ui-audit`).
 - [ ] `brand-strategy` (Grounding) — positioning, voice, tone, archetype,
-      messaging over the brand corpus.
+  messaging over the brand corpus.
 - [ ] `brand-identity` (Grounding + Method) — logo, colour story, type story,
-      imagery direction. brand-identity **defines** the tokens/constraints;
-      pack-ai-image's brand-asset generation skills (decision 1) **generate** the
-      marks from them. pack-brand exports tokens → pack-ai-image consumes (B → A).
+  imagery direction. brand-identity **defines** the tokens/constraints;
+  pack-ai-image's brand-asset generation skills (decision 1) **generate** the
+  marks from them. pack-brand exports tokens → pack-ai-image consumes (B → A).
 - [ ] Application stage reuses `fe-design` / `react-shadcn-ui` /
-      `design-intelligence` (already ship).
+  `design-intelligence` (already ship).
 
 ### B.3 Personas, rules, commands, greenfield stubs
 
 - [ ] Persona: add `brand-strategist` (positioning/archetype/voice; challenges
-      weak briefs). `design-director` already landed in Phase A and carries the
-      art-direction lens. `design-system-lead` deferred (decision 5).
+  weak briefs). `design-director` already landed in Phase A and carries the
+  art-direction lens. `design-system-lead` deferred (decision 5).
 - [ ] Rules — adapt first: extend `domain-safety-disclaimer` `routes_to` with the
-      brand skills; `framework-neutrality-in-generic-skills` keeps them
-      stack-agnostic. **New `brand-consistency` (Validation) — concrete gate:**
-      generated UI/copy/assets are checked against the active brand tokens (from
-      `state.ui_design` / the consumer's `.tokens.json`) and the voice profile;
-      a value not traceable to a brand token or voice rule is flagged off-brand
-      (mirrors design-intelligence's "audit findings outrank corpus"). New light
-      `brand-source-of-truth`: consumer brand tokens + voice are the run's source
-      of truth; corpus only fills gaps.
+  brand skills; `framework-neutrality-in-generic-skills` keeps them
+  stack-agnostic. **New `brand-consistency` (Validation) — concrete gate:**
+  generated UI/copy/assets are checked against the active brand tokens (from
+  `state.ui_design` / the consumer's `.tokens.json`) and the voice profile;
+  a value not traceable to a brand token or voice rule is flagged off-brand
+  (mirrors design-intelligence's "audit findings outrank corpus"). New light
+  `brand-source-of-truth`: consumer brand tokens + voice are the run's source
+  of truth; corpus only fills gaps.
 - [ ] Commands: `/brand:strategy`, `/brand:identity`, `/brand:tokens` (wraps
-      brand→token), `/brand:review` (consistency audit), `/brand:voice`. Wire into
-      the UI directive set so `design` consults the brand layer **before**
-      `design-intelligence` (brand constrains style selection).
+  brand→token), `/brand:review` (consistency audit), `/brand:voice`. Wire into
+  the UI directive set so `design` consults the brand layer **before**
+  `design-intelligence` (brand constrains style selection).
 - [ ] **Greenfield interface stubs** (decision 2): publish the brand-token
-      consumption contract (how a scaffold step reads `.tokens.json` + voice
-      profile) and a `mixed`-set routing hook, documented for the sibling
-      `road-to-greenfield-scaffold.md` to consume. No `scaffold.py` here.
+  consumption contract (how a scaffold step reads `.tokens.json` + voice
+  profile) and a `mixed`-set routing hook, documented for the sibling
+  `road-to-greenfield-scaffold.md` to consume. No `scaffold.py` here.
 
 ### B.4 Brand → token derivation (closes ADR-061 §8) + typography upgrade
 
 - [ ] `brand-to-tokens` (Method): brand decisions → a DTCG `.tokens.json` source
-      of truth → `design-tokens/scripts/tokens.py` emits CSS vars + Tailwind. Stay
-      on `$value`/`$type` + `.tokens.json` so Tokens Studio (Figma) / Style
-      Dictionary round-trip without glue; document Style Dictionary as the
-      sanctioned external transform. The same `.tokens.json` is the export that
-      pack-ai-image's brand-asset generation (decision 1) and the greenfield
-      scaffold seed (sibling roadmap) consume.
+  of truth → `design-tokens/scripts/tokens.py` emits CSS vars + Tailwind. Stay
+  on `$value`/`$type` + `.tokens.json` so Tokens Studio (Figma) / Style
+  Dictionary round-trip without glue; document Style Dictionary as the
+  sanctioned external transform. The same `.tokens.json` is the export that
+  pack-ai-image's brand-asset generation (decision 1) and the greenfield
+  scaffold seed (sibling roadmap) consume.
 - [ ] **Brand deck templates** (decision 7 — slides skipped): pack-brand emits
-      validated brand templates (Marp/reveal YAML with locked brand variables) for
-      the user's own deck tools. No rendering engine is owned.
+  validated brand templates (Marp/reveal YAML with locked brand variables) for
+  the user's own deck tools. No rendering engine is owned.
 - [ ] Upgrade `typography-system` to stage-2: when a brand layer exists, query
-      `typography-principles.csv` for the archetype → pairing-filter, then filter
-      `font-pairings-reference.csv` and emit brand-aligned type tokens. The
-      style-idiom path (Phase C) remains the fallback. Trigger-eval test:
-      "law-firm redesign" → must route to serif-containing pairs.
+  `typography-principles.csv` for the archetype → pairing-filter, then filter
+  `font-pairings-reference.csv` and emit brand-aligned type tokens. The
+  style-idiom path (Phase C) remains the fallback. Trigger-eval test:
+  "law-firm redesign" → must route to serif-containing pairs.
 
 ### B.5 Quality gates
 
 - [ ] ATTRIBUTION for the claudekit-derived material (Apache-2.0 §4b marking);
-      brand corpus carries confidence + evidence-gap (ADR-061 §3); SHA-pin +
-      refresh DoD; `pack-brand` opt-in, `requires: [frontend-design]`.
-      Trigger-evals authored (spec); recorded in Phase D.
+  brand corpus carries confidence + evidence-gap (ADR-061 §3); SHA-pin +
+  refresh DoD; `pack-brand` opt-in, `requires: [frontend-design]`.
+  Trigger-evals authored (spec); recorded in Phase D.
 
 **Exit criteria:** brand is a standalone opt-in pack; brand→token derivation
 emits a DTCG source of truth; the UI `design` step consults brand before style;
@@ -351,33 +351,33 @@ This closes the ADR-061 verified gap: `design-intelligence`'s manifest has **no
 `last_eval`**, and the live eval is manual/out-of-CI by design.
 
 - [ ] Port the legacy Python recorder to the TS CLI (TS-first directive). Add
-      `src/cli/commands/recordTriggerEval.ts` exporting
-      `runRecordTriggerEval(opts): number` (ESM, `zod`, `logger`), reading the
-      `EvalResult` JSON from `skill_trigger_eval.py --output` and patching
-      `upstream.last_eval` into a corpus `manifest.json`. Guards: reject non-live
-      (`router != "anthropic"`) with exit 2 unless `--allow-mock`; stamp
-      `sha_at_eval` from `upstream.sha`; exit 1 (recorded) on floor miss.
+  `src/cli/commands/recordTriggerEval.ts` exporting
+  `runRecordTriggerEval(opts): number` (ESM, `zod`, `logger`), reading the
+  `EvalResult` JSON from `skill_trigger_eval.py --output` and patching
+  `upstream.last_eval` into a corpus `manifest.json`. Guards: reject non-live
+  (`router != "anthropic"`) with exit 2 unless `--allow-mock`; stamp
+  `sha_at_eval` from `upstream.sha`; exit 1 (recorded) on floor miss.
 - [ ] Encode **domain-specific floors** observed from A/B/C, e.g. `image-generation`
-      1.0/0.85, `iconography` 1.0/0.9 (reference task), `brand-strategy` 0.9/0.7
-      (judgment task) — tuned to the trigger patterns each skill actually shows,
-      not a single global pair.
+  1.0/0.85, `iconography` 1.0/0.9 (reference task), `brand-strategy` 0.9/0.7
+  (judgment task) — tuned to the trigger patterns each skill actually shows,
+  not a single global pair.
 - [ ] Register `eval:record` in [`src/cli/registry.ts`](../../src/cli/registry.ts)
-      (`disposition: native`) and wire the commander subcommand in
-      `src/cli/agent-config.ts` (`--eval-json`, `--manifest`, `--min-recall`,
-      `--min-precision`, `--allow-mock`, `--dry-run`).
+  (`disposition: native`) and wire the commander subcommand in
+  `src/cli/agent-config.ts` (`--eval-json`, `--manifest`, `--min-recall`,
+  `--min-precision`, `--allow-mock`, `--dry-run`).
 - [ ] Co-located vitest `recordTriggerEval.test.ts` (six paths: pass → 0; mock →
-      2; `--allow-mock` → 0; recall < floor → 1; skill/manifest mismatch → 2;
-      dry-run writes nothing). `task test --filter recordTriggerEval`. <!-- carve-out: new-gate-verification -->
+  2; `--allow-mock` → 0; recall < floor → 1; skill/manifest mismatch → 2;
+  dry-run writes nothing). `task test --filter recordTriggerEval`. <!-- carve-out: new-gate-verification -->
 - [ ] Deterministic CI lint (no token spend), wired to `task ci-fast`: fail if a
-      skill ships `evals/triggers.json` but its `manifest.json` lacks
-      `upstream.last_eval` **or** `last_eval.sha_at_eval != upstream.sha`. <!-- carve-out: new-gate-verification -->
+  skill ships `evals/triggers.json` but its `manifest.json` lacks
+  `upstream.last_eval` **or** `last_eval.sha_at_eval != upstream.sha`. <!-- carve-out: new-gate-verification -->
 - [ ] Refresh runbook `docs/guides/frontend-design-corpus-refresh.md` coupling the
-      live eval to SHA-bump / description-edit: DoD = no refresh PR merges without
-      `upstream.last_eval.passed: true` and `sha_at_eval == upstream.sha`. Step-3
-      command is `agent-config eval:record …`.
+  live eval to SHA-bump / description-edit: DoD = no refresh PR merges without
+  `upstream.last_eval.passed: true` and `sha_at_eval == upstream.sha`. Step-3
+  command is `agent-config eval:record …`.
 - [ ] Backfill: run `task test-triggers-live -- <skill>` once per corpus-backed
-      skill (`design-intelligence` first, then the A/B/C skills) and `eval:record`
-      each result so every description-routed skill is provably firing.
+  skill (`design-intelligence` first, then the A/B/C skills) and `eval:record`
+  each result so every description-routed skill is provably firing.
 
 **Exit criteria:** `eval:record` is a green TS command with tests; the
 deterministic lint runs in `task ci-fast`; the runbook is the cited DoD; every
@@ -388,22 +388,22 @@ shipped corpus-backed skill carries a passing `upstream.last_eval`.
 ## Acceptance criteria (whole roadmap)
 
 - [ ] All new/extended skills pass `task lint-skills` with schema-conformant
-      frontmatter (`name`, `description`, `source`, `domain`; no extra fields).
+  frontmatter (`name`, `description`, `source`, `domain`; no extra fields).
 - [ ] Every description-routed new skill has `evals/triggers.json` (5/5) **and**,
-      after Phase D, a passing `upstream.last_eval` (where corpus-backed) per the
-      Phase D lint.
+  after Phase D, a passing `upstream.last_eval` (where corpus-backed) per the
+  Phase D lint.
 - [ ] Brand-asset generation rides on Phase A's adapters (no second stack, decision
-      1); the `recraft`/LLM-SVG vector path ships; the full font catalogue is not
-      re-vendored (pinned slim metadata, decision 8); no forked grounding engine
-      (brand reuses `corpus-grounding`).
+  1); the `recraft`/LLM-SVG vector path ships; the full font catalogue is not
+  re-vendored (pinned slim metadata, decision 8); no forked grounding engine
+  (brand reuses `corpus-grounding`).
 - [ ] ADR-061 §8/§9 supersession recorded (brand-asset generation adopted; fonts
-      pinned-metadata; slide engine skip-with-reasoning) via an ADR amendment.
+  pinned-metadata; slide engine skip-with-reasoning) via an ADR amendment.
 - [ ] ATTRIBUTION + SHA-pin + refresh DoD present for every adopted corpus.
 - [ ] `pack-ai-image` and `pack-brand` opt-in; `minimal` profile unaffected.
 - [ ] Greenfield scaffold lives in the sibling `road-to-greenfield-scaffold.md`;
-      this roadmap only ships the brand-token + `mixed`-routing interface stubs.
+  this roadmap only ships the brand-token + `mixed`-routing interface stubs.
 - [ ] Quality pipeline green before archival (per `verify-before-complete`;
-      cadence per `roadmap.quality_cadence`).
+  cadence per `roadmap.quality_cadence`).
 
 ## Council notes
 

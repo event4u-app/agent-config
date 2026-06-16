@@ -1,19 +1,19 @@
 ---
 complexity: structural
-status: draft
+status: ready
 parent_roadmap: road-to-frontier-grade-reasoning
 ---
 
 # Roadmap: RDP — eval execution, kernel promotion, polish (follow-up)
 
-> **Draft / blocked.** Spawned from the deferred (`[~]`) tail of
+> **Active (2026-06-16).** Eval budget + maintainer time allocated — this
+> roadmap is now executable. Spawned from the deferred (`[~]`) tail of
 > `road-to-frontier-grade-reasoning` (now archived) when its authorable phases
-> (0–6 + the Phase-8 scan) completed 2026-06-14. Every item here was blocked on
-> something that cannot be done by cost-free autonomous authoring: **billable
-> host-model runs**, **kernel governance** (PR + ADR + ≥24h soak), or
-> **human-reviewed edits**. Flip `status: ready` when eval budget / maintainer
-> time is allocated. Design decisions L1–L17 live in the archived parent + the
-> durable `frontier-reasoning-operating-profile` dossier + the `rdp-gate` context.
+> (0–6 + the Phase-8 scan) completed 2026-06-14. Items still require **billable
+> host-model runs** (Phase 1), **kernel governance** (PR + ADR + ≥24h soak,
+> Phase 2), and **human-reviewed edits** (Phase 3) — these are now authorized,
+> not blocked. Design decisions L1–L17 live in the archived parent + the durable
+> `frontier-reasoning-operating-profile` dossier + the `rdp-gate` context.
 
 ## Goal
 
