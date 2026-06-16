@@ -77,6 +77,50 @@ def test_mixed(prompt: str) -> None:
     assert classify_intent(prompt) == INTENT_MIXED
 
 
+# -- mixed via full-stack feature bias (greenfield-scaffold Phase 4) ---
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Build me a feature",
+        "Build the billing feature",
+        "Scaffold the invoicing module",
+        "Build a CRUD app for projects",
+        "Create an MVP for our SaaS product",
+        "Build a full-stack signup workflow",
+    ],
+)
+def test_fullstack_feature_routes_to_mixed(prompt: str) -> None:
+    """A build verb + full-stack noun routes to mixed, not backend."""
+    assert classify_intent(prompt) == INTENT_MIXED
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Add a CSV export endpoint",        # pure backend — no full-stack noun
+        "Refactor the billing feature",     # improve verb, not a build verb
+        "Document the export module",       # no build verb
+    ],
+)
+def test_fullstack_bias_does_not_overcapture(prompt: str) -> None:
+    """The bias never reclassifies pure-backend or non-build prompts."""
+    assert classify_intent(prompt) == INTENT_BACKEND
+
+
+def test_fullstack_bias_ignores_incidental_noun_cooccurrence() -> None:
+    """Regression (GT-1): a build verb + a co-occurring but ungoverned
+    full-stack-ish noun must NOT reclassify a backend task.
+
+    "Add multiply(a, b)" with an AC mentioning the math *product* of the
+    arguments stays backend — "product" is not the object of the build
+    verb (and is excluded from the noun set anyway).
+    """
+    title = "Add multiply(a, b) to the toy calculator"
+    ac = "returns the integer product of the two arguments"
+    assert classify_intent(ac, title=title) == INTENT_BACKEND
+
+
 # -- backend-coding (3) -----------------------------------------------
 
 @pytest.mark.parametrize(

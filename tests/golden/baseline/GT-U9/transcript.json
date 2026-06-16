@@ -526,7 +526,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=plan\n@agent-directive: ui-scaffold-plan\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> Greenfield scaffold — derive a stack-agnostic skeleton plan from the confirmed `state.app_spec` (page-set + entity model) and the locked `state.ui_design` brief. The engine writes no files; this stage only produces the plan.\n> Write `state.ui_scaffold` = {pages, routes, layout_strategy, component_manifest, token_seed}.\n> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open.\n> 1. Continue — derive the scaffold plan into `state.ui_scaffold`\n> 2. Abort — drop this UI request\n\n**Recommendation: 1 — derive the plan** — the stack-agnostic plan is the recoverable checkpoint: if the build stage fails, scaffold re-runs from here without touching design or apply.\n",
+      "stdout": "[halt] outcome=blocked step=plan\n@agent-directive: ui-scaffold-plan\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> Greenfield scaffold — derive a stack-agnostic skeleton plan from the confirmed `state.app_spec` (page-set + entity model) and the locked `state.ui_design` brief. The engine writes no files; this stage only produces the plan.\n> Write `state.ui_scaffold` = {pages, routes, layout_strategy, component_manifest, token_seed}.\n> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open (no `tokens.json` brand source detected).\n> 1. Continue — derive the scaffold plan into `state.ui_scaffold`\n> 2. Abort — drop this UI request\n\n**Recommendation: 1 — derive the plan** — the stack-agnostic plan is the recoverable checkpoint: if the build stage fails, scaffold re-runs from here without touching design or apply.\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -634,7 +634,7 @@
           "> Input: Build the first marketing landing page for our brand-new SaaS product.",
           "> Greenfield scaffold — derive a stack-agnostic skeleton plan from the confirmed `state.app_spec` (page-set + entity model) and the locked `state.ui_design` brief. The engine writes no files; this stage only produces the plan.",
           "> Write `state.ui_scaffold` = {pages, routes, layout_strategy, component_manifest, token_seed}.",
-          "> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open.",
+          "> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open (no `tokens.json` brand source detected).",
           "> 1. Continue — derive the scaffold plan into `state.ui_scaffold`",
           "> 2. Abort — drop this UI request",
           "",

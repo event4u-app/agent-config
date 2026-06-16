@@ -20,9 +20,11 @@ Branches covered:
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from work_engine import DeliveryState, Outcome
 from work_engine.delivery_state import AGENT_DIRECTIVE_PREFIX
-from work_engine.directives.ui import scaffold
+from work_engine.directives.ui import review, scaffold
 
 
 def _state(
@@ -172,3 +174,68 @@ def test_scaffolded_is_idempotent_on_reentry() -> None:
     second = scaffold.run(state)
     assert first.outcome is Outcome.SUCCESS
     assert second.outcome is Outcome.SUCCESS
+
+
+# --- Phase 4: brand-token seeding (graceful degradation) ----------------------
+
+
+def test_brand_token_source_absent(tmp_path: Path) -> None:
+    """No tokens.json under root → None (degrade to defaults)."""
+    assert scaffold._brand_token_source(root=tmp_path) is None
+
+
+def test_brand_token_source_found_at_root(tmp_path: Path) -> None:
+    (tmp_path / "tokens.json").write_text("{}", encoding="utf-8")
+    assert scaffold._brand_token_source(root=tmp_path) == "tokens.json"
+
+
+def test_brand_token_source_found_in_conventional_subdir(tmp_path: Path) -> None:
+    nested = tmp_path / "assets"
+    nested.mkdir()
+    (nested / "tokens.json").write_text("{}", encoding="utf-8")
+    assert scaffold._brand_token_source(root=tmp_path) == "assets/tokens.json"
+
+
+def test_plan_directive_uses_default_tokens_without_brand(monkeypatch) -> None:
+    monkeypatch.setattr(scaffold, "_brand_token_source", lambda root=None: None)
+    result = scaffold.run(_state(ui_audit=_scaffold_audit(), ui_scaffold=None))
+    body = "\n".join(result.questions)
+    assert "no `tokens.json` brand source detected" in body
+
+
+def test_plan_directive_brand_seeds_when_tokens_present(monkeypatch) -> None:
+    monkeypatch.setattr(
+        scaffold, "_brand_token_source", lambda root=None: "tokens.json",
+    )
+    result = scaffold.run(_state(ui_audit=_scaffold_audit(), ui_scaffold=None))
+    body = "\n".join(result.questions)
+    assert "anti-generic moat" in body
+    assert "tokens.json" in body
+    assert "Do NOT fall back to default shadcn tokens" in body
+
+
+# --- Phase 4: cross-link — scaffolded UI is verified by the render gate --------
+
+
+def test_scaffolded_render_capable_stack_hits_render_gate() -> None:
+    """Zero-to-One output is verified, not asserted: a render-capable
+    greenfield scaffold flows into the Phase-1 render gate at review.
+
+    After scaffold completes (``scaffolded=True``), the downstream
+    ``review`` step on a render-capable stack (``react-shadcn``) refuses
+    to pass without render evidence — closing the loop so a scaffolded
+    app cannot ship on an unrendered claim.
+    """
+    state = _state(
+        ui_audit=_scaffold_audit(),
+        ui_scaffold={"routes": ["/"], "scaffolded": True},
+        stack={"frontend": "react-shadcn"},
+    )
+    # scaffold itself is done...
+    assert scaffold.run(state).outcome is Outcome.SUCCESS
+    # ...and review (render-capable stack, no preview evidence) halts.
+    state.ui_review = {"findings": [], "review_clean": True}
+    result = review.run(state)
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions)
+    assert "render evidence is required" in body

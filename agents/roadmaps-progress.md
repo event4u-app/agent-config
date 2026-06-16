@@ -6,10 +6,10 @@
 
 ## Overall
 
-**23 / 107 steps done · 21%**
+**33 / 107 steps done · 31%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-contract-integrity.md](roadmaps/road-to-contract-integrity.md) | 3 | 15 | 3 | 12 | 0 | 0 | ████████░░ 80% |
-| 2 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 10 | 11 | 0 | 0 | █████░░░░░ 52% |
+| 2 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 0 | 21 | 0 | 0 | ██████████ 100% |
 | 3 | [road-to-harvest-orchestration.md](roadmaps/road-to-harvest-orchestration.md) | 4 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -38,14 +38,14 @@
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)
 
-**greenfield scaffold + render-verified review (the Lovable lever)** — 11 / 21 done (52%)
+**greenfield scaffold + render-verified review (the Lovable lever)** — 21 / 21 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | render-verified review gate (smallest; closes the open loop) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | app-spec grounding stage (prompt → spec, lightweight confirm) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | `scaffold` directive step (the Zero-to-One core) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | mixed-set routing + brand-coherence integration | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 4 | mixed-set routing + brand-coherence integration | ✅ done | 0 | 10 | 0 | 0 | 100% |
 
 ### [road-to-harvest-orchestration.md](roadmaps/road-to-harvest-orchestration.md)
 

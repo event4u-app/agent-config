@@ -36,6 +36,7 @@ Idempotent: a fully-scaffolded plan round-trips through ``SUCCESS``.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from ...delivery_state import (
@@ -44,6 +45,22 @@ from ...delivery_state import (
     StepResult,
     agent_directive,
 )
+
+BRAND_TOKEN_PATHS: tuple[str, ...] = (
+    "tokens.json",
+    "assets/tokens.json",
+    "resources/tokens.json",
+    "agents/settings/brand/tokens.json",
+)
+"""Conventional locations for a project's DTCG ``tokens.json``.
+
+When one is present (authored by the ``design-tokens`` skill, or shipped
+by ``pack-brand`` — see ``agents/settings/contexts/domain-watch/
+brand-token-pipeline.md``), the scaffold plan's ``token_seed`` is seeded
+from it — the anti-generic moat that makes a generated multi-page app
+coherent rather than default-shadcn. Absent → sane defaults. The
+dependency is acyclic and degrades gracefully (decision 5): scaffold
+never *requires* ``pack-brand``."""
 
 PLAN_DIRECTIVE = "ui-scaffold-plan"
 """Stack-agnostic directive that derives the scaffold plan.
@@ -181,17 +198,45 @@ def _resolve_build_directive(state: DeliveryState) -> str:
     return DEFAULT_DIRECTIVE
 
 
+def _brand_token_source(root: Path | None = None) -> str | None:
+    """Return the relative path to a present ``tokens.json``, or ``None``.
+
+    Checks :data:`BRAND_TOKEN_PATHS` under ``root`` (default: the current
+    working directory, which is the consumer project root when the engine
+    runs). The first existing file wins. Absent → ``None`` so the caller
+    degrades to default tokens — the acyclic, graceful-degradation
+    contract of decision 5.
+    """
+    base = root if root is not None else Path.cwd()
+    for rel in BRAND_TOKEN_PATHS:
+        try:
+            if (base / rel).is_file():
+                return rel
+        except OSError:
+            continue
+    return None
+
+
 def _token_seed_line(state: DeliveryState) -> str:
     """Describe the token-seed source for the plan directive.
 
-    greenfield-scaffold Phase 4 (brand coherence) overrides this when a
-    ``pack-brand`` token source is present. Phase 3 ships the
-    default-tokens line; the decision is centralised here so Phase 4 is
-    a single-helper change."""
+    Brand-seeds from a present DTCG ``tokens.json`` (decision 5) when one
+    exists; otherwise instructs the skill to derive from the locked
+    design brief + sane defaults. Graceful degradation: no token source
+    → defaults, never a hard failure.
+    """
+    source = _brand_token_source()
+    if source is not None:
+        return (
+            f"> `token_seed`: seed from the project's brand/design tokens "
+            f"at `{source}` (DTCG `tokens.json`) — the anti-generic moat. "
+            f"Do NOT fall back to default shadcn tokens when this source is "
+            f"present; carry its primitives + semantic layers into the plan."
+        )
     return (
         "> `token_seed`: derive from the locked design brief's tokens; "
         "fall back to sane defaults (neutral scale, system font) when the "
-        "brief leaves a slot open."
+        "brief leaves a slot open (no `tokens.json` brand source detected)."
     )
 
 

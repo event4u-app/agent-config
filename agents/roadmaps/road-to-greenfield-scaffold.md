@@ -182,16 +182,24 @@ the state has an explicit "scaffolded but not designed" stage.
 
 ## Phase 4 — mixed-set routing + brand-coherence integration
 
-- [ ] Bias the intent classifier so "build me a feature" / full-stack prompts
+- [x] Bias the intent classifier so "build me a feature" / full-stack prompts
       route into the `mixed` set (contract-lock → UI → stitch → verify) more
-      often; consume the `mixed`-routing interface stub from the sibling roadmap.
-- [ ] Brand-seed the scaffold token slice (decision 5): default tokens ship now;
-      when `pack-brand` is present, `scaffold.py`'s `token_seed` consumes the
-      brand-token-consumption contract (`.tokens.json` + voice profile) — the
-      anti-generic moat that makes a generated multi-page app coherent, not
-      default-shadcn. Degrades gracefully without `pack-brand`.
-- [ ] Cross-link: scaffolded UI runs through the render-verified `review` gate
-      (Phase 1) — Zero-to-One output is verified, not asserted.
+      often. Implemented as a build-object adjacency rung in `classify.py`
+      (build verb governs a full-stack noun, or the `full-stack` phrase) — kept
+      high-precision to avoid over-capture (GT-1 regression: a math "product" in
+      an AC must stay backend). Standalone — does not hard-depend on the
+      sibling's `mixed`-routing stub; degrades gracefully if absent.
+- [x] Brand-seed the scaffold token slice (decision 5): default tokens ship now;
+      when a DTCG `tokens.json` is present (authored by `design-tokens`, or
+      shipped by `pack-brand`), `scaffold.py`'s `token_seed` directive instructs
+      the skill to consume it — the anti-generic moat that makes a generated
+      multi-page app coherent, not default-shadcn. Degrades gracefully without a
+      token source (acyclic; `_brand_token_source` returns `None` → defaults).
+- [x] Cross-link: scaffolded UI runs through the render-verified `review` gate
+      (Phase 1) — Zero-to-One output is verified, not asserted. Structural (the
+      `plan`→`implement`→`test` order routes scaffold output into review) +
+      pinned by a test (render-capable greenfield scaffold halts at
+      `preview_render_required`).
 
 **Exit criteria:** feature prompts route to `mixed` appropriately; scaffolded
 apps consume brand tokens when `pack-brand` is present and use sane defaults
@@ -201,18 +209,18 @@ otherwise; every greenfield output passes the render gate.
 
 ## Acceptance criteria
 
-- [ ] `review` enforces render evidence (or explicit reasoned skip) for
+- [x] `review` enforces render evidence (or explicit reasoned skip) for
       render-capable stacks; no silent no-op pass; non-render-capable stacks
-      unaffected.
-- [ ] A greenfield `scaffold` decision produces a stack-agnostic plan consumed by
+      unaffected. (Phase 1.)
+- [x] A greenfield `scaffold` decision produces a stack-agnostic plan consumed by
       a stack skill; the engine writes no files; scaffold is re-runnable alone.
-- [ ] `bare` / `external_reference` greenfield decisions are unaffected.
-- [ ] App-spec confirm halt is lightweight and bypassable.
-- [ ] Brand-token seeding is wired but degrades gracefully without `pack-brand`
-      (acyclic dependency on the sibling roadmap).
-- [ ] No preview server / managed DB / deploy / canvas added (boundary held).
-- [ ] All new steps have directive-engine tests; quality pipeline green before
-      archival (per `verify-before-complete`).
+- [x] `bare` / `external_reference` greenfield decisions are unaffected.
+- [x] App-spec confirm halt is lightweight and bypassable.
+- [x] Brand-token seeding is wired but degrades gracefully without a token
+      source (acyclic dependency on the sibling roadmap).
+- [x] No preview server / managed DB / deploy / canvas added (boundary held).
+- [x] All new steps have directive-engine tests; full work_engine + golden
+      suite green (926 passed) before archival (per `verify-before-complete`).
 
 ## Council notes
 
