@@ -115,6 +115,18 @@ AMBIGUITIES: tuple[dict[str, str], ...] = (
         "renders again), Skip (write `state.ui_review.preview.skipped = "
         "true` so the gate stops asking this run), or Abort",
     },
+    {
+        "code": "preview_render_required",
+        "trigger": "the resolved stack is render-capable (has a rendering "
+        "review skill) but state.ui_review.preview carries no `render_ok` — "
+        "render evidence is required, not optional, so a skill cannot claim "
+        "success without rendering",
+        "resolution": "user picks Render (re-run the review skill so it "
+        "drives the headless browser and writes "
+        "`{render_ok, screenshot_path, dom_dump_path}`), Skip (this env "
+        "cannot render: set `state.ui_review.preview.skipped = true` plus a "
+        "`skip_reason`), or Abort",
+    },
 )
 """Declared ambiguity surfaces for this step."""
 
@@ -402,19 +414,31 @@ def _apply_preview_gate(
     ``render_ok`` plus optional ``screenshot_path``, ``dom_dump_path``,
     and ``error``. The gate inspects shape only.
 
-    Branches:
+    Branches (greenfield-scaffold Phase 1 — render evidence is enforced for
+    render-capable stacks; *silent* no-op on absence is no longer allowed):
 
-    - ``preview`` missing or not a dict → no-op (opt-in; pre-R4 envelopes
-      and stacks that do not produce previews flow through silently).
-    - ``preview.skipped`` truthy → no-op (idempotent re-entry after the
-      user picked the Skip option on a previous halt).
-    - ``preview.render_ok`` missing → no-op (envelope still in progress;
-      schema validates type when present, content gates wait for an
-      explicit signal).
-    - ``preview.render_ok is False`` → ``preview_render_failed`` halt
-      with Retry / Skip / Abort options.
+    - ``preview.skipped`` truthy → no-op (idempotent re-entry after the user
+      picked the Skip option, or an env that explicitly cannot render and
+      recorded a reasoned skip).
+    - ``preview.render_ok is False`` → ``preview_render_failed`` halt with
+      Retry / Skip / Abort options.
     - ``preview.render_ok is True`` → no-op; ``report.run`` will surface
       ``screenshot_path`` / ``dom_dump_path`` as a delivery artifact.
+    - ``render_ok`` missing/absent (no ``preview`` dict, or a dict without
+      ``render_ok``):
+        - resolved stack **render-capable** (has a rendering review skill —
+          :func:`_is_render_capable`) → ``preview_render_required`` halt. A
+          render-capable skill must produce render evidence or record an
+          explicit, reasoned ``skipped``; it can no longer claim success
+          silently (closes the open render-verification loop).
+        - resolved stack **not** render-capable (unknown / missing frontend,
+          or a stack with no rendering review skill) → no-op, exactly as
+          before; non-rendering stacks are unaffected.
+
+    The runner-availability half of the contract (a render-capable stack in
+    an env without a Playwright runner) is honoured through the explicit
+    ``skipped`` escape: the ``preview_render_required`` halt offers a reasoned
+    Skip, so a no-runner env opts out explicitly rather than passing silently.
 
     Trivial path (``directive_set == "ui-trivial"``) never reaches this
     handler — the dispatcher routes ``review`` to ``_skipped.run`` for
@@ -422,14 +446,38 @@ def _apply_preview_gate(
     """
     preview = review.get("preview")
     if not isinstance(preview, dict):
-        return None
+        preview = {}
     if preview.get("skipped"):
         return None
-    if "render_ok" not in preview:
-        return None
-    if preview["render_ok"] is False:
+    render_ok = preview.get("render_ok")
+    if render_ok is False:
         return _halt_preview_failed(state, preview)
+    if render_ok is True:
+        return None
+    # render_ok missing / None — absence is only tolerated for stacks that
+    # have no rendering review skill. A render-capable stack must render or
+    # explicitly skip; silent success is forbidden.
+    if _is_render_capable(state):
+        return _halt_preview_required(state)
     return None
+
+
+def _is_render_capable(state: DeliveryState) -> bool:
+    """True when the resolved frontend stack has a rendering review skill.
+
+    Render-capability is keyed off :data:`STACK_DIRECTIVES` — every entry
+    maps to a stack-specific ``ui-design-review-<stack>`` skill that drives a
+    headless browser (Playwright + axe-core) and writes the ``preview``
+    envelope. A missing / unknown frontend falls back to the generic
+    directive but is **not** treated as render-capable: the gate stays a
+    silent no-op for it, so non-rendering stacks/envs are unaffected.
+    """
+    stack = getattr(state, "stack", None) or {}
+    if isinstance(stack, dict):
+        frontend = stack.get("frontend")
+        if isinstance(frontend, str) and frontend in STACK_DIRECTIVES:
+            return True
+    return False
 
 
 def _halt_preview_failed(
@@ -458,6 +506,40 @@ def _halt_preview_failed(
             "> 3. Abort — drop this UI request",
         ],
         message="UI preview render failed; awaiting user decision.",
+    )
+
+
+def _halt_preview_required(state: DeliveryState) -> StepResult:
+    """BLOCKED halt — render-capable stack produced no render evidence.
+
+    A skill that never rendered cannot pass the gate by simply omitting
+    ``render_ok``. The agent must render (Option 1) or record an explicit,
+    reasoned skip (Option 2) — the only way a render-capable stack ships
+    without a screenshot artifact.
+    """
+    directive = _resolve_directive(state)
+    stack_label = _stack_label(state)
+    return StepResult(
+        outcome=Outcome.BLOCKED,
+        questions=[
+            agent_directive(directive),
+            f"> Stack `{stack_label}` is render-capable but "
+            "`state.ui_review.preview.render_ok` is absent — render evidence "
+            "is required, not optional.",
+            "> 1. Render — re-run the review skill so it drives the "
+            "headless browser (Playwright + axe-core) and writes "
+            "`{render_ok, screenshot_path, dom_dump_path}` into "
+            "`state.ui_review.preview`",
+            "> 2. Skip — this env cannot render: set "
+            "`state.ui_review.preview.skipped = true` plus a "
+            "`state.ui_review.preview.skip_reason` (e.g. no Playwright "
+            "runner) so the gate honours an explicit, reasoned skip",
+            "> 3. Abort — drop this UI request",
+        ],
+        message=(
+            f"UI render evidence required for render-capable stack "
+            f"`{stack_label}`; awaiting render or explicit skip."
+        ),
     )
 
 
