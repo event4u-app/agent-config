@@ -1,0 +1,17 @@
+{
+  "skill": "prompt-engineering-image",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers translating a brief into provider-specific prompt grammar. Should-not-trigger covers near-miss neighbors: provider selection (image-provider-routing), direct adapter invocation, media rights checks (media-governance-routing / image-likeness-and-rights), and general image editing.",
+  "queries": [
+    {"q": "write me an Ideogram prompt for a bakery logo with the name on it", "trigger": true},
+    {"q": "how do I structure a Flux prompt for a photoreal product shot?", "trigger": true},
+    {"q": "my Recraft prompt isn't generating SVG — what params am I missing?", "trigger": true},
+    {"q": "tune this prompt for Gemini image generation: artisan bread, rustic kitchen", "trigger": true},
+    {"q": "what's the right prompt grammar for GPT Image 2 when editing a background?", "trigger": true},
+    {"q": "which image provider should I use for a logo with text?", "trigger": false, "note": "provider selection question → image-provider-routing"},
+    {"q": "run the Ideogram adapter with my prompt", "trigger": false, "note": "direct adapter invocation — not prompt authoring"},
+    {"q": "can I put a celebrity's face in this image?", "trigger": false, "note": "likeness rights question → media-governance-routing / image-likeness-and-rights"},
+    {"q": "remove the background from this photo", "trigger": false, "note": "editing request, not prompt authoring for a provider"},
+    {"q": "what lifecycle tier is the Recraft adapter?", "trigger": false, "note": "lifecycle tier query → provider-lifecycle-discipline"}
+  ]
+}

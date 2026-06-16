@@ -1,0 +1,17 @@
+{
+  "skill": "image-provider-routing",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers job-shape to provider matching. Should-not-trigger covers near-miss neighbors: writing the actual prompt (prompt-engineering-image), invoking the adapter directly, media policy checks (media-governance-routing), and general image editing without a routing question.",
+  "queries": [
+    {"q": "which image model should I use for a logo with text?", "trigger": true},
+    {"q": "route this image generation job — it needs a photorealistic product shot", "trigger": true},
+    {"q": "I need a vector SVG icon, what provider handles that?", "trigger": true},
+    {"q": "pick the right AI image provider for a bakery banner with the name on it", "trigger": true},
+    {"q": "should I use Ideogram or Flux for this image brief?", "trigger": true},
+    {"q": "write me an Ideogram prompt for this logo brief", "trigger": false, "note": "writing provider-specific prompt grammar → prompt-engineering-image"},
+    {"q": "run the recraft adapter with this prompt", "trigger": false, "note": "direct adapter invocation, not routing selection"},
+    {"q": "can I use a celebrity's face in this image?", "trigger": false, "note": "likeness / rights question → media-governance-routing / image-likeness-and-rights"},
+    {"q": "edit this existing photo to remove the background", "trigger": false, "note": "editing task, not a provider routing decision"},
+    {"q": "what lifecycle tier is the Flux adapter?", "trigger": false, "note": "lifecycle tier lookup → provider-lifecycle-discipline"}
+  ]
+}
