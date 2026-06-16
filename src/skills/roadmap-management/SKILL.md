@@ -212,13 +212,16 @@ When picking up a roadmap in a new session:
 
 ### Completing, archiving & skipping a roadmap
 
-Every roadmap ends in exactly one of three states:
+Every roadmap ends in exactly one of four states:
 
 | State | Folder | Trigger |
 |---|---|---|
-| **Active** | `agents/roadmaps/` | Work in progress or planned |
+| **Active** | `agents/roadmaps/` | Work in progress or planned **and workable now** |
 | **Archived** | `agents/roadmaps/archive/` | Work was done (fully or partially) and no more work is planned |
 | **Skipped** | `agents/roadmaps/skipped/` | Decision against pursuit — superseded, scope rejected, wrong direction. Typically **0 items `[x]`** |
+| **Later** | `agents/roadmaps/later/` | Open work remains but is **blocked-for-later** — gated on an external trigger or a decision, **will resume** when unblocked. Set frontmatter `status: later` + a `Blocked until` / `Trigger` resume line. Excluded from the dashboard and `/roadmap:process-*` (parked, not abandoned). |
+
+**Active vs. Later — the test:** can the agent make progress on this roadmap *now*, autonomously? If every open item is gated on something outside this roadmap (a real consumer repo, a benchmark re-open, host-model access, a kernel soak, a pruning track, a human decision), it is **not** active — move it to `later/` with its resume condition. A blocked roadmap left in the active tree silently lies to the dashboard and to `/roadmap:process-*`, which will keep trying to execute it. The `lint_roadmap_later_disposition` guard enforces the placement↔`status: later` contract.
 
 After the last step of a roadmap is done, check completion status:
 
@@ -248,6 +251,7 @@ After the last step of a roadmap is done, check completion status:
 
    - Archive: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
    - Skip:    `⏭️  Roadmap skipped → agents/roadmaps/skipped/{filename}`
+   - Later:   `🕒  Roadmap parked for later → agents/roadmaps/later/{filename}`
 
    `[-]` cancelled items remain searchable inside the archived file —
    they were explicit drops. `[~]` deferred items, by contrast, may
@@ -268,6 +272,7 @@ After the last step of a roadmap is done, check completion status:
    > 2. Keep active — I want to finish the open items
    > 3. Mark open items as deferred [~] and archive (triggers Iron Law 3 flow)
    > 4. Skip — move to skipped/ (no meaningful work done, not pursuing)
+   > 5. Later — park in later/ (open work is blocked on an external trigger / decision but will resume)
    ```
 
    Option 4 is only appropriate when `count_x == 0` or the completed items were
@@ -275,6 +280,16 @@ After the last step of a roadmap is done, check completion status:
    being done, confirm once — archive is usually the right choice. Picking option 3
    does NOT archive immediately — it converts open → deferred and re-enters the
    `count_deferred > 0` branch, which runs step 4b.
+
+   **Option 5 (Later) is the right choice when the open items are real but
+   cannot proceed now** — gated on an external trigger or a decision. Set the
+   roadmap's frontmatter `status: later`, ensure it carries a `Blocked until` /
+   `Trigger` resume line, `git mv` it to `agents/roadmaps/later/`, migrate any
+   inbound references to the new path, and regenerate the dashboard. The open
+   `[ ]` items stay open (they are not cancelled or deferred) — the roadmap is
+   parked whole, ready to resume when the trigger fires. **Roadmaps with open
+   tasks deferred for later are always moved to `later/`**, never left to rot in
+   the active tree.
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
    The archive is **blocked** until the user resolves the deferrals. Surface

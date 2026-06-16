@@ -21,9 +21,10 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
 10. **Keep docs up to date:** If changes affect documented behavior, update the relevant agent docs.
 11. **One task per file.** Don't combine unrelated work.
 12. **Lifecycle:** Every roadmap ends in exactly one folder:
-    - `agents/roadmaps/` — active (in progress or planned)
+    - `agents/roadmaps/` — active (in progress or planned **and workable now**)
     - `agents/roadmaps/archive/` — work happened (fully or partially); no further work planned
     - `agents/roadmaps/skipped/` — decision against pursuit; typically 0 items `[x]` (superseded, scope rejected)
+    - `agents/roadmaps/later/` — open work remains but is **blocked-for-later** (gated on an external trigger or a decision); **will resume**. Set `status: later` + a `Blocked until` / `Trigger` line. Roadmaps with open tasks deferred for later are **always** moved here, never left active. Excluded from the dashboard and `/roadmap:process-*`; enforced by `lint_roadmap_later_disposition`.
 
     See the `roadmap-management` skill for the exact trigger matrix and user-confirmation flow.
 13. **No tags, releases, or version numbers.** Roadmaps describe work, not shipping.
