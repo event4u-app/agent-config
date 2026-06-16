@@ -6,10 +6,10 @@
 
 ## Overall
 
-**32 / 71 steps done · 45%**
+**0 / 38 steps done · 0%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 16 | 32 | 0 | 0 | ███████░░░ 67% |
+| 2 | [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md) | 5 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -35,16 +35,17 @@
 | 2 | Class B auto-capture (only if the gate passes; prefer static-consensus) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Class C accumulation (only if the gate passes) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
-### [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md)
+### [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md)
 
-**image generation, brand, and typography/iconography** — 32 / 48 done (67%)
+**image/brand follow-ons (live validation, commands, retarget)** — 0 / 15 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 6 | 9 | 0 | 0 | 60% |
-| C | typography & iconography (Reference + style path) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| B | brand as first-class UX (`pack-brand` + brand corpus) | 🟡 in progress | 1 | 12 | 0 | 0 | 92% |
-| D | trigger-eval substrate (built last, from observed needs) | 🟡 in progress | 9 | 6 | 0 | 0 | 40% |
+| 1 | Adapter live-validation + generation/editing skills | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Live trigger-eval backfill + ci-fast aggregate flip | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Command clusters + namespace decision | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | `openai-images` GPT-Image-2 retarget (low priority) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 5 | Substrate internal rename (cosmetic, gated) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 
 ### [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md)
 
