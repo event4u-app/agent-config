@@ -149,7 +149,7 @@
       "max_results": 3
     },
     "typography": {
-      "file": "typography.csv",
+      "file": "font-pairings-reference.csv",
       "search_cols": [
         "Font Pairing Name",
         "Category",

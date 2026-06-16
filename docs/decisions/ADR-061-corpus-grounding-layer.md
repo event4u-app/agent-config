@@ -119,7 +119,7 @@ Recorded in `src/skills/design-intelligence/ATTRIBUTION.md`.
 | Fork | Resolution |
 |---|---|
 | Pack placement | **New `frontend-design` pack** (ADR-013 amendment, same PR). `requires: [engineering-base]`, `suggests: [react, nextjs]` — corpus is stack-agnostic data, React never required. Keeps ~1 MB of design data out of `engineering-base`. |
-| `google-fonts.csv` (745 KB, 1923 rows) | **Skip.** Redundant with the public Google Fonts API; `typography.csv` (73 curated pairings) carries the pairing decision. Document the API fallback for fonts outside the curated set. |
+| `google-fonts.csv` (745 KB, 1923 rows) | **Skip.** Redundant with the public Google Fonts API; `font-pairings-reference.csv` (73 curated pairings) carries the pairing decision. Document the API fallback for fonts outside the curated set. |
 | Stack-corpus surfacing | **`--stack <name>` search domain** on the one grounding engine — single mechanism, no 16-way prose-staleness vector. |
 | Brand→token pipeline | **Defer** with a watch note pinning the upstream commit SHA; adopt on first consumer demand. |
 

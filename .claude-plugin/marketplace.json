@@ -283,6 +283,8 @@
         "./dist/agent-src/skills/hiring-loop-design",
         "./dist/agent-src/skills/image-analyser",
         "./dist/agent-src/skills/image-creator",
+        "./dist/agent-src/skills/typography-system",
+        "./dist/agent-src/skills/iconography",
         "./dist/agent-src/skills/image-provider-routing",
         "./dist/agent-src/skills/incident-commander",
         "./dist/agent-src/skills/jira-integration",

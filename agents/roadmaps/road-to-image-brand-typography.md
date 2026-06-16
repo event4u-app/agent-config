@@ -234,31 +234,31 @@ the brand archetype → pairing-filter mapping is **Grounding** and lands in
 Phase B.1; the full font catalogue is **Reference** (Google Fonts API on
 demand). Icons split the same way.
 
-- [ ] Reclassify typography: rename `typography.csv` → `font-pairings-reference.csv`
+- [x] Reclassify typography: rename `typography.csv` → `font-pairings-reference.csv`
   and move it to the `corpus-grounding` **Reference** layer with a freshness
   contract (re-review when Google Fonts adds families > ~10M downloads). For
   the catalogue (decision 8): don't re-vendor the 745 KB CSV **and** don't rely
   on the live API — pin the MIT `google-font-metadata` mirror or a slim top-N
   slice (usage + pairing coverage + ≥ 10/category) as the deterministic offline
   Reference; the `font-lookup` path reads that, not a live key-gated call.
-- [ ] New skill `iconography` (Method): resolve a requested icon to a concrete
+- [x] New skill `iconography` (Method): resolve a requested icon to a concrete
   **Iconify** name and emit the embedding — CSS class for the Font Awesome /
   web-font path; inline SVG or component for the SVG path — respecting the
   stack (`react-shadcn-ui`, `blade-ui`, `tailwind-engineer` pull from it).
   Default open sets: Lucide / Heroicons / Phosphor / Tabler; brand/provider
   marks via lobe-icons. Add an `icon-system` **Grounding** domain (icon-set ↔
   style/stack/brand fit) to `design-intelligence`'s manifest.
-- [ ] New skill `typography-system` (Method, stage-1 = **style path**): take a
+- [x] New skill `typography-system` (Method, stage-1 = **style path**): take a
   style constraint from `design-intelligence`'s existing idiom corpus, query
   `font-pairings-reference.csv`, derive scale/line-height/weights, emit DTCG
   type tokens through `design-tokens`. The brand-aware stage-2 (archetype →
   pairing-filter) is added in Phase B.4 — `typography-system` degrades
   gracefully without a brand layer.
-- [ ] Rule (adapt): extend `ui-audit-gate` `routes_to` with the new skills. New
+- [x] Rule (adapt): extend `ui-audit-gate` `routes_to` with the new skills. New
   light rule `icon-consistency` (Validation): one icon system per project
   unless the brand defines otherwise (encodes the "every AI UI looks like
   default Lucide" anti-pattern).
-- [ ] No new pack — these belong in the existing `frontend-design` pack.
+- [x] No new pack — these belong in the existing `frontend-design` pack.
   Trigger-evals authored (spec) but recorded in Phase D; icon-system grounding
   rows carry confidence + evidence-gap (ADR-061 §3).
 
