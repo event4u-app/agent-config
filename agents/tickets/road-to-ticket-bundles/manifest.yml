@@ -3,20 +3,9 @@ planner_tier: high
 builder_tier: lite
 import_targets: { linear: true, jira: false }
 dependency_graph:
-  T-001: { status: ready, blocks: [] }
-  T-002: { status: done,  blocks: [T-004, T-005, T-006, T-007] }
+  T-002: { status: done,  blocks: [T-005, T-006, T-007] }
   T-003: { status: ready, blocks: [] }
-  T-004: { status: ready, blocks: [] }
   T-005: { status: ready, blocks: [] }
   T-006: { status: ready, blocks: [T-003] }
   T-007: { status: ready, blocks: [] }
   T-008: { status: ready, blocks: [] }
-linear_state:
-  T-001: { linear_id: null, last_synced_sha: null }
-  T-002: { linear_id: null, last_synced_sha: null }
-  T-003: { linear_id: null, last_synced_sha: null }
-  T-004: { linear_id: null, last_synced_sha: null }
-  T-005: { linear_id: null, last_synced_sha: null }
-  T-006: { linear_id: null, last_synced_sha: null }
-  T-007: { linear_id: null, last_synced_sha: null }
-  T-008: { linear_id: null, last_synced_sha: null }

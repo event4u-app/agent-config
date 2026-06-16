@@ -9,13 +9,13 @@ from the ticket alone, without re-deriving the repo.
 
 **Setup:** a Haiku subagent was given ONLY `T-004-build-export-generator.md`
 (the ticket) + `src/scripts/build_linear_digest.py` (the named sibling pattern),
-and told to write `src/scripts/build_ticket_export.py`. No roadmap, no repo tour.
+and told to write `build_ticket_export.py`. No roadmap, no repo tour.
 
 **Result (independently re-verified by the orchestrator):**
 
 | Check | Outcome |
 |---|---|
-| Built the artifact from the ticket alone | ✅ `src/scripts/build_ticket_export.py` |
+| Built the artifact from the ticket alone | ✅ `build_ticket_export.py` |
 | Stayed inside `boundaries.must_touch` | ✅ only that one file changed |
 | Met runnable acceptance (`--dry-run` exit 0, create/skip per ticket) | ✅ exit 0, 8 lines |
 | Missing-token handling in live mode | ✅ clean error |
