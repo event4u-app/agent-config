@@ -23,6 +23,54 @@ orchestrator keep/revert + verifier-gate calibration on data, promote
 frontier-serving polish — without ever asserting a transfer claim the eval
 hasn't backed.
 
+## Execution disposition (2026-06-16 — AI council)
+
+AI council (claude-sonnet-4-5 + gpt-4o, 2-round peer-review, 2026-06-16)
+ruled on the maximal *autonomous* completion, given three constraints that
+authorization does **not** lift. Convergence:
+
+1. **L6 / L7 stay DEFERRED — decided on eval data, never on assertion.** The
+   roadmap's founding principle ("assertion without falsifiability is
+   marketing") forbids settling the orchestrator keep/revert (L6) or the
+   `notes-first-reasoning` kernel promotion (L7) before the eval produces data.
+   No autonomous decision here.
+2. **Phase 1 (eval) is irreducibly maintainer-gated — a handoff, not a block.**
+   The live trigger runner (`task test-triggers-live`) enforces an interactive
+   tty + an explicit human `yes` at the billable cost preview + an installed
+   `anthropic.key` + a `.venv`; the quality layer is hand-scored and needs a
+   valid no-RDP baseline (unproducible from an RDP-active session). So the
+   roadmap stays **active** with this **maintainer handoff** rather than parked.
+3. **Kernel-rule polish ships as separate, maintainer-paced own-PRs** (≥24h
+   merge cadence, Iron-Law SHA unchanged) — never bundled.
+
+### Maintainer handoff — to run Phase 1 (the eval)
+
+```bash
+task setup-evals            # bootstrap .venv (once)
+task install-anthropic-key  # install ~/.event4u/agent-config/anthropic.key (once)
+task test-triggers-live -- reasoning-orchestrator   # interactive; 'yes' at cost gate
+# quality layer: capture baseline (suite w/o RDP) vs treatment per
+# tests/reasoning-layer-eval/rubric.md, then hand-score the 12 transcripts.
+```
+
+Phase 1 results unlock L6/L7 (Phase 2). The eval substrate is built + validated
+(`validate_fixtures.py` ✅, 21 fixtures); only the billable + hand-scored runs
+remain.
+
+### Phase 3 (polish) — autonomous status
+
+- **Done (constraint-light, content-preserving):** `code-review`,
+  `analysis-autonomous-mode` — the clearest non-kernel, no-Iron-Law rote-recipe
+  offenders. (PR #590.)
+- **Maintainer-paced separate PRs** (see § Phase 3 execution notes): Batch K
+  (kernel rules — own-PR + soak), Batch R (non-kernel auto rules — reviewed),
+  the L15 kernel-homed refinements. **Held, not autonomously swept** — several
+  remaining candidates are Iron-Law-bearing (`verify-completion-evidence`),
+  safety/evidence-discipline, or carry genuinely load-bearing causal ordering
+  (`systematic-debugging` Phase 4, `condense-memory`); de-prescribing those
+  needs human review, and all are justified by the same thesis the **deferred
+  eval** is meant to validate — so they wait on the eval + review, not a sweep.
+
 ## Phase 1 — Eval execution (billable: real host-model runs)
 
 - [ ] Capture the **baseline** (current suite, no RDP) on ≥1 standard + ≥1

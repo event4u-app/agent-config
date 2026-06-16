@@ -6,10 +6,10 @@
 
 ## Overall
 
-**6 / 71 steps done · 8%**
+**7 / 71 steps done · 10%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   10%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 42 | 6 | 0 | 0 | █░░░░░░░░░ 12% |
 | 3 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 4 | 7 | 6 | 1 | 0 | 0 | █░░░░░░░░░ 14% |
+| 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 5 | 7 | 6 | 1 | 0 | 0 | █░░░░░░░░░ 14% |
 
 ---
 
@@ -60,6 +60,7 @@
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
+| 3 | (polish) — autonomous status | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 1 | Eval execution (billable: real host-model runs) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Kernel promotion (governance: own PR + ADR + soak) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 3 | Frontier-serving polish (human-reviewed) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
