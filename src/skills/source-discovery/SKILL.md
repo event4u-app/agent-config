@@ -156,6 +156,17 @@ The Evidence Report (gitignored session cache), three buckets, soft-capped to
 ~10–20 decision-relevant facts, produced **before** the plan; plus, where the
 threshold is met, a thin committed card.
 
+## Evidence v2 — self-building context (heuristics only, never a bypass)
+
+Curated project-intelligence (Class A config digests, Class B observed
+conventions, Class C learned lessons) may be loaded to inform *where to look* and
+*what convention to expect* — but it is read **for heuristics only** and **never**
+bypasses a fresh structural read. A field/endpoint/column/value is still confirmed
+against a live source this session. v2 capture is **write-only into gitignored
+intake** (the agent may *suggest* a signal, never silently commit); trust and
+commit are always human-gated. Full model + the three classes + memory tiers:
+[`project-intelligence`](../../agent-src/contexts/execution/project-intelligence.md).
+
 ## Gotchas
 
 - A card's positive structure is **never** "Verified" on the card alone — it is
