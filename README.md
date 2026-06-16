@@ -1,6 +1,6 @@
 <p align="center"><a href="https://event4u.app"><img alt="event4u Agent Config" src=".github/assets/banner.png"></a></p>
 
-# Agent Config — Universal AI Agent OS
+# Agent Config — Governed skills, rules & work journeys for AI coding agents
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
@@ -61,7 +61,7 @@ skills it composes:
 | 🔍 **Discovery** | `/feature:plan` · `/research` | explore → plan → estimate → refine, *before* building |
 | 🔨 **Implementation** | `/work` · `/implement-ticket` | plan → implement → verify → commit |
 | 🔎 **Review** | `/review-changes` · `/judge` | self-review → judge → quality-fix → threat-model |
-| 🚢 **Delivery** | `/commit` · `/pr:create` | commit in chunks → open PR → answer review |
+| 🚢 **Delivery** | `/commit` · `/create-pr` | commit in chunks → open PR → answer review |
 
 Full detail — entry commands, canonical path, composed skills per flow:
 [`docs/flows.md`](docs/flows.md). (`agent-admin` — memory / analytics / config —

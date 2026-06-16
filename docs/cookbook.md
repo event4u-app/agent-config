@@ -32,7 +32,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *The ask is fuzzy and you want a bounded plan first.*
 
-- **Commands:** `/feature/explore` → `/feature/plan`
+- **Commands:** `/feature:explore` → `/feature:plan`
 - **Skills:** `feature-planning`, `complexity-first-planning`
 
 ### Security-audit a surface
@@ -127,7 +127,7 @@ Broader than a single recipe — the end-to-end shapes most work follows.
 
 Explore, plan, estimate, refine, and investigate before building. The "what should we build and how" front of the developer journey.
 
-- **Path:** `/feature/explore` → `/feature/plan` → `/estimate-ticket` → `/refine-ticket`
+- **Path:** `/feature:explore` → `/feature:plan` → `/estimate-ticket` → `/refine-ticket`
 - **Skills:** `feature-planning`, `estimate-ticket`, `refine-ticket`, `project-analysis-core`, `validate-feature-fit`
 
 ### Implementation flow
