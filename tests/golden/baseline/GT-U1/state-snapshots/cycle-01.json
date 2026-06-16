@@ -35,7 +35,9 @@
     "audit_path": "high_confidence",
     "candidate_pick": "forms.text-input"
   },
+  "app_spec": null,
   "ui_design": null,
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,

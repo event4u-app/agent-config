@@ -146,22 +146,33 @@ app spec before any scaffold plan is produced.
 
 ## Phase 3 — `scaffold` directive step (the Zero-to-One core)
 
-- [ ] New `directives/ui/scaffold.py`, gated on `audit.greenfield_decision ==
-      "scaffold"`, sequenced **before** `design → apply`. Per decision 2 it
-      produces a **stack-agnostic scaffold plan** into `state.ui_scaffold`
+- [x] New `directives/ui/scaffold.py`, gated on `audit.greenfield_decision ==
+      "scaffold"`. Per decision 2 it gates the production of a **stack-agnostic
+      scaffold plan** into `state.ui_scaffold`
       (`{pages, routes, layout_strategy, component_manifest, token_seed}`); the
-      engine writes no files.
-- [ ] Register the step in the `ui` directive set ordering; greenfield
-      `audit_path` flows audit → app-spec → scaffold → design → apply → review →
-      polish. `bare` / `external_reference` decisions keep the current
-      (no-scaffold) flow, unchanged.
-- [ ] Stack scaffold skills (or extend `react-shadcn-ui` / `blade-ui` /
-      `tailwind-engineer`): consume `state.ui_scaffold`, create the skeleton, write
-      `state.ui_scaffold.scaffolded = true` + artifact paths. Recoverable: a failed
-      scaffold re-runs from the scaffold step alone.
-- [ ] Tests: greenfield+scaffold decision routes through `scaffold.py`;
-      non-scaffold decisions skip it; engine writes no files itself; scaffold is
-      re-runnable independent of `apply`. <!-- carve-out: new-gate-verification -->
+      engine writes no files. Two stages: `ui-scaffold-plan` (derive the plan)
+      then `ui-scaffold-<stack>` (stack skill creates the skeleton). Per the
+      Phases 2-4 council (Option A), it sits in the `plan` slot — **after**
+      design, not before — because design produces the *abstract* visual
+      language and scaffold maps it onto concrete structure. (Decision 2's
+      "factor the inlined `apply.py` greenfield branch out" was moot: the
+      current `apply.py` has no inlined greenfield branch — scaffold is a
+      clean new step.)
+- [x] Register the step in the `ui` directive set ordering; greenfield
+      `audit_path` flows audit → app-spec → **design → scaffold** → apply →
+      review → polish (Option A). `bare` / `external_reference` decisions keep
+      the current (no-scaffold) flow, unchanged (scaffold is a no-op `SUCCESS`
+      for them).
+- [x] Stack scaffold skills: consume `state.ui_scaffold` via the
+      `@agent-directive: ui-scaffold-<stack>` build directive (no new SKILL.md —
+      mirrors `ui-apply-<stack>`), create the skeleton, write
+      `state.ui_scaffold.scaffolded = true` + `artifacts`. Recoverable: a failed
+      build re-runs from the scaffold step alone (the plan stays locked).
+- [x] Tests: greenfield+scaffold decision routes through `scaffold.py` (plan →
+      build); non-scaffold decisions no-op; engine writes no files itself;
+      scaffold is re-runnable independent of `apply`. Golden GT-U9 re-captured
+      end-to-end (audit → app-spec → design → scaffold-plan → scaffold-build →
+      apply → review → report). <!-- carve-out: new-gate-verification -->
 
 **Exit criteria:** a greenfield `scaffold` decision raises a real skeleton via a
 stack skill, gated by a confirmed (or bypassed) app-spec, before `design/apply`;

@@ -35,6 +35,15 @@ The wire format adds five envelope fields on top of the legacy
   :mod:`work_engine.directives.ui.design` (R3 Phase 3 Step 1). Locks
   layout / components / states / microcopy / a11y; ``design_confirmed``
   carries the user's sign-off.
+- ``ui_scaffold`` — optional greenfield scaffold plan written by
+  :mod:`work_engine.directives.ui.scaffold` (greenfield-scaffold
+  Phase 3). Plan-only and stack-agnostic
+  (``{pages, routes, layout_strategy, component_manifest, token_seed}``);
+  the engine writes no files — a stack scaffold skill consumes the plan,
+  creates the skeleton, and sets ``scaffolded = true`` + ``artifacts``.
+  ``None`` for every non-greenfield-scaffold flow. The scaffold gate
+  sits in the ``plan`` slot (after design): design fixes the abstract
+  visual language, scaffold maps it onto concrete structure.
 - ``ui_review`` — optional review-pass output written by
   :mod:`work_engine.directives.ui.review` (R3 Phase 3 Step 4). Carries
   the design-review findings list and a ``review_clean`` flag set when
@@ -166,6 +175,7 @@ class WorkState:
     ui_audit: dict[str, Any] | None = None
     app_spec: dict[str, Any] | None = None
     ui_design: dict[str, Any] | None = None
+    ui_scaffold: dict[str, Any] | None = None
     ui_review: dict[str, Any] | None = None
     ui_polish: dict[str, Any] | None = None
     contract: dict[str, Any] | None = None
@@ -202,6 +212,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
     _validate_ui_audit(state.ui_audit)
     _validate_app_spec(state.app_spec)
     _validate_ui_design(state.ui_design)
+    _validate_ui_scaffold(state.ui_scaffold)
     _validate_ui_review(state.ui_review)
     _validate_ui_polish(state.ui_polish)
     _validate_contract(state.contract)
@@ -216,6 +227,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         "ui_audit": state.ui_audit,
         "app_spec": state.app_spec,
         "ui_design": state.ui_design,
+        "ui_scaffold": state.ui_scaffold,
         "ui_review": state.ui_review,
         "ui_polish": state.ui_polish,
         "contract": state.contract,
@@ -282,6 +294,9 @@ def from_dict(payload: Any) -> WorkState:
     ui_design = payload.get("ui_design")
     _validate_ui_design(ui_design)
 
+    ui_scaffold = payload.get("ui_scaffold")
+    _validate_ui_scaffold(ui_scaffold)
+
     ui_review = payload.get("ui_review")
     _validate_ui_review(ui_review)
 
@@ -305,6 +320,7 @@ def from_dict(payload: Any) -> WorkState:
         ui_audit=dict(ui_audit) if isinstance(ui_audit, dict) else None,
         app_spec=dict(app_spec) if isinstance(app_spec, dict) else None,
         ui_design=dict(ui_design) if isinstance(ui_design, dict) else None,
+        ui_scaffold=dict(ui_scaffold) if isinstance(ui_scaffold, dict) else None,
         ui_review=dict(ui_review) if isinstance(ui_review, dict) else None,
         ui_polish=dict(ui_polish) if isinstance(ui_polish, dict) else None,
         contract=dict(contract) if isinstance(contract, dict) else None,
@@ -505,6 +521,53 @@ def _validate_ui_design(ui_design: Any) -> None:
     ):
         raise SchemaError(
             "state.ui_design.design_confirmed must be a boolean when present",
+        )
+
+
+def _validate_ui_scaffold(ui_scaffold: Any) -> None:
+    """Reject malformed ``ui_scaffold`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the scaffold gate has not produced a plan yet — the
+    greenfield-scaffold ``scaffold`` directive (greenfield-scaffold
+    Phase 3) emits the agent-directive that populates it, and the gate
+    is a no-op for every non-greenfield flow so the slot stays ``None``
+    there. An empty dict is the in-progress shape. Once populated, the
+    stack-agnostic plan keys ``pages`` / ``routes`` / ``component_manifest``
+    / ``artifacts`` (when present) must be lists, ``layout_strategy``
+    (when present) must be a string, ``token_seed`` (when present) must
+    be an object, and ``scaffolded`` (when present) must be a bool — the
+    scaffold gate's "plan produced" and "files created" sentinels are
+    simple shape/equality tests, so the schema enforces only shape.
+    """
+    if ui_scaffold is None:
+        return
+    if not isinstance(ui_scaffold, dict):
+        raise SchemaError(
+            f"state.ui_scaffold must be a JSON object or null; "
+            f"got {type(ui_scaffold).__name__}",
+        )
+    for key in ("pages", "routes", "component_manifest", "artifacts"):
+        if key in ui_scaffold and not isinstance(ui_scaffold[key], list):
+            raise SchemaError(
+                f"state.ui_scaffold.{key} must be a list when present",
+            )
+    if "layout_strategy" in ui_scaffold and not isinstance(
+        ui_scaffold["layout_strategy"], str,
+    ):
+        raise SchemaError(
+            "state.ui_scaffold.layout_strategy must be a string when present",
+        )
+    if "token_seed" in ui_scaffold and not isinstance(
+        ui_scaffold["token_seed"], dict,
+    ):
+        raise SchemaError(
+            "state.ui_scaffold.token_seed must be a JSON object when present",
+        )
+    if "scaffolded" in ui_scaffold and not isinstance(
+        ui_scaffold["scaffolded"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_scaffold.scaffolded must be a boolean when present",
         )
 
 

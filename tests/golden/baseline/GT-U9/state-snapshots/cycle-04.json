@@ -18,39 +18,22 @@
     "greenfield_decision": "scaffold",
     "audit_path": "greenfield"
   },
-  "ui_design": {
-    "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
-    "components": [
-      {
-        "name": "MarketingLanding",
-        "primitives": [
-          "hero",
-          "feature-grid",
-          "cta"
-        ]
-      }
+  "app_spec": {
+    "pages": [
+      "Landing"
     ],
-    "states": {
-      "empty": "First load with hero, features, CTA",
-      "loading": "CTA button shows spinner while signup form submits",
-      "error": "Inline validation on signup field",
-      "success": "CTA replaced by 'Thanks — check your inbox'",
-      "disabled": "CTA disabled while submission is in flight"
+    "entity_model": [
+      "SignupLead"
+    ],
+    "flow_map": {
+      "Landing": [
+        "signup-submit"
+      ]
     },
-    "microcopy": {
-      "hero_title": "Ship faster with our SaaS platform",
-      "hero_subtitle": "Deploy in minutes, not days.",
-      "cta_button": "Start free trial",
-      "success": "Thanks — check your inbox to confirm your email."
-    },
-    "a11y": {
-      "labels": "hero h1 is the page title; CTA button labelled explicitly",
-      "focus": "skip link to main content; CTA receives focus on success",
-      "aria_live": "success message announced via aria-live=polite"
-    },
-    "reused_from_audit": [],
-    "design_confirmed": true
+    "confirmed": true
   },
+  "ui_design": null,
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,
@@ -64,20 +47,18 @@
   "verify": null,
   "outcomes": {
     "refine": "success",
-    "memory": "success",
-    "analyze": "blocked"
+    "memory": "blocked"
   },
   "questions": [
     "> Input: Build the first marketing landing page for our brand-new SaaS product.",
-    "> Design brief is ready. Summary:",
-    "> - Components: 1",
-    "> - States covered: 5",
-    "> - Microcopy entries (locked): 4",
-    "> 1. Confirm — lock this brief and advance to apply",
-    "> 2. Revise — send feedback; loops back to ui-design-brief",
-    "> 3. Abort — drop this UI request",
+    "> Derived app spec — confirm the shape before scaffold:",
+    "> Pages (1): Landing",
+    "> Entities (1): SignupLead",
+    "> 1. Confirm — the derived page-set + entity model look right (set `state.app_spec.confirmed = true`)",
+    "> 2. Edit — adjust the derived spec, then re-run the app-spec skill",
+    "> 3. Just scaffold — skip confirmation (set `state.app_spec.bypassed = true`)",
     "",
-    "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+    "**Recommendation: 1 — Confirm** — the derived shape is the cheapest point to catch a wrong page-set, before the scaffold plan locks routes and layout. Caveat: flip to 2 if a page or entity is missing / wrong."
   ],
   "report": ""
 }

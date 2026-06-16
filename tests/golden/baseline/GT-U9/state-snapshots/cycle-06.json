@@ -5,16 +5,7 @@
     "data": {
       "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
       "reconstructed_ac": [],
-      "assumptions": [],
-      "ui_apply": {
-        "summary": "Marketing landing page scaffolded with locked microcopy",
-        "rendered": {
-          "resources/views/marketing/landing.blade.php": "Ship faster with our SaaS platform. Deploy in minutes, not days. Start free trial."
-        },
-        "files": [
-          "resources/views/marketing/landing.blade.php"
-        ]
-      }
+      "assumptions": []
     }
   },
   "intent": "ui-build",
@@ -26,6 +17,20 @@
     "design_tokens": {},
     "greenfield_decision": "scaffold",
     "audit_path": "greenfield"
+  },
+  "app_spec": {
+    "pages": [
+      "Landing"
+    ],
+    "entity_model": [
+      "SignupLead"
+    ],
+    "flow_map": {
+      "Landing": [
+        "signup-submit"
+      ]
+    },
+    "confirmed": true
   },
   "ui_design": {
     "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
@@ -60,10 +65,8 @@
     "reused_from_audit": [],
     "design_confirmed": true
   },
-  "ui_review": {
-    "findings": [],
-    "review_clean": true
-  },
+  "ui_scaffold": null,
+  "ui_review": null,
   "ui_polish": null,
   "contract": null,
   "stitch": null,
@@ -71,31 +74,25 @@
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,
-  "changes": [
-    {
-      "kind": "ui",
-      "stack": "plain",
-      "file": "resources/views/marketing/landing.blade.php",
-      "summary": "Marketing landing page scaffolded with locked microcopy"
-    }
-  ],
+  "changes": [],
   "tests": null,
   "verify": null,
   "outcomes": {
     "refine": "success",
     "memory": "success",
-    "analyze": "success",
-    "plan": "success",
-    "implement": "success",
-    "test": "blocked"
+    "analyze": "blocked"
   },
   "questions": [
-    "@agent-directive: ui-design-review-plain",
-    "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
-    "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
-    "> Ground chart-type and contrast findings in the adopted corpus (design-intelligence § 'Grounding the review/polish a11y gate') — cite the corpus row, don't eyeball.",
-    "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
-    "> 2. Abort — drop this UI request"
+    "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+    "> Design brief is ready. Summary:",
+    "> - Components: 1",
+    "> - States covered: 5",
+    "> - Microcopy entries (locked): 4",
+    "> 1. Confirm — lock this brief and advance to apply",
+    "> 2. Revise — send feedback; loops back to ui-design-brief",
+    "> 3. Abort — drop this UI request",
+    "",
+    "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
   ],
   "report": ""
 }

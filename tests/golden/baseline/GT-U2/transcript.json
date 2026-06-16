@@ -56,7 +56,9 @@
           "audit_path": "high_confidence",
           "candidate_pick": "forms.text-input"
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -134,6 +136,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "forms.text-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -174,6 +177,7 @@
             "forms.text-input"
           ]
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -253,6 +257,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "forms.text-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -294,6 +299,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -387,6 +393,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "forms.text-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -428,6 +435,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -518,6 +526,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "forms.text-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -559,6 +568,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -661,6 +671,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "forms.text-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -702,6 +713,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true

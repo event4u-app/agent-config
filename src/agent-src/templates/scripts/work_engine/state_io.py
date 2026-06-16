@@ -109,6 +109,7 @@ def _to_delivery(work: WorkState) -> DeliveryState:
         ui_audit=work.ui_audit,
         app_spec=work.app_spec,
         ui_design=work.ui_design,
+        ui_scaffold=work.ui_scaffold,
         ui_review=work.ui_review,
         ui_polish=work.ui_polish,
         contract=work.contract,
@@ -139,6 +140,7 @@ def _sync_back(work: WorkState, delivery: DeliveryState) -> None:
     work.ui_audit = delivery.ui_audit
     work.app_spec = delivery.app_spec
     work.ui_design = delivery.ui_design
+    work.ui_scaffold = delivery.ui_scaffold
     work.ui_review = delivery.ui_review
     work.ui_polish = delivery.ui_polish
     work.contract = delivery.contract

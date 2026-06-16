@@ -18,38 +18,21 @@
     "greenfield_decision": "scaffold",
     "audit_path": "greenfield"
   },
-  "ui_design": {
-    "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
-    "components": [
-      {
-        "name": "MarketingLanding",
-        "primitives": [
-          "hero",
-          "feature-grid",
-          "cta"
-        ]
-      }
+  "app_spec": {
+    "pages": [
+      "Landing"
     ],
-    "states": {
-      "empty": "First load with hero, features, CTA",
-      "loading": "CTA button shows spinner while signup form submits",
-      "error": "Inline validation on signup field",
-      "success": "CTA replaced by 'Thanks — check your inbox'",
-      "disabled": "CTA disabled while submission is in flight"
-    },
-    "microcopy": {
-      "hero_title": "Ship faster with our SaaS platform",
-      "hero_subtitle": "Deploy in minutes, not days.",
-      "cta_button": "Start free trial",
-      "success": "Thanks — check your inbox to confirm your email."
-    },
-    "a11y": {
-      "labels": "hero h1 is the page title; CTA button labelled explicitly",
-      "focus": "skip link to main content; CTA receives focus on success",
-      "aria_live": "success message announced via aria-live=polite"
-    },
-    "reused_from_audit": []
+    "entity_model": [
+      "SignupLead"
+    ],
+    "flow_map": {
+      "Landing": [
+        "signup-submit"
+      ]
+    }
   },
+  "ui_design": null,
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,
@@ -63,15 +46,17 @@
   "verify": null,
   "outcomes": {
     "refine": "success",
-    "memory": "success",
-    "analyze": "blocked"
+    "memory": "blocked"
   },
   "questions": [
-    "@agent-directive: ui-design-brief",
+    "@agent-directive: app-spec",
     "> Input: Build the first marketing landing page for our brand-new SaaS product.",
-    "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
-    "> 1. Continue — produce the brief from audit findings",
-    "> 2. Abort — drop this UI request"
+    "> Greenfield scaffold — grounding the app shape before any skeleton is planned. Derive the page-set, entity model, and flow-map from the prompt.",
+    "> 1. Continue — derive {pages, entity_model, flow_map} into `state.app_spec`",
+    "> 2. Just scaffold — skip the app spec (set `state.app_spec.bypassed = true` and go straight to scaffold)",
+    "> 3. Abort — drop this UI request",
+    "",
+    "**Recommendation: 1 — derive the spec** — a confirmed page-set keeps the multi-page scaffold coherent and is seconds of work. Caveat: flip to 2 if the prompt already pins an exact, single-screen shape."
   ],
   "report": ""
 }

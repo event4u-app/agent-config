@@ -30,7 +30,9 @@
     "candidate_pick": "forms.toggle",
     "a11y_baseline": []
   },
+  "app_spec": null,
   "ui_design": null,
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,
