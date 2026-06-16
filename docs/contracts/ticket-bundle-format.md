@@ -1,8 +1,8 @@
 # Ticket-bundle format
 
 > The contract every downstream artifact reads from: the `emit-tickets` skill,
-> the export generator, the buildability/manifest linters, and the
-> `implement-ticket` bundle input path. Authoritative for the frontmatter
+> the buildability/manifest linters, and the `implement-ticket` bundle
+> input path. Authoritative for the frontmatter
 > schema, the body doctrine, the tracker mapping, and the self-containedness
 > floor. Locked by [ADR-101](../decisions/ADR-101-ticket-bundle-emission.md).
 
@@ -12,8 +12,9 @@ A roadmap step is a one-line checkbox; the full build spec is spread across the
 roadmap (what), ADRs (why), and the code (how). A `high`-tier agent holds that
 together; a `lite`-tier agent (Haiku) cannot. A **ticket bundle** is the closed,
 durable, importable artifact that lets an expensive planning agent hand a cheap
-building agent a complete unit of work. Markdown is the source of truth; the
-tracker (Linear) is a generated projection.
+building agent a complete unit of work. Markdown is the source of truth; a
+tracker issue (Linear/Jira) is a copy you make by paste or via MCP — not a
+generated export (§8).
 
 ## 2. Layout
 
@@ -21,7 +22,7 @@ A bundle is a directory, one per roadmap, under `agents/tickets/`:
 
 ```
 agents/tickets/{roadmap-slug}/
-  manifest.yml                 # machine index: dep graph + linear_state
+  manifest.yml                 # machine index: dependency graph
   T-001-{slug}.md              # one ticket = one Markdown build contract
   T-001-{slug}.assets/         # durable design context for that ticket
     before.png  wireframe.png  example-io.md
@@ -44,7 +45,7 @@ agents/tickets/_registry.yml   # machine-generated index of all bundles
 
 ```yaml
 ---
-id: T-001                      # bundle-local id; the idempotency external key
+id: T-001                      # bundle-local id; stable handle for the ticket
 roadmap: road-to-xyz           # back-link (traceability spine)
 phase: 2                       # roadmap phase number
 title: "…"                     # → Linear Title
@@ -61,9 +62,9 @@ source_refs:                   # files the build reads/changes, SHA-pinned (drif
   - { path: src/scripts/build_linear_digest.py, sha: <git-blob-sha> }
 assets: [T-001.assets/wireframe.png]   # relative to the bundle dir
 acceptance:                    # runnable AND isolation-testable; no prose-only
-  - "python3 src/scripts/build_ticket_export.py agents/tickets/x/ exits 0"
+  - "python3 src/scripts/lint_ticket_buildable.py exits 0"
 boundaries:                    # ENFORCED by the work_engine boundary guard
-  must_touch:    [src/scripts/build_ticket_export.py]
+  must_touch:    [src/scripts/lint_ticket_buildable.py]
   may_touch:     [Taskfile.yml]
   must_not_touch: [src/scripts/work_engine/**, ".github/**"]
 ---
@@ -111,14 +112,11 @@ import_targets: { linear: true, jira: false }
 dependency_graph:              # acyclic (no topological layering in v1)
   T-001: { status: ready, blocks: [T-002] }
   T-002: { status: ready, blocks: [] }
-linear_state:                  # the idempotency map (query/map-first export)
-  T-001: { linear_id: null, last_synced_sha: null }
 ```
 
-`linear_state.linear_id` is the **sole idempotency key** — Linear has no
-documented external-key upsert, so re-export is query/map-first: look up
-`linear_id`; create only when absent; record the returned id. `last_synced_sha`
-is reserved for the deferred *mutable* mode (v1 is immutable).
+The manifest carries no tracker state — there is no API export to keep
+idempotent (§8). The bundle is the source of truth; a tracker issue is created
+by paste or by the agent via MCP, never synced back into the manifest.
 
 ## 7. Registry (`agents/tickets/_registry.yml`, machine-generated)
 
@@ -132,23 +130,28 @@ bundles:
 
 `update_roadmap_progress.py` reads this one file; never recursive-globs bundles.
 
-## 8. Tracker mapping — Linear-first (GraphQL canonical)
+## 8. Tracker handoff — paste-ready, or via MCP (no API export)
 
-| Bundle field | Linear |
+A ticket goes into Linear/Jira **by copy/paste** or, when programmatic, by the
+**agent using a tracker MCP server**. There is **no bundled API client and no
+automatic export** — the ticket Markdown *is* the handoff artifact.
+
+| Ticket field | Tracker issue |
 |---|---|
-| full Markdown body | issue `description` (Markdown renders; image URLs auto-upload to Linear's auth-gated storage) |
-| `id` | the local idempotency key; stored `→ linear_id` in `linear_state` |
-| `title` / `priority` / `estimate` / `labels` | the matching issue fields |
-| `parent` (phase root) | `Parent issue` (phases group as parents) |
-| `status` | mapped to the team workflow state |
+| frontmatter `title` | issue title |
+| the Markdown **body** (everything after the frontmatter) | issue description — paste it; Markdown renders in Linear/Jira |
+| `priority` / `estimate` / `labels` | the matching issue fields (set during paste / by MCP) |
+| `parent` (phase root) | parent issue, when the tracker supports sub-issues |
 
-- **Transport:** GraphQL `issueCreate`/`issueUpdate`, query/map-first idempotency
-  (§6). CSV via the Linear importer is an **optional one-shot bootstrap only** —
-  it is create-only (duplicates on re-run), never the canonical path (ADR-101 R2).
-- **Assets:** public-repo raw URLs are auto-ingested by Linear; private repos
-  need the API upload path (resolved in the Phase-1b spike).
-- **Jira** is a deferred second emitter over the existing `jira-integration`
-  client; same bundle, different column set.
+- **Copy/paste (default):** the ticket body is clean, render-ready Markdown.
+  Paste it into a new Linear/Jira issue; set title from `title`. Asset images
+  are relative repo paths — attach them in the tracker, or (public repo) paste a
+  `raw.githubusercontent.com` URL.
+- **MCP (programmatic):** to create issues without pasting, the agent calls the
+  Linear/Jira **MCP server** with the ticket as input. The package ships **no**
+  API wiring of its own — MCP is the integration surface.
+- **One direction only:** the bundle is the source of truth; a tracker issue is
+  a copy, never read back into the bundle (no sync, no `linear_state`).
 
 ## 9. Traceability spine (bidirectional)
 
@@ -185,19 +188,38 @@ Two reversal surfaces, since a bundle is git-tracked and the tracker is a
 projection:
 
 - **Per-ticket.** A ticket is reverted by `git`-restoring its `T-NNN-*.md`
-  (and `.assets/`) to a prior commit; because the tracker is a projection,
-  the next export reconciles. A `lite` build gone wrong is bounded by the
-  ticket's `boundaries` (the work_engine boundary guard halts out-of-scope
+  (and `.assets/`) to a prior commit. A `lite` build gone wrong is bounded by
+  the ticket's `boundaries` (the work_engine boundary guard halts out-of-scope
   edits before commit) — so the blast radius is the ticket's `must_touch` set.
-- **Per-bundle.** Before any **live** export, the exporter snapshots the
-  bundle (`manifest.yml` + tickets) so a botched run is restorable; re-export
-  is idempotent via `linear_state.linear_id` (query/map-first), so a repeat
-  never duplicates. To abandon a bundle entirely, `git mv` it to
+- **Per-bundle.** To abandon a bundle entirely, `git mv` it to
   `agents/tickets/archive/{slug}/` (it moves with its roadmap on archival,
   §2) — never delete in place, so the audit trail survives.
 
-The MD bundle is always the source of truth (§6, D7): a divergent tracker is
-reconciled toward the bundle, never the reverse.
+A tracker issue created by paste/MCP from a ticket is a one-way copy (§8); the
+bundle is the source of truth, so reverting the bundle needs no tracker
+coordination — fix the issue in the tracker by hand if it was already created.
+
+## 13. Status projection — one direction only
+
+Three surfaces show a ticket's progress; exactly one is the truth and the other
+two are derived. The writeback is **single-directional** so they never become
+rival truths:
+
+```
+ticket `status` (MD)  ──►  roadmap checkbox  ──►  agents/roadmaps-progress.md (dashboard)
+```
+
+- The ticket file's `status` (`ready` / `draft` / `done`) is the **truth**.
+- When a ticket flips to `done`, its roadmap step's `<!-- ticket: T-NNN -->`
+  checkbox flips `[x]` in the **same edit**, and the dashboard regenerates
+  (`./agent-config roadmap:progress`) — the existing `roadmap-progress-sync`
+  cadence, unchanged.
+- A tracker issue (created by paste/MCP, §8) is a point-in-time copy; its state
+  is **not** read back into the ticket. If you keep a tracker issue in sync, do
+  it from the ticket outward (re-paste / MCP update), never the reverse.
+
+Never wire the reverse (tracker → ticket): that recreates the two-drifting-truths
+failure the whole format avoids.
 
 ## See also
 
