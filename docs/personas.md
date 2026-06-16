@@ -24,7 +24,7 @@ Removed personas are deleted in-commit (no soak window) — see
 
 Note: `product-owner` was reclassified to **specialist** at v2.0 — see below.
 
-## Catalog — Specialists (opt-in, 18 active)
+## Catalog — Specialists (opt-in, 20 active)
 
 | ID | Role | Wing | Owner | Lens summary |
 |---|---|---|---|---|
@@ -39,6 +39,8 @@ Note: `product-owner` was reclassified to **specialist** at v2.0 — see below.
 | `discovery-lead` | Discovery Lead | — | package | Switch events, falsifiable hypotheses, theme ranking. |
 | `hollywood-director` | Hollywood Director (`ai-video`) | — | package | Live-action lens, lighting, blocking, negative constraints. |
 | `ai-video-technical-director` | AI Video Technical Director (`ai-video`) | — | package | Provider tuning — Veo / Kling / Sora / Higgsfield / OpenAI grammar. |
+| `brand-strategist` | Brand Strategist (`design`) | — | package | Positioning, archetype, voice, messaging; challenges weak briefs. |
+| `design-director` | Design Director (`design`) | — | package | Art-direction and brand-aligned visual judgment; composition, hierarchy, vector-vs-raster. |
 | `cmo` | CMO | 3 | package | Positioning anchored, messaging stacked, launches sequenced. |
 | `growth-pm` | Growth PM | 3 | package | Leaky-bucket vs growth-loop classified, activation correlated. |
 | `customer-success-lead` | Customer Success Lead | 3 | package | TTFV falsifiable, churn cause split, expansion pulled, NRR. |
@@ -53,6 +55,7 @@ Note: `product-owner` was reclassified to **specialist** at v2.0 — see below.
 | Domain | Active specialists | Within cap |
 |---|---|---|
 | `ai-video` | `hollywood-director`, `ai-video-technical-director` | ✅ 2/2 |
+| `design` | `brand-strategist`, `design-director` | ✅ 2/2 |
 | GTM (Wing 3) | `cmo`, `growth-pm`, `customer-success-lead`, `revops` | ✅ (wing, not domain) |
 | Ops / Money (Wing 4) | `engineering-manager`, `people-strategist`, `finance-partner`, `strategist` | ✅ (wing, not domain) |
 | Backend | `backend-architect`, `eloquent-tamer` | ✅ 2/2 |
@@ -131,6 +134,8 @@ slot. Current cite map:
 | `eloquent-tamer` | `eloquent`, `database` |
 | `security-engineer` | `judge-security-auditor`, `threat-modeling`, `authz-review` |
 | `frontend-engineer` | `existing-ui-audit`, `fe-design` |
+| `brand-strategist` | `brand`, `brand-strategy` |
+| `design-director` | `brand-identity`, `logo-generation`, `brand-asset-generation` |
 
 Add a citation by appending `personas: [<id>]` to the skill's
 frontmatter — never overwrite an existing list, append.

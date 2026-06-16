@@ -1,0 +1,17 @@
+{
+  "skill": "typography-system",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers font selection, scale derivation, and DTCG type token authoring. Should-not-trigger covers near-miss neighbors: icon set selection (iconography), raw design-token authoring without a typography constraint (design-tokens), brand archetype requests that require Stage 2 / Phase B, and general color token work.",
+  "queries": [
+    {"q": "pick fonts for our new SaaS product — something modern and professional", "trigger": true},
+    {"q": "build a typographic scale for our design system with DTCG tokens", "trigger": true},
+    {"q": "we need a type system for a luxury fashion brand — choose pairings and emit tokens", "trigger": true},
+    {"q": "what heading and body fonts match an elegant, editorial mood?", "trigger": true},
+    {"q": "set up font-size tokens and line-height for our Tailwind project", "trigger": true},
+    {"q": "which icon set should we use for our dashboard?", "trigger": false, "note": "icon selection → iconography skill"},
+    {"q": "author a 3-layer DTCG token system for colors with dark mode", "trigger": false, "note": "color token authoring without typography constraint → design-tokens skill"},
+    {"q": "define our brand archetype so the font pairing fits our personality", "trigger": false, "note": "brand archetype → pairing-filter is Stage 2 / Phase B, not authored yet"},
+    {"q": "generate CSS variables for our button component tokens", "trigger": false, "note": "component token generation → design-tokens skill"},
+    {"q": "run validate to find hardcoded hex values in our codebase", "trigger": false, "note": "token-discipline lint step → design-tokens skill (tokens.py validate)"}
+  ]
+}

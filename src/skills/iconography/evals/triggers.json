@@ -1,0 +1,17 @@
+{
+  "skill": "iconography",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers icon resolution, set selection, and embedding tasks. Should-not-trigger covers near-miss neighbors: typography-system (font/type choices), design-tokens (CSS variable authoring), image-provider-routing (AI-generated images), and a generic draw-an-icon image-gen request.",
+  "queries": [
+    {"q": "which icon should I use for a download action in Lucide?", "trigger": true},
+    {"q": "add a warning icon to this component — we use Heroicons", "trigger": true},
+    {"q": "pick an icon set for our new React app", "trigger": true},
+    {"q": "wire Phosphor icons into our Blade templates", "trigger": true},
+    {"q": "resolve the Iconify name for a user-profile icon in Tabler", "trigger": true},
+    {"q": "pick a font pairing for our marketing page", "trigger": false, "note": "font/type selection → typography-system"},
+    {"q": "author CSS variables for our color palette", "trigger": false, "note": "token authoring → design-tokens"},
+    {"q": "which AI image model should I use for a product icon illustration?", "trigger": false, "note": "AI image generation routing → image-provider-routing"},
+    {"q": "draw me an icon for a mobile app in Midjourney", "trigger": false, "note": "image-gen request, not Iconify/UI icon resolution"},
+    {"q": "set up dark mode token overrides for our design system", "trigger": false, "note": "dark-mode token authoring → design-tokens"}
+  ]
+}

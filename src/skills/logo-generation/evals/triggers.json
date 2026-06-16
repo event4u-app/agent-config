@@ -1,0 +1,17 @@
+{
+  "skill": "logo-generation",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers end-to-end logo / brand mark generation requests. Should-not-trigger covers near-miss neighbors: general image generation (image-generation), banner/social asset production (brand-asset-generation), routing-only questions (image-provider-routing), prompt-authoring-only (prompt-engineering-image), and rights checks (image-likeness-and-rights).",
+  "queries": [
+    {"q": "generate a logo for my bakery called Golden Crust", "trigger": true},
+    {"q": "create a brand mark for our SaaS startup — minimalist, dark blue, no text", "trigger": true},
+    {"q": "I need a vector SVG logo for our coffee shop", "trigger": true},
+    {"q": "design a wordmark logo for our law firm with clean sans-serif type", "trigger": true},
+    {"q": "produce a combination mark logo — icon plus company name — for our fitness app", "trigger": true},
+    {"q": "generate a hero image for our homepage", "trigger": false, "note": "general image generation → image-generation"},
+    {"q": "create a banner for our bakery's Instagram with the seasonal offer", "trigger": false, "note": "social/banner asset → brand-asset-generation"},
+    {"q": "which provider should I use for a logo with text inside?", "trigger": false, "note": "routing-only question → image-provider-routing"},
+    {"q": "write me a Recraft prompt for a minimalist geometric logo mark", "trigger": false, "note": "prompt authoring only → prompt-engineering-image"},
+    {"q": "can I use a design that looks like the Apple logo as inspiration for my mark?", "trigger": false, "note": "rights / trademark check → image-likeness-and-rights"}
+  ]
+}

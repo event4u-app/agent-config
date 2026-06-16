@@ -495,6 +495,16 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 src/scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  lint-eval-freshness:
+    silent: true
+    # NOT yet in the ci-fast aggregate: it hard-fails until the SHA-pinned
+    # corpus skills (design-intelligence) carry a recorded upstream.last_eval,
+    # and that recording requires a LIVE trigger-eval run (token spend). Wire
+    # this into the ci-fast `deps` together with the backfill — see
+    # road-to-image-brand-typography Phase D + docs/guides/frontend-design-corpus-refresh.md.
+    desc: Corpus-backed skills must carry a current upstream.last_eval (ADR-061 §6 refresh DoD; deterministic, no token spend)
+    cmd: python3 src/scripts/lint_eval_freshness.py {{.QUIET_FLAG}}
+
   check-skill-requires:
     silent: true
     desc: Validate the skill-composition graph (requires_skills) — every sub-skill ships wherever its parent ships (roadmap 3.4)

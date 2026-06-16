@@ -13,7 +13,7 @@
   description: Code, tests, CI, reviews, architecture.
   example_roles: [Developer, CTO, Tech Lead]
   default_packs: [engineering-base, git]
-  optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python, frontend-design, analysis-workbench]
+  optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python, frontend-design, brand, analysis-workbench]
 
 - id: product
   label: Product

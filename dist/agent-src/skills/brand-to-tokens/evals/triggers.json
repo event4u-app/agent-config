@@ -1,0 +1,17 @@
+{
+  "skill": "brand-to-tokens",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers deriving a DTCG .tokens.json source of truth from brand decisions and emitting CSS/Tailwind + deck templates. Should-not covers near-miss neighbors: generic token authoring without a brand frame, defining (not emitting) identity, generation, validation, and a deck-render engine.",
+  "queries": [
+    {"q": "turn our confirmed brand identity into design tokens", "trigger": true},
+    {"q": "derive a .tokens.json source of truth from the brand colours and type", "trigger": true},
+    {"q": "emit the brand as CSS variables and a Tailwind theme", "trigger": true},
+    {"q": "export brand deck templates with the brand variables locked", "trigger": true},
+    {"q": "generate the brand token system that pack-ai-image will consume", "trigger": true},
+    {"q": "author a generic 3-layer token system for this app (no brand)", "trigger": false, "note": "generic token authoring with no brand frame -> design-tokens"},
+    {"q": "define the colour story and type story for the brand", "trigger": false, "note": "defining the identity constraint set -> brand-identity"},
+    {"q": "generate a logo from these brand tokens", "trigger": false, "note": "asset generation -> logo-generation (pack-ai-image)"},
+    {"q": "check this component is using the brand tokens", "trigger": false, "note": "validation -> brand-consistency rule"},
+    {"q": "render this brand deck to PDF / build a slide engine", "trigger": false, "note": "no render engine is owned (decision 7) — templates only"}
+  ]
+}

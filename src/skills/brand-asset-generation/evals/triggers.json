@@ -1,0 +1,17 @@
+{
+  "last_eval": "2026-06-16",
+  "should_trigger": [
+    "Generate a banner for our product launch — use the brand colors from .tokens.json",
+    "Create a social card for the Open Graph meta tag, 1200×630, matching our brand palette",
+    "Make a LinkedIn cover image using our brand typography and voice",
+    "Generate a CIP header element for the website hero section with brand-token injection",
+    "Produce a branded social media image for the campaign — we have pack-brand installed"
+  ],
+  "should_not_trigger": [
+    "Design a logo for our new startup",
+    "Generate a product photo of a coffee mug on a white background",
+    "Which image provider should I use for text-heavy images?",
+    "Write a prompt for Midjourney to create a realistic landscape",
+    "Create a brand strategy document outlining our positioning and target audience"
+  ]
+}

@@ -1,0 +1,46 @@
+---
+# Marp brand deck template — locked brand variables.
+# Every visual value below references a brand token from .tokens.json
+# (var(--token)). Do NOT inline raw hex/fonts — that breaks brand sync.
+# Render with the user's own Marp tooling; no engine is owned here.
+marp: true
+theme: brand
+paginate: true
+style: |
+  :root {
+    --brand-bg: var(--semantic-color-background);
+    --brand-fg: var(--semantic-color-foreground);
+    --brand-primary: var(--semantic-color-primary);
+    --brand-accent: var(--semantic-color-accent);
+    --brand-font-heading: var(--typography-heading-font-family);
+    --brand-font-body: var(--typography-body-font-family);
+  }
+  section {
+    background: var(--brand-bg);
+    color: var(--brand-fg);
+    font-family: var(--brand-font-body);
+  }
+  h1, h2 {
+    font-family: var(--brand-font-heading);
+    color: var(--brand-primary);
+  }
+  strong { color: var(--brand-accent); }
+---
+
+# [Brand Name]
+
+Subtitle in the brand voice — replace with confirmed positioning line.
+
+---
+
+## Section title
+
+- Body copy in the brand body font, brand foreground colour.
+- **Emphasis** uses the brand accent token, never a raw hex.
+
+---
+
+## Closing
+
+Call to action in the brand voice. All colour and type come from
+`.tokens.json` via `var(--token)` — change the tokens, the deck restyles.

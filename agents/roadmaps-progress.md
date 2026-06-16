@@ -6,7 +6,7 @@
 
 ## Overall
 
-**6 / 65 steps done · 9%**
+**3 / 38 steps done · 8%**
 
 ```text
 ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
@@ -16,24 +16,36 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 42 | 6 | 0 | 0 | █░░░░░░░░░ 12% |
-| 2 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md) | 5 | 15 | 12 | 3 | 0 | 0 | ██░░░░░░░░ 20% |
+| 3 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
 ## Per-roadmap phase breakdown
 
-### [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md)
+### [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md)
 
-**image generation, brand, and typography/iconography** — 6 / 48 done (12%)
+**Evidence v2 — Accumulation Layer (deferred from project-intelligence)** — 0 / 6 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 9 | 6 | 0 | 0 | 40% |
-| C | typography & iconography (Reference + style path) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| B | brand as first-class UX (`pack-brand` + brand corpus) | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
-| D | trigger-eval substrate (built last, from observed needs) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
+| 1 | Re-run the gate on a valid design | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Class B auto-capture (only if the gate passes; prefer static-consensus) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | Class C accumulation (only if the gate passes) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+### [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md)
+
+**image/brand follow-ons (live validation, commands, retarget)** — 3 / 15 done (20%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Adapter live-validation + generation/editing skills | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Live trigger-eval backfill + ci-fast aggregate flip | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Command clusters + namespace decision | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | `openai-images` GPT-Image-2 retarget (low priority) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 5 | Substrate internal rename (cosmetic, gated) | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 
 ### [road-to-install-contract-stability.md](roadmaps/road-to-install-contract-stability.md)
 
