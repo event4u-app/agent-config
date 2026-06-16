@@ -81,7 +81,7 @@ absent from `dist/agent-src/personas/` or `dist/agent-src/skills/`. No network
 call has happened yet.
 
 Then confirm the **runtime helper scripts** exist and are executable —
-`scripts/ai-video/lib/probe-audio.sh`, `scripts/ai-video/lib/load-config.sh`,
+`scripts/ai-video/lib/probe-audio.sh`, `scripts/media/lib/load-config.sh`,
 `scripts/ai-video/stitch.sh` — so a missing script fails here (with the
 path), not mid-run at Step 2/9.
 
@@ -156,7 +156,7 @@ if they really mean it; the guard never silently proceeds.
 
 ### 4. Load config + resolve providers
 
-Source `scripts/ai-video/lib/load-config.sh`. Resolve image / video
+Source `scripts/media/lib/load-config.sh`. Resolve image / video
 provider: command flag → `agents/.ai-video.xml` default → fail with the
 available-providers list. A **malformed XML** or a default/flag naming a
 provider with no `scripts/ai-video/adapters/<id>.sh` → fail fast here
@@ -488,4 +488,4 @@ labeled *modeled* (preview). No commit. No push.
 - [`/video:stitch`](stitch.md) — re-stitch after operator edits
 - [`song-to-script`](../../skills/song-to-script/SKILL.md) — audio →
   timed scene script
-- [`scripts/ai-video/lib/adapter-contract.md`](../../../scripts/ai-video/lib/adapter-contract.md)
+- [`scripts/media/lib/adapter-contract.md`](../../../scripts/media/lib/adapter-contract.md)

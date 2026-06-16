@@ -58,7 +58,7 @@ count.
 ## Critical Rules
 
 - Every variant declares: provider id, token count vs. cap, aspect, duration, audio mode. Missing any → fail.
-- Token count is measured, not estimated. Use the cap from `scripts/ai-video/lib/adapter-contract.md`.
+- Token count is measured, not estimated. Use the cap from `scripts/media/lib/adapter-contract.md`.
 - Aspect, duration, audio flags MUST match the adapter contract. Mismatch is `must-fix`.
 - CONSISTENCY LOCK is byte-identical across all variants in a run. Drift → re-lock pass.
 - Provider grammar follows the adapter's documented prompt shape, not a generic structure.

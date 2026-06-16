@@ -5,7 +5,7 @@
 # on macOS bash 3.2); jq required for JSON safety.
 #
 # Schema: .agent-src.uncondensed/skills/scene-expander/scene-blueprint.schema.yaml
-# Contract: scripts/ai-video/lib/adapter-contract.md
+# Contract: scripts/media/lib/adapter-contract.md
 #
 # Usage:
 #   parse-blueprint.sh < prompt.txt > blueprint.json

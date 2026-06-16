@@ -2,7 +2,7 @@
 
 > Provider-agnostic scaffold for a single live-action or
 > photoreal cinematic scene. Skill: [`scene-expander`](../../../.agent-src/skills/scene-expander/SKILL.md).
-> Adapter contract: [`adapter-contract.md`](../../../scripts/ai-video/lib/adapter-contract.md).
+> Adapter contract: [`adapter-contract.md`](../../../scripts/media/lib/adapter-contract.md).
 
 ## Why this shape
 

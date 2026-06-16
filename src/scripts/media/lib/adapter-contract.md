@@ -4,7 +4,7 @@
 > `scripts/ai-video/adapters/`. Phase 4 Step 1 finalizes any open
 > point in this draft; **breaking changes bump the version pin
 > and require every adapter to be rerun against the fixture set**
-> (`scripts/ai-video/lib/fixtures/`).
+> (`scripts/media/lib/fixtures/`).
 
 ## Scope
 
@@ -231,7 +231,7 @@ The artifact paths an adapter emits on `fetch` / `run`, and the bytes it
 downloads, are **untrusted provider output**. A buggy or hostile backend
 must not be able to make the orchestrator read `/etc/passwd`, follow a
 symlink out of the project, inject into the `ffmpeg` concat list, or fill
-the disk. Three rules, enforced by `scripts/ai-video/lib/adapter-common.sh`:
+the disk. Three rules, enforced by `scripts/media/lib/adapter-common.sh`:
 
 1. **Project-scoped artifacts.** Live `fetch` writes downloads into the
    scene-scoped output dir (`aiv_scene_dir <project> <scene_id>` →
@@ -284,7 +284,7 @@ the explicit `dry-run` subcommand:
 
 - No network call.
 - Stdout JSON points at a deterministic fixture under
-  `scripts/ai-video/lib/fixtures/<adapter-id>/`.
+  `scripts/media/lib/fixtures/<adapter-id>/`.
 - Exit code 0.
 
 Fixtures are committed and cover one happy path per adapter.
@@ -295,7 +295,7 @@ Phase 6 golden runs assert byte-identical stdout under
 
 - **stderr only** for log output. Stdout is reserved for the
   contract JSON.
-- Every adapter MUST source `scripts/ai-video/lib/redact.sh` and
+- Every adapter MUST source `scripts/media/lib/redact.sh` and
   pipe network responses through `aiv_redact_stream` before any
   `>&2` write. API keys, bearer tokens, and operator-registered
   secrets are masked.

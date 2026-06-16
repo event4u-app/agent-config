@@ -31,7 +31,7 @@ AUDIO_ADAPTER_DIR = REPO_ROOT / "src" / "scripts" / "ai-video" / "audio-adapters
 LIB_DIR = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib"
 CONTRACT = LIB_DIR / "audio-adapter-contract.md"
 VALIDATOR = LIB_DIR / "validate-vocal-map.sh"
-FIXTURES = LIB_DIR / "fixtures"
+FIXTURES = REPO_ROOT / "src" / "scripts" / "media" / "lib" / "fixtures"
 
 ADAPTERS = sorted(p.stem for p in AUDIO_ADAPTER_DIR.glob("*.sh"))
 VALID_KINDS = {"audio-analysis", "lyrics"}

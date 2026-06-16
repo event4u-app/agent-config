@@ -28,8 +28,8 @@
 
 set -euo pipefail
 
-# shellcheck source=../lib/adapter-common.sh
-. "$(dirname "$0")/../lib/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 ADAPTER_ID="allin1"
 

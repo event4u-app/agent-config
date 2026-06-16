@@ -24,7 +24,7 @@ video creation. Reads provider keys + defaults from
 [`agents/.ai-video.xml`](../../agents/templates/.ai-video.xml.example) (gitignored
 real file; example shipped). Every subcommand is **dry-run by default**;
 network calls require explicit per-turn confirmation per the adapter
-contract under [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md).
+contract under [`scripts/media/lib/adapter-contract.md`](../../scripts/media/lib/adapter-contract.md).
 
 ## Sub-commands
 
@@ -71,5 +71,5 @@ contract under [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-vid
 
 ## See also
 
-- [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md) — provider adapter v1 contract
-- [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md) — `video` cluster registration
+- [`scripts/media/lib/adapter-contract.md`](../../scripts/media/lib/adapter-contract.md) — provider adapter v1 contract
+- [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md) — `video` cluster registration
