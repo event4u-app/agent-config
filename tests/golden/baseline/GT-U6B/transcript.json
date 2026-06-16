@@ -108,7 +108,10 @@
         },
         "ui_review": {
           "findings": [],
-          "review_clean": true
+          "review_clean": true,
+          "preview": {
+            "render_ok": true
+          }
         },
         "ui_polish": null,
         "contract": null,
@@ -244,7 +247,10 @@
         },
         "ui_review": {
           "findings": [],
-          "review_clean": true
+          "review_clean": true,
+          "preview": {
+            "render_ok": true
+          }
         },
         "ui_polish": null,
         "contract": null,

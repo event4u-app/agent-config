@@ -100,16 +100,16 @@ slice; the stack-specific scaffold skill creates the files.
 The "see-it → fix-it" loop made enforceable. Keep the engine-never-renders
 contract; tighten only the gate (decision 1).
 
-- [ ] In `review.py`, change the `render_ok` *missing* branch: when the resolved
+- [x] In `review.py`, change the `render_ok` *missing* branch: when the resolved
       stack is render-capable **and** a runner is available, missing `render_ok`
       becomes a **halt** (`preview_render_required`), not a no-op.
-- [ ] Add an explicit `Skip` path: a stack/env that cannot render writes
+- [x] Add an explicit `Skip` path: a stack/env that cannot render writes
       `state.ui_review.preview.skipped = true` + reason; the gate honours an
       *explicit* skip but never an *implicit* absence.
-- [ ] Require stack review skills (`react-shadcn-ui`, `blade-ui`, …) to drive
+- [x] Require stack review skills (`react-shadcn-ui`, `blade-ui`, …) to drive
       Playwright + axe, write `render_ok`, `screenshot_path`, `dom_dump_path`, and
       surface them as `report.run` delivery artifacts.
-- [ ] Tests: directive-engine test that missing `render_ok` on a render-capable
+- [x] Tests: directive-engine test that missing `render_ok` on a render-capable
       stack halts; explicit `skipped` passes; `render_ok: false` halts (existing);
       non-render-capable stack with absent `render_ok` no-ops as before.
       <!-- carve-out: new-gate-verification -->
