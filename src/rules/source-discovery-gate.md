@@ -5,6 +5,7 @@ alwaysApply: false
 description: "Before coding/DB/API/vendor-package work — prove each structural fact against a real source (file:line · SDL · migration · probe) before planning"
 load_context:
   - contexts/execution/evidence-discipline.md
+  - contexts/execution/project-intelligence.md
 triggers:
   - intent: "before coding"
   - intent: "DB-driven work"
@@ -67,6 +68,20 @@ your memory of how the structure "probably" looks.
    hypothesis.
 5. **Verify after acting** with the real tool (per `think-before-action` matrix);
    any Assumed/`trust: low` line used unconfirmed is a violation surfaced post-task.
+
+## v1↔v2 isolation contract (self-building context never bypasses read-fresh)
+
+```
+CURATED PROJECT-INTELLIGENCE (Evidence v2) IS READ FOR HEURISTICS ONLY —
+NEVER TO BYPASS A FRESH STRUCTURAL READ. A FIELD/ENDPOINT/COLUMN/VALUE IS STILL
+CONFIRMED AGAINST A LIVE SOURCE THIS SESSION, REGARDLESS OF WHAT CURATED "KNOWS".
+```
+
+v2 context (Class A config digests, Class B observed conventions, Class C learned
+lessons) informs *where to look* and *what to expect* — it is **never** a build
+input and never a substitute for the Evidence Report. v2 capture is write-only
+into gitignored intake; trust and commit are always human-gated. Full model:
+[`project-intelligence`](../contexts/execution/project-intelligence.md).
 
 ## Honest enforcement
 

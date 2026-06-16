@@ -106,7 +106,7 @@ Resolve and read the actual class fresh (Step 0). In-codebase → local, no card
 
 ### E. Global cards — leads only (v2, ADR-100)
 
-When `knowledge.global_sharing.enabled` (user-global, default on), a matching
+When `knowledge.global_sharing.enabled` (user-global, **default off until cross-project reuse measured** — ADR-103), a matching
 card may exist in the per-user file-first store
 (`~/.event4u/agent-config/knowledge/`), promoted from another project. **Lead,
 never a build input**:
@@ -153,6 +153,17 @@ irreversible steps verify regardless.
 The Evidence Report (gitignored session cache), three buckets, soft-capped to
 ~10–20 decision-relevant facts, produced **before** the plan; plus, where the
 threshold is met, a thin committed card.
+
+## Evidence v2 — self-building context (heuristics only, never a bypass)
+
+Curated project-intelligence (Class A config digests, Class B observed conventions,
+Class C learned lessons) may be loaded to inform *where to look* and *what convention
+to expect* — but read **for heuristics only** and **never** bypasses a fresh structural
+read. A field/endpoint/column/value is still confirmed against a live source this
+session. v2 capture is **write-only into gitignored intake** (agent may *suggest* a
+signal, never silently commit); trust and commit are always human-gated. Full model +
+the three classes + memory tiers:
+[`project-intelligence`](../../agent-src/contexts/execution/project-intelligence.md).
 
 ## Gotchas
 

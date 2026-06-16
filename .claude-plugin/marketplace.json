@@ -400,6 +400,7 @@
         "./dist/agent-src/skills/skill-writing",
         "./dist/agent-src/skills/song-to-script",
         "./dist/agent-src/skills/source-discovery",
+        "./dist/agent-src/skills/standards-from-config",
         "./dist/agent-src/skills/sql-writing",
         "./dist/agent-src/skills/stakeholder-tradeoff",
         "./dist/agent-src/skills/subagent-orchestration",

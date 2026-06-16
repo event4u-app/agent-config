@@ -70,6 +70,8 @@ agents/settings/contexts/                                # Project-wide contexts
 | **Integration** | External API/system integration | `probaus-api.md` |
 | **Infrastructure** | DevOps or infrastructure concern | `queue-system.md` |
 | **Knowledge card** | Trust-tiered cache of *expensive* (remote) structural evidence — negative facts + pointers durable, positive structure a hypothesis | `lodash.md`, `stripe-api.md` |
+| **Standards card (Class A)** | Coding standards **derived from real tooling config** — pointer + digest, `trust: high (config-derived)`, auto-refreshed when the config changes; never a flattened claim | `coding-standards.md` (points at `ruff.toml`, `.editorconfig`) |
+| **Lesson card (Class C)** | A learned lesson — `symptom` (fact) split from `hypothesis` (decaying theory), `trust: low`, subject-not-person, anti-calcification decay; promoted only via the human gate (accumulation layer is eval-gated) | `agents/memory/curated/lessons/<slug>.md` |
 
 ## Where to store contexts
 
@@ -96,6 +98,21 @@ pointer, trust tagging, multi-evidence consistency). See
 [`source-discovery`](../source-discovery/SKILL.md) for when a structure is
 card-worthy and [`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md)
 for the full model.
+
+### Standards cards — Class A configured convention (Evidence v2)
+
+A **standards card** is a present-state context whose claims are **derived from
+the project's real tooling config** (`.editorconfig`, `eslint.config.js`,
+`pint.json`, `pyproject.toml`/`ruff.toml`, commit-lint, CI lint steps). It is
+`trust: high (config-derived)` — high *because* the config is the truth, not
+because the agent believes it. Each standard is a **pointer + digest** (value +
+`source: file:key` + scope), never a flattened claim; conflicting configs are
+surfaced as two pointers, never merged. The digest is **regenerated** when a
+source config's mtime/hash changes (auto-refresh, no human gate — Class A is
+deterministic) and is read for heuristics only, never to bypass a fresh
+structural read. Build it with the
+[`standards-from-config`](../standards-from-config/SKILL.md) skill; store under
+`agents/settings/contexts/`.
 
 ### Shared vs. project-specific contexts
 
