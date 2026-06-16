@@ -12,7 +12,7 @@ A curated subset of the 124 active commands. Full set lives in
 | [`/work`](../dist/agent-src/commands/work.md) | Same end-to-end loop for a free-form prompt — confidence-band gated |
 | [`/fix ci`](../dist/agent-src/commands/fix.md) | Fetch CI failures from GitHub Actions and fix them |
 | [`/review-changes`](../dist/agent-src/commands/review-changes.md) | Self-review local changes before creating a PR (five judges) |
-| [`/create-pr`](../dist/agent-src/commands/create-pr.md) | Create a GitHub PR with Jira-linked description |
+| [`/pr:create`](../dist/agent-src/commands/pr/create.md) | Create a GitHub PR with Jira-linked description |
 
 ## For everyone
 

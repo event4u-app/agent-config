@@ -61,7 +61,7 @@ skills it composes:
 | 🔍 **Discovery** | `/feature:plan` · `/research` | explore → plan → estimate → refine, *before* building |
 | 🔨 **Implementation** | `/work` · `/implement-ticket` | plan → implement → verify → commit |
 | 🔎 **Review** | `/review-changes` · `/judge` | self-review → judge → quality-fix → threat-model |
-| 🚢 **Delivery** | `/commit` · `/create-pr` | commit in chunks → open PR → answer review |
+| 🚢 **Delivery** | `/commit` · `/pr:create` | commit in chunks → open PR → answer review |
 
 Full detail — entry commands, canonical path, composed skills per flow:
 [`docs/flows.md`](docs/flows.md). (`agent-admin` — memory / analytics / config —
@@ -98,7 +98,7 @@ your stack, and you ship work end-to-end. New install? Start with the
 [Quickstart](#quickstart). Already installed? [Supported tools](#supported-tools)
 shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
 lists the end-to-end workflows (`/implement-ticket`, `/work`,
-`/commit`, `/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
+`/commit`, `/pr:create`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
 
 **Install scope.** Pick **one** scope per machine — project-local (default, recommended for application repos) or user-global (recommended for tooling repos / dotfiles). The installer refuses a second, conflicting scope via the `scope_guard` pre-flight. Details: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash scripts/cleanup_other_scope.sh --confirm`.
 
@@ -210,7 +210,7 @@ refine → memory → analyze → plan → implement → test → verify → rep
 - **Implements** under `minimal-safe-diff` + `scope-control` — no drive-by edits.
 - **Tests** (targeted first, full suite on success).
 - **Reviews** the diff through four judges (bugs, security, tests, code quality).
-- **Reports** changes, verdicts, follow-ups — then stops. `/commit` and `/create-pr` are suggestions, never auto-run.
+- **Reports** changes, verdicts, follow-ups — then stops. `/commit` and `/pr:create` are suggestions, never auto-run.
 
 Any ambiguity halts the flow with numbered options — never a silent guess. Persona comes from `.agent-settings.yml` (`roles.active_role`): `senior-engineer` (default), `qa`, or `advisory` (plan-only).
 

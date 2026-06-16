@@ -32,21 +32,26 @@ literal Phase-1 roadmap text by intent — see the roadmap step note.)
 
 ## Clashes resolved in this change
 
+Everything resolves **toward** the colon-canonical form. The PR command
+only ships as `dist/agent-src/commands/pr/create.md` (invoked `/pr:create`);
+there is no `commands/create-pr.md` projection, so `/create-pr` is a legacy
+*alias name* recorded in `replaces:`, not a directly-invocable command.
+
 | Surface | Was | Now | Basis |
 |---|---|---|---|
-| `README.md` Delivery flow | `/pr:create` | `/create-pr` | The command's own body, `featured-commands.md`, and 3/4 README refs use `/create-pr`; this aligns the outlier to what actually ships. |
-| `docs/cookbook.md` (×2) | `/feature/explore`, `/feature/plan` | `/feature:explore`, `/feature:plan` | Colon-canonical (ADR-003); matches the README flow table. |
+| `README.md` Delivery flow + 2 prose refs | `/pr:create` (1) + `/create-pr` (2) | `/pr:create` (all) | Colon-canonical (ADR-003); `/pr:create` is the only projected command. |
+| `docs/featured-commands.md` | `/create-pr` (→ stale `commands/create-pr.md` link) | `/pr:create` (→ `commands/pr/create.md`) | The legacy link target no longer exists; point at the real projection. |
+| `docs/cookbook.md` (generated) | `/feature/explore`, `/feature/plan`, … (slash) | `/feature:explore`, `/feature:plan`, … (colon) | Fixed at the **generator** (`_invocation()` renders `cluster/sub` → `/cluster:sub`); all clustered refs now colon. The file is generated — the slash form was a generator bug, not a hand-edit. |
 
 ## Known debt — deferred (own change)
 
-The PR command diverges from the colon-canonical rule: it ships as
-`/create-pr` (frontmatter `cluster: git-pr-create`, body documents the
-`/create-pr` family and `/create-pr:description-only`) rather than
-`/pr:create`. Re-clustering it to `/pr:create` touches the command body,
-the `:description-only` sub-family, and every inbound reference — out of
-scope for this audit. Until then, **`/create-pr` is the documented
-canonical** for that command (it is what the shipped command answers to),
-and the colon-form migration is tracked as command-surface debt.
+The PR command's frontmatter still carries `cluster: git-pr-create` and its
+body prose still self-documents the `/create-pr` family (and
+`/create-pr:description-only`). The user-facing invocation and all docs are
+now `/pr:create`; retiring the `/create-pr` alias name entirely — frontmatter
+`cluster`, the body prose, and the `:description-only` sub-family wording —
+is a command-body refactor out of scope for this audit and is tracked as
+command-surface debt.
 
 ## See also
 

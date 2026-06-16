@@ -146,9 +146,11 @@ name with documented aliases.
   literal step: NO new `aliases:` field — the alias registry already exists as
   `replaces:`/`superseded_by:` (ADR-090, enforced by lint_command_routing.py); a
   parallel field would re-create the two-sources-of-truth problem this step
-  fixes. Resolved clashes: README /pr:create→/create-pr (the command's shipped
-  canonical), cookbook /feature/* slash→colon. The pr-cluster colon-form
-  migration is tracked as deferred debt in the audit. -->
+  fixes. All clashes resolved TOWARD colon-canonical (ADR-003): README +
+  featured-commands /create-pr→/pr:create (the only projected PR command),
+  cookbook /feature/* slash→colon — fixed at the generator (_invocation()),
+  not by hand-editing the generated page. Retiring the legacy /create-pr
+  alias name (frontmatter cluster + body prose) is deferred debt. -->
 - [x] **F5 — Sharpen the README headline.** Replace the generic "Universal AI
   Agent OS" with a headline that signals the actual product (a governed,
   surgically-installable skill/rule/command suite with focused work journeys) —
