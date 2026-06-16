@@ -1,0 +1,32 @@
+{
+  "eval": "observed-conventions-class-B-dogfood",
+  "phase": "Evidence v2 Phase 3 gate (does OBSERVED convention lower error rate vs v1, at acceptable cost?)",
+  "date": "2026-06-16",
+  "project": "this repo (agent-config) — dogfood",
+  "task": "author frontmatter + section skeleton for a new skill `widget-inspector`",
+  "ground_truth": "src/scripts/skill_linter.py REQUIRED_SKILL_SECTIONS + frontmatter keys + name==dir + Output-format >=2 ordered reqs",
+  "model_under_test": "claude-sonnet-4-5 (subagent)",
+  "arms": {
+    "v1_no_card": {
+      "note": "repo access, no convention card — must discover conventions by exploring",
+      "frontmatter_keys": ["model_tier","name","description","domain","workspaces","packs"],
+      "required_sections_present": true,
+      "output_format_ordered_reqs": 6,
+      "hard_violations": 0,
+      "cost": { "total_subagent_tokens": 171655, "turns": 5, "wall_ms": 64384 }
+    },
+    "v1_plus_B_card": {
+      "note": "given the hand-curated Class-B conventions card as a lead",
+      "frontmatter_keys": ["model_tier","name","description","domain","workspaces","packs"],
+      "required_sections_present": true,
+      "output_format_ordered_reqs": 2,
+      "hard_violations": 0,
+      "soft_issues": ["workspaces:[] and packs:[] left empty — card stated they are lists but did not give values"],
+      "cost": { "total_subagent_tokens": 167161, "turns": 1, "wall_ms": 13456 }
+    }
+  },
+  "result": "CORRECTNESS LIFT ~NULL (both arms 0 hard violations); COST LIFT LARGE (turns 5->1, wall 64s->13.5s, ~5x). On a convention-adherence task a careful agent that explores already reaches compliance — the same saturation the v1 review flagged. Class B's measurable value is therefore COST (less exploration) + encoding non-obvious conventions (the >=2-ordered-Output-format rule, which the B arm hit exactly because the card stated it), not fewer errors.",
+  "gate_question": "The roadmap gate is 'lower error rate vs v1 at acceptable cost? If no -> ship A only, kill B.' Error rate did not drop (saturated); cost dropped substantially. Strict reading kills B; the v1 review explicitly demanded cost be a first-class axis. This is a genuine keep/kill fork -> routed to AI council.",
+  "caveat": "n=1 task, single domain (skill-authoring), correctness saturated. A task where a careful agent does NOT reliably reach compliance (multi-convention, non-obvious, or under time pressure) would be the discriminating test; not run here.",
+  "decision": "Council (claude-sonnet-4-5 + gpt-4o, 2 rounds, 2026-06-16) VERDICT: this eval is INVALID for the Class-B decision — it tested a LINTER-ENFORCED convention, i.e. a Class-A constraint disguised as Class-B. The v1 arm reached compliance by discovering the linter; the 5x win is 'pre-caching linter output helps' (Class-A/UX), not a Class-B validation. The gate as written is malformed ('acceptable cost' never quantified; 'lower error rate' unmeetable when correctness saturates). DISPOSITION: NARROW Class B. (1) Class B is only for conventions the tooling does NOT enforce; verifiability is the boundary. (2) Prefer a static-analysis CONSENSUS pass + deviation-metric staleness over an agent auto-capture loop. (3) Storage split (quarantine/->approved/) + B-specific validation are mandatory. (4) DEFER the auto-capture loop until a discriminating (non-linter) re-run justifies it. A proper re-run must use a convention with no linter (e.g. API response shape, directory naming, section ordering)."
+}
