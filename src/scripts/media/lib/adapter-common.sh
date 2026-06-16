@@ -1,28 +1,44 @@
 #!/usr/bin/env bash
-# adapter-common.sh — shared boilerplate sourced by every adapter under
-# scripts/ai-video/adapters/. Keeps individual adapters thin and makes
-# the contract surface (subcommand dispatch, dry-run plumbing, stdout
-# shape) uniform across providers.
+# adapter-common.sh — shared boilerplate sourced by every media adapter
+# (video under scripts/ai-video/adapters/; image under scripts/ai-image/
+# adapters/ from Phase A.2 on). Lives in the neutral scripts/media/lib/
+# substrate so both domains depend on it without a cross-domain reference.
+# Keeps individual adapters thin and makes the contract surface (subcommand
+# dispatch, dry-run plumbing, stdout shape) uniform across providers.
 #
 # Sourced; never executed directly. Strict-mode flags are the caller's
 # responsibility (every adapter starts with `set -euo pipefail`).
+#
+# NAMING: the AIV_* exports below are the historical names. The MEDIA_*
+# aliases are the forward-looking, domain-neutral surface — new (image)
+# adapters SHOULD source via the MEDIA_* names. The AIV_*→MEDIA_* rename
+# of the internals is deferred to a follow-up (road-to-image-brand-typography
+# Phase A); both name sets stay live until then.
 
 if [ -n "${AIV_ADAPTER_COMMON_LOADED:-}" ]; then
   return 0 2>/dev/null || exit 0
 fi
 AIV_ADAPTER_COMMON_LOADED=1
 
-# Resolve the lib dir from this file's location so adapters can source
-# us via the canonical `$(dirname "$0")/../lib/...` path.
+# Resolve the substrate dir from this file's location (scripts/media/lib).
+# Adapters source us via `$(dirname "$0")/../../media/lib/adapter-common.sh`.
 _aiv_lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 . "${_aiv_lib_dir}/redact.sh"
 # shellcheck source=/dev/null
 . "${_aiv_lib_dir}/load-config.sh"
 
-AIV_LIB_DIR="${_aiv_lib_dir}"
+# AIV_LIB_DIR is the *adapter domain's* resource dir (model-capabilities/,
+# comfyui-*), resolved relative to the calling adapter ($0) — those
+# resources stay in scripts/<domain>/lib/, NOT in the shared substrate.
+# Falls back to the substrate dir for non-adapter callers (smoke harness,
+# direct sourcing in tests) that never read domain resources.
+AIV_LIB_DIR="$(cd "$(dirname "$0")/../lib" 2>/dev/null && pwd || printf '%s' "${_aiv_lib_dir}")"
+# Shared substrate + fixtures live with this file (scripts/media/lib).
+MEDIA_LIB_DIR="${_aiv_lib_dir}"
 AIV_FIXTURE_ROOT="${_aiv_lib_dir}/fixtures"
-export AIV_LIB_DIR AIV_FIXTURE_ROOT
+MEDIA_FIXTURE_ROOT="${AIV_FIXTURE_ROOT}"
+export AIV_LIB_DIR MEDIA_LIB_DIR AIV_FIXTURE_ROOT MEDIA_FIXTURE_ROOT
 
 # Per-adapter run telemetry (success / cost / latency — local-only
 # JSONL, best-effort, AIV_TELEMETRY=false kill-switch).

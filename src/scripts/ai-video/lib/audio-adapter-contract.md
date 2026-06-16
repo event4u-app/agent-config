@@ -194,7 +194,7 @@ Identical to v2 — explicit here because council review flagged the gap:
 
 ## Dry-run fixtures
 
-`scripts/ai-video/lib/fixtures/<adapter-id>/analysis.json` — same
+`scripts/media/lib/fixtures/<adapter-id>/analysis.json` — same
 directory convention as v2 (`fixtures/<id>/result.json`). The fixture
 is the contract-shaped output for a deterministic reference track;
 tests pin its shape. CI never needs ffmpeg, allin1, whisperx, or a key.

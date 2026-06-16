@@ -170,6 +170,6 @@ def test_live_submit_refused_under_dryrun_default() -> None:
 
 
 def test_dry_run_fixture_reports_known_zero_cost() -> None:
-    fixture = _load(LIB_DIR / "fixtures" / "comfyui" / "result.json")
+    fixture = _load(REPO_ROOT / "src" / "scripts" / "media" / "lib" / "fixtures" / "comfyui" / "result.json")
     assert fixture["cost_estimate"] == 0.0
     assert fixture["audio_embedded"] is False

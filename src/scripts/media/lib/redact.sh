@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/ai-video/lib/redact.sh — secret-scrubbing helper for /video:* adapters.
+# scripts/media/lib/redact.sh — secret-scrubbing helper for /video:* adapters.
 #
 # Sourced by every adapter under scripts/ai-video/adapters/*.sh. Provides
 # two helpers:

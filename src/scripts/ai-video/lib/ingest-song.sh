@@ -34,8 +34,8 @@
 
 set -euo pipefail
 
-# shellcheck source=adapter-common.sh
-. "$(dirname "$0")/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 _ingest_validate_url() {
   local url="${1:-}"

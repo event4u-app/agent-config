@@ -27,7 +27,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 ADAPTER_DIR="${ROOT}/src/scripts/ai-video/adapters"
 # shellcheck source=/dev/null
-. "${ROOT}/src/scripts/ai-video/lib/adapter-common.sh"
+. "${ROOT}/src/scripts/media/lib/adapter-common.sh"
 
 PROVIDER=""
 MODE="dry-run"

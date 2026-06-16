@@ -1,7 +1,7 @@
 """Trust-boundary tests for the AI-video adapter common lib (contract v2).
 
 Provider-returned artifact paths and downloads are untrusted input. The
-helpers in ``scripts/ai-video/lib/adapter-common.sh`` are the enforcement
+helpers in ``scripts/media/lib/adapter-common.sh`` are the enforcement
 surface the live ``submit/poll/fetch`` path MUST route through. These tests
 lock the load-bearing rejections so a future live adapter cannot regress the
 boundary:
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-COMMON_LIB = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib" / "adapter-common.sh"
+COMMON_LIB = REPO_ROOT / "src" / "scripts" / "media" / "lib" / "adapter-common.sh"
 
 pytestmark = pytest.mark.skipif(
     shutil.which("bash") is None,
