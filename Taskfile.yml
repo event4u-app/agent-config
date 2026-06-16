@@ -99,6 +99,7 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
+      - task: lint-roadmap-later-disposition
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
@@ -240,6 +241,7 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
+      - task: lint-roadmap-later-disposition
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab

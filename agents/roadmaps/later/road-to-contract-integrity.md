@@ -1,9 +1,16 @@
 ---
 complexity: standard
-status: ready
+status: later
 ---
 
 # Roadmap: Contract Integrity — product-clarity, complexity-governance, release-discipline
+
+> **Parked in `later/` (2026-06-16).** Phase 0 + Phase 1 shipped (12/15). The
+> only open work — Phase 2 family-first presentation — is **blocked until** the
+> leanness / pruning track (`road-to-tier-removal` + command-surface-leanness)
+> prunes against the Phase-0 census; documenting families before the cull would
+> enshrine a bloated surface. **Resume when** that pruning lands. Open `[ ]`
+> items are intentionally kept open — this roadmap is parked whole, not dropped.
 
 **Trigger:** Two independent external reviews of the unreleased `main` (103
 commits past `6.1.0` = 6.2.0-in-progress, captured in
