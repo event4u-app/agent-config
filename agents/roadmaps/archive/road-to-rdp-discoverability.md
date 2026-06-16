@@ -30,17 +30,17 @@ benchmark or kernel-promotion question (those live in the sibling roadmaps).
 
 ## Phase 1 — Settings discoverability
 
-- [ ] Add `reasoning.enabled`, `reasoning.auto_gate`, and the
+- [x] Add `reasoning.enabled`, `reasoning.auto_gate`, and the
       `reasoning.components.*` switches to the **Available settings** table in
       `docs/customization.md` (currently absent), each with default + one-line
       description, matching the existing `personal.*` / `ai_council.*` row style.
-- [ ] Add a short prose block under the table pointing at the user contract
+- [x] Add a short prose block under the table pointing at the user contract
       (Phase 2) and the dossier for rationale — so the table row has a "learn
       more / turn off" path, not just a name.
 
 ## Phase 2 — User-facing RDP contract
 
-- [ ] Author `docs/contracts/reasoning-discipline-protocol.md` — concise,
+- [x] Author `docs/contracts/reasoning-discipline-protocol.md` — concise,
       user-facing (NOT a copy of the design dossier):
       - **What RDP does** — transplants operating discipline (notes-first,
         complexity-first, verifier, orchestrator), never capability.
@@ -50,21 +50,32 @@ benchmark or kernel-promotion question (those live in the sibling roadmaps).
         per-component switches, `auto_gate: false`.
       - **Why it is not a Fable/Mythos copy** — "capability does not transfer,
         discipline does"; link the dossier and `rdp-gate` for depth.
-- [ ] Cross-link: dossier → contract (user entry point), contract → dossier
+- [x] Cross-link: dossier → contract (user entry point), contract → dossier
       (rationale), and the `reasoning:` template comment → contract. Keep the
       one-screen budget; depth stays in the dossier.
 
 ## Phase 3 — Surfacing confirmations (verify-only)
 
-- [ ] Confirm the GUI surfaces the `reasoning.*` settings now that schema +
+- [x] Confirm the GUI surfaces the `reasoning.*` settings now that schema +
       template carry them. If the settings UI hardcodes categories/order and
       `reasoning` is hidden, file the minimal wiring fix; if it is schema-driven
       and already shows, record that and close.
-- [ ] Confirm no stale "tier-1/2 heavy vs tier-3/4 light" content-variant language
+      <!-- verified 2026-06-16: SHOWS (schema-driven). src/server/schemas/settings.ts:189-225
+      defines reasoning{enabled,auto_gate,components.*} with .describe() on every field;
+      the settings UI is fully schema-driven (settings route serves zodToJsonSchema →
+      src/ui/pages/SettingsPage.tsx → src/ui/forms/SchemaForm.tsx via flattenSchema in
+      schemaTypes.ts:99-113, which inlines depth-3 components.* as fields). No hardcoded
+      category list anywhere → the "Reasoning" section with all 11 fields renders
+      automatically. No wiring fix needed. -->
+- [x] Confirm no stale "tier-1/2 heavy vs tier-3/4 light" content-variant language
       survives in live (non-archived) docs/skills/rules — the gate's "one
       constraint-light scaffold, no heavy variant" (L1) is the current contract.
       Grep was clean at authoring time; this is a confirm + fix-if-found, not a
       sweep.
+      <!-- verified 2026-06-16: grep over live src + docs for heavy/light variant
+      language found only the two contract-affirming negations ("never ship heavy/light
+      content variants" in rdp-gate.md; "no heavy/light content variants" in the dossier).
+      No doc advertises tier-banded heavy vs light variants. Clean, no fix. -->
 
 ## Acceptance criteria
 
