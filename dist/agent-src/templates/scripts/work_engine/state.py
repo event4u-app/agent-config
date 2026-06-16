@@ -24,6 +24,13 @@ The wire format adds five envelope fields on top of the legacy
   pick. The audit gate (:mod:`work_engine.directives.ui.audit`)
   refuses to advance to design/apply while the slot is empty or
   while ``greenfield`` is set without a recorded decision.
+- ``app_spec`` — optional greenfield grounding artifact written by
+  :mod:`work_engine.directives.ui.app_spec` (greenfield-scaffold
+  Phase 2). Derives a ``pages`` set, ``entity_model``, and ``flow_map``
+  from the prompt and carries a ``confirmed`` flag (the lightweight
+  confirm halt) plus a ``bypassed`` flag (the "just scaffold" escape).
+  ``None`` for every non-greenfield-scaffold flow — the app-spec gate
+  is a no-op outside ``greenfield_decision == "scaffold"``.
 - ``ui_design`` — optional design brief produced by
   :mod:`work_engine.directives.ui.design` (R3 Phase 3 Step 1). Locks
   layout / components / states / microcopy / a11y; ``design_confirmed``
@@ -157,6 +164,7 @@ class WorkState:
     directive_set: str = DEFAULT_DIRECTIVE_SET
     stack: dict[str, Any] | None = None
     ui_audit: dict[str, Any] | None = None
+    app_spec: dict[str, Any] | None = None
     ui_design: dict[str, Any] | None = None
     ui_review: dict[str, Any] | None = None
     ui_polish: dict[str, Any] | None = None
@@ -192,6 +200,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         )
     _validate_stack(state.stack)
     _validate_ui_audit(state.ui_audit)
+    _validate_app_spec(state.app_spec)
     _validate_ui_design(state.ui_design)
     _validate_ui_review(state.ui_review)
     _validate_ui_polish(state.ui_polish)
@@ -205,6 +214,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         "directive_set": state.directive_set,
         "stack": state.stack,
         "ui_audit": state.ui_audit,
+        "app_spec": state.app_spec,
         "ui_design": state.ui_design,
         "ui_review": state.ui_review,
         "ui_polish": state.ui_polish,
@@ -266,6 +276,9 @@ def from_dict(payload: Any) -> WorkState:
     ui_audit = payload.get("ui_audit")
     _validate_ui_audit(ui_audit)
 
+    app_spec = payload.get("app_spec")
+    _validate_app_spec(app_spec)
+
     ui_design = payload.get("ui_design")
     _validate_ui_design(ui_design)
 
@@ -290,6 +303,7 @@ def from_dict(payload: Any) -> WorkState:
         directive_set=directive_set,
         stack=dict(stack) if isinstance(stack, dict) else None,
         ui_audit=dict(ui_audit) if isinstance(ui_audit, dict) else None,
+        app_spec=dict(app_spec) if isinstance(app_spec, dict) else None,
         ui_design=dict(ui_design) if isinstance(ui_design, dict) else None,
         ui_review=dict(ui_review) if isinstance(ui_review, dict) else None,
         ui_polish=dict(ui_polish) if isinstance(ui_polish, dict) else None,
@@ -423,6 +437,47 @@ def _validate_ui_audit(ui_audit: Any) -> None:
         raise SchemaError(
             "state.ui_audit.a11y_baseline must be a list when present",
         )
+
+
+def _validate_app_spec(app_spec: Any) -> None:
+    """Reject malformed ``app_spec`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the app-spec gate has not produced a grounding
+    artifact yet — the greenfield-scaffold ``app_spec`` directive
+    (greenfield-scaffold Phase 2) emits the agent-directive that
+    populates it, and the gate is a no-op for every non-greenfield
+    flow so the slot stays ``None`` there. An empty dict is the
+    in-progress shape after the skill returns but before the page-set
+    lands; the gate treats it the same as ``None``. Once populated,
+    ``pages`` / ``entity_model`` (when present) must be lists,
+    ``flow_map`` (when present) must be a list or dict, and
+    ``confirmed`` / ``bypassed`` (when present) must be bools — the
+    app-spec gate's confirm/bypass sentinels are simple equality
+    tests, so the schema enforces only shape, not content.
+    """
+    if app_spec is None:
+        return
+    if not isinstance(app_spec, dict):
+        raise SchemaError(
+            f"state.app_spec must be a JSON object or null; "
+            f"got {type(app_spec).__name__}",
+        )
+    for key in ("pages", "entity_model"):
+        if key in app_spec and not isinstance(app_spec[key], list):
+            raise SchemaError(
+                f"state.app_spec.{key} must be a list when present",
+            )
+    if "flow_map" in app_spec and not isinstance(
+        app_spec["flow_map"], (list, dict),
+    ):
+        raise SchemaError(
+            "state.app_spec.flow_map must be a list or object when present",
+        )
+    for key in ("confirmed", "bypassed"):
+        if key in app_spec and not isinstance(app_spec[key], bool):
+            raise SchemaError(
+                f"state.app_spec.{key} must be a boolean when present",
+            )
 
 
 def _validate_ui_design(ui_design: Any) -> None:

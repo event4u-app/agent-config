@@ -125,14 +125,19 @@ reasoned skip. Independently shippable.
 The "real orchestration" before any scaffolding: derive the app shape and
 confirm it fast before files are created (decision 3 — disambiguation, not BDUF).
 
-- [ ] New step/skill `app-spec` (Grounding + Method): prompt → derived page-set +
+- [x] New step/skill `app-spec` (Grounding + Method): prompt → derived page-set +
       entity model + flow-map. Records to a new state slice `state.app_spec`.
-- [ ] Lightweight human-confirm halt (`app_spec_unconfirmed`) before scaffold —
+      Realised as the UI set's `memory` slot (was a no-op pass-through) +
+      `directives/ui/app_spec.py`; delegates via `@agent-directive: app-spec`
+      (a directive verb, no new SKILL.md — mirrors `ui-design-brief`).
+- [x] Lightweight human-confirm halt (`app_spec_unconfirmed`) before scaffold —
       the user confirms/edits the derived page-set + entity model in one
-      numbered-options halt. **Explicit bypass** ("just scaffold" / fenced step)
-      honoured per the engine's existing escape idiom.
-- [ ] Feeds the scaffold plan in Phase 3 (page-set → routes/layout shell; entity
-      model → data-layer stubs).
+      numbered-options halt. **Explicit bypass** ("just scaffold" →
+      `app_spec.bypassed = true`) honoured per the engine's existing escape idiom.
+- [x] Feeds the scaffold plan in Phase 3 (page-set → routes/layout shell; entity
+      model → data-layer stubs). Gate is a no-op `SUCCESS` for every
+      non-greenfield-scaffold flow, so existing UI / improve flows stay
+      byte-identical (golden GT-U6A/U6B unaffected).
 
 **Exit criteria:** greenfield runs derive and confirm (or explicitly bypass) an
 app spec before any scaffold plan is produced.
@@ -214,3 +219,24 @@ explicit bypass** (decision 3). The Playwright-is-a-preview challenge was rebutt
 by both (headless CI testing tool ≠ user-facing preview surface), holding the
 hosting boundary. Kept as one roadmap with the render-gate as an independently
 shippable Phase 1.
+
+**Implementation resolution (Phases 2–4 council, claude-sonnet-4-5 + gpt-4o,
+2026-06-16, 2-round design debate).** The engine's `STEP_ORDER` is a fixed,
+global 8-tuple (`refine memory analyze plan implement test verify report`)
+shared by every directive set; the `ui` set has exactly two free pass-through
+slots — `memory` (before `analyze`/design) and `plan` (after design, before
+`implement`/apply). The locked Phase-3 wording ("scaffold before design") could
+not be honoured literally without a cross-cutting `STEP_ORDER` change. The
+council **converged on Option A** after the rebuttal round flipped: map
+`app-spec → memory` and `scaffold → plan`, giving greenfield order audit →
+app-spec → **design → scaffold** → apply. The decisive, code-grounded argument
+— `design` produces an **abstract** brief (visual language: tokens, component
+strategy, layout principles), *not* page-specific artifacts; `scaffold` then
+**consumes** that brief to map it onto concrete structure
+(`{pages, routes, layout_strategy, component_manifest, token_seed}`); `apply`
+renders. The recoverable-state *substance* of locked decision 2 is preserved
+(scaffold is plan-only and writes zero files, so a failed scaffold re-runs
+alone) — only the recoverable label flips to "designed but not scaffolded".
+Zero `STEP_ORDER` change, minimal-safe-diff, `bare` / `external_reference`
+paths byte-unchanged. Option B (fold app-spec into `audit`) was rejected for
+responsibility-creep + a dual-interactive-gate UX in one step.

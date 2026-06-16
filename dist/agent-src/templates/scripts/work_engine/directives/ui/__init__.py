@@ -13,7 +13,8 @@ and state-driven, so the same Markdown contract serves both tracks).
 The eight-step shape mirrors :mod:`work_engine.directives.backend`:
 
 - ``refine`` → :mod:`.audit` — existing-UI inventory gate.
-- ``memory`` → :mod:`._passthrough` — UI track does not consult memory.
+- ``memory`` → :mod:`.app_spec` — greenfield app-spec grounding gate
+  (no-op pass-through for every non-greenfield-scaffold flow).
 - ``analyze`` → :mod:`.design` — produces the locked design brief.
 - ``plan`` → :mod:`._passthrough` — design brief is the plan.
 - ``implement`` → :mod:`.apply` — stack-dispatched render of the brief.
@@ -28,7 +29,7 @@ from collections.abc import Mapping
 
 from ...delivery_state import Step
 from ..backend import report
-from . import _passthrough, apply, audit, design, polish, review
+from . import _passthrough, app_spec, apply, audit, design, polish, review
 
 DIRECTIVE_SET_NAME = "ui"
 """External name carried in ``state.directive_set`` for this set."""
@@ -58,7 +59,7 @@ def _build_step_map() -> dict[str, Step]:
     passthrough = _passthrough.run
     return {
         "refine": audit.run,
-        "memory": passthrough,
+        "memory": app_spec.run,
         "analyze": design.run,
         "plan": passthrough,
         "implement": apply.run,
@@ -88,7 +89,7 @@ def all_ambiguities() -> dict[str, tuple[dict[str, str], ...]]:
     passthrough = _passthrough.AMBIGUITIES
     return {
         "refine": audit.AMBIGUITIES,
-        "memory": passthrough,
+        "memory": app_spec.AMBIGUITIES,
         "analyze": design.AMBIGUITIES,
         "plan": passthrough,
         "implement": apply.AMBIGUITIES,
@@ -103,6 +104,7 @@ __all__ = [
     "ROADMAP",
     "SUPPORTED_KINDS",
     "all_ambiguities",
+    "app_spec",
     "apply",
     "audit",
     "design",
