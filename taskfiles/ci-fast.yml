@@ -436,6 +436,11 @@ tasks:
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: python3 src/scripts/lint_empty_roadmaps.py {{.QUIET_FLAG}}
 
+  lint-roadmap-later-disposition:
+    silent: true
+    desc: Enforce the later/ disposition — status:later roadmaps live under agents/roadmaps/later/, and every later/ roadmap records a resume condition
+    cmd: python3 src/scripts/lint_roadmap_later_disposition.py
+
   lint-tickets:
     silent: true
     desc: Build-readiness gate for ticket bundles — DoR floor, acyclic manifest graph, traceability spine, asset cap, split-severity staleness (ADR-101)

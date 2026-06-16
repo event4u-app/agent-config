@@ -76,6 +76,16 @@ When the closure check fires (`count_open == 0` and `count_deferred > 0`), the a
 
 The migration mechanics (file naming, frontmatter pattern, body shape, parent-back-link) live in [`roadmap-management § Spawn follow-up from deferred items`](../skills/roadmap-management/SKILL.md). This rule owns the obligation; the skill owns the procedure.
 
+## Later disposition — blocked-for-later roadmaps are parked, never left active
+
+```
+A ROADMAP WHOSE OPEN WORK CANNOT PROCEED NOW (GATED ON AN EXTERNAL
+TRIGGER OR A DECISION) BUT WILL RESUME → MOVE IT TO agents/roadmaps/later/.
+NEVER LEAVE A BLOCKED-FOR-LATER ROADMAP IN THE ACTIVE TREE.
+```
+
+`later/` is the fourth disposition alongside `archive/` (done, none planned) and `skipped/` (won't pursue): open work remains but is blocked-for-later. Set frontmatter `status: later` + a `Blocked until` / `Trigger` resume line, `git mv` to `agents/roadmaps/later/`, migrate inbound `agents/roadmaps/<x>.md` refs to the new path, regen. Open `[ ]` items stay open — the roadmap is parked whole, not cancelled or deferred-item-by-item. `later/` is excluded from the dashboard and `/roadmap:process-*` (same as `archive/`/`skipped/`); the `lint_roadmap_later_disposition` guard enforces the `status: later` ⇔ `later/` placement contract and that every parked roadmap records a resume condition. Procedure + the Active-vs-Later test live in [`roadmap-management`](../skills/roadmap-management/SKILL.md).
+
 ## PR-gate — a completed roadmap archives in its own PR, never post-merge
 
 A roadmap that reaches `count_open == 0 && count_deferred == 0` is **complete**
