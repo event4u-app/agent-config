@@ -1,5 +1,6 @@
 {
     "skill": "agent-security-review",
+    "last_eval": "2026-06-16",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for adversarial review of an agent's CONFIG/behaviour (rules, skills, MCP, hooks, permissions). Should-not-trigger covers the near-miss neighbours (code threat-model, code security-audit, the static config-audit command, privacy review, dependency CVE scan) whose vocabulary overlaps.",
     "queries": [
         {

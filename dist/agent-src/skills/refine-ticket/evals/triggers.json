@@ -1,5 +1,6 @@
 {
   "skill": "refine-ticket",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings and the four input paths (key, branch, paste, URL). Should-not-trigger covers the four near-miss neighbors (plan / estimate / duplicate / threat-model / bug-investigate) whose vocabulary overlaps with ticket refinement.",
   "queries": [
     {"q": "refine this ticket before I plan it", "trigger": true},

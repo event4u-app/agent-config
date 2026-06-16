@@ -1,5 +1,6 @@
 {
   "skill": "complexity-first-planning",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers multi-component / uncertain work where a load-bearing unknown must be resolved first; should-not covers trivial / linear / fully-sequenced work and neighbors (feature breakdown, simple tests).",
   "queries": [
     {"q": "build a multi-tenant reporting pipeline with caching and access control — where do I start?", "trigger": true},

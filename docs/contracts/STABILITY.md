@@ -150,6 +150,38 @@ for the contract and the transitional allowlist.
   shipped `dist/agent-src/` (condensed) directory; the uncondensed
   source size is informational only.
 
+## Schema versioning and structural breaking changes
+
+The breaking-change gate is **two-layered** so it does not depend on
+author discipline alone:
+
+1. **Commit-annotation layer (`release.py`).** `infer_bump` reads the
+   Conventional-Commits annotation (`<type>!:` bang or a
+   `BREAKING CHANGE` line) and returns a major bump when present.
+2. **Structural layer (`check_structural_breaking.py`, run in
+   `task ci-fast`).** Independently of the commit message, the detector
+   inspects the diff against the trunk and FAILS when a structural break
+   is present *without* an annotation — forcing the annotation to exist.
+
+A change is **structurally breaking** when either:
+
+- a tracked artifact *source* file is **deleted or renamed** — a skill
+  `SKILL.md`, a rule, a command `command.md`, a pack manifest, or a
+  contract schema; or
+- a contract schema under `src/scripts/schemas/` is **modified without
+  bumping its `x-schemaVersion`**. The four contract schemas (`pack`,
+  `skill`, `rule`, `command`) carry an `x-schemaVersion`. Bump it when an
+  enum value is added or removed, a field type changes, or a validation
+  rule tightens — these are breaking-for-consumers yet invisible to a
+  name-status diff. Purely *additive* schema changes (a new optional
+  field) do not require a bump.
+
+Escape for an intentional break (e.g. a deprecation cycle completing):
+add `ci-override: structural-breaking-ok` to a commit body. The detector
+accepts ~20% false-negatives on purely *semantic* breaks (behaviour
+change with no artifact/schema delta); the structural + schema + commit
+cross-check reaches ~95% coverage (2026-06-16 council).
+
 ## See also
 
 - [`docs/architecture.md`](../architecture.md) — package architecture overview
