@@ -29,6 +29,8 @@ routes_to:
   - "skill:scenario-modeling"
   - "skill:stakeholder-tradeoff"
   - "skill:decision-record"
+  - "skill:brand-strategy"
+  - "skill:brand-identity"
 applies_to_user_types:
   - "legal"
   - "finance"

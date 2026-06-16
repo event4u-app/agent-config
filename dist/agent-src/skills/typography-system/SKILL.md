@@ -22,6 +22,11 @@ Turn a style constraint into a full typographic system: pick a verified font
 pairing, derive a modular scale, and emit DTCG `$type: "typography"` tokens
 through the `design-tokens` toolchain.
 
+A **two-stage Method**: stage 1 (below) is the **style path** — a mood/idiom
+constraint drives the pairing. Stage 2 is the **brand-aware path** — when a
+brand layer exists, the brand archetype filters the pairing first. The skill
+degrades gracefully: with no brand layer, only stage 1 runs.
+
 ## When to use
 
 - Choosing heading/body fonts for a new product or rebrand.
@@ -52,8 +57,39 @@ through the `design-tokens` toolchain.
    to confirm no hardcoded font-size or font-family values remain outside the
    token file; exit code 0 is the evidence.
 
-Stage 2 (brand archetype → pairing-filter) is added in Phase B.4; this skill
-degrades gracefully without a brand layer.
+## Stage 2 — brand-aware path (when a brand layer exists)
+
+When a brand archetype is known (a confirmed `brand-strategy` /
+`brand-identity` constraint set, or a consumer brand profile), filter the
+pairing by the archetype **before** the mood match — the brand constrains the
+style, not the other way around.
+
+1. **Resolve the archetype** from the active brand layer (e.g. `Ruler`,
+   `Lover`, `Magician`).
+2. **Query the brand `typography` Grounding domain** for the archetype →
+   pairing-filter (Heading Class, Body Class, Mood, plus confidence +
+   evidence gap):
+
+   ```bash
+   python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+     --manifest <skills-root>/brand/data/manifest.json \
+     "<archetype + sector>" --domain typography --json
+   ```
+
+3. **Filter `font-pairings-reference.csv` by that pairing-filter** — keep only
+   pairings whose Heading/Body classes satisfy the archetype filter (e.g. a
+   `Ruler` / law-firm brief keeps serif-containing pairings; a `Magician` /
+   SaaS brief keeps geometric-sans pairings). Then apply the stage-1 mood match
+   within the filtered set.
+4. **Surface the corpus `confidence` + `evidence_gap`** for the archetype row,
+   then emit DTCG type tokens exactly as stage 1 (steps 4–5 above).
+5. **Trigger-eval invariant:** a "law-firm redesign" brief MUST route to a
+   serif-containing pairing (the archetype filter is `Ruler` → serif). This is
+   the recorded brand-aware regression test (recorded in Phase D).
+
+Consumer brand tokens outrank the corpus filter
+([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)) — if the
+brand already registers fonts, use them and skip the filter.
 
 ## Output format
 
@@ -98,3 +134,5 @@ degrades gracefully without a brand layer.
   (icon set selection, sizing scale).
 - [`fe-design`](../fe-design/SKILL.md) — broader frontend design skill that
   consumes the token system produced here.
+- [`brand`](../brand/SKILL.md) — supplies the archetype → pairing-filter
+  Grounding (`typography` domain) consumed by stage 2.

@@ -1,0 +1,17 @@
+{
+  "skill": "brand",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers grounding a brand decision against the corpus (archetype, voice, colour, naming, archetype->type). Should-not-trigger covers near-miss neighbors: UI style grounding (design-intelligence), token authoring (design-tokens), generating a logo asset (logo-generation), validation of emitted artifacts (brand-consistency), and font-pairing lookup without a brand frame (typography-system style path).",
+  "queries": [
+    {"q": "which brand archetype fits a rugged outdoor gear company?", "trigger": true},
+    {"q": "ground the voice and tone for a challenger fintech brand", "trigger": true},
+    {"q": "what colour direction does the corpus suggest for a children's education brand?", "trigger": true},
+    {"q": "which naming pattern suits a coined-word tech startup brand?", "trigger": true},
+    {"q": "what type pairing-filter does a luxury law firm archetype imply?", "trigger": true},
+    {"q": "which UI style and palette fit a fintech dashboard?", "trigger": false, "note": "frontend style grounding → design-intelligence, not brand strategy"},
+    {"q": "emit the brand colours as DTCG CSS variables", "trigger": false, "note": "token authoring/emission → design-tokens / brand-to-tokens"},
+    {"q": "generate a logo image for this bakery", "trigger": false, "note": "asset generation → logo-generation, not brand grounding"},
+    {"q": "check whether this landing page copy is on-brand", "trigger": false, "note": "post-action validation → brand-consistency rule"},
+    {"q": "what's a good serif font pairing for a magazine?", "trigger": false, "note": "font-pairing lookup with no brand frame → typography-system style path"}
+  ]
+}

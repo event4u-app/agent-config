@@ -123,6 +123,16 @@
   domain: engineering
   size_class: medium
 
+- id: brand
+  label: Brand
+  description: Brand as a first-class UX layer — archetype/voice/identity grounding corpus, brand→token derivation, and consistency governance that constrains UI.
+  workspaces: [engineering]
+  requires: [frontend-design]
+  suggests: [ai-image]
+  trust_level_default: professional
+  domain: engineering
+  size_class: medium
+
 - id: python
   label: Python
   description: Python-language patterns.

@@ -3,7 +3,8 @@ model_tier: inherit
 name: brand-asset-generation
 description: "Generate brand assets — banners, social cards, CIP elements — with brand-token injection + provider routing. Use when generating a banner / social image / branded asset."
 domain: product
-personas: []
+personas:
+  - design-director
 workspaces:
   - small-business
 packs:

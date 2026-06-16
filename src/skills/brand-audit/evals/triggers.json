@@ -1,0 +1,17 @@
+{
+  "skill": "brand-audit",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers auditing/inventorying current brand expression and flagging drift. Should-not covers near-miss neighbors.",
+  "queries": [
+    {"q": "audit our brand consistency across the site and decks", "trigger": true},
+    {"q": "is our brand applied consistently — find where we drift", "trigger": true},
+    {"q": "inventory how the logo and colours are used today across all touchpoints", "trigger": true},
+    {"q": "baseline our current brand expression before the refresh", "trigger": true},
+    {"q": "where does our copy drift from the brand voice", "trigger": true},
+    {"q": "define a new brand strategy from scratch", "trigger": false, "note": "strategy definition -> brand-strategy"},
+    {"q": "generate a new logo for us", "trigger": false, "note": "generation -> logo-generation"},
+    {"q": "audit just the UI components to find reuse opportunities", "trigger": false, "note": "UI component inventory -> existing-ui-audit"},
+    {"q": "emit our brand tokens as CSS custom properties", "trigger": false, "note": "emission -> brand-to-tokens"},
+    {"q": "validate this single banner asset against the token spec in CI", "trigger": false, "note": "automated validation gate -> brand-consistency rule"}
+  ]
+}

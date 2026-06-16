@@ -1,0 +1,226 @@
+{
+  "manifest_version": 1,
+  "domain": "brand",
+  "tier": "conditional-grounding",
+  "data_dir": ".",
+  "retriever": "bm25",
+  "default_domain": "archetype",
+  "domains": {
+    "archetype": {
+      "file": "archetypes.csv",
+      "search_cols": [
+        "Archetype",
+        "Core Desire",
+        "Voice Traits",
+        "Messaging Angle",
+        "Best For"
+      ],
+      "output_cols": [
+        "Archetype",
+        "Core Desire",
+        "Goal",
+        "Voice Traits",
+        "Messaging Angle",
+        "Visual Cues",
+        "Color Direction",
+        "Typography Filter",
+        "Best For",
+        "Avoid When"
+      ],
+      "max_results": 2
+    },
+    "voice": {
+      "file": "voice-tone.csv",
+      "search_cols": [
+        "Tone Context",
+        "Voice Trait",
+        "Archetype Fit"
+      ],
+      "output_cols": [
+        "Tone Context",
+        "Voice Trait",
+        "Do",
+        "Don't",
+        "Example Copy",
+        "Avoid Copy",
+        "Archetype Fit",
+        "Channel"
+      ],
+      "max_results": 3
+    },
+    "naming": {
+      "file": "naming-patterns.csv",
+      "search_cols": [
+        "Pattern",
+        "Description",
+        "Best For"
+      ],
+      "output_cols": [
+        "Pattern",
+        "Description",
+        "Construction",
+        "Examples",
+        "Strengths",
+        "Risks",
+        "Trademark Risk",
+        "Best For"
+      ],
+      "max_results": 3
+    },
+    "color": {
+      "file": "color-psychology.csv",
+      "search_cols": [
+        "Industry",
+        "Emotional Association",
+        "Archetype Fit"
+      ],
+      "output_cols": [
+        "Industry",
+        "Primary Hue Direction",
+        "Emotional Association",
+        "Secondary/Accent",
+        "Avoid Hue",
+        "Contrast Note",
+        "Cultural Caveat",
+        "Archetype Fit"
+      ],
+      "max_results": 2
+    },
+    "logo": {
+      "file": "logo-style-fit.csv",
+      "search_cols": [
+        "Logo Style",
+        "Industry Fit",
+        "Archetype Fit"
+      ],
+      "output_cols": [
+        "Logo Style",
+        "Description",
+        "Industry Fit",
+        "Construction",
+        "Scalability Note",
+        "Vector Requirement",
+        "Avoid When",
+        "Archetype Fit"
+      ],
+      "max_results": 3
+    },
+    "messaging": {
+      "file": "messaging-frameworks.csv",
+      "search_cols": [
+        "Framework",
+        "Purpose",
+        "When to Use"
+      ],
+      "output_cols": [
+        "Framework",
+        "Purpose",
+        "Structure",
+        "When to Use",
+        "Example Skeleton",
+        "Strengths",
+        "Risks",
+        "Archetype Fit"
+      ],
+      "max_results": 3
+    },
+    "typography": {
+      "file": "typography-principles.csv",
+      "search_cols": [
+        "Archetype",
+        "Industry Examples",
+        "Mood",
+        "Pairing Filter"
+      ],
+      "output_cols": [
+        "Archetype",
+        "Industry Examples",
+        "Pairing Filter",
+        "Heading Class",
+        "Body Class",
+        "Mood",
+        "Rationale",
+        "Confidence",
+        "Evidence Gap"
+      ],
+      "max_results": 2
+    }
+  },
+  "detect": {
+    "archetype": [
+      "archetype",
+      "brand personality",
+      "brand character",
+      "hero",
+      "sage",
+      "outlaw",
+      "rebel",
+      "jester",
+      "caregiver",
+      "ruler",
+      "creator",
+      "explorer",
+      "magician",
+      "lover",
+      "everyman",
+      "innocent"
+    ],
+    "voice": [
+      "voice",
+      "tone",
+      "tone of voice",
+      "copy",
+      "wording",
+      "brand voice",
+      "writing style"
+    ],
+    "naming": [
+      "name",
+      "naming",
+      "brand name",
+      "product name",
+      "wordmark",
+      "coined name"
+    ],
+    "color": [
+      "color",
+      "colour",
+      "palette",
+      "hue",
+      "color psychology",
+      "brand color"
+    ],
+    "logo": [
+      "logo",
+      "mark",
+      "logotype",
+      "emblem",
+      "monogram",
+      "symbol",
+      "brand mark"
+    ],
+    "messaging": [
+      "messaging",
+      "message",
+      "value proposition",
+      "positioning statement",
+      "tagline",
+      "slogan",
+      "pillars",
+      "manifesto"
+    ],
+    "typography": [
+      "typography",
+      "font",
+      "typeface",
+      "pairing",
+      "serif",
+      "sans",
+      "type system",
+      "brand type"
+    ]
+  },
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": null
+}

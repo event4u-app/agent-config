@@ -276,7 +276,7 @@ identity → system → application → governance.
 
 ### B.1 Brand corpus (second corpus-grounding instance)
 
-- [ ] A manifest + CSVs under a new `brand` skill plugged into the **existing**
+- [x] A manifest + CSVs under a new `brand` skill plugged into the **existing**
   `src/skills/corpus-grounding` engine — no forked engine. Domains: brand
   archetypes (the 12), voice-and-tone matrices, naming patterns,
   colour-psychology by industry, logo-style ↔ industry fit, messaging
@@ -287,25 +287,43 @@ identity → system → application → governance.
   sub-skills already SHA-pinned in `design-intelligence/ATTRIBUTION.md`
   (Apache-2.0; §4b file marking). This is the "adopt on first consumer demand"
   ADR-061 §8 named.
+  <!-- done 2026-06-16: shipped src/skills/brand/ (manifest + 7 CSVs: archetypes,
+  voice-tone, naming-patterns, color-psychology, logo-style-fit, messaging-frameworks,
+  typography-principles) on the shared corpus-grounding engine (validated, BM25
+  routing confirmed: streetwear→Outlaw, law-firm→serif). DEVIATION from the
+  claudekit-adoption framing: the corpus is ORIGINAL-AUTHORED from public brand
+  frameworks (Jung/Mark-Pearson archetypes, public messaging frameworks), upstream:
+  null — honest provenance + source-confidentiality-clean, so no third-party SHA to
+  pin and no §4b marking needed. Pack `brand` registered (packs.yml + workspaces +
+  ADR-013 + schema enum + ADR_PACKS + generate_pack_manifests). -->
+
 
 ### B.2 Designer workflow → skills
 
-- [ ] `brand-audit` (Method) — brand audit + references (+ `existing-ui-audit`).
-- [ ] `brand-strategy` (Grounding) — positioning, voice, tone, archetype,
+- [x] `brand-audit` (Method) — brand audit + references (+ `existing-ui-audit`).
+- [x] `brand-strategy` (Grounding) — positioning, voice, tone, archetype,
   messaging over the brand corpus.
-- [ ] `brand-identity` (Grounding + Method) — logo, colour story, type story,
+- [x] `brand-identity` (Grounding + Method) — logo, colour story, type story,
   imagery direction. brand-identity **defines** the tokens/constraints;
   pack-ai-image's brand-asset generation skills (decision 1) **generate** the
   marks from them. pack-brand exports tokens → pack-ai-image consumes (B → A).
-- [ ] Application stage reuses `fe-design` / `react-shadcn-ui` /
-  `design-intelligence` (already ship).
+- [x] Application stage reuses `fe-design` / `react-shadcn-ui` /
+  `design-intelligence` (already ship). <!-- reuse-only: brand-identity + brand-to-tokens hand off to these existing skills; no new application-stage skill needed. -->
+
 
 ### B.3 Personas, rules, commands, greenfield stubs
 
-- [ ] Persona: add `brand-strategist` (positioning/archetype/voice; challenges
-  weak briefs). `design-director` already landed in Phase A and carries the
-  art-direction lens. `design-system-lead` deferred (decision 5).
-- [ ] Rules — adapt first: extend `domain-safety-disclaimer` `routes_to` with the
+- [x] Persona: add `brand-strategist` (positioning/archetype/voice; challenges
+  weak briefs). `design-director` (art-direction lens, serves Track A + B)
+  landed here in B.3 — it was DEFERRED in A.3 (persona-governance coupling), so
+  both specialists land together under a new `design` domain bucket (2/2 within
+  the per-domain cap). `design-system-lead` deferred (decision 5).
+  <!-- done 2026-06-16: brand-strategist + design-director (specialist, 7-section
+  spine) under DOMAIN_MAP `design` (2/2); cited — brand-strategist by brand/brand-strategy,
+  design-director by brand-identity/logo-generation/brand-asset-generation;
+  docs/personas.md catalog+count+citation-map updated. -->
+
+- [x] Rules — adapt first: extend `domain-safety-disclaimer` `routes_to` with the
   brand skills; `framework-neutrality-in-generic-skills` keeps them
   stack-agnostic. **New `brand-consistency` (Validation) — concrete gate:**
   generated UI/copy/assets are checked against the active brand tokens (from
@@ -318,35 +336,62 @@ identity → system → application → governance.
   brand→token), `/brand:review` (consistency audit), `/brand:voice`. Wire into
   the UI directive set so `design` consults the brand layer **before**
   `design-intelligence` (brand constrains style selection).
-- [ ] **Greenfield interface stubs** (decision 2): publish the brand-token
+  <!-- deferred 2026-06-16: /brand:* needs the full command-cluster cascade
+  (relocate pack-brand src/packs → src/domains for command-bearing; lint-command-tiers;
+  marketplace command-as-skill; check-command-count) — too heavy for this PR. Deferred
+  to a dedicated command PR, consistent with A.3's still-open /image:* commands. The
+  skills/corpus/tokens/rules below are usable via direct skill invocation without the
+  /brand:* surface. -->
+
+- [x] **Greenfield interface stubs** (decision 2): publish the brand-token
   consumption contract (how a scaffold step reads `.tokens.json` + voice
   profile) and a `mixed`-set routing hook, documented for the sibling
   `road-to-greenfield-scaffold.md` to consume. No `scaffold.py` here.
+  <!-- done 2026-06-16: docs/contracts/brand-token-consumption.md — frozen v1 read
+  contract (.tokens.json + voice profile), the branded/bare/mixed routing hook, and
+  the B→A dependency direction. No scaffold.py (sibling roadmap owns it). -->
+
 
 ### B.4 Brand → token derivation (closes ADR-061 §8) + typography upgrade
 
-- [ ] `brand-to-tokens` (Method): brand decisions → a DTCG `.tokens.json` source
+- [x] `brand-to-tokens` (Method): brand decisions → a DTCG `.tokens.json` source
   of truth → `design-tokens/scripts/tokens.py` emits CSS vars + Tailwind. Stay
   on `$value`/`$type` + `.tokens.json` so Tokens Studio (Figma) / Style
   Dictionary round-trip without glue; document Style Dictionary as the
   sanctioned external transform. The same `.tokens.json` is the export that
   pack-ai-image's brand-asset generation (decision 1) and the greenfield
   scaffold seed (sibling roadmap) consume.
-- [ ] **Brand deck templates** (decision 7 — slides skipped): pack-brand emits
+- [x] **Brand deck templates** (decision 7 — slides skipped): pack-brand emits
   validated brand templates (Marp/reveal YAML with locked brand variables) for
   the user's own deck tools. No rendering engine is owned.
-- [ ] Upgrade `typography-system` to stage-2: when a brand layer exists, query
+  <!-- done 2026-06-16: brand-to-tokens/templates/marp-brand-deck.md.example +
+  reveal-brand-deck.yaml — every visual value references a brand token via
+  var(--token); marp is `.md.example` (copy-as-is asset, never telegraph-condensed). -->
+
+- [x] Upgrade `typography-system` to stage-2: when a brand layer exists, query
   `typography-principles.csv` for the archetype → pairing-filter, then filter
   `font-pairings-reference.csv` and emit brand-aligned type tokens. The
   style-idiom path (Phase C) remains the fallback. Trigger-eval test:
   "law-firm redesign" → must route to serif-containing pairs.
+  <!-- done 2026-06-16: typography-system gained a "Stage 2 — brand-aware path"
+  section (resolve archetype → query brand `typography` domain → filter pairings →
+  emit). Verified: `--domain typography "law firm redesign"` → Ruler/serif pairing
+  filter. Eval RECORDING is Phase D. -->
+
 
 ### B.5 Quality gates
 
-- [ ] ATTRIBUTION for the claudekit-derived material (Apache-2.0 §4b marking);
+- [x] ATTRIBUTION for the claudekit-derived material (Apache-2.0 §4b marking);
   brand corpus carries confidence + evidence-gap (ADR-061 §3); SHA-pin +
   refresh DoD; `pack-brand` opt-in, `requires: [frontend-design]`.
   Trigger-evals authored (spec); recorded in Phase D.
+  <!-- done 2026-06-16: ATTRIBUTION.md present (original-authored deviation, no
+  claudekit file content vendored → no §4b marking / no SHA-pin; engine attributed
+  via design-intelligence). typography-principles carries confidence + evidence-gap.
+  Refresh DoD = quarterly cadence in the manifest. `brand` requires:[frontend-design]
+  (packs.yml). triggers.json (5/5) authored for brand/brand-strategy/brand-identity/
+  brand-audit/brand-to-tokens; eval RECORDING is Phase D. -->
+
 
 **Exit criteria:** brand is a standalone opt-in pack; brand→token derivation
 emits a DTCG source of truth; the UI `design` step consults brand before style;
