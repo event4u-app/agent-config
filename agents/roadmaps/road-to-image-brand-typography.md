@@ -151,12 +151,15 @@ independent and provides the logo/asset path Phase B consumes.
 
 ### A.2 Pack + providers
 
-- [ ] New pack `pack-ai-image` mirroring `ai-video`'s manifest shape
+- [x] New pack `pack-ai-image` mirroring `ai-video`'s manifest shape
   (`trust_level_default: experimental`, `size_class: large`, `FIRST_WIN.md`,
   `time_to_first_value_minutes`); `requires: []`, `suggests: [ai-video]`.
   Ship in `balanced` + `full`; `minimal` stays text-only.
-  <!-- deferred: a pack with zero skills/commands is empty/invalid (artefact_count=0);
-  the manifest + generated-surface cascade ships WITH A.3's skills/commands. -->
+  <!-- 2026-06-16: shipped as a manifest-only capability pack (src/packs/ai-image/,
+  registered in packs.yml + small-business optional_packs; suggests:[ai-video]).
+  It became non-empty once A.3's first 2 skills landed (artefact_count=2).
+  size_class=medium + FIRST_WIN.md/onboarding + the balanced/full split deferred to
+  the command-bearing cut (relocates to src/domains/) when /image:* commands land. -->
 - [ ] Promote/extend adapters under the moved substrate, each per
   `provider-lifecycle-discipline` (scaffold → live-validated → stable, with
   smoke evidence):
@@ -180,6 +183,11 @@ independent and provides the logo/asset path Phase B consumes.
   model from job shape: needs-text? photoreal? budget? 4K?), `image-editing`
   (Method — inpaint/edit/variation where supported),
   `prompt-engineering-image` (Method/Reference — per-provider prompt grammar).
+  <!-- 2026-06-16: 2/4 shipped — `image-provider-routing` + `prompt-engineering-image`
+  (the two that are genuinely testable now: select + prompt-grammar, no live render).
+  `image-generation` + `image-editing` DEFERRED until the adapters leave scaffold
+  tier — shipping "generate"/"edit" skills over dry-run-only adapters is fake
+  capability (council 2026-06-16). -->
 - [ ] **Brand-asset generation skills** (decision 1 — ADOPTED, overturns §9; ride
   on the adapters above, not a second stack): `logo-generation`,
   `brand-asset-generation` (banner / social / CIP) — structured prompting +
@@ -194,6 +202,10 @@ independent and provides the logo/asset path Phase B consumes.
   `media-sync-ground-truth` `routes_to` to the new skills; add one **new**
   rule `image-likeness-and-rights` (real faces, trademark, model-license) as
   a child of the media-governance floor.
+  <!-- 2026-06-16: the new `image-likeness-and-rights` rule shipped (tier-2a,
+  child of the media-governance floor, references the media/*.md policies).
+  The media-governance-routing `routes_to` extension to the A.3 skills is pending
+  the remaining skills. -->
 - [ ] Persona: add `design-director` (composition, art direction, brand-aligned
   visual judgment — serves A and B) within the `persona-governance` cap;
   reuse `ai-video-technical-director` / `hollywood-director` for the
