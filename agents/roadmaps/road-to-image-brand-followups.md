@@ -48,14 +48,26 @@ response parsing — which only live calls exercise.
 
 <!-- HUMAN-ACTION: live Anthropic token spend, per-skill. Operator-run, not autonomous. -->
 
-- [ ] Run `task test-triggers-live -- <skill>` once per corpus-backed skill
+- [x] Run `task test-triggers-live -- <skill>` once per corpus-backed skill
   (`design-intelligence` first, then the A/B/C skills) and `eval:record` each
   result so every description-routed skill carries a passing
   `upstream.last_eval` (parent Phase D backfill — the only item left there).
-- [ ] After the backfill records `last_eval` for the SHA-pinned corpora, wire
+  <!-- done 2026-06-16: operator-run live eval for design-intelligence (router
+  anthropic, P/R 1.0/1.0, passed); `eval:record` patched src + dist manifest
+  (sha b7e3af80). It is the ONLY SHA-pinned corpus the freshness lint flags;
+  `brand` is upstream:null (original-authored) → exempt, no SHA to pin. The
+  other A/B/C skills are plain (no SHA-pinned manifest) → out of the gate's scope. -->
+- [x] After the backfill records `last_eval` for the SHA-pinned corpora, wire
   `lint-eval-freshness` into the `ci-fast` blocking `deps` aggregate (one-line
   add) so the freshness gate goes blocking. It is intentionally non-blocking
   until the corpora carry a recorded `last_eval`.
+  <!-- done 2026-06-16: added `- task: lint-eval-freshness` next to
+  `check-trigger-evals` in the `ci` + `ci-strict` aggregates (Taskfile.yml);
+  lint now clean so the gate is blocking-safe. Also fixed a Phase-D defect:
+  `eval:record` was registered in commander + the registry but omitted from
+  main.ts's hardcoded native-dispatch allowlist, so the documented
+  `agent-config eval:record` path returned "unknown command" (unit tests pass
+  because they call runRecordTriggerEval directly). -->
 
 ## Phase 3 — Command clusters + namespace decision
 
@@ -104,8 +116,10 @@ moment the substrate is already under active test.
 
 - [ ] All four image adapters live-validated with smoke evidence; `image-generation`
   / `image-editing` ship over live adapters (no fake capability).
-- [ ] Every corpus-backed skill carries a passing `upstream.last_eval`;
-  `lint-eval-freshness` is blocking in `ci-fast`.
+- [x] Every corpus-backed skill carries a passing `upstream.last_eval`;
+  `lint-eval-freshness` is blocking in `ci-fast`. <!-- done 2026-06-16:
+  design-intelligence recorded; brand exempt (upstream:null); gate wired into
+  ci/ci-strict. -->
 - [ ] The `/image:` namespace decision is recorded; both command clusters ship
   with the cascade green (tiers, marketplace, count).
 - [ ] `openai-images` retargeted to the published successor (or this phase
