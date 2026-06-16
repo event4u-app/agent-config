@@ -95,19 +95,7 @@ Never dump isolated observations without synthesis.
 
 ## Procedure: Autonomous investigation loop
 
-When running a broad investigation, repeat until confident:
-
-```
-1. Assess current understanding
-2. Identify biggest unknown
-3. Choose specialist skill to fill that gap
-4. Execute analysis
-5. Evaluate result — did it answer the question?
-6. Update mental model
-7. Decide: narrow down or broaden scope?
-8. If confident → synthesize and present
-   If not → loop back to step 2
-```
+Constraint: **attack the biggest unknown first.** Pick the largest gap in your understanding, route the right specialist skill at it, re-assess the result against the question, and repeat — narrowing or broadening scope as the evidence dictates — until confident; then synthesize and present. The loop is biggest-unknown-first, not breadth-first.
 
 ## Adaptation rules
 
