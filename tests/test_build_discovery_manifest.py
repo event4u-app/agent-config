@@ -108,6 +108,53 @@ def test_empty_tree_yields_zero_stats(repo: Path) -> None:
     assert manifest["artefacts"] == []
 
 
+def test_manifest_is_v2_with_tier_deprecation_signal(repo: Path) -> None:
+    """road-to-tier-removal Phase 1 / ADR-092: the manifest is v2 and carries a
+    machine-readable `deprecations` block announcing the integer command `tier`
+    alias, so external consumers can migrate to `visibility` during the soak.
+    Signal-only — `tier` removal is Phase 4 and is NOT done here."""
+    manifest, _ = mod._build(strict=False)
+    assert manifest["version"] == 2
+    deps = manifest["deprecations"]
+    assert isinstance(deps, list) and len(deps) >= 1
+    tier_dep = next(d for d in deps if d["key"] == "tier")
+    assert tier_dep["replacement"] == "visibility"
+    assert tier_dep["scope"] == "command"
+    assert tier_dep["sunset"] is None  # maintainer-owned; null until soak clears
+
+
+def test_command_entry_still_dual_emits_tier_non_breaking(repo: Path) -> None:
+    """Phase 1 is non-breaking: a command carrying `tier:` keeps emitting BOTH
+    `tier` (the deprecated alias) and `visibility` into its manifest entry. The
+    deprecation is announced (above), not enforced — removal is Phase 4."""
+    cmd = repo / ".agent-src.uncondensed" / "commands" / "demo" / "command.md"
+    cmd.parent.mkdir(parents=True, exist_ok=True)
+    cmd.write_text(
+        textwrap.dedent(
+            """\
+            ---
+            name: demo
+            description: "fixture command"
+            tier: 1
+            visibility: advanced
+            workspaces:
+              - engineering
+            packs:
+              - engineering-base
+            ---
+            body
+            """
+        ),
+        encoding="utf-8",
+    )
+    manifest, _ = mod._build(strict=False)
+    entries = [e for e in manifest["artefacts"] if e.get("category") == "command"]
+    assert entries, "expected a command entry"
+    entry = entries[0]
+    assert entry["tier"] == 1  # alias still emitted (non-breaking)
+    assert entry["visibility"] == "advanced"  # canonical field
+
+
 def test_single_skill_carries_checksum(repo: Path) -> None:
     _write_skill(repo, "sample-a")
     manifest, _ = mod._build(strict=False)
