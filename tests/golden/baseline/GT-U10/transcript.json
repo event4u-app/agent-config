@@ -37,7 +37,9 @@
           "components_found": [],
           "design_tokens": {}
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -97,7 +99,9 @@
           "design_tokens": {},
           "greenfield_decision": "bare"
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -160,6 +164,7 @@
           "greenfield_decision": "bare",
           "audit_path": "greenfield"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column demo page, max-w-3xl, header + body",
           "components": [
@@ -189,6 +194,7 @@
           },
           "reused_from_audit": []
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -251,6 +257,7 @@
           "greenfield_decision": "bare",
           "audit_path": "greenfield"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column demo page, max-w-3xl, header + body",
           "components": [
@@ -281,6 +288,7 @@
           "reused_from_audit": [],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -357,6 +365,7 @@
           "greenfield_decision": "bare",
           "audit_path": "greenfield"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column demo page, max-w-3xl, header + body",
           "components": [
@@ -387,6 +396,7 @@
           "reused_from_audit": [],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -460,6 +470,7 @@
           "greenfield_decision": "bare",
           "audit_path": "greenfield"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column demo page, max-w-3xl, header + body",
           "components": [
@@ -490,6 +501,7 @@
           "reused_from_audit": [],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -575,6 +587,7 @@
           "greenfield_decision": "bare",
           "audit_path": "greenfield"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column demo page, max-w-3xl, header + body",
           "components": [
@@ -605,6 +618,7 @@
           "reused_from_audit": [],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true

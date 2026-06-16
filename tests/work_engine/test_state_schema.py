@@ -364,6 +364,184 @@ class TestUiAuditEnvelope:
             from_dict(payload)
 
 
+class TestAppSpecEnvelope:
+    """``state.app_spec`` is the greenfield-scaffold-Phase-2 grounding slice.
+
+    Schema rules: ``None`` is the default (the app-spec gate has not
+    run, or the flow is not greenfield scaffold). When present,
+    ``pages`` / ``entity_model`` (if set) must be lists, ``flow_map``
+    (if set) must be a list or object, and ``confirmed`` / ``bypassed``
+    (if set) must be bools. Other keys are content the schema does not
+    police.
+    """
+
+    def test_default_app_spec_is_none(self) -> None:
+        state = _build_state()
+        assert state.app_spec is None
+        assert to_dict(state)["app_spec"] is None
+
+    def test_app_spec_round_trips(self) -> None:
+        spec = {
+            "pages": ["Dashboard", "Board"],
+            "entity_model": ["Board", "Task"],
+            "flow_map": {"Dashboard": ["Board"]},
+            "confirmed": True,
+            "bypassed": False,
+        }
+        state = _build_state(app_spec=spec)
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt.app_spec == spec
+
+    def test_flow_map_accepts_list(self) -> None:
+        state = _build_state(app_spec={"pages": ["Home"], "flow_map": []})
+        rebuilt = from_dict(to_dict(state))
+        assert rebuilt.app_spec["flow_map"] == []
+
+    def test_rejects_non_list_pages(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "app_spec": {"pages": "Home"},
+        }
+
+        with pytest.raises(SchemaError, match="state.app_spec.pages must be a list"):
+            from_dict(payload)
+
+    def test_rejects_non_bool_confirmed(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "app_spec": {"pages": ["Home"], "confirmed": "yes"},
+        }
+
+        with pytest.raises(SchemaError, match="state.app_spec.confirmed"):
+            from_dict(payload)
+
+    def test_rejects_bad_flow_map(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "app_spec": {"pages": ["Home"], "flow_map": "linear"},
+        }
+
+        with pytest.raises(SchemaError, match="state.app_spec.flow_map"):
+            from_dict(payload)
+
+    def test_rejects_app_spec_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "app_spec": ["not", "an", "object"],
+        }
+
+        with pytest.raises(SchemaError, match="state.app_spec must be a JSON object"):
+            from_dict(payload)
+
+
+class TestUiScaffoldEnvelope:
+    """``state.ui_scaffold`` is the greenfield-scaffold-Phase-3 plan slice.
+
+    Schema rules: ``None`` is the default. When present, ``pages`` /
+    ``routes`` / ``component_manifest`` / ``artifacts`` (if set) must be
+    lists, ``layout_strategy`` (if set) must be a string, ``token_seed``
+    (if set) must be an object, and ``scaffolded`` (if set) must be a
+    bool. Other keys are content the schema does not police.
+    """
+
+    def test_default_ui_scaffold_is_none(self) -> None:
+        state = _build_state()
+        assert state.ui_scaffold is None
+        assert to_dict(state)["ui_scaffold"] is None
+
+    def test_ui_scaffold_round_trips(self) -> None:
+        plan = {
+            "pages": ["Dashboard", "Board"],
+            "routes": ["/", "/board/:id"],
+            "layout_strategy": "sidebar-shell",
+            "component_manifest": ["AppShell", "BoardGrid"],
+            "token_seed": {"radius": "0.5rem", "primary": "#2563eb"},
+            "scaffolded": True,
+            "artifacts": ["src/App.tsx"],
+        }
+        state = _build_state(ui_scaffold=plan)
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt.ui_scaffold == plan
+
+    def test_rejects_non_list_routes(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_scaffold": {"routes": "/"},
+        }
+
+        with pytest.raises(SchemaError, match="state.ui_scaffold.routes must be a list"):
+            from_dict(payload)
+
+    def test_rejects_non_string_layout_strategy(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_scaffold": {"layout_strategy": ["sidebar"]},
+        }
+
+        with pytest.raises(SchemaError, match="layout_strategy must be a string"):
+            from_dict(payload)
+
+    def test_rejects_non_object_token_seed(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_scaffold": {"token_seed": ["primary"]},
+        }
+
+        with pytest.raises(SchemaError, match="token_seed must be a JSON object"):
+            from_dict(payload)
+
+    def test_rejects_non_bool_scaffolded(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_scaffold": {"routes": ["/"], "scaffolded": "yes"},
+        }
+
+        with pytest.raises(SchemaError, match="state.ui_scaffold.scaffolded"):
+            from_dict(payload)
+
+    def test_rejects_ui_scaffold_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_scaffold": ["not", "an", "object"],
+        }
+
+        with pytest.raises(
+            SchemaError, match="state.ui_scaffold must be a JSON object",
+        ):
+            from_dict(payload)
+
+
 class TestContractEnvelope:
     """``state.contract`` is the R3-Phase-4 sentinel written by ``mixed.contract``.
 

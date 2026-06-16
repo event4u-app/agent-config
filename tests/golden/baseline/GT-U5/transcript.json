@@ -47,7 +47,9 @@
         "directive_set": "mixed",
         "stack": null,
         "ui_audit": null,
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": {
@@ -178,7 +180,9 @@
         "directive_set": "mixed",
         "stack": null,
         "ui_audit": null,
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": {
@@ -328,6 +332,7 @@
             ]
           }
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form on /feedback, max-w-md",
           "components": [
@@ -351,6 +356,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -524,6 +530,7 @@
             ]
           }
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form on /feedback, max-w-md",
           "components": [
@@ -547,6 +554,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -732,6 +740,7 @@
             ]
           }
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form on /feedback, max-w-md",
           "components": [
@@ -755,6 +764,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -948,6 +958,7 @@
             ]
           }
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form on /feedback, max-w-md",
           "components": [
@@ -971,6 +982,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true

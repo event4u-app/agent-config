@@ -5,16 +5,7 @@
     "data": {
       "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
       "reconstructed_ac": [],
-      "assumptions": [],
-      "ui_apply": {
-        "summary": "Marketing landing page scaffolded with locked microcopy",
-        "rendered": {
-          "resources/views/marketing/landing.blade.php": "Ship faster with our SaaS platform. Deploy in minutes, not days. Start free trial."
-        },
-        "files": [
-          "resources/views/marketing/landing.blade.php"
-        ]
-      }
+      "assumptions": []
     }
   },
   "intent": "ui-build",
@@ -26,6 +17,20 @@
     "design_tokens": {},
     "greenfield_decision": "scaffold",
     "audit_path": "greenfield"
+  },
+  "app_spec": {
+    "pages": [
+      "Landing"
+    ],
+    "entity_model": [
+      "SignupLead"
+    ],
+    "flow_map": {
+      "Landing": [
+        "signup-submit"
+      ]
+    },
+    "confirmed": true
   },
   "ui_design": {
     "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
@@ -57,9 +62,9 @@
       "focus": "skip link to main content; CTA receives focus on success",
       "aria_live": "success message announced via aria-live=polite"
     },
-    "reused_from_audit": [],
-    "design_confirmed": true
+    "reused_from_audit": []
   },
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,
@@ -74,15 +79,13 @@
   "outcomes": {
     "refine": "success",
     "memory": "success",
-    "analyze": "success",
-    "plan": "success",
-    "implement": "blocked"
+    "analyze": "blocked"
   },
   "questions": [
-    "@agent-directive: ui-apply-plain",
-    "> Stack: `plain`. Implementing the locked design brief.",
-    "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
-    "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+    "@agent-directive: ui-design-brief",
+    "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+    "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+    "> 1. Continue — produce the brief from audit findings",
     "> 2. Abort — drop this UI request"
   ],
   "report": ""

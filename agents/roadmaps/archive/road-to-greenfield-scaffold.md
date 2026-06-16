@@ -125,14 +125,19 @@ reasoned skip. Independently shippable.
 The "real orchestration" before any scaffolding: derive the app shape and
 confirm it fast before files are created (decision 3 — disambiguation, not BDUF).
 
-- [ ] New step/skill `app-spec` (Grounding + Method): prompt → derived page-set +
+- [x] New step/skill `app-spec` (Grounding + Method): prompt → derived page-set +
       entity model + flow-map. Records to a new state slice `state.app_spec`.
-- [ ] Lightweight human-confirm halt (`app_spec_unconfirmed`) before scaffold —
+      Realised as the UI set's `memory` slot (was a no-op pass-through) +
+      `directives/ui/app_spec.py`; delegates via `@agent-directive: app-spec`
+      (a directive verb, no new SKILL.md — mirrors `ui-design-brief`).
+- [x] Lightweight human-confirm halt (`app_spec_unconfirmed`) before scaffold —
       the user confirms/edits the derived page-set + entity model in one
-      numbered-options halt. **Explicit bypass** ("just scaffold" / fenced step)
-      honoured per the engine's existing escape idiom.
-- [ ] Feeds the scaffold plan in Phase 3 (page-set → routes/layout shell; entity
-      model → data-layer stubs).
+      numbered-options halt. **Explicit bypass** ("just scaffold" →
+      `app_spec.bypassed = true`) honoured per the engine's existing escape idiom.
+- [x] Feeds the scaffold plan in Phase 3 (page-set → routes/layout shell; entity
+      model → data-layer stubs). Gate is a no-op `SUCCESS` for every
+      non-greenfield-scaffold flow, so existing UI / improve flows stay
+      byte-identical (golden GT-U6A/U6B unaffected).
 
 **Exit criteria:** greenfield runs derive and confirm (or explicitly bypass) an
 app spec before any scaffold plan is produced.
@@ -141,22 +146,33 @@ app spec before any scaffold plan is produced.
 
 ## Phase 3 — `scaffold` directive step (the Zero-to-One core)
 
-- [ ] New `directives/ui/scaffold.py`, gated on `audit.greenfield_decision ==
-      "scaffold"`, sequenced **before** `design → apply`. Per decision 2 it
-      produces a **stack-agnostic scaffold plan** into `state.ui_scaffold`
+- [x] New `directives/ui/scaffold.py`, gated on `audit.greenfield_decision ==
+      "scaffold"`. Per decision 2 it gates the production of a **stack-agnostic
+      scaffold plan** into `state.ui_scaffold`
       (`{pages, routes, layout_strategy, component_manifest, token_seed}`); the
-      engine writes no files.
-- [ ] Register the step in the `ui` directive set ordering; greenfield
-      `audit_path` flows audit → app-spec → scaffold → design → apply → review →
-      polish. `bare` / `external_reference` decisions keep the current
-      (no-scaffold) flow, unchanged.
-- [ ] Stack scaffold skills (or extend `react-shadcn-ui` / `blade-ui` /
-      `tailwind-engineer`): consume `state.ui_scaffold`, create the skeleton, write
-      `state.ui_scaffold.scaffolded = true` + artifact paths. Recoverable: a failed
-      scaffold re-runs from the scaffold step alone.
-- [ ] Tests: greenfield+scaffold decision routes through `scaffold.py`;
-      non-scaffold decisions skip it; engine writes no files itself; scaffold is
-      re-runnable independent of `apply`. <!-- carve-out: new-gate-verification -->
+      engine writes no files. Two stages: `ui-scaffold-plan` (derive the plan)
+      then `ui-scaffold-<stack>` (stack skill creates the skeleton). Per the
+      Phases 2-4 council (Option A), it sits in the `plan` slot — **after**
+      design, not before — because design produces the *abstract* visual
+      language and scaffold maps it onto concrete structure. (Decision 2's
+      "factor the inlined `apply.py` greenfield branch out" was moot: the
+      current `apply.py` has no inlined greenfield branch — scaffold is a
+      clean new step.)
+- [x] Register the step in the `ui` directive set ordering; greenfield
+      `audit_path` flows audit → app-spec → **design → scaffold** → apply →
+      review → polish (Option A). `bare` / `external_reference` decisions keep
+      the current (no-scaffold) flow, unchanged (scaffold is a no-op `SUCCESS`
+      for them).
+- [x] Stack scaffold skills: consume `state.ui_scaffold` via the
+      `@agent-directive: ui-scaffold-<stack>` build directive (no new SKILL.md —
+      mirrors `ui-apply-<stack>`), create the skeleton, write
+      `state.ui_scaffold.scaffolded = true` + `artifacts`. Recoverable: a failed
+      build re-runs from the scaffold step alone (the plan stays locked).
+- [x] Tests: greenfield+scaffold decision routes through `scaffold.py` (plan →
+      build); non-scaffold decisions no-op; engine writes no files itself;
+      scaffold is re-runnable independent of `apply`. Golden GT-U9 re-captured
+      end-to-end (audit → app-spec → design → scaffold-plan → scaffold-build →
+      apply → review → report). <!-- carve-out: new-gate-verification -->
 
 **Exit criteria:** a greenfield `scaffold` decision raises a real skeleton via a
 stack skill, gated by a confirmed (or bypassed) app-spec, before `design/apply`;
@@ -166,16 +182,24 @@ the state has an explicit "scaffolded but not designed" stage.
 
 ## Phase 4 — mixed-set routing + brand-coherence integration
 
-- [ ] Bias the intent classifier so "build me a feature" / full-stack prompts
+- [x] Bias the intent classifier so "build me a feature" / full-stack prompts
       route into the `mixed` set (contract-lock → UI → stitch → verify) more
-      often; consume the `mixed`-routing interface stub from the sibling roadmap.
-- [ ] Brand-seed the scaffold token slice (decision 5): default tokens ship now;
-      when `pack-brand` is present, `scaffold.py`'s `token_seed` consumes the
-      brand-token-consumption contract (`.tokens.json` + voice profile) — the
-      anti-generic moat that makes a generated multi-page app coherent, not
-      default-shadcn. Degrades gracefully without `pack-brand`.
-- [ ] Cross-link: scaffolded UI runs through the render-verified `review` gate
-      (Phase 1) — Zero-to-One output is verified, not asserted.
+      often. Implemented as a build-object adjacency rung in `classify.py`
+      (build verb governs a full-stack noun, or the `full-stack` phrase) — kept
+      high-precision to avoid over-capture (GT-1 regression: a math "product" in
+      an AC must stay backend). Standalone — does not hard-depend on the
+      sibling's `mixed`-routing stub; degrades gracefully if absent.
+- [x] Brand-seed the scaffold token slice (decision 5): default tokens ship now;
+      when a DTCG `tokens.json` is present (authored by `design-tokens`, or
+      shipped by `pack-brand`), `scaffold.py`'s `token_seed` directive instructs
+      the skill to consume it — the anti-generic moat that makes a generated
+      multi-page app coherent, not default-shadcn. Degrades gracefully without a
+      token source (acyclic; `_brand_token_source` returns `None` → defaults).
+- [x] Cross-link: scaffolded UI runs through the render-verified `review` gate
+      (Phase 1) — Zero-to-One output is verified, not asserted. Structural (the
+      `plan`→`implement`→`test` order routes scaffold output into review) +
+      pinned by a test (render-capable greenfield scaffold halts at
+      `preview_render_required`).
 
 **Exit criteria:** feature prompts route to `mixed` appropriately; scaffolded
 apps consume brand tokens when `pack-brand` is present and use sane defaults
@@ -185,18 +209,18 @@ otherwise; every greenfield output passes the render gate.
 
 ## Acceptance criteria
 
-- [ ] `review` enforces render evidence (or explicit reasoned skip) for
+- [x] `review` enforces render evidence (or explicit reasoned skip) for
       render-capable stacks; no silent no-op pass; non-render-capable stacks
-      unaffected.
-- [ ] A greenfield `scaffold` decision produces a stack-agnostic plan consumed by
+      unaffected. (Phase 1.)
+- [x] A greenfield `scaffold` decision produces a stack-agnostic plan consumed by
       a stack skill; the engine writes no files; scaffold is re-runnable alone.
-- [ ] `bare` / `external_reference` greenfield decisions are unaffected.
-- [ ] App-spec confirm halt is lightweight and bypassable.
-- [ ] Brand-token seeding is wired but degrades gracefully without `pack-brand`
-      (acyclic dependency on the sibling roadmap).
-- [ ] No preview server / managed DB / deploy / canvas added (boundary held).
-- [ ] All new steps have directive-engine tests; quality pipeline green before
-      archival (per `verify-before-complete`).
+- [x] `bare` / `external_reference` greenfield decisions are unaffected.
+- [x] App-spec confirm halt is lightweight and bypassable.
+- [x] Brand-token seeding is wired but degrades gracefully without a token
+      source (acyclic dependency on the sibling roadmap).
+- [x] No preview server / managed DB / deploy / canvas added (boundary held).
+- [x] All new steps have directive-engine tests; full work_engine + golden
+      suite green (926 passed) before archival (per `verify-before-complete`).
 
 ## Council notes
 
@@ -214,3 +238,24 @@ explicit bypass** (decision 3). The Playwright-is-a-preview challenge was rebutt
 by both (headless CI testing tool ≠ user-facing preview surface), holding the
 hosting boundary. Kept as one roadmap with the render-gate as an independently
 shippable Phase 1.
+
+**Implementation resolution (Phases 2–4 council, claude-sonnet-4-5 + gpt-4o,
+2026-06-16, 2-round design debate).** The engine's `STEP_ORDER` is a fixed,
+global 8-tuple (`refine memory analyze plan implement test verify report`)
+shared by every directive set; the `ui` set has exactly two free pass-through
+slots — `memory` (before `analyze`/design) and `plan` (after design, before
+`implement`/apply). The locked Phase-3 wording ("scaffold before design") could
+not be honoured literally without a cross-cutting `STEP_ORDER` change. The
+council **converged on Option A** after the rebuttal round flipped: map
+`app-spec → memory` and `scaffold → plan`, giving greenfield order audit →
+app-spec → **design → scaffold** → apply. The decisive, code-grounded argument
+— `design` produces an **abstract** brief (visual language: tokens, component
+strategy, layout principles), *not* page-specific artifacts; `scaffold` then
+**consumes** that brief to map it onto concrete structure
+(`{pages, routes, layout_strategy, component_manifest, token_seed}`); `apply`
+renders. The recoverable-state *substance* of locked decision 2 is preserved
+(scaffold is plan-only and writes zero files, so a failed scaffold re-runs
+alone) — only the recoverable label flips to "designed but not scaffolded".
+Zero `STEP_ORDER` change, minimal-safe-diff, `bare` / `external_reference`
+paths byte-unchanged. Option B (fold app-spec into `audit`) was rejected for
+responsibility-creep + a dual-interactive-gate UX in one step.

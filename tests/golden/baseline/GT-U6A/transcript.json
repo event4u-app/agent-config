@@ -75,6 +75,7 @@
           },
           "audit_path": "high_confidence"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "sidebar empty-state slot, vertically centered",
           "components": [
@@ -108,6 +109,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true,
@@ -216,6 +218,7 @@
           },
           "audit_path": "high_confidence"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "sidebar empty-state slot, vertically centered",
           "components": [
@@ -249,6 +252,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true,

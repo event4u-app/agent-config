@@ -51,7 +51,9 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -124,6 +126,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -158,6 +161,7 @@
             "wizards.step"
           ]
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -232,6 +236,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -267,6 +272,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -355,6 +361,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -390,6 +397,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -475,6 +483,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -510,6 +519,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -614,6 +624,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -649,6 +660,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -759,6 +771,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -794,6 +807,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -905,6 +919,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -940,6 +955,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -1052,6 +1068,7 @@
           "audit_path": "high_confidence",
           "candidate_pick": "wizards.step"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "vertical wizard, max-w-2xl, 12px step gap",
           "components": [
@@ -1087,6 +1104,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {

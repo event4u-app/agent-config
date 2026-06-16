@@ -72,6 +72,7 @@
           },
           "audit_path": "high_confidence"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -117,6 +118,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -217,6 +219,7 @@
           },
           "audit_path": "high_confidence"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "single-column form, max-w-md, centered",
           "components": [
@@ -262,6 +265,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true

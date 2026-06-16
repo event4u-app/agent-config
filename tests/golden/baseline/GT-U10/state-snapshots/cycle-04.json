@@ -18,6 +18,7 @@
     "greenfield_decision": "bare",
     "audit_path": "greenfield"
   },
+  "app_spec": null,
   "ui_design": {
     "layout": "single-column demo page, max-w-3xl, header + body",
     "components": [
@@ -48,6 +49,7 @@
     "reused_from_audit": [],
     "design_confirmed": true
   },
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,
