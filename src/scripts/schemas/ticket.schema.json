@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": ["id", "roadmap", "phase", "title", "status", "model_tier", "acceptance", "boundaries"],
   "properties": {
-    "id": { "type": "string", "pattern": "^T-[0-9]{3,}$", "description": "Bundle-local id; the idempotency external key." },
+    "id": { "type": "string", "pattern": "^T-[0-9]{3,}$", "description": "Bundle-local id; stable handle for the ticket." },
     "roadmap": { "type": "string", "description": "Back-link slug (traceability spine)." },
     "phase": { "type": ["integer", "string"], "description": "Roadmap phase the ticket materializes." },
     "title": { "type": "string", "minLength": 1 },

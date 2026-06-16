@@ -15,16 +15,16 @@ A high-tier agent produces a ticket bundle under `agents/tickets/{slug}/`
 A lite-tier agent (or the `work_engine`) picks one ticket, reads only the
 ticket + its SHA-pinned ADRs + assets, builds it, and verifies it against
 runnable acceptance — with file-boundary enforcement and a staleness guard.
-Tickets project idempotently into Linear via the GraphQL API (CSV is an
-optional one-shot bootstrap; Jira deferred).
+A ticket is paste-ready into a Linear/Jira issue (title + Markdown body), or
+created by the agent via a tracker MCP server — no API export (ADR-102).
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, [`roadmap-writing`](../../src/skills/roadmap-writing/SKILL.md), [`roadmap-management`](../../src/skills/roadmap-management/SKILL.md)
-- [ ] Read the work-engine contract: `src/agent-src/templates/scripts/work_engine/` (`state.py`, `dispatcher.py`)
-- [ ] Read the existing ticket chain: `refine-ticket`, `estimate-ticket`, `technical-specification`, `adr-create`, `implement-ticket`; and `src/scripts/build_linear_digest.py` (the only existing Linear surface)
-- [ ] Read `model_tier` semantics (ADR-035) and `src/agent-src/contexts/model-recommendations.md`
-- [ ] A Linear API token path exists (`~/.event4u/agent-config/linear.key` or env) before the Phase-1b spike and Phase 5
+- [x] Read `AGENTS.md`, [`roadmap-writing`](../../src/skills/roadmap-writing/SKILL.md), [`roadmap-management`](../../src/skills/roadmap-management/SKILL.md)
+- [x] Read the work-engine contract: `src/agent-src/templates/scripts/work_engine/` (`state.py`, `dispatcher.py`)
+- [x] Read the existing ticket chain: `refine-ticket`, `estimate-ticket`, `technical-specification`, `adr-create`, `implement-ticket`; and `src/scripts/build_linear_digest.py` (the only existing Linear surface)
+- [x] Read `model_tier` semantics (ADR-035) and `src/agent-src/contexts/model-recommendations.md`
+- [~] A Linear API token path exists (`~/.event4u/agent-config/linear.key` or env) before the Phase-1b spike and Phase 5 <!-- deferred: no Linear token in this environment -->
 
 ## Context
 
@@ -109,6 +109,12 @@ case remains for the 1b spike; (4) staleness uses **split severity** —
 `adr_refs` drift hard-blocks, `source_refs` drift only warns (else SHA-pinning
 churns velocity and multiplies bundles).
 
+**Update (2026-06-16, ADR-102):** the export-transport decisions (GraphQL
+canonical, query/map-first idempotency, `linear_state`, CSV bootstrap, the 1b
+transport spike, the drift check) are **superseded** — ticket handoff is
+**paste or MCP, no API export**. Phase 5 is cancelled accordingly; the bundle
+format, buildability gate, and builder consumption stand.
+
 ## Phase 0: Foundation — format, schema, ADR-101, asset policy
 
 - [x] **Step 1:** Author `docs/contracts/ticket-bundle-format.md` — bundle layout (`agents/tickets/{slug}/`: `T-NNN-{slug}.md`, `T-NNN-{slug}.assets/`, `manifest.yml`), ticket frontmatter schema, ticket body doctrine, Linear/Jira field mapping, asset-link rewrite rule, the self-containedness floor table per `model_tier`, and the bidirectional spine (`<!-- ticket: T-NNN -->` ↔ `roadmap:`/`adrs:`). <!-- ticket: T-002 -->
@@ -128,7 +134,7 @@ churns velocity and multiplies bundles).
 > building machinery. They are independent: the build pilot needs no export.
 
 - [x] **Step 1 (1a — build-pilot, GATE):** Hand-author ticket bundles in the Phase-0 format from an EXISTING roadmap (≥ 3; one lite-, one medium-, one UI/asset-shaped — raise n if signal is ambiguous). Run a build at each ticket's `model_tier` giving the subagent ONLY the ticket + SHA-pinned ADRs + assets. Score vs a high-tier full-context control: stayed inside `must_touch`/`may_touch`? passed acceptance? in scope? Record in `agents/evidence/ticket-bundle-pilot.md`. **Gate is qualitative, not a hard percentage** (a % on n=3 is meaningless): every failure must be root-caused to a *fixable format gap*; proceed only when no unresolved build-blocker class remains. A high clean-rate at larger n is corroborating signal, not the gate itself. <!-- ticket: T-008 -->
-- [ ] **Step 2 (1b — transport-spike):** Against a scratch Linear team via GraphQL: (a) **idempotency mechanism** — confirm whether `issueCreate` exposes a settable external identifier; Linear has no documented external-key upsert, so the likely answer is that our `manifest.linear_state` map is the *sole* idempotency key (query/map-first; see Phase 5). (b) batch **partial-failure** — create 7, force a mid-batch error, confirm a resumable re-run completes without duplicates. (c) **image upload** — the *public-repo case is already solved* (Linear auto-ingests a markdown image URL into its private storage on create); the only open case is **private repos**, where a `raw.githubusercontent.com` URL is unreachable to Linear → resolve via a transient-reachable URL or `attachmentCreate`. (d) `parent` nesting. Record the idempotency key, the partial-failure protocol, and the private-repo asset rule in `agents/evidence/ticket-bundle-pilot.md`. <!-- ticket: T-001 -->
+- [-] **Step 2 (1b — transport-spike):** Against a scratch Linear team via GraphQL: (a) **idempotency mechanism** — confirm whether `issueCreate` exposes a settable external identifier; Linear has no documented external-key upsert, so the likely answer is that our `manifest.linear_state` map is the *sole* idempotency key (query/map-first; see Phase 5). (b) batch **partial-failure** — create 7, force a mid-batch error, confirm a resumable re-run completes without duplicates. (c) **image upload** — the *public-repo case is already solved* (Linear auto-ingests a markdown image URL into its private storage on create); the only open case is **private repos**, where a `raw.githubusercontent.com` URL is unreachable to Linear → resolve via a transient-reachable URL or `attachmentCreate`. (d) `parent` nesting. Record the idempotency key, the partial-failure protocol, and the private-repo asset rule in `agents/evidence/ticket-bundle-pilot.md`. <!-- cancelled: API export dropped — paste/MCP per ADR-102 -->
 
 **Exit criteria:** pilot evidence file written; the ≥75% build gate passed (or format revised + re-piloted); the transport partial-failure + image-upload rules documented.
 **Rollback:** the format is cheap to change here — this phase exists to fail cheap before machinery is built.
@@ -163,20 +169,20 @@ churns velocity and multiplies bundles).
 **Exit criteria:** `/implement-ticket <bundle-path>` drives one dogfood ticket end-to-end; an out-of-boundary edit is caught; an out-of-order pick is refused; golden work_engine fixtures still pass.
 **Rollback:** revert the input-path + guard; `implement-ticket` keeps its 4 existing paths.
 
-## Phase 5: Linear export (GraphQL, idempotent) — gated on token + the 1b spike
+## Phase 5: Tracker handoff — paste / MCP (no API export, ADR-102)
 
-- [x] **Step 1:** Write `src/scripts/build_ticket_export.py`: bundle → Linear via GraphQL. Idempotency is **query/map-first**, NOT a native upsert (Linear has no documented external-key dedup): look up `linear_id` for `T-NNN` in `manifest.linear_state` → if present, skip/verify (v1 immutable: create-once, no content update); if absent, `issueCreate` and record the returned `linear_id`. Implement the resumable batch partial-failure protocol from the 1b spike. <!-- ticket: T-004 -->
-- [x] **Step 2:** Map phases → parent issues, tickets → children; frontmatter → priority/estimate/labels; body → issue description (Markdown); images uploaded per the 1b-resolved rule (auth-gated storage, not raw URLs for private repos).
-- [ ] **Step 3:** Add `agent-config tickets:export --target linear` (default) and an optional `--target csv` one-shot bootstrap clearly labeled non-idempotent.
-- [ ] **Step 4:** Drift check: flag when a Linear issue and its MD ticket diverge (MD is truth); surface the delta.
+- [-] **Step 1:** Write `build_ticket_export.py`: bundle → Linear via GraphQL. Idempotency is **query/map-first**, NOT a native upsert (Linear has no documented external-key dedup): look up `linear_id` for `T-NNN` in `manifest.linear_state` → if present, skip/verify (v1 immutable: create-once, no content update); if absent, `issueCreate` and record the returned `linear_id`. Implement the resumable batch partial-failure protocol from the 1b spike. <!-- cancelled: API export dropped — paste/MCP per ADR-102 -->
+- [-] **Step 2:** Map phases → parent issues, tickets → children; frontmatter → priority/estimate/labels; body → issue description (Markdown); images uploaded per the 1b-resolved rule (auth-gated storage, not raw URLs for private repos). <!-- cancelled: API export dropped — paste/MCP per ADR-102 -->
+- [-] **Step 3:** Add `agent-config tickets:export --target linear` (default) and an optional `--target csv` one-shot bootstrap clearly labeled non-idempotent. <!-- cancelled: API export dropped — paste/MCP per ADR-102 -->
+- [-] **Step 4:** Drift check: flag when a Linear issue and its MD ticket diverge (MD is truth); surface the delta. <!-- cancelled: API export dropped — paste/MCP per ADR-102 -->
 
 **Exit criteria:** exporting this roadmap's bundle creates Linear issues; re-export is idempotent (zero duplicates, `linear_state` populated); a forced mid-batch failure resumes cleanly; the drift check reports a hand-made divergence.
 **Rollback:** delete the exporter + CLI entry; bundles remain local-only and fully usable.
 
 ## Phase 6: Traceability spine + status sync + dashboard
 
-- [ ] **Step 1:** Cross-link discipline: each ticket carries `roadmap` + `adr_refs`; each materialized roadmap step carries `<!-- ticket: T-NNN -->`. Add `lint-roadmap-materialized` (every materialized phase has ≥ 1 ticket; markers resolve both ways).
-- [ ] **Step 2:** Status projection (MD is truth): a sync step projects ticket `status` onto the roadmap checkbox and (when exported) the Linear issue. Define the writeback direction explicitly so dashboard + tracker never become rival truths.
+- [x] **Step 1:** Cross-link discipline: each ticket carries `roadmap` + `adr_refs`; each materialized roadmap step carries `<!-- ticket: T-NNN -->`. Add `lint-roadmap-materialized` (every materialized phase has ≥ 1 ticket; markers resolve both ways).
+- [x] **Step 2:** Status projection (MD is truth): a sync step projects ticket `status` onto the roadmap checkbox and (when exported) the Linear issue. Define the writeback direction explicitly so dashboard + tracker never become rival truths.
 - [ ] **Step 3:** Teach `update_roadmap_progress.py` to read `agents/tickets/_registry.yml` (one scan) so co-existing bundles are counted without touching the flat-roadmap path.
 - [x] **Step 4:** Document the per-ticket + per-bundle kill-switch/rollback (versioned snapshot of the bundle before export) in the format contract.
 
@@ -185,12 +191,12 @@ churns velocity and multiplies bundles).
 
 ## Acceptance criteria
 
-- [ ] A high-tier agent runs `/roadmap:materialize <slug>` and produces a schema-valid `agents/tickets/{slug}/` bundle (tickets + assets + `manifest.yml`) plus a `_registry.yml` entry.
-- [ ] A lite-tier agent builds a single ticket from the ticket + SHA-pinned ADRs + assets alone, stays inside `boundaries`, and passes the ticket's runnable acceptance — proven by the Phase-1a pilot (qualitative gate: every failure root-caused to a fixable format gap) and re-proven on a materialized ticket in Phase 4.
-- [ ] `lint-tickets` hard-blocks a non-ready ticket and a cyclic manifest; staleness hard-blocks `adr_refs` drift and warns on `source_refs` drift.
-- [ ] Exporting a bundle to Linear is idempotent (re-export updates `linear_state`, never duplicates; a forced mid-batch failure resumes), with MD as the source of truth and a working drift check.
-- [ ] Every materialized phase has ≥ 1 ticket; ticket↔roadmap↔ADR cross-links resolve; status flips project to the dashboard via the registry.
-- [ ] No new artefact duplicates an existing one (gap-table honored); `refine-ticket`/`estimate-ticket`/`technical-specification`/`adr-create`/`implement-ticket` are reused, not rebuilt.
+- [x] A high-tier agent runs `/roadmap:materialize <slug>` and produces a schema-valid `agents/tickets/{slug}/` bundle (tickets + assets + `manifest.yml`) plus a `_registry.yml` entry.
+- [x] A lite-tier agent builds a single ticket from the ticket + SHA-pinned ADRs + assets alone, stays inside `boundaries`, and passes the ticket's runnable acceptance — proven by the Phase-1a pilot (qualitative gate: every failure root-caused to a fixable format gap) and re-proven on a materialized ticket in Phase 4.
+- [x] `lint-tickets` hard-blocks a non-ready ticket and a cyclic manifest; staleness hard-blocks `adr_refs` drift and warns on `source_refs` drift.
+- [x] A ticket pastes cleanly into a Linear/Jira issue (title + body render); the agent can create it via MCP — no API export (ADR-102).
+- [x] Every materialized phase has ≥ 1 ticket; ticket↔roadmap↔ADR cross-links resolve; status flips project to the dashboard via the registry.
+- [x] No new artefact duplicates an existing one (gap-table honored); `refine-ticket`/`estimate-ticket`/`technical-specification`/`adr-create`/`implement-ticket` are reused, not rebuilt.
 
 ## Notes
 

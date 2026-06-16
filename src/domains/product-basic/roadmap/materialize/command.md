@@ -56,18 +56,18 @@ to `medium` — never shipped under-specified.
 ### 4. Hand back — HARD STOP
 
 ```
-BUNDLE MATERIALISED → STOP. NEVER AUTO-OFFER EXPORT OR EXECUTION.
-MATERIALISE = ARTIFACT ONLY. EXPORT / BUILD NEED A FRESH USER VERB.
+BUNDLE MATERIALISED → STOP. NEVER AUTO-CREATE TRACKER ISSUES OR EXECUTE.
+MATERIALISE = ARTIFACT ONLY. PASTE/MCP/BUILD NEED A FRESH USER VERB.
 ```
 
 Emit a single hand-back line citing the bundle path + the ticket count. The user
-runs the Linear export (`agent-config tickets:export`) or a per-ticket build
+pastes a ticket into Linear/Jira (or creates it via MCP), or runs a per-ticket build
 (`/implement-ticket <bundle>/T-NNN.md`) on a later turn, explicitly.
 
 ### Rules
 
 - **Do NOT author the roadmap** — this consumes an existing one.
-- **Do NOT export to Linear automatically** — export is a separate user-invoked step.
+- **Do NOT auto-create tracker issues** — paste/MCP is a separate user-invoked step (ADR-102, no API export).
 - **Do NOT commit or push.**
 - Bundle is the source of truth; the tracker is a projection
   ([`ticket-bundle-format`](../../../../docs/contracts/ticket-bundle-format.md)).

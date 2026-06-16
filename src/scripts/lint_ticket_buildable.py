@@ -194,6 +194,37 @@ def lint() -> int:
     for mid in marker_ids - bundle_ids:
         failures.append(f"spine:roadmap marker {mid} has no bundle ticket")
 
+    # lint-roadmap-materialized: in a materialized roadmap (>=1 marker), every
+    # non-intro phase that carries open/done steps must carry >=1 ticket marker.
+    for rm in ROADMAPS.glob("*.md"):
+        text = rm.read_text()
+        if not MARKER_RE.search(text):
+            continue  # not materialized — nothing to enforce
+        phase = None
+        has_step = has_marker = False
+
+        def _close(p, step, mark):
+            # Partial materialisation is legitimate (some phases ticketed, some
+            # not) → warn, don't fail, so an un-materialised phase is surfaced
+            # without blocking.
+            if p and step and not mark:
+                warnings.append(f"{rm}:materialized roadmap — phase '{p}' has steps but no ticket marker (not materialised)")
+
+        for ln in text.split("\n"):
+            if ln.startswith("## Phase"):
+                _close(phase, has_step, has_marker)
+                phase = ln[3:].strip()
+                has_step = has_marker = False
+            elif ln.startswith("## "):  # left the phase region (Acceptance/Notes)
+                _close(phase, has_step, has_marker)
+                phase = None
+            elif phase:
+                if ln.lstrip().startswith(("- [ ]", "- [x]", "- [~]", "- [-]")):
+                    has_step = True
+                if MARKER_RE.search(ln):
+                    has_marker = True
+        _close(phase, has_step, has_marker)
+
     for w in warnings:
         print(f"⚠️  {w}")
     for f in failures:

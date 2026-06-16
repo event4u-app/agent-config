@@ -27,7 +27,7 @@ buildable step — then wire the markers back and run the buildability gate.
 | Estimating a single ticket | no → use `estimate-ticket` |
 
 **Upstream:** `roadmap-writing` — author the roadmap first.
-**Downstream:** `src/scripts/build_ticket_export.py` (export), `src/scripts/lint_ticket_buildable.py` (gate).
+**Downstream:** `src/scripts/lint_ticket_buildable.py` (the build-readiness gate). A ticket reaches a tracker by paste or MCP (ADR-102) — no export script.
 
 ## Procedure
 
@@ -41,7 +41,7 @@ Steps at a glance:
 6. Append `<!-- ticket: T-NNN -->` markers back into the roadmap.
 7. (Re)generate `agents/tickets/_registry.yml`.
 8. Run `lint_ticket_buildable.py` until exit 0 (max 3 attempts).
-9. Tell the user to run the export.
+9. Tell the user the bundle is ready: paste a ticket into Linear/Jira, or have the agent create it via a tracker MCP server (ADR-102 — no API export).
 
 ### §0 — Locate the roadmap
 
@@ -160,14 +160,15 @@ python3 src/scripts/lint_ticket_buildable.py agents/tickets/{slug}/
 Fix every reported error. Re-run until exit code 0. Max 3 attempts; if still
 failing, surface the linter output and ask for guidance.
 
-### §9 — Hand off to export
+### §9 — Hand off (paste / MCP)
 
 Tell the user:
 
-> Bundle written to `agents/tickets/{slug}/`. To export:
-> `python3 src/scripts/build_ticket_export.py agents/tickets/{slug}/`
+> Bundle written to `agents/tickets/{slug}/`. Each ticket's body is
+> paste-ready Markdown for a Linear/Jira issue; or create issues via a
+> tracker MCP server. No API export (ADR-102).
 
-Do NOT run the export yourself — that is a user-invoked step.
+Do NOT auto-create tracker issues — paste/MCP is the user's call.
 
 ## Output format
 
@@ -182,7 +183,7 @@ Do NOT run the export yourself — that is a user-invoked step.
 - Touch `src/scripts/**` — orchestrate; do not reimplement.
 - Mark a ticket `lite` before `lint_ticket_buildable.py` passes.
 - Create a circular `dependency_graph` — verify acyclicity before writing.
-- Run `build_ticket_export.py` — the user triggers that.
+- Auto-create tracker issues — paste/MCP is the user's call (ADR-102, no API export).
 - Reuse T-NNN numbers from another bundle in the same registry.
 
 ## Gotchas
