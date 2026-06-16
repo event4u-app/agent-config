@@ -56,8 +56,15 @@ ARTIFACT_RE = re.compile(
 )
 SCHEMA_RE = re.compile(r"^src/scripts/schemas/[^/]+\.schema\.json$")
 SCHEMA_VERSION_RE = re.compile(r'"x-schemaVersion"\s*:\s*"([^"]+)"')
+# A breaking annotation is a Conventional-Commits subject bang
+# (`feat!:`, `fix(scope)!:`) or a `BREAKING CHANGE:` footer line — both
+# line-anchored so a commit that merely *mentions* "breaking change" in
+# prose does not clear the gate.
 BANG_RE = re.compile(r"^[a-z]+(\([^)]+\))?!:", re.MULTILINE)
-OVERRIDE = "ci-override: structural-breaking-ok"
+BREAKING_FOOTER_RE = re.compile(r"^BREAKING[ -]CHANGE:", re.MULTILINE)
+# The override must be its own trailer line — not an inline mention (e.g.
+# this detector's own feature commit, which documents the phrase).
+OVERRIDE_RE = re.compile(r"^ci-override:\s*structural-breaking-ok\s*$", re.MULTILINE)
 
 
 def _git(*args: str) -> str:
@@ -108,8 +115,8 @@ def main() -> int:
         return 0
 
     log = _git("log", "--format=%B", f"{base}..HEAD")
-    annotated = bool(BANG_RE.search(log)) or "BREAKING CHANGE" in log
-    overridden = OVERRIDE in log
+    annotated = bool(BANG_RE.search(log)) or bool(BREAKING_FOOTER_RE.search(log))
+    overridden = bool(OVERRIDE_RE.search(log))
     if annotated or overridden:
         if not QUIET:
             why = "breaking annotation" if annotated else "ci-override"
