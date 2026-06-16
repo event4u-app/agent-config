@@ -35,6 +35,15 @@
 | B | brand as first-class UX (`pack-brand` + brand corpus) | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
 | D | trigger-eval substrate (built last, from observed needs) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
 
+### [road-to-install-contract-stability.md](roadmaps/road-to-install-contract-stability.md)
+
+**Install-Contract Stability — freeze the install ABI, split the lean core from the lab** — 0 / 15 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Freeze the install ABI (a versioned, deprecation-gated install layout) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Split the lean stable core from the experimental lab | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
 ### [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md)
 
 **Mission catalogue — content + catalogue expansion (mission-mode follow-up)** — 0 / 10 done (0%)
@@ -45,13 +54,15 @@
 
 ### [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md)
 
-**RDP — eval execution, kernel promotion, polish (follow-up)** — 0 / 7 done (0%)
+**RDP — eval execution, kernel promotion, polish (follow-up)** — 1 / 7 done (14%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
+| 3 | (polish) — autonomous status | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 1 | Eval execution (billable: real host-model runs) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Kernel promotion (governance: own PR + ADR + soak) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Frontier-serving polish (human-reviewed) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Frontier-serving polish (human-reviewed) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | execution notes (2026-06-16) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 
 ---
 

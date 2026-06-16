@@ -113,14 +113,7 @@ The checks below are stack-agnostic. For framework-specific conventions (PSR-12 
 
 ### The response pattern
 
-When receiving code review feedback, follow this sequence:
-
-1. **READ** — Complete feedback without reacting.
-2. **UNDERSTAND** — Restate the requirement in your own words (or ask if unclear).
-3. **VERIFY** — Check the suggestion against codebase reality.
-4. **EVALUATE** — Is it technically sound for THIS codebase?
-5. **RESPOND** — Technical acknowledgment or reasoned pushback.
-6. **IMPLEMENT** — One item at a time, test each.
+Constraint: **understand each comment fully before touching code, verify it against codebase reality, and implement one item at a time (test each).** Restate anything ambiguous in your own words — or ask. Push back with technical reasoning when a suggestion is unsound for *this* codebase rather than complying reflexively.
 
 If **any item is unclear**, STOP — do not implement anything yet. Items may be related;
 partial understanding leads to wrong implementation.
@@ -161,13 +154,7 @@ How: Use technical reasoning, not defensiveness. Reference working tests/code.
 
 ### Addressing PR comments systematically
 
-When working through review comments on a PR:
-
-1. **List** all comments and review threads (`gh pr view --comments`).
-2. **Categorize**: blocking → simple fixes → complex fixes.
-3. **Clarify** anything unclear BEFORE implementing.
-4. **Fix** one at a time, test each.
-5. **Reply in the thread** — not as a top-level PR comment.
+Constraint: **clarify anything unclear before implementing, fix one item at a time (test each), and reply in each review thread** — not as a top-level PR comment. Triage first (blocking → simple → complex) so blockers land first; `gh pr view --comments` lists the threads.
 
 ```bash
 # Reply to a specific review comment thread
@@ -176,6 +163,10 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
 ```
 
 ## Output format
+
+1. Structure every finding by severity (Blocker / Suggestion / Nit) using the block below; never mix severities in one block.
+2. Group related findings; skip anything the project's linter or type-checker already catches — focus on logic, architecture, and judgment.
+3. End with a one-line verdict (approve / request-changes / comment) and a count of Blockers vs. Suggestions.
 
 When reviewing code, structure feedback by severity:
 
