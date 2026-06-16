@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/ai-video/lib/load-config.sh — provider config loader for /video:*.
+# scripts/media/lib/load-config.sh — provider config loader for /video:*.
 #
 # Parses agents/.ai-video.xml with xmllint --xpath and surfaces a single
 # provider's settings as AIV_KEY / AIV_ENDPOINT / AIV_MODEL / AIV_DRYRUN
@@ -8,7 +8,7 @@
 #
 # Usage (sourced):
 #
-#   . scripts/ai-video/lib/load-config.sh
+#   . scripts/media/lib/load-config.sh
 #   aiv_load_provider gemini-veo
 #   echo "key: $(aiv_key_status)"     # → present | missing
 #   echo "endpoint: $AIV_ENDPOINT"
@@ -16,7 +16,7 @@
 #
 # Usage (CLI status check, no key echoed):
 #
-#   bash scripts/ai-video/lib/load-config.sh status gemini-veo
+#   bash scripts/media/lib/load-config.sh status gemini-veo
 #   → provider=gemini-veo key=present dryrun=true model=veo-3.0-generate-001
 #
 # Defaults:

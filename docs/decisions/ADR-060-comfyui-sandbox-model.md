@@ -148,7 +148,7 @@ internet" out of the execution path.
   mode, peer review on — convergence summarized inline per
   `no-roadmap-references`.
 - ADR-059 — sibling design (resume) from the same roadmap phase.
-- `src/scripts/ai-video/lib/adapter-contract.md` — v2 contract the
+- `src/scripts/media/lib/adapter-contract.md` — v2 contract the
   adapter implements; local-source rule lands there as an additive note.
 - Roadmap: road-to-video-deferred-design, Phase 2 (transient layer —
   not path-linked per `no-roadmap-references`).

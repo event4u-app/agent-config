@@ -9,8 +9,8 @@
   providers you actually use. The real file is gitignored and MUST NEVER be
   committed.
 
-  Loader: scripts/ai-video/lib/load-config.sh
-  Redaction: scripts/ai-video/lib/redact.sh
+  Loader: scripts/media/lib/load-config.sh
+  Redaction: scripts/media/lib/redact.sh
   Docs: agents/reference/ai-video/README.md
 -->
 <ai-video version="1">

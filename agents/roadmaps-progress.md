@@ -25,11 +25,11 @@
 
 ### [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md)
 
-**image generation, brand, and typography/iconography** — 0 / 47 done (0%)
+**image generation, brand, and typography/iconography** — 1 / 48 done (2%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| A | `pack-ai-image`: image as a first-class sibling of video | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
+| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 14 | 1 | 0 | 0 | 7% |
 | C | typography & iconography (Reference + style path) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | B | brand as first-class UX (`pack-brand` + brand corpus) | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
 | D | trigger-eval substrate (built last, from observed needs) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |

@@ -154,7 +154,7 @@ the "skill suite, not a runtime framework" answer.
 - Council artefact: two-round debate 2026-06-07 (members above), design
   mode, peer review on — convergence summarized in this ADR per
   `no-roadmap-references` (no session-file links).
-- `src/scripts/ai-video/lib/adapter-contract.md` — v2 trust boundary +
+- `src/scripts/media/lib/adapter-contract.md` — v2 trust boundary +
   error contract this design builds on.
 - Roadmap: road-to-video-deferred-design, Phase 1 (transient layer —
   not path-linked per `no-roadmap-references`).

@@ -1,6 +1,6 @@
 """Per-adapter telemetry — success / cost / latency (promotion evidence).
 
-``scripts/ai-video/lib/telemetry.sh`` records one JSONL line per
+``scripts/media/lib/telemetry.sh`` records one JSONL line per
 network-bound adapter subcommand (wired through ``aiv_dispatch``).
 These tests pin:
 
@@ -28,7 +28,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 LIB = REPO_ROOT / "src" / "scripts" / "ai-video" / "lib"
-SCRIPT = LIB / "telemetry.sh"
+SCRIPT = REPO_ROOT / "src" / "scripts" / "media" / "lib" / "telemetry.sh"
 FAL = REPO_ROOT / "src" / "scripts" / "ai-video" / "adapters" / "fal.sh"
 
 pytestmark = pytest.mark.skipif(
@@ -123,6 +123,6 @@ def test_dry_run_is_never_wrapped(tmp_path: Path) -> None:
         env={"AIV_TELEMETRY_FILE": str(sink), "AIV_DRYRUN": "true"},
     )
     assert res.returncode == 0
-    fixture = (LIB / "fixtures" / "fal" / "result.json").read_text()
+    fixture = (REPO_ROOT / "src" / "scripts" / "media" / "lib" / "fixtures" / "fal" / "result.json").read_text()
     assert res.stdout == fixture  # byte-exact fixture output
     assert not sink.exists()

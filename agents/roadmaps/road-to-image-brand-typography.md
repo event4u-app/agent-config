@@ -12,7 +12,7 @@ complexity: structural
 > (the reusable corpus-grounding layer; frontend-design is its first instance),
 > the `provider-lifecycle-discipline` / `media-governance-routing` rules, the
 > `pack-ai-video` adapter architecture
-> ([`src/scripts/ai-video/lib/adapter-contract.md`](../../src/scripts/ai-video/lib/adapter-contract.md),
+> ([`src/scripts/media/lib/adapter-contract.md`](../../src/scripts/media/lib/adapter-contract.md),
 > [`agents/.ai-video.xml`](../../agents/.ai-video.xml)), and the existing
 > `design-intelligence` / `design-tokens` / `corpus-grounding` skills.
 
@@ -129,12 +129,25 @@ independent and provides the logo/asset path Phase B consumes.
 
 ### A.1 The load-bearing refactor
 
-- [ ] Extract the shared adapter substrate out of `src/scripts/ai-video/` into a
+- [x] Extract the shared adapter substrate out of `src/scripts/ai-video/` into a
       neutral `src/scripts/media/` (adapter-contract, provider-registry schema,
       lifecycle states, smoke harness); `ai-video` and `ai-image` both depend on
       it. Gate with a parity test that the moved video adapters still pass their
       smoke runs. Broaden `provider-lifecycle-discipline`'s `path_prefix` from
       `scripts/ai-video/adapters/` to `scripts/media/`.
+      <!-- done 2026-06-16: Option-B behavior-preserving relocate (council
+      claude-sonnet-4-5 + gpt-4o, 3-round design debate). Moved adapter-common /
+      redact / load-config / telemetry / adapter-contract.md / fixtures → src/scripts/media/lib/;
+      all 12 adapters + staying libs + 94 refs repointed; MEDIA_* aliases added as
+      the forward-neutral surface; rule path_prefix +scripts/media/lib/. Video
+      parity green (5605 pass). DEFERRED to a Phase-A follow-up: (a) AIV_*→MEDIA_*
+      internal rename, (b) generalizing+relocating smoke-trace.sh (still hardcoded
+      to ai-video adapters/out-dir) — both cosmetic/high-churn, kept in place to
+      hold the shipped video pipeline stable. -->
+- [ ] *(Phase-A follow-up, deferred from A.1)* Rename the substrate internals
+      `AIV_*` → `MEDIA_*` and generalize+relocate `smoke-trace.sh` into
+      `src/scripts/media/` (parameterize ADAPTER_DIR / OUT_DIR per domain). Ships
+      with A.2 when the first image adapters exercise the neutral surface.
 
 ### A.2 Pack + providers
 
