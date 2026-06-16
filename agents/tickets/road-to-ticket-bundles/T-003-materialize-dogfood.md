@@ -19,7 +19,7 @@ acceptance:
   - "Every roadmap ticket marker resolves to a bundle ticket (spine integrity)."
 boundaries:
   must_touch: ["agents/tickets/road-to-ticket-bundles/"]
-  may_touch: [agents/roadmaps/road-to-ticket-bundles.md]
+  may_touch: [agents/roadmaps/archive/road-to-ticket-bundles.md]
   must_not_touch: ["src/**"]
 ---
 
@@ -33,7 +33,7 @@ Self-dogfooding: the bundle that builds the system is itself in the new format.
 - Validator: `src/scripts/lint_ticket_buildable.py` (T-005).
 
 ## Do
-1. Run emit-tickets over `agents/roadmaps/road-to-ticket-bundles.md`.
+1. Run emit-tickets over `agents/roadmaps/archive/road-to-ticket-bundles.md`.
 2. Confirm manifest + tickets + `_registry.yml` + markers.
 3. Run the buildability lint until green.
 

@@ -106,4 +106,4 @@ industry spec-driven-development pattern of spec→plan→isolation-testable-tas
 
 - [`ticket-bundle-format`](../contracts/ticket-bundle-format.md) — the full contract.
 - [ADR-035](ADR-035-model-capability-tiers.md) — model_tier bands.
-- `agents/roadmaps/road-to-ticket-bundles.md` — the roadmap that implements this ADR.
+- `agents/roadmaps/archive/road-to-ticket-bundles.md` — the roadmap that implements this ADR.

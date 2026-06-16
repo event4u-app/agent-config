@@ -362,7 +362,38 @@ def pending_iron_law_3(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
     ]
 
 
-def render(roadmaps: list[RoadmapStats]) -> str:
+def collect_bundles(repo_root: Path) -> list[dict]:
+    """Read agents/tickets/_registry.yml (one scan) and count tickets per bundle.
+
+    Graceful: returns [] when there is no registry or pyyaml is unavailable —
+    consumer repos without bundles or without yaml simply get no bundle section.
+    """
+    reg = repo_root / "agents" / "tickets" / "_registry.yml"
+    if not reg.exists():
+        return []
+    try:
+        import yaml  # optional — see docstring
+    except ImportError:
+        return []
+    try:
+        data = yaml.safe_load(reg.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 - a malformed registry must not break the dashboard
+        return []
+    out: list[dict] = []
+    for slug, meta in sorted((data.get("bundles") or {}).items()):
+        meta = meta or {}
+        bdir = repo_root / "agents" / "tickets" / slug
+        n = len(list(bdir.glob("T-*.md"))) if bdir.is_dir() else 0
+        out.append({
+            "slug": slug,
+            "tickets": n,
+            "status": meta.get("status", "?"),
+            "roadmap": meta.get("source_roadmap", ""),
+        })
+    return out
+
+
+def render(roadmaps: list[RoadmapStats], bundles: list[dict] | None = None) -> str:
     total_done = sum(r.done for r in roadmaps)
     total_active = sum(r.total_active for r in roadmaps)
     overall_pct = round(total_done * 100 / total_active) if total_active else 0
@@ -449,6 +480,22 @@ def render(roadmaps: list[RoadmapStats]) -> str:
                 f"{p.deferred} | {p.cancelled} | {p.percent}% |"
             )
         lines.append("")
+    if bundles:
+        lines.append("---\n")
+        lines.append("## Ticket bundles\n")
+        lines.append(
+            "Materialised ticket bundles under [`agents/tickets/`](tickets/) "
+            "(via `/roadmap:materialize`), counted from "
+            "`agents/tickets/_registry.yml`.\n"
+        )
+        lines.append("| Bundle | Tickets | Status | Source roadmap |")
+        lines.append("|---|---:|---|---|")
+        for b in bundles:
+            lines.append(
+                f"| {b['slug']} | {b['tickets']} | {b['status']} | "
+                f"{b['roadmap']} |"
+            )
+        lines.append("")
     return "\n".join(lines) + "\n"
 
 
@@ -468,7 +515,7 @@ def main() -> int:
         print(f"ℹ️  No roadmaps directory at {roadmap_root} — nothing to do.")
         return 0
     roadmaps = collect(roadmap_root)
-    new_text = render(roadmaps)
+    new_text = render(roadmaps, collect_bundles(args.repo_root))
     current = target.read_text(encoding="utf-8") if target.exists() else ""
     complete = unarchived_complete(roadmaps)
     pending = pending_iron_law_3(roadmaps)

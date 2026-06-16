@@ -124,7 +124,7 @@ by paste or by the agent via MCP, never synced back into the manifest.
 bundles:
   road-to-ticket-bundles:
     manifest_path: agents/tickets/road-to-ticket-bundles/manifest.yml
-    source_roadmap: agents/roadmaps/road-to-ticket-bundles.md
+    source_roadmap: agents/roadmaps/archive/road-to-ticket-bundles.md
     status: in_progress        # derived from manifest
 ```
 
