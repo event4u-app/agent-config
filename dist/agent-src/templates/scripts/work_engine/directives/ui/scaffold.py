@@ -1,7 +1,7 @@
 """``scaffold`` step — greenfield Zero-to-One skeleton gate (the ``plan`` slot).
 
 greenfield-scaffold Phase 3 of
-``agents/roadmaps/road-to-greenfield-scaffold.md``: raise a real
+``agents/roadmaps/archive/road-to-greenfield-scaffold.md``: raise a real
 multi-page skeleton from a confirmed app-spec, under gates, without the
 engine ever writing app files. The step occupies the UI set's ``plan``
 slot, which runs **after** ``analyze`` (design) and before ``implement``

@@ -1,7 +1,7 @@
 """``app_spec`` step — greenfield grounding gate (the ``memory`` slot).
 
 greenfield-scaffold Phase 2 of
-``agents/roadmaps/road-to-greenfield-scaffold.md``: before any
+``agents/roadmaps/archive/road-to-greenfield-scaffold.md``: before any
 scaffolding, derive the app shape and confirm it fast (decision 3 —
 disambiguation, not BDUF). The step occupies the UI set's ``memory``
 slot, which runs **before** ``analyze`` (design); it replaces the
