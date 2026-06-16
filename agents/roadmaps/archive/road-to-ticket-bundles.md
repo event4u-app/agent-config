@@ -24,7 +24,7 @@ created by the agent via a tracker MCP server — no API export (ADR-102).
 - [x] Read the work-engine contract: `src/agent-src/templates/scripts/work_engine/` (`state.py`, `dispatcher.py`)
 - [x] Read the existing ticket chain: `refine-ticket`, `estimate-ticket`, `technical-specification`, `adr-create`, `implement-ticket`; and `src/scripts/build_linear_digest.py` (the only existing Linear surface)
 - [x] Read `model_tier` semantics (ADR-035) and `src/agent-src/contexts/model-recommendations.md`
-- [~] A Linear API token path exists (`~/.event4u/agent-config/linear.key` or env) before the Phase-1b spike and Phase 5 <!-- deferred: no Linear token in this environment -->
+- [-] A Linear API token path exists (`~/.event4u/agent-config/linear.key` or env) <!-- cancelled: moot — no API export, ADR-102 -->
 
 ## Context
 
@@ -183,7 +183,7 @@ format, buildability gate, and builder consumption stand.
 
 - [x] **Step 1:** Cross-link discipline: each ticket carries `roadmap` + `adr_refs`; each materialized roadmap step carries `<!-- ticket: T-NNN -->`. Add `lint-roadmap-materialized` (every materialized phase has ≥ 1 ticket; markers resolve both ways).
 - [x] **Step 2:** Status projection (MD is truth): a sync step projects ticket `status` onto the roadmap checkbox and (when exported) the Linear issue. Define the writeback direction explicitly so dashboard + tracker never become rival truths.
-- [ ] **Step 3:** Teach `update_roadmap_progress.py` to read `agents/tickets/_registry.yml` (one scan) so co-existing bundles are counted without touching the flat-roadmap path.
+- [x] **Step 3:** Teach `update_roadmap_progress.py` to read `agents/tickets/_registry.yml` (one scan) so co-existing bundles are counted without touching the flat-roadmap path.
 - [x] **Step 4:** Document the per-ticket + per-bundle kill-switch/rollback (versioned snapshot of the bundle before export) in the format contract.
 
 **Exit criteria:** flipping a ticket `status` updates the roadmap checkbox + dashboard via the registry; `lint-roadmap-materialized` passes; kill-switch documented.
