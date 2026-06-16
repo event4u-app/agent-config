@@ -6,10 +6,10 @@
 
 ## Overall
 
-**11 / 71 steps done · 15%**
+**13 / 71 steps done · 18%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   15%
+███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   18%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 37 | 11 | 0 | 0 | ██░░░░░░░░ 23% |
+| 2 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 35 | 13 | 0 | 0 | ███░░░░░░░ 27% |
 | 3 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -37,11 +37,11 @@
 
 ### [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md)
 
-**image generation, brand, and typography/iconography** — 11 / 48 done (23%)
+**image generation, brand, and typography/iconography** — 13 / 48 done (27%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 9 | 6 | 0 | 0 | 40% |
+| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 7 | 8 | 0 | 0 | 53% |
 | C | typography & iconography (Reference + style path) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | B | brand as first-class UX (`pack-brand` + brand corpus) | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
 | D | trigger-eval substrate (built last, from observed needs) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |

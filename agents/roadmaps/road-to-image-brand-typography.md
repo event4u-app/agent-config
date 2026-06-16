@@ -177,7 +177,7 @@ independent and provides the logo/asset path Phase B consumes.
 
 ### A.3 Skills, commands, rules, persona
 
-- [ ] Skills: `image-generation` (Method — provider-agnostic blueprint →
+- [x] Skills: `image-generation` (Method — provider-agnostic blueprint →
   provider translation; ref-image/seed reuse for character consistency),
   `image-provider-routing` (Grounding — corpus + decision rules selecting a
   model from job shape: needs-text? photoreal? budget? 4K?), `image-editing`
@@ -188,7 +188,7 @@ independent and provides the logo/asset path Phase B consumes.
   `image-generation` + `image-editing` DEFERRED until the adapters leave scaffold
   tier — shipping "generate"/"edit" skills over dry-run-only adapters is fake
   capability (council 2026-06-16). -->
-- [ ] **Brand-asset generation skills** (decision 1 — ADOPTED, overturns §9; ride
+- [x] **Brand-asset generation skills** (decision 1 — ADOPTED, overturns §9; ride
   on the adapters above, not a second stack): `logo-generation`,
   `brand-asset-generation` (banner / social / CIP) — structured prompting +
   brand-token injection + provider routing; vector via the `recraft` adapter or
