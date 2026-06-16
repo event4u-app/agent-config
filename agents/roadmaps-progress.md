@@ -19,7 +19,7 @@
 | 1 | [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 42 | 6 | 0 | 0 | █░░░░░░░░░ 12% |
 | 3 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 4 | 7 | 6 | 1 | 0 | 0 | █░░░░░░░░░ 14% |
 
 ---
 
@@ -56,13 +56,14 @@
 
 ### [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md)
 
-**RDP — eval execution, kernel promotion, polish (follow-up)** — 0 / 7 done (0%)
+**RDP — eval execution, kernel promotion, polish (follow-up)** — 1 / 7 done (14%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Eval execution (billable: real host-model runs) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Kernel promotion (governance: own PR + ADR + soak) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Frontier-serving polish (human-reviewed) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Frontier-serving polish (human-reviewed) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | execution notes (2026-06-16) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 
 ---
 

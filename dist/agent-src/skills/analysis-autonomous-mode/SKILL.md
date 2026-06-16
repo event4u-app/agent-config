@@ -85,7 +85,7 @@ Route to the primary skill. Monitor findings for signals to chain additional ski
 
 Merge all specialist findings into ONE prioritized output:
 
-1. Confirmed root → (with evidence)
+1. Confirmed root causes (with evidence)
 2. Contributing factors
 3. Risks not yet proven but worth checking
 4. Concrete fixes (ordered by priority)
@@ -95,19 +95,11 @@ Never dump isolated observations without synthesis.
 
 ## Procedure: Autonomous investigation loop
 
-When running a broad investigation, repeat until confident:
+Constraint: **attack the biggest unknown first** (not breadth-first). Repeat until confident:
 
-```
-1. Assess current understanding
-2. Identify biggest unknown
-3. Choose specialist skill to fill that gap
-4. Execute analysis
-5. Evaluate result — did it answer the question?
-6. Update mental model
-7. Decide: narrow down or broaden scope?
-8. If confident → synthesize and present
-   If not → loop back to step 2
-```
+1. Route the right specialist skill at the largest gap in your understanding.
+2. Inspect the result against the question; narrow or broaden scope.
+3. Once confident, synthesize and present — otherwise return to step 1.
 
 ## Adaptation rules
 
@@ -161,6 +153,10 @@ When specialist findings conflict:
 5. Explicitly mark uncertainty instead of forcing a conclusion
 
 ## Output format
+
+1. Produce one report covering the five subsections below; no narration outside the report.
+2. Every finding must cite file paths or stack/version evidence; mark unverified items as *Contributing Risks*, not *Confirmed Findings*.
+3. Close with a *Recommended Fix Order*; prioritize by production impact → exploitability → user-facing breakage → effort vs value.
 
 ### Investigation Summary
 - What was analyzed, which skills were used, why
