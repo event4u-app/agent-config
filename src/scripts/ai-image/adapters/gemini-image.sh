@@ -5,6 +5,10 @@
 # (road-to-image-brand-typography decision 6). Distinct from the `gemini-veo`
 # VIDEO adapter — different endpoint, different model family.
 #
+# Cost: pay-per-image, low tier (~$0.03-0.04 / image for Imagen 4; Nano Banana
+# family varies). Reference as-of 2026-06 — verify at ai.google.dev/gemini-api/docs/pricing;
+# prices/models are Reference, re-checked on cadence, never frozen.
+#
 # Lifecycle: experimental — scaffold tier. dry-run plumbing only; the live
 # submit/poll/fetch round-trip is NOT wired (no maintainer-captured smoke
 # trace yet). Promotion to stable requires a real-API smoke trace under

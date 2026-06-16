@@ -6,6 +6,10 @@
 # multiplexers to start (their hosted FLUX endpoints) — a direct BFL endpoint
 # is an optional later wiring.
 #
+# Cost: pay-per-image, low tier (~$0.025-0.05 / image via the fal / replicate
+# gateway). Reference as-of 2026-06 — verify at the gateway's pricing;
+# prices/models are Reference, re-checked on cadence, never frozen.
+#
 # Lifecycle: experimental — scaffold tier. dry-run plumbing only; the live
 # submit/poll/fetch round-trip is NOT wired (routes through fal/replicate once
 # the pack-ai-image registry exists). Promotion to stable requires a

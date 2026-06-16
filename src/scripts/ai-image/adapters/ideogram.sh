@@ -5,6 +5,10 @@
 # (road-to-image-brand-typography decision 6) — strong glyph rendering for
 # logos and banners where raster models garble text.
 #
+# Cost: pay-per-image, mid tier (~$0.06-0.10 / image by quality/speed).
+# Reference as-of 2026-06 — verify at about.ideogram.ai pricing;
+# prices/models are Reference, re-checked on cadence, never frozen.
+#
 # Lifecycle: experimental — scaffold tier. dry-run plumbing only; the live
 # submit/poll/fetch round-trip is NOT wired (no maintainer-captured smoke
 # trace yet). Promotion to stable requires a real-API smoke trace under

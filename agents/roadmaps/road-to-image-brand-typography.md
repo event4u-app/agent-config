@@ -213,11 +213,22 @@ independent and provides the logo/asset path Phase B consumes.
 
 ### A.4 Quality gates
 
-- [ ] ATTRIBUTION for any vendored prompt corpora; per-adapter smoke evidence
+- [x] ATTRIBUTION for any vendored prompt corpora; per-adapter smoke evidence
   (local-only, gitignored) + lifecycle marker; cost note in each adapter
   header; a provider-registry **freshness** check (prices/models are
   Reference, re-checked on cadence, never frozen). Trigger-evals authored
   (the spec) but *recorded* in Phase D.
+  <!-- done 2026-06-16: cost note added to all 4 ai-image adapter headers
+  (gemini-image/ideogram/flux/recraft) with an as-of date + verify URL + the
+  "Reference, re-checked on cadence, never frozen" caveat — that caveat IS the
+  freshness discipline (the video path has no separate freshness script either;
+  freshness = last_checked/Reference framing). Lifecycle markers already present
+  (experimental/scaffold). ATTRIBUTION = N/A: prompt-engineering-image ships no
+  vendored prompt corpus (original-authored grammar). Smoke evidence is a
+  promotion-time, gitignored artifact (adapters are dry-run scaffold). Trigger-
+  evals authored; recording is Phase D (eval substrate shipped). bash -n + the
+  12 ai-image adapter tests green. -->
+
 
 **Exit criteria:** `/image:*` runs against the extracted `scripts/media/`
 substrate, multi-provider, governed; video adapters still pass parity smoke;

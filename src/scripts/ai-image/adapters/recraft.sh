@@ -7,6 +7,10 @@
 # icons. The LLM-authored-SVG path (simple marks) is a separate skill, not this
 # adapter.
 #
+# Cost: pay-per-image / vector, low-mid tier (~$0.04-0.08 / image).
+# Reference as-of 2026-06 — verify at recraft.ai pricing;
+# prices/models are Reference, re-checked on cadence, never frozen.
+#
 # Lifecycle: experimental — scaffold tier. dry-run plumbing only; the live
 # submit/fetch round-trip is NOT wired (no maintainer-captured smoke trace
 # yet). Promotion to stable requires a real-API smoke trace under
