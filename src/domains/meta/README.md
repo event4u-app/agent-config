@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 243
+- **artefacts**: 244
 
 ## Commands (119)
 
@@ -132,7 +132,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (61)
+## Rules (62)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -156,6 +156,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fast-path-marker-visibility`** — Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers
 - **`guidelines`** — Writing or reviewing code — check relevant guideline before writing or reviewing code
+- **`image-likeness-and-rights`** — Rights gate for AI image generation — real-person likenesses, trademarked brand marks, and named living artists' styles require explicit rights/consent check before generation.
 - **`invite-challenge`** — Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
 - **`low-impact-corpus-privacy-floor`** — Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus

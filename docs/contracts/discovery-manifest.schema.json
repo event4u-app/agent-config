@@ -83,7 +83,7 @@
         "product-basic", "product-discovery",
         "finance-basic", "finance-advanced",
         "gtm-sales", "gtm-marketing",
-        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "fun", "meta", "git", "frontend-design",
+        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "ai-image", "fun", "meta", "git", "frontend-design",
         "memory", "analytics", "product-reasoning", "analysis-workbench"
       ]
     },
