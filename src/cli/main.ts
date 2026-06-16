@@ -334,7 +334,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help'];
+    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.
