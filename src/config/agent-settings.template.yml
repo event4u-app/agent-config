@@ -554,10 +554,19 @@ memory:
 # removes the store and strips provenance from project cards.
 knowledge:
   global_sharing:
-    # Default ON for the safe tiers. Turning sharing on does NOT make promotion
-    # automatic — promotion is always suggest-then-confirm (auto_promote_threshold
-    # gates the *suggestion*, never a silent write).
-    enabled: true
+    # Default OFF until cross-project reuse is measured (Evidence v2 Phase 0;
+    # ADR-101 amends ADR-100). ADR-098 set a measure-then-decide gate for the
+    # global layer; ADR-100 shipped it default-on without waiting out the
+    # measurement window. Until reuse is instrumented across >= 2 real projects
+    # and shown positive, the safe default for a tool others install is opt-in,
+    # not opt-out — cross-project data movement should never be the default.
+    # Flip to `true` only after the reuse signal exists.
+    #
+    # Turning sharing on does NOT make promotion automatic — promotion is always
+    # suggest-then-confirm (auto_promote_threshold gates the *suggestion*, never
+    # a silent write). v1 (project-local discipline + cards) is byte-for-byte
+    # unaffected by this default; only the cross-project store is gated off.
+    enabled: false
 
     # Origin tiers eligible to cross a project boundary under default-on.
     # `proprietary` (in-house DB / private API / client schemas) is EXCLUDED by

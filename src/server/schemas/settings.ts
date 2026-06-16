@@ -284,8 +284,8 @@ export const settingsSchema = z.object({
     }),
     knowledge: z.object({
         global_sharing: z.object({
-            enabled: z.boolean().default(true).describe(
-                'Master switch for the file-first global knowledge-card store (ADR-100). User-global setting — keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer; project-local cards (v1) are unaffected.',
+            enabled: z.boolean().default(false).describe(
+                'Master switch for the file-first global knowledge-card store (ADR-100, default-off per ADR-101 / Evidence v2 Phase 0 until cross-project reuse is measured). User-global setting — keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer; project-local cards (v1) are unaffected.',
             ),
             allowed_tiers: z.array(z.string()).default(['public', 'vendor']).describe(
                 'Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares.',
