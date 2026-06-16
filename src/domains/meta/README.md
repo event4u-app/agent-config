@@ -214,7 +214,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
 - **`copilot-config`** — Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`).
-- **`decision-record`** — Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`.
+- **`decision-record`** — Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`.
 - **`description-assist`** — Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 - **`doc-coauthoring`** — Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
 - **`emit-tickets`** — Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
@@ -242,7 +242,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`readme-reviewer`** — Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues.
 - **`readme-writing`** — Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience.
 - **`readme-writing-package`** — Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding.
-- **`reasoning-orchestrator`** — Use for complex / ambiguous / long-horizon work — coordinate the reasoning chain ground→intent→notes→gather→audit→verify; composes existing skills, never duplicates them.
+- **`reasoning-orchestrator`** — Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills.
 - **`refine-prompt`** — Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work "…"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
 - **`repomix-packer`** — Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
