@@ -12,6 +12,7 @@ triggers:
   - keyword: "adapter"
   - keyword: "provider"
   - path_prefix: "scripts/ai-video/adapters/"
+  - path_prefix: "scripts/ai-image/adapters/"
   - path_prefix: "scripts/media/lib/"
   - path_prefix: "agents/.ai-video.xml"
   - phrase: "lifecycle"

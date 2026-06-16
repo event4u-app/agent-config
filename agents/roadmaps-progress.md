@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 54 steps done · 0%**
+**5 / 55 steps done · 9%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 48 | 43 | 5 | 0 | 0 | █░░░░░░░░░ 10% |
 | 2 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -25,11 +25,11 @@
 
 ### [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md)
 
-**image generation, brand, and typography/iconography** — 1 / 48 done (2%)
+**image generation, brand, and typography/iconography** — 5 / 48 done (10%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 14 | 1 | 0 | 0 | 7% |
+| A | `pack-ai-image`: image as a first-class sibling of video | 🟡 in progress | 10 | 5 | 0 | 0 | 33% |
 | C | typography & iconography (Reference + style path) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | B | brand as first-class UX (`pack-brand` + brand corpus) | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
 | D | trigger-eval substrate (built last, from observed needs) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |

@@ -155,15 +155,22 @@ independent and provides the logo/asset path Phase B consumes.
       (`trust_level_default: experimental`, `size_class: large`, `FIRST_WIN.md`,
       `time_to_first_value_minutes`); `requires: []`, `suggests: [ai-video]`.
       Ship in `balanced` + `full`; `minimal` stays text-only.
+      <!-- deferred: a pack with zero skills/commands is empty/invalid (artefact_count=0);
+      the manifest + generated-surface cascade ships WITH A.3's skills/commands. -->
 - [ ] Promote/extend adapters under the moved substrate, each per
       `provider-lifecycle-discipline` (scaffold → live-validated → stable, with
       smoke evidence):
+      <!-- 2026-06-16: the 4 NEW adapters shipped at scaffold tier (dry-run +
+      domain-neutral smoke harness proves the media/ substrate drives a new
+      image domain end-to-end; live submit/poll/fetch honestly "not wired").
+      openai-images retarget deferred — it is live-adapter surgery on a shipped
+      `stable` video adapter, not a scaffold (council 2026-06-16). -->
   - [ ] `openai-images` — retarget to GPT Image 2; **remove the DALL·E branch**.
-  - [ ] `gemini-image` — Nano Banana family + Imagen 4.
-  - [ ] `ideogram` — text-in-image default (logos/banners).
-  - [ ] `flux` — photorealism (via fal/replicate to start is acceptable).
-  - [ ] `recraft` — vector/SVG output (true `<path>` logos/icons; raster models
-        can't emit usable vector brand marks). Decision 1's vector path.
+  - [x] `gemini-image` — Nano Banana family + Imagen 4. (scaffold tier)
+  - [x] `ideogram` — text-in-image default (logos/banners). (scaffold tier)
+  - [x] `flux` — photorealism (via fal/replicate to start is acceptable). (scaffold tier)
+  - [x] `recraft` — vector/SVG output (true `<path>` logos/icons; raster models
+        can't emit usable vector brand marks). Decision 1's vector path. (scaffold tier)
 
 ### A.3 Skills, commands, rules, persona
 
