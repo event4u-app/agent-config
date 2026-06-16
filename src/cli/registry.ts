@@ -83,6 +83,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'council:estimate', disposition: 'delegate' },
     { name: 'council:run', disposition: 'delegate' },
     { name: 'council:render', disposition: 'delegate' },
+    { name: 'eval:record', disposition: 'native', synopsis: 'Record a live trigger-eval result into a corpus manifest (corpus-refresh DoD, ADR-061 §6).' },
 ] as const;
 
 export function findCommand(name: string): CommandEntry | undefined {

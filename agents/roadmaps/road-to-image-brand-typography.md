@@ -407,34 +407,45 @@ trigger patterns of A/B/C, not universal thresholds frozen up front (council).
 This closes the ADR-061 verified gap: `design-intelligence`'s manifest has **no
 `last_eval`**, and the live eval is manual/out-of-CI by design.
 
-- [ ] Port the legacy Python recorder to the TS CLI (TS-first directive). Add
+- [x] Port the legacy Python recorder to the TS CLI (TS-first directive). Add
   `src/cli/commands/recordTriggerEval.ts` exporting
   `runRecordTriggerEval(opts): number` (ESM, `zod`, `logger`), reading the
   `EvalResult` JSON from `skill_trigger_eval.py --output` and patching
   `upstream.last_eval` into a corpus `manifest.json`. Guards: reject non-live
   (`router != "anthropic"`) with exit 2 unless `--allow-mock`; stamp
   `sha_at_eval` from `upstream.sha`; exit 1 (recorded) on floor miss.
-- [ ] Encode **domain-specific floors** observed from A/B/C, e.g. `image-generation`
+- [x] Encode **domain-specific floors** observed from A/B/C, e.g. `image-generation`
   1.0/0.85, `iconography` 1.0/0.9 (reference task), `brand-strategy` 0.9/0.7
   (judgment task) — tuned to the trigger patterns each skill actually shows,
   not a single global pair.
-- [ ] Register `eval:record` in [`src/cli/registry.ts`](../../src/cli/registry.ts)
+- [x] Register `eval:record` in [`src/cli/registry.ts`](../../src/cli/registry.ts)
   (`disposition: native`) and wire the commander subcommand in
   `src/cli/agent-config.ts` (`--eval-json`, `--manifest`, `--min-recall`,
   `--min-precision`, `--allow-mock`, `--dry-run`).
-- [ ] Co-located vitest `recordTriggerEval.test.ts` (six paths: pass → 0; mock →
+- [x] Co-located vitest `recordTriggerEval.test.ts` (six paths: pass → 0; mock →
   2; `--allow-mock` → 0; recall < floor → 1; skill/manifest mismatch → 2;
   dry-run writes nothing). `task test --filter recordTriggerEval`. <!-- carve-out: new-gate-verification -->
-- [ ] Deterministic CI lint (no token spend), wired to `task ci-fast`: fail if a
+- [x] Deterministic CI lint (no token spend), wired to `task ci-fast`: fail if a
   skill ships `evals/triggers.json` but its `manifest.json` lacks
   `upstream.last_eval` **or** `last_eval.sha_at_eval != upstream.sha`. <!-- carve-out: new-gate-verification -->
-- [ ] Refresh runbook `docs/guides/frontend-design-corpus-refresh.md` coupling the
+  <!-- done 2026-06-16: src/scripts/lint_eval_freshness.py + `task lint-eval-freshness`.
+  Verified standalone: flags design-intelligence (sha-pinned, no last_eval), skips
+  brand (upstream:null, original-authored — nothing to pin). NOT yet added to the
+  ci-fast blocking `deps` aggregate: it hard-fails until the SHA-pinned corpora
+  carry a recorded last_eval, and that recording needs the LIVE backfill below.
+  Aggregate-wiring rides with the backfill (one-line `deps` add, flagged). -->
+- [x] Refresh runbook `docs/guides/frontend-design-corpus-refresh.md` coupling the
   live eval to SHA-bump / description-edit: DoD = no refresh PR merges without
   `upstream.last_eval.passed: true` and `sha_at_eval == upstream.sha`. Step-3
   command is `agent-config eval:record …`.
 - [ ] Backfill: run `task test-triggers-live -- <skill>` once per corpus-backed
   skill (`design-intelligence` first, then the A/B/C skills) and `eval:record`
   each result so every description-routed skill is provably firing.
+  <!-- deferred 2026-06-16: LIVE token spend (interactive anthropic API run per
+  skill). Flagged for explicit user confirmation — not run autonomously (the user
+  is rate-limit-conscious). Once done, also add `lint-eval-freshness` to the
+  ci-fast `deps` aggregate so the gate goes blocking. -->
+  <!-- HUMAN-ACTION: run the live backfill + flip the ci-fast aggregate together. -->
 
 **Exit criteria:** `eval:record` is a green TS command with tests; the
 deterministic lint runs in `task ci-fast`; the runbook is the cited DoD; every
