@@ -1,0 +1,45 @@
+{
+  "eval": "structure-grounding-fair-control",
+  "phase": "Evidence v2 Phase 0 (uncrippled control + cost arm)",
+  "date": "2026-06-16",
+  "surface": "db",
+  "fixture": "internal/evals/structure-grounding/fixtures/db/user_model.py",
+  "task": "internal/evals/structure-grounding/smoke/task.md",
+  "model_under_test": "claude-sonnet-4-5 (subagent)",
+  "ground_truth_fields": ["id", "email", "full_name", "created_at", "status", "active", "suspended", "pending"],
+  "conditions": {
+    "discovery_off": {
+      "note": "crippled control, from results/smoke-2026-06-15.json — kept for comparison",
+      "prompt": "fast first pass, do not explore the repo, build from the task description",
+      "fields_referenced": ["is_banned", "username", "signup_date"],
+      "invented_fields": ["is_banned", "username", "signup_date"],
+      "invented_count": 3,
+      "verified_count": 0,
+      "cost": { "input_tokens": null, "output_tokens": null, "turns": 0, "wall_ms": null }
+    },
+    "careful_control": {
+      "note": "NEW — a normally careful agent, NO crippling prompt, NO source-discovery discipline injected, repo access. The fair control the v1 review asked for.",
+      "prompt": "You are a careful, competent engineer. Do a good job. Keep it consistent with the existing User model.",
+      "fields_referenced": ["status", "UserStatus.SUSPENDED", "full_name", "created_at"],
+      "invented_fields": [],
+      "invented_count": 0,
+      "verified_count": 4,
+      "resolved_task_traps": { "banned": "suspended", "username": "full_name", "signup_date": "created_at" },
+      "cost": { "input_tokens": null, "output_tokens": null, "total_subagent_tokens": 167053, "turns": 1, "wall_ms": 10618 }
+    },
+    "discovery_on": {
+      "note": "from results/smoke-2026-06-15.json — the disciplined arm",
+      "prompt": "source-discovery discipline: read the real model first, emit Evidence Report, use only verified fields",
+      "fields_referenced": ["status", "suspended", "full_name", "created_at"],
+      "invented_fields": [],
+      "invented_count": 0,
+      "verified_count": 4,
+      "emitted_evidence_report": true,
+      "cost": { "input_tokens": null, "output_tokens": null, "turns": null, "wall_ms": null, "note": "not instrumented in the original smoke run; the Evidence-Report scaffold adds turns vs careful-control" }
+    }
+  },
+  "result": "HONEST NULL on marginal lift: careful_control invented 0/3 — same as discovery_on. The 3->0 headline is real only against the CRIPPLED discovery_off arm. On a single-file in-codebase fixture, a careful agent reads the source unprompted and the discipline's marginal benefit over it is ~null.",
+  "interpretation": "The discipline's value is NOT 'read the source' (a careful agent already does) — it is the FORCING FUNCTION where the agent would NOT otherwise read fresh: multi-surface / expensive-to-discover / time-pressured / cross-session work, and the negative-fact memory that stops a re-search. This sharpens where Evidence v2 should invest: not Class-A config digests (near-tautological, like this fixture), but the surfaces a careful agent skips.",
+  "cost_caveat": "Subagent token accounting is combined in+out (total_subagent_tokens), not split, and the original smoke arms were not cost-instrumented. The cost block schema is now mandatory (README); future runs via a real API runner split input/output. This is signal, not a benchmark; n=1.",
+  "decision": "Phase 0 gate satisfied: the fair control is run and recorded honestly. It does NOT kill v1 (v1's value holds on the surfaces a careful agent skips), but it RE-TARGETS v2 away from near-tautological Class-A-only claims and toward observed-convention / negative-fact value — exactly the smallest-validating-increment the roadmap's Phase 3 hand-curated arm tests."
+}
