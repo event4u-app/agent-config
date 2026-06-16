@@ -84,6 +84,7 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-structural-breaking
       - task: check-trigger-evals
+      - task: lint-eval-freshness
       - task: lint-workflow-security
       - task: lint-missions
       - task: check-token-optimizer-freshness
@@ -226,6 +227,7 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-structural-breaking
       - task: check-trigger-evals
+      - task: lint-eval-freshness
       - task: lint-workflow-security
       - task: lint-missions
       - task: check-token-optimizer-freshness
