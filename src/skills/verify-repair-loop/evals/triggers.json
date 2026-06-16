@@ -1,5 +1,6 @@
 {
   "skill": "verify-repair-loop",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the bounded test-verdict-gated iterate-to-green loop (numeric threshold → judge escalation). Should-not-trigger covers near-miss neighbors: subjective-craft revision (do-and-judge), one-shot multi-judge review (review-changes), a single test run with no loop, judging a diff without execution, and the deferred live-app Playwright verdict.",
   "queries": [
     {"q": "keep fixing until the tests pass", "trigger": true},

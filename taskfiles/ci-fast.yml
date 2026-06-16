@@ -346,6 +346,16 @@ tasks:
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
     cmd: python3 src/scripts/check_no_conflict_markers.py {{.QUIET_FLAG}}
 
+  check-structural-breaking:
+    silent: true
+    desc: "Fail when a structural break (artifact deleted/renamed, or a contract schema changed without an x-schemaVersion bump) lacks a breaking annotation — road-to-contract-integrity F3"
+    cmd: python3 src/scripts/check_structural_breaking.py {{.QUIET_FLAG}}
+
+  check-trigger-evals:
+    silent: true
+    desc: "Regression-lock skill trigger sets — every src/skills/*/evals/triggers.json carries a fresh (<=90d) last_eval and passes the offline structural smoke (road-to-contract-integrity F4)"
+    cmd: python3 src/scripts/check_trigger_evals.py {{.QUIET_FLAG}}
+
   lint-workflow-security:
     silent: true
     desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 113 steps done · 0%**
+**12 / 113 steps done · 11%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   11%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-contract-integrity.md](roadmaps/road-to-contract-integrity.md) | 3 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-contract-integrity.md](roadmaps/road-to-contract-integrity.md) | 3 | 15 | 3 | 12 | 0 | 0 | ████████░░ 80% |
 | 2 | [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-harvest-orchestration.md](roadmaps/road-to-harvest-orchestration.md) | 4 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-image-brand-typography.md](roadmaps/road-to-image-brand-typography.md) | 4 | 47 | 47 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,12 +29,12 @@
 
 ### [road-to-contract-integrity.md](roadmaps/road-to-contract-integrity.md)
 
-**Contract Integrity — product-clarity, complexity-governance, release-discipline** — 0 / 15 done (0%)
+**Contract Integrity — product-clarity, complexity-governance, release-discipline** — 12 / 15 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Trust boundaries, kill switches, and the census prerequisite | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 1 | Contract repair: regression locks and canonical naming | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Trust boundaries, kill switches, and the census prerequisite | ✅ done | 0 | 8 | 0 | 0 | 100% |
+| 1 | Contract repair: regression locks and canonical naming | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Discoverability: family-first presentation after pruning | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-greenfield-scaffold.md](roadmaps/road-to-greenfield-scaffold.md)

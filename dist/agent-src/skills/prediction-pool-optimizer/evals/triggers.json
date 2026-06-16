@@ -1,5 +1,6 @@
 {
   "skill": "prediction-pool-optimizer",
+  "last_eval": "2026-06-16",
   "description": "9 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings and the core intent (pool tips, kicktipp, expected-points optimization across sports, plus answering the bonus / award questions and using bookmaker-consensus odds). Should-not-trigger covers near-miss neighbours: regulated financial advice (finance pack), plain match-result prediction with no pool, generic web research, AI video, and real-money sportsbook betting (out of scope / refuse).",
   "queries": [
     {"q": "optimize my kicktipp tips for the football WM 2026", "trigger": true},
