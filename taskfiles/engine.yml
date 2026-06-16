@@ -131,6 +131,10 @@ tasks:
   test-triggers:
     silent: true
     desc: "Run trigger eval for one skill (MockRouter, no API call). Usage: task test-triggers -- eloquent"
+    env:
+      # `from scripts._lib import …` needs `src` on the import root; pyproject's
+      # pythonpath only applies under pytest, not raw task/python3 invocation.
+      PYTHONPATH: src
     cmd: python3 src/scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}} --dry-run
 
   trigger-coverage:
@@ -188,6 +192,10 @@ tasks:
       Bootstrap once:        task setup-evals
       Install the key once:  task install-anthropic-key
       Usage: task test-triggers-live -- eloquent
+    env:
+      # `from scripts._lib import …` needs `src` on the import root; pyproject's
+      # pythonpath only applies under pytest, not raw task/python3 invocation.
+      PYTHONPATH: src
     cmd: .venv/bin/python3 src/scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
     preconditions:
       - sh: test -x .venv/bin/python3

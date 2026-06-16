@@ -1,6 +1,6 @@
 ---
 name: reasoning-orchestrator
-description: "Use for complex / ambiguous / long-horizon work — coordinate the reasoning chain ground→intent→notes→gather→audit→verify; composes existing skills, never duplicates them."
+description: "Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills."
 source: package
 domain: engineering
 status: active

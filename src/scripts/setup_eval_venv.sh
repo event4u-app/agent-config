@@ -16,11 +16,14 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Script lives at src/scripts/; the repo root is two levels up (the venv must
+# land at repo-root .venv/ — that path is gitignored and is what
+# `task test-triggers-live` invokes).
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "${REPO_ROOT}"
 
 VENV_DIR=".venv"
-REQ_FILE="scripts/requirements-evals.txt"
+REQ_FILE="src/scripts/requirements-evals.txt"
 
 if [[ ! -f "${REQ_FILE}" ]]; then
     echo "❌  ${REQ_FILE} missing — aborting."

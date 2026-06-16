@@ -6,13 +6,16 @@ parent_roadmap: evidence-v2-project-intelligence
 
 # Roadmap: Evidence v2 — Accumulation Layer (deferred from project-intelligence)
 
-> **Active (2026-06-16).** Spend authorized. Spawned from the two `[~]` deferred
-> steps of the completed `road-to-evidence-v2-project-intelligence.md`
-> (archived). The remaining hard gate is **evidence**: the accumulation layer is
-> still **not built** until a *valid, re-designed* eval (see the council note
-> below) passes — a null/saturated signal kills the layer (v2 then ships as
-> Class A + the B/C spec + static-consensus). The first executable step is the
-> eval redesign, **not** the layer.
+> **Closed 2026-06-16 — shipped base only (KILL).** Spawned from the two `[~]`
+> deferred steps of the completed `road-to-evidence-v2-project-intelligence.md`
+> (archived). The hard gate was **evidence**. The re-designed, valid eval
+> (`internal/evals/silent-conventions/`) shows the discriminating pool is
+> structurally too thin to reach the Gate's ≥ 10 admitted tasks — nearly every
+> repo convention is already carried by tooling (#1) or an auto-firing skill's
+> `## Gotcha` (#3), i.e. by the v1 arm. Per the Gate's KILL branch the
+> accumulation layer is **not built**; v2 ships as the already-built base
+> (Class A + B/C spec + static-consensus). See the Decision in Phase 1 + the
+> eval `corpus.yaml` finding for the full rationale.
 
 **Trigger:** The Evidence v2 base layer shipped Class A (standards-from-config),
 the Class-B static-consensus path + storage split, and the full Class-C safety
@@ -60,20 +63,35 @@ not support it, kill the layer and ship v2 as the already-built base.
 
 ## Phase 1 — Re-run the gate on a valid design
 
-- [ ] Build the discriminating (non-linter) eval fixture + task per the Gate.
-- [ ] Run the 3-arm eval (no-context / v1 / v2-accumulated) across ≥ 10 tasks;
-      record efficacy + cost using the mandatory cost schema.
-- [ ] **Decision:** accumulated context lowers error rate vs. v1 at acceptable
-      cost → proceed to Phase 2/3. Otherwise → **kill the accumulation layer**,
-      mark this roadmap closed with "shipped base only", archive.
+- [x] Build the discriminating (non-linter) eval fixture + task per the Gate. —
+      `internal/evals/silent-conventions/` (README design + discrimination
+      pre-check + 3 arms + gate; flagship fixture `roadmap-phase-heading.md`
+      with real 2026-06-16 violation evidence; `corpus.yaml` applies the
+      pre-check: after the 2026-06-16 harvest, 1 admitted, 6 needs-evidence,
+      14 excluded-with-reason).
+- [-] Run the 3-arm eval (no-context / v1 / v2-accumulated) across ≥ 10 tasks;
+      record efficacy + cost using the mandatory cost schema. <!-- cancelled: the
+      discrimination pre-check cannot reach ≥ 10 admitted tasks (pool structurally
+      thin — see corpus.yaml finding); a run would burn budget on a settled
+      result. -->
+- [x] **Decision: KILL the accumulation layer — shipped base only.** The
+      silent-conventions harvest (2026-06-16) is the valid evidence the council
+      required: nearly every repo convention is already carried by a linter/CI
+      gate (#1) or the auto-firing skill's own `## Gotcha` (#3) — both ARE the v1
+      arm — so the discriminating pool cannot reach the Gate's ≥ 10 admitted
+      tasks. Marginal value over existing tooling + rules + skills is small. v2
+      ships as the already-built base (Class A + the B/C spec + static-consensus);
+      this roadmap is closed and archived. Revisit only on a future
+      non-deterministic / agentic-trajectory surface with genuinely silent,
+      un-tooled conventions + real violations.
 
 ## Phase 2 — Class B auto-capture (only if the gate passes; prefer static-consensus)
 
-- [ ] **Static-consensus pass first.** Implement the codebase consensus scan
+- [-] **Static-consensus pass first.** Implement the codebase consensus scan
       (dominant-pattern detection + `dominant_share`) feeding `quarantine/`; this
       is the cheaper path the council preferred. Build the auto-capture loop only
       if static-consensus proves insufficient.
-- [ ] **(deferred from project-intelligence P3.3) Auto-capture for B.**
+- [-] **(deferred from project-intelligence P3.3) Auto-capture for B.**
       `source-discovery` proposes an intake signal when it sees a recurring
       convention ("I notice X — record as context?"), writes to gitignored intake
       (low-trust, agent-id-suffixed filename, redaction-on-write), **never** treats
@@ -82,7 +100,7 @@ not support it, kill the layer and ship v2 as the already-built base.
 
 ## Phase 3 — Class C accumulation (only if the gate passes)
 
-- [ ] **(deferred from project-intelligence P4.4) Build the accumulation layer +
+- [-] **(deferred from project-intelligence P4.4) Build the accumulation layer +
       wire the anti-calcification CI/periodic pass.** Lessons are written to intake
       per the already-built `lesson-card` schema (symptom/hypothesis split,
       test-tracking `history[]`, decay triggers, subject-not-person floor);

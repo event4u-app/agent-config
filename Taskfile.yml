@@ -200,6 +200,7 @@ tasks:
       # in taskfiles/ci-fast.yml above test:ts).
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: check-council-config-location
       - task: lint-agents-layout
       - task: check-role-doc-links
       - task: roadmap-progress-check
@@ -340,6 +341,7 @@ tasks:
       - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: check-council-config-location
       - task: lint-agents-layout-strict
       - task: check-role-doc-links
       - task: roadmap-progress-check
