@@ -78,6 +78,17 @@ remain.
 - [ ] Run the hybrid eval (L8): trigger fixtures (`skill_trigger_eval.py`) +
       hand-scored golden transcripts, treatment vs baseline, incl. token-overhead
       delta + calibration accuracy + decision-reuse + uncertainty→effort.
+      <!-- TRIGGER HALF DONE 2026-06-16 (live, claude-sonnet-4-5, ~$2.76).
+      Re-framed: only 3/8 disciplines are trigger-measurable — prediction R1.0;
+      complexity + decision R0.6 borderline (decision sharpening-assisted 0.4→0.6).
+      orchestrator R0.2 (sharpening proven no-op → structural winner-take-one
+      ceiling) + verify (completion gate, triggers.json retired) + grounding/
+      intent/notes_first (rules) → quality layer. The "≥60% per discipline" gate
+      applies only to the routable 3. Record:
+      tests/reasoning-layer-eval/RESULTS-trigger-2026-06-16.md + TRIGGER-WIRING.md.
+      Wiring fixes landed this branch: PYTHONPATH=src on test-triggers(-live) +
+      setup_eval_venv.sh venv path (both src/-move breakage). GOLDEN-TRANSCRIPT
+      (quality) half still open — see Phase-1 quality-layer plan below. -->
 - [ ] Apply the L6 flip condition (keep/revert the orchestrator) + calibrate the
       L12 verifier structural gate by error-catch rate. Record the verdict + numbers.
 
