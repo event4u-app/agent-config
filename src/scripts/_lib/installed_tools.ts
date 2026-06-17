@@ -32,6 +32,7 @@
  * source). A consumer relying on `pyyaml`-backed full-v2 fidelity would see a
  * behavior change here. See ADR-200 § intentional-divergence.
  */
+import * as fs from "node:fs";
 import * as os from "node:os";
 import * as fsPath from "node:path";
 
@@ -131,8 +132,6 @@ export function read_manifest(path: string): AnyDict | null {
 
 /** Read a file as UTF-8 text, throwing on any error (caller catches). */
 function require_read_text(path: string): string {
-  // Lazy import keeps the module pure for the path helpers above.
-  const fs = require("node:fs") as typeof import("node:fs");
   return fs.readFileSync(path, { encoding: "utf-8" });
 }
 

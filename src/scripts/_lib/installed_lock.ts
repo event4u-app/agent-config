@@ -22,6 +22,7 @@
  * `~/.config/agent-config/installed.lock` if the new path is missing, so
  * pre-2.4 installs keep working during the transition.
  */
+import { randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -336,7 +337,6 @@ function strftime_iso_z(now: Date): string {
 
 /** `tempfile.mkstemp` equivalent: exclusive-create a unique sibling, mode 0600. */
 function mkstemp(dir: string, prefix: string): { fd: number; tmp_name: string } {
-  const { randomBytes } = require("node:crypto") as typeof import("node:crypto");
   for (let attempt = 0; attempt < 32; attempt += 1) {
     const tmp_name = path.join(dir, `${prefix}${randomBytes(6).toString("hex")}`);
     try {

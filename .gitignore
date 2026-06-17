@@ -251,3 +251,9 @@ internal/bench/reports/ab/*-ab-trackb-*.md
 internal/bench/ab/fixtures-v2/*/node_modules/
 internal/bench/ab/v2-clones/
 internal/bench/reports/ab-v2/
+# >>> event4u/agent-config (managed) >>>
+.agent-settings.yml
+agents/sessions/
+agents/runtime/council/responses/
+agents/runtime/council/sessions/
+# <<< event4u/agent-config (managed) <<<

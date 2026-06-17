@@ -44,6 +44,7 @@
  *       }
  *     }
  */
+import { randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -147,7 +148,6 @@ export function save_inventory(data: Inventory, p?: string | null): string {
   const target = p ?? inventory_path();
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const payload = json_dumps_sorted(data, 2) + "\n";
-  const { randomBytes } = require("node:crypto") as typeof import("node:crypto");
   const parent = path.dirname(target);
   let fd: number | null = null;
   let tmp_name = "";
