@@ -1,0 +1,17 @@
+{
+  "_comment": "Machine-readable form of corpus.md — the 12 quality-layer task prompts. band: standard|strong. Consumed by run_quality_eval.py. Editing this file changes what the eval runs.",
+  "slots": [
+    {"n": "01", "slug": "dashboard-activity-feature", "family": "ambiguous-discovery", "band": "standard", "discipline": "grounding", "prompt": "Add a feature to the dashboard so users can see their activity."},
+    {"n": "02", "slug": "oauth-migration-token-map", "family": "ambiguous-discovery", "band": "standard", "discipline": "grounding+intent", "prompt": "We need to migrate auth to OAuth and we're not sure the legacy token format maps cleanly. How should we approach this?"},
+    {"n": "03", "slug": "make-export-faster", "family": "ambiguous-discovery", "band": "strong", "discipline": "intent", "prompt": "Make the export faster."},
+    {"n": "04", "slug": "six-step-build-sequencing", "family": "multi-stage-impl", "band": "standard", "discipline": "complexity-first", "prompt": "We have a 6-step build ahead (schema change, API layer, background job, UI, caching, docs). Which part should we tackle first?"},
+    {"n": "05", "slug": "refactor-billing-module", "family": "multi-stage-impl", "band": "standard", "discipline": "orchestrator", "prompt": "Refactor the entire billing module to be cleaner and safer."},
+    {"n": "06", "slug": "migration-with-stage-checks", "family": "multi-stage-impl", "band": "strong", "discipline": "orchestrator+adaptive-stop", "prompt": "Plan and implement the data migration with checks at each stage."},
+    {"n": "07", "slug": "drop-legacy-accounts-table", "family": "verification", "band": "standard", "discipline": "verifier+notes-first", "prompt": "Write the migration that drops the legacy accounts table and backfills the data from the users table."},
+    {"n": "08", "slug": "auth-middleware-three-plans", "family": "verification", "band": "standard", "discipline": "verifier", "prompt": "Rewrite this auth middleware to branch on three plan types (free, pro, enterprise) with different rate limits each."},
+    {"n": "09", "slug": "payment-capture-refunds-chargebacks", "family": "verification", "band": "strong", "discipline": "verifier", "prompt": "Change the payment-capture flow to handle partial refunds, chargebacks, and retries."},
+    {"n": "10", "slug": "estimate-reindex-job", "family": "cross-run-calibration", "band": "standard", "discipline": "prediction", "prompt": "Estimate how long the search-reindex job will take — we'll check it against the actual runtime afterwards."},
+    {"n": "11", "slug": "action-vs-service-decision", "family": "cross-run-calibration", "band": "standard", "discipline": "decision-ledger", "prompt": "Should we use the Action pattern or a Service class for this workflow?"},
+    {"n": "12", "slug": "continue-refactor-locking", "family": "cross-run-calibration", "band": "strong", "discipline": "notes-persistence+decision-reuse", "prompt": "Continue yesterday's refactor — what did we decide about the locking strategy?"}
+  ]
+}

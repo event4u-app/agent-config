@@ -73,11 +73,20 @@ remain.
 
 ## Phase 1 — Eval execution (billable: real host-model runs)
 
-- [ ] Capture the **baseline** (current suite, no RDP) on ≥1 standard + ≥1
+- [x] Capture the **baseline** (current suite, no RDP) on ≥1 standard + ≥1
       strong-reasoning host; store numbers in `tests/reasoning-layer-eval/README.md`.
-- [ ] Run the hybrid eval (L8): trigger fixtures (`skill_trigger_eval.py`) +
+      <!-- DONE 2026-06-17: controlled two-system-prompt differential (baseline = no
+      RDP) captured on standard (claude-haiku-4-5) + strong (claude-sonnet-4-5)
+      via run_quality_eval.py; numbers in README § Results + RESULTS-quality-2026-06-17.md. -->
+- [x] Run the hybrid eval (L8): trigger fixtures (`skill_trigger_eval.py`) +
       hand-scored golden transcripts, treatment vs baseline, incl. token-overhead
       delta + calibration accuracy + decision-reuse + uncertainty→effort.
+      <!-- QUALITY HALF DONE 2026-06-17 (live, $0.086): 12 slots × baseline/treatment
+      via run_quality_eval.py, scored in RESULTS-quality-2026-06-17.md. Treatment
+      rubric mean 95.8% (≥70%✅); standard Δ +14.6pp/+17.9%rel; strong Δ +25pp (no
+      regression✅); strong/trivial token overhead +1.7% (≤5%✅); zero
+      reasoning_extraction refusals. Single-rater + ceiling-effect caveats recorded.
+      Trigger half = RESULTS-trigger-2026-06-16.md (prior). Both halves now run. -->
       <!-- TRIGGER HALF DONE 2026-06-16 (live, claude-sonnet-4-5, ~$2.76).
       Re-framed: only 3/8 disciplines are trigger-measurable — prediction R1.0;
       complexity + decision R0.6 borderline (decision sharpening-assisted 0.4→0.6).
@@ -89,8 +98,15 @@ remain.
       Wiring fixes landed this branch: PYTHONPATH=src on test-triggers(-live) +
       setup_eval_venv.sh venv path (both src/-move breakage). GOLDEN-TRANSCRIPT
       (quality) half still open — see Phase-1 quality-layer plan below. -->
-- [ ] Apply the L6 flip condition (keep/revert the orchestrator) + calibrate the
+- [~] Apply the L6 flip condition (keep/revert the orchestrator) + calibrate the
       L12 verifier structural gate by error-catch rate. Record the verdict + numbers.
+      <!-- PARTIAL 2026-06-17. L12 verifier gate: calibrated by error-catch rate →
+      KEEP — caught the two highest-severity failures (slot 07 data-loss migration,
+      slot 09 blind 1600-token over-production); recorded in RESULTS-quality. L6
+      orchestrator keep/revert: NOT settled by this design — the quality run measures
+      RDP-on vs RDP-off, not orchestrator-on vs distributed-only; settling L6 needs a
+      dedicated orchestrator-isolation run AND is a maintainer decision per the
+      execution-disposition ruling. Deferred to that run. -->
 
 ## Phase 2 — Kernel promotion (governance: own PR + ADR + soak)
 

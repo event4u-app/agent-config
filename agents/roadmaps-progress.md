@@ -6,17 +6,17 @@
 
 ## Overall
 
-**1 / 7 steps done · 14%**
+**3 / 6 steps done · 50%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   14%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 5 | 7 | 6 | 1 | 0 | 0 | █░░░░░░░░░ 14% |
+| 1 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 5 | 7 | 3 | 3 | 1 | 0 | █████░░░░░ 50% |
 
 ---
 
@@ -24,12 +24,12 @@
 
 ### [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md)
 
-**RDP — eval execution, kernel promotion, polish (follow-up)** — 1 / 7 done (14%)
+**RDP — eval execution, kernel promotion, polish (follow-up)** — 3 / 6 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 3 | (polish) — autonomous status | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 1 | Eval execution (billable: real host-model runs) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Eval execution (billable: real host-model runs) | ✅ done | 0 | 2 | 1 | 0 | 100% |
 | 2 | Kernel promotion (governance: own PR + ADR + soak) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 3 | Frontier-serving polish (human-reviewed) | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 3 | execution notes (2026-06-16) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
