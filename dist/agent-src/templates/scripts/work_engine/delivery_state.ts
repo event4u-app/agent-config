@@ -88,7 +88,9 @@ export class DeliveryState {
     questions: string[];
     report: string;
     ui_audit: Record<string, Any> | null;
+    app_spec: Record<string, Any> | null;
     ui_design: Record<string, Any> | null;
+    ui_scaffold: Record<string, Any> | null;
     ui_review: Record<string, Any> | null;
     ui_polish: Record<string, Any> | null;
     contract: Record<string, Any> | null;
@@ -107,7 +109,9 @@ export class DeliveryState {
         questions?: string[];
         report?: string;
         ui_audit?: Record<string, Any> | null;
+        app_spec?: Record<string, Any> | null;
         ui_design?: Record<string, Any> | null;
+        ui_scaffold?: Record<string, Any> | null;
         ui_review?: Record<string, Any> | null;
         ui_polish?: Record<string, Any> | null;
         contract?: Record<string, Any> | null;
@@ -125,7 +129,9 @@ export class DeliveryState {
         this.questions = args.questions ?? [];
         this.report = args.report ?? '';
         this.ui_audit = args.ui_audit ?? null;
+        this.app_spec = args.app_spec ?? null;
         this.ui_design = args.ui_design ?? null;
+        this.ui_scaffold = args.ui_scaffold ?? null;
         this.ui_review = args.ui_review ?? null;
         this.ui_polish = args.ui_polish ?? null;
         this.contract = args.contract ?? null;

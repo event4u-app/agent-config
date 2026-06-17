@@ -20,7 +20,12 @@
  *    OR explicit "existing" surface markers.
  * 4. **UI-Build** — UI signal AND a build/create/add verb, OR new-screen
  *    markers (`new page`, `new screen`, `new component`).
- * 5. **Backend-Coding** — default.
+ * 5. **Mixed (full-stack feature)** — a build verb AND a full-stack noun
+ *    (`feature`, `app`, `module`, `system`, …), with no isolated
+ *    UI or backend signal. "Build me a feature" / "build the billing
+ *    module" want the contract-lock → UI → stitch → verify mixed flow,
+ *    not the backend default (greenfield-scaffold Phase 4).
+ * 6. **Backend-Coding** — default.
  *
  * The label is the dispatcher's *only* input for routing. Confidence
  * band, `ui_intent` flag from the scorer, and AC reconstruction stay
@@ -94,6 +99,19 @@ const _BUILD_VERBS: ReadonlySet<string> = new Set([
     'draft', 'scaffold', 'wire',
 ]);
 
+const _FULLSTACK_PHRASE: RegExp = /\bfull[ -]?stack\b/;
+
+// A full-stack deliverable must be the *object* of a build verb — not
+// merely co-occur in the text. "Build me a feature" / "scaffold the
+// billing module" route to mixed; "returns the integer **product**"
+// (a math result, not a software product) does not, because no build
+// verb governs it. The noun must follow a build verb within a short
+// article/adjective window. Deliberately omits `product` (math
+// polysemy), `page` / `screen` / `component` (pure-UI — the
+// UI-Build rung owns them), and `endpoint` / `api` (pure-backend).
+const _FULLSTACK_BUILD: RegExp =
+    /\b(?:build|create|scaffold|implement|ship|draft|wire|introduce|add)\b(?:\s+(?:me|a|an|the|our|my|new|complete|full|entire|whole|single))*(?:\s+[\w-]+){0,2}\s+\b(?:feature|app|application|module|system|mvp|prototype|saas|platform|crud|workflow)\b/;
+
 const _NEW_SURFACE: RegExp =
     /\b(new|fresh|blank)\s+(page|screen|view|component|form|modal|tile|dashboard)\b/;
 
@@ -146,6 +164,12 @@ export function classify_intent(
         // surface check, which is the wrong default when the prompt
         // is ambiguous.
         return INTENT_UI_IMPROVE;
+    }
+    // No isolated UI or backend signal — but a full-stack feature build
+    // ("build me a feature", "scaffold the billing module") should reach
+    // the mixed flow rather than fall through to the backend default.
+    if (_is_fullstack_feature(text)) {
+        return INTENT_MIXED;
     }
     return INTENT_BACKEND;
 }
@@ -238,6 +262,23 @@ function _is_build(text: string): boolean {
         }
     }
     return false;
+}
+
+/**
+ * True when the prompt is a full-stack feature build.
+ *
+ * Either the `full-stack` phrase appears, or a full-stack noun is
+ * the object of a build verb ({@link _FULLSTACK_BUILD}). Only reached
+ * after the UI and backend rungs miss, so an isolated UI / backend
+ * prompt never lands here — this rung exists for the layer-agnostic
+ * "build me a feature" shape that would otherwise fall through to the
+ * backend default. The build-object adjacency keeps it from firing on
+ * incidental noun co-occurrence (e.g. a math "product" in an AC).
+ */
+function _is_fullstack_feature(text: string): boolean {
+    return (
+        reSearch(_FULLSTACK_PHRASE, text) || reSearch(_FULLSTACK_BUILD, text)
+    );
 }
 
 /**
