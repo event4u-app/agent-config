@@ -1,0 +1,18 @@
+{
+  "eval": "standards-from-config-class-A-synthetic",
+  "phase": "Evidence v2 Phase 1 gate (Class A mechanism correctness)",
+  "date": "2026-06-16",
+  "model_under_test": "claude-sonnet-4-5 (subagent)",
+  "fixture": "internal/evals/standards-from-config/fixtures/ (ruff.toml + .editorconfig with deliberate 100-vs-80 conflict)",
+  "skill": "src/skills/standards-from-config/SKILL.md",
+  "checks": {
+    "pointer_not_claim": { "expected": "every digest row carries a source: file:key pointer", "observed": "every_row_has_source=true", "pass": true },
+    "conflict_surfaced_not_flattened": { "expected": "ruff line-length=100 vs editorconfig max_line_length=80 emitted as two pointers", "observed": "flattened_any_conflict=false; conflict row lists both values+sources", "pass": true },
+    "config_derived_standard_used": { "expected": "code honors the config-derived quote style", "observed": "quote_style_used=single (matches ruff [format].quote-style)", "pass": true },
+    "drift_trigger": { "expected": "a config change flips the digest value + mtime so the card re-derives", "observed": "line-length 100->120 + mtime change detected deterministically", "pass": true }
+  },
+  "cost": { "input_tokens": null, "output_tokens": null, "total_subagent_tokens": 169387, "turns": 3, "wall_ms": 25496 },
+  "result": "PASS (mechanism correctness). Class A produces pointer+digest not a flattened claim, surfaces config conflicts as two pointers, drives config-derived standards into written code, and re-derives on config drift.",
+  "caveat": "Class A is near-tautological by design (it should help) — this gates the MECHANISM, not the v2 self-building thesis. The thesis is tested by the Phase-3 hand-curated Class-B arm (does OBSERVED convention lower error rate). Cross-ref fair-control-2026-06-16.json: a careful agent already reads config; Class A's value is the committed, re-checkable, drift-proof DIGEST for the next agent, not novel correctness.",
+  "decision": "Phase 1 gate green; Class A ships."
+}

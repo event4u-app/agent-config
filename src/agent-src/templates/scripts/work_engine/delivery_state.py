@@ -76,7 +76,9 @@ class DeliveryState:
     questions: list[str] = field(default_factory=list)
     report: str = ""
     ui_audit: dict[str, Any] | None = None
+    app_spec: dict[str, Any] | None = None
     ui_design: dict[str, Any] | None = None
+    ui_scaffold: dict[str, Any] | None = None
     ui_review: dict[str, Any] | None = None
     ui_polish: dict[str, Any] | None = None
     contract: dict[str, Any] | None = None

@@ -1,5 +1,6 @@
 {
   "skill": "image-analyser",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the analyse / canon-diff / accuracy-check / drift-find / bootstrap-from-portrait paths (DE + EN). Should-not covers the near-miss neighbours whose vocabulary overlaps: scene/motion review (video-director), non-character art (canvas-design), cross-scene token lock (character-consistency), generation (image-creator), and document OCR (generic).",
   "queries": [
     {"q": "analyse this character image down to the last detail", "trigger": true},

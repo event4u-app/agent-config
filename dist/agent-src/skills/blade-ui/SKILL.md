@@ -102,11 +102,18 @@ not the initial apply — it also emits:
   pre-existing entries on replay. Omit the envelope on apply passes; the
   engine's `_apply_a11y_gate` only fires when a baseline is present.
 - `state.ui_review.preview` — `{render_ok: bool, screenshot_path?,
-  dom_dump_path?, error?, skipped?}`. `render_ok: false` with `error`
-  populated triggers the `preview_render_failed` halt; `render_ok: true`
-  with `screenshot_path` threads the screenshot into the delivery
-  report's `artifacts` list. Browser tooling (Playwright/Cypress/…) is
-  a consumer-project dependency — this package does not ship one.
+  dom_dump_path?, error?, skipped?, skip_reason?}`. **Render evidence is
+  required, not optional** on a review/polish pass: you MUST drive the
+  headless browser (Playwright + axe-core) against the rendered output and
+  write `render_ok`. Omitting it now triggers the `preview_render_required`
+  halt — a render-capable stack can no longer claim success without
+  rendering. `render_ok: false` with `error` populated triggers the
+  `preview_render_failed` halt; `render_ok: true` with `screenshot_path`
+  threads the screenshot into the delivery report's `artifacts` list. The
+  only no-render path is an **explicit, reasoned skip**: set `skipped: true`
+  plus a `skip_reason` (e.g. no Playwright runner in this env). Browser
+  tooling (Playwright/Cypress/…) is a consumer-project dependency — this
+  package does not ship one.
 
 Polish dispatch: when the dispatcher skips `review` because a previous
 review pass already returned `SUCCESS`, this skill MUST itself

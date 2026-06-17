@@ -1,5 +1,6 @@
 {
   "skill": "doc-coauthoring",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger phrasings reflect real co-authoring asks for PRDs / specs / decision docs. Should-not-trigger near-misses share doc-writing vocabulary but route elsewhere (agent-docs-writing, readme-writing, adr-create, code docs, translations).",
   "queries": [
     {"q": "Help me draft a PRD for the new analytics feature — I have a lot of context but no structure yet", "trigger": true},

@@ -70,6 +70,8 @@ agents/settings/contexts/                                # Project-wide contexts
 | **Integration** | External API/system integration | `probaus-api.md` |
 | **Infrastructure** | DevOps or infrastructure concern | `queue-system.md` |
 | **Knowledge card** | Trust-tiered cache of *expensive* (remote) structural evidence — negative facts + pointers durable, positive structure a hypothesis | `lodash.md`, `stripe-api.md` |
+| **Standards card (Class A)** | Coding standards **derived from real tooling config** — pointer + digest, `trust: high (config-derived)`, auto-refreshed when config changes; never a flattened claim | `coding-standards.md` (points at `ruff.toml`, `.editorconfig`) |
+| **Lesson card (Class C)** | Learned lesson — `symptom` (fact) split from `hypothesis` (decaying theory), `trust: low`, subject-not-person, anti-calcification decay; promoted only via human gate (accumulation layer is eval-gated) | `agents/memory/curated/lessons/<slug>.md` |
 
 ## Where to store contexts
 
@@ -81,6 +83,19 @@ agents/settings/contexts/                                # Project-wide contexts
 | **Knowledge card** (committed) | `agents/knowledge/<source>.md` — fill from the `knowledge-card` template |
 | **Evidence Report / probe dumps / absence log** (ephemeral) | `agents/memory/knowledge/session/` (gitignored, overwritten each task) |
 | If unsure | Ask the user |
+
+### Standards cards — Class A configured convention (Evidence v2)
+
+A **standards card** is a present-state context whose claims are **derived from the
+project's real tooling config** (`.editorconfig`, `eslint.config.js`, `pint.json`,
+`pyproject.toml`/`ruff.toml`, commit-lint, CI lint steps). It is `trust: high
+(config-derived)` — high *because* the config is the truth. Each standard is a
+**pointer + digest** (value + `source: file:key` + scope), never a flattened claim;
+conflicting configs surface as two pointers, never merged. Digest is **regenerated**
+when a source config's mtime/hash changes (auto-refresh, no human gate). Read for
+heuristics only, never to bypass a fresh structural read. Build with
+[`standards-from-config`](../standards-from-config/SKILL.md) skill; store under
+`agents/settings/contexts/`.
 
 ### Knowledge cards — a specialized, evidence-disciplined context type
 

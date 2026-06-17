@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-06-13 | commit: 57588489 | files: 0 -->
 # Skill Description Audit — Baseline
 
 > **Date:** 2026-04-21

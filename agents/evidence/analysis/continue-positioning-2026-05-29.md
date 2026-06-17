@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-29 | commit: 57588489 | files: 0 -->
 # Competitive Positioning — continuedev/continue vs agent-config
 
 > Date: 2026-05-29 · Method: `competitive-positioning` skill · Evidence: deep-dive

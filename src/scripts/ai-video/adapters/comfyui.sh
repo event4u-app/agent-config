@@ -55,7 +55,7 @@
 # cost_estimate: a local render is a KNOWN 0.0 (no provider charge) —
 # distinct from an omitted estimate (unknown); ADR-060 §5.
 #
-# Contract: scripts/ai-video/lib/adapter-contract.md (v2 + the
+# Contract: scripts/media/lib/adapter-contract.md (v2 + the
 # local-source rule: a kind="local" provider consumes validated local
 # input paths; the https-only rule is for hosted providers that must
 # fetch the bytes).
@@ -70,8 +70,8 @@
 
 set -euo pipefail
 
-# shellcheck source=../lib/adapter-common.sh
-. "$(dirname "$0")/../lib/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 ADAPTER_ID="comfyui"
 COMFYUI_BASE_DEFAULT="http://127.0.0.1:8188"

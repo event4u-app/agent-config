@@ -1,0 +1,32 @@
+# reveal.js brand deck template — locked brand variables.
+# Values reference brand tokens from .tokens.json; the consumer's reveal
+# build injects assets/design-tokens.css so var(--token) resolves.
+# No render engine is owned here (decision 7) — this configures the user's reveal.
+deck:
+  title: "[Brand Name]"
+  # Inject the generated brand token stylesheet so var(--token) resolves.
+  css:
+    - assets/design-tokens.css
+  theme: brand
+
+# Brand variables are LOCKED to tokens — never inline a raw hex/font.
+brand:
+  background: "var(--semantic-color-background)"
+  text: "var(--semantic-color-foreground)"
+  heading: "var(--semantic-color-primary)"
+  accent: "var(--semantic-color-accent)"
+  font_heading: "var(--typography-heading-font-family)"
+  font_body: "var(--typography-body-font-family)"
+
+reveal:
+  controls: true
+  progress: true
+  transition: fade
+
+slides:
+  - heading: "[Brand Name]"
+    body: "Positioning line in the brand voice."
+  - heading: "Section title"
+    body: "Body copy in the brand body font; emphasis uses the accent token."
+  - heading: "Closing"
+    body: "Call to action. Restyle the whole deck by changing .tokens.json."

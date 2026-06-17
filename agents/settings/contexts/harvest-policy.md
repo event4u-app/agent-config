@@ -11,6 +11,42 @@ This context codifies the **third bucket** that bridges that gap:
 **defer-with-trigger**. The bucket is mechanical, not editorial — every
 deferred item carries the exact condition that reopens it.
 
+## Harvest is automated-but-gated, not manual
+
+A common misread of this policy is that harvesting an external reference
+is an editorial, manual act of judgement. It is not. The *analysis* is
+already automated; what stays human is the **gate**, not the labour.
+
+The package ships the tooling that does the mechanical work:
+
+| Tool | What it automates |
+|---|---|
+| [`skill_overlap.py`](../../../src/scripts/skill_overlap.py) | Pairwise Jaccard similarity over skill description + trigger + symbol-path sets → "is this idea already covered?" without re-reading 150 skills by hand. |
+| [`audit_overlap.py`](../../../src/scripts/audit_overlap.py) | Rule-side analog — path-prefix + keyword overlap → merge/redundancy candidates across rules. |
+| [`analyze-reference-repo`](../../../src/domains/engineering-base/analyze-reference-repo/command.md) | Structured deep-dive of an external repo → per-axis adopt / adapt / reject / already-shipped classification + adoption plan. |
+
+The discipline that makes harvesting *safe* is therefore **not** "do it
+by hand so a human stays in the loop" — the human is already in the loop
+at the decision, not the keyboard. The three real gates are:
+
+1. **The 5-unit plate cap** (`road-to-competitive-borrow.md`). A harvest
+   plate adopts at most 5 units; the tooling can surface 50 candidates,
+   but only 5 cross into the current plate. The cap is what prevents
+   automation from becoming a firehose.
+2. **Source-anonymity** ([`source-confidentiality`](../../../src/rules/source-confidentiality.md)).
+   Tracked artifacts never name the external source they learned from;
+   retained links are encrypted, raw evidence stays local-only. The
+   tooling reads named sources; the *output* anonymises them.
+3. **The council gate.** Any adopt-now decision (and any decision to
+   open a new domain) goes through an AI-council round or a maintainer
+   ruling before it lands. Convergence informs; it never auto-adopts.
+
+> The takeaway: a user-facing "import this skill" command is **forbidden**
+> precisely because it would let a user bypass the plate cap + council
+> gate — turning automated-but-gated into automated-and-ungoverned. Any
+> import helper lands as a developer-only `scripts/` tool, never in
+> `/help`. See `road-to-capability-discoverability.md` Phase 3.
+
 ## The three buckets
 
 | Bucket | When | Action | Owner |

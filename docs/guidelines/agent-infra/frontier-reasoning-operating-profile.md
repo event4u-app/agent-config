@@ -6,6 +6,11 @@
 > weaker models skip — the **transferable operating discipline** — and the
 > boundary of what is *not* transferable.
 >
+> **User entry point:** for the one-screen "what it does / when it fires / how to
+> turn it off" contract, see
+> [`docs/contracts/reasoning-discipline-protocol.md`](../../contracts/reasoning-discipline-protocol.md).
+> This dossier holds the depth; that contract is where users start.
+>
 > Citation discipline: every catalog row names its source **and its dignity**
 > (Anthropic primary doc · third-party review · customer testimonial · our own
 > derivation). Two independent external model analyses (Claude + GPT) corroborate

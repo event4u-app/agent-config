@@ -82,7 +82,7 @@ Provenance + licenses: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 ### Font fallback (no google-fonts index — by design)
 
 The 745 KB Google-Fonts index was rejected (ADR-061 §8): it duplicates a
-public API. When a requested font is outside `typography.csv`'s 73
+public API. When a requested font is outside `font-pairings-reference.csv`'s 73
 pairings: query `https://fonts.google.com/specimen/<Family>` (or the
 `webfonts` API) for metadata, OR propose the nearest curated pairing and
 say why. Never invent pairing metadata.

@@ -123,6 +123,16 @@
   domain: engineering
   size_class: medium
 
+- id: brand
+  label: Brand
+  description: Brand as a first-class UX layer — archetype/voice/identity grounding corpus, brand→token derivation, and consistency governance that constrains UI.
+  workspaces: [engineering]
+  requires: [frontend-design]
+  suggests: [ai-image]
+  trust_level_default: professional
+  domain: engineering
+  size_class: medium
+
 - id: python
   label: Python
   description: Python-language patterns.
@@ -235,6 +245,7 @@
   description: AI video pipeline.
   workspaces: [small-business]
   trust_level_default: experimental
+  surface_tier: lab
   domain: media
   size_class: large
   onboarding:
@@ -242,11 +253,22 @@
     example_workflow: scene-expander
     time_to_first_value_minutes: 12
 
+- id: ai-image
+  label: AI Image
+  description: AI image generation — multi-provider, governed (image as a sibling of video).
+  workspaces: [small-business]
+  suggests: [ai-video]
+  trust_level_default: experimental
+  surface_tier: lab
+  domain: media
+  size_class: medium
+
 - id: fun
   label: Fun
   description: Non-essential social/fun workflows (prediction-pool tips, etc.).
   workspaces: [small-business]
   trust_level_default: experimental
+  surface_tier: lab
   domain: fun
   size_class: small
   onboarding:

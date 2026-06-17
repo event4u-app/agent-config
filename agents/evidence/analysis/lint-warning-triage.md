@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-06-13 | commit: 57588489 | files: 1 -->
 # Lint Warning Triage — 2026-05-09
 
 **Source:** `agents/evidence/analysis/lint-baseline-2026-05-09.txt` (108 warn, 0 fail).

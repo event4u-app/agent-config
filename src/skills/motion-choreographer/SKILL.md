@@ -25,7 +25,7 @@ install:
 > environment motion, physics constraints, and — when the adapter
 > declares `audio: native` — a synchronized audio direction block.
 > Reads adapter capabilities from
-> [`adapter-contract.md`](../../../scripts/ai-video/lib/adapter-contract.md);
+> [`adapter-contract.md`](../../../scripts/media/lib/adapter-contract.md);
 > never speaks to a network API.
 
 ## When to use

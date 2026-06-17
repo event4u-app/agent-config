@@ -1,5 +1,6 @@
 {
   "skill": "estimate-ticket",
+  "last_eval": "2026-06-16",
   "version": 1,
   "should_trigger": [
     "estimate PROJ-123",

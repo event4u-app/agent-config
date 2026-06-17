@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-26 | commit: 57588489 | files: 0 -->
 # Feasibility: Rule & Guideline Quality Evals
 
 > Can we measure whether **rules** and **guidelines** fire and are followed,

@@ -146,12 +146,43 @@ note, package-internal path-swap, description budget, and the
 
 | Layer | Count | Purpose |
 |---|---|---|
-| **Skills** | 235 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 84 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 154 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
-| **Guidelines** | 81 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
+| **Skills** | 251 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+| **Rules** | 88 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Commands** | 161 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+| **Guidelines** | 82 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |
+
+---
+
+## Core vs full install
+
+Every shipped artefact carries a **surface tier** so experimental tooling cannot
+destabilise the lean engine adopters install:
+
+- **`core`** — the lean stable multi-host engine: rules + skills + install +
+  condensation, plus the engineering/authoring packs. This is the adoptable
+  surface. Its on-disk install layout is a frozen, versioned contract
+  ([`install-layout.md`](contracts/install-layout.md)) (beta).
+- **`lab`** — experimental / pilot meta-tooling that must not ride the same
+  release train as the core: AI media pipelines (`ai-video`, `ai-image`), the
+  `fun` pack, and the package's own pilot script clusters (council, MCP server,
+  prediction-pool, cost analytics, chat-history, benchmarking).
+
+Two install modes — the only end-user concept here:
+
+- **Full install** (default) — everything, including lab tooling. The
+  maintainer's own working surface.
+- **Core-only install** (`agent-config install --global --core-only`) — prunes
+  lab-tier skills/commands from the deployed tree, leaving a working
+  rules + skills + condensation engine with zero lab modules. The adoptable
+  surface for consumers who don't want pilot churn.
+
+A boundary guard (`scripts/check_surface_tiers.py`, in `task ci-fast`) keeps the
+two apart: it forbids a `core` module from hard-importing a `lab` module
+(guarded `try/except ModuleNotFoundError` optional imports excepted) and asserts
+the cluster-tier registry is exhaustive. Full tier map + the inventory:
+[`surface-tiers.md`](contracts/surface-tiers.md) (beta).
 
 ---
 

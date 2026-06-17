@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **235 skills** available in this package, in alphabetical order.
+All **236 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -239,6 +239,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`using-git-worktrees`](../dist/agent-src/skills/using-git-worktrees/SKILL.md) | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
 | [`"validate-feature-fit"`](../dist/agent-src/skills/"validate-feature-fit"/SKILL.md) | Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit |
 | [`verify-completion-evidence`](../dist/agent-src/skills/verify-completion-evidence/SKILL.md) | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
+| [`verify-repair-loop`](../dist/agent-src/skills/verify-repair-loop/SKILL.md) | Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'. |
 | [`video-director`](../dist/agent-src/skills/video-director/SKILL.md) | Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'. |
 | [`vision-articulation`](../dist/agent-src/skills/vision-articulation/SKILL.md) | Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'. |
 | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |

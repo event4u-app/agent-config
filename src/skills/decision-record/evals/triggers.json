@@ -1,0 +1,17 @@
+{
+  "skill": "decision-record",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Seeded from the RDP `decision` discipline rows in tests/reasoning-layer-eval/trigger-fixtures.json (choice among alternatives with real tradeoffs -> decision ledger; escalate to ADR only when cross-task/structural). Should-not covers tasks with no alternatives to weigh (mechanical / single-path).",
+  "queries": [
+    { "q": "should we use the Action pattern or a Service class for this workflow?", "trigger": true },
+    { "q": "should we adopt Redis or Postgres for the rate-limiter store? weigh the tradeoffs", "trigger": true },
+    { "q": "pick a migration strategy for the column rename: expand-contract or big-bang", "trigger": true },
+    { "q": "do we put authorization in middleware or a policy layer here?", "trigger": true },
+    { "q": "choose between optimistic and pessimistic locking for the checkout flow", "trigger": true },
+    { "q": "use the existing UserRepository to load the user", "trigger": false },
+    { "q": "add a created_at timestamp column to the orders table", "trigger": false },
+    { "q": "rename the variable usr to user in this function", "trigger": false },
+    { "q": "import the logger and log the request id", "trigger": false },
+    { "q": "format this file with the project formatter", "trigger": false }
+  ]
+}

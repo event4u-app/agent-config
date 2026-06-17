@@ -237,6 +237,7 @@ upstream-contribute: Use when a learning, new skill, rule improvement, or bug fi
 using-git-worktrees: Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.
 "validate-feature-fit": Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
 verify-completion-evidence: Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs.
+verify-repair-loop: Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
 video-director: Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'.
 vision-articulation: Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'.
 voc-extract: Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'.

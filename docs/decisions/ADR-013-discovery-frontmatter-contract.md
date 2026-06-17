@@ -126,6 +126,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `git` | Git workflow — commit, pull requests, branch sync. Carries `slug_prefix: git` (ADR-044 §A3); `requires: engineering-base`. Added 2026-06-04 for 6.0.0-D Step 12 Class B1 (`commit`→`git-commit`, `create-pr`→`git-pr-create`). |
 | `frontend-design` | Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge. `requires: engineering-base`; `suggests: react, nextjs`. Added 2026-06-07 (ADR-061). |
 | `analysis-workbench` | RCA, post-mortem, premortem, decision-review as an integrated learning loop. `requires: engineering-base`; opt-in under the `engineering` workspace. Added 2026-06-15 (ADR-096). |
+| `brand` | Brand as a first-class UX layer — archetype/voice/identity grounding corpus, brand→token derivation, and consistency governance that constrains UI. `requires: frontend-design`; `suggests: ai-image`; opt-in under the `engineering` workspace. Added 2026-06-16 (road-to-image-brand-typography Phase B). |
 
 Amendments to the pack list require an ADR-013 amendment and the
 matching `src/config/discovery/packs.yml` row in the same PR.
@@ -279,6 +280,20 @@ suggested, never required), `trust_level_default: professional`,
 openai/gpt-4o, converged A2: opt-in pack over inflating `engineering-base`
 with ~1 MB of design data). Additive, no rename; non-overlap with
 cost-profile and `profile.id` reservations holds.
+
+### 2026-06-16 — New `brand` pack
+
+Added pack id `brand` to the closed vocabulary (brand as a first-class UX layer
+— archetype/voice/identity grounding corpus, brand→token derivation, and
+consistency governance that constrains UI). Mirrored in
+[`src/config/discovery/packs.yml`](../../src/config/discovery/packs.yml) and the
+`ADR_PACKS` frozenset in
+[`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.py).
+`workspaces: [engineering]`, `requires: [frontend-design]`, `suggests:
+[ai-image]` (pack-brand exports tokens, pack-ai-image consumes them — B → A),
+`trust_level_default: professional`, `size_class: medium`. Council-resolved
+2026-06-13 (road-to-image-brand-typography Phase B). Additive, no rename;
+non-overlap with cost-profile and `profile.id` reservations holds.
 
 ## Cross-references
 

@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-30 | commit: 57588489 | files: 3 -->
 # Meta-Layer Classification — Phase 1 Step 2
 
 > Companion to `meta-layer-inventory.md` (the auto-generated, regenerated-at-Step-6 ledger).

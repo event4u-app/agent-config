@@ -1,5 +1,6 @@
 {
   "skill": "corpus-grounding",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers engine consultation + new-domain authoring; should-not-trigger covers domain skills that consult the engine themselves and reference/validation neighbors.",
   "queries": [
     {"q": "search the design corpus for fintech dashboard styles", "trigger": true},

@@ -1,26 +1,30 @@
-"""UI directive set — Phase 6 wires every slot to a working handler.
+"""UI directive set — every dispatcher slot wired to a working handler.
 
 Phase 1 of ``agents/roadmaps/road-to-product-ui-track.md`` landed the
 intent classifier; Phase 2 promoted ``refine`` to the real audit gate
-(:mod:`.audit`); Phase 3 added the four design / apply / review / polish
-handlers; Phase 6 retires the deferral stub by wiring the remaining
-``memory``, ``plan``, and ``report`` slots — the first two as
-:mod:`._passthrough` (the UI track has no memory retrieval, and the
-design brief IS the plan), and the third as a re-export of
-:func:`work_engine.directives.backend.report.run` (the renderer is pure
-and state-driven, so the same Markdown contract serves both tracks).
+(:mod:`.audit`); Phase 3 added the design / apply / review / polish
+handlers; Phase 6 wired the ``report`` slot. The greenfield-scaffold
+roadmap then promoted the two former pass-through slots into real
+greenfield gates: ``memory`` → :mod:`.app_spec` (the app-spec grounding
+gate) and ``plan`` → :mod:`.scaffold` (the Zero-to-One skeleton gate).
+Both are no-op ``SUCCESS`` for every non-greenfield-scaffold flow, so the
+improve-existing / ``bare`` / ``external_reference`` paths are unchanged.
 
 The eight-step shape mirrors :mod:`work_engine.directives.backend`:
 
-- ``refine`` → :mod:`.audit` — existing-UI inventory gate.
-- ``memory`` → :mod:`._passthrough` — UI track does not consult memory.
+- ``refine`` → :mod:`.audit` — existing-UI inventory + greenfield gate.
+- ``memory`` → :mod:`.app_spec` — greenfield app-spec grounding gate.
 - ``analyze`` → :mod:`.design` — produces the locked design brief.
-- ``plan`` → :mod:`._passthrough` — design brief is the plan.
+- ``plan`` → :mod:`.scaffold` — greenfield Zero-to-One skeleton gate.
 - ``implement`` → :mod:`.apply` — stack-dispatched render of the brief.
 - ``test`` → :mod:`.review` — design-review pass produces findings.
 - ``verify`` → :mod:`.polish` — bounded fix loop (≤ 2 rounds).
 - ``report`` → :mod:`work_engine.directives.backend.report` — shared
   delivery-Markdown renderer.
+
+The greenfield order is audit → app-spec → design → scaffold → apply →
+review → polish (Phases 2-4 council, Option A): ``design`` fixes the
+abstract visual language, ``scaffold`` maps it onto concrete structure.
 """
 from __future__ import annotations
 
@@ -28,7 +32,7 @@ from collections.abc import Mapping
 
 from ...delivery_state import Step
 from ..backend import report
-from . import _passthrough, apply, audit, design, polish, review
+from . import app_spec, apply, audit, design, polish, review, scaffold
 
 DIRECTIVE_SET_NAME = "ui"
 """External name carried in ``state.directive_set`` for this set."""
@@ -49,18 +53,19 @@ keep the same tuple so input-routing stays unchanged.
 def _build_step_map() -> dict[str, Step]:
     """Wire the eight-step dispatcher slots for the UI set.
 
-    ``refine`` runs audit; ``memory`` and ``plan`` are pass-through
-    no-ops; ``analyze`` runs design; ``implement`` runs apply; ``test``
-    runs review; ``verify`` runs polish; ``report`` re-uses the shared
-    backend renderer. The mapping is rebuilt per call (cheap; the
-    dispatcher invokes :func:`get_steps` once per run).
+    ``refine`` runs audit; ``memory`` runs the greenfield app-spec gate;
+    ``analyze`` runs design; ``plan`` runs the greenfield scaffold gate;
+    ``implement`` runs apply; ``test`` runs review; ``verify`` runs
+    polish; ``report`` re-uses the shared backend renderer. The app-spec
+    and scaffold gates are no-ops outside the greenfield-scaffold path.
+    The mapping is rebuilt per call (cheap; the dispatcher invokes
+    :func:`get_steps` once per run).
     """
-    passthrough = _passthrough.run
     return {
         "refine": audit.run,
-        "memory": passthrough,
+        "memory": app_spec.run,
         "analyze": design.run,
-        "plan": passthrough,
+        "plan": scaffold.run,
         "implement": apply.run,
         "test": review.run,
         "verify": polish.run,
@@ -80,17 +85,15 @@ def all_ambiguities() -> dict[str, tuple[dict[str, str], ...]]:
     """Per-step ambiguity declarations.
 
     Mirrors :func:`work_engine.directives.backend.all_ambiguities`.
-    Each working handler re-exports its own ``AMBIGUITIES`` tuple; the
-    pass-through slots re-export :data:`_passthrough.AMBIGUITIES` (an
-    empty tuple) so doc generators see a uniform shape across all
-    eight steps. ``report`` borrows the backend renderer's surface.
+    Each handler re-exports its own ``AMBIGUITIES`` tuple so doc
+    generators see a uniform shape across all eight steps. ``report``
+    borrows the backend renderer's surface.
     """
-    passthrough = _passthrough.AMBIGUITIES
     return {
         "refine": audit.AMBIGUITIES,
-        "memory": passthrough,
+        "memory": app_spec.AMBIGUITIES,
         "analyze": design.AMBIGUITIES,
-        "plan": passthrough,
+        "plan": scaffold.AMBIGUITIES,
         "implement": apply.AMBIGUITIES,
         "test": review.AMBIGUITIES,
         "verify": polish.AMBIGUITIES,
@@ -103,6 +106,7 @@ __all__ = [
     "ROADMAP",
     "SUPPORTED_KINDS",
     "all_ambiguities",
+    "app_spec",
     "apply",
     "audit",
     "design",
@@ -110,4 +114,5 @@ __all__ = [
     "polish",
     "report",
     "review",
+    "scaffold",
 ]

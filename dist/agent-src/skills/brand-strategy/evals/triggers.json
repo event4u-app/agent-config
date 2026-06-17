@@ -1,0 +1,17 @@
+{
+  "skill": "brand-strategy",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers grounding brand strategy (archetype, positioning, voice, messaging). Should-not covers near-miss neighbors.",
+  "queries": [
+    {"q": "which brand archetype fits a B2B SaaS startup targeting mid-market ops teams", "trigger": true},
+    {"q": "write an opposable positioning statement for our challenger brand", "trigger": true},
+    {"q": "define the voice and tone profile for our brand — what do we sound like and what do we never say", "trigger": true},
+    {"q": "which messaging framework should we use — jobs-to-be-done or category creation", "trigger": true},
+    {"q": "who is this brand actually for and what makes us different from the obvious competitors", "trigger": true},
+    {"q": "what UI style and colour palette should the dashboard use", "trigger": false, "note": "frontend style grounding -> design-intelligence"},
+    {"q": "generate a logo image for our new product line", "trigger": false, "note": "asset generation -> logo-generation"},
+    {"q": "emit our brand colours as CSS custom properties and a DTCG token file", "trigger": false, "note": "token emission -> brand-to-tokens / design-tokens"},
+    {"q": "check whether this landing page copy is consistent with our brand voice", "trigger": false, "note": "validation -> brand-consistency rule"},
+    {"q": "audit how consistently our brand is applied across our marketing site and product", "trigger": false, "note": "audit -> brand-audit"}
+  ]
+}

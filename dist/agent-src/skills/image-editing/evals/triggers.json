@@ -1,0 +1,17 @@
+{
+  "last_eval": "2026-06-16",
+  "true": [
+    "edit the background of this product shot to a white studio setting",
+    "inpaint the logo out of the upper-right corner of this image",
+    "make a variation of this hero image in a warmer colour palette",
+    "remove the person standing on the left side of the photo",
+    "modify this existing render — I want the sky replaced with a sunset"
+  ],
+  "false": [
+    "generate a new product shot from scratch — I have no existing image",
+    "which image provider should I use for this job?",
+    "create a logo for my company",
+    "how do I write a good prompt for Ideogram?",
+    "do I need a rights check before using a celebrity's likeness in my image?"
+  ]
+}

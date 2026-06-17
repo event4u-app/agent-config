@@ -2,7 +2,7 @@
 
 > Provider-specific tuning of the cinematic blueprint's `CAMERA_MOTION`
 > block. Skill: [`motion-choreographer`](../../../.agent-src/skills/motion-choreographer/SKILL.md).
-> Adapter contract: [`adapter-contract.md`](../../../scripts/ai-video/lib/adapter-contract.md).
+> Adapter contract: [`adapter-contract.md`](../../../scripts/media/lib/adapter-contract.md).
 
 ## Why this file exists
 

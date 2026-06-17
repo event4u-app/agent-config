@@ -25,9 +25,15 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-ADAPTER_DIR="${ROOT}/src/scripts/ai-video/adapters"
+# Adapters live per-domain under scripts/<domain>/adapters/; the shared
+# substrate (scripts/media/lib) is domain-neutral, so the harness resolves a
+# provider from any media domain (ai-video, ai-image, …).
+ADAPTER_DIRS=(
+  "${ROOT}/src/scripts/ai-video/adapters"
+  "${ROOT}/src/scripts/ai-image/adapters"
+)
 # shellcheck source=/dev/null
-. "${ROOT}/src/scripts/ai-video/lib/adapter-common.sh"
+. "${ROOT}/src/scripts/media/lib/adapter-common.sh"
 
 PROVIDER=""
 MODE="dry-run"
@@ -45,8 +51,11 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "${PROVIDER}" ] || { echo "smoke-trace: --provider <id> required" >&2; exit 2; }
-ADAPTER="${ADAPTER_DIR}/${PROVIDER}.sh"
-[ -f "${ADAPTER}" ] || { echo "smoke-trace: no adapter at ${ADAPTER}" >&2; exit 2; }
+ADAPTER=""
+for _dir in "${ADAPTER_DIRS[@]}"; do
+  [ -f "${_dir}/${PROVIDER}.sh" ] && { ADAPTER="${_dir}/${PROVIDER}.sh"; break; }
+done
+[ -n "${ADAPTER}" ] || { echo "smoke-trace: no adapter for '${PROVIDER}' under ${ADAPTER_DIRS[*]}" >&2; exit 2; }
 command -v jq >/dev/null 2>&1 || { echo "smoke-trace: jq required" >&2; exit 2; }
 
 TS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
@@ -135,7 +144,7 @@ else
     else
       SUCCESS=false   # timed out or provider-failed — recorded in PHASES
     fi
-  elif [ -n "$(jq -r '.video_path // empty' <<<"${LAST_OUT}" 2>/dev/null || true)" ]; then
+  elif [ -n "$(jq -r '.video_path // .image_path // empty' <<<"${LAST_OUT}" 2>/dev/null || true)" ]; then
     # Synchronous adapter (e.g. images API): submit produced the artifact
     # directly — its stdout IS the round-trip result, no poll/fetch.
     FETCH_OUT="${LAST_OUT}"
@@ -146,7 +155,7 @@ fi
 
 # Validate the returned artifact path against the trust boundary (when present).
 [ -n "${FETCH_OUT}" ] || FETCH_OUT='{}'
-VIDEO_PATH="$(jq -r '.video_path // empty' <<<"${FETCH_OUT}" 2>/dev/null | head -1 || true)"
+VIDEO_PATH="$(jq -r '.video_path // .image_path // empty' <<<"${FETCH_OUT}" 2>/dev/null | head -1 || true)"
 ARTIFACT_OK="n/a"
 if [ -n "${VIDEO_PATH}" ]; then
   # Subshell the validation: aiv_validate_artifact_path uses aiv_die (exit),

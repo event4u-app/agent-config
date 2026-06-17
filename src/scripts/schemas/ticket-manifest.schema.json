@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ticket-manifest.schema.json",
+  "title": "Ticket bundle manifest",
+  "description": "manifest.yml of a ticket bundle in agents/tickets/{slug}/. Contract: docs/contracts/ticket-bundle-format.md",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "planner_tier", "builder_tier", "dependency_graph"],
+  "properties": {
+    "status": { "type": "string", "enum": ["ready", "draft", "in_progress", "done"] },
+    "planner_tier": { "type": "string", "enum": ["lite", "medium", "high"] },
+    "builder_tier": { "type": "string", "enum": ["lite", "medium", "high"] },
+    "import_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "linear": { "type": "boolean" }, "jira": { "type": "boolean" } }
+    },
+    "dependency_graph": {
+      "type": "object",
+      "description": "Acyclic; no topological layering in v1. Keys are ticket ids.",
+      "patternProperties": {
+        "^T-[0-9]{3,}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "blocks"],
+          "properties": {
+            "status": { "type": "string", "enum": ["ready", "draft", "done"] },
+            "blocks": { "type": "array", "items": { "type": "string", "pattern": "^T-[0-9]{3,}$" } }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

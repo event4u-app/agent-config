@@ -24,6 +24,8 @@
   reason: scaffold for project .agent-settings.yml
 - path: .agent-src.uncondensed/templates/command.md
   reason: scaffold for new slash-command authoring
+- path: src/agent-src/templates/tickets.md
+  reason: scaffold template for ticket-bundle tickets (ADR-101); carries no runtime frontmatter — emit-tickets fills it in per ticket
 - path: .agent-src.uncondensed/templates/contexts.md
   reason: scaffold index for project contexts/
 - path: .agent-src.uncondensed/templates/contexts/auth-model.md
@@ -34,6 +36,8 @@
   reason: scaffold for project deployment-order context
 - path: src/agent-src/templates/contexts/knowledge-card.md
   reason: fill-in skeleton for committed knowledge cards (evidence-first structure discovery / ADR-098); frontmatter is the example shape a filled card carries, not a runtime artefact
+- path: src/agent-src/templates/contexts/lesson-card.md
+  reason: fill-in skeleton for Class-C learned lessons (Evidence v2 project-intelligence); frontmatter is the example shape a filled lesson carries, not a runtime artefact
 - path: .agent-src.uncondensed/templates/contexts/observability.md
   reason: scaffold for project observability context
 - path: .agent-src.uncondensed/templates/contexts/tenant-boundaries.md

@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-30 | commit: 57588489 | files: 0 -->
 # Abstraction-reduction pre-flight — frontmatter-default safety audit
 
 > Phase 0 deliverable of `road-to-abstraction-reduction.md`. Classifies every

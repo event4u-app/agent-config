@@ -57,7 +57,7 @@ call has happened yet.
 
 ### 2. Load config + resolve providers
 
-Source `scripts/ai-video/lib/load-config.sh`. Resolve image / video
+Source `scripts/media/lib/load-config.sh`. Resolve image / video
 provider in this order: command flag → `agents/.ai-video.xml` default
 → fail with the available-providers list.
 
@@ -156,4 +156,4 @@ cost (commit) or summed modeled `cost_estimate` labeled *modeled*
 - [`/video:scene`](scene.md) — single-scene iteration
 - [`/video:storyboard`](storyboard.md) — image-only contact sheet
 - [`/video:stitch`](stitch.md) — re-stitch after operator edits
-- [`scripts/ai-video/lib/adapter-contract.md`](../../../scripts/ai-video/lib/adapter-contract.md)
+- [`scripts/media/lib/adapter-contract.md`](../../../scripts/media/lib/adapter-contract.md)

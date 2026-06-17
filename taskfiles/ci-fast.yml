@@ -346,6 +346,16 @@ tasks:
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
     cmd: python3 src/scripts/check_no_conflict_markers.py {{.QUIET_FLAG}}
 
+  check-structural-breaking:
+    silent: true
+    desc: "Fail when a structural break (artifact deleted/renamed, or a contract schema changed without an x-schemaVersion bump) lacks a breaking annotation — road-to-contract-integrity F3"
+    cmd: python3 src/scripts/check_structural_breaking.py {{.QUIET_FLAG}}
+
+  check-trigger-evals:
+    silent: true
+    desc: "Regression-lock skill trigger sets — every src/skills/*/evals/triggers.json carries a fresh (<=90d) last_eval and passes the offline structural smoke (road-to-contract-integrity F4)"
+    cmd: python3 src/scripts/check_trigger_evals.py {{.QUIET_FLAG}}
+
   lint-workflow-security:
     silent: true
     desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
@@ -426,6 +436,16 @@ tasks:
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: python3 src/scripts/lint_empty_roadmaps.py {{.QUIET_FLAG}}
 
+  lint-roadmap-later-disposition:
+    silent: true
+    desc: Enforce the later/ disposition — status:later roadmaps live under agents/roadmaps/later/, and every later/ roadmap records a resume condition
+    cmd: python3 src/scripts/lint_roadmap_later_disposition.py
+
+  lint-tickets:
+    silent: true
+    desc: Build-readiness gate for ticket bundles — DoR floor, acyclic manifest graph, traceability spine, asset cap, split-severity staleness (ADR-101)
+    cmd: python3 src/scripts/lint_ticket_buildable.py
+
   lint-commit-subjects:
     silent: true
     desc: Reject sloppy commit subjects (< 10 chars after Conventional-Commits prefix, or blocklist tokens wip/leftover/temp/tmp/fixup) feeding the auto-generated changelog (ADR-033 + road-to-distribution-identity Phase 3)
@@ -474,6 +494,16 @@ tasks:
     silent: true
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: ./scripts-run src/scripts/lint_artefact_frontmatter {{.QUIET_FLAG}}
+
+  lint-eval-freshness:
+    silent: true
+    # NOT yet in the ci-fast aggregate: it hard-fails until the SHA-pinned
+    # corpus skills (design-intelligence) carry a recorded upstream.last_eval,
+    # and that recording requires a LIVE trigger-eval run (token spend). Wire
+    # this into the ci-fast `deps` together with the backfill — see
+    # road-to-image-brand-typography Phase D + docs/guides/frontend-design-corpus-refresh.md.
+    desc: Corpus-backed skills must carry a current upstream.last_eval (ADR-061 §6 refresh DoD; deterministic, no token spend)
+    cmd: python3 src/scripts/lint_eval_freshness.py {{.QUIET_FLAG}}
 
   check-skill-requires:
     silent: true
@@ -578,6 +608,11 @@ tasks:
     desc: Verify every skill that declares context_spine cites each slot in its body (closes lint gap from 1.34.0)
     cmd: ./scripts-run src/scripts/lint_context_spine_usage {{.QUIET_FLAG}}
 
+  check-surface-tiers:
+    silent: true
+    desc: "Surface-tier boundary guard — registry exhaustive over src/scripts/*/ and no core module hard-imports a lab module (road-to-install-contract-stability Phase 2)"
+    cmd: PYTHONPATH=src python3 src/scripts/check_surface_tiers.py
+
   check-public-links:
     silent: true
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
@@ -674,6 +709,16 @@ tasks:
     silent: true
     desc: "Knowledge-card pointer-CI — size ≤ 150, mandatory authoritative pointer, trust tagging, multi-evidence consistency (evidence-first structure discovery / ADR-097)"
     cmd: python3 src/scripts/check_knowledge_cards.py
+
+  knowledge-global:
+    silent: true
+    desc: "Global knowledge-card store surface (ADR-100). Usage: task knowledge-global -- <list|show|trace|forget|promote|validate> [args]. Default: list."
+    cmd: python3 src/scripts/knowledge_global_cli.py {{.CLI_ARGS | default "list"}}
+
+  knowledge-global-validate:
+    silent: true
+    desc: "Validate the untracked global knowledge-card store (offline; --check-urls for live pointer check)."
+    cmd: python3 src/scripts/knowledge_global_cli.py validate {{.CLI_ARGS}}
 
   check-no-local-settings:
     silent: true

@@ -119,7 +119,7 @@ Recorded in `src/skills/design-intelligence/ATTRIBUTION.md`.
 | Fork | Resolution |
 |---|---|
 | Pack placement | **New `frontend-design` pack** (ADR-013 amendment, same PR). `requires: [engineering-base]`, `suggests: [react, nextjs]` — corpus is stack-agnostic data, React never required. Keeps ~1 MB of design data out of `engineering-base`. |
-| `google-fonts.csv` (745 KB, 1923 rows) | **Skip.** Redundant with the public Google Fonts API; `typography.csv` (73 curated pairings) carries the pairing decision. Document the API fallback for fonts outside the curated set. |
+| `google-fonts.csv` (745 KB, 1923 rows) | **Skip.** Redundant with the public Google Fonts API; `font-pairings-reference.csv` (73 curated pairings) carries the pairing decision. Document the API fallback for fonts outside the curated set. |
 | Stack-corpus surfacing | **`--stack <name>` search domain** on the one grounding engine — single mechanism, no 16-way prose-staleness vector. |
 | Brand→token pipeline | **Defer** with a watch note pinning the upstream commit SHA; adopt on first consumer demand. |
 
@@ -168,3 +168,50 @@ Recorded in `src/skills/design-intelligence/ATTRIBUTION.md`.
   Gemini-suite watch note.
 - Upstream: `nextlevelbuilder/ui-ux-pro-max-skill` @
   `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (last checked 2026-06-07).
+
+## Amendment — 2026-06-16 (§8/§9 superseded in part)
+
+The image/brand/typography work re-examined the gated and deferred items of
+§8/§9 on the merits for the product vision. A two-round merits council
+(anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-06-13, design lens,
+web-research-grounded) overturned three of them. The four-operation routing
+(§1) and the no-forked-engine principle (§2) are unchanged — the brand corpus
+is a second instance of the same grounding engine.
+
+- **§8 brand→token defer — resolved, no longer deferred.** This work was the
+  "first consumer demand" §8 named. `brand-to-tokens` ships: brand decisions →
+  a DTCG `.tokens.json` source of truth → `design-tokens/scripts/tokens.py`
+  (no Node). The same `.tokens.json` is the export pack-ai-image's brand-asset
+  generation and the greenfield-scaffold seed consume.
+- **§8 font fork — superseded.** "Skip `google-fonts.csv`, rely on the live
+  Google Fonts API" is replaced by **adopt-lite pinned metadata**: pin the MIT
+  `google-font-metadata` mirror (or a slim top-N slice) as a deterministic
+  offline **Reference**; the live API needs a key, is nondeterministic, and
+  carries no pairing metadata. `font-pairings-reference.csv` stays the curated
+  pairing Reference with a freshness contract.
+- **§9 brand-asset generation — superseded, ADOPTED.** The Gemini generative
+  brand-asset suite (logo/CIP/banner/social) was gated as a possible second
+  image-gen stack. The merits pass established it never was one: generation is
+  structured prompting + brand-token injection + provider routing on the
+  **existing** adapters (now the neutral `scripts/media/` substrate), with a
+  `recraft`/LLM-SVG vector path for marks raster models can't emit. Generation
+  lives in **pack-ai-image**; brand governance/tokens stay in **pack-brand**,
+  which exports tokens pack-ai-image consumes (dependency B → A, never
+  inverted). The `domain-watch/generative-brand-assets.md` gate is cleared.
+- **§9 slide/presentation engine — confirmed out of scope, but reasoned.**
+  Document assembly ≠ brand UX; owning a render engine (reveal.js / Presenton /
+  Gamma) is scope creep. pack-brand instead **exports validated brand
+  templates** (Marp/reveal YAML with locked brand variables) for the user's own
+  deck tools — enforcement via the template, not engine ownership. Re-open only
+  on evidenced demand.
+
+The brand corpus deviates from the §8-implied "adopt the SHA-pinned claudekit
+brand sub-skills" framing: it is **original-authored** from public brand
+frameworks (Jung / Mark-Pearson archetypes, public messaging frameworks),
+`upstream: null` — honest provenance, no third-party SHA to pin, no §4b file
+marking. The shared grounding engine is still attributed via
+`design-intelligence/ATTRIBUTION.md`.
+
+Implementing roadmap: `road-to-image-brand-typography` (Phase A–D),
+archived 2026-06-16; live-validation + command-surface follow-on tracked in
+its sibling follow-up roadmap.

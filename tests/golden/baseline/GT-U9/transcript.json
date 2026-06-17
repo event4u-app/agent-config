@@ -37,7 +37,9 @@
           "components_found": [],
           "design_tokens": {}
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -97,7 +99,9 @@
           "design_tokens": {},
           "greenfield_decision": "scaffold"
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -138,6 +142,166 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=memory\n@agent-directive: app-spec\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> Greenfield scaffold — grounding the app shape before any skeleton is planned. Derive the page-set, entity model, and flow-map from the prompt.\n> 1. Continue — derive {pages, entity_model, flow_map} into `state.app_spec`\n> 2. Just scaffold — skip the app spec (set `state.app_spec.bypassed = true` and go straight to scaffold)\n> 3. Abort — drop this UI request\n\n**Recommendation: 1 — derive the spec** — a confirmed page-set keeps the multi-page scaffold coherent and is seconds of work. Caveat: flip to 2 if the prompt already pins an exact, single-screen shape.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "greenfield": true,
+          "components_found": [],
+          "design_tokens": {},
+          "greenfield_decision": "scaffold",
+          "audit_path": "greenfield"
+        },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          }
+        },
+        "ui_design": null,
+        "ui_scaffold": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "halts": [],
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "blocked"
+        },
+        "questions": [
+          "@agent-directive: app-spec",
+          "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+          "> Greenfield scaffold — grounding the app shape before any skeleton is planned. Derive the page-set, entity model, and flow-map from the prompt.",
+          "> 1. Continue — derive {pages, entity_model, flow_map} into `state.app_spec`",
+          "> 2. Just scaffold — skip the app spec (set `state.app_spec.bypassed = true` and go straight to scaffold)",
+          "> 3. Abort — drop this UI request",
+          "",
+          "**Recommendation: 1 — derive the spec** — a confirmed page-set keeps the multi-page scaffold coherent and is seconds of work. Caveat: flip to 2 if the prompt already pins an exact, single-screen shape."
+        ],
+        "report": ""
+      },
+      "directive": "app-spec",
+      "recipe_action": "app-spec",
+      "recipe_notes": [
+        "app_spec derived: 1 page (Landing), 1 entity (SignupLead)"
+      ]
+    },
+    {
+      "index": 4,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=memory\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> Derived app spec — confirm the shape before scaffold:\n> Pages (1): Landing\n> Entities (1): SignupLead\n> 1. Confirm — the derived page-set + entity model look right (set `state.app_spec.confirmed = true`)\n> 2. Edit — adjust the derived spec, then re-run the app-spec skill\n> 3. Just scaffold — skip confirmation (set `state.app_spec.bypassed = true`)\n\n**Recommendation: 1 — Confirm** — the derived shape is the cheapest point to catch a wrong page-set, before the scaffold plan locks routes and layout. Caveat: flip to 2 if a page or entity is missing / wrong.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "greenfield": true,
+          "components_found": [],
+          "design_tokens": {},
+          "greenfield_decision": "scaffold",
+          "audit_path": "greenfield"
+        },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
+        },
+        "ui_design": null,
+        "ui_scaffold": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "halts": [],
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "blocked"
+        },
+        "questions": [
+          "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+          "> Derived app spec — confirm the shape before scaffold:",
+          "> Pages (1): Landing",
+          "> Entities (1): SignupLead",
+          "> 1. Confirm — the derived page-set + entity model look right (set `state.app_spec.confirmed = true`)",
+          "> 2. Edit — adjust the derived spec, then re-run the app-spec skill",
+          "> 3. Just scaffold — skip confirmation (set `state.app_spec.bypassed = true`)",
+          "",
+          "**Recommendation: 1 — Confirm** — the derived shape is the cheapest point to catch a wrong page-set, before the scaffold plan locks routes and layout. Caveat: flip to 2 if a page or entity is missing / wrong."
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": "_no_directive",
+      "recipe_notes": [
+        "app_spec confirmed (user picked option 1)"
+      ]
+    },
+    {
+      "index": 5,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
       "stdout": "[halt] outcome=blocked step=analyze\n@agent-directive: ui-design-brief\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.\n> 1. Continue — produce the brief from audit findings\n> 2. Abort — drop this UI request\n",
       "stderr": "",
       "state_after": {
@@ -159,6 +323,20 @@
           "design_tokens": {},
           "greenfield_decision": "scaffold",
           "audit_path": "greenfield"
+        },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
         },
         "ui_design": {
           "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
@@ -192,6 +370,7 @@
           },
           "reused_from_audit": []
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -224,7 +403,7 @@
       ]
     },
     {
-      "index": 4,
+      "index": 6,
       "cmd": [
         "./agent-config",
         "work",
@@ -253,6 +432,20 @@
           "design_tokens": {},
           "greenfield_decision": "scaffold",
           "audit_path": "greenfield"
+        },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
         },
         "ui_design": {
           "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
@@ -287,6 +480,7 @@
           "reused_from_audit": [],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -324,7 +518,273 @@
       ]
     },
     {
-      "index": 5,
+      "index": 7,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=plan\n@agent-directive: ui-scaffold-plan\n> Input: Build the first marketing landing page for our brand-new SaaS product.\n> Greenfield scaffold — derive a stack-agnostic skeleton plan from the confirmed `state.app_spec` (page-set + entity model) and the locked `state.ui_design` brief. The engine writes no files; this stage only produces the plan.\n> Write `state.ui_scaffold` = {pages, routes, layout_strategy, component_manifest, token_seed}.\n> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open (no `tokens.json` brand source detected).\n> 1. Continue — derive the scaffold plan into `state.ui_scaffold`\n> 2. Abort — drop this UI request\n\n**Recommendation: 1 — derive the plan** — the stack-agnostic plan is the recoverable checkpoint: if the build stage fails, scaffold re-runs from here without touching design or apply.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "greenfield": true,
+          "components_found": [],
+          "design_tokens": {},
+          "greenfield_decision": "scaffold",
+          "audit_path": "greenfield"
+        },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
+        },
+        "ui_design": {
+          "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
+          "components": [
+            {
+              "name": "MarketingLanding",
+              "primitives": [
+                "hero",
+                "feature-grid",
+                "cta"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "First load with hero, features, CTA",
+            "loading": "CTA button shows spinner while signup form submits",
+            "error": "Inline validation on signup field",
+            "success": "CTA replaced by 'Thanks — check your inbox'",
+            "disabled": "CTA disabled while submission is in flight"
+          },
+          "microcopy": {
+            "hero_title": "Ship faster with our SaaS platform",
+            "hero_subtitle": "Deploy in minutes, not days.",
+            "cta_button": "Start free trial",
+            "success": "Thanks — check your inbox to confirm your email."
+          },
+          "a11y": {
+            "labels": "hero h1 is the page title; CTA button labelled explicitly",
+            "focus": "skip link to main content; CTA receives focus on success",
+            "aria_live": "success message announced via aria-live=polite"
+          },
+          "reused_from_audit": [],
+          "design_confirmed": true
+        },
+        "ui_scaffold": {
+          "pages": [
+            "Landing"
+          ],
+          "routes": [
+            "/"
+          ],
+          "layout_strategy": "single-column-shell",
+          "component_manifest": [
+            "MarketingLanding",
+            "SignupForm"
+          ],
+          "token_seed": {
+            "radius": "0.5rem",
+            "font": "system-ui"
+          }
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "halts": [],
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-scaffold-plan",
+          "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+          "> Greenfield scaffold — derive a stack-agnostic skeleton plan from the confirmed `state.app_spec` (page-set + entity model) and the locked `state.ui_design` brief. The engine writes no files; this stage only produces the plan.",
+          "> Write `state.ui_scaffold` = {pages, routes, layout_strategy, component_manifest, token_seed}.",
+          "> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open (no `tokens.json` brand source detected).",
+          "> 1. Continue — derive the scaffold plan into `state.ui_scaffold`",
+          "> 2. Abort — drop this UI request",
+          "",
+          "**Recommendation: 1 — derive the plan** — the stack-agnostic plan is the recoverable checkpoint: if the build stage fails, scaffold re-runs from here without touching design or apply."
+        ],
+        "report": ""
+      },
+      "directive": "ui-scaffold-plan",
+      "recipe_action": "ui-scaffold-plan",
+      "recipe_notes": [
+        "ui_scaffold plan written: 1 page, 1 route, single-column-shell"
+      ]
+    },
+    {
+      "index": 8,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=plan\n@agent-directive: ui-scaffold-plain\n> Stack: `plain`. Scaffold plan is ready (1 page(s), 1 route(s)). Create the skeleton from `state.ui_scaffold` — routes, layout shell, and the component-manifest stubs.\n> The engine writes no files: the stack skill creates the skeleton and writes `state.ui_scaffold.scaffolded = true` plus `state.ui_scaffold.artifacts` (the created paths).\n> Recoverable: a failed build re-runs from this scaffold step alone — design and app-spec stay locked.\n> 1. Continue — create the skeleton and mark `scaffolded = true`\n> 2. Abort — drop this UI request\n\n**Recommendation: 1 — build the skeleton** — the `plain` scaffold skill materialises the confirmed plan; the rendered output is verified downstream by the review gate.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "greenfield": true,
+          "components_found": [],
+          "design_tokens": {},
+          "greenfield_decision": "scaffold",
+          "audit_path": "greenfield"
+        },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
+        },
+        "ui_design": {
+          "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
+          "components": [
+            {
+              "name": "MarketingLanding",
+              "primitives": [
+                "hero",
+                "feature-grid",
+                "cta"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "First load with hero, features, CTA",
+            "loading": "CTA button shows spinner while signup form submits",
+            "error": "Inline validation on signup field",
+            "success": "CTA replaced by 'Thanks — check your inbox'",
+            "disabled": "CTA disabled while submission is in flight"
+          },
+          "microcopy": {
+            "hero_title": "Ship faster with our SaaS platform",
+            "hero_subtitle": "Deploy in minutes, not days.",
+            "cta_button": "Start free trial",
+            "success": "Thanks — check your inbox to confirm your email."
+          },
+          "a11y": {
+            "labels": "hero h1 is the page title; CTA button labelled explicitly",
+            "focus": "skip link to main content; CTA receives focus on success",
+            "aria_live": "success message announced via aria-live=polite"
+          },
+          "reused_from_audit": [],
+          "design_confirmed": true
+        },
+        "ui_scaffold": {
+          "pages": [
+            "Landing"
+          ],
+          "routes": [
+            "/"
+          ],
+          "layout_strategy": "single-column-shell",
+          "component_manifest": [
+            "MarketingLanding",
+            "SignupForm"
+          ],
+          "token_seed": {
+            "radius": "0.5rem",
+            "font": "system-ui"
+          },
+          "scaffolded": true,
+          "artifacts": [
+            "resources/views/marketing/landing.blade.php",
+            "routes/marketing.php"
+          ]
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "halts": [],
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-scaffold-plain",
+          "> Stack: `plain`. Scaffold plan is ready (1 page(s), 1 route(s)). Create the skeleton from `state.ui_scaffold` — routes, layout shell, and the component-manifest stubs.",
+          "> The engine writes no files: the stack skill creates the skeleton and writes `state.ui_scaffold.scaffolded = true` plus `state.ui_scaffold.artifacts` (the created paths).",
+          "> Recoverable: a failed build re-runs from this scaffold step alone — design and app-spec stay locked.",
+          "> 1. Continue — create the skeleton and mark `scaffolded = true`",
+          "> 2. Abort — drop this UI request",
+          "",
+          "**Recommendation: 1 — build the skeleton** — the `plain` scaffold skill materialises the confirmed plan; the rendered output is verified downstream by the review gate."
+        ],
+        "report": ""
+      },
+      "directive": "ui-scaffold-plain",
+      "recipe_action": "ui-scaffold-plain",
+      "recipe_notes": [
+        "scaffold skeleton created: scaffolded=True, 2 artifacts"
+      ]
+    },
+    {
+      "index": 9,
       "cmd": [
         "./agent-config",
         "work",
@@ -363,6 +823,20 @@
           "greenfield_decision": "scaffold",
           "audit_path": "greenfield"
         },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
+        },
         "ui_design": {
           "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
           "components": [
@@ -395,6 +869,28 @@
           },
           "reused_from_audit": [],
           "design_confirmed": true
+        },
+        "ui_scaffold": {
+          "pages": [
+            "Landing"
+          ],
+          "routes": [
+            "/"
+          ],
+          "layout_strategy": "single-column-shell",
+          "component_manifest": [
+            "MarketingLanding",
+            "SignupForm"
+          ],
+          "token_seed": {
+            "radius": "0.5rem",
+            "font": "system-ui"
+          },
+          "scaffolded": true,
+          "artifacts": [
+            "resources/views/marketing/landing.blade.php",
+            "routes/marketing.php"
+          ]
         },
         "ui_review": null,
         "ui_polish": null,
@@ -430,7 +926,7 @@
       ]
     },
     {
-      "index": 6,
+      "index": 10,
       "cmd": [
         "./agent-config",
         "work",
@@ -469,6 +965,20 @@
           "greenfield_decision": "scaffold",
           "audit_path": "greenfield"
         },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
+        },
         "ui_design": {
           "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
           "components": [
@@ -501,6 +1011,28 @@
           },
           "reused_from_audit": [],
           "design_confirmed": true
+        },
+        "ui_scaffold": {
+          "pages": [
+            "Landing"
+          ],
+          "routes": [
+            "/"
+          ],
+          "layout_strategy": "single-column-shell",
+          "component_manifest": [
+            "MarketingLanding",
+            "SignupForm"
+          ],
+          "token_seed": {
+            "radius": "0.5rem",
+            "font": "system-ui"
+          },
+          "scaffolded": true,
+          "artifacts": [
+            "resources/views/marketing/landing.blade.php",
+            "routes/marketing.php"
+          ]
         },
         "ui_review": {
           "findings": [],
@@ -548,7 +1080,7 @@
       ]
     },
     {
-      "index": 7,
+      "index": 11,
       "cmd": [
         "./agent-config",
         "work",
@@ -587,6 +1119,20 @@
           "greenfield_decision": "scaffold",
           "audit_path": "greenfield"
         },
+        "app_spec": {
+          "pages": [
+            "Landing"
+          ],
+          "entity_model": [
+            "SignupLead"
+          ],
+          "flow_map": {
+            "Landing": [
+              "signup-submit"
+            ]
+          },
+          "confirmed": true
+        },
         "ui_design": {
           "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
           "components": [
@@ -619,6 +1165,28 @@
           },
           "reused_from_audit": [],
           "design_confirmed": true
+        },
+        "ui_scaffold": {
+          "pages": [
+            "Landing"
+          ],
+          "routes": [
+            "/"
+          ],
+          "layout_strategy": "single-column-shell",
+          "component_manifest": [
+            "MarketingLanding",
+            "SignupForm"
+          ],
+          "token_seed": {
+            "radius": "0.5rem",
+            "font": "system-ui"
+          },
+          "scaffolded": true,
+          "artifacts": [
+            "resources/views/marketing/landing.blade.php",
+            "routes/marketing.php"
+          ]
         },
         "ui_review": {
           "findings": [],

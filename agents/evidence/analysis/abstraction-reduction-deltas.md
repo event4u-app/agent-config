@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-30 | commit: 57588489 | files: 0 -->
 # Abstraction-reduction — frontmatter line-count delta
 
 > Dry-run prediction from `scripts/migrate_frontmatter_defaults.py --dry-run` (road-to-abstraction-reduction.md Phase 2 § Step 2). Lines

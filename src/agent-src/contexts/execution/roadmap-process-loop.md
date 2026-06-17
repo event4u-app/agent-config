@@ -19,7 +19,8 @@ Search both locations:
   via `scripts/_lib/agent_settings.py::enumerate_modules()`. Laravel
   shape: `app/Modules/*/agents/roadmaps/*.md`)
 
-**Exclude** `template.md`, `archive/`, and `skipped/`.
+**Exclude** `template.md`, `archive/`, `skipped/`, and `later/` (`later/` holds
+roadmaps with open work that is blocked-for-later — parked, not active).
 
 - User named one (path, partial name, title) → use it.
 - None named, single active roadmap (`count_open > 0`) → use it.

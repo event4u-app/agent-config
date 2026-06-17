@@ -262,7 +262,7 @@ is invoked.
   tier. The two-tier split reconciles "Council always active when
   enabled" with "skip trivial agent-side requests": user-typed
   `/council` calls proceed by default, agent-initiated dispatches keep
-  `educate` behaviour. Override via `.agent-settings.yml`.
+  `educate` behaviour. Override via the resolved `.ai-council.yml`.
 - `lens_overrides.necessity_classifier_mode.<lens>` — per-lens override.
   Wins over the global `mode` for the matching invocation tier (agent
   vs user_explicit follow the same lens map). Typical use: leave the
@@ -433,26 +433,26 @@ Worked example — opt the Anthropic and OpenAI members in, leave the
 others off, and switch the `low_impact` class to `council`:
 
 ```yaml
-ai_council:
-  members:
-    anthropic:
-      enabled: true
-      model: claude-sonnet-4-5
-      api_key_ref: file:anthropic.key
-      participate_low_impact: true   # eligible for fast-path
-    openai:
-      enabled: true
-      model: gpt-4o
-      api_key_ref: file:openai.key
-      participate_low_impact: true   # eligible for fast-path
-    gemini:
-      enabled: false                  # disabled — opt-in ignored even if set
+# In the resolved .ai-council.yml — keys are top-level (no `ai_council:` wrapper).
+members:
+  anthropic:
+    enabled: true
+    model: claude-sonnet-4-5
+    api_key_ref: file:anthropic.key
+    participate_low_impact: true   # eligible for fast-path
+  openai:
+    enabled: true
+    model: gpt-4o
+    api_key_ref: file:openai.key
+    participate_low_impact: true   # eligible for fast-path
+  gemini:
+    enabled: false                  # disabled — opt-in ignored even if set
 
-  fast_path:
-    max_members: 2          # 1 or 2 only
-    max_rounds: 1           # LOCKED
-    max_tokens: 2500
-    max_cost_usd: 0.05
+fast_path:
+  max_members: 2          # 1 or 2 only
+  max_rounds: 1           # LOCKED
+  max_tokens: 2500
+  max_cost_usd: 0.05
 
 decision_resolution:
   classes:

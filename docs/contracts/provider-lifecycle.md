@@ -36,11 +36,11 @@ the human noticing.
    `agents/reference/ai-video/smoke-traces/<provider>.md` with timestamp,
    model id, and **redacted** response shape.
 2. **Secret-redaction confirmation** — the captured trace, re-read
-   through `scripts/ai-video/lib/redact.sh`, shows zero residual
+   through `scripts/media/lib/redact.sh`, shows zero residual
    key fragments.
 3. **Contract conformance** — the adapter's four-method shell
    surface (`submit / poll / fetch / dry-run` *or* `run / dry-run`)
-   matches `scripts/ai-video/lib/adapter-contract.md` verbatim.
+   matches `scripts/media/lib/adapter-contract.md` verbatim.
 
 A maintainer flipping the tier in `agents/templates/.ai-video.xml.example`
 **and** the adapter header comment is the promotion event. There is
@@ -117,6 +117,6 @@ snapshot — older snapshots live in git history, not in this file.
 ## See also
 
 - [`provider-lifecycle-discipline`](../../dist/agent-src/rules/provider-lifecycle-discipline.md) — the tier-2 routing rule that surfaces this contract when a provider is touched.
-- [`scripts/ai-video/lib/adapter-contract.md`](../../src/scripts/ai-video/lib/adapter-contract.md) — the four-method shell contract every adapter implements.
+- [`scripts/media/lib/adapter-contract.md`](../../src/scripts/media/lib/adapter-contract.md) — the four-method shell contract every adapter implements.
 - [`agents/templates/.ai-video.xml.example`](../../agents/templates/.ai-video.xml.example) — operator-facing provider configuration template (carries the tier tag inline).
 - [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — the agent-in-the-loop enforcement model this contract participates in.

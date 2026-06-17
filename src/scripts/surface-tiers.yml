@@ -1,0 +1,68 @@
+# Surface-tier registry for src/scripts/ clusters
+#
+# road-to-install-contract-stability Phase 2. Single source of truth (council
+# 2026-06-17, claude-sonnet-4-5 + gpt-4o, converged Q2 = one central registry).
+#
+#   core = the lean stable multi-host engine that users install
+#          (install, condensation, rules/skills tooling, lint/check gates).
+#   lab  = experimental / pilot meta-tooling that must NOT destabilise the
+#          core install surface (council, MCP server, media pipelines,
+#          prediction-pool, cost analytics, chat-history, benchmarking).
+#
+# EXHAUSTIVE over src/scripts/*/ directories: scripts/check_surface_tiers.py
+# enumerates every cluster dir and fails CI if one is missing here, forcing the
+# tier decision at cluster-creation time. Top-level lab scripts are listed under
+# `lab_modules` so the core→lab boundary guard can resolve their tier; anything
+# not listed as lab defaults to core (install/condense/lint/check tooling).
+
+clusters:
+  # --- core: the lean engine ---
+  _cli: core             # CLI commands (doctor, upgrade, sync) — user-facing engine
+  _lib: core             # shared library for install / condense / CLI
+  adr: core              # ADR numbering + index tooling
+  config: core           # discovery vocabulary + pack registry
+  hooks: core            # runtime hooks (context hygiene, roadmap progress, guards)
+  repro: core            # reproduction fixtures for the engine
+  schemas: core          # JSON schemas for frontmatter validation
+  skill_tools: core      # skill scoring + persona/user-type coverage audits
+  smoke: core            # engine smoke tests
+  tools: core            # GitHub / Jira adapter stubs
+
+  # --- lab: experimental / pilot meta-tooling ---
+  _archive: lab          # archived / deprecated scripts, not on the production path
+  ai-image: lab          # AI image-generation adapters (pack ai-image, experimental)
+  ai-video: lab          # AI video pipeline adapters (pack ai-video, experimental)
+  ai_council: lab         # multi-model council orchestration, external API deps
+  command_suggester: lab # context-aware command suggestion engine, pilot
+  cost: lab              # cost tracking / budget gate (observability, Node .mjs)
+  mcp_server: lab        # MCP stdio server, separate runtime, pilot distribution
+  media: lab             # shared adapter substrate for ai-video / ai-image
+  prediction-pool: lab   # prediction-pool optimizer (fun pack, experimental)
+
+# Top-level src/scripts/*.py modules that belong to lab (module stem, no .py).
+# Used by the boundary guard to resolve `import <stem>` to the lab tier.
+# Unlisted top-level scripts default to core (install/condense/lint/check).
+lab_modules:
+  - council_cli          # council CLI entry point (scripts.ai_council.*)
+  - council_prune        # council session pruning
+  - update_prices        # refresh ai_council pricing table
+  - pattern_share        # pattern sharing (ai_council redaction)
+  - spotcheck_thin_root  # evidence spotcheck against ai_council
+  - chat_history         # chat-history engine
+  - mine_session         # session mining (chat-history dependent)
+  - mcp_render           # MCP renderer
+  - mcp_parity_smoke     # MCP smoke tests
+  - mcp_telemetry_health # MCP telemetry health
+  - mcp_telemetry_store  # MCP telemetry store
+  - mcp_telemetry_query  # MCP telemetry query
+  - pack_mcp_content     # packs MCP server content
+  - build_mcp_registry_manifest
+  - bench_run            # benchmarking runner (council clients)
+  - bench_ab_run         # A/B benchmarking runner
+  - bench_ab_v2_run      # V2 benchmark runner
+  - cost_by_conversation # cost analytics
+  - cost_summary         # cost summary
+  - build_cloud_bundle   # Claude.ai cloud-bundle builder (pilot distribution)
+  - build_linear_digest  # Linear digest builder (external service)
+  - memory_report        # memory health report
+  - memory_signal        # memory signal classifier

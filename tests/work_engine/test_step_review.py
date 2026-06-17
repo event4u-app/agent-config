@@ -36,6 +36,21 @@ def _ui_state(
     }
     state = DeliveryState(ticket=ticket)
     if ui_review is not None:
+        # greenfield-scaffold Phase 1: a render-capable stack now needs render
+        # evidence to pass the preview gate. A *well-formed* success envelope
+        # (findings + review_clean, no own preview) represents a completed,
+        # rendered review, so inject `render_ok: True` to keep these fixtures
+        # focused on the property under test. Halt-path fixtures (empty dict,
+        # missing findings/clean, non-dict) are left untouched — they halt
+        # before the preview gate — and the dedicated preview-gate tests below
+        # supply their own `preview` envelope, so injection skips them.
+        if (
+            isinstance(ui_review, dict)
+            and "findings" in ui_review
+            and "review_clean" in ui_review
+            and "preview" not in ui_review
+        ):
+            ui_review = {**ui_review, "preview": {"render_ok": True}}
         state.ui_review = ui_review  # type: ignore[assignment]
     if stack is not None:
         state.stack = {"frontend": stack, "mtime": 0.0}
@@ -481,13 +496,72 @@ def test_a11y_gate_in_ambiguities_table() -> None:
 # --- R4 Phase 3: preview envelope gate --------------------------------------
 
 
-def test_preview_gate_no_envelope_passes() -> None:
-    """Pre-R4 envelopes (no `preview` key) flow through silently."""
-    state = _ui_state(ui_review={"findings": [], "review_clean": True})
+def test_preview_gate_render_capable_missing_render_ok_halts() -> None:
+    """greenfield-scaffold Phase 1: render-capable stack + no `render_ok` halts.
+
+    Closes the open render-verification loop — a skill can no longer pass the
+    gate by omitting render evidence. (`preview: {}` is passed explicitly so
+    the success-envelope render-evidence injection in `_ui_state` is bypassed.)
+    """
+    state = _ui_state(
+        stack="react-shadcn",
+        ui_review={"findings": [], "review_clean": True, "preview": {}},
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions).lower()
+    assert "render evidence" in body
+    assert "required" in body
+    # Render + Skip + Abort options surface.
+    assert "render" in body
+    assert "skip" in body
+    assert "abort" in body
+
+
+def test_preview_gate_non_render_capable_missing_render_ok_passes() -> None:
+    """greenfield-scaffold Phase 1: a stack with no rendering review skill is
+    unaffected — absent `render_ok` stays a silent no-op as before."""
+    state = _ui_state(
+        stack=None,  # no frontend → not render-capable
+        ui_review={"findings": [], "review_clean": True, "preview": {}},
+    )
 
     result = review.run(state)
 
     assert result.outcome is Outcome.SUCCESS
+
+
+def test_preview_gate_render_capable_explicit_skip_passes() -> None:
+    """greenfield-scaffold Phase 1: an explicit, reasoned skip is honoured even
+    on a render-capable stack (the no-runner-env escape)."""
+    state = _ui_state(
+        stack="react-shadcn",
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {"skipped": True, "skip_reason": "no Playwright runner"},
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_preview_gate_render_capable_non_dict_preview_halts() -> None:
+    """A non-dict `preview` on a render-capable stack carries no render
+    evidence → the required-evidence halt fires (no silent pass)."""
+    state = _ui_state(
+        stack="blade-livewire-flux",
+        ui_review={"findings": [], "review_clean": True, "preview": None},
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    assert "render evidence" in "\n".join(result.questions).lower()
 
 
 def test_preview_gate_render_ok_true_passes() -> None:
@@ -500,21 +574,6 @@ def test_preview_gate_render_ok_true_passes() -> None:
                 "render_ok": True,
                 "screenshot_path": "tmp/preview/foo.png",
             },
-        },
-    )
-
-    result = review.run(state)
-
-    assert result.outcome is Outcome.SUCCESS
-
-
-def test_preview_gate_render_ok_missing_passes() -> None:
-    """Incomplete envelope (skill still working) is not yet actionable."""
-    state = _ui_state(
-        ui_review={
-            "findings": [],
-            "review_clean": True,
-            "preview": {},
         },
     )
 
@@ -611,6 +670,7 @@ def test_preview_gate_runs_after_a11y_gate() -> None:
 
 
 def test_preview_gate_in_ambiguities_table() -> None:
-    """`preview_render_failed` is declared in the AMBIGUITIES table."""
+    """The preview ambiguity codes are declared in the AMBIGUITIES table."""
     codes = {entry["code"] for entry in review.AMBIGUITIES}
     assert "preview_render_failed" in codes
+    assert "preview_render_required" in codes

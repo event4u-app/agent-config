@@ -3541,10 +3541,68 @@ def _verify_deploy_targets(
     return missing
 
 
+def _prune_lab_modules(
+    deploy_results: dict[str, tuple[int, int, str, list[Path]]],
+    lab_ids: set[str],
+) -> tuple[int, dict[str, tuple[int, int, str, list[Path]]]]:
+    """Remove lab-tier skills/commands from a completed deploy (core-only).
+
+    road-to-install-contract-stability Phase 2 Step 2. Skills are pruned by
+    whole directory (tier decided by the skill's ``SKILL.md`` frontmatter);
+    commands by file (own frontmatter). Rules / personas / contexts / templates
+    are core/shared and left intact. Returns ``(pruned_count, adjusted_results)``
+    with the lab paths removed from each tool's ``written_paths`` so the manifest
+    never records them.
+    """
+    from scripts._lib.surface_tiers import is_lab_artefact
+
+    pruned = 0
+    adjusted: dict[str, tuple[int, int, str, list[Path]]] = {}
+    for tool_id, (written, skipped, status, paths) in deploy_results.items():
+        lab_skill_dirs: set[Path] = set()
+        for p in paths:
+            parts = p.parts
+            if "skills" in parts:
+                i = parts.index("skills")
+                if i + 1 < len(parts):
+                    skill_root = Path(*parts[: i + 2])
+                    if skill_root not in lab_skill_dirs:
+                        skillmd = skill_root / "SKILL.md"
+                        if skillmd.exists() and is_lab_artefact(skillmd, lab_ids):
+                            lab_skill_dirs.add(skill_root)
+        keep: list[Path] = []
+        delete_files: list[Path] = []
+        for p in paths:
+            parts = p.parts
+            is_lab = False
+            if "skills" in parts:
+                i = parts.index("skills")
+                if i + 1 < len(parts) and Path(*parts[: i + 2]) in lab_skill_dirs:
+                    is_lab = True
+            elif "commands" in parts and p.suffix == ".md" and is_lab_artefact(p, lab_ids):
+                is_lab = True
+            (delete_files if is_lab else keep).append(p)
+        for d in lab_skill_dirs:
+            shutil.rmtree(d, ignore_errors=True)
+        for p in delete_files:
+            if "commands" in p.parts and p.exists():
+                try:
+                    p.unlink()
+                except OSError:
+                    pass
+        pruned += len(delete_files)
+        adjusted[tool_id] = (
+            max(0, written - len(delete_files)), skipped, status, keep,
+        )
+    return pruned, adjusted
+
+
 def install_global(
     tools: set[str],
     force: bool,
     project_root: Path | None = None,
+    *,
+    core_only: bool = False,
 ) -> int:
     """User-scope install path (ADR-007 + Phase 1.6 lockfile lifecycle).
 
@@ -3612,6 +3670,19 @@ def install_global(
             "redeploying tools"
         )
 
+    # Install-ABI migration (road-to-install-contract-stability Phase 1.5):
+    # an installed tree at install_layout_version < current (absent =
+    # pre-freeze v0) is migrated in place before the deploy, surgical-uninstall
+    # pointers preserved. At the freeze baseline this only stamps the version;
+    # future layout versions add concrete shape transforms in migrate_layout.
+    migration = lock_mod.migrate_layout(path=write_path)
+    if migration and migration.get("changed") and not QUIET:
+        info(
+            "🔧 Migrated install layout "
+            f"v{migration['from']} → v{migration['to']}: "
+            + "; ".join(migration["changed"])
+        )
+
     if not QUIET:
         print()
         info("Agent Config — Global (user-scope) install [ADR-007]")
@@ -3645,6 +3716,22 @@ def install_global(
     # caller's CWD); destinations are `USER_SCOPE_PATHS[tool_id]` (expanded).
     package_root = _resolve_package_root_for_global()
     deploy_results = _deploy_global_content(tools, force, package_root, written)
+
+    # Core-only mode (road-to-install-contract-stability Phase 2 Step 2): prune
+    # lab-tier skills/commands from the just-deployed tree so the installed
+    # surface carries zero lab modules. Runs after the deploy postcheck so the
+    # prune operates on a verified-complete tree; the adjusted results feed the
+    # manifest so lab paths are never recorded.
+    if core_only:
+        from scripts._lib.surface_tiers import load_lab_pack_ids
+
+        lab_ids = load_lab_pack_ids(package_root)
+        pruned, deploy_results = _prune_lab_modules(deploy_results, lab_ids)
+        if not QUIET:
+            info(
+                f"🧹 Core-only install: pruned {pruned} lab-tier artefact(s) "
+                f"(packs: {', '.join(sorted(lab_ids))})."
+            )
 
     # Phase 5 (road-to-claude-code-global-distribution): postcheck-driven
     # lockfile correction. A tool whose deploy postcheck failed
@@ -3866,6 +3953,17 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "frontmatter/condense-time concept — recording the selection "
             "lets downstream condense/runtime honor it; install.py does not "
             "materialize packs. Default: none (base package only)."
+        ),
+    )
+    parser.add_argument(
+        "--core-only",
+        dest="core_only",
+        action="store_true",
+        help=(
+            "install only the lean stable core surface — prune lab-tier "
+            "skills/commands (ai-video, ai-image, fun) from the deployed tree "
+            "so lab churn cannot destabilise the adoptable install. Global "
+            "scope only. See docs/contracts/surface-tiers.md."
         ),
     )
     parser.add_argument(
@@ -4896,7 +4994,10 @@ def main(argv: list[str]) -> int:
                 return rc
         # Pass detect_root so the manifest refresh runs when --global is
         # invoked from within a project tree (ADR-008 Phase 3.2).
-        rc = install_global(parsed_tools, opts.force, project_root=detect_root)
+        rc = install_global(
+            parsed_tools, opts.force, project_root=detect_root,
+            core_only=getattr(opts, "core_only", False),
+        )
         _emit_progress_terminal(rc)
         # Browser-wizard parity with the project path: an interactive global
         # install (init / global / upgrade / refresh --global) hands off to

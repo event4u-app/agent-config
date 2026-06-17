@@ -5,16 +5,7 @@
     "data": {
       "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
       "reconstructed_ac": [],
-      "assumptions": [],
-      "ui_apply": {
-        "summary": "Marketing landing page scaffolded with locked microcopy",
-        "rendered": {
-          "resources/views/marketing/landing.blade.php": "Ship faster with our SaaS platform. Deploy in minutes, not days. Start free trial."
-        },
-        "files": [
-          "resources/views/marketing/landing.blade.php"
-        ]
-      }
+      "assumptions": []
     }
   },
   "intent": "ui-build",
@@ -26,6 +17,20 @@
     "design_tokens": {},
     "greenfield_decision": "scaffold",
     "audit_path": "greenfield"
+  },
+  "app_spec": {
+    "pages": [
+      "Landing"
+    ],
+    "entity_model": [
+      "SignupLead"
+    ],
+    "flow_map": {
+      "Landing": [
+        "signup-submit"
+      ]
+    },
+    "confirmed": true
   },
   "ui_design": {
     "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
@@ -60,10 +65,24 @@
     "reused_from_audit": [],
     "design_confirmed": true
   },
-  "ui_review": {
-    "findings": [],
-    "review_clean": true
+  "ui_scaffold": {
+    "pages": [
+      "Landing"
+    ],
+    "routes": [
+      "/"
+    ],
+    "layout_strategy": "single-column-shell",
+    "component_manifest": [
+      "MarketingLanding",
+      "SignupForm"
+    ],
+    "token_seed": {
+      "radius": "0.5rem",
+      "font": "system-ui"
+    }
   },
+  "ui_review": null,
   "ui_polish": null,
   "contract": null,
   "stitch": null,
@@ -71,26 +90,25 @@
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,
-  "changes": [
-    {
-      "kind": "ui",
-      "stack": "plain",
-      "file": "resources/views/marketing/landing.blade.php",
-      "summary": "Marketing landing page scaffolded with locked microcopy"
-    }
-  ],
+  "changes": [],
   "tests": null,
   "verify": null,
   "outcomes": {
     "refine": "success",
     "memory": "success",
     "analyze": "success",
-    "plan": "success",
-    "implement": "success",
-    "test": "success",
-    "verify": "success",
-    "report": "success"
+    "plan": "blocked"
   },
-  "questions": [],
-  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/landing.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+  "questions": [
+    "@agent-directive: ui-scaffold-plan",
+    "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+    "> Greenfield scaffold — derive a stack-agnostic skeleton plan from the confirmed `state.app_spec` (page-set + entity model) and the locked `state.ui_design` brief. The engine writes no files; this stage only produces the plan.",
+    "> Write `state.ui_scaffold` = {pages, routes, layout_strategy, component_manifest, token_seed}.",
+    "> `token_seed`: derive from the locked design brief's tokens; fall back to sane defaults (neutral scale, system font) when the brief leaves a slot open (no `tokens.json` brand source detected).",
+    "> 1. Continue — derive the scaffold plan into `state.ui_scaffold`",
+    "> 2. Abort — drop this UI request",
+    "",
+    "**Recommendation: 1 — derive the plan** — the stack-agnostic plan is the recoverable checkpoint: if the build stage fails, scaffold re-runs from here without touching design or apply."
+  ],
+  "report": ""
 }

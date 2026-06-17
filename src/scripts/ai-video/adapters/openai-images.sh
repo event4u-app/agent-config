@@ -6,7 +6,7 @@
 # through verbatim so character-consistency can lock a face across
 # scenes by reusing the same seed.
 #
-# Contract: scripts/ai-video/lib/adapter-contract.md
+# Contract: scripts/media/lib/adapter-contract.md
 # Provider: top-level <provider id="openai-images" kind="image"> in
 # agents/.ai-video.xml.
 #
@@ -21,8 +21,8 @@
 
 set -euo pipefail
 
-# shellcheck source=../lib/adapter-common.sh
-. "$(dirname "$0")/../lib/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 ADAPTER_ID="openai-images"
 

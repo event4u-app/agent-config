@@ -33,7 +33,7 @@ def test_adopted_files_match_council_decision() -> None:
     data = SKILL / "data"
     expected = {
         "ui-reasoning.csv", "products.csv", "colors.csv", "styles.csv",
-        "typography.csv", "charts.csv", "landing.csv", "icons.csv",
+        "font-pairings-reference.csv", "charts.csv", "landing.csv", "icons.csv",
         "ux-guidelines.csv", "react-performance.csv", "app-interface.csv",
     }
     present = {p.name for p in data.glob("*.csv")}

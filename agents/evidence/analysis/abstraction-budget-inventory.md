@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-06-13 | commit: 57588489 | files: 0 -->
 # Abstraction-Budget Inventory
 
 > Read-only discovery output for `agents/roadmaps/road-to-abstraction-budget-discovery.md`. Counts are grep-backed via the inventory script `scripts/inventory_abstraction_budget.py`. `bloat_candidate = Y` means usage-count threshold not met (typically zero external references) OR purpose overlap.

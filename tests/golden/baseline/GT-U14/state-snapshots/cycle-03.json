@@ -30,6 +30,7 @@
     "candidate_pick": "forms.toggle",
     "a11y_baseline": []
   },
+  "app_spec": null,
   "ui_design": {
     "layout": "two-column settings panel, max-w-3xl",
     "components": [
@@ -70,6 +71,7 @@
     ],
     "design_confirmed": true
   },
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,

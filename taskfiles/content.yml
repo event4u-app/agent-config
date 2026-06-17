@@ -206,6 +206,11 @@ tasks:
     desc: Fail if council-* artefacts are placed outside the canonical agents/runtime/council/{questions,responses,sessions}/ dirs (ai-council § Output path convention)
     cmd: ./scripts-run src/scripts/check_council_layout {{.QUIET_FLAG}}
 
+  check-council-config-location:
+    silent: true
+    desc: Fail if council surfaces tie config to .agent-settings.yml instead of .ai-council.yml (ADR-093)
+    cmd: python3 src/scripts/check_council_config_location.py {{.QUIET_FLAG}}
+
   lint-agents-layout:
     silent: true
     desc: Fail on unknown flat files at agents/ root; warn on legacy entries scheduled for migration (see scripts/lint_agents_layout.py)
@@ -294,6 +299,16 @@ tasks:
     silent: true
     desc: "road-to-competitive-borrow P1.3 — fail if the capability matrix is stale vs the generate_tools() projection logic"
     cmd: python3 src/scripts/generate_capability_matrix.py --check
+
+  generate-capabilities-index:
+    silent: true
+    desc: "road-to-capability-discoverability P2 — (re)generate CAPABILITIES.yaml (capability area → coverage → backing skills/commands → gaps) from packs.yml + skill/command frontmatter"
+    cmd: python3 src/scripts/generate_capabilities_index.py {{.CLI_ARGS}}
+
+  generate-capabilities-index-check:
+    silent: true
+    desc: "road-to-capability-discoverability P2 — fail if CAPABILITIES.yaml is stale vs the skill/command/pack surface (auto-run in CI; kill-switch on >5s / >50KB)"
+    cmd: python3 src/scripts/generate_capabilities_index.py --check
 
   generate-cookbook:
     silent: true

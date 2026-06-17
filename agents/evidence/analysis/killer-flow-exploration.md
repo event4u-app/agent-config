@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-05-21 | commit: 57588489 | files: 1 -->
 # Killer-Flow Exploration
 
 > Strategic memo — what a user-facing "killer flow" could look like for

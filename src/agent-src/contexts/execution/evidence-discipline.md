@@ -109,8 +109,59 @@ THE TEETH ARE POINTER-CI (DETERMINISTIC) + THE ANTI-HALLUCINATION EVAL (EMPIRICA
   content-compare) + the multi-evidence git-ancestry consistency check +
   the per-surface anti-hallucination eval with a variance baseline.
 
+## Global layer (v2 — cross-project card sharing, ADR-100)
+
+An *expensive* (remote) card may be promoted from project-local
+`agents/knowledge/` to a per-user **file-first** global store at
+`~/.event4u/agent-config/knowledge/` (no daemon / DB / vector index / decay —
+the 2026-06-14 Layer-2 sunset's core is preserved). It is **storage, not
+governed** like a committed card: unversioned, a cache, never a source of
+truth — the per-card provenance footer is its audit trail. Gated by the
+user-global `knowledge.global_sharing` setting (**default OFF until cross-project
+reuse is measured across ≥ 2 real projects** — ADR-103 amends ADR-100 Phase 0;
+`enabled: false` fully no-ops the layer — v1 unaffected; an operator opts in
+explicitly and the default flips back only on a positive reuse signal).
+
+- **A global card is a distillation, not a copy.** Its `trust: durable` core is
+  **negative facts + pointers**; positive structure is an explicit per-line
+  **hypothesis** — the same shape as a committed card, never positive structure
+  copied as a build input.
+- **Leads-only consumption.** A global card loaded in a consuming project enters
+  the Evidence Report under **"Assumed (from card · GLOBAL, unverified)"** — its
+  positive structure must be re-confirmed against the live source *this session*
+  before use (version skew, schema drift). Negative facts + pointers are usable
+  as leads. Global-sourced positive structure is **never** "Verified".
+- **Origin-tier scoping is the privacy floor.** `public` (registry / GitHub /
+  docs) auto-shareable; `vendor` (Stripe / AWS / …) shareable **post-redaction**;
+  `proprietary` (in-house DB / private API / client schemas) **manual-only,
+  default-off regardless of `enabled`** — no client-A schema leaks into client-B.
+- **Redaction on write.** Promotion runs the `low-impact-corpus-privacy-floor`
+  + `source-confidentiality` pattern set and **halts** on any hit — never
+  silent-shares, never auto-rewrites.
+- **Promotion is hybrid.** A `public`/`vendor` card seen in ≥`auto_promote_threshold`
+  distinct repos triggers a one-tap **suggestion**; never a silent write.
+
+## Evidence v2 rollback target (Phase 0)
+
+Evidence v2 (self-building project context — Class A config-pointers, Class B
+observed conventions, Class C learned lessons) is an **additive** layer. Its
+rollback target is fixed and measurable:
+
+```
+v2 ROLLBACK = DISABLE ALL CURATED ACCUMULATED CONTEXT EXCEPT CLASS-A CONFIG-POINTERS.
+THE MEASURABLE BASELINE TO REVERT TO IS v1 DISCIPLINE WITH NO ACCUMULATED CONTEXT.
+```
+
+Class A (config-derived pointers) is deterministic, drift-proof, and carries no
+accumulation risk, so it survives a rollback. Class B/C are the accumulation
+layers; if a v2 eval shows accumulated context raises the error rate or its cost
+is disproportionate, those layers are disabled and the agent runs on v1 discipline
+alone — an acceptable outcome (v1's value stood on its own). "Self-improving" is a
+hypothesis, not a law; the rollback target is what makes the hypothesis falsifiable.
+
 ## See also
 
+- [`project-intelligence`](project-intelligence.md) — Evidence v2: self-building context (A/B/C classes, memory tiers, the v1↔v2 isolation contract).
 - [`source-discovery`](../../rules/source-discovery-gate.md) — the obligation surface.
 - [`source-discovery`](../../skills/source-discovery/SKILL.md) — the procedure.
 - [`think-before-action`](../../rules/think-before-action.md) — minimum read set + verification matrix.

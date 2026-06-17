@@ -1,5 +1,6 @@
 {
   "skill": "design-tokens",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers token authoring, generation, and discipline linting; should-not-trigger covers value selection, Tailwind usage discipline, and component work.",
   "queries": [
     {"q": "set up a design token system with light and dark mode", "trigger": true},

@@ -156,6 +156,19 @@ the help text groups commands under `## Tier 0`, `## Tier 1`,
 
 Hooked into `task lint-skills` so it runs in CI.
 
+## `tier` deprecation signal (discovery manifest v2)
+
+Since ADR-090 the named `visibility:` field is the command classifier source
+of truth and the integer `tier:` (`0/1/2`) is a back-compat alias. The
+published discovery manifest (`dist/discovery/discovery-manifest.json`) is now
+**v2** and carries a machine-readable top-level `deprecations` block
+announcing the `tier` key (replacement: `visibility`). `tier` is **still
+emitted** on command artefacts (non-breaking) — the block only signals the
+deprecation so external manifest consumers can migrate during a soak window.
+Removal of `tier` (frontmatter + schema + manifest emit) is tracked in
+`road-to-tier-removal` (ADR-092, Phase 4) and is **not** done yet; restoring
+`tier` after removal would be a sub-1h manifest-schema patch.
+
 ## See also
 
 - The distribution-maturity roadmap — Phase 4 (under `agents/roadmaps/`).

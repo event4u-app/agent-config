@@ -1,0 +1,6 @@
+# Fixture tooling config — the REAL standard for the Class-A eval.
+line-length = 100
+
+[format]
+quote-style = "single"
+indent-style = "space"

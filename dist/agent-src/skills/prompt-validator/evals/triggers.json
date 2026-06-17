@@ -1,5 +1,6 @@
 {
   "skill": "prompt-validator",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers the pre-spend batch-contradiction gate (style / character / physics / lip-sync ownership). Should-not-trigger covers near-miss neighbors: single-prompt craft (video-director), LLM prompt tuning (prompt-optimizer / prompt-engineering-patterns), and vocal-map validation (validate-vocal-map.sh path).",
   "queries": [
     {"q": "validate the prompts before we render", "trigger": true},

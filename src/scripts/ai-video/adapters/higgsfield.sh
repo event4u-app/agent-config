@@ -6,7 +6,7 @@
 # discovery via `capability --preset <name>` so the orchestrator can
 # pick the right mux path.
 #
-# Contract: scripts/ai-video/lib/adapter-contract.md
+# Contract: scripts/media/lib/adapter-contract.md
 # Provider: top-level <provider id="higgsfield" kind="video"> in
 # agents/.ai-video.xml. Preset → motion-choreographer profile mapping
 # is documented in agents/reference/ai-video/prompts/motion-choreography.md
@@ -24,8 +24,8 @@
 
 set -euo pipefail
 
-# shellcheck source=../lib/adapter-common.sh
-. "$(dirname "$0")/../lib/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 ADAPTER_ID="higgsfield"
 
