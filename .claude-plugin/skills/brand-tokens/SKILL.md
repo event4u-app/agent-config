@@ -1,0 +1,1 @@
+../../../src/domains/brand/brand/tokens/command.md

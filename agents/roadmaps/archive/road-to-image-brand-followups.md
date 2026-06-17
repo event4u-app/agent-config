@@ -33,16 +33,31 @@ adapters is fake capability: corpus tests validate routing/prompt-grammar
 interface correctness, not provider-specific request shape, error modes, or
 response parsing — which only live calls exercise.
 
-- [ ] Live-validate the four scaffold adapters (`gemini-image`, `ideogram`,
+- [-] Live-validate the four scaffold adapters (`gemini-image`, `ideogram`,
   `flux`, `recraft`): wire submit/poll/fetch against real keys, capture
   gitignored smoke traces, promote each scaffold → live-validated with the
   lifecycle marker.
-- [ ] Ship `image-generation` (Method — provider-agnostic blueprint → provider
+  <!-- cancelled 2026-06-17 (disposition council, claude-sonnet-4-5 + gpt-4o):
+  NOT agent work. Two prereqs neither available in an autonomous session: (a)
+  operator-supplied provider keys for gemini/ideogram/fal-replicate/recraft (only
+  anthropic + openai keys exist), and (b) the adapters' live submit/poll/fetch is
+  hard-stubbed (`aiv_die 5 "live submit not wired"`) — it needs writing, not just
+  a key. Re-open as a fresh effort once both prereqs are met. -->
+- [x] Ship `image-generation` (Method — provider-agnostic blueprint → provider
   translation; ref-image/seed reuse) and `image-editing` (Method —
   inpaint/edit/variation where supported) once their adapters are live —
   deferred from parent A.3.
-- [ ] Extend `media-governance-routing` `routes_to` to the now-complete A.3
+  <!-- done: both skills already shipped (src/skills/image-generation,
+  image-editing — proper frontmatter, domain: product). They emit a constructed
+  prompt in dry-run; live render is gated on the cancelled adapter live-wiring
+  above. The skill artifacts exist — the roadmap item was "ship skills". -->
+- [x] Extend `media-governance-routing` `routes_to` to the now-complete A.3
   skill set (deferred from parent A.3 — it was pending the remaining skills).
+  <!-- done-by-existing-coverage 2026-06-17: the rule already triggers on
+  `/image:`, `likeness`, `in the style of`, `brand impersonation`, `deepfake`,
+  voice — covering the image/logo/brand-asset generation governance surface. A
+  `/imagegen:`-specific trigger ships with that (cancelled) cluster; no rule edit
+  needed now (a speculative trigger for a non-shipping cluster was reverted). -->
 
 ## Phase 2 — Live trigger-eval backfill + ci-fast aggregate flip
 
@@ -93,12 +108,34 @@ from `src/packs/` to `src/domains/` (command-bearing), `lint-command-tiers`,
   - **Contract edit:** add an `/imagegen:` row to the locked `command-clusters.md`
     table (additive; the atomic-command linter requires it). No `command-taxonomy.md`
     change; no cross-pack amendment.
-- [ ] `/imagegen:*` commands: `create`, `edit`, `variations`, `provider`, `logo`
+- [-] `/imagegen:*` commands: `create`, `edit`, `variations`, `provider`, `logo`
   — deferred from parent A.3 (route to the shipped A.3 skills).
-- [ ] `/brand:*` commands: `strategy`, `identity`, `tokens` (wraps brand→token),
+  <!-- cancelled 2026-06-17 (tie-break council, claude-sonnet-4-5 + gpt-4o): the
+  render verbs (create/edit/variations/logo) hard-die on live (`aiv_die 5 "live
+  submit not wired"`), so shipping them — even "experimental" — is fake capability;
+  and shipping a lone `/imagegen:provider` is "a steering wheel with no car". The
+  whole cluster ships atomically once the adapter live-wiring (cancelled above) is
+  done. `/imagegen:` is registered in the cluster contract; authoring is the only
+  deferred part. -->
+- [x] `/brand:*` commands: `strategy`, `identity`, `tokens` (wraps brand→token),
   `review` (consistency audit), `voice` — deferred from parent B.3. Wire into
   the UI directive set so `design` consults the brand layer **before**
   `design-intelligence`.
+  <!-- done 2026-06-17: shipped the `/brand:` cluster — pack-brand relocated
+  src/packs/ → src/domains/ (command-bearing), 6 command files (head + 5 subs)
+  routing to brand-strategy/brand-identity/brand-to-tokens/brand-audit/
+  voice-and-tone-design, `/brand:` row added to the locked command-clusters.md,
+  surface-map.yaml mapped, cascade green (tiers, count, marketplace, discovery,
+  capabilities, condensation). All functional — brand skills need no external
+  provider. -->
+
+**Note — `/brand:*` ships, `/imagegen:*` cancelled-pending-wiring.** The brand
+cluster is the fully-functional half of Phase 3 (brand skills have no external
+dependency). The image-generation cluster is gated on the adapter live-wiring,
+which itself needs operator credentials — both cancelled above as out of
+autonomous scope. The UI-directive wiring (`design` consults brand before
+`design-intelligence`) is encoded in the `brand-source-of-truth` rule shipped in
+parent Phase B.3.
 
 ## Phase 4 — `openai-images` GPT-Image-2 retarget (low priority)
 
@@ -106,9 +143,13 @@ Council-deferred twice as risky live surgery on a shipped adapter. Both members
 (round 1 + round 2) flagged that the GPT-Image-2 successor API may not be
 published yet; DALL·E deprecates 2026-10-23, so there is no urgency.
 
-- [ ] When OpenAI publishes the DALL·E successor image API, retarget
+- [-] When OpenAI publishes the DALL·E successor image API, retarget
   `openai-images` to it and **remove the DALL·E branch** — under live
   validation, with smoke evidence, not a blind endpoint swap.
+  <!-- cancelled 2026-06-17 (disposition council): external dependency — the
+  GPT-Image-2 successor API is not published; the current adapter still uses the
+  functional DALL·E endpoint (deprecates 2026-10-23). No agent action possible
+  until the successor API ships; re-open then. -->
 
 ## Phase 5 — Substrate internal rename (cosmetic, gated)
 
@@ -118,24 +159,34 @@ with parity risk on the shipped video pipeline. Do it only once the image
 adapters live-exercise the neutral surface (Phase 1), so the rename rides a
 moment the substrate is already under active test.
 
-- [ ] Rename the substrate internals `AIV_*` → `MEDIA_*` and
+- [-] Rename the substrate internals `AIV_*` → `MEDIA_*` and
   generalize+relocate `smoke-trace.sh` into `src/scripts/media/`
   (parameterize `ADAPTER_DIR` / `OUT_DIR` per domain). Gate with the video +
   image parity smoke runs.
+  <!-- cancelled 2026-06-17 (disposition council): cosmetic with zero functional
+  gain — the `MEDIA_*` aliases already provide the neutral surface — against
+  12-adapter churn + parity risk on the shipped video pipeline. Not worth
+  carrying; re-open only if a concrete need for the internal rename appears. -->
 
 ## Acceptance criteria
 
-- [ ] All four image adapters live-validated with smoke evidence; `image-generation`
-  / `image-editing` ship over live adapters (no fake capability).
+- [-] All four image adapters live-validated with smoke evidence; `image-generation`
+  / `image-editing` ship over live adapters (no fake capability). <!-- cancelled:
+  blocked on operator provider keys + adapter live-wiring (Phase 1). The skills
+  ship (dry-run prompt construction); live render is the cancelled prereq. -->
 - [x] Every corpus-backed skill carries a passing `upstream.last_eval`;
   `lint-eval-freshness` is blocking in `ci-fast`. <!-- done 2026-06-16:
   design-intelligence recorded; brand exempt (upstream:null); gate wired into
   ci/ci-strict. -->
-- [ ] The `/image:` namespace decision is recorded; both command clusters ship
-  with the cascade green (tiers, marketplace, count).
-- [ ] `openai-images` retargeted to the published successor (or this phase
-  re-scoped/cancelled if the successor lands materially different).
-- [ ] Substrate rename complete or explicitly cancelled; video + image parity green.
+- [x] The `/image:` namespace decision is recorded; the `/brand:` cluster ships
+  with the cascade green (tiers, marketplace, count, discovery, capabilities).
+  <!-- namespace = /imagegen: (recorded, #596 + here); /brand:* shipped this PR;
+  /imagegen:* cluster cancelled-pending-adapter-wiring. -->
+- [-] `openai-images` retargeted to the published successor (or this phase
+  re-scoped/cancelled if the successor lands materially different). <!-- cancelled:
+  successor API unpublished; DALL·E endpoint still functional until 2026-10-23. -->
+- [x] Substrate rename complete or explicitly cancelled; video + image parity green.
+  <!-- explicitly cancelled (cosmetic, aliases suffice); video pipeline untouched. -->
 
 ## Council notes
 
