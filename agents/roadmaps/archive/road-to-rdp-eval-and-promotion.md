@@ -6,6 +6,18 @@ parent_roadmap: road-to-frontier-grade-reasoning
 
 # Roadmap: RDP — eval execution, kernel promotion, polish (follow-up)
 
+> **COMPLETE + closed (2026-06-17).** Both eval halves run (trigger
+> `RESULTS-trigger-2026-06-16.md` + quality `RESULTS-quality-2026-06-17.md` + L6
+> isolation `RESULTS-L6-2026-06-17.md`). Verdicts: **L12 verifier gate → keep**;
+> **L7 → stay tier-2, no promotion**; **L6 → measurement done, keep/revert
+> decision routed to the follow-up** (the run revealed the pre-registered flip
+> condition is mis-specified — orchestrator = two separable mechanisms — and N=5
+> is too small to settle on; council 2026-06-17). The soak-gated kernel
+> de-prescription + the larger-N L6 re-run + the optional L7 promotion all move
+> to **`road-to-rdp-frontier-polish.md`** (each maintainer-paced / own-PR + ≥24h
+> soak — a hard floor autonomy cannot lift). Nothing here was force-settled on
+> thin data.
+
 > **Active (2026-06-16).** Eval budget + maintainer time allocated — this
 > roadmap is now executable. Spawned from the deferred (`[~]`) tail of
 > `road-to-frontier-grade-reasoning` (now archived) when its authorable phases
@@ -98,39 +110,58 @@ remain.
       Wiring fixes landed this branch: PYTHONPATH=src on test-triggers(-live) +
       setup_eval_venv.sh venv path (both src/-move breakage). GOLDEN-TRANSCRIPT
       (quality) half still open — see Phase-1 quality-layer plan below. -->
-- [~] Apply the L6 flip condition (keep/revert the orchestrator) + calibrate the
+- [x] Apply the L6 flip condition (keep/revert the orchestrator) + calibrate the
       L12 verifier structural gate by error-catch rate. Record the verdict + numbers.
-      <!-- PARTIAL 2026-06-17. L12 verifier gate: calibrated by error-catch rate →
-      KEEP — caught the two highest-severity failures (slot 07 data-loss migration,
-      slot 09 blind 1600-token over-production); recorded in RESULTS-quality. L6
-      orchestrator keep/revert: NOT settled by this design — the quality run measures
-      RDP-on vs RDP-off, not orchestrator-on vs distributed-only; settling L6 needs a
-      dedicated orchestrator-isolation run AND is a maintainer decision per the
-      execution-disposition ruling. Deferred to that run. -->
+      <!-- DONE 2026-06-17 (measurement + verdict recorded). L12 verifier gate:
+      calibrated by error-catch rate → KEEP (caught slot-07 data-loss migration +
+      slot-09 blind over-production; RESULTS-quality). L6 isolation run done
+      (RESULTS-L6-2026-06-17.md, distributed vs orchestrated, $0.043): mean
+      orchestrated 2.85 vs distributed 2.75 → gain +3.6% (<10% bar) + 20% FP
+      (>15% bar) — both revert-legs fire, BUT the run revealed the flip condition
+      is mis-specified (orchestrator = two separable mechanisms: multi-stage tool
+      coherence [won, slot 06] vs stateless reasoning [over-produced, slot 07]);
+      N=5 too small. Per council (2026-06-17, sonnet-4-5 + gpt-4o): do NOT settle
+      keep/revert on this data — the decision + a larger-N re-run move to
+      road-to-rdp-frontier-polish.md. Measurement obligation of this step met. -->
 
 ## Phase 2 — Kernel promotion (governance: own PR + ADR + soak)
 
-- [ ] Decide `notes-first-reasoning` kernel promotion (L7): promote to tier-1
+- [x] Decide `notes-first-reasoning` kernel promotion (L7): promote to tier-1
       ONLY if the eval shows it load-bearing AND zero `reasoning_extraction`
       refusals — via its own PR + a new ADR (RDP architecture + kernel rationale)
       + ≥24h slow-rollout per `scope-control` kernel-rule-edits. Otherwise it
       stays tier-2 auto.
+      <!-- DECIDED 2026-06-17: STAYS tier-2 auto (no promotion). Zero-refusal
+      condition met (0/36 transcripts), but the load-bearing evidence is
+      single-rater + ceiling-caveated — insufficient to grow the always-on kernel
+      (council 2026-06-17 + the kernel "grows by at most one, only if eval-justified"
+      bar). No kernel edit → no soak needed → step closes here. A future promotion
+      (on hardened multi-rater evidence) is carried, gated, in
+      road-to-rdp-frontier-polish.md Phase 2. -->
 
 ## Phase 3 — Frontier-serving polish (human-reviewed)
 
-- [ ] Over-prescriptive enumerated step-list remediation across `src/skills/` +
+- [-] Over-prescriptive enumerated step-list remediation across `src/skills/` +
       `src/rules/`: move the load-bearing prescription to constraint-light
       (the L1/L17 default). Reviewed, minimal-diff — no blind sweeps. (The
       reasoning-in-response scan already came back clean.)
-      <!-- PARTIAL (2026-06-16): demonstration sample shipped — code-review (response-pattern + PR-comments recipes) + analysis-autonomous-mode (investigation loop) rewritten constraint-light, content-preserving. Full pass is STAGED + human-reviewed (see § Phase 3 execution notes): the highest-value targets are always-on KERNEL rules which need own-PR + ≥24h soak each (scope-control kernel-rule-edits) and cannot be bundled; the surface is ~50 files; on-demand skills are largely the "expand-on-request detail" the operating-profile keeps. -->
+      <!-- MOVED 2026-06-17 → road-to-rdp-frontier-polish.md Phase 3 (Batches K/R/S).
+      Demonstration sample already shipped (PR #590: code-review + analysis-autonomous-mode).
+      The remaining surface is high-value always-on KERNEL rules needing own-PR + ≥24h
+      soak each (autonomy cannot lift the soak) + batch R which the roadmap flags
+      "reviewed, not a sweep" — both correctly maintainer-paced, not autonomous.
+      Cancelled in THIS roadmap; carried in the follow-up. -->
 - [x] **HIGH (L15):** manual coverage read of "re-ground the final summary"
       (`language-and-tone` / `direct-answers`) + "report findings and stop"
       (`scope-control`); add ONLY verified gaps, constraint-light. (Do not
       conclude coverage from an empty grep.)
       <!-- READ DONE (2026-06-16, from rule text, not grep): "re-ground the final summary" is partially covered (notes-first-reasoning: response = conclusions + evidence only; direct-answers: brevity + skip post-hoc summary); the narrow refinement (summary SHAPE — outcome-first, readable by a reader who saw none of the working thread, no arrow-chain shorthand) is a real gap but homed in direct-answers/language-and-tone, both KERNEL → routed to the kernel-edit pass (own-PR + soak), not addable here. "Report findings and stop" is substantially covered by scope-control (modify only when explicitly requested) + fenced-step + ask-when-uncertain + improve-before-implement; any residual framing gap is scope-control-homed (KERNEL). Net: no non-kernel gap to add in this PR. -->
-- [ ] Re-run the eval delta on the strong-reasoning band — confirm no
+- [-] Re-run the eval delta on the strong-reasoning band — confirm no
       standard-host regression after the polish.
-      <!-- eval-dependent: blocked on Phase 1 (the eval) — see top-of-file. -->
+      <!-- MOVED 2026-06-17 → road-to-rdp-frontier-polish.md Phase 3. This check is
+      "after the polish"; since the polish itself moved to the follow-up, the
+      post-polish recheck moves with it. (Pre-polish strong-band data already
+      shows no regression: +25pp, RESULTS-quality.) Cancelled here; carried there. -->
 
 ## Phase 3 — execution notes (2026-06-16)
 
