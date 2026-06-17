@@ -608,6 +608,11 @@ tasks:
     desc: Verify every skill that declares context_spine cites each slot in its body (closes lint gap from 1.34.0)
     cmd: python3 src/scripts/lint_context_spine_usage.py {{.QUIET_FLAG}}
 
+  check-surface-tiers:
+    silent: true
+    desc: "Surface-tier boundary guard — registry exhaustive over src/scripts/*/ and no core module hard-imports a lab module (road-to-install-contract-stability Phase 2)"
+    cmd: PYTHONPATH=src python3 src/scripts/check_surface_tiers.py
+
   check-public-links:
     silent: true
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter

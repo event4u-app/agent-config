@@ -12,5 +12,6 @@ owner:
 requires: []
 size_class: core
 suggests: []
+surface_tier: core
 trust_level_default: core
 version: 6.1.0
