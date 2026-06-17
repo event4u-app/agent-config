@@ -1773,7 +1773,7 @@ function _smoke_test_hooks(project_root: string, package_root: string): number {
 
 // --- Global user-level install (ADR-007) ---
 
-const USER_SCOPE_PATHS: Record<string, string> = {
+export const USER_SCOPE_PATHS: Record<string, string> = {
     'claude-code': '~/.claude/',
     'claude-desktop': '~/Library/Application Support/Claude/',
     cursor: '~/.cursor/',
@@ -1825,7 +1825,7 @@ const SCOPE_SUPPORT: Record<string, string> = {
     warp: 'global',
 };
 
-const PROJECT_BRIDGE_MARKERS: Record<string, string> = {
+export const PROJECT_BRIDGE_MARKERS: Record<string, string> = {
     'claude-code': '.claude/settings.json',
     'claude-desktop': '.claude-desktop/agent-config.md',
     cursor: '.cursor/hooks.json',
@@ -4468,5 +4468,19 @@ export {
     SUPPORTED_PROFILES,
     DEFAULT_PROFILE,
     _VALID_TOOLS,
+    // ADR-200 py2ts: re-exported for cmd_export.ts / cmd_settings_migrate.ts
+    // twins (Python imports these as `scripts.install` module constants).
+    SETTINGS_FILE,
+    GLOBAL_AGENT_SETTINGS_PATH,
+    GLOBAL_USER_SETTINGS_PATH,
+    AIDER_MARKER,
+    CLAUDE_DESKTOP_MARKER,
+    CODEX_MARKER,
+    CONTINUE_MARKER,
+    JETBRAINS_MARKER,
+    KILOCODE_MARKER,
+    KIRO_MARKER,
+    ROOCODE_MARKER,
+    ZED_MARKER,
 };
 export type { Options };

@@ -37,11 +37,17 @@
  * - Missing files → defaults.
  * - No file is ever created or written by this module.
  */
+import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
 import * as user_global_paths from './user_global_paths.js';
+
+// ESM has no `require`; `createRequire(import.meta.url)` restores it so the
+// lazy yaml load works under standalone tsx (the production dispatcher path),
+// not just under a require-shimmed test harness. Mirrors config/presets.ts.
+const _require = createRequire(import.meta.url);
 
 /** JSON-ish value type — mirrors Python's `Any` for settings data. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -944,8 +950,7 @@ function _read_yaml(p: string): SettingsDict | null {
     try {
         // Lazy require to mirror Python's lazy `import yaml` — a missing
         // package degrades to `null` (defaults) instead of crashing.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = require('yaml') as typeof import('yaml');
+        YAML = _require('yaml') as typeof import('yaml');
     } catch {
         return null;
     }
