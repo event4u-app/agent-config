@@ -8,7 +8,16 @@ Brand as a first-class UX layer — archetype/voice/identity grounding corpus, b
 - **version**: `6.1.0`
 - **owner**: engineering
 - **requires**: frontend-design
-- **artefacts**: 7
+- **artefacts**: 13
+
+## Commands (6)
+
+- **`brand`** — Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer.
+- **`brand-identity`** — Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes.
+- **`brand-review`** — Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule.
+- **`brand-strategy`** — Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI.
+- **`brand-tokens`** — Derive a DTCG .tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator.
+- **`brand-voice`** — Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against.
 
 ## Rules (2)
 

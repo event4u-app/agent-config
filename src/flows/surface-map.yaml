@@ -192,6 +192,12 @@ commands:
     - video/storyboard
 
   marketing:
+    - brand
+    - brand/identity
+    - brand/review
+    - brand/strategy
+    - brand/tokens
+    - brand/voice
     - ghostwriter
     - ghostwriter/delete
     - ghostwriter/fetch
