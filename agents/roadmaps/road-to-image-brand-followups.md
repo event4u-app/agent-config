@@ -75,15 +75,26 @@ Needs the full command-cluster cascade: relocate `pack-ai-image` + `pack-brand`
 from `src/packs/` to `src/domains/` (command-bearing), `lint-command-tiers`,
 `.claude-plugin` marketplace command-as-skill entries, `check-command-count`.
 
-- [ ] **Decide the `/image:` namespace** (council split, unresolved). Position A
-  (claude-sonnet-4-5): **share** `/image:` — ai-video owns the narrow analysis
-  verbs (`verify`, `analyse`), ai-image adds `create`/`edit`/`variations`/
-  `logo`/`provider`; verbs self-document scope; commands key on
-  `namespace:verb`, so peers can co-contribute. Position B (gpt-4o): **separate**
-  `/imagegen:` to avoid collision and keep the surface unambiguous. Resolve
-  before authoring the cluster.
-- [ ] `/image:*` (or `/imagegen:*`) commands: `create`, `edit`, `variations`,
-  `provider`, `logo` — deferred from parent A.3.
+- [x] **Decide the `/image:` namespace.** RESOLVED → **new `/imagegen:` cluster**
+  (Option A, separate). Council (claude-sonnet-4-5 + gpt-4o, 2026-06-17, 2-round
+  design debate) converged: `/image:` is a **locked single-owner cluster** owned by
+  pack-ai-video (a `visibility: internal` character-fidelity surface: `analyse` /
+  `create` / `verify`), so `/image:create` is already a different command and the
+  contract has no cross-pack-cluster precedent (taxonomy warns against
+  dual-namespacing). The verb-first `/generate:image` alternative was rejected —
+  it inverts the `/<surface>:<verb>` taxonomy and collides with `/video:` at the
+  next modality. `/imagegen:` is a clean domain-scoped cluster, additive, no
+  contract-model change.
+  - **Sub-decision (rename `/image:`?)** — split: gpt-4o → rename to
+    `/canon-image:`; sonnet → leave as-is (internal, renaming a locked shipped
+    cluster = breaking churn, zero external benefit). Taken: **leave as-is** (the
+    `/imagegen:` separation already removes user-facing ambiguity since `/image:`
+    is internal-only); an optional future rename can revisit.
+  - **Contract edit:** add an `/imagegen:` row to the locked `command-clusters.md`
+    table (additive; the atomic-command linter requires it). No `command-taxonomy.md`
+    change; no cross-pack amendment.
+- [ ] `/imagegen:*` commands: `create`, `edit`, `variations`, `provider`, `logo`
+  — deferred from parent A.3 (route to the shipped A.3 skills).
 - [ ] `/brand:*` commands: `strategy`, `identity`, `tokens` (wraps brand→token),
   `review` (consistency audit), `voice` — deferred from parent B.3. Wire into
   the UI directive set so `design` consults the brand layer **before**
