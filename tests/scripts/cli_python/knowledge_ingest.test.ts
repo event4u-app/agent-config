@@ -116,6 +116,13 @@ function normManifest(m: Record<string, unknown>, root: string): Record<string, 
             out[k] = v.map((f) => {
                 const fo = { ...(f as Record<string, unknown>) };
                 fo['path'] = normPath(String(fo['path']), root);
+                // `mime` is `mimetypes.guess_type()` output — host-variable
+                // (Python version / OS /etc/mime.types differ: e.g. `.md` →
+                // text/markdown on CI Linux py3.11+, octet-stream on macOS
+                // py3.9). The functional contract is the EXTENSION-based
+                // `adapter` routing (kept strict); the mime label is
+                // informational, so normalize it to compare host-independently.
+                if ('mime' in fo) fo['mime'] = '<mime>';
                 return fo;
             });
             continue;
