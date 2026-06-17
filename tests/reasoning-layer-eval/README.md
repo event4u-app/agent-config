@@ -55,15 +55,39 @@ are settled by data, not assertion.
 |---|---|---|
 | `validate_fixtures.py` | free (no model) | now / CI |
 | live trigger scoring (`skill_trigger_eval.py`) | billable | Phase 7 |
-| baseline + treatment transcript capture | billable | Phase 7 |
+| baseline + treatment transcript capture (`run_quality_eval.py`) | billable | Phase 7 |
 | rubric hand-scoring | human time | Phase 7 |
 
 Baseline capture is intentionally **not** done during authoring — it needs real
 host-model runs and is the first billable step in Phase 7.
+
+## Results (run 2026-06-17)
+
+- **Trigger layer** — `RESULTS-trigger-2026-06-16.md`. 3/8 disciplines are
+  trigger-measurable (prediction clean; complexity + decision borderline); the
+  other 5 are lenses/gates → quality layer. Spend ~$2.76.
+- **Quality layer** — `RESULTS-quality-2026-06-17.md`. Controlled
+  two-system-prompt differential (`run_quality_eval.py`), 12 slots ×
+  baseline/treatment, single rater. Spend $0.086.
+  - Treatment rubric mean **95.8%** (≥70% ✅). Treatment − baseline:
+    **standard band +14.6 pp / +17.9% rel** (≥15% bar: marginal on pp, pass on
+    relative), **strong band +25 pp** (≥0 no-regression ✅).
+  - Strong/trivial token overhead **+1.7%** (≤~5% ✅). **Zero
+    `reasoning_extraction` refusals** (no hard fail).
+  - **L12 verifier gate: keep** (caught a data-loss migration + a blind
+    1600-token over-production). **L6 orchestrator: unsettled** — needs a
+    dedicated orchestrator-on/-off run. **L7 promotion**: zero-refusal condition
+    met; decision stays Phase 2 (own PR + ADR + soak).
 
 ## Files
 
 - `trigger-fixtures.json` — RDP trigger fixtures (21 rows, 8 disciplines).
 - `validate_fixtures.py` — cost-free structural + invariant validator.
 - `rubric.md` — the 12-slot plan + 4-dimension hand-scoring rubric + thresholds.
+- `run_quality_eval.py` — quality-layer runner: controlled two-system-prompt
+  differential (baseline = no RDP / treatment = +RDP), dry-run by default,
+  `--confirm` to spend. Mirrors `skill_trigger_eval.py`'s key + cost-gate.
+- `golden-transcripts/corpus-prompts.json` — the 12 task prompts (machine form).
 - `golden-transcripts/_template.md` — per-slot transcript + scoring template.
+- `golden-transcripts/<NN>-<slug>.md` — captured baseline+treatment transcripts.
+- `RESULTS-trigger-2026-06-16.md` / `RESULTS-quality-2026-06-17.md` — scored runs.
