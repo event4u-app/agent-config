@@ -15,6 +15,31 @@ settings-key change legitimately trips a Major even when the day-to-day skill/ru
 the cadence reflects an actively-evolving install/runtime surface, not instability in the content you use.
 Each major below names what actually broke; majors with no consumer-facing break say so plainly.
 
+## Install-ABI deprecation window
+
+The on-disk **install layout** — the paths the installer writes, the JSON-pointer keys it claims in
+shared host configs, the surgical-uninstall pointer schema, and the lockfile shapes — is a versioned
+contract: [`docs/contracts/install-layout.md`](docs/contracts/install-layout.md), stamped as
+`install_layout_version` into `~/.event4u/agent-config/installed.lock`. A change to that shape is **not**
+an automatic Major. It follows a deprecation window instead:
+
+1. **Side-by-side for one minor cycle.** A layout change bumps `install_layout_version` and ships the
+   **old + new shape together** for at least one minor release. The installer keeps writing/reading the
+   old shape during the window so an existing install never breaks mid-cycle.
+2. **In-place migration.** When the installer detects an installed tree at `install_layout_version <
+   current` (absent = pre-freeze v0), it migrates the on-disk shape in place — idempotently, preserving
+   surgical-uninstall pointers — and surfaces what it changed.
+3. **Drop only after the window.** The old shape is removed only after the migration has shipped for a
+   full minor cycle. That removal is the breaking step and gets a `### Breaking` CHANGELOG entry; the
+   intermediate side-by-side release does not.
+
+The conformance test (`tests/test_install_layout_contract.py`) fails CI on any layout-shape change that
+is **not** paired with an `install_layout_version` bump, so the window cannot be skipped silently.
+
+This is why an install-layout change no longer needs to trip a Major on its own: the version stamp +
+migration path turn it into a deprecation-gated minor change. The cadence note below predates that rule
+and describes the historical reason majors were frequent.
+
 ## Breaking changes by major
 
 | Version | Date | What broke | Migration |

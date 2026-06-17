@@ -17,6 +17,7 @@ import { Command } from 'commander';
 import { PACKAGE_JSON } from './paths.js';
 import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
+import { runRecordTriggerEval } from './commands/recordTriggerEval.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions } from './initRouting.js';
@@ -83,6 +84,36 @@ async function main(argv: readonly string[]): Promise<number> {
             const code = runDoctorShell();
             process.exit(code);
         });
+
+    program
+        .command('eval:record')
+        .description('Record a live trigger-eval result into a corpus manifest (ADR-061 §6 refresh DoD)')
+        .requiredOption('--eval-json <path>', 'EvalResult JSON written by skill_trigger_eval.py --output')
+        .requiredOption('--manifest <path>', 'corpus manifest.json to patch')
+        .option('--min-recall <n>', 'Recall floor override (per-skill default otherwise)', (v) => Number.parseFloat(v))
+        .option('--min-precision <n>', 'Precision floor override (per-skill default otherwise)', (v) => Number.parseFloat(v))
+        .option('--allow-mock', 'Permit recording a non-live (MockRouter) result — plumbing only')
+        .option('--dry-run', 'Validate and print the record, but do not write the manifest')
+        .action(
+            (opts: {
+                evalJson: string;
+                manifest: string;
+                minRecall?: number;
+                minPrecision?: number;
+                allowMock?: boolean;
+                dryRun?: boolean;
+            }) => {
+                const code = runRecordTriggerEval({
+                    evalJson: opts.evalJson,
+                    manifest: opts.manifest,
+                    ...(opts.minRecall !== undefined ? { minRecall: opts.minRecall } : {}),
+                    ...(opts.minPrecision !== undefined ? { minPrecision: opts.minPrecision } : {}),
+                    ...(opts.allowMock !== undefined ? { allowMock: opts.allowMock } : {}),
+                    ...(opts.dryRun !== undefined ? { dryRun: opts.dryRun } : {}),
+                });
+                process.exit(code);
+            },
+        );
 
     program
         .command('mcp-server')
@@ -303,7 +334,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help'];
+    const native = ['versions', 'doctor-shell', 'mcp-server', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'commands', 'help', 'eval:record'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         // Actions that don't hard-exit signal failure via process.exitCode.

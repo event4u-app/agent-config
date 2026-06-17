@@ -28,12 +28,18 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import * as user_global_paths from "./user_global_paths.js";
+import {
+  INSTALL_LAYOUT_VERSION,
+  coerce_layout_version,
+  needs_migration,
+} from "./install_layout.js";
 
 export type EnvMap = Record<string, string | undefined>;
 
 /** Lockfile dict shape (loosely typed, mirroring Python's `dict`). */
 export interface LockfileData {
   schema_version?: number;
+  install_layout_version?: number;
   agent_config_version?: string;
   installed_at?: string;
   tools: string[];
@@ -56,6 +62,7 @@ export const DEFAULT_LOCKFILE = _default_lockfile();
 
 const _VERSION_RE = /^\s*agent_config_version\s*:\s*"?([^"\s]+)"?\s*$/;
 const _SCHEMA_RE = /^\s*schema_version\s*:\s*(\d+)\s*$/;
+const _LAYOUT_RE = /^\s*install_layout_version\s*:\s*(\d+)\s*$/;
 const _INSTALLED_AT_RE = /^\s*installed_at\s*:\s*"?([^"\s]+)"?\s*$/;
 const _TOOL_RE = /^\s*-\s*([A-Za-z0-9_\-.]+)\s*$/;
 
@@ -132,6 +139,12 @@ export function read_lockfile(path?: string | null): LockfileData | null {
       in_tools = false;
       continue;
     }
+    const layout_m = _LAYOUT_RE.exec(raw_line);
+    if (layout_m) {
+      data.install_layout_version = Number.parseInt(layout_m[1]!, 10);
+      in_tools = false;
+      continue;
+    }
     const version_m = _VERSION_RE.exec(raw_line);
     if (version_m) {
       data.agent_config_version = version_m[1]!;
@@ -175,6 +188,7 @@ function splitlines(text: string): string[] {
 function _render(version: string, tools: string[], installed_at: string): string {
   const lines = [
     `schema_version: ${SCHEMA_VERSION}`,
+    `install_layout_version: ${INSTALL_LAYOUT_VERSION}`,
     `agent_config_version: "${version}"`,
     `installed_at: "${installed_at}"`,
     "tools:",
@@ -218,6 +232,95 @@ export function write_lockfile(
     throw err;
   }
   return target;
+}
+
+/** Result of {@link migrate_layout}: from/to layout versions + change log. */
+export interface MigrateLayoutResult {
+  from: number;
+  to: number;
+  changed: string[];
+}
+
+/**
+ * Parse the lockfile's `installed_at` stamp back into a UTC Date.
+ *
+ * Returns `null` when absent or malformed, so a migration falls back to the
+ * current time rather than raising on a hand-edited file. Mirrors Python's
+ * `datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ")` — strict, UTC, no other
+ * formats accepted.
+ */
+function _parse_installed_at(stamp?: string | null): Date | null {
+  if (!stamp) {
+    return null;
+  }
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/.exec(stamp);
+  if (!m) {
+    return null;
+  }
+  const [, y, mo, d, h, mi, s] = m;
+  const ms = Date.UTC(
+    Number.parseInt(y!, 10),
+    Number.parseInt(mo!, 10) - 1,
+    Number.parseInt(d!, 10),
+    Number.parseInt(h!, 10),
+    Number.parseInt(mi!, 10),
+    Number.parseInt(s!, 10),
+  );
+  // strptime rejects out-of-range fields (e.g. month 13) rather than rolling
+  // over the way Date.UTC does; reject any value that round-trips differently.
+  const parsed = new Date(ms);
+  if (
+    parsed.getUTCFullYear() !== Number.parseInt(y!, 10) ||
+    parsed.getUTCMonth() !== Number.parseInt(mo!, 10) - 1 ||
+    parsed.getUTCDate() !== Number.parseInt(d!, 10) ||
+    parsed.getUTCHours() !== Number.parseInt(h!, 10) ||
+    parsed.getUTCMinutes() !== Number.parseInt(mi!, 10) ||
+    parsed.getUTCSeconds() !== Number.parseInt(s!, 10)
+  ) {
+    return null;
+  }
+  return parsed;
+}
+
+/**
+ * Migrate an installed-tree lockfile to the current install-layout ABI.
+ *
+ * Idempotent. Detects `install_layout_version < INSTALL_LAYOUT_VERSION`
+ * (absent = pre-freeze v0) and migrates the on-disk shape in place,
+ * preserving the recorded tools, package version, and `installed_at` stamp
+ * and re-stamping the layout version.
+ *
+ * At the freeze baseline (v0 → v1) the only material change is stamping the
+ * version — the on-disk shape is unchanged. Future layout versions extend
+ * this function with the concrete shape transforms; surgical-uninstall
+ * pointers must always be preserved.
+ *
+ * Returns:
+ *   - `null` — no lockfile exists (nothing installed).
+ *   - `{from: v, to: v, changed: []}` — already current (no-op).
+ *   - `{from: old, to: current, changed: [...]}` — migrated.
+ */
+export function migrate_layout(
+  options: { path?: string | null; now?: Date | null } = {},
+): MigrateLayoutResult | null {
+  const target = options.path ?? lockfile_write_path();
+  const existing = read_lockfile(target);
+  if (existing === null) {
+    return null;
+  }
+  const from_v = coerce_layout_version(existing.install_layout_version);
+  if (!needs_migration(existing.install_layout_version)) {
+    return { from: from_v, to: from_v, changed: [] };
+  }
+  const version = existing.agent_config_version || current_package_version();
+  const tools = [...(existing.tools ?? [])];
+  const when = options.now ?? _parse_installed_at(existing.installed_at);
+  write_lockfile(version, tools, { path: target, now: when });
+  return {
+    from: from_v,
+    to: INSTALL_LAYOUT_VERSION,
+    changed: [`install_layout_version ${from_v} → ${INSTALL_LAYOUT_VERSION}`],
+  };
 }
 
 /** `sorted(set(tools))` — de-duplicate then sort ascending (codepoint). */

@@ -30,6 +30,7 @@
     "candidate_pick": "banners.status",
     "a11y_baseline": []
   },
+  "app_spec": null,
   "ui_design": {
     "layout": "horizontal banner under top nav, full-width",
     "components": [
@@ -63,6 +64,7 @@
       "banners.status"
     ]
   },
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,

@@ -33,6 +33,16 @@ OBSERVED_AT_RE = re.compile(r"\bobserved_at:\s*\"?([0-9]{4}-[0-9]{2}-[0-9]{2})")
 SOURCE_LINE_RE = re.compile(r"\bsource=([^:\s]+):(\d+)")
 SHA_RE = re.compile(r"^[0-9a-f]{7,40}$", re.IGNORECASE)
 
+# Global-store helpers (ADR-100). Imported lazily/tolerantly so the project-local
+# linter still runs if the _lib package layout shifts.
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _lib import knowledge_global as _kg  # type: ignore
+    from _lib import knowledge_global_redaction as _kgr  # type: ignore
+except Exception:  # pragma: no cover
+    _kg = None  # type: ignore
+    _kgr = None  # type: ignore
+
 
 # ---------------------------------------------------------------------------
 # Tiny frontmatter parser (no pyyaml required — cards use simple scalar fields)
@@ -75,7 +85,45 @@ def _frontmatter_get(text: str, *keys: str) -> str:
 # Individual checks
 # ---------------------------------------------------------------------------
 
-def _check_card(path: Path, strict: bool, check_urls: bool) -> list[str]:
+def _check_global_card(rel: str, text: str, fm: dict[str, object]) -> list[str]:
+    """Global-store-only checks (ADR-100): tier validity, provenance footer,
+    and a redaction-clean assertion (the secret/PII patterns must have been
+    halted/cleaned before the card was written — never present in a global card)."""
+    errors: list[str] = []
+    valid_tiers = _kg.TIERS if _kg is not None else ("public", "vendor", "proprietary")
+
+    # G1 — tier present and valid
+    tier = str(fm.get("tier", "")).strip()
+    if not tier:
+        errors.append(f"{rel}:0 — G1: global card missing 'tier' in frontmatter")
+    elif tier not in valid_tiers:
+        errors.append(
+            f"{rel}:0 — G1: tier '{tier}' not in {sorted(valid_tiers)}"
+        )
+
+    # G2 — provenance footer present with all fields
+    if _kg is not None:
+        prov = _kg.parse_provenance_footer(text)
+        if not prov:
+            errors.append(f"{rel}:0 — G2: missing provenance footer (audit trail)")
+        else:
+            for field in ("first_seen", "promoted_at", "last_verified", "tier", "seen_in"):
+                if not prov.get(field):
+                    errors.append(f"{rel}:0 — G2: provenance footer missing '{field}'")
+
+    # G3 — redaction must have fired: a global card MUST be clean of confidential
+    # patterns (secrets, emails, internal hostnames, external-source names, …).
+    # A vendor card carrying a secret means redaction did not halt → hard fail.
+    if _kgr is not None:
+        for v in _kgr.redaction_scan(text):
+            errors.append(
+                f"{rel}:0 — G3: confidential pattern in global card "
+                f"({v.category}: {v.snippet!r}) — redaction must have fired before sharing"
+            )
+    return errors
+
+
+def _check_card(path: Path, strict: bool, check_urls: bool, global_mode: bool = False) -> list[str]:
     errors: list[str] = []
     try:
         rel = str(path.relative_to(ROOT))
@@ -187,6 +235,10 @@ def _check_card(path: Path, strict: bool, check_urls: bool) -> list[str]:
                     f"{rel}:{n} — C6: source path not found or empty: {m.group(1)}"
                 )
 
+    # Global-store-only checks (ADR-100).
+    if global_mode:
+        errors.extend(_check_global_card(rel, text, fm))
+
     return errors
 
 
@@ -244,9 +296,21 @@ def main() -> int:
         help="Honest freshness signal: WARN (never fail) when a card's newest "
         "observed_at is older than N days (lead-only). 0 = off.",
     )
+    parser.add_argument(
+        "--global",
+        dest="global_mode",
+        action="store_true",
+        help="Lint the file-first GLOBAL store (~/.event4u/agent-config/knowledge/) "
+        "with extra checks: tier validity, provenance footer, redaction-clean (ADR-100).",
+    )
     args = parser.parse_args()
 
+    global_mode: bool = args.global_mode
+    # In --global mode, default the dir to the global store unless the caller
+    # overrode --dir explicitly.
     card_dir: Path = args.dir
+    if global_mode and card_dir == ROOT / "agents" / "knowledge" and _kg is not None:
+        card_dir = _kg.global_store_dir()
     if not card_dir.exists():
         print(f"No cards directory found at {card_dir} — nothing to check.")
         return 0
@@ -261,7 +325,9 @@ def main() -> int:
     all_errors: list[str] = []
     all_warnings: list[str] = []
     for card in cards:
-        all_errors.extend(_check_card(card, strict=args.strict, check_urls=args.check_urls))
+        all_errors.extend(_check_card(
+            card, strict=args.strict, check_urls=args.check_urls, global_mode=global_mode,
+        ))
         all_warnings.extend(_freshness_warnings(card, args.freshness_days))
 
     for warn in all_warnings:

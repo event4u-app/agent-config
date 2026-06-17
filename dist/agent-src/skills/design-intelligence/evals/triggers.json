@@ -1,5 +1,6 @@
 {
   "skill": "design-intelligence",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers the ui-design-brief rebound + selection questions; should-not-trigger covers audit, implementation, a11y-method, and token-authoring neighbors.",
   "queries": [
     {"q": "which design style fits a luxury e-commerce shop?", "trigger": true},

@@ -1,4 +1,26 @@
 {
+  "upstream": {
+    "sha": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+    "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+    "last_checked": "2026-06-07",
+    "last_eval": {
+      "date": "2026-06-16",
+      "model": "claude-sonnet-4-5",
+      "router": "anthropic",
+      "sha_at_eval": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "precision": 1,
+      "recall": 1,
+      "true_positive": 5,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 5,
+      "floor": {
+        "min_precision": 0.8,
+        "min_recall": 1
+      },
+      "passed": true
+    }
+  },
   "manifest_version": 1,
   "domain": "frontend-design",
   "tier": "conditional-grounding",
@@ -149,7 +171,7 @@
       "max_results": 3
     },
     "typography": {
-      "file": "typography.csv",
+      "file": "font-pairings-reference.csv",
       "search_cols": [
         "Font Pairing Name",
         "Category",
@@ -454,11 +476,6 @@
   "default_category": "General",
   "owner": "package-maintainer",
   "refresh_cadence": "quarterly",
-  "upstream": {
-    "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
-    "sha": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
-    "last_checked": "2026-06-07"
-  },
   "stacks": {
     "react": "stacks/react.csv",
     "nextjs": "stacks/nextjs.csv",

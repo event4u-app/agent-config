@@ -141,7 +141,9 @@ export function _to_delivery(work: WorkState): DeliveryState {
         questions: work.questions,
         report: work.report,
         ui_audit: work.ui_audit as Record<string, DeliveryAny> | null,
+        app_spec: work.app_spec as Record<string, DeliveryAny> | null,
         ui_design: work.ui_design as Record<string, DeliveryAny> | null,
+        ui_scaffold: work.ui_scaffold as Record<string, DeliveryAny> | null,
         ui_review: work.ui_review as Record<string, DeliveryAny> | null,
         ui_polish: work.ui_polish as Record<string, DeliveryAny> | null,
         contract: work.contract as Record<string, DeliveryAny> | null,
@@ -171,7 +173,9 @@ export function _sync_back(work: WorkState, delivery: DeliveryState): void {
     work.questions = delivery.questions;
     work.report = delivery.report;
     work.ui_audit = delivery.ui_audit as Dict | null;
+    work.app_spec = delivery.app_spec as Dict | null;
     work.ui_design = delivery.ui_design as Dict | null;
+    work.ui_scaffold = delivery.ui_scaffold as Dict | null;
     work.ui_review = delivery.ui_review as Dict | null;
     work.ui_polish = delivery.ui_polish as Dict | null;
     work.contract = delivery.contract as Dict | null;

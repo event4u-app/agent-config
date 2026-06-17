@@ -51,6 +51,13 @@
 # repo free of unbounded raw signals. See road-to-memory-pipeline-consolidation.
 /agents/memory/intake/
 
+# Agent config — Evidence v2 ephemeral project-intelligence tier. Auto-captured
+# trial-and-error / transient / task-local observations, retained N days, NEVER
+# promoted to committed context (distinct from intake, which holds promotion
+# candidates). Keeps the promotion queue free of per-session noise. See
+# contexts/execution/project-intelligence.md § Memory tiers.
+/agents/memory/ephemeral/
+
 # Agent config — ghostwriter profiles (real-person public-figure voices,
 # written by /ghostwriter:fetch). Local-only by default; commit explicitly
 # only via the deferred --shared opt-in. README.md stays tracked.

@@ -33,6 +33,12 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+// Global-store helpers (ADR-100). The Python original imports these lazily and
+// tolerantly (try/except → None) so the project-local linter still runs if the
+// _lib package layout shifts; the TS twins always exist, so a static import is
+// byte-faithful for behaviour (the only observable effect is the --global path).
+import * as _kg from './_lib/knowledge_global.js';
+import * as _kgr from './_lib/knowledge_global_redaction.js';
 
 // ROOT = Path(__file__).resolve().parent.parent.parent — src/scripts/ → repo root.
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -98,7 +104,57 @@ function _frontmatter_get(text: string, ...keys: string[]): string {
 // Individual checks
 // ---------------------------------------------------------------------------
 
-function _check_card(p: string, strict: boolean, check_urls: boolean): string[] {
+/**
+ * Global-store-only checks (ADR-100): tier validity, provenance footer,
+ * and a redaction-clean assertion (the secret/PII patterns must have been
+ * halted/cleaned before the card was written — never present in a global card).
+ */
+function _check_global_card(rel: string, text: string, fm: Record<string, string>): string[] {
+    const errors: string[] = [];
+    const valid_tiers = _kg !== null ? _kg.TIERS : ['public', 'vendor', 'proprietary'];
+
+    // G1 — tier present and valid
+    const tier = (fm['tier'] ?? '').trim();
+    if (!tier) {
+        errors.push(`${rel}:0 — G1: global card missing 'tier' in frontmatter`);
+    } else if (!valid_tiers.includes(tier)) {
+        errors.push(`${rel}:0 — G1: tier '${tier}' not in ${_pyReprList(_sorted(valid_tiers))}`);
+    }
+
+    // G2 — provenance footer present with all fields
+    if (_kg !== null) {
+        const prov = _kg.parse_provenance_footer(text);
+        if (!_pyTruthyObj(prov)) {
+            errors.push(`${rel}:0 — G2: missing provenance footer (audit trail)`);
+        } else {
+            for (const field of ['first_seen', 'promoted_at', 'last_verified', 'tier', 'seen_in']) {
+                if (!prov[field]) {
+                    errors.push(`${rel}:0 — G2: provenance footer missing '${field}'`);
+                }
+            }
+        }
+    }
+
+    // G3 — redaction must have fired: a global card MUST be clean of confidential
+    // patterns (secrets, emails, internal hostnames, external-source names, …).
+    // A vendor card carrying a secret means redaction did not halt → hard fail.
+    if (_kgr !== null) {
+        for (const v of _kgr.redaction_scan(text)) {
+            errors.push(
+                `${rel}:0 — G3: confidential pattern in global card ` +
+                    `(${v.category}: ${_pyRepr(v.snippet)}) — redaction must have fired before sharing`,
+            );
+        }
+    }
+    return errors;
+}
+
+function _check_card(
+    p: string,
+    strict: boolean,
+    check_urls: boolean,
+    global_mode = false,
+): string[] {
     const errors: string[] = [];
     let rel: string;
     if (_isRelativeTo(p, ROOT)) {
@@ -216,6 +272,11 @@ function _check_card(p: string, strict: boolean, check_urls: boolean): string[] 
         });
     }
 
+    // Global-store-only checks (ADR-100).
+    if (global_mode) {
+        errors.push(..._check_global_card(rel, text, fm));
+    }
+
     return errors;
 }
 
@@ -264,12 +325,19 @@ interface ParsedArgs {
     strict: boolean;
     check_urls: boolean;
     freshness_days: number;
+    global_mode: boolean;
 }
 
 function main(): number {
     const args = _parseArgs(process.argv.slice(2));
 
-    const card_dir = args.dir;
+    const global_mode = args.global_mode;
+    // In --global mode, default the dir to the global store unless the caller
+    // overrode --dir explicitly.
+    let card_dir = args.dir;
+    if (global_mode && card_dir === path.join(ROOT, 'agents', 'knowledge') && _kg !== null) {
+        card_dir = _kg.global_store_dir();
+    }
     if (!fs.existsSync(card_dir)) {
         process.stdout.write(`No cards directory found at ${card_dir} — nothing to check.\n`);
         return 0;
@@ -284,7 +352,7 @@ function main(): number {
     const all_errors: string[] = [];
     const all_warnings: string[] = [];
     for (const card of cards) {
-        all_errors.push(..._check_card(card, args.strict, args.check_urls));
+        all_errors.push(..._check_card(card, args.strict, args.check_urls, global_mode));
         all_warnings.push(..._freshness_warnings(card, args.freshness_days));
     }
 
@@ -575,6 +643,43 @@ function _sortedGlobMd(dir: string): string[] {
     return out;
 }
 
+/** Python sorted() over a string sequence — lexicographic by code point. */
+function _sorted(xs: readonly string[]): string[] {
+    return [...xs].sort();
+}
+
+/** Python repr() for a string (single-quoted preference). */
+function _pyRepr(s: string): string {
+    const hasSingle = s.includes("'");
+    const hasDouble = s.includes('"');
+    const quote = hasSingle && !hasDouble ? '"' : "'";
+    let out = quote;
+    for (const ch of s) {
+        if (ch === quote || ch === '\\') {
+            out += `\\${ch}`;
+        } else if (ch === '\n') {
+            out += '\\n';
+        } else if (ch === '\r') {
+            out += '\\r';
+        } else if (ch === '\t') {
+            out += '\\t';
+        } else {
+            out += ch;
+        }
+    }
+    return out + quote;
+}
+
+/** Python repr() of a list[str] → `['a', 'b']`. */
+function _pyReprList(xs: readonly string[]): string {
+    return `[${xs.map((x) => _pyRepr(x)).join(', ')}]`;
+}
+
+/** Python truthiness for a parsed dict — empty dict is falsy. */
+function _pyTruthyObj(obj: Record<string, string>): boolean {
+    return Object.keys(obj).length > 0;
+}
+
 // ---------------------------------------------------------------------------
 // Argument parser
 // ---------------------------------------------------------------------------
@@ -585,6 +690,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         strict: false,
         check_urls: false,
         freshness_days: 0,
+        global_mode: false,
     };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
@@ -600,6 +706,8 @@ function _parseArgs(argv: string[]): ParsedArgs {
             args.freshness_days = _parseInt(_expect(argv[++i], '--freshness-days'), '--freshness-days');
         } else if (a.startsWith('--freshness-days=')) {
             args.freshness_days = _parseInt(a.slice('--freshness-days='.length), '--freshness-days');
+        } else if (a === '--global') {
+            args.global_mode = true;
         } else if (a === '-h' || a === '--help') {
             _printHelp();
             process.exit(0);
@@ -627,7 +735,7 @@ function _parseInt(v: string, flag: string): number {
 
 const TOP_USAGE =
     `usage: ${PROG} [-h] [--dir DIR] [--strict] [--check-urls]\n` +
-    `                                [--freshness-days FRESHNESS_DAYS]\n`;
+    `                                [--freshness-days FRESHNESS_DAYS] [--global]\n`;
 
 function _topError(message: string): never {
     process.stderr.write(TOP_USAGE);

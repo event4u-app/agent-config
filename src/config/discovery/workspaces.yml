@@ -13,7 +13,7 @@
   description: Code, tests, CI, reviews, architecture.
   example_roles: [Developer, CTO, Tech Lead]
   default_packs: [engineering-base, git]
-  optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python, frontend-design, analysis-workbench]
+  optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python, frontend-design, brand, analysis-workbench]
 
 - id: product
   label: Product
@@ -55,7 +55,7 @@
   description: Self-employed / SMB-shaped owner workflows.
   example_roles: [Owner, Freelancer]
   default_packs: [small-business]
-  optional_packs: [ai-video, fun]
+  optional_packs: [ai-video, ai-image, fun]
 
 - id: construction
   label: Construction

@@ -119,6 +119,6 @@ No adapter is removed without explicit maintainer sign-off in this ADR
 ## References
 
 - `road-to-video-foundation-validation.md` (Phase 4) — the step this ADR closes.
-- `src/scripts/ai-video/lib/adapter-contract.md` (v2) — the trust-boundary helpers a validated adapter must use.
+- `src/scripts/media/lib/adapter-contract.md` (v2) — the trust-boundary helpers a validated adapter must use.
 - `provider-lifecycle-discipline` rule — the `experimental → stable` promotion gate.
 - AI council convergence (claude-sonnet-4-5 + gpt-4o, 2026-06-06): validation-first; multiplexer pivot supersedes per-model adapters.

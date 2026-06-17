@@ -55,6 +55,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
     { name: 'roadmap:progress', disposition: 'delegate' },
     { name: 'roadmap:progress-check', disposition: 'delegate' },
+    { name: 'capabilities:index', disposition: 'delegate', synopsis: 'Regenerate CAPABILITIES.yaml (the package coverage index); --check for CI.' },
     { name: 'hooks:install', disposition: 'delegate' },
     { name: 'hooks:status', disposition: 'delegate' },
     { name: 'hooks:doctor', disposition: 'delegate' },
@@ -82,6 +83,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'council:estimate', disposition: 'delegate' },
     { name: 'council:run', disposition: 'delegate' },
     { name: 'council:render', disposition: 'delegate' },
+    { name: 'eval:record', disposition: 'native', synopsis: 'Record a live trigger-eval result into a corpus manifest (corpus-refresh DoD, ADR-061 §6).' },
 ] as const;
 
 export function findCommand(name: string): CommandEntry | undefined {

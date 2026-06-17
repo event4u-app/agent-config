@@ -24,7 +24,7 @@ FROM_SONG = (
     / "from-song" / "command.md"
 )
 CONTRACT = (
-    REPO_ROOT / "src" / "scripts" / "ai-video" / "lib" / "adapter-contract.md"
+    REPO_ROOT / "src" / "scripts" / "media" / "lib" / "adapter-contract.md"
 )
 
 

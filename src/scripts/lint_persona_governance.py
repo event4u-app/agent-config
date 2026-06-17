@@ -63,6 +63,8 @@ DOMAIN_MAP: dict[str, str] = {
     "people-strategist": "people",
     "finance-partner": "money",
     "strategist": "money",
+    "brand-strategist": "design",
+    "design-director": "design",
 }
 PER_DOMAIN_CAP = 2
 

@@ -1,0 +1,11 @@
+status: ready
+planner_tier: high
+builder_tier: lite
+import_targets: { linear: true, jira: false }
+dependency_graph:
+  T-002: { status: done,  blocks: [T-005, T-006, T-007] }
+  T-003: { status: ready, blocks: [] }
+  T-005: { status: ready, blocks: [] }
+  T-006: { status: ready, blocks: [T-003] }
+  T-007: { status: ready, blocks: [] }
+  T-008: { status: ready, blocks: [] }

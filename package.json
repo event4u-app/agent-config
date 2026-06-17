@@ -69,14 +69,6 @@
         "access": "public",
         "provenance": true
     },
-    "peerDependencies": {
-        "@event4u/agent-memory": "^1.1.0"
-    },
-    "peerDependenciesMeta": {
-        "@event4u/agent-memory": {
-            "optional": true
-        }
-    },
     "devDependencies": {
         "@inquirer/prompts": "^7.10.1",
         "@playwright/test": "^1.60.0",

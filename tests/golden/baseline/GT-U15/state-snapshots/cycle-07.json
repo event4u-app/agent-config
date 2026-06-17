@@ -43,6 +43,7 @@
     "audit_path": "high_confidence",
     "candidate_pick": "cards.tier"
   },
+  "app_spec": null,
   "ui_design": {
     "layout": "three-column tier grid, max-w-6xl, centered",
     "components": [
@@ -82,6 +83,7 @@
     ],
     "design_confirmed": true
   },
+  "ui_scaffold": null,
   "ui_review": {
     "findings": [],
     "review_clean": true,

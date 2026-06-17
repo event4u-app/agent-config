@@ -1,0 +1,98 @@
+# Silent-conventions eval corpus — discrimination pre-check applied per candidate.
+# A task is RUN only if status == admitted (all four pre-checks pass; #3 may be soft
+# when violation evidence is strong). Excluded candidates keep their reason as the
+# audit trail the dogfood eval lacked. See README.md § discrimination pre-check.
+
+version: 1
+eval: silent-conventions
+
+# ── Admitted (run these) ───────────────────────────────────────────────────────
+admitted:
+  - id: roadmap-phase-heading
+    fixture: fixtures/roadmap-phase-heading.md
+    pre_check: { no_linter: pass, not_in_rule: pass, not_in_skill: soft, evidence: pass }
+    evidence: "road-to-mission-catalogue.md 2026-06-16 — package-active violation"
+    oracle: "update_roadmap_progress.py --json: items counted iff `^## Phase \\d+`"
+
+# ── Needs work before admission (evidence or a fixture still missing) ───────────
+needs_evidence:   # plausibly discriminating, but no recorded in-repo violation yet
+  - id: adr-frontmatter-field
+    convention: "ADR renumber must update the `adr:` frontmatter field that regenerate_index reads, not just the filename + inbound refs"
+    pre_check: { no_linter: check, not_in_rule: pass, not_in_skill: check, evidence: weak }
+    note: "memory note 'ADR number collision' suggests a real miss; confirm a dated instance + that no check fails on it before admitting"
+  - id: bench-honesty-labels-first
+    convention: "bench/eval report markdown opens with a `## Honesty labels (read first)` block scoping the claim"
+    pre_check: { no_linter: pass, not_in_rule: pass, not_in_skill: pass, evidence: none }
+    note: "repo-specific, non-tooling — but need an instance where an author omitted it"
+  - id: eval-result-path-naming
+    convention: "eval results land at internal/evals/<name>/results/<kind>-<date>.json"
+    pre_check: { no_linter: check, not_in_rule: pass, not_in_skill: pass, evidence: none }
+  # ── harvest pass (2026-06-16 subagent sweep): strongest novel candidates, all
+  #    blocked at needs-evidence because the violation never occurred (the surface
+  #    is rare + careful). This scarcity is itself the finding (see below).
+  - id: trigger-dict-one-key
+    convention: "a rule `triggers:` item must have exactly ONE match key; a two-key dict passes the schema but compile_router._normalize_trigger silently drops it from dist/router.json (rule never routes)"
+    pre_check: { no_linter: pass, not_in_rule: pass, not_in_skill: pass, evidence: none }
+    note: "STRONGEST silent candidate — rule.schema.json has additionalProperties:false but no maxProperties:1; only the non-loaded docs/contracts/rule-router.md states it. No in-repo violation: rule authoring is rare + careful."
+  - id: load-context-eager-project-local-leak
+    convention: "a package-shipped rule's load_context_eager: pointing at agents/settings/contexts/ leaks project-local material into the shared package"
+    pre_check: { no_linter: warn-only, not_in_rule: pass, not_in_skill: pass, evidence: weak }
+    note: "lint_load_context.py warns but returns 0 — warn-only, so technically silent in CI; documented warn-tier in the (non-loaded) load-context-schema contract."
+  - id: changelog-narrative-paragraph
+    convention: "a CHANGELOG release entry needs a hand-written narrative paragraph (ADR-027); omission silently degrades the release fold to release-please-equivalent"
+    pre_check: { no_linter: pass, not_in_rule: pass, not_in_skill: pass, evidence: weak }
+    note: "ADR-027 names the consequence; no dated author-omission instance found."
+
+# ── Excluded (failed a pre-check — recorded so it is not relitigated) ───────────
+excluded:
+  - id: eval-result-cost-block
+    reason: "evidence FAIL (#4) — every existing result JSON already carries the cost block; no violation to lift. Tooling/propagation already solved it."
+  - id: inbound-ref-migration-on-archive
+    reason: "not_in_rule FAIL (#2) — roadmap-progress-sync PR-gate states ref-migration on archive."
+  - id: dashboard-regen-command
+    reason: "not_in_rule FAIL (#2) — roadmap-progress-sync Iron Law 1 mandates regen, not hand-edit."
+  - id: see-also-relative-paths
+    reason: "no_linter FAIL (#1) — check-refs validates the links."
+  - id: status-later-placement
+    reason: "no_linter FAIL (#1) — lint_roadmap_later_disposition enforces status:later ⇔ later/."
+  - id: marketplace-skills-insert
+    reason: "no_linter FAIL (#1) — lint_marketplace fails on a missing/mis-sorted entry."
+  - id: frontmatterless-template-discovery
+    reason: "no_linter FAIL (#1) — build_discovery_manifest --strict exits 1 (CI gate)."
+  - id: edit-src-not-dist
+    reason: "not_in_rule FAIL (#2) — source-of-truth (always-loaded) + condensation-hash CI."
+  - id: provider-lifecycle-tier
+    reason: "not_in_rule FAIL (#2) — provider-lifecycle-discipline (always-loaded)."
+  - id: memory-one-fact-per-file
+    reason: "not_in_rule FAIL (#2/#3) — global memory instructions are loaded for every session."
+  # ── harvest pass: conventions already written into the auto-firing skill's
+  #    ## Gotcha → fail pre-check #3 (v1 already carries them, no v1↔v2 gap).
+  - id: persona-without-citing-skill
+    reason: "not_in_skill FAIL (#3) — persona-writing SKILL.md states 'a persona not cited never loads'."
+  - id: worktree-npm-detection
+    reason: "not_in_skill FAIL (#3) — using-git-worktrees SKILL.md states 'hardcoded npm install on a PHP project fails silently. Detect…'."
+  - id: video-centered-camera-default
+    reason: "not_in_skill FAIL (#3) — video-director/motion-choreographer SKILL.md state the centered-camera default."
+  # ── harvest pass: git-log fix-commit conventions now caught by a gate → #1.
+  - id: harvest-tooling-caught-batch
+    reason: "no_linter FAIL (#1) — multi-key-yaml, frontmatterless-template, empty-roadmap, condensation-hash, skill-desc-length, command-tier, node-modules-symlink, iron-law-downgrade, md-language, routes_to-prefix, load-context-cycle each repaired by a deterministic gate (strict_yaml, build_discovery_manifest --strict, lint_empty_roadmaps, sync-check-hashes, skill_linter, lint_command_tiers, gitignore, check_iron_law_prominence, check_md_language, schema, lint_load_context cycle=error)."
+
+# ── Pre-run finding (CONFIRMED by a full harvest sweep, 2026-06-16) ─────────────
+finding: >
+  A thorough harvest (skill ## Gotcha / Do NOT sections, docs/ADR "must/never",
+  git-log fix commits, and generator silent-skip paths) confirms the pool is
+  STRUCTURALLY THIN. Result: 1 admitted (roadmap-phase-heading) + 6 needs-evidence
+  (none with a real in-repo violation) + 13 excluded. The exclusions cluster into
+  exactly two buckets that explain WHY discriminating conventions are rare: (1) a
+  deterministic linter/CI gate already catches it (#1), or (2) the auto-firing
+  skill's own ## Gotcha already states it (#3). Both buckets ARE the v1 arm — so a
+  convention that survives the pre-check is, almost by definition, one the package
+  does not yet carry, and those are rare because the package is mature.
+  The Gate requires >= 10 ADMITTED tasks; the harvest cannot reach it without
+  manufacturing violations. Per the Gate's KILL branch and evidence-discipline's
+  rollback target, this structural scarcity is a defensible KILL signal — the
+  accumulation layer's marginal value over the existing tooling + rules + skill
+  gotchas is small — obtained WITHOUT the billable 3-arm run. Recommendation:
+  close this roadmap "shipped base only" and archive; revisit only if a future
+  non-deterministic / agentic-trajectory surface produces genuinely silent,
+  un-tooled conventions with real violations.

@@ -121,6 +121,10 @@ def seed_state(workspace: Path) -> dict[str, Any]:
         "ui_review": {
             "findings": [],
             "review_clean": True,
+            # Render-capable stack (blade-livewire-flux): seed render evidence
+            # so the greenfield-scaffold Phase-1 preview gate stays a no-op and
+            # this golden keeps pinning the apply dispatch, not the render gate.
+            "preview": {"render_ok": True},
         },
         "ui_polish": None,
         "contract": None,

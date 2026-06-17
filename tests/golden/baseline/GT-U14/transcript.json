@@ -51,7 +51,9 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": null,
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -124,6 +126,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -163,6 +166,7 @@
             "forms.toggle"
           ]
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -237,6 +241,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -277,6 +282,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -365,6 +371,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -405,6 +412,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": null,
         "ui_polish": null,
         "contract": null,
@@ -490,6 +498,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -530,6 +539,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true,
@@ -641,6 +651,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -681,6 +692,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -800,6 +812,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -840,6 +853,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -960,6 +974,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -1000,6 +1015,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {
@@ -1128,6 +1144,7 @@
           "candidate_pick": "forms.toggle",
           "a11y_baseline": []
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "two-column settings panel, max-w-3xl",
           "components": [
@@ -1168,6 +1185,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [
             {

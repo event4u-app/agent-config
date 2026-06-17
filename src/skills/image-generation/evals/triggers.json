@@ -1,0 +1,17 @@
+{
+  "skill": "image-generation",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers end-to-end image generation requests (brief → render). Should-not-trigger covers near-miss neighbors: routing-only questions (image-provider-routing), prompt-writing-only (prompt-engineering-image), image editing (image-editing), logo-specific flows (logo-generation), and rights checks (image-likeness-and-rights).",
+  "queries": [
+    {"q": "generate an image of a product shot for our new coffee mug", "trigger": true},
+    {"q": "create a banner image for our bakery with the name on it", "trigger": true},
+    {"q": "I need an image generated for our website hero section", "trigger": true},
+    {"q": "produce a series of consistent character illustrations for our app onboarding", "trigger": true},
+    {"q": "generate a square social media image of a smiling barista", "trigger": true},
+    {"q": "which image model should I use for a logo with text?", "trigger": false, "note": "routing-only question → image-provider-routing"},
+    {"q": "write me an Ideogram prompt for this bakery banner brief", "trigger": false, "note": "prompt authoring only → prompt-engineering-image"},
+    {"q": "edit this photo to remove the background and add a sunset", "trigger": false, "note": "editing an existing image → image-editing"},
+    {"q": "create a vector SVG logo for our brand", "trigger": false, "note": "logo-specific flow → logo-generation"},
+    {"q": "can I use this celebrity's photo as a reference for my image prompt?", "trigger": false, "note": "rights / likeness check → image-likeness-and-rights"}
+  ]
+}

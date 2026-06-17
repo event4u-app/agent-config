@@ -1,0 +1,17 @@
+{
+  "skill": "brand-identity",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers defining the identity constraint set (colour story, type story, logo direction) from a strategy. Should-not covers near-miss neighbors.",
+  "queries": [
+    {"q": "define the colour story for our brand based on this archetype", "trigger": true},
+    {"q": "what type story fits a challenger archetype in the fintech sector", "trigger": true},
+    {"q": "give me a logo direction for our identity — what mark style and form language fits", "trigger": true},
+    {"q": "assemble the brand identity constraint set from our confirmed strategy", "trigger": true},
+    {"q": "what imagery direction should we use for our brand — subject matter, mood, composition", "trigger": true},
+    {"q": "who is our brand for and how should we position it in the market", "trigger": false, "note": "strategy -> brand-strategy"},
+    {"q": "generate the actual logo image for our brand", "trigger": false, "note": "generation -> logo-generation"},
+    {"q": "emit the colour tokens as CSS variables and a DTCG JSON file", "trigger": false, "note": "emission -> brand-to-tokens"},
+    {"q": "pick a font pairing for a modern SaaS product with no brand frame yet", "trigger": false, "note": "style path -> typography-system"},
+    {"q": "check whether this asset is on-brand and consistent with our guidelines", "trigger": false, "note": "validation -> brand-consistency rule"}
+  ]
+}

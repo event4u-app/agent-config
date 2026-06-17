@@ -25,21 +25,50 @@ packs:
 
 ### 1. Resolve input
 
-Accept one of four input paths:
+Accept one of five input paths:
 
 1. **Explicit key** — `/implement-ticket PROJ-123`
 2. **Branch detection** — no arg → `git branch --show-current` + regex
    `[A-Z]+-[0-9]+`
 3. **Pasted text** — markdown block under the command
 4. **URL** — `/implement-ticket https://…/browse/PROJ-123`
+5. **Local ticket bundle** — a path to a bundle ticket file,
+   `/implement-ticket agents/tickets/{slug}/T-NNN-….md` (the
+   ticket-bundle artifact from [`emit-tickets`](emit-tickets.md);
+   format: [`ticket-bundle-format`](../docs/contracts/ticket-bundle-format.md)).
 
 For paths 1, 2, 4: run steps 1-3 of the [`jira-ticket`](jira-ticket.md) command
 (extract ID, fetch ticket, scan for Sentry links). For path 3: parse the pasted
-markdown. If no input resolves:
+markdown. For path 5: parse the bundle ticket — its YAML frontmatter +
+Markdown body map straight onto the work-state envelope with **no engine
+schema fork** (`input.data = {id, title, body, acceptance_criteria}`; the
+ticket `acceptance` list → `acceptance_criteria`, the body → `body`). Then
+apply the **bundle-mode guards** in §1a before driving the engine. If no
+input resolves:
 
 ```
 🎫 Which ticket should I implement? Paste a key, URL, or the ticket text.
 ```
+
+### 1a. Bundle-mode guards (path 5 only)
+
+When the input is a local ticket bundle, three guards run **before** the
+engine — they make a `lite`-tier build safe (per
+[`ADR-101`](../../docs/decisions/ADR-101-ticket-bundle-emission.md)):
+
+- **Dependency-driven selection.** Read the bundle `manifest.yml`
+  `dependency_graph`. Only build a ticket whose `blocked_by` are all
+  `done`. If a dependency is open, STOP and surface it — never build
+  out of order.
+- **Pre-build staleness gate.** Run
+  `python3 src/scripts/lint_ticket_buildable.py` on the bundle. An
+  `adr_refs` SHA drift is a **hard** stop ("re-emit the bundle"); a
+  `source_refs` SHA drift only **warns** and proceeds (split severity).
+- **Boundary guard.** Carry the ticket's `boundaries`
+  (`must_touch` / `may_touch` / `must_not_touch`) into the
+  `apply-plan` and `review-changes` directives (§4). Any changeset file
+  outside `must_touch ∪ may_touch` HALTS with an escalation surface —
+  prose "do not touch" does not bind a cheap agent; this guard does.
 
 ### 2. Prepare the state file
 
@@ -59,10 +88,11 @@ Three cases, in this order:
   ./agent-config migrate
   ```
 
-  Unified `migrate` writes `.work-state.json`, renames source to
-  `.implement-ticket-state.json.bak`, sweeps other legacy install
-  artefacts (see `docs/contracts/migrate-command.md`). Idempotent and
-  safe to skip if already done. After this, treat the run as **Resume**.
+  The unified `migrate` command writes `.work-state.json`, renames the
+  source to `.implement-ticket-state.json.bak`, and sweeps any other
+  legacy install artefacts in the same pass (see
+  `docs/contracts/migrate-command.md`). Idempotent and safe to skip if
+  already done. After this, treat the run as **Resume**.
 - **Fresh run** — no state file at all. Write the resolved ticket to
   `ticket.json` (id, title, body, acceptance_criteria) and pass it via
   `--ticket-file ticket.json`. Honour `roles.active_role` from

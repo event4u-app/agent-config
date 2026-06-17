@@ -1,5 +1,6 @@
 {
   "skill": "eloquent",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. A-class accepted ambiguity (e.g. 'User*' substring pulling eloquent alongside a non-Model intent) is marked with trigger=true and a note — the router loading eloquent is defensible, not a routing failure. Near-misses share Laravel/database vocabulary (migration, seeder, model, SQL) without being Model:: read/write tasks.",
   "queries": [
     {"q": "fetch all users with their latest order eagerly", "trigger": true},

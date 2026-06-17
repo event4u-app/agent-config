@@ -1,5 +1,6 @@
 {
   "skill": "image-creator",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers generate/render/to-spec/loop-fix paths (DE + EN). Should-not covers near-miss neighbours: analysis (image-analyser), scene/motion (video-director, motion-choreographer), non-character art (canvas-design), and token-lock (character-consistency).",
   "queries": [
     {"q": "generate Veikko in the forge scene, matched to the canon", "trigger": true},

@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 240
+- **artefacts**: 244
 
-## Commands (118)
+## Commands (119)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -104,6 +104,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`roadmap`** — Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
 - **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
 - **`roadmap-create`** — Interactively create a new roadmap file in agents/roadmaps/
+- **`roadmap-materialize`** — Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/
 - **`roadmap-process-full`** — Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
 - **`roadmap-process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
 - **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
@@ -131,7 +132,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (61)
+## Rules (62)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -155,6 +156,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fast-path-marker-visibility`** — Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers
 - **`guidelines`** — Writing or reviewing code — check relevant guideline before writing or reviewing code
+- **`image-likeness-and-rights`** — Rights gate for AI image generation — real-person likenesses, trademarked brand marks, and named living artists' styles require explicit rights/consent check before generation.
 - **`invite-challenge`** — Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
 - **`low-impact-corpus-privacy-floor`** — Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus
@@ -195,7 +197,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 
-## Skills (60)
+## Skills (62)
 
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -212,9 +214,10 @@ Artefacts that maintain this package (agent-config itself).
 - **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
 - **`copilot-config`** — Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`).
-- **`decision-record`** — Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`.
+- **`decision-record`** — Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`.
 - **`description-assist`** — Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 - **`doc-coauthoring`** — Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'.
+- **`emit-tickets`** — Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
 - **`file-editor`** — Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
 - **`guideline-writing`** — Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
 - **`jira-integration`** — Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
@@ -239,7 +242,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`readme-reviewer`** — Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues.
 - **`readme-writing`** — Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience.
 - **`readme-writing-package`** — Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding.
-- **`reasoning-orchestrator`** — Use for complex / ambiguous / long-horizon work — coordinate the reasoning chain ground→intent→notes→gather→audit→verify; composes existing skills, never duplicates them.
+- **`reasoning-orchestrator`** — Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills.
 - **`refine-prompt`** — Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work "…"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
 - **`repomix-packer`** — Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
@@ -257,6 +260,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`subagent-orchestration`** — Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml.
 - **`token-optimizer`** — Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action.
 - **`upstream-contribute`** — Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package.
+- **`verify-repair-loop`** — Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
 
 ## Templatess (1)
 

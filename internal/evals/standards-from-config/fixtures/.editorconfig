@@ -1,0 +1,8 @@
+# Deliberately CONFLICTS with ruff.toml line-length (80 vs 100) to test that the
+# Class-A digest surfaces BOTH pointers instead of flattening to one value.
+root = true
+
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 80

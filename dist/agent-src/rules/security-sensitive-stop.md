@@ -9,6 +9,10 @@ triggers:
   - keyword: "tenant"
   - keyword: "secret"
   - keyword: "webhook"
+validator_ignore:
+  - type: "substring"
+    pattern: "../../docs/"
+    reason: "See-also routes to docs/threat-model.md — the canonical attack-surface doc lives there by design."
 workspaces:
   - engineering
 packs:

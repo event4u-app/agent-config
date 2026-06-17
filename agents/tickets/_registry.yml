@@ -1,0 +1,5 @@
+bundles:
+  road-to-ticket-bundles:
+    manifest_path: agents/tickets/road-to-ticket-bundles/manifest.yml
+    source_roadmap: agents/roadmaps/archive/road-to-ticket-bundles.md
+    status: in_progress

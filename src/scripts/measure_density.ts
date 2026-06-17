@@ -479,7 +479,61 @@ function _pyRound(value: number, ndigits: number): number {
 }
 
 function _fmt2(x: number): string {
-    return _pyRound(x, 2).toFixed(2);
+    // Mirror Python `f"{x:.2f}"` — round-half-to-even on the EXACT IEEE-754
+    // value, NOT an epsilon-fudged half. `0.685` is stored as
+    // 0.68500000000000005…, which is > 0.685, so Python rounds it UP to 0.69
+    // (not down to 0.68 as a naive banker's-rounding-of-a-decimal-0.685 would).
+    return _pyFormatFixed(x, 2);
+}
+
+/**
+ * Replicate Python `f"{value:.<ndigits>f}"` byte-for-byte.
+ *
+ * Rounds half-to-even on the *exact* double (the 17-significant-digit decimal
+ * expansion, which round-trips every double uniquely and faithfully encodes
+ * whether the true value sits below/above/at the rounding boundary). The naive
+ * `(value).toFixed(n)` rounds half-away-from-zero, and the epsilon-half
+ * `_pyRound` mis-classifies near-half doubles — both diverge from Python on
+ * values like 0.685.
+ */
+function _pyFormatFixed(value: number, ndigits: number): string {
+    if (!Number.isFinite(value)) {
+        return String(value);
+    }
+    const sign = value < 0 || Object.is(value, -0) ? '-' : '';
+    const abs = Math.abs(value);
+    let str = abs.toPrecision(17);
+    if (str.includes('e') || str.includes('E')) {
+        // Out-of-range magnitude — not hit by this corpus; fall back.
+        return (sign === '-' ? -abs : abs).toFixed(ndigits);
+    }
+    let [intPart, fracPart = ''] = str.split('.');
+    while (fracPart.length <= ndigits) {
+        fracPart += '0';
+    }
+    const keepFrac = fracPart.slice(0, ndigits);
+    const deciderStr = fracPart.slice(ndigits);
+    const scaledIntStr = intPart + keepFrac;
+    let scaledInt = BigInt(scaledIntStr === '' ? '0' : scaledIntStr);
+    const firstDecider = deciderStr.charAt(0);
+    const restNonZero = /[1-9]/u.test(deciderStr.slice(1));
+    if (firstDecider > '5' || (firstDecider === '5' && restNonZero)) {
+        scaledInt += 1n;
+    } else if (firstDecider === '5' && !restNonZero) {
+        if (scaledInt % 2n === 1n) {
+            scaledInt += 1n;
+        }
+    }
+    // Re-split the rounded scaled integer back into int.frac with ndigits dp.
+    let digits = scaledInt.toString();
+    if (ndigits === 0) {
+        return sign + digits;
+    }
+    while (digits.length <= ndigits) {
+        digits = '0' + digits;
+    }
+    const out = digits.slice(0, digits.length - ndigits) + '.' + digits.slice(digits.length - ndigits);
+    return sign + out;
 }
 
 function _splitLines(text: string): string[] {

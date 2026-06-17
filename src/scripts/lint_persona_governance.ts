@@ -47,6 +47,8 @@ const DOMAIN_MAP: Record<string, string> = {
     'people-strategist': 'people',
     'finance-partner': 'money',
     strategist: 'money',
+    'brand-strategist': 'design',
+    'design-director': 'design',
 };
 const PER_DOMAIN_CAP = 2;
 

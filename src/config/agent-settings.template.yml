@@ -265,7 +265,9 @@ pipelines:
 # Transplants the *operating discipline* of a frontier reasoning model
 # (ground -> intent -> notes -> gather -> audit -> verify) onto any host model.
 # It transfers discipline, never capability. Cost-gated so it only engages where
-# it pays. Rationale: docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
+# it pays. User guide (what it does / when it fires / how to turn it off):
+# docs/contracts/reasoning-discipline-protocol.md
+# Rationale + sources: docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
 reasoning:
   # Master switch (true, false). false = the whole layer is inert (zero overhead).
   enabled: true
@@ -534,6 +536,67 @@ memory:
   # or paths outside the repo root that must not land in intake JSONL.
   # Example: ["api[_-]?key", "/Users/[a-z]+/Library"]
   redact_patterns: []
+
+# --- Knowledge cards: global cross-project sharing (ADR-100) ---
+#
+# Structure-grounding v2. Promote *expensive* (remote) knowledge cards from
+# project-local `agents/knowledge/` to a per-user, file-first global store at
+# `~/.event4u/agent-config/knowledge/`, reusable across projects as LEADS only.
+# This is a USER-GLOBAL setting — keep it in `~/.event4u/agent-config/agent-settings.yml`.
+#
+# File-first, NOT a runtime: lazy-read plain card files, no daemon, no DB, no
+# vector index, no background decay (preserves the 2026-06-14 Layer-2 sunset's
+# core — see ADR-100). The store is UNVERSIONED (not in git) — a cache, never a
+# source of truth; the per-card provenance footer is its audit trail.
+#
+# enabled: false fully no-ops the layer — the global store is never read or
+# written, no promotion is suggested, Evidence Reports revert to project-local,
+# and any existing global cards go inert. v1 (project-local discipline + cards)
+# is byte-for-byte unaffected. `agent-config knowledge:global:purge --confirm`
+# removes the store and strips provenance from project cards.
+knowledge:
+  global_sharing:
+    # Default OFF until cross-project reuse is measured (Evidence v2 Phase 0;
+    # ADR-101 amends ADR-100). ADR-098 set a measure-then-decide gate for the
+    # global layer; ADR-100 shipped it default-on without waiting out the
+    # measurement window. Until reuse is instrumented across >= 2 real projects
+    # and shown positive, the safe default for a tool others install is opt-in,
+    # not opt-out — cross-project data movement should never be the default.
+    # Flip to `true` only after the reuse signal exists.
+    #
+    # Turning sharing on does NOT make promotion automatic — promotion is always
+    # suggest-then-confirm (auto_promote_threshold gates the *suggestion*, never
+    # a silent write). v1 (project-local discipline + cards) is byte-for-byte
+    # unaffected by this default; only the cross-project store is gated off.
+    enabled: false
+
+    # Origin tiers eligible to cross a project boundary under default-on.
+    # `proprietary` (in-house DB / private API / client schemas) is EXCLUDED by
+    # design — it is manual-only regardless of `enabled`, so no client-A schema
+    # ever leaks into client-B's session. Adding it here does NOT enable
+    # auto-share; the tier gate hard-codes proprietary as manual-only.
+    allowed_tiers: [public, vendor]
+
+    # Write-time redaction before any card is eligible to go global. Runs the
+    # low-impact-corpus-privacy-floor + source-confidentiality pattern set
+    # (API keys, internal hostnames, emails, blocklisted field/table names).
+    redaction:
+      enabled: true
+      # halt-and-prompt on a trigger; never silent-share, never auto-rewrite.
+      halt_on_trigger: true
+
+    # A `public`/`vendor` card seen in >= this many distinct repos triggers a
+    # promotion SUGGESTION (one-tap confirm). It never auto-promotes.
+    auto_promote_threshold: 2
+
+    # Freshness flip thresholds (days) for the untracked global store. A global
+    # card whose newest observed_at is older than `hypothesis_after_days` is
+    # lead-only (positive structure must be re-confirmed); older than
+    # `stale_after_days` it is skipped until re-verified. Negative facts +
+    # pointers stay usable as leads regardless.
+    freshness:
+      hypothesis_after_days: 90
+      stale_after_days: 180
 
 # --- Hooks ---
 #

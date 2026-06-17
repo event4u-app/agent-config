@@ -1,5 +1,6 @@
 {
   "skill": "skill-writing",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions 'skill-writing' directly. Near-misses share 'skill' vocabulary but route to skill-management, lint-skills, or unrelated skills.",
   "queries": [
     {"q": "let's create a skill for database migrations", "trigger": true},

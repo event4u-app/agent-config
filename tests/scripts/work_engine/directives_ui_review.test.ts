@@ -185,6 +185,6 @@ describe('directives/ui/review — TS-side unit checks', () => {
     it('constants + ambiguities', () => {
         expect(DEFAULT_SEVERITY_FLOOR).toBe('moderate');
         expect(SEVERITY_ORDER).toEqual({ minor: 0, moderate: 1, serious: 2, critical: 3 });
-        expect(AMBIGUITIES).toHaveLength(5);
+        expect(AMBIGUITIES).toHaveLength(6);
     });
 });

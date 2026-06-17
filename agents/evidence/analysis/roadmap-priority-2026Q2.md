@@ -1,3 +1,4 @@
+<!-- analyzed: 2026-06-13 | commit: 57588489 | files: 1 -->
 # Roadmap Priority Advisory — 2026-Q2
 
 > **Status:** advisory · user-decided. Produced 2026-05-09 as P5.2 of

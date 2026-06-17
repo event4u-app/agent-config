@@ -1,0 +1,17 @@
+{
+  "skill": "verify-repair-loop",
+  "last_eval": "2026-06-16",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the bounded test-verdict-gated iterate-to-green loop (numeric threshold → judge escalation). Should-not-trigger covers near-miss neighbors: subjective-craft revision (do-and-judge), one-shot multi-judge review (review-changes), a single test run with no loop, judging a diff without execution, and the deferred live-app Playwright verdict.",
+  "queries": [
+    {"q": "keep fixing until the tests pass", "trigger": true},
+    {"q": "iterate this change to green, run the suite each time", "trigger": true},
+    {"q": "verify and repair until quality checks pass, then have a judge confirm", "trigger": true},
+    {"q": "loop: run tests, fix failures, re-run, stop when green or after 3 tries", "trigger": true},
+    {"q": "drive this to passing tests but don't let it break anything that was green", "trigger": true},
+    {"q": "is this diff clean — naming, structure, conventions?", "trigger": false, "note": "subjective craft, no executed verdict → do-and-judge / judge-code-quality"},
+    {"q": "review my changes before I open the PR", "trigger": false, "note": "one-shot multi-judge review → /review-changes"},
+    {"q": "run the test suite once and show me the failures", "trigger": false, "note": "single run, no iterate-to-green loop"},
+    {"q": "judge this patch and tell me if it's correct", "trigger": false, "note": "judge reads a diff, no execution loop → do-and-judge"},
+    {"q": "loop the Playwright end-to-end tests against the live app until the UI passes", "trigger": false, "note": "live-app verdict is deferred (needs a runtime); not this skill's scope"}
+  ]
+}

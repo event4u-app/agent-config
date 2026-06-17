@@ -42,10 +42,10 @@ operator picks live on disk only.
 3. Check loader status without echoing keys:
 
    ```bash
-   bash scripts/ai-video/lib/load-config.sh status gemini-veo
+   bash scripts/media/lib/load-config.sh status gemini-veo
    # → provider=gemini-veo key=present dryrun=true model=veo-3.0-generate-001 …
 
-   bash scripts/ai-video/lib/load-config.sh defaults
+   bash scripts/media/lib/load-config.sh defaults
    # → default-image-provider=openai-images
    #   default-video-provider=gemini-veo
    ```
@@ -81,18 +81,18 @@ Provider IDs shipped in the example: `openai-images`, `higgsfield`,
 Every adapter under `scripts/ai-video/adapters/` sources two helpers
 before any network call:
 
-- `scripts/ai-video/lib/load-config.sh` — parses the XML, populates
+- `scripts/media/lib/load-config.sh` — parses the XML, populates
   `AIV_KEY` / `AIV_ENDPOINT` / `AIV_MODEL` / `AIV_DRYRUN` env vars.
   **It never prints the key.** Status output is `present` or `missing`.
-- `scripts/ai-video/lib/redact.sh` — registers `AIV_KEY` in a private
+- `scripts/media/lib/redact.sh` — registers `AIV_KEY` in a private
   scrub list and provides `aiv_redact` / `aiv_redact_stream`. Adapters
   pipe every `curl`, error, and trace through these before printing.
 
 Rule of thumb for any new adapter:
 
 ```bash
-. scripts/ai-video/lib/redact.sh
-. scripts/ai-video/lib/load-config.sh
+. scripts/media/lib/redact.sh
+. scripts/media/lib/load-config.sh
 aiv_load_provider gemini-veo
 curl … 2>&1 | aiv_redact_stream
 ```
@@ -106,7 +106,7 @@ adapter that printed it.
 2. Replace the value inside `<provider id="…"><api-key>…</api-key></provider>`
    in `agents/.ai-video.xml`.
 3. Revoke the old key in the provider dashboard.
-4. (Optional) `bash scripts/ai-video/lib/load-config.sh status <id>` to
+4. (Optional) `bash scripts/media/lib/load-config.sh status <id>` to
    confirm `key=present`.
 
 No restart needed — adapters re-source the loader on every invocation.
@@ -115,7 +115,7 @@ No restart needed — adapters re-source the loader on every invocation.
 
 All adapters honor `AIV_DRYRUN=true` (default — set per-provider in the
 XML and overridable via env). Dry-run returns a fixture artifact from
-`scripts/ai-video/lib/fixtures/` without touching the network, so the
+`scripts/media/lib/fixtures/` without touching the network, so the
 offline smoke test (`task test:ai-video`) is hermetic and the cost floor
 holds.
 

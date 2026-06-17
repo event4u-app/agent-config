@@ -51,11 +51,26 @@ const DIR_RULE_TOOLS = ['.claude', '.augment', '.cursor'];
 // Tools whose always-on surface is a single monolithic file.
 const MONOLITH_TOOLS = ['.windsurfrules'];
 
+// MCP tool-schema accounting (road-to-mcp-token-accounting). Every connected
+// MCP server's tool definitions (name + description + input schema) are
+// always-loaded context for an MCP client — the same "what is this context
+// costing?" question as the rule/description surfaces, for the MCP slice. The
+// source-of-truth catalog is the one shipped by this package's MCP server.
+const MCP_CATALOG = path.join(REPO_ROOT, 'src', 'scripts', 'mcp_server', 'consumer_tool_catalog.json');
+// This package ships a single MCP server; the accounting is keyed by server so
+// a multi-server consumer surface generalises without a shape change.
+const MCP_SERVER_NAME = 'agent-config';
+// Soft advisory ceiling on tool count per server. "Few used" cannot be known at
+// audit time (no runtime call data), so over-subscription is a count-based
+// heuristic: many tools => maintainer should review which earn their cost.
+const MCP_OVERSUBSCRIPTION_TOOL_CAP = 25;
+
 // Initial-token budget per surface (null = advisory only, no gate).
 const BUDGETS: Record<string, number | null> = {
     'rules.gpt': null,
     'skill_catalog.gpt': null,
     'command_catalog.gpt': null,
+    'mcp_schemas.gpt': null,
 };
 
 type Measure = token_count.Measure & { files?: number; entries?: number };
@@ -295,6 +310,82 @@ export function thin_projection(): Record<string, unknown> {
     }
 }
 
+// --- MCP tool-schema accounting (road-to-mcp-token-accounting) ---------------
+
+interface McpPriced extends Measure {
+    name: string;
+}
+
+interface McpServer {
+    tool_count: number;
+    chars: number;
+    tokens_gpt: number;
+    tokens_claude: number;
+    tokens_gpt_exact: boolean;
+    over_subscription: boolean;
+    oversubscription_cap: number;
+    tools: Array<{ name: string; tokens_gpt: number; chars: number }>;
+}
+
+/**
+ * Token cost of one MCP tool definition as a client loads it.
+ *
+ * An MCP `tools/list` entry carries `name` + `description` + `inputSchema`;
+ * that triple is what lands in an MCP client's always-on context. Price the
+ * serialized triple, not the whole catalog record (the catalog's bookkeeping
+ * fields — `side_effect`, `implemented_on` — are not sent to the client).
+ */
+function _measure_tool_schema(tool: Record<string, unknown>): McpPriced {
+    const payload = _jsonDumpsCompactSorted({
+        name: (tool.name as string) ?? '',
+        description: (tool.description as string) ?? '',
+        inputSchema: (tool.input_schema as unknown) ?? {},
+    });
+    const m = token_count.measure(payload) as McpPriced;
+    m.name = (tool.name as string) ?? '';
+    return m;
+}
+
+/**
+ * Per-server MCP tool-schema footprint (road-to-mcp-token-accounting).
+ *
+ * Prices each tool definition the package's MCP server exposes and folds the
+ * result into the same initial-context budget surface as rules/descriptions
+ * (NOT a new surface). Returns an empty object when the catalog is absent so
+ * the audit never hard-fails on it. Shape is keyed by server name so a
+ * multi-server consumer generalises without a change here.
+ */
+export function mcp_tool_schemas(): Record<string, McpServer> {
+    if (!_isFile(MCP_CATALOG)) {
+        return {};
+    }
+    let catalog: Record<string, unknown>;
+    try {
+        catalog = JSON.parse(fs.readFileSync(MCP_CATALOG, 'utf-8')) as Record<string, unknown>;
+    } catch {
+        return {};
+    }
+    const tools = (catalog.tools as unknown[]) ?? [];
+    const priced: McpPriced[] = tools
+        .filter((t): t is Record<string, unknown> => typeof t === 'object' && t !== null && !Array.isArray(t))
+        .map((t) => _measure_tool_schema(t));
+    // priced.sort(key=lambda r: (-int(r["tokens_gpt"]), str(r["name"])))
+    priced.sort(
+        (a, b) => b.tokens_gpt - a.tokens_gpt || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+    );
+    const server: McpServer = {
+        tool_count: priced.length,
+        chars: priced.reduce((acc, r) => acc + r.chars, 0),
+        tokens_gpt: priced.reduce((acc, r) => acc + r.tokens_gpt, 0),
+        tokens_claude: priced.reduce((acc, r) => acc + r.tokens_claude, 0),
+        tokens_gpt_exact: priced.length > 0 ? priced.every((r) => Boolean(r.tokens_gpt_exact)) : true,
+        over_subscription: priced.length > MCP_OVERSUBSCRIPTION_TOOL_CAP,
+        oversubscription_cap: MCP_OVERSUBSCRIPTION_TOOL_CAP,
+        tools: priced.map((r) => ({ name: r.name, tokens_gpt: r.tokens_gpt, chars: r.chars })),
+    };
+    return { [MCP_SERVER_NAME]: server };
+}
+
 export function build(): Record<string, unknown> {
     return {
         generated: _isoUtcSeconds(),
@@ -303,6 +394,7 @@ export function build(): Record<string, unknown> {
         thin_projection: thin_projection(),
         description_catalog: description_catalog(),
         longest_rules: longest_rules(),
+        mcp_tool_schemas: mcp_tool_schemas(),
     };
 }
 
@@ -347,8 +439,104 @@ export function render_md(d: Record<string, unknown>): string {
     for (const r of lr) {
         L.push(`| \`${r.id}\` | ${_comma(r.tokens_gpt)} | ${_comma(r.chars)} |`);
     }
+    const mcp = (d.mcp_tool_schemas as Record<string, McpServer>) ?? {};
+    if (Object.keys(mcp).length > 0) {
+        L.push(
+            '',
+            '## MCP — tool-schema cost per server (always-loaded for connected clients)',
+            '',
+            '| server | tools | chars | GPT tok | Claude tok | over-subscribed? |',
+            '|---|--:|--:|--:|--:|:--:|',
+        );
+        for (const [server, m] of Object.entries(mcp)) {
+            const flag = m.over_subscription ? '⚠️ yes' : 'no';
+            L.push(
+                `| \`${server}\` | ${m.tool_count} | ${_comma(m.chars)} | ` +
+                    `${_comma(m.tokens_gpt)} | ${_comma(m.tokens_claude)} | ${flag} |`,
+            );
+        }
+        for (const [server, m] of Object.entries(mcp)) {
+            if (m.over_subscription) {
+                L.push(
+                    '',
+                    `> ⚠️  \`${server}\` exposes ${m.tool_count} tools ` +
+                        `(> ${m.oversubscription_cap} soft cap). Every tool schema is ` +
+                        `always-loaded for connected MCP clients — review which tools earn ` +
+                        `their context cost. ("Few used" needs runtime call data, not ` +
+                        `available at audit time; this is a count-based heuristic.)`,
+                );
+            }
+            const top = m.tools.slice(0, 10);
+            if (top.length > 0) {
+                L.push(
+                    '',
+                    `### \`${server}\` — top-${top.length} tools by schema cost`,
+                    '',
+                    '| tool | GPT tok | chars |',
+                    '|---|--:|--:|',
+                );
+                for (const t of top) {
+                    L.push(`| \`${t.name}\` | ${_comma(t.tokens_gpt)} | ${_comma(t.chars)} |`);
+                }
+            }
+        }
+    }
     L.push('');
     return L.join('\n');
+}
+
+// --- json.dumps(separators=(",",":"), sort_keys=True) replica ----------------
+//
+// Compact, ensure_ascii=True, sorted keys — matches the Python payload built
+// by `_measure_tool_schema` so the priced byte count is identical.
+
+function _jsonDumpsCompactSorted(obj: unknown): string {
+    function enc(value: unknown): string {
+        if (value === null || value === undefined) {
+            return 'null';
+        }
+        if (typeof value === 'boolean') {
+            return value ? 'true' : 'false';
+        }
+        if (typeof value === 'number') {
+            return _pyNumberRepr(value);
+        }
+        if (typeof value === 'string') {
+            return encStr(value);
+        }
+        if (Array.isArray(value)) {
+            return '[' + value.map((v) => enc(v)).join(',') + ']';
+        }
+        const o = value as Record<string, unknown>;
+        const keys = Object.keys(o).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        return '{' + keys.map((k) => encStr(k) + ':' + enc(o[k])).join(',') + '}';
+    }
+    function encStr(s: string): string {
+        let out = '"';
+        for (const ch of s) {
+            const cp = ch.codePointAt(0) as number;
+            if (ch === '"') out += '\\"';
+            else if (ch === '\\') out += '\\\\';
+            else if (ch === '\n') out += '\\n';
+            else if (ch === '\r') out += '\\r';
+            else if (ch === '\t') out += '\\t';
+            else if (ch === '\b') out += '\\b';
+            else if (ch === '\f') out += '\\f';
+            else if (cp < 0x20) out += '\\u' + cp.toString(16).padStart(4, '0');
+            else if (cp < 0x7f) out += ch;
+            else if (cp > 0xffff) {
+                const v = cp - 0x10000;
+                const hi = 0xd800 + (v >> 10);
+                const lo = 0xdc00 + (v & 0x3ff);
+                out += '\\u' + hi.toString(16).padStart(4, '0');
+                out += '\\u' + lo.toString(16).padStart(4, '0');
+            } else {
+                out += '\\u' + cp.toString(16).padStart(4, '0');
+            }
+        }
+        return out + '"';
+    }
+    return enc(obj);
 }
 
 // --- json.dumps(indent=2, sort_keys=True) replica ----------------------------
@@ -460,10 +648,13 @@ export function main(argv: string[] | null = null): number {
         const rfVals = Object.values(data.rule_footprint as Record<string, Measure>);
         const rf = rfVals.length > 0 ? (rfVals[0] as Measure) : ({} as Measure);
         const dc = data.description_catalog as Record<string, Measure>;
+        const mcp = (data.mcp_tool_schemas as Record<string, McpServer>) ?? {};
+        const mcp_gpt = Object.values(mcp).reduce((acc, s) => acc + s.tokens_gpt, 0);
         const checks: Record<string, number> = {
             'rules.gpt': rf.tokens_gpt ?? 0,
             'skill_catalog.gpt': (dc.skills_projected as Measure).tokens_gpt,
             'command_catalog.gpt': (dc.commands_core_source as Measure).tokens_gpt,
+            'mcp_schemas.gpt': mcp_gpt,
         };
         for (const [key, val] of Object.entries(checks)) {
             const cap = BUDGETS[key];

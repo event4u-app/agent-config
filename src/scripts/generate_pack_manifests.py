@@ -258,6 +258,12 @@ def _build_pack_yaml(pid: str, vocab: dict[str, dict[str, Any]],
     # treats them as optional so reserved-vocab packs without artefacts still validate.
     if meta.get("size_class"):
         out["size_class"] = meta["size_class"]
+    # surface_tier — core | lab (road-to-install-contract-stability Phase 2).
+    # `core` = the lean stable multi-host engine (rules + skills + install +
+    # condensation). `lab` = experimental / pilot domain tooling that must not
+    # destabilise the core install surface. Default core; sourced from the
+    # discovery vocab when a pack is explicitly lab.
+    out["surface_tier"] = meta.get("surface_tier") or "core"
     out["suggests"] = meta.get("suggests") or []
     # dependencies — the artefact-level include graph (skills / rules the pack's
     # commands reference). Generated from frontmatter so it stays in sync; the

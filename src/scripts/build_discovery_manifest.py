@@ -321,8 +321,10 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
             # ADR-092: `visibility:` is the named source of truth; the integer
             # `tier:` is a back-compat alias. Dual-emit BOTH into the manifest
             # (a published data contract) during the deprecation window so
-            # external consumers reading the integer key keep working. Prefer
-            # the explicit field; derive from tier when absent.
+            # external consumers reading the integer key keep working. The
+            # top-level `deprecations` block (ADR-092 / road-to-tier-removal)
+            # announces the `tier` deprecation; removal is Phase 4. Prefer the
+            # explicit field; derive from tier when absent.
             _vis = fm.get("visibility")
             if _vis is None and fm.get("tier") is not None:
                 _vis = {0: "visible", 1: "advanced", 2: "internal"}.get(fm["tier"])
@@ -406,7 +408,30 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     stats = _compute_stats(artefacts, unassigned, documented_unassigned)
 
     manifest = {
-        "version": 1,
+        "version": 2,
+        # Machine-readable deprecation signal (road-to-tier-removal Phase 1,
+        # ADR-092). The integer command `tier` (0/1/2) is a back-compat alias
+        # for the named `visibility` field (ADR-090). It is STILL emitted into
+        # command entries above (non-breaking) — this block only ANNOUNCES the
+        # deprecation so external manifest consumers can migrate to `visibility`
+        # during the soak window. Removal of `tier` is Phase 4 of
+        # road-to-tier-removal (cheaply reversible per ADR-092); `sunset` is
+        # maintainer-owned and stays null until the soak clears.
+        "deprecations": [
+            {
+                "key": "tier",
+                "scope": "command",
+                "replacement": "visibility",
+                "since": "ADR-092",
+                "sunset": None,
+                "note": (
+                    "Integer command `tier` (0/1/2) is a deprecated back-compat "
+                    "alias for the named `visibility` field (ADR-090). Read "
+                    "`visibility`; `tier` is still emitted (non-breaking) but "
+                    "scheduled for removal — see road-to-tier-removal."
+                ),
+            }
+        ],
         "generated_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "scanner_version": _scanner_version(),
         "checksum": "sha256:" + "0" * 64,

@@ -1,5 +1,6 @@
 {
   "skill": "php-coder",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Multi-skill co-activation (e.g. php-coder alongside pest-testing on a test query) is accepted as TP where writing PHP code is a legitimate sub-task. Near-misses share PHP/Laravel vocabulary without being code-generation tasks.",
   "queries": [
     {"q": "my UserController is getting huge, split it into a service", "trigger": true},

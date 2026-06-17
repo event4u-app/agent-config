@@ -64,6 +64,22 @@ Show the user:
 > → {Promote / Reject / Note / Update existing}
 ```
 
+#### Cross-project promotion signal (surfacing only — never an auto-writer)
+
+Same learning now seen in **≥ 2 distinct projects** → strong candidate for a
+*shared* surface (global rule/skill or a `src/patterns/` recipe), not a
+project-local note. **Surface** it; do **not** auto-write:
+
+```
+> Cross-project: also seen in {other-project}.
+> ≥2 projects ⇒ candidate for a shared surface (global rule / skill / pattern).
+> → surface for promotion (human decides; no auto-write)
+```
+
+A *signal*, not a store: no auto-write, no decay, no runtime (the writable
+per-project learning store stays rejected — [[council-agent-memory-sunset]]).
+The human decides whether the cross-project recurrence justifies promotion.
+
 ### Step 3: Classify
 
 #### Category tag

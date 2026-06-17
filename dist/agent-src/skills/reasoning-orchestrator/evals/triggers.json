@@ -1,5 +1,6 @@
 {
   "skill": "reasoning-orchestrator",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers complex / ambiguous / long-horizon work on a standard host where the reasoning steps are interdependent; should-not covers trivial / linear tasks, strong-host self-coordination, and single-discipline neighbors.",
   "queries": [
     {"q": "refactor the entire billing module to be cleaner and safer", "trigger": true},

@@ -53,7 +53,7 @@ scripts/ai-video/lib/validate-deps.sh .agent-src.uncondensed/commands/video/scen
 
 ### 2. Load config + resolve providers
 
-Source `scripts/ai-video/lib/load-config.sh`. Resolve image / video
+Source `scripts/media/lib/load-config.sh`. Resolve image / video
 provider: flag → `agents/.ai-video.xml` default → fail with the
 available-providers list.
 

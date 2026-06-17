@@ -19,7 +19,7 @@
 # the raw prediction id (validated as untrusted input on every call).
 # poll/fetch are STATELESS — no side-channel state file.
 #
-# Contract: scripts/ai-video/lib/adapter-contract.md (v2 — trust
+# Contract: scripts/media/lib/adapter-contract.md (v2 — trust
 # boundary: downloads via aiv_fetch_url, returned paths via
 # aiv_validate_artifact_path).
 # Provider: top-level <provider id="replicate" kind="video"> in
@@ -39,8 +39,8 @@
 
 set -euo pipefail
 
-# shellcheck source=../lib/adapter-common.sh
-. "$(dirname "$0")/../lib/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 ADAPTER_ID="replicate"
 RPL_BASE_DEFAULT="https://api.replicate.com/v1"

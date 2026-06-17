@@ -203,7 +203,8 @@ def test_defaults_resolve_when_neither_argument_given(
 
 def test_mergeable_keys_are_documented_exact_paths() -> None:
     # Locking the whitelist in a test prevents accidental drift; adding a
-    # key requires an ADR per the roadmap.
+    # key requires an ADR per the roadmap. The knowledge.global_sharing.* keys
+    # were added under ADR-100 (global cross-project knowledge-card sharing).
     assert ags.MERGEABLE_KEYS == (
         "name",
         "ide",
@@ -212,6 +213,13 @@ def test_mergeable_keys_are_documented_exact_paths() -> None:
         "personal.bot_icon",
         "personal.autonomy",
         "telegraph.speak_scope",
+        "knowledge.global_sharing.enabled",
+        "knowledge.global_sharing.allowed_tiers",
+        "knowledge.global_sharing.redaction.enabled",
+        "knowledge.global_sharing.redaction.halt_on_trigger",
+        "knowledge.global_sharing.auto_promote_threshold",
+        "knowledge.global_sharing.freshness.hypothesis_after_days",
+        "knowledge.global_sharing.freshness.stale_after_days",
     )
 
 

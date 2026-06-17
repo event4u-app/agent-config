@@ -15,7 +15,12 @@ Priority order (deliberately fixed):
    OR explicit "existing" surface markers.
 4. **UI-Build** — UI signal AND a build/create/add verb, OR new-screen
    markers (``new page``, ``new screen``, ``new component``).
-5. **Backend-Coding** — default.
+5. **Mixed (full-stack feature)** — a build verb AND a full-stack noun
+   (``feature``, ``app``, ``module``, ``system``, …), with no isolated
+   UI or backend signal. "Build me a feature" / "build the billing
+   module" want the contract-lock → UI → stitch → verify mixed flow,
+   not the backend default (greenfield-scaffold Phase 4).
+6. **Backend-Coding** — default.
 
 The label is the dispatcher's *only* input for routing. Confidence
 band, ``ui_intent`` flag from the scorer, and AC reconstruction stay
@@ -105,6 +110,24 @@ _BUILD_VERBS: frozenset[str] = frozenset(
     },
 )
 
+_FULLSTACK_PHRASE: re.Pattern[str] = re.compile(r"\bfull[ -]?stack\b")
+
+# A full-stack deliverable must be the *object* of a build verb — not
+# merely co-occur in the text. "Build me a feature" / "scaffold the
+# billing module" route to mixed; "returns the integer **product**"
+# (a math result, not a software product) does not, because no build
+# verb governs it. The noun must follow a build verb within a short
+# article/adjective window. Deliberately omits ``product`` (math
+# polysemy), ``page`` / ``screen`` / ``component`` (pure-UI — the
+# UI-Build rung owns them), and ``endpoint`` / ``api`` (pure-backend).
+_FULLSTACK_BUILD: re.Pattern[str] = re.compile(
+    r"\b(?:build|create|scaffold|implement|ship|draft|wire|introduce|add)\b"
+    r"(?:\s+(?:me|a|an|the|our|my|new|complete|full|entire|whole|single))*"
+    r"(?:\s+[\w-]+){0,2}"
+    r"\s+\b(?:feature|app|application|module|system|mvp|prototype|saas"
+    r"|platform|crud|workflow)\b",
+)
+
 _NEW_SURFACE: re.Pattern[str] = re.compile(
     r"\b(new|fresh|blank)\s+(page|screen|view|component|form|modal|tile|dashboard)\b",
 )
@@ -155,6 +178,11 @@ def classify_intent(raw: str, *, title: str | None = None) -> str:
         # surface check, which is the wrong default when the prompt
         # is ambiguous.
         return INTENT_UI_IMPROVE
+    # No isolated UI or backend signal — but a full-stack feature build
+    # ("build me a feature", "scaffold the billing module") should reach
+    # the mixed flow rather than fall through to the backend default.
+    if _is_fullstack_feature(text):
+        return INTENT_MIXED
     return INTENT_BACKEND
 
 
@@ -210,6 +238,20 @@ def _is_build(text: str) -> bool:
     if _NEW_SURFACE.search(text):
         return True
     return any(re.search(rf"\b{re.escape(v)}\b", text) for v in _BUILD_VERBS)
+
+
+def _is_fullstack_feature(text: str) -> bool:
+    """True when the prompt is a full-stack feature build.
+
+    Either the ``full-stack`` phrase appears, or a full-stack noun is
+    the object of a build verb (:data:`_FULLSTACK_BUILD`). Only reached
+    after the UI and backend rungs miss, so an isolated UI / backend
+    prompt never lands here — this rung exists for the layer-agnostic
+    "build me a feature" shape that would otherwise fall through to the
+    backend default. The build-object adjacency keeps it from firing on
+    incidental noun co-occurrence (e.g. a math "product" in an AC).
+    """
+    return bool(_FULLSTACK_PHRASE.search(text) or _FULLSTACK_BUILD.search(text))
 
 
 def populate_routing(state: "WorkState") -> None:

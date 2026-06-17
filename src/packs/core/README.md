@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `6.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 41
+- **artefacts**: 44
 
 ## Contexts (4)
 
@@ -21,15 +21,17 @@ Core framework-neutral artefacts.
 
 - **`fictional-fixture-v1`** — _(no description)_
 
-## Personas (30)
+## Personas (32)
 
 - **`ai-agent`** — The voice of the coding agent that will execute this plan — automation-readiness, missing context, and steps that fail on a fresh clone.
 - **`ai-video-technical-director`** — Provider-tuning specialist — maps a scene blueprint to Veo / Kling / OpenAI / Higgsfield / Sora grammar with token caps, aspect ranges, audio flags.
 - **`backend-architect`** — The voice that watches service-layer boundaries — module seams, transaction scope, and the contracts a change widens or breaks.
+- **`brand-strategist`** — Positioning, archetype, voice and messaging lens — challenges weak briefs and refuses brand decisions not traceable to an audience, a difference, and a token.
 - **`cmo`** — The senior voice that owns the said and the seen — positioning anchored, messaging stacked, launches sequenced, content debt named before it compounds.
 - **`contrarian`** — The voice that argues the strongest possible case AGAINST the proposal — to surface hidden assumptions and avoid groupthink.
 - **`critical-challenger`** — The voice that refuses easy answers and drags hidden complexity back into the open.
 - **`customer-success-lead`** — The senior voice that owns the post-signature value — time-to-first-value falsifiable, churn cause split four ways, expansion pulled, NRR dilution named.
+- **`design-director`** — Art-direction and brand-aligned visual judgment — composition, hierarchy, colour and type that serve the brief and the brand, not whether the pixels rendered.
 - **`developer`** — The voice of the person who will actually implement this — grounded in edge cases, null values, and the failure modes prose hides.
 - **`discovery-lead`** — The senior voice that owns the who and the problem — switch events named, hypotheses falsifiable, themes ranked by distinct people.
 - **`eloquent-tamer`** — The voice that audits Eloquent for N+1, query-shape regressions, and ORM idioms that compile cleanly but melt the database.
@@ -54,9 +56,10 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Templatess (2)
+## Templatess (3)
 
 - **`knowledge-card`** — _(no description)_
+- **`lesson-card`** — _(no description)_
 - **`proposal.example`** — _(no description)_
 
 ## User-Typess (4)

@@ -39,6 +39,7 @@
     "candidate_pick": "banners.status",
     "a11y_baseline": []
   },
+  "app_spec": null,
   "ui_design": {
     "layout": "horizontal banner under top nav, full-width",
     "components": [
@@ -73,6 +74,7 @@
     ],
     "design_confirmed": true
   },
+  "ui_scaffold": null,
   "ui_review": {
     "findings": [],
     "review_clean": true,

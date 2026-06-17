@@ -52,7 +52,7 @@ const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
     'roadmaps-progress.md',
 ]);
 const EXCLUDE_PREFIXES = ['open-questions'] as const;
-const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs']);
+const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs', 'later']);
 
 /** Mirror update_roadmap_progress.parse_frontmatter. */
 function parse_frontmatter(text: string): Map<string, string> {

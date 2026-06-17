@@ -1,5 +1,6 @@
 {
   "skill": "canvas-design",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger asks for static visual art (poster / cover / marketing visual). Should-not-trigger near-misses share design vocabulary but route elsewhere (fe-design, tailwind-engineer, voice-and-tone-design, release-comms).",
   "queries": [
     {"q": "Need a launch poster for next week's release announcement — A3 print, minimal style", "trigger": true},

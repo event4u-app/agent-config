@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ticket.schema.json",
+  "title": "Ticket bundle ticket frontmatter",
+  "description": "Frontmatter of a ticket file in agents/tickets/{slug}/T-NNN-*.md. Contract: docs/contracts/ticket-bundle-format.md",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "roadmap", "phase", "title", "status", "model_tier", "acceptance", "boundaries"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^T-[0-9]{3,}$", "description": "Bundle-local id; stable handle for the ticket." },
+    "roadmap": { "type": "string", "description": "Back-link slug (traceability spine)." },
+    "phase": { "type": ["integer", "string"], "description": "Roadmap phase the ticket materializes." },
+    "title": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["ready", "draft", "done"] },
+    "model_tier": { "type": "string", "enum": ["lite", "medium", "high"], "description": "Which capability band may build it (ADR-035)." },
+    "estimate": { "type": ["integer", "string"] },
+    "priority": { "type": "integer", "minimum": 0, "maximum": 4 },
+    "labels": { "type": "array", "items": { "type": "string" } },
+    "parent": { "type": ["string", "null"], "description": "Linear Parent issue; null at a phase root." },
+    "blocked_by": { "type": "array", "items": { "type": "string", "pattern": "^T-[0-9]{3,}$" } },
+    "adr_refs": {
+      "type": "array",
+      "description": "SHA-pinned ADR references; drift HARD-blocks build-readiness.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha"],
+        "properties": { "path": { "type": "string" }, "sha": { "type": "string" } }
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "description": "SHA-pinned source files; drift WARNS only.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha"],
+        "properties": { "path": { "type": "string" }, "sha": { "type": "string" } }
+      }
+    },
+    "assets": { "anyOf": [ { "type": "array", "items": { "type": "string" } }, { "type": "string", "enum": ["none"] } ], "description": "Array of paths relative to the bundle dir; the string \"none\" or [] when there are none." },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Runnable AND isolation-testable criteria; no prose-only."
+    },
+    "boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["must_touch"],
+      "properties": {
+        "must_touch": { "type": "array", "items": { "type": "string" } },
+        "may_touch": { "type": "array", "items": { "type": "string" } },
+        "must_not_touch": { "type": "array", "items": { "type": "string" } }
+      },
+      "description": "Enforced by the work_engine boundary guard before commit."
+    }
+  }
+}

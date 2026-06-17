@@ -1,6 +1,6 @@
 <p align="center"><a href="https://event4u.app"><img alt="event4u Agent Config" src=".github/assets/banner.png"></a></p>
 
-# Agent Config — Universal AI Agent OS
+# Agent Config — Governed skills, rules & work journeys for AI coding agents
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
@@ -86,7 +86,7 @@ is platform operation, not a user-work flow.)
 <details>
 <summary><b>Catalog at a glance</b> — raw artefact counts (maintainer reference)</summary>
 
-[![Skills](https://img.shields.io/badge/Skills-235-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-84-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-154-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-81-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-251-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-88-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-161-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-82-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-26-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 The headline is the **experience** (profile + packs), not the raw counts. Full catalog: [`docs/catalog.md`](docs/catalog.md).
 </details>
@@ -98,7 +98,7 @@ your stack, and you ship work end-to-end. New install? Start with the
 [Quickstart](#quickstart). Already installed? [Supported tools](#supported-tools)
 shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
 lists the end-to-end workflows (`/implement-ticket`, `/work`,
-`/commit`, `/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
+`/commit`, `/pr:create`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
 
 **Install scope.** Pick **one** scope per machine — project-local (default, recommended for application repos) or user-global (recommended for tooling repos / dotfiles). The installer refuses a second, conflicting scope via the `scope_guard` pre-flight. Details: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash scripts/cleanup_other_scope.sh --confirm`.
 
@@ -210,7 +210,7 @@ refine → memory → analyze → plan → implement → test → verify → rep
 - **Implements** under `minimal-safe-diff` + `scope-control` — no drive-by edits.
 - **Tests** (targeted first, full suite on success).
 - **Reviews** the diff through four judges (bugs, security, tests, code quality).
-- **Reports** changes, verdicts, follow-ups — then stops. `/commit` and `/create-pr` are suggestions, never auto-run.
+- **Reports** changes, verdicts, follow-ups — then stops. `/commit` and `/pr:create` are suggestions, never auto-run.
 
 Any ambiguity halts the flow with numbered options — never a silent guess. Persona comes from `.agent-settings.yml` (`roles.active_role`): `senior-engineer` (default), `qa`, or `advisory` (plan-only).
 
@@ -299,16 +299,6 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
 
 > *The 9.3/10 feedback round (2026-05-25) re-asked for OAuth knowledge connectors, IAM / org governance, and organization-shared memory. Each is a stable cancellation row in [`team-deployment-posture`](docs/deploy/team-deployment-posture.md) under the same three release gates — recruited team customer · funded audit · maintainer ADR.*
-
-### Optional: persistent agent memory
-
-[`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory) — MCP-based backend for cross-session learnings. **Strictly optional**; without it, skills fall back to file-based memory under `agents/memory/`.
-
-```bash
-npm install --save-dev @event4u/agent-memory
-```
-
-→ [Memory contract](docs/contracts/agent-memory-contract.md) · [Built-in MCP server](docs/mcp-server.md) (experimental)
 
 ---
 
@@ -417,7 +407,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 | [**Migration**](docs/MIGRATION.md) | Per-version upgrade steps |
 | [**Showcase**](docs/showcase.md) | More examples & expected behavior |
 
-Browse content: [all 154 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
+Browse content: [all 161 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
 
 ---
 

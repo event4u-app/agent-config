@@ -86,6 +86,17 @@ function _command_exists(ref: string): boolean {
     return resolve_logical(`commands/${ref}.md`) !== null;
 }
 
+/**
+ * Colon-canonical invocation form (ADR-003): `cluster/sub` -> `/cluster:sub`.
+ *
+ * Refs are validated as file paths (`commands/<ref>.md`) but rendered as the
+ * canonical `/<cluster>:<sub>` invocation. Refs are at most one segment deep
+ * (sub-sub invocation is forbidden), so only the first `/` becomes `:`.
+ */
+function _invocation(ref: string): string {
+    return '/' + ref.replace('/', ':');
+}
+
 function _skill_exists(slug: string): boolean {
     return resolve_logical(`skills/${slug}/SKILL.md`) !== null;
 }
@@ -154,7 +165,7 @@ export function render(): string {
     ];
     for (const r of seed) {
         const cmds = _getList(r, 'commands')
-            .map((c) => `\`/${c}\``)
+            .map((c) => `\`${_invocation(c)}\``)
             .join(' → ');
         const sk = _getList(r, 'skills')
             .map((s) => `\`${s}\``)
@@ -177,7 +188,7 @@ export function render(): string {
     for (const fid of USER_WORK_FLOWS) {
         const f = flows[fid] as Dict;
         const flowPath = _getList(f, 'default_path')
-            .map((c) => `\`/${c}\``)
+            .map((c) => `\`${_invocation(c)}\``)
             .join(' → ');
         const sk = _getList(f, 'skills')
             .map((s) => `\`${s}\``)

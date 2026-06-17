@@ -79,6 +79,7 @@
           "audit_path": "ambiguous",
           "candidate_pick": "forms.labeled-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "stacked form fields, max-w-md, label-on-top, consistent vertical rhythm",
           "components": [
@@ -121,6 +122,7 @@
             "forms.labeled-input"
           ]
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -229,6 +231,7 @@
           "audit_path": "ambiguous",
           "candidate_pick": "forms.labeled-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "stacked form fields, max-w-md, label-on-top, consistent vertical rhythm",
           "components": [
@@ -272,6 +275,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true
@@ -384,6 +388,7 @@
           "audit_path": "ambiguous",
           "candidate_pick": "forms.labeled-input"
         },
+        "app_spec": null,
         "ui_design": {
           "layout": "stacked form fields, max-w-md, label-on-top, consistent vertical rhythm",
           "components": [
@@ -427,6 +432,7 @@
           ],
           "design_confirmed": true
         },
+        "ui_scaffold": null,
         "ui_review": {
           "findings": [],
           "review_clean": true

@@ -18,7 +18,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *CI is failing and you want the failure pinpointed and fixed.*
 
-- **Commands:** `/fix/ci`
+- **Commands:** `/fix:ci`
 - **Skills:** `systematic-debugging`
 
 ### Build a feature from a ticket
@@ -32,28 +32,28 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *The ask is fuzzy and you want a bounded plan first.*
 
-- **Commands:** `/feature/explore` → `/feature/plan`
+- **Commands:** `/feature:explore` → `/feature:plan`
 - **Skills:** `feature-planning`, `complexity-first-planning`
 
 ### Security-audit a surface
 
 *You touched auth / billing / tenancy and want abuse cases first.*
 
-- **Commands:** `/threat-model` → `/judge/solo`
+- **Commands:** `/threat-model` → `/judge:solo`
 - **Skills:** `threat-modeling`, `security-audit`
 
 ### Open a pull request
 
 *The work is done and you want a clean PR ready for review.*
 
-- **Commands:** `/prepare-for-review` → `/pr/create`
+- **Commands:** `/prepare-for-review` → `/pr:create`
 - **Skills:** `requesting-code-review`, `conventional-commits-writing`
 
 ### Research a topic deeply
 
 *You need a multi-source, fact-checked report, not a guess.*
 
-- **Commands:** `/research/deep` → `/research/report`
+- **Commands:** `/research:deep` → `/research:report`
 - **Skills:** `deep-reading-analyst`
 
 ### Investigate and fix a bug
@@ -67,28 +67,28 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *A design call is genuinely contested and you want independent models.*
 
-- **Commands:** `/council/design` → `/council/debate`
+- **Commands:** `/council:design` → `/council:debate`
 - **Skills:** `ai-council`
 
 ### Process a roadmap autonomously
 
 *You have a roadmap and want it worked end-to-end.*
 
-- **Commands:** `/roadmap/create` → `/roadmap/process-full`
+- **Commands:** `/roadmap:create` → `/roadmap:process-full`
 - **Skills:** `roadmap-management`
 
 ### Refactor with a safety net
 
 *You want to restructure code without changing behaviour.*
 
-- **Commands:** `/feature/refactor` → `/review-changes` → `/judge`
+- **Commands:** `/feature:refactor` → `/review-changes` → `/judge`
 - **Skills:** `code-refactoring`, `test-driven-development`
 
 ### Commit in logical chunks
 
 *You have a messy working tree and want clean, scoped commits.*
 
-- **Commands:** `/commit/in-chunks`
+- **Commands:** `/commit:in-chunks`
 - **Skills:** `conventional-commits-writing`
 
 ### Analyze an unfamiliar project
@@ -116,7 +116,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 
 *You want a gated, catalog-driven Laravel major-version upgrade (10→11) on a provisional branch — never auto-PR.*
 
-- **Commands:** `/mission/upgrade`
+- **Commands:** `/mission:upgrade`
 - **Skills:** `dependency-upgrade`
 
 ## The four work flows
@@ -127,7 +127,7 @@ Broader than a single recipe — the end-to-end shapes most work follows.
 
 Explore, plan, estimate, refine, and investigate before building. The "what should we build and how" front of the developer journey.
 
-- **Path:** `/feature/explore` → `/feature/plan` → `/estimate-ticket` → `/refine-ticket`
+- **Path:** `/feature:explore` → `/feature:plan` → `/estimate-ticket` → `/refine-ticket`
 - **Skills:** `feature-planning`, `estimate-ticket`, `refine-ticket`, `project-analysis-core`, `validate-feature-fit`
 
 ### Implementation flow
@@ -148,5 +148,5 @@ Check it. Self-review, judge, quality-fix, and threat-model a change before it s
 
 Ship it. Commit in logical chunks, open the PR, answer review comments, and prepare the branch for review.
 
-- **Path:** `/commit` → `/pr/create` → `/fix/pr-comments`
+- **Path:** `/commit` → `/pr:create` → `/fix:pr-comments`
 - **Skills:** `conventional-commits-writing`, `git-workflow`, `requesting-code-review`

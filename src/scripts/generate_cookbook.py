@@ -44,6 +44,16 @@ def _command_exists(ref: str) -> bool:
     return resolve_logical(f"commands/{ref}.md") is not None
 
 
+def _invocation(ref: str) -> str:
+    """Colon-canonical invocation form (ADR-003): `cluster/sub` -> `/cluster:sub`.
+
+    Refs are validated as file paths (`commands/<ref>.md`) but rendered as the
+    canonical `/<cluster>:<sub>` invocation. Refs are at most one segment deep
+    (sub-sub invocation is forbidden), so only the first `/` becomes `:`.
+    """
+    return "/" + ref.replace("/", ":", 1)
+
+
 def _skill_exists(slug: str) -> bool:
     return resolve_logical(f"skills/{slug}/SKILL.md") is not None
 
@@ -91,7 +101,7 @@ def render() -> str:
         "",
     ]
     for r in seed:
-        cmds = " → ".join(f"`/{c}`" for c in r.get("commands", []))
+        cmds = " → ".join(f"`{_invocation(c)}`" for c in r.get("commands", []))
         sk = ", ".join(f"`{s}`" for s in r.get("skills", []))
         lines.append(f"### {r['title']}")
         lines.append("")
@@ -110,7 +120,7 @@ def render() -> str:
     ]
     for fid in USER_WORK_FLOWS:
         f = flows[fid]
-        path = " → ".join(f"`/{c}`" for c in f.get("default_path", []))
+        path = " → ".join(f"`{_invocation(c)}`" for c in f.get("default_path", []))
         sk = ", ".join(f"`{s}`" for s in f.get("skills", []))
         summary = " ".join((f.get("summary") or "").split())
         lines.append(f"### {f.get('title', fid)} flow")

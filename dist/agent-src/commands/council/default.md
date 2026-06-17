@@ -52,8 +52,8 @@ the host translates that to `--depth deep` on the CLI. If multiple
 active artefacts disagree, **deep wins** (max policy). Explicit
 `rounds:N` overrides depth.
 
-The default comes from `ai_council.min_rounds` in
-`.agent-settings.yml` (default `2` so members critique each other at
+The default comes from `defaults.min_rounds` in the resolved
+`.ai-council.yml` (default `2` so members critique each other at
 least once before convergence). **Do NOT ask the user "how many
 rounds?"** when `rounds:N` is unset or `N <= min_rounds` — proceed
 with the settings default. Ask only when the artefact is genuinely
@@ -88,16 +88,40 @@ Neutrality — context-handoff).
 
 ### 2. Check the council is configured + price table fresh
 
-Read `.agent-settings.yml` → `ai_council`:
+Council config lives in **`.ai-council.yml`**, NOT in `.agent-settings.yml`.
+The CLI (`scripts/ai_council/config.py:resolve_config_path`, per
+[ADR-093](../../../docs/decisions/ADR-093-ai-council-config-user-global.md))
+resolves it — first hit wins:
 
-- If `ai_council.enabled` is false → state that and offer to flip it
-  on. Do not flip it autonomously.
-- If no member has `enabled: true` → list the install commands
-  (`./agent-config keys:install-anthropic`, `./agent-config keys:install-openai`)
-  and stop.
-- If a member is enabled but its `*.key` file is missing or has the
-  wrong mode → tell the user which key to install. Do not fall back
-  to env vars. Ever.
+1. Project-local `<project_root>/agents/settings/.ai-council.yml` (if present).
+2. User-global `~/.event4u/agent-config/settings/.ai-council.yml` — default
+   home; one global config serves every project.
+
+Keys are **top-level** (`enabled`, `defaults:`, `members:`). No `ai_council:`
+parent block; the legacy `ai_council.*` block under `.agent-settings.yml` was
+removed in ADR-093 — never read or recommend that path for council config.
+
+```
+NEVER claim the council "needs `.agent-settings.yml` set up" or an
+`ai_council` block. The CLI's `resolve_config_path` is authoritative:
+run `council:estimate` (Step 3) and read its exit code + message before
+making any "not configured" claim. A user-global `.ai-council.yml` with
+`enabled: true` works from EVERY project, including consumer repos that
+have no project-local config.
+```
+
+CLI is the single source of truth for the configured-check — do not hand-parse
+the YAML to second-guess it. Map its outcomes (Step 4 exit codes + the
+**CLI exits 2** cases below):
+
+- `enabled: false` (top-level in resolved `.ai-council.yml`) → CLI exits 2 with
+  `ai_council.enabled is false`. State that, offer to flip it on. Do not flip
+  it autonomously.
+- No member has `enabled: true` (under top-level `members:`) → list install
+  commands (`./agent-config keys:install-anthropic`,
+  `./agent-config keys:install-openai`) and stop.
+- A member is enabled but its `*.key` file is missing or wrong-mode → tell the
+  user which key to install. Do not fall back to env vars. Ever.
 
 Load the price table via `scripts.ai_council.pricing.load_prices()`
 (auto-bootstraps `agents/runtime/.agent-prices.md` from defaults if missing). Run
@@ -172,8 +196,8 @@ Once the user picks `1`, invoke the same arguments with `run` plus
     [--original-ask "<framing sentence>"]
 ```
 
-`--rounds` defaults to `ai_council.min_rounds` from
-`.agent-settings.yml` (or `2` if unset). Pass `--rounds N` only when
+`--rounds` defaults to `defaults.min_rounds` from the resolved
+`.ai-council.yml` (or `2` if unset). Pass `--rounds N` only when
 the user explicitly asked for a different count or a complex
 artefact justifies more depth — do not pass `--rounds 1` to "save
 money" by default; the settings owner already chose `min_rounds`.
@@ -181,15 +205,15 @@ money" by default; the settings owner already chose `min_rounds`.
 `--depth` defaults to `standard`. Set `--depth deep` when the
 active rule, skill, or command declares `council_depth: deep` in
 its frontmatter; the floor becomes
-`max(ai_council.deep_min_rounds, ai_council.min_rounds)` (default
+`max(defaults.deep_min_rounds, defaults.min_rounds)` (default
 `3`). If `--rounds N` is also passed, `--rounds` wins.
 
 The CLI:
 
 - bundles the artefact via `scripts.ai_council.bundler` (redaction +
   size guard — `BundleTooLarge` exits 2 with the byte count),
-- builds members from `.agent-settings.yml` (refusing if
-  `ai_council.enabled` is false or no member is wired up),
+- builds members from the resolved `.ai-council.yml` (refusing if
+  top-level `enabled` is false or no member is wired up),
 - detects project context via `detect_project_context()`,
 - calls `orchestrator.consult(...)` with the `cost_budget` from
   settings,
@@ -253,8 +277,11 @@ council can act on the project directly.
 
 ## Failure modes
 
-- **CLI exits 2, "ai_council.enabled is false"** → tell the user how
-  to flip it on; do not flip it autonomously.
+- **CLI exits 2, "ai_council.enabled is false"** → tell the user to set
+  top-level `enabled: true` in the resolved `.ai-council.yml` (user-global
+  `~/.event4u/agent-config/settings/.ai-council.yml`, or project-local
+  `<project_root>/agents/settings/.ai-council.yml`) — never in
+  `.agent-settings.yml`. Do not flip it autonomously.
 - **CLI exits 2, "no council member has `enabled: true`"** → list the
   install commands (`./agent-config keys:install-anthropic`,
   `./agent-config keys:install-openai`) and stop.

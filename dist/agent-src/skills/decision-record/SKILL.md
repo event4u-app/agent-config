@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: decision-record
-description: "Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`."
+description: "Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`."
 status: active
 tier: senior
 domain: process

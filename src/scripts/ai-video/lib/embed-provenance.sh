@@ -54,8 +54,8 @@
 
 set -euo pipefail
 
-# shellcheck source=adapter-common.sh
-. "$(dirname "$0")/adapter-common.sh"
+# shellcheck source=../../media/lib/adapter-common.sh
+. "$(dirname "$0")/../../media/lib/adapter-common.sh"
 
 PROV_SCHEMA=1
 PROV_GENERATOR="event4u/agent-config ai-video"

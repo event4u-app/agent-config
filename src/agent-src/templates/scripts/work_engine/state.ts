@@ -30,10 +30,26 @@
  *   pick. The audit gate (`work_engine.directives.ui.audit`)
  *   refuses to advance to design/apply while the slot is empty or
  *   while `greenfield` is set without a recorded decision.
+ * - `app_spec` — optional greenfield grounding artifact written by
+ *   `work_engine.directives.ui.app_spec` (greenfield-scaffold
+ *   Phase 2). Derives a `pages` set, `entity_model`, and `flow_map`
+ *   from the prompt and carries a `confirmed` flag (the lightweight
+ *   confirm halt) plus a `bypassed` flag (the "just scaffold" escape).
+ *   `null` for every non-greenfield-scaffold flow — the app-spec gate
+ *   is a no-op outside `greenfield_decision == "scaffold"`.
  * - `ui_design` — optional design brief produced by
  *   `work_engine.directives.ui.design` (R3 Phase 3 Step 1). Locks
  *   layout / components / states / microcopy / a11y; `design_confirmed`
  *   carries the user's sign-off.
+ * - `ui_scaffold` — optional greenfield scaffold plan written by
+ *   `work_engine.directives.ui.scaffold` (greenfield-scaffold
+ *   Phase 3). Plan-only and stack-agnostic
+ *   (`{pages, routes, layout_strategy, component_manifest, token_seed}`);
+ *   the engine writes no files — a stack scaffold skill consumes the plan,
+ *   creates the skeleton, and sets `scaffolded = true` + `artifacts`.
+ *   `null` for every non-greenfield-scaffold flow. The scaffold gate
+ *   sits in the `plan` slot (after design): design fixes the abstract
+ *   visual language, scaffold maps it onto concrete structure.
  * - `ui_review` — optional review-pass output written by
  *   `work_engine.directives.ui.review` (R3 Phase 3 Step 4). Carries
  *   the design-review findings list and a `review_clean` flag set when
@@ -197,7 +213,9 @@ export class WorkState {
     directive_set: string;
     stack: Dict | null;
     ui_audit: Dict | null;
+    app_spec: Dict | null;
     ui_design: Dict | null;
+    ui_scaffold: Dict | null;
     ui_review: Dict | null;
     ui_polish: Dict | null;
     contract: Dict | null;
@@ -220,7 +238,9 @@ export class WorkState {
         directive_set?: string;
         stack?: Dict | null;
         ui_audit?: Dict | null;
+        app_spec?: Dict | null;
         ui_design?: Dict | null;
+        ui_scaffold?: Dict | null;
         ui_review?: Dict | null;
         ui_polish?: Dict | null;
         contract?: Dict | null;
@@ -242,7 +262,9 @@ export class WorkState {
         this.directive_set = opts.directive_set ?? DEFAULT_DIRECTIVE_SET;
         this.stack = opts.stack ?? null;
         this.ui_audit = opts.ui_audit ?? null;
+        this.app_spec = opts.app_spec ?? null;
         this.ui_design = opts.ui_design ?? null;
+        this.ui_scaffold = opts.ui_scaffold ?? null;
         this.ui_review = opts.ui_review ?? null;
         this.ui_polish = opts.ui_polish ?? null;
         this.contract = opts.contract ?? null;
@@ -280,7 +302,9 @@ export function to_dict(state: WorkState): Dict {
     }
     _validate_stack(state.stack);
     _validate_ui_audit(state.ui_audit);
+    _validate_app_spec(state.app_spec);
     _validate_ui_design(state.ui_design);
+    _validate_ui_scaffold(state.ui_scaffold);
     _validate_ui_review(state.ui_review);
     _validate_ui_polish(state.ui_polish);
     _validate_contract(state.contract);
@@ -293,7 +317,9 @@ export function to_dict(state: WorkState): Dict {
         directive_set: state.directive_set,
         stack: state.stack,
         ui_audit: state.ui_audit,
+        app_spec: state.app_spec,
         ui_design: state.ui_design,
+        ui_scaffold: state.ui_scaffold,
         ui_review: state.ui_review,
         ui_polish: state.ui_polish,
         contract: state.contract,
@@ -359,8 +385,14 @@ export function from_dict(payload: JsonValue): WorkState {
     const ui_audit = payload['ui_audit'] ?? null;
     _validate_ui_audit(ui_audit);
 
+    const app_spec = payload['app_spec'] ?? null;
+    _validate_app_spec(app_spec);
+
     const ui_design = payload['ui_design'] ?? null;
     _validate_ui_design(ui_design);
+
+    const ui_scaffold = payload['ui_scaffold'] ?? null;
+    _validate_ui_scaffold(ui_scaffold);
 
     const ui_review = payload['ui_review'] ?? null;
     _validate_ui_review(ui_review);
@@ -383,7 +415,9 @@ export function from_dict(payload: JsonValue): WorkState {
         directive_set: directive_set as string,
         stack: _isDict(stack) ? { ...stack } : null,
         ui_audit: _isDict(ui_audit) ? { ...ui_audit } : null,
+        app_spec: _isDict(app_spec) ? { ...app_spec } : null,
         ui_design: _isDict(ui_design) ? { ...ui_design } : null,
+        ui_scaffold: _isDict(ui_scaffold) ? { ...ui_scaffold } : null,
         ui_review: _isDict(ui_review) ? { ...ui_review } : null,
         ui_polish: _isDict(ui_polish) ? { ...ui_polish } : null,
         contract: _isDict(contract) ? { ...contract } : null,
@@ -537,6 +571,57 @@ function _validate_ui_audit(ui_audit: JsonValue): void {
 }
 
 /**
+ * Reject malformed `app_spec` envelopes; tolerate `null` and `{}`.
+ *
+ * `null` means the app-spec gate has not produced a grounding
+ * artifact yet — the greenfield-scaffold `app_spec` directive
+ * (greenfield-scaffold Phase 2) emits the agent-directive that
+ * populates it, and the gate is a no-op for every non-greenfield
+ * flow so the slot stays `null` there. An empty dict is the
+ * in-progress shape after the skill returns but before the page-set
+ * lands; the gate treats it the same as `null`. Once populated,
+ * `pages` / `entity_model` (when present) must be lists,
+ * `flow_map` (when present) must be a list or dict, and
+ * `confirmed` / `bypassed` (when present) must be bools — the
+ * app-spec gate's confirm/bypass sentinels are simple equality
+ * tests, so the schema enforces only shape, not content.
+ */
+function _validate_app_spec(app_spec: JsonValue): void {
+    if (app_spec === null) {
+        return;
+    }
+    if (!_isDict(app_spec)) {
+        throw new SchemaError(
+            `state.app_spec must be a JSON object or null; ` +
+                `got ${pyTypeName(app_spec)}`,
+        );
+    }
+    for (const key of ['pages', 'entity_model']) {
+        if (key in app_spec && !Array.isArray(app_spec[key])) {
+            throw new SchemaError(
+                `state.app_spec.${key} must be a list when present`,
+            );
+        }
+    }
+    if (
+        'flow_map' in app_spec &&
+        !Array.isArray(app_spec['flow_map']) &&
+        !_isDict(app_spec['flow_map'])
+    ) {
+        throw new SchemaError(
+            'state.app_spec.flow_map must be a list or object when present',
+        );
+    }
+    for (const key of ['confirmed', 'bypassed']) {
+        if (key in app_spec && typeof app_spec[key] !== 'boolean') {
+            throw new SchemaError(
+                `state.app_spec.${key} must be a boolean when present`,
+            );
+        }
+    }
+}
+
+/**
  * Reject malformed `ui_design` envelopes; tolerate `null` and `{}`.
  *
  * `null` means the design step has not produced a brief yet — the
@@ -565,6 +650,61 @@ function _validate_ui_design(ui_design: JsonValue): void {
     ) {
         throw new SchemaError(
             'state.ui_design.design_confirmed must be a boolean when present',
+        );
+    }
+}
+
+/**
+ * Reject malformed `ui_scaffold` envelopes; tolerate `null` and `{}`.
+ *
+ * `null` means the scaffold gate has not produced a plan yet — the
+ * greenfield-scaffold `scaffold` directive (greenfield-scaffold
+ * Phase 3) emits the agent-directive that populates it, and the gate
+ * is a no-op for every non-greenfield flow so the slot stays `null`
+ * there. An empty dict is the in-progress shape. Once populated, the
+ * stack-agnostic plan keys `pages` / `routes` / `component_manifest`
+ * / `artifacts` (when present) must be lists, `layout_strategy`
+ * (when present) must be a string, `token_seed` (when present) must
+ * be an object, and `scaffolded` (when present) must be a bool — the
+ * scaffold gate's "plan produced" and "files created" sentinels are
+ * simple shape/equality tests, so the schema enforces only shape.
+ */
+function _validate_ui_scaffold(ui_scaffold: JsonValue): void {
+    if (ui_scaffold === null) {
+        return;
+    }
+    if (!_isDict(ui_scaffold)) {
+        throw new SchemaError(
+            `state.ui_scaffold must be a JSON object or null; ` +
+                `got ${pyTypeName(ui_scaffold)}`,
+        );
+    }
+    for (const key of ['pages', 'routes', 'component_manifest', 'artifacts']) {
+        if (key in ui_scaffold && !Array.isArray(ui_scaffold[key])) {
+            throw new SchemaError(
+                `state.ui_scaffold.${key} must be a list when present`,
+            );
+        }
+    }
+    if (
+        'layout_strategy' in ui_scaffold &&
+        typeof ui_scaffold['layout_strategy'] !== 'string'
+    ) {
+        throw new SchemaError(
+            'state.ui_scaffold.layout_strategy must be a string when present',
+        );
+    }
+    if ('token_seed' in ui_scaffold && !_isDict(ui_scaffold['token_seed'])) {
+        throw new SchemaError(
+            'state.ui_scaffold.token_seed must be a JSON object when present',
+        );
+    }
+    if (
+        'scaffolded' in ui_scaffold &&
+        typeof ui_scaffold['scaffolded'] !== 'boolean'
+    ) {
+        throw new SchemaError(
+            'state.ui_scaffold.scaffolded must be a boolean when present',
         );
     }
 }

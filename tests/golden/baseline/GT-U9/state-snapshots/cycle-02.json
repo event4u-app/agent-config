@@ -17,7 +17,9 @@
     "design_tokens": {},
     "greenfield_decision": "scaffold"
   },
+  "app_spec": null,
   "ui_design": null,
+  "ui_scaffold": null,
   "ui_review": null,
   "ui_polish": null,
   "contract": null,

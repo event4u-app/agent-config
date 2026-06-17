@@ -82,6 +82,9 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-structural-breaking
+      - task: check-trigger-evals
+      - task: lint-eval-freshness
       - task: lint-workflow-security
       - task: lint-missions
       - task: check-token-optimizer-freshness
@@ -97,6 +100,8 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
+      - task: lint-roadmap-later-disposition
+      - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
       - task: lint-profile-overlay-set-only
@@ -113,6 +118,7 @@ tasks:
       - task: check-artefact-checksums
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
+      - task: check-surface-tiers
       - task: check-public-links
       - task: check-beta-review-markers
       - task: check-public-catalog-links
@@ -176,6 +182,7 @@ tasks:
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
+      - task: generate-capabilities-index-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
@@ -194,6 +201,7 @@ tasks:
       # in taskfiles/ci-fast.yml above test:ts).
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: check-council-config-location
       - task: lint-agents-layout
       - task: check-role-doc-links
       - task: roadmap-progress-check
@@ -219,6 +227,9 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-structural-breaking
+      - task: check-trigger-evals
+      - task: lint-eval-freshness
       - task: lint-workflow-security
       - task: lint-missions
       - task: check-token-optimizer-freshness
@@ -234,6 +245,8 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
       - task: lint-empty-roadmaps
+      - task: lint-roadmap-later-disposition
+      - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
       - task: lint-profile-overlay-set-only
@@ -250,6 +263,7 @@ tasks:
       - task: check-artefact-checksums
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
+      - task: check-surface-tiers
       - task: check-public-links
       - task: check-beta-review-markers
       - task: check-public-catalog-links
@@ -313,6 +327,7 @@ tasks:
       - task: lint-command-flow-coverage
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
+      - task: generate-capabilities-index-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
@@ -328,6 +343,7 @@ tasks:
       - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: check-council-config-location
       - task: lint-agents-layout-strict
       - task: check-role-doc-links
       - task: roadmap-progress-check
