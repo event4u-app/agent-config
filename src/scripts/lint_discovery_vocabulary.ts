@@ -36,8 +36,10 @@ const ADR_PACKS: ReadonlySet<string> = new Set<string>([
     'product-discovery', 'finance-basic', 'finance-advanced',
     'gtm-sales', 'gtm-marketing', 'ops-people', 'founder-strategy', 'small-business',
     'construction', 'ai-video', 'fun', 'meta', 'git', 'frontend-design',
-    // Carved out of meta in ADR-092 (capability-scoped packs).
+    // Carved out of meta in ADR-091 (capability-scoped packs).
     'memory', 'analytics', 'product-reasoning',
+    // road-to-image-brand-typography Phase B (ADR-013 amendment, same PR).
+    'brand',
 ]);
 
 // ADR-010 non-overlap reservations.

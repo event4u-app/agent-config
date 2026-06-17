@@ -301,6 +301,12 @@ function _build_pack_yaml(
     if (_pyTruthy(meta.size_class)) {
         out.size_class = meta.size_class;
     }
+    // surface_tier — core | lab (road-to-install-contract-stability Phase 2).
+    // `core` = the lean stable multi-host engine (rules + skills + install +
+    // condensation). `lab` = experimental / pilot domain tooling that must not
+    // destabilise the core install surface. Default core; sourced from the
+    // discovery vocab when a pack is explicitly lab.
+    out.surface_tier = _pyTruthy(meta.surface_tier) ? (meta.surface_tier as unknown) : 'core';
     out.suggests = _pyTruthy(meta.suggests) ? (meta.suggests as unknown) : [];
     const depSkills = new Set<string>();
     const depRules = new Set<string>();

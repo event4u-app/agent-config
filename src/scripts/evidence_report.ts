@@ -127,6 +127,12 @@ function _build_provenance(args: ParsedArgs): string {
     if (args.version) {
         parts.push(`version=${args.version}`);
     }
+    // GLOBAL-origin leads (cross-project global store) are flagged so the
+    // lead-only enforcement can detect a GLOBAL positive-structure line used
+    // without this-session re-confirmation (road-to-structure-grounding-v2 P4).
+    if (args.bucket === 'assumed' && args.origin === 'global') {
+        parts.push('origin=GLOBAL');
+    }
     if (args.bucket === 'gaps') {
         if (args.searched) {
             parts.push(`searched=${args.searched}`);
@@ -341,18 +347,20 @@ interface ParsedArgs {
     source: string;
     observed_at: string;
     version: string;
+    origin: string;
     searched: string;
     not_searched: string;
 }
 
 const BUCKET_CHOICES = ['verified', 'assumed', 'gaps'];
+const ORIGIN_CHOICES = ['local', 'global'];
 
 const TOP_USAGE = `usage: ${PROG} [-h] [--root ROOT] subcommand ...\n`;
 const ADD_USAGE =
     `usage: ${PROG} add [-h] --bucket {verified,assumed,gaps} --claim\n` +
     `                              CLAIM [--source SOURCE]\n` +
     `                              [--observed-at OBSERVED_AT] [--version VERSION]\n` +
-    `                              [--searched SEARCHED]\n` +
+    `                              [--origin {local,global}] [--searched SEARCHED]\n` +
     `                              [--not-searched NOT_SEARCHED]\n`;
 const INIT_USAGE = `usage: ${PROG} init [-h] [--task TASK]\n`;
 const GIT_STATE_USAGE = `usage: ${PROG} git-state [-h]\n`;
@@ -389,6 +397,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         source: '',
         observed_at: '',
         version: '',
+        origin: 'local',
         searched: '',
         not_searched: '',
     };
@@ -495,6 +504,12 @@ function _parseAdd(rest: string[], args: ParsedArgs): void {
             args.observed_at = takeVal('--observed-at');
         } else if (flag === '--version') {
             args.version = takeVal('--version');
+        } else if (flag === '--origin') {
+            const v = takeVal('--origin');
+            if (!ORIGIN_CHOICES.includes(v)) {
+                _subError('add', `argument --origin: invalid choice: '${v}' (choose from 'local', 'global')`);
+            }
+            args.origin = v;
         } else if (flag === '--searched') {
             args.searched = takeVal('--searched');
         } else if (flag === '--not-searched') {

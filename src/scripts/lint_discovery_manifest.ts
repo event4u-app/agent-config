@@ -364,8 +364,11 @@ function _validateNode(
 
     if ('const' in schema) {
         if (!_deepEqual(schema['const'], data)) {
+            // jsonschema's `const` message reports the EXPECTED const value
+            // (Python-repr'd), not the actual data: `<const> was expected`
+            // (e.g. `2 was expected`, `'bar' was expected`).
             errors.push({
-                message: `${_jsonRepr(data)} was expected`,
+                message: `${_pyRepr2(schema['const'])} was expected`,
                 path: _pathStr(segs),
             });
             return;

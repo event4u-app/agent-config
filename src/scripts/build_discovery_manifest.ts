@@ -613,11 +613,13 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
             if (fm['tier'] !== undefined && fm['tier'] !== null) {
                 entry['tier'] = fm['tier'];
             }
-            // ADR-092: `visibility:` is the named source of truth; the integer
+            // ADR-090: `visibility:` is the named source of truth; the integer
             // `tier:` is a back-compat alias. Dual-emit BOTH into the manifest
             // (a published data contract) during the deprecation window so
-            // external consumers reading the integer key keep working. Prefer
-            // the explicit field; derive from tier when absent.
+            // external consumers reading the integer key keep working. The
+            // top-level `deprecations` block (ADR-092 / road-to-tier-removal)
+            // announces the `tier` deprecation; removal is Phase 4. Prefer the
+            // explicit field; derive from tier when absent.
             const _tierToVis: Record<number, string> = { 0: 'visible', 1: 'advanced', 2: 'internal' };
             let _vis: Json = fm['visibility'];
             if (
@@ -739,7 +741,29 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
     const stats = _compute_stats(artefacts, unassigned, documentedUnassigned);
 
     const manifest: JsonObject = {
-        version: 1,
+        version: 2,
+        // Machine-readable deprecation signal (road-to-tier-removal Phase 1,
+        // ADR-092). The integer command `tier` (0/1/2) is a back-compat alias
+        // for the named `visibility` field (ADR-090). It is STILL emitted into
+        // command entries above (non-breaking) — this block only ANNOUNCES the
+        // deprecation so external manifest consumers can migrate to `visibility`
+        // during the soak window. Removal of `tier` is Phase 4 of
+        // road-to-tier-removal (cheaply reversible per ADR-092); `sunset` is
+        // maintainer-owned and stays null until the soak clears.
+        deprecations: [
+            {
+                key: 'tier',
+                scope: 'command',
+                replacement: 'visibility',
+                since: 'ADR-092',
+                sunset: null,
+                note:
+                    'Integer command `tier` (0/1/2) is a deprecated back-compat ' +
+                    'alias for the named `visibility` field (ADR-090). Read ' +
+                    '`visibility`; `tier` is still emitted (non-breaking) but ' +
+                    'scheduled for removal — see road-to-tier-removal.',
+            },
+        ],
         generated_at: _nowUtc(),
         scanner_version: _scanner_version(),
         checksum: 'sha256:' + '0'.repeat(64),

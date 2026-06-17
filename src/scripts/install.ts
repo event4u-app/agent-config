@@ -72,6 +72,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
 import * as installed_lock from './_lib/installed_lock.js';
+import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as installed_tools from './_lib/installed_tools.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
@@ -2047,6 +2048,7 @@ interface Options {
     tools: string; // post-merge it's always a string
     ai: string | null;
     packs: string[]; // normalized to list post-parse
+    core_only: boolean;
     no_smoke: boolean;
     global_install: boolean;
     scope: string | null;
@@ -2981,10 +2983,82 @@ function _verify_deploy_targets(anchor: string, plan: ReadonlyArray<readonly [st
     return missing;
 }
 
+/**
+ * Remove lab-tier skills/commands from a completed deploy (core-only).
+ *
+ * road-to-install-contract-stability Phase 2 Step 2. Skills are pruned by
+ * whole directory (tier decided by the skill's `SKILL.md` frontmatter);
+ * commands by file (own frontmatter). Rules / personas / contexts / templates
+ * are core/shared and left intact. Returns `[pruned_count, adjusted_results]`
+ * with the lab paths removed from each tool's `written_paths` so the manifest
+ * never records them.
+ */
+function _prune_lab_modules(
+    deploy_results: Record<string, DeployResult>,
+    lab_ids: Set<string>,
+): [number, Record<string, DeployResult>] {
+    let pruned = 0;
+    const adjusted: Record<string, DeployResult> = {};
+    for (const tool_id of Object.keys(deploy_results)) {
+        const [written, skipped, status, paths] = deploy_results[tool_id] as DeployResult;
+        const lab_skill_dirs = new Set<string>();
+        for (const p of paths) {
+            const parts = p.split(path.sep);
+            if (parts.includes('skills')) {
+                const i = parts.indexOf('skills');
+                if (i + 1 < parts.length) {
+                    const skill_root = parts.slice(0, i + 2).join(path.sep);
+                    if (!lab_skill_dirs.has(skill_root)) {
+                        const skillmd = path.join(skill_root, 'SKILL.md');
+                        if (pathExists(skillmd) && surface_tiers.is_lab_artefact(skillmd, lab_ids)) {
+                            lab_skill_dirs.add(skill_root);
+                        }
+                    }
+                }
+            }
+        }
+        const keep: string[] = [];
+        const delete_files: string[] = [];
+        for (const p of paths) {
+            const parts = p.split(path.sep);
+            let is_lab = false;
+            if (parts.includes('skills')) {
+                const i = parts.indexOf('skills');
+                if (i + 1 < parts.length && lab_skill_dirs.has(parts.slice(0, i + 2).join(path.sep))) {
+                    is_lab = true;
+                }
+            } else if (
+                parts.includes('commands') &&
+                path.extname(p) === '.md' &&
+                surface_tiers.is_lab_artefact(p, lab_ids)
+            ) {
+                is_lab = true;
+            }
+            (is_lab ? delete_files : keep).push(p);
+        }
+        for (const d of lab_skill_dirs) {
+            fs.rmSync(d, { recursive: true, force: true });
+        }
+        for (const p of delete_files) {
+            if (p.split(path.sep).includes('commands') && pathExists(p)) {
+                try {
+                    fs.unlinkSync(p);
+                } catch {
+                    // OSError → swallow, mirroring the .py.
+                }
+            }
+        }
+        pruned += delete_files.length;
+        adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
+    }
+    return [pruned, adjusted];
+}
+
 function install_global(
     tools: Set<string>,
     force: boolean,
     project_root: string | null = null,
+    core_only = false,
 ): number {
     const migrated = user_global_paths.migrate_legacy_namespace();
     if (migrated && !state.QUIET) {
@@ -3018,6 +3092,20 @@ function install_global(
         info(`🔄 Upgrading lockfile from ${recorded} to ${installed_version}, redeploying tools`);
     }
 
+    // Install-ABI migration (road-to-install-contract-stability Phase 1.5):
+    // an installed tree at install_layout_version < current (absent =
+    // pre-freeze v0) is migrated in place before the deploy, surgical-uninstall
+    // pointers preserved. At the freeze baseline this only stamps the version;
+    // future layout versions add concrete shape transforms in migrate_layout.
+    const migration = installed_lock.migrate_layout({ path: write_path });
+    if (migration && migration.changed.length > 0 && !state.QUIET) {
+        info(
+            '🔧 Migrated install layout ' +
+                `v${migration.from} → v${migration.to}: ` +
+                migration.changed.join('; '),
+        );
+    }
+
     if (!state.QUIET) {
         process.stdout.write('\n');
         info('Agent Config — Global (user-scope) install [ADR-007]');
@@ -3044,7 +3132,24 @@ function install_global(
     }
 
     const package_root = _resolve_package_root_for_global();
-    const deploy_results = _deploy_global_content(tools, force, package_root, written);
+    let deploy_results = _deploy_global_content(tools, force, package_root, written);
+
+    // Core-only mode (road-to-install-contract-stability Phase 2 Step 2): prune
+    // lab-tier skills/commands from the just-deployed tree so the installed
+    // surface carries zero lab modules. Runs after the deploy postcheck so the
+    // prune operates on a verified-complete tree; the adjusted results feed the
+    // manifest so lab paths are never recorded.
+    if (core_only) {
+        const lab_ids = surface_tiers.load_lab_pack_ids(package_root);
+        let pruned: number;
+        [pruned, deploy_results] = _prune_lab_modules(deploy_results, lab_ids);
+        if (!state.QUIET) {
+            info(
+                `🧹 Core-only install: pruned ${pruned} lab-tier artefact(s) ` +
+                    `(packs: ${[...lab_ids].sort().join(', ')}).`,
+            );
+        }
+    }
 
     const failed_tools = new Set<string>(
         Object.keys(deploy_results).filter(
@@ -3175,8 +3280,9 @@ const USAGE =
     '                  [--cursor-user-hooks] [--cline-user-hooks]\n' +
     '                  [--windsurf-user-hooks] [--gemini-user-hooks]\n' +
     '                  [--project PROJECT] [--package PACKAGE] [--quiet]\n' +
-    '                  [--tools TOOLS] [--ai AI] [--packs PACKS] [--no-smoke]\n' +
-    '                  [--global] [--scope {project,global,prompt,auto}]\n' +
+    '                  [--tools TOOLS] [--ai AI] [--packs PACKS] [--core-only]\n' +
+    '                  [--no-smoke] [--global]\n' +
+    '                  [--scope {project,global,prompt,auto}]\n' +
     '                  [--custom-path CUSTOM_PATH] [--offline] [--minimal]\n' +
     '                  [--interactive] [--no-ui] [--dry-run]\n' +
     '                  [--apply-payload APPLY_PAYLOAD]\n';
@@ -3190,6 +3296,7 @@ const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--windsurf-user-hooks': 'windsurf_user_hooks',
     '--gemini-user-hooks': 'gemini_user_hooks',
     '--quiet': 'quiet',
+    '--core-only': 'core_only',
     '--no-smoke': 'no_smoke',
     '--global': 'global_install',
     '--offline': 'offline',
@@ -3236,6 +3343,7 @@ function parse_options(argv: string[]): Options {
         tools: null,
         ai: null,
         packs: null,
+        core_only: false,
         no_smoke: false,
         global_install: false,
         scope: null,
@@ -4036,7 +4144,7 @@ function main(argv: string[]): number {
             const rc = _run_migrate_to_global(detect_root);
             if (rc !== 0) return rc;
         }
-        const rc = install_global(parsed_tools, opts.force, detect_root);
+        const rc = install_global(parsed_tools, opts.force, detect_root, opts.core_only);
         _emit_progress_terminal(rc);
         if (rc === 0 && wizard_handoff) {
             return _wizard_spawn(detect_root, false);
