@@ -6,10 +6,10 @@
 
 ## Overall
 
-**3 / 38 steps done · 8%**
+**4 / 38 steps done · 11%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   11%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-evidence-v2-accumulation-layer.md](roadmaps/road-to-evidence-v2-accumulation-layer.md) | 3 | 6 | 6 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md) | 5 | 15 | 12 | 3 | 0 | 0 | ██░░░░░░░░ 20% |
+| 2 | [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md) | 5 | 15 | 11 | 4 | 0 | 0 | ███░░░░░░░ 27% |
 | 3 | [road-to-mission-catalogue.md](roadmaps/road-to-mission-catalogue.md) | 1 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-rdp-eval-and-promotion.md](roadmaps/road-to-rdp-eval-and-promotion.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -37,13 +37,13 @@
 
 ### [road-to-image-brand-followups.md](roadmaps/road-to-image-brand-followups.md)
 
-**image/brand follow-ons (live validation, commands, retarget)** — 3 / 15 done (20%)
+**image/brand follow-ons (live validation, commands, retarget)** — 4 / 15 done (27%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Adapter live-validation + generation/editing skills | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Live trigger-eval backfill + ci-fast aggregate flip | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | Command clusters + namespace decision | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Command clusters + namespace decision | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 4 | `openai-images` GPT-Image-2 retarget (low priority) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 5 | Substrate internal rename (cosmetic, gated) | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 
