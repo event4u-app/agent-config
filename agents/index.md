@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **556 artefacts** in this package.
+Maintainer-facing index of all **582 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (236)
+## Skills (251)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -32,6 +32,12 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`blade-ui`](../src/skills/blade-ui/SKILL.md) |  | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic. |
 | skill | [`blameless-post-mortem`](../src/skills/blameless-post-mortem/SKILL.md) |  | Use after an incident or outage is resolved — blame-free facilitation, root cause, corrective actions, memory write-back — even for a near-miss. Consumes the incident-commander skeleton. |
 | skill | [`blast-radius-analyzer`](../src/skills/blast-radius-analyzer/SKILL.md) |  | Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency. |
+| skill | [`brand`](../src/skills/brand/SKILL.md) |  | Grounded brand decisions from a curated corpus — archetype, voice, naming, colour psychology, logo-style fit, messaging frameworks, archetype→type mapping. Use to ground brand strategy and identity. |
+| skill | [`brand-asset-generation`](../src/skills/brand-asset-generation/SKILL.md) |  | Generate brand assets — banners, social cards, CIP elements — with brand-token injection + provider routing. Use when generating a banner / social image / branded asset. |
+| skill | [`brand-audit`](../src/skills/brand-audit/SKILL.md) |  | Audit how a brand is currently expressed across touchpoints and flag drift from its defined tokens, voice, and strategy. Use to inventory and critique an existing brand before changing it. |
+| skill | [`brand-identity`](../src/skills/brand-identity/SKILL.md) |  | Define a brand identity constraint set from a confirmed strategy — colour story, type story, logo direction, imagery direction. Defines the tokens that token emission and asset generation consume. |
+| skill | [`brand-strategy`](../src/skills/brand-strategy/SKILL.md) |  | Ground a brand strategy from the corpus — archetype, opposable positioning, voice and tone, messaging framework. Use to decide who a brand is for, what it stands for, and how it sounds. |
+| skill | [`brand-to-tokens`](../src/skills/brand-to-tokens/SKILL.md) |  | Derive a DTCG .tokens.json source of truth from confirmed brand decisions, emit CSS vars + Tailwind via design-tokens, and export locked brand deck templates. Use to turn a brand identity into tokens. |
 | skill | [`bug-analyzer`](../src/skills/bug-analyzer/SKILL.md) |  | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
 | skill | [`build-buy-partner`](../src/skills/build-buy-partner/SKILL.md) |  | Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'. |
 | skill | [`canvas-design`](../src/skills/canvas-design/SKILL.md) |  | Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'. |
@@ -63,7 +69,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`database`](../src/skills/database/SKILL.md) |  | Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'. |
 | skill | [`dcf-modeling`](../src/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
 | skill | [`deal-qualification-meddic`](../src/skills/deal-qualification-meddic/SKILL.md) |  | Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'. |
-| skill | [`decision-record`](../src/skills/decision-record/SKILL.md) |  | Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`. |
+| skill | [`decision-record`](../src/skills/decision-record/SKILL.md) |  | Use when choosing between alternatives with trade-offs — X-or-Y decisions (pattern vs pattern, strategy vs strategy) — frames options · trade-offs · consequences; ADR draft via `adr-create`. |
 | skill | [`decision-review`](../src/skills/decision-review/SKILL.md) |  | Use to audit a past architectural decision — did the chosen option hold up, what assumptions drifted, should the ADR be superseded? Backward review only; does not lock new choices. |
 | skill | [`deep-reading-analyst`](../src/skills/deep-reading-analyst/SKILL.md) |  | Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary. |
 | skill | [`defense-in-depth`](../src/skills/defense-in-depth/SKILL.md) |  | Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one. |
@@ -79,6 +85,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`docker`](../src/skills/docker/SKILL.md) |  | Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'. |
 | skill | [`editorial-calendar`](../src/skills/editorial-calendar/SKILL.md) |  | Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'. |
 | skill | [`eloquent`](../src/skills/eloquent/SKILL.md) |  | Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions. |
+| skill | [`emit-tickets`](../src/skills/emit-tickets/SKILL.md) |  | Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'. |
 | skill | [`error-handling-patterns`](../src/skills/error-handling-patterns/SKILL.md) |  | Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized. |
 | skill | [`estimate-ticket`](../src/skills/estimate-ticket/SKILL.md) |  | Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt. |
 | skill | [`existing-ui-audit`](../src/skills/existing-ui-audit/SKILL.md) |  | Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set. |
@@ -99,8 +106,12 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`gtm-launch`](../src/skills/gtm-launch/SKILL.md) |  | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | skill | [`guideline-writing`](../src/skills/guideline-writing/SKILL.md) |  | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../src/skills/hiring-loop-design/SKILL.md) |  | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
+| skill | [`iconography`](../src/skills/iconography/SKILL.md) |  | Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
 | skill | [`image-analyser`](../src/skills/image-analyser/SKILL.md) |  | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
 | skill | [`image-creator`](../src/skills/image-creator/SKILL.md) |  | Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'. |
+| skill | [`image-editing`](../src/skills/image-editing/SKILL.md) |  | Edit an existing image — inpaint, background swap, variation — via providers that support it. Use when editing/modifying/inpainting an image or making variations. |
+| skill | [`image-generation`](../src/skills/image-generation/SKILL.md) |  | Generate an image from a brief — provider-agnostic blueprint then provider-specific translation, with ref-image/seed reuse for consistency. Use when generating/creating an image. |
+| skill | [`image-provider-routing`](../src/skills/image-provider-routing/SKILL.md) |  | Select the right image-generation provider from job shape — text-in-image to Ideogram, photoreal to Flux, vector/logo to Recraft, general to Gemini/GPT. |
 | skill | [`incident-commander`](../src/skills/incident-commander/SKILL.md) |  | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../src/skills/jira-integration/SKILL.md) |  | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../src/skills/jobs-events/SKILL.md) |  | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
@@ -128,6 +139,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`livewire`](../src/skills/livewire/SKILL.md) |  | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`livewire-architect`](../src/skills/livewire-architect/SKILL.md) |  | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
 | skill | [`logging-monitoring`](../src/skills/logging-monitoring/SKILL.md) |  | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
+| skill | [`logo-generation`](../src/skills/logo-generation/SKILL.md) |  | Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path via a vector-native provider or LLM-authored SVG for simple marks. Use for logo or brand mark generation. |
 | skill | [`market-entry-analysis`](../src/skills/market-entry-analysis/SKILL.md) |  | Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'. |
 | skill | [`markitdown`](../src/skills/markitdown/SKILL.md) |  | Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'. |
 | skill | [`mcp`](../src/skills/mcp/SKILL.md) |  | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |
@@ -177,6 +189,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`project-analysis-zend-laminas`](../src/skills/project-analysis-zend-laminas/SKILL.md) |  | Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks. |
 | skill | [`project-analyzer`](../src/skills/project-analyzer/SKILL.md) |  | ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`. |
 | skill | [`project-docs`](../src/skills/project-docs/SKILL.md) |  | Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs. |
+| skill | [`prompt-engineering-image`](../src/skills/prompt-engineering-image/SKILL.md) |  | Translate an image brief into provider-specific prompt grammar per model. Use when writing or refining an image-generation prompt for Ideogram, Flux, Gemini, GPT Image 2, or Recraft. |
 | skill | [`prompt-engineering-patterns`](../src/skills/prompt-engineering-patterns/SKILL.md) |  | Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt. |
 | skill | [`prompt-optimizer`](../src/skills/prompt-optimizer/SKILL.md) |  | Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'. |
 | skill | [`prompt-validator`](../src/skills/prompt-validator/SKILL.md) |  | Pre-spend contradiction gate for AI-video runs: checks every prompt in the batch, blocks on style / character / physics mismatch. Triggers 'validate the prompts', 'check the storyboard'. |
@@ -186,7 +199,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`readme-reviewer`](../src/skills/readme-reviewer/SKILL.md) |  | Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues. |
 | skill | [`readme-writing`](../src/skills/readme-writing/SKILL.md) |  | Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience. |
 | skill | [`readme-writing-package`](../src/skills/readme-writing-package/SKILL.md) |  | Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding. |
-| skill | [`reasoning-orchestrator`](../src/skills/reasoning-orchestrator/SKILL.md) |  | Use for complex / ambiguous / long-horizon work — coordinate the reasoning chain ground→intent→notes→gather→audit→verify; composes existing skills, never duplicates them. |
+| skill | [`reasoning-orchestrator`](../src/skills/reasoning-orchestrator/SKILL.md) |  | Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills. |
 | skill | [`receiving-code-review`](../src/skills/receiving-code-review/SKILL.md) |  | Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'. |
 | skill | [`refine-prompt`](../src/skills/refine-prompt/SKILL.md) |  | Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'. |
 | skill | [`refine-ticket`](../src/skills/refine-ticket/SKILL.md) |  | Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt. |
@@ -220,6 +233,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`source-discovery`](../src/skills/source-discovery/SKILL.md) |  | Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields. |
 | skill | [`sql-writing`](../src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | skill | [`stakeholder-tradeoff`](../src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
+| skill | [`standards-from-config`](../src/skills/standards-from-config/SKILL.md) |  | Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim. |
 | skill | [`subagent-orchestration`](../src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
 | skill | [`symfony-workflow`](../src/skills/symfony-workflow/SKILL.md) |  | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
 | skill | [`systematic-debugging`](../src/skills/systematic-debugging/SKILL.md) |  | Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'. |
@@ -235,6 +249,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`throughput-vs-morale-tradeoff`](../src/skills/throughput-vs-morale-tradeoff/SKILL.md) |  | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) |  | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action. |
 | skill | [`traefik`](../src/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
+| skill | [`typography-system`](../src/skills/typography-system/SKILL.md) |  | Derive a type system from a style constraint — query curated font pairings, set scale/line-height/weights, emit DTCG tokens via design-tokens. Use when choosing fonts or building a typographic scale. |
 | skill | [`ui-component-architect`](../src/skills/ui-component-architect/SKILL.md) |  | Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'. |
 | skill | [`unit-economics-modeling`](../src/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'. |
 | skill | [`universal-project-analysis`](../src/skills/universal-project-analysis/SKILL.md) |  | ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + framework-specific `project-analysis-*`. Single-pass scan → `project-analyzer`. |
@@ -248,7 +263,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (84)
+## Rules (88)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -260,6 +275,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`ask-when-uncertain`](../src/rules/ask-when-uncertain.md) | always | Ask when uncertain — don't guess, assume, or improvise |
 | rule | [`augment-edit-discipline`](../src/rules/augment-edit-discipline.md) | auto | Editing .augment/ or src/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete |
 | rule | [`autonomous-execution`](../src/rules/autonomous-execution.md) | auto | Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default |
+| rule | [`brand-consistency`](../src/rules/brand-consistency.md) | auto | Generated UI, copy, and assets are checked against the active brand tokens and voice profile — a value not traceable to a brand token or voice rule is flagged off-brand. |
+| rule | [`brand-source-of-truth`](../src/rules/brand-source-of-truth.md) | auto | The consumer's brand tokens and voice profile are the run's source of truth — the curated brand corpus only fills gaps, never overrides a registered brand value. |
 | rule | [`cli-output-handling`](../src/rules/cli-output-handling.md) | auto | Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback |
 | rule | [`command-suggestion-policy`](../src/rules/command-suggestion-policy.md) | auto | Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes |
 | rule | [`commit-conventions`](../src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
@@ -281,6 +298,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`framework-neutrality-in-generic-skills`](../src/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers |
 | rule | [`git-history-discipline`](../src/rules/git-history-discipline.md) | auto | Git history ops — never rebase/squash/amend without request; never drop/exclude/force-over commits you didn't author (parallel / shared-PR work); once pushed, re-push same turn |
 | rule | [`guidelines`](../src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
+| rule | [`icon-consistency`](../src/rules/icon-consistency.md) | auto | One icon system per project unless the brand defines otherwise — flag mixed icon sets in a UI (the 'every AI UI is default Lucide' anti-pattern). |
+| rule | [`image-likeness-and-rights`](../src/rules/image-likeness-and-rights.md) | auto | Rights gate for AI image generation — real-person likenesses, trademarked brand marks, and named living artists' styles require explicit rights/consent check before generation. |
 | rule | [`improve-before-implement`](../src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation |
 | rule | [`language-and-tone`](../src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
@@ -337,7 +356,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (154)
+## Commands (161)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -363,6 +382,12 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analyze-near-miss`](../src/domains/analysis-workbench/analyze/near-miss/command.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../src/domains/analysis-workbench/analyze/postmortem/command.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
+| command | [`brand`](../src/domains/brand/brand/command.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
+| command | [`brand-identity`](../src/domains/brand/brand/identity/command.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
+| command | [`brand-review`](../src/domains/brand/brand/review/command.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |
+| command | [`brand-strategy`](../src/domains/brand/brand/strategy/command.md) | cluster: brand | Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI. |
+| command | [`brand-tokens`](../src/domains/brand/brand/tokens/command.md) | cluster: brand | Derive a DTCG .tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator. |
+| command | [`brand-voice`](../src/domains/brand/brand/voice/command.md) | cluster: brand | Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against. |
 | command | [`bug-fix`](../src/domains/engineering-base/bug-fix/command.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../src/domains/engineering-base/bug-investigate/command.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
 | command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
@@ -469,6 +494,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`roadmap`](../src/domains/product-basic/roadmap/command.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
 | command | [`roadmap-ai-council`](../src/domains/product-basic/roadmap/ai-council/command.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap-create`](../src/domains/product-basic/roadmap/create/command.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
+| command | [`roadmap-materialize`](../src/domains/product-basic/roadmap/materialize/command.md) | cluster: roadmap | Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/ |
 | command | [`roadmap-process-full`](../src/domains/product-basic/roadmap/process-full/command.md) | cluster: roadmap | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. |
 | command | [`roadmap-process-phase`](../src/domains/product-basic/roadmap/process-phase/command.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap-process-step`](../src/domains/product-basic/roadmap/process-step/command.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
