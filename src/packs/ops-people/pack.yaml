@@ -15,5 +15,6 @@ owner:
 requires: []
 size_class: medium
 suggests: []
+surface_tier: core
 trust_level_default: professional
 version: 6.1.0

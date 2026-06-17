@@ -28,6 +28,11 @@ from pathlib import Path
 from typing import Optional
 
 from scripts._lib import user_global_paths
+from scripts._lib.install_layout import (
+    INSTALL_LAYOUT_VERSION,
+    coerce_layout_version,
+    needs_migration,
+)
 
 LOCKFILE_ENV = "AGENT_CONFIG_INSTALLED_LOCK"
 SCHEMA_VERSION = 1
@@ -45,6 +50,7 @@ DEFAULT_LOCKFILE = _default_lockfile()
 
 _VERSION_RE = re.compile(r'^\s*agent_config_version\s*:\s*"?([^"\s]+)"?\s*$')
 _SCHEMA_RE = re.compile(r"^\s*schema_version\s*:\s*(\d+)\s*$")
+_LAYOUT_RE = re.compile(r"^\s*install_layout_version\s*:\s*(\d+)\s*$")
 _INSTALLED_AT_RE = re.compile(r'^\s*installed_at\s*:\s*"?([^"\s]+)"?\s*$')
 _TOOL_RE = re.compile(r"^\s*-\s*([A-Za-z0-9_\-.]+)\s*$")
 
@@ -114,6 +120,10 @@ def read_lockfile(path: Optional[Path] = None) -> Optional[dict]:
             data["schema_version"] = int(_SCHEMA_RE.match(raw_line).group(1))
             in_tools = False
             continue
+        if _LAYOUT_RE.match(raw_line):
+            data["install_layout_version"] = int(_LAYOUT_RE.match(raw_line).group(1))
+            in_tools = False
+            continue
         if _VERSION_RE.match(raw_line):
             data["agent_config_version"] = _VERSION_RE.match(raw_line).group(1)
             in_tools = False
@@ -137,6 +147,7 @@ def read_lockfile(path: Optional[Path] = None) -> Optional[dict]:
 def _render(version: str, tools: list[str], installed_at: str) -> str:
     lines = [
         f"schema_version: {SCHEMA_VERSION}",
+        f"install_layout_version: {INSTALL_LAYOUT_VERSION}",
         f'agent_config_version: "{version}"',
         f'installed_at: "{installed_at}"',
         "tools:",
@@ -175,6 +186,64 @@ def write_lockfile(
             pass
         raise
     return target
+
+
+def _parse_installed_at(stamp: Optional[str]) -> Optional[datetime]:
+    """Parse the lockfile's ``installed_at`` stamp back into a UTC datetime.
+
+    Returns ``None`` when absent or malformed, so a migration falls back to
+    the current time rather than raising on a hand-edited file.
+    """
+    if not stamp:
+        return None
+    try:
+        return datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=timezone.utc
+        )
+    except ValueError:
+        return None
+
+
+def migrate_layout(
+    *,
+    path: Optional[Path] = None,
+    now: Optional[datetime] = None,
+) -> Optional[dict]:
+    """Migrate an installed-tree lockfile to the current install-layout ABI.
+
+    Idempotent. Detects ``install_layout_version < INSTALL_LAYOUT_VERSION``
+    (absent = pre-freeze v0) and migrates the on-disk shape in place,
+    preserving the recorded tools, package version, and ``installed_at``
+    stamp and re-stamping the layout version.
+
+    At the freeze baseline (v0 → v1) the only material change is stamping
+    the version — the on-disk shape is unchanged. Future layout versions
+    extend this function with the concrete shape transforms; surgical-uninstall
+    pointers must always be preserved.
+
+    Returns:
+      * ``None`` — no lockfile exists (nothing installed).
+      * ``{"from": v, "to": v, "changed": []}`` — already current (no-op).
+      * ``{"from": old, "to": current, "changed": [...]}`` — migrated.
+    """
+    target = path or lockfile_write_path()
+    existing = read_lockfile(path=target)
+    if existing is None:
+        return None
+    from_v = coerce_layout_version(existing.get("install_layout_version"))
+    if not needs_migration(existing.get("install_layout_version")):
+        return {"from": from_v, "to": from_v, "changed": []}
+    version = existing.get("agent_config_version") or current_package_version()
+    tools = list(existing.get("tools", []))
+    when = now or _parse_installed_at(existing.get("installed_at"))
+    write_lockfile(version, tools, path=target, now=when)
+    return {
+        "from": from_v,
+        "to": INSTALL_LAYOUT_VERSION,
+        "changed": [
+            f"install_layout_version {from_v} → {INSTALL_LAYOUT_VERSION}"
+        ],
+    }
 
 
 def check_version(

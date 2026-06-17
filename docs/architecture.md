@@ -155,6 +155,37 @@ note, package-internal path-swap, description budget, and the
 
 ---
 
+## Core vs full install
+
+Every shipped artefact carries a **surface tier** so experimental tooling cannot
+destabilise the lean engine adopters install:
+
+- **`core`** — the lean stable multi-host engine: rules + skills + install +
+  condensation, plus the engineering/authoring packs. This is the adoptable
+  surface. Its on-disk install layout is a frozen, versioned contract
+  ([`install-layout.md`](contracts/install-layout.md)) (beta).
+- **`lab`** — experimental / pilot meta-tooling that must not ride the same
+  release train as the core: AI media pipelines (`ai-video`, `ai-image`), the
+  `fun` pack, and the package's own pilot script clusters (council, MCP server,
+  prediction-pool, cost analytics, chat-history, benchmarking).
+
+Two install modes — the only end-user concept here:
+
+- **Full install** (default) — everything, including lab tooling. The
+  maintainer's own working surface.
+- **Core-only install** (`agent-config install --global --core-only`) — prunes
+  lab-tier skills/commands from the deployed tree, leaving a working
+  rules + skills + condensation engine with zero lab modules. The adoptable
+  surface for consumers who don't want pilot churn.
+
+A boundary guard (`scripts/check_surface_tiers.py`, in `task ci-fast`) keeps the
+two apart: it forbids a `core` module from hard-importing a `lab` module
+(guarded `try/except ModuleNotFoundError` optional imports excepted) and asserts
+the cluster-tier registry is exhaustive. Full tier map + the inventory:
+[`surface-tiers.md`](contracts/surface-tiers.md) (beta).
+
+---
+
 ## Execution-layer detail
 
 > The six layers in the System overview are the top-level model. This section provides depth on the **Governance**, **Router-Kernel**, and **Execution Contracts** layers — the three a host agent interacts with on every turn. Distribution and Projection live in their own sub-pages ([`architecture/`](architecture/) and the "Distribution model" subsection above); MCP Lite/Full lives in [`docs/mcp-server.md`](mcp-server.md).

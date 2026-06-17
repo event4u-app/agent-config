@@ -50,6 +50,11 @@
       "enum": ["core", "small", "medium", "large", "platform"],
       "description": "Per-pack visible-command budget input."
     },
+    "surface_tier": {
+      "type": "string",
+      "enum": ["core", "lab"],
+      "description": "Install-layout surface tier (road-to-install-contract-stability Phase 2). `core` = the lean stable multi-host engine that users install (rules + skills + install + condensation); `lab` = experimental / pilot domain tooling that must not destabilise the core install. Default `core`. The core-only install path excludes `lab` packs."
+    },
     "trust_level_default": {
       "type": "string"
     },

@@ -1,0 +1,399 @@
+{
+  "claimed_pointer_keys": [
+    "/chat/pluginLocations",
+    "/enabledPlugins/agent-config@event4u",
+    "/enabledPlugins/agent-config@event4u-agent-config",
+    "/hooks/beforeSubmitPrompt",
+    "/hooks/postToolUse",
+    "/hooks/post_cascade_response",
+    "/hooks/post_setup_worktree",
+    "/hooks/pre_user_prompt",
+    "/hooks/sessionEnd",
+    "/hooks/sessionStart",
+    "/hooks/stop",
+    "/marketplace/name",
+    "/marketplace/plugins/0"
+  ],
+  "global_deploy_sources": {
+    "antigravity": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "augment": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/contexts",
+        "contexts"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ],
+      [
+        "dist/agent-src/templates",
+        "templates"
+      ]
+    ],
+    "claude-code": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "cline": [
+      [
+        "dist/agent-src/rules",
+        ""
+      ]
+    ],
+    "codebuddy": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "codex": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "continue": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "cursor": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "droid": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "gemini-cli": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "kilocode": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "kiro": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "steering"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "opencode": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "qoder": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "roocode": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "trae": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "warp": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ],
+      [
+        "dist/agent-src/skills",
+        "skills"
+      ],
+      [
+        "dist/agent-src/commands",
+        "commands"
+      ],
+      [
+        "dist/agent-src/personas",
+        "personas"
+      ]
+    ],
+    "windsurf": [
+      [
+        "dist/agent-src/rules",
+        "rules"
+      ]
+    ]
+  },
+  "install_layout_version": 1,
+  "lockfile": {
+    "field_order": [
+      "schema_version",
+      "install_layout_version",
+      "agent_config_version",
+      "installed_at",
+      "tools"
+    ],
+    "schema_version": 1
+  },
+  "project_bridge_markers": {
+    "aider": ".aider/agent-config.md",
+    "augment": ".augment/settings.json",
+    "claude-code": ".claude/settings.json",
+    "claude-desktop": ".claude-desktop/agent-config.md",
+    "cline": ".clinerules/hooks",
+    "codex": ".codex/agent-config.md",
+    "continue": ".continue/rules/agent-config.md",
+    "copilot": ".github/plugin/marketplace.json",
+    "cursor": ".cursor/hooks.json",
+    "gemini-cli": ".gemini/settings.json",
+    "jetbrains": ".jetbrains/agent-config.md",
+    "kilocode": ".kilocode/rules/agent-config.md",
+    "kiro": ".kiro/steering/agent-config.md",
+    "roocode": ".roo/rules/agent-config.md",
+    "windsurf": ".windsurf/hooks.json",
+    "zed": ".zed/agent-config.md"
+  },
+  "user_scope_paths": {
+    "aider": "~/.aider.conf.yml",
+    "antigravity": "~/.agents/",
+    "augment": "~/.augment/",
+    "claude-code": "~/.claude/",
+    "claude-desktop": "~/Library/Application Support/Claude/",
+    "cline": "~/Documents/Cline/Rules/",
+    "codebuddy": "~/.codebuddy/",
+    "codex": "~/.codex/",
+    "continue": "~/.continue/",
+    "copilot": "~/.copilot/",
+    "cursor": "~/.cursor/",
+    "droid": "~/.factory/",
+    "gemini-cli": "~/.gemini/",
+    "jetbrains": "~/.config/JetBrains/",
+    "kilocode": "~/.kilocode/",
+    "kiro": "~/.kiro/",
+    "opencode": "~/.opencode/",
+    "qoder": "~/.qoder/",
+    "roocode": "~/.roo/",
+    "trae": "~/.trae/",
+    "warp": "~/.warp/",
+    "windsurf": "~/.codeium/windsurf/",
+    "zed": "~/.config/zed/"
+  },
+  "valid_tools": [
+    "aider",
+    "all",
+    "antigravity",
+    "augment",
+    "claude-code",
+    "claude-desktop",
+    "cline",
+    "codebuddy",
+    "codex",
+    "continue",
+    "copilot",
+    "cursor",
+    "droid",
+    "gemini-cli",
+    "jetbrains",
+    "kilocode",
+    "kiro",
+    "opencode",
+    "qoder",
+    "roocode",
+    "trae",
+    "warp",
+    "windsurf",
+    "zed"
+  ]
+}

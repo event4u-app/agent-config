@@ -82,32 +82,32 @@ removal-pointer schema) becomes a **versioned contract** that cannot change
 shape without a declared version bump + a deprecation window. This is the
 stable contract Phase 2 splits against.
 
-- [ ] **Step 1 — Census the current install layout.** From `install.py` +
+- [x] **Step 1 — Census the current install layout.** From `install.py` +
       `install-scopes.md` + `installed-tools-lockfile.md`, enumerate exactly what
       the installer writes/mutates per host: file paths created, JSON-pointer keys
       claimed in shared configs, the surgical-uninstall pointer schema, the lockfile
       shape. Capture as `docs/contracts/install-layout.md` (a `stability: beta`
       contract). This is the source the freeze guards against — no behaviour change
       in this step.
-- [ ] **Step 2 — Stamp a `layout_version` into every written artefact.** Add a
+- [x] **Step 2 — Stamp a `layout_version` into every written artefact.** Add a
       single `install_layout_version` constant (e.g. in `_lib`) and write it into
       the installed lockfile / manifest the installer emits, so an installed tree
       self-declares which ABI it was written under. Back-compatible: absent =
       "v0 / pre-freeze", treated as the current shape.
-- [ ] **Step 3 — Conformance test that locks the shape.** A test
+- [x] **Step 3 — Conformance test that locks the shape.** A test
       (`tests/.../test_install_layout_contract.py`) asserts the set of
       written-paths + claimed-pointer-keys + lockfile schema against a golden
       derived from `install-layout.md`. The test **fails** when the layout changes
       without (a) bumping `install_layout_version` and (b) a `### Breaking` /
       deprecation note. Run it once locally to confirm it passes on the current
       tree. <!-- carve-out: new-gate-verification -->
-- [ ] **Step 4 — Deprecation-window policy.** Extend `BREAKING_CHANGES.md` (and
+- [x] **Step 4 — Deprecation-window policy.** Extend `BREAKING_CHANGES.md` (and
       cross-link from `install-layout.md`) with the install-ABI rule: a layout
       change ships the **old + new shape side-by-side for one minor cycle**, the
       installer migrates an old-version installed tree in place, and only then is
       the old shape dropped. Removes "majors are frequent because the install
       layout changes" as a standing excuse.
-- [ ] **Step 5 — Migration path for an already-installed old-version tree.** The
+- [x] **Step 5 — Migration path for an already-installed old-version tree.** The
       installer detects `install_layout_version < current`, migrates the on-disk
       shape in place (idempotent, surgical-uninstall pointers preserved), and
       surfaces what it changed. Verify once against a real plaintext installed tree
@@ -119,22 +119,22 @@ Goal: a core-only install path that does not carry experimental meta-tooling, so
 lab churn cannot destabilise what users install. The install-ABI from Phase 1 is
 the stable contract this splits against.
 
-- [ ] **Step 1 — Tag each domain/pack/script-module `core` vs `lab`.** Add a
+- [x] **Step 1 — Tag each domain/pack/script-module `core` vs `lab`.** Add a
       `surface_tier: core | lab` (name TBD in Step 1) to pack/domain manifests and a
       module-level marker for `src/scripts/` clusters. `core` = rules + skills +
       install + condensation (the lean multi-host engine). `lab` = `ai_council`,
       prediction-pool, chat-history, video, mcp-server, and other pilot tooling.
       Output: an inventory listing every artefact's tier with a one-line reason.
-- [ ] **Step 2 — Core-only install path.** The installer can write a **core-only**
+- [x] **Step 2 — Core-only install path.** The installer can write a **core-only**
       tree (no lab tooling) as a first-class, documented mode. Existing full install
       stays the default for the maintainer's own use; core-only is the adoptable
       surface. Verify a core-only install produces a working rules+skills+condensation
       tree with zero lab modules. <!-- carve-out: new-gate-verification -->
-- [ ] **Step 3 — Boundary guard.** A CI lint asserts no `core`-tier artefact
+- [x] **Step 3 — Boundary guard.** A CI lint asserts no `core`-tier artefact
       imports / depends on a `lab`-tier module (so lab churn cannot reach the core
       install surface). Run once to confirm the current tree is clean or to surface
       the existing violations as the work list. <!-- carve-out: new-gate-verification -->
-- [ ] **Step 4 — Document the split.** One section in `docs/architecture.md`
+- [x] **Step 4 — Document the split.** One section in `docs/architecture.md`
       (or the install-layout contract) stating the core/lab boundary, why it exists
       (lab churn must not tax adopters), and how to install each. No new concept for
       end-users beyond "core install vs full install."
@@ -155,15 +155,15 @@ the stable contract this splits against.
 
 ## Acceptance criteria
 
-- [ ] `docs/contracts/install-layout.md` exists, declares the written-paths +
+- [x] `docs/contracts/install-layout.md` exists, declares the written-paths +
       claimed-keys + lockfile schema, and is referenced by the conformance test.
-- [ ] A conformance test fails CI on any unversioned install-layout shape change;
+- [x] A conformance test fails CI on any unversioned install-layout shape change;
       green on the current tree.
-- [ ] `BREAKING_CHANGES.md` carries the install-ABI deprecation-window rule.
-- [ ] Every domain/pack/script cluster is tagged `core` or `lab` with a reason; a
+- [x] `BREAKING_CHANGES.md` carries the install-ABI deprecation-window rule.
+- [x] Every domain/pack/script cluster is tagged `core` or `lab` with a reason; a
       core-only install produces a working engine tree with zero lab modules.
-- [ ] A boundary guard prevents `core` → `lab` dependencies.
-- [ ] The disposition table above is the single auditable record of why D1/D3/D4/D5
+- [x] A boundary guard prevents `core` → `lab` dependencies.
+- [x] The disposition table above is the single auditable record of why D1/D3/D4/D5
       were not turned into roadmap work.
 
 ## Notes
