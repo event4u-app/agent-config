@@ -147,8 +147,41 @@ model that already self-coordinates, apply it lightly.
 """
 
 
+# ORCHESTRATOR_PREAMBLE: the L6 component under test. Distributed-only = the
+# RDP disciplines listed as a "buffet" (RDP_BLOCK alone). Orchestrated = the
+# same disciplines run as ONE ordered chain with handoffs (the
+# reasoning-orchestrator skill's "coherence, not exclusivity" value). The L6
+# flip condition compares orchestrated vs distributed-only.
+ORCHESTRATOR_PREAMBLE = """## Reasoning orchestration (run the disciplines as ONE ordered chain)
+
+Do not treat the protocol below as an optional buffet. Run it as a single
+coordinated chain, in order, with explicit handoffs between links — a skipped or
+out-of-order link compounds downstream:
+
+  ground → infer intent → write working notes → resolve the load-bearing unknown
+  first → audit progress against real evidence → verify before claiming done.
+
+Coordinate the links; do not let later steps run before earlier ones. On a
+trivial or fully-specified task, do NOT force the chain (that is over-process) —
+engage it only where the task is genuinely complex/ambiguous/interdependent.
+"""
+
+
 def build_systems() -> tuple[str, str]:
     return BASE_SYSTEM, BASE_SYSTEM + "\n\n" + RDP_BLOCK
+
+
+def build_arms(mode: str) -> list[tuple[str, str]]:
+    """Return [(variant_name, system_prompt), ...] for the run mode."""
+    base, treat = build_systems()
+    if mode == "l6":
+        # distributed-only (buffet) vs orchestrated (ordered chain)
+        return [
+            ("distributed", treat),
+            ("orchestrated", treat + "\n\n" + ORCHESTRATOR_PREAMBLE),
+        ]
+    # default quality mode: no-RDP baseline vs +RDP treatment
+    return [("baseline", base), ("treatment", treat)]
 
 
 def approx_tokens(text: str) -> int:
@@ -171,6 +204,9 @@ def model_for(band: str, standard_model: str, strong_model: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description="RDP quality-layer eval runner")
     ap.add_argument("--confirm", action="store_true", help="actually spend (billable)")
+    ap.add_argument("--mode", choices=["quality", "l6"], default="quality",
+                    help="quality = baseline vs treatment (RDP off/on); "
+                         "l6 = distributed-only vs orchestrated (L6 flip condition)")
     ap.add_argument("--slots", default="", help="comma-separated slot numbers, e.g. 05,06,07")
     ap.add_argument("--standard-model", default="claude-haiku-4-5-20251001")
     ap.add_argument("--strong-model", default="claude-sonnet-4-5")
@@ -180,19 +216,21 @@ def main() -> int:
 
     selected = {s.strip().zfill(2) for s in args.slots.split(",") if s.strip()} or None
     slots = load_slots(selected)
-    base_sys, treat_sys = build_systems()
+    arms = build_arms(args.mode)
+    variant_names = [a[0] for a in arms]
 
     # ---- cost preview --------------------------------------------------------
     calls = []
     for s in slots:
         model = model_for(s["band"], args.standard_model, args.strong_model)
-        for variant, sysprompt in (("baseline", base_sys), ("treatment", treat_sys)):
+        for variant, sysprompt in arms:
             tin = approx_tokens(sysprompt) + approx_tokens(s["prompt"])
             tout = args.max_tokens
             calls.append((s, variant, model, tin, tout, est_cost(model, tin, tout)))
 
     total = round(sum(c[5] for c in calls), 4)
-    print(f"rdp-quality-eval · {len(slots)} slots × 2 variants = {len(calls)} calls")
+    print(f"rdp-quality-eval · mode={args.mode} · {len(slots)} slots × "
+          f"{len(arms)} variants ({'/'.join(variant_names)}) = {len(calls)} calls")
     print(f"  standard-band model: {args.standard_model}")
     print(f"  strong-band model:   {args.strong_model}")
     by_model: dict[str, float] = {}
@@ -222,7 +260,7 @@ def main() -> int:
     for s in slots:
         model = model_for(s["band"], args.standard_model, args.strong_model)
         variants = {}
-        for variant, sysprompt in (("baseline", base_sys), ("treatment", treat_sys)):
+        for variant, sysprompt in arms:
             print(f"  → slot {s['n']} {variant} ({model}) …", flush=True)
             resp = client.messages.create(
                 model=model,
@@ -242,9 +280,9 @@ def main() -> int:
                 "output_tokens": tout,
                 "cost_usd": cost,
             }
-        b_out = variants["baseline"]["output_tokens"]
-        t_out = variants["treatment"]["output_tokens"]
-        overhead_pct = round((t_out - b_out) / b_out * 100, 1) if b_out else None
+        a_out = variants[variant_names[0]]["output_tokens"]
+        b_out = variants[variant_names[1]]["output_tokens"]
+        overhead_pct = round((b_out - a_out) / a_out * 100, 1) if a_out else None
         results.append({
             "slot": s["n"], "slug": s["slug"], "family": s["family"],
             "band": s["band"], "discipline": s["discipline"], "prompt": s["prompt"],
@@ -252,21 +290,23 @@ def main() -> int:
             "variants": variants,
             "output_token_overhead_pct": overhead_pct,
         })
-        _write_transcript(s, variants, ts, overhead_pct)
+        _write_transcript(s, variants, ts, overhead_pct, variant_names, args.mode)
 
     Path(args.results).write_text(json.dumps({
-        "date": ts, "standard_model": args.standard_model,
+        "date": ts, "mode": args.mode, "standard_model": args.standard_model,
         "strong_model": args.strong_model, "actual_cost_usd": round(actual_cost, 4),
         "results": results,
     }, indent=2), encoding="utf-8")
-    print(f"\nDONE · actual ~${round(actual_cost, 4)} · transcripts in {OUT_DIR}")
+    print(f"\nDONE · mode={args.mode} · actual ~${round(actual_cost, 4)} · transcripts in {OUT_DIR}")
     print(f"Results JSON: {args.results}")
     print("Next: hand-score each transcript against rubric.md (4 dims, 0–3).")
     return 0
 
 
-def _write_transcript(slot: dict, variants: dict, ts: str, overhead_pct) -> None:
-    p = OUT_DIR / f"{slot['n']}-{slot['slug']}.md"
+def _write_transcript(slot: dict, variants: dict, ts: str, overhead_pct,
+                      variant_names: list, mode: str) -> None:
+    prefix = "l6-" if mode == "l6" else ""
+    p = OUT_DIR / f"{prefix}{slot['n']}-{slot['slug']}.md"
     lines = [
         f"# Golden transcript — slot {slot['n']}: {slot['slug']}",
         "",
@@ -280,7 +320,7 @@ def _write_transcript(slot: dict, variants: dict, ts: str, overhead_pct) -> None
         slot["prompt"],
         "",
     ]
-    for variant in ("baseline", "treatment"):
+    for variant in variant_names:
         v = variants[variant]
         lines += [
             f"## Transcript — {variant} ({v['model']})",
@@ -293,19 +333,20 @@ def _write_transcript(slot: dict, variants: dict, ts: str, overhead_pct) -> None
             f"est ${v['cost_usd']}",
             "",
         ]
+    v0, v1 = variant_names[0], variant_names[1]
     if overhead_pct is not None:
-        lines += [f"**Output-token overhead (treatment vs baseline):** {overhead_pct:+}%", ""]
+        lines += [f"**Output-token overhead ({v1} vs {v0}):** {overhead_pct:+}%", ""]
     lines += [
         "## Rubric score (0–3 each) — fill during scoring",
         "",
-        "| dim | baseline | treatment | evidence (quote the transcript line) |",
+        f"| dim | {v0} | {v1} | evidence (quote the transcript line) |",
         "|---|---|---|---|",
         "| 1 notes-first adherence |  |  |  |",
         "| 2 grounding |  |  |  |",
         "| 3 premature-solution avoidance |  |  |  |",
         "| 4 coherence / re-grounded summary |  |  |  |",
         "",
-        "- **baseline mean:** _ / 3 · **treatment mean:** _ / 3 · **delta:** _",
+        f"- **{v0} mean:** _ / 3 · **{v1} mean:** _ / 3 · **delta:** _",
         "- **reasoning_extraction refusal seen?** no",
         "- **notes:** ",
         "",
