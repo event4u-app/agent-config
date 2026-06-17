@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 parent_roadmap: road-to-mission-mode
 ---
 
@@ -14,9 +14,12 @@ minimal 5-entry proof catalog, `lint_missions.py`). The council deferred the
 consumer Laravel repo. This roadmap carries that deferred work, each item
 trigger-gated.
 
-> **Blocked until:** the `/mission:upgrade` infrastructure is operationally
-> validated on a live Laravel repo (the Phase 2B trigger). Until each trigger fires, items stay planned-but-blocked. This
-> roadmap is `ready`; each item carries its own trigger.
+> **Status: later (parked).** Blocked until the `/mission:upgrade`
+> infrastructure is operationally validated on a live Laravel repo (the Phase 2B
+> trigger). Every item below is gated on an unmet external trigger (a consumer
+> Laravel repo validating the 2A infrastructure end-to-end), so the roadmap is
+> parked in `later/` rather than left in the active tree — resume when the
+> trigger fires. Each item also carries its own per-item trigger below.
 
 ## Phase 1 — Deferred-with-trigger content + catalogue (each item trigger-gated)
 
