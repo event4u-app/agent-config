@@ -253,10 +253,20 @@ crosses the irreversible `.py`-deletion line while python tests still need the c
 - **PR-1 (prerequisites — NO `.py` deletion, each independently green):**
   - [x] Orphan-snapshot prune (18 unreferenced goldens removed; 0 referenced touched).
   - [x] `runtime_handler` — `python3 -c` fixtures → `node -e` (language-irrelevant subprocess; now python-independent).
-  - [ ] **Gap coverage (PR-1b, the big one):** author `.ts` tests for the ~22 full + ~6 partial GAP
-    modules (see `py2ts-teardown-coverage-audit.md`), incl. the **Golden-Transcript `replay` subsystem**
-    (largest single gap — port the harness or replace with ~3 targeted multi-rebound integration tests
-    per the earlier council Option B). These are the coverage that justifies deleting the python tests.
+  - [ ] **Gap coverage (PR-1b) — authoring done 2026-06-18, closes when merged:** 23 gap modules now have `.ts` tests
+    (~230 new tests, all green python-shadowed + bite-checked): batch 1 = pricing, telemetry/boundary,
+    council_cli units, hooks_status, event_shape_contract, dispatcher_feedback traversal, contracts
+    (memory-visibility-redaction / readme-audience-order / rule-interactions behavioural),
+    install/consumer_model_tier, retrieval fixtures, migrate v0-state, explain disabled-short-circuit;
+    batch 2 = work_engine state validators / ui-polish / ui-review dispatch / cli-hooks exit table /
+    integration chat-history + full-flow (4-rebound) + mixed-flow (5-rebound) + persona + user-type, and
+    install_snapshot (per-platform + drift guard). The **Golden-Transcript `replay` subsystem is retired**
+    per council Option B — its coverage is the full-flow + mixed-flow integration tests; `tests/golden/
+    test_replay.py` + `harness.py` + recipes are slated for deletion in PR-2. **Found + fixed a real bug**
+    in `install.ts` (`finalize_claude_model_tiers` passed file-contents not path → auto model-tier switch
+    rendered 0 skills). **Justified skips:** `implement_ticket/test_shim.py` (python import-system shim,
+    no TS equivalent — dies with `__init__.py`); `cli/test_hooks_install_claude_flag.py` (bash-dispatcher
+    e2e — Phase-6-coupled, handled in PR-2). Partials reconciled per-module.
   - **`config_packs` = council option (c):** do NOT refactor `packs` to committed source (that changes
     production behaviour — rejected). The live-parity byte-check is transitional; it retires naturally
     with python (the monkeypatched `resolve_active_*` unit tests carry the logic coverage). Its
