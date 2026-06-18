@@ -13,6 +13,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { oracle2 } from '../../_lib/parity_oracle';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
 const MAIN_TS = path.join(SCRIPTS_ROOT, 'work_engine', '__main__.ts');
@@ -28,15 +30,25 @@ interface Run {
     stderr: string;
 }
 
-/** Run `python3 -m work_engine` semantics in `cwd` with `argv`. */
+/**
+ * Frozen Python-side result of `python3 -m work_engine ...argv`.
+ *
+ * The Python module is spawned in `cwd` (a per-test tmp dir) with
+ * `PYTHONPATH=SCRIPTS_ROOT` so `work_engine` resolves. `oracle2` keys on
+ * `kind:'module'` + the module name + PYTHONPATH (basename-stabilised) + argv,
+ * NOT the volatile tmp `cwd` — the module's observable output here is
+ * cwd-independent (BLOCKED stdout / arg-error stderr), so no `normalize` is
+ * needed. Capture spawns python3 once; normal reads the frozen snapshot.
+ */
 function runPy(cwd: string, argv: string[]): Run {
-    // `python3 -m work_engine` runs the package's __main__ with sys.argv set.
-    const r = spawnSync('python3', ['-m', 'work_engine', ...argv], {
-        encoding: 'utf8',
+    const r = oracle2({
+        kind: 'module',
+        target: 'work_engine',
+        args: argv,
+        env: { PYTHONPATH: SCRIPTS_ROOT },
         cwd,
-        env: { ...process.env, PYTHONPATH: SCRIPTS_ROOT },
     });
-    return { status: r.status ?? 0, stdout: r.stdout, stderr: r.stderr };
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
 
 /**

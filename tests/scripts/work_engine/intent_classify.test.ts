@@ -11,11 +11,12 @@
 // labels and identical ValueError text. `populate_routing` mutates a WorkState
 // in place; it is exercised TS-side (it needs the WorkState class) and its
 // classifier delegate is covered by the golden cases.
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import { oracle2 } from '../../_lib/parity_oracle';
 import { Input, WorkState } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
 import {
     INTENT_BACKEND,
@@ -53,21 +54,29 @@ function hasPython3(): boolean {
     return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
-function runPy(body: string, args: string[] = []): SpawnSyncReturns<string> {
-    const loader = [
-        'import sys, json, importlib.util',
-        `_sspec = importlib.util.spec_from_file_location("state", ${JSON.stringify(STATE_PY)})`,
-        'state = importlib.util.module_from_spec(_sspec)',
-        'sys.modules["state"] = state',
-        '_sspec.loader.exec_module(state)',
-        `_src = open(${JSON.stringify(CLASSIFY_PY)}, encoding="utf-8").read()`,
-        '_src = _src.replace("from ..state import WorkState", "from state import WorkState")',
-        'mod = type(sys)("mod")',
-        'exec(compile(_src, "mod", "exec"), mod.__dict__)',
-    ].join('\n');
-    return spawnSync('python3', ['-c', `${loader}\n${body}`, ...args], {
-        encoding: 'utf8',
-    });
+// The `-c` loader exec's classify.py with its `from ..state import WorkState`
+// rewritten to a file-loaded `state` module. Each probe appends its own body.
+// The loader embeds the absolute STATE_PY / CLASSIFY_PY paths — `oracle2`'s
+// inline-key stabilisation folds those volatile prefixes out so the snapshot
+// key is machine-independent (the spawn still gets the original code).
+const LOADER = [
+    'import sys, json, importlib.util',
+    `_sspec = importlib.util.spec_from_file_location("state", ${JSON.stringify(STATE_PY)})`,
+    'state = importlib.util.module_from_spec(_sspec)',
+    'sys.modules["state"] = state',
+    '_sspec.loader.exec_module(state)',
+    `_src = open(${JSON.stringify(CLASSIFY_PY)}, encoding="utf-8").read()`,
+    '_src = _src.replace("from ..state import WorkState", "from state import WorkState")',
+    'mod = type(sys)("mod")',
+    'exec(compile(_src, "mod", "exec"), mod.__dict__)',
+].join('\n');
+
+/** Frozen python stdout for one inline `-c` probe (capture spawns python3). */
+function pyInline(body: string, args: string[]): string {
+    const code = `${LOADER}\n${body}`;
+    const r = oracle2({ kind: 'inline', target: code, args });
+    if (r.status !== 0) throw new Error(`py inline probe failed (status ${r.status}): ${r.stderr || r.stdout}`);
+    return r.stdout;
 }
 
 /** Python classify_intent(raw, title=...). args: rawJson, titleJson (or "null"). */
@@ -77,9 +86,7 @@ function pyClassify(rawJson: string, titleJson: string): string {
         'title = json.loads(sys.argv[2])',
         'sys.stdout.write(mod.classify_intent(raw, title=title))',
     ].join('\n');
-    const r = runPy(body, [rawJson, titleJson]);
-    if (r.status !== 0) throw new Error(`py classify failed: ${r.stderr || r.stdout}`);
-    return r.stdout;
+    return pyInline(body, [rawJson, titleJson]);
 }
 
 function pyDirectiveSet(intentJson: string): string {
@@ -87,9 +94,7 @@ function pyDirectiveSet(intentJson: string): string {
         'intent = json.loads(sys.argv[1])',
         'sys.stdout.write(mod.directive_set_for(intent))',
     ].join('\n');
-    const r = runPy(body, [intentJson]);
-    if (r.status !== 0) throw new Error(`py directive_set failed: ${r.stderr || r.stdout}`);
-    return r.stdout;
+    return pyInline(body, [intentJson]);
 }
 
 function pyDirectiveSetError(intentJson: string): string {
@@ -101,9 +106,7 @@ function pyDirectiveSetError(intentJson: string): string {
         'except ValueError as exc:',
         '    sys.stdout.write(str(exc))',
     ].join('\n');
-    const r = runPy(body, [intentJson]);
-    if (r.status !== 0) throw new Error(`py directive_set error-probe failed: ${r.stderr || r.stdout}`);
-    return r.stdout;
+    return pyInline(body, [intentJson]);
 }
 
 function tsClassify(rawJson: string, titleJson: string): string {
