@@ -1,5 +1,0 @@
-{
-  "stdout": "profile-overlay: active=[engineering-base, laravel, php]\n  surfaced: commands=1 skills=3\n  hidden:   2 (behind inactive packs)\n  delta:    surface = full ∖ (artefacts whose packs ∉ active)\n  staleness: persists across sessions (overlay has no timestamp)\n",
-  "stderr": "",
-  "status": 0
-}

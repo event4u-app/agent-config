@@ -1,5 +1,0 @@
-{
-  "stdout": "{\"active_packs\": [\"engineering-base\", \"laravel\", \"php\"], \"shown\": [{\"name\": \"laravel\", \"category\": \"skill\", \"packs\": [\"laravel\"]}, {\"name\": \"eloquent\", \"category\": \"skill\", \"packs\": [\"laravel\"]}, {\"name\": \"git-workflow\", \"category\": \"skill\", \"packs\": [\"engineering-base\"]}], \"hidden\": [{\"name\": \"po-discovery\", \"category\": \"skill\", \"packs\": [\"product-basic\"]}, {\"name\": \"video-director\", \"category\": \"skill\", \"packs\": [\"ai-video\"]}]}\n",
-  "stderr": "",
-  "status": 0
-}

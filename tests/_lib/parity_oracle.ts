@@ -264,13 +264,17 @@ function snapshotKey(spec: OracleSpec): string {
         targetForKey = `${spec.kind}:${spec.target}`;
     }
 
-    // Fold PYTHONPATH into the key for module runs (basename-stabilised so the
-    // volatile checkout prefix drops out but a different search root still
-    // produces a distinct key).
+    // Fold PYTHONPATH into the key for module runs, BASENAME-stabilised: only the
+    // final path segment (e.g. `src`) enters the key, so the volatile checkout
+    // dir name drops out. `slice(-2)` would leak the checkout dir (`py2ts-phase1/src`
+    // in a worktree vs `agent-config/src` on CI) and make the snapshot key
+    // machine-dependent — a frozen golden captured in one checkout would not
+    // resolve in another. The module name (`targetForKey`) already disambiguates
+    // distinct modules, so the basename is enough.
     const pythonPath = spec.env?.['PYTHONPATH'];
     const envMaterial =
         spec.kind === 'module' && pythonPath
-            ? `\0PYTHONPATH=${pythonPath.split(path.sep).slice(-2).join('/')}`
+            ? `\0PYTHONPATH=${pythonPath.split(path.sep).slice(-1).join('/')}`
             : '';
 
     const material = `${spec.kind}\0${targetForKey}\0${JSON.stringify(keyArgs)}\0${input}${envMaterial}`;

@@ -1,5 +1,0 @@
-{
-  "stdout": "{\"active_packs\": [\"engineering-base\", \"laravel\", \"php\"], \"requested\": [\"laravel\"], \"closure_added\": [\"engineering-base\", \"php\"], \"notes\": []}\n",
-  "stderr": "",
-  "status": 0
-}
