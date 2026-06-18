@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: agent-config council [-h]\n                            {estimate,run,debate,render,replay,quota,shadow-report}\n                            ...\nagent-config council: error: unrecognized arguments: --bogus\n",
+  "status": 2
+}

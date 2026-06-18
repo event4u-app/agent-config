@@ -309,7 +309,9 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('activate --json matches', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        const pyOut = runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy, '--json']);
+        const pyOut = runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy, '--json'], {
+            scratch: [repoPy],
+        });
         const tsOut = runTsx(TS_SCRIPT, ['activate', 'laravel', '--root', repoTs, '--json']);
         expect(pyOut.status).toBe(0);
         expect(tsOut.status).toBe(0);
@@ -319,9 +321,11 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('show --json matches (with active overlay)', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy]);
+        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy], { scratch: [repoPy] });
         runTsx(TS_SCRIPT, ['activate', 'laravel', '--root', repoTs]);
-        const pyOut = runPy([...PY_MODULE_ARGS, 'show', '--root', repoPy, '--json']);
+        const pyOut = runPy([...PY_MODULE_ARGS, 'show', '--root', repoPy, '--json'], {
+            scratch: [repoPy],
+        });
         const tsOut = runTsx(TS_SCRIPT, ['show', '--root', repoTs, '--json']);
         expect(tsOut.stdout).toBe(pyOut.stdout);
     });
@@ -329,12 +333,16 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('explain --json + --mode technical matches', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy]);
+        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy], { scratch: [repoPy] });
         runTsx(TS_SCRIPT, ['activate', 'laravel', '--root', repoTs]);
-        const pyJson = runPy([...PY_MODULE_ARGS, 'explain', '--root', repoPy, '--json']);
+        const pyJson = runPy([...PY_MODULE_ARGS, 'explain', '--root', repoPy, '--json'], {
+            scratch: [repoPy],
+        });
         const tsJson = runTsx(TS_SCRIPT, ['explain', '--root', repoTs, '--json']);
         expect(tsJson.stdout).toBe(pyJson.stdout);
-        const pyTech = runPy([...PY_MODULE_ARGS, 'explain', '--root', repoPy, '--mode', 'technical']);
+        const pyTech = runPy([...PY_MODULE_ARGS, 'explain', '--root', repoPy, '--mode', 'technical'], {
+            scratch: [repoPy],
+        });
         const tsTech = runTsx(TS_SCRIPT, ['explain', '--root', repoTs, '--mode', 'technical']);
         expect(tsTech.stdout).toBe(pyTech.stdout);
     });
@@ -342,9 +350,12 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('surface --json --category skill matches', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy]);
+        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy], { scratch: [repoPy] });
         runTsx(TS_SCRIPT, ['activate', 'laravel', '--root', repoTs]);
-        const pyOut = runPy([...PY_MODULE_ARGS, 'surface', '--category', 'skill', '--root', repoPy, '--json']);
+        const pyOut = runPy(
+            [...PY_MODULE_ARGS, 'surface', '--category', 'skill', '--root', repoPy, '--json'],
+            { scratch: [repoPy] },
+        );
         const tsOut = runTsx(TS_SCRIPT, ['surface', '--category', 'skill', '--root', repoTs, '--json']);
         expect(tsOut.stdout).toBe(pyOut.stdout);
     });
@@ -352,9 +363,11 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('deactivate --json matches', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy]);
+        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy], { scratch: [repoPy] });
         runTsx(TS_SCRIPT, ['activate', 'laravel', '--root', repoTs]);
-        const pyOut = runPy([...PY_MODULE_ARGS, 'deactivate', '--root', repoPy, '--json']);
+        const pyOut = runPy([...PY_MODULE_ARGS, 'deactivate', '--root', repoPy, '--json'], {
+            scratch: [repoPy],
+        });
         const tsOut = runTsx(TS_SCRIPT, ['deactivate', '--root', repoTs, '--json']);
         expect(tsOut.stdout).toBe(pyOut.stdout);
     });
@@ -362,7 +375,9 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('unknown token error exit code matches', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        const pyOut = runPy([...PY_MODULE_ARGS, 'activate', 'does-not-exist', '--root', repoPy]);
+        const pyOut = runPy([...PY_MODULE_ARGS, 'activate', 'does-not-exist', '--root', repoPy], {
+            scratch: [repoPy],
+        });
         const tsOut = runTsx(TS_SCRIPT, ['activate', 'does-not-exist', '--root', repoTs]);
         expect(tsOut.status).toBe(2);
         expect(pyOut.status).toBe(2);
@@ -371,16 +386,21 @@ describe.skipIf(!py)('session_profiles — golden parity (python3 vs tsx CLI)', 
     it('write parity: local overlay file byte-identical', () => {
         const repoPy = freshRepo();
         const repoTs = freshRepo();
-        runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy]);
+        // The python activate writes the local overlay file in repoPy. Declare it
+        // as a frozen output: capture mode reads it after the spawn and freezes its
+        // bytes (base64); replay mode returns those bytes with no live python3 —
+        // repoPy never gets written in replay, so reading it off disk would fail.
+        const overlayRel = ['agents', 'settings', '.agent-settings.local.yml'];
+        const res = runPy([...PY_MODULE_ARGS, 'activate', 'laravel', '--root', repoPy], {
+            scratch: [repoPy],
+            outputs: { overlay: path.join(repoPy, ...overlayRel) },
+        });
+        // The .ts twin still writes + reads its own repoTs overlay live.
         runTsx(TS_SCRIPT, ['activate', 'laravel', '--root', repoTs]);
-        const pyFile = fs.readFileSync(
-            path.join(repoPy, 'agents', 'settings', '.agent-settings.local.yml'),
-            'utf-8',
-        );
-        const tsFile = fs.readFileSync(
-            path.join(repoTs, 'agents', 'settings', '.agent-settings.local.yml'),
-            'utf-8',
-        );
+        const overlay = res.files?.overlay;
+        expect(overlay, 'frozen python overlay must exist').toBeTruthy();
+        const pyFile = Buffer.from(overlay as string, 'base64').toString('utf-8');
+        const tsFile = fs.readFileSync(path.join(repoTs, ...overlayRel), 'utf-8');
         expect(tsFile).toBe(pyFile);
     });
 });

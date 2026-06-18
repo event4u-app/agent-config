@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"delta\": null, \"id\": \"selection\", \"label\": \"Right-skill selection\", \"mode\": \"dry-run\", \"source_report\": \"internal/bench/reports/ab/<dev-corpus-pair>.json\", \"unit\": \"pct\", \"what_this_means\": \"How often the right skill activates (top-K hit).\", \"with\": null, \"without\": null}",
+  "stderr": "",
+  "status": 0
+}

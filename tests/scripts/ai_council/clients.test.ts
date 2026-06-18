@@ -71,7 +71,7 @@ import {
     type TextInputStream,
     type TextOutputStream,
 } from '../../../src/scripts/ai_council/clients.js';
-import { hasPython3, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -649,21 +649,33 @@ describe('clients — quota gate + cli-calls counter', () => {
             const tsBytes = fs.readFileSync(tsPath, 'utf-8');
 
             const pyPath = path.join(mkTmp(), 'cli-calls.json');
+            // The output path is baked into the code body (not passed as argv): the
+            // inline-code key collapses quoted absolute paths to `<abspath>`
+            // (stableInlineKeyMaterial), so the snapshot key stays stable across the
+            // capture run (file present) and every replay run (fresh tmp dir). A
+            // volatile path passed as an ARG would key on file existence/content and
+            // diverge capture-vs-replay.
             const code = [
-                'import scripts.ai_council.clients as cl, sys',
+                'import scripts.ai_council.clients as cl',
                 'from pathlib import Path',
-                'p = Path(sys.argv[1])',
+                `p = Path(${JSON.stringify(pyPath)})`,
                 'cl.record_cli_call("anthropic", p)',
                 'cl.record_cli_call("anthropic", p)',
                 'cl.record_cli_call("öpenai", p)',
-                'sys.stdout.write(open(p, encoding="utf-8").read())',
             ].join('\n');
-            const r = runPyCode(code, [pyPath]);
-            expect(r.status).toBe(0);
+            // Oracle v3 — the observable python artefact is the WRITTEN cli-calls.json
+            // FILE, not stdout. Declare it as a frozen output: capture mode reads
+            // pyPath after the spawn and freezes its bytes; normal mode replays them
+            // with no live python3. Compare the .ts twin's own bytes against the golden.
+            const r = runPyCode(code, [], { outputs: { cliCalls: pyPath } });
+            expect(r.status, r.stderr).toBe(0);
+            const cliCalls = oracleFile(r, 'cliCalls');
+            expect(cliCalls, 'frozen python cli-calls.json must exist').not.toBeNull();
+            const pyBytes = (cliCalls as Buffer).toString('utf-8');
             // Normalise the wall-clock `date` field on BOTH sides (UTC rollover
             // could differ across the two process spawns at a day boundary).
             const norm = (s: string) => s.replace(/"date": "\d{4}-\d{2}-\d{2}"/, '"date": "<DATE>"');
-            expect(norm(tsBytes)).toBe(norm(r.stdout));
+            expect(norm(tsBytes)).toBe(norm(pyBytes));
         });
     }
 });

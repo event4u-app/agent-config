@@ -24,7 +24,7 @@ import {
     slo_banner,
     slo_status,
 } from '../../../src/scripts/ai_council/shadow_dispatch.js';
-import { hasPython3, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -194,21 +194,30 @@ describe.runIf(py3)('shadow_dispatch — golden parity vs CPython twin', () => {
             '"timestamp": "<TS>"',
         );
 
+        // Oracle v3 — the observable python artefact is the WRITTEN LOG FILE,
+        // not stdout. The log path is baked into the code body (not passed as
+        // argv): a volatile path passed as an ARG keys on the file's
+        // post-write contents, which embed a live timestamp → the snapshot key
+        // drifts on every capture. Baking it inline collapses the quoted path
+        // to `<abspath>` (stableInlineKeyMaterial), so the key stays stable.
+        const pyLog = tmpFile('py.jsonl', '');
         const code = [
-            'import re, sys',
             'from pathlib import Path',
             'from scripts.ai_council.shadow_dispatch import record_shadow_decision',
-            'lp = Path(sys.argv[1])',
+            `lp = Path(${JSON.stringify(pyLog)})`,
             'record_shadow_decision(lp, query="café query with emoji 😀 and ports",'
                 + ' solo_verdict="yes", full_verdict="no", escalated=True,'
                 + ' escalation_reason="low-conf")',
-            'row = lp.read_text(encoding="utf-8")',
-            'sys.stdout.write(re.sub(r\'"timestamp": "[^"]+"\', \'"timestamp": "<TS>"\', row))',
         ].join('\n');
-        const pyLog = tmpFile('py.jsonl', '');
-        const res = runPyCode(code, [pyLog]);
+        const res = runPyCode(code, [], { outputs: { log: pyLog } });
         expect(res.status, res.stderr).toBe(0);
-        expect(tsRow).toBe(res.stdout);
+        const py = oracleFile(res, 'log');
+        expect(py, 'frozen python log must exist').not.toBeNull();
+        const pyRow = (py as Buffer).toString('utf-8').replace(
+            /"timestamp": "[^"]+"/u,
+            '"timestamp": "<TS>"',
+        );
+        expect(tsRow).toBe(pyRow);
     });
 
     it('privacy-drop returns None on both sides', () => {

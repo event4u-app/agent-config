@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  council:estimate: --model member and model-id must both be non-empty: '=x'.\n",
+  "status": 2
+}

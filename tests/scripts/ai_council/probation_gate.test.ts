@@ -15,7 +15,7 @@ import {
     WINDOW_DAYS,
     run_gate,
 } from '../../../src/scripts/ai_council/probation_gate.js';
-import { hasPython3, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -168,19 +168,34 @@ describe.skipIf(!py3)('probation_gate — corpus byte-parity vs python3', () => 
         const tsBytes = fs.readFileSync(tsPath, 'utf-8');
 
         const pyPath = path.join(mkTmp(), 'py.md');
+        // Pre-seed the python corpus identically to the .ts side; run_gate
+        // rewrites it in place (the seed+rewrite is what gets frozen).
         fs.writeFileSync(pyPath, corpusText(), 'utf-8');
+        // The corpus path is baked into the code body (not passed as argv): the
+        // inline-code key collapses quoted absolute paths to `<abspath>`
+        // (stableInlineKeyMaterial), so the snapshot key stays stable across the
+        // capture run (file present) and every replay run (fresh tmp dir). A
+        // volatile path passed as an ARG would key on file existence/content and
+        // diverge capture-vs-replay.
         const code = [
-            'import sys',
             'from datetime import datetime, timezone',
             'from pathlib import Path',
             'from scripts.ai_council.probation_gate import run_gate',
+            `p = ${JSON.stringify(pyPath)}`,
             'today = datetime.strptime("2026-05-14","%Y-%m-%d").replace(tzinfo=timezone.utc)',
-            'r = run_gate(Path(sys.argv[1]), today=today)',
+            'r = run_gate(Path(p), today=today)',
             'print(f"{r.pruned_timestamps} {r.dropped_entries} {r.promoted_entries}")',
         ].join('\n');
-        const res = runPyCode(code, [pyPath]);
+        // Oracle v3 — the observable python artefact is the REWRITTEN CORPUS FILE,
+        // not stdout (stdout still carries the counts). Declare it as a frozen
+        // output: capture mode reads pyPath after the spawn and freezes its bytes;
+        // normal mode replays them with no live python3. Compare the .ts twin's own
+        // bytes against the frozen golden.
+        const res = runPyCode(code, [], { outputs: { corpus: pyPath } });
         expect(res.status, res.stderr).toBe(0);
-        const pyBytes = fs.readFileSync(pyPath, 'utf-8');
+        const corpusFrozen = oracleFile(res, 'corpus');
+        expect(corpusFrozen, 'frozen python corpus must exist').not.toBeNull();
+        const pyBytes = (corpusFrozen as Buffer).toString('utf-8');
 
         expect(tsBytes).toBe(pyBytes);
         // The Python counts must match the TS GateRun.

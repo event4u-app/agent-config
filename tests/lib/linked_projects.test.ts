@@ -7,7 +7,6 @@
  * (PhpStorm shape, VS Code shape, no-siblings shape) — same pattern as
  * tests/spikes/yaml_rt_py_driver.py, inlined via `python3 -c`.
  */
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -18,6 +17,7 @@ import {
     detect_linked_projects,
     type LinkedProjectEntry,
 } from '../../src/scripts/_lib/linked_projects.js';
+import { oracle2 } from '../_lib/parity_oracle.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -208,18 +208,56 @@ const PY_DRIVER = [
     'print(json.dumps(detect_linked_projects(sys.argv[1])))',
 ].join('\n');
 
-function pythonDetect(projectRoot: string): unknown {
-    const stdout = execFileSync(
-        'python3',
-        ['-c', PY_DRIVER, projectRoot, path.join(REPO_ROOT, 'src')],
-        { encoding: 'utf-8' },
-    );
-    return JSON.parse(stdout) as unknown;
+/**
+ * Strip the volatile tmp-dir abs prefix from text so the frozen golden is
+ * machine-independent. The Python output (and the TS output) carry the resolved
+ * absolute sibling `path`, rooted in a per-run `mkdtempSync` dir that differs
+ * capture-vs-replay. Both fixture sides resolve through realpath (macOS
+ * `/var`→`/private/var` symlink), so normalize on `realpathSync(tmpPath)`.
+ * Applied symmetrically: to the oracle's python stdout AND to the TS JSON string
+ * before parsing for comparison.
+ */
+function makeTmpNormalize(): (s: string) => string {
+    const real = realpathSync(tmpPath);
+    return (s: string): string => s.split(real).join('<TMP>').split(tmpPath).join('<TMP>');
 }
 
-function assertJsonParity(projectRoot: string): void {
-    const tsResult = JSON.parse(JSON.stringify(detect_linked_projects(projectRoot))) as unknown;
-    expect(tsResult).toEqual(pythonDetect(projectRoot));
+/**
+ * Drive the Python original; returns parsed JSON (paths normalized).
+ *
+ * Oracle-routed (`kind: 'inline'`): CAPTURE mode (PY2TS_CAPTURE=1) spawns
+ * `python3 -c PY_DRIVER <projectRoot> <repo>/src` and freezes the JSON stdout;
+ * NORMAL mode replays with no live python3. The volatile `projectRoot` arg is
+ * stabilised in the snapshot KEY via `scratch: [tmpPath]`; the tmp-dir
+ * `normalize` keeps the resolved sibling paths in the output machine-independent.
+ * The inline code embeds no absolute path (it reads argv), so the inline key is
+ * stable across machines.
+ */
+function pythonDetect(projectRoot: string, caseLabel: string): unknown {
+    const out = oracle2({
+        kind: 'inline',
+        target: PY_DRIVER,
+        // argv[1]=projectRoot, argv[2]=<repo>/src; argv[3]=caseLabel is IGNORED
+        // by the driver but disambiguates the snapshot KEY per fixture (every
+        // projectRoot stabilises to `<scratch:0>/main`, so without a stable
+        // discriminator all three differential fixtures would collide on one key).
+        args: [projectRoot, path.join(REPO_ROOT, 'src'), `case:${caseLabel}`],
+        cwd: REPO_ROOT,
+        scratch: [tmpPath],
+        normalize: makeTmpNormalize(),
+    });
+    expect(out.status, out.stderr).toBe(0);
+    return JSON.parse(out.stdout) as unknown;
+}
+
+function assertJsonParity(projectRoot: string, caseLabel: string): void {
+    // Apply the SAME tmp-dir normalize to the TS side before comparing — the
+    // python side was normalized in pythonDetect.
+    const normalize = makeTmpNormalize();
+    const tsResult = JSON.parse(
+        normalize(JSON.stringify(detect_linked_projects(projectRoot))),
+    ) as unknown;
+    expect(tsResult).toEqual(pythonDetect(projectRoot, caseLabel));
 }
 
 describe('differential: TS output JSON-equals Python output', () => {
@@ -233,7 +271,7 @@ describe('differential: TS output JSON-equals Python output', () => {
         // duplicate + in-tree mapping to exercise dedupe and rejection paths
         writeIdeaVcs(project, '../web');
 
-        assertJsonParity(project);
+        assertJsonParity(project, 'phpstorm');
     });
 
     test('vscode-shaped fixture project', () => {
@@ -247,7 +285,7 @@ describe('differential: TS output JSON-equals Python output', () => {
             'utf-8',
         );
 
-        assertJsonParity(project);
+        assertJsonParity(project, 'vscode');
     });
 
     test('no-siblings fixture project', () => {
@@ -256,6 +294,6 @@ describe('differential: TS output JSON-equals Python output', () => {
         makeGitRepo(path.join(project, 'submodule')); // in-tree → rejected
         writeIdeaVcs(project, 'submodule');
 
-        assertJsonParity(project);
+        assertJsonParity(project, 'no-siblings');
     });
 });

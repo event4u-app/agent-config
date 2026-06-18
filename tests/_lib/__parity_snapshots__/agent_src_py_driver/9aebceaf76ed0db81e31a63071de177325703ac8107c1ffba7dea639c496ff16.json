@@ -1,0 +1,5 @@
+{
+  "stdout": "[\".agent-src.uncondensed/commands/foo/command.md\", \"packages/core/.agent-src.uncondensed/commands/bar.md\", \"src/domains/git/commit/command.md\", \"src/domains/meta/council/analysis/command.md\"]",
+  "stderr": "",
+  "status": 0
+}

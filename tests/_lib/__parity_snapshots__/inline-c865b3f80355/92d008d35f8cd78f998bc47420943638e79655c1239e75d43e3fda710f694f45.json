@@ -1,0 +1,5 @@
+{
+  "stdout": "council:estimate · mode=prompt · members=2 (billable=2)\n  anthropic/claude-sonnet-4-5: ~231 in + 2048 out  =  $0.0314\n  openai/gpt-4o: ~231 in + 2048 out  =  $0.0211\n  TOTAL:  $0.0525\n",
+  "stderr": "",
+  "status": 0
+}

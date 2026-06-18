@@ -17,7 +17,7 @@ import {
     today_spend_usd,
     would_exceed,
 } from '../../../src/scripts/ai_council/budget_guard.js';
-import { hasPython3, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -166,11 +166,17 @@ describe.skipIf(!py3)('budget_guard — JSONL byte-parity vs python3', () => {
         const tsBytes = fs.readFileSync(tsPath, 'utf-8');
 
         const pyPath = path.join(mkTmp(), 'py.jsonl');
+        // The output path is baked into the code body (not passed as argv): the
+        // inline-code key collapses quoted absolute paths to `<abspath>`
+        // (stableInlineKeyMaterial), so the snapshot key stays stable across the
+        // capture run (file present) and every replay run (fresh tmp dir). A
+        // volatile path passed as an ARG would key on file existence/content and
+        // diverge capture-vs-replay.
         const code = [
-            'import sys, datetime as dt',
+            'import datetime as dt',
             'from pathlib import Path',
             'from scripts.ai_council.budget_guard import record_spend',
-            'p = sys.argv[1]',
+            `p = ${JSON.stringify(pyPath)}`,
             'now = dt.datetime(2026,5,2,12,0,tzinfo=dt.timezone.utc)',
             `cases = ${JSON.stringify(cases)}`,
             // JSON.stringify drops the `.0` on integer-valued floats (1.0 → 1),
@@ -180,9 +186,15 @@ describe.skipIf(!py3)('budget_guard — JSONL byte-parity vs python3', () => {
             'for usd,prov,mod in cases:',
             '    record_spend(float(usd),prov,mod,path=Path(p),now=now)',
         ].join('\n');
-        const res = runPyCode(code, [pyPath]);
+        // Oracle v3 — the observable python artefact is the WRITTEN LEDGER FILE,
+        // not stdout. Declare it as a frozen output: capture mode reads pyPath
+        // after the spawn and freezes its bytes; normal mode replays them with no
+        // live python3. Compare the .ts twin's own bytes against the frozen golden.
+        const res = runPyCode(code, [], { outputs: { ledger: pyPath } });
         expect(res.status, res.stderr).toBe(0);
-        const pyBytes = fs.readFileSync(pyPath, 'utf-8');
+        const ledger = oracleFile(res, 'ledger');
+        expect(ledger, 'frozen python ledger must exist').not.toBeNull();
+        const pyBytes = (ledger as Buffer).toString('utf-8');
 
         expect(tsBytes).toBe(pyBytes);
     });

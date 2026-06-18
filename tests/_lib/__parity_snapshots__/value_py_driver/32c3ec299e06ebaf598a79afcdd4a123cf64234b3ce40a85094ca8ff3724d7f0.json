@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"delta\": 0.81, \"id\": \"selection\", \"label\": \"Right-skill selection\", \"mode\": \"live\", \"source_report\": \"internal/bench/reports/ab/\", \"unit\": \"pct\", \"what_this_means\": \"How often the right skill activates (top-K hit).\", \"with\": 0.81, \"without\": 0}",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"eur_delta\": 16.11012, \"footnote\": \"Always-loaded footprint = kernel + tier_1 + tier_2 + charter; tokens \\u2248 chars / 4.\", \"id\": \"load\", \"label\": \"With package (rule load)\", \"source_report\": \"agents/runtime/frugality/baseline.jsonl\", \"token_delta\": 5837, \"what_it_does\": \"The always-active rules land in the context of every request.\"}",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: agent-config council estimate [-h] [--input-mode {prompt,roadmap}]\n                                     [--prompt-mode {pr,design,optimize,analysis}]\n                                     [--max-tokens MAX_TOKENS]\n                                     [--mode-override {api,manual}]\n                                     [--model MEMBER=MODEL_ID]\n                                     [--siblings MEMBER=MODEL1,MODEL2[,...]]\n                                     [--original-ask ORIGINAL_ASK]\n                                     [--peer-review] [--debate]\n                                     [--rounds ROUNDS]\n                                     question\nagent-config council estimate: error: argument --input-mode: invalid choice: 'nope' (choose from 'prompt', 'roadmap')\n",
+  "status": 2
+}

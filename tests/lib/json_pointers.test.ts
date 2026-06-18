@@ -7,7 +7,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 
 import {
   ArrayIndexPointerError,
@@ -17,6 +16,7 @@ import {
   validate_pointer,
   value_hash,
 } from "../../src/scripts/_lib/json_pointers.js";
+import { oracle2 } from "../_lib/parity_oracle.js";
 
 describe("validate_pointer", () => {
   it("test_empty_pointer_is_valid", () => {
@@ -315,12 +315,24 @@ for case in cases:
 print(json.dumps(out))
 `;
 
+/**
+ * Drive the Python reference on shared fixtures; returns parsed JSON.
+ *
+ * Oracle-routed (`kind: 'inline'`): CAPTURE mode (PY2TS_CAPTURE=1) spawns
+ * `python3 -c PY_DRIVER` with the JSON cases on stdin and freezes the JSON
+ * stdout; NORMAL mode replays the frozen snapshot with no live python3. The
+ * stdin (`JSON.stringify(cases)`) is the keying `input`, so each distinct case
+ * array maps to its own snapshot; the inline code embeds no absolute path
+ * (it computes `os.getcwd()`), keeping the inline key stable across machines.
+ */
 function run_python(cases: DiffCase[]): unknown[] {
-  const stdout = execFileSync("python3", ["-c", PY_DRIVER], {
+  const out = oracle2({
+    kind: "inline",
+    target: PY_DRIVER,
     input: JSON.stringify(cases),
-    encoding: "utf-8",
   });
-  return JSON.parse(stdout) as unknown[];
+  expect(out.status, out.stderr).toBe(0);
+  return JSON.parse(out.stdout) as unknown[];
 }
 
 describe("differential vs Python reference", () => {

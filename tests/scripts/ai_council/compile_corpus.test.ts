@@ -21,7 +21,7 @@ import {
     dump_lock_yaml,
 } from '../../../src/scripts/ai_council/compile_corpus.js';
 import { parse_corpus_strict } from '../../../src/scripts/ai_council/low_impact_corpus.js';
-import { hasPython3, runPyCode, runPyScript, runTsScript } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode, runPyScript, runTsScript } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -177,10 +177,21 @@ describe('compile_corpus — CLI exit codes', () => {
 
 describe.runIf(py3)('compile_corpus — golden parity vs CPython twin (byte-exact YAML)', () => {
     function pyCompile(corpus: string): string {
+        // `--out <out>` is a volatile scratch OUTPUT path passed as a CLI arg: the
+        // oracle keys the snapshot on the invocation, so `scratch: [out]` collapses
+        // the volatile path to a stable token in the key, and `outputs: { lock: out }`
+        // freezes the WRITTEN lockfile bytes (read after the spawn). Normal mode
+        // replays the frozen bytes via oracleFile — no live python3. (`--source` is a
+        // stable input fixture the oracle content-hashes; leave it.)
         const out = path.join(mkdtempSync(path.join(tmpdir(), 'pycc-')), 'lock.yaml');
-        const res = runPyScript('ai_council/compile_corpus', ['--source', corpus, '--out', out]);
+        const res = runPyScript('ai_council/compile_corpus', ['--source', corpus, '--out', out], {
+            outputs: { lock: out },
+            scratch: [out],
+        });
         expect(res.status, res.stderr).toBe(0);
-        return readFileSync(out, { encoding: 'utf-8' });
+        const lock = oracleFile(res, 'lock');
+        expect(lock, 'frozen python lockfile must exist').not.toBeNull();
+        return (lock as Buffer).toString('utf-8');
     }
 
     function tsCompile(corpus: string): string {
@@ -231,7 +242,12 @@ describe.runIf(py3)('compile_corpus — golden parity vs CPython twin (byte-exac
     it('parse-error stderr + exit code match', () => {
         const bad = tmpFile('bad.md', '### Validated\n\n- "x"\n');
         const out = tmpFile('o.yaml', '');
-        const py = runPyScript('ai_council/compile_corpus', ['--source', bad, '--out', out]);
+        // Error exit writes NO output file — the observable is exit-code + stderr only.
+        // `--out <out>` is still a volatile path in argv, so `scratch: [out]` keeps the
+        // snapshot key stable across capture/replay; no `outputs` (nothing to freeze).
+        const py = runPyScript('ai_council/compile_corpus', ['--source', bad, '--out', out], {
+            scratch: [out],
+        });
         const ts = runTsScript('ai_council/compile_corpus', ['--source', bad, '--out', out]);
         expect(ts.status).toBe(py.status);
         expect(ts.status).toBe(2);

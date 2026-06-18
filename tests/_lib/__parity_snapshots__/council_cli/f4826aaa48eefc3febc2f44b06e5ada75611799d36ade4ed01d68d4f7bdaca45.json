@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  council:quota: --reset openai requires --confirm.\n",
+  "status": 2
+}

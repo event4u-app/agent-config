@@ -10,7 +10,6 @@
  * `process.env.HOME` override — `os.homedir()` (like `Path.home()`)
  * resolves `$HOME` first on POSIX.
  */
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -18,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as user_global_paths from '../../src/scripts/_lib/user_global_paths';
+import { oracle2 } from '../_lib/parity_oracle.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -411,9 +411,42 @@ interface PyPaths {
     resolve: string | null;
 }
 
-function run_py_driver(env_overrides: Record<string, string | undefined>): PyPaths {
+// Build a normalize that collapses each volatile scratch abs-path (a per-test
+// `make_tmp()` HOME / custom-root dir) to a stable `<scratch:i>` token. The
+// resolved paths embed those dirs, so the frozen python golden bakes the
+// capture-run abs path in; a fresh replay run mints a different tmp dir, so the
+// python golden AND the .ts side must BOTH have the path replaced before
+// comparison (and any concrete-path expectation likewise).
+const make_normalize =
+    (scratch: string[]) =>
+    (s: string): string => {
+        let out = s;
+        // Longest-first so a custom-root nested under HOME is replaced before HOME.
+        [...scratch]
+            .map((p, i) => [p, i] as const)
+            .sort((a, b) => b[0].length - a[0].length)
+            .forEach(([p, i]) => {
+                out = out.split(p).join(`<scratch:${i}>`);
+            });
+        return out;
+    };
+
+// Route the Python reference (kind:inline `python3 -c PY_DRIVER`) through the
+// parity oracle. CAPTURE (PY2TS_CAPTURE=1) spawns python3 ONCE with the
+// scenario env and freezes the normalized JSON stdout; NORMAL replays it with
+// no live python3. The PY_DRIVER reads only the env (never argv), so a per-
+// scenario `tag` arg distinguishes the snapshot KEY without affecting output
+// (the four scenarios share the same inline code body and would otherwise
+// collide — env is not part of the inline key). The volatile HOME / custom-root
+// dirs leak into the output, so `normalize` (built from the scenario's scratch
+// dirs) strips them symmetrically on both sides; the dirs are also listed in
+// `scratch` to key-stabilise them.
+function run_py_driver(
+    tag: string,
+    env_overrides: Record<string, string | undefined>,
+    scratch: string[],
+): PyPaths {
     const env: Record<string, string> = {
-        PATH: process.env.PATH ?? '',
         AGENT_CONFIG_REPO_SRC: path.join(REPO_ROOT, 'src'),
     };
     for (const [key, value] of Object.entries(env_overrides)) {
@@ -421,18 +454,28 @@ function run_py_driver(env_overrides: Record<string, string | undefined>): PyPat
             env[key] = value;
         }
     }
-    const result = spawnSync('python3', ['-c', PY_DRIVER], { env, encoding: 'utf-8' });
+    const result = oracle2({
+        kind: 'inline',
+        target: PY_DRIVER,
+        args: [tag],
+        env,
+        cwd: REPO_ROOT,
+        scratch,
+        normalize: make_normalize(scratch),
+    });
     expect(result.status, result.stderr).toBe(0);
     return JSON.parse(result.stdout) as PyPaths;
 }
 
-function ts_paths(): PyPaths {
+function ts_paths(scratch: string[]): PyPaths {
     const resolved = user_global_paths.resolve_with_fallback('settings.yml');
+    const norm = make_normalize(scratch);
+    const normOrNull = (v: string | null): string | null => (v === null ? null : norm(v));
     return {
-        event4u_root: user_global_paths.event4u_root(),
-        legacy_xdg_root: user_global_paths.legacy_xdg_root(),
-        write_target: user_global_paths.write_target('installed.lock'),
-        resolve: resolved,
+        event4u_root: norm(user_global_paths.event4u_root()),
+        legacy_xdg_root: norm(user_global_paths.legacy_xdg_root()),
+        write_target: norm(user_global_paths.write_target('installed.lock')),
+        resolve: normOrNull(resolved),
     };
 }
 
@@ -441,8 +484,9 @@ describe('differential vs Python reference', () => {
         const home = make_tmp();
         patch_env('HOME', home);
         patch_env(user_global_paths.EVENT4U_HOME_ENV, undefined);
-        const py = run_py_driver({ HOME: home });
-        expect(ts_paths()).toEqual(py);
+        const scratch = [home];
+        const py = run_py_driver('scenario-1', { HOME: home }, scratch);
+        expect(ts_paths(scratch)).toEqual(py);
         expect(py.resolve).toBeNull();
     });
 
@@ -453,12 +497,15 @@ describe('differential vs Python reference', () => {
         fs.writeFileSync(path.join(custom, 'settings.yml'), 'x: 1\n', 'utf-8');
         patch_env('HOME', home);
         patch_env(user_global_paths.EVENT4U_HOME_ENV, custom);
-        const py = run_py_driver({
-            HOME: home,
-            [user_global_paths.EVENT4U_HOME_ENV]: custom,
-        });
-        expect(ts_paths()).toEqual(py);
-        expect(py.resolve).toBe(path.join(custom, 'settings.yml'));
+        const scratch = [home, custom];
+        const norm = make_normalize(scratch);
+        const py = run_py_driver(
+            'scenario-2',
+            { HOME: home, [user_global_paths.EVENT4U_HOME_ENV]: custom },
+            scratch,
+        );
+        expect(ts_paths(scratch)).toEqual(py);
+        expect(py.resolve).toBe(norm(path.join(custom, 'settings.yml')));
     });
 
     it('scenario 3 — tilde expansion in the override', () => {
@@ -467,12 +514,15 @@ describe('differential vs Python reference', () => {
         fs.writeFileSync(path.join(home, 'cfg-root', 'settings.yml'), 'x: 1\n', 'utf-8');
         patch_env('HOME', home);
         patch_env(user_global_paths.EVENT4U_HOME_ENV, '~/cfg-root');
-        const py = run_py_driver({
-            HOME: home,
-            [user_global_paths.EVENT4U_HOME_ENV]: '~/cfg-root',
-        });
-        expect(ts_paths()).toEqual(py);
-        expect(py.event4u_root).toBe(path.join(home, 'cfg-root'));
+        const scratch = [home];
+        const norm = make_normalize(scratch);
+        const py = run_py_driver(
+            'scenario-3',
+            { HOME: home, [user_global_paths.EVENT4U_HOME_ENV]: '~/cfg-root' },
+            scratch,
+        );
+        expect(ts_paths(scratch)).toEqual(py);
+        expect(py.event4u_root).toBe(norm(path.join(home, 'cfg-root')));
     });
 
     it('scenario 4 — legacy fallback when only the XDG tree exists', () => {
@@ -482,8 +532,10 @@ describe('differential vs Python reference', () => {
         fs.writeFileSync(path.join(legacy, 'settings.yml'), 'legacy: 1\n', 'utf-8');
         patch_env('HOME', home);
         patch_env(user_global_paths.EVENT4U_HOME_ENV, undefined);
-        const py = run_py_driver({ HOME: home });
-        expect(ts_paths()).toEqual(py);
-        expect(py.resolve).toBe(path.join(legacy, 'settings.yml'));
+        const scratch = [home];
+        const norm = make_normalize(scratch);
+        const py = run_py_driver('scenario-4', { HOME: home }, scratch);
+        expect(ts_paths(scratch)).toEqual(py);
+        expect(py.resolve).toBe(norm(path.join(legacy, 'settings.yml')));
     });
 });

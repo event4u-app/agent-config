@@ -9,7 +9,6 @@
  * at the same repo root, so the shape assertions exercise the real
  * graceful-degradation path identically.
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -17,17 +16,28 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { Dict, JsonValue } from '../../src/scripts/_lib/value_ladder.js';
 import * as R from '../../src/scripts/_lib/value_report.js';
+import { oracle2 } from '../_lib/parity_oracle.js';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
-const DRIVER = path.join(ROOT, 'tests', 'lib', 'value_py_driver.py');
+// Repo-relative driver stem (no `.py`) for the oracle's `kind: 'script'` spawn.
+const DRIVER_STEM = 'tests/lib/value_py_driver';
 
-/** Invoke the Python reference for `fn(...args)` and return the decoded result. */
+/**
+ * Invoke the Python reference for `fn(...args)` and return the decoded result.
+ * Routed through the parity oracle (kind:script `python3 value_py_driver.py`):
+ * CAPTURE (PY2TS_CAPTURE=1) spawns python3 ONCE per distinct `{fn,args}` stdin
+ * request and freezes its JSON stdout; NORMAL replays the frozen golden with no
+ * live python3. `render_md_dump` returns the markdown body as a JSON string, so
+ * a JSON-decoded string compare is a byte-for-byte compare of the markdown. The
+ * stdin request is part of the snapshot KEY — each case maps to its own snapshot.
+ */
 function py(fn: string, args: JsonValue[]): unknown {
-    const out = execFileSync('python3', [DRIVER], {
+    const out = oracle2({
+        kind: 'script',
+        target: DRIVER_STEM,
         input: JSON.stringify({ fn, args }),
-        encoding: 'utf-8',
     });
-    return JSON.parse(out) as unknown;
+    expect(out.status, out.stderr).toBe(0);
+    return JSON.parse(out.stdout) as unknown;
 }
 
 // ── value_report.py assembler (mirror of pytest) ─────────────────────────

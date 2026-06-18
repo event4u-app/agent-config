@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"delta\": 0.3333, \"id\": \"completion\", \"label\": \"Task completion rate\", \"mode\": \"live\", \"source_report\": \"internal/bench/reports/ab/\", \"unit\": \"pct\", \"what_this_means\": \"Share of tasks the agent completes fully.\", \"with\": 0.8765, \"without\": 0.5432}",
+  "stderr": "",
+  "status": 0
+}

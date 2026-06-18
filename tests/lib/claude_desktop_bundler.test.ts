@@ -7,7 +7,6 @@
  * TS-generated archives (cross-validates `zip_min.ts` against the
  * reference implementation). ADR-088 parity gates 1 + 2.
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -18,6 +17,7 @@ import {
     build_skill_bundles,
 } from '../../src/scripts/_lib/claude_desktop_bundler.js';
 import { zip_read_sync } from '../../src/scripts/_lib/zip_min.js';
+import { oracle2, oracleFile } from '../_lib/parity_oracle.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 
@@ -298,15 +298,6 @@ describe('build_command_bundles', () => {
 
 // ─── differential parity vs the Python original ────────────────────────────────
 
-function python_available(): boolean {
-    try {
-        execFileSync('python3', ['--version'], { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 /**
  * Runs the Python bundler into `dest_py`, then reads BOTH bundle dirs
  * (Python's via zipfile, TS's via zipfile too — cross-validating the
@@ -342,7 +333,7 @@ print(json.dumps({
 }))
 `;
 
-describe.skipIf(!python_available())('differential: TS twin vs Python original', () => {
+describe('differential: TS twin vs Python original', () => {
     it('bundle list + per-file ZIP contents are identical on a synthetic tree', () => {
         const pkg = path.join(tmp_path, 'pkg');
         // Skills: nested dirs, junk to exclude, a SKILL.md-less folder, unicode content.
@@ -379,13 +370,35 @@ describe.skipIf(!python_available())('differential: TS twin vs Python original',
             .sort();
 
         const dest_py = path.join(tmp_path, 'bundles-py');
-        const py = JSON.parse(
-            execFileSync('python3', ['-c', PY_BUNDLER_DRIVER, pkg, dest_py, dest_ts], {
-                cwd: ROOT,
-                maxBuffer: 64 * 1024 * 1024,
-                encoding: 'utf-8',
-            }),
-        ) as {
+        // The Python driver writes one `<slug>.sha256` sidecar next to every
+        // written `<slug>.zip`. The synthetic tree above is fixed, so the written
+        // set is deterministic — these four slugs. Declaring each sidecar as a
+        // frozen `outputs` entry lets assertion 5 compare the .ts twin's own
+        // sidecar bytes against the Python sidecar bytes WITHOUT a live python3 in
+        // normal mode (dest_py is never created on disk when python doesn't run).
+        const PY_SLUGS = ['alpha-skill', 'beta-skill', 'commit', 'council-default'];
+
+        // Oracle v3 — route the python driver through the snapshot. CAPTURE mode
+        // (PY2TS_CAPTURE=1) spawns `python3 -c PY_BUNDLER_DRIVER pkg dest_py dest_ts`
+        // with the real TS zips already built into dest_ts, and freezes the
+        // manifest stdout (including the python-side cross-read of the TS output)
+        // PLUS each python sidecar's bytes. NORMAL mode replays the frozen manifest
+        // and sidecars with no live python3. The volatile tmp-dir args (pkg,
+        // dest_py, dest_ts) are stabilised in the snapshot KEY via `scratch`; the
+        // inline code body embeds no absolute paths (it reads argv), so the inline
+        // key stays stable across capture and every replay.
+        const out = oracle2({
+            kind: 'inline',
+            target: PY_BUNDLER_DRIVER,
+            args: [pkg, dest_py, dest_ts],
+            cwd: ROOT,
+            scratch: [pkg, dest_py, dest_ts],
+            outputs: Object.fromEntries(
+                PY_SLUGS.map((slug) => [`sha-${slug}`, path.join(dest_py, `${slug}.sha256`)]),
+            ),
+        });
+        expect(out.status, out.stderr).toBe(0);
+        const py = JSON.parse(out.stdout) as {
             written: string[];
             py_manifest: Record<string, Record<string, string>>;
             ts_manifest_read_by_python: Record<string, Record<string, string>>;
@@ -394,9 +407,16 @@ describe.skipIf(!python_available())('differential: TS twin vs Python original',
         // 1. Same set of written bundles.
         expect(written_ts).toEqual(py.written);
 
-        // 2. Same zip file list on disk (zips + sha256 sidecars).
+        // 2. Same zip file list on disk (zips + sha256 sidecars). The Python
+        //    on-disk listing is reconstructed from the frozen `written` set (each
+        //    written `<slug>.zip` has a sibling `<slug>.sha256`) — dest_py is not
+        //    created on disk in replay mode, so the frozen manifest is the python
+        //    ground truth.
         const ls = (d: string): string[] => fs.readdirSync(d).sort();
-        expect(ls(dest_ts)).toEqual(ls(dest_py));
+        const py_listing = py.written
+            .flatMap((zipName) => [zipName, zipName.replace(/\.zip$/, '.sha256')])
+            .sort();
+        expect(ls(dest_ts)).toEqual(py_listing);
 
         // 3. TS zips, read by the TS reader, match the Python manifest
         //    entry-for-entry and byte-for-byte.
@@ -415,10 +435,17 @@ describe.skipIf(!python_available())('differential: TS twin vs Python original',
         //    the same contents (validates the zip_min container format).
         expect(py.ts_manifest_read_by_python).toEqual(py.py_manifest);
 
-        // 5. The sha256 sidecars are identical (manifest digest parity).
-        for (const name of ls(dest_ts).filter((n) => n.endsWith('.sha256'))) {
-            expect(fs.readFileSync(path.join(dest_ts, name), 'utf-8')).toBe(
-                fs.readFileSync(path.join(dest_py, name), 'utf-8'),
+        // 5. The sha256 sidecars are identical (manifest digest parity). Compare
+        //    each .ts twin's live sidecar bytes against the frozen python sidecar
+        //    bytes — the cross-impl byte-for-byte digest guarantee, preserved with
+        //    no live python3 in replay mode.
+        const ts_sidecars = ls(dest_ts).filter((n) => n.endsWith('.sha256'));
+        expect(ts_sidecars).toEqual(PY_SLUGS.map((slug) => `${slug}.sha256`).sort());
+        for (const slug of PY_SLUGS) {
+            const py_sidecar = oracleFile(out, `sha-${slug}`);
+            expect(py_sidecar, `frozen python sidecar ${slug}.sha256 must exist`).not.toBeNull();
+            expect(fs.readFileSync(path.join(dest_ts, `${slug}.sha256`), 'utf-8')).toBe(
+                (py_sidecar as Buffer).toString('utf-8'),
             );
         }
     });

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"eur_delta\": -1.0211999999999999, \"footnote\": \"Honest: measured median = +12.34% against 'be terse' \\u2014 telegraph delivers more tokens here, not fewer. We measure, we do not hide.\", \"id\": \"terse\", \"label\": \"+ terse (shorter replies)\", \"source_report\": \"internal/bench/reports/telegraph-v1.json\", \"token_delta\": -74, \"what_it_does\": \"Telegraph style aims at terser model replies.\"}",
+  "stderr": "",
+  "status": 0
+}

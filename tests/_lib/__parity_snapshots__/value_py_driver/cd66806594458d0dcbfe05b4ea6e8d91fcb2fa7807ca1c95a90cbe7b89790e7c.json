@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"delta\": -0.4444, \"id\": \"ask-vs-act\", \"label\": \"Ask-vs-act ratio\", \"mode\": \"live\", \"source_report\": \"internal/bench/reports/ab/\", \"unit\": \"ratio\", \"what_this_means\": \"Ratio of clarifying questions to actions \\u2014 lower = more decisive.\", \"with\": 0.1234, \"without\": 0.5678}",
+  "stderr": "",
+  "status": 0
+}

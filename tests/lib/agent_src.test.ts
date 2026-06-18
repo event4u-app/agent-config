@@ -12,7 +12,6 @@
  * `iter_artefacts` / `iter_commands` / `resolve_logical` / `logical_relpath`
  * / `strip_source_prefix` / `command_slug` / `pack_slug_prefix`.
  */
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -20,10 +19,12 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import * as A from '../../src/scripts/_lib/agent_src.js';
+import { oracle2 } from '../_lib/parity_oracle.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const PY_DRIVER = path.join(HERE, 'agent_src_py_driver.py');
 const REPO_ROOT = path.resolve(HERE, '..', '..');
+// Oracle `script` target is repo-relative WITHOUT the `.py` extension.
+const PY_DRIVER_STEM = path.relative(REPO_ROOT, path.join(HERE, 'agent_src_py_driver'));
 
 // --- Part A: 1:1 port of tests/test_agent_src_domains.py (real repo) ---------
 
@@ -148,14 +149,43 @@ describe('agent_src — command_slug (tmp domains)', () => {
 
 // --- Part B: differential suite (synthetic 2-root tree, TS vs Python) --------
 
-/** Drive the Python original against the synthetic root; returns parsed JSON. */
+/**
+ * Strip the volatile synthetic-root abs prefix from text so the frozen golden
+ * is machine-independent. The ONLY call that leaks an absolute path into the
+ * Python output is `logical_relpath` outside-root, whose `{error: ...}` text
+ * renders the path verbatim; every other function emits POSIX-relative paths.
+ * Applied symmetrically: to the oracle's python output (capture + replay) AND
+ * to the `.ts` side before comparing (see the `logical_relpath` test).
+ */
+function makeSynthNormalize(synthRoot: string): (s: string) => string {
+    return (s: string): string => s.split(synthRoot).join('<SYNTH>');
+}
+
+/**
+ * Drive the Python original against the synthetic root; returns parsed JSON.
+ *
+ * Oracle-routed (`kind: 'script'`): CAPTURE mode (PY2TS_CAPTURE=1) spawns
+ * `python3 <driver>.py <synthRoot> <fn> [arg]` and freezes the JSON stdout;
+ * NORMAL mode replays the frozen snapshot with no live python3. The volatile
+ * tmp-dir args (`synthRoot`, and any abs path arg under it) are stabilised in
+ * the snapshot KEY via `scratch`; the synth-stripping `normalize` keeps the one
+ * absolute-path-leaking output (`logical_relpath` error) machine-independent.
+ */
 function pyDrive(synthRoot: string, fn: string, arg?: string): unknown {
-    const args = [PY_DRIVER, synthRoot, fn];
+    const args = [synthRoot, fn];
     if (arg !== undefined) {
         args.push(arg);
     }
-    const out = execFileSync('python3', args, { maxBuffer: 16 * 1024 * 1024 });
-    return JSON.parse(out.toString('utf-8'));
+    const out = oracle2({
+        kind: 'script',
+        target: PY_DRIVER_STEM,
+        args,
+        cwd: REPO_ROOT,
+        scratch: [synthRoot],
+        normalize: makeSynthNormalize(synthRoot),
+    });
+    expect(out.status, out.stderr).toBe(0);
+    return JSON.parse(out.stdout);
 }
 
 /** POSIX-relative path of an absolute result under the synthetic root. */
@@ -313,8 +343,11 @@ describe('agent_src — differential TS vs Python (synthetic 2-root tree)', () =
         expect(tsErr).not.toBeNull();
         expect(py.ok).toBeUndefined();
         expect(py.error).toBeDefined();
-        // error text identical (path is rendered verbatim in both)
-        expect(tsErr).toBe(py.error);
+        // error text identical (path is rendered verbatim in both). The python
+        // side was synth-normalized in pyDrive; apply the SAME normalize to the
+        // TS error so the comparison is machine-independent (capture vs replay).
+        const normalize = makeSynthNormalize(synth);
+        expect(tsErr === null ? null : normalize(tsErr)).toBe(py.error);
     });
 
     test('strip_source_prefix + is_artefact_path — match Python', () => {

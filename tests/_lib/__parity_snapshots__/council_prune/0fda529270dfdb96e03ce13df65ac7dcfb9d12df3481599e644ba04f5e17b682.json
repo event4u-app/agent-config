@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: council_prune.py [-h] [--days DAYS] [--dry-run]\ncouncil_prune.py: error: argument --days: invalid int value: 'abc'\n",
+  "status": 2
+}

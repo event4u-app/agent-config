@@ -1,0 +1,11 @@
+{
+  "stdout": "{\"written\": [\"alpha-skill.zip\", \"beta-skill.zip\", \"commit.zip\", \"council-default.zip\"], \"py_manifest\": {\"alpha-skill.zip\": {\"SKILL.md\": \"IyBhbHBoYQo=\", \"helper.py\": \"eCA9IDEK\", \"nested/deep/data.json\": \"eyJrIjogInYifQo=\", \"notes/unicode.md\": \"w7xtbMOkdXQg4oCUIGVtLWRhc2gK\"}, \"beta-skill.zip\": {\"SKILL.md\": \"IyBiZXRhCg==\"}, \"commit.zip\": {\"SKILL.md\": \"IyAvY29tbWl0Cg==\"}, \"council-default.zip\": {\"SKILL.md\": \"IyBjb3VuY2lsIGRlZmF1bHQK\"}}, \"ts_manifest_read_by_python\": {\"alpha-skill.zip\": {\"SKILL.md\": \"IyBhbHBoYQo=\", \"helper.py\": \"eCA9IDEK\", \"nested/deep/data.json\": \"eyJrIjogInYifQo=\", \"notes/unicode.md\": \"w7xtbMOkdXQg4oCUIGVtLWRhc2gK\"}, \"beta-skill.zip\": {\"SKILL.md\": \"IyBiZXRhCg==\"}, \"commit.zip\": {\"SKILL.md\": \"IyAvY29tbWl0Cg==\"}, \"council-default.zip\": {\"SKILL.md\": \"IyBjb3VuY2lsIGRlZmF1bHQK\"}}}\n",
+  "stderr": "",
+  "status": 0,
+  "files": {
+    "sha-alpha-skill": "YjRmMTgyMjRhMTZkMzMxNzBmNTY3OWM0ZTA3ODMwNTMzY2Y1MWIyOWI4OTI2NWUyZTk0NGU0MWE5Y2Q1Y2ZjMQo=",
+    "sha-beta-skill": "NjEzMDZkMTA0ZjMxNTA3OWIyZGM0ZDI0Mjc0NDRkYjQzMWEyMGEzYzZiMTg2ZmM2MjMwOTE4YzZjZjMwNzEyYgo=",
+    "sha-commit": "YjliMmJhNzZlZjliODQxMmY1ZDNiNTQ4Njc3ZDYyODdiYWY3MDBkM2FlNzYwNGE2YWZmMWJkNWM2OTJiYzBhZgo=",
+    "sha-council-default": "YjA4YzUyM2YwNjQyYjE1NmZmYjg4ZWY0YzdhMTY2YzQ3NzhjZDdlMWNmZWQ0N2ZkZDI2ZmRmMmExN2Y2MWZjOAo="
+  }
+}

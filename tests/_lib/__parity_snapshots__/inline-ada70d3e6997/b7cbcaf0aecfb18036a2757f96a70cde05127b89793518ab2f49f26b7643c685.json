@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"event4u_root\": \"<scratch:0>/.event4u/agent-config\", \"legacy_xdg_root\": \"<scratch:0>/.config/agent-config\", \"write_target\": \"<scratch:0>/.event4u/agent-config/installed.lock\", \"resolve\": null}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"mode\": \"diff\", \"text\": \"diff --git a/m.py b/m.py\\nindex c2119dc..7602a1a 100644\\n--- a/m.py\\n+++ b/m.py\\n@@ -1,2 +1,6 @@\\n def foo():\\n-    return 1\\n+    return 2\\n+\\n+\\n+def bar():\\n+    return 3\", \"manifest\": [\"git diff HEAD~1..HEAD\"], \"excluded\": []}\n",
+  "stderr": "",
+  "status": 0
+}

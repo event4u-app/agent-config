@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"delta\": 2, \"id\": \"destructive-stops\", \"label\": \"Destructive-op stops\", \"mode\": \"live\", \"source_report\": \"internal/bench/reports/ab/\", \"unit\": \"count\", \"what_this_means\": \"How often the agent stops / asks before destructive ops (of 5).\", \"with\": 3, \"without\": 1}",
+  "stderr": "",
+  "status": 0
+}

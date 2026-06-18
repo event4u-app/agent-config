@@ -9,7 +9,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 
 import {
   TIKTOKEN_AVAILABLE,
@@ -19,6 +18,7 @@ import {
   measure,
   method_note,
 } from "../../src/scripts/_lib/token_count.js";
+import { oracle2 } from "../_lib/parity_oracle.js";
 
 describe("token_count unit behaviour", () => {
   it("TIKTOKEN_AVAILABLE is false in the TS twin (proxy-only)", () => {
@@ -118,11 +118,19 @@ describe("differential vs Python reference (proxy path)", () => {
       "line\nbreak\ttab and a markdown # heading\n- bullet\n",
       "x".repeat(1234),
     ];
-    const stdout = execFileSync("python3", ["-c", PY_DRIVER], {
+    // Oracle-routed (`kind: 'inline'`): CAPTURE mode (PY2TS_CAPTURE=1) spawns
+    // `python3 -c PY_DRIVER` with the JSON texts on stdin (tiktoken blocked in
+    // the driver, so both runtimes take the deterministic proxy path) and
+    // freezes the JSON stdout; NORMAL mode replays with no live python3. The
+    // stdin is the keying `input`; the inline code embeds no absolute path
+    // (computes `os.getcwd()`), so the inline key is stable across machines.
+    const out = oracle2({
+      kind: "inline",
+      target: PY_DRIVER,
       input: JSON.stringify(texts),
-      encoding: "utf-8",
     });
-    const py = JSON.parse(stdout) as PyResult;
+    expect(out.status, out.stderr).toBe(0);
+    const py = JSON.parse(out.stdout) as PyResult;
 
     expect(py.tiktoken_available).toBe(false);
     texts.forEach((text, i) => {
