@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "error: No state file at .work-state.json and no --ticket-file, --prompt-file, --diff-file, or --file-file given; cannot build an initial state.\n",
+  "status": 2
+}

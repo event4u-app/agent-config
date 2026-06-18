@@ -1,0 +1,5 @@
+{
+  "stdout": "[halt] outcome=blocked step=refine\n> Ticket T-1 is missing: missing or trivial title; no acceptance criteria.\n> 1. Run `/refine-ticket T-1` and re-invoke `/implement-ticket`\n> 2. Provide the missing details in chat — I'll merge them into the ticket\n> 3. Abandon this ticket — too vague to implement\n",
+  "stderr": "",
+  "status": 1
+}
