@@ -13,17 +13,16 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { oracle } from '../_lib/parity_oracle';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const S = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
 const TS_SCRIPT = path.join(S, 'telemetry_report.ts');
-const PY_SCRIPT = path.join(S, 'telemetry_report.py');
+// scriptStem is relative to REPO_ROOT; parity_oracle appends `.py` in capture mode.
+const PY_STEM = 'src/agent-src/templates/scripts/telemetry_report';
 const TSX_BIN = process.env.TSX_BIN
     ? path.resolve(REPO_ROOT, process.env.TSX_BIN)
     : path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -87,14 +86,14 @@ function run(bin: string, script: string, args: string[]): Run {
 }
 
 function assertParity(args: string[]): void {
-    const py = run('python3', PY_SCRIPT, args);
+    const py = oracle(PY_STEM, args, '');
     const ts = run(TSX_BIN, TS_SCRIPT, args);
     expect(ts.status).toBe(py.status);
     expect(ts.stdout).toBe(py.stdout);
     expect(ts.stderr).toBe(py.stderr);
 }
 
-describe.runIf(hasPython3())('telemetry_report — golden parity (python3 vs tsx)', () => {
+describe('telemetry_report — golden parity (snapshot oracle vs tsx)', () => {
     it('markdown over an 8-artefact log (quartile buckets, --since all)', () => {
         const log = makeLog(mkTmp());
         assertParity(['--log-path', log, '--since', 'all']);
@@ -129,7 +128,7 @@ describe.runIf(hasPython3())('telemetry_report — golden parity (python3 vs tsx
     it('unparseable --since → byte-identical error + exit 2', () => {
         const log = makeLog(mkTmp());
         const args = ['--log-path', log, '--since', 'zzz'];
-        const py = run('python3', PY_SCRIPT, args);
+        const py = oracle(PY_STEM, args, '');
         const ts = run(TSX_BIN, TS_SCRIPT, args);
         expect(ts.status).toBe(py.status);
         expect(ts.status).toBe(2);
