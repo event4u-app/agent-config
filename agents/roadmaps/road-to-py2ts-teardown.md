@@ -218,6 +218,30 @@ directly. Triaged (NOT a uniform snapshot-convert — see council verdicts):
 Next wave = convert the golden-parity subset (proven oracle-v3 patterns), retire `replay`, delete the
 spikes; then bulk-capture + review-lock; then Phase 4+ deletions (HARD FLOOR — explicit user confirmation).
 
+#### Golden-parity subset converted (2026-06-18) + env-brittle class carve-out
+
+Converted to the snapshot oracle (verified python-shadowed green + regression-proof): `tests/lib/{agent_src,
+json_pointers,linked_projects,token_count,user_global_paths,value_ladder,value_report}.test.ts`,
+`tests/scripts/{council_cli,council_prune}.test.ts`. Correctly NOT converted (re-triaged on inspection):
+`run` + `hooks/replay_hook` (dispatcher-coupled → Phase 6), `runtime_handler` (python3 `-c` is a generic
+subprocess fixture for `execute_shell`, no `.py` twin → fixture-swap in Phase 6).
+
+**Env-brittle frozen-rig class — RESOLVED by council (claude-sonnet-4-5 + gpt-4o, 2026-06-18, converged):**
+A rig may be snapshot-frozen ONLY if its output is a **pure function of committed source**. Rigs whose
+output derives from **generated / gitignored state** (e.g. the discovery manifest) are NOT freezable: the
+golden bakes the capture-env's generated state and diverges from CI's freshly-built one — a CI-only
+failure invisible to the local python-shadowed sweep (which catches python-DEPENDENCE, not cross-env
+brittleness). The deterministic-build-in-setup alternative was rejected: the manifest builder is not
+provably cross-environment deterministic (fs traversal order, OS case-sensitivity, path separators, Node
+version). Such rigs stay **LIVE python↔tsx** (`skipIf(real python3)`) until the deletion phase.
+- **`config_packs`** (instance): `--json` closure comes from `load_manifest` (gitignored). Reverted its 3
+  golden-parity tests to live python↔tsx + real-python3 gate; dropped the frozen `module-scripts.config.packs`
+  snapshots. Green on CI (python present, both sides read CI's fresh manifest), skips post-deletion.
+  Now in the **deletion-phase bucket** (blocks deleting `config/packs.py` until a Phase-5 resolution —
+  e.g. make `packs` read committed source, or commit a deterministic manifest fixture).
+- **Detection (Phase-5 gate):** before deleting any `.py`, audit each surviving frozen rig for
+  generated/gitignored-state reads; re-classify manifest-dependent ones as live-parity-then-delete.
+
 ## Risk register
 
 - **R1 — shipped consumer runtime (highest).** `dist/agent-src/**/*.py` is executed by consumers, not just dev tooling. Deleting src `.py` without resolving dist emission breaks installed consumers. **Resolved (Phase-0 council, 2026-06-18):** TS-only, Python fully removed; runtime = Node-via-`tsx` (baseline A), pre-bundled `.js` fallback (D) only if Phase-1 evidence forces it. Residual exposure = the empirical A-vs-D call; Phase-3 consumer smoke is the verification.
