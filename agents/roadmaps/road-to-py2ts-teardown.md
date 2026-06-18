@@ -167,7 +167,56 @@ side-effect rig; (b) is bounded per-rig work. Route to council or decide in the 
 bulk-execution session. The 10-green harness conversion is preserved on the WIP branch
 and is reusable under either fork.
 
-**Decision required (test-teardown strategy):** RESOLVED above.
+**Resolved — council (claude-sonnet-4-5 + gpt-4o, 2026-06-18, 2 rounds, converged):
+Oracle v3 for both sub-shapes; reject stdout-coercion and TS-only demotion.**
+
+- **No single mechanism is uniform across both sub-shapes** — the impossibility of
+  freezing B as an independent python snapshot is evidence *for* the split, not against.
+- **Sub-shape A (5 file-sink rigs):** extend the oracle to capture **raw file bytes**
+  via a declared-output-path contract. Rejected option (b)'s `print(open(p).read())`
+  stdout-coercion: it smuggles base64-for-binary, multi-file serialisation, error
+  mis-attribution (python-crash vs byte-diff), and pipe-truncation-without-integrity.
+  One central file-capture (1×) beats 5× per-rig `fs.readFileSync` duplication.
+- **Sub-shape B (4 scratch-dir rigs):** capture the python **composite artefact**
+  (incl. its cross-read of the live TS output) at capture time, while `.py` still
+  exists. Rejected demoting the cross-read to a TS-only round-trip: "TS reads its own
+  zips" is a tautology when one lib writes+reads; the cross-language equivalence
+  ("python reads TS output") is the load-bearing guarantee and must be frozen, not
+  dropped. Post-deletion python is gone, so the frozen capture-time verdict is the
+  strongest preservable form.
+- **Stable-scratch-path contract** required so B's key is deterministic (the existing
+  `readSnapshot` throw-on-missing guard is preserved unweakened).
+
+Session synthesis: `agents/runtime/council/responses/r7-fork-synthesis.md/` (transient).
+
+#### Harness conversion — COMPLETE (2026-06-18, verified)
+
+Oracle v3 built (`tests/_lib/parity_oracle.ts`): `outputs` (freeze file side-effects, base64),
+`oracleFile()` decoder, `scratch` (stabilise volatile path args in the snapshot key), plus the
+`outputs`/`scratch` guards (a declared output with no frozen `files` THROWS — the R6 no-neutering
+guard extended). Plumbed through `_harness.ts` (`runPyCode`/`runPyScript`) and `_config_parity.ts`
+(`runPy`). All 9 R7 rigs converted + verified python-independent (python3 shadowed by a failing stub,
+git intact) + regression-proof (twin break → RED → revert → green):
+- file-sink (A): `budget_guard`, `probation_gate`, `low_impact_intake`, `shadow_dispatch`, `clients`.
+- scratch/composite (B): `session`, `compile_corpus`, `config_session_profiles` (`--root` scratch + overlay
+  file freeze), `ai_council/bundler` (volatile-repo `scratch` + symmetric path-normalize). Cross-read
+  rig `claude_desktop_bundler` also converted (oracle composite freeze; cross-read preserved per council).
+Full importer set green python-independent: **28 files / 444 tests pass, 0 fail** (`ai_council/` +
+`config_session_profiles` + `claude_desktop_bundler`). Global typecheck clean. The prior 10 importers
+stay green (back-compat: the v3 fields are additive/optional).
+
+#### Remaining python-dependent test files — 21 (full-suite python3-shadowed sweep, 2026-06-18)
+
+The shared-harness leverage already covered most rigs; only **21 files (158 tests)** still spawn python3
+directly. Triaged (NOT a uniform snapshot-convert — see council verdicts):
+- **Convertible golden-parity rigs (snapshot oracle):** `tests/lib/{agent_src,json_pointers,linked_projects,token_count,user_global_paths,value_ladder,value_report}.test.ts`,
+  `tests/scripts/{council_cli,council_prune,run,runtime_handler}.test.ts`, `tests/scripts/hooks/replay_hook.test.ts`.
+- **Retire-and-replace (council Option B, → C-gap integration tests):** `tests/parity/replay.test.ts` (the byte-replay Golden-Transcript harness).
+- **Delete (obsolete spikes — python-vs-npm comparisons, meaningless post-teardown):** `tests/spikes/pyyaml_vs_npm.test.ts`, `tests/spikes/yaml_rt_spike.test.ts`.
+- **Phase-6-coupled (hit python via the dispatcher fast-path / `scripts-run`; convert WITH the dispatcher python removal, not before):** `tests/cli/{cli-e2e,mcp-server.e2e,settings.e2e}.test.ts`, `tests/server/{wizard.applySse,workspace}.test.ts`, `tests/ui/build.test.ts`.
+
+Next wave = convert the golden-parity subset (proven oracle-v3 patterns), retire `replay`, delete the
+spikes; then bulk-capture + review-lock; then Phase 4+ deletions (HARD FLOOR — explicit user confirmation).
 
 ## Risk register
 
