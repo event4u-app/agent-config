@@ -141,6 +141,15 @@ describe('learn_low_impact_preview — bucketing + flags', () => {
 });
 
 describe.runIf(py3)('learn_low_impact_preview — golden parity vs CPython twin', () => {
+    // The render echoes the `seed:` path verbatim, which is a per-run
+    // `os.tmpdir()` fixture — volatile across the capture run (frozen into the
+    // snapshot) and the normal run (the live TS render). Strip every temp
+    // fixture path to a stable token so the snapshot is machine-independent;
+    // the SAME normalize is applied to the python side (via the harness) AND
+    // to the TS render, per the parity-oracle normalize contract.
+    const stripTmpPaths = (s: string): string =>
+        s.replace(/(?:\/[^\s"']+)?\/[a-z]+\.md/g, '<fixture>.md');
+
     /** Run build_preview in CPython, return [render, render_diff, render_pr_body]. */
     function pyRender(
         corpusPath: string,
@@ -156,8 +165,13 @@ describe.runIf(py3)('learn_low_impact_preview — golden parity vs CPython twin'
             'print(json.dumps([p.render(), p.render_diff(), p.render_pr_body(),'
                 + ' p.has_work, p.would_open_pr, p.last_upstreamed_sha], ensure_ascii=False))',
         ].join('\n');
-        const res = runPyCode(code, [corpusPath, seedPath, repoSlug, leakPath]);
+        const res = runPyCode(code, [corpusPath, seedPath, repoSlug, leakPath], {
+            normalize: stripTmpPaths,
+        });
         expect(res.status, res.stderr).toBe(0);
+        // The python JSON is normalized as a whole; the embedded render strings
+        // already have their fixture paths tokenised. Apply the same token to
+        // the TS renders below before comparing.
         return JSON.parse(res.stdout) as [string, string, string, boolean, boolean, string];
     }
 
@@ -166,9 +180,9 @@ describe.runIf(py3)('learn_low_impact_preview — golden parity vs CPython twin'
         const s = tmpFile('s.md', SEED);
         const [render, diff, prBody, hasWork, wouldOpen, sha] = pyRender(c, s, 'acme/widgets', '');
         const p = build_preview(c, s, { repoSlug: 'acme/widgets' });
-        expect(p.render()).toBe(render);
-        expect(p.render_diff()).toBe(diff);
-        expect(p.render_pr_body()).toBe(prBody);
+        expect(stripTmpPaths(p.render())).toBe(render);
+        expect(stripTmpPaths(p.render_diff())).toBe(diff);
+        expect(stripTmpPaths(p.render_pr_body())).toBe(prBody);
         expect(p.has_work).toBe(hasWork);
         expect(p.would_open_pr).toBe(wouldOpen);
         expect(p.last_upstreamed_sha).toBe(sha);
@@ -193,9 +207,9 @@ describe.runIf(py3)('learn_low_impact_preview — golden parity vs CPython twin'
         const c = tmpFile('e.md', empty);
         const [render, diff, prBody] = pyRender(c, '/no/such/seed.md', '', '');
         const p = build_preview(c, '/no/such/seed.md');
-        expect(p.render()).toBe(render);
-        expect(p.render_diff()).toBe(diff);
-        expect(p.render_pr_body()).toBe(prBody);
+        expect(stripTmpPaths(p.render())).toBe(render);
+        expect(stripTmpPaths(p.render_diff())).toBe(diff);
+        expect(stripTmpPaths(p.render_pr_body())).toBe(prBody);
     });
 
     it('refused-only render + reason() byte-match', () => {
@@ -218,8 +232,8 @@ describe.runIf(py3)('learn_low_impact_preview — golden parity vs CPython twin'
         const c = tmpFile('r.md', refusedOnly);
         const [render, diff, prBody] = pyRender(c, '/no/such/seed.md', 'acme/widgets', '');
         const p = build_preview(c, '/no/such/seed.md', { repoSlug: 'acme/widgets' });
-        expect(p.render()).toBe(render);
-        expect(p.render_diff()).toBe(diff);
-        expect(p.render_pr_body()).toBe(prBody);
+        expect(stripTmpPaths(p.render())).toBe(render);
+        expect(stripTmpPaths(p.render_diff())).toBe(diff);
+        expect(stripTmpPaths(p.render_pr_body())).toBe(prBody);
     });
 });

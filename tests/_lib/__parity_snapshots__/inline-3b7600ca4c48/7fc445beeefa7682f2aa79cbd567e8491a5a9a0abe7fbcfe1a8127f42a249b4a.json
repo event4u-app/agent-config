@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"mode\": \"diff\", \"text\": \"diff --git a/m.py b/m.py\\nindex c2119dc..7602a1a 100644\\n--- a/m.py\\n+++ b/m.py\\n@@ -1,2 +1,6 @@\\n def foo():\\n-    return 1\\n+    return 2\\n+\\n+\\n+def bar():\\n+    return 3\\n\\n## Surrounding signatures\\n\\n### m.py\\n\\n    L1: def foo():\", \"manifest\": [\"git diff HEAD~1..HEAD\", \"+ surrounding signatures for 1 file(s)\"], \"excluded\": []}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "error: unknown profile/pack 'does-not-exist'. Known: ai-image, ai-video, analysis-workbench, analytics, brand, construction, content, developer, engineering-base, finance, finance-advanced, finance-basic, founder-strategy, frontend-design, fun, git, gtm, gtm-marketing, gtm-sales, javascript, laravel, memory, meta, nextjs, ops-people, php, po, product-basic, product-discovery, product-reasoning, python, react, small-business, symfony, typescript\n",
+  "status": 2
+}

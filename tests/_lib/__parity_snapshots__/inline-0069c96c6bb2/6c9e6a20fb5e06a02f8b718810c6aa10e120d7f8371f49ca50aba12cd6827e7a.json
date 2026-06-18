@@ -1,0 +1,5 @@
+{
+  "stdout": "[\"heading_drift\", 1, \"validated\", \"corpus parse failed: heading_drift at line 1 in section 'validated' — got '### Validated', expected '## Validated'\"]\n",
+  "stderr": "",
+  "status": 0
+}

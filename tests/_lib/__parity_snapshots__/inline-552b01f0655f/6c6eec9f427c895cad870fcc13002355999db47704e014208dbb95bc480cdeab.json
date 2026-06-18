@@ -1,0 +1,5 @@
+{
+  "stdout": "\"n\\n[redacted: Authorization header]\\n[redacted: secret-like assignment]\\n[redacted: anthropic-key-like token]\\n[redacted: openai-key-like token]\\nz\"\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"mode\": \"prompt\", \"text\": \"hello\\n[redacted: secret-like assignment]\\nworld\", \"manifest\": [\"<inline prompt>\"], \"excluded\": []}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — secret: 'sk-AAAAA…'; secret: 'api_key: CCCCCCCCCCC…'; email: 'alice@example.com'; project_path: '/Users/bob/proj/file.ts'; project_path: '/Users/bob'; internal_hostname: 'api.corp.internal'; monetary_amount: '$1,234.56'; customer_name: 'acme'; sql_identifier: 'tbl'; long_code_excerpt: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…'\", \"violations\": [[\"secret\", \"sk-AAAAA…\", \"raw-key prefix 'sk-'\"], [\"secret\", \"api_key: CCCCCCCCCCC…\", \"inline api_key\"], [\"email\", \"alice@example.com\", \"\"], [\"project_path\", \"/Users/bob/proj/file.ts\", \"\"], [\"project_path\", \"/Users/bob\", \"configured repo root\"], [\"internal_hostname\", \"api.corp.internal\", \"\"], [\"monetary_amount\", \"$1,234.56\", \"\"], [\"customer_name\", \"acme\", \"\"], [\"sql_identifier\", \"tbl\", \"\"], [\"long_code_excerpt\", \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…\", \"45 chars\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

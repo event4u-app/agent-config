@@ -144,6 +144,29 @@ green with `python3` absent from PATH AND to go RED on an injected twin regressi
 
 Revised Phase-4.5 sub-sequence: (0) pre-capture audit (nondeterminism + tmp-in-output) → (1) oracle v2 (invocation-descriptor + normalization hooks) → (2) convert shared harnesses → (3) convert the inline-spawn rigs (parallelized) → (4) bulk capture + review-lock → (5) write ~25 C-gap tests → THEN deletion.
 
+### R7 — File-side-effect / scratch-dir rigs (discovered 2026-06-18, blocks harness conversion)
+
+The harness-conversion wave (2026-06-18, branch `feat/py2ts-phase45-harness-conversion`,
+WIP-checkpoint, NOT merged) converted both shared harnesses (`ai_council/_harness.ts`,
+`_config_parity.ts`) through oracle v2: **10 of 19 importers green** (python3-off-PATH),
+2 regression-proofs, typecheck clean. But **9 importers fail** — a new obstacle class:
+
+- **Output-sink-FILE rigs (5):** `budget_guard`, `probation_gate`, `low_impact_intake`,
+  `shadow_dispatch`, `clients` — python WRITES a tmp file the rig then reads. A
+  stdout-only snapshot oracle cannot replay file side-effects.
+- **Volatile scratch-DIR rigs (4):** `session`, `bundler`, `compile_corpus`,
+  `config_session_profiles` — a random-basename scratch dir as a python arg →
+  snapshot key never stable → `readSnapshot` throws.
+
+**Coupling problem:** converting a SHARED harness forces ALL its importers onto the
+oracle at once, so it cannot land green until these 9 are handled. **Fork (next session):**
+(a) **oracle v3** — capture file side-effects + accept a stable-scratch-path contract,
+or (b) **restructure the 9 rigs** to assert on python STDOUT (emit the written bytes)
++ use a fixed scratch path. (a) is a mechanism change reusable across any future
+side-effect rig; (b) is bounded per-rig work. Route to council or decide in the fresh
+bulk-execution session. The 10-green harness conversion is preserved on the WIP branch
+and is reusable under either fork.
+
 **Decision required (test-teardown strategy):** RESOLVED above.
 
 ## Risk register

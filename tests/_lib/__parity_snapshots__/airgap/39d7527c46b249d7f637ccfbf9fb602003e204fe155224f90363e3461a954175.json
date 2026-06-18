@@ -1,0 +1,5 @@
+{
+  "stdout": "usage: airgap.py [-h] [--timeout TIMEOUT]\n\nDetect airgap state and print recommended member_mode.\n\noptional arguments:\n  -h, --help         show this help message and exit\n  --timeout TIMEOUT  per-host DNS timeout in seconds (default: 1.0)\n",
+  "stderr": "",
+  "status": 0
+}

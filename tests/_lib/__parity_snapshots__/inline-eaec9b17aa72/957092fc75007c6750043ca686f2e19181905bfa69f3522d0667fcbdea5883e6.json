@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"timestamp\": \"<TS>\", \"query_hash\": \"f887dccff067a81a\", \"solo_verdict\": \"yes\", \"full_verdict\": \"no\", \"agreed\": false, \"escalated\": true, \"escalation_reason\": \"low-conf\"}\n",
+  "stderr": "",
+  "status": 0
+}

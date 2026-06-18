@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"id\": \"strict\", \"source\": \"runtime\", \"knobs\": {\"autonomy\": {\"default\": false, \"trivial_suppress\": false}, \"confidence\": {\"min_band\": \"high\", \"require_evidence\": true}, \"risk\": {\"block_on\": [\"security\", \"prod_data\", \"bulk_delete\", \"schema_change\", \"financial_paths\"], \"ask_on\": [\"code_paths\", \"infra_change\"]}, \"council\": {\"auto_consult\": true, \"cap_per_consult_usd\": 1.0}, \"mcp\": {\"per_call_max_usd\": 0.05, \"per_session_max_usd\": 1.0}, \"cost\": {\"daily_max_usd\": 5.0, \"weekly_max_usd\": 20.0, \"monthly_max_usd\": 60.0, \"enforce\": \"hybrid\"}, \"notifications\": {\"threshold_pct\": [25, 50, 75, 90, 100]}}}\n",
+  "stderr": "",
+  "status": 0
+}

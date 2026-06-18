@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — internal_hostname: 'api.corp.internal'\", \"violations\": [[\"internal_hostname\", \"api.corp.internal\", \"\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

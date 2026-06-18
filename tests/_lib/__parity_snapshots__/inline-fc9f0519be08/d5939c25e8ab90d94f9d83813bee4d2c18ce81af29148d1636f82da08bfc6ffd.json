@@ -1,0 +1,5 @@
+{
+  "stdout": "[\"auth_expired\", \"timeout\", \"cli_quota_exhausted\", \"exit_9\", \"auth_expired\", \"auth_expired\", \"auth_expired\", \"auth_expired\", \"auth_expired\"]\n",
+  "stderr": "",
+  "status": 0
+}
