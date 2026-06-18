@@ -6,8 +6,8 @@
  * Python→TS migration, Phase 8 / Wave 8a). The CLI contract is mirrored
  * EXACTLY: same flags (`--json`, `--branch`), same exit codes (0 normal,
  * 1 on registry-read IO error), same byte-identical text + JSON output,
- * same `ci_status.py` shell-out (still the Python script — it has not
- * been ported), same `unknown` best-effort fallbacks. No behaviour
+ * same `ci_status` shell-out (now the `.ts` twin run via `tsx` — no
+ * python3), same `unknown` best-effort fallbacks. No behaviour
  * changes — latent bugs replicated.
  *
  * Prints three things in one short block:
@@ -18,7 +18,7 @@
  *      `agents/recruit-sessions/[0-9]*.md` (excludes template / runbook /
  *      findings).
  *   3. Latest required-check colour on `main` — shells out to
- *      `scripts/ci_status.py` (zero-cost; per-shape required set).
+ *      `scripts/ci_status.ts` (zero-cost; per-shape required set).
  *
  * CLI:
  *
@@ -127,44 +127,51 @@ export function count_recruit_reports(reportsDir: string): number {
 }
 
 /**
- * Shell out to `scripts/ci_status.py --json` to find the required-set
+ * Shell out to `scripts/ci_status.ts --json` to find the required-set
  * color. Mirrors `ci_status_color`. Returns `[color, summary]`.
  */
 export function ci_status_color(branch: string): [string, string] {
-    const script = path.join(REPO_ROOT, 'src', 'scripts', 'ci_status.py');
+    const script = path.join(REPO_ROOT, 'src', 'scripts', 'ci_status.ts');
     if (!_exists(script)) {
-        return ['unknown', 'ci_status.py not present — Phase A Step 6 not landed'];
+        return ['unknown', 'ci_status.ts not present — Phase A Step 6 not landed'];
     }
     if (_which('gh') === null) {
         return ['unknown', 'gh CLI not on PATH — cannot probe required-check set'];
     }
+    // Run the `.ts` twin through the repo-local `tsx` binary — no python3.
+    const tsxBin = path.join(
+        REPO_ROOT,
+        'node_modules',
+        '.bin',
+        process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+    );
     let proc;
     try {
         proc = spawnSync(
-            'python3',
+            tsxBin,
             [script, '--branch', branch, '--json', '--no-phantom-resolve'],
             { encoding: 'utf8', timeout: 15_000 },
         );
     } catch {
-        return ['unknown', `ci_status.py timed out probing branch ${branch}`];
+        return ['unknown', `ci_status.ts timed out probing branch ${branch}`];
     }
     // Node surfaces a timeout as an error on the result, not a throw.
     if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
-        return ['unknown', `ci_status.py timed out probing branch ${branch}`];
+        return ['unknown', `ci_status.ts timed out probing branch ${branch}`];
     }
     if (proc.signal === 'SIGTERM') {
-        return ['unknown', `ci_status.py timed out probing branch ${branch}`];
+        return ['unknown', `ci_status.ts timed out probing branch ${branch}`];
     }
     const returncode = proc.status;
     if (returncode !== 0 && returncode !== 1) {
         const stderrSnip = _pyStrip(proc.stderr ?? '').slice(0, 80);
-        return ['unknown', `ci_status.py exit=${returncode}: ${stderrSnip}`];
+        return ['unknown', `ci_status.ts exit=${returncode}: ${stderrSnip}`];
     }
     let data: Record<string, unknown>;
     try {
         data = JSON.parse(proc.stdout || '{}') as Record<string, unknown>;
     } catch {
-        return ['unknown', 'ci_status.py output not parseable as JSON'];
+        return ['unknown', 'ci_status.ts output not parseable as JSON'];
     }
     const red = data.red;
     if (_pyTruthy(red)) {

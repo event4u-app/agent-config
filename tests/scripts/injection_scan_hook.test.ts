@@ -190,11 +190,6 @@ describe.runIf(hasPython3())('injection_scan_hook — golden parity (python3 vs 
     });
 });
 
-describe('injection_scan_hook — legacy-literal guard (ADR-051)', () => {
-    it('ts has the same .agent-src.uncondensed count as py', () => {
-        const py = fs.readFileSync(PY_SCRIPT, 'utf-8');
-        const ts = fs.readFileSync(TS_SCRIPT, 'utf-8');
-        const count = (s: string): number => (s.match(/\.agent-src\.uncondensed/g) ?? []).length;
-        expect(count(ts)).toBe(count(py));
-    });
-});
+// The legacy-literal guard ("ts has the same .agent-src.uncondensed count as
+// py") was retired with the Python→TS final deletion — its Python sibling no
+// longer exists to compare against.

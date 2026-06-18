@@ -754,6 +754,9 @@ const _PYTEST_COLLECTED_RE = /^(\d+)\s+tests?\s+collected/m;
  * line is informational, never a release blocker.
  */
 function _count_tests_current(): number | null {
+    // Release-time pytest-collection probe: python-test-tooling, not package
+    // runtime — there is no tsx equivalent of pytest collection. Degrades to
+    // null (informational trend line dropped) when python3/pytest is absent.
     const res = spawnSync('python3', ['-m', 'pytest', '--collect-only', '-q'], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',

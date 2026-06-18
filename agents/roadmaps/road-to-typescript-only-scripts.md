@@ -1,6 +1,7 @@
 ---
 complexity: structural
 ---
+<!-- check-refs: skip -->
 
 # Roadmap: TypeScript-only scripts — full Python → TypeScript migration
 

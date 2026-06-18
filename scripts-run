@@ -1,21 +1,9 @@
 #!/usr/bin/env bash
 # Migration dispatcher shim (py2ts Phase 1, Step 4).
 # Resolves tsx + run.ts relative to this file so it works from any cwd.
-# Python fast-path (Step 5): while a target is still Python-only, exec
-# python3 directly — no node_modules needed. Mirrors run.ts resolution
-# exactly: <path>.ts wins, <path>.py is the fallback, repo-root-relative
-# or absolute paths.
+# Every script is now TypeScript (the Python→TS final deletion removed the
+# .py twins); run.ts resolves <path>.ts and runs it via tsx. Repo-root-
+# relative or absolute paths both work.
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ $# -ge 1 && -n "$1" ]]; then
-  case "$1" in
-    /*) BASE="$1" ;;
-    *)  BASE="$DIR/$1" ;;
-  esac
-  if [[ ! -e "${BASE}.ts" && -f "${BASE}.py" ]]; then
-    TARGET="${BASE}.py"
-    shift
-    exec python3 "$TARGET" "$@"
-  fi
-fi
 exec "$DIR/node_modules/.bin/tsx" "$DIR/src/scripts/run.ts" "$@"

@@ -79,7 +79,7 @@ STDIN_JSON="$(jq -nc --arg model "${MODEL}" --arg ref "${REF_IMAGE}" '{
 } + (if $model != "" then {model_id: $model} else {} end)
   + (if $ref   != "" then {ref_images: [$ref]} else {} end)')"
 
-ms_now() { python3 -c 'import time;print(int(time.time()*1000))'; }
+ms_now() { node -e 'console.log(Date.now())'; }
 
 PHASES="[]"
 SUCCESS=true

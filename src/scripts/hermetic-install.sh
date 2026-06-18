@@ -201,34 +201,45 @@ fi
   exit 4
 }
 
-# ---------------------------------------------------------------- install.py
+# ---------------------------------------------------------------- install.ts
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "🟡  --dry-run: skipping install.py invocation"
-  echo "    would invoke: scripts/install.py --offline --package-dir=$STAGED"
+  echo "🟡  --dry-run: skipping install.ts invocation"
+  echo "    would invoke: scripts/install.ts --offline --package-dir=$STAGED"
   echo "    installation_mode=hermetic"
   echo "    package_checksum=$PACKAGE_CHECKSUM"
   echo "    signature_verified=$SIGNATURE_VERIFIED"
   exit 0
 fi
 
-# install.py is shipped inside the staged package — invoke that
+# install.ts is shipped inside the staged package — invoke that
 # copy, not whatever happens to be in $PWD.
-INSTALL_PY="$STAGED/scripts/install.py"
-[[ -f "$INSTALL_PY" ]] || {
-  echo "❌  install.py not found in staged package: $INSTALL_PY" >&2
+INSTALL_TS="$STAGED/scripts/install.ts"
+[[ -f "$INSTALL_TS" ]] || {
+  echo "❌  install.ts not found in staged package: $INSTALL_TS" >&2
   exit 4
 }
 
-echo "🚀  invoking install.py --offline --package-dir=$STAGED"
-# Pass the hermetic metadata via environment so install.py can record
+# Resolve tsx from the staged package's node_modules, else fall back to npx.
+if [[ -x "$STAGED/node_modules/.bin/tsx" ]]; then
+  TSX_BIN="$STAGED/node_modules/.bin/tsx"
+elif command -v npx >/dev/null 2>&1; then
+  TSX_BIN="npx tsx"
+else
+  echo "❌  tsx runner not found (no node_modules/.bin/tsx in staged package, no npx on PATH)" >&2
+  exit 4
+fi
+
+echo "🚀  invoking install.ts --offline --package-dir=$STAGED"
+# Pass the hermetic metadata via environment so install.ts can record
 # the additive lockfile fields without changing its CLI surface.
+# shellcheck disable=SC2086
 AGENT_CONFIG_INSTALLATION_MODE="hermetic" \
 AGENT_CONFIG_PACKAGE_CHECKSUM="$PACKAGE_CHECKSUM" \
 AGENT_CONFIG_SIGNATURE_VERIFIED="$SIGNATURE_VERIFIED" \
 AGENT_CONFIG_PACKAGE_VERSION="$PACKAGE_VERSION" \
-python3 "$INSTALL_PY" --offline --package-dir="$STAGED" || {
-  echo "❌  install.py exited non-zero" >&2
+$TSX_BIN "$INSTALL_TS" --offline --package-dir="$STAGED" || {
+  echo "❌  install.ts exited non-zero" >&2
   exit 4
 }
 

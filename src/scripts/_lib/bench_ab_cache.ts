@@ -19,18 +19,16 @@
  * the latest matching report, and reports freshness.
  *
  * Cross-batch dependency: `target_shape_hash()` re-exports the shape hash from
- * `src/scripts/bench_ab_clone.py`. That clone script is NOT yet ported to
- * TypeScript (it belongs to a later phase). The Python original imports it via
- * `importlib`; this twin shells out to `python3` to call
- * `bench_ab_clone.target_shape_hash()`, keeping a single source of truth for the
- * surface definition until `bench_ab_clone` is ported. When that twin lands,
- * swap the subprocess call for a direct `./bench_ab_clone.js` import.
+ * `bench_ab_clone`. Now that the `.ts` twin has landed, this imports
+ * `bench_ab_clone.target_shape_hash()` directly — a single source of truth for
+ * the surface definition, no python3 dependency.
  */
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { target_shape_hash as _clone_target_shape_hash } from "../bench_ab_clone.js";
 
 const __filename_ts = fileURLToPath(import.meta.url);
 const __dirname_ts = path.dirname(__filename_ts);
@@ -180,35 +178,12 @@ export function claude_cli_version(): string {
 /**
  * Re-export the shape hash from the clone script for a single source of truth.
  *
- * The clone script (`bench_ab_clone`) is not yet ported; until it is, this
- * shells out to the Python original. Mirrors the Python `importlib` path: on
- * any failure to load/run the module, returns "unknown".
+ * Delegates directly to the `bench_ab_clone` `.ts` twin — no python3. Mirrors
+ * the Python `importlib` path's resilience: any failure returns "unknown".
  */
 export function target_shape_hash(): string {
-  const clonePy = path.join(
-    REPO_ROOT,
-    "src",
-    "scripts",
-    "bench_ab_clone.py",
-  );
-  if (!fs.existsSync(clonePy)) {
-    return "unknown";
-  }
   try {
-    const driver = [
-      "import importlib.util, sys",
-      `spec = importlib.util.spec_from_file_location("bench_ab_clone", ${JSON.stringify(clonePy)})`,
-      "if spec is None or spec.loader is None:",
-      '    print("unknown"); sys.exit(0)',
-      "module = importlib.util.module_from_spec(spec)",
-      "spec.loader.exec_module(module)",
-      "sys.stdout.write(module.target_shape_hash())",
-    ].join("\n");
-    const out = execFileSync("python3", ["-c", driver], {
-      encoding: "utf-8",
-      maxBuffer: 4 * 1024 * 1024,
-    });
-    return out.trim();
+    return _clone_target_shape_hash().trim();
   } catch {
     return "unknown";
   }

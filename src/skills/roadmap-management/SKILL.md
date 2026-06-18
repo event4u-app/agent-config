@@ -419,7 +419,7 @@ no meaningful work was invested and the scope itself was rejected.
 
 A generated dashboard aggregates progress across every open roadmap. It sits at
 `agents/roadmaps-progress.md` (outside `roadmaps/` to keep the folder clean) and
-is rewritten by `.augment/scripts/update_roadmap_progress.py`.
+is rewritten by `.augment/scripts/update_roadmap_progress.ts`.
 
 **Always regenerate in the SAME response** after any of the following
 (enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):

@@ -57,7 +57,7 @@ something we learned from, harvested, compared against, or copied.
 
 - Drop the source name — say "an external reference" or omit it.
 - To retain a real source link, encrypt it via
-  `src/scripts/_lib/link_crypto.py` (key in the gitignored `.agent-settings.yml`
+  `src/scripts/_lib/link_crypto.ts` (key in the gitignored `.agent-settings.yml`
   under `secrets.link_encryption_key`, resolved project-then-global).
 - **Raw named evidence** that cannot be understood without the source names
   (clone dumps, full competitor audits, scraped comparison tables) stays
@@ -87,7 +87,7 @@ IT IS NEVER HIDDEN IN .harvest-local/ JUST BECAUSE IT MENTIONS A SOURCE.
 ## Backstop
 
 The `check-no-external-sources` CI gate
-(`src/scripts/check_no_external_sources.py` + `external_sources_denylist.json`)
+(`src/scripts/check_no_external_sources.ts` + `external_sources_denylist.json`)
 runs in the package CI pipeline and fails the build on any denied source token
 in a non-carve-out tracked file. The linter is a deterministic net, not a
 substitute for not writing the attribution in the first place.
@@ -96,4 +96,4 @@ substitute for not writing the attribution in the first place.
 
 - [`source-of-truth`](source-of-truth.md) — edit `src/`, never the projections.
 - [`augment-edit-discipline`](augment-edit-discipline.md) — portability + cross-ref sync.
-- `src/scripts/_lib/link_crypto.py` — encrypted link storage.
+- `src/scripts/_lib/link_crypto.ts` — encrypted link storage.

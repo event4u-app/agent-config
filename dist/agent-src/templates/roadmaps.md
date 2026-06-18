@@ -94,7 +94,7 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
       (never the raw competitor / tool name, per
       [`source-confidentiality`](../rules/source-confidentiality.md));
       retain the real link as an `ENC1:` token via
-      `src/scripts/_lib/link_crypto.py encrypt --value <url>`.
+      `src/scripts/_lib/link_crypto.ts encrypt --value <url>`.
     - **(c) Council convergence inlined** with date + members — never a
       session filepath ([`no-roadmap-references`](../rules/no-roadmap-references.md)).
     Authoring contract:
@@ -193,7 +193,7 @@ complexity: lightweight
      roadmaps (rule 18). OMIT entirely for internally-originated roadmaps —
      do NOT ship an empty Provenance section.
 - Source: <neutral descriptor> (anonymized per source-confidentiality);
-  link via `src/scripts/_lib/link_crypto.py decrypt`: ENC1:<token>
+  link via `src/scripts/_lib/link_crypto.ts decrypt`: ENC1:<token>
 - Council: <members>, <date>, <depth>; convergence inlined above. -->
 ```
 

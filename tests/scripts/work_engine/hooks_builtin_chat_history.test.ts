@@ -94,9 +94,17 @@ describe('ChatHistoryAppendHook — TS unit checks', () => {
         const { calls, error } = fireAppend(ctx, EXIT_OK);
         expect(error).toBeNull();
         expect(calls.length).toBe(1);
-        expect(calls[0]).toEqual([
-            'python3',
-            'scripts/chat_history.py',
+        // The hook runs the chat-history `.ts` twin through `tsx` (no python3).
+        // The runner resolves a `tsx` binary (or `npx tsx` fallback); the `.py`
+        // script_path maps to its `.ts` sibling. Assert the sub-command tail
+        // structurally and the `.ts` target — not the host-specific tsx path.
+        const call = calls[0] as string[];
+        const tsIdx = call.indexOf('scripts/chat_history.ts');
+        expect(tsIdx).toBeGreaterThanOrEqual(0);
+        expect(call).not.toContain('python3');
+        expect(call).not.toContain('scripts/chat_history.py');
+        expect(call.slice(tsIdx)).toEqual([
+            'scripts/chat_history.ts',
             'append',
             '--type',
             'phase',
@@ -108,7 +116,8 @@ describe('ChatHistoryAppendHook — TS unit checks', () => {
     it('missing step_name → "<unknown>" in payload', () => {
         const ctx = new HookContext({ result: new StepResult({ outcome: Outcome.SUCCESS }) });
         const { calls } = fireAppend(ctx, EXIT_OK);
-        expect(calls[0]?.[6]).toBe('{"step": "<unknown>"}');
+        const call = calls[0] as string[];
+        expect(call[call.length - 1]).toBe('{"step": "<unknown>"}');
     });
 
     it('non-zero exit → HookError', () => {

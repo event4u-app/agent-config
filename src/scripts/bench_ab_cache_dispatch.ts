@@ -8,8 +8,8 @@
  * forwarded to the underlying runner, exit codes (1 corpus missing, else the
  * underlying runner's return code), and byte-identical stdout/stderr.
  *
- * The Python original shells out via `sys.executable <runner>.py …`; this twin
- * mirrors that by invoking the SAME `.py` runners through `python3` (those
+ * The Python original shelled out via `sys.executable <runner>.py …`; this twin
+ * invokes the `.ts` runner twins through the repo-local `tsx` binary (those
  * runners are referenced as runtime subprocesses, not imported logic).
  *
  * Phase 5 supporting helper. Wraps the Phase 2 cache lookup so the Taskfile
@@ -31,12 +31,18 @@ import * as bench_ab_cache from './_lib/bench_ab_cache.js';
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/bench_ab_cache_dispatch.ts → parents[2] is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+const TSX_BIN = path.join(
+    REPO_ROOT,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
 
 // corpus -> [runner script path, corpus filename]. Insertion order mirrors the
 // Python dict literal (used for the positional `choices` tuple order).
 const RUNNER_FOR: Array<[string, [string, string]]> = [
-    ['tracka', [path.join(REPO_ROOT, 'src', 'scripts', 'bench_ab_tracka_run.py'), 'ab-tracka.yaml']],
-    ['trackb', [path.join(REPO_ROOT, 'src', 'scripts', 'bench_ab_task_runner.py'), 'ab-trackb.yaml']],
+    ['tracka', [path.join(REPO_ROOT, 'src', 'scripts', 'bench_ab_tracka_run.ts'), 'ab-tracka.yaml']],
+    ['trackb', [path.join(REPO_ROOT, 'src', 'scripts', 'bench_ab_task_runner.ts'), 'ab-trackb.yaml']],
 ];
 
 const CHOICES = RUNNER_FOR.map(([c]) => c);
@@ -100,7 +106,7 @@ export function main(argv: string[] | null = null): number {
     if (variants.length === 2) {
         cmd = ['--variant', 'both', ...args.extra];
     }
-    const result = spawnSync('python3', [runner, ...cmd], { stdio: 'inherit' });
+    const result = spawnSync(TSX_BIN, [runner, ...cmd], { stdio: 'inherit' });
     // subprocess.run(...).returncode — null status (signal) maps to non-zero
     // in Python via the signal-encoded returncode; here surface 1 on a null
     // status to avoid claiming success when the child was killed.

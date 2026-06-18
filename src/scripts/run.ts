@@ -5,10 +5,9 @@
  * Usage: run.ts <script-path-without-extension> [args...]
  *
  * Given a script path without extension (relative to the repo root, or
- * absolute), prefers `<path>.ts` (executed via tsx) and falls back to
- * `<path>.py` (executed via python3). Argv, stdin, stdout, stderr, and the
- * exit code pass through unchanged; SIGINT/SIGTERM are forwarded to the
- * child. Exits 127 when neither candidate exists.
+ * absolute), resolves `<path>.ts` and executes it via tsx. Argv, stdin,
+ * stdout, stderr, and the exit code pass through unchanged; SIGINT/SIGTERM
+ * are forwarded to the child. Exits 127 when the `.ts` script does not exist.
  *
  * Zero output of its own on the happy path — callers parse the wrapped
  * script's output.
@@ -84,19 +83,14 @@ function main(): void {
 
     const basePath = isAbsolute(scriptArg) ? scriptArg : resolve(REPO_ROOT, scriptArg);
     const tsCandidate = `${basePath}.ts`;
-    const pyCandidate = `${basePath}.py`;
 
     if (existsSync(tsCandidate)) {
         runChild(resolveTsxInvocation(tsCandidate, scriptArgs));
         return;
     }
-    if (existsSync(pyCandidate)) {
-        runChild({ command: 'python3', args: [pyCandidate, ...scriptArgs] });
-        return;
-    }
 
     process.stderr.write(
-        `run.ts: no script found for '${scriptArg}' — tried:\n  ${tsCandidate}\n  ${pyCandidate}\n`,
+        `run.ts: no script found for '${scriptArg}' — tried:\n  ${tsCandidate}\n`,
     );
     process.exit(127);
 }

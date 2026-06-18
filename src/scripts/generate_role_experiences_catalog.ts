@@ -25,8 +25,8 @@
  *   - `docs/role-experiences.md`
  *
  * Usage:
- *     python3 scripts/generate_role_experiences_catalog.py
- *     python3 scripts/generate_role_experiences_catalog.py --check
+ *     ./scripts-run src/scripts/generate_role_experiences_catalog
+ *     ./scripts-run src/scripts/generate_role_experiences_catalog --check
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -233,7 +233,7 @@ export function main(argv: string[] | null = null): number {
         if (current !== content) {
             process.stderr.write(
                 'generate_role_experiences_catalog: docs/role-experiences.md is ' +
-                    'stale — run `python3 scripts/generate_role_experiences_catalog.py`\n',
+                    'stale — run `./scripts-run src/scripts/generate_role_experiences_catalog`\n',
             );
             return 1;
         }

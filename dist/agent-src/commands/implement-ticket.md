@@ -61,7 +61,7 @@ engine — they make a `lite`-tier build safe (per
   `done`. If a dependency is open, STOP and surface it — never build
   out of order.
 - **Pre-build staleness gate.** Run
-  `python3 src/scripts/lint_ticket_buildable.py` on the bundle. An
+  `python3 src/scripts/lint_ticket_buildable.ts` on the bundle. An
   `adr_refs` SHA drift is a **hard** stop ("re-emit the bundle"); a
   `source_refs` SHA drift only **warns** and proceeds (split severity).
 - **Boundary guard.** Carry the ticket's `boundaries`

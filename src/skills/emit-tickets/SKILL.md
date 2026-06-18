@@ -27,7 +27,7 @@ buildable step — then wire the markers back and run the buildability gate.
 | Estimating a single ticket | no → use `estimate-ticket` |
 
 **Upstream:** `roadmap-writing` — author the roadmap first.
-**Downstream:** `src/scripts/lint_ticket_buildable.py` (the build-readiness gate). A ticket reaches a tracker by paste or MCP (ADR-102) — no export script.
+**Downstream:** `src/scripts/lint_ticket_buildable.ts` (the build-readiness gate). A ticket reaches a tracker by paste or MCP (ADR-102) — no export script.
 
 ## Procedure
 
@@ -97,7 +97,7 @@ Apply this floor **before** marking any ticket `lite`:
 - Any miss → split the ticket further, or escalate to `medium`
 - Architectural / multi-module → `high` (use `adr-create` first)
 
-**Gate:** run `python3 src/scripts/lint_ticket_buildable.py agents/tickets/{slug}/`
+**Gate:** run `python3 src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/`
 and fix all errors before declaring any ticket `lite`. This is the only
 authoritative check — do not skip it.
 
@@ -154,7 +154,7 @@ If the file does not exist, create it with the `bundles:` root.
 ### §8 — Run the buildability gate
 
 ```bash
-python3 src/scripts/lint_ticket_buildable.py agents/tickets/{slug}/
+python3 src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/
 ```
 
 Fix every reported error. Re-run until exit code 0. Max 3 attempts; if still

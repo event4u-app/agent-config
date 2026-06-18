@@ -4,12 +4,13 @@
 // write-tool gating, regenerator dispatch, never-block guarantee) plus a
 // golden-parity layer.
 //
-// The hook re-shells to the GENERATED `update_roadmap_progress.py`
-// regenerator (a Python script). The Python original runs it via
-// `sys.executable`; the TS twin runs it via `python3`. Both unit and parity
-// tests build a self-contained sentinel `.py` regenerator and therefore
-// require python3 — they skipIf python3 is absent (the generated .augment/
-// regenerator dependency stands in for the runtime one).
+// The hook re-shells to the GENERATED `update_roadmap_progress.ts`
+// regenerator (a `.ts` script), running it through the repo-local `tsx`
+// binary. The unit tests build a self-contained sentinel `.ts` regenerator
+// and run the hook in-process (which spawns tsx), so they require tsx — they
+// skipIf the tsx binary is absent. The golden-parity layer spawns both the
+// deleted Python hook (`roadmap_progress_hook.py`) and the TS hook for a
+// byte-for-byte compare, so it still requires python3.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -40,7 +41,12 @@ function hasPython3(): boolean {
     return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
+function hasTsx(): boolean {
+    return fs.existsSync(TSX_BIN);
+}
+
 const py3 = hasPython3();
+const tsx = hasTsx();
 
 // Restore the default _package_roots after every test (parallels pytest's
 // monkeypatch teardown).
@@ -49,19 +55,19 @@ afterEach(() => {
     _module._package_roots = DEFAULT_PACKAGE_ROOTS;
 });
 
-// ── consumer_root fixture: a sentinel .py regenerator that writes a marker ──
+// ── consumer_root fixture: a sentinel .ts regenerator that writes a marker ──
 
 function makeConsumerRoot(): { root: string; marker: string } {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'roadmap-progress-'));
     const scriptsDir = path.join(root, '.augment', 'scripts');
     fs.mkdirSync(scriptsDir, { recursive: true });
     const marker = path.join(root, 'regen.marker');
-    const script = path.join(scriptsDir, 'update_roadmap_progress.py');
+    const script = path.join(scriptsDir, 'update_roadmap_progress.ts');
     fs.writeFileSync(
         script,
-        'import pathlib, sys\n' +
-            `pathlib.Path(${JSON.stringify(marker)}).write_text('ok')\n` +
-            'sys.exit(0)\n',
+        "import fs from 'node:fs';\n" +
+            `fs.writeFileSync(${JSON.stringify(marker)}, 'ok');\n` +
+            'process.exit(0);\n',
     );
     return { root, marker };
 }
@@ -135,7 +141,7 @@ describe('roadmap_progress — _candidate_paths', () => {
 
 // ── run() — full hook behaviour (needs python3 for the sentinel regen) ──
 
-describe.skipIf(!py3)('roadmap_progress — run()', () => {
+describe.skipIf(!tsx)('roadmap_progress — run()', () => {
     it('regenerates on roadmap str-replace', () => {
         const { root, marker } = consumerRoot();
         const stdin = payload('str-replace-editor', {
@@ -210,10 +216,10 @@ describe.skipIf(!py3)('roadmap_progress — run()', () => {
         fs.mkdirSync(pkgScripts, { recursive: true });
         const marker = path.join(base, 'pkg-regen.marker');
         fs.writeFileSync(
-            path.join(pkgScripts, 'update_roadmap_progress.py'),
-            'import pathlib, sys\n' +
-                `pathlib.Path(${JSON.stringify(marker)}).write_text('ok')\n` +
-                'sys.exit(0)\n',
+            path.join(pkgScripts, 'update_roadmap_progress.ts'),
+            "import fs from 'node:fs';\n" +
+                `fs.writeFileSync(${JSON.stringify(marker)}, 'ok');\n` +
+                'process.exit(0);\n',
         );
 
         const prevEnv = process.env['AGENT_CONFIG_PACKAGE_ROOT'];

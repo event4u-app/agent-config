@@ -21,7 +21,7 @@ tasks:
       MCP-tool inventory drift gate (step-11 Phase 5.3). Regenerates
       docs/contracts/mcp-tool-inventory.md from the source-of-truth
       catalog and fails if the on-disk file is stale. Run
-      `python3 src/scripts/audit_mcp_tools.py --write` to refresh.
+      `./scripts-run src/scripts/audit_mcp_tools --write` to refresh.
     cmd: ./scripts-run src/scripts/audit_mcp_tools --check {{.QUIET_FLAG}}
 
   lint-agent-security:
@@ -32,7 +32,7 @@ tasks:
       dangerous-frontmatter — over src/ under the false-positive containment
       convention (docs/guidelines/agent-infra/security-lint-containment.md).
       Supply-chain integrity gate for the suite's own shipped artifacts.
-    cmd: python3 src/scripts/lint_agent_security.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_agent_security {{.QUIET_FLAG}}
 
   lint-skills-strict:
     silent: true
@@ -106,7 +106,7 @@ tasks:
       (fail-the-build deferred until thresholds stable one full release cycle).
       Allowlist: src/scripts/lint_skill_originality_allowlist.json (capped 20).
       Promotion path: add --strict once thresholds are confirmed stable.
-    cmd: python3 src/scripts/lint_skill_originality.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_skill_originality {{.QUIET_FLAG}}
 
   lint-archived-skills:
     silent: true
@@ -305,7 +305,7 @@ tasks:
       module may import an owner-module of a not-owned domain (skill design,
       profile/pack semantics, video providers, MCP registry, analytics product
       strategy). Import-edge only; semantic drift stays doc-governance.
-    cmd: python3 src/scripts/lint_workspace_boundary.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_workspace_boundary {{.QUIET_FLAG}}
 
   lint-pack-first-win:
     silent: true
@@ -344,27 +344,27 @@ tasks:
   check-no-conflict-markers:
     silent: true
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
-    cmd: python3 src/scripts/check_no_conflict_markers.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_no_conflict_markers {{.QUIET_FLAG}}
 
   check-structural-breaking:
     silent: true
     desc: "Fail when a structural break (artifact deleted/renamed, or a contract schema changed without an x-schemaVersion bump) lacks a breaking annotation — road-to-contract-integrity F3"
-    cmd: python3 src/scripts/check_structural_breaking.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_structural_breaking {{.QUIET_FLAG}}
 
   check-trigger-evals:
     silent: true
     desc: "Regression-lock skill trigger sets — every src/skills/*/evals/triggers.json carries a fresh (<=90d) last_eval and passes the offline structural smoke (road-to-contract-integrity F4)"
-    cmd: python3 src/scripts/check_trigger_evals.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_trigger_evals {{.QUIET_FLAG}}
 
   lint-workflow-security:
     silent: true
     desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
-    cmd: python3 src/scripts/lint_workflow_security.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_workflow_security {{.QUIET_FLAG}}
 
   lint-missions:
     silent: true
     desc: "Validate src/missions/*/mission.yaml against mission.schema.json + catalogs against mission-catalog.schema.json (command safe-prefix allowlist) — road-to-mission-mode P2A"
-    cmd: python3 src/scripts/lint_missions.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_missions {{.QUIET_FLAG}}
 
   check-no-new-legacy-path:
     silent: true
@@ -384,7 +384,7 @@ tasks:
   check-no-external-sources:
     silent: true
     desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep)
-    cmd: python3 src/scripts/check_no_external_sources.py
+    cmd: ./scripts-run src/scripts/check_no_external_sources
 
   check-module-management-neutral:
     silent: true
@@ -434,17 +434,17 @@ tasks:
   lint-empty-roadmaps:
     silent: true
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
-    cmd: python3 src/scripts/lint_empty_roadmaps.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_empty_roadmaps {{.QUIET_FLAG}}
 
   lint-roadmap-later-disposition:
     silent: true
     desc: Enforce the later/ disposition — status:later roadmaps live under agents/roadmaps/later/, and every later/ roadmap records a resume condition
-    cmd: python3 src/scripts/lint_roadmap_later_disposition.py
+    cmd: ./scripts-run src/scripts/lint_roadmap_later_disposition
 
   lint-tickets:
     silent: true
     desc: Build-readiness gate for ticket bundles — DoR floor, acyclic manifest graph, traceability spine, asset cap, split-severity staleness (ADR-101)
-    cmd: python3 src/scripts/lint_ticket_buildable.py
+    cmd: ./scripts-run src/scripts/lint_ticket_buildable
 
   lint-commit-subjects:
     silent: true
@@ -503,7 +503,7 @@ tasks:
     # this into the ci-fast `deps` together with the backfill — see
     # road-to-image-brand-typography Phase D + docs/guides/frontend-design-corpus-refresh.md.
     desc: Corpus-backed skills must carry a current upstream.last_eval (ADR-061 §6 refresh DoD; deterministic, no token spend)
-    cmd: python3 src/scripts/lint_eval_freshness.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_eval_freshness {{.QUIET_FLAG}}
 
   check-skill-requires:
     silent: true
@@ -611,7 +611,7 @@ tasks:
   check-surface-tiers:
     silent: true
     desc: "Surface-tier boundary guard — registry exhaustive over src/scripts/*/ and no core module hard-imports a lab module (road-to-install-contract-stability Phase 2)"
-    cmd: PYTHONPATH=src python3 src/scripts/check_surface_tiers.py
+    cmd: ./scripts-run src/scripts/check_surface_tiers
 
   check-public-links:
     silent: true
@@ -668,7 +668,7 @@ tasks:
   lint-skill-names:
     silent: true
     desc: "Fail when a command/skill name violates the Agent-Skills spec or differs from its path-derived slug (2026-06 Zed fix — colon names break Zed)"
-    cmd: python3 src/scripts/lint_agent_skill_names.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_agent_skill_names {{.QUIET_FLAG}}
 
   lint-new-skill-gate:
     silent: true
@@ -708,17 +708,17 @@ tasks:
   check-knowledge-cards:
     silent: true
     desc: "Knowledge-card pointer-CI — size ≤ 150, mandatory authoritative pointer, trust tagging, multi-evidence consistency (evidence-first structure discovery / ADR-097)"
-    cmd: python3 src/scripts/check_knowledge_cards.py
+    cmd: ./scripts-run src/scripts/check_knowledge_cards
 
   knowledge-global:
     silent: true
     desc: "Global knowledge-card store surface (ADR-100). Usage: task knowledge-global -- <list|show|trace|forget|promote|validate> [args]. Default: list."
-    cmd: python3 src/scripts/knowledge_global_cli.py {{.CLI_ARGS | default "list"}}
+    cmd: ./scripts-run src/scripts/knowledge_global_cli {{.CLI_ARGS | default "list"}}
 
   knowledge-global-validate:
     silent: true
     desc: "Validate the untracked global knowledge-card store (offline; --check-urls for live pointer check)."
-    cmd: python3 src/scripts/knowledge_global_cli.py validate {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/knowledge_global_cli validate {{.CLI_ARGS}}
 
   check-no-local-settings:
     silent: true

@@ -180,7 +180,7 @@ function main(): number {
     process.stdout.write(
         '\nFix: update `scripts/generate_index.py` _to_shipped_path() / catalog renderer,\n',
     );
-    process.stdout.write('then re-run `python3 scripts/generate_index.py`.\n');
+    process.stdout.write('then re-run `./scripts-run src/scripts/generate_index`.\n');
     return 1;
 }
 

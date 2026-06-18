@@ -365,8 +365,8 @@ export function _render_index(
         `Maintainer-facing index of all **${total} artefacts** in this package.`,
         'Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.',
         '',
-        '> **Regenerate:** `python3 scripts/generate_index.py`',
-        '> **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)',
+        '> **Regenerate:** `./scripts-run src/scripts/generate_index`',
+        '> **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)',
         '> Do not edit manually.',
         '',
         `## Skills (${skills.length})`,
@@ -405,7 +405,7 @@ export function _render_catalog(
         'this package. Internal package-maintenance rules and deprecation shims',
         'are excluded.',
         '',
-        '> **Regenerate:** `python3 scripts/generate_index.py`',
+        '> **Regenerate:** `./scripts-run src/scripts/generate_index`',
         '> Auto-generated — do not edit manually.',
         '',
         `## Skills (${skills.length})`,
@@ -470,7 +470,7 @@ export function main(argv: string[] | null = null): number {
         }
         if (drift.length > 0) {
             process.stdout.write('❌  Index drift detected — regenerate with:\n');
-            process.stdout.write('    python3 scripts/generate_index.py\n');
+            process.stdout.write('    ./scripts-run src/scripts/generate_index\n');
             for (const d of drift) {
                 process.stdout.write(`    - ${d}\n`);
             }

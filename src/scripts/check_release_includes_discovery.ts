@@ -43,7 +43,7 @@ function _isFile(p: string): boolean {
 function _die(msg: string): number {
     process.stderr.write(`check-release-discovery: ${msg}\n`);
     process.stderr.write(
-        '  hint: run `python3 src/scripts/build_discovery_manifest.py --write --strict`' +
+        '  hint: run `./scripts-run src/scripts/build_discovery_manifest --write --strict`' +
             ' before `npm pack` / `npm publish`.\n',
     );
     return 1;

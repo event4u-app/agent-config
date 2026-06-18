@@ -45,7 +45,7 @@ The high-tier planning entry point — the "expensive agent plans" half.
 See frontmatter.
 
 ## Quality gates
-- `python3 src/scripts/skill_linter.py src/skills/emit-tickets/`.
+- `python3 src/scripts/skill_linter.ts src/skills/emit-tickets/`.
 
 ## Assets
 none

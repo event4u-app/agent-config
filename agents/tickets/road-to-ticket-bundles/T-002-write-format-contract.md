@@ -42,7 +42,7 @@ The spec every downstream artifact reads from. Highest-leverage high-tier ticket
 See frontmatter.
 
 ## Quality gates
-- `python3 src/scripts/check_references.py` resolves the contract links.
+- `python3 src/scripts/check_references.ts` resolves the contract links.
 
 ## Assets
 none

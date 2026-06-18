@@ -105,7 +105,7 @@ export function main(argv: string[] | null = null): number {
     if (!_isDir(CORPUS)) {
         process.stderr.write(`ERROR: corpus not found at ${CORPUS}\n`);
         process.stderr.write(
-            'Generate it: python3 tests/fixtures/markitdown-corpus/_generate.py\n',
+            'Generate the fixtures under tests/fixtures/markitdown-corpus/ first.\n',
         );
         return 2;
     }

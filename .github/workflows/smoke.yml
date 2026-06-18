@@ -19,9 +19,9 @@ on:
       - ".agent-src.uncondensed/skills/**"
       - "router.json"
       - "src/scripts/smoke/**"
-      - "src/scripts/measure_rule_budget.py"
-      - "src/scripts/skill_linter.py"
-      - "src/scripts/validate_frontmatter.py"
+      - "src/scripts/measure_rule_budget.ts"
+      - "src/scripts/skill_linter.ts"
+      - "src/scripts/validate_frontmatter.ts"
       - "src/scripts/schemas/**"
       - "docs/contracts/**"
       - "docs/guidelines/**"
@@ -41,9 +41,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
       - name: Run kernel smoke
         run: src/scripts/smoke/kernel.sh
 
@@ -52,9 +57,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
       - name: Run router smoke
         run: src/scripts/smoke/router.sh
 
@@ -63,9 +73,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
       - name: Run schema smoke
         run: src/scripts/smoke/schema.sh
 
@@ -74,8 +89,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
       - name: Run skills smoke
         run: src/scripts/smoke/skills.sh

@@ -208,7 +208,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         if (current !== content) {
             process.stderr.write(
                 'generate_command_flows: docs/command-flows.md is stale — ' +
-                    'run `python3 scripts/generate_command_flows.py`\n',
+                    'run `./scripts-run src/scripts/generate_command_flows`\n',
             );
             return 1;
         }

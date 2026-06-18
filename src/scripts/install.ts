@@ -49,11 +49,12 @@
  * - The lazy `_load_*_module()` helpers in the Python are eager static
  *   imports here; the sys.path bootstrap they performed is a Python-only
  *   import-resolution detail with no observable effect.
- * - `scripts._cli.cmd_migrate` has NO `.ts` twin yet, so `_run_migrate_to_global`
- *   spawns `python3` against the real `cmd_migrate.py` and inherits its
- *   stdout + exit code. The Python original runs it in-process writing to
- *   `sys.stdout`; the observable contract (stdout text + exit code) is
- *   identical. Inline reason at the call site.
+ * - `scripts._cli.cmd_migrate` now has a `.ts` twin, so `_run_migrate_to_global`
+ *   calls `cmd_migrate.main([], { cwd })` directly in-process — exactly as the
+ *   Python original ran it via `sys.stdout`. The migrator's `out`/`err` sinks
+ *   default to `process.stdout`/`process.stderr`, preserving the prior
+ *   `stdio:['ignore','inherit','pipe']` observable contract (stdout text + exit
+ *   code). Inline reason at the call site.
  * - `webbrowser.open` → a platform open spawn (`open`/`xdg-open`/`start`),
  *   best-effort and never fatal, matching the Python's bare-except guard.
  * - `threading.Thread` draining child stderr → an async line reader; the
@@ -84,6 +85,7 @@ import {
     read_model_tier,
     render_native_model_md,
 } from './_lib/model_tier.js';
+import { main as cmdMigrateMain } from './_cli/cmd_migrate.js';
 
 // ---------------------------------------------------------------------------
 // Python-runtime parity helpers
@@ -1694,8 +1696,36 @@ function dirHasEntries(p: string): boolean {
     }
 }
 
+/**
+ * Resolve how to run a `.ts` script: prefer the `tsx` binary from a
+ * `node_modules/.bin` directory found by walking up from the script's
+ * directory; fall back to `npx tsx`. Mirrors
+ * `dispatch_hook.ts::_resolve_tsx_invocation` so the smoke probe runs the
+ * dispatcher as TypeScript with no python3 dependency.
+ */
+function _resolve_tsx_invocation(
+    scriptPath: string,
+    scriptArgs: string[],
+): { command: string; args: string[] } {
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    let dir = path.dirname(scriptPath);
+    for (;;) {
+        const candidate = path.join(dir, 'node_modules', '.bin', binName);
+        if (isFile(candidate)) {
+            return { command: candidate, args: [scriptPath, ...scriptArgs] };
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+    }
+    return { command: 'npx', args: ['tsx', scriptPath, ...scriptArgs] };
+}
+
 function _smoke_test_hooks(project_root: string, package_root: string): number {
-    const dispatcher = path.join(package_root, 'scripts', 'hooks', 'dispatch_hook.py');
+    // The dispatcher is a `.ts` concern run via tsx; in an installed package
+    // layout it ships under `scripts/hooks/dispatch_hook.ts` (the package's
+    // projection scripts dir, not `src/scripts`).
+    const dispatcher = path.join(package_root, 'scripts', 'hooks', 'dispatch_hook.ts');
     const manifest = path.join(package_root, 'scripts', 'hook_manifest.yaml');
     if (!isFile(dispatcher) || !isFile(manifest)) return 0;
 
@@ -1713,8 +1743,7 @@ function _smoke_test_hooks(project_root: string, package_root: string): number {
             skipped.push(platform);
             continue;
         }
-        const cmd = [
-            dispatcher,
+        const dispatcherArgs = [
             '--manifest',
             manifest,
             '--platform',
@@ -1725,9 +1754,10 @@ function _smoke_test_hooks(project_root: string, package_root: string): number {
             native,
             '--dry-run',
         ];
+        const inv = _resolve_tsx_invocation(dispatcher, dispatcherArgs);
         let res;
         try {
-            res = spawnSync('python3', cmd, {
+            res = spawnSync(inv.command, inv.args, {
                 input: '{}',
                 encoding: 'utf-8',
                 cwd: project_root,
@@ -2498,49 +2528,23 @@ function _prompt_migrate_to_global(project_root: string, artefacts: string[]): b
 
 function _run_migrate_to_global(project_root: string): number {
     // The .py runs `scripts._cli.cmd_migrate.main([], cwd, out=sys.stdout)`
-    // in-process. cmd_migrate has no .ts twin yet, so we spawn python3 against
-    // the real cmd_migrate.py with the same cwd and inherited stdio — the
-    // observable contract (stdout text + exit code) is identical. The
-    // `-c` bootstrap inserts the package root on sys.path exactly as the
-    // Python's _run_migrate_to_global does before the package-qualified import.
-    const pkg_root = path.dirname(path.dirname(resolvePath(_HERE)));
-    const bootstrap =
-        'import sys; ' +
-        `sys.path.insert(0, ${pyStrLiteral(pkg_root)}); ` +
-        'import importlib; ' +
-        'mod=None\n' +
-        'try:\n' +
-        '    mod=importlib.import_module("scripts._cli.cmd_migrate")\n' +
-        'except ImportError:\n' +
-        '    try:\n' +
-        '        mod=importlib.import_module("_cli.cmd_migrate")\n' +
-        '    except ImportError as exc:\n' +
-        '        sys.stderr.write("MIGRATE_UNAVAILABLE:%s" % exc); sys.exit(99)\n' +
-        'from pathlib import Path\n' +
-        `sys.exit(mod.main([], cwd=Path(${pyStrLiteral(project_root)}), out=sys.stdout))\n`;
-    const res = spawnSync('python3', ['-c', bootstrap], {
-        cwd: project_root,
-        stdio: ['ignore', 'inherit', 'pipe'],
-        encoding: 'utf-8',
-    });
-    if (res.status === 99) {
-        const msg = (res.stderr || '').replace(/^MIGRATE_UNAVAILABLE:/, '');
-        warn(`migrate unavailable: ${msg}`);
+    // in-process. The `.ts` twin (`./_cli/cmd_migrate.ts`) is statically
+    // imported above, so this is a direct in-process call — no subprocess.
+    // cmd_migrate.main defaults its `out` sink to `process.stdout` and its
+    // `err` sink to `process.stderr`, reproducing the old
+    // `stdio:['ignore','inherit','pipe']` semantics (child stdout → parent
+    // stdout; migrator stderr → parent stderr). It returns the int exit code.
+    //
+    // The old python3-spawn path returned 1 on a MIGRATE_UNAVAILABLE (exit 99)
+    // sentinel or a spawn error. With a static import the migrator can never be
+    // "unavailable", so that arm is dead — but the defensive try/catch is kept:
+    // any unexpected throw maps to the same exit-1 contract.
+    try {
+        return cmdMigrateMain([], { cwd: project_root });
+    } catch (exc) {
+        warn(`migrate unavailable: ${String(exc)}`);
         return 1;
     }
-    if (res.error) {
-        warn(`migrate unavailable: ${String(res.error)}`);
-        return 1;
-    }
-    // Surface any stderr the migrator emitted (the .py shares the parent's
-    // stderr; we captured it to detect the unavailable sentinel).
-    if (res.stderr) process.stderr.write(res.stderr);
-    return res.status ?? 1;
-}
-
-/** Render a Python single-quoted string literal for the `-c` bootstrap. */
-function pyStrLiteral(s: string): string {
-    return "'" + s.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 }
 
 function _format_global_root_for_marker(global_root: string): string {
@@ -4188,7 +4192,7 @@ function _propose_modules_config(project_root: string, is_first_run: boolean): v
     process.stdout.write('    skip_dirs: [.module-template, .example]\n');
     process.stdout.write('\n');
     info(
-        'Re-run anytime via `python3 src/scripts/propose_modules_config.py` ' +
+        'Re-run anytime via `./scripts-run src/scripts/propose_modules_config` ' +
             '(installed under <package>/src/scripts/).',
     );
 }

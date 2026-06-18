@@ -42,7 +42,7 @@ Before starting, confirm:
 Any fail → surface the conflict and stop. Run:
 
 ```bash
-python3 src/scripts/lint_missions.py --check-precondition upgrade .
+python3 src/scripts/lint_missions.ts --check-precondition upgrade .
 ```
 
 (Currently a documented stub — full live-repo check lands in Phase 1 PoC.)
@@ -172,7 +172,7 @@ Knowledge source: `src/missions/upgrade/laravel-10-to-11.yaml`. Versionable, dif
 - [`dependency-upgrade`](../../skills/dependency-upgrade/SKILL.md) — the stack-agnostic upgrade skill this mission specialises
 - `src/missions/upgrade/mission.yaml` — the mission manifest
 - `src/missions/upgrade/laravel-10-to-11.yaml` — the breaking-change catalog
-- `src/scripts/lint_missions.py` — validates the manifest and catalog
+- `src/scripts/lint_missions.ts` — validates the manifest and catalog
 
 ## Examples
 

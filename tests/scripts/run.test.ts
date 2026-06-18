@@ -33,17 +33,10 @@ function dispatch(args: readonly string[], input?: string): DispatchResult {
 }
 
 describe('src/scripts/run.ts dispatcher', () => {
-    it('prefers the .ts version when both .ts and .py exist', () => {
+    it('resolves the .ts version (the only supported resolution)', () => {
         const result = dispatch([`${FIXTURES}/pair`]);
         expect(result.status).toBe(0);
         expect(result.stdout).toBe('ts:pair\n');
-        expect(result.stderr).toBe('');
-    });
-
-    it('falls back to .py via python3 when only .py exists', () => {
-        const result = dispatch([`${FIXTURES}/pyonly`]);
-        expect(result.status).toBe(0);
-        expect(result.stdout).toBe('py:[]\n');
         expect(result.stderr).toBe('');
     });
 
@@ -52,13 +45,6 @@ describe('src/scripts/run.ts dispatcher', () => {
         const result = dispatch([`${FIXTURES}/tsonly`, ...args]);
         expect(result.status).toBe(0);
         expect(result.stdout).toBe(`ts:${JSON.stringify(args)}\n`);
-    });
-
-    it('passes argv through verbatim to a .py script', () => {
-        const args = ['a b', '--snake_case-flag', '3'];
-        const result = dispatch([`${FIXTURES}/pyonly`, ...args]);
-        expect(result.status).toBe(0);
-        expect(result.stdout).toBe(`py:${JSON.stringify(args)}\n`);
     });
 
     it('keeps stdout/stderr on their channels and propagates the exit code', () => {
@@ -86,13 +72,12 @@ describe('src/scripts/run.ts dispatcher', () => {
         expect(result.stdout).toBe('ts:pair\n');
     });
 
-    it('exits 127 and names both candidates when no script exists', () => {
+    it('exits 127 and names the .ts candidate when no script exists', () => {
         const missing = `${FIXTURES}/does_not_exist`;
         const result = dispatch([missing]);
         expect(result.status).toBe(127);
         expect(result.stdout).toBe('');
         expect(result.stderr).toContain(join(REPO_ROOT, `${missing}.ts`));
-        expect(result.stderr).toContain(join(REPO_ROOT, `${missing}.py`));
     });
 
     it('exits 2 with usage when no script path is given', () => {

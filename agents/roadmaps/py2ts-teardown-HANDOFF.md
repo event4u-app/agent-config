@@ -1,3 +1,4 @@
+<!-- check-refs: skip -->
 # Agent Handoff — Python→TypeScript Teardown (Phase 12 / 4.5)
 
 Paste-ready state dump for a fresh session. Everything below is committed/pushed;

@@ -64,7 +64,7 @@ export function _maybe_raise_legacy_hint(state_file: string): void {
     throw new _CLIError(
         `Found legacy state file ${legacy_candidate} but no ` +
             `${state_file}. The default state file was renamed in 1.15.0. ` +
-            `Run \`python3 -m work_engine.migration.v0_to_v1 ` +
+            `Run \`node node_modules/.bin/tsx work_engine/migration/v0_to_v1.ts ` +
             `${legacy_candidate}\` to migrate, or pass \`--state-file ` +
             `${legacy_candidate}\` to keep using the old name. See ` +
             'docs/MIGRATION.md.',

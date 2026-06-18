@@ -277,23 +277,16 @@ EOF
 }
 
 print_version() {
-  if [[ -f "$VERSION_FILE" ]] && command -v python3 >/dev/null 2>&1; then
-    python3 -c "import json; print(json.load(open('$VERSION_FILE'))['version'])"
+  if [[ -f "$VERSION_FILE" ]] && command -v node >/dev/null 2>&1; then
+    node -e "process.stdout.write(require(process.argv[1]).version + '\n')" "$VERSION_FILE"
   else
     echo "unknown"
   fi
 }
 
-require_python3() {
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "❌  agent-config: python3 not found on PATH" >&2
-    echo "    Install Python 3.10+ and retry." >&2
-    exit 127
-  fi
-}
-
 # Resolve the tsx runner (Python→TypeScript migration). Sets TSX_BIN to the
-# repo-local binary when present, else `npx tsx`. Returns 1 if neither works.
+# repo-local binary when present, else `npx tsx`. Exits 127 if neither works
+# since the runtime is now Node/tsx and there is no Python fallback.
 require_tsx() {
   if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
     TSX_BIN="$PACKAGE_ROOT/node_modules/.bin/tsx"
@@ -303,27 +296,41 @@ require_tsx() {
     TSX_BIN="npx tsx"
     return 0
   fi
-  return 1
+  echo "❌  agent-config: tsx runner not found on PATH" >&2
+  echo "    Run \`npm install\` in the package to provide node_modules/.bin/tsx." >&2
+  exit 127
 }
 
-# Run a hook that has been ported to TypeScript: prefer <base>.ts via tsx,
-# fall back to <base>.py via python3. <base> is relative to PACKAGE_ROOT,
-# WITHOUT extension. Mirrors the src/scripts/run.ts dispatcher resolution so
-# a hook flips to TS the moment its .ts twin lands, with no other edits.
+# Run an absolute script path via tsx. The argument is an absolute path that
+# may carry a `.py` (legacy) or `.ts` extension; we resolve the `.ts` twin and
+# exec it through tsx. Argv/stdin/stdout/stderr/exit-code pass through
+# unchanged — mirrors src/scripts/run.ts resolution.
+exec_ts() {
+  local script="$1"; shift
+  local ts_abs="${script%.py}"
+  ts_abs="${ts_abs%.ts}.ts"
+  if [[ ! -f "$ts_abs" ]]; then
+    echo "❌  agent-config: script not found: $ts_abs" >&2
+    exit 127
+  fi
+  require_tsx
+  # shellcheck disable=SC2086
+  exec $TSX_BIN "$ts_abs" "$@"
+}
+
+# Run a hook that has been ported to TypeScript: resolve <base>.ts via tsx.
+# <base> is relative to PACKAGE_ROOT, WITHOUT extension. Mirrors the
+# src/scripts/run.ts dispatcher resolution.
 exec_hook() {
   local base="$1"; shift
   local ts_abs="$PACKAGE_ROOT/${base}.ts"
-  if [[ -f "$ts_abs" ]] && require_tsx; then
-    # shellcheck disable=SC2086
-    exec $TSX_BIN "$ts_abs" "$@"
-  fi
-  require_python3
-  local py_abs="$PACKAGE_ROOT/${base}.py"
-  if [[ ! -f "$py_abs" ]]; then
-    echo "❌  agent-config: hook not found: ${base}.ts or ${base}.py" >&2
+  if [[ ! -f "$ts_abs" ]]; then
+    echo "❌  agent-config: hook not found: ${base}.ts" >&2
     return 1
   fi
-  exec python3 "$py_abs" "$@"
+  require_tsx
+  # shellcheck disable=SC2086
+  exec $TSX_BIN "$ts_abs" "$@"
 }
 
 # Locate a script. First argument is relative to PACKAGE_ROOT, second is
@@ -373,17 +380,15 @@ resolve_template_script() {
 }
 
 cmd_mcp_render() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/mcp_render.py")"
-  exec python3 "$script" "$@"
+  script="$(resolve_script "src/scripts/mcp_render.ts")"
+  exec_ts "$script" "$@"
 }
 
 cmd_mcp_check() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/mcp_render.py")"
-  exec python3 "$script" --check "$@"
+  script="$(resolve_script "src/scripts/mcp_render.ts")"
+  exec_ts "$script" --check "$@"
 }
 
 cmd_mcp_setup() {
@@ -393,39 +398,34 @@ cmd_mcp_setup() {
 }
 
 # Run the built-in stdio MCP server. The server module ships inside the
-# package (PACKAGE_ROOT/scripts/mcp_server/), but the venv is created by
-# `mcp_setup.sh` at CWD — keeping consumer projects in control of where
-# the SDK install lives. PYTHONPATH points at PACKAGE_ROOT so the
-# `scripts.mcp_server` import resolves regardless of CWD.
+# package (PACKAGE_ROOT/src/scripts/mcp_server/) as a TypeScript module run
+# via tsx — no Python venv / SDK install any more (the runtime is Node/tsx).
 cmd_mcp_run() {
-  local venv_py="$CONSUMER_ROOT/.venv-mcp/bin/python"
-  if [[ ! -x "$venv_py" ]]; then
-    echo "❌  agent-config: .venv-mcp/ not found at $CONSUMER_ROOT/.venv-mcp" >&2
-    echo "    Run \`./agent-config mcp:setup\` first to create it." >&2
+  local server_main="$PACKAGE_ROOT/src/scripts/mcp_server/__main__.ts"
+  if [[ ! -f "$server_main" ]]; then
+    echo "❌  agent-config: MCP server module not found at $server_main" >&2
+    echo "    Reinstall the package and retry." >&2
     exit 1
   fi
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" "$venv_py" -m scripts.mcp_server "$@"
+  exec_ts "$server_main" "$@"
 }
 
 cmd_roadmap_progress() {
-  require_python3
   local script
-  script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
-  exec python3 "$script" "$@"
+  script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"
+  exec_ts "$script" "$@"
 }
 
 cmd_roadmap_progress_check() {
-  require_python3
   local script
-  script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
-  exec python3 "$script" --check "$@"
+  script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"
+  exec_ts "$script" --check "$@"
 }
 
 cmd_capabilities_index() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/generate_capabilities_index.py")"
-  exec python3 "$script" "$@"
+  script="$(resolve_script "src/scripts/generate_capabilities_index.ts")"
+  exec_ts "$script" "$@"
 }
 
 cmd_first_run() {
@@ -435,14 +435,13 @@ cmd_first_run() {
 }
 
 cmd_implement_ticket() {
-  require_python3
   local engine_root="$PACKAGE_ROOT/dist/agent-src/templates/scripts"
   if [[ ! -d "$engine_root/work_engine" ]]; then
     echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
     echo "    Reinstall the package and retry." >&2
     return 1
   fi
-  exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
+  exec_ts "$engine_root/work_engine/__main__.ts" "$@"
 }
 
 cmd_work() {
@@ -450,98 +449,85 @@ cmd_work() {
   # envelope differs (kind=prompt vs kind=ticket). Keeping a separate
   # subcommand makes the user-facing distinction explicit and lets the
   # two flows diverge later without churn at the wrapper layer.
-  require_python3
   local engine_root="$PACKAGE_ROOT/dist/agent-src/templates/scripts"
   if [[ ! -d "$engine_root/work_engine" ]]; then
     echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
     echo "    Reinstall the package and retry." >&2
     return 1
   fi
-  exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
+  exec_ts "$engine_root/work_engine/__main__.ts" "$@"
 }
 
 cmd_memory_lookup() {
-  require_python3
   local script
-  script="$(resolve_template_script "memory_lookup.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "memory_lookup.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_linked_projects_list() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/linked_projects_list.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_script "src/scripts/linked_projects_list.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_memory_signal() {
-  require_python3
   local script
-  script="$(resolve_template_script "memory_signal.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "memory_signal.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_memory_hash() {
-  require_python3
   local script
-  script="$(resolve_template_script "memory_hash.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "memory_hash.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_telemetry_record() {
-  require_python3
   local script
-  script="$(resolve_template_script "telemetry_record.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "telemetry_record.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_telemetry_status() {
-  require_python3
   local script
-  script="$(resolve_template_script "telemetry_status.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "telemetry_status.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_telemetry_report() {
-  require_python3
   local script
-  script="$(resolve_template_script "telemetry_report.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "telemetry_report.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_memory_check() {
-  require_python3
   local script
-  script="$(resolve_template_script "check_memory.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "check_memory.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_memory_check_proposal() {
-  require_python3
   local script
-  script="$(resolve_template_script "check_memory_proposal.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_template_script "check_memory_proposal.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_proposal_check() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/check_proposal.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_script "src/scripts/check_proposal.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_refine_ticket_detect() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/refine_ticket_detect.py")" || return 1
-  exec python3 "$script" "$@"
+  script="$(resolve_script "src/scripts/refine_ticket_detect.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 cmd_chat_history_hook() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/chat_history.py")" || return 1
-  exec python3 "$script" hook-dispatch "$@"
+  script="$(resolve_script "src/scripts/chat_history.ts")" || return 1
+  exec_ts "$script" hook-dispatch "$@"
 }
 
 cmd_roadmap_progress_hook() {
@@ -573,12 +559,11 @@ cmd_hooks_replay() {
 }
 
 cmd_chat_history_checkpoint() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/chat_history.py")" || return 1
+  script="$(resolve_script "src/scripts/chat_history.ts")" || return 1
   # Default cadence-bearing event when a user/agent invokes /chat-history-checkpoint:
   # "phase" — explicit phase boundary, lands under per_phase / per_turn cadences.
-  exec python3 "$script" hook-append --event phase "$@"
+  exec_ts "$script" hook-append --event phase "$@"
 }
 
 cmd_hooks_install() {
@@ -705,32 +690,39 @@ _hooks_install_claude_lifecycle() {
   local settings_file="$settings_dir/settings.json"
   mkdir -p "$settings_dir"
 
-  # Idempotent merge using python3 — bash JSON edits are unsafe with
+  # Idempotent merge using node — bash JSON edits are unsafe with
   # nested keys. Falls back to a fresh-write when the file is absent.
-  python3 - "$settings_file" <<'PY' || return 1
-import json
-import sys
-from pathlib import Path
-
-target = Path(sys.argv[1])
-data = {}
-if target.is_file():
-    try:
-        data = json.loads(target.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        print(f"❌  hooks:install --claude: existing {target} is not valid JSON ({exc})", file=sys.stderr)
-        sys.exit(1)
-    if not isinstance(data, dict):
-        print(f"❌  hooks:install --claude: existing {target} is not a JSON object", file=sys.stderr)
-        sys.exit(1)
-enabled = data.setdefault("enabledPlugins", {})
-if not isinstance(enabled, dict):
-    print(f"❌  hooks:install --claude: enabledPlugins in {target} is not an object", file=sys.stderr)
-    sys.exit(1)
-enabled["agent-config@event4u-agent-config"] = True
-target.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-print(f"✅  hooks:install --claude: enabled plugin in {target}")
-PY
+  node -e '
+const fs = require("fs");
+const target = process.argv[1];
+let data = {};
+if (fs.existsSync(target)) {
+  let raw;
+  try {
+    raw = fs.readFileSync(target, "utf8");
+    data = JSON.parse(raw);
+  } catch (exc) {
+    process.stderr.write(`❌  hooks:install --claude: existing ${target} is not valid JSON (${exc.message})\n`);
+    process.exit(1);
+  }
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    process.stderr.write(`❌  hooks:install --claude: existing ${target} is not a JSON object\n`);
+    process.exit(1);
+  }
+}
+let enabled = data.enabledPlugins;
+if (enabled === undefined) {
+  enabled = {};
+  data.enabledPlugins = enabled;
+}
+if (enabled === null || typeof enabled !== "object" || Array.isArray(enabled)) {
+  process.stderr.write(`❌  hooks:install --claude: enabledPlugins in ${target} is not an object\n`);
+  process.exit(1);
+}
+enabled["agent-config@event4u-agent-config"] = true;
+fs.writeFileSync(target, JSON.stringify(data, null, 2) + "\n", "utf8");
+process.stdout.write(`✅  hooks:install --claude: enabled plugin in ${target}\n`);
+' "$settings_file" || return 1
 
   # Symlink the package's agent-config wrapper into the consumer root.
   # Idempotent — replace stale symlinks; skip if already correct.
@@ -778,7 +770,9 @@ _hooks_install_regenerator() {
   # The helper module lives at src/scripts/_lib/ (6.0.0-D moved tooling under
   # src/). $PACKAGE_ROOT is the package root (two levels above src/scripts) and
   # is the search base the regenerator needs to locate dist/agent-src/ / .augment/.
-  python3 "$SCRIPT_DIR/_lib/install_regenerator.py" "$CONSUMER_ROOT" "$PACKAGE_ROOT" 2>&1
+  require_tsx
+  # shellcheck disable=SC2086
+  $TSX_BIN "$SCRIPT_DIR/_lib/install_regenerator.ts" "$CONSUMER_ROOT" "$PACKAGE_ROOT" 2>&1
   return $?
 }
 
@@ -801,47 +795,41 @@ cmd_keys_install_openai() {
 # Three subcommands share one Python entry point; we forward the subcommand
 # verb so `./agent-config council:run --confirm` lands on `council_cli.py run`.
 cmd_council() {
-  require_python3
   local sub="$1"; shift || true
   local script
-  script="$(resolve_script "src/scripts/council_cli.py")" || return 1
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 "$script" "$sub" "$@"
+  script="$(resolve_script "src/scripts/council_cli.ts")" || return 1
+  exec_ts "$script" "$sub" "$@"
 }
 
 # `use --profile=<id>` — switch the active experience/profile. Writes
 # profile.id into the canonical .agent-settings.yml; the explicit
 # profile-switch seam named by ADR-040 (road-to-6.0.0-a Step 8).
 cmd_use() {
-  require_python3
   local script
-  script="$(resolve_script "src/scripts/profile_use.py")" || return 1
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 "$script" "$@"
+  script="$(resolve_script "src/scripts/profile_use.ts")" || return 1
+  exec_ts "$script" "$@"
 }
 
 # `agent-config update` — flip the agent_config_version pin in
 # .agent-settings.yml. See scripts/_cli/cmd_update.py (P3.1 of
 # road-to-portable-runtime-and-update-check.md).
 cmd_update() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_update "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_update.ts" "$@"
 }
 
 cmd_upgrade() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_upgrade "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_upgrade.ts" "$@"
 }
 
 cmd_refresh() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_refresh "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_refresh.ts" "$@"
 }
 
 # `agent-config migrate` — one-shot migration off legacy composer / npm
 # install paths onto the npx-only runtime. See scripts/_cli/cmd_migrate.py
 # (P3.5 of road-to-portable-runtime-and-update-check.md).
 cmd_migrate() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_migrate "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_migrate.ts" "$@"
 }
 
 # `agent-config init` — project-scope install entry point. Forwards
@@ -871,24 +859,21 @@ cmd_global() {
 # road-to-global-first-install.md. Replaces the rejected symlink-bridge.
 # See scripts/_cli/cmd_export.py for the registry and idempotency logic.
 cmd_export() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_export "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_export.ts" "$@"
 }
 
 # `agent-config sync` — replay agents/installed-tools.lock (ADR-008
 # Phase 3.3). Re-installs any tool whose bridge marker is missing on
 # disk. Typical onboarding flow: clone → `./agent-config sync` → done.
 cmd_sync() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_sync "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_sync.ts" "$@"
 }
 
 # `agent-config validate` — read-only drift detection (ADR-008 Phase 3.4).
 # Surfaces marker-missing, scope-divergence, and version-drift; exits 1 on
 # any drift. Never edits the manifest or re-runs the installer.
 cmd_validate() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_validate "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_validate.ts" "$@"
 }
 
 # `agent-config settings:check` — read-only YAML-subset validator for
@@ -896,8 +881,7 @@ cmd_validate() {
 # pinned in docs/contracts/settings-sync-yaml-subset.md. Exit 0 clean,
 # 1 finding(s), 2 file absent / unreadable.
 cmd_settings_check() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_settings_check "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_check.ts" "$@"
 }
 
 # `agent-config settings:migrate` — lift project-local
@@ -907,8 +891,7 @@ cmd_settings_check() {
 # (see docs/contracts/migrate-command.md).
 # Exit 0 success / no-op, 1 non-empty global without --force or parse error.
 cmd_settings_migrate() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_settings_migrate "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_migrate.ts" "$@"
 }
 
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
@@ -916,8 +899,7 @@ cmd_settings_migrate() {
 # content directories under user-scope anchors (destructive). See
 # scripts/_cli/cmd_uninstall.py.
 cmd_uninstall() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_uninstall "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_uninstall.ts" "$@"
 }
 
 # `agent-config prune` — remove orphaned project bridge markers.
@@ -926,16 +908,14 @@ cmd_uninstall() {
 # declared. Hard-floors when lockfile is absent. See
 # scripts/_cli/cmd_prune.py.
 cmd_prune() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_prune "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_prune.ts" "$@"
 }
 
 # `agent-config doctor` — read-only drift report against the manifest.
 # Surfaces missing / modified / foreign files. Exit 0 clean, 1 drift,
 # 2 manifest-absent. See scripts/_cli/cmd_doctor.py.
 cmd_doctor() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_doctor "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor.ts" "$@"
 }
 
 # `agent-config versions` — list available @event4u/agent-config versions
@@ -943,16 +923,14 @@ cmd_doctor() {
 # and the latest published version. Offline-tolerant. See
 # scripts/_cli/cmd_versions.py.
 cmd_versions() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_versions "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_versions.ts" "$@"
 }
 
 # `agent-config explain <config|rule|route>` — print the decision chain
 # behind a configuration or routing outcome. Read-only diagnostic; never
 # edits state. See scripts/_cli/cmd_explain.py.
 cmd_explain() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._cli.cmd_explain "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_explain.ts" "$@"
 }
 
 main() {
@@ -1048,13 +1026,20 @@ maybe_pin_reexec() {
   case "$cmd" in
     help|--help|-h|--version|-V|update|migrate|init|"") return 0 ;;
   esac
-  if ! command -v python3 >/dev/null 2>&1; then
+  # Best-effort: soft tsx probe (no hard-exit — this runs around dispatch).
+  local tsx_bin=""
+  if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
+    tsx_bin="$PACKAGE_ROOT/node_modules/.bin/tsx"
+  elif command -v npx >/dev/null 2>&1; then
+    tsx_bin="npx tsx"
+  else
     return 0
   fi
   local installed
   installed="$(print_version)"
   [[ -z "$installed" || "$installed" == "unknown" ]] && return 0
-  env PYTHONPATH="$PACKAGE_ROOT/src" python3 -m scripts._lib.pin_resolver \
+  # shellcheck disable=SC2086
+  $tsx_bin "$PACKAGE_ROOT/src/scripts/_lib/pin_resolver.ts" \
     --cwd "$CONSUMER_ROOT" --installed "$installed" -- "$@" || true
 }
 
@@ -1069,12 +1054,19 @@ run_update_check_banner() {
   case "$cmd" in
     help|--help|-h|--version|-V|"") return 0 ;;
   esac
-  if ! command -v python3 >/dev/null 2>&1; then
+  # Best-effort: soft tsx probe (no hard-exit — banner is post-dispatch).
+  local tsx_bin=""
+  if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
+    tsx_bin="$PACKAGE_ROOT/node_modules/.bin/tsx"
+  elif command -v npx >/dev/null 2>&1; then
+    tsx_bin="npx tsx"
+  else
     return 0
   fi
-  local banner_script="$PACKAGE_ROOT/src/scripts/check_update_banner.py"
+  local banner_script="$PACKAGE_ROOT/src/scripts/check_update_banner.ts"
   [[ -f "$banner_script" ]] || return 0
-  python3 "$banner_script" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
+  # shellcheck disable=SC2086
+  $tsx_bin "$banner_script" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
 }
 
 # Global `--root <path>` / `--root=<path>` parsing (Step 8 A3).

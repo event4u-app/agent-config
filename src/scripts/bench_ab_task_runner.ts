@@ -19,7 +19,7 @@
  * 3. Capture the transcript, tool-call events, wall-time, and (if available)
  *    token + cost counts.
  * 4. Snapshot the post-run tree.
- * 5. Score the task via scripts/_lib/bench_ab_scoring.py.
+ * 5. Score the task via scripts/_lib/bench_ab_scoring.ts.
  *
  * Modes:
  *
@@ -31,18 +31,19 @@
  * The runner ALWAYS resets the clone to a clean state before each task and
  * ALWAYS records the mode in the report header.
  *
- * Cross-batch dependency: `reset_clone` calls `bench_ab_clone.clone()`. That
- * clone script is NOT yet ported to TypeScript; the Python original loads it
- * via `importlib`, and this twin shells out to `python3` to call it — keeping a
- * single source of truth until `bench_ab_clone` is ported.
+ * Cross-batch dependency: `reset_clone` calls `bench_ab_clone.clone()`. Now
+ * that the `.ts` twin has landed, this imports `bench_ab_clone.clone()`
+ * directly — a single source of truth for the clone surface, no python3
+ * dependency.
  */
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { clone as _clone } from './bench_ab_clone.js';
 import * as bench_ab_cache from './_lib/bench_ab_cache.js';
 import { score_task } from './_lib/bench_ab_scoring.js';
 
@@ -155,26 +156,14 @@ export function snapshot_clone(cloneRoot: string, maxDepth: number = SNAPSHOT_MA
 
 /** Rebuild the clone so each task starts from the same state. */
 export function reset_clone(variant: string): string {
-    const clonePy = path.join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.py');
-    if (!fs.existsSync(clonePy)) {
+    // Mirror the Python `module.clone(variant, refresh=True, quiet=True)` by
+    // calling the `bench_ab_clone` `.ts` twin directly — single source of truth,
+    // no python3. Preserve the original "cannot load helper" failure surface.
+    try {
+        return _clone(variant, { refresh: true, quiet: true });
+    } catch {
         throw new Error('cannot load bench_ab_clone helper');
     }
-    // Mirror the Python `importlib` load + `module.clone(variant, refresh=True)`
-    // by shelling out to the same .py, printing the returned clone-root path.
-    const driver = [
-        'import importlib.util, sys',
-        `spec = importlib.util.spec_from_file_location("bench_ab_clone", ${JSON.stringify(clonePy)})`,
-        'if spec is None or spec.loader is None:',
-        '    raise RuntimeError("cannot load bench_ab_clone helper")',
-        'module = importlib.util.module_from_spec(spec)',
-        'spec.loader.exec_module(module)',
-        `sys.stdout.write(str(module.clone(${JSON.stringify(variant)}, refresh=True, quiet=True)))`,
-    ].join('\n');
-    const out = execFileSync('python3', ['-c', driver], {
-        encoding: 'utf-8',
-        maxBuffer: 16 * 1024 * 1024,
-    });
-    return out;
 }
 
 /** Resolve the claude CLI binary (env override → PATH). */

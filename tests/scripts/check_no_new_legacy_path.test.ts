@@ -98,17 +98,17 @@ describe('check_no_new_legacy_path — 1:1 port of test_check_no_new_legacy_path
     });
 
     it('test_faithful_twin_default_reads_sibling_from_disk', () => {
-        // Default twin_check reads the real sibling. agent_src.py exists and carries
-        // the literal → its .ts twin is exempt under the default predicate. The
-        // sibling lookup is cwd-relative, so run it from the repo root.
+        // After the Python→TS final deletion there are no `.py` siblings left on
+        // disk, so the default predicate never exempts via a real sibling — a
+        // `.ts` with no legacy-carrying `.py` sibling is correctly not a faithful
+        // twin. (The injected-predicate exemption path is covered by the test
+        // above.) The sibling lookup is cwd-relative, so run from the repo root.
         const cwd = process.cwd();
         try {
             process.chdir(REPO_ROOT);
-            expect(g._is_faithful_twin('src/scripts/_lib/agent_src.ts')).toBe(true);
-            // A .ts with no .py sibling carrying the literal is not a faithful twin.
+            // No `.py` sibling exists post-deletion → not a faithful twin.
+            expect(g._is_faithful_twin('src/scripts/_lib/agent_src.ts')).toBe(false);
             expect(g._is_faithful_twin('src/scripts/_lib/__does_not_exist__.ts')).toBe(false);
-            // A .py is never auto-exempted by this rule (only the static EXEMPT set).
-            expect(g._is_faithful_twin('src/scripts/_lib/agent_src.py')).toBe(false);
         } finally {
             process.chdir(cwd);
         }

@@ -73,7 +73,6 @@
 
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -1184,53 +1183,17 @@ function _check_stale_orphans(): Dict {
 }
 
 function _check_python_runtime(): Dict {
-    // Parity: the Python check reports the running interpreter version. The TS
-    // twin spawns the same `python3` the rest of the package uses, so the
-    // verdict reflects the real toolchain (not the Node runtime). This is the
-    // one boundary where the .ts must consult python3 to keep parity with the
-    // .py's `sys.version_info` self-report.
-    const cur = pythonVersionInfo();
-    const need = MIN_PYTHON;
-    if (cur === null) {
-        // python3 unavailable: cannot read sys.version_info. The .py would
-        // never reach this state (it IS python). Mirror the below-min arm so a
-        // missing interpreter never falsely reports green.
-        return {
-            id: 'python-runtime',
-            status: 'fail',
-            message: `python ?.? below required ${need[0]}.${need[1]}`,
-            remedy: `install python >= ${need[0]}.${need[1]} and re-run`,
-        };
-    }
-    if (cur[0] < need[0] || (cur[0] === need[0] && cur[1] < need[1])) {
-        return {
-            id: 'python-runtime',
-            status: 'fail',
-            message: `python ${cur[0]}.${cur[1]} below required ${need[0]}.${need[1]}`,
-            remedy: `install python >= ${need[0]}.${need[1]} and re-run`,
-        };
-    }
+    // Post-teardown: the package runtime is TypeScript-on-`tsx`. python3 is no
+    // longer a runtime dependency, so this check no longer probes for an
+    // interpreter (spawning python3 here would be misleading in a python-free
+    // package). The check id is retained for the doctor's stable report shape;
+    // it always reports `ok`.
     return {
         id: 'python-runtime',
         status: 'ok',
-        message: `python ${cur[0]}.${cur[1]} meets ${need[0]}.${need[1]}+ requirement`,
+        message: 'python3 is not a runtime dependency (TS runtime via tsx)',
         remedy: '',
     };
-}
-
-/** Read `(major, minor)` from the `python3` on PATH; null when unavailable. */
-function pythonVersionInfo(): [number, number] | null {
-    const r = spawnSync(
-        'python3',
-        ['-c', 'import sys;print(f"{sys.version_info[0]} {sys.version_info[1]}")'],
-        { encoding: 'utf8' },
-    );
-    if (r.status !== 0 || typeof r.stdout !== 'string') {
-        return null;
-    }
-    const m = r.stdout.trim().match(/^(\d+)\s+(\d+)/);
-    if (!m) return null;
-    return [Number.parseInt(m[1] as string, 10), Number.parseInt(m[2] as string, 10)];
 }
 
 function _check_mcp_beta_readiness(project_root: string): Dict {
@@ -1534,7 +1497,7 @@ function _check_council_cli(project_root: string): Dict {
                 `quota warn_at=${pyFloat(warn_at)} (${over_warn.join(', ')}) · ${detail}`,
             remedy:
                 'wait for UTC rollover or run ' +
-                '`python3 scripts/council_cli.py quota --reset` to clear the counter',
+                '`./scripts-run src/scripts/council_cli quota --reset` to clear the counter',
         };
     }
     return {

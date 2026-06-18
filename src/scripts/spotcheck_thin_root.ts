@@ -11,26 +11,26 @@
  * that simulate a fresh agent landing on the file. Records qualitative
  * verdicts in agents/runtime/reports/thin-root-platform-spotcheck.md.
  *
- * Cross-batch dependency (DIVERGENCE — see
- * `docs/migration/divergences/src-scripts-spotcheck_thin_root.md`): the live
- * council step needs the still-Python `ai_council.clients`
- * (AnthropicClient / OpenAIClient / load_anthropic_key / load_openai_key) and
- * `ai_council.orchestrator` (CostBudget / CouncilQuestion / consult) modules —
- * ~2,800 lines of network-calling code with no TS twin in this wave, and a
- * `.ts` cannot import a `.py`. Per the "PORT + import, never inline the
- * un-ported logic" rule, this twin does NOT re-implement those clients; it
- * delegates the live consult to a `python3` shim that imports the real Python
- * modules (the same strategy `check_discovery_determinism.ts` and
- * `smoke_quickstart.ts` use for their un-ported Python deps). The artefact
- * assembly and report writing are deterministic and live in TS. The script is
- * non-deterministic by construction (live LLM latency / token counts), so it
- * has no golden-parity path.
+ * The live council step imports the `ai_council` TS twins directly in-process
+ * (`clients` — AnthropicClient / OpenAIClient / load_anthropic_key /
+ * load_openai_key; `orchestrator` — CostBudget / CouncilQuestion / consult;
+ * `pricing` — load_prices). The artefact assembly and report writing are
+ * deterministic. The script is non-deterministic by construction (live LLM
+ * latency / token counts), so it has no golden-parity path.
  */
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import {
+    AnthropicClient,
+    OpenAIClient,
+    load_anthropic_key,
+    load_openai_key,
+} from './ai_council/clients.js';
+import { CostBudget, CouncilQuestion, consult } from './ai_council/orchestrator.js';
+import { load_prices } from './ai_council/pricing.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -72,51 +72,31 @@ interface ResponseRow {
 }
 
 /**
- * Run the live council via a `python3` shim importing the still-Python
- * `ai_council` modules. Returns the council responses as plain rows. Mirrors
- * the Python original's `consult(members, question, budget, table, rounds=1)`
- * call exactly (same members, prompt, max_tokens, budget).
+ * Run the live council in-process via the `ai_council` TS twins. Returns the
+ * council responses as plain rows. Mirrors the Python original's
+ * `consult(members, question, budget, table=table, rounds=1)` call exactly
+ * (same members, prompt, max_tokens, budget). `table` + `rounds` ride in the
+ * twin's `opts` argument.
  */
-function _consultViaPython(artefact: string): ResponseRow[] {
-    const shim = `
-import json, sys
-from pathlib import Path
-ROOT = Path(${JSON.stringify(ROOT)})
-sys.path.insert(0, str(ROOT / "src"))
-from scripts.ai_council.clients import (
-    AnthropicClient, OpenAIClient, load_anthropic_key, load_openai_key,
-)
-from scripts.ai_council.orchestrator import CostBudget, CouncilQuestion, consult
-from scripts.ai_council.pricing import load_prices
-
-artefact = json.loads(sys.stdin.read())
-members = [
-    AnthropicClient(model="claude-sonnet-4-5", api_key=load_anthropic_key()),
-    OpenAIClient(model="gpt-4o", api_key=load_openai_key()),
-]
-question = CouncilQuestion(mode="files", user_prompt=artefact, max_tokens=1500)
-budget = CostBudget(max_total_usd=2.00, max_calls=4)
-table = load_prices()
-print("Running spot-check council …", file=sys.stderr)
-responses = consult(members, question, budget, table=table, rounds=1)
-rows = [{
-    "provider": r.provider, "model": r.model,
-    "input_tokens": r.input_tokens, "output_tokens": r.output_tokens,
-    "latency_ms": r.latency_ms, "error": r.error, "text": r.text,
-} for r in responses]
-sys.stdout.write(json.dumps(rows))
-`;
-    const result = spawnSync('python3', ['-c', shim], {
-        input: JSON.stringify(artefact),
-        encoding: 'utf-8',
-        cwd: ROOT,
-        stdio: ['pipe', 'pipe', 'inherit'],
-        maxBuffer: 256 * 1024 * 1024,
-    });
-    if (result.status !== 0) {
-        throw new Error(`council shim failed: exit ${result.status}`);
-    }
-    return JSON.parse(result.stdout ?? '[]') as ResponseRow[];
+function _consultViaCouncil(artefact: string): ResponseRow[] {
+    const members = [
+        new AnthropicClient({ model: 'claude-sonnet-4-5', api_key: load_anthropic_key() }),
+        new OpenAIClient({ model: 'gpt-4o', api_key: load_openai_key() }),
+    ];
+    const question = new CouncilQuestion({ mode: 'files', user_prompt: artefact, max_tokens: 1500 });
+    const budget = new CostBudget({ max_total_usd: 2.0, max_calls: 4 });
+    const table = load_prices();
+    process.stderr.write('Running spot-check council …\n');
+    const responses = consult(members, question, budget, { table, rounds: 1 });
+    return responses.map((r) => ({
+        provider: r.provider,
+        model: r.model,
+        input_tokens: r.input_tokens,
+        output_tokens: r.output_tokens,
+        latency_ms: r.latency_ms,
+        error: r.error,
+        text: r.text,
+    }));
 }
 
 /** Python `json.dumps(raw, indent=2)` parity (ensure_ascii=True, no sort_keys). */
@@ -206,7 +186,7 @@ export function main(): number {
         `\`\`\`markdown\n${consumerTemplate}\n\`\`\`\n\n` +
         `${QUESTIONS}\n`;
 
-    const responses = _consultViaPython(artefact);
+    const responses = _consultViaCouncil(artefact);
 
     const outDir = path.join(ROOT, 'agents', 'reports');
     fs.mkdirSync(outDir, { recursive: true });

@@ -35,6 +35,11 @@ export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 // 6.0.0-D Step 10 moved the command surface into src/domains/<pack>/<verb>/command.md.
 const DEFAULT_ROOT = (): string => SRC_DOMAINS();
+// Enforced source target — read by check_gate_paths (parity with the Python
+// module's `GATE_CORE_PATHS = (SRC_DOMAINS,)`). Exported so the gate can
+// introspect it directly (read, never copied).
+export const GATE_CORE_PATHS = [SRC_DOMAINS()];
+void GATE_CORE_PATHS;
 const REPORT_DIR = path.join(REPO_ROOT, 'agents', 'reports');
 const OUT_JSON = path.join(REPORT_DIR, 'command-surface.json');
 const OUT_MD = path.join(REPORT_DIR, 'command-surface.md');

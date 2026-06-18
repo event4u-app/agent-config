@@ -265,7 +265,7 @@ export function render_report(rows: JsonObject[], weeks: number): string {
         '`docs/contracts/adoption-signal-floor.md`.\n\n';
     if (rows.length === 0) {
         header +=
-            '_No snapshots in the current window — run `python3 scripts/adoption_snapshot.py` ' +
+            '_No snapshots in the current window — run `./scripts-run src/scripts/adoption_snapshot` ' +
             '(scheduled weekly via the cron in `.github/workflows/`) to populate the trend._\n';
         return header;
     }

@@ -14,15 +14,15 @@ write-only.
 
 | Field (artifact) | Values | Read by | Effect |
 |---|---|---|---|
-| **rule `tier`** | `kernel` / `tier-1` / `tier-2` (+ legacy `1`/`2a`/`2b`/`3`/`safety-floor`/`mechanical-already`) | `src/scripts/compile_router.py` → `dist/router.json` | session-start rule activation per profile |
-| **command `tier`** | `0` / `1` / `2` | `src/cli/commands/commands.ts` (`--visible`), `src/scripts/audit_command_surface.py` (per-pack budget), `src/scripts/build_discovery_manifest.py` | CLI filtering, budget enforcement, published manifest |
+| **rule `tier`** | `kernel` / `tier-1` / `tier-2` (+ legacy `1`/`2a`/`2b`/`3`/`safety-floor`/`mechanical-already`) | `src/scripts/compile_router.ts` → `dist/router.json` | session-start rule activation per profile |
+| **command `tier`** | `0` / `1` / `2` | `src/cli/commands/commands.ts` (`--visible`), `src/scripts/audit_command_surface.ts` (per-pack budget), `src/scripts/build_discovery_manifest.ts` | CLI filtering, budget enforcement, published manifest |
 | **command `visibility`** | `visible` / `advanced` / `internal` | same three readers (prefer `visibility`, fall back to `tier` — ADR-090) | the *authoritative* classifier; `tier` is its back-compat alias |
-| **skill `tier`** | `senior` | `src/scripts/skill_linter.py`, `src/scripts/lint_handoffs.py` | senior-structure required-section checks + handoff-graph constraints |
+| **skill `tier`** | `senior` | `src/scripts/skill_linter.ts`, `src/scripts/lint_handoffs.ts` | senior-structure required-section checks + handoff-graph constraints |
 | **skill `model_tier`** | `inherit` / `lite` / `medium` / `high` (227/227 skills) | model-recommendation routing | model selection — distinct from `tier` |
 
-CI enforces command `tier`+`visibility` via `src/scripts/lint_command_tiers.py`
+CI enforces command `tier`+`visibility` via `src/scripts/lint_command_tiers.ts`
 (present + valid enum + consistency when both set); rule `tier` via
-`src/scripts/lint_rule_tiers.py`.
+`src/scripts/lint_rule_tiers.ts`.
 
 **The only genuine redundancy** is command `tier` ⇄ `visibility` (two fields,
 same 3-level concept). ADR-090 (2026-06-13) made `visibility` the source of

@@ -9,10 +9,16 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { execa } from 'execa';
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const CLI = resolve(process.cwd(), 'dist/cli/agent-config.js');
 const MANIFEST = resolve(process.cwd(), 'dist/discovery/discovery-manifest.json');
+const TSX_BIN = join(
+    process.cwd(),
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
 
 beforeAll(async () => {
     // `commands ls/explain` read the generated (gitignored) discovery
@@ -20,7 +26,7 @@ beforeAll(async () => {
     // suite exercises the real artefact instead of the missing-manifest
     // error path.
     if (!existsSync(MANIFEST)) {
-        await execa('python3', ['src/scripts/build_discovery_manifest.py', '--write', '--quiet'], {
+        await execa(TSX_BIN, ['src/scripts/build_discovery_manifest.ts', '--write', '--quiet'], {
             cwd: process.cwd(),
             timeout: 60_000,
         });
@@ -90,7 +96,9 @@ describe('compiled CLI', () => {
             reject: false,
             timeout: 10_000,
         });
-        // Exit code may be 0 (all checks pass) or 1 (python3 missing on CI).
+        // Exit 0 when all checks pass; the `[0, 1]` envelope tolerates a
+        // missing bash_entry/bash_shim on a stripped runner. python3 is no
+        // longer probed (TS runtime via tsx — not a runtime dependency).
         expect([0, 1]).toContain(res.exitCode);
         expect(res.stdout).toContain('package_root:');
         expect(res.stdout).toContain('consumer_root:');

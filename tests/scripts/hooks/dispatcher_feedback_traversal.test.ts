@@ -35,7 +35,7 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-const FIXTURE_CONCERN = 'tests/hooks/fixtures/concern_allow.py';
+const FIXTURE_CONCERN = 'tests/hooks/fixtures/concern_allow.ts';
 
 let tmp: string;
 beforeEach(() => {
