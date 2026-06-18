@@ -8,9 +8,9 @@
  * flag, exit codes (0 match, 1 drift / missing committed manifest),
  * stdout/stderr split, byte-identical messages, and the same `generated_at`
  * normalization + sorted-key JSON comparison + first-diff-line report. The
- * scanner (`build_discovery_manifest.py`) has no TS twin yet, so this twin
- * runs the SAME Python scanner via `python3`, exactly as the Python original
- * runs it via `sys.executable`. No behaviour changes.
+ * scanner (`build_discovery_manifest.ts`) is run via the repo-local `tsx`
+ * binary, mirroring how the Python original invoked the scanner via
+ * `sys.executable`. No behaviour changes.
  *
  * Exit codes:
  *   0  manifest on disk matches a fresh re-build
@@ -23,7 +23,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const SCANNER = path.join(ROOT, 'src', 'scripts', 'build_discovery_manifest.py');
+const SCANNER = path.join(ROOT, 'src', 'scripts', 'build_discovery_manifest.ts');
+const TSX_BIN = path.join(
+    ROOT,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
 const COMMITTED = path.join(ROOT, 'dist', 'discovery', 'discovery-manifest.json');
 
 type Json = unknown;
@@ -58,7 +64,7 @@ function _normalise(manifest: JsonObject): string {
 }
 
 function _fresh_build(): JsonObject {
-    const proc = spawnSync('python3', [SCANNER], {
+    const proc = spawnSync(TSX_BIN, [SCANNER], {
         encoding: 'utf-8',
         cwd: ROOT,
         maxBuffer: 256 * 1024 * 1024,

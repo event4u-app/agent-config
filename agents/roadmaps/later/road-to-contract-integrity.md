@@ -92,7 +92,7 @@ has a pruning heuristic.
   `docs/contracts/STABILITY.md`: enum value added/removed, field type changed, or
   validation tightened → major bump required.
 - [x] **F3 — Build the structural breaking-change detector.** New CI script
-  (`src/scripts/check_structural_breaking.py`): fails when a tracked artifact
+  (`src/scripts/check_structural_breaking.ts`): fails when a tracked artifact
   manifest (`pack`/`skill`/`rule`/`command`) is **deleted or renamed** in the
   diff against `origin/main`, OR a `schemaVersion`-bearing schema changes
   incompatibly, UNLESS the commit range carries a `feat!` / `BREAKING CHANGE`
@@ -131,7 +131,7 @@ Exit: trigger sets are regression-locked; every command has exactly one canonica
 name with documented aliases.
 
 - [x] **F4 — Wire trigger-eval into CI.** Add a `last_eval` (ISO date) field to
-  every `triggers.json` and a CI check (`src/scripts/check_trigger_evals.py`) that
+  every `triggers.json` and a CI check (`src/scripts/check_trigger_evals.ts`) that
   fails when `last_eval` is missing or older than 90 days, then runs the
   lightweight trigger smoke-eval. Rationale (council, contested then upheld):
   `triggers.json` encodes *behavioural intent*, not just static predicates — the

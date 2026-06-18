@@ -307,7 +307,7 @@ function main(argv: readonly string[]): number {
         process.stderr.write(
             `\n== frontmatter-boilerplate: ${offenders}/${total} artefact(s) carry a ` +
                 'defaulted field. Omit it (the loader injects the default) or run ' +
-                '`python3 scripts/migrate_frontmatter_defaults.py`. ==\n',
+                '`./scripts-run src/scripts/migrate_frontmatter_defaults`. ==\n',
         );
         return 1;
     }

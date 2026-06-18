@@ -41,7 +41,8 @@ export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const _CORE_SRC = SRC_AGENT();
 void _CORE_SRC;
 // Enforced source target — the command surface the description-catalog scans.
-const GATE_CORE_PATHS = [SRC_DOMAINS()];
+// Exported so `check_gate_paths` can introspect it (read, never copied).
+export const GATE_CORE_PATHS = [SRC_DOMAINS()];
 void GATE_CORE_PATHS;
 
 export const REPORT_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports');

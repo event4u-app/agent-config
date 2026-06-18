@@ -48,11 +48,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -63,9 +58,6 @@ jobs:
         run: |
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
-
-      - name: Install runtime deps
-        run: pip install pyyaml
 
       - name: Lint topics.yml
         run: ./scripts-run src/scripts/lint_topics_yaml

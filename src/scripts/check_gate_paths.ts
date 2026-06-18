@@ -8,15 +8,16 @@
  * import / lacks GATE_CORE_PATHS), byte-identical messages, stdout/stderr
  * split, same gate list / source-tree roots.
  *
- * The Python original reads each gate's ACTUAL enforced paths via that
+ * The Python original read each gate's ACTUAL enforced paths via that
  * module's `GATE_CORE_PATHS` attribute (`importlib.import_module`) — it
- * does NOT re-declare a copy of the path strings. The gates in `GATES`
- * are mostly still Python-only modules in this migration window, so this
- * twin introspects them by spawning `python3` with the same `sys.path`
- * shim the Python original uses (`REPO_ROOT/src/scripts`). That keeps the
- * "read the gate's real paths, never copy them" property regardless of
- * which gates are ported, and reproduces the ImportError → exit-2 and
- * AttributeError → exit-2 behaviour. No behaviour changes.
+ * did NOT re-declare a copy of the path strings. The gate `.py` modules are
+ * gone (ADR-200); the ported `.ts` twins each export `GATE_CORE_PATHS`, so
+ * this twin introspects them by spawning `tsx` to dynamically `import()` each
+ * gate `.ts` under `REPO_ROOT/src/scripts` and read the exported constant.
+ * That keeps the "read the gate's real paths, never copy them" property and
+ * reproduces the ImportError → exit-2 and AttributeError → exit-2 behaviour.
+ * A subprocess (not an in-process dynamic import) keeps `collect_gate_paths`
+ * synchronous. No behaviour changes.
  *
  * Exit codes: 0 = all enforced targets resolve under the source tree ·
  * 1 = at least one missing / out-of-tree target · 2 = a gate failed to import.
@@ -65,39 +66,73 @@ function _is_under_source_tree(p: string): boolean {
 }
 
 /**
- * Import each gate (via python3, mirroring the Python original's
- * `importlib.import_module` + `sys.path` shim) and read its declared
+ * Import each gate (via a `tsx` subprocess that dynamically `import()`s the
+ * gate's `.ts` twin under `src/scripts/`) and read its exported
  * `GATE_CORE_PATHS`. Throws a {kind, message} on ImportError /
  * missing-or-empty GATE_CORE_PATHS — surfaced as exit 2 by `main`.
+ *
+ * The gate `.py` modules are gone (ADR-200); the `.ts` twins each export a
+ * module-level `GATE_CORE_PATHS`. The Python original read the gate's REAL
+ * paths via `importlib` + `getattr` and never copied them — this keeps that
+ * property by importing the twin and reading its exported constant. A `tsx`
+ * subprocess (not an in-process dynamic `import()`) is used so this function
+ * stays synchronous: callers and tests rely on a sync `Map` return / a
+ * synchronous `throw`. The subprocess emits the same protocol — a JSON map
+ * `{gate: [abs paths...]}` on success, or `ERR\t<kind>\t<message>` + exit 1 on
+ * the first failing gate — with byte-identical ImportError / AttributeError
+ * messages.
  */
 function collect_gate_paths(gate_modules: readonly string[]): Map<string, string[]> {
-    // One python3 introspection process: replicate the Python body so the
-    // exact AttributeError / ImportError messages propagate. Output is a JSON
-    // map {gate: [abs paths...]} on success; on the first failing gate it
-    // prints `ERR\t<kind>\t<message>` and exits 1.
+    // tsx --eval transforms as CJS (no top-level await), so the dynamic
+    // import()s live inside an async IIFE; a failure in the IIFE rejects and
+    // is surfaced as a non-zero exit via the trailing .catch.
     const scriptLines = [
-        'import importlib, json, sys',
-        'sys.path.insert(0, sys.argv[1])',
-        'gates = sys.argv[2:]',
-        'out = {}',
-        'for name in gates:',
-        '    try:',
-        '        mod = importlib.import_module(name)',
-        '    except ImportError as exc:',
-        '        sys.stdout.write("ERR\\tImportError\\t%s" % exc)',
-        '        sys.exit(1)',
-        '    paths = getattr(mod, "GATE_CORE_PATHS", None)',
-        '    if not paths:',
-        '        msg = ("%s has no non-empty GATE_CORE_PATHS — gate cannot be "',
-        '               "checked. Declare the source targets it enforces." % name)',
-        '        sys.stdout.write("ERR\\tAttributeError\\t%s" % msg)',
-        '        sys.exit(1)',
-        '    out[name] = [str(p) for p in paths]',
-        'sys.stdout.write(json.dumps(out))',
+        'const { pathToFileURL } = require("node:url");',
+        'const path = require("node:path");',
+        '(async () => {',
+        // With `tsx --eval`, positional args populate process.argv from
+        // index 1 (there is no script-path slot): argv = [node, arg1, arg2, …].
+        '    const scriptsDir = process.argv[1];',
+        '    const gates = process.argv.slice(2);',
+        '    const out = {};',
+        '    for (const name of gates) {',
+        '        let mod;',
+        '        try {',
+        '            mod = await import(pathToFileURL(path.join(scriptsDir, name + ".ts")).href);',
+        '        } catch (exc) {',
+        '            const m = exc && exc.message ? exc.message : String(exc);',
+        '            process.stdout.write("ERR\\tImportError\\t" + m);',
+        '            process.exit(1);',
+        '        }',
+        '        const paths = mod.GATE_CORE_PATHS;',
+        '        if (!paths || paths.length === 0) {',
+        '            const msg = name + " has no non-empty GATE_CORE_PATHS — gate cannot be "',
+        '                + "checked. Declare the source targets it enforces.";',
+        '            process.stdout.write("ERR\\tAttributeError\\t" + msg);',
+        '            process.exit(1);',
+        '        }',
+        '        out[name] = Array.from(paths).map((p) => String(p));',
+        '    }',
+        '    process.stdout.write(JSON.stringify(out));',
+        '})().catch((exc) => {',
+        '    process.stderr.write(exc && exc.message ? exc.message : String(exc));',
+        '    process.exit(1);',
+        '});',
     ];
+    const tsxBin = path.join(
+        REPO_ROOT,
+        'node_modules',
+        '.bin',
+        process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+    );
     const proc = spawnSync(
-        'python3',
-        ['-c', scriptLines.join('\n'), path.join(REPO_ROOT, 'src', 'scripts'), ...gate_modules],
+        tsxBin,
+        [
+            '--eval',
+            scriptLines.join('\n'),
+            path.join(REPO_ROOT, 'src', 'scripts'),
+            ...gate_modules,
+        ],
         { encoding: 'utf8' },
     );
     const stdout = proc.stdout ?? '';
@@ -110,7 +145,7 @@ function collect_gate_paths(gate_modules: readonly string[]): Map<string, string
         throw err;
     }
     if ((typeof proc.status === 'number' ? proc.status : 1) !== 0) {
-        // python3 unavailable or crashed before producing JSON — treat as an
+        // tsx unavailable or crashed before producing JSON — treat as an
         // import failure (exit 2 path), matching the "a gate failed to import"
         // semantics of the Python original.
         const err = new Error(

@@ -660,7 +660,7 @@ export function _main(argv: string[]): number {
             if (fresh !== existing) {
                 process.stderr.write(
                     `low-impact corpus lockfile is stale: ${args.out}\n` +
-                        '  run: python3 -m scripts.ai_council.compile_corpus\n',
+                        '  run: ./scripts-run src/scripts/ai_council/compile_corpus\n',
                 );
                 return 1;
             }

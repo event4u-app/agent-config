@@ -8,7 +8,7 @@ Evidence for `road-to-ticket-bundles` Phase 1 (T-008 build-pilot, T-001 transpor
 from the ticket alone, without re-deriving the repo.
 
 **Setup:** a Haiku subagent was given ONLY `T-004-build-export-generator.md`
-(the ticket) + `src/scripts/build_linear_digest.py` (the named sibling pattern),
+(the ticket) + `src/scripts/build_linear_digest.ts` (the named sibling pattern),
 and told to write `build_ticket_export.py`. No roadmap, no repo tour.
 
 **Result (independently re-verified by the orchestrator):**

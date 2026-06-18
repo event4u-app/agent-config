@@ -4,6 +4,7 @@ slug: py2ts-teardown
 title: "Python → TypeScript migration: Phase 12 teardown"
 parent_roadmap: null
 ---
+<!-- check-refs: skip -->
 
 # Road to Python → TypeScript Teardown (Phase 12)
 
@@ -16,6 +17,23 @@ parent_roadmap: null
 >
 > **Out of scope:** the final `python2ts → main` merge. That is the user's
 > Hard-Floor decision and is not a roadmap step.
+
+> **Teardown PR — 2026-06-18 (this branch `feat/py2ts-final-deletion`).**
+> Landed: Phase 4 (delete `src/**/*.py`) + Phase 5 (delete `tests/**/*.py`,
+> keep fixtures) + Phase 6 (toolchain + dispatcher python fast-path) executed
+> as one atomic diff. **MCP serving completed via the council-chosen Option 2:**
+> `mcp_server/server.ts` `_serveOverSdk` now maps all six handlers onto the npm
+> `@modelcontextprotocol/sdk` (added as a dependency), byte-parity with the
+> Python `mcp` SDK envelopes; a new `tests/scripts/mcp_server_serve.test.ts`
+> drives the real SDK Client over stdio (6/6 green) — the Python MCP server is
+> deleted with zero feature loss. Gates verified python-shadowed: `check-refs`
+> 0 dead links, `npm run typecheck` clean, full vitest **491 files pass / 0 fail
+> / 0 python invocations**, CLI dispatcher green.
+> **Remainder (follow-up):** Phase 3 dist-consumer A-vs-D smoke; the full
+> `grep python3 == 0` sweep across **consumer-shipped templates + contributor
+> docs** (owned jointly with `road-to-typescript-only-scripts.md`); and 7
+> **pre-existing** condensation-hash drifts in `commands/{fix,roadmap}/*`
+> (present on the branch base, not introduced here).
 
 ## Inventory (evidence, `git ls-files` on `python2ts` HEAD)
 
@@ -63,9 +81,9 @@ parent_roadmap: null
 
 ## Phase 4 — Delete `src/**/*.py` port-targets (Hard Floor)
 
-- [ ] Surface the deletion diff (586 files) and obtain explicit user confirmation.
-- [ ] Delete `src/**/*.py` (keep the 3 residual fixtures).
-- [ ] Verify: full parity suite + `npm run typecheck` + dispatcher resolution green; grep `src/` for any remaining non-fixture `.py` → zero.
+- [x] Surface the deletion diff (586 files) and obtain explicit user confirmation. <!-- 2026-06-18: user authorized deletions + the final PR this session; PR diff is the surface. -->
+- [x] Delete `src/**/*.py` (keep the residual fixtures). <!-- 2026-06-18: incl. mcp_server/*.py — TS twin now serves (Option 2). -->
+- [x] Verify: full parity suite + `npm run typecheck` + dispatcher resolution green; grep `src/` for any remaining non-fixture `.py` → zero. <!-- 2026-06-18: vitest 491 pass/0 fail python-shadowed, typecheck clean, dispatcher green. -->
 
 ## Phase 5 — Delete `tests/**/*.py` Python suite (Hard Floor) — NOT a blanket delete
 

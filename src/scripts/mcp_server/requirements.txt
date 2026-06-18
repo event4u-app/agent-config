@@ -1,4 +1,0 @@
-# MCP server runtime — pinned to the versions the test suite ran against.
-# Mirror upstream when bumping; keep this lean (no dev/test deps).
-mcp==1.27.1
-PyYAML==6.0.3

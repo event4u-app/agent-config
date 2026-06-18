@@ -121,110 +121,6 @@ jobs:
         # `.claude/` populates and `.agent-settings.yml` renders.
         run: bash tests/test_one_liner_entrypoints.sh
 
-  python-tests:
-    # Release-PR skip per docs/contracts/release-pr-gating.md — release
-    # PRs don't touch scripts/** or tests/** (only package.json,
-    # CHANGELOG, marketplace, pack manifests, pack READMEs).
-    #
-    # Baseline leg only: ubuntu + macOS × 3.12. The 3.10 / 3.11 / 3.13
-    # version sweep moved to .github/workflows/python-version-sweep.yml
-    # in road-to-optimized-ci-and-release-gates Phase C Step 2 — runs
-    # only on PRs whose diff touches Python paths. Minimum supported
-    # version is 3.10 (per AGENTS.md); the sweep workflow proves the
-    # range when relevant code changes.
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
-    name: Python Tests (${{ matrix.os }}, ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ['3.12']
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-
-      - name: Install test deps
-        # pytest drives the suite; pytest-xdist parallelises across CPU
-        # cores (`-n auto`); pyyaml is a runtime dep of the memory
-        # tooling (check_memory / check_proposal / memory_lookup) that
-        # the tests invoke via subprocess; jsonschema validates the
-        # ExplainTrace v1 payload via scripts/lint_explain_trace.py;
-        # cryptography lets the workspace_crypto AES-256-GCM round-trip
-        # tests actually run instead of skipping (ADR-062 must-have #1).
-        run: pip install pytest pytest-xdist pyyaml jsonschema cryptography
-
-      # py2ts (ADR-094): the bootstrap + dispatcher + ci-summary steps below
-      # invoke `./scripts-run`, which execs `tsx` whenever the target's `.ts`
-      # twin exists. condense / runtime_dispatcher / ci_summary are already
-      # ported, so this job needs node + node_modules — without it the
-      # scripts-run calls fail (exec tsx: no node_modules) once these twins
-      # reach main. (No-op on a tree where the targets are still .py: the
-      # scripts-run python fast-path skips tsx entirely.)
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install node deps (for scripts-run tsx targets)
-        run: npm ci
-
-      - name: Bootstrap generated projection (.augment/, .cursor/, …)
-        # The Phase-2.4 install_global tests deploy content from
-        # `.augment/rules`, `.cursor/rules`, etc. into a fake user-scope
-        # home. Those dirs are git-ignored and rebuilt by `task sync`
-        # from `dist/agent-src/` on developer machines. CI checkouts skip
-        # that step, so without this bootstrap `_copy_dir_dereferencing
-        # _symlinks` returns 0 written files (src missing) and the
-        # tests fail with "rules dir does not exist".
-        run: ./scripts-run src/scripts/condense --sync
-
-      - name: Golden Replay — smoke subset (P2.4 PR budget)
-        # Replays the smoke-tagged Golden Transcripts (~6 of 25) for
-        # sub-second PR feedback. A failure here means the refactor
-        # regressed engine behavior — fix the engine, never the
-        # baseline. Full coverage runs in two places:
-        #   1. The pytest sweep below re-runs ALL goldens (~7s).
-        #   2. `freeze-guard.yml` does a full live-capture replay on
-        #      every PR that touches `scripts/work_engine/**` and on
-        #      a nightly cron schedule.
-        # The smoke step exists for reviewer visibility — a single
-        # named step that flags drift without scanning 800+ test names.
-        run: python3 -m pytest tests/golden/test_replay.py -m smoke -v
-
-      - name: Run Python tests
-        # pytest discovers every test module in tests/. Prevents new test
-        # files from silently missing CI coverage. `-n auto` fans the
-        # suite across available CPU cores via pytest-xdist.
-        run: python3 -m pytest tests/ -n auto -q
-
-      - name: Runtime E2E (dispatch pilot skills via CLI)
-        # Guards the public dispatcher CLI contract for runnable skills.
-        # Pytest exercises the handler in-process; this step proves
-        # `python3 src/scripts/runtime_dispatcher.py run --skill <name>`
-        # still exits 0 for the two pilots. Kept narrow on purpose — add
-        # a pilot to the matrix below only after it has unit coverage.
-        # Each run persists its ExecutionResult so the next step can
-        # render a job summary even if an individual skill fails.
-        run: |
-          mkdir -p agents/reports/runs
-          ./scripts-run src/scripts/runtime_dispatcher run --skill lint-skills \
-            --output agents/reports/runs/lint-skills.json
-          ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs \
-            --output agents/reports/runs/check-refs.json
-
-      - name: CI summary (dispatcher runs)
-        # Renders a Markdown table of the runs above as a GitHub Step
-        # Summary. Runs on success AND failure so failing pilots still
-        # show up in the PR UI with their stderr tail.
-        if: always()
-        run: ./scripts-run src/scripts/ci_summary --runs agents/reports/runs
-
   node-tests:
     # Consolidates TypeScript CLI/UI tests (Phase 5.2 of
     # typescript-cli-and-local-gui-foundation) and the installer-package
@@ -256,21 +152,15 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
 
       - name: Build discovery manifest (gitignored; cli-e2e reads it)
         # `agent-config commands ls/explain` and the cli-e2e suite read
         # dist/discovery/discovery-manifest.json — a generated artefact
-        # absent from CI checkouts. Built here with a provisioned Python
-        # (the macOS system python3 lacks pyyaml).
-        run: |
-          pip install --quiet pyyaml
-          ./scripts-run src/scripts/build_discovery_manifest --write --quiet
-
-      - name: Install dependencies (hoists installer toolchain)
-        run: npm ci
+        # absent from CI checkouts. Built via the TypeScript builder
+        # (scripts-run → tsx); needs node_modules, so it runs after npm ci.
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       # ── Root TS CLI + UI ───────────────────────────────────────────
       - name: ESLint (src/**/*.ts)

@@ -339,7 +339,7 @@ export async function main(argv?: string[]): Promise<number> {
         report = await summarise(db_path);
     } catch (exc) {
         if (exc instanceof FileNotFoundLikeError) {
-            const msg = `❌  ${exc.message}\n   run \`python3 scripts/mcp_telemetry_store.py\` first.`;
+            const msg = `❌  ${exc.message}\n   run \`./scripts-run src/scripts/mcp_telemetry_store\` first.`;
             if (args.json) {
                 process.stdout.write(_py_json_dumps({ error: exc.message }) + '\n');
             } else {

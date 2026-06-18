@@ -13,7 +13,9 @@
  * Runs skill_linter --all --format json on both the baseline (via a temp
  * `git worktree`) and the working tree, then compares results to find new
  * failures, status downgrades (regressions), new files with issues, and
- * status upgrades (improvements).
+ * status upgrades (improvements). The HEAD linter is the `.ts` twin run via
+ * tsx; a baseline ref may be a pre-migration `.py` (run via python3) or a
+ * post-migration `.ts` (run via tsx), resolved by extension.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -66,7 +68,9 @@ class CalledProcessError extends Error {}
  *
  * Mirrors `run_linter_json`: for a ref, add a detached temp worktree, run the
  * BASELINE worktree's own copy of skill_linter (artefact discovery anchored at
- * the script location, not --repo-root — the PR #466 fix), then remove it. */
+ * the script location, not --repo-root — the PR #466 fix), then remove it. The
+ * HEAD copy is the `.ts` linter run via tsx; the baseline copy may be `.py`
+ * (python3) or `.ts` (tsx), dispatched by extension. */
 function run_linter_json(ref: string | null, repo_root: string): LinterJson {
     if (ref) {
         const tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), 'lint-baseline-'));
@@ -87,23 +91,38 @@ function run_linter_json(ref: string | null, repo_root: string): LinterJson {
             );
         }
         try {
-            let baseline_linter = path.join(tmpdir, 'src', 'scripts', 'skill_linter.py');
+            // The baseline ref may be pre-migration (`.py`, run via python3) or
+            // post-migration (`.ts`, run via tsx). Probe both extensions in both
+            // locations and spawn by extension. A historical `.py` ref genuinely
+            // needs python3, so that path is preserved.
+            let baseline_linter = path.join(tmpdir, 'src', 'scripts', 'skill_linter.ts');
+            if (!_isFile(baseline_linter)) {
+                baseline_linter = path.join(tmpdir, 'src', 'scripts', 'skill_linter.py');
+            }
             if (!_isFile(baseline_linter)) {
                 // Pre-src-move baselines kept the linter under scripts/.
+                baseline_linter = path.join(tmpdir, 'scripts', 'skill_linter.ts');
+            }
+            if (!_isFile(baseline_linter)) {
                 baseline_linter = path.join(tmpdir, 'scripts', 'skill_linter.py');
             }
             if (!_isFile(baseline_linter)) {
                 process.stderr.write(
-                    `Warning: no skill_linter.py in baseline '${ref}' — ` +
+                    `Warning: no skill_linter.ts / skill_linter.py in baseline '${ref}' — ` +
                         `baseline treated as empty.\n`,
                 );
                 return { results: [], summary: {} };
             }
-            const result = spawnSync(
-                'python3',
-                [baseline_linter, '--all', '--format', 'json', '--repo-root', tmpdir],
-                { cwd: tmpdir, encoding: 'utf8' },
-            );
+            const baselineArgs = ['--all', '--format', 'json', '--repo-root', tmpdir];
+            const result = baseline_linter.endsWith('.ts')
+                ? (() => {
+                      const inv = _resolve_tsx_invocation(baseline_linter, baselineArgs);
+                      return spawnSync(inv.command, inv.args, { cwd: tmpdir, encoding: 'utf8' });
+                  })()
+                : spawnSync('python3', [baseline_linter, ...baselineArgs], {
+                      cwd: tmpdir,
+                      encoding: 'utf8',
+                  });
             const out = result.stdout ?? '';
             return out.trim() ? (JSON.parse(out) as LinterJson) : { results: [], summary: {} };
         } finally {
@@ -112,14 +131,36 @@ function run_linter_json(ref: string | null, repo_root: string): LinterJson {
             });
         }
     }
-    const cmd = path.join(repo_root, 'src', 'scripts', 'skill_linter.py');
-    const result = spawnSync(
-        'python3',
-        [cmd, '--all', '--format', 'json', '--repo-root', repo_root],
-        { cwd: repo_root, encoding: 'utf8' },
-    );
+    // HEAD: the linter is a `.ts` twin run via tsx (no python3 dependency).
+    const cmd = path.join(repo_root, 'src', 'scripts', 'skill_linter.ts');
+    const inv = _resolve_tsx_invocation(cmd, ['--all', '--format', 'json', '--repo-root', repo_root]);
+    const result = spawnSync(inv.command, inv.args, { cwd: repo_root, encoding: 'utf8' });
     const out = result.stdout ?? '';
     return out.trim() ? (JSON.parse(out) as LinterJson) : { results: [], summary: {} };
+}
+
+/**
+ * Resolve how to run a `.ts` script: prefer the `tsx` binary from a
+ * `node_modules/.bin` directory found by walking up from the script's
+ * directory; fall back to `npx tsx`. Mirrors
+ * `dispatch_hook.ts::_resolve_tsx_invocation`.
+ */
+function _resolve_tsx_invocation(
+    scriptPath: string,
+    scriptArgs: string[],
+): { command: string; args: string[] } {
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    let dir = path.dirname(scriptPath);
+    for (;;) {
+        const candidate = path.join(dir, 'node_modules', '.bin', binName);
+        if (_isFile(candidate)) {
+            return { command: candidate, args: [scriptPath, ...scriptArgs] };
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+    }
+    return { command: 'npx', args: ['tsx', scriptPath, ...scriptArgs] };
 }
 
 function _isFile(p: string): boolean {

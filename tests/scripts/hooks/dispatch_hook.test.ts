@@ -2,13 +2,10 @@
 //
 // 1:1 port of the pure-parser cases in tests/hooks/test_dispatcher_parser.py
 // (_fallback_yaml, _resolve_concerns, _build_envelope, _parse_concern_stdout,
-// _severity_for, _reduce, EVENT_VOCABULARY, _maybe_capture_payload) plus a
-// golden-parity layer over the REAL manifest: python3 dispatch_hook.py vs
-// tsx dispatch_hook.ts fed an identical envelope on stdin, asserting
-// byte-identical stdout (dry-run plan) and identical exit + normalised
-// feedback state-file writes for a real end-to-end run. Parity skipped
-// without python3.
-import { spawnSync } from 'node:child_process';
+// _severity_for, _reduce, EVENT_VOCABULARY, _maybe_capture_payload). The
+// python3-vs-tsx golden-parity layer was retired with the Python→TS final
+// deletion (the Python dispatcher no longer exists); end-to-end dispatcher
+// behaviour is covered by dispatcher_feedback_traversal.test.ts.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -31,15 +28,7 @@ import {
 } from '../../../src/scripts/hooks/dispatch_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_hook.py');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
-const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'hooks', 'post_tool_use.json');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function ns(platform = 'augment', event = 'stop', native = 'Stop') {
     return {
@@ -237,74 +226,5 @@ describe('dispatch_hook — _load_yaml', () => {
         expect(m['schema_version']).toBe(1);
         expect(typeof m['concerns']).toBe('object');
         expect(typeof m['platforms']).toBe('object');
-    });
-});
-
-const py3 = hasPython3();
-
-// Normalise volatile feedback fields so two real runs are comparable.
-function normalizeFeedback(dir: string): string {
-    const fb = path.join(dir, 'agents', 'runtime', 'state', '.dispatcher');
-    if (!fs.existsSync(fb)) return '<no-feedback>';
-    const out: string[] = [];
-    for (const sess of fs.readdirSync(fb).sort()) {
-        const sessDir = path.join(fb, sess);
-        if (!fs.statSync(sessDir).isDirectory()) continue;
-        for (const f of fs.readdirSync(sessDir).sort()) {
-            if (!f.endsWith('.json')) continue;
-            const o = JSON.parse(fs.readFileSync(path.join(sessDir, f), 'utf8'));
-            for (const k of ['started_at', 'completed_at', 'duration_ms']) {
-                if (k in o) o[k] = '<N>';
-            }
-            if (Array.isArray(o['concerns'])) {
-                for (const c of o['concerns']) {
-                    delete c['duration_ms'];
-                    delete c['started_at'];
-                    delete c['completed_at'];
-                }
-            }
-            out.push(`${f}\n${JSON.stringify(o, Object.keys(o).sort(), 2)}`);
-        }
-    }
-    return out.join('\n');
-}
-
-function runDispatcher(bin: string, scriptArgs: string[], wsDir: string): { stdout: string; stderr: string; status: number } {
-    fs.mkdirSync(wsDir, { recursive: true });
-    const input = fs.readFileSync(FIXTURE, 'utf8');
-    const r = spawnSync(bin, scriptArgs, { cwd: wsDir, input, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? 0 };
-}
-
-describe.skipIf(!py3)('dispatch_hook — golden parity (python3 vs tsx)', () => {
-    it('dry-run plan stdout is byte-identical', () => {
-        for (const event of ['post_tool_use', 'stop', 'session_start']) {
-            const args = ['--platform', 'augment', '--event', event, '--manifest', MANIFEST, '--dry-run'];
-            const py = runDispatcher('python3', [PY_SCRIPT, ...args], path.join(tmp, `py-${event}`));
-            const ts = runDispatcher(TSX_BIN, [TS_SCRIPT, ...args], path.join(tmp, `ts-${event}`));
-            expect(ts.stdout, `event=${event}`).toBe(py.stdout);
-            expect(ts.status).toBe(py.status);
-        }
-    });
-
-    it('unknown event fail-open: stderr + exit identical', () => {
-        const args = ['--platform', 'augment', '--event', 'nope', '--manifest', MANIFEST];
-        const py = runDispatcher('python3', [PY_SCRIPT, ...args], path.join(tmp, 'py-bad'));
-        const ts = runDispatcher(TSX_BIN, [TS_SCRIPT, ...args], path.join(tmp, 'ts-bad'));
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('real end-to-end run: exit + stdout match and feedback writes match (normalised)', () => {
-        const args = ['--platform', 'augment', '--event', 'post_tool_use', '--manifest', MANIFEST];
-        const pyWs = path.join(tmp, 'py-e2e');
-        const tsWs = path.join(tmp, 'ts-e2e');
-        const py = runDispatcher('python3', [PY_SCRIPT, ...args], pyWs);
-        const ts = runDispatcher(TSX_BIN, [TS_SCRIPT, ...args], tsWs);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        // Same set of feedback files + identical content after normalising
-        // timestamps / durations.
-        expect(normalizeFeedback(tsWs)).toBe(normalizeFeedback(pyWs));
     });
 });

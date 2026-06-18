@@ -38,8 +38,8 @@
  *   - `dist/discovery/capability-matrix.json` (machine-readable, per-host cells)
  *
  * Usage:
- *     python3 scripts/generate_capability_matrix.py
- *     python3 scripts/generate_capability_matrix.py --check   # fail if out of date
+ *     ./scripts-run src/scripts/generate_capability_matrix
+ *     ./scripts-run src/scripts/generate_capability_matrix --check   # fail if out of date
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -387,7 +387,7 @@ export function main(argv: string[] | null = null): number {
         if (current !== md) {
             process.stderr.write(
                 'generate_capability_matrix: stale — run ' +
-                    `\`python3 scripts/generate_capability_matrix.py\` (${_relToRoot(OUT_MD)})\n`,
+                    `\`./scripts-run src/scripts/generate_capability_matrix\` (${_relToRoot(OUT_MD)})\n`,
             );
             return 1;
         }

@@ -111,7 +111,7 @@ function main(argv: readonly string[]): number {
         }
         process.stderr.write(
             `\n== model_tier coverage: ${missing.length}/${total} artefact(s) ` +
-                'untagged. Run `python3 scripts/backfill_model_tier.py`. ==\n',
+                'untagged. Run `./scripts-run src/scripts/backfill_model_tier`. ==\n',
         );
         return 1;
     }

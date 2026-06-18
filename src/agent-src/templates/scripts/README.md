@@ -18,8 +18,8 @@ high-risk PRs.
 | File in package | Copy to | Purpose |
 |---|---|---|
 | `templates/github-workflows/pr-risk-review.yml` | `.github/workflows/pr-risk-review.yml` | GitHub Actions workflow |
-| `templates/scripts/pr_risk_review.py` | `scripts/pr_risk_review.py` | Risk classifier (Python 3.10+, PyYAML) |
-| `templates/scripts/pr_review_routing.py` | `scripts/pr_review_routing.py` | Routing classifier |
+| `templates/scripts/pr_risk_review.ts` | `scripts/pr_risk_review.py` | Risk classifier (Python 3.10+, PyYAML) |
+| `templates/scripts/pr_review_routing.ts` | `scripts/pr_review_routing.py` | Routing classifier |
 | `templates/scripts/pr-risk-config.example.yml` | `.github/pr-risk-config.yml` | Risk patterns (optional) |
 | `templates/scripts/ownership-map.example.yml` | `.github/ownership-map.yml` | Ownership entries (optional) |
 | `templates/scripts/historical-bug-patterns.example.yml` | `.github/historical-bug-patterns.yml` | Registered failure modes (optional) |
@@ -29,8 +29,8 @@ high-risk PRs.
 ```bash
 # from the consumer repo root
 cp .augment/templates/github-workflows/pr-risk-review.yml    .github/workflows/
-cp .augment/templates/scripts/pr_risk_review.py              scripts/
-cp .augment/templates/scripts/pr_review_routing.py           scripts/
+cp .augment/templates/scripts/pr_risk_review.ts              scripts/
+cp .augment/templates/scripts/pr_review_routing.ts           scripts/
 cp .augment/templates/scripts/pr-risk-config.example.yml     .github/pr-risk-config.yml
 cp .augment/templates/scripts/ownership-map.example.yml      .github/ownership-map.yml
 cp .augment/templates/scripts/historical-bug-patterns.example.yml .github/historical-bug-patterns.yml
@@ -168,14 +168,14 @@ PRs.
 | File in package | Copy to | Purpose |
 |---|---|---|
 | `templates/github-workflows/memory-hygiene.yml` | `.github/workflows/memory-hygiene.yml` | Weekly staleness workflow |
-| `templates/scripts/check_memory.py` | `scripts/check_memory.py` | YAML schema + staleness validator |
+| `templates/scripts/check_memory.ts` | `scripts/check_memory.py` | YAML schema + staleness validator |
 
 ## Install
 
 ```bash
 # from the consumer repo root
 cp .augment/templates/github-workflows/memory-hygiene.yml .github/workflows/
-cp .augment/templates/scripts/check_memory.py            scripts/
+cp .augment/templates/scripts/check_memory.ts            scripts/
 ```
 
 Commit both. The first scheduled run (Mondays 06:00 UTC) reports on

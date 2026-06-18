@@ -78,13 +78,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node: ['20', '22']
-    env:
-      # Windows runners default to cp1252 which crashes scripts/install.py
-      # the moment it prints ✅ / ❌. Force UTF-8 for every step so the
-      # Windows leg exercises the same code path consumers hit on
-      # PowerShell / Git Bash with a modern terminal.
-      PYTHONIOENCODING: 'utf-8'
-      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
 
@@ -93,17 +86,11 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Print toolchain versions
         shell: bash
         run: |
           echo "node:    $(node --version)"
           echo "npm:     $(npm --version)"
-          echo "python:  $(python3 --version)"
           echo "bash:    $(bash --version | head -1)"
           echo "tar:     $(tar --version | head -1)"
 

@@ -31,11 +31,11 @@ const DOC = `Thin CLI wrapper: emit the daily update-check banner to stderr.
 
 Invoked by the \`scripts/agent-config\` dispatcher **after** a
 subcommand finishes. Never raises, never exits non-zero — banner is
-best-effort. See \`scripts/_lib/update_check.py\` for the decision
+best-effort. See \`scripts/_lib/update_check.ts\` for the decision
 logic.
 
 Usage:
-    python3 scripts/check_update_banner.py [--installed-version X.Y.Z]
+    ./scripts-run src/scripts/check_update_banner [--installed-version X.Y.Z]
 
 When \`--installed-version\` is omitted, reads \`package.json\` next to
 the package root (\`$PACKAGE_ROOT/package.json\`).`;

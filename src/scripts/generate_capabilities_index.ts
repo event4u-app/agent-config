@@ -32,8 +32,8 @@
  * Output is deterministic (sorted, no timestamp) so `--check` is stable.
  *
  * Usage:
- *     python3 src/scripts/generate_capabilities_index.py
- *     python3 src/scripts/generate_capabilities_index.py --check   # fail if stale
+ *     ./scripts-run src/scripts/generate_capabilities_index
+ *     ./scripts-run src/scripts/generate_capabilities_index --check   # fail if stale
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -470,7 +470,7 @@ export function main(argv: string[] | null = null): number {
         if (onDisk !== content) {
             process.stderr.write(
                 '❌  CAPABILITIES.yaml is stale — run ' +
-                    '`python3 src/scripts/generate_capabilities_index.py`\n',
+                    '`./scripts-run src/scripts/generate_capabilities_index`\n',
             );
             return 1;
         }

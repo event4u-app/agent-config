@@ -7,7 +7,9 @@
  * internals. The `runner` injection point is the test seam — production passes
  * the default runner, tests pass a fake.
  */
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import * as process from 'node:process';
 
 /**
@@ -30,7 +32,7 @@ export const EXIT_RETURNING = 12;
 
 export function _default_runner(cmd: string[]): CompletedProcess {
     const [program, ...args] = cmd;
-    const proc = spawnSync(program as string, args, {
+    const proc: SpawnSyncReturns<string> = spawnSync(program as string, args, {
         encoding: 'utf8',
     });
     return {
@@ -39,6 +41,38 @@ export function _default_runner(cmd: string[]): CompletedProcess {
         stdout: proc.stdout ?? '',
         stderr: proc.stderr ?? '',
     };
+}
+
+/**
+ * Resolve the invocation for the chat-history script as a TypeScript twin.
+ *
+ * The chat-history script ships as a `.ts` file run through `tsx` — no
+ * python3 dependency. A `.py` `script_path` (the historical default /
+ * config value) is mapped to its `.ts` sibling. The `tsx` binary is found
+ * by walking up from the script's directory to a `node_modules/.bin/tsx`,
+ * falling back to `npx tsx`. Mirrors `dispatch_hook.ts::_resolve_tsx_invocation`
+ * and `run.ts::resolveTsxInvocation`.
+ */
+export function _resolve_chat_history_invocation(script_path: string): string[] {
+    const tsScript = script_path.replace(/\.py$/, '.ts');
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    let dir = path.dirname(path.resolve(tsScript));
+    for (;;) {
+        const candidate = path.join(dir, 'node_modules', '.bin', binName);
+        try {
+            if (fs.statSync(candidate).isFile()) {
+                return [candidate, tsScript];
+            }
+        } catch {
+            // not here — keep walking up.
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) {
+            break;
+        }
+        dir = parent;
+    }
+    return ['npx', 'tsx', tsScript];
 }
 
 /**
@@ -59,9 +93,10 @@ export class _ChatHistoryHookBase {
     }
 
     protected _invoke(...args: string[]): CompletedProcess {
-        // `sys.executable` → the active interpreter; here `python3`.
-        const cmd = ['python3', this.script_path, ...args];
-        void process; // imported for parity with Python's `sys` usage.
+        // Run the chat-history `.ts` script through `tsx` — no python3
+        // dependency. `script_path` (a `.py` default / config value) maps to
+        // its `.ts` sibling, prefixed by the resolved `tsx` binary.
+        const cmd = [..._resolve_chat_history_invocation(this.script_path), ...args];
         return this._runner(cmd);
     }
 }

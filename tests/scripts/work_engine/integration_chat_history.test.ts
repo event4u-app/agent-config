@@ -119,16 +119,25 @@ describe('chat-history hooks — one dispatch cycle through main()', () => {
         expect(exitCode).toBe(1);
         expect(fs.existsSync(stateFile)).toBe(true);
 
-        // Only chat-history subprocess invocations matter; the sub-command is at
-        // argv index 2 (python3, <script>, <sub-command>, ...).
-        const subCommands = capturedCommands.filter((c) => c.length > 2).map((c) => c[2]);
+        // Only chat-history subprocess invocations matter. The hook now runs the
+        // chat-history `.ts` script through `tsx` (no python3), so the argv prefix
+        // is a variable-length tsx invocation (`<tsxBin> <script.ts> …` or the
+        // `npx tsx <script.ts> …` fallback when no local bin is found — as in this
+        // tmp-dir test). The chat-history sub-command (`append`) is the argv token
+        // immediately after the `…chat_history.ts` script path — locate it by the
+        // script suffix, not a fixed index.
+        const subCommandOf = (c: string[]): string | undefined => {
+            const i = c.findIndex((a) => a.endsWith('chat_history.ts'));
+            return i !== -1 ? c[i + 1] : undefined;
+        };
+        const subCommands = capturedCommands.map(subCommandOf).filter((s): s is string => s !== undefined);
         // No cooperative hooks fire — they were removed.
         expect(subCommands).not.toContain('turn-check');
         expect(subCommands).not.toContain('heartbeat');
 
         // refine + memory + analyze succeeded before plan blocked → 3 phase
         // appends + 1 decision append for the create-plan halt.
-        const appendCalls = capturedCommands.filter((c) => c.length > 2 && c[2] === 'append');
+        const appendCalls = capturedCommands.filter((c) => subCommandOf(c) === 'append');
         expect(appendCalls.length).toBeGreaterThanOrEqual(3);
 
         const typesSeen: string[] = [];

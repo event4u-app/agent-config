@@ -11,7 +11,7 @@
  *   P2 — malformed NDJSON does not tear the SSE stream down.
  *   P2 — installer exits 0 with no terminal frame → synthetic `done` emitted.
  *
- * Harness: the apply endpoint spawns `<packageRoot>/scripts/install.py`.
+ * Harness: the apply endpoint spawns `<packageRoot>/src/scripts/install.ts`
  * Each test overrides `packageRoot` to a temp dir holding a fake installer
  * whose behaviour the test fully controls, then drives a real listening
  * server with `fetch` (the only way to exercise the real
@@ -21,7 +21,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createServer } from 'node:net';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, delimiter } from 'node:path';
+import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 
 import { createApp } from '../../src/server/app.js';
@@ -98,9 +98,13 @@ async function bootSseApp(): Promise<SseBoot> {
     return { app, baseUrl: `http://127.0.0.1:${port}`, host: `127.0.0.1:${port}`, packageRoot, baseTmp, cleanup };
 }
 
-/** Write the fake `scripts/install.py` body the apply endpoint will spawn. */
+/**
+ * Write the fake `scripts/install.ts` body the apply endpoint will spawn.
+ * The installer is TypeScript (Python→TS final deletion); the server runs it
+ * via tsx, so each fake body is Node/TS that tsx can execute directly.
+ */
 function writeInstaller(packageRoot: string, body: string): void {
-    writeFileSync(join(packageRoot, 'src', 'scripts', 'install.py'), body, { mode: 0o755 });
+    writeFileSync(join(packageRoot, 'src', 'scripts', 'install.ts'), body, { mode: 0o755 });
 }
 
 function authHeaders(host: string): Record<string, string> {
@@ -159,21 +163,17 @@ describe('POST /api/v1/wizard/apply — P0 failure paths', () => {
         // write+rename so the poller never sees a half-written file), then
         // sleep without emitting any terminal NDJSON frame.
         writeInstaller(boot.packageRoot, [
-            'import os, sys, signal, time',
-            `READY = r"${readyPath}"`,
-            `MARKER = r"${markerPath}"`,
-            'def _on_term(signum, frame):',
-            '    tmp = MARKER + ".tmp"',
-            '    with open(tmp, "w") as f:',
-            '        f.write("sigterm")',
-            '    os.replace(tmp, MARKER)',
-            '    sys.exit(0)',
-            'signal.signal(signal.SIGTERM, _on_term)',
-            'tmp = READY + ".tmp"',
-            'with open(tmp, "w") as f:',
-            '    f.write(str(os.getpid()))',
-            'os.replace(tmp, READY)',
-            'time.sleep(30)',
+            "import { writeFileSync, renameSync } from 'node:fs';",
+            `const READY = ${JSON.stringify(readyPath)};`,
+            `const MARKER = ${JSON.stringify(markerPath)};`,
+            "process.on('SIGTERM', () => {",
+            "    writeFileSync(MARKER + '.tmp', 'sigterm');",
+            '    renameSync(MARKER + ".tmp", MARKER);',
+            '    process.exit(0);',
+            '});',
+            "writeFileSync(READY + '.tmp', String(process.pid));",
+            'renameSync(READY + ".tmp", READY);',
+            'setTimeout(() => {}, 30_000);',
             '',
         ].join('\n'));
 
@@ -222,12 +222,10 @@ describe('POST /api/v1/wizard/apply — P0 failure paths', () => {
         const spawnMarker = join(boot.baseTmp, 'spawned');
         // If this body ever runs, the marker proves a spawn happened.
         writeInstaller(boot.packageRoot, [
-            'import os',
-            `SPAWN = r"${spawnMarker}"`,
-            'tmp = SPAWN + ".tmp"',
-            'with open(tmp, "w") as f:',
-            '    f.write("spawned")',
-            'os.replace(tmp, SPAWN)',
+            "import { writeFileSync, renameSync } from 'node:fs';",
+            `const SPAWN = ${JSON.stringify(spawnMarker)};`,
+            "writeFileSync(SPAWN + '.tmp', 'spawned');",
+            'renameSync(SPAWN + ".tmp", SPAWN);',
             '',
         ].join('\n'));
 
@@ -259,13 +257,9 @@ describe('POST /api/v1/wizard/apply — P2 stream robustness', () => {
     it('survives a malformed NDJSON line and still delivers the terminal frame', async () => {
         boot = await bootSseApp();
         writeInstaller(boot.packageRoot, [
-            'import sys, json',
-            'sys.stdout.write(json.dumps({"type":"file","file":"a.txt","status":"written","written":1,"total":2}) + "\\n")',
-            'sys.stdout.flush()',
-            'sys.stdout.write("THIS IS NOT JSON {oops\\n")',
-            'sys.stdout.flush()',
-            'sys.stdout.write(json.dumps({"type":"done"}) + "\\n")',
-            'sys.stdout.flush()',
+            'process.stdout.write(JSON.stringify({ type: "file", file: "a.txt", status: "written", written: 1, total: 2 }) + "\\n");',
+            'process.stdout.write("THIS IS NOT JSON {oops\\n");',
+            'process.stdout.write(JSON.stringify({ type: "done" }) + "\\n");',
             '',
         ].join('\n'));
 
@@ -290,10 +284,8 @@ describe('POST /api/v1/wizard/apply — P2 stream robustness', () => {
     it('emits a synthetic done frame when the installer exits 0 with no terminal frame', async () => {
         boot = await bootSseApp();
         writeInstaller(boot.packageRoot, [
-            'import sys, json',
-            'sys.stdout.write(json.dumps({"type":"file","file":"a.txt","status":"written","written":1,"total":2}) + "\\n")',
-            'sys.stdout.flush()',
-            'sys.exit(0)',
+            'process.stdout.write(JSON.stringify({ type: "file", file: "a.txt", status: "written", written: 1, total: 2 }) + "\\n");',
+            'process.exit(0);',
             '',
         ].join('\n'));
 
@@ -320,10 +312,8 @@ describe('POST /api/v1/wizard/apply — P2 stream robustness', () => {
     it('surfaces a structured error frame when the installer emits a valid error line', async () => {
         boot = await bootSseApp();
         writeInstaller(boot.packageRoot, [
-            'import sys, json',
-            'sys.stdout.write(json.dumps({"type":"error","code":"E_DISK","message":"disk full"}) + "\\n")',
-            'sys.stdout.flush()',
-            'sys.exit(1)',
+            'process.stdout.write(JSON.stringify({ type: "error", code: "E_DISK", message: "disk full" }) + "\\n");',
+            'process.exit(1);',
             '',
         ].join('\n'));
 
@@ -352,25 +342,22 @@ describe('POST /api/v1/wizard/apply — spawn environment', () => {
         if (boot) await boot.cleanup();
     });
 
-    // Regression for the browser-wizard "Finish writes nothing" bug: the
-    // wizard spawns install.py with no PYTHONPATH, so the package-qualified
-    // `scripts._cli.cmd_migrate` import failed → migrate-to-global aborted →
-    // empty install. The spawn helpers MUST seed PYTHONPATH=<packageRoot>/src
-    // (parity with _dispatch.bash) so `scripts.*` resolves in the child.
-    it('seeds PYTHONPATH=<packageRoot>/src on the spawned installer', async () => {
+    // Post Python→TS final deletion: the installer is a `.ts` CLI run via tsx,
+    // not `python3 install.py`. There is no PYTHONPATH to seed; the surviving
+    // env contract is `AGENT_CONFIG_NO_UPDATE_CHECK=1`. This pins that the
+    // spawned child is the TypeScript installer and receives that env.
+    it('spawns the TypeScript installer with AGENT_CONFIG_NO_UPDATE_CHECK=1', async () => {
         boot = await bootSseApp();
-        const envPath = join(boot.baseTmp, 'child-pythonpath');
-        // Fake installer: record the PYTHONPATH it received (atomic write so
-        // the reader never sees a partial file), then emit a terminal frame.
+        const envPath = join(boot.baseTmp, 'child-env');
+        // Fake installer: record the no-update-check flag it received (atomic
+        // write so the reader never sees a partial file), then emit a terminal
+        // frame. Being a runnable `.ts` body at all proves it ran under tsx.
         writeInstaller(boot.packageRoot, [
-            'import os, sys, json',
-            `ENVF = r"${envPath}"`,
-            'tmp = ENVF + ".tmp"',
-            'with open(tmp, "w") as f:',
-            '    f.write(os.environ.get("PYTHONPATH", ""))',
-            'os.replace(tmp, ENVF)',
-            'sys.stdout.write(json.dumps({"type":"done"}) + "\\n")',
-            'sys.stdout.flush()',
+            "import { writeFileSync, renameSync } from 'node:fs';",
+            `const ENVF = ${JSON.stringify(envPath)};`,
+            "writeFileSync(ENVF + '.tmp', process.env.AGENT_CONFIG_NO_UPDATE_CHECK ?? '');",
+            'renameSync(ENVF + ".tmp", ENVF);',
+            'process.stdout.write(JSON.stringify({ type: "done" }) + "\\n");',
             '',
         ].join('\n'));
 
@@ -383,8 +370,7 @@ describe('POST /api/v1/wizard/apply — spawn environment', () => {
         await collectFrames(res.body);
 
         await waitForFile(envPath, 6_000);
-        const pythonPath = readFileSync(envPath, 'utf8');
-        const expectedSrc = join(boot.packageRoot, 'src');
-        expect(pythonPath.split(delimiter)).toContain(expectedSrc);
+        const noUpdateCheck = readFileSync(envPath, 'utf8');
+        expect(noUpdateCheck).toBe('1');
     });
 });

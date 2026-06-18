@@ -7,38 +7,38 @@
  *
  * Phase 3 of `road-to-hooks-actually-fire-in-consumers`.
  *
- * The roadmap-progress hook (`scripts/roadmap_progress_hook.py`) searches
- * three locations for `update_roadmap_progress.py`. Only the **canonical**
+ * The roadmap-progress hook (`scripts/roadmap_progress_hook.ts`) searches
+ * three locations for `update_roadmap_progress.ts`. Only the **canonical**
  * location is reliable in marketplace-install consumers:
- * `.augment/scripts/update_roadmap_progress.py`. This helper pins the contract
+ * `.augment/scripts/update_roadmap_progress.ts`. This helper pins the contract
  * and copies the script idempotently.
  *
  * Contract: idempotent; preserves executable bit; never throws (callers get a
  * `[success, message]` tuple).
  *
- * Divergence candidate (flagged, not fixed): the Python module still references
- * `update_roadmap_progress.py` by name (the regenerator itself is not yet
- * ported). This twin copies whatever file the package-side resolution finds —
- * `.py` today, `.ts` once that script is migrated — without behavior change.
+ * The regenerator has been ported to TypeScript; this helper copies the
+ * package-side `.ts` regenerator into the consumer. The executable bit is
+ * still preserved (a `.ts` run via tsx does not strictly need it, but keeping
+ * the chmod preserves the idempotent contract).
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Path of the script relative to the package's source-of-truth tree. */
-export const REGENERATOR_REL = "scripts/update_roadmap_progress.py";
+export const REGENERATOR_REL = "scripts/update_roadmap_progress.ts";
 
 /** Canonical destination path inside a consumer repo. */
-export const CONSUMER_REGENERATOR_REL = ".augment/scripts/update_roadmap_progress.py";
+export const CONSUMER_REGENERATOR_REL = ".augment/scripts/update_roadmap_progress.ts";
 
 /**
  * Resolve the package-side source-of-truth for the regenerator.
  *
  * Searches the package layout in priority order:
- *   1. `src/agent-src/scripts/update_roadmap_progress.py`
- *   2. `packages/core/.agent-src.uncondensed/scripts/update_roadmap_progress.py`
- *   3. `dist/agent-src/scripts/update_roadmap_progress.py` (condensed projection)
- *   4. `.augment/scripts/update_roadmap_progress.py` (tool projection)
+ *   1. `src/agent-src/scripts/update_roadmap_progress.ts`
+ *   2. `packages/core/.agent-src.uncondensed/scripts/update_roadmap_progress.ts`
+ *   3. `dist/agent-src/scripts/update_roadmap_progress.ts` (condensed projection)
+ *   4. `.augment/scripts/update_roadmap_progress.ts` (tool projection)
  *
  * Returns the first existing file, or `null` if none exist (which is a
  * misconfigured package and should be a hard error at the call site).

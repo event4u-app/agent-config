@@ -160,7 +160,7 @@ export async function refresh(p: string = PRICES_FILE): Promise<string> {
 
 function _cmdCheck(p: string): number {
     if (!fs.existsSync(p)) {
-        process.stdout.write(`[update_prices] ${p} missing — run \`python3 scripts/update_prices.py\`\n`);
+        process.stdout.write(`[update_prices] ${p} missing — run \`./scripts-run src/scripts/update_prices\`\n`);
         return 1;
     }
     const table = load_prices(p);

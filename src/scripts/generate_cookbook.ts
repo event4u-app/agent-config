@@ -20,8 +20,8 @@
  *   - `docs/cookbook.md`
  *
  * Usage:
- *     python3 scripts/generate_cookbook.py
- *     python3 scripts/generate_cookbook.py --check   # fail if out of date
+ *     ./scripts-run src/scripts/generate_cookbook
+ *     ./scripts-run src/scripts/generate_cookbook --check   # fail if out of date
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -272,7 +272,7 @@ export function main(argv: string[] | null = null): number {
         if (current !== content) {
             process.stderr.write(
                 'generate_cookbook: docs/cookbook.md is stale — run ' +
-                    '`python3 scripts/generate_cookbook.py`\n',
+                    '`./scripts-run src/scripts/generate_cookbook`\n',
             );
             return 1;
         }

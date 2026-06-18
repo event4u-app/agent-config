@@ -244,12 +244,14 @@ export function build_server(
     return { request_handlers: handlers };
 }
 
-// The npm `@modelcontextprotocol/sdk` is intentionally NOT a dependency at
-// this phase (the Python entry remains the runtime). The specifiers are
-// built at runtime so the type-checker does not attempt to resolve an
-// absent module — the TS analogue of Python's `try: import mcp`.
+// The npm `@modelcontextprotocol/sdk` is a soft dependency: it IS declared
+// in package.json, but the specifiers are built at runtime and imported
+// dynamically so the module stays importable (and the boot path stays
+// exercisable in tests / CI) even when the dependency has been stripped —
+// the TS analogue of Python's `try: import mcp`.
 const _SDK_SERVER_SPEC = '@modelcontextprotocol/sdk' + '/server/index.js';
 const _SDK_STDIO_SPEC = '@modelcontextprotocol/sdk' + '/server/stdio.js';
+const _SDK_TYPES_SPEC = '@modelcontextprotocol/sdk' + '/types.js';
 
 /** Dynamic import that escapes static module resolution. */
 async function _dynImport(spec: string): Promise<unknown> {
@@ -315,9 +317,9 @@ export async function run_stdio(): Promise<void> {
 
     if (!(await mcp_sdk_available())) {
         process.stderr.write(
-            'mcp-server: warn: @modelcontextprotocol/sdk not installed — ' +
-                'stdio transport unavailable in the TS twin (degraded); ' +
-                'the Python entry (`python -m scripts.mcp_server`) remains the runtime.\n',
+            'mcp-server: warn: @modelcontextprotocol/sdk not importable — ' +
+                'stdio transport unavailable (degraded). The SDK is a declared ' +
+                'dependency; run `npm install` to restore stdio serving.\n',
         );
         return;
     }
@@ -328,30 +330,103 @@ export async function run_stdio(): Promise<void> {
 /**
  * Wire the built handlers onto the npm MCP SDK and serve over stdio.
  *
- * Isolated in its own function with a lazy import so the module compiles
- * and the non-serving paths run without the SDK present.
+ * Maps the transport-agnostic `request_handlers` map onto the SDK's
+ * schema-keyed `setRequestHandler` API. This is the TS analogue of the
+ * Python module's `@server.list_prompts()` / `@server.call_tool()`
+ * decorators: same handler logic, same wire output. The result envelopes
+ * mirror what the Python `mcp` SDK produced — in particular `tools/call`
+ * wraps the handler's plain object in a single JSON-serialized `text`
+ * content block (the Python SDK auto-wrapped a returned `dict` the same
+ * way), and a `null` `nextCursor` is dropped (omitted) rather than sent.
+ *
+ * Isolated in its own function with lazy imports so the module stays
+ * importable and the non-serving boot path runs even when the SDK has
+ * been stripped (degrade-when-absent, the analogue of Python `try: import`).
  */
 async function _serveOverSdk(server: BuiltServer): Promise<void> {
-    // Lazy import — the dep is intentionally absent at this phase; this
-    // path only runs when a later phase adds `@modelcontextprotocol/sdk`.
     const sdk = (await _dynImport(_SDK_SERVER_SPEC)) as {
-        Server: new (info: { name: string; version: string }) => SdkServer;
+        Server: new (
+            info: { name: string; version: string },
+            options: { capabilities: Record<string, unknown> },
+        ) => SdkServer;
     };
     const { StdioServerTransport } = (await _dynImport(_SDK_STDIO_SPEC)) as {
         StdioServerTransport: new () => SdkTransport;
     };
+    const schemas = (await _dynImport(_SDK_TYPES_SPEC)) as {
+        ListPromptsRequestSchema: unknown;
+        GetPromptRequestSchema: unknown;
+        ListResourcesRequestSchema: unknown;
+        ReadResourceRequestSchema: unknown;
+        ListToolsRequestSchema: unknown;
+        CallToolRequestSchema: unknown;
+    };
 
-    const sdkServer = new sdk.Server({ name: SERVER_NAME, version: __version__ });
-    // The SDK's request-handler registration API differs from the Python
-    // decorator surface; a later phase maps `server.request_handlers` onto
-    // the SDK's `setRequestHandler`. The mapping is intentionally deferred
-    // until the dependency lands so this twin stays buildable.
-    void server;
+    const handlers = server.request_handlers;
+    const sdkServer = new sdk.Server(
+        { name: SERVER_NAME, version: __version__ },
+        { capabilities: { prompts: {}, resources: {}, tools: {} } },
+    );
+
+    // MCP omits `nextCursor` when there is no next page; the handlers carry
+    // `null`, which the SDK's response schema rejects — map it to undefined.
+    const dropNull = (cursor: string | null): string | undefined =>
+        cursor === null ? undefined : cursor;
+
+    sdkServer.setRequestHandler(schemas.ListPromptsRequestSchema, async (req: SdkRequest) => {
+        const result = await handlers['prompts/list']((req.params?.cursor as string) ?? null);
+        return { prompts: result.prompts, nextCursor: dropNull(result.nextCursor) };
+    });
+    sdkServer.setRequestHandler(schemas.GetPromptRequestSchema, async (req: SdkRequest) =>
+        handlers['prompts/get'](req.params?.name as string),
+    );
+    sdkServer.setRequestHandler(schemas.ListResourcesRequestSchema, async (req: SdkRequest) => {
+        const result = await handlers['resources/list']((req.params?.cursor as string) ?? null);
+        return { resources: result.resources, nextCursor: dropNull(result.nextCursor) };
+    });
+    sdkServer.setRequestHandler(schemas.ReadResourceRequestSchema, async (req: SdkRequest) => {
+        const uri = req.params?.uri as string;
+        const contents = await handlers['resources/read'](uri);
+        return { contents: contents.map((c) => ({ uri, mimeType: c.mimeType, text: c.content })) };
+    });
+
+    const listTools = handlers['tools/list'];
+    const callTool = handlers['tools/call'];
+    if (listTools !== undefined && callTool !== undefined) {
+        sdkServer.setRequestHandler(schemas.ListToolsRequestSchema, async () => ({
+            tools: await listTools(),
+        }));
+        sdkServer.setRequestHandler(schemas.CallToolRequestSchema, async (req: SdkRequest) => {
+            try {
+                const result = await callTool(
+                    req.params?.name as string,
+                    (req.params?.arguments as Record<string, unknown>) ?? {},
+                );
+                // Mirror the Python SDK: a returned object becomes a single
+                // JSON-serialized text content block.
+                return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+            } catch (err) {
+                // Mirror the Python SDK's `call_tool` wrapper: a raised
+                // exception becomes a tool-error CallToolResult (isError),
+                // not a JSON-RPC protocol error.
+                const message = err instanceof Error ? err.message : String(err);
+                return { content: [{ type: 'text', text: message }], isError: true };
+            }
+        });
+    }
+
     const transport = new StdioServerTransport();
     await sdkServer.connect(transport);
 }
 
+interface SdkRequest {
+    params?: Record<string, unknown>;
+}
 interface SdkServer {
+    setRequestHandler(
+        schema: unknown,
+        handler: (req: SdkRequest) => Promise<unknown>,
+    ): void;
     connect(transport: SdkTransport): Promise<void>;
 }
 interface SdkTransport {

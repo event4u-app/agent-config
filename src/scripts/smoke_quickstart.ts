@@ -9,7 +9,7 @@
  *
  * Verifies the 3-step Quickstart from a fresh-project perspective:
  *
- *   1. `scripts/install.py --project <tmpdir>` produces a usable
+ *   1. `scripts/install.ts --project <tmpdir>` produces a usable
  *      `.agent-settings.yml` with the documented default `rule_loading_tier`.
  *   2. The decision_engine block (P2.x of road-to-productization) parses
  *      cleanly through the same engine parser the runtime uses.
@@ -22,13 +22,11 @@
  *     agent. This smoke test asserts the *mechanics* the agent depends
  *     on, so a Quickstart break is caught before the agent ever runs.
  *
- * Cross-batch dependency: Step 1 runs the still-Python installer
- * (`install.py`) via `python3` exactly as the Python original runs it via
- * `sys.executable`; Step 3 imports the still-Python `decision_engine` module
- * (under `templates/scripts/`, no TS twin) and so runs that check through a
- * `python3` shim that reproduces the Python logic and message surface. A
- * `.ts` cannot import a `.py`, and porting the work-engine scoring tree is
- * out of this wave's scope.
+ * Cross-batch dependency: Step 1 runs the installer's `.ts` twin
+ * (`install.ts`) via the repo-local `tsx` binary. Step 3 imports the
+ * `work_engine.scoring.decision_engine` TS twin (under `agent-src/templates/
+ * scripts/`) directly in-process — `parse` + `DecisionEngineSettings` — no
+ * `python3` subprocess needed.
  *
  * Exit codes: 0 = green; 1 = one or more checks failed; 2 = setup error.
  */
@@ -40,12 +38,26 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import {
+    DecisionEngineConfigError,
+    DecisionEngineSettings,
+    parse as parseDecisionEngine,
+} from '../agent-src/templates/scripts/work_engine/scoring/decision_engine.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // Python: ROOT = Path(__file__).resolve().parent.parent.parent
 const ROOT = path.resolve(_HERE, '..', '..', '..');
-const INSTALLER = path.join(ROOT, 'src', 'scripts', 'install.py');
+const INSTALLER = path.join(ROOT, 'src', 'scripts', 'install.ts');
 const TEMPLATE = path.join(ROOT, 'src', 'config', 'agent-settings.template.yml');
+
+// Repo-local tsx binary — run the installer's `.ts` twin without npx.
+const TSX_BIN = path.join(
+    ROOT,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
 
 const EXPECTED_DEFAULT_PROFILE = 'balanced';
 
@@ -66,7 +78,9 @@ function _checkInstallerRuns(tmpdir: string): [number, string | null] {
     ];
     // ADR-020: --project is reserved for maintainers; CI is a maintainer context.
     const env = { ...process.env, AGENT_CONFIG_DEV_MODE: '1' };
-    const result = spawnSync('python3', cmd, {
+    // Run the installer's `.ts` twin via the repo-local tsx binary (was
+    // `python3 install.py`; the Python original is deleted).
+    const result = spawnSync(TSX_BIN, cmd, {
         encoding: 'utf-8',
         timeout: 60000,
         env,
@@ -110,54 +124,29 @@ function _checkDefaultProfile(settings: string): number {
 /**
  * Step 3 — decision_engine block parses through the engine parser.
  *
- * The parser lives in the still-Python `work_engine.scoring.decision_engine`
- * module; run the check through a `python3` shim that reproduces the Python
- * `_check_decision_engine_block` logic and emits the failure reason (if any)
- * on stdout so the TS `_fail` wrapper produces a byte-identical `::error::`.
+ * Imports the `work_engine.scoring.decision_engine` TS twin directly and runs
+ * the same parse the runtime uses: extract the `decision_engine` block from the
+ * settings YAML, feed it to `parse()`, and assert the result is a
+ * `DecisionEngineSettings`. A parser rejection is reported via `_fail` so the
+ * `::error::` annotation matches the Python original's failure shape.
  */
 function _checkDecisionEngineBlock(settings: string): number {
-    const shim = `
-import sys
-from pathlib import Path
-ROOT = Path(${JSON.stringify(ROOT)})
-SETTINGS = Path(${JSON.stringify(settings)})
-sys.path.insert(0, str(ROOT / "src" / "scripts"))
-from _lib.agent_src import resolve_logical
-template_scripts = resolve_logical("templates/scripts") or (
-    ROOT / ".agent-src.uncondensed" / "templates" / "scripts"
-)
-sys.path.insert(0, str(template_scripts))
-try:
-    from work_engine.scoring.decision_engine import (
-        DecisionEngineSettings,
-        parse as parse_decision_engine,
-    )
-except ImportError as exc:
-    print(f"decision_engine module not importable: {exc}")
-    sys.exit(1)
-import yaml
-parsed = yaml.safe_load(SETTINGS.read_text(encoding="utf-8"))
-block = parsed.get("decision_engine") if isinstance(parsed, dict) else None
-try:
-    settings_obj = parse_decision_engine(block)
-except Exception as exc:
-    print(f"decision_engine block rejected by parser: {exc}")
-    sys.exit(1)
-if not isinstance(settings_obj, DecisionEngineSettings):
-    print("parser returned non-DecisionEngineSettings instance")
-    sys.exit(1)
-sys.exit(0)
-`;
-    const result = spawnSync('python3', ['-c', shim], {
-        encoding: 'utf-8',
-        cwd: ROOT,
-        maxBuffer: 256 * 1024 * 1024,
-    });
-    if (result.status === 0) {
-        return 0;
+    const parsed: unknown = parseYaml(fs.readFileSync(settings, 'utf-8'), { version: '1.1' });
+    const block =
+        parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? (parsed as Record<string, unknown>).decision_engine ?? null
+            : null;
+    let settingsObj: DecisionEngineSettings;
+    try {
+        settingsObj = parseDecisionEngine(block);
+    } catch (exc) {
+        const detail = exc instanceof DecisionEngineConfigError ? exc.message : String(exc);
+        return _fail(`decision_engine block rejected by parser: ${detail}`);
     }
-    const reason = (result.stdout ?? '').replace(/\n+$/, '').split('\n').pop() ?? '';
-    return _fail(reason);
+    if (!(settingsObj instanceof DecisionEngineSettings)) {
+        return _fail('parser returned non-DecisionEngineSettings instance');
+    }
+    return 0;
 }
 
 /** Python repr() of a scalar value as embedded by `{profile!r}`. */

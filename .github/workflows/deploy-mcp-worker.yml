@@ -56,12 +56,6 @@ jobs:
           ref: ${{ steps.ref.outputs.ref }}
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: 'pip'
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -77,9 +71,9 @@ jobs:
         id: pack
         run: |
           ./scripts-run src/scripts/pack_mcp_content
-          sig=$(python3 -c "import json; print(json.load(open('internal/workers/mcp/manifest.json'))['signature'])")
-          release_key=$(python3 -c "import json; print(json.load(open('internal/workers/mcp/manifest.json'))['release_key'])")
-          pkg=$(python3 -c "import json; print(json.load(open('internal/workers/mcp/manifest.json'))['package_version'])")
+          sig=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').signature)")
+          release_key=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').release_key)")
+          pkg=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').package_version)")
           echo "signature=$sig" >> "$GITHUB_OUTPUT"
           echo "release_key=$release_key" >> "$GITHUB_OUTPUT"
           echo "package_version=$pkg" >> "$GITHUB_OUTPUT"

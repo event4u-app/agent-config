@@ -113,12 +113,12 @@ tasks:
   compile-corpus:
     silent: true
     desc: Compile agents/decisions/low-impact-decisions.md → .lock.yaml (decisions source-of-truth)
-    cmd: PYTHONPATH=src python3 -m scripts.ai_council.compile_corpus
+    cmd: ./scripts-run src/scripts/ai_council/compile_corpus
 
   check-corpus:
     silent: true
     desc: Verify agents/decisions/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
-    cmd: PYTHONPATH=src python3 -m scripts.ai_council.compile_corpus --check
+    cmd: ./scripts-run src/scripts/ai_council/compile_corpus --check
 
   check-augmentignore:
     silent: true
@@ -189,12 +189,12 @@ tasks:
   roadmap-progress:
     silent: true
     desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
-    cmd: python3 .augment/scripts/update_roadmap_progress.py
+    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts
 
   roadmap-progress-check:
     silent: true
     desc: Fail if agents/roadmaps-progress.md is stale (for CI)
-    cmd: python3 .augment/scripts/update_roadmap_progress.py --check
+    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check
 
   check-roadmap-trackable:
     silent: true
@@ -209,7 +209,7 @@ tasks:
   check-council-config-location:
     silent: true
     desc: Fail if council surfaces tie config to .agent-settings.yml instead of .ai-council.yml (ADR-093)
-    cmd: python3 src/scripts/check_council_config_location.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_council_config_location {{.QUIET_FLAG}}
 
   lint-agents-layout:
     silent: true
@@ -293,42 +293,42 @@ tasks:
   generate-capability-matrix:
     silent: true
     desc: "road-to-competitive-borrow P1.3 — (re)generate docs/capability-matrix.md + dist/discovery/capability-matrix.json from condense.py generate_tools() projection logic"
-    cmd: python3 src/scripts/generate_capability_matrix.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_capability_matrix {{.CLI_ARGS}}
 
   generate-capability-matrix-check:
     silent: true
     desc: "road-to-competitive-borrow P1.3 — fail if the capability matrix is stale vs the generate_tools() projection logic"
-    cmd: python3 src/scripts/generate_capability_matrix.py --check
+    cmd: ./scripts-run src/scripts/generate_capability_matrix --check
 
   generate-capabilities-index:
     silent: true
     desc: "road-to-capability-discoverability P2 — (re)generate CAPABILITIES.yaml (capability area → coverage → backing skills/commands → gaps) from packs.yml + skill/command frontmatter"
-    cmd: python3 src/scripts/generate_capabilities_index.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_capabilities_index {{.CLI_ARGS}}
 
   generate-capabilities-index-check:
     silent: true
     desc: "road-to-capability-discoverability P2 — fail if CAPABILITIES.yaml is stale vs the skill/command/pack surface (auto-run in CI; kill-switch on >5s / >50KB)"
-    cmd: python3 src/scripts/generate_capabilities_index.py --check
+    cmd: ./scripts-run src/scripts/generate_capabilities_index --check
 
   generate-cookbook:
     silent: true
     desc: "road-to-competitive-borrow P1.4 — (re)generate docs/cookbook.md from src/flows/cookbook.yaml + the four user-work flows (validates every command/skill ref)"
-    cmd: python3 src/scripts/generate_cookbook.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_cookbook {{.CLI_ARGS}}
 
   generate-cookbook-check:
     silent: true
     desc: "road-to-competitive-borrow P1.4 — fail if docs/cookbook.md is stale or references a non-existent command/skill"
-    cmd: python3 src/scripts/generate_cookbook.py --check
+    cmd: ./scripts-run src/scripts/generate_cookbook --check
 
   generate-role-experiences-catalog:
     silent: true
     desc: "road-to-competitive-borrow P1.0 — (re)generate docs/role-experiences.md from agents/roles/*/index.md taglines"
-    cmd: python3 src/scripts/generate_role_experiences_catalog.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_role_experiences_catalog {{.CLI_ARGS}}
 
   generate-role-experiences-catalog-check:
     silent: true
     desc: "road-to-competitive-borrow P1.0 — fail if docs/role-experiences.md is stale vs the role taglines"
-    cmd: python3 src/scripts/generate_role_experiences_catalog.py --check
+    cmd: ./scripts-run src/scripts/generate_role_experiences_catalog --check
 
   lint-namespace-collisions:
     silent: true

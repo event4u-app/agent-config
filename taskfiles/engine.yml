@@ -72,13 +72,12 @@ tasks:
 
   test:
     silent: true
-    desc: Run all tests (bash + Python, parallel where safe)
+    desc: Run all bash integration tests (parallel where safe). TS unit tests run via `task test-ts` (vitest).
     cmds:
       - bash tests/test_install.sh --parallel
       - bash tests/test_install_orchestrator.sh --parallel
       - bash tests/test_install_openai_key.sh
       - bash tests/test_install_anthropic_key.sh
-      - python3 -m pytest tests/ -n auto -q
       - task: test-ai-video
 
   test-ai-video:
@@ -86,14 +85,6 @@ tasks:
     desc: Offline smoke test for the /video:* pipeline against banana-arc (Phase 6 Step 4)
     cmds:
       - bash src/scripts/ai-video/test-pipeline.sh
-
-  test-installer-e2e:
-    silent: true
-    desc: "Container e2e — builds the installer-e2e image and runs the installer + wizard apply scenarios inside it (needs Docker; multi-minute build)."
-    env:
-      AGENT_CONFIG_E2E_DOCKER: "1"
-    cmds:
-      - python3 -m pytest tests/test_e2e_container_install.py -v
 
   video:smoke-trace:
     silent: true
@@ -103,13 +94,12 @@ tasks:
 
   test-install:
     silent: true
-    desc: Run install.sh + orchestrator + install.py + key-script tests
+    desc: Run install.sh + orchestrator + key-script bash tests. Installer unit tests run via `task test-ts` (vitest, tests/install/**).
     cmds:
       - bash tests/test_install.sh --parallel
       - bash tests/test_install_orchestrator.sh --parallel
       - bash tests/test_install_openai_key.sh
       - bash tests/test_install_anthropic_key.sh
-      - python3 -m pytest tests/test_install_py.py -n auto -q
 
   test-install-local:
     silent: true
@@ -122,11 +112,6 @@ tasks:
       if any sub-test fails. Usage:
       task test-install-local
     cmd: bash tests/test_one_liner_entrypoints.sh
-
-  test-python:
-    silent: true
-    desc: Run all Python unit tests (pytest-discovered)
-    cmd: python3 -m pytest tests/ -n auto -q
 
   test-triggers:
     silent: true
@@ -152,11 +137,6 @@ tasks:
     silent: true
     desc: "Measure the thin-projection token delta (Phase 3.1): eager vs (kernel full + non-kernel pointers). Read-only — never writes the live projections. Set lean_projection.mode=thin + `task generate-tools` to actually thin (validate with bench:ab:live first)."
     cmd: ./scripts-run src/scripts/project_thin_rules --measure
-
-  setup-evals:
-    desc: "Bootstrap .venv/ with the pinned anthropic SDK for live trigger evals (idempotent)."
-    cmd: bash src/scripts/setup_eval_venv.sh
-    interactive: true
 
   install-anthropic-key:
     desc: |
@@ -185,43 +165,10 @@ tasks:
            legacy ~/.config/agent-config/anthropic.key read as fallback)
         2) interactive tty stdin
         3) explicit 'yes' at the pre-run cost preview
-      Bootstrap once:        task setup-evals
       Install the key once:  task install-anthropic-key
       Usage: task test-triggers-live -- eloquent
-    env:
-      # `from scripts._lib import …` needs `src` on the import root; pyproject's
-      # pythonpath only applies under pytest, not raw task/python3 invocation.
-      PYTHONPATH: src
-    cmd: .venv/bin/python3 src/scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
-    preconditions:
-      - sh: test -x .venv/bin/python3
-        msg: ".venv missing — run 'task setup-evals' first"
+    cmd: ./scripts-run src/scripts/skill_trigger_eval --skill {{.CLI_ARGS}}
     interactive: true
-
-  test-linter:
-    silent: true
-    desc: Run skill linter tests
-    cmd: python3 -m pytest tests/test_skill_linter.py -v
-
-  test-readme-linter:
-    silent: true
-    desc: Run README linter tests
-    cmd: python3 -m pytest tests/test_readme_linter.py -v
-
-  test-marketplace-linter:
-    silent: true
-    desc: Run marketplace linter tests
-    cmd: python3 -m pytest tests/test_lint_marketplace.py -v
-
-  test-runtime:
-    silent: true
-    desc: Run runtime registry and dispatcher tests
-    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py -v
-
-  test-ai-council:
-    silent: true
-    desc: Run AI Council tests (clients, bundler, orchestrator, prompts)
-    cmd: python3 -m pytest tests/ai_council/ -v
 
   runtime-list:
     silent: true
@@ -248,40 +195,11 @@ tasks:
     desc: Validate tool declarations
     cmd: ./scripts-run src/scripts/tool_registry --validate-tools {{.CLI_ARGS}}
 
-  test-tools:
-    silent: true
-    desc: Run tool registry and adapter tests
-    cmd: python3 -m pytest tests/test_tool_registry.py tests/test_tool_adapters.py -v
-
-  test-runtime-all:
-    silent: true
-    desc: Run all runtime and tools tests
-    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_handler.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_ci_summary.py -v
-
   runtime-e2e:
     desc: End-to-end gate — dispatch each runnable pilot skill and fail on any non-zero exit
     cmds:
       - ./scripts-run src/scripts/runtime_dispatcher run --skill lint-skills
       - ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs
-
-  golden-replay:
-    silent: true
-    desc: Replay all Golden Transcripts against work_engine — fail on any structural drift (R1 P6)
-    cmd: python3 -m pytest tests/golden/test_replay.py -v
-
-  golden-replay-smoke:
-    silent: true
-    desc: Replay only the smoke-tagged Golden Transcripts — sub-second PR feedback (P2.4)
-    cmd: python3 -m pytest tests/golden/test_replay.py -m smoke -v
-
-  doctor-smoke:
-    silent: true
-    desc: |
-      Manifest-correctness smoke test (P4.4). Runs the doctor command
-      against the current repo's project lockfile and asserts the
-      filesystem is in sync. Opt-in: not part of `task ci`. Useful
-      after install / sync to verify manifest fidelity.
-    cmd: python3 -m pytest tests/test_cmd_doctor.py -q
 
   smoke-quickstart:
     silent: true

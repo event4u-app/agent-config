@@ -64,12 +64,12 @@ describe('validate_agent_settings — schema enum contract', () => {
     });
 });
 
-describe('validate_agent_settings — alias map (Python install source)', () => {
-    it('install.py maps cost_profile → rule_loading_tier', () => {
-        // The alias map lives in the Python installer (not this twin). Pin the
-        // source line so the contract the Python test asserts stays visible.
-        const install = fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'install.py'), 'utf-8');
-        expect(install).toMatch(/["']cost_profile["']\s*:\s*["']rule_loading_tier["']/);
+describe('validate_agent_settings — alias map (install source)', () => {
+    it('install.ts maps cost_profile → rule_loading_tier', () => {
+        // The alias map lives in the installer (not this twin). Pin the source
+        // line so the contract stays visible after the Python→TS deletion.
+        const install = fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'install.ts'), 'utf-8');
+        expect(install).toMatch(/["']?cost_profile["']?\s*:\s*["']rule_loading_tier["']/);
     });
 });
 

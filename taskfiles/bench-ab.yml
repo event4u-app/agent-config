@@ -120,8 +120,8 @@ tasks:
       # (without = --setting-sources project,local → plugin off; with = real
       # plugin; with-rdp = + injected RDP rules), not via clone files. The runner
       # resets a fixture working dir per task itself.
-      - python3 src/scripts/bench_ab_clone.py --variant without --refresh
-      - python3 src/scripts/bench_ab_task_runner.py --variant all --mode live
+      - ./scripts-run src/scripts/bench_ab_clone --variant without --refresh
+      - ./scripts-run src/scripts/bench_ab_task_runner --variant all --mode live
       - task: bench:ab:diff
 
   bench:ab:value:quick:
@@ -136,8 +136,8 @@ tasks:
       content fail). Use this to prove the harness end-to-end without the full
       39-run corpus tripping the usage limit.
     cmds:
-      - python3 src/scripts/bench_ab_clone.py --variant without --refresh
-      - python3 src/scripts/bench_ab_task_runner.py --variant all --mode live --tasks trackb-bugfix-01,trackb-bugfix-02,trackb-refactor-01 --budget 4.0 --timeout 300
+      - ./scripts-run src/scripts/bench_ab_clone --variant without --refresh
+      - ./scripts-run src/scripts/bench_ab_task_runner --variant all --mode live --tasks trackb-bugfix-01,trackb-bugfix-02,trackb-refactor-01 --budget 4.0 --timeout 300
       - task: bench:ab:diff
 
   bench:ab:v2:
@@ -152,21 +152,21 @@ tasks:
       --seeds to bound it. See agents/roadmaps/road-to-discipline-axis-benchmark.md.
       Pass flags through, e.g.:
         task bench:ab:v2 -- --tasks trapA-overeng-01,trapB-regress-01 --seeds 1 --budget 3.5
-    cmd: python3 src/scripts/bench_ab_v2_run.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/bench_ab_v2_run {{.CLI_ARGS}}
 
   bench:ab:v2:stats:
     silent: true
     desc: |
       Print the paired statistics + L4 gate verdict for the latest v2 paired
       report (or pass a report path). Cost-free.
-    cmd: python3 src/scripts/bench_ab_v2_stats.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/bench_ab_v2_stats {{.CLI_ARGS}}
 
   bench:ab:v2:diff:
     silent: true
     desc: |
       Re-render docs/benchmark.md from the latest v2 paired report (honest
       two-table + gate + honesty labels). Cost-free.
-    cmd: python3 src/scripts/bench_ab_v2_stats.py --markdown docs/benchmark.md
+    cmd: ./scripts-run src/scripts/bench_ab_v2_stats --markdown docs/benchmark.md
 
   bench:ab:watch:
     silent: true
@@ -174,30 +174,22 @@ tasks:
       Tail the live bench progress (internal/bench/reports/ab/.progress.json) in a
       second terminal while `bench:ab:value` / `bench:ab:live` runs. Ctrl-C stops.
     cmd: |
-      python3 - <<'PY'
-      import json, time, pathlib, sys
-      p = pathlib.Path("internal/bench/reports/ab/.progress.json")
-      sys.stderr.write(f"watching {p} … Ctrl-C to stop\n")
-      try:
-          while True:
-              s = {}
-              if p.exists():
-                  try:
-                      s = json.loads(p.read_text())
-                  except Exception:
-                      s = {}
-              sys.stdout.write(
-                  "\r{}/{} · {} · {} · {}        ".format(
-                      s.get("total_done", 0), s.get("total", "?"),
-                      s.get("variant", ""), s.get("current_id", ""),
-                      s.get("last_result") or "running",
-                  )
-              )
-              sys.stdout.flush()
-              time.sleep(1)
-      except KeyboardInterrupt:
-          sys.stdout.write("\n")
-      PY
+      node -e '
+      const fs = require("node:fs");
+      const p = "internal/bench/reports/ab/.progress.json";
+      process.stderr.write(`watching ${p} … Ctrl-C to stop\n`);
+      process.on("SIGINT", () => { process.stdout.write("\n"); process.exit(0); });
+      const tick = () => {
+        let s = {};
+        try { s = JSON.parse(fs.readFileSync(p, "utf8")); } catch { s = {}; }
+        process.stdout.write(
+          `\r${s.total_done ?? 0}/${s.total ?? "?"} · ${s.variant ?? ""} · ` +
+          `${s.current_id ?? ""} · ${s.last_result || "running"}        `
+        );
+      };
+      tick();
+      setInterval(tick, 1000);
+      '
 
   lint-bench-ab:
     silent: true

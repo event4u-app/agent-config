@@ -1,3 +1,4 @@
+<!-- check-refs: skip -->
 # Phase-5 Coverage-Equivalence Audit (2026-06-18)
 
 Companion evidence for `road-to-py2ts-teardown.md` Phase 5. Three parallel

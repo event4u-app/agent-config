@@ -14,11 +14,11 @@
  * chain integrity gate for the suite's *own* artifacts
  * (road-to-security-pillar.md P1).
  *
- * The four child linters have no TypeScript twins yet (they import the
- * Python-only `_lib/security_lint` module), so this runner shells out to
- * `python3 <child>.py --json` exactly as the Python original shelled
- * `sys.executable`. A `.ts` MUST NOT import a `.py`; spawning the child
- * process is the faithful port of the Python `subprocess.run` call.
+ * The four child linters now have TypeScript twins, so this runner spawns each
+ * `<child>.ts --json` via the repo-local `tsx` binary (the Python originals
+ * were deleted in the ADR-200 migration). Each child is a separate process so
+ * its JSON findings are aggregated here exactly as the Python original
+ * aggregated `subprocess.run` output.
  *
  * Usage:
  *   ./scripts-run src/scripts/lint_agent_security [--sarif artifacts/agent-security.sarif]
@@ -30,21 +30,30 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 
+// src/scripts → repo root is two levels up (src/scripts/<file>).
+const REPO_ROOT = path.resolve(_HERE, "..", "..");
+const tsxBin = path.join(
+  REPO_ROOT,
+  "node_modules",
+  ".bin",
+  process.platform === "win32" ? "tsx.cmd" : "tsx",
+);
+
 type Finding = Record<string, unknown>;
 
 const LINTERS: ReadonlyArray<[string, string]> = [
-  ["hidden-unicode", "lint_hidden_unicode.py"],
-  ["instruction-smuggling", "lint_instruction_smuggling.py"],
-  ["mcp-config-security", "lint_mcp_config_security.py"],
-  ["dangerous-frontmatter", "lint_skill_frontmatter_safety.py"],
+  ["hidden-unicode", "lint_hidden_unicode.ts"],
+  ["instruction-smuggling", "lint_instruction_smuggling.ts"],
+  ["mcp-config-security", "lint_mcp_config_security.ts"],
+  ["dangerous-frontmatter", "lint_skill_frontmatter_safety.ts"],
 ];
 
 function _run(script: string): [number, Finding[]] {
-  // Mirrors Python: subprocess.run([sys.executable, HERE/script, "--json"],
-  // capture_output=True, text=True). The child linters are pure-stdlib Python,
-  // so the interpreter that ran this twin's sibling (.py) is `python3` —
-  // spawning `python3` reproduces `sys.executable` for the migration window.
-  const proc = spawnSync("python3", [path.join(_HERE, script), "--json"], {
+  // Spawn the child linter's `.ts` twin via the repo-local tsx binary
+  // (capture_output=True, text=True equivalent). Mirrors the Python original's
+  // `subprocess.run([sys.executable, HERE/<child>.py, "--json"])`, now that the
+  // children are TypeScript and the `.py` originals are deleted.
+  const proc = spawnSync(tsxBin, [path.join(_HERE, script), "--json"], {
     encoding: "utf-8",
   });
   let findings: Finding[];
@@ -196,7 +205,7 @@ export function main(argv: string[] | null = null): number {
   if (blocking) {
     process.stdout.write(
       `❌  agent-security: ${blocking} blocking finding(s). ` +
-        `Run each linter directly for detail (e.g. python3 src/scripts/lint_hidden_unicode.py).\n`,
+        `Run each linter directly for detail (e.g. ./scripts-run src/scripts/lint_hidden_unicode).\n`,
     );
     return 1;
   }

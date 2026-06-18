@@ -1,11 +1,12 @@
 // Tests for src/scripts/check_gate_paths.ts (py2ts Phase 4 / Wave 4c).
 //
 // Port of tests/test_check_gate_paths.py over the I/O-free core
-// (check_paths, _is_under_source_tree) plus the python3-backed gate
-// introspection (collect_gate_paths). The introspection + main() tests
-// require python3 (the gate modules are still Python-only in this
-// migration window) and are skipped without it. A golden-parity layer
-// runs python3 vs tsx on the REAL REPO.
+// (check_paths, _is_under_source_tree) plus the tsx-backed gate
+// introspection (collect_gate_paths). The gate modules are now `.ts` twins;
+// collect_gate_paths spawns `tsx` to read their exported GATE_CORE_PATHS, so
+// the introspection + main() tests require tsx and are skipped without it.
+// A golden-parity layer compares tsx vs the legacy python3 entry on the REAL
+// REPO (skipped without python3).
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -29,6 +30,10 @@ const TSX_BIN = path.join(
 
 function hasPython3(): boolean {
     return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
+}
+
+function hasTsx(): boolean {
+    return spawnSync(TSX_BIN, ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
 describe('check_gate_paths.check_paths — the I/O-free assertion core', () => {
@@ -74,8 +79,9 @@ describe('check_gate_paths.check_paths — the I/O-free assertion core', () => {
 });
 
 const py3 = hasPython3();
+const tsx = hasTsx();
 
-describe.skipIf(!py3)('check_gate_paths.collect_gate_paths — gate introspection', () => {
+describe.skipIf(!tsx)('check_gate_paths.collect_gate_paths — gate introspection', () => {
     it('reads real gate attributes; all resolve', () => {
         const named = mod.collect_gate_paths(mod.GATES);
         expect(new Set(named.keys())).toEqual(new Set(mod.GATES));
@@ -86,7 +92,8 @@ describe.skipIf(!py3)('check_gate_paths.collect_gate_paths — gate introspectio
     });
 
     it('raises without GATE_CORE_PATHS attribute', () => {
-        // `json` is importable but has no GATE_CORE_PATHS → AttributeError path.
+        // No `json.ts` twin under src/scripts → the introspection import() fails,
+        // so this surfaces as the ImportError throw path (same exit-2 behaviour).
         expect(() => mod.collect_gate_paths(['json'])).toThrow();
     });
 

@@ -7,14 +7,14 @@ on:
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "src/scripts/condense.py"
+      - "src/scripts/condense.ts"
       - "src/scripts/condense.sh"
-      - "src/scripts/check_references.py"
-      - "src/scripts/check_no_new_legacy_path.py"
-      - "src/scripts/build_cloud_bundle.py"
-      - "src/scripts/build_linear_digest.py"
-      - "src/scripts/lint_marketplace.py"
-      - "src/scripts/lint_agents_md.py"
+      - "src/scripts/check_references.ts"
+      - "src/scripts/check_no_new_legacy_path.ts"
+      - "src/scripts/build_cloud_bundle.ts"
+      - "src/scripts/build_linear_digest.ts"
+      - "src/scripts/lint_marketplace.ts"
+      - "src/scripts/lint_agents_md.ts"
       - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
@@ -29,14 +29,14 @@ on:
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "src/scripts/condense.py"
+      - "src/scripts/condense.ts"
       - "src/scripts/condense.sh"
-      - "src/scripts/check_references.py"
-      - "src/scripts/check_no_new_legacy_path.py"
-      - "src/scripts/build_cloud_bundle.py"
-      - "src/scripts/build_linear_digest.py"
-      - "src/scripts/lint_marketplace.py"
-      - "src/scripts/lint_agents_md.py"
+      - "src/scripts/check_references.ts"
+      - "src/scripts/check_no_new_legacy_path.ts"
+      - "src/scripts/build_cloud_bundle.ts"
+      - "src/scripts/build_linear_digest.ts"
+      - "src/scripts/lint_marketplace.ts"
+      - "src/scripts/lint_agents_md.ts"
       - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
@@ -57,12 +57,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: 'pip'
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -81,14 +75,9 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Python dependencies
-        # pyyaml:     required by check_always_budget.py (parses rule frontmatter).
-        # jsonschema: required by scripts/lint_discovery_manifest.py (R3 Phase 2).
-        run: pip install pytest pyyaml jsonschema
-
       - name: Show tool versions
         run: |
-          python3 --version
+          node --version
           task --version
 
       - name: Verify current sync state
@@ -179,9 +168,6 @@ jobs:
 
       - name: Lint README
         run: ./scripts-run src/scripts/readme_linter README.md --root .
-
-      - name: Run README linter tests
-        run: python3 -m pytest tests/test_readme_linter.py -v
 
       - name: Check for unexpected changes
         run: |

@@ -2,11 +2,9 @@
 //
 // 1:1 port of tests/hooks/test_replay_subcommand.py against the TS replay
 // driver (no-state-mutation per event + per platform, --json summary shape,
-// bare-event-name resolution, invalid-payload exit 2, --dry-run plan) plus a
-// golden-parity layer: python3 replay_hook.py vs tsx replay_hook.ts must
-// agree on exit code + the --json summary (each spawns its own-language
-// dispatcher, which runs the same concern .py scripts). Parity skipped
-// without python3.
+// bare-event-name resolution, invalid-payload exit 2, --dry-run plan). The
+// python3-vs-tsx golden-parity layer was retired with the Python→TS final
+// deletion (the Python replay driver no longer exists).
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -16,14 +14,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_REPLAY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'replay_hook.ts');
-const PY_REPLAY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'replay_hook.py');
 const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'hooks');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const EVENTS = [
     'session_start',
@@ -164,69 +157,5 @@ describe('replay_hook — summary + resolution', () => {
         expect(plan['event']).toBe('post_tool_use');
         expect(Array.isArray(plan['concerns'])).toBe(true);
         expect([...snapshotState(tmp)]).toEqual([]);
-    });
-});
-
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('replay_hook — golden parity (python3 vs tsx)', () => {
-    function runPy(workspace: string, platform: string, event: string, extra: string[]): {
-        stdout: string;
-        stderr: string;
-        status: number;
-    } {
-        fs.mkdirSync(workspace, { recursive: true });
-        const cmd = [
-            PY_REPLAY,
-            '--platform',
-            platform,
-            '--event',
-            event,
-            '--payload',
-            path.join(FIXTURE_DIR, `${event}.json`),
-            '--manifest',
-            MANIFEST,
-            ...extra,
-        ];
-        const r = spawnSync('python3', cmd, { cwd: workspace, encoding: 'utf8' });
-        return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? 0 };
-    }
-
-    it('--json summary matches (exit + summary fields)', () => {
-        const event = 'post_tool_use';
-        const py = runPy(path.join(tmp, 'py'), 'augment', event, ['--json']);
-        const ts = runTsReplay(path.join(tmp, 'ts'), 'augment', event, ['--json']);
-        expect(ts.status).toBe(py.status);
-        const pySum = JSON.parse(py.stdout);
-        const tsSum = JSON.parse(ts.stdout);
-        // payload is a repo-relative path string in both; identical.
-        expect(tsSum).toEqual(pySum);
-    });
-
-    it('invalid payload path: stderr + exit identical', () => {
-        const cmdArgs = (script: string) => [
-            script,
-            '--platform',
-            'augment',
-            '--event',
-            'post_tool_use',
-            '--payload',
-            'nonexistent_event_xyz',
-            '--manifest',
-            MANIFEST,
-        ];
-        const py = spawnSync('python3', cmdArgs(PY_REPLAY), { cwd: tmp, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, cmdArgs(TS_REPLAY), { cwd: tmp, encoding: 'utf8' });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('non-json mode trailing replay line matches', () => {
-        const py = runPy(path.join(tmp, 'py2'), 'augment', 'post_tool_use', []);
-        const ts = runTsReplay(path.join(tmp, 'ts2'), 'augment', 'post_tool_use', []);
-        expect(ts.status).toBe(py.status);
-        // The final "replay_hook: ... rc=N (AGENT_CONFIG_REPLAY=1, no writes)" line.
-        const lastLine = (s: string) => s.trimEnd().split('\n').pop() ?? '';
-        expect(lastLine(ts.stderr)).toBe(lastLine(py.stderr));
     });
 });

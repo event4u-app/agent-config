@@ -1,14 +1,13 @@
 /**
  * `doctor-shell` — native TS implementation.
  *
- * Probes the TS-shell environment: Node version, python3 availability,
- * package root resolution, and the Bash dispatcher's existence. This
- * complements (not replaces) the existing Python-side `doctor`, which
- * audits the consumer project itself.
+ * Probes the TS-shell environment: Node version, package root
+ * resolution, and the Bash dispatcher's existence. The package runtime
+ * is TypeScript-on-`tsx` — python3 is not a runtime dependency, so it is
+ * not probed here.
  */
 
 import { existsSync } from 'node:fs';
-import { PythonNotFoundError, resolvePython } from '../python/resolvePython.js';
 import { BASH_ENTRY, BASH_SHIM, CONSUMER_ROOT, PACKAGE_ROOT } from '../paths.js';
 import { logger } from '../log/logger.js';
 
@@ -29,22 +28,6 @@ function checkNode(): Check {
             ? `v${version} (>= v${required}.0.0)`
             : `v${version} — need >= v${required}.11.0`,
     };
-}
-
-function checkPython(): Check {
-    try {
-        const resolved = resolvePython();
-        return {
-            name: 'python3',
-            ok: true,
-            detail: `${resolved.bin} — ${resolved.version}`,
-        };
-    } catch (err) {
-        const message = err instanceof PythonNotFoundError
-            ? 'not on PATH'
-            : err instanceof Error ? err.message : String(err);
-        return { name: 'python3', ok: false, detail: message };
-    }
 }
 
 function checkPackageRoot(): Check {
@@ -77,7 +60,6 @@ function checkBashShim(): Check {
 export function runDoctorShell(): number {
     const checks: Check[] = [
         checkNode(),
-        checkPython(),
         checkPackageRoot(),
         checkBashEntry(),
         checkBashShim(),

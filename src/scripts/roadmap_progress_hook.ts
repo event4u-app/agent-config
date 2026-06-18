@@ -9,16 +9,17 @@
  * Reads a JSON event from stdin (Augment / Claude / Cursor / Cline /
  * Windsurf / Gemini PostToolUse-shaped envelopes), decides whether the
  * tool call wrote to a roadmap file under `agents/roadmaps/`, and — when
- * it did — re-runs `update_roadmap_progress.py` so the dashboard stays
+ * it did — re-runs `update_roadmap_progress.ts` so the dashboard stays
  * in sync without depending on agent self-discipline.
  *
- * The regenerator the hook re-shells to is the GENERATED Python script
- * (`update_roadmap_progress.py`) shipped under `.augment/scripts/`,
- * `dist/agent-src/scripts/`, or `.agent-src.uncondensed/scripts/`. The
- * Python original runs it via `sys.executable`; the TS twin runs it via
- * `python3` (the only divergence — a `.py` regenerator cannot run under
- * node/tsx). Its golden-parity test therefore skips when no project-local
- * `.augment/` regenerator is present (and when python3 is absent).
+ * The regenerator the hook re-shells to is the GENERATED `.ts` script
+ * (`update_roadmap_progress.ts`) shipped under `.augment/scripts/`,
+ * `dist/agent-src/scripts/`, or `.agent-src.uncondensed/scripts/`. It is
+ * run through the repo/package-local `tsx` binary (resolved by walking up
+ * from the regenerator's directory to `node_modules/.bin/tsx`, falling back
+ * to `npx tsx`), mirroring how the dispatcher runs its `.ts` concerns. Its
+ * golden-parity test therefore skips when no project-local `.augment/`
+ * regenerator is present.
  *
  * Exit code is **always 0**. Hooks must never block the agent loop; the
  * worst-case is a no-op when stdin is malformed or the regenerator is
@@ -63,7 +64,7 @@ export const ROADMAP_PREFIX = "agents/roadmaps/";
 export const ROADMAP_EXCLUDED_PARTS: ReadonlySet<string> = new Set(["archive", "skipped"]);
 export const DASHBOARD_PATH = "agents/roadmaps-progress.md";
 
-export const REGEN_NAME = "update_roadmap_progress.py";
+export const REGEN_NAME = "update_roadmap_progress.ts";
 // Distributed-content script subtrees that may ship the regenerator,
 // in priority order. Project-scoped installs land it under .augment/ or
 // dist/agent-src/; the package itself carries the same projection.
@@ -241,6 +242,31 @@ function _isFile(p: string): boolean {
   }
 }
 
+/**
+ * Resolve how to run the `.ts` regenerator: prefer the `tsx` binary from a
+ * `node_modules/.bin` directory found by walking up from the regenerator's
+ * directory; fall back to `npx tsx`. Mirrors
+ * `dispatch_hook.ts::_resolve_tsx_invocation` so the regenerator runs as
+ * TypeScript with no python3 dependency (the regenerator may live in a
+ * consumer `.augment/scripts/` with the package's node_modules up the tree).
+ */
+function _resolve_tsx_invocation(scriptPath: string): { command: string; args: string[] } {
+  const binName = process.platform === "win32" ? "tsx.cmd" : "tsx";
+  let dir = path.dirname(scriptPath);
+  for (;;) {
+    const candidate = path.join(dir, "node_modules", ".bin", binName);
+    if (_isFile(candidate)) {
+      return { command: candidate, args: [scriptPath] };
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  return { command: "npx", args: ["tsx", scriptPath] };
+}
+
 export function run(
   stdin_text: string,
   options: { consumer_root: string; verbose?: boolean },
@@ -290,7 +316,7 @@ export function run(
         consumer_root,
         "roadmap-progress",
         "prerequisite_missing",
-        "update_roadmap_progress.py not found at any of: " +
+        "update_roadmap_progress.ts not found at any of: " +
           ".augment/scripts/, dist/agent-src/scripts/, " +
           "src/agent-src/scripts/",
         "./agent-config hooks:install --regen " + "(or ./agent-config init)",
@@ -314,9 +340,11 @@ export function run(
   }
 
   try {
-    // The regenerator is a Python script; run it via python3 (the Python
-    // original uses sys.executable — the documented TS divergence).
-    spawnSync("python3", [script], {
+    // The regenerator is a `.ts` script; run it through tsx (resolved from
+    // a node_modules/.bin found by walking up from the regenerator's dir,
+    // falling back to `npx tsx`), mirroring the dispatcher's `.ts` concerns.
+    const inv = _resolve_tsx_invocation(script);
+    spawnSync(inv.command, inv.args, {
       cwd: consumer_root,
       stdio: ["ignore", "ignore", "ignore"],
       timeout: 30000,

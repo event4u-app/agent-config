@@ -56,7 +56,7 @@ something we learned from, harvested, compared against, or copied.
 ## Required instead
 
 - Drop the source name — say "an external reference" or omit.
-- Retain a real link → encrypt via `src/scripts/_lib/link_crypto.py` (key in
+- Retain a real link → encrypt via `src/scripts/_lib/link_crypto.ts` (key in
   gitignored `.agent-settings.yml` `secrets.link_encryption_key`,
   project-then-global).
 - **Raw named evidence** that can't be understood without the source names
@@ -85,7 +85,7 @@ IT IS NEVER HIDDEN IN .harvest-local/ JUST BECAUSE IT MENTIONS A SOURCE.
 ## Backstop
 
 The `check-no-external-sources` CI gate
-(`src/scripts/check_no_external_sources.py` + `external_sources_denylist.json`)
+(`src/scripts/check_no_external_sources.ts` + `external_sources_denylist.json`)
 runs in the package CI pipeline, fails the build on any denied source token in
 a non-carve-out tracked file. Deterministic net, not a substitute for not
 writing the attribution.
@@ -94,4 +94,4 @@ writing the attribution.
 
 - [`source-of-truth`](source-of-truth.md) — edit `src/`, never projections.
 - [`augment-edit-discipline`](augment-edit-discipline.md) — portability + cross-ref sync.
-- `src/scripts/_lib/link_crypto.py` — encrypted link storage.
+- `src/scripts/_lib/link_crypto.ts` — encrypted link storage.

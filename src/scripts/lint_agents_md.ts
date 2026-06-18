@@ -27,7 +27,8 @@ const QUIET = process.argv.slice(2).includes('--quiet');
 // 6.0.x: the uncondensed source container moved to src/agent-src/ (ADR-051).
 const _CONSUMER_TEMPLATE = path.join(SRC_AGENT(), 'templates', 'AGENTS.md');
 // Enforced source target — kept for parity with the Python module's
-// GATE_CORE_PATHS export (read by check_gate_paths).
+// GATE_CORE_PATHS export (read by check_gate_paths). Re-exported via the
+// `export { ... }` block below so the gate can introspect it (read, never copied).
 const GATE_CORE_PATHS = [_CONSUMER_TEMPLATE] as const;
 
 const LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/;

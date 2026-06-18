@@ -40,12 +40,6 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: 'pip'
-
       - name: Set up Node
         # build_cloud_bundle is now TypeScript; the dispatcher runs it via tsx.
         uses: actions/setup-node@v4
@@ -75,7 +69,7 @@ jobs:
           count=$(find dist/cloud -name '*.zip' | wc -l | tr -d ' ')
           echo "cloud_bundle_count=$count" >> "$GITHUB_ENV"
           if [ "$count" = "0" ]; then
-            echo "::error::no cloud bundles produced — build_cloud_bundle.py emitted zero ZIPs"
+            echo "::error::no cloud bundles produced — build_cloud_bundle emitted zero ZIPs"
             exit 1
           fi
 

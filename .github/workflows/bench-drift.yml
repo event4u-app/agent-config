@@ -10,11 +10,11 @@ name: Bench Drift
 on:
   pull_request:
     paths:
-      - "src/scripts/bench_run.py"
-      - "src/scripts/bench_drift_check.py"
-      - "src/scripts/bench_baseline_ready.py"
-      - "src/scripts/bench_runner.py"
-      - "src/scripts/_lib/bench_*.py"
+      - "src/scripts/bench_run.ts"
+      - "src/scripts/bench_drift_check.ts"
+      - "src/scripts/bench_baseline_ready.ts"
+      - "src/scripts/bench_runner.ts"
+      - "src/scripts/_lib/bench_*.ts"
       - "tests/eval/**"
       - "internal/bench/**"
       - ".github/workflows/bench-drift.yml"
@@ -35,11 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: 'pip'
-
       - uses: actions/setup-node@v4
         # bench_drift_check / bench_baseline_ready / bench_run are now
         # TypeScript; the dispatcher runs them via tsx.
@@ -55,9 +50,6 @@ jobs:
       - uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install bench deps
-        run: pip install pyyaml
 
       - name: Run task bench (dev corpus)
         id: bench
@@ -85,49 +77,52 @@ jobs:
       - name: Render PR comment body
         id: render
         run: |
-          python3 - <<'PY' > /tmp/comment.md
-          import json, pathlib
-          drift = json.loads(pathlib.Path("/tmp/drift.json").read_text()
-                             or '{"status":"unknown"}')
-          base  = json.loads(pathlib.Path("/tmp/baseline.json").read_text()
-                             or '{"status":"unknown"}')
-          headline = pathlib.Path("/tmp/bench.out").read_text().strip().splitlines()
-          headline = headline[0] if headline else "(no bench output)"
+          node -e '
+          const fs = require("node:fs");
+          const readJson = (p) => {
+            const raw = (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "").trim();
+            try { return JSON.parse(raw || "{\"status\":\"unknown\"}"); }
+            catch { return { status: "unknown" }; }
+          };
+          const drift = readJson("/tmp/drift.json");
+          const base = readJson("/tmp/baseline.json");
+          const benchLines = (fs.existsSync("/tmp/bench.out")
+            ? fs.readFileSync("/tmp/bench.out", "utf8") : "").trim().split("\n").filter(Boolean);
+          const headline = benchLines.length ? benchLines[0] : "(no bench output)";
 
-          status_emoji = {"ok": "✅", "drift": "⚠️", "warmup": "⏳",
-                          "ready": "✅", "error": "❌"}
-          de = status_emoji.get(drift.get("status"), "❔")
-          be = status_emoji.get(base.get("status"),  "❔")
+          const statusEmoji = { ok: "✅", drift: "⚠️", warmup: "⏳", ready: "✅", error: "❌" };
+          const de = statusEmoji[drift.status] || "❔";
+          const be = statusEmoji[base.status] || "❔";
 
-          lines = [
-              "## Bench drift — warn-only",
-              "",
-              f"**Headline:** `{headline}`",
-              "",
-              f"**Drift:** {de} `{drift.get('status', 'unknown')}` · "
-              f"latest=`{drift.get('latest_report', '—')}` · "
-              f"window={drift.get('baseline_window', '—')} · "
-              f"findings={len(drift.get('findings', []))}",
-          ]
-          for f in drift.get("findings", []):
-              lines.append(
-                  f"- `{f['axis']}`: latest={f['latest']:.4f} "
-                  f"baseline_mean={f['baseline_mean']:.4f}"
-              )
-          lines += [
-              "",
-              f"**Baseline:** {be} `{base.get('status', 'unknown')}` · "
-              f"days={base.get('days_elapsed', '?')}/"
-              f"{base.get('min_days', '?')} · "
-              f"reports={base.get('report_count', '?')}/"
-              f"{base.get('min_reports', '?')}",
-              "",
-              "_Informational only — drift does not block this PR until "
-              "`task bench:baseline-ready` returns 0 "
-              "(step-4 Phase 3 Step 4)._",
-          ]
-          pathlib.Path("/tmp/comment.md").write_text("\n".join(lines) + "\n")
-          PY
+          const findings = drift.findings || [];
+          const lines = [
+            "## Bench drift — warn-only",
+            "",
+            `**Headline:** \`${headline}\``,
+            "",
+            `**Drift:** ${de} \`${drift.status ?? "unknown"}\` · ` +
+              `latest=\`${drift.latest_report ?? "—"}\` · ` +
+              `window=${drift.baseline_window ?? "—"} · ` +
+              `findings=${findings.length}`,
+          ];
+          for (const f of findings) {
+            lines.push(
+              `- \`${f.axis}\`: latest=${Number(f.latest).toFixed(4)} ` +
+                `baseline_mean=${Number(f.baseline_mean).toFixed(4)}`
+            );
+          }
+          lines.push(
+            "",
+            `**Baseline:** ${be} \`${base.status ?? "unknown"}\` · ` +
+              `days=${base.days_elapsed ?? "?"}/${base.min_days ?? "?"} · ` +
+              `reports=${base.report_count ?? "?"}/${base.min_reports ?? "?"}`,
+            "",
+            "_Informational only — drift does not block this PR until " +
+              "`task bench:baseline-ready` returns 0 " +
+              "(step-4 Phase 3 Step 4)._"
+          );
+          fs.writeFileSync("/tmp/comment.md", lines.join("\n") + "\n");
+          '
 
       - name: Post / update PR comment
         if: github.event_name == 'pull_request'

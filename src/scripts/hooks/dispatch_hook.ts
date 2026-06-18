@@ -421,6 +421,32 @@ interface RunResult {
 }
 
 /**
+ * Resolve how to run a `.ts` concern: prefer the `tsx` binary from a
+ * `node_modules/.bin` directory found by walking up from the script's
+ * directory; fall back to `npx tsx`. Mirrors `run.ts::resolveTsxInvocation`
+ * so concern scripts run as TypeScript with no python3 dependency.
+ */
+function _resolve_tsx_invocation(
+  scriptPath: string,
+  scriptArgs: string[],
+): { command: string; args: string[] } {
+  const binName = process.platform === "win32" ? "tsx.cmd" : "tsx";
+  let dir = path.dirname(scriptPath);
+  for (;;) {
+    const candidate = path.join(dir, "node_modules", ".bin", binName);
+    if (_isFile(candidate)) {
+      return { command: candidate, args: [scriptPath, ...scriptArgs] };
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  return { command: "npx", args: ["tsx", scriptPath, ...scriptArgs] };
+}
+
+/**
  * Invoke one concern with the envelope on stdin.
  *
  * Concerns run with CWD = consumer workspace (envelope.workspace_root),
@@ -428,8 +454,9 @@ interface RunResult {
  * and other consumer-local paths relative to CWD. The script *itself*
  * lives in the package (REPO_ROOT), so we resolve it absolutely.
  *
- * Concern scripts are Python (`.py`) — the dispatcher invokes them through
- * `python3`, mirroring the Python original's `sys.executable`.
+ * Concern scripts are TypeScript (`.ts`) — the dispatcher invokes them
+ * through `tsx` (resolved from the package's `node_modules/.bin`, falling
+ * back to `npx tsx`), mirroring how `run.ts` runs its `.ts` twins.
  */
 function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   const script = path.join(REPO_ROOT, String(concern["script"]));
@@ -464,7 +491,8 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   const concern_env = { ...process.env, AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT };
 
   const started = performance.now();
-  const proc = spawnSync("python3", cmd, {
+  const { command, args: spawnArgs } = _resolve_tsx_invocation(script, cmd.slice(1));
+  const proc = spawnSync(command, spawnArgs, {
     input: _compactJsonDumps(envelope),
     encoding: "utf-8",
     cwd: workspace,
