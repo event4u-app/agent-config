@@ -1,5 +1,0 @@
-{
-  "stdout": "",
-  "stderr": "corpus parse failed: corpus parse failed: heading_drift at line 1 in section 'validated' — got '### Validated', expected '## Validated'\n",
-  "status": 2
-}

@@ -53,7 +53,7 @@ function skill(
 
 describe('runtime_handler — handler in isolation', () => {
     it('test_execute_shell_success', () => {
-        const result = execute_shell(skill(['python3', '-c', "print('ok')"]), tmp);
+        const result = execute_shell(skill(['node', '-e', "console.log('ok')"]), tmp);
         expect(result.status).toBe('success');
         expect(result.exit_code).toBe(0);
         expect(result.stdout).toContain('ok');
@@ -63,7 +63,7 @@ describe('runtime_handler — handler in isolation', () => {
     });
 
     it('test_execute_shell_non_zero_is_failure', () => {
-        const result = execute_shell(skill(['python3', '-c', 'import sys; sys.exit(3)']), tmp);
+        const result = execute_shell(skill(['node', '-e', 'process.exit(3)']), tmp);
         expect(result.status).toBe('failure');
         expect(result.exit_code).toBe(3);
         expect(result.is_success).toBe(false);
@@ -71,7 +71,7 @@ describe('runtime_handler — handler in isolation', () => {
 
     it('test_execute_shell_captures_stderr', () => {
         const result = execute_shell(
-            skill(['python3', '-c', "import sys; sys.stderr.write('boom'); sys.exit(1)"]),
+            skill(['node', '-e', "process.stderr.write('boom'); process.exit(1)"]),
             tmp,
         );
         expect(result.status).toBe('failure');
@@ -79,7 +79,7 @@ describe('runtime_handler — handler in isolation', () => {
     });
 
     it('test_execute_shell_timeout', () => {
-        const result = execute_shell(skill(['python3', '-c', 'import time; time.sleep(5)'], 'shell', 1), tmp);
+        const result = execute_shell(skill(['node', '-e', 'setTimeout(() => {}, 5000)'], 'shell', 1), tmp);
         expect(result.status).toBe('timeout');
         expect(result.timed_out).toBe(true);
         expect(result.exit_code).toBe(-1);
@@ -127,7 +127,7 @@ describe('runtime_handler — handler in isolation', () => {
     });
 
     it('execute_shell returns an ExecutionResult instance', () => {
-        const result = execute_shell(skill(['python3', '-c', 'pass']), tmp);
+        const result = execute_shell(skill(['node', '-e', '0']), tmp);
         expect(result).toBeInstanceOf(ExecutionResult);
     });
 });

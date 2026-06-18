@@ -242,6 +242,32 @@ version). Such rigs stay **LIVE python↔tsx** (`skipIf(real python3)`) until th
 - **Detection (Phase-5 gate):** before deleting any `.py`, audit each surviving frozen rig for
   generated/gitignored-state reads; re-classify manifest-dependent ones as live-parity-then-delete.
 
+### Completion plan to the final PR — council (claude-sonnet-4-5 + gpt-4o, 2026-06-18, converged)
+
+**Structure = ~3 PRs, NOT granular per-phase.** Deleting `src/**/*.py`, `tests/**/*.py`, the pytest CI
+jobs, and the dispatcher python fast-path MUST be **ATOMIC in one PR** — splitting them creates a
+"zombie test state" (surviving pytest imports / dispatcher calls reference deleted modules →
+`ModuleNotFoundError`/`FileNotFoundError`, not independently green, not independently revertible, and it
+crosses the irreversible `.py`-deletion line while python tests still need the code).
+
+- **PR-1 (prerequisites — NO `.py` deletion, each independently green):**
+  - [x] Orphan-snapshot prune (18 unreferenced goldens removed; 0 referenced touched).
+  - [x] `runtime_handler` — `python3 -c` fixtures → `node -e` (language-irrelevant subprocess; now python-independent).
+  - [ ] **Gap coverage (PR-1b, the big one):** author `.ts` tests for the ~22 full + ~6 partial GAP
+    modules (see `py2ts-teardown-coverage-audit.md`), incl. the **Golden-Transcript `replay` subsystem**
+    (largest single gap — port the harness or replace with ~3 targeted multi-rebound integration tests
+    per the earlier council Option B). These are the coverage that justifies deleting the python tests.
+  - **`config_packs` = council option (c):** do NOT refactor `packs` to committed source (that changes
+    production behaviour — rejected). The live-parity byte-check is transitional; it retires naturally
+    with python (the monkeypatched `resolve_active_*` unit tests carry the logic coverage). Its
+    `skipIf(real-python3)` block self-skips post-deletion / is dropped in PR-2. No prereq refactor.
+- **PR-2 (the FINAL atomic deletion — Hard Floor, user-authorized 2026-06-18):** delete `src/**/*.py`
+  (~586; keep the 3 `internal/` fixtures) + `tests/**/*.py` + `conftest.py`/`pytest.ini` + pytest CI
+  jobs + dispatcher python fast-path & `.py` fallback + `pyproject.toml`/`requirements*.txt` + migration
+  scaffolding, AND repoint the 8 dispatcher-coupled e2e tests + delete the 2 obsolete spikes + retire the
+  `config_packs`/`config_session_profiles` live-parity blocks — all in one atomic, independently-green PR.
+  Snapshots are already review-locked (committed). Then hand to user for `python2ts → main`.
+
 ## Risk register
 
 - **R1 — shipped consumer runtime (highest).** `dist/agent-src/**/*.py` is executed by consumers, not just dev tooling. Deleting src `.py` without resolving dist emission breaks installed consumers. **Resolved (Phase-0 council, 2026-06-18):** TS-only, Python fully removed; runtime = Node-via-`tsx` (baseline A), pre-bundled `.js` fallback (D) only if Phase-1 evidence forces it. Residual exposure = the empirical A-vs-D call; Phase-3 consumer smoke is the verification.
