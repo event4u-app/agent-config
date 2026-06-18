@@ -51,9 +51,9 @@ parent_roadmap: null
 
 ## Phase 2 — Rewire callers to `.ts` (before any deletion)
 
-- [ ] `hook_manifest.yaml`: flip `.py` handler paths to `.ts` (or extension-less dispatcher form). Verify each hook fires green.
-- [ ] CI workflows: rewire each real `python3 .../*.py` call to the `.ts`/dispatcher form. Distinguish migration-scaffolding workflows (`py2ts-*`, `migration-gates`, `migration-dry-run`) from production workflows (`tests`, `consistency`, `release-*`, `smoke-*`) — the scaffolding workflows are removed in Phase 6, not rewired.
-- [ ] Verify each rewired caller green individually before proceeding (narrow probe, not full pipeline).
+- [x] `hook_manifest.yaml`: **N/A** — no `.py` handler paths; handlers resolve extension-less via the dispatcher (`.ts`-wins).
+- [x] CI workflows — non-pytest direct invocation rewired: `consistency.yml` `python3 src/scripts/check_no_conflict_markers.py` → `./scripts-run src/scripts/check_no_conflict_markers` (job already has `npm ci`; verified locally: dispatcher resolves `.ts`, exit 0, byte-identical to `.py`). The remaining executed-python surface is **all pytest** (`tests.yml` python-tests, `python-version-sweep.yml`, `freeze-guard.yml` golden capture, `windows-lockfile-export.yml`, `consistency.yml:184` readme_linter) — these are removed **atomically with the `tests/**/*.py` deletion in Phase 5**, not here. Migration-scaffolding workflows (`py2ts-*`, `migration-gates`) removed in Phase 6.
+- [x] Verified the one rewired caller green individually (byte-parity probe).
 
 ## Phase 3 — dist mirror resolution (council verdict: TS-only, Node runtime)
 
