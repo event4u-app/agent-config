@@ -39,6 +39,8 @@ export interface RunResult {
     status: number;
     stdout: string;
     stderr: string;
+    /** v3 — frozen file side-effects, present only when the call declares `outputs`. */
+    files?: Record<string, string | null>;
 }
 
 /**
@@ -60,7 +62,12 @@ export function hasPython3(): boolean {
  */
 export function runPy(
     moduleArgs: string[],
-    options: { cwd?: string; env?: NodeJS.ProcessEnv } = {},
+    options: {
+        cwd?: string;
+        env?: NodeJS.ProcessEnv;
+        scratch?: string[];
+        outputs?: Record<string, string>;
+    } = {},
 ): RunResult {
     const pythonPath = path.join(REPO_ROOT, 'src');
     // Stringify any caller-supplied env onto the oracle env (only used in
@@ -92,8 +99,21 @@ export function runPy(
         rest = moduleArgs.slice(1);
     }
 
-    const r = oracle2({ kind, target, args: rest, env, cwd: options.cwd ?? REPO_ROOT });
-    return { status: r.status, stdout: r.stdout, stderr: r.stderr };
+    const r = oracle2({
+        kind,
+        target,
+        args: rest,
+        env,
+        cwd: options.cwd ?? REPO_ROOT,
+        ...(options.scratch !== undefined ? { scratch: options.scratch } : {}),
+        ...(options.outputs !== undefined ? { outputs: options.outputs } : {}),
+    });
+    return {
+        status: r.status,
+        stdout: r.stdout,
+        stderr: r.stderr,
+        ...(r.files !== undefined ? { files: r.files } : {}),
+    };
 }
 
 /** Run the .ts twin via tsx. */

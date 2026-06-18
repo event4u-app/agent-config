@@ -1,5 +1,0 @@
-{
-  "stdout": "{\"mode\": \"files\", \"text\": \"### /var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/bundler-BMcyz9/a.txt\\n\\nline\\n[redacted: secret-like assignment]\\nend\", \"manifest\": [\"/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/bundler-BMcyz9/a.txt\"], \"excluded\": [\"/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/bundler-BMcyz9/gone.txt (not found)\"]}\n",
-  "stderr": "",
-  "status": 0
-}

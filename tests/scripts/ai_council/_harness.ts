@@ -23,7 +23,11 @@ import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { oracle2 } from '../../_lib/parity_oracle.js';
+import { oracle2, oracleFile } from '../../_lib/parity_oracle.js';
+
+// Re-exported so file-sink rigs (sub-shape A) decode frozen outputs from the
+// same import as the run helpers.
+export { oracleFile };
 
 // tests/scripts/ai_council/_harness.ts → three levels up is the repo root.
 export const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
@@ -59,8 +63,15 @@ export function hasPython3(): boolean {
     return true;
 }
 
-/** Minimal subset of `SpawnSyncReturns<string>` the rigs read from a python run. */
-type PyResult = Pick<SpawnSyncReturns<string>, 'stdout' | 'stderr' | 'status'>;
+/**
+ * Minimal subset of `SpawnSyncReturns<string>` the rigs read from a python run,
+ * plus v3 frozen file side-effects (`files`, present only when the call declares
+ * `outputs` — sub-shape A "file-sink" rigs). Decode a frozen file with
+ * `oracleFile(result, name)`.
+ */
+type PyResult = Pick<SpawnSyncReturns<string>, 'stdout' | 'stderr' | 'status'> & {
+    files?: Record<string, string | null>;
+};
 
 /**
  * Run a `python3 -c <code>` snippet with the ai_council import root wired up.
@@ -70,7 +81,13 @@ type PyResult = Pick<SpawnSyncReturns<string>, 'stdout' | 'stderr' | 'status'>;
 export function runPyCode(
     code: string,
     args: string[] = [],
-    options: { cwd?: string; input?: string; normalize?: (s: string) => string } = {},
+    options: {
+        cwd?: string;
+        input?: string;
+        normalize?: (s: string) => string;
+        outputs?: Record<string, string>;
+        scratch?: string[];
+    } = {},
 ): PyResult {
     return oracle2({
         kind: 'inline',
@@ -80,6 +97,8 @@ export function runPyCode(
         cwd: options.cwd ?? REPO_ROOT,
         ...(options.input !== undefined ? { input: options.input } : {}),
         ...(options.normalize !== undefined ? { normalize: options.normalize } : {}),
+        ...(options.outputs !== undefined ? { outputs: options.outputs } : {}),
+        ...(options.scratch !== undefined ? { scratch: options.scratch } : {}),
     });
 }
 
@@ -90,7 +109,13 @@ export function runPyCode(
 export function runPyScript(
     moduleRelPath: string,
     args: string[],
-    options: { cwd?: string; input?: string; normalize?: (s: string) => string } = {},
+    options: {
+        cwd?: string;
+        input?: string;
+        normalize?: (s: string) => string;
+        outputs?: Record<string, string>;
+        scratch?: string[];
+    } = {},
 ): PyResult {
     return oracle2({
         kind: 'script',
@@ -100,6 +125,8 @@ export function runPyScript(
         cwd: options.cwd ?? REPO_ROOT,
         ...(options.input !== undefined ? { input: options.input } : {}),
         ...(options.normalize !== undefined ? { normalize: options.normalize } : {}),
+        ...(options.outputs !== undefined ? { outputs: options.outputs } : {}),
+        ...(options.scratch !== undefined ? { scratch: options.scratch } : {}),
     });
 }
 
