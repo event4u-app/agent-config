@@ -67,11 +67,14 @@ parent_roadmap: null
 - [ ] Delete `src/**/*.py` (keep the 3 residual fixtures).
 - [ ] Verify: full parity suite + `npm run typecheck` + dispatcher resolution green; grep `src/` for any remaining non-fixture `.py` → zero.
 
-## Phase 5 — Delete `tests/**/*.py` Python suite (Hard Floor)
+## Phase 5 — Delete `tests/**/*.py` Python suite (Hard Floor) — NOT a blanket delete
 
-- [ ] Coverage-gap check: confirm `.ts` golden tests cover every behavior the 207 Python tests asserted (no silent loss). Surface any gap before deleting.
-- [ ] Surface the deletion diff and obtain explicit confirmation.
-- [ ] Delete `tests/**/*.py` + `conftest.py` + `pytest.ini`.
+- [x] Coverage-equivalence audit DONE (2026-06-18, 3 parallel agents, 125 modules) → `py2ts-teardown-coverage-audit.md`. Result: **108 COVERED, ~25 GAP, 1 OBSOLETE, fixtures KEEP.** A blanket delete would have silently dropped ~25 modules of coverage — audit vindicated the stop.
+- [ ] **Phase 4.5 (NEW precursor) — port the ~25 GAP modules' missing assertions to `.ts`** before any test deletion. Full list in the audit doc. Includes real security asserts (path-traversal, secret-redaction), `hooks_status` (no `.ts` at all), pricing primitives, per-platform install snapshots, 3 work_engine convergence-loop integrations, contract tests.
+- [ ] **Council fork — Golden-Transcript replay harness.** `golden/test_replay.py` + `tests/golden/harness.py` + recipes is a Python-only subsystem with no `.ts` port. Port it, or retire it (the per-step golden-parity rigs may already pin equivalent behavior)? Scope decision → AI council.
+- [ ] Reconcile the 4 `work_engine/hooks` partial-gap modules (Batch A deep-gap vs Batch B covered) per-module before deleting those.
+- [ ] Only after gaps closed: delete the COVERED + OBSOLETE `.py` test modules + `conftest.py` + `pytest.ini` (Hard Floor diff). **KEEP** all fixtures/recipes (`sandbox/`, `fixtures/`, `gt*.py`, `concern_*.py`, `test_calculator.py`).
+- [ ] Atomically remove the pytest CI jobs/steps (`tests.yml` python-tests, `python-version-sweep.yml`, `freeze-guard.yml`, `windows-lockfile-export.yml`, `consistency.yml:184`) in the same diff.
 - [ ] Verify: full `.ts` test suite green.
 
 ## Phase 6 — Remove Python toolchain + dead fast-paths (Hard Floor)
