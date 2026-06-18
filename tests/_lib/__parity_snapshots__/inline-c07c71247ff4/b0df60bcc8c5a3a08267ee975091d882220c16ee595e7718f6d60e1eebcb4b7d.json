@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"id\": \"founder\", \"audience\": {\"label\": \"Solo / early-stage founder\", \"readme_anchor\": \"founder\"}, \"preset_id\": \"fast\", \"packs\": [\"founder-strategy\", \"product-basic\", \"finance-basic\"], \"personas\": [\"product-strategist\", \"reviewer\"], \"skills_hint\": [\"refine-prompt\", \"rice-prioritization\", \"vision-articulation\", \"fundraising-narrative\", \"runway-cognition\"], \"commands_hint\": [\"work\", \"feature\", \"challenge-me\", \"council\"], \"docs_first_pointer\": \"docs/getting-started-by-role.md#founder\", \"source\": \"runtime\"}\n",
+  "stderr": "",
+  "status": 0
+}

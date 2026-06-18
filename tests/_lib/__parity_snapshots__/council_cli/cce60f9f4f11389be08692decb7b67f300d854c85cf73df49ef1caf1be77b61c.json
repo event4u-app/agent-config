@@ -1,0 +1,5 @@
+{
+  "stdout": "council:quota · no providers have a configured cli_call_budget.max_calls_per_day cap.\n",
+  "stderr": "",
+  "status": 0
+}

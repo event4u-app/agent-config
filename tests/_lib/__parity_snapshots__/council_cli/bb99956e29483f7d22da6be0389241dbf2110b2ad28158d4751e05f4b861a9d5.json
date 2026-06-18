@@ -1,0 +1,5 @@
+{
+  "stdout": "## anthropic · claude-sonnet-4-5\n\n*tokens: 10 in / 5 out · 0 ms*\n\nHello world finding.\n\n---\n\n## Convergence / Divergence\n\nSummarise the council with the PR-review shape below.\n\n### Consensus\nFindings where two or more reviewers agreed, each one a single line.\n\n### Conflicts\nFindings where reviewers disagreed. State both sides with reviewer\nlabels; do not pick a winner here — that lives in the recommendation.\n\n### Must-fix before merge\nItems at least one reviewer marked `REQUEST_CHANGES` or `REJECT`\nand the host agent confirms are load-bearing. Maximum five.\n\n### Recommendation\nAPPROVE / REQUEST_CHANGES / REJECT and a single sentence justifying\nthe verdict, anchored on the strongest consensus or must-fix line.\n",
+  "stderr": "",
+  "status": 0
+}

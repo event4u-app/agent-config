@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: agent-config council run [-h] [--input-mode {prompt,roadmap}]\n                                [--prompt-mode {pr,design,optimize,analysis}]\n                                [--max-tokens MAX_TOKENS]\n                                [--mode-override {api,manual}]\n                                [--model MEMBER=MODEL_ID]\n                                [--siblings MEMBER=MODEL1,MODEL2[,...]]\n                                [--original-ask ORIGINAL_ASK] [--peer-review]\n                                --output OUTPUT [--confirm] [--rounds ROUNDS]\n                                [--depth {standard,deep}]\n                                [--invocation {agent,user_explicit}]\n                                [--proceed-anyway] [--single]\n                                [--prose-synthesis | --no-prose-synthesis]\n                                question\nagent-config council run: error: argument --depth: invalid choice: 'bogus' (choose from 'standard', 'deep')\n",
+  "status": 2
+}

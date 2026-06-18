@@ -1,0 +1,5 @@
+{
+  "stdout": "usage: agent-config council [-h]\n                            {estimate,run,debate,render,replay,quota,shadow-report}\n                            ...\n\nNon-interactive council orchestration.\n\npositional arguments:\n  {estimate,run,debate,render,replay,quota,shadow-report}\n    estimate            Pre-call cost preview (no spend).\n    run                 Run the council; --confirm required to spend.\n    debate              Multi-round debate with progressive cost disclosure\n                        (Phase 7).\n    render              Re-render a saved responses JSON.\n    replay              Re-render decision-replay.md from a saved responses\n                        JSON (Phase 9).\n    quota               Dump today's CLI-quota state and configured caps\n                        (step-8 P1).\n    shadow-report       Read agents/runtime/council/shadow-log.jsonl and print\n                        the 7-day rolling disagreement rate + SLO status\n                        (step-9 P10).\n\noptional arguments:\n  -h, --help            show this help message and exit\n",
+  "stderr": "",
+  "status": 0
+}

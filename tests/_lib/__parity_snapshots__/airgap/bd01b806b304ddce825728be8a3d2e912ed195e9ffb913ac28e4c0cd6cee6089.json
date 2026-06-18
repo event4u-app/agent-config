@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: airgap.py [-h] [--timeout TIMEOUT]\nairgap.py: error: unrecognized arguments: --bogus\n",
+  "status": 2
+}

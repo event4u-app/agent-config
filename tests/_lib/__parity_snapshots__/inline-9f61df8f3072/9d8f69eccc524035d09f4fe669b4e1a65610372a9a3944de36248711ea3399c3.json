@@ -1,0 +1,5 @@
+{
+  "stdout": "[{\"doc\": {\"other\": \"keep\"}, \"warnings\": []}, {\"doc\": {\"hooks\": {\"PostToolUse\": [{\"hook\": \"a\"}, {\"hook\": \"n\"}]}}, \"warnings\": [{\"pointer\": \"/hooks/PostToolUse\", \"reason\": \"drift\", \"expected_hash\": \"c5cf85f3ae3f301634755b47689d43554f650056c3561e95a0703f855effe18b\", \"actual_hash\": \"ec080951c053d1a494ff0e10d6d85477d7f1775c7ebea4fe82eebeae2e1db13f\"}]}, {\"doc\": {\"other\": \"x\"}, \"warnings\": [{\"pointer\": \"/agent_config/enabled\", \"reason\": \"missing\", \"expected_hash\": null, \"actual_hash\": null}]}, {\"doc\": {\"keep\": 1}, \"warnings\": [{\"pointer\": \"/keep-missing\", \"reason\": \"missing\", \"expected_hash\": null, \"actual_hash\": null}]}]\n",
+  "stderr": "",
+  "status": 0
+}

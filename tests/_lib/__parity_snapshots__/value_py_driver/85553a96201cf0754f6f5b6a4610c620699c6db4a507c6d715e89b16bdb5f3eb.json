@@ -1,0 +1,5 @@
+{
+  "stdout": "[{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"id\": \"baseline\", \"token_delta\": 0}, {\"confidence\": \"measured\", \"cumulative_pct\": 741.987, \"id\": \"load\", \"token_delta\": 59359}, {\"confidence\": \"available\", \"cumulative_pct\": 741.987, \"id\": \"thin\", \"token_delta\": -45857}, {\"confidence\": \"measured\", \"cumulative_pct\": 739.688, \"id\": \"condense\", \"token_delta\": -184}, {\"confidence\": \"pending\", \"cumulative_pct\": 739.688, \"id\": \"rtk\", \"token_delta\": -9999}, {\"confidence\": \"measured\", \"cumulative_pct\": 740.388, \"id\": \"terse\", \"token_delta\": 56}]",
+  "stderr": "",
+  "status": 0
+}

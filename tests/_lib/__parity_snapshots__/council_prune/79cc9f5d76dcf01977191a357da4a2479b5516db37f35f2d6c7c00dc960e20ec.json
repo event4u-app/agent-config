@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: council_prune.py [-h] [--days DAYS] [--dry-run]\ncouncil_prune.py: error: argument --days: expected one argument\n",
+  "status": 2
+}

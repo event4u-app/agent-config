@@ -1,0 +1,8 @@
+{
+  "stdout": "[\"noop\", \"how do i run tests\", \"2026-05-01\", \"already seen today\"]\n",
+  "stderr": "",
+  "status": 0,
+  "files": {
+    "corpus": "IyBMb3ctSW1wYWN0IERlY2lzaW9ucwoKIyMgVmFsaWRhdGVkCgo8IS0tIGludGFrZS1hbmNob3I6IHZhbGlkYXRlZCAtLT4KCi0gIndoYXQgcG9ydCBkb2VzIHRoZSBhcHAgdXNlIiDigJQgbGVhcm5lZCAyMDI2LTAxLTAxCgojIyBPbiBQcm9iYXRpb24KCjwhLS0gaW50YWtlLWFuY2hvcjogcHJvYmF0aW9uIC0tPgoKLSAiaG93IGRvIGkgcnVuIHRlc3RzIiDigJQgZmlyc3Qtc2VlbiAyMDI2LTA1LTAxIMK3IHNlZW4gWzIwMjYtMDUtMDFdCgojIyBBbnRpLUV4YW1wbGVzIChBbHdheXMgQXNrIFVzZXIpCgotICJzaG91bGQgd2UgZGVsZXRlIHByb2QiCg=="
+  }
+}

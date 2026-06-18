@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"text\": \"one\\ntwo\", \"in\": 7, \"out\": 9, \"meta\": {\"item_id\": \"x\", \"session_id\": \"sx\"}}\n",
+  "stderr": "",
+  "status": 0
+}

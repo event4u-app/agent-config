@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"error\": \"path is not under any artefact root: <SYNTH>/docs/architecture.md\"}",
+  "stderr": "",
+  "status": 0
+}

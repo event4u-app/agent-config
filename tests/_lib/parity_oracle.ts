@@ -47,6 +47,14 @@ export interface OracleResult {
     stdout: string;
     stderr: string;
     status: number;
+    /**
+     * v3 — frozen file side-effects (sub-shape A "file-sink" rigs). Keyed by the
+     * caller's logical name (the key of `OracleSpec.outputs`), value is the
+     * base64 of the bytes python wrote to that path, or `null` if python did not
+     * create the file. Absent entirely for invocations that declare no `outputs`
+     * (v1/v2 snapshots stay byte-identical — no `files` field is written).
+     */
+    files?: Record<string, string | null>;
 }
 
 /** The three python3 invocation kinds v2 models. */
@@ -93,6 +101,34 @@ export interface OracleSpec {
     env?: Record<string, string>;
     normalize?: (s: string) => string;
     cwd?: string;
+    /**
+     * v3 — file side-effects to freeze (sub-shape A "file-sink" rigs whose
+     * observable python artefact is a written FILE, not stdout). Maps a stable
+     * logical name → the path python writes (absolute, or relative to `cwd`).
+     * Capture mode reads each path AFTER the spawn and freezes its bytes into the
+     * snapshot under `OracleResult.files[name]` (base64; `null` if not written).
+     * Normal mode returns the frozen bytes — the caller compares the `.ts` twin's
+     * own written bytes against `oracle2(...).files[name]`.
+     *
+     * The path VALUES are volatile (per-test tmp dirs) and are NOT part of the
+     * snapshot key — they are capture-side read instructions, not invocation
+     * identity. The logical NAMES are the stable contract. Declare `outputs` and
+     * the rig's observable becomes file-content parity instead of stdout parity.
+     */
+    outputs?: Record<string, string>;
+    /**
+     * v3 — volatile scratch paths (sub-shape B: a per-test scratch DIR or output
+     * FILE passed as a CLI arg, e.g. `--root /tmp/sessprof-XXXX` or `--out
+     * /tmp/cc-XXXX/lock.yaml`). Such an absolute-path arg destabilises the
+     * snapshot key (the random basename / content-hash differs every run and
+     * capture-vs-replay). Listing it here replaces every matching arg (the path
+     * itself, or any path UNDER it) with a stable `<scratch:i>` token in the KEY
+     * only — the spawn still receives the real path. `outputs` values are folded
+     * in automatically (an output path is volatile by definition). Use `scratch`
+     * for script/module/inline-with-path-args rigs where the path cannot be baked
+     * into an inline code body.
+     */
+    scratch?: string[];
 }
 
 // tests/_lib/parity_oracle.ts → repo root is two levels up.
@@ -177,10 +213,43 @@ function stableInlineKeyMaterial(code: string): string {
  * The NUL separators keep fields unambiguous (no field contains a NUL byte in
  * practice), so distinct invocations never collide on a single key.
  */
+/**
+ * Reduce a volatile scratch path to a stable key token. If `arg` equals a scratch
+ * entry it becomes `<scratch:i>`; if it lives UNDER one it keeps the relative
+ * suffix (`<scratch:i>/overlay.yml`) so distinct files under the same scratch dir
+ * stay distinct. Non-scratch args fall through unchanged (the caller then applies
+ * `normalizeArgForKey`). Index-based so the token is stable as long as the rig
+ * lists scratch paths in a fixed order (it does — they are local consts).
+ */
+function stabiliseScratchArg(arg: string, scratchPaths: string[]): string | null {
+    if (!path.isAbsolute(arg)) {
+        return null;
+    }
+    for (let i = 0; i < scratchPaths.length; i++) {
+        const s = scratchPaths[i];
+        if (s === undefined || !path.isAbsolute(s)) {
+            continue;
+        }
+        if (arg === s) {
+            return `<scratch:${i}>`;
+        }
+        if (arg.startsWith(s + path.sep)) {
+            return `<scratch:${i}>${arg.slice(s.length)}`;
+        }
+    }
+    return null;
+}
+
 function snapshotKey(spec: OracleSpec): string {
     const args = spec.args ?? [];
     const input = spec.input ?? '';
-    const keyArgs = args.map(normalizeArgForKey);
+    // Scratch set = explicit scratch paths + every declared output path (an output
+    // is volatile by definition). Stabilise those in the key, normalise the rest.
+    const scratchPaths = [...(spec.scratch ?? []), ...Object.values(spec.outputs ?? {})];
+    const keyArgs = args.map((a) => {
+        const stabilised = scratchPaths.length ? stabiliseScratchArg(a, scratchPaths) : null;
+        return stabilised ?? normalizeArgForKey(a);
+    });
 
     if (spec.kind === 'script' && !spec.env) {
         // v1-identical material — keeps existing script snapshots resolving.
@@ -195,13 +264,17 @@ function snapshotKey(spec: OracleSpec): string {
         targetForKey = `${spec.kind}:${spec.target}`;
     }
 
-    // Fold PYTHONPATH into the key for module runs (basename-stabilised so the
-    // volatile checkout prefix drops out but a different search root still
-    // produces a distinct key).
+    // Fold PYTHONPATH into the key for module runs, BASENAME-stabilised: only the
+    // final path segment (e.g. `src`) enters the key, so the volatile checkout
+    // dir name drops out. `slice(-2)` would leak the checkout dir (`py2ts-phase1/src`
+    // in a worktree vs `agent-config/src` on CI) and make the snapshot key
+    // machine-dependent — a frozen golden captured in one checkout would not
+    // resolve in another. The module name (`targetForKey`) already disambiguates
+    // distinct modules, so the basename is enough.
     const pythonPath = spec.env?.['PYTHONPATH'];
     const envMaterial =
         spec.kind === 'module' && pythonPath
-            ? `\0PYTHONPATH=${pythonPath.split(path.sep).slice(-2).join('/')}`
+            ? `\0PYTHONPATH=${pythonPath.split(path.sep).slice(-1).join('/')}`
             : '';
 
     const material = `${spec.kind}\0${targetForKey}\0${JSON.stringify(keyArgs)}\0${input}${envMaterial}`;
@@ -274,6 +347,19 @@ function capture(spec: OracleSpec): OracleResult {
         // signal; -1 is a deterministic, JSON-serialisable stand-in.
         status: r.status ?? -1,
     };
+    // v3 — freeze declared file side-effects (raw bytes, base64; never coerced
+    // through stdout). Read AFTER the spawn so we capture what python wrote.
+    if (spec.outputs) {
+        const files: Record<string, string | null> = {};
+        for (const [name, outPath] of Object.entries(spec.outputs)) {
+            const abs = path.isAbsolute(outPath) ? outPath : path.join(cwd, outPath);
+            files[name] =
+                fs.existsSync(abs) && fs.statSync(abs).isFile()
+                    ? fs.readFileSync(abs).toString('base64')
+                    : null;
+        }
+        result.files = files;
+    }
     const target = snapshotPath(spec);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, `${JSON.stringify(result, null, 2)}\n`);
@@ -299,7 +385,37 @@ function readSnapshot(spec: OracleSpec): OracleResult {
     ) {
         throw new Error(`parity_oracle: malformed snapshot at ${target}`);
     }
-    return { stdout: parsed.stdout, stderr: parsed.stderr, status: parsed.status };
+    const result: OracleResult = {
+        stdout: parsed.stdout,
+        stderr: parsed.stderr,
+        status: parsed.status,
+    };
+    // v3 — when the caller declares `outputs`, the snapshot MUST carry the frozen
+    // file bytes for every declared name, or it is a stale pre-v3 snapshot.
+    // Throw rather than silently pass (the R6 no-neutering guard, extended to
+    // file side-effects). Re-capture with PY2TS_CAPTURE=1 while the .py exists.
+    if (spec.outputs) {
+        const files = parsed.files;
+        if (files === undefined) {
+            throw new Error(
+                `parity_oracle: snapshot at ${target} has no frozen file outputs but the ` +
+                    `invocation declares outputs=${JSON.stringify(Object.keys(spec.outputs))}. ` +
+                    `Stale pre-v3 snapshot — re-run capture with PY2TS_CAPTURE=1 while the .py original exists.`,
+            );
+        }
+        for (const name of Object.keys(spec.outputs)) {
+            if (!(name in files)) {
+                throw new Error(
+                    `parity_oracle: snapshot at ${target} is missing frozen output "${name}". ` +
+                        `Re-run capture with PY2TS_CAPTURE=1 while the .py original exists.`,
+                );
+            }
+        }
+        result.files = files;
+    } else if (parsed.files !== undefined) {
+        result.files = parsed.files;
+    }
+    return result;
 }
 
 /**
@@ -328,4 +444,25 @@ export function oracle2(spec: OracleSpec): OracleResult {
  */
 export function oracle(scriptStem: string, args: string[], input: string): OracleResult {
     return oracle2({ kind: 'script', target: scriptStem, args, input });
+}
+
+/**
+ * v3 — decode one frozen file side-effect from an OracleResult to raw bytes.
+ * Returns `null` when python did not write the file (the frozen `null` sentinel),
+ * letting the caller assert the .ts twin likewise produced no file. Throws if the
+ * name was never frozen (mis-wired rig — declare it in `spec.outputs`).
+ */
+export function oracleFile(
+    result: { files?: Record<string, string | null> },
+    name: string,
+): Buffer | null {
+    if (!result.files || !(name in result.files)) {
+        throw new Error(
+            `parity_oracle: no frozen file output "${name}" in result ` +
+                `(declare it in spec.outputs and re-capture). Present: ` +
+                `${JSON.stringify(Object.keys(result.files ?? {}))}.`,
+        );
+    }
+    const b64 = result.files[name];
+    return b64 === null || b64 === undefined ? null : Buffer.from(b64, 'base64');
 }

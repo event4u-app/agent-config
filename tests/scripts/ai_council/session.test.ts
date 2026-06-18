@@ -25,7 +25,7 @@ import {
     prune_old_sessions,
     save,
 } from '../../../src/scripts/ai_council/session.js';
-import { hasPython3, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -222,15 +222,28 @@ function tsSave(spec: SaveSpec, base: string): string {
     });
 }
 
-/** Run the python3 twin's save() into `base` for `spec` (real package path). */
-function pySave(spec: SaveSpec, base: string): void {
+// Oracle v3 — the observable python artefacts are the THREE WRITTEN FILES
+// (manifest.json / response.md / raw-text.md under base/<timestamp>/), not
+// stdout. The session dir `base` is baked into the code body via
+// JSON.stringify (the inline-code key collapses quoted absolute paths to
+// `<abspath>` via stableInlineKeyMaterial), so the snapshot key stays stable
+// across the capture run (files present) and every replay run (fresh tmp dir).
+// A volatile path passed as an ARG would key on file existence/content and
+// diverge capture-vs-replay. Each written file is declared as a frozen output:
+// capture reads it after the spawn and freezes its bytes; normal mode replays
+// them with no live python3. The three frozen Buffers are returned for
+// byte-parity against the .ts twin's own writes.
+const SAVE_ARTEFACTS = ['manifest.json', 'response.md', 'raw-text.md'] as const;
+
+function pySave(spec: SaveSpec): Record<string, string> {
+    const base = mkTmp();
     const code = [
         'import sys, json',
         'from pathlib import Path',
         'from scripts.ai_council import session as S',
         'from scripts.ai_council.clients import CouncilResponse',
         'spec = json.loads(sys.stdin.read())',
-        'base = Path(sys.argv[1])',
+        `base = Path(${JSON.stringify(base)})`,
         'def mk(r):',
         '    return CouncilResponse(provider=r["provider"], model=r["model"], text=r["text"],',
         '        input_tokens=r.get("input_tokens", 0), output_tokens=r.get("output_tokens", 0),',
@@ -250,10 +263,23 @@ function pySave(spec: SaveSpec, base: string): void {
         'S.save(manifest=man, responses=rounds, sessions_dir=base,',
         '    timestamp=spec["timestamp"], retention_days=0)',
     ].join('\n');
-    const r = runPyCode(code, [base], { input: JSON.stringify(spec) });
+    const outputs: Record<string, string> = {};
+    for (const name of SAVE_ARTEFACTS) {
+        outputs[name] = path.join(base, spec.timestamp, name);
+    }
+    const r = runPyCode(code, [], { input: JSON.stringify(spec), outputs });
     if (r.status !== 0) {
         throw new Error(`python3 save failed: ${r.stderr}`);
     }
+    const frozen: Record<string, string> = {};
+    for (const name of SAVE_ARTEFACTS) {
+        const buf = oracleFile(r, name);
+        if (buf === null) {
+            throw new Error(`frozen python artefact ${name} must exist`);
+        }
+        frozen[name] = buf.toString('utf-8');
+    }
+    return frozen;
 }
 
 function readArtefact(base: string, ts: string, name: string): string {
@@ -268,14 +294,13 @@ describe.runIf(py3)('session.save — byte-parity with python3', () => {
     ] as const) {
         it(`writes identical manifest/response/raw-text — ${label}`, () => {
             const tsBase = mkTmp();
-            const pyBase = mkTmp();
             const tsDir = tsSave(spec, tsBase);
-            pySave(spec, pyBase);
+            const pyFrozen = pySave(spec);
 
             expect(path.basename(tsDir)).toBe(spec.timestamp);
-            for (const f of ['manifest.json', 'response.md', 'raw-text.md']) {
+            for (const f of SAVE_ARTEFACTS) {
                 const tsContent = readArtefact(tsBase, spec.timestamp, f);
-                const pyContent = readArtefact(pyBase, spec.timestamp, f);
+                const pyContent = pyFrozen[f] as string;
                 expect(tsContent, `${f} byte-parity`).toBe(pyContent);
             }
         });
@@ -365,13 +390,34 @@ function tsPrune(root: string, spec: PruneSpec): { removed: string[]; survivors:
     return { removed, survivors: survivorList(root) };
 }
 
-/** Run python3 prune_all_council_artifacts; return removed-by-label + survivors. */
+/**
+ * Run python3 prune_all_council_artifacts; return removed-by-label + survivors.
+ *
+ * Oracle v3 — the genuine python observable here is STDOUT: the `removed`
+ * labels (`<label>: <basename>`). prune() only DELETES paths — there is no
+ * written-file artefact to freeze, and the deletion side-effect on a live
+ * python-seeded tree cannot be reproduced in replay mode (no python3 runs).
+ * So this rig is a stdout-shape conversion, not a file-sink one:
+ *
+ *   1. The volatile `root` is baked into the code body via JSON.stringify so
+ *      the inline-code key collapses it to `<abspath>` (stableInlineKeyMaterial)
+ *      and stays stable across capture (root present) and every replay (fresh
+ *      tmp dir). Passing `root` as an ARG would key on file existence/content
+ *      and diverge capture-vs-replay.
+ *   2. The frozen stdout (removed labels) replays with no live python3.
+ *   3. `survivors` is DERIVED from the frozen removed-set by re-seeding an
+ *      identical tree and applying exactly those deletions — never read back
+ *      from a python-pruned tree (which only exists in capture mode). The seed
+ *      uses unique basenames per label-dir, so `<label>: <name>` maps 1:1 to a
+ *      concrete path to delete. This keeps the survivor-equality assertion
+ *      faithful AND python-independent.
+ */
 function pyPrune(root: string, spec: PruneSpec): { removed: string[]; survivors: string[] } {
     const code = [
-        'import sys, json, datetime as dt',
+        'import json, datetime as dt, sys',
         'from pathlib import Path',
         'from scripts.ai_council import session as S',
-        'root = Path(sys.argv[1])',
+        `root = Path(${JSON.stringify(root)})`,
         'spec = json.loads(sys.stdin.read())',
         'now = dt.datetime.fromtimestamp(spec["nowEpochMs"] / 1000, tz=dt.timezone.utc)',
         'res = S.prune_all_council_artifacts(retention_days=spec["retentionDays"],',
@@ -382,12 +428,26 @@ function pyPrune(root: string, spec: PruneSpec): { removed: string[]; survivors:
         '        out.append(f"{label}: {Path(p).name}")',
         'sys.stdout.write("\\n".join(out))',
     ].join('\n');
-    const r = runPyCode(code, [root], { input: JSON.stringify(spec) });
+    const r = runPyCode(code, [], { input: JSON.stringify(spec) });
     if (r.status !== 0) {
         throw new Error(`python3 prune failed: ${r.stderr}`);
     }
     const removed = r.stdout.length > 0 ? r.stdout.split('\n') : [];
-    return { removed, survivors: survivorList(root) };
+    // Derive python survivors offline: re-seed an identical tree, apply the
+    // frozen removed-set, then list what remains. `root` (the capture-mode
+    // python tree) is NOT read back — replay mode never pruned it.
+    const derivedRoot = mkTmp();
+    seedPruneFixture(derivedRoot, spec);
+    const councilDir = path.join(derivedRoot, 'agents', 'runtime', 'council');
+    for (const label of removed) {
+        const m = /^(\w+): (.+)$/.exec(label);
+        if (m === null) {
+            throw new Error(`unparsable prune removal label: ${label}`);
+        }
+        const target = path.join(councilDir, m[1] as string, m[2] as string);
+        fs.rmSync(target, { recursive: true, force: true });
+    }
+    return { removed, survivors: survivorList(derivedRoot) };
 }
 
 function survivorList(root: string): string[] {

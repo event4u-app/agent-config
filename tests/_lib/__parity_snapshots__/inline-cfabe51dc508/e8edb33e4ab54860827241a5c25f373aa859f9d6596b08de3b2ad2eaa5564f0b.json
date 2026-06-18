@@ -1,0 +1,5 @@
+{
+  "stdout": "\"Bundle for 'prompt' mode is 51201 bytes (> 51200 hard ceiling). Narrow the scope (smaller diff, fewer files, shorter prompt).\"\n",
+  "stderr": "",
+  "status": 0
+}

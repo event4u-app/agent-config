@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"pending\", \"cumulative_pct\": 0.0, \"eur_delta\": 0.0, \"footnote\": \"a caveat\", \"id\": \"x\", \"label\": \"X label\", \"source_report\": \"some/path.json\", \"token_delta\": 0, \"what_it_does\": \"does x\"}",
+  "stderr": "",
+  "status": 0
+}

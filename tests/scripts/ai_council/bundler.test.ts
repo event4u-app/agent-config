@@ -125,13 +125,35 @@ describe('bundler — git diff', () => {
 });
 
 describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
-    function pyBundle(snippet: string, args: string[]): unknown {
+    // Build a normalize that collapses each volatile scratch abs-path (a per-test
+    // makeGitRepo()/tmpDir() dir) to a stable `<scratch:i>` token. The frozen
+    // golden bakes the capture-run abs path into manifest/excluded/`### <path>`
+    // headers; a fresh replay run mints a different tmp dir, so the python golden
+    // and the .ts side must BOTH have that path replaced before comparison.
+    // git-diff bodies carry no abs path (a/ b/ relative; index SHAs are
+    // content-derived → deterministic), so a scratch-only normalize is a no-op
+    // for the diff cases beyond key-stabilisation.
+    const makeNormalize =
+        (scratch: string[]) =>
+        (s: string): string => {
+            let out = s;
+            scratch.forEach((p, i) => {
+                out = out.split(p).join(`<scratch:${i}>`);
+            });
+            return out;
+        };
+
+    function pyBundle(snippet: string, args: string[], scratch?: string[]): unknown {
         const code = [
             'import json, sys',
             'from scripts.ai_council import bundler as B',
             snippet,
         ].join('\n');
-        const res = runPyCode(code, args);
+        const normalize = scratch ? makeNormalize(scratch) : undefined;
+        const res = runPyCode(code, args, {
+            ...(scratch ? { scratch } : {}),
+            ...(normalize ? { normalize } : {}),
+        });
         expect(res.status, res.stderr).toBe(0);
         return JSON.parse(res.stdout);
     }
@@ -142,6 +164,18 @@ describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
         manifest: c.manifest,
         excluded: c.excluded,
     });
+
+    // Symmetric normalize: the python golden was frozen with scratch paths
+    // collapsed to `<scratch:i>`; apply the identical replacement to the .ts ctx
+    // object (round-trip through JSON so it reaches text/manifest/excluded) before
+    // comparing against the parsed-from-normalized-python `expected`.
+    const ctxToObjNorm = (c: CouncilContext, scratch: string[]): Record<string, unknown> => {
+        let json = JSON.stringify(ctxToObj(c));
+        scratch.forEach((p, i) => {
+            json = json.split(p).join(`<scratch:${i}>`);
+        });
+        return JSON.parse(json) as Record<string, unknown>;
+    };
 
     const dumpCtx =
         'def dump(c):\n    return {"mode": c.mode, "text": c.text, "manifest": c.manifest, "excluded": c.excluded}\n';
@@ -168,8 +202,9 @@ describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
         const expected = pyBundle(
             dumpCtx + 'print(json.dumps(dump(B.bundle_files([sys.argv[1], sys.argv[2]]))))',
             [ok, missing],
+            [dir],
         );
-        expect(ctxToObj(bundle_files([ok, missing]))).toEqual(expected);
+        expect(ctxToObjNorm(bundle_files([ok, missing]), [dir])).toEqual(expected);
     });
 
     it('bundle_roadmap matches', () => {
@@ -179,8 +214,9 @@ describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
         const expected = pyBundle(
             dumpCtx + 'print(json.dumps(dump(B.bundle_roadmap(sys.argv[1]))))',
             [rm],
+            [dir],
         );
-        expect(ctxToObj(bundle_roadmap(rm))).toEqual(expected);
+        expect(ctxToObjNorm(bundle_roadmap(rm), [dir])).toEqual(expected);
     });
 
     it('BundleTooLarge message matches', () => {
@@ -205,8 +241,9 @@ describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
         const expected = pyBundle(
             dumpCtx + 'print(json.dumps(dump(B.bundle_diff("HEAD~1", "HEAD", cwd=sys.argv[1]))))',
             [repo],
+            [repo],
         );
-        expect(ctxToObj(bundle_diff('HEAD~1', 'HEAD', { cwd: repo }))).toEqual(expected);
+        expect(ctxToObjNorm(bundle_diff('HEAD~1', 'HEAD', { cwd: repo }), [repo])).toEqual(expected);
     });
 
     it('bundle_diff_with_context matches (signature section)', () => {
@@ -215,7 +252,10 @@ describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
             dumpCtx
                 + 'print(json.dumps(dump(B.bundle_diff_with_context("HEAD~1", "HEAD", cwd=sys.argv[1]))))',
             [repo],
+            [repo],
         );
-        expect(ctxToObj(bundle_diff_with_context('HEAD~1', 'HEAD', { cwd: repo }))).toEqual(expected);
+        expect(ctxToObjNorm(bundle_diff_with_context('HEAD~1', 'HEAD', { cwd: repo }), [repo])).toEqual(
+            expected,
+        );
     });
 });

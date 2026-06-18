@@ -144,7 +144,103 @@ green with `python3` absent from PATH AND to go RED on an injected twin regressi
 
 Revised Phase-4.5 sub-sequence: (0) pre-capture audit (nondeterminism + tmp-in-output) → (1) oracle v2 (invocation-descriptor + normalization hooks) → (2) convert shared harnesses → (3) convert the inline-spawn rigs (parallelized) → (4) bulk capture + review-lock → (5) write ~25 C-gap tests → THEN deletion.
 
-**Decision required (test-teardown strategy):** RESOLVED above.
+### R7 — File-side-effect / scratch-dir rigs (discovered 2026-06-18, blocks harness conversion)
+
+The harness-conversion wave (2026-06-18, branch `feat/py2ts-phase45-harness-conversion`,
+WIP-checkpoint, NOT merged) converted both shared harnesses (`ai_council/_harness.ts`,
+`_config_parity.ts`) through oracle v2: **10 of 19 importers green** (python3-off-PATH),
+2 regression-proofs, typecheck clean. But **9 importers fail** — a new obstacle class:
+
+- **Output-sink-FILE rigs (5):** `budget_guard`, `probation_gate`, `low_impact_intake`,
+  `shadow_dispatch`, `clients` — python WRITES a tmp file the rig then reads. A
+  stdout-only snapshot oracle cannot replay file side-effects.
+- **Volatile scratch-DIR rigs (4):** `session`, `bundler`, `compile_corpus`,
+  `config_session_profiles` — a random-basename scratch dir as a python arg →
+  snapshot key never stable → `readSnapshot` throws.
+
+**Coupling problem:** converting a SHARED harness forces ALL its importers onto the
+oracle at once, so it cannot land green until these 9 are handled. **Fork (next session):**
+(a) **oracle v3** — capture file side-effects + accept a stable-scratch-path contract,
+or (b) **restructure the 9 rigs** to assert on python STDOUT (emit the written bytes)
++ use a fixed scratch path. (a) is a mechanism change reusable across any future
+side-effect rig; (b) is bounded per-rig work. Route to council or decide in the fresh
+bulk-execution session. The 10-green harness conversion is preserved on the WIP branch
+and is reusable under either fork.
+
+**Resolved — council (claude-sonnet-4-5 + gpt-4o, 2026-06-18, 2 rounds, converged):
+Oracle v3 for both sub-shapes; reject stdout-coercion and TS-only demotion.**
+
+- **No single mechanism is uniform across both sub-shapes** — the impossibility of
+  freezing B as an independent python snapshot is evidence *for* the split, not against.
+- **Sub-shape A (5 file-sink rigs):** extend the oracle to capture **raw file bytes**
+  via a declared-output-path contract. Rejected option (b)'s `print(open(p).read())`
+  stdout-coercion: it smuggles base64-for-binary, multi-file serialisation, error
+  mis-attribution (python-crash vs byte-diff), and pipe-truncation-without-integrity.
+  One central file-capture (1×) beats 5× per-rig `fs.readFileSync` duplication.
+- **Sub-shape B (4 scratch-dir rigs):** capture the python **composite artefact**
+  (incl. its cross-read of the live TS output) at capture time, while `.py` still
+  exists. Rejected demoting the cross-read to a TS-only round-trip: "TS reads its own
+  zips" is a tautology when one lib writes+reads; the cross-language equivalence
+  ("python reads TS output") is the load-bearing guarantee and must be frozen, not
+  dropped. Post-deletion python is gone, so the frozen capture-time verdict is the
+  strongest preservable form.
+- **Stable-scratch-path contract** required so B's key is deterministic (the existing
+  `readSnapshot` throw-on-missing guard is preserved unweakened).
+
+Session synthesis: `agents/runtime/council/responses/r7-fork-synthesis.md/` (transient).
+
+#### Harness conversion — COMPLETE (2026-06-18, verified)
+
+Oracle v3 built (`tests/_lib/parity_oracle.ts`): `outputs` (freeze file side-effects, base64),
+`oracleFile()` decoder, `scratch` (stabilise volatile path args in the snapshot key), plus the
+`outputs`/`scratch` guards (a declared output with no frozen `files` THROWS — the R6 no-neutering
+guard extended). Plumbed through `_harness.ts` (`runPyCode`/`runPyScript`) and `_config_parity.ts`
+(`runPy`). All 9 R7 rigs converted + verified python-independent (python3 shadowed by a failing stub,
+git intact) + regression-proof (twin break → RED → revert → green):
+- file-sink (A): `budget_guard`, `probation_gate`, `low_impact_intake`, `shadow_dispatch`, `clients`.
+- scratch/composite (B): `session`, `compile_corpus`, `config_session_profiles` (`--root` scratch + overlay
+  file freeze), `ai_council/bundler` (volatile-repo `scratch` + symmetric path-normalize). Cross-read
+  rig `claude_desktop_bundler` also converted (oracle composite freeze; cross-read preserved per council).
+Full importer set green python-independent: **28 files / 444 tests pass, 0 fail** (`ai_council/` +
+`config_session_profiles` + `claude_desktop_bundler`). Global typecheck clean. The prior 10 importers
+stay green (back-compat: the v3 fields are additive/optional).
+
+#### Remaining python-dependent test files — 21 (full-suite python3-shadowed sweep, 2026-06-18)
+
+The shared-harness leverage already covered most rigs; only **21 files (158 tests)** still spawn python3
+directly. Triaged (NOT a uniform snapshot-convert — see council verdicts):
+- **Convertible golden-parity rigs (snapshot oracle):** `tests/lib/{agent_src,json_pointers,linked_projects,token_count,user_global_paths,value_ladder,value_report}.test.ts`,
+  `tests/scripts/{council_cli,council_prune,run,runtime_handler}.test.ts`, `tests/scripts/hooks/replay_hook.test.ts`.
+- **Retire-and-replace (council Option B, → C-gap integration tests):** `tests/parity/replay.test.ts` (the byte-replay Golden-Transcript harness).
+- **Delete (obsolete spikes — python-vs-npm comparisons, meaningless post-teardown):** `tests/spikes/pyyaml_vs_npm.test.ts`, `tests/spikes/yaml_rt_spike.test.ts`.
+- **Phase-6-coupled (hit python via the dispatcher fast-path / `scripts-run`; convert WITH the dispatcher python removal, not before):** `tests/cli/{cli-e2e,mcp-server.e2e,settings.e2e}.test.ts`, `tests/server/{wizard.applySse,workspace}.test.ts`, `tests/ui/build.test.ts`.
+
+Next wave = convert the golden-parity subset (proven oracle-v3 patterns), retire `replay`, delete the
+spikes; then bulk-capture + review-lock; then Phase 4+ deletions (HARD FLOOR — explicit user confirmation).
+
+#### Golden-parity subset converted (2026-06-18) + env-brittle class carve-out
+
+Converted to the snapshot oracle (verified python-shadowed green + regression-proof): `tests/lib/{agent_src,
+json_pointers,linked_projects,token_count,user_global_paths,value_ladder,value_report}.test.ts`,
+`tests/scripts/{council_cli,council_prune}.test.ts`. Correctly NOT converted (re-triaged on inspection):
+`run` + `hooks/replay_hook` (dispatcher-coupled → Phase 6), `runtime_handler` (python3 `-c` is a generic
+subprocess fixture for `execute_shell`, no `.py` twin → fixture-swap in Phase 6).
+
+**Env-brittle frozen-rig class — RESOLVED by council (claude-sonnet-4-5 + gpt-4o, 2026-06-18, converged):**
+A rig may be snapshot-frozen ONLY if its output is a **pure function of committed source**. Rigs whose
+output derives from **generated / gitignored state** (e.g. the discovery manifest) are NOT freezable: the
+golden bakes the capture-env's generated state and diverges from CI's freshly-built one — a CI-only
+failure invisible to the local python-shadowed sweep (which catches python-DEPENDENCE, not cross-env
+brittleness). The deterministic-build-in-setup alternative was rejected: the manifest builder is not
+provably cross-environment deterministic (fs traversal order, OS case-sensitivity, path separators, Node
+version). Such rigs stay **LIVE python↔tsx** (`skipIf(real python3)`) until the deletion phase.
+- **`config_packs`** (instance): `--json` closure comes from `load_manifest` (gitignored). Reverted its 3
+  golden-parity tests to live python↔tsx + real-python3 gate; dropped the frozen `module-scripts.config.packs`
+  snapshots. Green on CI (python present, both sides read CI's fresh manifest), skips post-deletion.
+  Now in the **deletion-phase bucket** (blocks deleting `config/packs.py` until a Phase-5 resolution —
+  e.g. make `packs` read committed source, or commit a deterministic manifest fixture).
+- **Detection (Phase-5 gate):** before deleting any `.py`, audit each surviving frozen rig for
+  generated/gitignored-state reads; re-classify manifest-dependent ones as live-parity-then-delete.
 
 ## Risk register
 

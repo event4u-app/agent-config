@@ -1,0 +1,5 @@
+{
+  "stdout": "## anthropic · claude-sonnet-4-5\n\n*tokens: 10 in / 5 out · 0 ms*\n\nHello world finding.\n\n---\n\n## Convergence / Divergence\n\n*to be summarised by the host agent*\n",
+  "stderr": "",
+  "status": 0
+}

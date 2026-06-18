@@ -1,0 +1,5 @@
+{
+  "stdout": "council-prune: retention_days=-1 → pruning disabled.\n",
+  "stderr": "",
+  "status": 0
+}

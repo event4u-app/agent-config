@@ -1,0 +1,5 @@
+{
+  "stdout": "Why the surface looks different: a profile is active (engineering-base).\nIt shows you 40 commands and 60 skills, and hides 167 behind packs you haven't turned on — that's why some commands aren't visible.\nNothing is broken; the overlay just narrows the surface to this profile.\nIt stays this way across sessions until you run `/profile deactivate`.",
+  "stderr": "",
+  "status": 0
+}

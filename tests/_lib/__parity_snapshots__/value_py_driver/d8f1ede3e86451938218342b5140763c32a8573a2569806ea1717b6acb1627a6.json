@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"eur_delta\": 13.87728, \"footnote\": \"Kernel = 4 rules (16015 chars) + charter (4100 chars); tokens \\u2248 chars / 4.\", \"id\": \"load\", \"label\": \"With package (rule load)\", \"source_report\": \"dist/router.json\", \"token_delta\": 5028, \"what_it_does\": \"The always-active rules land in the context of every request.\"}",
+  "stderr": "",
+  "status": 0
+}

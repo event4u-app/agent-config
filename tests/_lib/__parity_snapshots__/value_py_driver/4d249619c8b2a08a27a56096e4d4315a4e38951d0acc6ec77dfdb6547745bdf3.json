@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"eur_delta\": -0.9190800000000001, \"id\": \"rtk\", \"label\": \"+ rtk (filter CLI output)\", \"source_report\": \"internal/bench/reports/rtk/latest.json\", \"token_delta\": -333, \"what_it_does\": \"rtk cuts verbose CLI output before the model input.\"}",
+  "stderr": "",
+  "status": 0
+}

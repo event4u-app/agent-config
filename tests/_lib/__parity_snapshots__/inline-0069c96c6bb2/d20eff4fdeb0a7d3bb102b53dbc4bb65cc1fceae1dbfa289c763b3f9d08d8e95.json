@@ -1,0 +1,5 @@
+{
+  "stdout": "[\"missing_anchor\", null, \"validated\", \"corpus parse failed: missing_anchor in section 'validated' — expected marker '<!-- intake-anchor: validated -->'\"]\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  council:estimate: --siblings requires ≥ 2 distinct models for 'anthropic', got ['only-one'].\n",
+  "status": 2
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "[[[\"what port\", \"what port\", \"validated\", 5, \"— meta here\"]], [[\"how to test\", \"how to test\", \"probation\", 11, \"— first-seen 2026-05-01\"]], [[\"delete prod?\", \"delete prod\", \"anti_examples\", 15, \"\"]]]\n",
+  "stderr": "",
+  "status": 0
+}

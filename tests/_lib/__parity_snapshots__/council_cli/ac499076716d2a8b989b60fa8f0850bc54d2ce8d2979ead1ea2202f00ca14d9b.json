@@ -1,0 +1,5 @@
+{
+  "stdout": "## anthropic · claude-sonnet-4-5\n\n*tokens: 10 in / 5 out · 0 ms*\n\nHello world finding.\n\n---\n\n## Convergence / Divergence\n\nSummarise the council with the analysis-lens shape below.\n\n### Top-10 by consensus\nFindings ranked by how many reviewers surfaced them. Format each\nline as: `N. <finding> — cited by <reviewer labels> · evidence:\nconfirmed | inferred | speculative · roadmap-ready: yes | needs-discovery`.\nStop at ten or when only single-reviewer items remain, whichever\ncomes first.\n\n### Supporting\nFindings that one reviewer raised and at least one other treated as\nplausible but did not independently surface. One line each, same\nmetadata shape as Top-10.\n\n### Outliers\nSingle-reviewer findings the others did not engage with. Keep them\n— they are signal for a future deeper analysis pass — but mark each\nas `unverified-by-council`.\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — secret: 'sk-AAAAA…'\", \"violations\": [[\"secret\", \"sk-AAAAA…\", \"raw-key prefix 'sk-'\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

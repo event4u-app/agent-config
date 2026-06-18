@@ -16,7 +16,7 @@ import {
     normalise,
     record_intake,
 } from '../../../src/scripts/ai_council/low_impact_intake.js';
-import { hasPython3, runPyCode } from './_harness.js';
+import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
 
@@ -117,22 +117,38 @@ describe.runIf(py3)('low_impact_intake — golden parity vs CPython twin', () =>
         const pyPath = tmpCorpus();
         const tsPath = tmpCorpus();
 
+        // The volatile output path is baked into the code body (not passed as
+        // argv): the inline-code key collapses quoted absolute paths to a stable
+        // placeholder (stableInlineKeyMaterial), so the snapshot key stays stable
+        // across the capture run (file present) and every replay run (fresh tmp
+        // dir). A volatile path passed as an ARG would key on file
+        // existence/content and diverge capture-vs-replay. `question`/`today` are
+        // stable strings — they STAY as argv (indices shift to [1]/[2] now that
+        // pyPath has left argv).
         const code = [
             'import json, sys',
             'from scripts.ai_council.low_impact_intake import record_intake',
             'from pathlib import Path',
-            'p, q, today = sys.argv[1], sys.argv[2], sys.argv[3]',
+            `p = ${JSON.stringify(pyPath)}`,
+            'q, today = sys.argv[1], sys.argv[2]',
             'r = record_intake(Path(p), q, today=today)',
             'print(json.dumps([r.kind, r.question, r.today, r.note]))',
         ].join('\n');
-        const res = runPyCode(code, [pyPath, question, today]);
+        // Oracle v3 — the python side has TWO observable artefacts: the JSON
+        // outcome on stdout AND the rewritten corpus FILE at pyPath. Declare the
+        // file as a frozen output: capture mode reads pyPath after the spawn and
+        // freezes its bytes; normal mode replays them with no live python3.
+        const res = runPyCode(code, [question, today], { outputs: { corpus: pyPath } });
         expect(res.status, res.stderr).toBe(0);
         const pyOutcome = JSON.parse(res.stdout) as [string, string, string, string];
 
         const tsR = record_intake(tsPath, question, { today });
         expect([tsR.kind, tsR.question, tsR.today, tsR.note]).toEqual(pyOutcome);
 
-        // The corpus bytes written by each runtime must be identical.
-        expect(readFileSync(tsPath, 'utf-8')).toBe(readFileSync(pyPath, 'utf-8'));
+        // The corpus bytes written by each runtime must be identical. The .ts
+        // twin writes tsPath live; compare against the frozen python golden.
+        const corpus = oracleFile(res, 'corpus');
+        expect(corpus, 'frozen python corpus must exist').not.toBeNull();
+        expect(readFileSync(tsPath, 'utf-8')).toBe((corpus as Buffer).toString('utf-8'));
     });
 });

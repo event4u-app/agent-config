@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"text\": \"hi\", \"in\": 3, \"out\": 5, \"meta\": {\"session_id\": \"s\", \"reported_cost_usd\": 0.01, \"reported_duration_ms\": 42}}\n",
+  "stderr": "",
+  "status": 0
+}

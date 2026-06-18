@@ -1,0 +1,5 @@
+{
+  "stdout": "council:cli-skip · anthropic · binary not found · install: npm install -g @anthropic-ai/claude-code · docs: https://docs.anthropic.com/en/docs/claude-code/quickstart\ncouncil:cli-skip · unknownprov · binary not found · foo not found\ncouncil:cli-skip · openai · auth_expired · token expired\ncouncil:cli-skip · perplexity · binary not found · install: npm install -g perplexity-cli · docs: https://github.com/perplexityai/perplexity-cli\ncouncil:cli-skip · gemini · unknown · ",
+  "stderr": "",
+  "status": 0
+}
