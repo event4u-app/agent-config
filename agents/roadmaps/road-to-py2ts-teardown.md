@@ -126,6 +126,24 @@ to green is the rig-conversion, not the deletion.
 This is the new Phase 4.5. Execution: (1) codemod the rigs A-style + verify green;
 (2) write the ~25 C-style gap tests; (3) THEN the deletion waves (4/5/6).
 
+### Phase 4.5 — prototype DONE (2026-06-18), fan-out sized
+
+`tests/_lib/parity_oracle.ts` built + validated on `templates_telemetry_report.test.ts`:
+capture mode freezes the `python3` output as committed JSON snapshots
+(`tests/_lib/__parity_snapshots__/`); normal mode reads them — **proven** to run
+green with `python3` absent from PATH AND to go RED on an injected twin regression
+(R6-neutering guard satisfied), typecheck clean. The A-strategy is executable.
+
+**Fan-out obstacles (must handle before bulk capture — `.py` deletion is irreversible for capture):**
+1. **Key normalization** — naive `hash(stem+args+input)` fails on volatile tmp-path args + basename collisions; the oracle keys file-args on content-hash. Works only where output is path-independent.
+2. **#1 blocker — tmp paths IN output.** Rigs whose stdout/stderr echoes an absolute tmp path are not byte-comparable to a frozen snapshot. Need output normalization or a deterministic fixture root before capture. **Repo-wide audit required.**
+3. **Non-determinism** (`Date.now`/`Math.random`/random fixtures) — must be made deterministic before capture or can't use the oracle.
+4. **Module/inline invocations** — shared `ai_council/_harness.ts` + `_config_parity.ts` use `python3 -m`/`-c` + `PYTHONPATH=src`, not `python3 <stem>.py`. Oracle needs a v2 invocation-descriptor (`{kind: script|module|inline, target, args, input, env}`).
+5. **Leverage** — route the python side through the oracle **inside the shared harnesses once**, not 311 rigs individually.
+6. **Capture-once + review gate** — capture must run with `.py` present and the goldens be reviewed/locked **before** Phase 4 deletes the `.py`; after deletion, a missing/wrong snapshot is unrecoverable.
+
+Revised Phase-4.5 sub-sequence: (0) pre-capture audit (nondeterminism + tmp-in-output) → (1) oracle v2 (invocation-descriptor + normalization hooks) → (2) convert shared harnesses → (3) convert the inline-spawn rigs (parallelized) → (4) bulk capture + review-lock → (5) write ~25 C-gap tests → THEN deletion.
+
 **Decision required (test-teardown strategy):** RESOLVED above.
 
 ## Risk register

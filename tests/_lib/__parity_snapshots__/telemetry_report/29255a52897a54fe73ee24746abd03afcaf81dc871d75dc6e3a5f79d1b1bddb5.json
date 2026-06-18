@@ -1,0 +1,5 @@
+{
+  "stdout": "{\n  \"buckets\": {\n    \"essential\": [],\n    \"retirement_candidate\": [],\n    \"useful\": []\n  },\n  \"outcomes\": {\n    \"by_category\": {},\n    \"total\": 0\n  },\n  \"schema_version\": 1,\n  \"summary\": {\n    \"earliest_ts\": null,\n    \"latest_ts\": null,\n    \"parsed_events\": 0,\n    \"since_label\": null,\n    \"skipped_lines\": 0,\n    \"total_events\": 0\n  }\n}\n",
+  "stderr": "",
+  "status": 0
+}

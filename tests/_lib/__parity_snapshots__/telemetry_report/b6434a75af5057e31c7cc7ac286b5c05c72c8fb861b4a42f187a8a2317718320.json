@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  --since must be <int>{d,h,m} or 'all', got 'zzz'\n",
+  "status": 2
+}
