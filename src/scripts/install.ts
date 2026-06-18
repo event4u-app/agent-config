@@ -4485,5 +4485,14 @@ export {
     KIRO_MARKER,
     ROOCODE_MARKER,
     ZED_MARKER,
+    // ADR-200 py2ts: re-exported for test_install_snapshot.ts twin
+    CURSOR_DISPATCHER_BINDINGS,
+    CLINE_DISPATCHER_BINDINGS,
+    WINDSURF_DISPATCHER_BINDINGS,
+    GEMINI_DISPATCHER_BINDINGS,
+    ensure_cursor_bridge,
+    ensure_cline_bridge,
+    ensure_windsurf_bridge,
+    ensure_gemini_bridge,
 };
 export type { Options };
