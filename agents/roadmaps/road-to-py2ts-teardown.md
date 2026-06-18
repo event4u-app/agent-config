@@ -110,9 +110,23 @@ not the "~25 gap ports" the audit alone implied. Evidence: `PY_SCRIPT = …X.py`
 and 475 others. CI would go red on deletion (visible, not silent) — but the path
 to green is the rig-conversion, not the deletion.
 
-**Decision required (test-teardown strategy):** convert all rigs to standalone /
-keep `.py` as a test-only anchor / hybrid / phased. Routed to AI council; reshapes
-the migration endgame, so surfaced to the user.
+**Decision (council 2026-06-18, claude-sonnet-4-5 + gpt-4o, 2 rounds; split A↔C → host-synthesised hybrid):**
+- **A — snapshot-conversion** for the ~450 COVERED parity rigs: capture each rig's
+  `python3` output once as a committed snapshot, rewrite the rig to compare the
+  `.ts` output against it, drop the live `python3` spawn. They share one
+  `spawnSync('python3', …)` pattern → drive via a **codemod + verification**, not
+  450 hand-edits. Preserves the migration's byte-verified contract (the `.ts` is
+  intentionally byte-identical to `.py`, so the snapshot just freezes the
+  already-verified state).
+- **C — fresh intent-based standalone tests** for the ~25 GAP modules (no rig to
+  snapshot; must be written anyway) — covers the round-2 intent concern exactly
+  where it matters (security, contracts, convergence-loops).
+- **B rejected** (both members, both rounds — fails "end Python").
+
+This is the new Phase 4.5. Execution: (1) codemod the rigs A-style + verify green;
+(2) write the ~25 C-style gap tests; (3) THEN the deletion waves (4/5/6).
+
+**Decision required (test-teardown strategy):** RESOLVED above.
 
 ## Risk register
 
