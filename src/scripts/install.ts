@@ -4224,7 +4224,7 @@ function finalize_claude_model_tiers(project_root: string): number {
         const src_md = path.join(src_dir, 'SKILL.md');
         let tier: string | null;
         try {
-            tier = read_model_tier(readText(src_md));
+            tier = read_model_tier(src_md);
         } catch {
             tier = null;
         }
@@ -4465,6 +4465,9 @@ export {
     SystemExitError,
     ArgparseExit,
     state,
+    // ADR-200 py2ts: re-exported for test_consumer_model_tier.ts twin
+    // (Python test imports `install.finalize_claude_model_tiers` directly).
+    finalize_claude_model_tiers,
     SUPPORTED_PROFILES,
     DEFAULT_PROFILE,
     _VALID_TOOLS,
