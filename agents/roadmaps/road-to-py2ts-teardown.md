@@ -91,6 +91,29 @@ parent_roadmap: null
 - [ ] Full CI green on `python2ts`.
 - [ ] Hand back to user: `python2ts → main` final merge is the user's Hard-Floor decision (out of scope).
 
+## R6 — Parity-rig dependency (CRITICAL, discovered 2026-06-18, blocks teardown-as-planned)
+
+```
+479 of 541 .test.ts (88%) are golden-parity rigs that spawn `python3 <original.py>`
+and byte-compare .py-output vs .ts-output. Deleting the src .py removes their
+comparison anchor → they fail / assert nothing. "COVERED" in the audit is largely
+parity-rig coverage that does NOT survive deletion.
+```
+
+The parity rigs are the **migration's verification mechanism** (prove `.ts == .py`),
+not a standalone permanent suite. "Delete all `.py`" therefore requires first
+**converting ~479 rigs to standalone `.ts` tests** (inline/snapshot the expected
+values, drop the `python3` spawn) — an effort comparable to the migration itself,
+not the "~25 gap ports" the audit alone implied. Evidence: `PY_SCRIPT = …X.py` +
+`spawnSync('python3', …)` in `directives_backend_analyze.test.ts`,
+`ai_council/config.test.ts`, `templates_telemetry_report.test.ts`, `_cli/cmd_migrate.test.ts`,
+and 475 others. CI would go red on deletion (visible, not silent) — but the path
+to green is the rig-conversion, not the deletion.
+
+**Decision required (test-teardown strategy):** convert all rigs to standalone /
+keep `.py` as a test-only anchor / hybrid / phased. Routed to AI council; reshapes
+the migration endgame, so surfaced to the user.
+
 ## Risk register
 
 - **R1 — shipped consumer runtime (highest).** `dist/agent-src/**/*.py` is executed by consumers, not just dev tooling. Deleting src `.py` without resolving dist emission breaks installed consumers. **Resolved (Phase-0 council, 2026-06-18):** TS-only, Python fully removed; runtime = Node-via-`tsx` (baseline A), pre-bundled `.js` fallback (D) only if Phase-1 evidence forces it. Residual exposure = the empirical A-vs-D call; Phase-3 consumer smoke is the verification.
