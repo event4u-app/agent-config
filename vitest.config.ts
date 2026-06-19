@@ -20,6 +20,9 @@ export default defineConfig({
             ['src/ui/**', 'happy-dom'],
         ],
         environment: 'node',
+        // Enforce the post-migration python-free runtime so obsolete live
+        // python↔tsx parity blocks self-skip (see tests/_lib/python-free-env.ts).
+        setupFiles: ['./tests/_lib/python-free-env.ts'],
         testTimeout: 10_000,
         hookTimeout: 10_000,
         reporters: process.env.CI ? ['default'] : ['default'],
