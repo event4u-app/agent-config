@@ -12,6 +12,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import type * as YamlModule from 'yaml';
+
 import * as sp from '../../src/scripts/config/session_profiles.js';
 import { REPO_ROOT } from './_config_parity.js';
 
@@ -164,7 +166,7 @@ describe('session_profiles — fail-open read + atomic write', () => {
         fs.writeFileSync(local, 'linked_projects:\n  - path: /x\n', 'utf-8');
         sp.set_overlay(repo, ['laravel']);
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const YAML = require('yaml') as typeof import('yaml');
+        const YAML = require('yaml') as typeof YamlModule;
         const data = YAML.parse(fs.readFileSync(local, 'utf-8'), { version: '1.1' });
         expect('linked_projects' in data).toBe(true);
         expect(data['runtime']['active_packs']).toEqual(['laravel']);

@@ -30,7 +30,7 @@ import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import process from 'node:process';
 
-import { SkillRuntime } from './runtime_registry.js';
+import type { SkillRuntime } from './runtime_registry.js';
 
 // Environment variables that are always forwarded to the child process.
 // Kept deliberately narrow — no credentials, no shell config, no auth tokens.

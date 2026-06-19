@@ -70,7 +70,6 @@ export const REQUIRED_SECTIONS = [
     '**NET',
 ] as const;
 
-type Json = unknown;
 type JsonObject = Record<string, unknown>;
 
 /** Mirror `datetime.now(timezone.utc).isoformat(timespec="seconds")`. */

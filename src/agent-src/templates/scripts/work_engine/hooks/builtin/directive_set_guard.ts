@@ -10,10 +10,10 @@
  *
  * The guard is read-only. It does not rewrite `state.directive_set`.
  */
-import { HookContext } from '../context.js';
+import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError } from '../exceptions.js';
-import { HookRegistry } from '../registry.js';
+import type { HookRegistry } from '../registry.js';
 
 /** Arbitrary value, mirroring the Python `Any` fields. */
 type Any = unknown;

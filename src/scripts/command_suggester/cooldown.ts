@@ -20,13 +20,14 @@
  * never byte-compares a raw timestamp, only the structural decision.
  */
 
-import {
+import type {
     CommandSpec,
+    Match,
+    Settings} from './types.js';
+import {
     CooldownState,
     cooldownKey,
-    cooldownKeyCommand,
-    Match,
-    Settings,
+    cooldownKeyCommand
 } from './types.js';
 
 const _DURATION_RE = /^\s*(\d+)\s*([smhd])\s*$/i;

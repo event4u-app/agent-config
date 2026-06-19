@@ -12,8 +12,9 @@
 // secret-scanning linters.
 import { describe, expect, it } from 'vitest';
 
+import type {
+    RedactionResult} from '../../../src/scripts/ai_council/redact_low_impact_entry.js';
 import {
-    RedactionResult,
     redact_low_impact_entry,
 } from '../../../src/scripts/ai_council/redact_low_impact_entry.js';
 import { hasPython3, runPyCode } from './_harness.js';

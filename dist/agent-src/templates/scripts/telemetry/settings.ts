@@ -8,10 +8,11 @@
  */
 import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
+import type * as YamlModule from 'yaml';
 
 // Resolve `yaml` relative to this module (not cwd) so a consumer's cwd
 // package.json never interferes; mirrors Python's lazy `import yaml`.
-const YAML = createRequire(import.meta.url)('yaml') as typeof import('yaml');
+const YAML = createRequire(import.meta.url)('yaml') as typeof YamlModule;
 
 export const DEFAULT_LOG_PATH = '.agent-engagement.jsonl';
 export const DEFAULT_GRANULARITY = 'task';

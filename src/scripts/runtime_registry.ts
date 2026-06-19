@@ -117,14 +117,6 @@ export class SkillRuntime {
     }
 }
 
-function isDir(p: string): boolean {
-    try {
-        return fs.statSync(p).isDirectory();
-    } catch {
-        return false;
-    }
-}
-
 function isSymlink(p: string): boolean {
     try {
         return fs.lstatSync(p).isSymbolicLink();

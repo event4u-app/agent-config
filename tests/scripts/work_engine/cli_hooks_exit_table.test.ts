@@ -18,12 +18,14 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type {
+    HookContext} from '../../../src/agent-src/templates/scripts/work_engine/hooks/index.js';
 import {
-    HookContext,
     HookEvent,
     HookHalt,
     HookRegistry,
 } from '../../../src/agent-src/templates/scripts/work_engine/hooks/index.js';
+import type * as HookBootstrapModule from '../../../src/agent-src/templates/scripts/work_engine/hook_bootstrap.js';
 
 // Mutable factory the mocked `_build_hook_registry` delegates to. Declared
 // before the hoisted vi.mock factory references it via the module-scope binding.
@@ -38,7 +40,7 @@ vi.mock(
     async (importOriginal) => {
         const actual =
             await importOriginal<
-                typeof import('../../../src/agent-src/templates/scripts/work_engine/hook_bootstrap.js')
+                typeof HookBootstrapModule
             >();
         return {
             ...actual,

@@ -74,9 +74,6 @@ const TRUST_LEVELS_ENUM: readonly string[] = [
     'experimental',
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Json = any;
-
 interface InventoryRow {
     name: string;
     cls: string;

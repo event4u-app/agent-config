@@ -7,6 +7,7 @@
 // --diff match/mismatch, and the no-args error path.
 import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -75,7 +76,7 @@ describe('iron_law_sha — golden parity (python3 vs tsx)', () => {
     function _hasRules(): boolean {
         return artefact_roots().some((r) => {
             try {
-                return require('node:fs').statSync(path.join(r, 'rules')).isDirectory();
+                return fs.statSync(path.join(r, 'rules')).isDirectory();
             } catch {
                 return false;
             }

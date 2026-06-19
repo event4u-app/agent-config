@@ -21,7 +21,6 @@ import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 
 import { createApp } from '../../src/server/app.js';
-import { readRecentEntries } from '../../src/install/txlog.js';
 
 const TOKEN = 'i'.repeat(64);
 

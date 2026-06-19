@@ -26,7 +26,8 @@
  * round-trip the structure without pickling dataclasses.
  */
 
-import { type Any, DeliveryState, Outcome, StepResult } from '../../delivery_state.js';
+import type { DeliveryState} from '../../delivery_state.js';
+import { type Any, Outcome, StepResult } from '../../delivery_state.js';
 import { retrieve as _real_retrieve } from '../../../memory_lookup.js';
 
 /** The three types allowed by the flow contract. No aliases, no extras. */

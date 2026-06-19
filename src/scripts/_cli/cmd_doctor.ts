@@ -96,7 +96,6 @@ import {
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
 
-type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 type Dict = Record<string, unknown>;
 
 // ---------------------------------------------------------------------------
@@ -1414,7 +1413,7 @@ function _check_council_cli(project_root: string): Dict {
                 `${council_path} (see docs/contracts/ai-council-config.md)`,
         };
     }
-    let cfg: import('../ai_council/config.js').CouncilConfig;
+    let cfg: ai_council_config.CouncilConfig;
     try {
         cfg = load_council_config(council_path);
     } catch (exc) {
@@ -1425,7 +1424,7 @@ function _check_council_cli(project_root: string): Dict {
             remedy: `fix ${council_path} and re-run doctor`,
         };
     }
-    const cli_members: Array<[string, import('../ai_council/config.js').MemberConfig]> = [];
+    const cli_members: Array<[string, ai_council_config.MemberConfig]> = [];
     for (const [name, m] of cfg.members.entries()) {
         if (m.enabled && m.mode === 'cli' && name in _CLI_PROVIDER_META) {
             cli_members.push([name, m]);

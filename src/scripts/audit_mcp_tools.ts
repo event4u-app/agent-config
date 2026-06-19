@@ -49,7 +49,7 @@ function _splitlines(text: string): string[] {
     if (text === '') {
         return [];
     }
-    // eslint-disable-next-line no-control-regex
+     
     const BOUNDARY = /\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/g;
     const out: string[] = [];
     let last = 0;

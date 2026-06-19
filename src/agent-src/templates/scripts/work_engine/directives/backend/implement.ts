@@ -28,7 +28,8 @@
  * `lines` / `purpose` feed the delivery report.
  */
 
-import { type Any, DeliveryState, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
+import type { DeliveryState} from '../../delivery_state.js';
+import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
 import { resolve_policy } from '../../persona_policy.js';
 
 /** Declared ambiguity surfaces. Advisory personas skip this step entirely. */

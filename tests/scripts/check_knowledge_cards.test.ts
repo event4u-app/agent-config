@@ -12,7 +12,7 @@
 // freshness test), the golden-parity fixtures live under a temp directory
 // INSIDE the repo (the real-usage shape) and are passed as a relative `--dir`.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

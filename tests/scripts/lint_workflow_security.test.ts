@@ -259,7 +259,7 @@ describe.skipIf(!py3)('lint_workflow_security — golden parity (python3 vs tsx)
         fs.writeFileSync(path.join(wfDir, 'bad.yml'), DANGEROUS_WF, 'utf-8');
         const pyJson = path.join(tmp, 'py.json');
         const tsJson = path.join(tmp, 'ts.json');
-        run(['--json', pyJson, '--quiet'], wfDir).py;
+        run(['--json', pyJson, '--quiet'], wfDir);
         // Re-run TS separately to write its own artifact (the run() helper runs
         // both with the same argv, so the second arg differs per engine here).
         const env = envFor(wfDir, ['--json', pyJson, '--quiet']);

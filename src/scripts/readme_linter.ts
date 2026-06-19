@@ -421,7 +421,7 @@ function _splitlines(text: string): string[] {
     }
     // Python str.splitlines boundary set: \n \r \r\n \v \f \x1c \x1d
     // \x1e \x85 \u2028 \u2029. No trailing empty element at EOS.
-    // eslint-disable-next-line no-control-regex
+     
     const BOUNDARY = /\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/g;
     const out: string[] = [];
     let last = 0;

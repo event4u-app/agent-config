@@ -25,6 +25,7 @@ import * as path from 'node:path';
 
 import { DEFAULT_PROJECT_FILE, logger } from '../_lib/agent_settings.js';
 import { artefact_roots } from '../_lib/agent_src.js';
+import type * as YamlModule from 'yaml';
 
 // ESM-standard `require` shim — works whether imported or run directly.
 const _require = createRequire(import.meta.url);
@@ -100,11 +101,11 @@ export class ProfileError extends Error {
 }
 
 function _load_yaml(p: string): Dict {
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require mirrors Python's lazy `import yaml`.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = _require('yaml') as typeof import('yaml');
+         
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         logger.info('PyYAML unavailable; profile %s returned empty', p);
         return {};

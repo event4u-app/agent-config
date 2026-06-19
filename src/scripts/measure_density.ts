@@ -315,7 +315,7 @@ export function main(argv: string[] | null = null): number {
     const results = collect();
     if (args.snapshot) {
         fs.mkdirSync(path.dirname(SNAPSHOT_FILE), { recursive: true });
-        const sorted = _stableSortBy(results, (r) => 0, (a, b) => _pyStrCmp(a.file, b.file));
+        const sorted = _stableSortBy(results, (_r) => 0, (a, b) => _pyStrCmp(a.file, b.file));
         const chunks: string[] = [];
         for (const r of sorted) {
             chunks.push(_jsonDumpsSortKeys(_rowToJson(r)) + '\n');

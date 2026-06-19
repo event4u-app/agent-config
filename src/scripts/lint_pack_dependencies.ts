@@ -31,7 +31,6 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".
 const PACKAGES = path.join(REPO, "packages");
 const SRC_DOMAINS = path.join(REPO, "src", "domains");
 const SRC_PACKS = path.join(REPO, "src", "packs");
-const PACKS_VOCAB = path.join(REPO, "src", "config", "discovery", "packs.yml");
 const PACKAGE_JSON = path.join(REPO, "package.json");
 
 type YamlValue =

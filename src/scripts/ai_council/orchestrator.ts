@@ -26,15 +26,17 @@ import {
     today_spend_usd as _today_spend_usd,
     would_exceed as _would_exceed_daily,
 } from './budget_guard.js';
+import type {
+    ExternalAIClient} from './clients.js';
 import {
     DEFAULT_MAX_TOKENS,
-    CouncilResponse,
-    ExternalAIClient,
+    CouncilResponse
 } from './clients.js';
+import type {
+    ConsensusMetadata,
+    Finding} from './consensus.js';
 import {
     ConsensusBucket,
-    ConsensusMetadata,
-    Finding,
     FindingScore,
     aggregate_scores,
     anonymize_findings,
@@ -43,14 +45,15 @@ import {
     parse_findings_response,
     parse_scores_response,
 } from './consensus.js';
-import {
+import type {
     CostEstimate,
-    PriceTable,
+    PriceTable} from './pricing.js';
+import {
     estimate_cost,
     estimate_input_tokens,
 } from './pricing.js';
-import { ProjectContext } from './project_context.js';
-import { AdvisorPlan } from './advisors.js';
+import type { ProjectContext } from './project_context.js';
+import type { AdvisorPlan } from './advisors.js';
 import {
     advisor_system_prompt,
     build_extraction_user_prompt,

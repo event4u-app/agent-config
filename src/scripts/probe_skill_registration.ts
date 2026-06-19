@@ -31,7 +31,7 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 
 export const TOOL_IDS = ['claude', 'augment', 'cursor', 'cline', 'windsurf', 'copilot'] as const;
 export const SCOPE_IDS = ['user', 'project'] as const;

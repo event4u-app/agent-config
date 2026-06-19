@@ -23,7 +23,8 @@ import {
     TraceHook,
     build_decision_gate_hook,
 } from './hooks/builtin/index.js';
-import { HookSettings, load_hook_settings } from './hooks/settings.js';
+import type { HookSettings} from './hooks/settings.js';
+import { load_hook_settings } from './hooks/settings.js';
 
 /**
  * Build the CLI-side {@link HookRegistry} for one `main()` run.

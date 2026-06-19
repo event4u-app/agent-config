@@ -29,8 +29,10 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { SkillRuntime, build_registry } from './runtime_registry.js';
-import { ExecutionResult, HandlerError, execute_shell } from './runtime_handler.js';
+import type { SkillRuntime} from './runtime_registry.js';
+import { build_registry } from './runtime_registry.js';
+import type { ExecutionResult} from './runtime_handler.js';
+import { HandlerError, execute_shell } from './runtime_handler.js';
 import { resolve_level } from './_lib/script_output.js';
 
 const _HERE = fileURLToPath(import.meta.url);

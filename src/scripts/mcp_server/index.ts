@@ -19,6 +19,6 @@
 // SERVER_NAME.
 
 // Wire-surface SemVer. Hand-bumped when the MCP-side surface changes.
-// eslint-disable-next-line @typescript-eslint/naming-convention
+ 
 export const __version__ = '0.1.0';
 export const SERVER_NAME = 'agent-config';

@@ -10,9 +10,10 @@ import { mkdtempSync, rmSync, existsSync, writeFileSync, mkdirSync } from 'node:
 import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
 import { writeServerInfo, readServerInfo, clearServerInfo, serverInfoPath } from '../../src/server/serverInfo.js';
+import type * as NodeOs from 'node:os';
 
 vi.mock('node:os', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('node:os')>();
+    const actual = await importOriginal<typeof NodeOs>();
     return { ...actual, homedir: vi.fn(actual.homedir) };
 });
 

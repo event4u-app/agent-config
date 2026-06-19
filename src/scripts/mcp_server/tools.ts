@@ -47,6 +47,8 @@ import {
     not_implemented_envelope,
 } from './catalog.js';
 import { type Outcome, record_call } from './telemetry.js';
+import type { PromptCache } from './prompts.js';
+import type { ResourceCache } from './resources.js';
 
 // Stable transport tag for the stub envelope. Mirrored verbatim by
 // `internal/workers/mcp/src/stubs.ts` with `"worker"`.
@@ -454,10 +456,10 @@ async function _memoryStatusHandler(
 const _PROMPT_CACHES = new Map<string, unknown>();
 const _RESOURCE_CACHES = new Map<string, unknown>();
 
-async function _getPromptCache(consumerRoot: string): Promise<import('./prompts.js').PromptCache> {
+async function _getPromptCache(consumerRoot: string): Promise<PromptCache> {
     const { PromptCache } = await import('./prompts.js');
     const key = _resolvePath(consumerRoot);
-    let cache = _PROMPT_CACHES.get(key) as import('./prompts.js').PromptCache | undefined;
+    let cache = _PROMPT_CACHES.get(key) as PromptCache | undefined;
     if (cache === undefined) {
         cache = new PromptCache(consumerRoot);
         _PROMPT_CACHES.set(key, cache);
@@ -467,10 +469,10 @@ async function _getPromptCache(consumerRoot: string): Promise<import('./prompts.
 
 async function _getResourceCache(
     consumerRoot: string,
-): Promise<import('./resources.js').ResourceCache> {
+): Promise<ResourceCache> {
     const { ResourceCache } = await import('./resources.js');
     const key = _resolvePath(consumerRoot);
-    let cache = _RESOURCE_CACHES.get(key) as import('./resources.js').ResourceCache | undefined;
+    let cache = _RESOURCE_CACHES.get(key) as ResourceCache | undefined;
     if (cache === undefined) {
         cache = new ResourceCache(consumerRoot);
         _RESOURCE_CACHES.set(key, cache);

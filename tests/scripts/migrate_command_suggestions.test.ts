@@ -25,7 +25,6 @@ import {
 } from '../../src/scripts/migrate_command_suggestions.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'migrate_command_suggestions.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',

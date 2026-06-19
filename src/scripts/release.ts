@@ -90,14 +90,14 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import type {
+    SplitPlan} from './_lib/changelog_eras.js';
 import {
     CURRENT_ERA_BODY_CAP,
-    SplitPlan,
     current_era_body_size,
     current_era_insertion_point,
     perform_split,
     plan_split,
-    read_changelog_lines,
 } from './_lib/changelog_eras.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
@@ -425,13 +425,6 @@ function run(
 function git(args: readonly string[], opts: { capture?: boolean } = {}): string {
     const capture = opts.capture ?? false;
     const r = run(['git', ...args], { capture });
-    return capture ? r.stdout.trim() : '';
-}
-
-function gh(args: readonly string[], opts: { capture?: boolean; check?: boolean } = {}): string {
-    const capture = opts.capture ?? false;
-    const check = opts.check ?? true;
-    const r = run(['gh', ...args], { capture, check });
     return capture ? r.stdout.trim() : '';
 }
 

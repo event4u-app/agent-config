@@ -44,6 +44,7 @@ import {
     load_agent_settings,
 } from '../_lib/agent_settings.js';
 import * as profile_explain from './profile_explain.js';
+import type * as YamlModule from 'yaml';
 
 // `any` mirrors Python's `dict[str, Any]` heterogeneous manifest / overlay.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,11 +109,11 @@ function _read_yaml(p: string): Any {
     if (!_exists(p)) {
         return null;
     }
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require mirrors Python's `import yaml` (yaml is None on failure).
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = _require('yaml') as typeof import('yaml');
+         
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         return null;
     }
@@ -292,10 +293,10 @@ function _write_local(repo_root: string, data: Dict): void {
         '# Per-machine local overrides (gitignored, deepest-winning layer).\n' +
         '# `runtime.active_packs` is the EPHEMERAL session-profile overlay —\n' +
         '# managed by `/profile`. Delete the key (or this file) to reset.\n';
-    let YAML: typeof import('yaml') | null;
+    let YAML: typeof YamlModule | null;
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = _require('yaml') as typeof import('yaml');
+         
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         YAML = null;
     }

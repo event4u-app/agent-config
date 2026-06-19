@@ -19,9 +19,10 @@
  * Default-off: when `settings.decision_engine` is `null` or every gate is
  * `off` the hook short-circuits without examining state.
  */
+import type {
+    GateDecision} from '../../scoring/decision_engine.js';
 import {
     DecisionEngineSettings,
-    GateDecision,
     evaluate_gates,
 } from '../../scoring/decision_engine.js';
 import {
@@ -30,10 +31,10 @@ import {
     summarise_memory,
     summarise_verify,
 } from '../../scoring/decision_trace.js';
-import { HookContext } from '../context.js';
+import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError, HookHalt } from '../exceptions.js';
-import { HookRegistry } from '../registry.js';
+import type { HookRegistry } from '../registry.js';
 
 /** Arbitrary value, mirroring the Python `Any` fields. */
 type Any = unknown;

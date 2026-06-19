@@ -58,6 +58,7 @@ import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import type * as YamlModule from 'yaml';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -458,9 +459,9 @@ function collect_bundles(repo_root: string): Bundle[] {
     if (!fs.existsSync(reg)) {
         return [];
     }
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
-        YAML = _require('yaml') as typeof import('yaml');
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         return [];
     }

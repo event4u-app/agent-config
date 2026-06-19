@@ -91,7 +91,7 @@ const _MONEY_RE = new RegExp(
 /** Python `len()` — counts Unicode code points, not UTF-16 units. */
 function pyLen(s: string): number {
     let n = 0;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     for (const _ch of s) {
         n += 1;
     }

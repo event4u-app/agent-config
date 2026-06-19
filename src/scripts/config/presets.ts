@@ -25,6 +25,7 @@ import * as path from 'node:path';
 
 import { logger } from '../_lib/agent_settings.js';
 import { artefact_roots } from '../_lib/agent_src.js';
+import type * as YamlModule from 'yaml';
 
 // ESM-standard `require` shim — works whether this module is imported or run
 // directly (mirrors Python's lazy `import yaml`).
@@ -91,12 +92,12 @@ export class PresetError extends Error {
 }
 
 function _load_yaml(p: string): Dict {
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require mirrors Python's lazy `import yaml` — a missing package
         // degrades to `{}` (empty knobs) instead of crashing.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = _require('yaml') as typeof import('yaml');
+         
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         logger.info('PyYAML unavailable; preset %s returned empty', p);
         return {};

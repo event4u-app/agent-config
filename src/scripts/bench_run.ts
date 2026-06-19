@@ -399,7 +399,7 @@ function _run_telegraph_live(_args: Args): number {
     // The client build is async; the Python flow is synchronous. We surface the
     // failure synchronously by attempting the import eagerly and reporting.
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+         
         const required = _tryRequireClients();
         if (required === null) {
             throw new Error('ai_council.clients twin not available');

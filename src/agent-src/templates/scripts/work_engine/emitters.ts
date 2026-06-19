@@ -15,8 +15,9 @@
 import * as fs from 'node:fs';
 
 import { Outcome } from './delivery_state.js';
-import { HookHalt } from './hooks/index.js';
-import { WorkState, dump } from './state.js';
+import type { HookHalt } from './hooks/index.js';
+import type { WorkState} from './state.js';
+import { dump } from './state.js';
 
 /**
  * Print the terminal surface for `final` to stdout.

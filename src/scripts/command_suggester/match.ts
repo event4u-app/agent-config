@@ -27,7 +27,8 @@
 
 import { pyRound } from '../_lib/value_ladder.js';
 import { sanitize_context, sanitize_message } from './sanitize.js';
-import { CommandSpec, Match } from './types.js';
+import type { CommandSpec} from './types.js';
+import { Match } from './types.js';
 
 const _TICKET_RE = /[A-Z][A-Z0-9]+-\d+/;
 // Global variant for `findall`-style iteration where needed.

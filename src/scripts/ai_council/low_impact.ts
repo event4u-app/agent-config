@@ -37,6 +37,7 @@
 import { pyRound } from '../_lib/value_ladder.js';
 import type { CouncilResponse, ExternalAIClient } from './clients.js';
 import type { LowImpactFastPathConfig, MemberConfig } from './config.js';
+import type { ImpactVerdict } from './necessity.js';
 import { CostBudget } from './orchestrator.js';
 
 // Token split ratio between input prompt and output budget when the
@@ -911,7 +912,7 @@ export async function classify_impact_with_corpus_fuzzy(
     question_text: string,
     corpus_paths: readonly string[] | null = null,
     opts: { threshold?: number } = {},
-): Promise<import('./necessity.js').ImpactVerdict> {
+): Promise<ImpactVerdict> {
     const threshold = opts.threshold ?? 0.92;
 
     const { load_anti_example_phrases, load_validated_phrases } = await import(

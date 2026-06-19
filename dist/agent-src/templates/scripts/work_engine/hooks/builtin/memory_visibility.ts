@@ -20,10 +20,10 @@ import {
     should_emit,
     summarise_visibility,
 } from '../../scoring/memory_visibility.js';
-import { HookContext } from '../context.js';
+import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError } from '../exceptions.js';
-import { HookRegistry } from '../registry.js';
+import type { HookRegistry } from '../registry.js';
 
 /** Arbitrary value, mirroring the Python `Any` fields. */
 type Any = unknown;
@@ -92,7 +92,7 @@ export class MemoryVisibilityHook {
         const sep = existing ? '\n\n' : '';
         try {
             (work as Record<string, Any>)['report'] = `${existing}${sep}${rendered}`;
-        } catch (exc) {
+        } catch (_exc) {
             throw new HookError('memory-visibility: state.report not writable');
         }
     }

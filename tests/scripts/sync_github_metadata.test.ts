@@ -22,13 +22,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as sgm from '../../src/scripts/sync_github_metadata.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'sync_github_metadata.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 let tmp: string;
 

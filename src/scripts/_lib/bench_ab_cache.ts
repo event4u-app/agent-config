@@ -131,7 +131,7 @@ export function hash_file(filePath: string): string {
   try {
     const buf = Buffer.allocUnsafe(65536);
     let read: number;
-    // eslint-disable-next-line no-cond-assign
+     
     while ((read = fs.readSync(fd, buf, 0, buf.length, null)) > 0) {
       h.update(buf.subarray(0, read));
     }

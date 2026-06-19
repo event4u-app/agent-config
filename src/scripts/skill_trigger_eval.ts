@@ -495,7 +495,7 @@ export function require_confirmation(
         try {
             fdIn = fs.openSync('/dev/tty', 'r');
             fdOut = fs.openSync('/dev/tty', 'w');
-        } catch (exc) {
+        } catch (_exc) {
             throw new ConfirmationAborted(
                 'Confirmation requires a controlling terminal (/dev/tty). ' +
                     'Refusing to run under automation.',

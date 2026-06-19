@@ -22,6 +22,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { DatabaseSync } from 'node:sqlite';
+import type * as NodeSqlite from 'node:sqlite';
 
 import { TELEMETRY_FILENAME, TELEMETRY_REL_DIR } from './mcp_server/telemetry.js';
 
@@ -190,7 +191,7 @@ function _silenceSqliteExperimentalWarning(): void {
 }
 
 /** Lazy `node:sqlite` import — keeps the module loadable on a runtime without it. */
-async function _loadSqlite(): Promise<typeof import('node:sqlite')> {
+async function _loadSqlite(): Promise<typeof NodeSqlite> {
     _silenceSqliteExperimentalWarning();
     try {
         return await import('node:sqlite');

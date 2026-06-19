@@ -62,14 +62,14 @@
  * - `signal.SIGTERM`/`SIGKILL` + `os.kill(pid, 0)` liveness → `process.kill`.
  */
 
-import { spawnSync, spawn } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
-import * as readline from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import type * as YamlModule from 'yaml';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
 import * as installed_lock from './_lib/installed_lock.js';
@@ -274,8 +274,6 @@ function utcStamp(now?: Date): string {
 
 // --- JSON byte-parity (ensure_ascii=False; insertion order) ---
 
-type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
-
 function _jsonStrNoAscii(s: string): string {
     // json.dumps(ensure_ascii=False): escape control chars + " + \, keep >=0x20
     let out = '"';
@@ -378,10 +376,10 @@ function jsonDumpsCompact(value: unknown): string {
 
 /** Lazy YAML safe_load mirroring PyYAML (version 1.1), `{}` on every error. */
 function yamlSafeLoad(text: string): unknown {
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = require('yaml') as typeof import('yaml');
+        YAML = require('yaml') as typeof YamlModule;
     } catch {
         return null; // ImportError → callers collapse to {}
     }

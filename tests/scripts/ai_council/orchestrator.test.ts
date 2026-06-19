@@ -22,6 +22,8 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
 import { CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
+import type {
+    OverrunEvent} from '../../../src/scripts/ai_council/orchestrator.js';
 import {
     consult,
     CostBudget,
@@ -29,7 +31,6 @@ import {
     DebateCapExceeded,
     estimate,
     estimate_debate_cost,
-    OverrunEvent,
     render,
     run_consensus_scoring,
     run_debate,

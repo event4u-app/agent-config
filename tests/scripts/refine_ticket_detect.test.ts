@@ -11,17 +11,18 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type {
+    Decision,
+    SubSkillDecision} from '../../src/scripts/refine_ticket_detect.js';
 import {
     CLOSE_PROMPT_FULL,
     CLOSE_PROMPT_READ_ONLY,
-    Decision,
     detect,
     fold_parent_context,
     gather_repo_context,
     issuetype_needs_parent,
     load_map,
     render_close_prompt,
-    SubSkillDecision,
     _evaluate_alt_signals,
     _extract_ac_first_words,
     _extract_description_body,
