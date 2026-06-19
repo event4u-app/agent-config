@@ -210,7 +210,14 @@ function syntheticReport(): Dict {
     };
 }
 
-describe('differential: render_md_dump TS == Python (byte-exact)', () => {
+// py2ts: obsolete migration-era TS-vs-frozen-Python differential. The .py
+// original is deleted, so this is no longer a live parity check; the TS twin
+// is the source of truth (its shape + per-section rendering are covered by the
+// `assemble_value_v1` / `write_value_report` / `render_md_dump` tests above).
+// The live-disk "graceful-degradation" variant's oracle key is also
+// non-portable across checkouts (embeds repo state). Retired — see
+// road-to-py2ts-teardown.md Phase 5 (live-parity retirement).
+describe.skip('differential: render_md_dump TS == Python (byte-exact)', () => {
     it('renders a fully-populated report identically', () => {
         const report = syntheticReport();
         const tsMd = R.render_md_dump(report);

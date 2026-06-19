@@ -20,6 +20,7 @@ import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify'
 import { promises as fs, existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
@@ -350,14 +351,26 @@ function installerInvocation(scriptPath: string, args: readonly string[]): {
     args: string[];
 } {
     const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
-    let dir = dirname(scriptPath);
-    for (;;) {
-        const candidate = join(dir, 'node_modules', '.bin', binName);
-        if (existsSync(candidate)) return { command: candidate, args: [scriptPath, ...args] };
-        const parent = dirname(dir);
-        if (parent === dir) break;
-        dir = parent;
-    }
+    const findUpward = (startDir: string): string | null => {
+        let dir = startDir;
+        for (;;) {
+            const candidate = join(dir, 'node_modules', '.bin', binName);
+            if (existsSync(candidate)) return candidate;
+            const parent = dirname(dir);
+            if (parent === dir) return null;
+            dir = parent;
+        }
+    };
+    // 1) beside the script (a real consumer install ships node_modules there).
+    const fromScript = findUpward(dirname(scriptPath));
+    if (fromScript !== null) return { command: fromScript, args: [scriptPath, ...args] };
+    // 2) the running server's OWN package tsx. Preferred over `npx tsx`, which
+    // is fragile offline (cold esbuild fetch → ENOENT) and does not reliably
+    // forward SIGTERM to the child — breaking abort-on-disconnect (the SSE
+    // apply route kills the child on client drop). The server always ships
+    // from a package that has node_modules/.bin/tsx.
+    const fromSelf = findUpward(dirname(fileURLToPath(import.meta.url)));
+    if (fromSelf !== null) return { command: fromSelf, args: [scriptPath, ...args] };
     return { command: 'npx', args: ['tsx', scriptPath, ...args] };
 }
 

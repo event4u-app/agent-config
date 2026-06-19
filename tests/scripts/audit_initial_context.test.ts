@@ -9,6 +9,7 @@
 //     compared byte-identical after normalising that single line.
 // Skipped without python3.
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -32,7 +33,10 @@ function normalizeGenerated(s: string): string {
 }
 
 describe('audit_initial_context — pure helpers', () => {
-    it('rule_footprint returns per-tool chars/token measures', () => {
+    // Reads the gitignored generated tool projections (.claude/rules, …) which
+    // exist after `task generate-tools`/`sync` but are absent in a bare CI
+    // checkout. Skip when none are present rather than assert a count.
+    it.skipIf(!existsSync(path.join(REPO_ROOT, '.claude', 'rules')))('rule_footprint returns per-tool chars/token measures', () => {
         const rf = aic.rule_footprint();
         // .claude/rules exists in the repo → at least one tool measured.
         expect(Object.keys(rf).length).toBeGreaterThan(0);

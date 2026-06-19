@@ -43,7 +43,10 @@ describe('bench_per_tool — pure helpers', () => {
         expect(m.size).toBe(0);
     });
 
-    it('load_descriptions reads name + description from .augment/skills', () => {
+    // .augment/skills is a gitignored generated projection (symlink → dist);
+    // present after `task sync` but absent in a bare CI checkout. Skip when
+    // absent (the empty-dir contract is covered by the test above).
+    it.skipIf(!fs.existsSync(path.join(REPO_ROOT, '.augment', 'skills')))('load_descriptions reads name + description from .augment/skills', () => {
         const m = bpt.load_descriptions(path.join(REPO_ROOT, '.augment', 'skills'));
         expect(m.size).toBeGreaterThan(0);
         // Each value is "name description" (name prefixed).
