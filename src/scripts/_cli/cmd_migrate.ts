@@ -68,13 +68,21 @@
  *   inputs and a single replace mirrors the canonical single-block shape).
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
-import { migrate_file as _v0_migrate_file } from '../../agent-src/templates/scripts/work_engine/migration/v0_to_v1.js';
+// NOTE: the v0→v1 migrator is NOT statically imported. It lives in the
+// consumer-shipped work_engine template, which ships as `.ts` (run via tsx),
+// while this CLI is compiled to `dist/cli/*.js` and run under plain `node` in
+// a consumer install. A static import would resolve the template's `.js`
+// specifier into the uncompiled template tree (`.ts` only) and crash the whole
+// CLI at module load — breaking every command (e.g. `agent-config init`).
+// `_load_state_migrator` spawns it via tsx instead (the install orchestrator
+// pattern), keeping the migrator lazy like the Python original.
 
 const PACKAGE_NAME_NPM = '@event4u/agent-config';
 const PACKAGE_NAME_COMPOSER = 'event4u/agent-config';
@@ -510,18 +518,53 @@ type StateMigrator = (
 
 /** Import the v0→v1 state migrator from the shipped engine. */
 function _load_state_migrator(): StateMigrator | null {
-    // Python resolves `parents[3]` (repo root) then
-    // `dist/agent-src/templates/scripts/work_engine/migration`. The eager
-    // static import above already binds the shipped `.ts` twin (located under
-    // `src/agent-src/...` at dev time, projected to `dist/...` when shipped);
-    // we preserve the directory-existence guard so a stripped install with no
-    // engine yields `null` exactly like the Python ImportError path.
+    // Locate the shipped v0→v1 migration driver (`.ts`). Prefer the shipped
+    // `dist/` tree; fall back to the dev `src/` tree. A stripped install with
+    // no engine yields `null` (Python ImportError parity).
     const pkg_root = path.resolve(_HERE_DIR, '..', '..', '..');
-    const engine_root = path.join(pkg_root, 'dist/agent-src', 'templates', 'scripts');
-    if (!_isDir(path.join(engine_root, 'work_engine', 'migration'))) {
+    const rel = path.join(
+        'agent-src', 'templates', 'scripts', 'work_engine', 'migration', 'v0_to_v1.ts',
+    );
+    const driver =
+        [path.join(pkg_root, 'dist', rel), path.join(pkg_root, 'src', rel)].find((p) =>
+            fs.existsSync(p),
+        ) ?? null;
+    if (driver === null) {
         return null;
     }
-    return _v0_migrate_file;
+    // Resolve a tsx runner (the CLI runs under plain `node`; the driver is a
+    // `.ts` template). Walk up for a local node_modules/.bin/tsx, else npx.
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    let tsxBin: string | null = null;
+    for (let dir = pkg_root; ; ) {
+        const cand = path.join(dir, 'node_modules', '.bin', binName);
+        if (fs.existsSync(cand)) {
+            tsxBin = cand;
+            break;
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+    }
+    const command = tsxBin ?? 'npx';
+    const prefix = tsxBin !== null ? [] : ['tsx'];
+
+    return (source: string, opts: { destination?: string | null; backup?: boolean } = {}): string => {
+        const args = [...prefix, driver, source];
+        if (opts.destination !== undefined && opts.destination !== null) {
+            args.push('--destination', opts.destination);
+        }
+        if (opts.backup === false) {
+            args.push('--no-backup');
+        }
+        const r = spawnSync(command, args, { encoding: 'utf8' });
+        if (r.status !== 0) {
+            throw new Error(
+                `v0→v1 state migration failed (exit ${r.status ?? 'null'}): ${(r.stderr ?? '').trim()}`,
+            );
+        }
+        return (r.stdout ?? '').trim();
+    };
 }
 
 /**
