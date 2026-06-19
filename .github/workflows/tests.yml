@@ -81,6 +81,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # The installer is now TypeScript (install.ts via tsx); the bridges stage
+      # + skill-registration probe resolve node_modules/.bin/tsx. Without a
+      # local install, resolve_tsx_bin falls back to `npx tsx`, whose on-the-fly
+      # fetch fails offline (esbuild ENOENT). Provide node_modules up front.
+      - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
+        run: npm ci
+
       - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
         run: bash tests/test_install.sh --parallel 9
 
@@ -100,6 +112,17 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # The installer is now TypeScript (install.ts via tsx); without a local
+      # install, resolve_tsx_bin falls back to `npx tsx` whose fetch fails
+      # offline (esbuild ENOENT). Provide node_modules up front.
+      - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
+        run: npm ci
 
       - name: Run install orchestrator integration tests
         # Default nproc on macOS-arm64 runners returns 3, bottlenecking
