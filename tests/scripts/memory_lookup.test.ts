@@ -8,7 +8,7 @@
 // retrieve() via a python3 -c driver and the CLI surfaces on identical
 // fixtures — asserting byte-exact output, skipped without python3.
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -25,7 +25,7 @@ function pythonAvailable(): boolean {
 }
 const HAVE_PYTHON = pythonAvailable();
 
-const { Hit } = ml;
+type Hit = InstanceType<typeof ml.Hit>;
 
 // dedent helper mirroring textwrap.dedent.
 function dedent(s: string): string {
@@ -90,7 +90,7 @@ describe('memory_lookup.ts — retrieve()', () => {
             path: "app/Http/Controllers/Billing/**"
     `,
         );
-        const hits = ml.retrieve(['ownership'], ['billing'], 5) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['ownership'], ['billing'], 5) as Hit[];
         expect(hits.length).toBe(1);
         expect(hits[0]?.id).toBe('own-1');
         expect(hits[0]?.source).toBe('curated');
@@ -113,7 +113,7 @@ describe('memory_lookup.ts — retrieve()', () => {
         feature: "billing"
     `,
         );
-        const hits = ml.retrieve(['domain-invariants'], ['billing']) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['domain-invariants'], ['billing']) as Hit[];
         expect(hits.length).toBe(1);
         expect(hits[0]?.id).toBe('di-1');
         expect(hits[0]?.source).toBe('curated');
@@ -127,7 +127,7 @@ describe('memory_lookup.ts — retrieve()', () => {
             intake,
             JSON.stringify({ id: 'i-1', entry_type: 'historical-patterns', path: 'app/Http/Foo.php', body: 'off-by-one' }) + '\n',
         );
-        const hits = ml.retrieve(['historical-patterns'], ['foo.php']) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['historical-patterns'], ['foo.php']) as Hit[];
         expect(hits.length).toBe(1);
         expect(hits[0]?.source).toBe('intake');
         expect(hits[0]?.score).toBeGreaterThan(0);
@@ -146,7 +146,7 @@ describe('memory_lookup.ts — retrieve()', () => {
                 JSON.stringify({ type: 'supersede', supersedes: 'i-1' }),
             ].join('\n') + '\n',
         );
-        const hits = ml.retrieve(['incident-learnings'], ['queue']) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['incident-learnings'], ['queue']) as Hit[];
         const ids = hits.map((h) => h.id);
         expect(ids).toContain('i-2');
         expect(ids, 'superseded entries must not be returned').not.toContain('i-1');
@@ -163,7 +163,7 @@ describe('memory_lookup.ts — retrieve()', () => {
             path: "x"
     `,
         );
-        const hits = ml.retrieve(['ownership', 'not-a-type'], ['x']) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['ownership', 'not-a-type'], ['x']) as Hit[];
         expect(hits.length).toBe(1);
         expect(hits[0]?.type).toBe('ownership');
     });
@@ -172,7 +172,7 @@ describe('memory_lookup.ts — retrieve()', () => {
         chdirInto(tmp);
         const entries = Array.from({ length: 10 }, (_, i) => `  - id: own-${i}\n    path: "src/${i}"`).join('\n');
         write(join(tmp, 'agents/memory/ownership.yml'), `version: 1\nentries:\n${entries}\n`);
-        const hits = ml.retrieve(['ownership'], ['src/'], 3) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['ownership'], ['src/'], 3) as Hit[];
         expect(hits.length).toBe(3);
     });
 
@@ -209,7 +209,7 @@ describe('memory_lookup.ts — retrieve()', () => {
         writeKnowledgeIngest('018f4a1b-0000-7000-8000-000000000001', '/Users/maintainer/clients/acme/brief.pdf', [
             'Acme pricing model uses tiered SaaS billing.',
         ]);
-        const hits = ml.retrieve(['knowledge'], ['acme'], 5) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['knowledge'], ['acme'], 5) as Hit[];
         expect(hits.length).toBe(1);
         expect(hits[0]?.type).toBe('knowledge');
         expect(hits[0]?.source).toBe('knowledge');
@@ -226,10 +226,10 @@ describe('memory_lookup.ts — retrieve()', () => {
         chdirInto(tmp);
         writeKnowledgeIngest('018f4a1b-0000-7000-8000-000000000002', 'docs/normal.md', ['acme normal content'], false);
         writeKnowledgeIngest('018f4a1b-0000-7000-8000-000000000003', 'docs/pinned.md', ['acme pinned content'], true);
-        const hits = ml.retrieve(['knowledge'], ['acme'], 5) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['knowledge'], ['acme'], 5) as Hit[];
         expect(hits.length).toBe(2);
-        const pinnedHit = hits.find((h) => (h.entry as Record<string, unknown>)['pinned']) as InstanceType<typeof Hit>;
-        const normalHit = hits.find((h) => !(h.entry as Record<string, unknown>)['pinned']) as InstanceType<typeof Hit>;
+        const pinnedHit = hits.find((h) => (h.entry as Record<string, unknown>)['pinned']) as Hit;
+        const normalHit = hits.find((h) => !(h.entry as Record<string, unknown>)['pinned']) as Hit;
         expect(pinnedHit.score).toBeGreaterThanOrEqual(normalHit.score);
     });
 
@@ -283,7 +283,7 @@ describe('memory_lookup.ts — supersession & staleness', () => {
             { id: 'own-active', status: 'active', path: 'app/Http/Controllers/Billing/**', owner: 'team-payments' },
             { id: 'own-superseded', status: 'superseded', path: 'app/Http/Controllers/Billing/**', owner: 'team-payments' },
         ]);
-        const hits = ml.retrieve(['ownership'], ['billing']) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['ownership'], ['billing']) as Hit[];
         const hitIds = hits.map((h) => h.id);
         expect(hitIds).toContain('own-active');
         expect(hitIds).not.toContain('own-superseded');
@@ -315,7 +315,7 @@ describe('memory_lookup.ts — supersession & staleness', () => {
             },
         ]);
         // retrieve() (real today, which is ≥ 2026-06-15 → the 200-day-old entry stays stale)
-        const hits = ml.retrieve(['ownership'], ['billing']) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['ownership'], ['billing']) as Hit[];
         const hitIds = hits.map((h) => h.id);
         expect(hitIds).not.toContain('own-stale');
         expect(hitIds).toContain('own-fresh');
@@ -454,7 +454,7 @@ describe.skipIf(!HAVE_PYTHON)('memory_lookup — golden parity', () => {
         ml._setMemoryRoot(join('agents', 'memory'));
         ml._setIntakeRoot(join('agents', 'memory', 'intake'));
         ml._setKnowledgeRoot(join('agents', 'memory', 'knowledge'));
-        const hits = ml.retrieve(['ownership', 'historical-patterns'], ['billing'], 5) as InstanceType<typeof Hit>[];
+        const hits = ml.retrieve(['ownership', 'historical-patterns'], ['billing'], 5) as Hit[];
         process.chdir(prev);
         // Compare structurally (key-sorted JSON) to match the driver's dump.
         const tsJson = JSON.stringify(

@@ -29,13 +29,14 @@ import * as fs from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import * as path from 'node:path';
+import type * as YamlModule from 'yaml';
 
 // Mirrors Python's top-level `import yaml` (with its ImportError → exit 3
 // fallback). `yaml` is a hard dependency; version '1.1' matches PyYAML's
 // safe_load tolerance, including date scalars parsed to a Date. Resolved
 // relative to THIS module (not cwd) because the script runs `git diff` in the
 // caller's cwd, which may carry its own (possibly invalid) package.json.
-const YAML = createRequire(import.meta.url)('yaml') as typeof import('yaml');
+const YAML = createRequire(import.meta.url)('yaml') as typeof YamlModule;
 
 export const LEVELS = ['high', 'medium', 'low'] as const;
 export const STALE_MONTHS = 6;

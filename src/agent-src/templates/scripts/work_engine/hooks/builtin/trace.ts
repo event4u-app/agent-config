@@ -9,10 +9,11 @@
  * Pure observability — never mutates context, never halts. A misbehaving sink
  * raises {@link HookError}, which the runner swallows with a warning.
  */
-import { HOOK_EVENTS, HookEvent } from '../events.js';
-import { HookContext } from '../context.js';
+import type { HookEvent } from '../events.js';
+import { HOOK_EVENTS } from '../events.js';
+import type { HookContext } from '../context.js';
 import { HookError } from '../exceptions.js';
-import { HookCallback, HookRegistry } from '../registry.js';
+import type { HookCallback, HookRegistry } from '../registry.js';
 
 /** Arbitrary value, mirroring the Python `Any` fields. */
 type Any = unknown;

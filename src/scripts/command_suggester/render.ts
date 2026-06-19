@@ -18,7 +18,7 @@
  * for.
  */
 
-import { CommandSpec, Match } from './types.js';
+import type { CommandSpec, Match } from './types.js';
 
 export const AS_IS_LABEL = 'Just run the prompt as-is, no command';
 

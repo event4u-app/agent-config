@@ -19,7 +19,7 @@
  * 5. Cap at `settings.max_options`.
  */
 
-import { CommandSpec, Match, Settings } from './types.js';
+import type { CommandSpec, Match, Settings } from './types.js';
 
 const _LONELY_BAND = 0.1; // roadmap Phase 4: floor + 0.1 lonely-match threshold
 

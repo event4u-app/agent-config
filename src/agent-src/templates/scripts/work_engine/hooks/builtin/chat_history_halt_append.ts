@@ -6,10 +6,10 @@
  * Records a `--type decision` entry with the step name and any pending
  * questions so a fresh chat can resume from the persisted log alone.
  */
-import { HookContext } from '../context.js';
+import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError } from '../exceptions.js';
-import { HookRegistry } from '../registry.js';
+import type { HookRegistry } from '../registry.js';
 import { EXIT_OK, _ChatHistoryHookBase, _getattr, _pyJsonDumps } from './_chat_history_base.js';
 
 /** Arbitrary value, mirroring the Python `Any` payload values. */

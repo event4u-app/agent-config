@@ -32,8 +32,10 @@
  * AC + assumptions, the engine decides.
  */
 
-import { type Any, DeliveryState, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
-import { ConfidenceScore, DIMENSION_NAMES, score as _confidence_score } from '../../scoring/confidence.js';
+import type { DeliveryState} from '../../delivery_state.js';
+import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
+import type { ConfidenceScore} from '../../scoring/confidence.js';
+import { DIMENSION_NAMES, score as _confidence_score } from '../../scoring/confidence.js';
 
 const _MIN_TITLE_LEN = 3;
 const _MIN_AC_LEN = 10;

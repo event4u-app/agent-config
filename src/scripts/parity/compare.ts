@@ -10,7 +10,7 @@
  * programmatically (see replay.ts for the CLI wrapper).
  */
 
-import { Buffer } from "node:buffer";
+import type { Buffer } from "node:buffer";
 import { parse as parseYaml } from "yaml";
 
 export type NormalizeMode = "json" | "yaml" | "none";

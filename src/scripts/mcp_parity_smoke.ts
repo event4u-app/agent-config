@@ -524,7 +524,6 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
         if (arg === '-h' || arg === '--help') {
             process.stdout.write(usageText());
             process.exitCode = 0;
-            // eslint-disable-next-line @typescript-eslint/no-throw-literal
             throw new _HelpExit();
         } else if (arg === '--target' || arg.startsWith('--target=')) {
             if (arg.startsWith('--target=')) {

@@ -82,15 +82,6 @@ function isolateMultiRoot(source: string): void {
     });
 }
 
-/** Save full module state, run body, restore — mirrors setUp/tearDown. */
-function withSavedState<T>(body: () => T): T {
-    const saved = condense._getStateForTest();
-    try {
-        return body();
-    } finally {
-        condense._setStateForTest(saved);
-    }
-}
 
 // ===========================================================================
 // Ported from tests/test_condense.py

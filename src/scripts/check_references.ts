@@ -23,6 +23,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import type * as YamlModule from 'yaml';
 
 type Severity = 'error' | 'warning';
 
@@ -722,12 +723,12 @@ function _walk_yaml(data: unknown, paths: string[], skills: string[]): void {
 function check_memory_yaml(filepath: string, artifacts: Artifacts, root: string): BrokenRef[] {
     // Validate path/skill refs inside an engineering-memory YAML file.
     const broken: BrokenRef[] = [];
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require mirrors Python's optional `import yaml` — a missing
         // package degrades to no findings (text-ref checker still runs).
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = require('yaml') as typeof import('yaml');
+        YAML = require('yaml') as typeof YamlModule;
     } catch {
         return broken; // PyYAML optional; text-ref checker still runs
     }

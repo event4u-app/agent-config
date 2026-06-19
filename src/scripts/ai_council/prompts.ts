@@ -22,7 +22,7 @@
  * - `sorted(...)` for error messages mirrors Python `sorted()` (code-point
  *   ascending) via `[...].sort()` on ASCII keys.
  */
-import { ProjectContext } from './project_context.js';
+import type { ProjectContext } from './project_context.js';
 
 // Python: NEUTRALITY_PREAMBLE = """\...""".strip()
 export const NEUTRALITY_PREAMBLE = `You are an independent reviewer. You have NOT seen any prior reasoning,

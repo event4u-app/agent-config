@@ -25,7 +25,8 @@
  * rule. Otherwise it returns `SUCCESS` without mutating state.
  */
 
-import { DeliveryState, Outcome, StepResult } from '../../delivery_state.js';
+import type { DeliveryState} from '../../delivery_state.js';
+import { Outcome, StepResult } from '../../delivery_state.js';
 
 /** Declared ambiguity surfaces. Every BLOCKED return maps to one code. */
 export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [

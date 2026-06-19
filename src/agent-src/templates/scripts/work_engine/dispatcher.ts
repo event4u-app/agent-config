@@ -25,13 +25,15 @@
  * import order.
  */
 
-import {
+import type {
     DeliveryState,
+    StepResult} from './delivery_state.js';
+import {
     Outcome,
-    type Step,
-    StepResult,
+    type Step
 } from './delivery_state.js';
-import { HookContext, HookEvent, HookHalt, HookRunner } from './hooks/index.js';
+import type { HookHalt} from './hooks/index.js';
+import { HookContext, HookEvent, HookRunner } from './hooks/index.js';
 import { KNOWN_DIRECTIVE_SETS } from './state.js';
 
 // Static directive-set registry. The Python source uses `import_module` to load

@@ -22,13 +22,14 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as NodeChildProcess from 'node:child_process';
 
 // Capture log shared with the mocked spawnSync (declared before the hoisted
 // vi.mock factory references it via the module-scope binding).
 const capturedCommands: string[][] = [];
 
 vi.mock('node:child_process', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('node:child_process')>();
+    const actual = await importOriginal<typeof NodeChildProcess>();
     return {
         ...actual,
         spawnSync: (program: string, args: string[]) => {

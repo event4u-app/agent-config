@@ -12,9 +12,10 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import type {
+    PersonaPolicy} from '../../../src/agent-src/templates/scripts/work_engine/persona_policy.js';
 import {
     DEFAULT_PERSONA,
-    PersonaPolicy,
     known_personas,
     resolve_policy,
 } from '../../../src/agent-src/templates/scripts/work_engine/persona_policy.js';

@@ -42,6 +42,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import * as user_global_paths from './user_global_paths.js';
+import type * as YamlModule from 'yaml';
 
 /** JSON-ish value type — mirrors Python's `Any` for settings data. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -940,12 +941,12 @@ function _read_yaml(p: string): SettingsDict | null {
     if (!_is_file(p)) {
         return null;
     }
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require to mirror Python's lazy `import yaml` — a missing
         // package degrades to `null` (defaults) instead of crashing.
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = require('yaml') as typeof import('yaml');
+        YAML = require('yaml') as typeof YamlModule;
     } catch {
         return null;
     }

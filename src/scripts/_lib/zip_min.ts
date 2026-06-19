@@ -52,7 +52,7 @@ export function crc32(buf: Buffer): number {
 }
 
 function isAscii(s: string): boolean {
-    // eslint-disable-next-line no-control-regex
+     
     return /^[\x00-\x7f]*$/.test(s);
 }
 

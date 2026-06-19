@@ -22,8 +22,8 @@
  * the HookError is swallowed and dispatch continues — is preserved; the
  * exact stderr warning text is normalised in the golden harness.
  */
-import { HookContext } from './context.js';
-import { HookEvent } from './events.js';
+import type { HookContext } from './context.js';
+import type { HookEvent } from './events.js';
 import { HookError, HookHalt } from './exceptions.js';
 import { HookRegistry } from './registry.js';
 

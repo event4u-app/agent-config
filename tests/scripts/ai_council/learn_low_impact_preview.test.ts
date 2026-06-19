@@ -12,9 +12,10 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import type {
+    RefusedEntry} from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
 import {
     LearnLowImpactPreview,
-    RefusedEntry,
     build_preview,
 } from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
 import { hasPython3, runPyCode } from './_harness.js';
@@ -24,7 +25,6 @@ const py3 = hasPython3();
 // A leaked path + an email → both refused by the redactor. Assembled from
 // parts so this test file does not embed a literal home path / address that
 // trips secret/path linters.
-const LEAK_PATH = '/Users/' + 'demo' + '/secret.txt';
 const LEAK_EMAIL = 'admin' + '@' + 'example.com';
 
 function corpus(opts: { upstreamed?: string } = {}): string {

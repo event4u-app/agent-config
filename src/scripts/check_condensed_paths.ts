@@ -45,6 +45,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import type * as YamlModule from 'yaml';
 
 // ESM-standard `require` shim. The bare `require` global is present when this
 // module is *imported* (tsx injects it) but absent when the module is the
@@ -151,9 +152,9 @@ function _split_frontmatter(text: string): [Frontmatter | null, string] {
     }
     const fmText = text.slice(4, end);
     const body = text.slice(end + '\n---\n'.length);
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
-        YAML = _require('yaml') as typeof import('yaml');
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         return [null, text];
     }

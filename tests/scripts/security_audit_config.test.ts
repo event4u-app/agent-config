@@ -100,7 +100,7 @@ describe('security_audit_config — _scanMcp / _scanFrontmatter over built Scann
         expect(msgs).toContain(
             'automated execution with handler none/missing (runtime-safety)',
         );
-        expect(msgs.every((m) => hits[0]!.check === 'dangerous-frontmatter')).toBe(true);
+        expect(msgs.every((_m) => hits[0]!.check === 'dangerous-frontmatter')).toBe(true);
     });
 
     it('audit() of a clean dir scores every category A/100.0, overall A 100.0', () => {

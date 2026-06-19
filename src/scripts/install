@@ -66,7 +66,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_SH="$SCRIPT_DIR/install.sh"
-INSTALL_PY="$SCRIPT_DIR/install.py"
+INSTALL_TS="$SCRIPT_DIR/install.ts"
 
 SOURCE_DIR=""
 TARGET_DIR=""
@@ -305,17 +305,18 @@ if ! $GLOBAL && [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
     fi
 fi
 
-# Find python3 for the bridges stage (optional until SKIP_BRIDGES=false)
-find_python() {
-    local candidate path
-    for candidate in python3 python; do
-        path="$(command -v "$candidate" 2>/dev/null || true)"
-        [[ -z "$path" ]] && continue
-        if "$path" -c 'import sys; exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
-            echo "$path"
-            return 0
-        fi
-    done
+# Resolve the tsx runner for the bridges stage (Python→TypeScript migration —
+# the bridge engine is now install.ts, run via tsx). Echoes the runner command
+# on stdout; returns 1 when neither a local tsx binary nor npx is available.
+resolve_tsx_bin() {
+    if [[ -x "$SOURCE_DIR/node_modules/.bin/tsx" ]]; then
+        printf '%s' "$SOURCE_DIR/node_modules/.bin/tsx"
+        return 0
+    fi
+    if command -v npx >/dev/null 2>&1; then
+        printf '%s' "npx tsx"
+        return 0
+    fi
     return 1
 }
 
@@ -333,10 +334,10 @@ run_sync() {
 }
 
 run_bridges() {
-    local python_bin
-    if ! python_bin="$(find_python)"; then
-        $QUIET || echo "  ⚠️  Python 3 not found — skipping .agent-settings and bridge files." >&2
-        $QUIET || echo "      Install python3 and re-run: bash scripts/install --skip-sync" >&2
+    local tsx_bin
+    if ! tsx_bin="$(resolve_tsx_bin)"; then
+        $QUIET || echo "  ⚠️  tsx runner not found — skipping .agent-settings and bridge files." >&2
+        $QUIET || echo "      Run \`npm install\` in the package (provides node_modules/.bin/tsx), then re-run: bash scripts/install --skip-sync" >&2
         return 0
     fi
 
@@ -356,7 +357,8 @@ run_bridges() {
     $OFFLINE && args+=(--offline)
     $MINIMAL && args+=(--minimal)
     args+=(--tools="$TOOLS")
-    "$python_bin" "$INSTALL_PY" "${args[@]}"
+    # shellcheck disable=SC2086  # $tsx_bin may be "npx tsx" (two words) — intentional split.
+    $tsx_bin "$INSTALL_TS" "${args[@]}"
 }
 
 RC=0
@@ -368,8 +370,8 @@ RC=0
 # `./agent-config` wrapper on a confirmed-clean target.
 if $MINIMAL; then
     if ! $SKIP_BRIDGES; then
-        if [[ ! -f "$INSTALL_PY" ]]; then
-            err "Missing $INSTALL_PY"
+        if [[ ! -f "$INSTALL_TS" ]]; then
+            err "Missing $INSTALL_TS"
             exit 1
         fi
         run_bridges || RC=$?
@@ -401,8 +403,8 @@ if [[ $RC -ne 0 ]]; then
 fi
 
 if ! $SKIP_BRIDGES; then
-    if [[ ! -f "$INSTALL_PY" ]]; then
-        err "Missing $INSTALL_PY"
+    if [[ ! -f "$INSTALL_TS" ]]; then
+        err "Missing $INSTALL_TS"
         exit 1
     fi
     run_bridges || RC=$?

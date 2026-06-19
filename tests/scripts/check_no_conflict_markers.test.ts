@@ -201,8 +201,8 @@ describe.skipIf(!py3)('check_no_conflict_markers — golden parity (synthetic)',
         spawnSync('git', ['checkout', '-qb', 'feat'], big(work));
         fs.writeFileSync(path.join(work, 'm.txt'), 'theirs\n', 'utf-8');
         spawnSync('git', ['commit', '-aqm', 'theirs'], big(work));
-        spawnSync('git', ['checkout', '-q', 'main'], big(work)).status === 0 ||
-            spawnSync('git', ['checkout', '-q', 'master'], big(work));
+        void (spawnSync('git', ['checkout', '-q', 'main'], big(work)).status === 0 ||
+            spawnSync('git', ['checkout', '-q', 'master'], big(work)));
         fs.writeFileSync(path.join(work, 'm.txt'), 'mine\n', 'utf-8');
         spawnSync('git', ['commit', '-aqm', 'mine'], big(work));
         spawnSync('git', ['merge', 'feat'], big(work)); // conflicts, leaves unmerged index

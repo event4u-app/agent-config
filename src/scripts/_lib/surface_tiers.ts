@@ -17,6 +17,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import type * as YamlModule from 'yaml';
 
 // Conservative fallback if packs.yml is unreadable: the day-one lab packs.
 const _LAB_FALLBACK: ReadonlySet<string> = new Set(['ai-video', 'ai-image', 'fun']);
@@ -27,7 +28,7 @@ export function load_lab_pack_ids(repo_root: string): Set<string> {
     const ids = new Set<string>();
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const YAML = require('yaml') as typeof import('yaml');
+        const YAML = require('yaml') as typeof YamlModule;
         // version '1.1' matches PyYAML's safe_load.
         const data = YAML.parse(fs.readFileSync(vocab, 'utf-8'), { version: '1.1' });
         for (const entry of (data as unknown[]) ?? []) {

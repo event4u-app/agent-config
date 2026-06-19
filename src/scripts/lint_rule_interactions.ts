@@ -163,11 +163,6 @@ function _run(): number {
     }
 
     const seen_ids = new Set<string>();
-    const declared_set = new Set<string>(
-        Array.isArray(declared_rules_raw)
-            ? declared_rules.filter((r): r is string => typeof r === 'string')
-            : [],
-    );
     // Note: Python builds declared_set from the raw list (which may contain
     // non-strings); membership checks below use JS Set with string entries.
     const declared_set_all = new Set<unknown>(Array.isArray(declared_rules_raw) ? declared_rules : []);

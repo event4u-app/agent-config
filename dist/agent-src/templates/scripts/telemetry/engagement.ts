@@ -347,7 +347,7 @@ export function now_utc_iso(): string {
 /** Python `len(str)` — code-point count, not UTF-16 unit count. */
 export function _pyLen(s: string): number {
     let count = 0;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     for (const _ of s) {
         count += 1;
     }

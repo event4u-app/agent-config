@@ -35,11 +35,12 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import type {
+    CouncilResponse} from '../../../src/scripts/ai_council/clients.js';
 import {
     AnthropicClient,
     AnthropicCliClient,
     CliClient,
-    CouncilResponse,
     DEFAULT_ANTHROPIC_MODEL,
     DEFAULT_CLI_TIMEOUT_SECONDS,
     DEFAULT_GEMINI_MODEL,

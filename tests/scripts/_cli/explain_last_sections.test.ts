@@ -17,6 +17,8 @@
 // indent, the provider/pack empty-string skip, and the council citations
 // sub-block.
 import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -244,8 +246,6 @@ describe('explain_last state_loader — golden parity (importlib direct-file)', 
     }
 
     function tsLoad(stateJson: string | null): { ok: boolean; msg?: string; exit?: number } {
-        const fs = require('node:fs') as typeof import('node:fs');
-        const os = require('node:os') as typeof import('node:os');
         const d = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-'));
         const p = path.join(d, 's.json');
         if (stateJson !== null) {

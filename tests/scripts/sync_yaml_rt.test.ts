@@ -17,7 +17,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { Node, emit, heal_user_block, merge, parse, sync } from '../../src/scripts/sync_yaml_rt.js';
+import type { Node} from '../../src/scripts/sync_yaml_rt.js';
+import { emit, heal_user_block, merge, parse, sync } from '../../src/scripts/sync_yaml_rt.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');

@@ -8,10 +8,10 @@
  * converts them to warnings — append errors must not break the main flow.
  */
 import { Outcome } from '../../delivery_state.js';
-import { HookContext } from '../context.js';
+import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError } from '../exceptions.js';
-import { HookRegistry } from '../registry.js';
+import type { HookRegistry } from '../registry.js';
 import { EXIT_OK, _ChatHistoryHookBase, _getattr, _pyJsonDumps } from './_chat_history_base.js';
 
 /** Arbitrary value, mirroring the Python `Any` payload values. */

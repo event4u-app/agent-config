@@ -9,10 +9,10 @@
  * runner warns and continues — observability, not a gate.
  */
 import { SchemaError, type WorkState, from_dict, to_dict } from '../../state.js';
-import { HookContext } from '../context.js';
+import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError } from '../exceptions.js';
-import { HookRegistry } from '../registry.js';
+import type { HookRegistry } from '../registry.js';
 
 /** Round-trips the loaded `WorkState` against the v1 schema. */
 export class StateShapeValidationHook {

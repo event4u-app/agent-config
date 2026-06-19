@@ -34,11 +34,6 @@ function makeTmp(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'cr-'));
 }
 
-function writeFile(p: string, content: string): void {
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, content, 'utf-8');
-}
-
 // ===========================================================================
 // Port of test_check_references_allowlist.py
 // ===========================================================================

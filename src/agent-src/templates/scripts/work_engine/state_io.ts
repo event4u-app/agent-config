@@ -21,12 +21,13 @@ import {
     type Any as DeliveryAny,
 } from './delivery_state.js';
 import { _CLIError } from './errors.js';
+import type {
+    WorkState} from './state.js';
 import {
     DEFAULT_DIRECTIVE_SET,
     DEFAULT_INTENT,
     SCHEMA_VERSION,
     SchemaError,
-    WorkState,
     type Dict,
     type JsonValue,
     from_dict as _state_from_dict,

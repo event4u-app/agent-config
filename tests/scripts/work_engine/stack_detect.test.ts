@@ -28,7 +28,6 @@ import {
     DEFAULT_STACK,
     KNOWN_STACKS,
     StackResult,
-    detect_stack,
     latest_manifest_mtime,
 } from '../../../src/agent-src/templates/scripts/work_engine/stack/detect.js';
 

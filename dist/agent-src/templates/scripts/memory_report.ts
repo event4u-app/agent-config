@@ -524,7 +524,7 @@ export function _role_mode_stats(): RoleModeStats {
             files_scanned += 1;
             _MODE_MARKER_PATTERN.lastIndex = 0;
             let m: RegExpExecArray | null;
-            // eslint-disable-next-line no-cond-assign
+             
             while ((m = _MODE_MARKER_PATTERN.exec(text)) !== null) {
                 const slug = (m[1] as string).toLowerCase();
                 counts.set(slug, (counts.get(slug) ?? 0) + 1);

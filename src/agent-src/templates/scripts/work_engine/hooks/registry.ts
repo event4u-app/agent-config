@@ -9,8 +9,8 @@
  * not catch exceptions, and does not know about the error contract; that
  * responsibility lives in {@link HookRunner}.
  */
-import { HookContext } from './context.js';
-import { HookEvent } from './events.js';
+import type { HookContext } from './context.js';
+import type { HookEvent } from './events.js';
 
 /**
  * A hook callback. Returns `void` on success, throws `HookError` or

@@ -119,21 +119,21 @@ function main(): number {
 
     if (empties.length === 0) {
         if (!QUIET) {
-            console.log('✅  lint-empty-roadmaps: no empty roadmap files.');
+            process.stdout.write('✅  lint-empty-roadmaps: no empty roadmap files.\n');
         }
         return 0;
     }
 
-    console.log('❌  lint-empty-roadmaps: empty (0-byte / whitespace-only) roadmap file(s):');
+    process.stdout.write('❌  lint-empty-roadmaps: empty (0-byte / whitespace-only) roadmap file(s):\n');
     for (const rel of empties) {
-        console.log(`      ${rel}`);
+        process.stdout.write(`      ${rel}\n`);
     }
-    console.log('');
-    console.log('   A roadmap with no content is invalid. Either:');
-    console.log('     • restore the intended content, or');
-    console.log('     • delete the file (if its content lives in agents/roadmaps/archive/).');
-    console.log('   Empty roadmap stubs are usually an artefact of an auto-commit that');
-    console.log('   staged a 0-byte placeholder — remove it; do not commit it.');
+    process.stdout.write('\n');
+    process.stdout.write('   A roadmap with no content is invalid. Either:\n');
+    process.stdout.write('     • restore the intended content, or\n');
+    process.stdout.write('     • delete the file (if its content lives in agents/roadmaps/archive/).\n');
+    process.stdout.write('   Empty roadmap stubs are usually an artefact of an auto-commit that\n');
+    process.stdout.write('   staged a 0-byte placeholder — remove it; do not commit it.\n');
     return 1;
 }
 

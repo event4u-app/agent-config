@@ -43,6 +43,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import * as user_global_paths from './user_global_paths.js';
+import type * as YamlModule from 'yaml';
 
 // ESM has no `require`; `createRequire(import.meta.url)` restores it so the
 // lazy yaml load works under standalone tsx (the production dispatcher path),
@@ -946,11 +947,11 @@ function _read_yaml(p: string): SettingsDict | null {
     if (!_is_file(p)) {
         return null;
     }
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require to mirror Python's lazy `import yaml` — a missing
         // package degrades to `null` (defaults) instead of crashing.
-        YAML = _require('yaml') as typeof import('yaml');
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         return null;
     }

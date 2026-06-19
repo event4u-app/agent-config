@@ -20,7 +20,8 @@
  * and always returns `SUCCESS`.
  */
 
-import { type Any, DeliveryState, Outcome, StepResult } from '../../delivery_state.js';
+import type { DeliveryState} from '../../delivery_state.js';
+import { type Any, Outcome, StepResult } from '../../delivery_state.js';
 import { resolve_policy } from '../../persona_policy.js';
 
 /** Report rendering is pure and always succeeds — no blocked paths. */

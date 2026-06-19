@@ -24,6 +24,8 @@ import {
     bundle_prompt,
     bundle_roadmap,
 } from './ai_council/bundler.js';
+import type {
+    ExternalAIClient} from './ai_council/clients.js';
 import {
     DEFAULT_MAX_TOKENS,
     UNLIMITED_TOKENS_FALLBACK,
@@ -32,7 +34,6 @@ import {
     CliClient,
     CliClientError,
     CouncilResponse,
-    ExternalAIClient,
     GeminiClient,
     GeminiCliClient,
     ManualClient,
@@ -48,8 +49,9 @@ import {
     quota_summary_line,
     reset_cli_call_counts,
 } from './ai_council/clients.js';
+import type {
+    AdvisorPlan} from './ai_council/advisors.js';
 import {
-    AdvisorPlan,
     build_persona_labels,
     plan_advisor_swap,
 } from './ai_council/advisors.js';
@@ -73,12 +75,13 @@ import {
     downgrade_message,
     educate_message,
 } from './ai_council/necessity.js';
+import type {
+    DebateCheckpoint} from './ai_council/orchestrator.js';
 import {
     ConsensusResult,
     CostBudget,
     CouncilQuestion,
     DebateCapExceeded,
-    DebateCheckpoint,
     type DebateCostEstimate,
     PeerReviewResult,
     consult,
@@ -147,7 +150,6 @@ const _CLI_PROVIDERS: ReadonlySet<string> = new Set([
 // `PACKAGE_ROOT` is where `ai_council/*` lives — fixed relative to this
 // file. `REPO_ROOT` is the project the council operates on.
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
-const PACKAGE_ROOT = path.resolve(_HERE, '..');
 const [REPO_ROOT] = resolve_project_root(null);
 const SETTINGS_FILE = project_settings_path(REPO_ROOT);
 // User-global-first resolution (see `resolve_config_path`).

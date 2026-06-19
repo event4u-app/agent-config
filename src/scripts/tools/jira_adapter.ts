@@ -20,7 +20,8 @@
  */
 import { spawnSync } from 'node:child_process';
 
-import { BaseToolAdapter, ToolAction, ToolResult } from './base_adapter.js';
+import type { ToolAction} from './base_adapter.js';
+import { BaseToolAdapter, ToolResult } from './base_adapter.js';
 
 export const TIMEOUT_SECONDS = 15;
 

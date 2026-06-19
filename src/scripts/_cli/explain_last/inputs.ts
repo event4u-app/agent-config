@@ -19,6 +19,7 @@ import { DEFAULT_PROJECT_FILE, load_agent_settings, logger } from '../../_lib/ag
 import * as presets from '../../config/presets.js';
 import * as profiles from '../../config/profiles.js';
 import { scrub_string } from './scrubber.js';
+import type * as YamlModule from 'yaml';
 
 const _require = createRequire(import.meta.url);
 
@@ -164,11 +165,11 @@ export function build_pack(project_root: string): Record<string, unknown> | null
     if (marker === null) {
         return null;
     }
-    let YAML: typeof import('yaml');
+    let YAML: typeof YamlModule;
     try {
         // Lazy require mirrors Python's lazy `import yaml`.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        YAML = _require('yaml') as typeof import('yaml');
+         
+        YAML = _require('yaml') as typeof YamlModule;
     } catch {
         // ImportError → None.
         return null;

@@ -53,7 +53,7 @@ const _SECTION_KEYS: readonly Section[] = ['validated', 'probation', 'anti_examp
 // Heading-detection regex. `^##\s+<title>\s*$` accepts the canonical form;
 // anything else with the title text triggers `heading_drift`.
 // (Defined in Python but unused by the runtime path; kept for parity.)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const _HEADING_OK = /^##\s+(.+?)\s*$/u;
 
 // Canonical bullet form: `- "phrase"` followed by optional metadata.

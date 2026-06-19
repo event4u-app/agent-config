@@ -79,7 +79,7 @@ function _condense_prose_line(line: string): string {
     let last = 0;
     RE_PRESERVE_SPAN.lastIndex = 0;
     let m: RegExpExecArray | null;
-    // eslint-disable-next-line no-cond-assign
+     
     while ((m = RE_PRESERVE_SPAN.exec(line)) !== null) {
         parts.push(_condense_words(line.slice(last, m.index)));
         parts.push(m[0]);

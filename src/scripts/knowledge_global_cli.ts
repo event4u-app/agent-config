@@ -38,7 +38,6 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
-import { load_agent_settings } from './_lib/agent_settings.js';
 import type { SettingsDict, SettingsValue } from './_lib/agent_settings.js';
 import { write_atomic } from './_lib/fs_atomic.js';
 import * as kg from './_lib/knowledge_global.js';
@@ -601,7 +600,7 @@ function _dispatch(argv: string[]): number {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function _wrap<T>(cmd: string, rest: string[], parse: (rest: string[]) => T | number, run: (a: T) => number): number {
     const parsed = parse(rest);
     if (typeof parsed === 'number') {

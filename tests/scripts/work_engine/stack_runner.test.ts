@@ -20,7 +20,7 @@
 //  - `write_config` → the on-disk file bytes (incl. `sort_keys=True` + the
 //    trailing `\n`), again with `mtime` normalised. This exercises the
 //    `json.dumps(..., indent=2, sort_keys=True)` serialiser directly.
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -37,7 +37,6 @@ import {
     SPEED_FAST,
     SPEED_SLOW,
     ToolchainResult,
-    resolve_toolchain,
 } from '../../../src/agent-src/templates/scripts/work_engine/stack/runner.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');

@@ -31,7 +31,8 @@
  * derailed flow.
  */
 
-import { type Any, DeliveryState, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
+import type { DeliveryState} from '../../delivery_state.js';
+import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
 
 /** Declared ambiguity surfaces. Every BLOCKED return maps to one code. */
 export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
