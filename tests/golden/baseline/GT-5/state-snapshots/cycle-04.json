@@ -13,24 +13,24 @@
   "plan": [
     {
       "title": "Add negate(a)",
-      "detail": "Append negate(a: int) -> int to src/calculator.py"
+      "detail": "Append negate(a: number): number to src/calculator.ts"
     },
     {
       "title": "Add negate(a)",
-      "detail": "Append test_negate_returns_negation to tests/test_calculator.py"
+      "detail": "Append a negate test to tests/calculator.test.ts"
     },
     {
       "title": "Add negate(a)",
-      "detail": "Run pytest to confirm both edge cases pass"
+      "detail": "Run vitest to confirm both edge cases pass"
     }
   ],
   "changes": [
     {
-      "path": "src/calculator.py",
+      "path": "src/calculator.ts",
       "purpose": "applied by GT recipe"
     },
     {
-      "path": "tests/test_calculator.py",
+      "path": "tests/calculator.test.ts",
       "purpose": "applied by GT recipe"
     }
   ],
@@ -38,7 +38,7 @@
     "verdict": "success",
     "scope": "targeted",
     "exit_code": 0,
-    "targeted": "============================== 4 passed in <DURATION>s ==============================="
+    "targeted": "Tests 4 passed (4)"
   },
   "verify": {
     "verdict": "success",

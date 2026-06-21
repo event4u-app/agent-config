@@ -13,15 +13,15 @@
   "plan": [
     {
       "title": "Add negate(a)",
-      "detail": "Append negate(a: int) -> int to src/calculator.py"
+      "detail": "Append negate(a: number): number to src/calculator.ts"
     },
     {
       "title": "Add negate(a)",
-      "detail": "Append test_negate_returns_negation to tests/test_calculator.py"
+      "detail": "Append a negate test to tests/calculator.test.ts"
     },
     {
       "title": "Add negate(a)",
-      "detail": "Run pytest to confirm both edge cases pass"
+      "detail": "Run vitest to confirm both edge cases pass"
     }
   ],
   "changes": [],

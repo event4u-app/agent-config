@@ -6,10 +6,10 @@
       "raw": "Refactor power\n",
       "reconstructed_ac": [
         "should preserve the public signature of power(a, b)",
-        "must keep test_power_positive_base green after the edit"
+        "must keep the positive-base power test green after the edit"
       ],
       "assumptions": [
-        "touches src/calculator.py only",
+        "touches src/calculator.ts only",
         "no behaviour change intended; docstring tightening"
       ],
       "confidence": {
@@ -33,7 +33,7 @@
       },
       "acceptance_criteria": [
         "should preserve the public signature of power(a, b)",
-        "must keep test_power_positive_base green after the edit"
+        "must keep the positive-base power test green after the edit"
       ],
       "confidence_confirmed": true
     }
@@ -55,16 +55,16 @@
   "plan": [
     {
       "title": "Tighten power() docstring",
-      "detail": "Replace the placeholder docstring on src/calculator.py::power"
+      "detail": "Replace the placeholder docstring on src/calculator.ts::power"
     },
     {
       "title": "Tighten power() docstring",
-      "detail": "Re-run pytest to confirm test_power_positive_base stays green"
+      "detail": "Re-run vitest to confirm the positive-base power test stays green"
     }
   ],
   "changes": [
     {
-      "path": "src/calculator.py",
+      "path": "src/calculator.ts",
       "purpose": "applied by GT recipe"
     }
   ],
@@ -72,7 +72,7 @@
     "verdict": "success",
     "scope": "targeted",
     "exit_code": 0,
-    "targeted": "============================== 3 passed in <DURATION>s ==============================="
+    "targeted": "Tests 3 passed (3)"
   },
   "verify": {
     "verdict": "success",
@@ -96,5 +96,5 @@
     "report": "success"
   },
   "questions": [],
-  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Tighten power() docstring** — Replace the placeholder docstring on src/calculator.py::power\n2. **Tighten power() docstring** — Re-run pytest to confirm test_power_positive_base stays green\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 3 passed in <DURATION>s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Tighten power() docstring** — Replace the placeholder docstring on src/calculator.ts::power\n2. **Tighten power() docstring** — Re-run vitest to confirm the positive-base power test stays green\n\n## Changes\n\n- `src/calculator.ts` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** Tests 3 passed (3)\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
 }

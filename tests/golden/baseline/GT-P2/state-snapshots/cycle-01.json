@@ -6,10 +6,10 @@
       "raw": "Refactor power\n",
       "reconstructed_ac": [
         "should preserve the public signature of power(a, b)",
-        "must keep test_power_positive_base green after the edit"
+        "must keep the positive-base power test green after the edit"
       ],
       "assumptions": [
-        "touches src/calculator.py only",
+        "touches src/calculator.ts only",
         "no behaviour change intended; docstring tightening"
       ]
     }

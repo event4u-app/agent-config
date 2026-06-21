@@ -59,7 +59,7 @@
         "contract": null,
         "stitch": null,
         "halts": [],
-        "persona": null,
+        "persona": "senior-engineer",
         "memory": [],
         "plan": null,
         "changes": [],
@@ -139,7 +139,7 @@
         "contract": null,
         "stitch": null,
         "halts": [],
-        "persona": null,
+        "persona": "senior-engineer",
         "memory": [],
         "plan": null,
         "changes": [
@@ -156,7 +156,7 @@
           "verdict": "success",
           "scope": "smoke",
           "exit_code": 0,
-          "targeted": "1 passed in <DURATION>s"
+          "targeted": "Tests 1 passed (1)"
         },
         "verify": null,
         "outcomes": {
@@ -235,7 +235,7 @@
         "contract": null,
         "stitch": null,
         "halts": [],
-        "persona": null,
+        "persona": "senior-engineer",
         "memory": [],
         "plan": null,
         "changes": [
@@ -252,7 +252,7 @@
           "verdict": "success",
           "scope": "smoke",
           "exit_code": 0,
-          "targeted": "1 passed in <DURATION>s"
+          "targeted": "Tests 1 passed (1)"
         },
         "verify": null,
         "outcomes": {

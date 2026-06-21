@@ -4,7 +4,7 @@
 
 ## Persona
 
-(unset)
+senior-engineer
 
 ## Plan
 

@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { RECIPES, type RecipeModule } from './sandbox/recipes/index.js';
-import { run_capture, type Dict, type RecipeStep } from './sandbox/runner.js';
+import { run_capture, type CaptureResult, type Dict, type RecipeStep } from './sandbox/runner.js';
 
 const GOLDEN_ROOT = path.dirname(fileURLToPath(import.meta.url));
 export const BASELINE_ROOT = path.join(GOLDEN_ROOT, 'baseline');
@@ -113,7 +113,16 @@ function resolveInput(meta: RecipeModule['META']): {
 
 // ── replay ──────────────────────────────────────────────────────────────────
 
-export function replay(gt_id: string): ReplayResult {
+/**
+ * Drive a scenario through the live `.ts` work_engine and return the full
+ * `CaptureResult` (per-cycle cmd / stdout / stderr / state + final outcome).
+ * The temp workspace is removed before returning — the transcript is fully
+ * in-memory and the fixture is the input file under `SANDBOX_ROOT`, so no
+ * caller needs the workspace afterwards. `replay()` trims this to the
+ * structural `ReplayResult` the comparators consume; `capture.ts` serialises
+ * the full result into the locked baseline pack.
+ */
+export function captureFull(gt_id: string): CaptureResult {
     const module = loadModuleFor(gt_id);
     const meta = module.META;
     const inputs = resolveInput(meta);
@@ -122,7 +131,7 @@ export function replay(gt_id: string): ReplayResult {
     try {
         const recipe: Record<string, RecipeStep> = module.buildRecipe(workspace);
         const seed = module.seedState ? module.seedState(workspace) : null;
-        const cap = run_capture({
+        return run_capture({
             gt_id,
             workspace,
             recipe,
@@ -134,19 +143,23 @@ export function replay(gt_id: string): ReplayResult {
             cycle_cap: meta.cycle_cap,
             seed_state: seed,
         });
-        const cyclesState = cap.cycles.map((c) => c.state_after);
-        const finalState = cyclesState.length > 0 ? cyclesState[cyclesState.length - 1]! : {};
-        return {
-            gt_id,
-            cycles_state: cyclesState,
-            cycles_exit: cap.cycles.map((c) => c.exit_code),
-            cycles_directive: cap.cycles.map((c) => c.directive),
-            cycles_recipe_action: cap.cycles.map((c) => c.recipe_action),
-            delivery_report: (finalState['report'] as string | undefined) ?? '',
-        };
     } finally {
         fs.rmSync(tmpBase, { recursive: true, force: true });
     }
+}
+
+export function replay(gt_id: string): ReplayResult {
+    const cap = captureFull(gt_id);
+    const cyclesState = cap.cycles.map((c) => c.state_after);
+    const finalState = cyclesState.length > 0 ? cyclesState[cyclesState.length - 1]! : {};
+    return {
+        gt_id,
+        cycles_state: cyclesState,
+        cycles_exit: cap.cycles.map((c) => c.exit_code),
+        cycles_directive: cap.cycles.map((c) => c.directive),
+        cycles_recipe_action: cap.cycles.map((c) => c.recipe_action),
+        delivery_report: (finalState['report'] as string | undefined) ?? '',
+    };
 }
 
 export function loadBaseline(gt_id: string, baselineRoot: string = BASELINE_ROOT): Baseline {

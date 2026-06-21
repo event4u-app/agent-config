@@ -8,21 +8,21 @@ senior-engineer
 
 ## Plan
 
-1. **Add modulo(a, b)** — Append modulo(a: int, b: int) -> int to src/calculator.py
-2. **Add modulo(a, b)** — Append test_modulo_returns_remainder to tests/test_calculator.py
-3. **Add modulo(a, b)** — Run pytest to confirm the new test passes
+1. **Add modulo(a, b)** — Append modulo(a: number, b: number): number to src/calculator.ts
+2. **Add modulo(a, b)** — Append a modulo test to tests/calculator.test.ts
+3. **Add modulo(a, b)** — Run vitest to confirm the new test passes
 
 ## Changes
 
-- `src/calculator.py` — applied by GT recipe
-- `tests/test_calculator.py` — applied by GT recipe
+- `src/calculator.ts` — applied by GT recipe
+- `tests/calculator.test.ts` — applied by GT recipe
 
 ## Tests
 
 - **verdict:** success
 - **scope:** targeted
 - **exit_code:** 0
-- **targeted:** ============================== 4 passed in <DURATION>s ===============================
+- **targeted:** Tests 4 passed (4)
 
 ## Verify
 

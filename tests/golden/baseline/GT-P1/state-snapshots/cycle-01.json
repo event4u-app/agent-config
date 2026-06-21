@@ -5,12 +5,12 @@
     "data": {
       "raw": "Add modulo(a, b) to src/calculator.py — return a % b for ints\n",
       "reconstructed_ac": [
-        "modulo(a, b) should return the integer remainder a % b",
+        "modulo(a, b) should return the integer remainder, divisor-signed",
         "when called with modulo(7, 3) it must return 1",
-        "when called with modulo(-2, 3) it must return 1 (Python semantics)"
+        "when called with modulo(-2, 3) it must return 1 (divisor-signed)"
       ],
       "assumptions": [
-        "function lives in src/calculator.py next to add/subtract/power",
+        "function lives in src/calculator.ts next to add/subtract/power",
         "no behaviour change to existing functions"
       ]
     }

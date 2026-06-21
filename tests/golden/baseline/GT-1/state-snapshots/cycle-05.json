@@ -13,24 +13,24 @@
   "plan": [
     {
       "title": "Add multiply(a, b)",
-      "detail": "Append multiply(a: int, b: int) -> int to src/calculator.py"
+      "detail": "Append multiply(a: number, b: number): number to src/calculator.ts"
     },
     {
       "title": "Add multiply(a, b)",
-      "detail": "Append test_multiply_returns_product to tests/test_calculator.py"
+      "detail": "Append a multiply test to tests/calculator.test.ts"
     },
     {
       "title": "Add multiply(a, b)",
-      "detail": "Run pytest to confirm the new test passes"
+      "detail": "Run vitest to confirm the new test passes"
     }
   ],
   "changes": [
     {
-      "path": "src/calculator.py",
+      "path": "src/calculator.ts",
       "purpose": "applied by GT recipe"
     },
     {
-      "path": "tests/test_calculator.py",
+      "path": "tests/calculator.test.ts",
       "purpose": "applied by GT recipe"
     }
   ],
@@ -38,7 +38,7 @@
     "verdict": "success",
     "scope": "targeted",
     "exit_code": 0,
-    "targeted": "============================== 4 passed in <DURATION>s ==============================="
+    "targeted": "Tests 4 passed (4)"
   },
   "verify": {
     "verdict": "success",
@@ -62,5 +62,5 @@
     "report": "success"
   },
   "questions": [],
-  "report": "## Ticket\n\nGT-1-MULT — Add multiply(a, b) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add multiply(a, b)** — Append multiply(a: int, b: int) -> int to src/calculator.py\n2. **Add multiply(a, b)** — Append test_multiply_returns_product to tests/test_calculator.py\n3. **Add multiply(a, b)** — Run pytest to confirm the new test passes\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n- `tests/test_calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 4 passed in <DURATION>s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+  "report": "## Ticket\n\nGT-1-MULT — Add multiply(a, b) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add multiply(a, b)** — Append multiply(a: number, b: number): number to src/calculator.ts\n2. **Add multiply(a, b)** — Append a multiply test to tests/calculator.test.ts\n3. **Add multiply(a, b)** — Run vitest to confirm the new test passes\n\n## Changes\n\n- `src/calculator.ts` — applied by GT recipe\n- `tests/calculator.test.ts` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** Tests 4 passed (4)\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
 }

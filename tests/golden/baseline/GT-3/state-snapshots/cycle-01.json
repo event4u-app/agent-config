@@ -13,15 +13,15 @@
   "plan": [
     {
       "title": "Fix power() for negative bases",
-      "detail": "Replace the abs(a)**b stub with sign-aware logic"
+      "detail": "Replace the Math.abs(a) ** b stub with sign-aware logic"
     },
     {
       "title": "Fix power() for negative bases",
-      "detail": "Add test_power_negative_base covering odd + even exponents"
+      "detail": "Add a negative-base power test covering odd + even exponents"
     },
     {
       "title": "Fix power() for negative bases",
-      "detail": "Re-run pytest to confirm both assertions pass"
+      "detail": "Re-run vitest to confirm both assertions pass"
     }
   ],
   "changes": [],
