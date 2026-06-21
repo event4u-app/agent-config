@@ -27,6 +27,16 @@ on:
       - "docs/guidelines/**"
       - "docs/contracts/smoke-contracts.md"
       - ".github/workflows/smoke.yml"
+      # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
+      # Smoke Contracts is a REQUIRED check for docs-only PRs, so it must
+      # trigger on the docs-only paths or such PRs deadlock (required check
+      # never runs). docs/contracts/** + docs/guidelines/** are already above.
+      - "CHANGELOG.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "llms.txt"
+      - "docs/**"
   push:
     branches: [main, master]
   workflow_dispatch:
