@@ -4414,10 +4414,25 @@ function _main_project_install(
 
 // --- CLI entry ---
 
-const _isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (_isCliEntry || process.argv[1] === _HERE) {
+// Node realpath-resolves the entry module's `import.meta.url` (symlinks
+// followed), but `path.resolve(argv[1])` does NOT. On macOS the temp tree is
+// under `/var/folders/...` (a `/var → /private/var` symlink), so a bare
+// `path.resolve` comparison mismatches and `main()` never fires — a silent
+// no-op. This bit the pre-bundled installer (`dist/install/install.mjs`) on
+// the macOS `setup.sh` path specifically (Linux `/tmp` is not symlinked).
+// Realpath-resolve `argv[1]` so both sides are canonical; fall back to the
+// bare resolve if the path can't be realpath'd.
+function _resolvedArgv1(): string | undefined {
+    if (process.argv[1] === undefined) return undefined;
+    try {
+        return fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return path.resolve(process.argv[1]);
+    }
+}
+const _argv1 = _resolvedArgv1();
+const _isCliEntry = _argv1 !== undefined && import.meta.url === pathToFileURL(_argv1).href;
+if (_isCliEntry || _argv1 === _HERE) {
     try {
         process.exitCode = main(process.argv.slice(2));
     } catch (e) {
