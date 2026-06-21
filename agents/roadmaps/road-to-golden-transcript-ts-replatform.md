@@ -58,9 +58,9 @@ transcripts are re-derived, not preserved byte-for-byte (accepted in option 2).
 - [x] `_helpers.ts`: pure helpers ported 1:1; `run_pytest` → `run_vitest(workspace)` (spawns the package vitest, cwd=workspace) returns the same `state.tests` shape; verdict map exit 0→success / 1→failed / else→mixed; `targeted` = the deterministic `Tests …` count line (timing scrubbed). Verified: success → `Tests 3 passed (3)`, failed → `Tests 1 failed | 3 passed (4)`; typecheck + eslint clean.
 - [x] `runner.ts`: ported `prepare_workspace`, `invoke_engine` (spawns `./agent-config implement-ticket`/`work --state-file --no-hooks`), `detect_directive`, `write_state`, `run_capture` (cycle loop), `serialise_capture`. **Integration linchpin verified:** `run_capture` drove GT-1 through the live `.ts` engine to **SUCCESS / exit 0 / 5 cycles** (`create-plan → apply-plan → run-tests → review-changes → exit0`), `run_vitest` → `Tests 4 passed (4)`. typecheck + eslint clean.
 
-### Phase 3 — Port the harness + comparators
-- [ ] `harness.ts`: `allGtIds`, `replay`, `loadBaseline`, the 4 comparators (faithful per the spec above), `replayAndCompare`.
-- [ ] Unit-test each comparator in isolation (shape-diff, Strict-Verb classify) before wiring the full replay.
+### Phase 3 — Port the harness + comparators — DONE 2026-06
+- [x] `harness.ts`: `allGtIds`, `replay`, `loadBaseline`, the 4 comparators + `compare`/`replayAndCompare` + `haltMarkers`/`classifyQuestion`/`shapeDiff`. Recipe registry seam at `sandbox/recipes/index.ts` (`RECIPES: RecipeModule[]`, populated in Phase 4).
+- [x] Comparators unit-verified in isolation: identical baseline↔replay → 0 diffs; each mutated dimension (exit / state-shape missing-key / halt directive / delivery heading) → exactly one targeted diff; `classifyQuestion` → directive/numbered/blockquote/text/invalid; `shapeDiff` → leaf-drift 0, type/length change → diff. typecheck + eslint clean.
 
 ### Phase 4 — Port the 29 recipes
 - [ ] Port each `gt*.py` → `gt*.ts`: `META` object + `buildRecipe(workspace)` returning the directive→callback map; `seedState` where present. The injected source/test snippets become TS (e.g. `multiply` as TS). Parallelizable per recipe.
