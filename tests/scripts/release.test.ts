@@ -44,6 +44,12 @@ import {
     _RELEASE_BRANCH_RE,
     confirmGate,
 } from '../../src/scripts/release.js';
+import {
+    CURRENT_ERA_BODY_CAP,
+    current_era_accumulated_body_size,
+    current_era_body_size,
+    read_changelog_lines,
+} from '../../src/scripts/_lib/changelog_eras.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'release.ts');
@@ -506,5 +512,30 @@ describe.runIf(hasPython3())('release CLI — golden parity (python3 vs tsx)', (
         expect(ts.status).toBe(0);
         expect(normalizeDryRun(ts.stdout)).toBe(normalizeDryRun(py.stdout));
         expect(ts.stderr).toBe(py.stderr);
+    });
+});
+
+// ─── era-split gate — newest-release exemption (regression) ───────────────────
+// The gate in main() must measure the *accumulated* era body (newest release
+// exempt), the same quantity the drift test enforces — NOT the raw total. A
+// single large catch-up release (e.g. 7.0.0 in its own era, ~414 lines) busts
+// the raw cap, but its body is exempt and forces the split on the *next*
+// minor/major, never on the patch immediately after. Reverting the gate to
+// current_era_body_size re-fires the die() the exemption exists to clear, which
+// is exactly the `task release` failure this guards against (exit 2 on a patch).
+describe('release --dry-run — era gate honours the newest-release exemption', () => {
+    it('does not die when the era total busts the cap but the accumulated body is under it', () => {
+        const lines = read_changelog_lines();
+        const total = current_era_body_size(lines);
+        const accumulated = current_era_accumulated_body_size(lines);
+        // Only meaningful while the exemption is load-bearing — the current
+        // era's newest release alone exceeds the cap. After a genuine era split
+        // the precondition lapses and the guard is moot (skip, don't assert).
+        if (!(total > CURRENT_ERA_BODY_CAP && accumulated <= CURRENT_ERA_BODY_CAP)) {
+            return;
+        }
+        const ts = runTs(['--dry-run']);
+        expect(ts.status, ts.stderr).toBe(0);
+        expect(ts.stderr).not.toContain('split needs a minor/major bump');
     });
 });

@@ -94,7 +94,7 @@ import type {
     SplitPlan} from './_lib/changelog_eras.js';
 import {
     CURRENT_ERA_BODY_CAP,
-    current_era_body_size,
+    current_era_accumulated_body_size,
     current_era_insertion_point,
     perform_split,
     plan_split,
@@ -1596,12 +1596,18 @@ function main(argv: readonly string[] | null = null): number {
         test_trend_line,
     });
 
-    // Era-split planning: only crosses the gate when the current era body
-    // has grown past the drift cap AND the release crosses a minor/major
-    // boundary. Patch overflow is caught by the drift test (red CI), not
-    // by an auto-split into a nonsensical "pre-X.Y.Z" archive.
+    // Era-split planning: only crosses the gate when the current era's
+    // *accumulated* body (prior releases, excluding the newest section) has
+    // grown past the drift cap AND the release crosses a minor/major boundary.
+    // The newest release is exempt — a single large catch-up release forces
+    // the split on the *next* minor/major once it has become a prior entry,
+    // not on the patch that immediately follows it. This is the same quantity
+    // the drift test enforces (current_era_accumulated_body_size); measuring
+    // the raw total here would re-fire the gate the exemption exists to clear.
+    // Patch overflow that genuinely accumulates is caught by the drift test
+    // (red CI), not by an auto-split into a nonsensical "pre-X.Y.Z" archive.
     let split: SplitPlan | null = null;
-    const body_size = current_era_body_size();
+    const body_size = current_era_accumulated_body_size();
     if (body_size > CURRENT_ERA_BODY_CAP) {
         const candidate = plan_split(target);
         if (candidate === null) {
