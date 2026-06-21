@@ -272,7 +272,10 @@ the 472-file surgery"). Phase A does the safe, mechanizable slice of that surger
   coverage) are detected and left untouched.
 - Of 460 python-gated files: **170 cleaned** (raw-spawn blocks + orphans removed, every file retains its
   real pure-TS / ported-pytest tests), **20 reverted** (their *only* content was the parity block → pure
-  rigs that need oracle-conversion, not deletion — left shim-skipped), **269 skipped** (oracle-backed,
+  rigs needing oracle-conversion or fresh intent-tests — **1 since covered** by a python-free intent
+  suite (`generate_pack_manifests._py_safe_dump`, 23 frozen PyYAML-faithful assertions); the other **19
+  are `main()`-only CLI anchored to the real repo tree** — no clean intent surface without src changes,
+  so they stay shim-skipped), **269 skipped** (oracle-backed,
   need per-file human judgement on whether the `runIf(py3)` gate is stale or load-bearing).
 - **Verified lose-nothing:** full suite `4801 passed` (identical to the pre-cleanup baseline) / `2450
   skipped` (down from `2997` — 547 dead blocks gone) / **0 failures**; typecheck + eslint clean. Net diff:

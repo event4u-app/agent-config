@@ -1,186 +1,67 @@
-// Tests for src/scripts/generate_pack_manifests.ts (py2ts Phase 8 / Wave 8a).
+// Intent tests for src/scripts/generate_pack_manifests.ts — the `_py_safe_dump`
+// serializer (the byte-identity risk this writer carries).
 //
-// No standalone pytest suite exists. WRITER with PyYAML safe_dump output —
-// the golden-parity layer is the load-bearing test: it asserts python3 and
-// tsx regenerate EVERY committed pack.yaml + README.md byte-identically, and
-// that a full write run leaves zero git drift. The committed manifests ARE
-// the byte target. A `--check` parity layer confirms the drift verdict
-// matches. Skipped without python3. Every write run snapshots + restores the
-// committed manifest set so the suite leaves the tree clean.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+// `_py_safe_dump` is a pure PyYAML-`safe_dump(sort_keys=True, allow_unicode=
+// True)`-faithful emitter (value in, YAML string out — no I/O, no repo state),
+// so its contract is frozen here as committed expected literals. The literals
+// were captured once from PyYAML 6.0.3 (`yaml.safe_dump`) and pin the
+// behaviours the pack manifests depend on: key sorting, plain/single-quoted
+// scalar selection (implicit-resolver re-typing of `yes/no/on/true/1.2`),
+// int/bool/null reprs, empty `{}`/`[]`, nested block maps, block sequences
+// aligned at the key indent, and the 80-column plain-scalar fold. No python at
+// runtime. (The "every committed manifest regenerates byte-identically" check
+// is a repo-wide CI concern — `task generate-pack-manifests --check` — not a
+// hermetic unit test, so it is not duplicated here.)
+import { describe, it, expect } from 'vitest';
 
 import * as gpm from '../../src/scripts/generate_pack_manifests.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_pack_manifests.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_pack_manifests.py');
-const SRC_PACKS = path.join(REPO_ROOT, 'src', 'packs');
-const SRC_DOMAINS = path.join(REPO_ROOT, 'src', 'domains');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-/** Every committed pack.yaml + README.md under src/packs + src/domains. */
-function manifestFiles(): string[] {
-    const out: string[] = [];
-    for (const parent of [SRC_PACKS, SRC_DOMAINS]) {
-        let dirs: string[];
-        try {
-            dirs = fs.readdirSync(parent);
-        } catch {
-            continue;
-        }
-        for (const d of dirs.sort()) {
-            for (const f of ['pack.yaml', 'README.md']) {
-                const p = path.join(parent, d, f);
-                if (fs.existsSync(p)) out.push(p);
-            }
-        }
-    }
-    return out.sort();
-}
-
-function snapshot(): Map<string, string> {
-    const snap = new Map<string, string>();
-    for (const p of manifestFiles()) {
-        snap.set(p, fs.readFileSync(p, 'utf-8'));
-    }
-    return snap;
-}
-
-function restore(snap: Map<string, string>): void {
-    for (const [p, content] of snap) {
-        if (fs.readFileSync(p, 'utf-8') !== content) {
-            fs.writeFileSync(p, content, 'utf-8');
-        }
-    }
-}
-
-describe.skipIf(!py3)('generate_pack_manifests — golden parity (python3 vs tsx)', () => {
-    let snap: Map<string, string>;
-    beforeEach(() => {
-        snap = snapshot();
-    });
-    afterEach(() => {
-        restore(snap);
-    });
-
-    function runPy(args: string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('--check → identical stdout/stderr/exit (same drift verdict)', () => {
-        const p = runPy(['--check']);
-        const t = runTs(['--check']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    });
-
-    it('write run regenerates EVERY manifest byte-identically (PY vs TS)', () => {
-        // Run python; capture the bytes it produced for every manifest.
-        runPy([]);
-        const pyBytes = new Map<string, string>();
-        for (const p of manifestFiles()) pyBytes.set(p, fs.readFileSync(p, 'utf-8'));
-
-        // Restore to committed baseline, then run TS from the same start.
-        restore(snap);
-        runTs([]);
-        const tsBytes = new Map<string, string>();
-        for (const p of manifestFiles()) tsBytes.set(p, fs.readFileSync(p, 'utf-8'));
-
-        // Every file PY produced must equal what TS produced, byte-for-byte.
-        expect([...tsBytes.keys()].sort()).toEqual([...pyBytes.keys()].sort());
-        for (const [p, tsContent] of tsBytes) {
-            expect(`${path.relative(REPO_ROOT, p)}:\n${tsContent}`).toBe(
-                `${path.relative(REPO_ROOT, p)}:\n${pyBytes.get(p)}`,
-            );
-        }
-    });
-
-    it('TS write run leaves zero drift vs the committed manifests', () => {
-        // The committed manifests are the byte target — a clean TS write must
-        // reproduce them exactly (this is what `task generate-pack-manifests`
-        // asserts in CI).
-        runTs([]);
-        for (const [p, committed] of snap) {
-            expect(`${path.relative(REPO_ROOT, p)}:\n${fs.readFileSync(p, 'utf-8')}`).toBe(
-                `${path.relative(REPO_ROOT, p)}:\n${committed}`,
-            );
-        }
-    });
-});
-
-// PyYAML safe_dump scalar-quoting parity — the byte-identity risk flagged for
-// this writer. Compares the TS emitter against python3 yaml.safe_dump for a
-// spread of tricky scalar shapes (colon, bool-like, number-like, leading/
-// trailing space, hash, em-dash/unicode, empty list/string).
-describe.skipIf(!py3)('generate_pack_manifests — PyYAML safe_dump scalar parity', () => {
-    const CASES: Array<Record<string, unknown>> = [
+// [name, input, expected PyYAML-faithful output]
+const CASES: Array<[string, unknown, string]> = [
+    ['empty mapping → inline {}', {}, '{}\n'],
+    ['empty sequence → inline []', [], '[]\n'],
+    ['keys are sorted; int scalars bare', { b: 1, a: 2 }, 'a: 2\nb: 1\n'],
+    ['bool + null reprs, sorted', { flag: true, empty_val: null }, 'empty_val: null\nflag: true\n'],
+    [
+        'plain string with em-dash (allow_unicode) stays unquoted',
         { description: 'Git workflow — commit, pull requests, branch sync.' },
-        { description: 'Vision: fundraising narrative, competitive moat.' },
-        { label: 'Founder — Strategy' },
-        { label: 'AI Video' },
-        { version: '5.10.1' },
-        { artefact_count: 86 },
-        { owner: ['engineering'] },
-        { empty: [] },
-        { description: '' },
-        { x: 'yes' },
-        { x: 'no' },
-        { x: 'on' },
-        { x: 'y' },
-        { x: 'true' },
-        { v: '1.2' },
-        { nested: { a: 1, b: 'two' } },
-        { hash: '# leading hash' },
-        { quote: "it's fine" },
+        'description: Git workflow — commit, pull requests, branch sync.\n',
+    ],
+    ['unicode label plain', { label: 'Founder — Strategy' }, 'label: Founder — Strategy\n'],
+    ['version-like string stays plain (not re-typed)', { version: '5.10.1' }, 'version: 5.10.1\n'],
+    ['integer value bare', { artefact_count: 86 }, 'artefact_count: 86\n'],
+    ['one-item list under key → block seq at key indent', { owner: ['engineering'] }, 'owner:\n- engineering\n'],
+    ['empty list value → inline []', { empty: [] }, 'empty: []\n'],
+    ["empty string → single-quoted ''", { description: '' }, "description: ''\n"],
+    ["'yes' re-types to bool → single-quoted", { x: 'yes' }, "x: 'yes'\n"],
+    ["'no' re-types to bool → single-quoted", { x: 'no' }, "x: 'no'\n"],
+    ["'on' re-types to bool → single-quoted", { x: 'on' }, "x: 'on'\n"],
+    ["'y' stays plain (not a YAML 1.1 bool in safe_dump)", { x: 'y' }, 'x: y\n'],
+    ["'true' re-types to bool → single-quoted", { x: 'true' }, "x: 'true'\n"],
+    ["number-like '1.2' → single-quoted", { v: '1.2' }, "v: '1.2'\n"],
+    ['nested non-empty mapping indents +2', { nested: { a: 1, b: 'two' } }, 'nested:\n  a: 1\n  b: two\n'],
+    ["leading '#' forces single-quote", { hash: '# leading hash' }, "hash: '# leading hash'\n"],
+    ["apostrophe in plain context stays plain", { quote: "it's fine" }, "quote: it's fine\n"],
+    [
+        'composite: sorted keys, empty + nested lists, block seqs at key indent',
         {
             id: 'fun',
             label: 'Fun',
-            onboarding: {
-                example_workflow: 'prediction-pool-optimizer',
-                first_win_doc: 'FIRST_WIN.md',
-                time_to_first_value_minutes: 6,
-            },
             owner: ['small-business'],
             dependencies: { rules: [], skills: ['prediction-pool-optimizer'] },
         },
-    ];
+        'dependencies:\n  rules: []\n  skills:\n  - prediction-pool-optimizer\nid: fun\nlabel: Fun\nowner:\n- small-business\n',
+    ],
+    ['no word boundary → no fold even past 80 cols', { k: 'x'.repeat(100) }, `k: ${'x'.repeat(100)}\n`],
+    [
+        '80-column plain-scalar fold at a word boundary, continuation indent 2',
+        { desc: 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi' },
+        'desc: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron\n  pi\n',
+    ],
+];
 
-    function pyDump(obj: unknown): string {
-        const r = spawnSync(
-            'python3',
-            [
-                '-c',
-                'import sys,json,yaml; ' +
-                    'sys.stdout.write(yaml.safe_dump(json.loads(sys.stdin.read()), sort_keys=True, allow_unicode=True))',
-            ],
-            { input: JSON.stringify(obj), encoding: 'utf8' },
-        );
-        return r.stdout;
-    }
-
-    it('every scalar shape matches python3 yaml.safe_dump byte-for-byte', () => {
-        for (const c of CASES) {
-            const tsOut = gpm._py_safe_dump(c);
-            const pyOut = pyDump(c);
-            expect(tsOut).toBe(pyOut);
-        }
+describe('generate_pack_manifests — _py_safe_dump (PyYAML-faithful)', () => {
+    it.each(CASES)('%s', (_name, input, expected) => {
+        expect(gpm._py_safe_dump(input)).toBe(expected);
     });
 });
