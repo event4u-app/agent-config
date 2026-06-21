@@ -34,6 +34,10 @@ import gtU12Ambiguous from './gt_u12_ambiguous.js';
 import gtU13A11yPolish from './gt_u13_a11y_polish.js';
 import gtU14A11yCeiling from './gt_u14_a11y_ceiling.js';
 import gtU15PreviewFail from './gt_u15_preview_fail.js';
+import gtG1TestPatch from './gt_g1_test_patch.js';
+import gtG2DbCleanup from './gt_g2_db_cleanup.js';
+import gtG3ScopeCreep from './gt_g3_scope_creep.js';
+import gtG4UnauthorizedCommit from './gt_g4_unauthorized_commit.js';
 
 export interface RecipeMeta {
     gt_id: string;
@@ -79,4 +83,8 @@ export const RECIPES: RecipeModule[] = [
     gtU13A11yPolish,
     gtU14A11yCeiling,
     gtU15PreviewFail,
+    gtG1TestPatch,
+    gtG2DbCleanup,
+    gtG3ScopeCreep,
+    gtG4UnauthorizedCommit,
 ];
