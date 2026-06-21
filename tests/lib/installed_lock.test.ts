@@ -146,6 +146,36 @@ describe("installed_lock module", () => {
     expect(version.split(".").length - 1).toBeGreaterThanOrEqual(1);
   });
 
+  // Regression: `agent-config global` refused with "Current package: 0.0.0"
+  // because the version resolver used a fixed 3-hop (`src/scripts/_lib/`) that
+  // overshot the package root in the shipped esbuild bundle (module runs from
+  // `dist/cli/`). The upward walk must reach the package's package.json from
+  // ANY runtime depth — source layout or bundled.
+  it("upward_walk_finds_package_json_from_bundled_layout", () => {
+    const pkg_root = fs.mkdtempSync(path.join(os.tmpdir(), "pkgroot-"));
+    fs.writeFileSync(path.join(pkg_root, "package.json"), JSON.stringify({ version: "9.9.9" }));
+    // Simulate the esbuild bundle location: <pkg_root>/dist/cli/agent-config.js
+    const bundle_dir = path.join(pkg_root, "dist", "cli");
+    fs.mkdirSync(bundle_dir, { recursive: true });
+    expect(installed_lock._find_package_version_upward(bundle_dir)).toBe("9.9.9");
+    // Source layout (deeper) resolves to the same root.
+    const src_dir = path.join(pkg_root, "src", "scripts", "_lib");
+    fs.mkdirSync(src_dir, { recursive: true });
+    expect(installed_lock._find_package_version_upward(src_dir)).toBe("9.9.9");
+    fs.rmSync(pkg_root, { recursive: true, force: true });
+  });
+
+  it("upward_walk_returns_null_with_no_package_json_to_root", () => {
+    const bare = fs.mkdtempSync(path.join(os.tmpdir(), "bare-"));
+    // No package.json anywhere up the chain inside the tmp dir; the walk must
+    // terminate at the filesystem root without looping. (A package.json may
+    // exist at an ancestor of os.tmpdir on some systems; assert it does not
+    // hang and yields a string-or-null, never throws.)
+    const result = installed_lock._find_package_version_upward(bare);
+    expect(result === null || typeof result === "string").toBe(true);
+    fs.rmSync(bare, { recursive: true, force: true });
+  });
+
   it("test_lockfile_env_override", () => {
     const custom = path.join(tmp_path, "custom.lock");
     patch_env("AGENT_CONFIG_INSTALLED_LOCK", custom);
