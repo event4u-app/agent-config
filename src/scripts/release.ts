@@ -1019,24 +1019,58 @@ function confirm(prompt: string): boolean {
     return ans === 'y' || ans === 'yes';
 }
 
-/** Mirror of Python `input(prompt)` — write prompt, read one line from stdin. */
+/** Can we prompt at all — is fd 0 a TTY, or is a controlling terminal openable? */
+function _canPrompt(): boolean {
+    if (process.stdin.isTTY) return true;
+    try {
+        const fd = fs.openSync('/dev/tty', 'r');
+        fs.closeSync(fd);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Mirror of Python `input(prompt)` — write prompt, read one line.
+ *
+ * Reads from the controlling terminal (`/dev/tty`) when fd 0 is not itself a
+ * TTY. `task release` / `./scripts-run` spawn this script with stdin detached
+ * from the terminal, so a naive `readSync(0)` hits EOF immediately and the
+ * `[y/N]` prompt "auto-aborts" without ever waiting. Falling back to `/dev/tty`
+ * keeps the prompt interactive regardless of how the script is invoked.
+ */
 function _input(prompt: string): string {
     process.stdout.write(prompt);
-    const buf = Buffer.alloc(1);
-    const chars: number[] = [];
-    while (true) {
-        let bytesRead: number;
+    let fd = 0;
+    let openedTty = false;
+    if (!process.stdin.isTTY) {
         try {
-            bytesRead = fs.readSync(0, buf, 0, 1, null);
+            fd = fs.openSync('/dev/tty', 'r');
+            openedTty = true;
         } catch {
-            break; // EOF / error → EOFError analogue; return what we have.
+            return ''; // no controlling terminal (true non-interactive); guarded by _canPrompt upstream.
         }
-        if (bytesRead === 0) break;
-        const b = buf[0] as number;
-        if (b === 0x0a) break; // newline terminates the line (stripped, like input()).
-        chars.push(b);
     }
-    return Buffer.from(chars).toString('utf-8');
+    try {
+        const buf = Buffer.alloc(1);
+        const chars: number[] = [];
+        while (true) {
+            let bytesRead: number;
+            try {
+                bytesRead = fs.readSync(fd, buf, 0, 1, null);
+            } catch {
+                break; // EOF / error → EOFError analogue; return what we have.
+            }
+            if (bytesRead === 0) break;
+            const b = buf[0] as number;
+            if (b === 0x0a) break; // newline terminates the line (stripped, like input()).
+            chars.push(b);
+        }
+        return Buffer.from(chars).toString('utf-8');
+    } finally {
+        if (openedTty) fs.closeSync(fd);
+    }
 }
 
 // ─── orchestration ────────────────────────────────────────────────────────────
@@ -1559,9 +1593,18 @@ function main(argv: readonly string[] | null = null): number {
         return 0;
     }
 
-    if (!args.yes && !confirm(`Proceed with release ${plan.target}?`)) {
-        process.stdout.write('aborted.\n');
-        return 1;
+    if (!args.yes) {
+        if (!_canPrompt()) {
+            process.stderr.write(
+                'No terminal available for the [y/N] confirmation (non-interactive shell). ' +
+                    'Re-run with --yes to confirm, e.g. `task release -- --yes`.\n',
+            );
+            return 1;
+        }
+        if (!confirm(`Proceed with release ${plan.target}?`)) {
+            process.stdout.write('aborted.\n');
+            return 1;
+        }
     }
 
     execute(plan, {

@@ -15,6 +15,7 @@ tasks:
       task release                     # interactive, auto-detect
       task release -- --dry-run        # preview only
       task release -- --yes --no-wait  # non-interactive
+    interactive: true
     cmd: ./scripts-run src/scripts/release {{.CLI_ARGS}}
 
   release:major:
@@ -23,6 +24,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:major
       task release:major -- --dry-run
+    interactive: true
     cmd: ./scripts-run src/scripts/release --as major {{.CLI_ARGS}}
 
   release:minor:
@@ -31,6 +33,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:minor
       task release:minor -- --dry-run
+    interactive: true
     cmd: ./scripts-run src/scripts/release --as minor {{.CLI_ARGS}}
 
   release:patch:
@@ -39,6 +42,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:patch
       task release:patch -- --dry-run
+    interactive: true
     cmd: ./scripts-run src/scripts/release --as patch {{.CLI_ARGS}}
 
   release:version:
@@ -48,6 +52,7 @@ tasks:
       pipeline and flags as `task release`. Usage:
       task release:version -- 2.0.0
       task release:version -- 2.0.0 --dry-run
+    interactive: true
     cmd: ./scripts-run src/scripts/release --version {{.CLI_ARGS}}
 
   npm:login:
