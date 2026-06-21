@@ -55,8 +55,8 @@ transcripts are re-derived, not preserved byte-for-byte (accepted in option 2).
 - [x] **Reachability decision (PINNED):** `run_vitest(workspace)` = spawn the package's `node_modules/vitest/vitest.mjs run` with `cwd = <temp workspace>`. The workspace is a copy under a tmp dir **outside** the package, so vitest finds no upward config → pure defaults collect `**/*.test.ts`; vitest + esbuild come from the package's `node_modules` (invoked by abs path), so the workspace needs no `node_modules`. Proven: copied repo → `3 passed`, rc 0. Faithful twin of the old `python3 -m pytest`.
 
 ### Phase 2 — Port the helper + runner layer
-- [ ] `_helpers.ts`: port the pure helpers 1:1; replace `run_pytest` → `run_vitest(workspace)` returning the same `state.tests` dict shape (verdict/summary), summary-line scrub adapted to vitest output.
-- [ ] `runner.ts`: port `prepare_workspace` (copy repo fixture), `invoke_engine` (drive the `.ts` work_engine via `./scripts-run`/tsx — already `.ts`-first), `detect_directive`, `run_capture`, `serialise_capture`. This is the deepest integration; verify against one scenario before the rest.
+- [x] `_helpers.ts`: pure helpers ported 1:1; `run_pytest` → `run_vitest(workspace)` (spawns the package vitest, cwd=workspace) returns the same `state.tests` shape; verdict map exit 0→success / 1→failed / else→mixed; `targeted` = the deterministic `Tests …` count line (timing scrubbed). Verified: success → `Tests 3 passed (3)`, failed → `Tests 1 failed | 3 passed (4)`; typecheck + eslint clean.
+- [ ] `runner.ts`: port `prepare_workspace` (copy repo fixture), `invoke_engine` (drive the `.ts` work_engine via `./agent-config implement-ticket`/`work` — already `.ts`-first), `detect_directive`, `run_capture`, `serialise_capture`. Deepest integration — only end-to-end-verifiable as part of a GT-1 vertical slice (runner + harness + GT-1 recipe + re-captured baseline + replay), so build that slice first, then fan out.
 
 ### Phase 3 — Port the harness + comparators
 - [ ] `harness.ts`: `allGtIds`, `replay`, `loadBaseline`, the 4 comparators (faithful per the spec above), `replayAndCompare`.
