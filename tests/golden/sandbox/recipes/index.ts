@@ -14,6 +14,10 @@ import gt2Ambiguity from './gt2_ambiguity.js';
 import gt3Recovery from './gt3_recovery.js';
 import gt4PersonaRefusal from './gt4_persona_refusal.js';
 import gt5StateResume from './gt5_state_resume.js';
+import gtP1High from './gt_p1_high.js';
+import gtP2Medium from './gt_p2_medium.js';
+import gtP3Low from './gt_p3_low.js';
+import gtP4UiRejection from './gt_p4_ui_rejection.js';
 
 export interface RecipeMeta {
     gt_id: string;
@@ -39,4 +43,8 @@ export const RECIPES: RecipeModule[] = [
     gt3Recovery,
     gt4PersonaRefusal,
     gt5StateResume,
+    gtP1High,
+    gtP2Medium,
+    gtP3Low,
+    gtP4UiRejection,
 ];
