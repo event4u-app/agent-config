@@ -97,8 +97,8 @@ parent_roadmap: null
 
 ## Phase 6 — Remove Python toolchain + dead fast-paths (Hard Floor)
 
-- [ ] Remove `pyproject.toml`, `requirements*.txt`, `python-version-sweep.yml`, the `migration-gates.yml` python-parity-dep step, and the migration scaffolding workflows once parity is no longer being tested.
-- [ ] Remove the dispatcher Python fast-path (`scripts-run` lines 15–19) and the `run.ts` `.py` fallback.
+- [~] Remove `pyproject.toml`, `requirements*.txt`, `python-version-sweep.yml`, the `migration-gates.yml` python-parity-dep step, and the migration scaffolding workflows once parity is no longer being tested. <!-- partial 2026-06: pyproject.toml / requirements*.txt / pytest.ini / conftest.py / python-version-sweep.yml / freeze-guard.yml all already deleted. BLOCKED on the rest (migration-scaffolding `py2ts-*.yml`) because parity is still tested by the ~466 R6/R7 python-spawn rigs — those must be retired first. -->
+- [x] Remove the dispatcher Python fast-path (`scripts-run` lines 15–19) and the `run.ts` `.py` fallback. <!-- verified 2026-06: scripts-run is 9 lines, pure `tsx src/scripts/run.ts` (no python branch); run.ts has no .py fallback; runtime_dispatcher.py / run.py deleted. -->
 - [ ] Surface the diff (infra + bulk) and obtain explicit confirmation.
 - [ ] Verify: full CI green; dispatcher still resolves `.ts` from any cwd.
 
