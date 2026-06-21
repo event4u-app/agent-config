@@ -15,4 +15,4 @@ suggests:
 - ai-video
 surface_tier: lab
 trust_level_default: experimental
-version: 6.1.0
+version: 7.0.0
