@@ -42,6 +42,7 @@ import {
     CONVENTIONAL_RE,
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
+    confirmGate,
 } from '../../src/scripts/release.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -416,6 +417,36 @@ function runTs(args: string[]): RunOut {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
     return { stdout: r.stdout, stderr: r.stderr, status: r.status };
 }
+
+// ─── confirm-gate — non-interactive must fail fast, never auto-abort/hang ─────
+// Regression lock for `task release` exiting 1 at "[y/N]" without waiting:
+// go-task / scripts-run spawn the script with stdin detached from the terminal,
+// so a naive `readSync(0)` hit EOF and "aborted" silently. The fix (a) reads the
+// controlling tty when present, and (b) when there is genuinely no terminal
+// (CI / detached stdin), surfaces actionable `--yes` guidance instead. Unit-test
+// the pure `confirmGate` verdict so the contract is locked without spawning the
+// real release (which would hit preflight / working-tree gates first).
+describe('confirmGate — pre-execute confirmation verdict', () => {
+    const origCI = process.env.CI;
+    afterEach(() => {
+        if (origCI === undefined) delete process.env.CI;
+        else process.env.CI = origCI;
+    });
+
+    it('--yes → proceeds unprompted', () => {
+        delete process.env.CI;
+        expect(confirmGate('7.0.0', true)).toEqual({ proceed: true });
+    });
+
+    it('non-interactive (CI) + no --yes → does NOT proceed, surfaces --yes guidance on stderr', () => {
+        process.env.CI = '1'; // _canPrompt() → false by contract; never reads stdin/tty
+        const v = confirmGate('7.0.0', false);
+        expect(v.proceed).toBe(false);
+        expect(v.stream).toBe('stderr');
+        expect(v.message).toContain('--yes');
+        expect(v.message).not.toMatch(/^aborted\.?$/); // actionable, not a bare silent abort
+    });
+});
 
 /**
  * Normalise --dry-run preview output for cross-runtime comparison:

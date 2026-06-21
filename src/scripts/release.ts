@@ -1021,6 +1021,7 @@ function confirm(prompt: string): boolean {
 
 /** Can we prompt at all — is fd 0 a TTY, or is a controlling terminal openable? */
 function _canPrompt(): boolean {
+    if (process.env.CI) return false; // CI is non-interactive by contract → require --yes
     if (process.stdin.isTTY) return true;
     try {
         const fd = fs.openSync('/dev/tty', 'r');
@@ -1071,6 +1072,37 @@ function _input(prompt: string): string {
     } finally {
         if (openedTty) fs.closeSync(fd);
     }
+}
+
+export interface ConfirmVerdict {
+    proceed: boolean;
+    /** Message to surface when not proceeding (no trailing newline). */
+    message?: string;
+    stream?: 'stdout' | 'stderr';
+}
+
+/**
+ * Resolve the pre-execute confirmation as a pure verdict (no I/O, so it is
+ * unit-testable). `--yes` proceeds unprompted; otherwise a terminal must be
+ * available — when none is (CI, detached stdin) we surface actionable `--yes`
+ * guidance instead of silently aborting; with a terminal, the user must answer
+ * `y`. The caller performs the I/O + the `return 1`.
+ */
+export function confirmGate(target: string, yes: boolean): ConfirmVerdict {
+    if (yes) return { proceed: true };
+    if (!_canPrompt()) {
+        return {
+            proceed: false,
+            stream: 'stderr',
+            message:
+                'No terminal available for the [y/N] confirmation (non-interactive shell). ' +
+                'Re-run with --yes to confirm, e.g. `task release -- --yes`.',
+        };
+    }
+    if (!confirm(`Proceed with release ${target}?`)) {
+        return { proceed: false, stream: 'stdout', message: 'aborted.' };
+    }
+    return { proceed: true };
 }
 
 // ─── orchestration ────────────────────────────────────────────────────────────
@@ -1593,18 +1625,13 @@ function main(argv: readonly string[] | null = null): number {
         return 0;
     }
 
-    if (!args.yes) {
-        if (!_canPrompt()) {
-            process.stderr.write(
-                'No terminal available for the [y/N] confirmation (non-interactive shell). ' +
-                    'Re-run with --yes to confirm, e.g. `task release -- --yes`.\n',
-            );
-            return 1;
+    const verdict = confirmGate(plan.target, args.yes);
+    if (!verdict.proceed) {
+        if (verdict.message) {
+            const sink = verdict.stream === 'stderr' ? process.stderr : process.stdout;
+            sink.write(`${verdict.message}\n`);
         }
-        if (!confirm(`Proceed with release ${plan.target}?`)) {
-            process.stdout.write('aborted.\n');
-            return 1;
-        }
+        return 1;
     }
 
     execute(plan, {
