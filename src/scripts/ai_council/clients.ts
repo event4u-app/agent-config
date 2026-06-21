@@ -275,6 +275,41 @@ interface CliClientOptions {
     cli_calls_path?: string | null | undefined;
 }
 
+/**
+ * Synchronous JSON POST via `curl` (no Node SDK, no Python). Matches the
+ * council's `spawnSync` transport model so the live-call clients stay
+ * synchronous. Returns the parsed response JSON (the provider HTTP APIs return
+ * exactly the SDK response shape `ask()` reads). Throws on transport failure or
+ * a non-2xx status so `ask()`'s catch surfaces it as a member error.
+ */
+function _curlJsonPost(url: string, extraHeaders: string[], body: unknown): unknown {
+    const args = ['-sS', '-X', 'POST', url, '-H', 'content-type: application/json'];
+    for (const h of extraHeaders) {
+        args.push('-H', h);
+    }
+    args.push('-w', '\n%{http_code}', '--data-binary', '@-');
+    const r = spawnSync('curl', args, {
+        input: JSON.stringify(body),
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+        timeout: 120_000,
+    });
+    if (r.error) {
+        throw new Error(`curl spawn failed: ${(r.error as Error).message}`);
+    }
+    if (r.status !== 0) {
+        throw new Error(`curl exited ${r.status ?? 'null'}: ${(r.stderr ?? '').toString().slice(0, 500)}`);
+    }
+    const out = (r.stdout ?? '').toString();
+    const nl = out.lastIndexOf('\n');
+    const httpCode = (nl >= 0 ? out.slice(nl + 1) : out).trim();
+    const bodyText = nl >= 0 ? out.slice(0, nl) : out;
+    if (!/^2\d\d$/.test(httpCode)) {
+        throw new Error(`HTTP ${httpCode}: ${bodyText.slice(0, 500)}`);
+    }
+    return JSON.parse(bodyText);
+}
+
 export class AnthropicClient extends ExternalAIClient {
     override name = 'anthropic';
     override billable = true;
@@ -294,10 +329,20 @@ export class AnthropicClient extends ExternalAIClient {
                     'Use load_anthropic_key() — no env-var fallback.',
             );
         }
-        // Real SDK is a soft dependency; the twin has no Node `anthropic` SDK
-        // wired in this layer. Tests always inject `client`. Mirror the Python
-        // ImportError → RuntimeError shape for the no-SDK path.
-        throw new Error('anthropic package not installed. `pip install anthropic`.');
+        // Live transport: curl → Anthropic Messages API (synchronous, no Node
+        // SDK, no Python). The HTTP response is the same shape `ask()` reads
+        // (`content[0].text`, `usage.{input_tokens,output_tokens}`). Tests still
+        // inject a mock `client` above and never reach this path.
+        this._client = {
+            messages: {
+                create: (kwargs: Record<string, unknown>): unknown =>
+                    _curlJsonPost(
+                        'https://api.anthropic.com/v1/messages',
+                        [`x-api-key: ${api_key}`, 'anthropic-version: 2023-06-01'],
+                        kwargs,
+                    ),
+            },
+        };
     }
 
     override ask(
@@ -368,7 +413,22 @@ export class OpenAIClient extends ExternalAIClient {
                     'Use load_openai_key() — no env-var fallback.',
             );
         }
-        throw new Error('openai package not installed. `pip install openai`.');
+        // Live transport: curl → OpenAI Chat Completions API (synchronous, no
+        // Node SDK, no Python). The HTTP response is the same shape `ask()`
+        // reads (`choices[0].message.content`, `usage.{prompt_tokens,
+        // completion_tokens}`). Tests still inject a mock `client` above.
+        this._client = {
+            chat: {
+                completions: {
+                    create: (kwargs: Record<string, unknown>): unknown =>
+                        _curlJsonPost(
+                            'https://api.openai.com/v1/chat/completions',
+                            [`authorization: Bearer ${api_key}`],
+                            kwargs,
+                        ),
+                },
+            },
+        };
     }
 
     override ask(
