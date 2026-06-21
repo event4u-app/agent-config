@@ -20,6 +20,15 @@ on:
       - "Taskfile.yml"
       - "taskfiles/**"
       - ".github/workflows/consistency.yml"
+      # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
+      # Consistency is a REQUIRED check for docs-only PRs, so it must trigger
+      # on the docs-only paths or such PRs deadlock (required check never runs).
+      - "CHANGELOG.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "llms.txt"
+      - "docs/**"
   push:
     branches:
       - main
@@ -42,6 +51,15 @@ on:
       - "Taskfile.yml"
       - "taskfiles/**"
       - ".github/workflows/consistency.yml"
+      # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
+      # Consistency is a REQUIRED check for docs-only PRs, so it must trigger
+      # on the docs-only paths or such PRs deadlock (required check never runs).
+      - "CHANGELOG.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "LICENSE"
+      - "llms.txt"
+      - "docs/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
