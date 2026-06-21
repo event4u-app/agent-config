@@ -38,13 +38,59 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
 
     it('test_current_era_body_under_cap', () => {
         const lines = eras.read_changelog_lines();
-        const body_size = eras.current_era_body_size(lines);
+        // The cap bounds *accumulated prior* releases in the current era; the
+        // newest released section is exempt and instead forces the era split on
+        // the next bump (see current_era_accumulated_body_size). This keeps a
+        // single large catch-up release from tripping a gate no split can clear.
+        const accumulated = eras.current_era_accumulated_body_size(lines);
         expect(
-            body_size,
-            `Current era body is ${body_size} lines (cap ${eras.CURRENT_ERA_BODY_CAP}). ` +
-                'Run `task release` — `scripts/release.py` will split the era ' +
-                'automatically before bumping.',
+            accumulated,
+            `Current era accumulated body (excluding the newest release) is ${accumulated} lines ` +
+                `(cap ${eras.CURRENT_ERA_BODY_CAP}). An era split is due — \`task release\` ` +
+                'performs it on the next bump.',
         ).toBeLessThanOrEqual(eras.CURRENT_ERA_BODY_CAP);
+    });
+
+    it('accumulated body excludes the newest released section', () => {
+        const lines = [
+            '# Era: 7.0.x — current',
+            '',
+            '> Started at `7.0.0`. Full entries live inline below.',
+            '',
+            '## [7.0.0](https://example/compare/6.1.0...7.0.0) (2026-06-21)',
+            '',
+            ...Array<string>(400).fill('* **scope:** a real entry line'),
+            '## [6.9.0](https://example/compare/6.8.0...6.9.0) (2026-06-01)',
+            '',
+            ...Array<string>(40).fill('* **scope:** a prior entry line'),
+            '# Era: pre-6.0.0 — archived',
+            '',
+        ];
+        const total = eras.current_era_body_size(lines);
+        const accumulated = eras.current_era_accumulated_body_size(lines);
+        // The newest (7.0.0, 400+ lines) alone busts the cap…
+        expect(total).toBeGreaterThan(eras.CURRENT_ERA_BODY_CAP);
+        // …but it is exempt, so only the prior 6.9.0 (~40) accumulates → under cap.
+        expect(accumulated).toBeLessThan(total);
+        expect(accumulated).toBeLessThanOrEqual(eras.CURRENT_ERA_BODY_CAP);
+    });
+
+    it('single-release era accumulates ~nothing (only the era intro)', () => {
+        const lines = [
+            '# Era: 8.0.x — current',
+            '',
+            '> Started at `8.0.0`. Full entries live inline below.',
+            '',
+            '## [8.0.0](https://example/compare/7.0.0...8.0.0) (2026-07-01)',
+            '',
+            ...Array<string>(500).fill('* **scope:** sole-release entry line'),
+            '# Era: pre-7.0.0 — archived',
+        ];
+        // A single oversized release section is fully exempt; only the few
+        // header/intro lines before the version heading remain counted.
+        expect(eras.current_era_accumulated_body_size(lines)).toBeLessThanOrEqual(
+            eras.CURRENT_ERA_BODY_CAP,
+        );
     });
 
     it('test_archived_eras_point_at_existing_files', () => {
