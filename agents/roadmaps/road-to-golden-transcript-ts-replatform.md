@@ -56,7 +56,7 @@ transcripts are re-derived, not preserved byte-for-byte (accepted in option 2).
 
 ### Phase 2 — Port the helper + runner layer
 - [x] `_helpers.ts`: pure helpers ported 1:1; `run_pytest` → `run_vitest(workspace)` (spawns the package vitest, cwd=workspace) returns the same `state.tests` shape; verdict map exit 0→success / 1→failed / else→mixed; `targeted` = the deterministic `Tests …` count line (timing scrubbed). Verified: success → `Tests 3 passed (3)`, failed → `Tests 1 failed | 3 passed (4)`; typecheck + eslint clean.
-- [ ] `runner.ts`: port `prepare_workspace` (copy repo fixture), `invoke_engine` (drive the `.ts` work_engine via `./agent-config implement-ticket`/`work` — already `.ts`-first), `detect_directive`, `run_capture`, `serialise_capture`. Deepest integration — only end-to-end-verifiable as part of a GT-1 vertical slice (runner + harness + GT-1 recipe + re-captured baseline + replay), so build that slice first, then fan out.
+- [x] `runner.ts`: ported `prepare_workspace`, `invoke_engine` (spawns `./agent-config implement-ticket`/`work --state-file --no-hooks`), `detect_directive`, `write_state`, `run_capture` (cycle loop), `serialise_capture`. **Integration linchpin verified:** `run_capture` drove GT-1 through the live `.ts` engine to **SUCCESS / exit 0 / 5 cycles** (`create-plan → apply-plan → run-tests → review-changes → exit0`), `run_vitest` → `Tests 4 passed (4)`. typecheck + eslint clean.
 
 ### Phase 3 — Port the harness + comparators
 - [ ] `harness.ts`: `allGtIds`, `replay`, `loadBaseline`, the 4 comparators (faithful per the spec above), `replayAndCompare`.

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**35 / 88 steps done · 40%**
+**36 / 88 steps done · 41%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-golden-transcript-ts-replatform.md](roadmaps/road-to-golden-transcript-ts-replatform.md) | 6 | 14 | 10 | 4 | 0 | 0 | ███░░░░░░░ 29% |
+| 1 | [road-to-golden-transcript-ts-replatform.md](roadmaps/road-to-golden-transcript-ts-replatform.md) | 6 | 14 | 9 | 5 | 0 | 0 | ████░░░░░░ 36% |
 | 2 | [road-to-rdp-frontier-polish.md](roadmaps/road-to-rdp-frontier-polish.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 36 | 31 | 0 | 0 | █████░░░░░ 46% |
 
@@ -26,12 +26,12 @@
 
 ### [road-to-golden-transcript-ts-replatform.md](roadmaps/road-to-golden-transcript-ts-replatform.md)
 
-**Road to a TypeScript Golden-Transcript Replay (py2ts Phase 12 follow-up)** — 4 / 14 done (29%)
+**Road to a TypeScript Golden-Transcript Replay (py2ts Phase 12 follow-up)** — 5 / 14 done (36%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Re-platform the toy repo to TS+vitest — DONE 2026-06 | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Port the helper + runner layer | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 2 | Port the helper + runner layer | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | Port the harness + comparators | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | Port the 29 recipes | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 5 | Re-capture baselines + replay test + CI | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
