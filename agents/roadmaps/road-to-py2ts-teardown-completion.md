@@ -17,11 +17,18 @@ parent_roadmap: py2ts-teardown
 > `python2ts → main` merge (#613) is the user's Hard-Floor decision and stays
 > out of scope.
 >
-> **Progress already on `python2ts` (this branch):** golden-transcript replay
-> subsystem fully re-platformed to TS+vitest (29/29, Python deleted); R6/R7
-> Phase A stripped obsolete raw live-parity blocks from 170 test files (547 dead
-> skipped tests gone, suite still `4801 passed / 0 failed`);
-> `generate_pack_manifests._py_safe_dump` converted to a python-free intent suite.
+> **Refined by the AI council (claude-sonnet-4-5 + gpt-4o, deep, 2026-06-21)** —
+> see the Council review block at the foot. The pre-flight gates (Phase 0), the
+> mechanical oracle-classification criteria, the batching/rollback protocol, the
+> precise python audit, and the smoke pass/fail criteria below are the applied
+> convergence findings.
+>
+> **Progress already on `python2ts`:** golden-transcript replay re-platformed to
+> TS+vitest (29/29, Python deleted); R6/R7 Phase A stripped obsolete raw
+> live-parity blocks from 170 test files (547 dead skipped tests gone, suite
+> `4801 passed / 0 failed`); `generate_pack_manifests._py_safe_dump` → python-free
+> intent suite; **council live-call transport wired** (`clients.ts` curl bridge
+> for the 2 enabled members — this is what let the council run; see Phase 2b).
 
 ## Current state (evidence)
 
@@ -30,73 +37,106 @@ parent_roadmap: py2ts-teardown
 - Full `vitest run` → `4801 passed / 2450 skipped / 0 failed` (python shadowed
   by `tests/_lib/python-free-env.ts`).
 - ~288 test files still carry a python-gated block the shim force-skips:
-  **269 oracle-backed** (`runIf(py3)` blocks routed through the snapshot oracle)
-  + **19 raw `main()`-only parity rigs** anchored to the real repo tree.
+  **269 oracle-backed** (`runIf(py3)` routed through the snapshot oracle) + **19
+  raw `main()`-only parity rigs** anchored to the real repo tree.
 - Migration-scaffolding workflows still present: `py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`.
 
-## Phases
+## Phase 0 — Pre-flight gates (block Phase 1) — council-mandated
 
-### Phase 1 — Purge the remaining live-python test layer
+- [ ] **Oracle-integrity validation** (council N1 — highest-impact risk). The
+  oracle snapshots are Phase 1's ground truth, but the oracle subsystem was
+  itself re-platformed; a corrupted snapshot would make a test pass against a
+  *wrong* oracle and that error becomes permanent once the `runIf(py3)` gate is
+  dropped. Before any purge: sample ~10% of oracle-backed files, re-capture
+  fresh snapshots on a ref where `python3` + the original `.py` still exist
+  (e.g. `origin/main`), diff fresh vs committed. Trivial diffs (whitespace) →
+  proceed; meaningful diffs in >5% of the sample → escalate to full oracle
+  re-validation before Phase 1.
+- [ ] **Council-transport decision** (council B2 — sequencing inversion).
+  Determine whether the Phase-3 consumer-smoke scripts invoke the council. If
+  **yes** → Phase 2b must complete before Phase 3. If **no** → Phase 2b is
+  optional / deferrable. (Partly resolved already: the 2 enabled members now
+  have a working curl transport — see Phase 2b.)
 
-- [ ] **269 oracle-backed `runIf(py3)` files** — per file, decide whether the
-  `runIf(py3)` gate is *stale* (the block already reads the frozen oracle
-  snapshot → drop the gate so it runs python-free) or *load-bearing* (still does
-  a live capture-verify → leave gated). Convert the stale ones to ungated
-  oracle-snapshot tests; verify python-shadowed green per file.
-- [ ] **19 raw `main()`-only parity rigs** — each is a pure parity rig (its only
-  test was the live `python3 <src>.py` vs `tsx` comparison) anchored to the real
-  repo tree. Per twin: if covered elsewhere → delete the dead rig; if its
-  `main()` is cleanly hermetic (target-path arg) → fresh intent test; otherwise
-  parametrize the module's `ROOT` (src change, minimal) to enable a hermetic
-  intent test. Do **not** resurrect env-brittle byte-parity snapshots.
+## Phase 1 — Purge the remaining live-python test layer
+
+> **Batching + rollback protocol (council B4):** process in batches of ~10
+> files per commit; run `vitest run` after each batch; on any *new* failure,
+> halt + triage; 2 consecutive batch-failures → revert the last batches and
+> escalate to manual review. Full python-free `vitest run` green is the Phase-1
+> exit gate.
+
+- [ ] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
+  judgement** (council B1). Per file: if the `runIf(py3)` block calls
+  `readOracleSnapshot(...)` with **no** `captureSnapshot(...)` in the same block
+  → **stale** (the gate is vestigial; drop it so the block runs python-free).
+  If the block *captures* a snapshot that any other file reads (corpus
+  dependency check) → **load-bearing** (leave gated). Ambiguous (captures S1,
+  reads S2) → flag for manual triage. Verify each converted file
+  python-shadowed green before committing the batch.
+- [ ] **19 raw `main()`-only parity rigs** — each is a pure parity rig anchored
+  to the real repo tree. Per twin: if covered elsewhere → delete the dead rig;
+  if `main()` is cleanly hermetic (target-path arg) → fresh intent test;
+  otherwise parametrize the module's `ROOT` (minimal src change) for a hermetic
+  intent test. **Confirm "pure rig" before deleting** (council N2 — some may be
+  intentional CLI smoke tests, not redundant parity). Do **not** resurrect
+  env-brittle byte-parity snapshots.
 - [ ] **`config_packs` / `config_session_profiles` live-parity blocks** —
   resolve the env-brittle (manifest/generated-state-dependent) blocks per the
-  parent roadmap's Phase-5 detection gate: make the source read committed state,
-  or drop the live-parity block once the logic is covered by unit tests.
+  parent roadmap's Phase-5 detection gate.
 - [ ] **Retire `tests/_lib/python-free-env.ts`** — once no test file needs the
-  python3-shadow, remove the shim from `vitest.config.ts` `setupFiles` and the
-  file itself. Confirm the suite is green python-free *by construction*.
+  python3-shadow, remove the shim from `vitest.config.ts` `setupFiles` + the
+  file. Confirm the suite is green python-free *by construction*.
 
-### Phase 2 — CI + scaffolding cleanup (unblocked by Phase 1)
+## Phase 2 — CI + scaffolding cleanup (requires Phase 1 complete)
 
-- [ ] Remove the migration-scaffolding workflows once parity is no longer
-  tested anywhere: `py2ts-base-guard.yml`, `py2ts-drift.yml`,
-  `py2ts-main-sync.yml` (+ any `migration-gates` python-parity step).
-- [ ] `grep -rn python3` across tracked code (excluding fixtures + docs prose)
-  → zero invocation sites.
-- [ ] Confirm remote CI green on `python2ts` after the workflow removals
-  (the PR is the authoritative gate).
+> "Requires Phase 1 complete" = shim removed, `vitest run` green python-free by
+> construction, no test spawns live `python3` (council Phase-1/2 coupling).
 
-### Phase 2b — AI-council live-call layer (py2ts gap, discovered 2026-06)
+- [ ] **Precise python-invocation audit** (council G3 — `grep python3` misses
+  `python`, `spawn.*python`, `sys.executable`, shebangs; bare `python\b`
+  over-matches). Restrict to code files:
+  `git ls-files '*.ts' '*.js' '*.json' '*.sh' | xargs grep -nE 'python3|spawn.*python|sys\.executable'`
+  + `git ls-files | xargs grep -l '^#!/usr/bin/env python'`; manual-review the
+  hits; exclude the documented `tests/hooks/fixtures/concern_*.py` fixtures.
+  Target: zero live-invocation sites.
+- [ ] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
+  `py2ts-drift.yml`, `py2ts-main-sync.yml`).
+- [ ] **Add a permanent replacement guard** (council G2 convergence over the
+  time-limited-buffer divergence — see review): `no-python-in-src.yml` fails the
+  build if `git ls-files 'src/**/*.py'` is non-empty. Survives post-merge; not
+  time-limited.
+- [ ] Confirm remote CI green on `python2ts` with the new guard in place.
 
-> Surfaced while trying to run the council on this roadmap: every billable
-> council client in `src/scripts/ai_council/clients.ts`
-> (`AnthropicClient`/`OpenAIClient`/`GeminiClient`/`XAIClient`) is a **throwing
-> twin** — the constructor raises `"<sdk> package not installed"` because no
-> Node-native SDK was wired; only injected mock clients (tests) work. So the
-> council **cannot make any live API call** post-migration (on `python2ts` or
-> `main`). The python SDKs (`anthropic`, `openai`) are importable on the host,
-> but the TS twins never bridge to them, and `council_cli.py` is deleted.
+## Phase 2b — AI-council live-call layer (py2ts gap — transport now wired)
 
-- [ ] Decide the council's live-call transport: wire Node-native SDKs
-  (`@anthropic-ai/sdk`, `openai`, `@google/genai`) into the TS clients, OR a
-  `spawnSync`-to-python bridge for the SDK call (the `_runSubprocess` seam
-  already exists), OR explicitly accept "council is dev-only via injected
-  mocks" and document it. (Decision likely belongs in the council itself once
-  the live path exists — chicken-and-egg until then.)
-- [ ] Implement the chosen transport for each billable member; add a real
-  smoke (one live call, gated, low-token) so the throwing-twin regression
-  can't recur silently.
+> Discovered + **resolved-for-the-2-enabled-members this session.** Every
+> billable council client in `clients.ts` was a throwing twin (no Node SDK
+> wired) → the council could make no live call. Fixed with a synchronous
+> `curl`-HTTP bridge (no python, no npm dep) for `anthropic` + `openai` (the
+> only two `enabled: true` members); proven by running this very roadmap through
+> the council (actual $0.1057). `gemini`/`xai`/`perplexity` stay `enabled: false`
+> and remain throwing twins.
 
-### Phase 3 — Consumer + merge readiness
+- [ ] Add a gated live smoke (one low-token real call per enabled member) so the
+  throwing-twin regression cannot recur silently.
+- [ ] If `gemini`/`xai`/`perplexity` are ever re-enabled, wire their transport
+  too (gemini needs its own API shape; xai/perplexity reuse the openai-compatible
+  client).
 
-- [ ] Consumer smoke (baseline A): install into a sandbox consumer and run a
-  shipped skill-script (`corpus-grounding/bm25_search`, `design-tokens/tokens`)
-  + roadmap-progress via the installed package's `tsx`. Confirm end-to-end.
-- [ ] **A-vs-D empirical gate:** if the smoke shows consumers invoke `dist/`
-  skill-scripts without reachable `tsx`, switch shipped skill-scripts to
-  fallback D (pre-bundled `.js`, node-only) and re-smoke; otherwise stay on A.
+## Phase 3 — Consumer + merge readiness
+
+- [ ] **Consumer smoke (baseline A) — define pass/fail BEFORE running** (council
+  B3). Per shipped skill-script: `corpus-grounding/bm25_search` → exit 0 +
+  expected `results.json` shape; `design-tokens/tokens` → exit 0 + emits tokens,
+  no stderr; `roadmap-progress` → exit 0 + report with `Phase` lines. Install
+  into a sandbox consumer, run via the installed package's `tsx`, log actual vs
+  expected.
+- [ ] **A-vs-D empirical gate:** if the smoke shows `tsx` unreachable (script
+  "command not found"), switch shipped skill-scripts to fallback D (pre-bundled
+  `.js`, node-only) and re-smoke — note whether this blocks the merge or is a
+  hotfix. Otherwise stay on A.
 - [ ] Decide whether `python2ts` is synced with latest `main` one final time
   before the merge (avoid a late big-bang conflict) — surface the decision.
 - [ ] Hand back to the user: `python2ts → main` final merge (#613) is the
@@ -106,13 +146,57 @@ parent_roadmap: py2ts-teardown
 
 - The `python2ts → main` merge itself (#613) — user Hard-Floor decision.
 - Re-running the structural deletions (src `.py`, pytest CI, toolchain) — done.
-- Resurrecting env-brittle byte-parity snapshots — rejected (a snapshot that
-  bakes generated/repo state passes locally but is silently wrong).
+- Resurrecting env-brittle byte-parity snapshots — rejected.
+- Performance parity (TS vs python runtime) — implicit out-of-scope; a post-merge
+  follow-up if regressions surface, not a teardown blocker (council clash M3).
 
 ## Acceptance criteria
 
+- Oracle-integrity sample validated before any gate is dropped (Phase 0).
 - No test file spawns live `python3` (shim removed, suite green by construction).
-- `grep -rn python3` over tracked code → 0 invocation sites (fixtures/docs aside).
-- Migration-scaffolding workflows removed; remote CI green on `python2ts`.
+- Precise python audit over tracked code → 0 live-invocation sites.
+- Migration-scaffolding workflows removed; permanent `no-python-in-src` guard in
+  place; remote CI green on `python2ts`.
+- Council live smoke present (no silent throwing-twin regression).
 - Consumer smoke confirms the installed runtime resolves; A-vs-D call recorded.
 - Remaining decision surfaced to the user: the `python2ts → main` merge.
+
+## Council review (2026-06-21)
+
+AI council (claude-sonnet-4-5 + gpt-4o, deep / 3 rounds, `--input-mode roadmap`;
+actual $0.1057). Synthesis: **conditional approval** — implementable after the
+pre-flight gates above; the original draft had real sequencing + procedure gaps.
+
+### Convergence findings (both members)
+
+1. **Oracle classification must be mechanical, not a judgement call** — "decide
+   stale vs load-bearing" over 269 files is non-executable; needs AST/snapshot
+   pass/fail rules (a 5% misclassification = ~13 silent parity breaks). → applied
+   to Phase 1.
+2. **AI-council transport is a sequencing inversion** — decide before Phase 1
+   whether smoke depends on the council. → Phase 0 gate (now partly moot: transport wired).
+3. **Missing batching + rollback protocol** for the ~288-file purge (shared-state
+   contamination is hard to bisect without checkpoints). → applied to Phase 1.
+4. **`grep python3` is insufficient** (misses `python`/`sys.executable`/shebangs;
+   `python\b` over-matches) — needs a precise, code-files-only audit. → applied to Phase 2.
+5. **Consumer smoke needs explicit per-script pass/fail criteria** defined before
+   running. → applied to Phase 3.
+6. **Oracle data-integrity is never validated (blind spot N1)** — the oracle is
+   Phase 1's ground truth but was itself re-platformed; a corrupted snapshot
+   passes against a wrong oracle and the error becomes permanent. → Phase 0 gate.
+7. **Baseline re-run is NOT needed** — both rejected a pre-flight baseline rerun
+   as busywork (version control + Phase-1 per-batch verify already cover it).
+
+### Divergences (no consensus — user decides)
+
+- **Scaffolding removal guard:** claude — add a *permanent* `no-python-in-src.yml`
+  guard (not time-limited); gpt-4o — keep an *extended scaffolding buffer* as a
+  time-boxed safety net. Applied claude's permanent guard (survives the
+  unknown-timed merge); the time-boxed buffer is the user's call to add on top.
+- **CI cleanup coupling:** claude — Phase 2 strictly requires Phase 1 complete;
+  gpt-4o — selective decoupling is acceptable with interim safeguards. Applied
+  the stricter coupling.
+
+### Predecessor council trace
+
+`agents/runtime/council/responses/py2ts-teardown-completion-roadmap.json` (this run).
