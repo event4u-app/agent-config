@@ -429,23 +429,58 @@ function tuple_lt(a: [number, number, number], b: [number, number, number]): boo
   return false;
 }
 
-/** Read `version` from the package's own `package.json`. */
-export function current_package_version(repo_root?: string | null): string {
-  let root = repo_root ?? null;
-  if (root === null) {
-    // __file__ = src/scripts/_lib/installed_lock.ts → repo root is three
-    // levels up (_lib → scripts → src → root), i.e. parents[3] in Python.
-    const here = path.dirname(fileURLToPath(import.meta.url));
-    root = path.resolve(here, "..", "..", "..");
-  }
+/** Read a string `version` from `<dir>/package.json`, or null if absent/malformed. */
+function _read_package_version(dir: string): string | null {
   try {
-    const data = JSON.parse(fs.readFileSync(path.join(root, "package.json"), { encoding: "utf-8" }));
+    const data = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), { encoding: "utf-8" }));
     const version = (data as { version?: unknown }).version;
     if (typeof version === "string" && version.trim()) {
       return version.trim();
     }
   } catch {
-    // Missing / unreadable / malformed package.json → fall through.
+    // Missing / unreadable / malformed package.json → null.
   }
-  return "0.0.0";
+  return null;
+}
+
+/**
+ * Walk upward from `start_dir` to the nearest `package.json` carrying a string
+ * `version`. Layout-independent: works in the source tree
+ * (`src/scripts/_lib/`), a per-file `dist/`, AND the esbuild single-file bundle
+ * (`dist/cli/agent-config.js`) where this module's runtime location differs
+ * from its source path. Returns null at the filesystem root.
+ */
+export function _find_package_version_upward(start_dir: string): string | null {
+  let dir = start_dir;
+  for (;;) {
+    const found = _read_package_version(dir);
+    if (found !== null) {
+      return found;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      return null; // reached the filesystem root
+    }
+    dir = parent;
+  }
+}
+
+/**
+ * Read `version` from the package's own `package.json`.
+ *
+ * With no `repo_root`, the version is resolved by walking **upward** from this
+ * module's runtime directory to the nearest `package.json`. A previous fixed
+ * `parents[3]` hop assumed the source layout (`src/scripts/_lib/`); in the
+ * shipped esbuild bundle the module runs from `dist/cli/`, so three hops
+ * overshot the package root → `package.json` not found → `"0.0.0"` → a
+ * spurious "downgrade" refusal on `agent-config global` (lockfile recorded a
+ * real version, current package read as `0.0.0`). The upward walk is correct
+ * in both layouts.
+ */
+export function current_package_version(repo_root?: string | null): string {
+  if (repo_root != null) {
+    return _read_package_version(repo_root) ?? "0.0.0";
+  }
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  return _find_package_version_upward(here) ?? "0.0.0";
 }

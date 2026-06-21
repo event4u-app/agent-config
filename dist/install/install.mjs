@@ -7929,21 +7929,37 @@ function tuple_lt(a, b) {
   }
   return false;
 }
-function current_package_version(repo_root) {
-  let root = repo_root ?? null;
-  if (root === null) {
-    const here = path2.dirname(fileURLToPath(import.meta.url));
-    root = path2.resolve(here, "..", "..", "..");
-  }
+function _read_package_version(dir) {
   try {
-    const data = JSON.parse(fs2.readFileSync(path2.join(root, "package.json"), { encoding: "utf-8" }));
+    const data = JSON.parse(fs2.readFileSync(path2.join(dir, "package.json"), { encoding: "utf-8" }));
     const version = data.version;
     if (typeof version === "string" && version.trim()) {
       return version.trim();
     }
   } catch {
   }
-  return "0.0.0";
+  return null;
+}
+function _find_package_version_upward(start_dir) {
+  let dir = start_dir;
+  for (; ; ) {
+    const found = _read_package_version(dir);
+    if (found !== null) {
+      return found;
+    }
+    const parent = path2.dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+}
+function current_package_version(repo_root) {
+  if (repo_root != null) {
+    return _read_package_version(repo_root) ?? "0.0.0";
+  }
+  const here = path2.dirname(fileURLToPath(import.meta.url));
+  return _find_package_version_upward(here) ?? "0.0.0";
 }
 
 // src/scripts/_lib/surface_tiers.ts
