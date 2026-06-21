@@ -14,7 +14,11 @@ export default defineConfig({
     },
     test: {
         include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-        exclude: ['node_modules/**', 'dist/**', 'dist/agent-src/**', '.agent-src.uncondensed/**'],
+        // tests/golden/sandbox/repo/** is the golden-transcript toy-repo
+        // fixture — its tests run only when the replay harness drives them in
+        // a temp workspace, never in the outer suite (mirrors the retired
+        // conftest `collect_ignore_glob`).
+        exclude: ['node_modules/**', 'dist/**', 'dist/agent-src/**', '.agent-src.uncondensed/**', 'tests/golden/sandbox/repo/**'],
         environmentMatchGlobs: [
             ['tests/ui/**', 'happy-dom'],
             ['src/ui/**', 'happy-dom'],

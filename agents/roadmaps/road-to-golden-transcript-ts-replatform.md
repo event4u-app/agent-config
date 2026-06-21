@@ -49,10 +49,10 @@ transcripts are re-derived, not preserved byte-for-byte (accepted in option 2).
 
 ## Phases
 
-### Phase 1 — Re-platform the toy repo to TS+vitest
-- [ ] Port `sandbox/repo/src/calculator.py` → `calculator.ts` (add/subtract/buggy `power`).
-- [ ] Port `tests/test_calculator.py` → `calculator.test.ts` (3 pre-green tests; `power` green for positive base so GT-3 can add the failing case).
-- [ ] Decide toy-repo test-runner reachability from a temp workspace (recipes copy the repo to a tmp dir, then run tests there). Options: vitest run with an explicit `--root`/config pointing at the copied tree, or a tiny standalone runner. Pin the approach so `run_vitest` is deterministic + offline.
+### Phase 1 — Re-platform the toy repo to TS+vitest — DONE 2026-06
+- [x] Port `sandbox/repo/src/calculator.py` → `calculator.ts` (add/subtract/buggy `power` = `Math.abs(a) ** b`).
+- [x] Port `tests/test_calculator.py` → `calculator.test.ts` (3 pre-green tests; `power` green for positive base so GT-3 can add the failing case). Excluded from the outer suite via `tests/golden/sandbox/repo/**` in `vitest.config.ts`.
+- [x] **Reachability decision (PINNED):** `run_vitest(workspace)` = spawn the package's `node_modules/vitest/vitest.mjs run` with `cwd = <temp workspace>`. The workspace is a copy under a tmp dir **outside** the package, so vitest finds no upward config → pure defaults collect `**/*.test.ts`; vitest + esbuild come from the package's `node_modules` (invoked by abs path), so the workspace needs no `node_modules`. Proven: copied repo → `3 passed`, rc 0. Faithful twin of the old `python3 -m pytest`.
 
 ### Phase 2 — Port the helper + runner layer
 - [ ] `_helpers.ts`: port the pure helpers 1:1; replace `run_pytest` → `run_vitest(workspace)` returning the same `state.tests` dict shape (verdict/summary), summary-line scrub adapted to vitest output.
