@@ -66,7 +66,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_SH="$SCRIPT_DIR/install.sh"
-INSTALL_PY="$SCRIPT_DIR/install.py"
+INSTALL_TS="$SCRIPT_DIR/install.ts"
 
 SOURCE_DIR=""
 TARGET_DIR=""
@@ -305,17 +305,18 @@ if ! $GLOBAL && [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
     fi
 fi
 
-# Find python3 for the bridges stage (optional until SKIP_BRIDGES=false)
-find_python() {
-    local candidate path
-    for candidate in python3 python; do
-        path="$(command -v "$candidate" 2>/dev/null || true)"
-        [[ -z "$path" ]] && continue
-        if "$path" -c 'import sys; exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
-            echo "$path"
-            return 0
-        fi
-    done
+# Resolve the tsx runner for the bridges stage (Python→TypeScript migration —
+# the bridge engine is now install.ts, run via tsx). Echoes the runner command
+# on stdout; returns 1 when neither a local tsx binary nor npx is available.
+resolve_tsx_bin() {
+    if [[ -x "$SOURCE_DIR/node_modules/.bin/tsx" ]]; then
+        printf '%s' "$SOURCE_DIR/node_modules/.bin/tsx"
+        return 0
+    fi
+    if command -v npx >/dev/null 2>&1; then
+        printf '%s' "npx tsx"
+        return 0
+    fi
     return 1
 }
 
@@ -333,11 +334,24 @@ run_sync() {
 }
 
 run_bridges() {
-    local python_bin
-    if ! python_bin="$(find_python)"; then
-        $QUIET || echo "  ⚠️  Python 3 not found — skipping .agent-settings and bridge files." >&2
-        $QUIET || echo "      Install python3 and re-run: bash scripts/install --skip-sync" >&2
-        return 0
+    # Resolve the bridge runner. Preference order (py2ts consumer-runtime,
+    # fallback D): a pre-bundled, dependency-inlined installer run via plain
+    # `node` — this is the raw-source `setup.sh` curl|bash path, which has no
+    # tsx/node_modules toolchain. Falls back to `tsx install.ts` for the dev
+    # tree (where the bundle may be stale relative to install.ts).
+    local runner=()
+    local bridge_bundle="$SOURCE_DIR/dist/install/install.mjs"
+    if [[ -f "$bridge_bundle" ]] && command -v node >/dev/null 2>&1; then
+        runner=(node "$bridge_bundle")
+    else
+        local tsx_bin
+        if ! tsx_bin="$(resolve_tsx_bin)"; then
+            $QUIET || echo "  ⚠️  No bridge runner found (no pre-bundled installer, no tsx) — skipping .agent-settings and bridge files." >&2
+            $QUIET || echo "      Install Node.js, or run \`npm install\` in the package (provides node_modules/.bin/tsx), then re-run: bash scripts/install --skip-sync" >&2
+            return 0
+        fi
+        # shellcheck disable=SC2206  # $tsx_bin may be "npx tsx" (two words) — intentional split into array elements.
+        runner=($tsx_bin "$INSTALL_TS")
     fi
 
     if $DRY_RUN; then
@@ -356,7 +370,7 @@ run_bridges() {
     $OFFLINE && args+=(--offline)
     $MINIMAL && args+=(--minimal)
     args+=(--tools="$TOOLS")
-    "$python_bin" "$INSTALL_PY" "${args[@]}"
+    "${runner[@]}" "${args[@]}"
 }
 
 RC=0
@@ -368,8 +382,8 @@ RC=0
 # `./agent-config` wrapper on a confirmed-clean target.
 if $MINIMAL; then
     if ! $SKIP_BRIDGES; then
-        if [[ ! -f "$INSTALL_PY" ]]; then
-            err "Missing $INSTALL_PY"
+        if [[ ! -f "$INSTALL_TS" ]]; then
+            err "Missing $INSTALL_TS"
             exit 1
         fi
         run_bridges || RC=$?
@@ -401,8 +415,8 @@ if [[ $RC -ne 0 ]]; then
 fi
 
 if ! $SKIP_BRIDGES; then
-    if [[ ! -f "$INSTALL_PY" ]]; then
-        err "Missing $INSTALL_PY"
+    if [[ ! -f "$INSTALL_TS" ]]; then
+        err "Missing $INSTALL_TS"
         exit 1
     fi
     run_bridges || RC=$?

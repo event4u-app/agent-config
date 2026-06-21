@@ -25,7 +25,7 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 
 Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.schema.json`.
 Violations are reported by `scripts/skill_linter.py` as `schema_<rule>` errors
-and fail `python3 scripts/validate_frontmatter.py` and the full CI pipeline.
+and fail `./scripts-run src/scripts/validate_frontmatter` and the full CI pipeline.
 
 ### Omit fields equal to their schema default
 
@@ -41,7 +41,7 @@ A field that carries the schema `default` (e.g. `trust.level: core`,
 every consumer (validator, discovery manifest, drift checksum). Writing it
 anyway is boilerplate that `scripts/lint_frontmatter_boilerplate.py` rejects
 (wired into `task ci-fast`). To strip it across the tree, run
-`python3 scripts/migrate_frontmatter_defaults.py`. Background:
+`./scripts-run src/scripts/migrate_frontmatter_defaults`. Background:
 `road-to-abstraction-reduction.md` +
 `agents/evidence/analysis/abstraction-reduction-preflight.md`.
 

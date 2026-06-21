@@ -3,8 +3,10 @@
 #
 # Downloads the latest GitHub tarball into a temp dir,
 # runs src/scripts/install with the user's tool selection, then cleans up.
-# Use this when Node.js is not available (otherwise prefer
-# `npx @event4u/agent-config init`).
+# Requires Node.js (>=20): the installer's bridge stage runs a pre-bundled,
+# dependency-inlined `dist/install/install.mjs` via plain `node` — no tsx /
+# npm install needed (fallback D of the py2ts consumer-runtime decision).
+# For an npm-managed install instead, use `npx @event4u/agent-config init`.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
@@ -63,6 +65,8 @@ need_cmd() {
 }
 need_cmd bash
 need_cmd tar
+# Node.js drives the installer's bridge stage (pre-bundled install.mjs).
+need_cmd node
 if command -v curl >/dev/null 2>&1; then
     DOWNLOADER="curl"
 elif command -v wget >/dev/null 2>&1; then

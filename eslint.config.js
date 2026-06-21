@@ -15,6 +15,7 @@ export default [
             'node_modules/**',
             'scripts/**',
             'dist/agent-src/**',
+            'tests/fixtures/**',
             '.agent-src.uncondensed/**',
             '.augment/**',
             '.claude/**',
@@ -48,7 +49,14 @@ export default [
         rules: {
             ...tseslint.configs['recommended'].rules,
             'no-console': ['error', { allow: ['warn', 'error'] }],
-            '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                },
+            ],
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/no-explicit-any': 'warn',
         },

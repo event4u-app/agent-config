@@ -1,0 +1,7 @@
+# Duplicate keys at the same level: last wins, earlier line dropped.
+mode: first
+mode: second
+section:
+  inner: a
+  inner: b  # this one survives
+tail: end

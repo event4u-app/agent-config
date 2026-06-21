@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  council:estimate: --model expects '<member>=<model-id>', got 'badshape'.\n",
+  "status": 2
+}

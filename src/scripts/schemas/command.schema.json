@@ -17,12 +17,12 @@
     "tier": {
       "type": "integer",
       "enum": [0, 1, 2],
-      "description": "Command-surface tier per docs/contracts/command-surface-tiers.md. 0 = daily-driver (rendered in default `./agent-config --help`), 1 = power-user (rendered with `--tier=1`), 2 = maintenance/internal (rendered only with `--tier=all`). Default for new commands is 2 — promotion is gated by ADR criteria, never by author preference. BACK-COMPAT ALIAS since ADR-090: `visibility:` is the named source of truth (visible↔0, advanced↔1, internal↔2); `tier:` is retained as a derived integer alias and dual-emitted in the discovery manifest during the deprecation window. When both are present they MUST agree (enforced by lint_command_tiers.py)."
+      "description": "Command-surface tier per docs/contracts/command-surface-tiers.md. 0 = daily-driver (rendered in default `./agent-config --help`), 1 = power-user (rendered with `--tier=1`), 2 = maintenance/internal (rendered only with `--tier=all`). Default for new commands is 2 — promotion is gated by ADR criteria, never by author preference. BACK-COMPAT ALIAS since ADR-092: `visibility:` is the named source of truth (visible↔0, advanced↔1, internal↔2); `tier:` is retained as a derived integer alias and dual-emitted in the discovery manifest during the deprecation window. When both are present they MUST agree (enforced by lint_command_tiers.py)."
     },
     "visibility": {
       "type": "string",
       "enum": ["visible", "advanced", "internal"],
-      "description": "Command-surface visibility (ADR-090) — the NAMED source of truth that supersedes the integer `tier:` proxy. `visible` = daily-driver (default `./agent-config --help`, ↔ tier 0), `advanced` = power-user (`--tier=1`, ↔ tier 1), `internal` = maintenance/hidden (`--tier=all` only, ↔ tier 2). Read by the surface classifier (commands ls/explain), the per-pack visible-command budget audit, and the discovery-manifest builder, each preferring `visibility:` and falling back to `tier:`. Default for new commands is `internal`; promotion is gated by ADR criteria per docs/contracts/command-surface-tiers.md."
+      "description": "Command-surface visibility (ADR-092) — the NAMED source of truth that supersedes the integer `tier:` proxy. `visible` = daily-driver (default `./agent-config --help`, ↔ tier 0), `advanced` = power-user (`--tier=1`, ↔ tier 1), `internal` = maintenance/hidden (`--tier=all` only, ↔ tier 2). Read by the surface classifier (commands ls/explain), the per-pack visible-command budget audit, and the discovery-manifest builder, each preferring `visibility:` and falling back to `tier:`. Default for new commands is `internal`; promotion is gated by ADR criteria per docs/contracts/command-surface-tiers.md."
     },
     "description": {
       "type": "string",

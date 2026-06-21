@@ -89,7 +89,7 @@ Surface candidates with explicit justification. Never auto-apply.
 Run the linter and inspect output:
 
 ```bash
-python3 scripts/lint_agents_md.py
+./scripts-run src/scripts/lint_agents_md
 wc -c AGENTS.md
 ```
 
@@ -105,7 +105,7 @@ Failures route to `/agents optimize` — this command does **not** edit.
 ### 5. Check docs sync + stale references
 
 ```bash
-python3 scripts/check_references.py
+./scripts-run src/scripts/check_references
 ```
 
 Confirm counts/lists in `.augment/contexts/augment-infrastructure.md` and
@@ -114,7 +114,7 @@ Confirm counts/lists in `.augment/contexts/augment-infrastructure.md` and
 ### 6. Run skill linter
 
 ```bash
-python3 scripts/skill_linter.py --all --pairs --duplicates 2>&1 | grep "Summary:"
+./scripts-run src/scripts/skill_linter --all --pairs --duplicates 2>&1 | grep "Summary:"
 ```
 
 Report FAIL/WARN counts. Don't fix here — delegate to `skill-reviewer` or

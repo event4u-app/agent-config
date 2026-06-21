@@ -1,0 +1,5 @@
+{
+  "stdout": "profile-overlay: active=[ops-people]\n  surfaced: commands=30 skills=50\n  hidden:   100 (behind inactive packs)\n  delta:    surface = full ∖ (artefacts whose packs ∉ active)\n  staleness: persists across sessions (overlay has no timestamp)",
+  "stderr": "",
+  "status": 0
+}

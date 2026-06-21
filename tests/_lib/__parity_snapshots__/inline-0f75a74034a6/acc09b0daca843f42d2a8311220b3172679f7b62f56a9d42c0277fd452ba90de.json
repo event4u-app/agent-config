@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"id\": \"fast\", \"source\": \"runtime\", \"knobs\": {\"autonomy\": {\"default\": true, \"trivial_suppress\": true}, \"confidence\": {\"min_band\": \"low\", \"require_evidence\": false}, \"risk\": {\"block_on\": [\"security\", \"prod_data\"], \"ask_on\": [\"bulk_delete\"]}, \"council\": {\"auto_consult\": false, \"cap_per_consult_usd\": 0.25}, \"mcp\": {\"per_call_max_usd\": 0.25, \"per_session_max_usd\": 5.0}, \"cost\": {\"daily_max_usd\": 25.0, \"weekly_max_usd\": 100.0, \"monthly_max_usd\": 300.0, \"enforce\": \"hybrid\"}, \"notifications\": {\"threshold_pct\": [75, 100]}}}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -101,7 +101,7 @@
   "contract": null,
   "stitch": null,
   "halts": [],
-  "persona": null,
+  "persona": "senior-engineer",
   "memory": [],
   "plan": null,
   "changes": [
@@ -131,5 +131,5 @@
     "report": "success"
   },
   "questions": [],
-  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\n(unset)\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
 }

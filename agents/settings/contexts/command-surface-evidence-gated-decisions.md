@@ -2,7 +2,7 @@
 
 > Durable home for command-surface changes that were **deliberately not
 > actioned** pending a concrete evidence signal. Promoted out of
-> `road-to-command-surface-refactor-residuals` Phase 3 (ADR-090 / ADR-091 era)
+> `road-to-command-surface-refactor-residuals` Phase 3 (ADR-092 / ADR-092 era)
 > when that roadmap closed, so the obligations stay visible in a stable layer
 > rather than vanishing with the archived roadmap.
 >
@@ -60,9 +60,9 @@
 
 - [`ADR-057`](../../../docs/decisions/ADR-057-consolidation-evidence-gate-outcomes.md)
   — the consolidation-evidence-gate outcomes that first deferred these.
-- [`ADR-090`](../../../docs/decisions/ADR-090-visibility-command-frontmatter-field.md)
+- [`ADR-092`](../../../docs/decisions/ADR-090-visibility-command-frontmatter-field.md)
   — the `visibility:` field (Phase 1 of the residuals roadmap).
-- [`ADR-091`](../../../docs/decisions/ADR-091-split-meta-capability-packs.md)
+- [`ADR-092`](../../../docs/decisions/ADR-091-split-meta-capability-packs.md)
   — the `meta`-pack split (Phase 2 of the residuals roadmap).
 - `docs/contracts/command-surface-tiers.md` — the surfacing contract these
   decisions live under.

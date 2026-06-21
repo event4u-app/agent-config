@@ -33,7 +33,7 @@ gated on any evidence signal.
 
 - [x] Decide field semantics: add `visibility:` alongside `tier:`, or
       promote `tier:` → `visibility:` with a back-compat alias. Record in
-      an ADR. <!-- ADR-090: Option A — visibility source of truth, tier kept as back-compat alias; council-decided -->
+      an ADR. <!-- ADR-092: Option A — visibility source of truth, tier kept as back-compat alias; council-decided -->
 - [x] Add `visibility:` to the command frontmatter schema
       (`src/scripts/schemas/command.schema.json` or equivalent) with the
       `visible | advanced | internal` enum. <!-- enum added; tier kept as back-compat alias -->
@@ -56,10 +56,10 @@ the split.
 - [x] Inventory the `meta` command + skill set and group by concern
       (`agent-admin`, `memory`, `analytics`, `governance`). <!-- 68 cmds + 58 skills; governance (2 cmds) folded into meta -->
 - [x] Decide the split shape in an ADR (new packs vs. sub-namespaces),
-      including the pack dependency edges (`requires` / `suggests`). <!-- ADR-091: logical re-tag, council-decided; memory/analytics/product-reasoning requires:[meta] -->
+      including the pack dependency edges (`requires` / `suggests`). <!-- ADR-092: logical re-tag, council-decided; memory/analytics/product-reasoning requires:[meta] -->
 - [x] Re-parent the grouped commands/skills into the new pack(s) under
       `src/domains/` + `src/packs/*/pack.yaml`, keeping deprecation
-      aliases (`replaces` / `deprecated_in`) for any renamed slug. <!-- 26 cmds re-tagged pack:+packs: → memory(11)/analytics(4)/product-reasoning(11); slugs path-derived so unchanged → no aliases needed (per ADR-091); physical move deferred -->
+      aliases (`replaces` / `deprecated_in`) for any renamed slug. <!-- 26 cmds re-tagged pack:+packs: → memory(11)/analytics(4)/product-reasoning(11); slugs path-derived so unchanged → no aliases needed (per ADR-092); physical move deferred -->
 - [x] Update pack-dependency + budget lints and the discovery manifest
       for the new pack set. <!-- manifests regen, allowlist chat-history meta→memory, discovery manifest rebuilt -->
 - [x] Targeted validation: pack-dependency lint + marketplace lint green

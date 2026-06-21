@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: airgap.py [-h] [--timeout TIMEOUT]\nairgap.py: error: argument --timeout: invalid float value: 'abc'\n",
+  "status": 2
+}

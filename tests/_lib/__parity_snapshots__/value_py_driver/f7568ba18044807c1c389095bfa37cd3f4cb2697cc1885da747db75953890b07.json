@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"available\", \"cumulative_pct\": 0.0, \"eur_delta\": -126.56532, \"footnote\": \"Available behind `lean_projection.mode=thin` (default `eager-all` \\u2014 hence NOT in the default NET). With thin active: rule layer 59359 \\u2192 13502 GPT tok (\\u221245857, \\u221277.3%). MUST-LOAD floor `task trigger-coverage` 26/26 green; live A/B validation pending (harness declined). Rollback = one flip.\", \"id\": \"thin\", \"label\": \"+ thin (rules as pointers)\", \"source_report\": \"internal/bench/reports/projection-cost.json\", \"token_delta\": -45857, \"what_it_does\": \"Non-kernel rule bodies become router-resolved pointers.\"}",
+  "stderr": "",
+  "status": 0
+}

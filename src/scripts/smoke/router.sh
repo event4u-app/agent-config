@@ -21,82 +21,82 @@ EXPECTED_MISSING_CONTRACTS=2
 quiet="${SMOKE_QUIET:-0}"
 log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 
-result=$(python3 <<'PY'
-import json, os, sys, pathlib
+result=$(node_modules/.bin/tsx -e '
+import { existsSync, readFileSync } from "node:fs";
+// ADR-017: routes_to resolution walks artefact_roots() across the
+// monorepo. Skills/commands/guidelines may live under any source root.
+import { resolve_logical } from "./src/scripts/_lib/agent_src.ts";
 
-# ADR-017: routes_to resolution walks artefact_roots() across the
-# monorepo. Skills/commands/guidelines may live under any source root.
-sys.path.insert(0, "src/scripts")
-from _lib.agent_src import resolve_logical
+const d = JSON.parse(readFileSync("dist/router.json", "utf8"));
+const kernel = d.kernel || [];
+const tier1 = d.tier_1 || [];
+const tier2 = d.tier_2 || [];
+const ids = [...kernel, ...tier1.map((r) => r.id), ...tier2.map((r) => r.id)];
+const total = ids.length;
 
-d = json.load(open("dist/router.json"))
-kernel = d.get("kernel", [])
-tier1 = d.get("tier_1", [])
-tier2 = d.get("tier_2", [])
-ids = list(kernel) + [r["id"] for r in tier1] + [r["id"] for r in tier2]
-total = len(ids)
+// Rule-file resolution
+const missingRules = ids.filter((i) => !existsSync(`dist/agent-src/rules/${i}.md`));
 
-# Rule-file resolution
-missing_rules = [i for i in ids if not os.path.exists(f"dist/agent-src/rules/{i}.md")]
+// routes_to resolution — multi-root aware via resolve_logical.
+function resolve(ref) {
+  let kind, rest;
+  if (!ref.includes(":")) { kind = "skill"; rest = ref; }
+  else { const idx = ref.indexOf(":"); kind = ref.slice(0, idx); rest = ref.slice(idx + 1); }
+  if (kind === "skill") {
+    for (const p of [
+      `dist/agent-src/skills/${rest}/SKILL.md`,
+      `.agent-src.uncondensed/skills/${rest}/SKILL.md`,
+    ]) {
+      if (existsSync(p)) return [p, "skill"];
+    }
+    const hit = resolve_logical(`skills/${rest}/SKILL.md`);
+    return [hit ? String(hit) : `.agent-src.uncondensed/skills/${rest}/SKILL.md`, "skill"];
+  }
+  if (kind === "command") {
+    for (const p of [
+      `dist/agent-src/commands/${rest}.md`,
+      `.agent-src.uncondensed/commands/${rest}.md`,
+      `.agent-src.uncondensed/commands/${rest}/INDEX.md`,
+    ]) {
+      if (existsSync(p)) return [p, "command"];
+    }
+    for (const logical of [`commands/${rest}.md`, `commands/${rest}/INDEX.md`]) {
+      const hit = resolve_logical(logical);
+      if (hit) return [String(hit), "command"];
+    }
+    return [`.agent-src.uncondensed/commands/${rest}.md`, "command"];
+  }
+  if (kind === "guideline") return [`docs/guidelines/${rest}.md`, "guideline"];
+  if (kind === "contract") return [`docs/contracts/${rest}.md`, "contract"];
+  return [null, kind];
+}
 
-# routes_to resolution — multi-root aware via resolve_logical.
-def resolve(ref):
-    if ":" not in ref:
-        kind, rest = "skill", ref
-    else:
-        kind, rest = ref.split(":", 1)
-    if kind == "skill":
-        # Legacy projected path first (fast path), then multi-root source.
-        for p in (
-            f"dist/agent-src/skills/{rest}/SKILL.md",
-            f".agent-src.uncondensed/skills/{rest}/SKILL.md",
-        ):
-            if os.path.exists(p):
-                return p, "skill"
-        hit = resolve_logical(f"skills/{rest}/SKILL.md")
-        return (str(hit) if hit else f".agent-src.uncondensed/skills/{rest}/SKILL.md"), "skill"
-    if kind == "command":
-        for p in (
-            f"dist/agent-src/commands/{rest}.md",
-            f".agent-src.uncondensed/commands/{rest}.md",
-            f".agent-src.uncondensed/commands/{rest}/INDEX.md",
-        ):
-            if os.path.exists(p):
-                return p, "command"
-        for logical in (f"commands/{rest}.md", f"commands/{rest}/INDEX.md"):
-            hit = resolve_logical(logical)
-            if hit:
-                return str(hit), "command"
-        return f".agent-src.uncondensed/commands/{rest}.md", "command"
-    if kind == "guideline":
-        return f"docs/guidelines/{rest}.md", "guideline"
-    if kind == "contract":
-        return f"docs/contracts/{rest}.md", "contract"
-    return None, kind
+const refs = new Set();
+for (const r of [...tier1, ...tier2]) {
+  for (const ref of r.routes_to || []) refs.add(ref);
+}
 
-refs = set()
-for r in tier1 + tier2:
-    for ref in r.get("routes_to", []):
-        refs.add(ref)
+const missingByKind = { skill: [], command: [], guideline: [], contract: [] };
+for (const ref of refs) {
+  const [path, kind] = resolve(ref);
+  if (path === null || !existsSync(path)) {
+    (missingByKind[kind] ||= []).push(ref);
+  }
+}
 
-missing_by_kind = {"skill": [], "command": [], "guideline": [], "contract": []}
-for ref in refs:
-    path, kind = resolve(ref)
-    if path is None or not os.path.exists(path):
-        missing_by_kind.setdefault(kind, []).append(ref)
-
-print(f"TOTAL_IDS={total}")
-print(f"KERNEL={len(kernel)}")
-print(f"TIER1={len(tier1)}")
-print(f"TIER2={len(tier2)}")
-print(f"MISSING_RULES={len(missing_rules)}")
-print(f"ROUTES_TO_REFS={len(refs)}")
-for kind, items in missing_by_kind.items():
-    print(f"MISSING_{kind.upper()}={len(items)}")
-    for r in items:
-        print(f"  - {kind}: {r}")
-PY
-)
+const out = [];
+out.push(`TOTAL_IDS=${total}`);
+out.push(`KERNEL=${kernel.length}`);
+out.push(`TIER1=${tier1.length}`);
+out.push(`TIER2=${tier2.length}`);
+out.push(`MISSING_RULES=${missingRules.length}`);
+out.push(`ROUTES_TO_REFS=${refs.size}`);
+for (const [kind, items] of Object.entries(missingByKind)) {
+  out.push(`MISSING_${kind.toUpperCase()}=${items.length}`);
+  for (const r of items) out.push(`  - ${kind}: ${r}`);
+}
+console.log(out.join("\n"));
+')
 
 # Parse out the counters
 TOTAL_IDS=$(echo "$result" | grep '^TOTAL_IDS=' | cut -d= -f2)

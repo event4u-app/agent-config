@@ -25,19 +25,19 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 fail=0
 
 echo "🔍 Checking dist/agent-src/ sync..."
-if ! python3 src/scripts/condense.py --check; then
+if ! ./scripts-run src/scripts/condense --check; then
     echo "❌  dist/agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
     fail=1
 fi
 
 echo "🔍 Checking command count messaging..."
-if ! python3 src/scripts/check_command_count_messaging.py; then
+if ! ./scripts-run src/scripts/check_command_count_messaging; then
     echo "❌  Command-count drift in README / AGENTS.md / getting-started. Run 'task counts-update', stage the changes, then re-commit."
     fail=1
 fi
 
 echo "🔍 Checking for leftover conflict markers / unmerged paths..."
-if ! python3 src/scripts/check_no_conflict_markers.py --quiet; then
+if ! ./scripts-run src/scripts/check_no_conflict_markers --quiet; then
     echo "❌  Conflict markers or unmerged paths present. Resolve them (e.g. 'git checkout HEAD -- <file>' or finish the merge), then re-push."
     fail=1
 fi
@@ -69,7 +69,7 @@ cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 # agents/roadmaps-progress.md is in sync with the current state of
 # agents/roadmaps/ (roadmap-progress-sync Iron Law).
 
-python3 src/scripts/lint_marketplace.py
+./scripts-run src/scripts/lint_marketplace
 status=$?
 
 if [ $status -ne 0 ]; then
@@ -84,13 +84,13 @@ fi
 # Roadmap dashboard sync — only fires when staged changes touch a roadmap
 # file or the dashboard itself, so unrelated commits stay fast.
 if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)'; then
-    python3 .augment/scripts/update_roadmap_progress.py --check
+    ./scripts-run .augment/scripts/update_roadmap_progress --check
     rstatus=$?
     if [ $rstatus -ne 0 ]; then
         echo ""
         echo "❌  Commit blocked — agents/roadmaps-progress.md is stale."
         echo "   Run './agent-config roadmap:progress' (or"
-        echo "   'python3 .augment/scripts/update_roadmap_progress.py'),"
+        echo "   './scripts-run .augment/scripts/update_roadmap_progress'),"
         echo "   stage agents/roadmaps-progress.md, then re-commit."
         echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
         exit 1
@@ -99,10 +99,10 @@ if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)';
     # Empty-roadmap backstop — refuse 0-byte / whitespace-only roadmap files.
     # An external "chore: add uncomitted roadmaps" auto-commit has twice staged
     # 0-byte placeholders; this gate stops the class from landing.
-    if ! python3 src/scripts/lint_empty_roadmaps.py --quiet; then
+    if ! ./scripts-run src/scripts/lint_empty_roadmaps --quiet; then
         echo ""
         echo "❌  Commit blocked — empty (0-byte / whitespace-only) roadmap file staged."
-        python3 src/scripts/lint_empty_roadmaps.py || true
+        ./scripts-run src/scripts/lint_empty_roadmaps || true
         echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
         exit 1
     fi
@@ -112,10 +112,10 @@ fi
 # single-namespace collision lints. Only fires when staged changes touch pack
 # sources, the packs vocab, or the gate scripts themselves, so unrelated
 # commits stay fast.
-if git diff --cached --name-only | grep -qE '^(packages/|src/config/discovery/packs\.yml|src/scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.py|src/scripts/schemas/pack\.schema\.json|src/scripts/pack_dependency_allowlist\.json)'; then
-    if ! python3 src/scripts/validate_pack_yaml.py \
-        || ! python3 src/scripts/lint_pack_dependencies.py \
-        || ! python3 src/scripts/lint_namespace_collisions.py; then
+if git diff --cached --name-only | grep -qE '^(packages/|src/config/discovery/packs\.yml|src/scripts/(validate_pack_yaml|lint_pack_dependencies|lint_namespace_collisions|generate_pack_manifests)\.ts|src/scripts/schemas/pack\.schema\.json|src/scripts/pack_dependency_allowlist\.json)'; then
+    if ! ./scripts-run src/scripts/validate_pack_yaml \
+        || ! ./scripts-run src/scripts/lint_pack_dependencies \
+        || ! ./scripts-run src/scripts/lint_namespace_collisions; then
         echo ""
         echo "❌  Commit blocked — Phase-0 pack gate failed (schema / dependency / namespace)."
         echo "   Run 'task generate-pack-manifests' if manifests drifted, fix the"
@@ -138,7 +138,7 @@ echo "✅  Pre-commit hook installed."
 # boundary in agents/runtime/.agent-chat-history when an agent session is active.
 #
 # The hooks are silent no-ops when no agent session is active (the
-# chat_history.py hook-append script returns "skipped_no_sidecar" with
+# chat_history.ts hook-append script returns "skipped_no_sidecar" with
 # exit 0) and `|| true` belt-and-suspenders ensures git operations are
 # never blocked.
 
@@ -171,7 +171,7 @@ write_chat_history_hook "post-rewrite"  "git:post-rewrite"
 
 # Auto-sync agent-tool projections after pull / branch-switch ---------------
 #
-# When `.agent-src.uncondensed/`, `dist/agent-src/`, `src/scripts/condense.py`,
+# When `.agent-src.uncondensed/`, `dist/agent-src/`, `src/scripts/condense.ts`,
 # `agents/.agent-tools.yml`, or `Taskfile.yml` change between the previous and
 # new HEAD, the developer's working tree has stale `.claude/`,
 # `.augment/`, etc. projections until they remember to run `task sync`.
@@ -206,7 +206,7 @@ fi
 
 if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
     if git diff --name-only "\$prev" "\$new" 2>/dev/null | \\
-        grep -qE '^(dist/agent-src/|\\.agent-src\\.uncondensed/|src/scripts/condense\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
+        grep -qE '^(dist/agent-src/|\\.agent-src\\.uncondensed/|src/scripts/condense\\.ts|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
         if command -v task >/dev/null 2>&1; then
             task sync >/dev/null 2>&1 || true
             task generate-tools >/dev/null 2>&1 || true

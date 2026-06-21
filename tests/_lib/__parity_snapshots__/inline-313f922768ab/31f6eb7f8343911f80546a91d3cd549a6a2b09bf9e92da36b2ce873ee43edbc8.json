@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — secret: 'api_key: CCCCCCCCCCC…'\", \"violations\": [[\"secret\", \"api_key: CCCCCCCCCCC…\", \"inline api_key\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

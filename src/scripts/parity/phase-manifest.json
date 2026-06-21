@@ -1,0 +1,93 @@
+{
+  "_doc": "Phase-gate manifest for agents/roadmaps/road-to-typescript-only-scripts.md (Phase 1 Step 10). Each entry maps a migration phase (2-12) to the migration_status.ts categories it owns. `status` is flipped by the migration orchestrator as phases run: 'pending' (not started \u2014 no gate enforced), 'in-progress' (phase_gate.ts reports the remaining tracked .py count, informational), 'complete' (phase_gate.ts asserts ZERO tracked .py files remain in the phase's categories \u2014 violation fails CI). Sequencing rule: a phase may only be 'in-progress' or 'complete' if every lower-numbered phase is also 'in-progress' or 'complete' (no later phase starts while an earlier one is still 'pending'). The 'installer' category is shared by phases 3 and 11: phase 3 ports the installer, phase 11 finalizes it \u2014 its .py files must be gone before phase 11 can be marked complete. Checked by src/scripts/parity/phase_gate.ts (CI: .github/workflows/migration-gates.yml).",
+  "phases": [
+    {
+      "phase": 2,
+      "name": "shared-libs",
+      "categories": [
+        "libs"
+      ],
+      "status": "in-progress"
+    },
+    {
+      "phase": 3,
+      "name": "installer",
+      "categories": [
+        "installer"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 4,
+      "name": "linters",
+      "categories": [
+        "linters"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 5,
+      "name": "pipeline",
+      "categories": [
+        "pipeline"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 6,
+      "name": "hooks",
+      "categories": [
+        "hooks"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 7,
+      "name": "memory-telemetry",
+      "categories": [
+        "memory-telemetry"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 8,
+      "name": "misc",
+      "categories": [
+        "misc"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 9,
+      "name": "consumer-templates",
+      "categories": [
+        "consumer-templates"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 10,
+      "name": "council",
+      "categories": [
+        "council"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 11,
+      "name": "installer-finalization",
+      "categories": [
+        "installer"
+      ],
+      "status": "pending"
+    },
+    {
+      "phase": 12,
+      "name": "tests",
+      "categories": [
+        "tests"
+      ],
+      "status": "pending"
+    }
+  ]
+}

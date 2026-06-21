@@ -40,11 +40,17 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        # build_cloud_bundle is now TypeScript; the dispatcher runs it via tsx.
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-          cache: 'pip'
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
       - name: Resolve tag name
         id: tag
@@ -57,19 +63,19 @@ jobs:
 
       - name: Build Claude.ai Web cloud bundles (dist/cloud/*.zip)
         run: |
-          python3 src/scripts/build_cloud_bundle.py --all --clean
+          ./scripts-run src/scripts/build_cloud_bundle --all --clean
           echo "=== bundle inventory ==="
           ls -la dist/cloud/
           count=$(find dist/cloud -name '*.zip' | wc -l | tr -d ' ')
           echo "cloud_bundle_count=$count" >> "$GITHUB_ENV"
           if [ "$count" = "0" ]; then
-            echo "::error::no cloud bundles produced — build_cloud_bundle.py emitted zero ZIPs"
+            echo "::error::no cloud bundles produced — build_cloud_bundle emitted zero ZIPs"
             exit 1
           fi
 
       - name: Build Linear AI digest (dist/linear/*.md)
         run: |
-          python3 src/scripts/build_linear_digest.py --strict-missing
+          ./scripts-run src/scripts/build_linear_digest --strict-missing
           echo "=== digest inventory ==="
           ls -la dist/linear/
           for layer in workspace team personal; do

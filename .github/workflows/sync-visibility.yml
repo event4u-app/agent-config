@@ -48,27 +48,30 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install runtime deps
-        run: pip install pyyaml
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
       - name: Lint topics.yml
-        run: python3 src/scripts/lint_topics_yaml.py
+        run: ./scripts-run src/scripts/lint_topics_yaml
 
       - name: Dry-run preview
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 src/scripts/sync_github_metadata.py
+        run: ./scripts-run src/scripts/sync_github_metadata
 
       - name: Apply (gated on dry_run=false)
         if: ${{ inputs.dry_run == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 src/scripts/sync_github_metadata.py --apply
+        run: ./scripts-run src/scripts/sync_github_metadata --apply
 
       - name: Commit audit log
         if: ${{ inputs.dry_run == 'false' }}

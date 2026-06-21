@@ -237,7 +237,7 @@ execution:
 Invoke a runtime-capable skill end-to-end:
 
 ```bash
-python3 scripts/runtime_dispatcher.py run --skill lint-skills
+./scripts-run src/scripts/runtime_dispatcher run --skill lint-skills
 ```
 
 A typed `ExecutionResult` (exit code, stdout, stderr, duration,
@@ -378,7 +378,7 @@ package's own `.augment/` projection:
 
 ```bash
 task sync                              # regenerate dist/agent-src/ → .augment/
-python3 scripts/smoke_path_resolution.py
+./scripts-run src/scripts/smoke_path_resolution
 ```
 
 The script walks `.augment/rules/*.md` and resolves every

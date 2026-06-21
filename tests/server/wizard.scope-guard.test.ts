@@ -13,8 +13,7 @@
  * current package); the test asserts the wire shape and that the script
  * actually exists + runs.
  */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { resolve } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

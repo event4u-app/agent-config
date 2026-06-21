@@ -28,7 +28,7 @@ Skill audit: measure, find duplicates/merge candidates, run linter, present find
 ### 1. Measure baseline
 
 ```bash
-total=$(ls -d .agent-src.uncondensed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total=$(ls -d src/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 total_lines=$(cat .agent-src.uncondensed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Skills: $total, Total lines: $total_lines"
 
@@ -43,7 +43,7 @@ done | sort -rn | head -15
 ### 2. Run skill linter
 
 ```bash
-python3 scripts/skill_linter.py --pairs --duplicates .agent-src.uncondensed/skills/*/SKILL.md 2>&1 | tail -20
+./scripts-run src/scripts/skill_linter --pairs --duplicates src/skills/*/SKILL.md 2>&1 | tail -20
 ```
 
 Report FAIL/WARN counts. Do NOT fix linter issues here — that's the linter's or `skill-reviewer`'s job.

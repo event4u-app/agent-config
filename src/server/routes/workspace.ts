@@ -31,6 +31,25 @@ import yaml from 'js-yaml';
 
 const execFileAsync = promisify(execFile);
 
+// The workspace CLIs are TypeScript (Python→TS final deletion). They run via
+// the repo-local `tsx` binary, resolved by walking up from this module's
+// directory (falling back to `npx tsx`). Every `execFileAsync` call below
+// passes `WORKSPACE_RUNNER` as the command and the `.ts` CLI path as args[0].
+function resolveTsxBin(): string {
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    let dir = dirname(fileURLToPath(import.meta.url));
+    for (;;) {
+        const candidate = join(dir, 'node_modules', '.bin', binName);
+        if (existsSync(candidate)) return candidate;
+        const parent = dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+    }
+    return 'tsx';
+}
+
+const WORKSPACE_RUNNER = resolveTsxBin();
+
 // Python-authoritative document read path (ADR-062 Part B, Option 4). When
 // encrypt-at-rest is on, document bodies live as AES-256-GCM `.md.enc` files
 // the Node runtime must not decrypt itself — so the recent-documents rail
@@ -39,7 +58,7 @@ const execFileAsync = promisify(execFile);
 // it resolves identically in tests and in an installed consumer.
 const WORKSPACE_DOCS_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_documents.py',
+    '..', '..', 'cli', 'python', 'workspace_documents.ts',
 );
 
 // Sessions are also Python-authoritative (ADR-064 store 3b). They are
@@ -50,7 +69,7 @@ const WORKSPACE_DOCS_CLI = join(
 // `<writeRoot>/workspace/sessions`, which the CLI validates.
 const WORKSPACE_SESSIONS_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_sessions.py',
+    '..', '..', 'cli', 'python', 'workspace_sessions.ts',
 );
 
 function sessionsRoot(writeRoot: string): string {
@@ -62,7 +81,7 @@ function sessionsRoot(writeRoot: string): string {
 // off) until the hand-off UX is validated.
 const WORKSPACE_INBOX_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_inbox.py',
+    '..', '..', 'cli', 'python', 'workspace_inbox.ts',
 );
 
 function inboxRoot(writeRoot: string): string {
@@ -75,7 +94,7 @@ function inboxRoot(writeRoot: string): string {
 // loop is unbuilt — launch reports the tier, it does not claim a drive.
 const WORKSPACE_HOSTS_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_hosts.py',
+    '..', '..', 'cli', 'python', 'workspace_hosts.ts',
 );
 
 // Role-prompt placeholder rendering (ADR-069). Python-authoritative + pure:
@@ -85,7 +104,7 @@ const WORKSPACE_HOSTS_CLI = join(
 // `<packageRoot>/agents/roles` tree, never the write root.
 const WORKSPACE_RENDER_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_render.py',
+    '..', '..', 'cli', 'python', 'workspace_render.ts',
 );
 
 function rolesRoot(packageRoot: string): string {
@@ -98,7 +117,7 @@ function rolesRoot(packageRoot: string): string {
 // (best-effort) a Tier-3 inbox hand-off so the user is never stuck.
 const WORKSPACE_DRIVE_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_drive.py',
+    '..', '..', 'cli', 'python', 'workspace_drive.ts',
 );
 
 // Drive health + kill-switch (ADR-073). A per-host cache counter: 5 consecutive
@@ -107,7 +126,7 @@ const WORKSPACE_DRIVE_CLI = join(
 // open (missing → healthy); the session log stays canonical.
 const WORKSPACE_HEALTH_CLI = join(
     dirname(fileURLToPath(import.meta.url)),
-    '..', '..', 'cli', 'python', 'workspace_drive_health.py',
+    '..', '..', 'cli', 'python', 'workspace_drive_health.ts',
 );
 
 function healthRoot(writeRoot: string): string {
@@ -129,7 +148,7 @@ interface HostTier {
 async function appendSession(writeRoot: string, id: string, kind: string, data: unknown): Promise<boolean> {
     try {
         await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_SESSIONS_CLI, 'append', id, '--kind', kind,
              '--data-json', JSON.stringify(data), '--root', sessionsRoot(writeRoot)],
             { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
@@ -151,7 +170,7 @@ async function renderTaskPrompt(
     await writeFile(tmp, JSON.stringify(inputs), 'utf8');
     try {
         const { stdout } = await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_RENDER_CLI, 'render', '--role', role, '--prompt', promptName,
              '--inputs-json', tmp, '--root', rolesRoot(packageRoot), '--json'],
             { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
@@ -175,7 +194,7 @@ async function driveHostTurn(writeRoot: string, host: string, rendered: string, 
         let stdout: string;
         try {
             ({ stdout } = await execFileAsync(
-                'python3',
+                WORKSPACE_RUNNER,
                 [WORKSPACE_DRIVE_CLI, 'drive', '--host', host, '--prompt-file', tmp, '--json',
                  ...(resumeSessionId !== undefined ? ['--resume-session-id', resumeSessionId] : [])],
                 { timeout: 120_000, maxBuffer: 16 * 1024 * 1024 },
@@ -201,7 +220,7 @@ async function degradeToInbox(
     await writeFile(tmp, rendered, 'utf8');
     try {
         const { stdout } = await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_INBOX_CLI, 'write', '--role', role, '--task', task, '--body-file', tmp,
              ...(skillHint ? ['--skill-hint', skillHint] : []), '--root', inboxRoot(writeRoot)],
             { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
@@ -220,7 +239,7 @@ async function degradeToInbox(
 async function driveGate(writeRoot: string, host: string): Promise<'closed' | 'open' | 'half_open'> {
     try {
         const { stdout } = await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_HEALTH_CLI, 'gate', '--host', host, '--root', healthRoot(writeRoot)],
             { timeout: 5_000 },
         );
@@ -236,7 +255,7 @@ async function driveGate(writeRoot: string, host: string): Promise<'closed' | 'o
 async function recordDriveHealth(writeRoot: string, host: string, ok: boolean, errorKind?: string, isProbe = false): Promise<void> {
     try {
         await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_HEALTH_CLI, 'record', '--host', host, '--outcome', ok ? 'ok' : 'fail',
              ...(errorKind ? ['--error-kind', errorKind] : []), ...(isProbe ? ['--is-probe'] : []),
              '--root', healthRoot(writeRoot)],
@@ -287,7 +306,7 @@ function promptNameForTask(role: Role, task: string): string | null {
 async function detectHostTier(host: string): Promise<HostTier> {
     try {
         const { stdout } = await execFileAsync(
-            'python3', [WORKSPACE_HOSTS_CLI, 'detect', host, '--json'],
+            WORKSPACE_RUNNER, [WORKSPACE_HOSTS_CLI, 'detect', host, '--json'],
             { timeout: 5_000 },
         );
         const r = JSON.parse(stdout) as Record<string, unknown>;
@@ -457,7 +476,7 @@ async function listSessions(writeRoot: string, limit = 20): Promise<SessionMeta[
     if (!existsSync(sessionsRoot(writeRoot))) return [];
     try {
         const { stdout } = await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_SESSIONS_CLI, 'list', '--json',
              '--root', sessionsRoot(writeRoot), '--limit', String(limit)],
             { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
@@ -477,7 +496,7 @@ async function listSessions(writeRoot: string, limit = 20): Promise<SessionMeta[
 async function readSessionLog(writeRoot: string, id: string): Promise<SessionRecord[]> {
     try {
         const { stdout } = await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_SESSIONS_CLI, 'read', id, '--json', '--root', sessionsRoot(writeRoot)],
             { timeout: 10_000, maxBuffer: 16 * 1024 * 1024 },
         );
@@ -541,7 +560,7 @@ async function listDocuments(writeRoot: string, limit = 20): Promise<DocumentSum
     // empty rail rather than 500-ing the whole workspace page.
     try {
         const { stdout } = await execFileAsync(
-            'python3',
+            WORKSPACE_RUNNER,
             [WORKSPACE_DOCS_CLI, 'list', '--json', '--root', root, '--limit', String(limit)],
             { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
         );
@@ -729,7 +748,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             // session-id minting + per-record encryption when the flag is on.
             // A fresh id per launch → no shared-session append race.
             const { stdout } = await execFileAsync(
-                'python3',
+                WORKSPACE_RUNNER,
                 [WORKSPACE_SESSIONS_CLI, 'start', '--role', role, '--task', task,
                  '--host', host, '--root', sessionsRoot(opts.writeRoot)],
                 { timeout: 10_000 },
@@ -809,7 +828,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             // rejects an unknown kind / missing session with exit 1 → 404.
             try {
                 await execFileAsync(
-                    'python3',
+                    WORKSPACE_RUNNER,
                     [WORKSPACE_SESSIONS_CLI, 'append', params.id, '--kind', kind,
                      '--data-json', JSON.stringify(data),
                      '--root', sessionsRoot(opts.writeRoot)],
@@ -844,7 +863,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             const host = typeof query?.['host'] === 'string' ? (query['host'] as string) : '';
             try {
                 const { stdout } = await execFileAsync(
-                    'python3',
+                    WORKSPACE_RUNNER,
                     [WORKSPACE_HEALTH_CLI, 'status', ...(host !== '' ? ['--host', host] : []),
                      '--json', '--root', healthRoot(opts.writeRoot)],
                     { timeout: 5_000 },
@@ -862,7 +881,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             const params = request.params as { host: string };
             try {
                 const { stdout } = await execFileAsync(
-                    'python3',
+                    WORKSPACE_RUNNER,
                     [WORKSPACE_HEALTH_CLI, 'reset', '--host', params.host, '--root', healthRoot(opts.writeRoot)],
                     { timeout: 5_000 },
                 );
@@ -880,7 +899,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
         app.get('/api/v1/workspace/hosts', async () => {
             try {
                 const { stdout } = await execFileAsync(
-                    'python3', [WORKSPACE_HOSTS_CLI, 'list', '--json'], { timeout: 5_000 },
+                    WORKSPACE_RUNNER, [WORKSPACE_HOSTS_CLI, 'list', '--json'], { timeout: 5_000 },
                 );
                 const rows = JSON.parse(stdout) as Array<Record<string, unknown>>;
                 const hosts = rows
@@ -934,7 +953,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             await writeFile(tmp, JSON.stringify(inputs), 'utf8');
             try {
                 const { stdout } = await execFileAsync(
-                    'python3',
+                    WORKSPACE_RUNNER,
                     [WORKSPACE_RENDER_CLI, 'render', '--role', role, '--prompt', prompt,
                      '--inputs-json', tmp, '--root', rolesRoot(opts.packageRoot), '--json'],
                     { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
@@ -976,7 +995,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             await writeFile(tmp, prompt, 'utf8');
             try {
                 const { stdout } = await execFileAsync(
-                    'python3',
+                    WORKSPACE_RUNNER,
                     [WORKSPACE_INBOX_CLI, 'write', '--role', role, '--task', task,
                      '--body-file', tmp, ...(session ? ['--session', session] : []),
                      ...(skillHint ? ['--skill-hint', skillHint] : []),
@@ -997,7 +1016,7 @@ export function workspaceRoute(opts: WorkspaceRouteOptions): FastifyPluginAsync 
             const params = request.params as { id: string };
             try {
                 const { stdout } = await execFileAsync(
-                    'python3',
+                    WORKSPACE_RUNNER,
                     [WORKSPACE_INBOX_CLI, 'read', params.id, '--root', inboxRoot(opts.writeRoot)],
                     { timeout: 10_000, maxBuffer: 8 * 1024 * 1024 },
                 );

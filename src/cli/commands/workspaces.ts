@@ -44,7 +44,7 @@ export function runWorkspacesLs(opts: WorkspacesLsOptions = {}): number {
         if (err instanceof ManifestNotFoundError) {
             logger.error(
                 `discovery manifest not found at ${err.path} — run ` +
-                    "'python3 src/scripts/build_discovery_manifest.py --write' " +
+                    "'./scripts-run src/scripts/build_discovery_manifest --write' " +
                     'or install a published release.',
             );
             return 1;

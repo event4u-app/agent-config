@@ -33,10 +33,9 @@ fail=0
 log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 
 # 1. kernel ids from router.json
-kernel_ids=$(python3 -c '
-import json
-d = json.load(open("dist/router.json"))
-print("\n".join(d.get("kernel", [])))
+kernel_ids=$(node -e '
+const d = require("./dist/router.json");
+console.log((d.kernel || []).join("\n"));
 ')
 kernel_count=$(printf '%s\n' "$kernel_ids" | grep -c .)
 
@@ -87,7 +86,7 @@ fi
 
 # 4. kernel char-budget breach count (advisory: locked at current measured)
 breach_count=0
-if python3 src/scripts/measure_rule_budget.py --kernel-budget-check >/tmp/kernel-budget.$$ 2>&1; then
+if ./scripts-run src/scripts/measure_rule_budget --kernel-budget-check >/tmp/kernel-budget.$$ 2>&1; then
   breach_count=0
 else
   breach_count=$(grep -c "^  - " /tmp/kernel-budget.$$ || true)

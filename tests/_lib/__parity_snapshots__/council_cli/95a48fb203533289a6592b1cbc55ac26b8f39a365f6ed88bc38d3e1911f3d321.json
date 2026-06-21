@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  council:render: council:render --output must live under agents/runtime/council/sessions/ (per ai-council § Output path convention); got '<badout>'.\n",
+  "status": 2
+}

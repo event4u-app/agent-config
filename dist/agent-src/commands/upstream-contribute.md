@@ -126,9 +126,9 @@ Frontmatter must have `source: package`.
 ### 6. Run quality gates
 
 ```bash
-python3 scripts/skill_linter.py --all           # 0 FAIL required
-python3 scripts/check_condensation.py            # No 🔴 errors for this file
-python3 scripts/condense.py --generate-tools    # Regenerate symlinks
+./scripts-run src/scripts/skill_linter --all           # 0 FAIL required
+./scripts-run src/scripts/check_condensation            # No 🔴 errors for this file
+./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
 bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
 bash scripts/condense.sh --check-hashes         # All hashes match
 ```

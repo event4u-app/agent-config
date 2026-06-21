@@ -715,19 +715,34 @@ run_scope_guard() {
     fi
 }
 
+# Resolve the tsx runner (Python→TypeScript migration). Echoes the runner
+# command on stdout and returns 0 when found, else returns 1.
+resolve_tsx_bin() {
+    if [[ -x "$SOURCE_DIR/node_modules/.bin/tsx" ]]; then
+        printf '%s' "$SOURCE_DIR/node_modules/.bin/tsx"
+        return 0
+    fi
+    if command -v npx >/dev/null 2>&1; then
+        printf '%s' "npx tsx"
+        return 0
+    fi
+    return 1
+}
+
 # Post-install skill-registration probe (Phase C Step 6). Informational by
 # default; PROBE_STRICT=1 turns drift findings into a non-zero exit so a
-# release install fails loudly. Skipped in dry-run and when python3 or the
+# release install fails loudly. Skipped in dry-run and when tsx or the
 # probe script is missing (older bundles).
 run_post_install_probe() {
     local target="$1"
-    local probe="$SOURCE_DIR/src/scripts/probe_skill_registration.py"
+    local probe="$SOURCE_DIR/src/scripts/probe_skill_registration.ts"
 
-    [[ -f "$probe" ]] || { log_verbose "skip probe_skill_registration.py (not found)"; return 0; }
-    if ! command -v python3 >/dev/null 2>&1; then
-        log_verbose "skip skill-registration probe (python3 missing)"
+    [[ -f "$probe" ]] || { log_verbose "skip probe_skill_registration.ts (not found)"; return 0; }
+    local tsx_bin
+    tsx_bin="$(resolve_tsx_bin)" || {
+        log_verbose "skip skill-registration probe (tsx missing)"
         return 0
-    fi
+    }
     if $DRY_RUN; then
         log_verbose "skip skill-registration probe (--dry-run)"
         return 0
@@ -740,14 +755,15 @@ run_post_install_probe() {
     local args=( "$probe" "--project" "$target" "--format=text" )
     [[ "${PROBE_STRICT:-0}" == "1" ]] && args+=("--strict")
 
-    if python3 "${args[@]}" > /tmp/agent-config-probe.$$ 2>&1; then
+    # shellcheck disable=SC2086
+    if $tsx_bin "${args[@]}" > /tmp/agent-config-probe.$$ 2>&1; then
         # On clean output (no findings) only show a one-liner.
         if grep -qE 'DUPLICATE|DRIFT' /tmp/agent-config-probe.$$; then
             $QUIET || echo ""
             $QUIET || echo "  ⚠️  Skill-registration findings:"
             $QUIET || sed -n '/DUPLICATE\|DRIFT/,$p' /tmp/agent-config-probe.$$ | head -40
             $QUIET || echo ""
-            $QUIET || echo "      Run: python3 scripts/probe_skill_registration.py — for the full report."
+            $QUIET || echo "      Run: ./scripts-run src/scripts/probe_skill_registration — for the full report."
         else
             log_info "Skill-registration probe: clean (no duplicates / drift)"
         fi
@@ -959,13 +975,13 @@ migrate_legacy_council_yml() {
 }
 
 # Ensure .gitignore contains the managed agent-config block.
-# Delegates to scripts/sync_gitignore.py so the installer and the
+# Delegates to scripts/sync_gitignore.ts so the installer and the
 # standalone /sync-gitignore command share one source of truth
 # (src/config/gitignore-block.txt). Honors --dry-run and --skip-gitignore.
 ensure_gitignore() {
     local project_root="$1"
     local gitignore="$project_root/.gitignore"
-    local sync_script="$SOURCE_DIR/src/scripts/sync_gitignore.py"
+    local sync_script="$SOURCE_DIR/src/scripts/sync_gitignore.ts"
     local template="$SOURCE_DIR/src/config/gitignore-block.txt"
 
     if $SKIP_GITIGNORE; then
@@ -987,7 +1003,13 @@ ensure_gitignore() {
     local args=(--path "$gitignore" --template "$template" --quiet)
     $DRY_RUN && args+=(--dry-run)
 
-    if python3 "$sync_script" "${args[@]}" >/dev/null 2>&1; then
+    local tsx_bin
+    tsx_bin="$(resolve_tsx_bin)" || {
+        log_warn ".gitignore sync skipped — tsx runner missing"
+        return 0
+    }
+    # shellcheck disable=SC2086
+    if $tsx_bin "$sync_script" "${args[@]}" >/dev/null 2>&1; then
         log_verbose ".gitignore synced"
     else
         log_warn ".gitignore sync failed (exit $?)"
@@ -1135,13 +1157,15 @@ main() {
     if $is_first_run && ! $QUIET; then
         echo ""
         echo "✅  agent-config payload synced."
-        echo "    Run src/scripts/install (or python3 src/scripts/install.py) to render .agent-settings.yml and bridges."
+        echo "    Run src/scripts/install (or ./scripts-run src/scripts/install) to render .agent-settings.yml and bridges."
         # step-9 P11 · U1 — airgap detection. Probe DNS for provider hosts;
         # on first-run with no reachable backend, surface the banner so the
         # installer caller can flip defaults.member_mode to `api`.
-        if command -v python3 >/dev/null 2>&1; then
+        local _airgap_tsx
+        if _airgap_tsx="$(resolve_tsx_bin)"; then
             local airgap_mode
-            airgap_mode="$(python3 "$SOURCE_DIR/src/scripts/ai_council/airgap.py" 2>/dev/null || true)"
+            # shellcheck disable=SC2086
+            airgap_mode="$($_airgap_tsx "$SOURCE_DIR/src/scripts/ai_council/airgap.ts" 2>/dev/null || true)"
             if [[ "$airgap_mode" == "api" ]]; then
                 echo ""
                 echo "⚠️  airgapped environment detected — defaulting to mode: api"

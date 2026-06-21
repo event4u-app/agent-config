@@ -32,7 +32,7 @@ This contract covers the **variant axis** (`with` vs. `without` agent-config) th
 
 1. `task bench:ab` runs (the full pipeline ends with `bench:ab:diff` which calls the renderer).
 2. `task bench:ab:diff` runs alone (no fresh bench, just re-render).
-3. The renderer is invoked directly: `python3 scripts/render_benchmark_md.py`.
+3. The renderer is invoked directly: `./scripts-run src/scripts/render_benchmark_md`.
 
 The renderer is deterministic: same reports → same output. It never runs a bench. If no reports exist, it writes a placeholder document — never errors out.
 
@@ -86,10 +86,10 @@ The integrity check `bench_ab_tracka_run.py::integrity_check` fails the run if `
 
 A bench run counts as a real measurement (rather than a plumbing health check) when:
 
-- `python3 scripts/bench_ab_integrity.py` exits 0 (the variant axis is clean).
+- `./scripts-run src/scripts/bench_ab_integrity` exits 0 (the variant axis is clean).
 - Track A runs in BOTH variants and produces `integrity_ok: true` (with scoring close to 100%, without scoring 0%).
 - Track B runs in BOTH variants in `--mode live` (not dry-run).
-- `python3 scripts/lint_bench_ab.py` passes.
+- `./scripts-run src/scripts/lint_bench_ab` passes.
 - The rendered `docs/benchmark.md` carries the Headline + Track A + Track B + Methodology + History sections.
 
 ## Out of scope for this contract

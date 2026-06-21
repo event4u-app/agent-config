@@ -14,12 +14,19 @@ export default defineConfig({
     },
     test: {
         include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-        exclude: ['node_modules/**', 'dist/**', 'dist/agent-src/**', '.agent-src.uncondensed/**'],
+        // tests/golden/sandbox/repo/** is the golden-transcript toy-repo
+        // fixture — its tests run only when the replay harness drives them in
+        // a temp workspace, never in the outer suite (mirrors the retired
+        // conftest `collect_ignore_glob`).
+        exclude: ['node_modules/**', 'dist/**', 'dist/agent-src/**', '.agent-src.uncondensed/**', 'tests/golden/sandbox/repo/**'],
         environmentMatchGlobs: [
             ['tests/ui/**', 'happy-dom'],
             ['src/ui/**', 'happy-dom'],
         ],
         environment: 'node',
+        // Enforce the post-migration python-free runtime so obsolete live
+        // python↔tsx parity blocks self-skip (see tests/_lib/python-free-env.ts).
+        setupFiles: ['./tests/_lib/python-free-env.ts'],
         testTimeout: 10_000,
         hookTimeout: 10_000,
         reporters: process.env.CI ? ['default'] : ['default'],

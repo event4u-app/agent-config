@@ -580,7 +580,7 @@ usually lower).
 If `pricing.is_stale(table)` returns true, ask before proceeding:
 
 > Price table is stale (last_updated: YYYY-MM-DD)
-> 1. Refresh now (`python3 scripts/update_prices.py`)
+> 1. Refresh now (`./scripts-run src/scripts/update_prices`)
 > 2. Continue with the stale table
 > 3. Cancel
 

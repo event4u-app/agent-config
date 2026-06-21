@@ -71,7 +71,7 @@ A persona being removed is **deleted in the same commit** that lands its replace
 
 ### 4. Schema conformance — the skill linter is the gate
 
-Every persona file is linted against [`docs/contracts/persona-schema.md`](../docs/contracts/persona-schema.md) by the skill linter: frontmatter shape, tier enum, wing enum, required sections per tier, line budget per tier (with wing override), `Unique Questions` ≥ 3, filename / id match, description ≤ 160 chars. The agent runs `python3 scripts/skill_linter.py` before any persona PR is marked ready.
+Every persona file is linted against [`docs/contracts/persona-schema.md`](../docs/contracts/persona-schema.md) by the skill linter: frontmatter shape, tier enum, wing enum, required sections per tier, line budget per tier (with wing override), `Unique Questions` ≥ 3, filename / id match, description ≤ 160 chars. The agent runs `./scripts-run src/scripts/skill_linter` before any persona PR is marked ready.
 
 ## Failure modes — what counts as a violation
 
@@ -79,7 +79,7 @@ Every persona file is linted against [`docs/contracts/persona-schema.md`](../doc
 - Landing a specialist with no `personas: [<id>]` cite in any skill.
 - Renaming or deleting a persona file without naming the successor (or sunset reason) in the commit message.
 - Editing core-tier personas in-place with breaking changes (rename, section removal) without bumping to a new id.
-- Skipping the skill linter (`python3 scripts/skill_linter.py`) on a persona PR.
+- Skipping the skill linter (`./scripts-run src/scripts/skill_linter`) on a persona PR.
 
 ## Day-one state
 

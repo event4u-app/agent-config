@@ -1,0 +1,5 @@
+{
+  "stdout": "[\"## learn-low-impact preview — repo=acme/widgets\\nlast-upstreamed: 0000000000000000000000000000000000000000\\nseed: <fixture>.md\\n\\n### Refused (1) — redactor blocked\\n- \\\"reach admin@example.com now\\\"  (line 5) — email: admin@example.com\\n\\n> Refusals block the PR. Rephrase the entries locally (or drop them) and re-run.\\n\", \"\", \"# feat(low-impact-seed): add 0 validated entries from acme/widgets\\n\\nUpstream from `/memory learn-low-impact --apply`.\\n\\n## Entries\\n\\n\\nProvenance baseline: `0000000000000000000000000000000000000000`.\\n\\nPer `low-impact-corpus-privacy-floor`, every entry above cleared the redactor on intake and again at upstream.\\n\", true, false, \"0000000000000000000000000000000000000000\"]\n",
+  "stderr": "",
+  "status": 0
+}

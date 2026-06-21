@@ -6,8 +6,8 @@ tasks:
     desc: Sync .agent-src.uncondensed/ → dist/agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
     cmds:
       - bash src/scripts/condense.sh --sync
-      - python3 src/scripts/update_counts.py
-      - python3 src/scripts/generate_pack_manifests.py
+      - ./scripts-run src/scripts/update_counts
+      - ./scripts-run src/scripts/generate_pack_manifests
       - task: compile-corpus
       - task: sync-agent-settings
 
@@ -17,7 +17,7 @@ tasks:
     cmds:
       - |
         if [ -f .agent-settings.yml ]; then
-          python3 src/scripts/sync_agent_settings.py --quiet
+          ./scripts-run src/scripts/sync_agent_settings --quiet
         else
           echo "ℹ️  .agent-settings.yml absent — skipping sync (run src/scripts/install.py for first-run setup)"
         fi
@@ -25,7 +25,7 @@ tasks:
   project-augment:
     silent: true
     desc: Rebuild the .augment/ projection from dist/agent-src/ (copies rules, symlinks rest)
-    cmd: python3 src/scripts/condense.py --project-augment
+    cmd: ./scripts-run src/scripts/condense --project-augment
 
   sync-list:
     silent: true
@@ -65,12 +65,12 @@ tasks:
   generate-tools:
     silent: true
     desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
-    cmd: python3 src/scripts/condense.py --generate-tools
+    cmd: ./scripts-run src/scripts/condense --generate-tools
 
   probe:skills:
     silent: true
     desc: Detect duplicate/drifting skill registrations across user-global and project-local scopes (road-to-clean-skill-distribution-channels Phase C)
-    cmd: python3 src/scripts/probe_skill_registration.py --format=text
+    cmd: ./scripts-run src/scripts/probe_skill_registration --format=text
 
   release-prepare:
     silent: true
@@ -83,57 +83,57 @@ tasks:
   clean-tools:
     silent: true
     desc: Remove all generated tool directories and files
-    cmd: python3 src/scripts/condense.py --clean-tools
+    cmd: ./scripts-run src/scripts/condense --clean-tools
 
   generate-catalog:
     silent: true
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
-    cmd: python3 src/scripts/generate_catalog.py
+    cmd: ./scripts-run src/scripts/generate_catalog
 
   generate-index:
     silent: true
     desc: Regenerate agents/index.md (internal) and docs/catalog.md (public)
-    cmd: python3 src/scripts/generate_index.py
+    cmd: ./scripts-run src/scripts/generate_index
 
   check-index:
     silent: true
     desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
-    cmd: python3 src/scripts/generate_index.py --check
+    cmd: ./scripts-run src/scripts/generate_index --check
 
   compile-router:
     silent: true
     desc: Compile rule frontmatter into router.json (kernel + tier-1/2 routing)
-    cmd: python3 src/scripts/compile_router.py
+    cmd: ./scripts-run src/scripts/compile_router
 
   check-router:
     silent: true
     desc: Verify router.json matches a fresh compile (fails on drift)
-    cmd: python3 src/scripts/compile_router.py --check
+    cmd: ./scripts-run src/scripts/compile_router --check
 
   compile-corpus:
     silent: true
     desc: Compile agents/decisions/low-impact-decisions.md → .lock.yaml (decisions source-of-truth)
-    cmd: PYTHONPATH=src python3 -m scripts.ai_council.compile_corpus
+    cmd: ./scripts-run src/scripts/ai_council/compile_corpus
 
   check-corpus:
     silent: true
     desc: Verify agents/decisions/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
-    cmd: PYTHONPATH=src python3 -m scripts.ai_council.compile_corpus --check
+    cmd: ./scripts-run src/scripts/ai_council/compile_corpus --check
 
   check-augmentignore:
     silent: true
     desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
-    cmd: python3 src/scripts/check_augmentignore.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_augmentignore {{.QUIET_FLAG}}
 
   counts-update:
     silent: true
     desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
-    cmd: python3 src/scripts/update_counts.py
+    cmd: ./scripts-run src/scripts/update_counts
 
   counts-check:
     silent: true
     desc: Verify doc counts match reality (fails if stale)
-    cmd: python3 src/scripts/update_counts.py --check
+    cmd: ./scripts-run src/scripts/update_counts --check
 
   consistency:
     silent: true
@@ -159,186 +159,186 @@ tasks:
   check-condensation:
     silent: true
     desc: Check condensation quality (headings, code blocks, frontmatter, word count)
-    cmd: python3 src/scripts/check_condensation.py
+    cmd: ./scripts-run src/scripts/check_condensation
 
   check-condensed-paths:
     silent: true
     desc: "Validate condensed-output paths in dist/agent-src/rules/*.md (road-to-path-fixes P5.2)"
-    cmd: python3 src/scripts/check_condensed_paths.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_condensed_paths {{.QUIET_FLAG}}
 
   check-overlay-cascade-subdirs:
     silent: true
     desc: "Verify agents_overlay constants ↔ docs/customization.md table (road-to-portable-runtime P1.6)"
-    cmd: python3 src/scripts/check_overlay_cascade_subdirs.py
+    cmd: ./scripts-run src/scripts/check_overlay_cascade_subdirs
 
   check-template-pin-drift:
     silent: true
     desc: "Verify package.json version ↔ agent_config_version in project-settings template (road-to-portable-runtime P3.3)"
-    cmd: python3 src/scripts/check_template_pin_drift.py
+    cmd: ./scripts-run src/scripts/check_template_pin_drift
 
   generate-ownership-matrix:
     silent: true
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
-    cmd: python3 src/scripts/generate_ownership_matrix.py
+    cmd: ./scripts-run src/scripts/generate_ownership_matrix
 
   check-ownership-matrix:
     silent: true
     desc: Verify the committed ownership matrix matches a fresh regeneration (CI gate)
-    cmd: python3 src/scripts/generate_ownership_matrix.py --check
+    cmd: ./scripts-run src/scripts/generate_ownership_matrix --check
 
   roadmap-progress:
     silent: true
     desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
-    cmd: python3 .augment/scripts/update_roadmap_progress.py
+    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts
 
   roadmap-progress-check:
     silent: true
     desc: Fail if agents/roadmaps-progress.md is stale (for CI)
-    cmd: python3 .augment/scripts/update_roadmap_progress.py --check
+    cmd: node_modules/.bin/tsx .augment/scripts/update_roadmap_progress.ts --check
 
   check-roadmap-trackable:
     silent: true
     desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)
-    cmd: python3 src/scripts/check_roadmap_trackable.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_roadmap_trackable {{.QUIET_FLAG}}
 
   check-council-layout:
     silent: true
     desc: Fail if council-* artefacts are placed outside the canonical agents/runtime/council/{questions,responses,sessions}/ dirs (ai-council § Output path convention)
-    cmd: python3 src/scripts/check_council_layout.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_council_layout {{.QUIET_FLAG}}
 
   check-council-config-location:
     silent: true
     desc: Fail if council surfaces tie config to .agent-settings.yml instead of .ai-council.yml (ADR-093)
-    cmd: python3 src/scripts/check_council_config_location.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_council_config_location {{.QUIET_FLAG}}
 
   lint-agents-layout:
     silent: true
     desc: Fail on unknown flat files at agents/ root; warn on legacy entries scheduled for migration (see scripts/lint_agents_layout.py)
-    cmd: python3 src/scripts/lint_agents_layout.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_agents_layout {{.QUIET_FLAG}}
 
   lint-agents-layout-strict:
     silent: true
     desc: Promote agents/ layout legacy warnings to errors (release-tag gate)
-    cmd: python3 src/scripts/lint_agents_layout.py --strict {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_agents_layout --strict {{.QUIET_FLAG}}
 
   check-role-doc-links:
     silent: true
     desc: "Fail if any skill link in docs/getting-started-by-role.md or getting-started-laravel.md does not resolve (step-12 Phase 2 CI gate)"
-    cmd: python3 src/scripts/check_role_doc_links.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/check_role_doc_links {{.QUIET_FLAG}}
 
   council-prune:
     desc: Prune council artefacts older than ai_council.session_retention_days (default 7) across questions, responses, and sessions dirs
-    cmd: python3 src/scripts/council_prune.py
+    cmd: ./scripts-run src/scripts/council_prune
 
   migration-plan:
     silent: true
     desc: "Phase 4 (ADR-017) — emit dist/migration/move-plan.json from frontmatter packs[]; non-zero on conflicts"
-    cmd: python3 src/scripts/plan_physical_move.py
+    cmd: ./scripts-run src/scripts/plan_physical_move
 
   migration-snapshot:
     silent: true
     desc: "Phase 4 (ADR-017) — capture pre-move sha256 snapshot of dist/agent-src/, .augment/, and the discovery manifest"
-    cmd: python3 src/scripts/snapshot_agent_outputs.py
+    cmd: ./scripts-run src/scripts/snapshot_agent_outputs
 
   migration-verify:
     silent: true
     desc: "Phase 4 (ADR-017) — diff current outputs against the snapshot; only artefacts[].path may differ"
-    cmd: python3 src/scripts/verify_physical_move.py
+    cmd: ./scripts-run src/scripts/verify_physical_move
 
   generate-pack-manifests:
     silent: true
     desc: "Phase 4.4 (ADR-017) — regenerate packages/*/pack.yaml + README.md from frontmatter + packs vocab"
-    cmd: python3 src/scripts/generate_pack_manifests.py
+    cmd: ./scripts-run src/scripts/generate_pack_manifests
 
   generate-pack-manifests-check:
     silent: true
     desc: "Phase 4.4 (ADR-017) — fail if pack manifests are out of date (CI gate)"
-    cmd: python3 src/scripts/generate_pack_manifests.py --check
+    cmd: ./scripts-run src/scripts/generate_pack_manifests --check
 
   lint-pack-boundaries:
     silent: true
     desc: "Phase 4.4 (ADR-017) — fail on cross-pack references not declared in pack.yaml requires[]"
-    cmd: python3 src/scripts/lint_pack_boundaries.py --quiet
+    cmd: ./scripts-run src/scripts/lint_pack_boundaries --quiet
 
   validate-pack-yaml:
     silent: true
     desc: "road-to-6.0.0-D Phase 0 — validate packages/*/pack.yaml against the schema + resolve every dependency reference"
-    cmd: python3 src/scripts/validate_pack_yaml.py
+    cmd: ./scripts-run src/scripts/validate_pack_yaml
 
   lint-pack-dependencies:
     silent: true
     desc: "road-to-6.0.0-D Phase 0 — pack.yaml dependency drift (declared vs actual includes) + pack-graph DAG check"
-    cmd: python3 src/scripts/lint_pack_dependencies.py
+    cmd: ./scripts-run src/scripts/lint_pack_dependencies
 
   lint-flows:
     silent: true
     desc: "road-to-6.1.0 Step 8b (ADR-055) — validate src/flows/*.yaml against the flow schema + resolve every command/skill reference + closed-set/completeness"
-    cmd: python3 src/scripts/lint_flows.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_flows {{.QUIET_FLAG}}
 
   lint-command-flow-coverage:
     silent: true
     desc: "road-to-6.1.0 Step 9 — every src/domains command is classified into exactly one flow/surface in src/flows/surface-map.yaml (the Flows primary view)"
-    cmd: python3 src/scripts/lint_command_flow_coverage.py {{.QUIET_FLAG}}
+    cmd: ./scripts-run src/scripts/lint_command_flow_coverage {{.QUIET_FLAG}}
 
   generate-command-flows:
     silent: true
     desc: "road-to-6.1.0 Step 9 — (re)generate docs/command-flows.md (the Flows primary view) from surface-map.yaml + src/flows/*.yaml"
-    cmd: python3 src/scripts/generate_command_flows.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_command_flows {{.CLI_ARGS}}
 
   generate-command-flows-check:
     silent: true
     desc: "road-to-6.1.0 Step 9 — fail if docs/command-flows.md is stale vs surface-map.yaml + src/flows/*.yaml"
-    cmd: python3 src/scripts/generate_command_flows.py --check
+    cmd: ./scripts-run src/scripts/generate_command_flows --check
 
   generate-capability-matrix:
     silent: true
     desc: "road-to-competitive-borrow P1.3 — (re)generate docs/capability-matrix.md + dist/discovery/capability-matrix.json from condense.py generate_tools() projection logic"
-    cmd: python3 src/scripts/generate_capability_matrix.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_capability_matrix {{.CLI_ARGS}}
 
   generate-capability-matrix-check:
     silent: true
     desc: "road-to-competitive-borrow P1.3 — fail if the capability matrix is stale vs the generate_tools() projection logic"
-    cmd: python3 src/scripts/generate_capability_matrix.py --check
+    cmd: ./scripts-run src/scripts/generate_capability_matrix --check
 
   generate-capabilities-index:
     silent: true
     desc: "road-to-capability-discoverability P2 — (re)generate CAPABILITIES.yaml (capability area → coverage → backing skills/commands → gaps) from packs.yml + skill/command frontmatter"
-    cmd: python3 src/scripts/generate_capabilities_index.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_capabilities_index {{.CLI_ARGS}}
 
   generate-capabilities-index-check:
     silent: true
     desc: "road-to-capability-discoverability P2 — fail if CAPABILITIES.yaml is stale vs the skill/command/pack surface (auto-run in CI; kill-switch on >5s / >50KB)"
-    cmd: python3 src/scripts/generate_capabilities_index.py --check
+    cmd: ./scripts-run src/scripts/generate_capabilities_index --check
 
   generate-cookbook:
     silent: true
     desc: "road-to-competitive-borrow P1.4 — (re)generate docs/cookbook.md from src/flows/cookbook.yaml + the four user-work flows (validates every command/skill ref)"
-    cmd: python3 src/scripts/generate_cookbook.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_cookbook {{.CLI_ARGS}}
 
   generate-cookbook-check:
     silent: true
     desc: "road-to-competitive-borrow P1.4 — fail if docs/cookbook.md is stale or references a non-existent command/skill"
-    cmd: python3 src/scripts/generate_cookbook.py --check
+    cmd: ./scripts-run src/scripts/generate_cookbook --check
 
   generate-role-experiences-catalog:
     silent: true
     desc: "road-to-competitive-borrow P1.0 — (re)generate docs/role-experiences.md from agents/roles/*/index.md taglines"
-    cmd: python3 src/scripts/generate_role_experiences_catalog.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/generate_role_experiences_catalog {{.CLI_ARGS}}
 
   generate-role-experiences-catalog-check:
     silent: true
     desc: "road-to-competitive-borrow P1.0 — fail if docs/role-experiences.md is stale vs the role taglines"
-    cmd: python3 src/scripts/generate_role_experiences_catalog.py --check
+    cmd: ./scripts-run src/scripts/generate_role_experiences_catalog --check
 
   lint-namespace-collisions:
     silent: true
     desc: "road-to-6.0.0-D Phase 0 — every skill/rule/command name unique within its namespace (single flat library)"
-    cmd: python3 src/scripts/lint_namespace_collisions.py
+    cmd: ./scripts-run src/scripts/lint_namespace_collisions
 
   new-skill:
     desc: "Phase 4.5 (ADR-017) — interactive scaffolder for new skills/rules/commands under packages/. Flags forwarded after `--`."
-    cmd: python3 src/scripts/new_skill.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/new_skill {{.CLI_ARGS}}
 
   move-artefact:
     desc: "Phase 4.5 (ADR-017) — move a skill/rule/command between packs via `git mv` + frontmatter rewrite. Flags forwarded after `--`."
-    cmd: python3 src/scripts/move_artefact.py {{.CLI_ARGS}}
+    cmd: ./scripts-run src/scripts/move_artefact {{.CLI_ARGS}}

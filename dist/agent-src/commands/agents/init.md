@@ -157,7 +157,7 @@ module-aware skills (road-to-configurable-modules Phase B). Skips
 silently when the helper finds no candidates.
 
 ```bash
-python3 scripts/propose_modules_config.py --json
+./scripts-run src/scripts/propose_modules_config --json
 ```
 
 If the JSON `candidates` array is non-empty, render the proposed

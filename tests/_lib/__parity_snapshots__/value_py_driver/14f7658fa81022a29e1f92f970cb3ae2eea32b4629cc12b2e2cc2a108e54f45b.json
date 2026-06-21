@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"eur_delta\": 163.83084, \"footnote\": \"Eager default: all 79 rule files always-on in the `.claude` projection path (0B.6-confirmed for the primary tool). Not just the kernel \\u2014 this is the honest up-front load; tokens \\u2248 chars / 4.\", \"id\": \"load\", \"label\": \"With package (rule load)\", \"source_report\": \"internal/bench/reports/projection-cost.json\", \"token_delta\": 59359, \"what_it_does\": \"The always-active rules land in the context of every request.\"}",
+  "stderr": "",
+  "status": 0
+}

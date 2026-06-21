@@ -1,0 +1,5 @@
+{
+  "stdout": "usage: council_prune.py [-h] [--days DAYS] [--dry-run]\n\nManual pruner for council artefacts. Deletes council files older than\n`ai_council.session_retention_days` (default 7) across all four artefact\ndirectories: - agents/runtime/council/sessions/ (timestamp subdirs + root\nfiles) - agents/runtime/council/questions/ (mtime-based) -\nagents/runtime/council/responses/ (mtime-based) Same logic as the auto-prune\nthat runs on every `council save()`, exposed as a Task target so the user can\nsweep on demand. Invocation (from project root): python3\nscripts/council_prune.py [--days N] [--dry-run] Exit code 0 always — pruning\nis a hygiene operation, never a build gate. Disk failures are logged to stderr\nby the underlying pruner.\n\noptional arguments:\n  -h, --help   show this help message and exit\n  --days DAYS  Override retention_days (default: from .agent-settings.yml)\n  --dry-run    List what would be deleted without removing anything.\n",
+  "stderr": "",
+  "status": 0
+}

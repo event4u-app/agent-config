@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"id\": \"finance\", \"audience\": {\"label\": \"CFO / fractional finance / FP&A\", \"readme_anchor\": \"finance\"}, \"preset_id\": \"strict\", \"packs\": [\"finance-basic\", \"finance-advanced\"], \"personas\": [\"finance-partner\", \"reviewer\"], \"skills_hint\": [\"dcf-modeling\", \"forecasting\", \"scenario-modeling\", \"unit-economics-modeling\", \"runway-cognition\"], \"commands_hint\": [\"work\", \"council\", \"challenge-me\"], \"docs_first_pointer\": \"docs/getting-started-by-role.md#finance\", \"source\": \"runtime\"}\n",
+  "stderr": "",
+  "status": 0
+}

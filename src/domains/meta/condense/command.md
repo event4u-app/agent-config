@@ -112,7 +112,7 @@ For each changed `.md` file:
 7. **MANDATORY: Run condensation quality check on this file:**
 
 ```bash
-python3 scripts/check_condensation.py --format text 2>&1 | grep "{path}"
+./scripts-run src/scripts/check_condensation --format text 2>&1 | grep "{path}"
 ```
 
 If the output contains 🔴 (error) for this file: **STOP. Fix the condensed file before continuing.**
@@ -146,7 +146,7 @@ bash scripts/condense.sh --check
 Must show ✅ (hashes in sync).
 
 ```bash
-python3 scripts/check_condensation.py
+./scripts-run src/scripts/check_condensation
 ```
 
 Must show **zero 🔴 errors**. Warnings (🟡) are acceptable.

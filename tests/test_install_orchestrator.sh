@@ -12,17 +12,17 @@ export AGENT_CONFIG_DEV_MODE=1
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL="$SCRIPT_DIR/src/scripts/install"
 INSTALL_PHP="$SCRIPT_DIR/bin/install.php"
-TMPDIR=""
+TEST_TARGET=""
 PASS=0
 FAIL=0
 
 setup() {
-    TMPDIR="$(mktemp -d)"
-    touch "$TMPDIR/.gitignore"
+    TEST_TARGET="$(mktemp -d)"
+    touch "$TEST_TARGET/.gitignore"
 }
 
 teardown() {
-    [[ -n "$TMPDIR" ]] && rm -rf "$TMPDIR"
+    [[ -n "$TEST_TARGET" ]] && rm -rf "$TEST_TARGET"
 }
 
 pass() { echo "  ✅  $1"; ((PASS++)) || true; }
@@ -42,51 +42,52 @@ assert_false() {
 
 test_full_run_creates_payload_and_bridges() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --quiet
     assert_true "exit 0 on full run" test $? -eq 0
-    assert_true "payload: .augment/rules/php-coding.md exists" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_true "payload: .augment/skills/ has symlinks" test -L "$TMPDIR/.augment/skills/php-coder/SKILL.md"
-    assert_true "payload: .windsurfrules generated" test -f "$TMPDIR/.windsurfrules"
-    assert_true "payload: GEMINI.md symlink" test -L "$TMPDIR/GEMINI.md"
-    assert_true "bridges: .agent-settings.yml rendered" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
-    assert_true "bridges: .vscode/settings.json created" test -f "$TMPDIR/.vscode/settings.json"
-    assert_true "bridges: .augment/settings.json created" test -f "$TMPDIR/.augment/settings.json"
+    assert_true "payload: .augment/rules/php-coding.md exists" test -f "$TEST_TARGET/.augment/rules/php-coding.md"
+    assert_true "payload: .augment/skills/ has symlinks" test -L "$TEST_TARGET/.augment/skills/php-coder/SKILL.md"
+    assert_true "payload: .windsurfrules generated" test -f "$TEST_TARGET/.windsurfrules"
+    assert_true "payload: GEMINI.md symlink" test -L "$TEST_TARGET/GEMINI.md"
+    assert_true "bridges: .agent-settings.yml rendered" test -f "$TEST_TARGET/agents/settings/.agent-settings.yml"
+    assert_true "bridges: .vscode/settings.json created" test -f "$TEST_TARGET/.vscode/settings.json"
+    assert_true "bridges: .augment/settings.json created" test -f "$TEST_TARGET/.augment/settings.json"
     teardown
 }
 
 test_skip_sync_runs_bridges_only() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --skip-sync --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --skip-sync --quiet
     assert_true "exit 0 with --skip-sync" test $? -eq 0
-    assert_false "payload skipped: no .augment/rules/" test -d "$TMPDIR/.augment/rules"
-    assert_true "bridges still ran: .agent-settings.yml exists" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
+    assert_false "payload skipped: no .augment/rules/" test -d "$TEST_TARGET/.augment/rules"
+    assert_true "bridges still ran: .agent-settings.yml exists" test -f "$TEST_TARGET/agents/settings/.agent-settings.yml"
     teardown
 }
 
 test_skip_bridges_runs_sync_only() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --skip-bridges --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --skip-bridges --quiet
     assert_true "exit 0 with --skip-bridges" test $? -eq 0
-    assert_true "payload ran: rules copied" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_false "bridges skipped: no .agent-settings.yml" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
-    assert_false "bridges skipped: no .vscode/settings.json" test -f "$TMPDIR/.vscode/settings.json"
+    assert_true "payload ran: rules copied" test -f "$TEST_TARGET/.augment/rules/php-coding.md"
+    assert_false "bridges skipped: no .agent-settings.yml" test -f "$TEST_TARGET/agents/settings/.agent-settings.yml"
+    assert_false "bridges skipped: no .vscode/settings.json" test -f "$TEST_TARGET/.vscode/settings.json"
     teardown
 }
 
 test_dry_run_creates_no_files() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --dry-run --quiet
-    local file_count
-    file_count="$(find "$TMPDIR" -type f ! -name ".gitignore" 2>/dev/null | wc -l | tr -d ' ')"
-    assert_true "no files after --dry-run (found $file_count)" test "$file_count" -eq 0
+    bash "$INSTALL" --target "$TEST_TARGET" --dry-run --quiet
+    local file_count leaked
+    file_count="$(find "$TEST_TARGET" -type f ! -name ".gitignore" 2>/dev/null | wc -l | tr -d ' ')"
+    leaked="$(find "$TEST_TARGET" -type f ! -name ".gitignore" 2>/dev/null | sed "s|$TEST_TARGET/|<target>/|" | tr '\n' ' ')"
+    assert_true "no files after --dry-run (found $file_count: $leaked)" test "$file_count" -eq 0
     teardown
 }
 
 test_profile_forwarded_to_bridges() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --profile=balanced --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --profile=balanced --quiet
     assert_true "profile=balanced written to .agent-settings.yml" \
-        grep -q "^rule_loading_tier: balanced" "$TMPDIR/agents/settings/.agent-settings.yml"
+        grep -q "^rule_loading_tier: balanced" "$TEST_TARGET/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -95,23 +96,23 @@ test_subagent_keys_seeded() {
     # `subagents:` block. Match the indented child keys (two-space
     # indent, unambiguous inside the template).
     setup
-    bash "$INSTALL" --target "$TMPDIR" --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --quiet
     assert_true "subagents.implementer_model seeded" \
-        grep -q "^  implementer_model:" "$TMPDIR/agents/settings/.agent-settings.yml"
+        grep -q "^  implementer_model:" "$TEST_TARGET/agents/settings/.agent-settings.yml"
     assert_true "subagents.judge_model seeded" \
-        grep -q "^  judge_model:" "$TMPDIR/agents/settings/.agent-settings.yml"
+        grep -q "^  judge_model:" "$TEST_TARGET/agents/settings/.agent-settings.yml"
     assert_true "subagents.max_parallel: 3 seeded" \
-        grep -q "^  max_parallel: 3" "$TMPDIR/agents/settings/.agent-settings.yml"
+        grep -q "^  max_parallel: 3" "$TEST_TARGET/agents/settings/.agent-settings.yml"
     teardown
 }
 
 test_idempotent() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --quiet
-    bash "$INSTALL" --target "$TMPDIR" --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --quiet
+    bash "$INSTALL" --target "$TEST_TARGET" --quiet
     assert_true "second run exits 0 (idempotent)" test $? -eq 0
-    assert_true "rules still present" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_true ".agent-settings.yml still present" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
+    assert_true "rules still present" test -f "$TEST_TARGET/.augment/rules/php-coding.md"
+    assert_true ".agent-settings.yml still present" test -f "$TEST_TARGET/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -136,11 +137,11 @@ test_bin_install_php_routes_through_orchestrator() {
     [[ -f "$INSTALL_PHP" ]] || { echo "  ⏭️  skip: bin/install.php missing"; return; }
     command -v php >/dev/null 2>&1 || { echo "  ⏭️  skip: php not available"; return; }
     setup
-    php "$INSTALL_PHP" --target "$TMPDIR" --quiet >/dev/null 2>&1
+    php "$INSTALL_PHP" --target "$TEST_TARGET" --quiet >/dev/null 2>&1
     local rc=$?
     assert_true "bin/install.php exit 0" test $rc -eq 0
-    assert_true "bin/install.php: payload synced" test -f "$TMPDIR/.augment/rules/php-coding.md"
-    assert_true "bin/install.php: bridges rendered" test -f "$TMPDIR/agents/settings/.agent-settings.yml"
+    assert_true "bin/install.php: payload synced" test -f "$TEST_TARGET/.augment/rules/php-coding.md"
+    assert_true "bin/install.php: bridges rendered" test -f "$TEST_TARGET/agents/settings/.agent-settings.yml"
     teardown
 }
 
@@ -175,50 +176,50 @@ test_empty_tools_value_rejected() {
 
 test_tools_cursor_only_excludes_claude_and_windsurf() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --tools=cursor --quiet
-    assert_true "cursor: .cursor/rules populated" test -d "$TMPDIR/.cursor/rules"
-    assert_false "cursor: no .claude/rules" test -d "$TMPDIR/.claude/rules"
-    assert_false "cursor: no .clinerules" test -d "$TMPDIR/.clinerules"
-    assert_false "cursor: no .windsurfrules" test -f "$TMPDIR/.windsurfrules"
-    assert_false "cursor: no GEMINI.md" test -e "$TMPDIR/GEMINI.md"
-    assert_false "cursor: no .github/copilot-instructions.md" test -f "$TMPDIR/.github/copilot-instructions.md"
+    bash "$INSTALL" --target "$TEST_TARGET" --tools=cursor --quiet
+    assert_true "cursor: .cursor/rules populated" test -d "$TEST_TARGET/.cursor/rules"
+    assert_false "cursor: no .claude/rules" test -d "$TEST_TARGET/.claude/rules"
+    assert_false "cursor: no .clinerules" test -d "$TEST_TARGET/.clinerules"
+    assert_false "cursor: no .windsurfrules" test -f "$TEST_TARGET/.windsurfrules"
+    assert_false "cursor: no GEMINI.md" test -e "$TEST_TARGET/GEMINI.md"
+    assert_false "cursor: no .github/copilot-instructions.md" test -f "$TEST_TARGET/.github/copilot-instructions.md"
     # Substrate is always written.
-    assert_true "cursor: .augment/ substrate present" test -d "$TMPDIR/.augment/rules"
-    assert_true "cursor: AGENTS.md universal contract present" test -f "$TMPDIR/AGENTS.md"
+    assert_true "cursor: .augment/ substrate present" test -d "$TEST_TARGET/.augment/rules"
+    assert_true "cursor: AGENTS.md universal contract present" test -f "$TEST_TARGET/AGENTS.md"
     teardown
 }
 
 test_tools_claude_code_only_excludes_others() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --tools=claude-code --quiet
-    assert_true "claude-code: .claude/rules populated" test -d "$TMPDIR/.claude/rules"
-    assert_true "claude-code: .claude/skills populated" test -d "$TMPDIR/.claude/skills"
-    assert_false "claude-code: no .cursor/rules" test -d "$TMPDIR/.cursor/rules"
-    assert_false "claude-code: no .clinerules" test -d "$TMPDIR/.clinerules"
-    assert_false "claude-code: no .windsurfrules" test -f "$TMPDIR/.windsurfrules"
-    assert_false "claude-code: no GEMINI.md" test -e "$TMPDIR/GEMINI.md"
+    bash "$INSTALL" --target "$TEST_TARGET" --tools=claude-code --quiet
+    assert_true "claude-code: .claude/rules populated" test -d "$TEST_TARGET/.claude/rules"
+    assert_true "claude-code: .claude/skills populated" test -d "$TEST_TARGET/.claude/skills"
+    assert_false "claude-code: no .cursor/rules" test -d "$TEST_TARGET/.cursor/rules"
+    assert_false "claude-code: no .clinerules" test -d "$TEST_TARGET/.clinerules"
+    assert_false "claude-code: no .windsurfrules" test -f "$TEST_TARGET/.windsurfrules"
+    assert_false "claude-code: no GEMINI.md" test -e "$TEST_TARGET/GEMINI.md"
     teardown
 }
 
 test_tools_all_matches_default() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --tools=all --quiet
-    assert_true "tools=all: .claude/rules" test -d "$TMPDIR/.claude/rules"
-    assert_true "tools=all: .cursor/rules" test -d "$TMPDIR/.cursor/rules"
-    assert_true "tools=all: .clinerules" test -d "$TMPDIR/.clinerules"
-    assert_true "tools=all: .windsurfrules" test -f "$TMPDIR/.windsurfrules"
-    assert_true "tools=all: GEMINI.md" test -L "$TMPDIR/GEMINI.md"
-    assert_true "tools=all: .github/copilot-instructions.md" test -f "$TMPDIR/.github/copilot-instructions.md"
+    bash "$INSTALL" --target "$TEST_TARGET" --tools=all --quiet
+    assert_true "tools=all: .claude/rules" test -d "$TEST_TARGET/.claude/rules"
+    assert_true "tools=all: .cursor/rules" test -d "$TEST_TARGET/.cursor/rules"
+    assert_true "tools=all: .clinerules" test -d "$TEST_TARGET/.clinerules"
+    assert_true "tools=all: .windsurfrules" test -f "$TEST_TARGET/.windsurfrules"
+    assert_true "tools=all: GEMINI.md" test -L "$TEST_TARGET/GEMINI.md"
+    assert_true "tools=all: .github/copilot-instructions.md" test -f "$TEST_TARGET/.github/copilot-instructions.md"
     teardown
 }
 
 test_tools_combination_cursor_plus_windsurf() {
     setup
-    bash "$INSTALL" --target "$TMPDIR" --tools=cursor,windsurf --quiet
-    assert_true "combo: .cursor/rules" test -d "$TMPDIR/.cursor/rules"
-    assert_true "combo: .windsurfrules" test -f "$TMPDIR/.windsurfrules"
-    assert_false "combo: no .claude/rules" test -d "$TMPDIR/.claude/rules"
-    assert_false "combo: no .clinerules" test -d "$TMPDIR/.clinerules"
+    bash "$INSTALL" --target "$TEST_TARGET" --tools=cursor,windsurf --quiet
+    assert_true "combo: .cursor/rules" test -d "$TEST_TARGET/.cursor/rules"
+    assert_true "combo: .windsurfrules" test -f "$TEST_TARGET/.windsurfrules"
+    assert_false "combo: no .claude/rules" test -d "$TEST_TARGET/.claude/rules"
+    assert_false "combo: no .clinerules" test -d "$TEST_TARGET/.clinerules"
     teardown
 }
 
@@ -228,40 +229,40 @@ test_tools_combination_cursor_plus_windsurf() {
 # tree, and bypassable via AGENT_CONFIG_ALLOW_SELF_INSTALL=1 for self-tests.
 test_source_repo_guard_blocks_project_install() {
     setup
-    mkdir -p "$TMPDIR/.agent-src.uncondensed"
+    mkdir -p "$TEST_TARGET/.agent-src.uncondensed"
     local out exit_code
-    out="$(bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
+    out="$(bash "$INSTALL" --target "$TEST_TARGET" --quiet 2>&1)"; exit_code=$?
     assert_true "guard: exit 2 on project install into source tree" test "$exit_code" -eq 2
     assert_true "guard: 'Refusing' message printed" grep -q "Refusing to install agent-config" <<<"$out"
-    assert_false "guard: no .augment/ created in source tree" test -d "$TMPDIR/.augment"
+    assert_false "guard: no .augment/ created in source tree" test -d "$TEST_TARGET/.augment"
     teardown
 }
 
 test_source_repo_guard_allows_global_install() {
     setup
-    mkdir -p "$TMPDIR/.agent-src.uncondensed"
+    mkdir -p "$TEST_TARGET/.agent-src.uncondensed"
     # Sandbox HOME so user-scope deploys (~/.claude/, ~/.cursor/, …) land
-    # under TMPDIR instead of the developer's real config dirs. Mirrors
+    # under TEST_TARGET instead of the developer's real config dirs. Mirrors
     # the `isolated_lock` fixture in tests/test_installed_lock.py.
-    mkdir -p "$TMPDIR/home"
+    mkdir -p "$TEST_TARGET/home"
     local out exit_code
-    out="$(AGENT_CONFIG_INSTALLED_LOCK="$TMPDIR/installed.lock" \
-        HOME="$TMPDIR/home" \
-        USERPROFILE="$TMPDIR/home" \
-        EVENT4U_CONFIG_HOME="$TMPDIR/home/.event4u/agent-config" \
-        bash "$INSTALL" --target "$TMPDIR" --global --tools=claude-code --quiet 2>&1)"; exit_code=$?
+    out="$(AGENT_CONFIG_INSTALLED_LOCK="$TEST_TARGET/installed.lock" \
+        HOME="$TEST_TARGET/home" \
+        USERPROFILE="$TEST_TARGET/home" \
+        EVENT4U_CONFIG_HOME="$TEST_TARGET/home/.event4u/agent-config" \
+        bash "$INSTALL" --target "$TEST_TARGET" --global --tools=claude-code --quiet 2>&1)"; exit_code=$?
     assert_true "guard: exit 0 on --global into source tree" test "$exit_code" -eq 0
     assert_false "guard: no 'Refusing' message on --global" grep -q "Refusing to install agent-config" <<<"$out"
-    assert_true "guard: lockfile written to redirected path" test -f "$TMPDIR/installed.lock"
+    assert_true "guard: lockfile written to redirected path" test -f "$TEST_TARGET/installed.lock"
     teardown
 }
 
 test_source_repo_guard_override_env_bypasses() {
     setup
-    mkdir -p "$TMPDIR/.agent-src.uncondensed"
+    mkdir -p "$TEST_TARGET/.agent-src.uncondensed"
     local out exit_code
     out="$(AGENT_CONFIG_ALLOW_SELF_INSTALL=1 \
-        bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
+        bash "$INSTALL" --target "$TEST_TARGET" --quiet 2>&1)"; exit_code=$?
     assert_true "guard: exit 0 with AGENT_CONFIG_ALLOW_SELF_INSTALL=1" test "$exit_code" -eq 0
     assert_false "guard: no 'Refusing' message with override" grep -q "Refusing to install agent-config" <<<"$out"
     teardown
@@ -270,11 +271,11 @@ test_source_repo_guard_override_env_bypasses() {
 test_source_repo_guard_package_json_marker() {
     setup
     # No .agent-src.uncondensed/, but package.json declares the source name.
-    cat >"$TMPDIR/package.json" <<'JSON'
+    cat >"$TEST_TARGET/package.json" <<'JSON'
 { "name": "@event4u/agent-config", "version": "0.0.0" }
 JSON
     local out exit_code
-    out="$(bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
+    out="$(bash "$INSTALL" --target "$TEST_TARGET" --quiet 2>&1)"; exit_code=$?
     assert_true "guard: exit 2 on package.json name marker" test "$exit_code" -eq 2
     assert_true "guard: 'package.json::name' in detected reason" grep -q 'package.json::name' <<<"$out"
     teardown

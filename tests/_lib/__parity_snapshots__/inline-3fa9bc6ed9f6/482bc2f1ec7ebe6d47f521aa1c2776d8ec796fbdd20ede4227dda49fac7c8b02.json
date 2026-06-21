@@ -1,0 +1,5 @@
+{
+  "stdout": "unknown intent ''; expected one of ['backend-coding', 'mixed', 'ui-build', 'ui-improve', 'ui-trivial']",
+  "stderr": "",
+  "status": 0
+}

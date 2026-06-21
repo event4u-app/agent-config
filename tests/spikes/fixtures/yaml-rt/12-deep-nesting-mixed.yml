@@ -1,0 +1,13 @@
+# Deeper nesting, comments between siblings, list under deep mapping.
+a:
+  b:
+    c:
+      leaf: 1
+      # comment between siblings
+      other: 2
+    back_up: 3
+  # comment before a list-bearing key
+  items:
+    - one
+    - two
+top_again: done

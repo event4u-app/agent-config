@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"text\": \"h\\u00e9llo w\\u00f6rld \\ud83d\\ude00 chars\", \"in\": 0, \"out\": 4, \"meta\": {\"cli_output_format\": \"plain_text\", \"tokens_estimated\": true}}\n",
+  "stderr": "",
+  "status": 0
+}

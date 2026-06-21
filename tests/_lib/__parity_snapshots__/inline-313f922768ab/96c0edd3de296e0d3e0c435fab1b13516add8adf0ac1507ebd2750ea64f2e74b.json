@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — long_code_excerpt: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…'\", \"violations\": [[\"long_code_excerpt\", \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…\", \"45 chars\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -82,7 +82,7 @@ position or framing:
    underneath.
 
 Mechanical backstop:
-`python3 scripts/check_reply_consistency.py --stdin < draft.md`
+`./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
 (non-zero exit on any rule above). Self-scan is the primary gate;
 the script is the deterministic safety net for ambiguous cases.
 

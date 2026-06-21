@@ -37,7 +37,7 @@ function loadOrReport(): DiscoveryManifest | null {
         if (err instanceof ManifestNotFoundError) {
             logger.error(
                 `discovery manifest not found at ${err.path} — run ` +
-                    "'python3 src/scripts/build_discovery_manifest.py --write' " +
+                    "'./scripts-run src/scripts/build_discovery_manifest --write' " +
                     'or install a published release.',
             );
             return null;
@@ -63,7 +63,7 @@ function visibilityLabel(tier: number): string {
     return tier === 0 ? 'visible' : tier === 1 ? 'advanced' : 'internal';
 }
 
-// ADR-090: prefer the named `visibility` field; fall back to the integer
+// ADR-092: prefer the named `visibility` field; fall back to the integer
 // `tier` alias when the manifest entry predates the backfill.
 function visibilityOf(a: DiscoveryArtefact): string {
     return a.visibility ?? visibilityLabel(tierOf(a));

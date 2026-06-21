@@ -641,7 +641,7 @@ as comments and the loader enforces them.
   whose projected spend would breach a cap and asks the user to continue.
   Each `0` value disables that single cap; other caps still apply.
   Prices come from [`agents/runtime/.agent-prices.md`](../../agents/runtime/.agent-prices.md)
-  (gitignored, refreshed weekly by `python3 scripts/update_prices.py`;
+  (gitignored, refreshed weekly by `./scripts-run src/scripts/update_prices`;
   bootstrapped from `scripts/ai_council/_default_prices.py` on first run).
 
 ## Validation rules

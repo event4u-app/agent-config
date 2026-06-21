@@ -40,7 +40,7 @@ argument. Missing name → print usage and stop.
 ### 2. Run the previewer
 
 ```bash
-python3 scripts/skill_preview.py <name>
+./scripts-run src/scripts/skill_preview <name>
 ```
 
 Add `--technical` for the raw frontmatter + numbered step list; default is the

@@ -43,7 +43,7 @@ neither resolves, it prints the available roles and stops — do not guess.
 ### 2. Run the recommender
 
 ```bash
-python3 scripts/skill_discovery.py --role <role>
+./scripts-run src/scripts/skill_discovery --role <role>
 ```
 
 Optional flags: `--format json` (machine-readable), `--limit N` (results per

@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"id\": \"agency\", \"audience\": {\"label\": \"Multi-client delivery shop\", \"readme_anchor\": \"agency\"}, \"preset_id\": \"strict\", \"packs\": [\"engineering-base\", \"gtm-marketing\", \"product-basic\", \"ops-people\"], \"personas\": [\"reviewer\", \"product-strategist\", \"editor\"], \"skills_hint\": [\"doc-coauthoring\", \"decision-record\", \"refine-ticket\", \"estimate-ticket\", \"perf-feedback-craft\"], \"commands_hint\": [\"work\", \"implement-ticket\", \"refine-ticket\", \"feature\", \"roadmap\"], \"docs_first_pointer\": \"docs/getting-started-by-role.md#agency\", \"source\": \"runtime\"}\n",
+  "stderr": "",
+  "status": 0
+}

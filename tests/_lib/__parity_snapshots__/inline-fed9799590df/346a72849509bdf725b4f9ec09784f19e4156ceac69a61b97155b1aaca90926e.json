@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"schema_version\": 1, \"provenance\": {\"source_path\": \"c.md\", \"source_sha256\": \"c3d2624becd562de803ed70a14ec0b051644c626b44520c99d79178e30a46fcd\", \"last_upstreamed\": \"0123456789abcdef0123456789abcdef01234567\"}, \"validated\": [{\"phrase\": \"what port\", \"normalised\": \"what port\", \"line_no\": 5, \"trailing_metadata\": \"— meta here\"}], \"probation\": [{\"phrase\": \"how to test\", \"normalised\": \"how to test\", \"line_no\": 11, \"trailing_metadata\": \"— first-seen 2026-05-01\"}], \"anti_examples\": [{\"phrase\": \"delete prod?\", \"normalised\": \"delete prod\", \"line_no\": 15, \"trailing_metadata\": \"\"}]}\n",
+  "stderr": "",
+  "status": 0
+}

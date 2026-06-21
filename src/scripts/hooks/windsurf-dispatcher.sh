@@ -66,15 +66,9 @@ if [ -z "$WORKSPACE" ]; then
     if command -v jq >/dev/null 2>&1; then
         EXTRACTED="$(printf '%s' "$EVENT_DATA" \
             | jq -r '.tool_info.cwd // .tool_info.file_path // empty' 2>/dev/null)"
-    elif command -v python3 >/dev/null 2>&1; then
-        EXTRACTED="$(printf '%s' "$EVENT_DATA" | python3 -c '
-import json, sys
-try:
-    data = json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-info = data.get("tool_info") or {}
-print(info.get("cwd") or info.get("file_path") or "")
+    elif command -v node >/dev/null 2>&1; then
+        EXTRACTED="$(printf '%s' "$EVENT_DATA" | node -e '
+let b="";process.stdin.on("data",c=>b+=c);process.stdin.on("end",()=>{let d;try{d=JSON.parse(b)}catch(e){process.exit(0)}const info=(d&&d.tool_info)||{};process.stdout.write(String(info.cwd||info.file_path||""))});
 ' 2>/dev/null)"
     else
         EXTRACTED=""

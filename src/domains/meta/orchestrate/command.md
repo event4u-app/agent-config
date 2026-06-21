@@ -44,7 +44,7 @@ side; this command reads the same shape and dispatches each step.
 Run the linter against the resolved file:
 
 ```
-python3 scripts/lint_orchestration_dsl.py --file <path>
+./scripts-run src/scripts/lint_orchestration_dsl --file <path>
 ```
 
 Exit code ≠ 0 → surface the linter output and stop. **Never** run

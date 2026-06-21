@@ -1,0 +1,13 @@
+first: 1
+
+
+second: 2
+
+
+
+third:
+  nested: value
+
+
+# trailing comment after a blank-line run
+

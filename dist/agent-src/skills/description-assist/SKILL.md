@@ -126,7 +126,7 @@ Only after the user picks:
 
 * Edit the frontmatter in `.agent-src.uncondensed/{kind}/{name}.{md,SKILL.md}`.
 * Re-copy / re-sync as the target artifact's writing skill prescribes.
-* Run `python3 scripts/skill_linter.py {path}` — must report 0 FAIL.
+* Run `./scripts-run src/scripts/skill_linter {path}` — must report 0 FAIL.
 * Report the diff and exit.
 
 ### 6. Max two rounds

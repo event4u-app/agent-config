@@ -112,10 +112,10 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 
 ### 6. Validate
 
-* Run `python3 scripts/skill_linter.py docs/guidelines/{topic}/{name}.md`
+* Run `./scripts-run src/scripts/skill_linter docs/guidelines/{topic}/{name}.md`
   → 0 FAIL (guidelines have relaxed linting but must still parse).
 * Run `bash scripts/condense.sh --sync` → projects updates.
-* Run `python3 scripts/check_references.py` → no broken links.
+* Run `./scripts-run src/scripts/check_references` → no broken links.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.
 

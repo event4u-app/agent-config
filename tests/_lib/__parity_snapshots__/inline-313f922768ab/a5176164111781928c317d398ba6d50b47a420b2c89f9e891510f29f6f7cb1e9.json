@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — project_path: '/Users/bob/proj/file.ts'\", \"violations\": [[\"project_path\", \"/Users/bob/proj/file.ts\", \"\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,5 @@
+{
+  "stdout": "[\".agent-src.uncondensed/commands/foo/command.md\", \".agent-src.uncondensed/rules/legacy-rule.md\", \".agent-src.uncondensed/skills/legacy-only/SKILL.md\", \".agent-src.uncondensed/skills/shared/SKILL.md\", \"packages/core/.agent-src.uncondensed/commands/bar.md\", \"packages/core/.agent-src.uncondensed/skills/core-only/SKILL.md\", \"src/agent-src/contexts/ctx.md\", \"src/skills/flat-skill/SKILL.md\", \"src/rules/flat-rule.md\", \"src/domains/git/commit/command.md\", \"src/domains/meta/council/analysis/command.md\"]",
+  "stderr": "",
+  "status": 0
+}

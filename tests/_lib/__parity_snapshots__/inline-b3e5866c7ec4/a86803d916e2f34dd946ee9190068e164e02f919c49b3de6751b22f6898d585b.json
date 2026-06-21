@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"dr\": 0.6666666666666666, \"dn\": 3, \"er\": 0.3333333333333333, \"en\": 3, \"ok\": \"[shadow SLO] OK · 3.3% disagreement over 30 samples (<5%)\", \"warn\": \"[shadow SLO] WARN · 6.0% disagreement over 50 samples (5–8% — consider reverting to low_impact.dispatch: full) · 2.5% auto-escalated\", \"breach\": \"[shadow SLO] BREACH · 9.5% disagreement over 100 samples (>8% — revert to low_impact.dispatch: full)\", \"round_half_even\": [\"[shadow SLO] OK · 2.5% disagreement over 40 samples (<5%)\", \"[shadow SLO] OK · 3.5% disagreement over 40 samples (<5%)\"]}\n",
+  "stderr": "",
+  "status": 0
+}

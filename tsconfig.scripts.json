@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": [
+    "src/scripts/**/*.ts",
+    "src/skills/**/scripts/**/*.ts",
+    "src/agent-src/templates/scripts/**/*.ts",
+    "tests/scripts/**/*.ts",
+    "tests/parity/**/*.ts",
+    "tests/spikes/**/*.ts",
+    "tests/lib/**/*.ts",
+    "src/agent-src/templates/scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

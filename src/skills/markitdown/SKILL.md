@@ -37,7 +37,7 @@ Do NOT use when:
 - **1.5-2× token reduction** on plain-text-heavy PDFs.
 - **Negative** ratio on DOCX with revision history ON or PPTX with verbose presenter notes — see § Step 3 mitigations.
 
-Measure on your own corpus before quoting numbers. The bundled measurement corpus at `tests/fixtures/markitdown-corpus/` plus `python3 scripts/measure_markitdown_lift.py` lets the consumer ground the claim locally — the script lists each fixture, computes the raw-bytes baseline, and (if `markitdown-mcp` is reachable peer-side) prints the converted-Markdown token count + ratio per format.
+Measure on your own corpus before quoting numbers. The bundled measurement corpus at `tests/fixtures/markitdown-corpus/` plus `./scripts-run src/scripts/measure_markitdown_lift` lets the consumer ground the claim locally — the script lists each fixture, computes the raw-bytes baseline, and (if `markitdown-mcp` is reachable peer-side) prints the converted-Markdown token count + ratio per format.
 
 ## Procedure: markitdown
 

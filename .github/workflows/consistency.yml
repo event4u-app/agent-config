@@ -7,14 +7,14 @@ on:
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "src/scripts/condense.py"
+      - "src/scripts/condense.ts"
       - "src/scripts/condense.sh"
-      - "src/scripts/check_references.py"
-      - "src/scripts/check_no_new_legacy_path.py"
-      - "src/scripts/build_cloud_bundle.py"
-      - "src/scripts/build_linear_digest.py"
-      - "src/scripts/lint_marketplace.py"
-      - "src/scripts/lint_agents_md.py"
+      - "src/scripts/check_references.ts"
+      - "src/scripts/check_no_new_legacy_path.ts"
+      - "src/scripts/build_cloud_bundle.ts"
+      - "src/scripts/build_linear_digest.ts"
+      - "src/scripts/lint_marketplace.ts"
+      - "src/scripts/lint_agents_md.ts"
       - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
@@ -29,14 +29,14 @@ on:
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "src/scripts/condense.py"
+      - "src/scripts/condense.ts"
       - "src/scripts/condense.sh"
-      - "src/scripts/check_references.py"
-      - "src/scripts/check_no_new_legacy_path.py"
-      - "src/scripts/build_cloud_bundle.py"
-      - "src/scripts/build_linear_digest.py"
-      - "src/scripts/lint_marketplace.py"
-      - "src/scripts/lint_agents_md.py"
+      - "src/scripts/check_references.ts"
+      - "src/scripts/check_no_new_legacy_path.ts"
+      - "src/scripts/build_cloud_bundle.ts"
+      - "src/scripts/build_linear_digest.ts"
+      - "src/scripts/lint_marketplace.ts"
+      - "src/scripts/lint_agents_md.ts"
       - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
@@ -57,25 +57,27 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-          cache: 'pip'
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          # Retry once — the per-pack matrix fans out ~14 concurrent npm ci
+          # calls; transient registry ECONNRESET would otherwise flake a job.
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
       - name: Set up Task
         uses: ./.github/actions/setup-task
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Python dependencies
-        # pyyaml:     required by check_always_budget.py (parses rule frontmatter).
-        # jsonschema: required by scripts/lint_discovery_manifest.py (R3 Phase 2).
-        run: pip install pytest pyyaml jsonschema
-
       - name: Show tool versions
         run: |
-          python3 --version
+          node --version
           task --version
 
       - name: Verify current sync state
@@ -91,30 +93,33 @@ jobs:
         run: task generate-tools
 
       - name: Check cross-references
-        run: python3 src/scripts/check_references.py
+        run: ./scripts-run src/scripts/check_references
 
       - name: No leftover conflict markers / unmerged paths
-        run: python3 src/scripts/check_no_conflict_markers.py
+        run: ./scripts-run src/scripts/check_no_conflict_markers
 
       - name: Guard — no new legacy path under src/ (ADR-051)
         # PR-scoped: pull the diff via the GitHub API (gh) instead of
         # `git fetch <base>` — the shallow PR-merge checkout races with the
         # auth extraheader (same failure the kernel-rule-bundle step sidesteps).
+        # NOTE: no --patch — that emits a per-commit format-patch series, so a
+        # line added by one commit and fixed by a later commit in the same PR
+        # would fail forever. The guard's contract is the NET diff of the PR.
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr diff "${{ github.event.pull_request.number }}" --patch \
-            | python3 src/scripts/check_no_new_legacy_path.py --stdin
+          gh pr diff "${{ github.event.pull_request.number }}" \
+            | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
 
       - name: Check package portability
-        run: python3 src/scripts/check_portability.py
+        run: ./scripts-run src/scripts/check_portability
 
       - name: Check condensation quality
-        run: python3 src/scripts/check_condensation.py
+        run: ./scripts-run src/scripts/check_condensation
 
       - name: Check Iron Law prominence
-        run: python3 src/scripts/check_iron_law_prominence.py
+        run: ./scripts-run src/scripts/check_iron_law_prominence
 
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
@@ -138,7 +143,7 @@ jobs:
             echo "No changed files reported by gh pr view; nothing to gate."
             exit 0
           fi
-          python3 src/scripts/check_kernel_rule_bundle.py --files "${CHANGED[@]}"
+          ./scripts-run src/scripts/check_kernel_rule_bundle --files "${CHANGED[@]}"
 
       - name: Lint marketplace.json
         run: task lint-marketplace
@@ -153,19 +158,16 @@ jobs:
         run: task ci-linear-digest
 
       - name: Build discovery manifest (R3 Phase 2.1)
-        run: python3 src/scripts/build_discovery_manifest.py --write --quiet
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       - name: Lint discovery manifest — schema + checksum + vocab (R3 Phase 2.2)
-        run: python3 src/scripts/lint_discovery_manifest.py --quiet
+        run: ./scripts-run src/scripts/lint_discovery_manifest --quiet
 
       - name: Discovery scanner determinism (R3 Phase 2.3)
-        run: python3 src/scripts/check_discovery_determinism.py
+        run: ./scripts-run src/scripts/check_discovery_determinism
 
       - name: Lint README
-        run: python3 src/scripts/readme_linter.py README.md --root .
-
-      - name: Run README linter tests
-        run: python3 -m pytest tests/test_readme_linter.py -v
+        run: ./scripts-run src/scripts/readme_linter README.md --root .
 
       - name: Check for unexpected changes
         run: |

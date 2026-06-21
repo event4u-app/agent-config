@@ -14,5 +14,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-python3 "$SCRIPT_DIR/condense.py" "${@:---sync}"
+# Run the TypeScript condense twin via the scripts-run shim (resolves tsx +
+# run.ts; the Python condense.py was removed in the Python→TS final deletion).
+if [ "$#" -eq 0 ]; then
+  set -- --sync
+fi
+exec "$REPO_ROOT/scripts-run" src/scripts/condense "$@"

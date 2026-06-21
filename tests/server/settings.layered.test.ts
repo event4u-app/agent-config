@@ -10,7 +10,7 @@
  * `writeRoot` (global stand-in) and `legacyReadRoot` (project stand-in)
  * so the merge order is exercised end-to-end.
  */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

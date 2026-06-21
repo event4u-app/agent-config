@@ -1,0 +1,51 @@
+name: py2ts Base Guard
+
+# Phase 1 Step 2 of agents/roadmaps/road-to-typescript-only-scripts.md.
+# Enforces the locked branch strategy of the Python -> TypeScript
+# migration: every migration PR (head branch matching the py2ts naming
+# pattern) MUST target the integration branch `python2ts`, never `main`.
+#
+# Two directions:
+#   1. py2ts-named head + base != python2ts  -> FAIL (hard guard).
+#   2. base == python2ts + non-py2ts head    -> WARN only (sync PRs and
+#      hotfixes against the integration branch are legitimate).
+#
+# Listed as a required check for `python2ts` in
+# docs/contracts/branch-protection-policy.md (addendum). The `edited`
+# trigger matters: retargeting a PR's base re-runs the guard.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  base-guard:
+    name: py2ts-base-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Enforce migration PR base
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          echo "head=${HEAD_REF} base=${BASE_REF}"
+          if [[ "$HEAD_REF" =~ ^(feat|fix|chore)/py2ts- ]] || [[ "$HEAD_REF" =~ ^py2ts ]]; then
+            if [[ "$BASE_REF" != "python2ts" ]]; then
+              echo "::error::migration PRs must target python2ts — head branch '${HEAD_REF}' matches the py2ts pattern but the base is '${BASE_REF}'. Retarget this PR to base 'python2ts'."
+              exit 1
+            fi
+            echo "Migration PR correctly targets python2ts."
+          elif [[ "$BASE_REF" == "python2ts" ]]; then
+            echo "::warning::head branch '${HEAD_REF}' does not match the py2ts naming pattern ((feat|fix|chore)/py2ts-* or py2ts*) but targets python2ts. Sync PRs and hotfixes are legitimate; rename the branch if this is a migration PR."
+          else
+            echo "Not a py2ts PR — guard inert."
+          fi

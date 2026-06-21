@@ -36,16 +36,9 @@ WORKSPACE=""
 if command -v jq >/dev/null 2>&1; then
     WORKSPACE="$(printf '%s' "$EVENT_DATA" \
         | jq -r '.workspace_roots[0] // empty' 2>/dev/null)"
-elif command -v python3 >/dev/null 2>&1; then
-    WORKSPACE="$(printf '%s' "$EVENT_DATA" | python3 -c '
-import json, sys
-try:
-    data = json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-roots = data.get("workspace_roots") or []
-if roots:
-    print(roots[0])
+elif command -v node >/dev/null 2>&1; then
+    WORKSPACE="$(printf '%s' "$EVENT_DATA" | node -e '
+let b="";process.stdin.on("data",c=>b+=c);process.stdin.on("end",()=>{let d;try{d=JSON.parse(b)}catch(e){process.exit(0)}const r=(d&&d.workspace_roots)||[];if(r.length)process.stdout.write(String(r[0]))});
 ' 2>/dev/null)"
 fi
 

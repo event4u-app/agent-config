@@ -200,7 +200,7 @@ not as open questions in prose. One run, converge; do not relitigate.
   (never the raw competitor/tool name,
   [`source-confidentiality`](../../rules/source-confidentiality.md));
   retain the real link as an `ENC1:` token via
-  `src/scripts/_lib/link_crypto.py encrypt --value <url>`.
+  `src/scripts/_lib/link_crypto.ts encrypt --value <url>`.
 - Save the locked decision to memory (project type, "don't relitigate")
   so a future session does not re-derive it.
 

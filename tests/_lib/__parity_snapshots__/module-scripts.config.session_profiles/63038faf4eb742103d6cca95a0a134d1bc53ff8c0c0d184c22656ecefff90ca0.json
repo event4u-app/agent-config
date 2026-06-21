@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"envelope_type\": \"profile-overlay\", \"active\": [\"engineering-base\", \"laravel\", \"php\"], \"commands_shown\": 1, \"skills_shown\": 3, \"hidden_total\": 2, \"delta\": {\"hidden_behind_inactive_packs\": 2}, \"persists_across_sessions\": true}\n",
+  "stderr": "",
+  "status": 0
+}

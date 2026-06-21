@@ -116,10 +116,10 @@ Decide what to create:
 - **Update existing** → use `skill-management` skill
 
 After creation:
-1. Run `python3 scripts/skill_linter.py {path}` — must pass (0 fail)
+1. Run `./scripts-run src/scripts/skill_linter {path}` — must pass (0 fail)
 2. Copy to `.augment/`
-3. Mark hash: `python3 scripts/condense.py --mark-done "{relative_path}"`
-4. Regenerate tools: `python3 scripts/condense.py --generate-tools`
+3. Mark hash: `./scripts-run src/scripts/condense --mark-done "{relative_path}"`
+4. Regenerate tools: `./scripts-run src/scripts/condense --generate-tools`
 
 ### Step 5: Decide scope
 

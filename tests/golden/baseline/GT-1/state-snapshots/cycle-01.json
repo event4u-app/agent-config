@@ -13,15 +13,15 @@
   "plan": [
     {
       "title": "Add multiply(a, b)",
-      "detail": "Append multiply(a: int, b: int) -> int to src/calculator.py"
+      "detail": "Append multiply(a: number, b: number): number to src/calculator.ts"
     },
     {
       "title": "Add multiply(a, b)",
-      "detail": "Append test_multiply_returns_product to tests/test_calculator.py"
+      "detail": "Append a multiply test to tests/calculator.test.ts"
     },
     {
       "title": "Add multiply(a, b)",
-      "detail": "Run pytest to confirm the new test passes"
+      "detail": "Run vitest to confirm the new test passes"
     }
   ],
   "changes": [],

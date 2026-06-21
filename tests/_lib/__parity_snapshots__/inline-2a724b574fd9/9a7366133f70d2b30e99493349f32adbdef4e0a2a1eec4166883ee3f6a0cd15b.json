@@ -1,0 +1,5 @@
+{
+  "stdout": "[\"## learn-low-impact preview\\nlast-upstreamed: 0000000000000000000000000000000000000000\\nseed: <fixture>.md\\n\\n> No new validated entries to upstream.\\n\", \"\", \"# feat(low-impact-seed): add 0 validated entries from <repo-slug>\\n\\nUpstream from `/memory learn-low-impact --apply`.\\n\\n## Entries\\n\\n\\nProvenance baseline: `0000000000000000000000000000000000000000`.\\n\\nPer `low-impact-corpus-privacy-floor`, every entry above cleared the redactor on intake and again at upstream.\\n\", false, false, \"0000000000000000000000000000000000000000\"]\n",
+  "stderr": "",
+  "status": 0
+}

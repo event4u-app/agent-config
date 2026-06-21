@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — email: 'alice@example.com'\", \"violations\": [[\"email\", \"alice@example.com\", \"\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

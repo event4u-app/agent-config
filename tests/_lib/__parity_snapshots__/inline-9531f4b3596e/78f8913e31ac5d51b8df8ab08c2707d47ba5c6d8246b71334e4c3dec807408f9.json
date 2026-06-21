@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"mode\": \"files\", \"text\": \"### <scratch:0>/a.txt\\n\\nline\\n[redacted: secret-like assignment]\\nend\", \"manifest\": [\"<scratch:0>/a.txt\"], \"excluded\": [\"<scratch:0>/gone.txt (not found)\"]}\n",
+  "stderr": "",
+  "status": 0
+}

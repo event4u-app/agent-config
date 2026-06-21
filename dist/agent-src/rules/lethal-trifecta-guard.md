@@ -68,7 +68,7 @@ data/instruction-separation + spotlighting mechanics.
 
 ## Companion lint
 
-`src/scripts/lint_skill_frontmatter_safety.py` and the `lint_agent_security`
+`src/scripts/lint_skill_frontmatter_safety.ts` and the `lint_agent_security`
 umbrella flag over-broad tool grants that widen the egress leg. The
 architectural judgement above is the agent's; the linter is the backstop.
 

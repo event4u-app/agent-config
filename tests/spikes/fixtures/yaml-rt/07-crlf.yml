@@ -1,0 +1,6 @@
+crlf_file: true
+section:
+  key: value  # comment
+
+  other: 2
+# trailing comment

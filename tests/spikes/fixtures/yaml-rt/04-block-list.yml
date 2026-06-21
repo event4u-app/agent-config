@@ -1,0 +1,12 @@
+# Block lists, nested under mappings, items with inline comments.
+packs:
+  - core
+  - php  # inline comment on a list item
+  - "quoted item"
+  -
+tools:
+  - name-only
+deep:
+  inner:
+    - alpha
+    - beta

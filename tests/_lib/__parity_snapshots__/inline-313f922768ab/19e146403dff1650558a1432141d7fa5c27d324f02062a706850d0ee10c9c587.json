@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — project_path: 'C:\\\\\\\\Users\\\\\\\\bob\\\\\\\\f.txt'\", \"violations\": [[\"project_path\", \"C:\\\\Users\\\\bob\\\\f.txt\", \"\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

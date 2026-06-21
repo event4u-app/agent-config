@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "❌  council:replay: payload has no `consensus` block — rerun with consensus_scoring enabled for this lens.\n",
+  "status": 2
+}

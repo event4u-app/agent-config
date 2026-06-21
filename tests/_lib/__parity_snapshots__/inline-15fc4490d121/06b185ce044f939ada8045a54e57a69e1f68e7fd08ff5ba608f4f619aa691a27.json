@@ -1,0 +1,5 @@
+{
+  "stdout": "Why the surface looks different: a profile is active (finance-basic, finance-advanced).\nIt shows you 12 commands and 20 skills, and hides 300 behind packs you haven't turned on — that's why some commands aren't visible.\nNothing is broken; the overlay just narrows the surface to this profile.\nIt stays this way across sessions until you run `/profile deactivate`.",
+  "stderr": "",
+  "status": 0
+}

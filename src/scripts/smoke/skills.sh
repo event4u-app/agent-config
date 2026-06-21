@@ -22,63 +22,84 @@ SAMPLE_SIZE=5
 quiet="${SMOKE_QUIET:-0}"
 log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 
-result=$(python3 <<'PY'
-import os, sys, time, hashlib, pathlib, glob
-sys.path.insert(0, "src/scripts")
-from validate_frontmatter import parse_frontmatter, load_schema, validate, apply_schema_defaults
-from _lib.agent_src import artefact_roots
+result=$(node_modules/.bin/tsx -e '
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import {
+  parse_frontmatter,
+  load_schema,
+  validate,
+  apply_schema_defaults,
+} from "./src/scripts/validate_frontmatter.ts";
+import { artefact_roots } from "./src/scripts/_lib/agent_src.ts";
 
-# ADR-017: walk every source root, collect skill dirs by logical name.
-# First root wins on collision (legacy > core > packs per agent_src).
-skills_by_name: dict[str, str] = {}
-for src_root in artefact_roots():
-    sd = src_root / "skills"
-    if not sd.exists():
-        continue
-    for d in sorted(sd.iterdir()):
-        if not d.is_dir():
-            continue
-        if (d / "SKILL.md").exists() and d.name not in skills_by_name:
-            skills_by_name[d.name] = str(d / "SKILL.md")
-skills = sorted(skills_by_name.keys())
-total = len(skills)
-print(f"TOTAL_SKILLS={total}")
+// ADR-017: walk every source root, collect skill dirs by logical name.
+// First root wins on collision (legacy > core > packs per agent_src).
+const skillsByName = new Map();
+for (const srcRoot of artefact_roots()) {
+  const sd = join(srcRoot, "skills");
+  if (!existsSync(sd)) continue;
+  for (const name of readdirSync(sd).sort()) {
+    const d = join(sd, name);
+    if (!statSync(d).isDirectory()) continue;
+    const skillFile = join(d, "SKILL.md");
+    if (existsSync(skillFile) && !skillsByName.has(name)) {
+      skillsByName.set(name, skillFile);
+    }
+  }
+}
+const skills = [...skillsByName.keys()].sort();
+const total = skills.length;
+console.log(`TOTAL_SKILLS=${total}`);
 
-# Deterministic seed = epoch day → same sample within 24h, drifts daily.
-seed = int(time.time() // 86400)
-import random
-rng = random.Random(seed)
-sample = rng.sample(skills, min(5, total))
+// Deterministic seed = epoch day → same sample within 24h, drifts daily.
+const seed = Math.floor(Date.now() / 1000 / 86400);
+// Seeded PRNG (mulberry32) → deterministic Fisher-Yates shuffle, take first N.
+let s = seed >>> 0;
+const rand = () => {
+  s = (s + 0x6d2b79f5) >>> 0;
+  let t = s;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const pool = [...skills];
+for (let i = pool.length - 1; i > 0; i -= 1) {
+  const j = Math.floor(rand() * (i + 1));
+  [pool[i], pool[j]] = [pool[j], pool[i]];
+}
+const sample = pool.slice(0, Math.min(5, total));
 
-schema = load_schema("skill")
+const schema = load_schema("skill");
 
-failures = []
-for name in sample:
-    path = skills_by_name[name]
-    text = open(path, encoding="utf-8").read()
-    fm, _ = parse_frontmatter(text)
-    if fm is None:
-        failures.append(f"{name}: no frontmatter")
-        continue
-    # Inject schema defaults before validating: artefacts may omit a field
-    # equal to its default (abstraction-reduction), injected at read time.
-    apply_schema_defaults(fm, schema)
-    errs = validate(fm, schema)
-    if errs:
-        for e in errs:
-            failures.append(f"{name}: {e.format()}")
-        continue
-    declared = fm.get("name")
-    if declared != name:
-        failures.append(f"{name}: name field='{declared}' ≠ directory='{name}'")
+const failures = [];
+for (const name of sample) {
+  const path = skillsByName.get(name);
+  const text = readFileSync(path, "utf-8");
+  const [fm] = parse_frontmatter(text);
+  if (fm === null) {
+    failures.push(`${name}: no frontmatter`);
+    continue;
+  }
+  // Inject schema defaults before validating: artefacts may omit a field
+  // equal to its default (abstraction-reduction), injected at read time.
+  apply_schema_defaults(fm, schema);
+  const errs = validate(fm, schema);
+  if (errs.length) {
+    for (const e of errs) failures.push(`${name}: ${e.format()}`);
+    continue;
+  }
+  const declared = fm.name;
+  if (declared !== name) {
+    failures.push(`${name}: name field=\"${declared}\" ≠ directory=\"${name}\"`);
+  }
+}
 
-print(f"SAMPLE={','.join(sample)}")
-print(f"SAMPLE_PASS={len(sample) - len([f for f in failures])}")
-print(f"SAMPLE_TOTAL={len(sample)}")
-for f in failures:
-    print(f"  FAIL: {f}")
-PY
-)
+console.log(`SAMPLE=${sample.join(",")}`);
+console.log(`SAMPLE_PASS=${sample.length - failures.length}`);
+console.log(`SAMPLE_TOTAL=${sample.length}`);
+for (const f of failures) console.log(`  FAIL: ${f}`);
+')
 
 TOTAL_SKILLS=$(echo "$result" | grep '^TOTAL_SKILLS=' | cut -d= -f2)
 SAMPLE=$(echo "$result" | grep '^SAMPLE=' | cut -d= -f2)

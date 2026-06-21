@@ -91,9 +91,9 @@ Diagnostic format: one issue per line — `<path>: <rule> — <detail>`.
 Pick the name; verify locally:
 
 ```bash
-python3 scripts/lint_namespace.py --name <candidate>
+./scripts-run src/scripts/lint_namespace --name <candidate>
 # or full run:
-python3 scripts/lint_namespace.py
+./scripts-run src/scripts/lint_namespace
 ```
 
 If the candidate fails, the linter prints the rule it violated.

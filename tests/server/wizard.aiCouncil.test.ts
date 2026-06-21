@@ -8,7 +8,7 @@
  *                                    replaceScalar, atomic-written under writeRoot.
  *   Both 404 when extended-mode is off.
  */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { bootTestApp, authHeaders, type TestApp } from './helpers.js';

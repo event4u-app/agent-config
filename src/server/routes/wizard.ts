@@ -19,7 +19,8 @@
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { promises as fs, existsSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
-import { join, dirname, delimiter } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
@@ -333,25 +334,52 @@ interface InstallerResult {
 }
 
 /**
- * Build the env for a spawned `src/scripts/*.py`. The package root's `src`
- * dir (two levels up from the script — scripts live at `<pkg>/src/scripts/`)
- * MUST be on PYTHONPATH so package-qualified imports (`scripts._cli.*`,
- * `scripts._lib.*`) resolve. The bash dispatcher already does this
- * (`PYTHONPATH=$PACKAGE_ROOT/src`); without parity here the wizard-apply
- * subprocess loses the `scripts` package and aborts mid-install (the
- * migrate-to-global path raises ImportError → nothing is created).
+ * Build the env for a spawned `src/scripts/*.ts` installer CLI. The installer
+ * CLIs are TypeScript (Python→TS final deletion); no PYTHONPATH is required.
  */
-function installerSpawnEnv(scriptPath: string): NodeJS.ProcessEnv {
-    const srcRoot = dirname(dirname(scriptPath));
-    const pythonPath = [srcRoot, process.env.PYTHONPATH].filter(Boolean).join(delimiter);
-    return { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', PYTHONPATH: pythonPath };
+function installerSpawnEnv(): NodeJS.ProcessEnv {
+    return { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1' };
+}
+
+/**
+ * Resolve how to run a `.ts` installer CLI: prefer a `node_modules/.bin/tsx`
+ * found by walking up from the script's dir, falling back to `npx tsx`.
+ * Mirrors `run.ts::resolveTsxInvocation`.
+ */
+function installerInvocation(scriptPath: string, args: readonly string[]): {
+    command: string;
+    args: string[];
+} {
+    const binName = process.platform === 'win32' ? 'tsx.cmd' : 'tsx';
+    const findUpward = (startDir: string): string | null => {
+        let dir = startDir;
+        for (;;) {
+            const candidate = join(dir, 'node_modules', '.bin', binName);
+            if (existsSync(candidate)) return candidate;
+            const parent = dirname(dir);
+            if (parent === dir) return null;
+            dir = parent;
+        }
+    };
+    // 1) beside the script (a real consumer install ships node_modules there).
+    const fromScript = findUpward(dirname(scriptPath));
+    if (fromScript !== null) return { command: fromScript, args: [scriptPath, ...args] };
+    // 2) the running server's OWN package tsx. Preferred over `npx tsx`, which
+    // is fragile offline (cold esbuild fetch → ENOENT) and does not reliably
+    // forward SIGTERM to the child — breaking abort-on-disconnect (the SSE
+    // apply route kills the child on client drop). The server always ships
+    // from a package that has node_modules/.bin/tsx.
+    const fromSelf = findUpward(dirname(fileURLToPath(import.meta.url)));
+    if (fromSelf !== null) return { command: fromSelf, args: [scriptPath, ...args] };
+    return { command: 'npx', args: ['tsx', scriptPath, ...args] };
 }
 
 async function spawnInstaller(scriptPath: string, args: readonly string[]): Promise<InstallerResult> {
     return new Promise<InstallerResult>((resolve, reject) => {
-        const child = spawn('python3', [scriptPath, ...args], {
+        const inv = installerInvocation(scriptPath, args);
+        const child = spawn(inv.command, inv.args, {
             stdio: ['ignore', 'pipe', 'pipe'],
-            env: installerSpawnEnv(scriptPath),
+            env: installerSpawnEnv(),
         });
         const stdoutChunks: Buffer[] = [];
         const stderrChunks: Buffer[] = [];
@@ -393,9 +421,10 @@ function streamInstaller(
     signal?: AbortSignal,
 ): Promise<StreamResult> {
     return new Promise<StreamResult>((resolve, reject) => {
-        const child = spawn('python3', [scriptPath, ...args], {
+        const inv = installerInvocation(scriptPath, args);
+        const child = spawn(inv.command, inv.args, {
             stdio: ['ignore', 'pipe', 'pipe'],
-            env: installerSpawnEnv(scriptPath),
+            env: installerSpawnEnv(),
         });
         const onAbort = (): void => {
             child.kill('SIGTERM');
@@ -728,7 +757,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         // its own top-level "Projekt" page, not a wizard-only step.
         app.get('/api/v1/modules/detect', async (_request, reply) => {
             const root = legacyReadRoot ?? process.cwd();
-            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'propose_modules_config.py');
+            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'propose_modules_config.ts');
             try {
                 const result = await spawnInstaller(scriptPath, ['--json', '--project', root]);
                 if (result.exitCode !== 0) {
@@ -767,7 +796,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 return reply;
             }
             const projectRoot = legacyReadRoot ?? process.cwd();
-            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'apply_modules_config.py');
+            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'apply_modules_config.ts');
             const tmpPath = join(tmpdir(), `agent-config-modules-${randomBytes(8).toString('hex')}.json`);
             try {
                 await fs.writeFile(tmpPath, JSON.stringify(parsed.data), { mode: 0o600 });
@@ -860,7 +889,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
                 return reply;
             }
-            const probePath = join(opts.packageRoot, 'src', 'scripts', 'probe_skill_registration.py');
+            const probePath = join(opts.packageRoot, 'src', 'scripts', 'probe_skill_registration.ts');
             if (!existsSync(probePath)) {
                 await reply.code(500).send({ error: { code: 'PROBE_MISSING', message: `probe script not found at ${probePath}` } });
                 return reply;
@@ -975,7 +1004,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             const isDryRun = parsed.data.dry_run === true;
             const payload = parsed.data;
             const tmpPath = join(tmpdir(), `agent-config-apply-${randomBytes(8).toString('hex')}.json`);
-            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'install.py');
+            const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'install.ts');
 
             if (isDryRun) {
                 // Plan-summary preview — buffered JSON (Review step).
@@ -1215,7 +1244,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 let modulesApplyError: { code: string; message: string; exitCode?: number } | null = null;
                 if (modulesConfigData !== null) {
                     const projectRoot = legacyReadRoot ?? process.cwd();
-                    const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'apply_modules_config.py');
+                    const scriptPath = join(opts.packageRoot, 'src', 'scripts', 'apply_modules_config.ts');
                     const tmpPath = join(tmpdir(), `agent-config-modules-${randomBytes(8).toString('hex')}.json`);
                     try {
                         await fs.writeFile(tmpPath, JSON.stringify(modulesConfigData), { mode: 0o600 });

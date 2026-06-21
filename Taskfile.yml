@@ -189,7 +189,6 @@ tasks:
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
-      - task: golden-replay
       - task: test
       - task: runtime-e2e
       - task: lint-ts
@@ -334,7 +333,6 @@ tasks:
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
-      - task: golden-replay
       - task: test
       - task: runtime-e2e
       - task: lint-ts

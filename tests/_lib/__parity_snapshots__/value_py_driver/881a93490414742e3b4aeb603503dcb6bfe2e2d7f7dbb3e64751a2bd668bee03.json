@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"confidence\": \"measured\", \"cumulative_pct\": 0.0, \"eur_delta\": -0.7866, \"footnote\": \"Aggregate across non-Thin-Root categories; Thin-Root files (AGENTS.md variants) net negative (~\\u22124%) and are excluded from the rung \\u2014 surfaced separately.\", \"id\": \"condense\", \"label\": \"+ condense (rule shrink)\", \"source_report\": \"internal/bench/reports/telegraph-v2.json\", \"token_delta\": -285, \"what_it_does\": \"Build step shrinks rule files before shipping.\"}",
+  "stderr": "",
+  "status": 0
+}

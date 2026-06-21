@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"a\": \"claude-sonnet-4-5\", \"o\": \"gpt-4o\", \"g\": \"gemini-2.5-pro\", \"x\": \"grok-4\", \"p\": \"sonar-pro\", \"mt\": 2048, \"uf\": 16384, \"to\": 120.0, \"em\": \"END\", \"xb\": \"https://api.x.ai/v1\", \"pb\": \"https://api.perplexity.ai\"}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -15,7 +15,7 @@ adr_refs:
 source_refs: []
 assets: none
 acceptance:
-  - "python3 src/scripts/lint_ticket_buildable.py exits 0 on agents/tickets/road-to-ticket-bundles/."
+  - "python3 src/scripts/lint_ticket_buildable.ts exits 0 on agents/tickets/road-to-ticket-bundles/."
   - "Every roadmap ticket marker resolves to a bundle ticket (spine integrity)."
 boundaries:
   must_touch: ["agents/tickets/road-to-ticket-bundles/"]
@@ -30,7 +30,7 @@ Self-dogfooding: the bundle that builds the system is itself in the new format.
 
 ## Context spine
 - Skill that produces it: `src/skills/emit-tickets/SKILL.md` (T-006).
-- Validator: `src/scripts/lint_ticket_buildable.py` (T-005).
+- Validator: `src/scripts/lint_ticket_buildable.ts` (T-005).
 
 ## Do
 1. Run emit-tickets over `agents/roadmaps/archive/road-to-ticket-bundles.md`.
@@ -44,7 +44,7 @@ Self-dogfooding: the bundle that builds the system is itself in the new format.
 See frontmatter.
 
 ## Quality gates
-- `python3 src/scripts/lint_ticket_buildable.py`.
+- `python3 src/scripts/lint_ticket_buildable.ts`.
 
 ## Assets
 none

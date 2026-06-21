@@ -87,7 +87,7 @@ to abort.
 ### 5. Invoke the CLI
 
 ```bash
-python3 scripts/council_cli.py debate <topic-path> \
+./scripts-run src/scripts/council_cli debate <topic-path> \
   --output agents/runtime/council/sessions/<date>-<slug>/ \
   --confirm \
   --rounds <N> \
@@ -114,7 +114,7 @@ After all rounds complete, render the last round's JSON via
 `/council` render flow:
 
 ```bash
-python3 scripts/council_cli.py render agents/runtime/council/sessions/<dir>/debate-round-<N>.json
+./scripts-run src/scripts/council_cli render agents/runtime/council/sessions/<dir>/debate-round-<N>.json
 ```
 
 The debate mode uses the structured decision-lens template (Karpathy

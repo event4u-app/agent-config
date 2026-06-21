@@ -1,0 +1,5 @@
+{
+  "stdout": "council-prune: dry-run, cutoff = retention_days=7\ncouncil-prune: actual deletion requires omitting --dry-run\n",
+  "stderr": "",
+  "status": 0
+}

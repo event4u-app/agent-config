@@ -1,0 +1,5 @@
+{
+  "stdout": "{\"ok\": false, \"summary\": \"redaction REFUSED — monetary_amount: 'USD 1000'\", \"violations\": [[\"monetary_amount\", \"USD 1000\", \"\"]]}\n",
+  "stderr": "",
+  "status": 0
+}

@@ -1,0 +1,8 @@
+{
+  "stdout": "activated: engineering-base, laravel, php\n  + closure: engineering-base, php\n",
+  "stderr": "",
+  "status": 0,
+  "files": {
+    "overlay": "IyBQZXItbWFjaGluZSBsb2NhbCBvdmVycmlkZXMgKGdpdGlnbm9yZWQsIGRlZXBlc3Qtd2lubmluZyBsYXllcikuCiMgYHJ1bnRpbWUuYWN0aXZlX3BhY2tzYCBpcyB0aGUgRVBIRU1FUkFMIHNlc3Npb24tcHJvZmlsZSBvdmVybGF5IOKAlAojIG1hbmFnZWQgYnkgYC9wcm9maWxlYC4gRGVsZXRlIHRoZSBrZXkgKG9yIHRoaXMgZmlsZSkgdG8gcmVzZXQuCnJ1bnRpbWU6CiAgYWN0aXZlX3BhY2tzOgogIC0gZW5naW5lZXJpbmctYmFzZQogIC0gbGFyYXZlbAogIC0gcGhwCg=="
+  }
+}

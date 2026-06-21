@@ -2,15 +2,15 @@
 #
 # Container e2e for the installer + browser-wizard apply path.
 #
-# Runs inside the installer-e2e image (python3 + node + a built dist/). It
+# Runs inside the installer-e2e image (node + a built dist/). It
 # reproduces, in a pristine container, the field bug where the browser wizard
 # finished but nothing was installed: a consumer project with a legacy
-# `.claude/` dir + a global-scope apply spawned WITHOUT PYTHONPATH made the
-# migrate-to-global import fail and abort the whole install.
+# `.claude/` dir + a global-scope apply made the migrate-to-global path fail
+# and abort the whole install.
 #
 # Two scenarios, both must pass (exit 0 = green):
-#   A. Direct apply — `install.py --apply-payload` in a clean env (no
-#      PYTHONPATH), exactly how the wizard server spawns it.
+#   A. Direct apply — `tsx install.ts --apply-payload` in a clean env,
+#      exactly how the wizard server spawns it.
 #   B. Real wizard server — boot `createApp` and drive POST
 #      /api/v1/wizard/apply over HTTP end-to-end.
 set -euo pipefail
@@ -31,11 +31,13 @@ mkdir -p "$A_CONSUMER/.claude" "$A_GLOBAL"
 echo "$PAYLOAD" > /work/a/payload.json
 
 # `env -u PYTHONPATH` reproduces the wizard spawn (no PYTHONPATH). DEV/CI/NO_UI
-# stripped so legacy detection + the migrate path actually fire.
+# stripped so legacy detection + the migrate path actually fire. The installer
+# is now TypeScript; the wizard server spawns it via node_modules/.bin/tsx
+# (src/server/routes/wizard.ts:resolveTsxInvocation) — mirror that here.
 set +e
 env -u PYTHONPATH -u AGENT_CONFIG_DEV_MODE -u CI -u AGENT_CONFIG_NO_UI \
     EVENT4U_CONFIG_HOME="$A_GLOBAL" AGENT_CONFIG_NO_UPDATE_CHECK=1 \
-    python3 "$PKG/src/scripts/install.py" \
+    "$PKG/node_modules/.bin/tsx" "$PKG/src/scripts/install.ts" \
     --apply-payload /work/a/payload.json --project "$A_CONSUMER" \
     >/work/a/out.ndjson 2>/work/a/err.log
 A_RC=$?

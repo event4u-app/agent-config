@@ -36,15 +36,15 @@
         "plan": [
           {
             "title": "Outline modulo(a, b)",
-            "detail": "Signature: modulo(a: int, b: int) -> int"
+            "detail": "Signature: modulo(a: number, b: number): number"
           },
           {
             "title": "Outline modulo(a, b)",
-            "detail": "Edge cases: raise ValueError when b == 0"
+            "detail": "Edge cases: throw when b === 0"
           },
           {
             "title": "Outline modulo(a, b)",
-            "detail": "Test: test_modulo_handles_zero_divisor pinning the raise"
+            "detail": "Test: a modulo test pinning the zero-divisor throw"
           }
         ],
         "changes": [],
@@ -79,7 +79,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 0,
-      "stdout": "## Ticket\n\nGT-4-MOD — Plan-only: outline how modulo(a, b) would be added\n\n## Persona\n\nadvisory\n\n## Plan\n\n1. **Outline modulo(a, b)** — Signature: modulo(a: int, b: int) -> int\n2. **Outline modulo(a, b)** — Edge cases: raise ValueError when b == 0\n3. **Outline modulo(a, b)** — Test: test_modulo_handles_zero_divisor pinning the raise\n\n## Changes\n\n_(no file changes recorded)_\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n",
+      "stdout": "## Ticket\n\nGT-4-MOD — Plan-only: outline how modulo(a, b) would be added\n\n## Persona\n\nadvisory\n\n## Plan\n\n1. **Outline modulo(a, b)** — Signature: modulo(a: number, b: number): number\n2. **Outline modulo(a, b)** — Edge cases: throw when b === 0\n3. **Outline modulo(a, b)** — Test: a modulo test pinning the zero-divisor throw\n\n## Changes\n\n_(no file changes recorded)_\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n",
       "stderr": "",
       "state_after": {
         "ticket": {
@@ -97,15 +97,15 @@
         "plan": [
           {
             "title": "Outline modulo(a, b)",
-            "detail": "Signature: modulo(a: int, b: int) -> int"
+            "detail": "Signature: modulo(a: number, b: number): number"
           },
           {
             "title": "Outline modulo(a, b)",
-            "detail": "Edge cases: raise ValueError when b == 0"
+            "detail": "Edge cases: throw when b === 0"
           },
           {
             "title": "Outline modulo(a, b)",
-            "detail": "Test: test_modulo_handles_zero_divisor pinning the raise"
+            "detail": "Test: a modulo test pinning the zero-divisor throw"
           }
         ],
         "changes": [],
@@ -122,7 +122,7 @@
           "report": "success"
         },
         "questions": [],
-        "report": "## Ticket\n\nGT-4-MOD — Plan-only: outline how modulo(a, b) would be added\n\n## Persona\n\nadvisory\n\n## Plan\n\n1. **Outline modulo(a, b)** — Signature: modulo(a: int, b: int) -> int\n2. **Outline modulo(a, b)** — Edge cases: raise ValueError when b == 0\n3. **Outline modulo(a, b)** — Test: test_modulo_handles_zero_divisor pinning the raise\n\n## Changes\n\n_(no file changes recorded)_\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_"
+        "report": "## Ticket\n\nGT-4-MOD — Plan-only: outline how modulo(a, b) would be added\n\n## Persona\n\nadvisory\n\n## Plan\n\n1. **Outline modulo(a, b)** — Signature: modulo(a: number, b: number): number\n2. **Outline modulo(a, b)** — Edge cases: throw when b === 0\n3. **Outline modulo(a, b)** — Test: a modulo test pinning the zero-divisor throw\n\n## Changes\n\n_(no file changes recorded)_\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_"
       },
       "directive": null,
       "recipe_action": null,

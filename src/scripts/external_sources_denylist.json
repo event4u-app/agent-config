@@ -52,6 +52,7 @@
   ],
   "skip_paths": [
     "src/scripts/check_no_external_sources.py",
+    "src/scripts/check_no_external_sources.ts",
     "src/scripts/external_sources_denylist.json",
     "src/skills/design-intelligence/*",
     "src/skills/corpus-grounding/*",

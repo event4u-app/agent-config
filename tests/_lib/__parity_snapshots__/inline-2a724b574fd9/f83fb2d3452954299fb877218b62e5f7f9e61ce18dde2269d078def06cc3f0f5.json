@@ -1,0 +1,5 @@
+{
+  "stdout": "[\"## learn-low-impact preview — repo=acme/widgets\\nlast-upstreamed: abcdef0123456789abcdef0123456789abcdef01\\nseed: <fixture>.md\\n\\n### Promoted (1)\\n- \\\"what port should the dev server use\\\"  (line 5)\\n\\n### Refused (1) — redactor blocked\\n- \\\"ping admin@example.com for access\\\"  (line 6) — email: admin@example.com\\n\\n### Already seeded (1)\\n- \\\"already seeded phrase\\\"\\n\\n> Refusals block the PR. Rephrase the entries locally (or drop them) and re-run.\\n\", \"--- <fixture>.md\\n+++ <fixture>.md\\n+- \\\"what port should the dev server use\\\"\\n\", \"# feat(low-impact-seed): add 1 validated entries from acme/widgets\\n\\nUpstream from `/memory learn-low-impact --apply`.\\n\\n## Entries\\n\\n- \\\"what port should the dev server use\\\"\\n\\nProvenance baseline: `abcdef0123456789abcdef0123456789abcdef01`.\\n\\nPer `low-impact-corpus-privacy-floor`, every entry above cleared the redactor on intake and again at upstream.\\n\", true, false, \"abcdef0123456789abcdef0123456789abcdef01\"]\n",
+  "stderr": "",
+  "status": 0
+}

@@ -6,7 +6,7 @@ name: Release Drift Check
 #   2. npm dist-tags.latest equals that version.
 # Fails (red) when npm lags main — the signal that a release crashed
 # after merge but before the tag-push that triggers publish-npm.yml.
-# NEVER mutates anything. Recovery: `python3 src/scripts/release.py --resume`
+# NEVER mutates anything. Recovery: `./scripts-run src/scripts/release --resume`
 # (now package.json-anchored, ADR-safe) or a manual tag-push.
 #
 # NOTE: deliberately no path-filtered `push:` trigger (avoids the
@@ -43,10 +43,5 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Detect release-published drift (read-only)
-        run: python3 src/scripts/check_release_published.py --strict --check-npm --require-main
+        run: ./scripts-run src/scripts/check_release_published --strict --check-npm --require-main

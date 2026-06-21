@@ -1,0 +1,5 @@
+{
+  "stdout": "council:estimate · mode=debate · members=2 (billable=2) · rounds=2 (cap=4)\n\nRound 1 of 2:\n  anthropic/claude-sonnet-4-5: ~231 in + 2048 out  =  $0.0314\n  openai/gpt-4o: ~231 in + 2048 out  =  $0.0211\n  TOTAL:  $0.0525\n  ────────────────────────────────────────\n\nRound 2 of 2:\n  anthropic/claude-sonnet-4-5: ~231 in + 2048 out  =  $0.0314\n  openai/gpt-4o: ~231 in + 2048 out  =  $0.0211\n  TOTAL:  $0.0525\n\n  PROJECTED TOTAL (2 rounds):  $0.1049\n  Note: progressive disclosure may stop the debate early; this is an upper bound.\n",
+  "stderr": "",
+  "status": 0
+}

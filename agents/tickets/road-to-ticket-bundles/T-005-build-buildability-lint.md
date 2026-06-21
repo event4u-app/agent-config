@@ -16,12 +16,12 @@ source_refs:
   - { path: docs/contracts/ticket-bundle-format.md, sha: pending }
 assets: none
 acceptance:
-  - "python3 src/scripts/lint_ticket_buildable.py exits 0 on agents/tickets/ when the bundle is clean."
+  - "python3 src/scripts/lint_ticket_buildable.ts exits 0 on agents/tickets/ when the bundle is clean."
   - "It exits 1 with a path:reason line on a lite ticket missing acceptance, a concrete path, a boundary, or a resolvable asset."
   - "It detects a dependency cycle in a manifest and an unresolved roadmap ticket marker (spine)."
   - "adr_refs SHA drift fails; source_refs SHA drift only warns; assets over 500KB warn. Pure stdlib + yaml + jsonschema."
 boundaries:
-  must_touch: [src/scripts/lint_ticket_buildable.py]
+  must_touch: [src/scripts/lint_ticket_buildable.ts]
   may_touch: [Taskfile.yml]
   must_not_touch: ["src/scripts/work_engine/**"]
 ---
@@ -34,7 +34,7 @@ The enforcement that makes `model_tier: lite` a real promise — the load-bearin
 ## Context spine
 - Floor it enforces: `docs/contracts/ticket-bundle-format.md` §5/§6/§9/§10/§11.
 - Schemas: `src/scripts/schemas/ticket.schema.json`, `src/scripts/schemas/ticket-manifest.schema.json`.
-- Frontmatter parse + jsonschema: pattern of `src/scripts/validate_frontmatter.py`.
+- Frontmatter parse + jsonschema: pattern of `src/scripts/validate_frontmatter.ts`.
 
 ## Do
 1. Walk `agents/tickets/*/`; validate manifest + each ticket vs schema.
@@ -48,4 +48,4 @@ The enforcement that makes `model_tier: lite` a real promise — the load-bearin
 See frontmatter. The dogfood bundle is the golden fixture — it must pass.
 
 ## Quality gates
-- `python3 src/scripts/lint_ticket_buildable.py` exits 0 on this bundle.
+- `python3 src/scripts/lint_ticket_buildable.ts` exits 0 on this bundle.

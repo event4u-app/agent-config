@@ -97,7 +97,7 @@ Each answer must fit on one line. The block exists so the root never silently de
 
 ## Procedure — apply Thin-Root to AGENTS.md
 
-1. **Measure baseline.** `wc -c AGENTS.md` and `python3 scripts/measure_augment_budget.py`. Record current char-count and the gap to 2,200 / 2,500.
+1. **Measure baseline.** `wc -c AGENTS.md` and `./scripts-run src/scripts/measure_augment_budget`. Record current char-count and the gap to 2,200 / 2,500.
 2. **Inventory sections.** List every `## ` heading and its char-count. Mark each as `keep-inline` (Iron-Law-adjacent, ≤ 200 chars, no good outboard target) or `outboard-candidate` (longer-form prose, table-only sections, narrative).
 3. **Identify outboard targets.** For each `outboard-candidate`, name the destination — `packages/core/.agent-src.uncondensed/contexts/`, `docs/contracts/`, an existing rule body, an existing skill body. Never invent a new top-level directory.
 4. **Move content; insert pointer.** Cut the section into the target file. Replace it in AGENTS.md with a single substantive pointer per anatomy above. Verify the *why*-clause length.

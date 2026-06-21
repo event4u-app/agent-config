@@ -31,7 +31,7 @@ The cheap-builds entry point: a lite ticket flows straight into the existing eng
 
 ## Context spine
 - Skill to extend: `src/domains/engineering-base/implement-ticket/command.md`.
-- Engine envelope (do not change): `input.data={id,title,body,acceptance_criteria}` — `src/agent-src/templates/scripts/work_engine/dispatcher.py`.
+- Engine envelope (do not change): `input.data={id,title,body,acceptance_criteria}` — `src/agent-src/templates/scripts/work_engine/dispatcher.ts`.
 
 ## Do
 1. Add input path 5: a local bundle ticket path.

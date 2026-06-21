@@ -1,69 +1,43 @@
 #!/usr/bin/env bash
 # mcp_setup.sh — One-line MCP server onboarding.
-# Creates .venv-mcp/ (gitignored) and installs the `mcp` SDK.
-# Idempotent: safe to re-run; reuses an existing .venv-mcp/.
+# The MCP server is a TypeScript module (scripts/mcp_server/) run via tsx;
+# there is no Python venv / SDK install any more — the runtime is Node/tsx.
+# Idempotent: safe to re-run; verifies tsx + the server module are present
+# and prints the client config snippet.
 
 set -euo pipefail
-
-VENV_DIR=".venv-mcp"
 
 log_ok()    { echo "✅  $*"; }
 log_warn()  { echo "⚠️  $*" >&2; }
 log_err()   { echo "❌  $*" >&2; }
 
-# --- Locate a Python ≥ 3.11 ---
-find_python() {
-  for cand in python3.13 python3.12 python3.11; do
-    if command -v "$cand" >/dev/null 2>&1; then
-      echo "$cand"
-      return 0
-    fi
-  done
-  if command -v python3 >/dev/null 2>&1; then
-    local ver
-    ver="$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
-    case "$ver" in
-      3.11|3.12|3.13|3.1[4-9]|3.[2-9][0-9]) echo "python3"; return 0 ;;
-    esac
-  fi
-  return 1
-}
+# Package root = two levels above this script (scripts/ → src? no: this script
+# ships under src/scripts/, package root is two levels up).
+SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-PY="$(find_python || true)"
-if [[ -z "${PY:-}" ]]; then
-  log_err "Python 3.11+ not found."
-  log_err "Install Python 3.11+ (e.g. via pyenv, asdf, brew, or apt) and re-run."
-  exit 1
-fi
-
-PY_VER="$("$PY" -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])')"
-
-# --- Create or reuse venv ---
-if [[ -d "$VENV_DIR" ]]; then
-  log_ok "$VENV_DIR/ exists — reusing (Python $("$VENV_DIR/bin/python" --version 2>&1 | awk '{print $2}'))"
+# --- Locate tsx (Node runtime) ---
+if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
+  TSX_BIN="$PACKAGE_ROOT/node_modules/.bin/tsx"
+elif command -v npx >/dev/null 2>&1; then
+  TSX_BIN="npx tsx"
 else
-  "$PY" -m venv "$VENV_DIR"
-  log_ok "Created $VENV_DIR/ with $PY ($PY_VER)"
-fi
-
-# --- Install / upgrade mcp SDK ---
-"$VENV_DIR/bin/pip" install --quiet --upgrade pip
-"$VENV_DIR/bin/pip" install --quiet --upgrade mcp
-
-MCP_VER="$("$VENV_DIR/bin/python" -c 'import mcp, importlib.metadata as m; print(m.version("mcp"))' 2>/dev/null || echo "?")"
-log_ok "Installed mcp SDK ($MCP_VER) in $VENV_DIR/"
-
-# --- Smoke: import the server module ---
-if ! "$VENV_DIR/bin/python" -c 'import scripts.mcp_server' 2>/dev/null; then
-  log_warn "scripts.mcp_server import failed — check repository checkout."
+  log_err "tsx runner not found."
+  log_err "Run \`npm install\` in the package to provide node_modules/.bin/tsx and re-run."
   exit 1
 fi
-log_ok "scripts.mcp_server import OK"
+log_ok "tsx runner: $TSX_BIN"
+
+# --- Locate the server module ---
+SERVER_MAIN="$PACKAGE_ROOT/src/scripts/mcp_server/__main__.ts"
+if [[ ! -f "$SERVER_MAIN" ]]; then
+  log_err "MCP server module not found: $SERVER_MAIN"
+  log_err "Check the repository checkout / package install."
+  exit 1
+fi
+log_ok "scripts/mcp_server module present"
 
 # --- Print client config snippet ---
-ROOT="$(pwd)"
-PY_BIN="$ROOT/$VENV_DIR/bin/python"
-
 echo ""
 echo "──  MCP server ready  ─────────────────────────────────────────"
 echo ""
@@ -75,9 +49,8 @@ cat <<JSON
   {
     "mcpServers": {
       "agent-config": {
-        "command": "$PY_BIN",
-        "args": ["-m", "scripts.mcp_server"],
-        "env": { "PYTHONPATH": "$ROOT" }
+        "command": "$TSX_BIN",
+        "args": ["$SERVER_MAIN"]
       }
     }
   }

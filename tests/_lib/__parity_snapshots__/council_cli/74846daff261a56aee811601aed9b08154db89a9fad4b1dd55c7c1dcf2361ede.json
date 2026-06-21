@@ -1,0 +1,5 @@
+{
+  "stdout": "",
+  "stderr": "usage: agent-config council render [-h]\n                                   [--prompt-mode {default,pr,design,optimize,analysis,prompt,roadmap,diff,files}]\n                                   [--output OUTPUT]\n                                   [--prose-synthesis | --no-prose-synthesis]\n                                   responses\nagent-config council render: error: argument --prompt-mode: invalid choice: 'nope' (choose from 'default', 'pr', 'design', 'optimize', 'analysis', 'prompt', 'roadmap', 'diff', 'files')\n",
+  "status": 2
+}

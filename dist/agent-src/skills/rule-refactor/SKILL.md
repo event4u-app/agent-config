@@ -40,8 +40,8 @@ raises `TOTAL_CAP`.
 ### 1. Inspect the current budget state
 
 ```bash
-python3 scripts/measure_augment_budget.py --json > /tmp/budget-before.json
-python3 scripts/measure_rule_budget.py --json > /tmp/rule-budget-before.json
+./scripts-run src/scripts/measure_augment_budget --json > /tmp/budget-before.json
+./scripts-run src/scripts/measure_rule_budget --json > /tmp/rule-budget-before.json
 ```
 
 ### 2. Run the audit pipeline
@@ -49,9 +49,9 @@ python3 scripts/measure_rule_budget.py --json > /tmp/rule-budget-before.json
 The audit infrastructure already exists — compose it:
 
 ```bash
-python3 scripts/audit_auto_rules.py      # → agents/runtime/reports/auto-rules-audit.{json,md}
-python3 scripts/audit_overlap.py         # → appends overlap pairs to the MD
-python3 scripts/audit_likelihood.py      # → agents/runtime/reports/auto-rules-likelihood.json
+./scripts-run src/scripts/audit_auto_rules      # → agents/runtime/reports/auto-rules-audit.{json,md}
+./scripts-run src/scripts/audit_overlap         # → appends overlap pairs to the MD
+./scripts-run src/scripts/audit_likelihood      # → agents/runtime/reports/auto-rules-likelihood.json
 ```
 
 Then read `agents/runtime/reports/auto-rules-audit.md` end-to-end.
@@ -94,9 +94,9 @@ For each approved verdict:
 
 ```bash
 bash scripts/condense.sh --sync
-python3 scripts/condense.py --generate-tools
-python3 scripts/measure_augment_budget.py --check   # must exit 0
-python3 scripts/skill_linter.py --all               # 0 FAIL
+./scripts-run src/scripts/condense --generate-tools
+./scripts-run src/scripts/measure_augment_budget --check   # must exit 0
+./scripts-run src/scripts/skill_linter --all               # 0 FAIL
 ```
 
 Then run your package's full CI pipeline (see `Taskfile.yml` for the
@@ -107,7 +107,7 @@ canonical sequence) before pushing.
 Append a snapshot to `agents/.augment-budget-history.jsonl`:
 
 ```bash
-python3 scripts/measure_augment_budget.py --trend-append
+./scripts-run src/scripts/measure_augment_budget --trend-append
 ```
 
 Commit the cleanup as a separate chunk from any rule-add commits so
