@@ -23,6 +23,12 @@ import gtU2ImproveDiff from './gt_u2_improve_diff.js';
 import gtU3AuditSkipped from './gt_u3_audit_skipped.js';
 import gtU4PolishCeiling from './gt_u4_polish_ceiling.js';
 import gtU5MixedFlow from './gt_u5_mixed_flow.js';
+import gtU6aStackBlade from './gt_u6a_stack_blade.js';
+import gtU6bStackReact from './gt_u6b_stack_react.js';
+import gtU7TrivialHappy from './gt_u7_trivial_happy.js';
+import gtU8TrivialReclassification from './gt_u8_trivial_reclassification.js';
+import gtU9GreenfieldScaffold from './gt_u9_greenfield_scaffold.js';
+import gtU10GreenfieldBare from './gt_u10_greenfield_bare.js';
 
 export interface RecipeMeta {
     gt_id: string;
@@ -57,4 +63,10 @@ export const RECIPES: RecipeModule[] = [
     gtU3AuditSkipped,
     gtU4PolishCeiling,
     gtU5MixedFlow,
+    gtU6aStackBlade,
+    gtU6bStackReact,
+    gtU7TrivialHappy,
+    gtU8TrivialReclassification,
+    gtU9GreenfieldScaffold,
+    gtU10GreenfieldBare,
 ];
