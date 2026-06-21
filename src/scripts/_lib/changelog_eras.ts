@@ -126,6 +126,64 @@ export function current_era_body_size(lines: readonly string[] | null = null): n
     return next_era_line - current_idx - 1;
 }
 
+/**
+ * Lines in the current era body EXCLUDING the newest (topmost) released
+ * version section.
+ *
+ * The drift cap bounds *accumulated prior* releases in the current era — the
+ * mechanism by which "growth forces an era split" (see
+ * `docs/contracts/CHANGELOG-conventions.md § Era splits`). The newest released
+ * section is exempt: a single release is allowed to be arbitrarily large and
+ * instead forces the split on the **next** bump, once it has become a prior
+ * entry. Without this exemption a single large catch-up release — e.g. a
+ * 376-commit bump whose `## [x.y.z]` section alone exceeds the cap — trips the
+ * gate with no era split that could ever bring it under, which is the exact
+ * failure this function fixes.
+ *
+ * Returns the same count as {@link current_era_body_size} when the era holds no
+ * released section yet (nothing to exempt).
+ */
+export function current_era_accumulated_body_size(lines: readonly string[] | null = null): number {
+    const all = lines ?? read_changelog_lines();
+    const spans = era_spans(all);
+    const current_idx = current_era_index(spans);
+    if (current_idx === null) {
+        return 0;
+    }
+    let next_era_line = all.length;
+    for (const span of spans) {
+        if (span.line_index > current_idx) {
+            next_era_line = span.line_index;
+            break;
+        }
+    }
+    const total = next_era_line - current_idx - 1;
+    if (total <= 0) {
+        return total;
+    }
+    // Topmost (newest) version heading in the era body.
+    let first = -1;
+    for (let i = current_idx + 1; i < next_era_line; i++) {
+        if (VERSION_HEADING_RE.test(all[i]!)) {
+            first = i;
+            break;
+        }
+    }
+    if (first === -1) {
+        return total; // no released section yet → nothing to exempt
+    }
+    // The next version heading marks where accumulated prior releases begin.
+    let next_ver = next_era_line;
+    for (let i = first + 1; i < next_era_line; i++) {
+        if (VERSION_HEADING_RE.test(all[i]!)) {
+            next_ver = i;
+            break;
+        }
+    }
+    const newest_section = next_ver - first;
+    return Math.max(0, total - newest_section);
+}
+
 /** Parse `M.N.x` into `[M, N]`; return null for archived labels. */
 export function parse_era_label(label: string): [number, number] | null {
     const m = ERA_LABEL_RE.exec(label.trim());
