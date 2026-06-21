@@ -948,6 +948,14 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.0.1](https://github.com/event4u-app/agent-config/compare/7.0.0...7.0.1) (2026-06-22)
+
+### Bug Fixes
+
+* **release:** measure accumulated era body in the split gate ([3837048](https://github.com/event4u-app/agent-config/commit/3837048138e5e5d8cfa024ab80df4882d8ecc736))
+* **changelog:** exempt newest release from era drift cap; split 7.0.0 into its own era ([0dfa3a2](https://github.com/event4u-app/agent-config/commit/0dfa3a23fe44f8eb4e664d78173d294c7c4848c3))
+* **install:** resolve package version by upward walk so global install stops refusing ([977bdc3](https://github.com/event4u-app/agent-config/commit/977bdc359fe8954592f81649b23ea4a00f157b74))
+
 ## [7.0.0](https://github.com/event4u-app/agent-config/compare/6.1.0...7.0.0) (2026-06-21)
 
 ### BREAKING CHANGES
