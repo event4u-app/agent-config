@@ -454,6 +454,32 @@ describe('confirmGate — pre-execute confirmation verdict', () => {
     });
 });
 
+// ─── --check-confirm self-test — confirm prompt reachable through wrappers ────
+// Regression lock for the interactive [y/N] prompt "auto-aborting" under
+// `task release` / `./scripts-run`: go-task's interactive mode leaves fd 0 a
+// non-blocking TTY, so a bare readSync(0) threw EAGAIN and the prompt aborted
+// without ever waiting — even on a typed `y` (reproduced with isTTY === true).
+// The fix reads a fresh BLOCKING /dev/tty instead of fd 0. The interactive read
+// itself needs a pty (verified out-of-band via a pty.fork harness + the
+// `--check-confirm` self-test); here we lock the safe surface: the self-test is
+// wired, runs without a release, and a genuinely non-interactive shell yields
+// the actionable --yes guidance with exit 1 — never a hang, never a bare abort.
+describe('release --check-confirm — self-test wiring', () => {
+    it('non-interactive shell → guidance + exit 1, no release, no hang', () => {
+        const r = spawnSync(TSX_BIN, [TS_SCRIPT, '--check-confirm'], {
+            encoding: 'utf8',
+            cwd: REPO_ROOT,
+            input: '', // detached stdin
+            env: { ...process.env, CI: '1' }, // force the non-interactive path → no tty read, cannot hang
+            timeout: 15_000,
+        });
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('self-test');
+        expect(r.stdout + r.stderr).toContain('--yes'); // actionable guidance
+        expect(r.stdout + r.stderr).not.toMatch(/^aborted\.?$/m); // not a bare silent abort
+    });
+});
+
 /**
  * Normalise --dry-run preview output for cross-runtime comparison:
  *  - the `({today})` date in the changelog heading (a day rollover between the

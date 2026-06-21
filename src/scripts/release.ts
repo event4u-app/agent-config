@@ -1014,9 +1014,11 @@ function print_preview(plan: Plan): void {
     process.stdout.write('\n');
 }
 
-function confirm(prompt: string): boolean {
-    const ans = _input(`${prompt} [y/N] `).trim().toLowerCase();
-    return ans === 'y' || ans === 'yes';
+function confirm(prompt: string): boolean | null {
+    const ans = _input(`${prompt} [y/N] `);
+    if (ans === null) return null; // no usable controlling terminal
+    const norm = ans.trim().toLowerCase();
+    return norm === 'y' || norm === 'yes';
 }
 
 /** Can we prompt at all — is fd 0 a TTY, or is a controlling terminal openable? */
@@ -1033,35 +1035,42 @@ function _canPrompt(): boolean {
 }
 
 /**
- * Mirror of Python `input(prompt)` — write prompt, read one line.
+ * Mirror of Python `input(prompt)` — write the prompt, read one line from the
+ * controlling terminal. Returns `null` when no terminal is reachable.
  *
- * Reads from the controlling terminal (`/dev/tty`) when fd 0 is not itself a
- * TTY. `task release` / `./scripts-run` spawn this script with stdin detached
- * from the terminal, so a naive `readSync(0)` hits EOF immediately and the
- * `[y/N]` prompt "auto-aborts" without ever waiting. Falling back to `/dev/tty`
- * keeps the prompt interactive regardless of how the script is invoked.
+ * The answer is ALWAYS read from a freshly opened, blocking `/dev/tty`
+ * (`openSync(..., 'rs')`), NEVER from fd 0. `task release` / `./scripts-run`
+ * run this under go-task's `interactive: true`, which leaves fd 0 a TTY
+ * (`process.stdin.isTTY === true`) but one Node treats as NON-blocking — so a
+ * bare `readSync(0)` throws `EAGAIN`, the catch swallows it, and the `[y/N]`
+ * prompt "auto-aborts" without ever waiting (the exact failure this fixes;
+ * reproduced with `isTTY === true`). A fresh blocking `/dev/tty` descriptor
+ * blocks for real input regardless of how the script was invoked — the proven
+ * synchronous-prompt pattern.
  */
-function _input(prompt: string): string {
+function _input(prompt: string): string | null {
     process.stdout.write(prompt);
-    let fd = 0;
-    let openedTty = false;
-    if (!process.stdin.isTTY) {
-        try {
-            fd = fs.openSync('/dev/tty', 'r');
-            openedTty = true;
-        } catch {
-            return ''; // no controlling terminal (true non-interactive); guarded by _canPrompt upstream.
-        }
+    let fd: number;
+    try {
+        // 'rs' → O_RDONLY | O_SYNC: a fresh, blocking descriptor on the
+        // controlling terminal, unaffected by Node's non-blocking fd 0.
+        fd = fs.openSync('/dev/tty', 'rs');
+    } catch {
+        return null; // no controlling terminal (true non-interactive)
     }
     try {
         const buf = Buffer.alloc(1);
         const chars: number[] = [];
-        while (true) {
+        for (;;) {
             let bytesRead: number;
             try {
                 bytesRead = fs.readSync(fd, buf, 0, 1, null);
-            } catch {
-                break; // EOF / error → EOFError analogue; return what we have.
+            } catch (e) {
+                const code = (e as NodeJS.ErrnoException).code;
+                // A blocking /dev/tty should not yield these, but inherited
+                // descriptor flags can — retry rather than abort the prompt.
+                if (code === 'EAGAIN' || code === 'EINTR') continue;
+                break; // EOF / EIO → EOFError analogue; return what we have.
             }
             if (bytesRead === 0) break;
             const b = buf[0] as number;
@@ -1070,7 +1079,7 @@ function _input(prompt: string): string {
         }
         return Buffer.from(chars).toString('utf-8');
     } finally {
-        if (openedTty) fs.closeSync(fd);
+        fs.closeSync(fd);
     }
 }
 
@@ -1090,18 +1099,19 @@ export interface ConfirmVerdict {
  */
 export function confirmGate(target: string, yes: boolean): ConfirmVerdict {
     if (yes) return { proceed: true };
-    if (!_canPrompt()) {
-        return {
-            proceed: false,
-            stream: 'stderr',
-            message:
-                'No terminal available for the [y/N] confirmation (non-interactive shell). ' +
-                'Re-run with --yes to confirm, e.g. `task release -- --yes`.',
-        };
-    }
-    if (!confirm(`Proceed with release ${target}?`)) {
-        return { proceed: false, stream: 'stdout', message: 'aborted.' };
-    }
+    const noTerminal: ConfirmVerdict = {
+        proceed: false,
+        stream: 'stderr',
+        message:
+            'No terminal available for the [y/N] confirmation (non-interactive shell). ' +
+            'Re-run with --yes to confirm, e.g. `task release -- --yes`.',
+    };
+    if (!_canPrompt()) return noTerminal;
+    const answer = confirm(`Proceed with release ${target}?`);
+    // null = the controlling terminal vanished between the probe and the read;
+    // surface the actionable --yes guidance, never a bare silent "aborted.".
+    if (answer === null) return noTerminal;
+    if (!answer) return { proceed: false, stream: 'stdout', message: 'aborted.' };
     return { proceed: true };
 }
 
@@ -1382,6 +1392,7 @@ interface Args {
     dry_run: boolean;
     no_wait: boolean;
     resume: boolean;
+    check_confirm: boolean;
 }
 
 const PROG = 'release.py';
@@ -1391,7 +1402,7 @@ const PROG = 'release.py';
 // not the body prose.
 const USAGE =
     `usage: ${PROG} [-h] [--as {major,minor,patch}] [--version EXPLICIT] [--yes]\n` +
-    '                  [--dry-run] [--no-wait] [--resume]\n';
+    '                  [--dry-run] [--no-wait] [--resume] [--check-confirm]\n';
 
 function _argError(msg: string): never {
     process.stderr.write(USAGE);
@@ -1407,6 +1418,7 @@ function _parse_args(argv: readonly string[]): Args {
         dry_run: false,
         no_wait: false,
         resume: false,
+        check_confirm: false,
     };
 
     const positionals: string[] = [];
@@ -1478,6 +1490,13 @@ function _parse_args(argv: readonly string[]): Args {
         if (flag === '--resume') {
             if (inlineVal !== null) _argError(`argument --resume: ignored explicit argument '${inlineVal}'`);
             args.resume = true;
+            i += 1;
+            continue;
+        }
+        if (flag === '--check-confirm') {
+            if (inlineVal !== null)
+                _argError(`argument --check-confirm: ignored explicit argument '${inlineVal}'`);
+            args.check_confirm = true;
             i += 1;
             continue;
         }
@@ -1559,6 +1578,32 @@ function _detect_in_flight_target(): string | null {
 
 function main(argv: readonly string[] | null = null): number {
     const args = _parse_args(argv === null ? process.argv.slice(2) : argv);
+
+    // Self-test the confirmation prompt without touching git/gh/npm. Run it the
+    // same way a real release is invoked — `task release -- --check-confirm` —
+    // to verify the `[y/N]` prompt can actually read your answer through the
+    // go-task / scripts-run wrapper chain. Nothing is released either way.
+    if (args.check_confirm) {
+        process.stdout.write(
+            'Confirm-gate self-test — answer the [y/N] prompt below.\n' +
+                'Nothing is released; this only checks that the prompt can read your answer.\n',
+        );
+        const verdict = confirmGate('SELF-TEST (no release)', args.yes);
+        if (verdict.proceed) {
+            process.stdout.write(
+                'result: OK — the prompt read your confirmation. ' +
+                    '`task release` will work interactively.\n',
+            );
+            return 0;
+        }
+        const sink = verdict.stream === 'stderr' ? process.stderr : process.stdout;
+        if (verdict.message) sink.write(`${verdict.message}\n`);
+        process.stdout.write(
+            `result: the prompt did not read a "y" (stdin.isTTY=${String(process.stdin.isTTY)}). ` +
+                'If you typed y and still see this, paste this whole block back.\n',
+        );
+        return 1;
+    }
 
     const current = (
         JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf-8')) as Record<string, unknown>
