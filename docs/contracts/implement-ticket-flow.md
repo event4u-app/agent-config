@@ -170,7 +170,7 @@ therefore requires:
 2. Re-run the per-dimension fixtures
    (`tests/work_engine/test_scoring_confidence.py`).
 3. Re-capture GT-P1..GT-P4 if a fixture's band assignment shifts
-   (`python3 -m tests.golden.capture`); review the diff before
+   (`node node_modules/.bin/tsx tests/golden/capture.ts`); review the diff before
    locking. If GT-P3 (low) or GT-P4 (UI rejection) flip bands the
    threshold change is rejected — those fixtures are pinned to
    their bands by design.
@@ -428,7 +428,7 @@ manual for producing and re-producing those packs.
 
 Each cycle is a fresh `./agent-config implement-ticket` subprocess
 seeded from the persisted state file. The runner
-(`tests/golden/sandbox/runner.py`) chains them:
+(`tests/golden/sandbox/runner.ts`) chains them:
 
 ```bash
 ./agent-config implement-ticket \
@@ -443,8 +443,8 @@ seeded from the persisted state file. The runner
 The runner is invoked via the capture driver:
 
 ```bash
-python3 -m tests.golden.capture                 # all five GTs
-python3 -m tests.golden.capture --scenarios GT-3
+node node_modules/.bin/tsx tests/golden/capture.ts                 # all five GTs
+node node_modules/.bin/tsx tests/golden/capture.ts --scenarios GT-3
 ```
 
 ### Kill points & resume
@@ -492,7 +492,7 @@ recipe and relock policy: [`tests/golden/CAPTURING.md`](../../tests/golden/CAPTU
 Only when the engine's observable behaviour intentionally changes:
 
 ```bash
-python3 -m tests.golden.capture
+node node_modules/.bin/tsx tests/golden/capture.ts
 git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
 ```
 
@@ -566,7 +566,7 @@ Only when an engine change is **intentionally** behaviour-altering.
 The PR description must justify each new checksum. Procedure:
 
 ```bash
-python3 -m tests.golden.capture                  # regenerate Capture Packs + manifest
+node node_modules/.bin/tsx tests/golden/capture.ts                  # regenerate Capture Packs + manifest
 git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
 ```
 
@@ -587,13 +587,13 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 
 - Loosening the harness comparator to "fix" a failing replay. The
   harness is the contract; the engine is the variable.
-- Re-running `python3 -m tests.golden.capture` to "make the diff go
+- Re-running `node node_modules/.bin/tsx tests/golden/capture.ts` to "make the diff go
   away" without justification. The diff *is* the question.
 - Treating the harness and freeze-guard as duplicate checks. They
   catch different drift classes — both must stay green.
 - Adding a sixth Capture Pack without adding a corresponding entry
-  to `RECIPE_MODULES` in `harness.py` and a parametrize row in
-  `test_replay.py`.
+  to `RECIPES` in `sandbox/recipes/index.ts` and a parametrize row in
+  `golden_replay.test.ts`.
 
 ## Non-goals
 

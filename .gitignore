@@ -154,7 +154,7 @@ dist/agent-src/skills/*/evals/runs/
 /.github/budget-trend.jsonl
 
 # Golden Transcript freeze-guard staging output (produced by
-# `python3 -m tests.golden.capture --target tests/golden/.staging`,
+# `tsx tests/golden/capture.ts` into a staging tree,
 # diffed against the committed baseline; never committed).
 /tests/golden/.staging/
 /tests/golden/.staging-*.txt
