@@ -7,7 +7,6 @@
 //   config, so the port drives the exact same fixture.
 // Layer 2: golden parity on the REAL REPO — python3 vs tsx, byte-identical
 //   stdout/stderr/exit (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -17,18 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as tc from '../../src/scripts/lint_trust_coherence.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_trust_coherence.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_trust_coherence.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const _BANNER = tc._BANNER_MARKER;
 
@@ -217,23 +205,3 @@ describe('lint_trust_coherence — Phase-5.4 invariants (port of pytest)', () =>
 
 // --- Layer 2: golden parity on the REAL REPO -------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_trust_coherence — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function same(args: readonly string[]): void {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default run matches byte-for-byte', () => same([]));
-    it('--quiet matches byte-for-byte', () => same(['--quiet']));
-});

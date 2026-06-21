@@ -5,28 +5,14 @@
 // ids, exit codes) plus a golden-parity layer that runs python3 vs tsx on the
 // REAL REPO (skipped without python3). `lint`/`main` take a path argument, so
 // the fixtures live in a tmp dir while refs resolve against the real repo.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as lod from '../../src/scripts/lint_orchestration_dsl.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_orchestration_dsl.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_orchestration_dsl.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const VALID_PIPELINE = `schema_version: 1
 name: smoke-pipeline
@@ -145,21 +131,3 @@ steps:
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_orchestration_dsl — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('matches the default (no-flag) run byte-for-byte (real CI invocation)', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

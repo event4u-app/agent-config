@@ -13,29 +13,14 @@
 // match; the trailing exception string does not. The CI invocation always
 // uses the valid default policy, so this path never fires in CI. We assert the
 // exit code + prefix here, never byte-compare the exception tail.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { lint } from '../../src/scripts/lint_global_paths.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_global_paths.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_global_paths.py');
-const DEFAULT_POLICY = path.join(REPO_ROOT, 'src', 'scripts', 'expected_perms.json');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('lint_global_paths.lint — synthetic policies', () => {
     let tmp: string;
@@ -86,36 +71,3 @@ describe('lint_global_paths.lint — synthetic policies', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_global_paths — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function same(args: readonly string[]): void {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default run matches byte-for-byte', () => same([]));
-    it('--quiet matches byte-for-byte', () => same(['--quiet']));
-    it('explicit default policy matches byte-for-byte', () => same(['--policy', DEFAULT_POLICY]));
-
-    // Divergence-candidate path: exit code + stable prefix only (runtime
-    // exception text legitimately differs — see file header).
-    it('missing policy: exit 2 + stable prefix on both runtimes', () => {
-        const args = ['--policy', '/nonexistent/py2ts/zzz.json'];
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.status).toBe(2);
-        expect(py.status).toBe(2);
-        expect(ts.stderr.startsWith('error: policy load failed:')).toBe(true);
-        expect(py.stderr.startsWith('error: policy load failed:')).toBe(true);
-    });
-});

@@ -8,30 +8,14 @@
 //   - default + `--json` + `--measure` → byte-identical stdout/stderr/exit.
 //   - `--out <dir>` → byte-identical per-file output + stdout line.
 // Skipped without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as ptr from '../../src/scripts/project_thin_rules.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'project_thin_rules.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'project_thin_rules.py');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const _tmpDirs: string[] = [];
-function mkTmp(): string {
-    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ptr-'));
-    _tmpDirs.push(d);
-    return d;
-}
 afterEach(() => {
     for (const d of _tmpDirs.splice(0)) {
         fs.rmSync(d, { recursive: true, force: true });
@@ -92,43 +76,5 @@ describe('project_thin_rules — pure surface', () => {
         expect(m.saved_gpt).toBe(m.eager_gpt - m.thin_gpt);
         expect(typeof m.saved_pct).toBe('number');
         expect(typeof m.token_method).toBe('string');
-    });
-});
-
-describe.runIf(hasPython3())('project_thin_rules — golden parity (python3 vs tsx)', () => {
-    it('--json is byte-identical', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--json'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-    it('default + --measure human report is byte-identical', () => {
-        for (const flags of [[], ['--measure']]) {
-            const py = spawnSync('python3', [PY_SCRIPT, ...flags], { encoding: 'utf8', cwd: REPO_ROOT });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...flags], { encoding: 'utf8', cwd: REPO_ROOT });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        }
-    });
-    it('--out writes byte-identical thin rule files', () => {
-        const pyDir = mkTmp();
-        const tsDir = mkTmp();
-        const py = spawnSync('python3', [PY_SCRIPT, '--out', pyDir], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--out', tsDir], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        // stdout: "wrote N thin rule files → <dir>" — dir differs, count matches.
-        expect(ts.stdout.replace(tsDir, 'DIR')).toBe(py.stdout.replace(pyDir, 'DIR'));
-        expect(ts.stderr).toBe(py.stderr);
-
-        const pyFiles = fs.readdirSync(pyDir).sort();
-        const tsFiles = fs.readdirSync(tsDir).sort();
-        expect(tsFiles).toEqual(pyFiles);
-        for (const name of pyFiles) {
-            const a = fs.readFileSync(path.join(pyDir, name), 'utf-8');
-            const b = fs.readFileSync(path.join(tsDir, name), 'utf-8');
-            expect(b).toBe(a);
-        }
     });
 });

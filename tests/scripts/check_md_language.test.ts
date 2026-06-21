@@ -4,27 +4,13 @@
 // public behaviour (scan_file: umlauts, DE words, fences, anchors, inline
 // code, ignore marker) plus a golden-parity layer (python3 vs tsx) over the
 // real `docs/**` CI invocation (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { scan_file } from '../../src/scripts/check_md_language.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_md_language.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_md_language.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('check_md_language — scan_file', () => {
     let tmp: string;
@@ -79,35 +65,3 @@ describe('check_md_language — scan_file', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_md_language — golden parity (python3 vs tsx)', () => {
-    function docArgs(): string[] {
-        const out: string[] = [];
-        const walk = (dir: string): void => {
-            for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-                const full = path.join(dir, ent.name);
-                if (ent.isDirectory()) walk(full);
-                else if (
-                    ent.name.endsWith('.md') &&
-                    ent.name !== 'catalog.md' &&
-                    ent.name !== 'skills-catalog.md'
-                ) {
-                    out.push(path.relative(REPO_ROOT, full));
-                }
-            }
-        };
-        walk(path.join(REPO_ROOT, 'docs'));
-        out.sort();
-        return out;
-    }
-
-    it('matches the real docs/** CI scan byte-for-byte', () => {
-        const args = docArgs();
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

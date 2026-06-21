@@ -5,9 +5,6 @@
 // file covers the full exported surface as unit tests, plus a differential
 // golden-parity layer (python3 -c driver vs the TS functions) over unwrap /
 // looks_like_envelope / envelope_field. Skipped without python3.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -17,12 +14,7 @@ import {
     unwrap,
 } from '../../../src/scripts/hooks/envelope.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'envelope.py');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('envelope — looks_like_envelope', () => {
     it('true when all four envelope keys present at top level', () => {
@@ -121,88 +113,3 @@ describe('envelope — envelope_field', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('envelope — golden parity (python3 vs TS)', () => {
-    const DRIVER = `
-import json, sys
-sys.path.insert(0, sys.argv[1])
-import envelope as e
-cases = json.loads(sys.argv[2])
-out = []
-for c in cases:
-    fn = c["fn"]
-    if fn == "unwrap":
-        env, payload, plat = e.unwrap(c["text"], c.get("default", "generic"))
-        out.append([env, payload, plat])
-    elif fn == "looks_like_envelope":
-        out.append(e.looks_like_envelope(c["obj"]))
-    elif fn == "envelope_field":
-        out.append(e.envelope_field(c["env"], c["key"], c.get("default", "")))
-print(json.dumps(out))
-`;
-    const HOOKS_DIR = path.dirname(PY);
-
-    function runPy(cases: unknown[]): unknown {
-        const r = spawnSync('python3', ['-c', DRIVER, HOOKS_DIR, JSON.stringify(cases)], {
-            encoding: 'utf8',
-        });
-        expect(r.status, r.stderr).toBe(0);
-        return JSON.parse(r.stdout);
-    }
-
-    it('unwrap matches across representative inputs', () => {
-        const texts: Array<[string, string]> = [
-            ['', 'generic'],
-            ['   ', 'augment'],
-            ['{not json', 'claude'],
-            ['{"session_id": "raw-1", "tool_name": "view"}', 'cursor'],
-            ['[1, 2, 3]', 'generic'],
-            [
-                JSON.stringify({ schema_version: 1, platform: 'augment', event: 'stop', payload: { a: 1 } }),
-                'generic',
-            ],
-            [
-                JSON.stringify({ schema_version: 1, platform: '', event: 'stop', payload: 'bad' }),
-                'cline',
-            ],
-        ];
-        const cases = texts.map(([text, def]) => ({ fn: 'unwrap', text, default: def }));
-        const pyOut = runPy(cases) as Array<[unknown, unknown, string]>;
-        const tsOut = texts.map(([text, def]) => {
-            const [e, p, plat] = unwrap(text, def);
-            return [e, p, plat];
-        });
-        expect(tsOut).toEqual(pyOut);
-    });
-
-    it('looks_like_envelope matches', () => {
-        const objs = [
-            { schema_version: 1, platform: 'a', event: 'x', payload: {} },
-            { schema_version: 1, platform: 'a', event: 'x' },
-            'string',
-            null,
-            [1, 2],
-            { payload: { schema_version: 1, platform: 'a', event: 'x' } },
-        ];
-        const cases = objs.map((obj) => ({ fn: 'looks_like_envelope', obj }));
-        const pyOut = runPy(cases) as boolean[];
-        const tsOut = objs.map((o) => looks_like_envelope(o));
-        expect(tsOut).toEqual(pyOut);
-    });
-
-    it('envelope_field matches', () => {
-        const cases = [
-            { fn: 'envelope_field', env: { a: 1 }, key: 'a', default: '' },
-            { fn: 'envelope_field', env: { a: 1 }, key: 'b', default: 'fb' },
-            { fn: 'envelope_field', env: { a: null }, key: 'a', default: 'd' },
-        ];
-        const pyOut = runPy(cases) as unknown[];
-        const tsOut = [
-            envelope_field({ a: 1 }, 'a', ''),
-            envelope_field({ a: 1 }, 'b', 'fb'),
-            envelope_field({ a: null }, 'a', 'd'),
-        ];
-        expect(tsOut).toEqual(pyOut);
-    });
-});

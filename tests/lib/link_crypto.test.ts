@@ -12,9 +12,6 @@
  * scheme is byte-for-byte identical across runtimes. Skipped when python3 is
  * unavailable.
  */
-import { spawnSync } from 'node:child_process';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -26,14 +23,7 @@ import {
     resolve_keys,
 } from '../../src/scripts/_lib/link_crypto.js';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(HERE, '..', '..');
-const PY_LIB = path.join(REPO_ROOT, 'src', 'scripts', '_lib');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 const KEY = 'test-key-abc123';
 const KEY2 = 'second-key-xyz789';
@@ -103,40 +93,4 @@ describe('link_crypto — contract', () => {
 
 // --- Part B: cross-runtime crypto parity (python3 ↔ tsx) --------------------
 
-const PY_ENCRYPT = [
-    'import sys',
-    'sys.path.insert(0, sys.argv[1])',
-    'import link_crypto as m',
-    'sys.stdout.write(m.encrypt(sys.argv[2], sys.argv[3]))',
-].join('\n');
 
-const PY_DECRYPT = [
-    'import sys',
-    'sys.path.insert(0, sys.argv[1])',
-    'import link_crypto as m',
-    'sys.stdout.write(m.decrypt(sys.argv[2], sys.argv[3]))',
-].join('\n');
-
-describe.skipIf(!py3)('link_crypto — cross-runtime crypto parity', () => {
-    it('python3-encrypted token decrypts under the TS twin', () => {
-        const py = spawnSync('python3', ['-c', PY_ENCRYPT, PY_LIB, SECRET, KEY], { encoding: 'utf8' });
-        expect(py.status).toBe(0);
-        const token = py.stdout;
-        expect(is_token(token)).toBe(true);
-        expect(decrypt(token, KEY)).toBe(SECRET);
-    });
-
-    it('TS-encrypted token decrypts under the Python original', () => {
-        const token = encrypt(SECRET, KEY);
-        const py = spawnSync('python3', ['-c', PY_DECRYPT, PY_LIB, token, KEY], { encoding: 'utf8' });
-        expect(py.stderr).toBe('');
-        expect(py.status).toBe(0);
-        expect(py.stdout).toBe(SECRET);
-    });
-
-    it('Python rejects a TS token under the wrong key (same failure surface)', () => {
-        const token = encrypt(SECRET, KEY);
-        const py = spawnSync('python3', ['-c', PY_DECRYPT, PY_LIB, token, KEY2], { encoding: 'utf8' });
-        expect(py.status).not.toBe(0);
-    });
-});

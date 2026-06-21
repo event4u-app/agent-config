@@ -7,9 +7,6 @@
 //     identical synthetic hook-event JSON on stdin (clean + the blocked
 //     --no-verify case + malformed) and identical --command strings, asserting
 //     byte-identical stdout/stderr + exit. Parity skipped without python3.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -21,19 +18,7 @@ import {
     shlexSplit,
 } from '../../../src/scripts/hooks/block_no_verify.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'block_no_verify.py');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'block_no_verify.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // --- shlexSplit -------------------------------------------------------------
 
@@ -139,77 +124,3 @@ describe('block_no_verify — _extract_command', () => {
 
 // --- Golden parity (python3 vs tsx) -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('block_no_verify — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[], input = '') {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { input, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[], input = '') {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { input, encoding: 'utf8' });
-    }
-    function expectMatch(args: readonly string[], input = '') {
-        const py = runPy(args, input);
-        const ts = runTs(args, input);
-        expect(ts.stdout, `args=${JSON.stringify(args)}`).toBe(py.stdout);
-        expect(ts.stderr, `args=${JSON.stringify(args)}`).toBe(py.stderr);
-        expect(ts.status, `args=${JSON.stringify(args)}`).toBe(py.status);
-    }
-
-    // --command path
-    for (const cmd of [
-        'git commit --no-verify',
-        'git commit -nm wip',
-        'git -c core.hooksPath=/dev/null commit',
-        'git --config core.hooksPath=x commit',
-        "git commit -m 'a safe message'",
-        'echo hi | git -n commit',
-        'FOO=1 git commit -n',
-        'git commit -m "unterminated',
-        'echo "unterminated',
-        '',
-    ]) {
-        it(`--command parity: ${cmd || '(empty)'}`, () => {
-            expectMatch(['--command', cmd]);
-        });
-    }
-
-    it('--platform is accepted and ignored', () => {
-        expectMatch(['--command', 'git commit -n', '--platform', 'claude']);
-    });
-
-    // stdin envelope path — clean
-    it('stdin envelope (clean) parity', () => {
-        const env = JSON.stringify({ payload: { tool_input: { command: 'git status' } } });
-        expectMatch([], env);
-    });
-
-    // stdin envelope path — blocked --no-verify
-    it('stdin envelope (blocked --no-verify) parity', () => {
-        const env = JSON.stringify({
-            payload: { tool_input: { command: 'git commit --no-verify -m wip' } },
-        });
-        expectMatch([], env);
-    });
-
-    // stdin envelope — legacy payload.command
-    it('stdin envelope (legacy payload.command) parity', () => {
-        const env = JSON.stringify({ payload: { command: 'git commit -n' } });
-        expectMatch([], env);
-    });
-
-    // malformed stdin (not JSON) → allow (exit 0)
-    it('malformed stdin parity', () => {
-        expectMatch([], '{not json at all');
-    });
-
-    // empty stdin → allow
-    it('empty stdin parity', () => {
-        expectMatch([], '');
-    });
-
-    // usage error
-    it('unknown arg parity (exit 2)', () => {
-        expectMatch(['--bogus']);
-    });
-});

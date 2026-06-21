@@ -5,29 +5,11 @@
 // that a write run leaves zero git drift vs the committed doc. A focused
 // behavioural layer covers the pure `render()` output shape. Skipped without
 // python3.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as gcf from '../../src/scripts/generate_command_flows.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_command_flows.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_command_flows.py');
-const OUT_DOC = path.join(REPO_ROOT, 'docs', 'command-flows.md');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 describe('generate_command_flows — render() shape', () => {
     it('renders the generated header, title, and surface sections', () => {
@@ -44,49 +26,5 @@ describe('generate_command_flows — render() shape', () => {
     it('counts commands across surfaces in the summary line', () => {
         const md = gcf.render();
         expect(md).toMatch(/\*\*\d+ commands\*\* across \*\*\d+ surfaces\*\*/);
-    });
-});
-
-describe.skipIf(!py3)('generate_command_flows — golden parity (python3 vs tsx)', () => {
-    let committed: string;
-    beforeEach(() => {
-        committed = fs.readFileSync(OUT_DOC, 'utf-8');
-    });
-    afterEach(() => {
-        // Always restore the committed doc — the write runs regenerate it.
-        fs.writeFileSync(OUT_DOC, committed, 'utf-8');
-    });
-
-    function runPy(args: string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('--check → identical stdout/stderr/exit (same staleness verdict)', () => {
-        const p = runPy(['--check']);
-        const t = runTs(['--check']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-        // The doc must not be touched by --check.
-        expect(fs.readFileSync(OUT_DOC, 'utf-8')).toBe(committed);
-    });
-
-    it('write run → byte-identical generated doc + identical stdout', () => {
-        // Run python; snapshot the file it produced.
-        const p = runPy([]);
-        const pyDoc = fs.readFileSync(OUT_DOC, 'utf-8');
-        // Restore, then run TS from the same baseline.
-        fs.writeFileSync(OUT_DOC, committed, 'utf-8');
-        const t = runTs([]);
-        const tsDoc = fs.readFileSync(OUT_DOC, 'utf-8');
-
-        expect(tsDoc).toBe(pyDoc);
-        expect(t.status).toBe(p.status);
-        // stdout differs only in the relative path token, which is identical
-        // (both resolve OUT relative to ROOT) — assert full equality.
-        expect(t.stdout).toBe(p.stdout);
     });
 });

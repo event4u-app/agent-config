@@ -5,11 +5,10 @@
 // inputs and asserts byte-identical condensed bodies (modulo the per-run
 // `condensed_at:` timestamp) + backups + CLI messages, skipped without python3.
 
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -20,15 +19,7 @@ import {
 } from '../../src/scripts/condense_memory.js';
 import { SensitivePathError } from '../../src/scripts/validate_safe_paths.js';
 
-const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
-const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'condense_memory.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'condense_memory.py');
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 let tmp: string;
 beforeEach(() => {
@@ -156,68 +147,5 @@ describe('condense_memory.ts — condense_file()', () => {
         decondense_file(target);
         expect(readFileSync(target, 'utf-8')).toBe(body);
         expect(existsSync(join(tmp, 'AGENTS.md.original.md'))).toBe(false);
-    });
-});
-
-// --- golden parity vs python3 --------------------------------------------
-
-describe.skipIf(!HAVE_PYTHON)('condense_memory — golden parity', () => {
-    const SAMPLE = [
-        'The agent is a tool that helps the user.',
-        '',
-        '```python',
-        'x = the value',
-        '```',
-        '',
-        '1. The first option',
-        '❌ The error happened',
-        'NEVER COMMIT WITHOUT PERMISSION',
-        'See [the guide](docs/the-guide.md) here.',
-        'The path docs/is-the-thing/a-file.md is the target.',
-        '',
-    ].join('\n');
-
-    function runCli(bin: 'py' | 'ts', args: string[]): ReturnType<typeof spawnSync> {
-        if (bin === 'py') {
-            return spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8' });
-        }
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8' });
-    }
-
-    it('condense output + backup + stdout parity', () => {
-        const pyTarget = join(tmp, 'A.md');
-        const tsTarget = join(tmp, 'B.md');
-        writeFileSync(pyTarget, SAMPLE, 'utf-8');
-        writeFileSync(tsTarget, SAMPLE, 'utf-8');
-        const py = runCli('py', [pyTarget]);
-        const ts = runCli('ts', [tsTarget]);
-        expect(ts.status).toBe(py.status);
-        // stdout: normalise A/B filename.
-        const normOut = (s: string, f: string): string => s.split(f).join('X.md');
-        expect(normOut(String(ts.stdout), 'B.md')).toBe(normOut(String(py.stdout), 'A.md'));
-        // condensed body: normalise condensed_at timestamp + filename.
-        const normBody = (s: string): string => s.replace(/condensed_at: .*/g, 'condensed_at: TS');
-        expect(normBody(readFileSync(tsTarget, 'utf-8'))).toBe(normBody(readFileSync(pyTarget, 'utf-8')));
-        // backup is byte-for-byte the original.
-        expect(readFileSync(join(tmp, 'B.md.original.md'), 'utf-8')).toBe(
-            readFileSync(join(tmp, 'A.md.original.md'), 'utf-8'),
-        );
-    });
-
-    it('sensitive refusal stderr/exit parity', () => {
-        const py = runCli('py', [join(tmp, '.env.local')]);
-        const ts = runCli('ts', [join(tmp, '.env.local')]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('argparse error parity', () => {
-        for (const args of [[] as string[], ['x.md', '--check', '--decondense']]) {
-            const py = runCli('py', args);
-            const ts = runCli('ts', args);
-            expect(ts.stderr, args.join(' ')).toBe(py.stderr);
-            expect(ts.status, args.join(' ')).toBe(py.status);
-        }
     });
 });

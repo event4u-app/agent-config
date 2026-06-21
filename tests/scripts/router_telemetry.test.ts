@@ -23,7 +23,6 @@
 // (insertion-ordered). Byte-identical parity is therefore impossible; the
 // golden layer compares the report body with those set-derived structures
 // canonicalized.
-import { spawnSync } from 'node:child_process';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -33,28 +32,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as mod from '../../src/scripts/router_telemetry.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'router_telemetry.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'router_telemetry.py');
-const REPORT_DIR = path.join(
-    REPO_ROOT,
-    'internal',
-    'bench',
-    'reports',
-    'router-telemetry',
-);
-const TRACK_B = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb.yaml');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-const corporaPresent = fs.existsSync(TRACK_B);
 
 // ── Unit: trigger_matches ────────────────────────────────────────────────
 
@@ -257,112 +235,5 @@ describe('router_telemetry — write_report serialization', () => {
 
 // ── Golden parity (python3 vs tsx on the REAL repo) ──────────────────────
 
-function snapshotReportDir(): { restore: () => void } {
-    const backup = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-snap-'));
-    if (fs.existsSync(REPORT_DIR)) {
-        fs.cpSync(REPORT_DIR, backup, { recursive: true });
-    }
-    return {
-        restore: () => {
-            fs.rmSync(REPORT_DIR, { recursive: true, force: true });
-            if (fs.existsSync(backup)) {
-                fs.cpSync(backup, REPORT_DIR, { recursive: true });
-            }
-            fs.rmSync(backup, { recursive: true, force: true });
-        },
-    };
-}
 
-const TS_RE = /telemetry\/[0-9T:+-]+\.json/g;
-function normStdout(s: string): string {
-    return s.replace(TS_RE, 'telemetry/<TS>.json');
-}
 
-function canonicalReport(jsonText: string): string {
-    const d = JSON.parse(jsonText) as Record<string, unknown>;
-    delete d['generated_at'];
-    // Canonicalize set-derived ordering (see divergence note at top).
-    const pra = d['per_rule_activations'] as Record<string, Record<string, number>>;
-    const praSorted: Record<string, Record<string, number>> = {};
-    for (const tier of Object.keys(pra).sort()) {
-        const inner = pra[tier] as Record<string, number>;
-        const sortedInner: Record<string, number> = {};
-        for (const k of Object.keys(inner).sort()) sortedInner[k] = inner[k] as number;
-        praSorted[tier] = sortedInner;
-    }
-    d['per_rule_activations'] = praSorted;
-    const pcs = d['per_corpus_summary'] as Array<Record<string, unknown>>;
-    for (const s of pcs) {
-        const top = s['top_rules'] as Array<[string, number]>;
-        top.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-    }
-    return stableStringify(d);
-}
-
-// Deterministic key-sorted JSON for comparison only.
-function stableStringify(v: unknown): string {
-    if (v === null || typeof v !== 'object') return JSON.stringify(v);
-    if (Array.isArray(v)) return '[' + v.map(stableStringify).join(',') + ']';
-    const obj = v as Record<string, unknown>;
-    const keys = Object.keys(obj).sort();
-    return '{' + keys.map((k) => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}';
-}
-
-describe.skipIf(!py3 || !corporaPresent)(
-    'router_telemetry — golden parity (python3 vs tsx)',
-    () => {
-        const runPy = (args: string[]) =>
-            spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const runTs = (args: string[]) =>
-            spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-
-        for (const args of [['--quiet'], []]) {
-            it(`stdout/stderr/exit + report body parity for args=${JSON.stringify(args)}`, () => {
-                const snap = snapshotReportDir();
-                try {
-                    const py = runPy(args);
-                    const pyReport = fs.readFileSync(path.join(REPORT_DIR, 'latest.json'), 'utf-8');
-                    snap.restore();
-
-                    const snap2 = snapshotReportDir();
-                    try {
-                        const ts = runTs(args);
-                        const tsReport = fs.readFileSync(path.join(REPORT_DIR, 'latest.json'), 'utf-8');
-
-                        expect(ts.status).toBe(py.status);
-                        expect(normStdout(ts.stdout)).toBe(normStdout(py.stdout));
-                        expect(ts.stderr).toBe(py.stderr);
-                        // Report body parity, set-order canonicalized.
-                        expect(canonicalReport(tsReport)).toBe(canonicalReport(pyReport));
-                    } finally {
-                        snap2.restore();
-                    }
-                } finally {
-                    // Defensive: ensure nothing leaked.
-                    if (fs.existsSync(path.join(os.tmpdir()))) {
-                        /* snapshots already restored above */
-                    }
-                }
-            });
-        }
-
-        it('custom relative --corpus path fails like Python (latent crash)', () => {
-            const snap = snapshotReportDir();
-            try {
-                const args = ['--corpus', 'dev:tests/eval/corpus-dev.yaml', '--quiet'];
-                const py = runPy(args);
-                snap.restore();
-                const snap2 = snapshotReportDir();
-                try {
-                    const ts = runTs(args);
-                    expect(py.status).not.toBe(0);
-                    expect(ts.status).not.toBe(0);
-                } finally {
-                    snap2.restore();
-                }
-            } finally {
-                // restored above
-            }
-        });
-    },
-);

@@ -6,11 +6,9 @@
 // layer: Python atomic_write_json vs TS atomic_write_json must write the
 // exact same bytes (the Python json.dumps(indent=2) + "\n" contract).
 // Skipped without python3 for the parity layer only.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -23,12 +21,7 @@ import {
     REPLAY_ENV_VAR,
 } from '../../../src/scripts/hooks/state_io.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'state_io.py');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmp: string;
 beforeEach(() => {
@@ -140,47 +133,3 @@ describe('state_io — feedback_dir', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('state_io — JSON byte parity (python3 vs TS)', () => {
-    const DRIVER = `
-import json, sys
-sys.path.insert(0, sys.argv[1])
-import state_io as s
-target = sys.argv[2]
-payload = json.loads(sys.argv[3])
-s.atomic_write_json(target, payload)
-sys.stdout.buffer.write(open(target, "rb").read())
-`;
-    const HOOKS_DIR = path.dirname(PY);
-
-    function pyBytes(payload: unknown): Buffer {
-        const pyTarget = path.join(tmp, 'py.json');
-        const r = spawnSync('python3', ['-c', DRIVER, HOOKS_DIR, pyTarget, JSON.stringify(payload)], {
-            encoding: 'buffer',
-        });
-        expect(r.status, r.stderr?.toString()).toBe(0);
-        return r.stdout;
-    }
-
-    function tsBytes(payload: unknown): Buffer {
-        const tsTarget = path.join(tmp, 'agents', 'runtime', 'state', 'ts.json');
-        atomic_write_json(tsTarget, payload);
-        return fs.readFileSync(tsTarget);
-    }
-
-    const PAYLOADS: unknown[] = [
-        { hello: 'world' },
-        { b: 2, a: [1, 2], nested: { x: true, y: null } },
-        { arr: [], obj: {}, flag: false },
-        { unicode: 'café — naïve — 日本語', emoji: '🚀' },
-        { schema_version: 1, concerns: [{ concern: 'x', exit_code: 0, severity: 'allow' }] },
-        { ints: [0, -1, 42, 1000000] },
-    ];
-
-    for (const [idx, payload] of PAYLOADS.entries()) {
-        it(`payload #${idx} bytes match`, () => {
-            expect(tsBytes(payload).equals(pyBytes(payload))).toBe(true);
-        });
-    }
-});

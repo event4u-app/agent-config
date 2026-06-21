@@ -5,26 +5,11 @@
 //   _pack_universe) and the live-tree lint() == 0 invariant.
 // Layer 2: CLI golden parity python3 vs tsx on the REAL REPO (default +
 //   --quiet, the real CI args). Skipped without python3.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as mod from '../../src/scripts/lint_profile_overlay_set_only.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_profile_overlay_set_only.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_profile_overlay_set_only.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('lint_profile_overlay_set_only — ported pytest suite (helpers)', () => {
     it('test_live_tree_passes', () => {
@@ -63,23 +48,3 @@ describe('lint_profile_overlay_set_only — ported pytest suite (helpers)', () =
 
 // --- CLI golden parity on the REAL REPO -------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_profile_overlay_set_only — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    for (const args of [[], ['--quiet']]) {
-        it(`matches \`${args.join(' ') || '(default)'}\` byte-for-byte`, () => {
-            const py = runPy(args);
-            const ts = runTs(args);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-    }
-});

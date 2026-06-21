@@ -6,26 +6,11 @@
 // same surface via an injectable `Hooks` bag passed to main(). A
 // golden-parity layer runs python3 vs tsx on the REAL REPO (no flags →
 // warn-only, exit 0) when python3 is present.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as c from '../../src/scripts/check_release_published.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_release_published.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_release_published.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function stub(opts: {
     version: string;
@@ -108,29 +93,3 @@ describe('check_release_published.main — exit codes (1:1 port)', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_release_published — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function expectMatch(args: readonly string[]) {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    // Default (warn-only) on the real repo — uses real git/package.json.
-    it('default warn-only matches', () => {
-        expectMatch([]);
-    });
-
-    it('--strict --require-main matches', () => {
-        expectMatch(['--strict', '--require-main']);
-    });
-});

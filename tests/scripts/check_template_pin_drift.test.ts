@@ -3,28 +3,14 @@
 // No pytest suite exists. Focused spec over _read_package_version /
 // _read_template_pin / _template_files, plus golden parity (python3 vs tsx)
 // on the REAL REPO for the default and --allow-empty invocations.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as ctpd from '../../src/scripts/check_template_pin_drift.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_template_pin_drift.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_template_pin_drift.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('check_template_pin_drift — helpers', () => {
     it('_read_package_version returns the repo version (string)', () => {
@@ -64,22 +50,3 @@ describe('check_template_pin_drift — helpers', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_template_pin_drift — golden parity (python3 vs tsx)', () => {
-    function expectMatch(args: readonly string[]) {
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default matches byte-for-byte', () => {
-        expectMatch([]);
-    });
-
-    it('--allow-empty matches byte-for-byte', () => {
-        expectMatch(['--allow-empty']);
-    });
-});

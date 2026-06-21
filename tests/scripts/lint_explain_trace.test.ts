@@ -11,32 +11,16 @@
 // text differs (CPython json vs V8 JSON.parse). The OK path, the validation
 // messages (subset validator mirrors jsonschema wording), and all exit codes
 // are byte-identical — asserted below.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as let_ from '../../src/scripts/lint_explain_trace.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_explain_trace.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_explain_trace.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
-function hasJsonschema(): boolean {
-    return spawnSync('python3', ['-c', 'import jsonschema'], { encoding: 'utf8' }).status === 0;
-}
 
 const SCHEMA = JSON.parse(
     fs.readFileSync(
@@ -139,101 +123,3 @@ describe('lint_explain_trace.parse_args', () => {
 
 // --- Golden parity on the REAL REPO schema ---------------------------------
 
-const py3 = hasPython3() && hasJsonschema();
-
-describe.skipIf(!py3)('lint_explain_trace — golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'let-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    function runPy(args: readonly string[], input?: string) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            input,
-        });
-    }
-    function runTs(args: readonly string[], input?: string) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            input,
-        });
-    }
-    function same(args: readonly string[], input?: string): void {
-        const py = runPy(args, input);
-        const ts = runTs(args, input);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    // Tolerant comparison for SCHEMA-VALIDATION findings: jsonschema's exact
-    // error prose is Python-version-dependent (local 3.9 vs CI 3.12 emit
-    // different wording/ordering), and post-migration there is no Python — the
-    // TS validator owns the wording. The stable contract is: same exit code +
-    // the same set of "<field-path>:" prefixes flagged. Byte-comparing
-    // jsonschema prose chases a moving target, so compare the stable projection.
-    function sameSchemaFindings(args: readonly string[], input?: string): void {
-        const py = runPy(args, input);
-        const ts = runTs(args, input);
-        expect(ts.status).toBe(py.status);
-        const prefixes = (s: string): string[] =>
-            s.split('\n')
-                .filter((l) => l.includes(':'))
-                .map((l) => l.slice(0, l.indexOf(':')).trim())
-                .sort();
-        expect(prefixes(ts.stdout + ts.stderr)).toEqual(prefixes(py.stdout + py.stderr));
-    }
-
-    function write(name: string, obj: unknown): string {
-        const p = path.join(tmp, name);
-        fs.writeFileSync(p, JSON.stringify(obj));
-        return p;
-    }
-
-    it('valid trace (file) matches byte-for-byte (exit 0)', () => {
-        same([write('ok.json', VALID_TRACE)]);
-    });
-    it('valid trace (--stdin) matches byte-for-byte (exit 0)', () => {
-        same(['--stdin'], JSON.stringify(VALID_TRACE));
-    });
-    it('missing-required failure matches byte-for-byte (exit 1)', () => {
-        same([write('bad.json', { version: 1 })]);
-    });
-    it('wrong-const failure matches byte-for-byte (exit 1)', () => {
-        same([write('const.json', { ...VALID_TRACE, version: 2 })]);
-    });
-    it('wrong-enum failure matches byte-for-byte (exit 1)', () => {
-        same([write('enum.json', { ...VALID_TRACE, subject: 'nope' })]);
-    });
-    it('additional-property failure matches byte-for-byte (exit 1)', () => {
-        same([write('extra.json', { ...VALID_TRACE, extra: 1 })]);
-    });
-    it('minLength / nested-item failures flag the same fields (exit 1)', () => {
-        // Tolerant: jsonschema prose varies by Python version; assert the same
-        // exit code + the same flagged field-paths, not the exact wording.
-        sameSchemaFindings([write('nested.json', { ...VALID_TRACE, run_id: '', assumptions: [{}] })]);
-    });
-    it('no path / no --stdin invocation error matches (exit 2)', () => {
-        same([]);
-    });
-    it('missing-file invocation error matches (exit 2)', () => {
-        same([path.join(tmp, 'does-not-exist.json')]);
-    });
-
-    it('malformed JSON: exit 2 + stable prefix on both sides (DOCUMENTED DIVERGENCE on parser text)', () => {
-        const py = runPy(['--stdin'], 'not json');
-        const ts = runTs(['--stdin'], 'not json');
-        expect(py.status).toBe(2);
-        expect(ts.status).toBe(py.status);
-        // The exit code + the stable prefix match; only the parser-error tail
-        // diverges (CPython json vs V8 JSON.parse).
-        expect(py.stderr.startsWith('❌  stdin is not valid JSON:')).toBe(true);
-        expect(ts.stderr.startsWith('❌  stdin is not valid JSON:')).toBe(true);
-    });
-});

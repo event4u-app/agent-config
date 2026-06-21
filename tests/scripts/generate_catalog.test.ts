@@ -7,11 +7,9 @@
 // byte-identical AND that the tsx writer reproduces the committed output with
 // ZERO git drift. The working tree is restored afterwards. Skipped without
 // python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -21,21 +19,7 @@ import {
     render_llms_txt,
 } from '../../src/scripts/generate_catalog.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_catalog.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_catalog.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const LLMS_TXT = path.join(REPO_ROOT, 'llms.txt');
-const CATALOG_MD = path.join(REPO_ROOT, 'docs', 'skills-catalog.md');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmpDir: string;
 beforeEach(() => {
@@ -95,35 +79,3 @@ describe('renderers', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('generate_catalog — golden parity (python3 vs tsx)', () => {
-    it('python3 and tsx produce byte-identical outputs with zero git drift; tree restored', () => {
-        const origLlms = fs.readFileSync(LLMS_TXT, 'utf-8');
-        const origCatalog = fs.readFileSync(CATALOG_MD, 'utf-8');
-        try {
-            const p = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-            expect(p.status).toBe(0);
-            const pyLlms = fs.readFileSync(LLMS_TXT, 'utf-8');
-            const pyCatalog = fs.readFileSync(CATALOG_MD, 'utf-8');
-            // python3 baseline reproduces the committed output (zero drift).
-            expect(pyLlms).toBe(origLlms);
-            expect(pyCatalog).toBe(origCatalog);
-
-            const t = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-            expect(t.status).toBe(0);
-            const tsLlms = fs.readFileSync(LLMS_TXT, 'utf-8');
-            const tsCatalog = fs.readFileSync(CATALOG_MD, 'utf-8');
-            // tsx reproduces the committed output (zero drift) — identical to py.
-            expect(tsLlms).toBe(pyLlms);
-            expect(tsCatalog).toBe(pyCatalog);
-            expect(tsLlms).toBe(origLlms);
-            expect(tsCatalog).toBe(origCatalog);
-            expect(t.stdout).toBe(p.stdout);
-            expect(t.stderr).toBe(p.stderr);
-        } finally {
-            fs.writeFileSync(LLMS_TXT, origLlms, 'utf-8');
-            fs.writeFileSync(CATALOG_MD, origCatalog, 'utf-8');
-        }
-    });
-});

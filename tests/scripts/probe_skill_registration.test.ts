@@ -17,7 +17,6 @@ import { run_probe } from '../../src/scripts/probe_skill_registration.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'probe_skill_registration.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'probe_skill_registration.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -25,9 +24,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -190,53 +186,4 @@ describe('probe_skill_registration — differential (run_probe)', () => {
         expect(r.status).toBe(0);
         expect(r.stdout).toContain('DRIFT');
     });
-});
-
-describe.runIf(hasPython3())('probe_skill_registration — golden parity (python3 vs tsx)', () => {
-    // Build a synthetic fixture tree so parity is deterministic + independent
-    // of the host machine's real install state (HOME contents).
-    function buildFixture(): { home: string; project: string } {
-        const tmp = mkTmp();
-        const home = path.join(tmp, 'home');
-        const project = path.join(tmp, 'project');
-        fs.mkdirSync(home);
-        fs.mkdirSync(project);
-        writePkgJson(home, '2.9.0');
-        writePkgJson(project, '3.3.0');
-        writeSkill(home, '.claude/skills', 'alpha', 'Stale alpha');
-        writeSkill(project, '.claude/skills', 'alpha', 'Fresh alpha');
-        writeSkill(project, '.claude/skills', 'beta', 'Project-only beta');
-        writeSkill(project, '.cursor/rules', 'rule-one', "Cursor rule with 'quote'", 'mdc');
-        writeSkill(project, '.clinerules', 'rule-two', 'Cline rule', 'md');
-        writeSkill(project, '.github', 'copilot-instructions', 'n/a', 'single');
-        const manifest = path.join(project, '.claude-plugin', 'marketplace.json');
-        fs.mkdirSync(path.dirname(manifest), { recursive: true });
-        fs.writeFileSync(
-            manifest,
-            JSON.stringify({ plugins: [{ name: 'agent-config', skills: ['./.claude/skills/alpha'] }] }),
-            'utf-8',
-        );
-        return { home, project };
-    }
-
-    const argShapes: string[][] = [
-        [],
-        ['--format=json'],
-        ['--strict'],
-        ['--strict', '--format=json'],
-        ['--tool=claude'],
-        ['--scope=project', '--format=json'],
-    ];
-
-    for (const extra of argShapes) {
-        it(`byte-identical for: ${extra.join(' ') || '(default)'}`, () => {
-            const { home, project } = buildFixture();
-            const baseArgs = ['--home', home, '--project', project, ...extra];
-            const py = spawnSync('python3', [PY_SCRIPT, ...baseArgs], { encoding: 'utf8' });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...baseArgs], { encoding: 'utf8' });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
 });

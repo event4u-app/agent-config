@@ -8,7 +8,6 @@
 // into the Python install module; it is asserted here against the install.py
 // source line (the alias map is Python-side and not part of this twin's
 // surface). Plus golden parity (python3 vs tsx) on the real repo.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,18 +16,7 @@ import { describe, expect, it } from 'vitest';
 import { SCHEMA_PATH, _iter_errors } from '../../src/scripts/validate_agent_settings.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_agent_settings.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_agent_settings.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const SCHEMA = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf-8'));
 const VALID_TIERS = ['minimal', 'balanced', 'full', 'custom'] as const;
@@ -75,14 +63,3 @@ describe('validate_agent_settings — alias map (install source)', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('validate_agent_settings — golden parity (python3 vs tsx)', () => {
-    it('matches the clean-repo run byte-for-byte', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

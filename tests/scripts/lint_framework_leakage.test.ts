@@ -8,28 +8,14 @@
 //   2. A golden-parity layer that runs python3 vs tsx on the REAL REPO across
 //      the real CI args (default / --quiet / --json), asserting byte-identical
 //      stdout/stderr/exit. Skipped without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as mod from '../../src/scripts/lint_framework_leakage.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_framework_leakage.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_framework_leakage.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // --- ported pytest harness --------------------------------------------------
 
@@ -156,43 +142,3 @@ describe('lint_framework_leakage — ported pytest suite', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_framework_leakage — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('matches the default run byte-for-byte (CI invocation is --quiet)', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('matches the --quiet run byte-for-byte (the real CI args)', () => {
-        const py = runPy(['--quiet']);
-        const ts = runTs(['--quiet']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('matches the --json run byte-for-byte', () => {
-        const py = runPy(['--json']);
-        const ts = runTs(['--json']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('--help exits 0 and prints a usage line (not a parity contract)', () => {
-        const ts = runTs(['--help']);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toContain('usage:');
-    });
-});

@@ -4,23 +4,14 @@
 // output formatting) plus a golden-parity layer that runs python3 vs tsx on
 // the REAL repo README for each --format / --strict combination (skipped
 // without python3). Byte-identical stdout/stderr/exit asserted.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as rl from '../../src/scripts/readme_linter.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'readme_linter.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'readme_linter.py');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmp: string;
 beforeEach(() => {
@@ -254,27 +245,5 @@ describe('readme_linter — output formatting', () => {
         const out = rl.format_markdown(result);
         expect(out).toContain('⚠️ Warnings');
         expect(out).toContain('readme_overloaded');
-    });
-});
-
-describe.runIf(hasPython3())('readme_linter — golden parity (python3 vs tsx) on real README', () => {
-    for (const fmt of ['text', 'json', 'markdown']) {
-        for (const strict of ['', '--strict']) {
-            const args = ['README.md', '--root', '.', '--format', fmt, ...(strict ? [strict] : [])];
-            it(`byte-identical for: ${fmt}${strict ? ' --strict' : ''}`, () => {
-                const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-                const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-                expect(ts.status).toBe(py.status);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-            });
-        }
-    }
-    it('README-not-found returns 3 with the same message', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, 'NOPE.md'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, 'NOPE.md'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
     });
 });

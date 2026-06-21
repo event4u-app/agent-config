@@ -5,28 +5,14 @@
 // _skill_name_field, check_single) plus a golden-parity layer running
 // python3 vs tsx on the REAL REPO (skipped without python3). Byte-identical
 // stdout/stderr/exit is the contract.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as ln from '../../src/scripts/lint_namespace.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_namespace.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_namespace.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('lint_namespace._shape_errors', () => {
     it('accepts a valid kebab-case command name', () => {
@@ -125,26 +111,3 @@ describe('lint_namespace._skill_name_field', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_namespace — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function same(args: readonly string[]): void {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default scan matches byte-for-byte', () => same([]));
-    it('--quiet matches byte-for-byte', () => same(['--quiet']));
-    it('--name valid matches byte-for-byte (exit 0)', () => same(['--name', 'foo-bar']));
-    it('--name invalid matches byte-for-byte (exit 1)', () => same(['--name', 'Bad_Name']));
-    it('--name reserved matches byte-for-byte (exit 1)', () => same(['--name', 'index']));
-});

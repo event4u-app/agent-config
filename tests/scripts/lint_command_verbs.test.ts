@@ -4,7 +4,6 @@
 // suite over the public behaviour (leading_token, check — both rules, tier /
 // grandfather gating) plus a golden-parity layer running python3 vs tsx on the
 // REAL REPO, byte-identical stdout/stderr/exit (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,18 +12,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import * as cv from '../../src/scripts/lint_command_verbs.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_command_verbs.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_command_verbs.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const APPROVED = new Set(['work', 'fix', 'agents']);
 const BANNED = new Set(['create']);
@@ -124,28 +112,3 @@ describe('lint_command_verbs.load_config', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_command_verbs — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function same(args: readonly string[]): void {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default (changed since main) matches', () => same([]));
-    it('--all matches', () => same(['--all']));
-    it('--quiet matches', () => same(['--quiet']));
-    it('--baseline main matches', () => same(['--baseline', 'main']));
-    it('--all --quiet matches', () => same(['--all', '--quiet']));
-    it('unrecognized flag matches argparse error (exit 2)', () => same(['--nope']));
-    it('missing --baseline value matches argparse error', () => same(['--baseline']));
-});

@@ -5,23 +5,14 @@
 // builds both python3 and tsx into tmp out-dirs over the REAL rule source and
 // asserts byte-identical digest files + console output (skipped without
 // python3).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as bld from '../../src/scripts/build_linear_digest.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_linear_digest.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_linear_digest.py');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const LINEAR_PER_FIELD_BUDGET = 100_000;
 
@@ -112,28 +103,5 @@ describe('build_linear_digest — end-to-end build', () => {
         bld._setConfigForTest({ WORKSPACE: [bld.RuleEntry('does-not-exist')], TEAM: [], PERSONAL: [] });
         const rc = bld.main(['--out-dir', tmp]);
         expect(rc).toBe(3);
-    });
-});
-
-describe.runIf(hasPython3())('build_linear_digest — golden parity (python3 vs tsx)', () => {
-    it('byte-identical digests + console output over the real rule source', () => {
-        const pyd = fs.mkdtempSync(path.join(os.tmpdir(), 'ld-py-'));
-        const tsd = fs.mkdtempSync(path.join(os.tmpdir(), 'ld-ts-'));
-        try {
-            const py = spawnSync('python3', [PY_SCRIPT, '--out-dir', pyd], { encoding: 'utf8', cwd: REPO_ROOT });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--out-dir', tsd], { encoding: 'utf8', cwd: REPO_ROOT });
-            expect(ts.status).toBe(py.status);
-            // stdout carries the tmp out-dir path; compare after stripping it.
-            expect(ts.stdout.replace(new RegExp(tsd, 'g'), 'OUT')).toBe(py.stdout.replace(new RegExp(pyd, 'g'), 'OUT'));
-            expect(ts.stderr).toBe(py.stderr);
-            for (const layer of ['workspace', 'team', 'personal']) {
-                expect(fs.readFileSync(path.join(tsd, `${layer}.md`), 'utf-8')).toBe(
-                    fs.readFileSync(path.join(pyd, `${layer}.md`), 'utf-8'),
-                );
-            }
-        } finally {
-            fs.rmSync(pyd, { recursive: true, force: true });
-            fs.rmSync(tsd, { recursive: true, force: true });
-        }
     });
 });

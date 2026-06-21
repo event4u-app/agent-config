@@ -7,35 +7,13 @@
 // normalising the single volatile value (the embedded UTC timestamp).
 // The live docs/benchmark.md is snapshot + restored so the test leaves zero
 // git drift.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as rb from '../../src/scripts/render_benchmark_md.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'render_benchmark_md.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'render_benchmark_md.py');
-const OUT = path.join(REPO_ROOT, 'docs', 'benchmark.md');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 /** Normalise the two timestamp shapes the renderer embeds. */
-function normTs(s: string): string {
-    return s
-        .replace(/_Last rendered: [^_]*_/g, '_Last rendered: TS_')
-        .replace(/\*\*Last rendered:\*\* `[^`]*`/g, '**Last rendered:** TS');
-}
 
 describe('render_benchmark_md — pure formatters', () => {
     it('fmt_pct returns the em-dash for null', () => {
@@ -78,40 +56,4 @@ describe('render_benchmark_md — pure formatters', () => {
         expect(out).toContain('### Table 2 — RDP reasoning lift (with → with-rdp)');
         expect(out).toContain('| Metric | with | with-rdp | delta |');
     });
-});
-
-describe.runIf(hasPython3())('render_benchmark_md — golden parity (python3 vs tsx)', () => {
-    let saved: string | null = null;
-    let existed = false;
-
-    beforeEach(() => {
-        existed = fs.existsSync(OUT);
-        saved = existed ? fs.readFileSync(OUT, 'utf-8') : null;
-    });
-    afterEach(() => {
-        if (existed && saved !== null) {
-            fs.writeFileSync(OUT, saved);
-        } else if (!existed && fs.existsSync(OUT)) {
-            fs.rmSync(OUT);
-        }
-    });
-
-    for (const args of [[], ['--quiet']]) {
-        it(`stdout + rendered file match for: ${args.join(' ') || '(default)'}`, () => {
-            const py = spawnSync('python3', [PY_SCRIPT, ...args], {
-                encoding: 'utf8',
-                cwd: REPO_ROOT,
-            });
-            const pyFile = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf-8') : '';
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-                encoding: 'utf8',
-                cwd: REPO_ROOT,
-            });
-            const tsFile = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf-8') : '';
-            expect(ts.status).toBe(py.status);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(normTs(ts.stdout)).toBe(normTs(py.stdout));
-            expect(normTs(tsFile)).toBe(normTs(pyFile));
-        });
-    }
 });

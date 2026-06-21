@@ -2,16 +2,13 @@
 //
 // Ports tests/test_redact_hook_capture.py 1:1 (redact() recursion, strict
 // mode, envelope-key keep, CLI single-file / directory / missing-input).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { main, redact, REDACTED } from '../../src/scripts/redact_hook_capture.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 let tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -170,65 +167,3 @@ describe('redact_hook_capture — ported pytest suite', () => {
 
 // ---- Golden parity: python3 vs tsx CLI -------------------------------------
 
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'redact_hook_capture.py');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'redact_hook_capture.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('redact_hook_capture — golden parity (python3 vs tsx)', () => {
-    function sampleRecord(): Record<string, unknown> {
-        return {
-            captured_at: '2026-05-05T10:00:00Z',
-            platform: 'cursor',
-            session_id: 'abc',
-            raw_payload: {
-                hook_event_name: 'stop',
-                prompt: 'secret user input',
-                response: 'secret agent output',
-                conversation: {
-                    userPrompt: 'nested secret',
-                    agentCodeResponse: [{ path: 'src/foo.py', content: 'diff' }],
-                },
-                long_unknown: 'y'.repeat(300),
-            },
-        };
-    }
-
-    it('single-file written redaction is byte-identical', () => {
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rhc-par-'));
-        try {
-            const pySrc = path.join(tmp, 'cap-py.json');
-            const tsSrc = path.join(tmp, 'cap-ts.json');
-            fs.writeFileSync(pySrc, JSON.stringify(sampleRecord()), 'utf-8');
-            fs.writeFileSync(tsSrc, JSON.stringify(sampleRecord()), 'utf-8');
-            const p = spawnSync('python3', [PY_SCRIPT, pySrc, '--strict', '--max-len', '100'], {
-                encoding: 'utf8',
-            });
-            const t = spawnSync(TSX_BIN, [TS_SCRIPT, tsSrc, '--strict', '--max-len', '100'], {
-                encoding: 'utf8',
-            });
-            expect(t.status).toBe(p.status);
-            const pyOut = fs.readFileSync(path.join(tmp, 'cap-py.redacted.json'), 'utf-8');
-            const tsOut = fs.readFileSync(path.join(tmp, 'cap-ts.redacted.json'), 'utf-8');
-            expect(tsOut).toBe(pyOut);
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
-    });
-
-    it('missing-input stderr/exit identical', () => {
-        const missing = path.join(os.tmpdir(), 'rhc-nope-zzz', 'no.json');
-        const p = spawnSync('python3', [PY_SCRIPT, missing], { encoding: 'utf8' });
-        const t = spawnSync(TSX_BIN, [TS_SCRIPT, missing], { encoding: 'utf8' });
-        expect(t.status).toBe(p.status);
-        expect(t.stderr).toBe(p.stderr);
-    });
-});

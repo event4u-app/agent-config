@@ -6,9 +6,6 @@
 // Plus a golden-parity layer (python3 vs tsx) over to_dict across the
 // success/error/empty-data permutations, asserting the JSON shapes are
 // byte-identical. Output is fully deterministic.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -18,17 +15,6 @@ import {
     ToolResult,
 } from '../../../src/scripts/tools/base_adapter.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 /** Minimal concrete adapter to exercise the abstract base. */
 class FakeAdapter extends BaseToolAdapter {
@@ -150,52 +136,4 @@ describe('base_adapter — pure unit', () => {
 
 // --- Golden parity (python3 vs tsx) -----------------------------------------
 
-const PY_HARNESS = `
-import json, sys
-sys.path.insert(0, "src/scripts")
-from tools.base_adapter import ToolResult
-cases = [
-    ToolResult(tool_name="github", action="read_pr", success=True, data={"id": 1}),
-    ToolResult(tool_name="github", action="read_pr", success=False, error="Not found"),
-    ToolResult(tool_name="jira", action="read_ticket", success=True),  # data/error None
-    ToolResult(tool_name="github", action="x", success=True, data={}),  # empty dict
-    ToolResult(tool_name="github", action="x", success=False, error=""),  # empty str
-    ToolResult(tool_name="github", action="y", success=True, data={"scaffold": True, "params": {"a": 1}}),
-]
-out = [c.to_dict() for c in cases]
-sys.stdout.write(json.dumps(out, indent=2, sort_keys=True))
-`;
 
-const TS_HARNESS = `
-import { ToolResult } from "./src/scripts/tools/base_adapter.ts";
-const cases = [
-    new ToolResult({ tool_name: "github", action: "read_pr", success: true, data: { id: 1 } }),
-    new ToolResult({ tool_name: "github", action: "read_pr", success: false, error: "Not found" }),
-    new ToolResult({ tool_name: "jira", action: "read_ticket", success: true }),
-    new ToolResult({ tool_name: "github", action: "x", success: true, data: {} }),
-    new ToolResult({ tool_name: "github", action: "x", success: false, error: "" }),
-    new ToolResult({ tool_name: "github", action: "y", success: true, data: { scaffold: true, params: { a: 1 } } }),
-];
-const out = cases.map((c) => c.to_dict());
-function sortKeys(v: unknown): unknown {
-    if (Array.isArray(v)) return v.map(sortKeys);
-    if (v && typeof v === "object") {
-        const o = v as Record<string, unknown>;
-        const r: Record<string, unknown> = {};
-        for (const k of Object.keys(o).sort()) r[k] = sortKeys(o[k]);
-        return r;
-    }
-    return v;
-}
-process.stdout.write(JSON.stringify(sortKeys(out), null, 2));
-`;
-
-describe.skipIf(!py3)('base_adapter — golden parity (python3 vs tsx)', () => {
-    it('to_dict JSON shapes are byte-identical across permutations', () => {
-        const p = spawnSync('python3', ['-c', PY_HARNESS], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const t = spawnSync(TSX_BIN, ['--eval', TS_HARNESS], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(p.status).toBe(0);
-        expect(t.status).toBe(0);
-        expect(t.stdout).toBe(p.stdout);
-    });
-});

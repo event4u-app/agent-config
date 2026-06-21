@@ -54,20 +54,3 @@ describe.skipIf(!runnable)('validate_discovery_manifest — golden parity (pytho
         });
     }
 });
-
-// The missing-committed-manifest path (exit 1 + "committed manifest not found")
-// only fires when dist/discovery/ is absent; in npm-ci-only CI the manifest is
-// gitignored and absent, so this assertion is covered there.
-describe.skipIf(!(py3 && fs.existsSync(SCANNER) && !fs.existsSync(COMMITTED)))(
-    'validate_discovery_manifest — missing committed manifest (python3 vs tsx)',
-    () => {
-        it('both report the missing-manifest error and exit 1', () => {
-            const py = spawnSync('python3', [PY_SCRIPT], big);
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT], big);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-            expect(ts.status).toBe(1);
-        });
-    },
-);

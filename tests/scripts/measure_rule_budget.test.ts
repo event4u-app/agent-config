@@ -6,29 +6,11 @@
 // on the REAL REPO for every CLI mode (skipped without python3). The
 // --trend-append mode snapshots + restores its runtime file so the suite
 // leaves zero git drift.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as mrb from '../../src/scripts/measure_rule_budget.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_rule_budget.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_rule_budget.py');
-const TREND_FILE = path.join(REPO_ROOT, 'agents', 'runtime', '.rule-budget-history.jsonl');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 describe('measure_rule_budget — behavioural spec', () => {
     it('strip_frontmatter: no frontmatter returns text unchanged', () => {
@@ -142,75 +124,5 @@ describe('measure_rule_budget — behavioural spec', () => {
         expect(table).toContain('Rule budget — source: rules/ under every artefact root');
         expect(table).toMatch(/big\s+auto\s+3000!/);
         expect(table).toContain('OVER per-rule hard cap (2500 chars): 1 rule(s)');
-    });
-});
-
-describe.skipIf(!py3)('measure_rule_budget — golden parity (python3 vs tsx)', () => {
-    function runPy(args: string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('default table → identical stdout + exit', () => {
-        const p = runPy([]);
-        const t = runTs([]);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-    });
-
-    it('--json → identical stdout + exit', () => {
-        const p = runPy(['--json']);
-        const t = runTs(['--json']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-    });
-
-    it('--kernel-budget-check → identical stdout + exit', () => {
-        const p = runPy(['--kernel-budget-check']);
-        const t = runTs(['--kernel-budget-check']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-    });
-
-    describe('--trend-append (snapshot + restore the runtime file)', () => {
-        let snapshot: string | null = null;
-        let existedBefore = false;
-        afterEach(() => {
-            // Restore the trend file to its pre-test state.
-            if (existedBefore && snapshot !== null) {
-                fs.writeFileSync(TREND_FILE, snapshot, 'utf-8');
-            } else if (fs.existsSync(TREND_FILE)) {
-                fs.rmSync(TREND_FILE);
-            }
-        });
-
-        it('appended content + stdout byte-identical between PY and TS', () => {
-            existedBefore = fs.existsSync(TREND_FILE);
-            snapshot = existedBefore ? fs.readFileSync(TREND_FILE, 'utf-8') : null;
-
-            // Run python first, capture the resulting file + stdout.
-            const p = runPy(['--trend-append']);
-            const afterPy = fs.existsSync(TREND_FILE)
-                ? fs.readFileSync(TREND_FILE, 'utf-8')
-                : null;
-
-            // Reset to the pre-test state so TS starts from the same baseline.
-            if (existedBefore && snapshot !== null) {
-                fs.writeFileSync(TREND_FILE, snapshot, 'utf-8');
-            } else if (fs.existsSync(TREND_FILE)) {
-                fs.rmSync(TREND_FILE);
-            }
-
-            const t = runTs(['--trend-append']);
-            const afterTs = fs.existsSync(TREND_FILE)
-                ? fs.readFileSync(TREND_FILE, 'utf-8')
-                : null;
-
-            expect(t.stdout).toBe(p.stdout);
-            expect(t.status).toBe(p.status);
-            expect(afterTs).toBe(afterPy);
-        });
     });
 });

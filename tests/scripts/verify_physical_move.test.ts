@@ -7,29 +7,11 @@
 // and compare stdout/stderr/exit byte-for-byte for the human report, --json,
 // and the missing-snapshot error path. The temp snapshot is removed afterwards
 // so the test leaves zero git drift.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as vp from '../../src/scripts/verify_physical_move.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_physical_move.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_physical_move.py');
-const SNAP_WRITER = path.join(REPO_ROOT, 'src', 'scripts', 'snapshot_agent_outputs.py');
-const SNAP_PATH = path.join(REPO_ROOT, 'dist', 'migration', '_verify.test.snapshot.json');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('verify_physical_move — _diff_tree', () => {
     it('flags added / removed / changed entries', () => {
@@ -95,54 +77,5 @@ describe('verify_physical_move — _normalise_loaded_snapshot', () => {
         expect((m.artefacts[0] as Record<string, unknown>)['path']).toBeUndefined();
         expect('checksum' in m).toBe(false);
         expect('scanner_version' in m).toBe(false);
-    });
-});
-
-describe.runIf(hasPython3())('verify_physical_move — golden parity (python3 vs tsx)', () => {
-    beforeAll(() => {
-        fs.mkdirSync(path.dirname(SNAP_PATH), { recursive: true });
-        // Capture a fresh pre-move snapshot from the current outputs.
-        const r = spawnSync('python3', [SNAP_WRITER, '--out', SNAP_PATH], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        expect(r.status).toBe(0);
-    });
-    afterAll(() => {
-        if (fs.existsSync(SNAP_PATH)) {
-            fs.rmSync(SNAP_PATH);
-        }
-    });
-
-    for (const args of [['--snapshot', SNAP_PATH], ['--snapshot', SNAP_PATH, '--json']]) {
-        it(`byte-identical for: ${args.includes('--json') ? '--json' : 'human'}`, () => {
-            const py = spawnSync('python3', [PY_SCRIPT, ...args], {
-                encoding: 'utf8',
-                cwd: REPO_ROOT,
-            });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-                encoding: 'utf8',
-                cwd: REPO_ROOT,
-            });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
-
-    it('exits 2 with matching stderr for a missing snapshot', () => {
-        const missing = path.join(REPO_ROOT, 'dist', 'migration', '_does-not-exist.json');
-        const py = spawnSync('python3', [PY_SCRIPT, '--snapshot', missing], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--snapshot', missing], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        expect(py.status).toBe(2);
-        expect(ts.status).toBe(2);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.stdout).toBe(py.stdout);
     });
 });

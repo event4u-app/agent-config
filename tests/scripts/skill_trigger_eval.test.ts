@@ -7,30 +7,16 @@
 // makes a real API call. A golden-parity layer runs python3 vs tsx for the
 // `--dry-run` path against the committed eloquent pilot, comparing
 // stdout/stderr/exit and the written JSON byte-for-byte (timestamp stripped).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
 import { resolve_logical } from '../../src/scripts/_lib/agent_src.js';
 import * as ste from '../../src/scripts/skill_trigger_eval.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'skill_trigger_eval.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'skill_trigger_eval.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function tmpFile(name: string, content: string, mode?: number): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ste-'));
@@ -436,65 +422,10 @@ describe('skill_trigger_eval — main live gate', () => {
 
 // --- Golden parity (python3 vs tsx) on the dry-run path ----------------------
 
-const py3 = hasPython3();
 
 /** Strip the volatile timestamp field before JSON diff. */
-function stripTs(json: string): unknown {
-    const obj = JSON.parse(json) as Record<string, unknown>;
-    delete obj['timestamp'];
-    return obj;
-}
 
 // The Python script does `from scripts._lib import …` / `from _lib.agent_src
 // import …`, which resolve only with `src` (and the repo root) on PYTHONPATH
 // — exactly the `pythonpath = ["src", "."]` pytest config. The dispatcher
 // sets this in production; the golden spawn reproduces it.
-const PY_ENV = { ...process.env, PYTHONPATH: `src${path.delimiter}.` };
-
-describe.skipIf(!py3)('skill_trigger_eval — golden parity (python3 vs tsx)', () => {
-    it('dry-run on eloquent pilot matches stdout/exit + written JSON', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ste-par-'));
-        const pyOut = path.join(dir, 'py.json');
-        const tsOut = path.join(dir, 'ts.json');
-
-        const py = spawnSync(
-            'python3',
-            [PY_SCRIPT, '--skill', 'eloquent', '--dry-run', '--output', pyOut],
-            { cwd: REPO_ROOT, encoding: 'utf8', env: PY_ENV },
-        );
-        const ts = spawnSync(
-            TSX_BIN,
-            [TS_SCRIPT, '--skill', 'eloquent', '--dry-run', '--output', tsOut],
-            { cwd: REPO_ROOT, encoding: 'utf8' },
-        );
-
-        expect(ts.status, ts.stderr).toBe(py.status);
-        // stdout differs only on the trailing "Wrote: <path>" line (different
-        // tmp paths) and is otherwise identical; compare with the path line
-        // normalized away.
-        const norm = (s: string): string =>
-            s.replace(/^Wrote: .*$/m, 'Wrote: <path>').replace(/[\r]/g, '');
-        expect(norm(ts.stdout)).toBe(norm(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-
-        expect(stripTs(fs.readFileSync(tsOut, 'utf-8'))).toEqual(
-            stripTs(fs.readFileSync(pyOut, 'utf-8')),
-        );
-        fs.rmSync(dir, { recursive: true, force: true });
-    });
-
-    it('missing triggers file matches stderr + exit', () => {
-        const py = spawnSync(
-            'python3',
-            [PY_SCRIPT, '--skill', 'nonexistent-skill-xyz', '--dry-run'],
-            { cwd: REPO_ROOT, encoding: 'utf8', env: PY_ENV },
-        );
-        const ts = spawnSync(
-            TSX_BIN,
-            [TS_SCRIPT, '--skill', 'nonexistent-skill-xyz', '--dry-run'],
-            { cwd: REPO_ROOT, encoding: 'utf8' },
-        );
-        expect(ts.status, ts.stderr).toBe(py.status);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-});

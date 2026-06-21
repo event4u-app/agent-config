@@ -4,26 +4,11 @@
 // `check_subject` surface, plus a golden-parity layer running python3 vs tsx
 // on the REAL REPO (skipped without python3). The commit-subjects workflow
 // runs `--base <sha> --head <sha>`, so parity probes that shape.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as lcs from '../../src/scripts/lint_commit_subjects.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_commit_subjects.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_commit_subjects.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // --- Clean subjects — must pass with zero issues. ---
 describe('lint_commit_subjects.check_subject — clean', () => {
@@ -92,27 +77,3 @@ describe('lint_commit_subjects.check_subject — carve-outs', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_commit_subjects — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function same(args: readonly string[]): void {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default (origin/main..HEAD) matches', () => same([]));
-    it('--quiet matches', () => same(['--quiet']));
-    // The commit-subjects workflow shape: explicit --base / --head.
-    it('--base HEAD~3 --head HEAD matches', () => same(['--base', 'HEAD~3', '--head', 'HEAD']));
-    it('empty range (--base HEAD --head HEAD) matches', () =>
-        same(['--base', 'HEAD', '--head', 'HEAD']));
-});

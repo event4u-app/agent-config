@@ -3,7 +3,6 @@
 // 1:1 port of tests/test_check_no_new_legacy_path.py (8 tests) plus a
 // golden-parity layer that runs python3 vs tsx on the REAL REPO with a
 // piped diff on --stdin (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -11,20 +10,9 @@ import { describe, expect, it } from 'vitest';
 import * as g from '../../src/scripts/check_no_new_legacy_path.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_no_new_legacy_path.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_no_new_legacy_path.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 const LEGACY = '.agent-src.uncondensed';
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // Mirror the pytest helper `_diff(path, added_line, sign="+")`.
 function _diff(p: string, addedLine: string, sign = '+'): string {
@@ -117,55 +105,3 @@ describe('check_no_new_legacy_path — 1:1 port of test_check_no_new_legacy_path
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_no_new_legacy_path — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[], input: string) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            input,
-        });
-    }
-    function runTs(args: readonly string[], input: string) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            input,
-        });
-    }
-
-    it('--stdin clean diff: identical stdout/stderr/exit', () => {
-        const diff = _diff('src/skills/foo/SKILL.md', 'see `src/rules/x.md`');
-        const py = runPy(['--stdin'], diff);
-        const ts = runTs(['--stdin'], diff);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('--stdin offending diff: identical stdout/stderr/exit', () => {
-        const diff = _diff('src/rules/a.md', `\`${LEGACY}/rules/a.md\``);
-        const py = runPy(['--stdin'], diff);
-        const ts = runTs(['--stdin'], diff);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('--stdin empty diff (no-op): identical', () => {
-        const py = runPy(['--stdin'], '');
-        const ts = runTs(['--stdin'], '');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('--base unavailable ref: identical no-op', () => {
-        const py = runPy(['--base', '__no_such_ref_xyz__'], '');
-        const ts = runTs(['--base', '__no_such_ref_xyz__'], '');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

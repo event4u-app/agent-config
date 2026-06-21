@@ -8,7 +8,6 @@
 //   - `--json` / default carry a non-deterministic `generated` timestamp;
 //     compared byte-identical after normalising that single line.
 // Skipped without python3.
-import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,20 +16,9 @@ import { describe, expect, it } from 'vitest';
 import * as aic from '../../src/scripts/audit_initial_context.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_initial_context.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_initial_context.py');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // Normalise the non-deterministic timestamp line so two builds compare equal.
-function normalizeGenerated(s: string): string {
-    return s
-        .replace(/"generated": "[^"]*"/, '"generated": "X"')
-        .replace(/- generated: `[^`]*`/, '- generated: `X`');
-}
 
 describe('audit_initial_context — pure helpers', () => {
     // Reads the gitignored generated tool projections (.claude/rules, …) which
@@ -80,29 +68,5 @@ describe('audit_initial_context — pure helpers', () => {
         expect(md).toContain('## 0B.2 — always-on rule footprint per tool');
         expect(md).toContain('## 0B.4 — description-catalog cost (eager)');
         expect(md).toContain('## 1.3 — top-10 longest rules (token trim candidates)');
-    });
-});
-
-describe.runIf(hasPython3())('audit_initial_context — golden parity (python3 vs tsx)', () => {
-    it('--fail-if-over-budget is byte-identical', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--fail-if-over-budget'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--fail-if-over-budget'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-    it('--json is byte-identical (modulo the generated timestamp)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--json'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(normalizeGenerated(ts.stdout)).toBe(normalizeGenerated(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-    });
-    it('default markdown report is byte-identical (modulo the generated timestamp)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(normalizeGenerated(ts.stdout)).toBe(normalizeGenerated(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
     });
 });

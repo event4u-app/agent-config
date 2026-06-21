@@ -5,7 +5,6 @@
 // layer that runs python3 vs tsx on the REAL REPO (skipped without python3).
 // Live `gh` invocations are not exercised — the CI color resolution exits
 // via the `unknown` branch when `gh` is absent, identically in both.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,19 +14,7 @@ import { describe, expect, it } from 'vitest';
 import * as as_ from '../../src/scripts/adoption_status.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adoption_status.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adoption_status.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 const SAMPLE_REGISTRY = `# Registry Submissions — tracking sheet
 
@@ -118,37 +105,5 @@ describe('adoption_status — ported pytest suite', () => {
         expect(parsed.recruit_reports).toBe(0);
         expect(parsed.ci.color).toBe('green');
         expect(parsed.ci.branch).toBe('main');
-    });
-});
-
-describe.skipIf(!py3)('adoption_status — golden parity (python3 vs tsx)', () => {
-    function runPy(args: string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('text mode → identical stdout/stderr/exit', () => {
-        const p = runPy([]);
-        const t = runTs([]);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    });
-
-    it('--json mode → identical stdout/stderr/exit', () => {
-        const p = runPy(['--json']);
-        const t = runTs(['--json']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    });
-
-    it('--branch foo → identical stdout', () => {
-        const p = runPy(['--branch', 'foo']);
-        const t = runTs(['--branch', 'foo']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
     });
 });

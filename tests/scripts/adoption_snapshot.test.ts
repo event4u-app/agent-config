@@ -7,11 +7,9 @@
 //   2. A golden-parity layer (python3 vs tsx) on the --no-network path: the
 //      appended JSONL row and stdout are asserted byte-identical (snapshot_at
 //      timestamp normalized). Skipped without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -22,19 +20,7 @@ import {
     main,
 } from '../../src/scripts/adoption_snapshot.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adoption_snapshot.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adoption_snapshot.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmpDir: string;
 beforeEach(() => {
@@ -125,28 +111,3 @@ describe('main --no-network', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('adoption_snapshot — golden parity (python3 vs tsx)', () => {
-    const norm = (s: string): string => s.replace(/"snapshot_at": "[^"]*"/g, '"snapshot_at": "TS"');
-    // Normalize both the timestamp and the trailing out-path (py.jsonl vs ts.jsonl).
-    const normOut = (s: string): string =>
-        s.replace(/appended snapshot @ \S+ → .*/g, 'appended snapshot @ TS → OUT');
-
-    it('byte-identical JSONL row + stdout on --no-network', () => {
-        const pyOut = path.join(tmpDir, 'py.jsonl');
-        const tsOut = path.join(tmpDir, 'ts.jsonl');
-        const py = spawnSync('python3', [PY_SCRIPT, '--no-network', '--out', pyOut], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--no-network', '--out', tsOut], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        });
-        expect(ts.status).toBe(py.status);
-        expect(norm(fs.readFileSync(tsOut, 'utf-8'))).toBe(norm(fs.readFileSync(pyOut, 'utf-8')));
-        expect(normOut(ts.stdout)).toBe(normOut(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-    });
-});

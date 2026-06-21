@@ -6,11 +6,9 @@
 // parity layer (python3 vs TS write the exact same line bytes). Volatile
 // timestamps are normalised before byte comparison. Parity layer skipped
 // without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -21,12 +19,7 @@ import {
     VALID_ISSUE,
 } from '../../../src/scripts/hooks/dispatch_issues.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_issues.py');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmp: string;
 beforeEach(() => {
@@ -135,49 +128,3 @@ describe('dispatch_issues — helper round-trip', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('dispatch_issues — JSONL byte parity (python3 vs TS)', () => {
-    // Append the same entries with both runtimes; normalise the volatile
-    // timestamp to a sentinel and assert the JSONL bytes are identical.
-    const DRIVER = `
-import json, sys
-sys.path.insert(0, sys.argv[1])
-import dispatch_issues as d
-ws = sys.argv[2]
-for e in json.loads(sys.argv[3]):
-    d.log_dispatch_issue(ws, e["hook"], e["issue"], e["detail"], e["resolution"])
-log = __import__("os").path.join(ws, "agents", "runtime", "state", "dispatch-issues.jsonl")
-sys.stdout.buffer.write(open(log, "rb").read())
-`;
-    const HOOKS_DIR = path.dirname(PY);
-    const TS_PADRE = /"timestamp": "[^"]+"/g;
-
-    const ENTRIES = [
-        { hook: 'roadmap-progress', issue: 'prerequisite_missing', detail: 'plain ascii', resolution: './agent-config init' },
-        { hook: 'chat-history', issue: 'execution_failed', detail: 'unicode café 日本語 🚀', resolution: 'see docs/x.md' },
-        { hook: 'h', issue: 'script_not_found', detail: 'quote "inner" and \\ backslash', resolution: 'r' },
-        { hook: 'h', issue: 'permission_denied', detail: 'tab\there', resolution: 'r' },
-    ];
-
-    function normalize(buf: Buffer): string {
-        return buf.toString('utf8').replace(TS_PADRE, '"timestamp": "<TS>"');
-    }
-
-    it('JSONL line bytes match (timestamp normalised)', () => {
-        const pyWs = path.join(tmp, 'py');
-        fs.mkdirSync(pyWs, { recursive: true });
-        const r = spawnSync('python3', ['-c', DRIVER, HOOKS_DIR, pyWs, JSON.stringify(ENTRIES)], {
-            encoding: 'buffer',
-        });
-        expect(r.status, r.stderr?.toString()).toBe(0);
-
-        const tsWs = path.join(tmp, 'ts');
-        for (const e of ENTRIES) {
-            log_dispatch_issue(tsWs, e.hook, e.issue, e.detail, e.resolution);
-        }
-        const tsBuf = fs.readFileSync(path.join(tsWs, LOG_REL));
-
-        expect(normalize(tsBuf)).toBe(normalize(r.stdout));
-    });
-});

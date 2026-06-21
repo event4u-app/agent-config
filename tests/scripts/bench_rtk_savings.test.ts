@@ -83,32 +83,6 @@ describe('bench_rtk_savings.ts — aggregate() pure layer', () => {
     });
 });
 
-describe.skipIf(!HAVE_PYTHON)('bench_rtk_savings — aggregate() differential vs python', () => {
-    it('matches python aggregate over mixed rows', () => {
-        const rows = [
-            okRow('a', { chars_saved: 233, tokens_saved: 58, pct_saved: 34.467 }),
-            okRow('b', { chars_saved: -1, tokens_saved: -1, pct_saved: 0.0 }),
-            skipRow('c'),
-            okRow('d', { chars_saved: 100, tokens_saved: 25, pct_saved: 50.0 }),
-            okRow('e', { chars_saved: 7, tokens_saved: 1, pct_saved: 12.5 }),
-        ];
-        const tsAgg = aggregate(rows as never) as unknown as Record<string, number>;
-        const code = [
-            'import json, sys',
-            `sys.path.insert(0, ${JSON.stringify(join(REPO_ROOT, 'src', 'scripts'))})`,
-            'import bench_rtk_savings as b',
-            'rows = json.loads(sys.stdin.read())',
-            'print(json.dumps(b.aggregate(rows)))',
-        ].join('\n');
-        const res = spawnSync('python3', ['-c', code], { input: JSON.stringify(rows), encoding: 'utf8' });
-        expect(res.status, res.stderr).toBe(0);
-        const pyAgg = JSON.parse(res.stdout) as Record<string, number>;
-        for (const k of Object.keys(pyAgg)) {
-            expect(tsAgg[k]).toBeCloseTo(pyAgg[k] as number, 9);
-        }
-    });
-});
-
 // --- golden parity: full run structure (timing/subprocess fields normalized) -
 
 describe.skipIf(!HAVE_PYYAML)('bench_rtk_savings — golden parity (structure + error paths)', () => {

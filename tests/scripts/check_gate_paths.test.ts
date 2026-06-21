@@ -19,8 +19,6 @@ import * as mod from '../../src/scripts/check_gate_paths.js';
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SRC = path.join(REPO_ROOT, 'src');
 const SRC_AGENT = path.join(SRC, 'agent-src');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_gate_paths.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_gate_paths.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -28,9 +26,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function hasTsx(): boolean {
     return spawnSync(TSX_BIN, ['--version'], { encoding: 'utf8' }).status === 0;
@@ -78,7 +73,6 @@ describe('check_gate_paths.check_paths — the I/O-free assertion core', () => {
     });
 });
 
-const py3 = hasPython3();
 const tsx = hasTsx();
 
 describe.skipIf(!tsx)('check_gate_paths.collect_gate_paths — gate introspection', () => {
@@ -104,15 +98,5 @@ describe.skipIf(!tsx)('check_gate_paths.collect_gate_paths — gate introspectio
     it('main is green on live tree', () => {
         // main writes to stdout; assert exit code only here.
         expect(mod.main()).toBe(0);
-    });
-});
-
-describe.skipIf(!py3)('check_gate_paths — golden parity (python3 vs tsx)', () => {
-    it('matches byte-for-byte (real repo)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
     });
 });

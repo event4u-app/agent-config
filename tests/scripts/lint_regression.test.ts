@@ -6,33 +6,12 @@
 //      against `--baseline HEAD`.
 //   2. A golden-parity layer running python3 vs tsx on the REAL REPO,
 //      byte-identical stdout/stderr/exit (skipped without python3).
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as reg from '../../src/scripts/lint_regression.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_regression.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_regression.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
-function isGitCheckout(): boolean {
-    const r = spawnSync('git', ['-C', REPO_ROOT, 'rev-parse', '--is-inside-work-tree'], {
-        encoding: 'utf8',
-    });
-    return r.status === 0 && r.stdout.trim() === 'true';
-}
 
 // --- Ported pytest: CompareTests — pure comparison logic, no git. ---
 
@@ -150,51 +129,3 @@ describe('lint_regression — formatters + status map', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
-const py3 = hasPython3();
-const git = isGitCheckout();
-
-describe.skipIf(!py3 || !git)('lint_regression — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('bad-baseline ref matches exit 2 + message', () => {
-        const a = ['--baseline', 'py2ts-no-such-ref-xyz'];
-        const py = runPy(a);
-        const ts = runTs(a);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('invalid --format choice matches argparse error', () => {
-        const a = ['--format', 'bogus'];
-        const py = runPy(a);
-        const ts = runTs(a);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    // The EndToEndTests equivalent — run against --baseline HEAD. The working
-    // tree's lintable .md files equal HEAD in clean checkouts, so the report is
-    // empty (rc 0). This spins up a temp git worktree + runs skill_linter twice
-    // per format, so it is slow; a generous timeout is set.
-    for (const fmt of ['text', 'json', 'markdown'] as const) {
-        it(
-            `--baseline HEAD --format ${fmt} matches byte-for-byte`,
-            () => {
-                const a = ['--baseline', 'HEAD', '--format', fmt, '--repo-root', '.'];
-                const py = runPy(a);
-                const ts = runTs(a);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.status).toBe(py.status);
-            },
-            180_000,
-        );
-    }
-});

@@ -4,9 +4,7 @@
 // public behaviour (load_cluster_table, parse_frontmatter, check_dispatcher,
 // build_slug_map) plus a golden-parity layer (python3 vs tsx) on the REAL
 // REPO (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -16,18 +14,6 @@ import {
     parse_frontmatter,
 } from '../../src/scripts/check_cluster_patterns.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_cluster_patterns.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_cluster_patterns.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('check_cluster_patterns — parse_frontmatter', () => {
     it('parses top-level keys only (skips indented)', () => {
@@ -70,14 +56,3 @@ describe('check_cluster_patterns — table + slug map', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_cluster_patterns — golden parity (python3 vs tsx)', () => {
-    it('matches byte-for-byte on the real repo', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

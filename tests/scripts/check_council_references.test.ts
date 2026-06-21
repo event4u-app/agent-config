@@ -5,29 +5,14 @@
 //      spec (forbidden hits, allowed forms, structural carve-outs, scope).
 //   2. Golden parity on the REAL REPO — python3 vs tsx, byte-identical
 //      stdout/stderr/exit (skipped when python3 is absent).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ccr from '../../src/scripts/check_council_references.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_council_references.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_council_references.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    const r = spawnSync('python3', ['--version'], { encoding: 'utf8' });
-    return r.status === 0;
-}
 
 function write(p: string, content: string): void {
     fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -215,35 +200,3 @@ describe('check_council_references — behavioural spec (port of pytest suite)',
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_council_references — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        });
-    }
-
-    it('matches default invocation byte-for-byte', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('matches --quiet invocation byte-for-byte', () => {
-        const py = runPy(['--quiet']);
-        const ts = runTs(['--quiet']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

@@ -7,23 +7,14 @@
 // python3 + tsx and asserts byte-identical behaviour (structural, since id/ts
 // vary per run), skipped without python3.
 
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as sig from '../../src/scripts/memory_signal.js';
 
-const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
-const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'memory_signal.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'memory_signal.py');
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 let tmp: string;
 
@@ -150,61 +141,3 @@ function _isoSeconds(d: Date): string {
         `T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}+00:00`
     );
 }
-
-// --- golden parity vs python3 --------------------------------------------
-
-describe.skipIf(!HAVE_PYTHON)('memory_signal — golden parity', () => {
-    function run(bin: 'py' | 'ts', cwd: string, args: string[]): ReturnType<typeof spawnSync> {
-        const env = { ...process.env, AGENT_MEMORY_STATUS: '' };
-        if (bin === 'py') {
-            return spawnSync('python3', [PY_SCRIPT, ...args], { cwd, encoding: 'utf8', env });
-        }
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8', env });
-    }
-
-    it('emit stdout shape parity (id normalised)', () => {
-        const pyDir = mkdtempSync(join(tmpdir(), 'memsig-gp-py-'));
-        const tsDir = mkdtempSync(join(tmpdir(), 'memsig-gp-ts-'));
-        try {
-            const args = ['--type', 'historical-patterns', '--path', 'app/Foo.php', '--body', 'null deref'];
-            const py = run('py', pyDir, args);
-            const ts = run('ts', tsDir, args);
-            const norm = (s: string): string => s.replace(/id=sig-[0-9a-f]+/g, 'id=sig-XXX');
-            expect(norm(String(ts.stdout))).toBe(norm(String(py.stdout)));
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-            // Written record keys + non-id/ts values must match.
-            const keysOf = (dir: string): string[] => {
-                const root = join(dir, 'agents', 'memory', 'intake');
-                const f = readdirSync(root).find((n) => n.endsWith('.jsonl')) as string;
-                const obj = JSON.parse(readFileSync(join(root, f), 'utf-8').trim()) as Record<string, unknown>;
-                return Object.keys(obj).sort();
-            };
-            expect(keysOf(tsDir)).toEqual(keysOf(pyDir));
-        } finally {
-            rmSync(pyDir, { recursive: true, force: true });
-            rmSync(tsDir, { recursive: true, force: true });
-        }
-    });
-
-    it('error-path stderr/exit parity', () => {
-        const cases: string[][] = [
-            ['--type', 'bogus', '--path', 'x', '--body', 'y'],
-            ['--path', 'x'],
-            ['--type', 'ownership', '--path', 'x', '--body', 'y', '--bogus'],
-            ['--type', 'ownership', '--path', 'x', '--body', 'y', '--extra', '[1,2]'],
-        ];
-        for (const args of cases) {
-            const dir = mkdtempSync(join(tmpdir(), 'memsig-err-'));
-            try {
-                const py = run('py', dir, args);
-                const ts = run('ts', dir, args);
-                expect(ts.stdout, `stdout ${args.join(' ')}`).toBe(py.stdout);
-                expect(ts.stderr, `stderr ${args.join(' ')}`).toBe(py.stderr);
-                expect(ts.status, `exit ${args.join(' ')}`).toBe(py.status);
-            } finally {
-                rmSync(dir, { recursive: true, force: true });
-            }
-        }
-    });
-});

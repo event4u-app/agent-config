@@ -4,26 +4,11 @@
 // NEGATIVE_FIXTURES, case-insensitivity, assert_safe behaviour, error-type,
 // and CLI exit codes. Plus a golden-parity layer (python3 vs tsx) on a few
 // representative paths (skipped without python3).
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { SensitivePathError, assert_safe, is_sensitive } from '../../src/scripts/validate_safe_paths.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_safe_paths.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_safe_paths.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // One positive fixture per denylist entry — covers SENSITIVE_BASENAME_REGEX,
 // SENSITIVE_PATH_COMPONENTS, and the SENSITIVE_NAME_TOKENS substring fallback.
@@ -111,29 +96,3 @@ describe('assert_safe', () => {
 
 // --- Golden parity on representative paths ----------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('validate_safe_paths — golden parity (python3 vs tsx)', () => {
-    function runPy(arg: string) {
-        return spawnSync('python3', [PY_SCRIPT, arg], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(arg: string) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, arg], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('CLI rejects a sensitive path identically', () => {
-        const py = runPy('.env.local');
-        const ts = runTs('.env.local');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('CLI accepts a safe path identically', () => {
-        const py = runPy('README.md');
-        const ts = runTs('README.md');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

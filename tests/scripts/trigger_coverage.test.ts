@@ -4,24 +4,12 @@
 // (every required rule must fire) plus the kernel-always-fires floor — over
 // the REAL dist/router.json + tests/eval/trigger-coverage.yaml. Adds a
 // golden-parity layer (python3 vs tsx) for `--json` and the human report.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { describe, expect, it } from 'vitest';
 
 import * as tc from '../../src/scripts/trigger_coverage.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'trigger_coverage.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'trigger_coverage.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 interface Case {
     id: string;
@@ -33,9 +21,6 @@ const CORPUS =
     (parseYaml(fs.readFileSync(tc.CORPUS, 'utf-8'), { version: '1.1' }) as Case[] | null) ?? [];
 const ROUTER = tc.load_router();
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('trigger_coverage — corpus + router present', () => {
     it('router file exists', () => {
@@ -84,22 +69,4 @@ describe('trigger_coverage — matching primitives', () => {
         expect(tc.fired_rules('a structural decision was made', router).has('it')).toBe(true);
         expect(tc.fired_rules('only structural here', router).has('it')).toBe(false);
     });
-});
-
-describe.runIf(hasPython3())('trigger_coverage — golden parity (python3 vs tsx)', () => {
-    for (const args of [[], ['--json']]) {
-        it(`byte-identical for: ${args.join(' ') || '(human)'}`, () => {
-            const py = spawnSync('python3', [PY_SCRIPT, ...args], {
-                encoding: 'utf8',
-                cwd: REPO_ROOT,
-            });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-                encoding: 'utf8',
-                cwd: REPO_ROOT,
-            });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
 });

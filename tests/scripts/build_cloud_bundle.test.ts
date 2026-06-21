@@ -7,25 +7,16 @@
 // skill source and asserts byte-identical manifest + decompressed ZIP CONTENTS
 // (the raw archive bytes are an intentional documented divergence — see the
 // module header). Skipped without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as bcb from '../../src/scripts/build_cloud_bundle.js';
 import { zip_read_sync } from '../../src/scripts/_lib/zip_min.js';
 import * as audit from '../../src/scripts/audit_cloud_compatibility.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_cloud_bundle.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_cloud_bundle.py');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmp: string;
 beforeEach(() => {
@@ -173,45 +164,5 @@ describe('build_cloud_bundle — regression: no T3-H in shipped source', () => {
     it('summary by_tier has zero T3-H', () => {
         const summary = audit.summarize(audit.scan()) as { by_tier: Record<string, number> };
         expect(summary.by_tier['T3-H'] ?? 0).toBe(0);
-    });
-});
-
-describe.runIf(hasPython3())('build_cloud_bundle — golden parity (python3 vs tsx)', () => {
-    it('--check is byte-identical', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-    it('--all: identical console + manifest + decompressed ZIP contents, zero drift', () => {
-        const pyd = fs.mkdtempSync(path.join(os.tmpdir(), 'cb-py-'));
-        const tsd = fs.mkdtempSync(path.join(os.tmpdir(), 'cb-ts-'));
-        try {
-            const py = spawnSync('python3', [PY_SCRIPT, '--all', '--out', pyd], { encoding: 'utf8', cwd: REPO_ROOT });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--all', '--out', tsd], { encoding: 'utf8', cwd: REPO_ROOT });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            // manifest byte-identical after normalising the tmp out-dir path.
-            const pyMan = fs.readFileSync(path.join(pyd, 'manifest.json'), 'utf-8').replaceAll(pyd, 'OUT');
-            const tsMan = fs.readFileSync(path.join(tsd, 'manifest.json'), 'utf-8').replaceAll(tsd, 'OUT');
-            expect(tsMan).toBe(pyMan);
-            // every ZIP's decompressed entry map is byte-identical.
-            const pyZips = fs.readdirSync(pyd).filter((f) => f.endsWith('.zip')).sort();
-            const tsZips = fs.readdirSync(tsd).filter((f) => f.endsWith('.zip')).sort();
-            expect(tsZips).toEqual(pyZips);
-            for (const z of pyZips) {
-                const a = zipEntries(path.join(pyd, z));
-                const b = zipEntries(path.join(tsd, z));
-                expect(Object.keys(b).sort()).toEqual(Object.keys(a).sort());
-                for (const name of Object.keys(a)) {
-                    expect(Buffer.compare(b[name] as Buffer, a[name] as Buffer)).toBe(0);
-                }
-            }
-        } finally {
-            fs.rmSync(pyd, { recursive: true, force: true });
-            fs.rmSync(tsd, { recursive: true, force: true });
-        }
     });
 });

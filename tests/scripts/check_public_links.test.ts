@@ -4,28 +4,14 @@
 // suite over the public behaviour (read_stability, scan_file, resolve)
 // plus a golden-parity layer that runs python3 vs tsx on the REAL REPO
 // (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as cpl from '../../src/scripts/check_public_links.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_public_links.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_public_links.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function write(p: string, content: string): void {
     fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -81,23 +67,3 @@ describe('check_public_links — behavioural spec', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_public_links — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    for (const args of [[], ['--list'], ['--json'], ['--strict']] as const) {
-        it(`matches byte-for-byte: ${args.join(' ') || '(no args)'}`, () => {
-            const py = runPy(args);
-            const ts = runTs(args);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-    }
-});

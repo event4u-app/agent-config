@@ -7,26 +7,11 @@
 // leaves zero git drift. All outputs here are fully deterministic — the
 // keyword-overlap ranking has no timing or OS-order dependence (skills are
 // iterated in sorted-path order in both implementations).
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as br from '../../src/scripts/bench_runner.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'bench_runner.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'bench_runner.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('bench_runner — pure helpers', () => {
     it('tokenize lowercases, drops stopwords + short tokens', () => {
@@ -70,25 +55,4 @@ describe('bench_runner — pure helpers', () => {
         const ranked = br.rank_skills('database migration', skills, 2);
         expect(ranked).toEqual(['zzz', 'aaa']);
     });
-});
-
-describe.runIf(hasPython3())('bench_runner — golden parity (python3 vs tsx)', () => {
-    const cases: string[][] = [
-        ['--corpus', 'dev', '--json'],
-        ['--corpus', 'non-dev', '--json'],
-        ['--corpus', 'dev'],
-        ['--corpus', 'non-dev'],
-        ['--corpus', 'dev', '--top-k', '1', '--json'],
-        ['--corpus', 'dev', '--top-k', '5'],
-        ['--corpus', 'does-not-exist'],
-    ];
-    for (const args of cases) {
-        it(`stdout + stderr + exit match for: ${args.join(' ')}`, () => {
-            const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
 });

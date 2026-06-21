@@ -12,16 +12,13 @@
 //      monkeypatched) vs tsx (with the request seam) produce byte-identical
 //      stdout / exit / audit-file bytes on the same fixture inputs. Skipped
 //      when python3 is absent.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as sgm from '../../src/scripts/sync_github_metadata.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 let tmp: string;
 
@@ -200,41 +197,3 @@ describe('sync_github_metadata — injected-transport behaviour', () => {
 
 // --- Layer 2: golden parity against a stubbed python transport --------------
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('sync_github_metadata — golden parity (python stub vs tsx stub)', () => {
-    it('dry-run drift diff is byte-identical, exit matches', async () => {
-        // Python side: monkeypatch _request, capture stdout + exit.
-        const pyHarness = `
-import sys, os, pathlib
-sys.path.insert(0, ${JSON.stringify(path.join(REPO_ROOT, 'src', 'scripts'))})
-import sync_github_metadata as m
-m.TOPICS_FILE = pathlib.Path(${JSON.stringify(path.join(tmp, '.github', 'topics.yml'))})
-m.ABOUT_FILE = pathlib.Path(${JSON.stringify(path.join(tmp, '.github', 'about.yml'))})
-os.environ['GITHUB_TOKEN'] = 'tok'
-def fake(method, url, token, body=None):
-    if method == 'GET' and url.endswith('/topics'):
-        return {'names': ['zzz']}
-    if method == 'GET':
-        return {'description': 'Old desc', 'homepage': 'https://old.example'}
-    return {}
-m._request = fake
-sys.argv = ['x', '--repo', 'owner/name']
-rc = m.main()
-sys.stderr.write('RC %d\\n' % rc)
-`;
-        const py = spawnSync('python3', ['-c', pyHarness], { encoding: 'utf8', cwd: REPO_ROOT });
-        const pyRc = Number((py.stderr.match(/RC (\d+)/) ?? [])[1] ?? '-1');
-
-        const { rc, out } = await runMain(['--repo', 'owner/name'], {
-            topics: ['zzz'],
-            description: 'Old desc',
-            homepage: 'https://old.example',
-        });
-        expect(rc).toBe(pyRc);
-        expect(out).toBe(py.stdout);
-    });
-});

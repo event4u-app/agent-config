@@ -25,56 +25,20 @@
 //   `_run_migrate_to_global` python3 spawn, the global deploy + reaper, and
 //   the interactive TTY prompts. Those are network/subprocess/TTY-bound and
 //   are exercised only via their pure sub-helpers above.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inst from '../../src/scripts/install.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'install.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'install.py');
 // Resolve TSX_BIN to an ABSOLUTE path: golden-parity runs spawn with cwd set
 // to a temp dir, and a relative binary path would resolve against that cwd
 // (→ ENOENT → status:null). The env override is honored but absolutized.
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
-interface RunResult {
-    status: number | null;
-    stdout: string;
-    stderr: string;
-}
-
-function runPy(args: string[], cwd: string): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd,
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src') },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-
-function runTs(args: string[], cwd: string): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8' });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
 
 /** Normalize machine-specific tmp paths so the differential stays stable. */
-function norm(text: string, tmp: string): string {
-    return text.split(tmp).join('<TMP>').split(path.resolve(tmp)).join('<TMP>');
-}
 
 // ---------------------------------------------------------------------------
 // Pure-helper unit tests
@@ -263,162 +227,5 @@ describe('install — source-repo detect + legacy migration detect', () => {
         expect(found).toContain('.augment/');
         // sorted output
         expect([...found].sort()).toEqual(found);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// Golden parity (python3 vs tsx) — deterministic, side-effect-free surfaces
-// ---------------------------------------------------------------------------
-
-describe.skipIf(!py3)('install — golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'install-gp-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    it('--help: same exit code + usage token (body prose is a documented divergence)', () => {
-        const p = runPy(['--help'], tmp);
-        const t = runTs(['--help'], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(0);
-        // Both emit the argparse `usage:` block (load-bearing token).
-        expect(p.stdout.startsWith('usage: install.py')).toBe(true);
-        expect(t.stdout.startsWith('usage: install.py')).toBe(true);
-    });
-
-    it('unknown flag: exit 2 + byte-identical usage + error', () => {
-        const p = runPy(['--bogus'], tmp);
-        const t = runTs(['--bogus'], tmp);
-        expect(p.status).toBe(2);
-        expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
-    });
-
-    it('--scope invalid choice: exit 2 + byte-identical error', () => {
-        const p = runPy(['--scope=nope'], tmp);
-        const t = runTs(['--scope=nope'], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
-    });
-
-    it('--scope=global + --custom-path conflict: byte-identical fail + exit 1', () => {
-        const p = runPy(['--scope=global', '--custom-path=/x'], tmp);
-        const t = runTs(['--scope=global', '--custom-path=/x'], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(1);
-        expect(t.stderr).toBe(p.stderr);
-    });
-
-    it('--dry-run plan: byte-identical stdout/stderr/exit', () => {
-        const p = runPy(['--dry-run', '--project', tmp, '--no-ui'], tmp);
-        const t = runTs(['--dry-run', '--project', tmp, '--no-ui'], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(0);
-        expect(norm(t.stdout, tmp)).toBe(norm(p.stdout, tmp));
-        expect(norm(t.stderr, tmp)).toBe(norm(p.stderr, tmp));
-    });
-
-    it('--apply-payload wizard-v2 --dry-run: byte-identical preview', () => {
-        const payload = path.join(tmp, 'wiz.json');
-        fs.writeFileSync(
-            payload,
-            JSON.stringify({
-                schema_version: 'wizard-v2',
-                tools: ['claude-code', 'cursor'],
-                packs: ['pack-a'],
-                settings: { rule_loading_tier: 'full', personal: { user_type: 'developer' } },
-                scope_to_project_only: true,
-                dry_run: true,
-            }),
-        );
-        const p = runPy(['--apply-payload', payload, '--project', tmp], tmp);
-        const t = runTs(['--apply-payload', payload, '--project', tmp], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(0);
-        expect(norm(t.stdout, tmp)).toBe(norm(p.stdout, tmp));
-        expect(norm(t.stderr, tmp)).toBe(norm(p.stderr, tmp));
-    });
-
-    it('--apply-payload installer-v1 --dry-run: byte-identical preview', () => {
-        const payload = path.join(tmp, 'inst.json');
-        fs.writeFileSync(
-            payload,
-            JSON.stringify({
-                schema_version: 'installer-v1',
-                ai_tools: ['augment', 'codex'],
-                configs: { x: 1 },
-                dry_run: true,
-            }),
-        );
-        const p = runPy(['--apply-payload', payload, '--project', tmp], tmp);
-        const t = runTs(['--apply-payload', payload, '--project', tmp], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(0);
-        expect(norm(t.stdout, tmp)).toBe(norm(p.stdout, tmp));
-        expect(norm(t.stderr, tmp)).toBe(norm(p.stderr, tmp));
-    });
-
-    it('--apply-payload bad schema: byte-identical fail + exit 1', () => {
-        const payload = path.join(tmp, 'bad.json');
-        fs.writeFileSync(payload, JSON.stringify({ schema_version: 'nope' }));
-        const p = runPy(['--apply-payload', payload, '--project', tmp], tmp);
-        const t = runTs(['--apply-payload', payload, '--project', tmp], tmp);
-        expect(t.status).toBe(p.status);
-        expect(p.status).toBe(1);
-        expect(norm(t.stderr, tmp)).toBe(norm(p.stderr, tmp));
-    });
-
-    it('--minimal install into a temp dir: byte-identical stdout/stderr/exit + same files', () => {
-        // Minimal init writes only the project-local override scaffold (no
-        // network, no browser, no global writes). Run both into separate temp
-        // dirs and compare the emitted text + the produced file tree.
-        const pdir = fs.mkdtempSync(path.join(os.tmpdir(), 'min-py-'));
-        const tdir = fs.mkdtempSync(path.join(os.tmpdir(), 'min-ts-'));
-        try {
-            const env = { ...process.env, AGENT_CONFIG_DEV_MODE: '1', AGENT_CONFIG_NO_UI: '1' };
-            const p = spawnSync('python3', [PY_SCRIPT, '--minimal', '--project', pdir, '--quiet'], {
-                cwd: REPO_ROOT,
-                encoding: 'utf8',
-                env: { ...env, PYTHONPATH: path.join(REPO_ROOT, 'src') },
-            });
-            const t = spawnSync(TSX_BIN, [TS_SCRIPT, '--minimal', '--project', tdir, '--quiet'], {
-                cwd: REPO_ROOT,
-                encoding: 'utf8',
-                env,
-            });
-            expect(t.status).toBe(p.status);
-            expect(p.status).toBe(0);
-            // --quiet silences stdout; the produced file tree is the contract.
-            const treeOf = (root: string): string[] => {
-                const out: string[] = [];
-                const walk = (d: string, prefix: string): void => {
-                    for (const name of fs.readdirSync(d).sort()) {
-                        const full = path.join(d, name);
-                        const rel = prefix ? `${prefix}/${name}` : name;
-                        if (fs.statSync(full).isDirectory()) {
-                            out.push(rel + '/');
-                            walk(full, rel);
-                        } else {
-                            out.push(rel);
-                        }
-                    }
-                };
-                walk(root, '');
-                return out;
-            };
-            expect(treeOf(tdir)).toEqual(treeOf(pdir));
-            // Spot-check a deployed file is byte-identical.
-            const readme = 'agents/overrides/README.md';
-            expect(fs.readFileSync(path.join(tdir, readme), 'utf8')).toBe(
-                fs.readFileSync(path.join(pdir, readme), 'utf8'),
-            );
-        } finally {
-            fs.rmSync(pdir, { recursive: true, force: true });
-            fs.rmSync(tdir, { recursive: true, force: true });
-        }
     });
 });

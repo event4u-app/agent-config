@@ -5,28 +5,11 @@
 // plus golden-parity layers: (a) the REAL repo SKILL.md (clean, exit 0), and
 // (b) a temp-repo failing fixture run as a subprocess so SKILL_PATH resolves
 // to the injected file. Both skipped without python3.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as mmn from '../../src/scripts/check_module_management_neutral.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_module_management_neutral.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_module_management_neutral.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('check_module_management_neutral — pure scanners', () => {
     it('_split_frontmatter splits on the closing fence', () => {
@@ -84,50 +67,3 @@ describe('check_module_management_neutral — pure scanners', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_module_management_neutral — golden parity (python3 vs tsx)', () => {
-    it('clean real repo matches byte-for-byte', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('failing fixture matches byte-for-byte (temp repo subprocess)', () => {
-        // realpathSync resolves the macOS /var → /private/var symlink so the
-        // script's CLI-entry guard (import.meta.url vs argv[1]) matches.
-        const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'mmn-fixture-')));
-        try {
-            const scriptsDir = path.join(tmp, 'src', 'scripts');
-            fs.mkdirSync(scriptsDir, { recursive: true });
-            fs.mkdirSync(path.join(tmp, 'src', 'skills', 'module-management'), { recursive: true });
-            fs.copyFileSync(PY_SCRIPT, path.join(scriptsDir, 'check_module_management_neutral.py'));
-            fs.copyFileSync(TS_SCRIPT, path.join(scriptsDir, 'check_module_management_neutral.ts'));
-            fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(tmp, 'node_modules'));
-            fs.writeFileSync(
-                path.join(tmp, 'src', 'skills', 'module-management', 'SKILL.md'),
-                '---\nframework: laravel\n---\n# Module Management\n\n' +
-                    'Mentions app/Modules/Foo and App\\\\Modules\\\\Bar outside carve-out.\n\n' +
-                    '### Laravel HMVC carve-out\n\nInside app/Modules/X is fine.\n',
-                'utf-8',
-            );
-            const py = spawnSync(
-                'python3',
-                [path.join(scriptsDir, 'check_module_management_neutral.py')],
-                { cwd: tmp, encoding: 'utf8' },
-            );
-            const ts = spawnSync(
-                TSX_BIN,
-                [path.join(scriptsDir, 'check_module_management_neutral.ts')],
-                { cwd: tmp, encoding: 'utf8' },
-            );
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
-    });
-});

@@ -23,13 +23,11 @@
 // not (exit + usage token only). COLUMNS pinned to 80. No env mutation; the
 // real repo is only ever READ.
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { _forbidden_reason, _is_intra_workspace, check_file } from '../../src/scripts/lint_workspace_boundary.js';
+import { _forbidden_reason, _is_intra_workspace } from '../../src/scripts/lint_workspace_boundary.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_workspace_boundary.py');
@@ -82,120 +80,6 @@ describe('lint_workspace_boundary — TS-side unit checks', () => {
 
 // The py wrapper loads the module via importlib and prints the JSON-encoded
 // findings list for the file in WB_TARGET, so stdout is a stable comparand.
-const PY_WRAPPER = [
-    'import importlib.util, os, pathlib, json',
-    'spec = importlib.util.spec_from_file_location("lwb", os.environ["WB_PY"])',
-    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
-    'findings = m.check_file(pathlib.Path(os.environ["WB_TARGET"]))',
-    'print(json.dumps(findings, ensure_ascii=False))',
-    '',
-].join('\n');
-
-describe.runIf(py3)('lint_workspace_boundary — check_file golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    let pyWrap: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wb-parity-'));
-        pyWrap = path.join(tmp, 'wrap.py');
-        fs.writeFileSync(pyWrap, PY_WRAPPER, 'utf-8');
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    /** Compare check_file findings on `body` (written to a `workspace_*.py` name). */
-    function expectFindingsMatch(body: string, name = 'workspace_fixture.py'): void {
-        const target = path.join(tmp, name);
-        fs.writeFileSync(target, body, 'utf-8');
-        const env = childEnv({ WB_PY: PY_SCRIPT, WB_TARGET: target });
-        const py = spawnSync('python3', [pyWrap], { env, encoding: 'utf8' });
-        expect(py.status, `python3 wrapper failed: ${py.stderr}`).toBe(0);
-        const pyFindings = JSON.parse(py.stdout.trim()) as string[];
-        const tsFindings = check_file(target);
-        expect(tsFindings).toEqual(pyFindings);
-    }
-
-    it('pass: only allowed imports → no findings', () => {
-        expectFindingsMatch(
-            ['import os', 'import sys', 'from pathlib import Path', 'import workspace_secrets', ''].join('\n'),
-        );
-    });
-
-    it('violation: one forbidden import per not-owned domain', () => {
-        expectFindingsMatch(
-            [
-                'from condense import x',
-                'import skill_linter',
-                'from skill_management import a',
-                'import skill_writing',
-                'from discovery_manifest import d',
-                'import profiles',
-                'import packs',
-                'from ai_video import v',
-                'import mcp',
-                'from router import r',
-                'import persona_writer',
-                '',
-            ].join('\n'),
-        );
-    });
-
-    it('allow: intra-workspace imports never flagged', () => {
-        expectFindingsMatch(
-            ['import workspace', 'import workspace_skills', 'from workspace_documents import D', ''].join('\n'),
-        );
-    });
-
-    it('allow: relative `from . import x` (module=None) is skipped', () => {
-        expectFindingsMatch(['from . import sibling', 'from .pkg import thing', ''].join('\n'));
-    });
-
-    it('allow: `# boundary-exception:` pragma on a forbidden import is skipped', () => {
-        expectFindingsMatch(
-            [
-                'from condense import x  # boundary-exception: reviewed, deliberate',
-                'import mcp  # no pragma here → flagged',
-                '',
-            ].join('\n'),
-        );
-    });
-
-    it('packaging does not trip pack; multi-name + alias import lines', () => {
-        expectFindingsMatch(
-            ['import packaging', 'import os, sys, packaging', 'import router as r, condense as c', ''].join('\n'),
-        );
-    });
-
-    it('substring near-misses do not trip segment-bounded patterns', () => {
-        // `packs_helper` (pack + suffix) IS matched (`(?:$|[._-])` boundary);
-        // `unpacked` is not. Whatever the shared regex decides, both engines agree.
-        expectFindingsMatch(
-            ['import unpacked', 'import packs_helper', 'from condenser import x', ''].join('\n'),
-        );
-    });
-
-    it('unreadable target → identical `unparseable` finding', () => {
-        // Point check_file at a path that does not exist as a file (a dir):
-        // both engines surface the read error as one `unparseable` line. The
-        // OS error text differs py↔ts, so compare only the shape + that there
-        // is exactly one finding ending in the expected suffix family.
-        const dirTarget = path.join(tmp, 'a-directory');
-        fs.mkdirSync(dirTarget);
-        const env = childEnv({ WB_PY: PY_SCRIPT, WB_TARGET: dirTarget });
-        const py = spawnSync('python3', [pyWrap], { env, encoding: 'utf8' });
-        // Python's read_text on a directory raises IsADirectoryError (OSError),
-        // NOT SyntaxError — the `except SyntaxError` does not catch it, so the
-        // wrapper exits non-zero. TS catches any read error → one `unparseable`
-        // line. This is a documented py-side narrowing (only SyntaxError, marked
-        // `pragma: no cover`); the shapes diverge by language so we assert the
-        // TS side returns exactly one `unparseable` finding and the py side
-        // raises (its `pragma: no cover` path), rather than byte-comparing.
-        const tsFindings = check_file(dirTarget);
-        expect(tsFindings.length).toBe(1);
-        expect(tsFindings[0]!.includes('unparseable')).toBe(true);
-        expect(py.status).not.toBe(0); // py raised IsADirectoryError (no-cover path)
-    });
-});
 
 // --- main() golden parity against the REAL repo -----------------------------
 

@@ -3,28 +3,14 @@
 // Ported 1:1 from tests/test_adoption_report.py (the behavioural spec) plus a
 // golden-parity layer that runs python3 vs tsx on tmp fixtures (skipped
 // without python3). Byte-exact report + stdout/exit parity is the contract.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ar from '../../src/scripts/adoption_report.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adoption_report.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adoption_report.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function isoUtc(d: Date): string {
     return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -147,59 +133,5 @@ describe('adoption_report — unit helpers', () => {
     it('npm_downloads renders comma-grouped counts', () => {
         const rows = [{ snapshot_at: 'X', signals: { npm_downloads: { last_7_days: 1234567 } } }];
         expect(ar.render_npm_downloads(rows)).toContain('1,234,567');
-    });
-});
-
-describe.runIf(hasPython3())('adoption_report — golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ar-gold-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    function fixture(): string {
-        const now = new Date();
-        const old = new Date(now.getTime() - 20 * 7 * 24 * 60 * 60 * 1000);
-        const rows = [
-            {
-                snapshot_at: isoUtc(old),
-                signals: {
-                    npm_downloads: { last_7_days: 1234 },
-                    npm_version: { latest: '3.3.0', version_count: 12 },
-                    github_stars: { stars: 1500, forks: 12, watchers: 1500 },
-                    topic_rank: { 'agent-skills': { rank: 3 }, 'cinematic-ai-video': { rank: 1 } },
-                },
-            },
-            {
-                snapshot_at: isoUtc(now),
-                signals: {
-                    npm_downloads: { error: 'rate-limited' },
-                    npm_version: { error: 'x' },
-                    github_stars: { stars: 2000000, forks: 0, watchers: 5 },
-                    topic_rank: { 'agent-skills': { error: 'e' }, 'cinematic-ai-video': { rank: null } },
-                },
-            },
-        ];
-        return rows.map((r) => JSON.stringify(r)).join('\n') + '\n';
-    }
-
-    it('byte-identical report from python3 and tsx', () => {
-        const inPath = path.join(tmp, 'snap.jsonl');
-        fs.writeFileSync(inPath, fixture());
-        const pyOut = path.join(tmp, 'py.md');
-        const tsOut = path.join(tmp, 'ts.md');
-        const py = spawnSync('python3', [PY_SCRIPT, '--in', inPath, '--out', pyOut, '--weeks', '8'], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--in', inPath, '--out', tsOut, '--weeks', '8'], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(fs.readFileSync(tsOut, 'utf-8')).toBe(fs.readFileSync(pyOut, 'utf-8'));
     });
 });

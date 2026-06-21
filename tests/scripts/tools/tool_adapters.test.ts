@@ -13,9 +13,6 @@
 // All credential env vars are cleared in-process (beforeEach) and in the
 // spawned harness env so read actions deterministically take the scaffold
 // path regardless of the developer's shell.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -23,17 +20,6 @@ import { ToolAction } from '../../../src/scripts/tools/base_adapter.js';
 import { GITHUB_API, GitHubAdapter } from '../../../src/scripts/tools/github_adapter.js';
 import { JiraAdapter } from '../../../src/scripts/tools/jira_adapter.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 const CRED_KEYS = [
     'GITHUB_TOKEN',
@@ -254,78 +240,4 @@ describe('request construction (no live network)', () => {
 
 // --- Golden parity (python3 vs tsx) — scaffold dispatch + to_dict -----------
 
-const PY_HARNESS = `
-import json, sys
-sys.path.insert(0, "src/scripts")
-from tools.github_adapter import GitHubAdapter
-from tools.jira_adapter import JiraAdapter
-from tools.base_adapter import ToolAction
 
-def run(adapter):
-    out = []
-    for action_name in sorted(adapter.supported_actions):
-        action = ToolAction(tool_name=adapter.name, action=action_name, params={"test": True, "b": "x"})
-        out.append(adapter.execute_action(action).to_dict())
-    # one validation rejection + one unsupported dispatch
-    bad = ToolAction(tool_name="other", action=sorted(adapter.supported_actions)[0], params={})
-    out.append(adapter.safe_execute(bad).to_dict())
-    unsup = ToolAction(tool_name=adapter.name, action="zzz_no_such", params={})
-    out.append(adapter.execute_action(unsup).to_dict())
-    return out
-
-result = {"github": run(GitHubAdapter()), "jira": run(JiraAdapter())}
-sys.stdout.write(json.dumps(result, indent=2, sort_keys=True))
-`;
-
-const TS_HARNESS = `
-import { GitHubAdapter } from "./src/scripts/tools/github_adapter.ts";
-import { JiraAdapter } from "./src/scripts/tools/jira_adapter.ts";
-import { ToolAction, BaseToolAdapter } from "./src/scripts/tools/base_adapter.ts";
-
-function run(adapter: BaseToolAdapter) {
-    const actions = [...adapter.supported_actions].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    const out: unknown[] = [];
-    for (const action_name of actions) {
-        const action = new ToolAction({ tool_name: adapter.name, action: action_name, params: { test: true, b: "x" } });
-        out.push(adapter.execute_action(action).to_dict());
-    }
-    const bad = new ToolAction({ tool_name: "other", action: actions[0]!, params: {} });
-    out.push(adapter.safe_execute(bad).to_dict());
-    const unsup = new ToolAction({ tool_name: adapter.name, action: "zzz_no_such", params: {} });
-    out.push(adapter.execute_action(unsup).to_dict());
-    return out;
-}
-
-const result = { github: run(new GitHubAdapter()), jira: run(new JiraAdapter()) };
-function sortKeys(v: unknown): unknown {
-    if (Array.isArray(v)) return v.map(sortKeys);
-    if (v && typeof v === "object") {
-        const o = v as Record<string, unknown>;
-        const r: Record<string, unknown> = {};
-        for (const k of Object.keys(o).sort()) r[k] = sortKeys(o[k]);
-        return r;
-    }
-    return v;
-}
-process.stdout.write(JSON.stringify(sortKeys(result), null, 2));
-`;
-
-describe.skipIf(!py3)('tool adapters — golden parity (python3 vs tsx)', () => {
-    it('scaffold dispatch + to_dict are byte-identical', () => {
-        const scrubbedEnv = { ...process.env };
-        for (const k of CRED_KEYS) delete scrubbedEnv[k];
-        const p = spawnSync('python3', ['-c', PY_HARNESS], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            env: scrubbedEnv,
-        });
-        const t = spawnSync(TSX_BIN, ['--eval', TS_HARNESS], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            env: scrubbedEnv,
-        });
-        expect(p.status).toBe(0);
-        expect(t.status).toBe(0);
-        expect(t.stdout).toBe(p.stdout);
-    });
-});

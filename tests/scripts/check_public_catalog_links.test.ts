@@ -3,26 +3,11 @@
 // No pytest suite exists. Focused spec over _shipped_roots / _resolve /
 // _under_shipped_surface plus golden parity (python3 vs tsx) on the REAL
 // REPO for the default and --quiet invocations.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as cpcl from '../../src/scripts/check_public_catalog_links.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_public_catalog_links.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_public_catalog_links.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('check_public_catalog_links — helpers', () => {
     it('_shipped_roots splits dirs and files from package.json#files', () => {
@@ -52,22 +37,3 @@ describe('check_public_catalog_links — helpers', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_public_catalog_links — golden parity (python3 vs tsx)', () => {
-    function expectMatch(args: readonly string[]) {
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default matches byte-for-byte', () => {
-        expectMatch([]);
-    });
-
-    it('--quiet matches byte-for-byte', () => {
-        expectMatch(['--quiet']);
-    });
-});

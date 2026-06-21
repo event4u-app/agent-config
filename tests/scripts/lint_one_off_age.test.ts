@@ -7,28 +7,14 @@
 // Layer 2: CLI golden parity python3 vs tsx via the real `--root` flag on
 //   tmp trees (covers main's exit codes) and on the REAL REPO. Skipped
 //   without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as mod from '../../src/scripts/lint_one_off_age.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_one_off_age.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_one_off_age.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function makeRoot(tmp: string): string {
     fs.mkdirSync(path.join(tmp, 'scripts', '_one_off'), { recursive: true });
@@ -149,51 +135,3 @@ describe('lint_one_off_age — ported pytest suite (helpers)', () => {
 
 // --- CLI golden parity python3 vs tsx ---------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_one_off_age — golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ooa-cli-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function bothMatch(args: readonly string[]) {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-        return ts;
-    }
-
-    it('clean tmp tree exits 0, byte-identical (test_main_exit_zero_on_clean)', () => {
-        const r = bothMatch(['--root', tmp]);
-        expect(r.status).toBe(0);
-    });
-
-    it('ancient one-off exits 1, byte-identical (test_main_exit_one_on_fail)', () => {
-        makeRoot(tmp);
-        writeOneOff(tmp, '2020-01', 'ancient');
-        const r = bothMatch(['--root', tmp]);
-        expect(r.status).toBe(1);
-    });
-
-    it('matches the default real-repo run (the real CI invocation)', () => {
-        bothMatch([]);
-    });
-
-    it('--help exits 0 and prints a usage line (not a parity contract)', () => {
-        const ts = runTs(['--help']);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout + ts.stderr).toContain('usage');
-    });
-});

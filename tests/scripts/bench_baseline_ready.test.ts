@@ -8,7 +8,6 @@
 // (wall-clock) — they are normalised before comparison. The report count
 // derives from a directory listing (a stable count, not OS-order-sensitive).
 // bench_baseline_ready is read-only — zero git drift.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -18,35 +17,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import * as bbr from '../../src/scripts/bench_baseline_ready.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'bench_baseline_ready.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'bench_baseline_ready.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 /** Normalise the wall-clock-dependent fields (today / days / verdict). */
-function normJson(s: string): string {
-    return s
-        .replace(/"today": "[0-9-]+"/g, '"today": "TS"')
-        .replace(/"days_elapsed": -?[0-9]+/g, '"days_elapsed": N')
-        .replace(/"days_ok": (true|false)/g, '"days_ok": B')
-        .replace(/"reports_ok": (true|false)/g, '"reports_ok": B')
-        .replace(/"status": "(ready|warmup)"/g, '"status": S');
-}
 
-function normText(s: string): string {
-    return s
-        .replace(/days=-?[0-9]+\//g, 'days=N/')
-        .replace(/(READY|WARMUP)/g, 'V')
-        .replace(/(✅|⏳)/g, 'E');
-}
 
 describe('bench_baseline_ready — pure helper', () => {
     let tmp: string | null = null;
@@ -79,49 +53,5 @@ describe('bench_baseline_ready — pure helper', () => {
         if (fs.existsSync(p)) {
             expect(bbr._read_baseline_start(p)).toBe('2026-05-16');
         }
-    });
-});
-
-describe.runIf(hasPython3())('bench_baseline_ready — golden parity (python3 vs tsx)', () => {
-    it('--json matches (timing fields normalised)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--json'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(normJson(ts.stdout)).toBe(normJson(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('text mode matches (timing fields normalised)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(normText(ts.stdout)).toBe(normText(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('missing baseline file → exit 1, identical error JSON', () => {
-        const args = ['--baseline-file', 'internal/bench/does-not-exist.txt', '--json'];
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(1);
-        expect(py.status).toBe(1);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('missing baseline file (text) → identical stderr', () => {
-        const args = ['--baseline-file', 'internal/bench/does-not-exist.txt'];
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('high min-days forces WARMUP (exit 2) consistently', () => {
-        const args = ['--min-days', '99999', '--json'];
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(normJson(ts.stdout)).toBe(normJson(py.stdout));
     });
 });

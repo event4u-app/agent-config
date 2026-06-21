@@ -12,30 +12,15 @@
 // mismatch, dangling supersedes) and the empty-dir / not-found paths use
 // synthetic fixtures. Everything is deterministic — zero git drift; the live
 // tree is never written.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as rgi from '../../src/scripts/adr/regenerate_index.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adr', 'regenerate_index.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'adr', 'regenerate_index.py');
-const DECISIONS = path.join(REPO_ROOT, 'docs', 'decisions');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -150,80 +135,5 @@ describe('regenerate_index — pure helpers', () => {
         expect(out).toContain('## Unnumbered (legacy)');
         const noLegacy = rgi.render([{ num: '001', slug: 'a', path: 'ADR-001-a.md', decision: 'a' }], []);
         expect(noLegacy).not.toContain('## Unnumbered (legacy)');
-    });
-});
-
-describe.runIf(hasPython3())('regenerate_index — golden parity (python3 vs tsx)', () => {
-    it('--check matches on the real docs/decisions tree (read-only)', () => {
-        const args = ['--check', '--dir', DECISIONS];
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('default dir (docs/adr/ missing) prints the same not-found message + exit 2', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('--report writes a byte-identical INDEX.md from the real ADR set', () => {
-        const real = fs
-            .readdirSync(DECISIONS)
-            .filter((n) => n.startsWith('ADR-') && n.endsWith('.md'));
-        const pyDir = mkTmp();
-        const tsDir = mkTmp();
-        for (const n of real) {
-            fs.copyFileSync(path.join(DECISIONS, n), path.join(pyDir, n));
-            fs.copyFileSync(path.join(DECISIONS, n), path.join(tsDir, n));
-        }
-        const py = spawnSync('python3', [PY_SCRIPT, '--dir', pyDir], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--dir', tsDir], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        // stdout embeds the dir path; normalise that one token, compare the rest.
-        expect(ts.stdout.replace(tsDir, 'DIR')).toBe(py.stdout.replace(pyDir, 'DIR'));
-        expect(ts.stderr).toBe(py.stderr);
-        const pyIdx = fs.readFileSync(path.join(pyDir, 'INDEX.md'), 'utf8');
-        const tsIdx = fs.readFileSync(path.join(tsDir, 'INDEX.md'), 'utf8');
-        expect(tsIdx).toBe(pyIdx);
-    });
-
-    it('--report on an empty dir writes the same No-ADRs INDEX.md', () => {
-        const pyDir = mkTmp();
-        const tsDir = mkTmp();
-        spawnSync('python3', [PY_SCRIPT, '--dir', pyDir], { encoding: 'utf8', cwd: REPO_ROOT });
-        spawnSync(TSX_BIN, [TS_SCRIPT, '--dir', tsDir], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(fs.readFileSync(path.join(tsDir, 'INDEX.md'), 'utf8')).toBe(
-            fs.readFileSync(path.join(pyDir, 'INDEX.md'), 'utf8'),
-        );
-    });
-
-    it('duplicate ADR number → byte-identical error + exit 2 (the orchestrator path)', () => {
-        const dir = mkTmp();
-        writeAdr(dir, 'ADR-005-first.md', { adr: '5', status: 'accepted', date: '2026-01-01', decision: 'first' });
-        writeAdr(dir, 'ADR-005-second.md', { adr: '5', status: 'draft', date: '2026-01-02', decision: 'second' });
-        const py = spawnSync('python3', [PY_SCRIPT, '--dir', dir], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--dir', dir], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.stderr).toContain('ADR-005 duplicate');
-    });
-
-    it('adr/filename mismatch + dangling supersedes → byte-identical errors + exit 2', () => {
-        const dir = mkTmp();
-        writeAdr(dir, 'ADR-008-mismatch.md', { adr: '7', decision: 'mismatch' });
-        writeAdr(dir, 'ADR-009-dangling.md', { adr: '9', decision: 'dangling', supersedes: 'ADR-042' });
-        const py = spawnSync('python3', [PY_SCRIPT, '--dir', dir], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--dir', dir], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
     });
 });

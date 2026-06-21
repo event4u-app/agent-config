@@ -4,7 +4,6 @@
 // invalid tier, empty dir, missing dir, AGENTS.md companions, real-repo pass)
 // plus a golden-parity layer that runs python3 vs tsx on the REAL REPO
 // (skipped without python3).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -14,19 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as lct from '../../src/scripts/lint_command_tiers.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_command_tiers.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_command_tiers.py');
 const REAL_COMMANDS_DIR = path.join(REPO_ROOT, '.agent-src.uncondensed', 'commands');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // Capture process.stdout / process.stderr writes (capsys equivalent).
 function captureLint(fn: () => number): { rc: number; out: string; err: string } {
@@ -195,29 +183,3 @@ describe('lint_command_tiers — ported pytest suite', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_command_tiers — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('matches the default (no-flag) run byte-for-byte', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('matches the --quiet run byte-for-byte (real CI invocation)', () => {
-        const py = runPy(['--quiet']);
-        const ts = runTs(['--quiet']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

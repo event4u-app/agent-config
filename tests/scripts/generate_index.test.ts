@@ -6,29 +6,11 @@
 // `--check` summary AND byte-exact generated agents/index.md + docs/catalog.md
 // via a snapshot+restore harness (skipped without python3). Writers must
 // leave zero on-disk drift.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as gi from '../../src/scripts/generate_index.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_index.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'generate_index.py');
-const INDEX_PATH = path.join(REPO_ROOT, 'agents', 'index.md');
-const CATALOG_PATH = path.join(REPO_ROOT, 'docs', 'catalog.md');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 describe('generate_index — pure helpers', () => {
     it('_parse_frontmatter reads top-level keys, strips quotes, skips indented lines', () => {
@@ -71,51 +53,5 @@ describe('generate_index — collectors run against the real repo', () => {
         expect(guidelines.length).toBeGreaterThan(0);
         const names = skills.map((s) => s.name);
         expect([...names].sort()).toEqual(names);
-    });
-});
-
-describe.runIf(hasPython3())('generate_index — golden parity (python3 vs tsx)', () => {
-    let indexBak: string | null = null;
-    let catalogBak: string | null = null;
-
-    afterEach(() => {
-        // Restore on-disk files to leave zero git drift.
-        if (indexBak !== null) fs.writeFileSync(INDEX_PATH, indexBak, 'utf-8');
-        if (catalogBak !== null) fs.writeFileSync(CATALOG_PATH, catalogBak, 'utf-8');
-        indexBak = null;
-        catalogBak = null;
-    });
-
-    it('--check: identical stdout + exit code', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('write: byte-identical agents/index.md + docs/catalog.md, zero drift after restore', () => {
-        indexBak = fs.existsSync(INDEX_PATH) ? fs.readFileSync(INDEX_PATH, 'utf-8') : null;
-        catalogBak = fs.existsSync(CATALOG_PATH) ? fs.readFileSync(CATALOG_PATH, 'utf-8') : null;
-
-        const py = spawnSync('python3', [PY_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(py.status).toBe(0);
-        const pyIndex = fs.readFileSync(INDEX_PATH, 'utf-8');
-        const pyCatalog = fs.readFileSync(CATALOG_PATH, 'utf-8');
-
-        // Reset to the original bytes before the TS run so each writes fresh.
-        if (indexBak !== null) fs.writeFileSync(INDEX_PATH, indexBak, 'utf-8');
-        if (catalogBak !== null) fs.writeFileSync(CATALOG_PATH, catalogBak, 'utf-8');
-
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(0);
-        const tsIndex = fs.readFileSync(INDEX_PATH, 'utf-8');
-        const tsCatalog = fs.readFileSync(CATALOG_PATH, 'utf-8');
-
-        expect(tsIndex).toBe(pyIndex);
-        expect(tsCatalog).toBe(pyCatalog);
-        // stdout differs only in the leading emoji-status lines, which are
-        // identical between implementations.
-        expect(ts.stdout).toBe(py.stdout);
     });
 });

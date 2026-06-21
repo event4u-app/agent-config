@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type {
     Decision,
@@ -531,57 +531,3 @@ describe('refine_ticket_detect — ported pytest suite', () => {
 
 // ---- Golden parity: python3 vs tsx CLI (orchestration notes) ---------------
 
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'refine_ticket_detect.py');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'refine_ticket_detect.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('refine_ticket_detect — golden parity (python3 vs tsx)', () => {
-    // The CLI gathers repo context against cwd. Both run with cwd = a fresh
-    // throwaway dir (no .git) so the alignment / repo-context tails are
-    // deterministic and free of git timing non-determinism.
-    let scratch: string;
-    beforeEach(() => {
-        scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'rtd-cli-'));
-    });
-    afterEach(() => {
-        try {
-            fs.rmSync(scratch, { recursive: true, force: true });
-        } catch {
-            /* ignore */
-        }
-    });
-
-    function runPy(fixtureBody: string): ReturnType<typeof spawnSync> {
-        return spawnSync('python3', [PY_SCRIPT, '-'], {
-            cwd: scratch,
-            input: fixtureBody,
-            encoding: 'utf8',
-        });
-    }
-    function runTs(fixtureBody: string): ReturnType<typeof spawnSync> {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, '-'], {
-            cwd: scratch,
-            input: fixtureBody,
-            encoding: 'utf8',
-        });
-    }
-
-    for (const name of ['clean', 'duplicate_intent', 'scope_creep_prose', 'security_sensitive']) {
-        it(`${name} → identical stdout/exit (no repo context)`, () => {
-            const body = _loadFixture(name);
-            const p = runPy(body);
-            const t = runTs(body);
-            expect(t.stdout).toBe(p.stdout);
-            expect(t.status).toBe(p.status);
-        });
-    }
-});

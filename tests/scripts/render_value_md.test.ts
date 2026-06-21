@@ -7,29 +7,15 @@
 // fixture, comparing the rendered docs/value.md byte-for-byte (timestamps
 // are the only drift, so the parity layer renders against the SAME fixture
 // in both runtimes and strips the `_Last rendered:` lines before diff).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as rvm from '../../src/scripts/render_value_md.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'render_value_md.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'render_value_md.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function _canonical_report(): Record<string, unknown> {
     return {
@@ -271,99 +257,5 @@ describe('render_value_md — required-sections golden (ports test_render_value_
 
 // --- Golden parity (python3 vs tsx) on a tmp fixture -------------------------
 
-const py3 = hasPython3();
 
 /** Strip the volatile `_Last rendered:` timestamp lines before diff. */
-function stripTimestamps(text: string): string {
-    return text
-        .split('\n')
-        .filter((l) => !l.startsWith('_Last rendered:'))
-        .join('\n');
-}
-
-describe.skipIf(!py3)('render_value_md — golden parity (python3 vs tsx)', () => {
-    function renderWith(bin: string, scriptArgs: string[], reportJson: string | null) {
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rvm-par-'));
-        try {
-            const reports = path.join(tmp, 'internal', 'bench', 'reports', 'value');
-            fs.mkdirSync(reports, { recursive: true });
-            const docs = path.join(tmp, 'docs');
-            fs.mkdirSync(docs, { recursive: true });
-            if (reportJson !== null) {
-                fs.writeFileSync(path.join(reports, 'latest.json'), reportJson);
-            }
-            // Both runtimes resolve REPO_ROOT from the script's own location,
-            // so we cannot relocate it; instead run a tiny driver that imports
-            // the module, overrides paths, and renders into the tmp tree.
-            return { tmp, reports, docs };
-        } finally {
-            // caller cleans up
-        }
-    }
-
-    it('renders byte-identical docs/value.md from the same fixture (timestamps stripped)', () => {
-        const fixture = JSON.stringify(_canonical_report());
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rvm-par-'));
-        const reports = path.join(tmp, 'reports');
-        fs.mkdirSync(reports, { recursive: true });
-        const latest = path.join(reports, 'latest.json');
-        fs.writeFileSync(latest, fixture);
-        const pyOut = path.join(tmp, 'py-value.md');
-        const tsOut = path.join(tmp, 'ts-value.md');
-
-        const pyDriver = [
-            'import importlib.util, sys',
-            `spec = importlib.util.spec_from_file_location('rvm', ${JSON.stringify(PY_SCRIPT)})`,
-            'mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)',
-            `mod.LATEST = __import__('pathlib').Path(${JSON.stringify(latest)})`,
-            `mod.OUT_PATH = __import__('pathlib').Path(${JSON.stringify(pyOut)})`,
-            'mod.render(quiet=True)',
-        ].join('\n');
-        const py = spawnSync('python3', ['-c', pyDriver], { encoding: 'utf8' });
-        expect(py.status, py.stderr).toBe(0);
-
-        const tsDriver =
-            `import * as rvm from ${JSON.stringify(TS_SCRIPT)};` +
-            `rvm._setPathsForTest({ LATEST: ${JSON.stringify(latest)}, OUT_PATH: ${JSON.stringify(tsOut)} });` +
-            `rvm.render(true);`;
-        const ts = spawnSync(TSX_BIN, ['-e', tsDriver], { encoding: 'utf8' });
-        expect(ts.status, ts.stderr).toBe(0);
-
-        const pyText = stripTimestamps(fs.readFileSync(pyOut, 'utf-8'));
-        const tsText = stripTimestamps(fs.readFileSync(tsOut, 'utf-8'));
-        expect(tsText).toBe(pyText);
-        fs.rmSync(tmp, { recursive: true, force: true });
-        // touch helper to satisfy lint (kept for parity-structure clarity)
-        void renderWith;
-    });
-
-    it('renders byte-identical placeholder (timestamps stripped)', () => {
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rvm-ph-'));
-        const latest = path.join(tmp, 'absent.json'); // does not exist
-        const pyOut = path.join(tmp, 'py-value.md');
-        const tsOut = path.join(tmp, 'ts-value.md');
-
-        const pyDriver = [
-            'import importlib.util',
-            `spec = importlib.util.spec_from_file_location('rvm', ${JSON.stringify(PY_SCRIPT)})`,
-            'mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)',
-            `mod.LATEST = __import__('pathlib').Path(${JSON.stringify(latest)})`,
-            `mod.OUT_PATH = __import__('pathlib').Path(${JSON.stringify(pyOut)})`,
-            'mod.render(quiet=True)',
-        ].join('\n');
-        const py = spawnSync('python3', ['-c', pyDriver], { encoding: 'utf8' });
-        expect(py.status, py.stderr).toBe(0);
-
-        const tsDriver =
-            `import * as rvm from ${JSON.stringify(TS_SCRIPT)};` +
-            `rvm._setPathsForTest({ LATEST: ${JSON.stringify(latest)}, OUT_PATH: ${JSON.stringify(tsOut)} });` +
-            `rvm.render(true);`;
-        const ts = spawnSync(TSX_BIN, ['-e', tsDriver], { encoding: 'utf8' });
-        expect(ts.status, ts.stderr).toBe(0);
-
-        expect(stripTimestamps(fs.readFileSync(tsOut, 'utf-8'))).toBe(
-            stripTimestamps(fs.readFileSync(pyOut, 'utf-8')),
-        );
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-});

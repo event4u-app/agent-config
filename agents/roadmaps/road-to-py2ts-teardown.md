@@ -260,6 +260,27 @@ version). Such rigs stay **LIVE python↔tsx** (`skipIf(real python3)`) until th
 - **Detection (Phase-5 gate):** before deleting any `.py`, audit each surviving frozen rig for
   generated/gitignored-state reads; re-classify manifest-dependent ones as live-parity-then-delete.
 
+#### Obsolete live-parity-block cleanup — Phase A (raw-spawn rigs) DONE 2026-06
+
+The `python-free-env.ts` shim force-skips ~2997 obsolete `(describe|it).(skipIf|runIf)(<python-gate>)`
+live-parity blocks (its own comment scheduled "delete the obsolete live-parity blocks outright … without
+the 472-file surgery"). Phase A does the safe, mechanizable slice of that surgery:
+
+- Built a TS-compiler-API codemod (no new dep) that removes a block **only** when it is UNAMBIGUOUS raw
+  live-parity — body spawns `python3` directly AND references no oracle (`oracle2`/`oracleFile`/`runPyScript`/
+  `runPyCode`) — then drops orphaned imports / consts / local types. Oracle-backed blocks (converted
+  coverage) are detected and left untouched.
+- Of 460 python-gated files: **170 cleaned** (raw-spawn blocks + orphans removed, every file retains its
+  real pure-TS / ported-pytest tests), **20 reverted** (their *only* content was the parity block → pure
+  rigs that need oracle-conversion, not deletion — left shim-skipped), **269 skipped** (oracle-backed,
+  need per-file human judgement on whether the `runIf(py3)` gate is stale or load-bearing).
+- **Verified lose-nothing:** full suite `4801 passed` (identical to the pre-cleanup baseline) / `2450
+  skipped` (down from `2997` — 547 dead blocks gone) / **0 failures**; typecheck + eslint clean. Net diff:
+  170 files, 0 file deletions, ~10.2k dead lines removed.
+- **Remaining (deferred, NOT blocking):** the 20 pure-rigs + 269 oracle-backed files + retiring the
+  `python-free-env.ts` shim are per-file human-judgement work, not mechanizable safely. The shim keeps the
+  suite green python-free until then; none of this blocks the `python2ts → main` merge.
+
 ### Completion plan to the final PR — council (claude-sonnet-4-5 + gpt-4o, 2026-06-18, converged)
 
 **Structure = ~3 PRs, NOT granular per-phase.** Deleting `src/**/*.py`, `tests/**/*.py`, the pytest CI

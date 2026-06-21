@@ -8,28 +8,14 @@
 // Layer 2: golden parity on the REAL REPO — python3 vs tsx, byte-identical
 //   stdout/stderr/exit (skipped without python3). Includes the
 //   --plain-language scan, the linter's real CI invocation.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as lre from '../../src/scripts/lint_role_experiences.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_role_experiences.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_role_experiences.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 // --- Layer 1: 1:1 port of tests/test_lint_role_experiences.py --------------
 
@@ -111,24 +97,3 @@ describe('lint_role_experiences — status coupling (port of pytest)', () => {
 
 // --- Layer 2: golden parity on the REAL REPO -------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_role_experiences — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function same(args: readonly string[]): void {
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('default run matches byte-for-byte', () => same([]));
-    it('--plain-language (real CI invocation) matches byte-for-byte', () =>
-        same(['--plain-language']));
-});

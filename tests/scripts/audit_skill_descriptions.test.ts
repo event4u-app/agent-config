@@ -17,7 +17,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_skill_descriptions.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_skill_descriptions.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -25,9 +24,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function runTs(args: string[]): { stdout: string; stderr: string; status: number | null } {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
@@ -164,35 +160,3 @@ describe('audit_skill_descriptions — flagging rules (ported)', () => {
     });
 });
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('audit_skill_descriptions — golden parity (python3 vs tsx)', () => {
-    function py(args: string[]): { stdout: string; stderr: string; status: number | null } {
-        const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-    }
-    it('--json byte-identical on the real repo', () => {
-        const p = py(['--json']);
-        const t = runTs(['--json']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-    });
-    it('text byte-identical on the real repo', () => {
-        const p = py([]);
-        const t = runTs([]);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-    });
-    it('--full byte-identical on the real repo', () => {
-        const p = py(['--full']);
-        const t = runTs(['--full']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-    });
-    it('missing-root stderr + exit identical', () => {
-        const p = py(['--root', '/tmp/py2ts-nope-xyz']);
-        const t = runTs(['--root', '/tmp/py2ts-nope-xyz']);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    });
-});

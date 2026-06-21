@@ -5,7 +5,6 @@
 // valid manifest, rejecting bad shapes) plus a golden-parity layer that runs
 // python3 vs tsx on the REAL REPO (skipped without python3). In this worktree
 // dist/mcp/ is absent, so the no-arg run exercises the `missing:` branch.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,19 +13,8 @@ import { describe, expect, it } from 'vitest';
 import * as mod from '../../src/scripts/lint_mcp_registry_manifest.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_mcp_registry_manifest.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_mcp_registry_manifest.py');
 const SCHEMA_PATH = path.join(REPO_ROOT, 'docs', 'contracts', 'mcp-registry-manifest.schema.json');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const schema = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf-8')) as Record<string, unknown>;
 
@@ -112,29 +100,3 @@ describe('lint_mcp_registry_manifest — schema validator (subset)', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_mcp_registry_manifest — golden parity (python3 vs tsx)', () => {
-    function runPy(args: readonly string[]) {
-        return spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    function runTs(args: readonly string[]) {
-        return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('matches the default (no-flag) run byte-for-byte', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('matches --quiet byte-for-byte (real CI invocation)', () => {
-        const py = runPy(['--quiet']);
-        const ts = runTs(['--quiet']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

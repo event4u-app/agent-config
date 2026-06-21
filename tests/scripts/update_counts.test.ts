@@ -8,23 +8,10 @@
 //      byte-identical stdout/stderr/exit; tsx update mode leaves README /
 //      getting-started / architecture with ZERO drift (the repo is in-sync).
 //      Skipped when python3 is absent.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import * as uc from '../../src/scripts/update_counts.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'update_counts.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'update_counts.py');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -129,38 +116,3 @@ describe('update_counts.TARGETS — regression guard', () => {
 
 // --- Layer 2: golden parity on the REAL REPO -------------------------------
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('update_counts — golden parity (python3 vs tsx)', () => {
-    it('--check stdout/stderr/exit byte-identical', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('--check passes on a clean tree (exit 0)', () => {
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(0);
-    });
-
-    it('update mode reproduces committed docs with ZERO drift', () => {
-        const targets = uc.TARGETS.map(([rel]) => path.join(REPO_ROOT, rel));
-        const before = targets.map((p) => fs.readFileSync(p, 'utf-8'));
-        try {
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-            expect(ts.status).toBe(0);
-            // The repo is in-sync, so update mode must leave every target byte-identical.
-            targets.forEach((p, i) => {
-                expect(fs.readFileSync(p, 'utf-8')).toBe(before[i]);
-            });
-        } finally {
-            // Restore defensively even though zero-drift is expected.
-            targets.forEach((p, i) => fs.writeFileSync(p, before[i] as string, 'utf-8'));
-        }
-    });
-});
