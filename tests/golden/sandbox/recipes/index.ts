@@ -18,6 +18,11 @@ import gtP1High from './gt_p1_high.js';
 import gtP2Medium from './gt_p2_medium.js';
 import gtP3Low from './gt_p3_low.js';
 import gtP4UiRejection from './gt_p4_ui_rejection.js';
+import gtU1BuildHappy from './gt_u1_build_happy.js';
+import gtU2ImproveDiff from './gt_u2_improve_diff.js';
+import gtU3AuditSkipped from './gt_u3_audit_skipped.js';
+import gtU4PolishCeiling from './gt_u4_polish_ceiling.js';
+import gtU5MixedFlow from './gt_u5_mixed_flow.js';
 
 export interface RecipeMeta {
     gt_id: string;
@@ -47,4 +52,9 @@ export const RECIPES: RecipeModule[] = [
     gtP2Medium,
     gtP3Low,
     gtP4UiRejection,
+    gtU1BuildHappy,
+    gtU2ImproveDiff,
+    gtU3AuditSkipped,
+    gtU4PolishCeiling,
+    gtU5MixedFlow,
 ];
