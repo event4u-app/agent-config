@@ -63,7 +63,9 @@ transcripts are re-derived, not preserved byte-for-byte (accepted in option 2).
 - [x] Comparators unit-verified in isolation: identical baseline↔replay → 0 diffs; each mutated dimension (exit / state-shape missing-key / halt directive / delivery heading) → exactly one targeted diff; `classifyQuestion` → directive/numbered/blockquote/text/invalid; `shapeDiff` → leaf-drift 0, type/length change → diff. typecheck + eslint clean.
 
 ### Phase 4 — Port the 29 recipes
-- [ ] Port each `gt*.py` → `gt*.ts`: `META` object + `buildRecipe(workspace)` returning the directive→callback map; `seedState` where present. The injected source/test snippets become TS (e.g. `multiply` as TS). Parallelizable per recipe.
+- [~] Port each `gt*.py` → `gt*.ts`: `META` object + `buildRecipe(workspace)` returning the directive→callback map; `seedState` where present. The injected source/test snippets become TS (e.g. `multiply` as TS). Parallelizable per recipe. **GT-1 done + proven** (see vertical-slice below); 28 recipes remain (gt2-gt5, gt_p1-4, gt_u1-15, gt_g1-4).
+
+> **GT-1 vertical slice proven 2026-06** (closes Phase 4-first + de-risks Phase 5): `gt1_happy.ts` registered in `sandbox/recipes/index.ts`; an inlined capture wrote a GT-1 baseline pack from `replay('GT-1')` (5 cycles, exits [1,1,1,1,0], 8 report headings); a fresh `replayAndCompare('GT-1')` against it returned **0 diffs** across all four comparators. The full chain (recipe → runner → live `.ts` work_engine → capture → replay → diff) is deterministic + consistent. The capture file-format used here is the Phase-5 `capture.ts` contract.
 
 ### Phase 5 — Re-capture baselines + replay test + CI
 - [ ] Port `capture.ts` (or fold capture into the harness) and **re-capture all GT-* baselines** from the `.ts` system → new locked Capture Packs (transcript/exit-codes/halt-markers/state-snapshots/delivery-report). Update `CHECKSUMS.txt` + `CAPTURING.md` for the TS flow.

@@ -9,6 +9,7 @@
  * Phase 4 — one entry per ported `gt*.ts`).
  */
 import type { Dict, RecipeStep } from '../runner.js';
+import gt1Happy from './gt1_happy.js';
 
 export interface RecipeMeta {
     gt_id: string;
@@ -26,4 +27,4 @@ export interface RecipeModule {
     seedState?(workspace: string): Dict | null;
 }
 
-export const RECIPES: RecipeModule[] = [];
+export const RECIPES: RecipeModule[] = [gt1Happy];
