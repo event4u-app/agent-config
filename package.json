@@ -55,10 +55,11 @@
     },
     "scripts": {
         "build:cli": "tsc -p tsconfig.json && chmod +x dist/cli/agent-config.js",
+        "build:install-bundle": "esbuild src/scripts/install.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/install/install.mjs",
         "build:ui": "vite build",
         "build:discovery": "./scripts-run src/scripts/build_discovery_manifest --write --strict",
         "build:mcp-manifest": "./scripts-run src/scripts/build_mcp_registry_manifest --write --strict",
-        "build": "npm run build:cli && npm run build:ui",
+        "build": "npm run build:cli && npm run build:install-bundle && npm run build:ui",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
         "lint:ts": "eslint 'src/**/*.ts'",
         "test:ts": "vitest run",

@@ -124,6 +124,14 @@ jobs:
       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
         run: npm ci
 
+      # The committed dist/install/install.mjs is the raw-source consumer
+      # bridge runner (node, no tsx) used by setup.sh. Rebuild it and assert
+      # no drift — a stale bundle ships old install behavior to consumers.
+      - name: Install bundle is fresh (dist/install/install.mjs)
+        run: |
+          npm run build:install-bundle
+          git diff --exit-code -- dist/install/
+
       - name: Run install orchestrator integration tests
         # Default nproc on macOS-arm64 runners returns 3, bottlenecking
         # the ~40-test orchestrator suite. Explicit -P 8 keeps wall-clock

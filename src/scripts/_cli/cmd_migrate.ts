@@ -921,11 +921,24 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
 }
 
 // CLI entry guard — set process.exitCode; never call process.exit().
+//
+// Bundle-safety: esbuild --bundle rewrites every inlined module's
+// `import.meta.url` to the OUTPUT bundle's URL, so this guard would otherwise
+// fire spuriously when cmd_migrate is inlined into the installer bundle
+// (dist/install/install.mjs) — install.ts owns that entry point and calls
+// this module's `main` in-process via `_run_migrate_to_global`. The
+// `__AGENT_CONFIG_BUNDLE__` sentinel (replaced with `true` by the bundle
+// build's `--define`) disables the auto-run there; under tsx/node it is
+// undefined, so `typeof` short-circuits and the standalone CLI guard fires
+// normally.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+const _bundled =
+    typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
 const _HERE = fileURLToPath(import.meta.url);
 const _isCliEntry =
     process.argv[1] !== undefined &&
     import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (_isCliEntry || process.argv[1] === _HERE) {
+if (!_bundled && (_isCliEntry || process.argv[1] === _HERE)) {
     try {
         process.exitCode = main(process.argv.slice(2));
     } catch (exc) {

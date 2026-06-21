@@ -52,6 +52,14 @@ setup() {
         mkdir -p "$stage/agent-config/dist"
         cp -R "$REPO_ROOT/dist/agent-src" "$stage/agent-config/dist/"
     fi
+    # The pre-bundled installer bridge (dependency-inlined, runs via plain
+    # `node`) is the raw-source consumer's bridge runner — no tsx /
+    # node_modules. It's a tracked dist/ carve-out, so the real codeload
+    # tarball carries it; stage it here so this smoke test mirrors that.
+    if [[ -f "$REPO_ROOT/dist/install/install.mjs" ]]; then
+        mkdir -p "$stage/agent-config/dist/install"
+        cp "$REPO_ROOT/dist/install/install.mjs" "$stage/agent-config/dist/install/"
+    fi
     # The installer entrypoints (install / install.sh / install.py /
     # agent-config / _dispatch.bash) live under src/scripts/ since 6.0.0-D, and
     # config/ + templates/ moved under src/ in Step 16b — stage each subtree at

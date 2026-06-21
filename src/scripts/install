@@ -334,11 +334,24 @@ run_sync() {
 }
 
 run_bridges() {
-    local tsx_bin
-    if ! tsx_bin="$(resolve_tsx_bin)"; then
-        $QUIET || echo "  ⚠️  tsx runner not found — skipping .agent-settings and bridge files." >&2
-        $QUIET || echo "      Run \`npm install\` in the package (provides node_modules/.bin/tsx), then re-run: bash scripts/install --skip-sync" >&2
-        return 0
+    # Resolve the bridge runner. Preference order (py2ts consumer-runtime,
+    # fallback D): a pre-bundled, dependency-inlined installer run via plain
+    # `node` — this is the raw-source `setup.sh` curl|bash path, which has no
+    # tsx/node_modules toolchain. Falls back to `tsx install.ts` for the dev
+    # tree (where the bundle may be stale relative to install.ts).
+    local runner=()
+    local bridge_bundle="$SOURCE_DIR/dist/install/install.mjs"
+    if [[ -f "$bridge_bundle" ]] && command -v node >/dev/null 2>&1; then
+        runner=(node "$bridge_bundle")
+    else
+        local tsx_bin
+        if ! tsx_bin="$(resolve_tsx_bin)"; then
+            $QUIET || echo "  ⚠️  No bridge runner found (no pre-bundled installer, no tsx) — skipping .agent-settings and bridge files." >&2
+            $QUIET || echo "      Install Node.js, or run \`npm install\` in the package (provides node_modules/.bin/tsx), then re-run: bash scripts/install --skip-sync" >&2
+            return 0
+        fi
+        # shellcheck disable=SC2206  # $tsx_bin may be "npx tsx" (two words) — intentional split into array elements.
+        runner=($tsx_bin "$INSTALL_TS")
     fi
 
     if $DRY_RUN; then
@@ -357,8 +370,7 @@ run_bridges() {
     $OFFLINE && args+=(--offline)
     $MINIMAL && args+=(--minimal)
     args+=(--tools="$TOOLS")
-    # shellcheck disable=SC2086  # $tsx_bin may be "npx tsx" (two words) — intentional split.
-    $tsx_bin "$INSTALL_TS" "${args[@]}"
+    "${runner[@]}" "${args[@]}"
 }
 
 RC=0
