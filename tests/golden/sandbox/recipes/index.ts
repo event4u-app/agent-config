@@ -10,6 +10,10 @@
  */
 import type { Dict, RecipeStep } from '../runner.js';
 import gt1Happy from './gt1_happy.js';
+import gt2Ambiguity from './gt2_ambiguity.js';
+import gt3Recovery from './gt3_recovery.js';
+import gt4PersonaRefusal from './gt4_persona_refusal.js';
+import gt5StateResume from './gt5_state_resume.js';
 
 export interface RecipeMeta {
     gt_id: string;
@@ -19,6 +23,8 @@ export interface RecipeMeta {
     file_relpath?: string;
     persona?: string | null;
     cycle_cap?: number;
+    /** Capture-only: capture.ts segments the run at this directive (GT-5 resume demo). */
+    resume_after_directive?: string;
 }
 
 export interface RecipeModule {
@@ -27,4 +33,10 @@ export interface RecipeModule {
     seedState?(workspace: string): Dict | null;
 }
 
-export const RECIPES: RecipeModule[] = [gt1Happy];
+export const RECIPES: RecipeModule[] = [
+    gt1Happy,
+    gt2Ambiguity,
+    gt3Recovery,
+    gt4PersonaRefusal,
+    gt5StateResume,
+];
