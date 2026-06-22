@@ -156,14 +156,22 @@ describe('ci_time_ratio — relative_to latent-bug parity', () => {
 
     it.skipIf(!py)('relative --out: both exit 1 (relative-vs-absolute ValueError)', () => {
         // argparse type=Path keeps the relative path; relative_to(absolute) raises.
-        const rel = 'ci_time_ratio_test_rel/out.json';
-        const p = runPy(['--limit', '2', '--out', rel]);
-        const t = runTs(['--limit', '2', '--out', rel]);
-        expect(p.status).toBe(1);
-        expect(t.status).toBe(1);
-        expect(p.stdout).toBe('');
-        expect(t.stdout).toBe('');
-        // both create the parent dir + file relative to cwd (REPO_ROOT) — clean up.
-        fs.rmSync(path.join(REPO_ROOT, 'ci_time_ratio_test_rel'), { recursive: true, force: true });
+        // Write under the gitignored test-results/ dir so a leaked artifact (if the
+        // cleanup below ever fails to run) can never be committed.
+        const rel = 'test-results/ci_time_ratio_rel/out.json';
+        try {
+            const p = runPy(['--limit', '2', '--out', rel]);
+            const t = runTs(['--limit', '2', '--out', rel]);
+            expect(p.status).toBe(1);
+            expect(t.status).toBe(1);
+            expect(p.stdout).toBe('');
+            expect(t.stdout).toBe('');
+        } finally {
+            // both create the parent dir + file relative to cwd (REPO_ROOT) — clean up.
+            fs.rmSync(path.join(REPO_ROOT, 'test-results', 'ci_time_ratio_rel'), {
+                recursive: true,
+                force: true,
+            });
+        }
     });
 });
