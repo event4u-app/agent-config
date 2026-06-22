@@ -34,12 +34,30 @@ coordinates); on a standard host run the full chain.
 
 ## When to use
 
-- A complex, ambiguous, or long-horizon task on a standard host.
-- Work where the reasoning steps are interdependent (a missed grounding or skipped
-  verification compounds downstream).
+Scope (eval-calibrated, L6): engage only for **interdependent multi-step** work
+— multiple steps whose ordering and handoffs matter (schema → API → job → UI; a
+staged migration; a cross-cutting refactor). **Not** for single-turn analysis
+(explain / name / yes-no / pick-X-or-Y / one-shot edit): there the ordered chain
+is a no-op and only adds tokens.
 
-Do NOT use for trivial / linear / fully-specified tasks (the gate filters these),
-and do not let it duplicate the work of the skills it coordinates.
+- An interdependent **multi-step** task on a standard host. Analyze the
+  dependency structure (what blocks what) before acting.
+- Work where a missed or out-of-order link (grounding, verification) compounds
+  downstream.
+
+Do NOT use for trivial / linear / fully-specified tasks **or single-turn
+analysis** (the gate filters these), and do not let it duplicate the work of the
+skills it coordinates.
+
+> **Why scoped (L6, 2026-06-22).** A controlled distributed-vs-orchestrated eval
+> (N=16, independent rater) found the ordered chain gains **+19.2%** on
+> multi-step work but **−1.1%** (a no-op) on single-turn reasoning. The standard
+> host classifies multi-step vs single-turn at gate time with 16/16 accuracy, and
+> a misclassification degrades gracefully (wrong arm is still functional). The
+> revert trigger is a re-run of `tests/reasoning-layer-eval` (the eval is the
+> telemetry — this is a no-runtime package); RDP flip conditions are judged
+> per-mechanism, never on a univariate aggregate. Evidence:
+> `tests/reasoning-layer-eval/RESULTS-L6-largeN-2026-06-22.md`.
 
 ## When the agent should load this
 
@@ -77,8 +95,16 @@ not exclusivity.
 
 ## Output
 
-The task's actual deliverable — produced through the chain. Reasoning stays in the
-notes file; the response leads with the outcome + its evidence.
+The task's actual deliverable, produced **through the chain** (analysis before
+action — grounding and the load-bearing-unknown resolution precede any edit):
+
+1. **Outcome first** — the response leads with the result and its evidence.
+2. **Reasoning stays in notes** — hypotheses / predictions / decisions live in
+   the notes file, never dumped into the response.
+3. **Chain honoured in order** — ground → intent → notes → resolve-hardest-first
+   → audit → verify ran as ordered links (with handoffs), not a buffet.
+4. **Verified before "done"** — no completion claim without the verifier link's
+   evidence.
 
 ## Do NOT
 
