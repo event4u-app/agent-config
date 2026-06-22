@@ -5,7 +5,7 @@
 Brand as a first-class UX layer — archetype/voice/identity grounding corpus, brand→token derivation, and consistency governance that constrains UI.
 
 - **id**: `brand`
-- **version**: `7.0.1`
+- **version**: `7.0.2`
 - **owner**: engineering
 - **requires**: frontend-design
 - **artefacts**: 13
