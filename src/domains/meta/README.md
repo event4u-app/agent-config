@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `7.0.2`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 244
+- **artefacts**: 245
 
-## Commands (119)
+## Commands (120)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -43,6 +43,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`feature-roadmap`** — Generate implementation roadmap(s) from a feature plan and link them
 - **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments
 - **`fix-ci`** — Fetch CI errors from GitHub Actions and fix them
+- **`fix-comments`** — Review the code comments touched by the current branch and simplify, shorten, or remove each one
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
 - **`fix-pr-comments`** — Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files

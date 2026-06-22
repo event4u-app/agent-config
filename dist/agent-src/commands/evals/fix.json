@@ -1,9 +1,13 @@
 {
   "command": "fix",
-  "intent": "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability",
+  "intent": "Fix-workflow dispatcher — ci, pr-comments, refs, seeder, portability, comments",
   "cases": [
     {
       "prompt": "fix the failing CI",
+      "expected": "fix"
+    },
+    {
+      "prompt": "simplify the code comments in my branch",
       "expected": "fix"
     },
     {
