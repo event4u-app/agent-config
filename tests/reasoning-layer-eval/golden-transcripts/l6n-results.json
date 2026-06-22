@@ -1,0 +1,762 @@
+{
+  "date": "2026-06-22",
+  "mode": "l6",
+  "standard_model": "claude-haiku-4-5-20251001",
+  "strong_model": "claude-sonnet-4-5",
+  "scorer_model": "claude-sonnet-4-5",
+  "actual_cost_usd": 0.7544,
+  "results": [
+    {
+      "slot": "01",
+      "slug": "ms-add-search",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Add full-text search across the orders and invoices tables, with an indexed backend and a paginated API.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & unknowns:**\n1. **Database**: Not stated. Assuming PostgreSQL (most common for FTS); if SQLite/MySQL, approach differs.\n2. **FTS scope**: \"full-text search across orders and invoices\" — which columns? (order IDs, customer names, descriptions, line items, invoice amounts?)\n3. **Indexed backend**: Does this mean PostgreSQL's native FTS, or a separate search engine (Elasticsearch, MeiliSearch)?\n4. **Existing API framework**: Not stated. Assuming REST (no GraphQL hint given).\n5. **Pagination style**: Offset/limit or cursor-based?\n6. **Search ranking**: All results equally weighted, or should invoice amounts/dates boost relevance?\n\n**Load-bearing unknowns to close:**\n- Is PostgreSQL the database?\n- Which specific columns should be searchable in orders and invoices?\n- Native FTS (tsvector) or external search engine?\n\n**Inferred goal:** Add a search endpoint that queries orders and invoices across key fields (customer name, descriptions, amounts) with fast indexed lookup and paginated results.\n\n**Recommendation:** Implement PostgreSQL tsvector FTS (native, no external dependency) on a combined view, with a REST endpoint supporting offset pagination and result ranking. This is the minimal, self-contained solution.\n\n---\n\n## Answer\n\nI need two clarifications before proceeding:\n\n1. **Database:** Is this PostgreSQL? (If not, the FTS strategy changes.)\n2. **Searchable fields:** Which columns in orders and invoices should be indexed? For example:\n   - Orders: customer name, order description, order ID?\n   - Invoices: customer name, line item descriptions, amounts?\n\nOnce confirmed, I'll add:\n- PostgreSQL `tsvector` column + GIN index on both tables\n- A `search_orders_and_invoices` function (or view) that unions results\n- A paginated REST endpoint (`GET /search?q=...&limit=20&offset=0`)\n- Migration script\n\n**Placeholder: I'm holding here to avoid designing against unstated schema assumptions.** Reply with those two points and I'll deliver the diff.",
+          "input_tokens": 671,
+          "output_tokens": 503,
+          "cost_usd": 0.009558,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first execution: identifies all unknowns, grounds assumptions, refuses premature code, clear blocked state."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working Notes\n\n**Ground: Constraints & unknowns**\n- What database is in use? (PostgreSQL, MySQL, SQLite, etc.)\n- Current schema: do `orders` and `invoices` tables exist? What columns?\n- Current API framework? (Express, FastAPI, Django, etc.)\n- Definition of \"full-text search\": simple substring matching, phrase search, ranking, language-aware?\n- Pagination style: cursor-based or offset-limit? Preferred page size?\n- Should search span both tables together or separately?\n- Index strategy: native DB full-text index (PostgreSQL `tsvector`, MySQL `FULLTEXT`), or separate search engine (Elasticsearch)?\n- Performance SLA: What response time is acceptable?\n\n**Missing-critical unknowns (load-bearing):**\n- No codebase visible → cannot inspect schema, framework, or current API structure.\n- I will assume: PostgreSQL (most common for production search), Express.js, offset-limit pagination, unified search across both tables, native PostgreSQL full-text search (simplest, indexed backend).\n\n**Inferred goal:**  \nEnable users to search across order and invoice data with fast, indexed lookups and paginated results.\n\n**Recommendation:**  \n1. Add GIN indexes on `tsvector` columns in both tables.\n2. Create stored function to combine and rank results.\n3. Add paginated API endpoint that accepts `query` and `page` params.\n\n**Complexity-first sequencing:**\n- **First (load-bearing):** Define what columns to index and confirm schema exists.\n- **Second:** Set up indexed full-text search in the DB (indexes + function).\n- **Third:** Build API endpoint with pagination.\n\n---\n\n## Answer\n\nSince the codebase is not visible, I'll provide a complete, portable solution for **PostgreSQL + Express.js**. Adjust for your actual framework/DB.\n\n### 1. **Add Full-Text Search Indexes (PostgreSQL)**\n\n```sql\n-- Add tsvector columns and indexes to orders table\nALTER TABLE orders ADD COLUMN search_vector tsvector;\n\nCREATE INDEX idx_orders_search ON orders USING GIN(search_vector);\n\n-- Populate with existing data (example: order_number + customer_name)\nUPDATE orders SET search_vector = \n  setweight(to_tsvector('english', COALESCE(order_number, '')), 'A') ||\n  setweight(to_tsvector('english', COALESCE(customer_name, '')), 'B');\n\n-- Add trigger to keep search_vector in sync on INSERT/UPDATE\nCREATE TRIGGER orders_search_update BEFORE INSERT OR UPDATE ON orders\nFOR EACH ROW EXECUTE FUNCTION\n  tsvector_update_trigger(search_vector, 'pg_catalog.english', order_number, customer_name);\n\n---\n\n-- Same for invoices table\nALTER TABLE invoices ADD COLUMN search_vector tsvector;\n\nCREATE INDEX idx_invoices_search ON invoices USING GIN(search_vector);\n\nUPDATE invoices SET search_vector = \n  setweight(to_tsvector('english', COALESCE(invoice_number, '')), 'A') ||\n  setweight(to_tsvector('english', COALESCE(vendor_name, '')), 'B');\n\nCREATE TRIGGER invoices_search_update BEFORE INSERT OR UPDATE ON invoices\nFOR EACH ROW EXECUTE FUNCTION\n  tsvector_update_trigger(search_vector, 'pg_catalog.english', invoice_number, vendor_name);\n```\n\n### 2. **Unified Search Function (PostgreSQL)**\n\n```sql\nCREATE OR REPLACE FUNCTION search_orders_and_invoices(\n  p_query text,\n  p_limit int DEFAULT 20,\n  p_offset int DEFAULT 0,\n  OUT total_count int,\n  OUT results jsonb\n) AS $$\nDECLARE\n  v_query tsquery;\nBEGIN\n  -- Convert input to tsquery; handle basic syntax\n  v_query := plainto_tsquery('english', p_query);\n  \n  -- Search orders\n  WITH order_results AS (\n    SELECT \n      'order' as type,\n      id,\n      order_number as title,\n      customer_name as subtitle,\n      created_at,\n      ts_rank(search_vector, v_query) as rank\n    FROM orders\n    WHERE search_vector @@ v_query\n  ),\n  -- Search invoices\n  invoice_results AS (\n    SELECT \n      'invoice' as type,\n      id,\n      invoice_number as title,\n      vendor_name as subtitle,\n      created_at,\n      ts_rank(search_vector, v_query) as rank\n    FROM invoices\n    WHERE search_vector @@ v_query\n  ),\n  -- Union and rank\n  combined AS (\n    SELECT * FROM order_results\n    UNION ALL\n    SELECT * FROM invoice_results\n  )\n  SELECT \n    COUNT(*)::int INTO total_count\n  FROM combined;\n  \n  SELECT jsonb_agg(row_to_json(t)) INTO results\n  FROM (\n    SELECT type, id, title, subtitle, created_at, rank\n    FROM (\n      SELECT * FROM order_results\n      UNION ALL\n      SELECT * FROM invoice_results\n    )\n    ORDER BY rank DESC, created_at DESC\n    LIMIT p_limit OFFSET p_offset\n  ) t;\n  \n  -- Return null results as empty array if no matches\n  IF results IS NULL THEN\n    results := '[]'::jsonb;\n  END IF;\nEND;\n$$ LANGUAGE plpgsql STABLE;\n```\n\n### 3. **Express.js API Endpoint**\n\n```javascript\nconst express = require('express');\nconst pool = require('./db'); // Your pg pool\n\nconst router = express.Router();\n\n/**\n * GET /api/search?q=<query>&page=<page>&limit=<limit>\n * \n * Query params:\n *   q (string, required): search query\n *   page (int, default=1): page number (1-indexed)\n *   limit (int, default=20): results per page\n * \n * Response:\n *   { total: int, page: int, pageCount: int, results: [...] }\n */\nrouter.get('/search', async (req, res) => {\n  const { q, page = 1, limit = 20 } = req.query;\n\n  // Validate input\n  if (!q || typeof q !== 'string') {\n    return res.status(400).json({ error: 'Missing or invalid query parameter \"q\"' });\n  }\n  if (q.trim().length === 0) {\n    return res.status(400).json({ error: '",
+          "input_tokens": 825,
+          "output_tokens": 1600,
+          "cost_usd": 0.026475,
+          "score": {
+            "dim1": 3,
+            "dim2": 2,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Strong notes-first; grounded unknowns+assumptions; solved load-bearing first; clear outcome. Minor: some assumptions could be tighter."
+          }
+        }
+      },
+      "output_token_overhead_pct": 218.1,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 2.75
+      },
+      "rater2_delta": -0.25
+    },
+    {
+      "slot": "02",
+      "slug": "ms-extract-notifications-service",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Extract the notifications code out of the monolith into its own service and wire the monolith to call it.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Information gaps & constraints:**\n1. I don't know what codebase this is—no repo context provided.\n2. I don't know the current architecture: monolith language, framework, current notification implementation location/pattern.\n3. I don't know the target service style: REST, gRPC, message queue, etc.\n4. I don't know scope: extract *all* notification code or specific types? Async or sync?\n5. I don't know deployment: separate process? Same infra? Docker? Kubernetes?\n6. \"Wire the monolith to call it\" – does this mean HTTP client calls, dependency injection, or message publishing?\n\n**Inferred real goal:**\nDecouple notification logic from the monolith so it can scale, update, and test independently, and so the monolith doesn't block on notification side effects.\n\n**Recommendation:**\nI need **one focused clarifying question** before designing:\n\n**What is the monolith's primary language/framework, and how are notifications currently triggered?** (e.g., \"Python/Django with notifications sent via a `NotificationService` class called synchronously from business logic\" or \"Node.js/Express with async job queue\".)\n\nThis determines whether the extract is surgical (move a class, add an HTTP client) or structural (convert sync calls to async pub/sub).\n\n---\n\n## Answer\n\nI cannot provide a diff without knowing the monolith's language, current notification implementation, and preferred service communication pattern (HTTP, gRPC, async queue, etc.).\n\n**Provide:**\n- Language and framework of the monolith  \n- Current location and how notifications are invoked (sync method call? job queue? event listener?)  \n- Preferred service style (REST endpoint? gRPC? Message broker?)  \n\n**Then I will:**\n1. Extract the notification module into its own service scaffold\n2. Replace monolith calls with client calls (HTTP/gRPC) or publish to a queue\n3. Provide a minimal, verified diff",
+          "input_tokens": 672,
+          "output_tokens": 456,
+          "cost_usd": 0.008856,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first. Grounded all gaps before solution. No premature code. Answer clean/outcome-focused w/ handoff spec."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Reasoning Protocol Engagement\n\nThis task is **multi-component, stateful, and has undefined scope boundaries**. I need to ground before designing.\n\n### 1. GROUND: Constraints & Information Gaps\n\n**What I know:**\n- There is a monolith codebase.\n- Notifications code currently lives in it.\n- Goal: extract to a separate service + wire the monolith to call it.\n\n**Critical unknowns (load-bearing):**\n- **Where is the monolith?** No repo path provided. I cannot see the code.\n- **What constitutes \"notifications code\"?** (DB schema? Business logic? API? Message queues? Auth? Dependencies?)\n- **What's the scale?** (50 lines? 5000? Multiple tables?)\n- **What calling pattern?** (HTTP? gRPC? Events/async? RPC? Synchronous only?)\n- **Deployment model?** (Docker? Kubernetes? Serverless? Same host?)\n- **Are there existing tests?** (Critical for migration safety.)\n- **Data ownership:** Does notifications own its own storage, or does the monolith own it?\n- **Backwards compat:** Can we break the monolith's internal API to notifications?\n\n**Cannot proceed without:**\n1. A pointer to the codebase (or a minimal example of the notifications code structure).\n2. Clarification on scope: what code/schema/config counts as \"notifications\"?\n\n---\n\n### 2. INFER REAL GOAL\n\n**Inferred goal:** Decouple notification delivery/logic from the monolith to enable independent scaling, deployment, and maintenance of the notification system.\n\n**One recommendation:** Show me the codebase structure (or describe the notifications layer), and I'll extract it with minimal, testable diffs in this order:\n1. Create the new service skeleton + contracts.\n2. Migrate logic & storage.\n3. Wire the monolith to call it (with fallback/compat layer if needed).\n4. Test & validate.\n\n---\n\n## Working Notes\n\n**Prediction (confidence: high):** The notifications layer likely couples:\n- Domain models (User, Notification, Channel prefs)\n- Business logic (formatting, routing, retry)\n- Storage (DB schema, message queue)\n- API (internal service calls from monolith)\n\n**Decision logic:** Cannot architect the extraction without seeing code. The \"load-bearing unknown\" is **scope + current structure**.\n\n---\n\n## Answer\n\nI need **one of the following** to proceed:\n\n### Option A: Show me the code\nProvide a link to the monolith repo or paste:\n- Directory structure of notification-related code.\n- Example files: models, controllers/handlers, DB migrations.\n- How the monolith currently calls notifications (internal function? Method? Service class?).\n\n### Option B: Describe the notifications layer\n- What does it do? (send emails? SMS? Push? In-app messages?)\n- What data does it own? (Notification records? User preferences? Templates?)\n- How does the monolith trigger it? (Synchronous method call? Event publishing? Queue?)\n- Are there tests? (If yes, share a sample.)\n\nOnce I see the structure, I will:\n1. **Extract the notification service** (minimal new codebase).\n2. **Replace monolith calls** with HTTP/RPC to the service.\n3. **Provide diffs** for both repos.\n4. **Specify what to test** before cut-over.\n\nWhich can you provide?",
+          "input_tokens": 826,
+          "output_tokens": 810,
+          "cost_usd": 0.014628,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first protocol. Grounded all unknowns before design. Avoided premature solution. Clear outcome-focused summary."
+          }
+        }
+      },
+      "output_token_overhead_pct": 77.6,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "03",
+      "slug": "ms-add-audit-log",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Add an audit log that records every write to the billing tables and exposes it on an admin page.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints and gaps:**\n1. \"Billing tables\" — are these specific tables (e.g., `invoices`, `payments`, `subscriptions`) or all tables matching a pattern? I need this to scope the audit scope correctly.\n2. \"Every write\" — INSERT, UPDATE, DELETE? What about bulk operations or migrations?\n3. \"Admin page\" — is there an existing admin interface (Django admin, custom dashboard)? Should this be UI or just an endpoint?\n4. \"Records\" — what metadata? (user, timestamp, old/new values, table, operation type)\n5. Current tech stack — is this a Django app, Rails, Node? This determines implementation approach.\n\n**Assumption needed:** I'll assume:\n- This is a Django app (most common for billing + admin)\n- \"Billing tables\" = explicit list we define (e.g., Invoice, Payment, Subscription models)\n- \"Records\" = full change tracking (before/after values, user, timestamp, operation)\n- \"Admin page\" = Django admin + read-only list view\n- Stack: Django ORM with PostgreSQL\n\n**Real goal:** Create a tamper-evident, queryable record of all billing mutations so admins can audit changes and detect accidental/malicious data modification.\n\n**Load-bearing complexity:** The trigger mechanism. Django signals are convenient but fragile under bulk operations. A database-level trigger is authoritative but harder to integrate with Django ORM state.\n\n**Recommendation:** Use Django signals + explicit middleware to catch both ORM and raw SQL writes, with a fallback PostgreSQL trigger for defense-in-depth.\n\n---\n\n## Answer\n\nI need one clarifying question before I proceed:\n\n**What is your current tech stack and which specific tables need audit coverage?**  \n(e.g., Django + Invoice/Payment/Subscription models? Or Rails? Or a different framework?)\n\nFor now, I'll provide a **Django-based solution** that covers the common case. If you're using a different stack, let me know and I'll adjust.\n\n### Solution: Django audit log for billing tables\n\n**1. Create the audit log model:**\n\n```python\n# models.py (in your app)\n\nfrom django.db import models\nfrom django.contrib.auth.models import User\nimport json\n\nclass BillingAuditLog(models.Model):\n    OPERATION_CHOICES = [\n        ('CREATE', 'Create'),\n        ('UPDATE', 'Update'),\n        ('DELETE', 'Delete'),\n    ]\n    \n    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)\n    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)\n    operation = models.CharField(max_length=10, choices=OPERATION_CHOICES)\n    table_name = models.CharField(max_length=100, db_index=True)\n    record_id = models.IntegerField(db_index=True)\n    \n    # Full change: {field: {old: val, new: val}, ...}\n    old_values = models.JSONField(default=dict, blank=True)\n    new_values = models.JSONField(default=dict, blank=True)\n    \n    ip_address = models.GenericIPAddressField(null=True, blank=True)\n    \n    class Meta:\n        ordering = ['-timestamp']\n        indexes = [\n            models.Index(fields=['table_name', '-timestamp']),\n            models.Index(fields=['record_id', 'table_name']),\n        ]\n    \n    def __str__(self):\n        return f\"{self.operation} {self.table_name}#{self.record_id} at {self.timestamp}\"\n```\n\n**2. Create signal handlers to capture writes:**\n\n```python\n# signals.py\n\nfrom django.db.models.signals import post_save, post_delete\nfrom django.dispatch import receiver\nfrom django.apps import apps\nfrom .models import BillingAuditLog\nfrom functools import wraps\n\n# Define which models to audit\nAUDITED_MODELS = ['Invoice', 'Payment', 'Subscription']\n\ndef audit_log_for_model(model_class):\n    \"\"\"Decorator to enable audit logging for a model.\"\"\"\n    \n    @receiver(post_save, sender=model_class, weak=False)\n    def log_save(sender, instance, created, **kwargs):\n        user = getattr(instance, '_audit_user', None)\n        ip = getattr(instance, '_audit_ip', None)\n        \n        # Capture new values\n        new_vals = {f.name: getattr(instance, f.name) \n                    for f in instance._meta.fields \n                    if f.name not in ['id', 'created_at']}\n        new_vals = {k: str(v) if not isinstance(v, (int, float, bool, type(None))) \n                    else v for k, v in new_vals.items()}\n        \n        old_vals = getattr(instance, '_audit_old_values', {})\n        \n        BillingAuditLog.objects.create(\n            operation='CREATE' if created else 'UPDATE',\n            table_name=sender._meta.db_table,\n            record_id=instance.id,\n            old_values=old_vals,\n            new_values=new_vals,\n            user=user,\n            ip_address=ip,\n        )\n    \n    @receiver(post_delete, sender=model_class, weak=False)\n    def log_delete(sender, instance, **kwargs):\n        user = getattr(instance, '_audit_user', None)\n        ip = getattr(instance, '_audit_ip', None)\n        \n        old_vals = {f.name: getattr(instance, f.name) \n                    for f in instance._meta.fields}\n        old_vals = {k: str(v) if not isinstance(v, (int, float, bool, type(None))) \n                    else v for k, v in old_vals.items()}\n        \n        BillingAuditLog.objects.create(\n            operation='DELETE',\n            table_name=sender._meta.db_table,\n            record_id=instance.id,\n            old_values=old_vals,\n            new_values={},\n            user=user,\n            ip_address=ip,\n        )\n\n# Register signals in apps.py\n```\n\n**3. Hook user/IP context via middleware:**\n\n```python\n# middleware.py\n\nclass AuditContextMiddleware:\n    def __init__(self, get_response):\n        self.get_response = get_response\n    \n    def __call__(self, request):\n        # Attach user and IP to thread-local context\n        from .models import Bil",
+          "input_tokens": 669,
+          "output_tokens": 1600,
+          "cost_usd": 0.026007,
+          "score": {
+            "dim1": 2,
+            "dim2": 2,
+            "dim3": 1,
+            "dim4": 0,
+            "reasoning_extraction_refusal": false,
+            "note": "Notes good; gaps identified. Answer incomplete (cut-off mid-code). No final summary/outcome. Solution starts before key Q answered."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- \"billing tables\" — plural, but unspecified which ones. Need to know: do I infer them from the codebase, or should I ask?\n- \"records every write\" — INSERT, UPDATE, DELETE; what about transactions? Soft-deletes? Timestamp granularity?\n- \"exposes it on an admin page\" — implies a web UI exists. Need: does an admin panel already exist? What framework? What auth model?\n- Scope of \"write\": does this include bulk operations, API calls, batch jobs, or just application-level code?\n\n**Information gaps (load-bearing):**\n1. Which are the \"billing tables\"? (e.g., invoices, subscriptions, payments, line_items…)\n2. Is there an existing admin dashboard/framework I should integrate with?\n3. What auth/roles control access to the audit log?\n4. Retention policy: how long to keep audit logs?\n5. Performance constraint: will audit logging run synchronously or async?\n\n**Inferred real goal:**\nCreate a compliance/forensic record of all billing data mutations (with user/timestamp/change details) and make it queryable/viewable to admins for accountability and debugging.\n\n---\n\nI need three clarifying answers to scope this properly:\n\n1. **Which tables constitute \"billing tables\"?** (e.g., list them, or do I infer from a schema file?)\n2. **Does an admin panel already exist?** If yes, what framework/tech? If no, should I create a minimal one?\n3. **Should audit logging be synchronous (transactional) or asynchronous?**\n\nOnce I have these, I can build:\n- Audit log table schema + triggers/middleware to capture writes\n- Admin view to query/filter the audit log\n- Minimal test to verify capture works",
+          "input_tokens": 823,
+          "output_tokens": 424,
+          "cost_usd": 0.008829,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: all reasoning in notes; clear gaps; load-bearing unknowns block premature work; coherent 3-Q ask."
+          }
+        }
+      },
+      "output_token_overhead_pct": -73.5,
+      "rater2_mean": {
+        "distributed": 1.25,
+        "orchestrated": 3
+      },
+      "rater2_delta": 1.75
+    },
+    {
+      "slot": "04",
+      "slug": "ms-introduce-caching",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Introduce a caching layer in front of the product-catalog reads and invalidate it correctly on writes.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & Facts:**\n- No codebase shown yet; I need to see the actual product-catalog module to design the cache layer.\n- \"Correctly invalidate on writes\" is load-bearing: cache must stay consistent with the source of truth.\n- Ambiguity: What is the read/write pattern? (high-read, occasional writes? bulk writes? concurrent?) What backend? (DB, in-memory, external service?)\n- Ambiguity: Scope of invalidation—single product, category, entire catalog, or depends on write type?\n\n**Real Goal Inferred:**\nReduce latency and load on product-catalog reads while ensuring writes immediately reflect in subsequent reads (consistency), without stale-data bugs.\n\n**What I need before proceeding:**\n1. Show me the product-catalog code (read and write entry points).\n2. Confirm: is this caching for a single process, or distributed (multi-instance)?\n3. Confirm: what counts as a \"write\"? (create, update, delete, bulk import, all of the above?)\n\n---\n\nI cannot design a correct cache layer without seeing the actual code structure and understanding the write semantics. **Show me the product-catalog module and I'll:**\n\n1. Identify all read paths that should be cached\n2. Identify all write paths that must invalidate cache\n3. Propose a minimal, focused implementation (e.g., decorator + cache dict, Redis, or in-process with TTL)\n4. Verify the invalidation strategy doesn't allow stale reads\n\n**Please provide:**\n- Current product-catalog code (or a link/snippet)\n- The framework/stack (FastAPI, Django, Flask, Node, etc.)\n- Whether this is single-process or distributed",
+          "input_tokens": 670,
+          "output_tokens": 398,
+          "cost_usd": 0.00798,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first: 0 premature code, grounded all unknowns, clear wait-state, outcome-focused summary. Textbook execution."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Task parsing & constraints:**\n- \"caching layer in front of product-catalog reads\" → intercept catalog fetch operations\n- \"invalidate it correctly on writes\" → product mutations must clear relevant cache entries\n- Ambiguity: I don't have the codebase, so I cannot identify:\n  - Where catalog reads happen (endpoints? service methods?)\n  - What write operations exist (create, update, delete, bulk?)\n  - Current data structure (single catalog? indexed by product ID? category?)\n  - Deployment context (in-memory, Redis, application scope?)\n\n**Clarifying question before proceeding:**\nSince I have no codebase visibility:\n1. Should I assume an in-memory cache (e.g., a Map-based implementation) or a distributed cache (Redis)?\n2. What granularity do you want for invalidation—per-product, per-category, or full-flush on any write?\n3. Where should the cache live—in a repository/service layer, or in a dedicated cache manager?\n\n**Proceeding with a general pattern** that is framework-agnostic and you can adapt:\nI'll show a **repository-pattern cache wrapper** with:\n- Read-through cache (lazy populate on miss)\n- Invalidation on all write paths (create, update, delete)\n- Clear separation of cache logic from business logic\n\nThis pattern works for both in-memory and distributed caches with minimal rewiring.\n\n---\n\n## Answer\n\nSince I cannot see your codebase, I'm providing a **portable template** you apply to your product-catalog layer. The pattern assumes a repository or service mediating all catalog access.\n\n### 1. Cache abstraction (adapter pattern)\n\n```python\nfrom abc import ABC, abstractmethod\nfrom typing import Optional, Any, Dict\nimport hashlib\n\nclass CatalogCache(ABC):\n    \"\"\"Cache abstraction; swap implementations (in-memory, Redis, etc.)\"\"\"\n    \n    @abstractmethod\n    def get(self, key: str) -> Optional[Any]:\n        pass\n    \n    @abstractmethod\n    def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:\n        pass\n    \n    @abstractmethod\n    def invalidate(self, key: str) -> None:\n        pass\n    \n    @abstractmethod\n    def invalidate_pattern(self, pattern: str) -> None:\n        \"\"\"Invalidate all keys matching pattern (e.g., 'product:*')\"\"\"\n        pass\n\n\nclass InMemoryCatalogCache(CatalogCache):\n    \"\"\"Simple in-memory implementation for development/testing\"\"\"\n    \n    def __init__(self):\n        self._store: Dict[str, Any] = {}\n    \n    def get(self, key: str) -> Optional[Any]:\n        return self._store.get(key)\n    \n    def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:\n        # Production: use TTL library; here, simplified\n        self._store[key] = value\n    \n    def invalidate(self, key: str) -> None:\n        self._store.pop(key, None)\n    \n    def invalidate_pattern(self, pattern: str) -> None:\n        # Simple prefix matching\n        prefix = pattern.rstrip('*')\n        keys_to_remove = [k for k in self._store.keys() if k.startswith(prefix)]\n        for k in keys_to_remove:\n            self._store.pop(k, None)\n```\n\n### 2. Cached repository wrapper\n\n```python\nfrom dataclasses import dataclass\nfrom typing import List\n\n@dataclass\nclass Product:\n    id: str\n    name: str\n    price: float\n    category: str\n\n\nclass ProductCatalogRepository:\n    \"\"\"Original repository (your existing code)\"\"\"\n    \n    def __init__(self, db):\n        self.db = db\n    \n    def get_product(self, product_id: str) -> Optional[Product]:\n        # Query database\n        row = self.db.query(f\"SELECT * FROM products WHERE id = ?\", product_id)\n        return Product(**row) if row else None\n    \n    def list_by_category(self, category: str) -> List[Product]:\n        rows = self.db.query(f\"SELECT * FROM products WHERE category = ?\", category)\n        return [Product(**row) for row in rows]\n    \n    def create_product(self, product: Product) -> Product:\n        self.db.insert(\"INSERT INTO products (...) VALUES (...)\", product)\n        return product\n    \n    def update_product(self, product: Product) -> Product:\n        self.db.update(\"UPDATE products SET ... WHERE id = ?\", product)\n        return product\n    \n    def delete_product(self, product_id: str) -> None:\n        self.db.delete(\"DELETE FROM products WHERE id = ?\", product_id)\n\n\nclass CachedProductCatalogRepository(ProductCatalogRepository):\n    \"\"\"Wrapper that layers caching + invalidation over the original repo\"\"\"\n    \n    def __init__(self, db, cache: CatalogCache):\n        super().__init__(db)\n        self.cache = cache\n    \n    def get_product(self, product_id: str) -> Optional[Product]:\n        cache_key = f\"product:{product_id}\"\n        \n        # Read-through: check cache first\n        cached = self.cache.get(cache_key)\n        if cached is not None:\n            return cached\n        \n        # Cache miss: fetch from DB\n        product = super().get_product(product_id)\n        if product:\n            self.cache.set(cache_key, product)\n        return product\n    \n    def list_by_category(self, category: str) -> List[Product]:\n        cache_key = f\"category:{category}\"\n        \n        cached = self.cache.get(cache_key)\n        if cached is not None:\n            return cached\n        \n        products = super().list_by_category(category)\n        self.cache.set(cache_key, products)\n        return products\n    \n    def create_product(self, product: Product) -> Product:\n        # Write-through: persist first\n        result = super().create_product(product)\n        \n        # Invalidate affected caches\n        self.cache.invalidate(f\"product:{product.id}\")\n        self.cache.invalidate(f\"category:{product.category}\")\n        \n        return result\n    \n    def update_product(self, product: Product) -> Product:\n        # Need old product to invalidate its category (in case it changed)\n        old_product = super().get_product(product.id)\n        \n        result = super().update_product(",
+          "input_tokens": 824,
+          "output_tokens": 1600,
+          "cost_usd": 0.026472,
+          "score": {
+            "dim1": 3,
+            "dim2": 2,
+            "dim3": 3,
+            "dim4": 2,
+            "reasoning_extraction_refusal": false,
+            "note": "Solid grounding attempt (asks 3 clarifying Qs), avoids premature solution, code in answer not notes. Summary could be tighter."
+          }
+        }
+      },
+      "output_token_overhead_pct": 302,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 2.5
+      },
+      "rater2_delta": -0.5
+    },
+    {
+      "slot": "05",
+      "slug": "ms-upgrade-framework",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Upgrade the app from framework v3 to v5, including the breaking middleware and routing changes.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- Task is to upgrade from v3 → v5 (two major versions).\n- Mentions \"breaking middleware and routing changes\" — these are the load-bearing changes.\n- No codebase shown; I cannot see the actual app code, current v3 code, or the migration guide.\n\n**Information gaps (load-bearing):**\n1. What framework? (Express, Next.js, Django, Rails, etc.?)\n2. Where is the codebase? (You haven't shared it.)\n3. What are the specific breaking changes in v5? (Middleware signature? Router API? Async handling?)\n4. Are there tests I can verify against?\n5. Should I assume a monolithic app or microservices?\n\n**Inferred goal:**\nHelp you systematically upgrade a framework-based app from v3 to v5, fixing middleware and routing to match v5 APIs.\n\n**Recommendation:**\nShare the codebase (or at minimum: framework name, current middleware examples, and the v5 migration guide or changelog). Without that, I cannot write the actual upgrade — I can only give you the methodology.\n\n---\n\n## Answer\n\nI cannot complete this task without the codebase. Please provide:\n\n1. **Framework name** (Express, Next.js, Fastify, Django, etc.)\n2. **Share the app code** (or key files: `app.js` / `server.ts`, middleware setup, route definitions)\n3. **v3 → v5 migration guide** (link or paste the official breaking changes)\n\nOnce you do, I will:\n- [ ] Identify all v3 middleware that needs refactoring\n- [ ] Identify all v3 routes that need refactoring\n- [ ] Apply fixes in dependency order (middleware first if routing depends on it)\n- [ ] Run tests to verify no regressions\n- [ ] Show a minimal diff for each breaking change\n\nPaste the code now and I'll proceed.",
+          "input_tokens": 669,
+          "output_tokens": 454,
+          "cost_usd": 0.008817,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary refusal: enumerated gaps, demanded grounding info, blocked premature work. Answer clean, actionable checklist."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Ground: Constraints and Information Gaps\n\n**What I know:**\n- Target: upgrade from framework v3 → v5\n- Scope includes: breaking middleware + routing changes\n- Current state: unknown\n\n**Critical unknowns (load-bearing):**\n1. **Which framework?** (Django, Express, Rails, FastAPI, etc.) — the breaking changes are framework-specific.\n2. **What codebase state?** (no repo link, file structure, or current version provided)\n3. **Breaking changes specifics** — v3→v5 gap varies wildly by framework. Do you want me to assume generic patterns or a specific framework?\n4. **Migration scope** — is this the entire app or a subset? Are there tests I can validate against?\n\n**I need one clarifying answer before designing:**\n\n**What framework are we upgrading, and can you share a brief file listing (or the entry point + key middleware/route files)?**\n\nIf you can't provide that, I can offer:\n- A **generic checklist** of common v3→v5 breaking changes (applicable to most web frameworks)\n- An **example for a specific framework** (you choose: Django, Express, FastAPI, Rails, etc.)\n\nWhich would be most useful right now?",
+          "input_tokens": 823,
+          "output_tokens": 286,
+          "cost_usd": 0.006759,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first: enumerates gaps, blocks on load-bearing unknowns, offers grounded paths forward. No premature code."
+          }
+        }
+      },
+      "output_token_overhead_pct": -37,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "06",
+      "slug": "ms-add-multitenancy",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Add tenant isolation so each customer's data is scoped to their tenant across the whole app.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & unknowns:**\n1. No codebase provided yet—I cannot inspect current data model, auth flow, or API structure\n2. \"Across the whole app\" suggests multi-layer isolation needed: DB queries, API endpoints, possibly UI\n3. Critical unknowns:\n   - How is tenant identity currently established? (JWT claim? Session? URL param?)\n   - What's the current data model? (Relational? Document? Multi-schema or shared schema?)\n   - Are there existing row-level security (RLS) policies or ORM hooks?\n   - Is this greenfield or retrofit on existing queries?\n   - What's the scale? (100 customers or 100k?)\n\n**Real goal inference:** Prevent data leakage where one customer can read/modify another customer's data, and enforce this at the database and API layers so mistakes in business logic don't become security holes.\n\n**Recommendation before I proceed:** Share the codebase structure (stack, auth mechanism, current data layer). I'll focus on the highest-leverage isolation point first—likely either DB schema/queries or API middleware—depending on what I find.\n\n**Load-bearing sequencing if I proceed blind:**\n1. **Auth context extraction** – how tenant ID flows through the request (hardest, most upstream)\n2. **DB layer enforcement** – query filtering or RLS (irreversible if retrofitted wrong)\n3. **API route guards** – middleware to block cross-tenant access\n4. **Audit** – identify unscoped queries that need fixing\n\n---\n\n## Answer\n\nI need to see your codebase to add tenant isolation correctly. Provide:\n\n1. **Stack** – framework (Next.js, Rails, Node+Express?), DB (PostgreSQL, MongoDB?), ORM (Prisma, Sequelize, etc.)\n2. **Auth mechanism** – how the current request knows which user/tenant (JWT, session cookie, etc.)\n3. **Data model** – sample schema showing how customer/tenant data is currently organized\n4. **Entry points** – 1–2 example API routes or pages\n\nOnce I see these, I'll implement isolation at the narrowest upstream point (likely auth → request context → DB query filter) to minimize diff surface.\n\nWhat's your stack?",
+          "input_tokens": 667,
+          "output_tokens": 514,
+          "cost_usd": 0.009711,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: identifies missing context upfront, refuses premature solution, answer is clean request for grounding info."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Grounding constraints & gaps:**\n\n1. I don't know the current architecture:\n   - Is this a monolith, microservices, or hybrid?\n   - What's the data layer (SQL, NoSQL, other)?\n   - Are there existing auth/user models?\n   - Is there a defined \"tenant\" entity or do I need to create one?\n\n2. Scope ambiguity:\n   - \"Whole app\" — does this include APIs, background jobs, reporting, admin panels?\n   - Do existing tenants already exist, or is this a green-field multi-tenant setup?\n   - Are there shared/global data that should NOT be tenant-scoped?\n\n3. Load-bearing unknowns (in order of impact):\n   - **What is the current data model?** (Can't add isolation without seeing schema/ORM)\n   - **How is the user identified today?** (tenant linkage depends on this)\n   - **Acceptance criteria:** what does \"isolation\" mean to you? (query-level filtering? row-level security? network/API level?)\n\n**Inferred real goal:**  \nEnsure that API calls, queries, and UI views from User A (tenant X) cannot read, write, or infer data belonging to User B (tenant Y), even if they guess IDs or exploit bugs.\n\n**Recommendation:**  \nShow me the codebase structure (schema, auth model, request flow) so I can propose a minimal scoped change. A guess-based implementation will leave gaps.\n\n---\n\n## Answer\n\nI cannot design this without seeing:\n\n1. **Your data schema** — what tables/collections exist and how do they relate to users/accounts?\n2. **Current auth flow** — how do you identify the user making a request?\n3. **Framework & ORM** — (e.g., Rails + ActiveRecord, Django + ORM, Node.js + Sequelize, etc.)\n\n**Ask one of these to unblock:**\n\n- Can you share the main `User` / `Account` / schema files?\n- Or paste a representative API endpoint + its database query?\n- Or describe: \"We have [framework], users belong to [organization/team/workspace], and data is currently [scoped/not scoped]\"?\n\nOnce I see the actual structure, I'll give you a minimal, targeted diff that:\n- Adds tenant context to the request (from user → tenant lookup)\n- Adds `.where(tenant_id: current_tenant_id)` to queries (or equivalent in your ORM)\n- Covers the critical path (which endpoints/models first)",
+          "input_tokens": 821,
+          "output_tokens": 593,
+          "cost_usd": 0.011358,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first. Grounded unknowns before designing. Refused premature solution. Answer clear & outcome-focused."
+          }
+        }
+      },
+      "output_token_overhead_pct": 15.4,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "07",
+      "slug": "ms-build-import-pipeline",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Build an import pipeline that ingests a vendor CSV, validates it, and upserts into our schema with a dry-run mode.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- No spec provided for: vendor CSV schema/columns, target database schema, validation rules, error handling strategy, dry-run semantics (report-only vs rollback-able transaction).\n- \"Upsert\" implies update-or-insert logic; need to know the match key (vendor ID? name?).\n- \"Dry-run mode\" could mean (a) validation only, (b) transaction-scoped rollback, or (c) report without persistence.\n- No mention of: framework/ORM, database type, where the CSV comes from, how errors should be surfaced.\n\n**Information gaps to close:**\n1. What is the vendor schema (CSV columns and DB target table)?\n2. What are the validation rules (required fields, formats, constraints)?\n3. What is the upsert key (how do we identify \"same vendor\")?\n4. What is the dry-run behavior (rollback transaction or just skip writes)?\n\n**Inferred goal:**\nBuild a reusable, testable pipeline that safely ingests vendor data with user control over mutation; validation gates writes; errors are logged, not silent.\n\n**Load-bearing decision:**\nI'll assume PostgreSQL + SQLAlchemy (common in Python codebases) and make the schema explicit so you can adapt it. Dry-run will use transaction-scoped rollback (safest, clearest semantics). I'll ask the one critical question below.\n\n---\n\n## One clarifying question\n\n**What is the unique identifier for a vendor in the target schema?** (e.g., vendor ID, email, company name?)\n\nFor now, I'll assume `vendor_id` as the natural key and show a solution. You can override.\n\n---\n\n## Answer\n\nI'll build a production-ready pipeline with validation, logging, and dry-run semantics:\n\n### 1. Schema & Models\n\n```python\n# models.py\nfrom sqlalchemy import Column, Integer, String, DateTime, Boolean\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom datetime import datetime\n\nBase = declarative_base()\n\nclass Vendor(Base):\n    __tablename__ = 'vendors'\n    \n    vendor_id = Column(String(50), primary_key=True)\n    name = Column(String(255), nullable=False)\n    email = Column(String(255), nullable=False)\n    phone = Column(String(20))\n    country = Column(String(2))\n    active = Column(Boolean, default=True)\n    created_at = Column(DateTime, default=datetime.utcnow)\n    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)\n```\n\n### 2. Validator\n\n```python\n# validators.py\nfrom dataclasses import dataclass\nfrom typing import List, Dict, Any\nimport re\n\n@dataclass\nclass ValidationError:\n    row: int\n    field: str\n    message: str\n\nclass VendorValidator:\n    \"\"\"Validates vendor CSV rows against schema rules.\"\"\"\n    \n    REQUIRED_FIELDS = {'vendor_id', 'name', 'email'}\n    EMAIL_REGEX = r'^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'\n    COUNTRY_CODES = set(['US', 'CA', 'GB', 'DE', 'FR', 'AU'])  # example\n    \n    def __init__(self):\n        self.errors: List[ValidationError] = []\n    \n    def validate(self, rows: List[Dict[str, str]]) -> bool:\n        \"\"\"Returns True if all rows valid; errors stored in self.errors.\"\"\"\n        self.errors.clear()\n        \n        for row_num, row in enumerate(rows, start=2):  # 2 = skip header\n            self._validate_row(row, row_num)\n        \n        return len(self.errors) == 0\n    \n    def _validate_row(self, row: Dict[str, str], row_num: int):\n        # Check required fields\n        for field in self.REQUIRED_FIELDS:\n            if not row.get(field, '').strip():\n                self.errors.append(\n                    ValidationError(row_num, field, f\"Required field missing\")\n                )\n        \n        # Validate email format\n        if row.get('email'):\n            if not re.match(self.EMAIL_REGEX, row['email']):\n                self.errors.append(\n                    ValidationError(row_num, 'email', 'Invalid email format')\n                )\n        \n        # Validate country code (if present)\n        if row.get('country') and row['country'] not in self.COUNTRY_CODES:\n            self.errors.append(\n                ValidationError(row_num, 'country', \n                    f\"Unknown country code. Allowed: {', '.join(sorted(self.COUNTRY_CODES))}\")\n            )\n        \n        # Validate vendor_id is alphanumeric\n        if row.get('vendor_id'):\n            if not re.match(r'^[A-Z0-9_-]{3,50}$', row['vendor_id']):\n                self.errors.append(\n                    ValidationError(row_num, 'vendor_id', \n                        'Must be 3-50 chars, alphanumeric, underscore, or hyphen')\n                )\n```\n\n### 3. Import Pipeline\n\n```python\n# import_pipeline.py\nimport csv\nimport logging\nfrom typing import List, Dict, Any, Tuple\nfrom contextlib import contextmanager\nfrom sqlalchemy.orm import Session\nfrom sqlalchemy import update\nfrom datetime import datetime\n\nfrom models import Vendor\nfrom validators import VendorValidator\n\nlogger = logging.getLogger(__name__)\n\nclass VendorImporter:\n    \"\"\"Ingests CSV and upserts vendors with optional dry-run.\"\"\"\n    \n    def __init__(self, session: Session):\n        self.session = session\n        self.validator = VendorValidator()\n    \n    def import_csv(self, filepath: str, dry_run: bool = False) -> Dict[str, Any]:\n        \"\"\"\n        Imports vendor CSV into database.\n        \n        Args:\n            filepath: Path to CSV file\n            dry_run: If True, validates and reports without persisting\n        \n        Returns:\n            Dict with keys: success (bool), upserted (int), updated (int), \n                           errors (List[ValidationError]), summary (str)\n        \"\"\"\n        result = {\n            'success': False,\n            'upserted': 0,\n            'updated': 0,\n            'errors': [],\n            'summary': ''\n        }\n        \n        # Step 1: Load & parse CSV\n        try:\n            rows = self._load_",
+          "input_tokens": 676,
+          "output_tokens": 1600,
+          "cost_usd": 0.026028,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 0,
+            "reasoning_extraction_refusal": false,
+            "note": "Excellent notes+grounding; solution deferred until key unknown (match key) clarified. Answer cut mid-code = no summary."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- Need to ingest vendor CSV → validate → upsert with optional dry-run\n- No schema, vendor CSV structure, or codebase shown; I must infer or ask\n- Upsert logic requires a key to match on (vendor ID? name?)\n- Dry-run means: read, validate, show what *would* happen, but don't commit\n- Validation scope unclear: schema shape, business rules, data types?\n\n**Load-bearing unknowns to close:**\n1. **Where does the CSV come from / what's the target schema?** (file path, DB table, Pydantic model?)\n2. **What fields must exist in the CSV, and what are the validation rules?** (required, types, ranges, uniqueness?)\n3. **What key identifies an existing vendor record for upsert?**\n4. **Language/framework?** (Python + SQLAlchemy, Django ORM, raw SQL, etc.?)\n\n**Assumption-driven clarification question:**\n\n> Can you provide: (a) the vendor schema/table structure, (b) a sample CSV row, and (c) whether this is Python + a specific ORM/DB? Or shall I build a framework-agnostic example with Pydantic + SQLAlchemy?\n\nFor now, I'll **build a self-contained, reusable pipeline template in Python** (Pydantic + SQLAlchemy) that you can adapt to your schema. This unblocks you while awaiting details.\n\n---\n\n## Answer\n\nHere's a production-ready vendor CSV import pipeline with validation and dry-run mode:\n\n### `models.py` (Schema)\n```python\nfrom sqlalchemy import Column, String, Float, DateTime, Integer\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom datetime import datetime\n\nBase = declarative_base()\n\nclass Vendor(Base):\n    __tablename__ = \"vendors\"\n    \n    vendor_id = Column(String(50), primary_key=True)\n    name = Column(String(255), nullable=False)\n    contact_email = Column(String(255), nullable=False)\n    phone = Column(String(20), nullable=True)\n    country = Column(String(100), nullable=False)\n    rating = Column(Float, nullable=True)\n    created_at = Column(DateTime, default=datetime.utcnow)\n    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)\n```\n\n### `schemas.py` (Validation)\n```python\nfrom pydantic import BaseModel, Field, validator, EmailStr\nfrom typing import Optional\n\nclass VendorRow(BaseModel):\n    \"\"\"Validate a single CSV row.\"\"\"\n    vendor_id: str = Field(..., min_length=1, max_length=50)\n    name: str = Field(..., min_length=1, max_length=255)\n    contact_email: EmailStr\n    phone: Optional[str] = Field(None, max_length=20)\n    country: str = Field(..., min_length=1, max_length=100)\n    rating: Optional[float] = None\n    \n    @validator(\"rating\")\n    def rating_in_range(cls, v):\n        if v is not None and not (0 <= v <= 5):\n            raise ValueError(\"rating must be between 0 and 5\")\n        return v\n    \n    @validator(\"vendor_id\")\n    def vendor_id_alphanumeric(cls, v):\n        if not v.replace(\"_\", \"\").replace(\"-\", \"\").isalnum():\n            raise ValueError(\"vendor_id must be alphanumeric (hyphens/underscores allowed)\")\n        return v\n    \n    class Config:\n        extra = \"forbid\"  # Reject unknown fields\n```\n\n### `pipeline.py` (Import Logic)\n```python\nimport csv\nfrom pathlib import Path\nfrom typing import List, Dict, Tuple\nfrom dataclasses import dataclass\nfrom datetime import datetime\nfrom sqlalchemy.orm import Session\nfrom sqlalchemy.dialects.postgresql import insert\n\nfrom models import Vendor, Base\nfrom schemas import VendorRow\n\n@dataclass\nclass ImportResult:\n    total_rows: int\n    valid_rows: int\n    invalid_rows: int\n    errors: List[Dict]  # [{\"row\": 5, \"vendor_id\": \"V123\", \"error\": \"...\"}]\n    upserted: int\n    skipped: int  # dry-run\n\nclass VendorImportPipeline:\n    def __init__(self, db_session: Session):\n        self.session = db_session\n        self.errors = []\n    \n    def validate_csv(self, csv_path: str) -> Tuple[List[VendorRow], List[Dict]]:\n        \"\"\"\n        Read and validate CSV rows.\n        Returns (valid_rows, error_dicts).\n        \"\"\"\n        valid_rows = []\n        errors = []\n        \n        try:\n            with open(csv_path, \"r\", encoding=\"utf-8\") as f:\n                reader = csv.DictReader(f)\n                if not reader.fieldnames:\n                    raise ValueError(\"CSV is empty or malformed\")\n                \n                for row_num, row in enumerate(reader, start=2):  # start=2 to skip header\n                    try:\n                        # Strip whitespace from all fields\n                        row = {k: v.strip() if isinstance(v, str) else v for k, v in row.items()}\n                        validated = VendorRow(**row)\n                        valid_rows.append(validated)\n                    except Exception as e:\n                        errors.append({\n                            \"row_number\": row_num,\n                            \"vendor_id\": row.get(\"vendor_id\", \"UNKNOWN\"),\n                            \"error\": str(e)\n                        })\n        \n        except FileNotFoundError:\n            raise FileNotFoundError(f\"CSV file not found: {csv_path}\")\n        except Exception as e:\n            raise ValueError(f\"CSV read failed: {e}\")\n        \n        return valid_rows, errors\n    \n    def upsert_vendors(self, vendors: List[VendorRow], dry_run: bool = False) -> ImportResult:\n        \"\"\"\n        Upsert vendors into DB. If dry_run=True, validate but don't commit.\n        \"\"\"\n        upserted = 0\n        result = ImportResult(\n            total_rows=len(vendors),\n            valid_rows=len(vendors),\n            invalid_rows=0,\n            errors=[],\n            upserted=0,\n            skipped=0\n        )\n        \n        try:\n            for vendor_row in vendors:\n                # Build vendor record",
+          "input_tokens": 830,
+          "output_tokens": 1600,
+          "cost_usd": 0.02649,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: closes unknowns explicitly, assumes then builds, notes→code separation clear, coherent standalone answer"
+          }
+        }
+      },
+      "output_token_overhead_pct": 0,
+      "rater2_mean": {
+        "distributed": 2.25,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0.75
+    },
+    {
+      "slot": "08",
+      "slug": "ms-rework-auth-flow",
+      "band": "standard",
+      "mechanism": "multi-stage",
+      "discipline": null,
+      "prompt": "Rework the login flow to add email verification, then password reset, then optional 2FA.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Ground constraints & gaps:**\n- No codebase context given. I cannot see the current login flow, auth stack (Django, Express, custom?), email infrastructure, or where 2FA tokens are stored.\n- \"Rework\" implies modifying existing code, but I don't know the existing architecture.\n- \"Optional 2FA\" is ambiguous: does it mean user-configurable (admin toggle per account) or conditionally triggered (e.g., on suspicious login)?\n- Password reset scope: self-service only, or admin-initiated too?\n- Email verification: one-time on signup, or re-triggerable?\n\n**Load-bearing unknowns (must close):**\n1. What framework/auth library?\n2. Current user/session model shape?\n3. Email sending mechanism available?\n4. Where is 2FA state stored (DB field, separate table)?\n\n**Real goal inference:**\nExtend the login flow from `[username/password] → session` to:\n- `[email verification] → [login] → [optional 2FA check] → session`\n- Add a separate password-reset endpoint/flow\n\n**Decision without full codebase:**\nI will assume a **Django + Django-REST-Framework** stack (common for this request pattern) with a User model and email capability. I'll provide:\n1. Minimal model changes (flag fields for email_verified, 2fa_enabled).\n2. Serializers for each step.\n3. Views for login, email verification, password reset, 2FA setup & verify.\n4. Flow logic that enforces the sequence.\n\nIf your stack differs, the pattern will translate; you'll map serializer/view logic to your framework.\n\n---\n\n## Answer\n\n### Assumption\nDjango + DRF stack; User model has `email`, `password`, `is_active`. You have email sending (e.g., Django's `send_mail`).\n\n### 1. Extend User Model\n\n```python\n# models.py\nfrom django.contrib.auth.models import AbstractUser\nfrom django.db import models\n\nclass CustomUser(AbstractUser):\n    email = models.EmailField(unique=True)\n    email_verified = models.BooleanField(default=False)\n    email_verification_token = models.CharField(max_length=255, blank=True, null=True)\n    \n    # 2FA fields\n    two_fa_enabled = models.BooleanField(default=False)\n    two_fa_secret = models.CharField(max_length=32, blank=True, null=True)  # TOTP secret\n    two_fa_backup_codes = models.JSONField(default=list, blank=True)\n    \n    # Password reset\n    password_reset_token = models.CharField(max_length=255, blank=True, null=True)\n    password_reset_expires = models.DateTimeField(null=True, blank=True)\n```\n\n### 2. Login Flow (Step-by-Step)\n\n```python\n# serializers.py\nfrom rest_framework import serializers\nfrom django.contrib.auth import get_user_model\nfrom django.utils.timezone import now\nfrom datetime import timedelta\nimport secrets\n\nUser = get_user_model()\n\nclass EmailVerificationSerializer(serializers.Serializer):\n    email = serializers.EmailField()\n    token = serializers.CharField()\n\n    def validate(self, data):\n        try:\n            user = User.objects.get(email=data['email'])\n        except User.DoesNotExist:\n            raise serializers.ValidationError(\"User not found.\")\n        \n        if user.email_verification_token != data['token']:\n            raise serializers.ValidationError(\"Invalid verification token.\")\n        \n        return data\n\nclass LoginSerializer(serializers.Serializer):\n    email = serializers.EmailField()\n    password = serializers.CharField(write_only=True)\n\n    def validate(self, data):\n        user = User.objects.filter(email=data['email']).first()\n        if not user or not user.check_password(data['password']):\n            raise serializers.ValidationError(\"Invalid email or password.\")\n        if not user.email_verified:\n            raise serializers.ValidationError(\n                \"Email not verified. Check your inbox for verification link.\"\n            )\n        if not user.is_active:\n            raise serializers.ValidationError(\"Account is inactive.\")\n        \n        data['user'] = user\n        return data\n\nclass TwoFAVerifySerializer(serializers.Serializer):\n    token = serializers.CharField()  # 6-digit TOTP or backup code\n    \n    def validate_token(self, value):\n        if len(value) != 6 and value not in self.context.get('backup_codes', []):\n            raise serializers.ValidationError(\"Invalid 2FA token.\")\n        return value\n\nclass PasswordResetRequestSerializer(serializers.Serializer):\n    email = serializers.EmailField()\n\n    def validate_email(self, value):\n        if not User.objects.filter(email=value).exists():\n            raise serializers.ValidationError(\"Email not found.\")\n        return value\n\nclass PasswordResetConfirmSerializer(serializers.Serializer):\n    email = serializers.EmailField()\n    token = serializers.CharField()\n    new_password = serializers.CharField(write_only=True, min_length=8)\n\n    def validate(self, data):\n        user = User.objects.filter(email=data['email']).first()\n        if not user or user.password_reset_token != data['token']:\n            raise serializers.ValidationError(\"Invalid or expired reset token.\")\n        if user.password_reset_expires and user.password_reset_expires < now():\n            raise serializers.ValidationError(\"Reset token has expired.\")\n        return data\n```\n\n### 3. Views (Login Flow)\n\n```python\n# views.py\nfrom rest_framework.views import APIView\nfrom rest_framework.response import Response\nfrom rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST\nfrom rest_framework.authtoken.models import Token\nfrom django.core.mail import send_mail\nfrom django.utils.timezone import now\nfrom datetime import timedelta\nimport secrets\nimport pyotp\n\nUser = get_user_model()\n\nclass SignupView(APIView):\n    \"\"\"POST: email, password. Send verification email.\"\"\"\n    permission_classes = []\n    \n    def post(self, request):\n        email = request.data.get('email')\n        password = request.data.get('password')\n        \n        if User.objects.filter(email=email).exists():\n            return Response({\"error\": \"Email already registered.\"}, status=HTTP_400_BAD_REQUEST)\n        \n        user = User.objects.create_user(email=",
+          "input_tokens": 669,
+          "output_tokens": 1600,
+          "cost_usd": 0.026007,
+          "score": {
+            "dim1": 2,
+            "dim2": 1,
+            "dim3": 0,
+            "dim4": 1,
+            "reasoning_extraction_refusal": false,
+            "note": "Notes present but code dumped before closing gaps; guesses Django without confirmation; premature 400-line solution."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- Task asks for three sequential additions (email verification → password reset → 2FA).\n- No codebase context provided; I'm working blind on architecture, tech stack, current login implementation, database schema, existing auth patterns, or whether these features partially exist.\n- \"Rework\" suggests modifying existing code, not greenfield build.\n- Order matters: email verification should happen early; password reset typically comes after forgot-password flow; 2FA is optional (gating).\n\n**Information gaps (load-bearing):**\n1. What is the current login flow? (Is there one I should extend, or start from scratch?)\n2. What tech stack? (Node/Express, Django, Spring, etc. — patterns differ sharply.)\n3. Is there existing auth middleware or a user model I'm extending?\n4. Should email verification block login, or just enable password reset + 2FA features?\n5. Is 2FA optional per-user (user can toggle it) or optional per-request (user can skip on login)?\n\n**Inferred real goal:**\nStrengthen the authentication pipeline by layering verification and recovery mechanisms, with 2FA as an opt-in extra. This likely supports a real product needing to pass security/compliance gates.\n\n**Recommendation before proceeding:**\nI need to see:\n- A code sample of your current login endpoint (handler, middleware, or auth service).\n- What framework/language you're using.\n- Whether a user schema or database exists.\n\n**Alternatively**, I can provide a reference architecture (generic pseudocode/pattern) that you adapt to your stack.\n\n---\n\n**What would I tackle first?**\nThe current login flow structure — if it doesn't exist or is unclear, the rest is guesswork. Everything else chains off that.\n\n---\n\n## What I need to proceed\n\nPlease provide **one of:**\n\nA. **The current login code** (endpoint, user model, any existing auth middleware) + stack name.\n\nB. **A minimal stack choice** (e.g., \"Node.js/Express + MongoDB\" or \"Django + PostgreSQL\") + confirmation that I should build a reference implementation from scratch.\n\nC. **Confirmation** that email verification gates login (blocks entry until verified) vs. gates features (allows login, blocks password reset/2FA until verified).\n\nWhich is most useful?",
+          "input_tokens": 823,
+          "output_tokens": 529,
+          "cost_usd": 0.010404,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect notes-first execution: all reasoning isolated, answer grounded work impossibility, refused premature solution elegantly"
+          }
+        }
+      },
+      "output_token_overhead_pct": -66.9,
+      "rater2_mean": {
+        "distributed": 1,
+        "orchestrated": 3
+      },
+      "rater2_delta": 2
+    },
+    {
+      "slot": "09",
+      "slug": "ss-explain-deadlock",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "Why might a query be deadlocking under load? Give the common causes.",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a straightforward technical question asking for enumeration of common deadlock causes. No ambiguity, no design work needed. A reasoning protocol would be overkill. Answering directly with well-organized categories and specifics.\n\n## Answer\n\n**Common causes of query deadlocking under load:**\n\n### 1. **Lock ordering mismatch**\n- Two or more transactions acquire locks on the same tables/rows in different orders.\n- TX1: locks TableA → waits for TableB. TX2: locks TableB → waits for TableA.\n- Most common cause. Load amplifies by increasing transaction concurrency.\n\n### 2. **Row-level lock conflicts**\n- Transactions lock rows in unpredictable order (e.g., scanning with WHERE conditions that match different rows per execution).\n- Under load, overlapping scans collide more frequently.\n- Example: UPDATE on non-unique column or range queries without explicit ordering.\n\n### 3. **Gap locks and phantom reads (InnoDB)**\n- Next-key locking on range predicates can cause deadlocks between INSERT/UPDATE/SELECT operations.\n- Gap locks on the same range held by different transactions block each other circularly.\n\n### 4. **Implicit locks from foreign keys**\n- FK constraint checks acquire locks on parent/child tables without explicit ORDER BY.\n- Bulk inserts or updates can trigger them in conflicting order.\n\n### 5. **Lock escalation or conversion**\n- Shared locks (S) held by one TX trying to upgrade to exclusive (X) while another TX holds X waiting for S on the same resource.\n\n### 6. **Cursor-level deadlocks**\n- Long-running transactions hold locks while executing multiple statements.\n- Load increases likelihood that a later statement in TX1 conflicts with an earlier statement in TX2.\n\n### 7. **Hot rows under contention**\n- Many transactions competing for the same small set of rows (inventory counts, account balances).\n- Lock wait queues grow; eventual timeout triggers rollback, which cascades.\n\n### 8. **Locking in application logic after DB query**\n- Application acquires a lock (mutex, semaphore) after a DB read, then issues a DB write.\n- Two threads doing this in opposite order = deadlock.\n\n### 9. **Insufficient transaction isolation level**\n- Running at READ_COMMITTED instead of SERIALIZABLE can mask lock conflicts until they manifest as anomalies under load.\n\n### 10. **Inadequate indexes**\n- Missing index forces full table scan, locking more rows than necessary.\n- Load makes contention on locked rows more likely.\n\n---\n\n**Quick diagnostic approach:**\n- Check database lock wait graph (`SHOW ENGINE INNODB STATUS`, `sp_who2`, equivalent for your DB).\n- Inspect transaction log for lock order in deadlock report.\n- Measure transaction duration and scope (rows locked).\n- Verify PRIMARY KEY / UNIQUE INDEX coverage for WHERE clauses.",
+          "input_tokens": 664,
+          "output_tokens": 672,
+          "cost_usd": 0.012072,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Perfect direct-answer format. Notes correctly dismiss reasoning protocol as overkill. Comprehensive, grounded, no premature work."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a knowledge question, not a code-change task. No reasoning protocol needed—direct answer is appropriate.\n\nThe questioner is asking for common causes of query deadlocks under load. This is a diagnostic reference, not a design challenge. I'll enumerate the actual patterns that appear in production systems.\n\n## Answer\n\nQuery deadlocks under load occur when two or more transactions hold locks that each other needs, creating a cycle. Here are the common causes:\n\n### 1. **Lock ordering inconsistency**\nTransactions acquire locks on tables/rows in different orders.\n- Transaction A: locks Table1, then Table2\n- Transaction B: locks Table2, then Table1\n- **Under load:** Both transactions start simultaneously, each holding their first lock, waiting for the second.\n\n### 2. **Row-level lock conflicts with overlapping row sets**\nMultiple transactions modify overlapping rows in different orders.\n- Transaction A: updates rows {1, 2}\n- Transaction B: updates rows {2, 1}\n- **Under load:** High concurrency makes collision timing probable.\n\n### 3. **Gap locks or range locks (e.g., PostgreSQL, MySQL InnoDB)**\nTransactions use `WHERE` predicates that lock ranges, not just individual rows.\n- Transaction A: `WHERE id > 10` (gap locks everything > 10)\n- Transaction B: `WHERE id < 50` (gap locks everything < 50)\n- Under high concurrency, they block each other's subsequent inserts or range scans.\n\n### 4. **Foreign key constraints**\nOperations on parent and child tables in reverse order.\n- Transaction A: inserts child row, waits for parent check\n- Transaction B: deletes parent row, waits for child check\n- Deadlock if timing aligns.\n\n### 5. **Implicit locks from secondary effects**\n- Index updates during inserts/deletes\n- Cascade triggers or application-level locking\n- Lock escalation (row → page → table)\n\n### 6. **Load itself (not a root cause, a multiplier)**\nLow concurrency hides deadlock-prone patterns. High concurrency makes rare timing windows frequent. If deadlocks are *only* under load, the query pattern itself is the issue.\n\n---\n\n### Diagnostic approach:\n1. **Enable deadlock logging** (MySQL: `innodb_print_all_deadlocks`; PostgreSQL: `log_lock_waits`).\n2. **Check lock wait graph** from the log—identify which queries hold vs. wait.\n3. **Examine transaction isolation level** (SERIALIZABLE vs. READ COMMITTED changes lock behavior).\n4. **Review transaction scope**—long transactions hold locks longer, increasing collision windows.\n\n**Most common fix:** Ensure all transactions access tables/rows in the same order.",
+          "input_tokens": 818,
+          "output_tokens": 636,
+          "cost_usd": 0.011994,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Correctly identified knowledge Q not needing protocol. Clean answer, grounded in constraints, enumerated causes, diagnostic path."
+          }
+        }
+      },
+      "output_token_overhead_pct": -5.4,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "10",
+      "slug": "ss-name-retry-fn",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "What's a good name for a function that retries a job with exponential backoff and a max-attempts cap?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a naming task with no ambiguity about requirements—exponential backoff + max attempts is fully specified. The reasoning protocol would be overkill here; I'll just apply judgment.\n\nKey constraints:\n- Must signal **retry** (the core action)\n- Must signal **exponential backoff** (the strategy)\n- Must signal **max-attempts** (the boundary condition)\n- Should be readable in a call site and a job queue context\n\nCommon patterns in the wild:\n- `retry_with_exponential_backoff()` — explicit but verbose\n- `retry_exponential()` — concise, assumes \"with max attempts\"\n- `retry()` with a strategy enum/class — clean if you have multiple strategies\n- `execute_with_retries()` — job-agnostic, hides the backoff detail\n\n## Answer\n\n**Recommendation: `retry_with_exponential_backoff()`**\n\nIt's explicit, immediately readable, and the max-attempts cap is a natural parameter (not part of the name—that goes in the signature). This avoids ambiguity when someone reads the call six months later.\n\nIf you're in a context where you already have a retry abstraction and need to pick between strategies, a shorter name like `retry_exponential()` works if it's paired with clear documentation or type hints showing the max-attempts parameter.\n\nAvoid burying the backoff strategy under a generic `retry()` unless you have a strategy object or enum doing the real work—that defers understanding to the parameter inspection.",
+          "input_tokens": 673,
+          "output_tokens": 348,
+          "cost_usd": 0.007239,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean notes→answer separation; grounded constraints; no premature code; coherent standalone recommendation."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a naming task, not a design task. The function's contract is clear: retry logic with exponential backoff and a max-attempts limit. No ambiguity about what it does. No need for the full reasoning protocol—this is a \"list files\" tier question.\n\nWhat matters: clarity, convention, and domain fit.\n\n**Candidate patterns:**\n- `retryWithExponentialBackoff` — explicit, clear, common Java/TypeScript style\n- `retryExponential` — shorter, assumes \"backoff\" is understood in retry context\n- `executeWithRetry` — verb-first, clear intent, generic enough to compose\n- `retryWithBackoff` — assumes exponential is the default strategy\n\n**Convention check:** Most libraries (bulleted retry, axios, etc.) use verb-first patterns. Exponential backoff is the standard, so naming it explicitly is good when there are alternatives (linear, fibonacci, etc.).\n\n## Answer\n\n**`retryWithExponentialBackoff`**\n\nReasons:\n- **Clarity:** The name fully specifies the strategy (exponential, not linear or fixed), making callsites self-documenting.\n- **Convention:** Matches patterns in established libraries (retry, axios, node-retry).\n- **Reduces surprise:** Callers see \"exponential\" and know to expect delay multipliers, not guessing at behavior.\n\nIf you need shorter and exponential backoff is your only retry strategy, **`retryWithBackoff`** is fine. If you're wrapping the function and need verb-first (e.g., in an executor pattern), **`executeWithRetry`** works.",
+          "input_tokens": 827,
+          "output_tokens": 374,
+          "cost_usd": 0.008091,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean notes-first. Naming task grounded correctly (no phantom constraints). No premature code. Answer clear+complete."
+          }
+        }
+      },
+      "output_token_overhead_pct": 7.5,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "11",
+      "slug": "ss-hashmap-vs-array",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "Should I use a hash map or a sorted array for a read-heavy lookup of about 500 stable keys?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- 500 keys (small, fits in L3 cache)\n- Read-heavy (writes are rare/absent)\n- Keys are stable (no churn)\n- Lookup is the bottleneck, not insertion/deletion\n\n**What matters here:**\n1. Cache locality (sorted array wins; hash map has pointer chasing)\n2. Constant-factor overhead (hash map: hashing + probing; array: binary search or linear scan)\n3. Memory footprint (sorted array is denser)\n4. Implementation friction (language, stdlib, existing code pattern)\n\n**The deciding factor:**\nAt 500 items in a read-heavy path, **cache misses dominate CPU time**, not algorithmic complexity. A sorted array with binary search will outperform a hash map on modern hardware because:\n- Array access is sequential/predictable → CPU prefetch works\n- Hash map requires indirection (hash → bucket → collision chain) → cache miss per lookup\n- 500 items fit in L3; you're not doing \"large hash map\" tricks\n\n**Edge case that flips the answer:**\nIf keys are non-integer and hashing is cheap (e.g., string interning with identity hash), hash map can be competitive. If you need sub-microsecond latency on every lookup, array + binary search is safer.\n\n---\n\n## Answer\n\n**Use a sorted array.**\n\nFor 500 stable keys in a read-heavy workload, a sorted array with binary search (or linear scan if keys are accessed sequentially) will beat a hash map on latency and cache behavior. The 500-item size means you stay cache-resident, and the CPU can prefetch sequential memory. Hash map lookups require indirection that causes cache misses.\n\n**Hash map wins only if:**\n- You need O(1) worst-case latency guarantees (binary search is O(log n), but with better constants on real hardware)\n- You insert/delete frequently enough to amortize the cost of maintaining sorted order\n- Profiling shows hash lookups are not your bottleneck (measure first)\n\n**Recommendation:** Benchmark both on your actual key distribution and access pattern. Start with a sorted array; it's simpler, and you'll likely see better numbers.",
+          "input_tokens": 672,
+          "output_tokens": 512,
+          "cost_usd": 0.009696,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Excellent: grounded constraints, resolved cache-locality as load-bearing factor, clean answer with evidence-based conclusion."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- 500 stable keys (no churn, insertions/deletions are rare or absent)\n- Read-heavy workload (lookup dominates)\n- Trade-off space: hash map vs. sorted array\n- Unknown: access patterns (uniform? hot-spot?), latency sensitivity, memory constraints, language/platform context\n\n**Load-bearing unknowns:**\n1. Do you need range queries or prefix matching? (sorted array only)\n2. Is cache locality / memory footprint a concern? (sorted array wins)\n3. Are you in a latency-sensitive context (e.g., microsecond-scale)? (hash map typically better)\n4. Language/runtime? (GC pressure, hash quality, branch prediction matter)\n\n**Real goal inference:** Maximize read throughput and minimize latency for ~500 stable lookups, with minimal implementation complexity.\n\n---\n\n## Answer\n\n**Use a hash map** unless you have a specific reason not to.\n\n**Why:**\n- For simple key-value lookups on 500 stable keys, a hash map gives **O(1) amortized lookup** vs. O(log 500) ≈ O(9) for sorted array. The constant factors are low.\n- Hash map insertion/rehash is not a concern (keys are stable).\n- You avoid branch misprediction cost from binary search.\n\n**Switch to sorted array only if:**\n- You need **range queries, prefix matching, or iteration in sorted order** (hash map can't do this efficiently).\n- You're in an **embedded or memory-constrained environment** (sorted array is denser).\n- Profiling shows cache misses dominate, and the workload is **extremely latency-sensitive** (sorted array can fit in cache and has sequential access patterns). This is rare at 500 keys.\n\n**Quick sanity check:** 500 keys in a hash map is trivial. Collision likelihood is negligible with a decent hash function. No special tuning needed.\n\nIf you haven't profiled yet and latency/throughput isn't a known bottleneck, go with hash map—it's the safer default and simpler to reason about.",
+          "input_tokens": 826,
+          "output_tokens": 497,
+          "cost_usd": 0.009933,
+          "score": {
+            "dim1": 3,
+            "dim2": 2,
+            "dim3": 2,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Strong notes-first; answer clean. Grounding partial (assumes simple lookup). Some premature hash-map lean before all gaps closed."
+          }
+        }
+      },
+      "output_token_overhead_pct": -2.9,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 2.5
+      },
+      "rater2_delta": -0.5
+    },
+    {
+      "slot": "12",
+      "slug": "ss-review-email-regex",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "Is this email regex safe to use for validation: ^[^@]+@[^@]+\\.[^@]+$ ?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**What \"safe\" means here** — The task likely asks whether this regex is safe for *production email validation* (won't crash, won't expose the system to ReDoS, won't silently reject valid emails). It could also mean \"safe from security injection,\" but regex itself isn't a vector; misuse of the result is.\n\n**Constraints & facts:**\n- The regex: `^[^@]+@[^@]+\\.[^@]+$`\n- Must handle: common valid emails, edge cases per RFC 5321/5322\n- Must avoid: ReDoS (catastrophic backtracking), false negatives on real addresses\n\n**Analysis:**\n\n1. **ReDoS risk:** LOW. The regex uses only `[^@]+` (negated char class) and literal chars. Negated classes don't backtrack catastrophically; they consume greedily until a match boundary. No nested quantifiers or alternations that create exponential paths. Safe from ReDoS.\n\n2. **Correctness (false negatives/positives):**\n   - ✓ Enforces `user@domain.tld` shape\n   - ✗ **Rejects valid addresses:** `user+tag@domain.co.uk` (works—`+` is in `[^@]`), `user.name@domain` (works—`[^@]+` after second `@`), but `user@localhost` (fails—no dot required after domain). This breaks intranet emails and misses RFC allowances.\n   - ✗ **Accepts invalid addresses:** `a@b.c` passes; `a@@b.c` fails ✓; but `user@domain.` passes (trailing dot is invalid per RFC).\n   - ✗ **No escape handling:** `user\\\"@domain.com` is technically valid in quoted strings per RFC 5321; regex will reject it.\n\n**Real-world verdict:** This regex is **not safe for production**—it's a *shape check*, not validation. It will reject real emails and accept some invalid ones.\n\n---\n\n## Answer\n\n**No, this regex is not safe for production email validation.**\n\n**Why:**\n\n1. **It rejects valid emails.** Examples:\n   - `user@localhost` (intranet)\n   - `user+tag@example.com` (subaddressing; the `+` is allowed)\n   - `user@example.co.uk` actually works, but...\n\n2. **It accepts invalid emails.** Examples:\n   - `user@domain.` (trailing dot violates RFC 5321)\n   - `a@b.c` (too permissive on label length and structure)\n\n3. **It's incomplete.** Doesn't handle:\n   - Quoted strings or escapes (RFC 5321 allows `\"user name\"@domain.com`)\n   - IP literals (`user@[192.0.2.1]`)\n\n**What to do instead:**\n\n- **For most applications:** Use a battle-tested library (e.g., `email-validator` npm, Python `email-validator`, or language stdlib). They handle RFCs and real-world quirks.\n- **If you must regex:** Use a more permissive check like `^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$` (allows more valid cases) *and follow it with a confirmation email step*—that's the only true validation.\n- **Best practice:** Accept any plausible-looking address and validate by sending a confirmation link. Regex alone cannot validate email correctness.\n\nThe regex is **safe from ReDoS** (no backtracking risk) but **unsafe from a correctness standpoint**.",
+          "input_tokens": 675,
+          "output_tokens": 848,
+          "cost_usd": 0.014745,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: grounded safety in context, tested edge cases, avoided premature solution, delivered actionable verdict first."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Ground the constraints:**\n- Task is to assess a specific regex for email validation\n- \"Safe\" is ambiguous: safe from what? (ReDoS, false negatives, false positives, security)\n- Email validation is notoriously complex; RFC 5321/5322 specs are permissive but real-world use rarely needs full compliance\n\n**Infer the real goal:**\nThe question is likely \"Is this regex sufficient for my validation use case?\" The answer depends on context, but I should flag the actual risks and tradeoffs.\n\n**Load-bearing unknowns:**\n1. What is the regex *used for*? (signup form, internal tool, message filtering?)\n2. What is the cost of false positives vs. false negatives in the context?\n3. Do you need RFC compliance or just \"probably a real email\"?\n\n**Assess the regex itself:**\n- Pattern: `^[^@]+@[^@]+\\.[^@]+$`\n- What it does: matches one or more non-@ chars, @, one or more non-@ chars, a dot, one or more non-@ chars\n- ReDoS risk: **None.** No backtracking, no nested quantifiers, no alternation. Linear time.\n- False negatives (rejects valid): **Many.** (1) No support for + in local part. (2) Subdomains like `user@co.uk` fail (only matches 1 dot). (3) International domains fail. (4) Quoted strings fail. (5) IP addresses in brackets fail.\n- False positives (accepts invalid): **Several.** (1) `a@b.c` passes but `.` at start/end of labels is invalid. (2) `@@@` passes the regex as written—wait, no: needs at least one char before first @. Actually `a@b.c` is the minimal valid match here. But `a@b..c` passes (double dot). (3) Labels can't be 64+ chars in spec, but this allows it.\n\n</answer>\n\n## Answer\n\n**Safe from ReDoS?** Yes—no pathological backtracking.\n\n**Safe for actual email validation?** No—too permissive and too restrictive simultaneously:\n\n| Issue | Impact |\n|-------|--------|\n| Rejects `user+tag@example.com` | False negative (common in real inboxes) |\n| Rejects `user@example.co.uk` | False negative (only matches one dot) |\n| Accepts `user@example..com` | False positive (invalid double dot) |\n| No length limits on labels | False positive (violates RFC 1035) |\n\n**Recommendation:**\n\n- **For a quick, low-stakes signup form:** use this regex *and* send a confirmation email. The confirmation is your real validator; the regex just prevents obvious typos.\n- **For anything more rigorous:** use a dedicated email validation library (e.g., `email-validator` in Python, `Apache Commons Validator` in Java) or at minimum adopt `^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$` and document that it's a heuristic, not a spec check.\n- **Never** rely on regex alone for email validation. The only true test is whether the recipient can receive mail at that address.",
+          "input_tokens": 829,
+          "output_tokens": 766,
+          "cost_usd": 0.013977,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: grounded ambiguity, resolved unknowns, concrete risks tabulated, actionable recs; answer clean & standalone."
+          }
+        }
+      },
+      "output_token_overhead_pct": -9.7,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "13",
+      "slug": "ss-explain-undefined-error",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "What does 'cannot read property of undefined' usually mean, and how do I find the cause?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a straightforward conceptual question about a common JavaScript error. No ambiguity, no multi-step task. I'll skip the full reasoning protocol and give direct, actionable guidance.\n\n## Answer\n\n**What it means:**  \nYou're trying to access a property (or call a method) on something that doesn't exist — a variable, object field, or function return value is `undefined`. The error stops your code there.\n\n```javascript\n// Common cases:\nlet obj;\nobj.name  // ❌ Cannot read property 'name' of undefined\n\nlet arr = [];\narr[0].id  // ❌ Cannot read property 'id' of undefined (arr[0] is undefined)\n\nfunction getData() { }\ngetData().value  // ❌ Cannot read property 'value' of undefined (no return)\n```\n\n---\n\n**How to find the cause:**\n\n1. **Read the stack trace** (the most direct path).  \n   Look at the line number and filename in the error message — that tells you *where* the crash happened. Modern browsers and Node show this clearly.\n\n2. **Work backward from the crash site.**  \n   At that line, identify which object/variable is undefined:\n   ```javascript\n   user.profile.email  // Which one is undefined?\n   ```\n   Add a console check just before:\n   ```javascript\n   console.log('user:', user);\n   console.log('user.profile:', user?.profile);  // Use optional chaining to stay safe\n   ```\n\n3. **Trace why it's undefined.**  \n   - Was it never assigned? (`let x;` without `= ...`)  \n   - Does the source function/API not return what you expect?  \n   - Did you misspell a property name?  \n   - Is the data structure different than your code assumes?\n\n4. **Use optional chaining and nullish coalescing** as a safety net during debugging:\n   ```javascript\n   user?.profile?.email ?? 'no email'  // Won't crash if any step is undefined\n   ```\n\n5. **Reproduce with minimal input** — if it's async or data-dependent, log the actual values at each step rather than assuming the shape.\n\n**Quick checklist:**\n- Stack trace → line number  \n- Log the variable at that line  \n- Check: assignment, API response, spelling, data structure  \n- Verify assumption with actual data, not expected shape",
+          "input_tokens": 669,
+          "output_tokens": 556,
+          "cost_usd": 0.010347,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean notes/answer split; grounded in JS behavior; direct diagnostic steps; coherent standalone summary. Exemplary."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a conceptual/diagnostic question, not a code change. High value to answer directly and practically. The user is asking for both the meaning AND the debugging method. No reasoning protocol needed—answer outcome-first with concrete steps.\n\n---\n\n## Answer\n\n### What it means\n\n**\"Cannot read property of undefined\"** (or \"Cannot read property 'X' of undefined\") means your code tried to access a property or method on a value that is `undefined`, not an object.\n\nExamples:\n```javascript\nlet user;\nuser.name  // ❌ \"Cannot read property 'name' of undefined\"\n\nlet data = { };\ndata.nested.value  // ❌ if nested is undefined\n```\n\n### How to find the cause\n\n1. **Read the stack trace** (most direct)\n   - The error message points to a file and line number.\n   - Go there first. Find the exact property access that failed.\n\n2. **Work backward from the property access**\n   - At that line, identify which variable is `undefined`.\n   - Example: if the error is on line 15 in `user.name`, the variable `user` is undefined.\n   - Ask: *Why wasn't this variable initialized?*\n\n3. **Check the source of that variable**\n   - Was it assigned? Fetch a value from an API, database, or parent prop?\n   - Does the assignment have a guard? (e.g., `if (response.data)` before using it)\n   - Did it come from a function return that might return nothing?\n\n4. **Common culprits**\n   - API call hasn't finished yet (async timing issue)\n   - Conditional logic failed silently (e.g., `if` didn't match, so variable never set)\n   - Object destructuring or prop drilling broke partway down the chain\n   - Function returned `undefined` instead of the expected object\n   - Typo in property name (accessed wrong key)\n\n5. **Quick fixes to try**\n   - Add optional chaining: `user?.name` (returns `undefined` gracefully instead of crashing)\n   - Add a null check: `if (user) { ... }`\n   - Log before the crash: `console.log(user)` on the line before to see what it actually is\n   - Check your initial state (especially in React: did you initialize it to `null` or an object?)\n\n**Pro tip:** Use browser DevTools → pause on exceptions, or add a breakpoint right before the failing line. Inspect the variable's actual value at that moment—often your assumption about what it contains is wrong.",
+          "input_tokens": 823,
+          "output_tokens": 593,
+          "cost_usd": 0.011364,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean separation: notes confirm no protocol needed. Answer is grounded, outcome-first, practical, avoids premature fixes."
+          }
+        }
+      },
+      "output_token_overhead_pct": 6.7,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "14",
+      "slug": "ss-memory-estimate",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "Roughly how much memory does caching 10,000 objects of about 2KB each take?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n- 10,000 objects × 2 KB/object = 20,000 KB = ~20 MB (raw data)\n- Cache overhead depends on structure:\n  - Hash table (typical in-memory caches): ~20–30% overhead for pointers, metadata, load-factor slack\n  - Object wrapper / reference overhead (in Python, Java, etc.): 40–100 bytes per object\n  - Serialization format (if stored as strings): varies widely\n\n## Answer\n\n**Ballpark: 24–30 MB** for the raw cached data plus modest overhead in a typical in-memory cache (hash table, minimal metadata).\n\n**If you need a tighter estimate, clarify:**\n- Language / runtime? (Python dicts have more per-object overhead than a C struct; Java has GC overhead)\n- Cache library? (Redis, Memcached, or application-level?)\n- What counts as \"2 KB\"—serialized form, or in-memory object size?\n\nFor most practical purposes, assume **~25 MB** and measure if it matters.",
+          "input_tokens": 670,
+          "output_tokens": 251,
+          "cost_usd": 0.005775,
+          "score": {
+            "dim1": 3,
+            "dim2": 2,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean notes-first; good calculation; identifies key assumptions (runtime/library); avoids premature detail; coherent summary"
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nSimple arithmetic: 10,000 objects × 2 KB/object = 20,000 KB = ~20 MB.\n\nThat's the _data_ footprint. Reality will be higher due to:\n- **Language runtime overhead**: Python dicts/objects add 50–200% overhead per object (PyObject header, refcount, hash table slots). Java objects similarly have header overhead. C/C++ depends on your struct layout but typically 0–20% if packed.\n- **Cache metadata**: If you're using a library (Redis, Memcached, your own), add per-entry overhead for key storage, expiry timestamps, linked-list pointers, etc. — often 100–300 bytes per entry.\n- **Memory allocator fragmentation**: ~10–20% waste from heap fragmentation.\n\n**Ballpark for typical cases:**\n- **Python in-memory dict**: 20 MB data + ~60 MB overhead = **~80 MB**\n- **Redis (remote cache)**: 20 MB data + ~10 MB metadata/overhead = **~30 MB**\n- **C/C++ with minimal overhead**: **~22–24 MB**\n\n## Answer\n\n**Minimum: ~20 MB** (pure data).  \n**Typical in-process (Python/Java): 70–100 MB** due to runtime object overhead and allocator fragmentation.  \n**Remote cache (Redis): 25–35 MB**.\n\nIf you're planning capacity or seeing unexpectedly high memory use, measure your actual heap with a profiler rather than estimating.",
+          "input_tokens": 824,
+          "output_tokens": 362,
+          "cost_usd": 0.007902,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: arithmetic→overhead factors→platform variants. Answer clean, grounded, actionable. No premature code."
+          }
+        }
+      },
+      "output_token_overhead_pct": 44.2,
+      "rater2_mean": {
+        "distributed": 2.75,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0.25
+    },
+    {
+      "slot": "15",
+      "slug": "ss-need-index",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "Do I need an index on a column I only ever filter by equality on, with 50 distinct values across 10M rows?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- 10M rows total\n- 50 distinct values (high cardinality ratio: 200k rows per value on average)\n- Access pattern: equality filter only (no range, no sorting, no joins on this column)\n- Question: does an index help?\n\n**Load-bearing unknown:** What proportion of queries filter on this column, and what's the current query performance?\n\n**Analysis:**\n\nFor equality filters, an index *helps* when:\n1. Selectivity is good enough that index lookup + row fetch beats a table scan\n2. The query is frequent enough to justify maintenance cost\n\nYour selectivity is poor: 50 values across 10M rows means the average filter returns ~200k rows. A table scan of 10M rows + filter is competitive with an index lookup that still retrieves 200k rows.\n\n**Decision rule:**\n- If the query returns <1% of rows (i.e., filters to <100k rows), an index is worth it.\n- If it returns >1% of rows, a table scan is likely faster or equivalent, and you're paying write/storage overhead for no gain.\n\nAt 50 distinct values, you're at the threshold; it depends on the *distribution*. If the values are uniform, most equality filters hit ~200k rows → index doesn't help. If skewed (80/20 rule), index helps for the 20% of queries hitting small subsets.\n\n---\n\n## Answer\n\n**Do you need it?** Probably not, unless:\n\n1. **The distribution is heavily skewed** (some values appear far less frequently than others), so common filters retrieve <1% of rows.\n2. **This is a very hot query** and reducing CPU on 10M-row scans is critical (measure first).\n\n**Why:** 50 distinct values = ~200k rows per filter on average. An index still has to fetch ~200k rows; a table scan is not much slower and avoids index maintenance overhead on writes.\n\n**What to do:**\n- **If you're uncertain:** add the index. It costs ~1–5% storage and write latency; the downside is modest.\n- **If you want to be sure:** run `EXPLAIN` on a representative query before and after adding the index. If the planner chooses a table scan anyway, the index is redundant.\n- **Revisit if:** you later discover that 80%+ of queries filter to the same handful of values (skewed distribution).",
+          "input_tokens": 676,
+          "output_tokens": 561,
+          "cost_usd": 0.010443,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Excellent: notes explore selectivity/distribution; answer clean, grounded, actionable; no premature solution; coherent summary"
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\n**Constraints & facts:**\n- 10M rows total\n- 50 distinct values\n- Filter pattern: equality only (no range, no sorting)\n- Implicit: no stated write volume, query frequency, or resource constraints\n\n**Load-bearing unknowns:**\n1. Query frequency / workload pattern (is this a hot filter or rare?)\n2. Current table scan cost vs. index overhead (depends on row width, query selectivity)\n3. Storage/write budget (indexes add write latency)\n4. Whether this column is in a composite index already\n\n**Quick math:**\n- 50 distinct values → average 200k rows per value (uniform case)\n- A single-column B-tree index on 10M rows is ~100–200 MB (typical)\n- A table scan for equality on 50 distinct values varies: if selectivity is poor (e.g., 40% of rows match), scan wins; if tight (e.g., 1% match), index wins\n\n**The real question:** Is the query fast enough *without* the index? If yes, don't add it. If no, add it.\n\n---\n\n## Answer\n\n**Short answer: Probably not, unless the query is slow.**\n\n**Reasoning:**\n\nAn index on a low-cardinality equality filter is a **low-ROI optimization**. The query engine can do a full table scan efficiently when there are only 50 distinct values. You pay the index cost (storage, write overhead) for a small or zero read win.\n\n**Add an index only if:**\n- The query is demonstrably slow (measure first)\n- The filter matches a small percentage of rows (e.g., 1–5%, not 50%)\n- Write volume is low enough that index maintenance doesn't hurt\n\n**Verify by:**\n1. Run the query without an index and measure latency.\n2. If it's acceptable, stop.\n3. If slow, check execution plan (table scan vs. seek) and filter selectivity. If selectivity is poor, an index won't help anyway.\n\n**What would change my answer:** If you have a composite index that *already includes* this column (e.g., for another reason), adding equality filters on it is free—use what you have.",
+          "input_tokens": 830,
+          "output_tokens": 511,
+          "cost_usd": 0.010155,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Exemplary: notes explicit on unknowns, answer grounded in measure-first, no premature indexing, clear outcome-first summary"
+          }
+        }
+      },
+      "output_token_overhead_pct": -8.9,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    },
+    {
+      "slot": "16",
+      "slug": "ss-ternary-to-ifelse",
+      "band": "standard",
+      "mechanism": "stateless",
+      "discipline": null,
+      "prompt": "Rewrite a deeply nested ternary as an if/else chain for readability — what's the general approach?",
+      "model": "claude-haiku-4-5-20251001",
+      "variants": {
+        "distributed": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a straightforward refactoring task with no ambiguity or load-bearing unknowns. The request is asking for the *general approach*, not a specific code fix, so I'll give a clear, reusable pattern. No reasoning protocol needed here—it's a naming-and-explaining job.\n\n## Answer\n\n**General approach:**\n\n1. **Extract the condition** at each ternary level into its own `if` or `else if` block.\n2. **Assign to a single variable** (or return early) in each branch.\n3. **Read top-to-bottom** instead of nesting right-to-left.\n\n**Example:**\n\n```javascript\n// Before: deeply nested\nconst status = user.isAdmin \n  ? 'admin' \n  : user.isPremium \n    ? 'premium' \n    : user.isActive \n      ? 'active' \n      : 'inactive';\n\n// After: if/else chain\nlet status;\nif (user.isAdmin) {\n  status = 'admin';\n} else if (user.isPremium) {\n  status = 'premium';\n} else if (user.isActive) {\n  status = 'active';\n} else {\n  status = 'inactive';\n}\n```\n\n**Or, if you can return early (in a function):**\n\n```javascript\nfunction getStatus(user) {\n  if (user.isAdmin) return 'admin';\n  if (user.isPremium) return 'premium';\n  if (user.isActive) return 'active';\n  return 'inactive';\n}\n```\n\n**Why it works:**\n- Conditions are evaluated top-to-bottom (natural reading order).\n- Each branch is visually distinct and indented consistently.\n- Adding, removing, or reordering conditions doesn't deepen nesting.\n- Easier to debug: you can set breakpoints on any branch.\n\nThe early-return pattern is the cleanest if the context allows it.",
+          "input_tokens": 673,
+          "output_tokens": 468,
+          "cost_usd": 0.009039,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean separation; no unknowns to ground; direct pedagogical answer with examples; coherent standalone summary."
+          }
+        },
+        "orchestrated": {
+          "model": "claude-haiku-4-5-20251001",
+          "text": "## Working notes\n\nThis is a straightforward refactoring request without ambiguity or load-bearing unknowns. No reasoning protocol needed — it's a pattern transformation with a single best practice.\n\nThe task is: convert nested ternary operators into a linear if/else chain.\n\nGeneral principle: ternary operators (`condition ? true_val : false_val`) nest poorly because they read right-to-left at depth, forcing the reader to track multiple branches simultaneously. An if/else chain reads top-to-bottom, one decision at a time.\n\n---\n\n## Answer\n\n### General Approach\n\n**Before (nested ternary):**\n```javascript\nconst result = condition1 ? value1 : condition2 ? value2 : condition3 ? value3 : defaultValue;\n```\n\n**After (if/else chain):**\n```javascript\nlet result;\nif (condition1) {\n  result = value1;\n} else if (condition2) {\n  result = value2;\n} else if (condition3) {\n  result = value3;\n} else {\n  result = defaultValue;\n}\n```\n\n### Mechanical steps\n\n1. **Extract the outermost ternary** as the initial `if`.\n2. **Each nested ternary becomes an `else if`** (preserving the condition and true branch).\n3. **The final `else` branch** captures the deepest `false_val`.\n4. **Assign to a single variable** on each branch for clarity.\n\n### When to use this pattern\n\n- **Readability threshold:** 2+ levels of nesting → switch to if/else.\n- **Expression context** (need a value immediately): keep ternary for simple conditions; use IIFE or extract function if complex.\n- **Parallel structure** (all branches produce similar data): if/else chain scales better than deeply nested ternary.\n\n### Quick example\n\n**Nested:**\n```javascript\nconst status = score > 90 ? \"A\" : score > 80 ? \"B\" : score > 70 ? \"C\" : \"F\";\n```\n\n**Chain:**\n```javascript\nlet status;\nif (score > 90) {\n  status = \"A\";\n} else if (score > 80) {\n  status = \"B\";\n} else if (score > 70) {\n  status = \"C\";\n} else {\n  status = \"F\";\n}\n```\n\n**Alternative** (for this specific case, `switch` or early returns may fit better, but if/else is the direct mechanical equivalent.)",
+          "input_tokens": 827,
+          "output_tokens": 587,
+          "cost_usd": 0.011286,
+          "score": {
+            "dim1": 3,
+            "dim2": 3,
+            "dim3": 3,
+            "dim4": 3,
+            "reasoning_extraction_refusal": false,
+            "note": "Clean pattern transformation. Notes minimal but sufficient; answer self-contained, grounded, no premature complexity."
+          }
+        }
+      },
+      "output_token_overhead_pct": 25.4,
+      "rater2_mean": {
+        "distributed": 3,
+        "orchestrated": 3
+      },
+      "rater2_delta": 0
+    }
+  ]
+}
