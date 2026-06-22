@@ -24,6 +24,7 @@ const chatOverflow = z.enum(['rotate', 'condense']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const worktreeMode = z.enum(['off', 'on', 'ask']);
+const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
@@ -184,6 +185,11 @@ export const settingsSchema = z.object({
         ),
         wait_for_remote_ci: z.boolean().default(false).describe(
             'After pushing a branch, poll the remote CI provider (GitHub Actions, GitLab CI) and surface failures inline. Off by default — useful when local CI does not cover everything the remote pipeline runs.',
+        ),
+    }),
+    design: z.object({
+        fidelity_mode: fidelityMode.default('strict').describe(
+            'How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous.',
         ),
     }),
     reasoning: z.object({
