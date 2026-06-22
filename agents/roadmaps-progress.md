@@ -6,10 +6,10 @@
 
 ## Overall
 
-**31 / 152 steps done · 20%**
+**33 / 152 steps done · 22%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   20%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-rdp-frontier-polish.md](roadmaps/road-to-rdp-frontier-polish.md) | 3 | 7 | 7 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-rdp-frontier-polish.md](roadmaps/road-to-rdp-frontier-polish.md) | 3 | 7 | 5 | 2 | 0 | 0 | ███░░░░░░░ 29% |
 | 3 | [road-to-roadmap-archival-robustness.md](roadmaps/road-to-roadmap-archival-robustness.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 36 | 31 | 0 | 0 | █████░░░░░ 46% |
@@ -40,11 +40,11 @@
 
 ### [road-to-rdp-frontier-polish.md](roadmaps/road-to-rdp-frontier-polish.md)
 
-**RDP frontier polish — orchestrator decision, kernel de-prescription, L7 (follow-up)** — 0 / 7 done (0%)
+**RDP frontier polish — orchestrator decision, kernel de-prescription, L7 (follow-up)** — 2 / 7 done (29%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Orchestrator keep/revert (L6), on adequate data | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 1 | Orchestrator keep/revert (L6), on adequate data | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | notes-first kernel promotion (L7), if maintainer elects | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 3 | Frontier-serving de-prescription (human-reviewed, kernel = soak-gated) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
