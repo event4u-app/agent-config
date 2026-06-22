@@ -17,8 +17,12 @@
  * Usage: ./scripts-run src/scripts/rdp_gate_classify --corpus <file> --confirm
  */
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { estimate_cost, load_anthropic_key } from './skill_trigger_eval.js';
+
+/** stdout helper — the lint config forbids `console.log` (allows warn/error). */
+const emit = (s: string): void => {
+    process.stdout.write(`${s}\n`);
+};
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
@@ -95,9 +99,9 @@ async function main(): Promise<number> {
     const slots = (JSON.parse(fs.readFileSync(corpusPath, 'utf-8')) as { slots: Slot[] }).slots;
 
     const est = slots.reduce((p) => p + estimate_cost(model, 250, 60), 0);
-    console.log(`rdp-gate-classify · ${slots.length} prompts · ${model} · ~$${est.toFixed(4)}`);
+    emit(`rdp-gate-classify · ${slots.length} prompts · ${model} · ~$${est.toFixed(4)}`);
     if (!args.confirm) {
-        console.log('DRY-RUN — no spend. Re-run with --confirm.');
+        emit('DRY-RUN — no spend. Re-run with --confirm.');
         return 0;
     }
     if (!process.stdin.isTTY && process.env.RDP_EVAL_ALLOW_NONTTY !== '1') {
@@ -118,8 +122,8 @@ async function main(): Promise<number> {
     const acc = Math.round((correct / slots.length) * 1000) / 10;
     const out = (args.results as string) ?? '/tmp/rdp-gate-classify.json';
     fs.writeFileSync(out, JSON.stringify({ model, n: slots.length, correct, accuracy_pct: acc, rows }, null, 2), 'utf-8');
-    console.log(`\nGATE-TIME CLASSIFICATION ACCURACY: ${correct}/${slots.length} = ${acc}%  (model ${model})`);
-    console.log(`Results: ${out}`);
+    emit(`\nGATE-TIME CLASSIFICATION ACCURACY: ${correct}/${slots.length} = ${acc}%  (model ${model})`);
+    emit(`Results: ${out}`);
     return 0;
 }
 

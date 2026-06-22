@@ -30,11 +30,12 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {
-    ANTHROPIC_KEY_PATH,
-    estimate_cost,
-    load_anthropic_key,
-} from './skill_trigger_eval.js';
+import { estimate_cost, load_anthropic_key } from './skill_trigger_eval.js';
+
+/** stdout helper — the lint config forbids `console.log` (allows warn/error). */
+const out = (s: string): void => {
+    process.stdout.write(`${s}\n`);
+};
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
 const EVAL_DIR = path.join(REPO_ROOT, 'tests', 'reasoning-layer-eval');
@@ -289,15 +290,15 @@ async function main(): Promise<number> {
         }
     }
     const nCalls = slots.length * arms.length + (scoreWith ? slots.length * 2 : 0);
-    console.log(
+    out(
         `rdp-eval · mode=${mode} · ${slots.length} slots × ${arms.length} variants (${variantNames.join('/')}) ` +
             `${scoreWith ? `+ scorer(${scoreWith})` : ''} = ${nCalls} calls`,
     );
-    for (const [m, c] of Object.entries(byModel)) console.log(`    ${m}: ~$${c.toFixed(4)}`);
-    console.log(`  EXPECTED TOTAL (worst-case): ~$${total.toFixed(4)}`);
+    for (const [m, c] of Object.entries(byModel)) out(`    ${m}: ~$${c.toFixed(4)}`);
+    out(`  EXPECTED TOTAL (worst-case): ~$${total.toFixed(4)}`);
 
     if (!args.confirm) {
-        console.log('\nDRY-RUN — no spend. Re-run with --confirm to capture transcripts.');
+        out('\nDRY-RUN — no spend. Re-run with --confirm to capture transcripts.');
         return 0;
     }
     if (!process.stdin.isTTY && process.env.RDP_EVAL_ALLOW_NONTTY !== '1') {
@@ -373,8 +374,8 @@ async function main(): Promise<number> {
         ),
         'utf-8',
     );
-    console.log(`\nDONE · mode=${mode} · actual ~$${(Math.round(actual * 10000) / 10000).toFixed(4)}`);
-    console.log(`Results JSON: ${resultsPath}`);
+    out(`\nDONE · mode=${mode} · actual ~$${(Math.round(actual * 10000) / 10000).toFixed(4)}`);
+    out(`Results JSON: ${resultsPath}`);
     return 0;
 }
 
