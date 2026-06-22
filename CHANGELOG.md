@@ -948,6 +948,27 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.0.2](https://github.com/event4u-app/agent-config/compare/7.0.1...7.0.2) (2026-06-22)
+
+### Bug Fixes
+
+* **roadmaps:** regen entry-guard fires under symlinked invocation ([244e4e4](https://github.com/event4u-app/agent-config/commit/244e4e45a42a6b3d4793ac192e0f912d71954ba4))
+* **rdp-eval:** harden index access for strict typecheck (noUncheckedIndexedAccess) ([041b21e](https://github.com/event4u-app/agent-config/commit/041b21e4877361b1499328216242fa6ec595ff99))
+* **rdp-eval:** satisfy eslint on the new runners ([3c418e1](https://github.com/event4u-app/agent-config/commit/3c418e16faf340b8367148f6788835e400241e4e))
+
+### Documentation
+
+* **rdp-eval:** keep-scoped L6 verdict — scope orchestrator to multi-step work ([61173ca](https://github.com/event4u-app/agent-config/commit/61173ca899442b81159e4f3efe586251dcea4459))
+
+### Tests
+
+* **rdp-eval:** capture larger-N L6 + gate-classification data ([f92aad3](https://github.com/event4u-app/agent-config/commit/f92aad32620af27c5cf4d000859adeeb9894a819))
+* **rdp-eval:** port quality+L6 eval runners to TypeScript (fetch-based) ([9c4ec60](https://github.com/event4u-app/agent-config/commit/9c4ec604ca6fbb82d796cf2d65626d381a854142))
+
+### CI
+
+* **consistency:** trigger on src/** and dist/agent-src/** paths ([6a5e5e7](https://github.com/event4u-app/agent-config/commit/6a5e5e76cea3d5f879f9fcda6e510cc73039826e))
+
 ## [7.0.1](https://github.com/event4u-app/agent-config/compare/7.0.0...7.0.1) (2026-06-22)
 
 ### Bug Fixes

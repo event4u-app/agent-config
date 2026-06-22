@@ -12,4 +12,4 @@ requires: []
 suggests: []
 surface_tier: core
 trust_level_default: core
-version: 7.0.1
+version: 7.0.2
