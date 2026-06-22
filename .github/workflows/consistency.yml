@@ -4,6 +4,12 @@ on:
   pull_request:
     paths:
       - ".agent-src.uncondensed/**"
+      # `src/` is the source of truth and `dist/agent-src/` its projection; a PR
+      # touching only these (e.g. a src/agent-src/scripts edit + its dist twin)
+      # must still trigger the REQUIRED Consistency check or it deadlocks on
+      # "Expected — Waiting for status to be reported".
+      - "src/**"
+      - "dist/agent-src/**"
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
@@ -35,6 +41,12 @@ on:
       - master
     paths:
       - ".agent-src.uncondensed/**"
+      # `src/` is the source of truth and `dist/agent-src/` its projection; a PR
+      # touching only these (e.g. a src/agent-src/scripts edit + its dist twin)
+      # must still trigger the REQUIRED Consistency check or it deadlocks on
+      # "Expected — Waiting for status to be reported".
+      - "src/**"
+      - "dist/agent-src/**"
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
