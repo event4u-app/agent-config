@@ -1,0 +1,136 @@
+{
+  "model": "claude-haiku-4-5-20251001",
+  "n": 16,
+  "correct": 16,
+  "accuracy_pct": 100,
+  "rows": [
+    {
+      "slot": "01",
+      "slug": "ms-add-search",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "02",
+      "slug": "ms-extract-notifications-service",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "03",
+      "slug": "ms-add-audit-log",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "04",
+      "slug": "ms-introduce-caching",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "05",
+      "slug": "ms-upgrade-framework",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "06",
+      "slug": "ms-add-multitenancy",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "07",
+      "slug": "ms-build-import-pipeline",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "08",
+      "slug": "ms-rework-auth-flow",
+      "expected": "multi-step",
+      "got": "multi-step",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "09",
+      "slug": "ss-explain-deadlock",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "10",
+      "slug": "ss-name-retry-fn",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "11",
+      "slug": "ss-hashmap-vs-array",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "12",
+      "slug": "ss-review-email-regex",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "13",
+      "slug": "ss-explain-undefined-error",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "14",
+      "slug": "ss-memory-estimate",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "15",
+      "slug": "ss-need-index",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    },
+    {
+      "slot": "16",
+      "slug": "ss-ternary-to-ifelse",
+      "expected": "single-turn",
+      "got": "single-turn",
+      "confidence": "high",
+      "ok": true
+    }
+  ]
+}

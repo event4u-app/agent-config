@@ -28,13 +28,27 @@ hasn't backed.
 
 ## Phase 1 — Orchestrator keep/revert (L6), on adequate data
 
-- [ ] Re-run the L6 isolation eval at **larger N** (≥ 15 orchestrator-relevant
+- [x] Re-run the L6 isolation eval at **larger N** (≥ 15 orchestrator-relevant
       slots, ideally a second rater), separating the two mechanisms the first run
       surfaced: **multi-stage tool coherence** (where it won, slot 06) vs
       **stateless single-turn reasoning** (where it over-produced, slot 07).
-- [ ] Decide keep / revert / keep-scoped-to-multi-stage. If "keep-scoped", first
+      <!-- DONE 2026-06-22: N=16 (8 multi-stage / 8 stateless), independent model
+      rater (claude-sonnet-4-5). Two-mechanism split replicated: multi-stage gain
+      +19.2%, stateless −1.1%. TS port of the harness (rdp_quality_eval.ts — the
+      Python one was removed in the py2ts teardown; fetch-based, no SDK dep).
+      RESULTS-L6-largeN-2026-06-22.md. -->
+- [x] Decide keep / revert / keep-scoped-to-multi-stage. If "keep-scoped", first
       specify HOW the scope is detected without a runtime gate (the open design
       debt the council flagged) — else it is not implementable.
+      <!-- DONE 2026-06-22: KEEP-SCOPED. Detection = rdp-gate self-assessment,
+      validated at gate time 16/16 (rdp_gate_classify.ts) + graceful degradation
+      (a misclassification picks a wrong-but-functional arm, never breaks). Encoded
+      in src/skills/reasoning-orchestrator/SKILL.md § When to use (non-kernel,
+      tier-2 — no soak; re-condensed). Council conditions met: pre-registration
+      override made explicit (univariate aggregate superseded by per-mechanism
+      analysis; go-forward: judge per-mechanism); no-runtime "telemetry" = re-eval
+      revert trigger documented in the skill. Residual: borderline-case gate
+      accuracy untested (bounded by graceful degradation). -->
 
 ## Phase 2 — notes-first kernel promotion (L7), if maintainer elects
 

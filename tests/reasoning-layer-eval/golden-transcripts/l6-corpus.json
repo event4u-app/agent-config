@@ -1,0 +1,21 @@
+{
+  "_comment": "Larger-N L6 corpus (road-to-rdp-frontier-polish Phase 1). 16 slots split by the two mechanisms the first L6 run surfaced: 'multi-stage' tool/work coherence (where ordered chaining should help) vs 'stateless' single-turn reasoning (where the full chain risks over-processing). All standard band to isolate the mechanism on the orchestrator's target host. Consumed by src/scripts/rdp_quality_eval.ts --mode l6.",
+  "slots": [
+    {"n": "01", "slug": "ms-add-search", "band": "standard", "mechanism": "multi-stage", "prompt": "Add full-text search across the orders and invoices tables, with an indexed backend and a paginated API."},
+    {"n": "02", "slug": "ms-extract-notifications-service", "band": "standard", "mechanism": "multi-stage", "prompt": "Extract the notifications code out of the monolith into its own service and wire the monolith to call it."},
+    {"n": "03", "slug": "ms-add-audit-log", "band": "standard", "mechanism": "multi-stage", "prompt": "Add an audit log that records every write to the billing tables and exposes it on an admin page."},
+    {"n": "04", "slug": "ms-introduce-caching", "band": "standard", "mechanism": "multi-stage", "prompt": "Introduce a caching layer in front of the product-catalog reads and invalidate it correctly on writes."},
+    {"n": "05", "slug": "ms-upgrade-framework", "band": "standard", "mechanism": "multi-stage", "prompt": "Upgrade the app from framework v3 to v5, including the breaking middleware and routing changes."},
+    {"n": "06", "slug": "ms-add-multitenancy", "band": "standard", "mechanism": "multi-stage", "prompt": "Add tenant isolation so each customer's data is scoped to their tenant across the whole app."},
+    {"n": "07", "slug": "ms-build-import-pipeline", "band": "standard", "mechanism": "multi-stage", "prompt": "Build an import pipeline that ingests a vendor CSV, validates it, and upserts into our schema with a dry-run mode."},
+    {"n": "08", "slug": "ms-rework-auth-flow", "band": "standard", "mechanism": "multi-stage", "prompt": "Rework the login flow to add email verification, then password reset, then optional 2FA."},
+    {"n": "09", "slug": "ss-explain-deadlock", "band": "standard", "mechanism": "stateless", "prompt": "Why might a query be deadlocking under load? Give the common causes."},
+    {"n": "10", "slug": "ss-name-retry-fn", "band": "standard", "mechanism": "stateless", "prompt": "What's a good name for a function that retries a job with exponential backoff and a max-attempts cap?"},
+    {"n": "11", "slug": "ss-hashmap-vs-array", "band": "standard", "mechanism": "stateless", "prompt": "Should I use a hash map or a sorted array for a read-heavy lookup of about 500 stable keys?"},
+    {"n": "12", "slug": "ss-review-email-regex", "band": "standard", "mechanism": "stateless", "prompt": "Is this email regex safe to use for validation: ^[^@]+@[^@]+\\.[^@]+$ ?"},
+    {"n": "13", "slug": "ss-explain-undefined-error", "band": "standard", "mechanism": "stateless", "prompt": "What does 'cannot read property of undefined' usually mean, and how do I find the cause?"},
+    {"n": "14", "slug": "ss-memory-estimate", "band": "standard", "mechanism": "stateless", "prompt": "Roughly how much memory does caching 10,000 objects of about 2KB each take?"},
+    {"n": "15", "slug": "ss-need-index", "band": "standard", "mechanism": "stateless", "prompt": "Do I need an index on a column I only ever filter by equality on, with 50 distinct values across 10M rows?"},
+    {"n": "16", "slug": "ss-ternary-to-ifelse", "band": "standard", "mechanism": "stateless", "prompt": "Rewrite a deeply nested ternary as an if/else chain for readability — what's the general approach?"}
+  ]
+}
