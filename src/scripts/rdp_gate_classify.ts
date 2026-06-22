@@ -87,6 +87,7 @@ async function main(): Promise<number> {
     const args: Record<string, string | boolean> = {};
     for (let i = 0; i < argv.length; i++) {
         const t = argv[i];
+        if (t === undefined) continue;
         if (t === '--confirm') args.confirm = true;
         else if (t.startsWith('--')) {
             const next = argv[i + 1];

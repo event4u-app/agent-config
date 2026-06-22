@@ -232,6 +232,7 @@ function parseArgs(argv: string[]): Record<string, string | boolean> {
     const a: Record<string, string | boolean> = {};
     for (let i = 0; i < argv.length; i++) {
         const t = argv[i];
+        if (t === undefined) continue;
         if (t === '--confirm') a.confirm = true;
         else if (t.startsWith('--')) {
             const key = t.slice(2);
@@ -336,11 +337,17 @@ async function main(): Promise<number> {
             }
             variants[variant] = v;
         }
-        const aOut = variants[variantNames[0]].output_tokens;
-        const bOut = variants[variantNames[1]].output_tokens;
+        const [v0, v1] = variantNames;
+        const va = v0 !== undefined ? variants[v0] : undefined;
+        const vb = v1 !== undefined ? variants[v1] : undefined;
+        if (v0 === undefined || v1 === undefined || va === undefined || vb === undefined) {
+            continue;
+        }
+        const aOut = va.output_tokens;
+        const bOut = vb.output_tokens;
         const overhead = aOut ? Math.round(((bOut - aOut) / aOut) * 1000) / 10 : null;
-        const m0 = meanDims(variants[variantNames[0]].score);
-        const m1 = meanDims(variants[variantNames[1]].score);
+        const m0 = meanDims(va.score);
+        const m1 = meanDims(vb.score);
         results.push({
             slot: s.n,
             slug: s.slug,
@@ -351,7 +358,7 @@ async function main(): Promise<number> {
             model,
             variants,
             output_token_overhead_pct: overhead,
-            rater2_mean: { [variantNames[0]]: m0, [variantNames[1]]: m1 },
+            rater2_mean: { [v0]: m0, [v1]: m1 },
             rater2_delta: m0 !== null && m1 !== null ? Math.round((m1 - m0) * 100) / 100 : null,
         });
         writeTranscript(s, variants, ts, overhead, variantNames, mode);
@@ -402,6 +409,7 @@ function writeTranscript(
     ];
     for (const variant of variantNames) {
         const v = variants[variant];
+        if (v === undefined) continue;
         const sc = v.score ? ` · rater2 ${JSON.stringify(v.score)}` : '';
         L.push(
             `## Transcript — ${variant} (${v.model})`,
