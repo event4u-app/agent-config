@@ -191,7 +191,7 @@ export const settingsSchema = z.object({
         fidelity_mode: fidelityMode.default('strict').describe(
             'How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous.',
         ),
-    }),
+    }).default({ fidelity_mode: 'strict' }),
     reasoning: z.object({
         enabled: z.boolean().default(true).describe(
             'Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead).',
