@@ -96,6 +96,7 @@
         "./.claude-plugin/skills/feature-roadmap",
         "./.claude-plugin/skills/fix",
         "./.claude-plugin/skills/fix-ci",
+        "./.claude-plugin/skills/fix-comments",
         "./.claude-plugin/skills/fix-portability",
         "./.claude-plugin/skills/fix-pr-comments",
         "./.claude-plugin/skills/fix-refs",

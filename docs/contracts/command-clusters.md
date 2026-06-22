@@ -28,7 +28,7 @@ column 1 of this table.
 
 | Cluster | Phase | Sub-commands | Replaces |
 |---|:-:|---|---|
-| `fix` | 1 | `ci` · `pr-comments` · `pr-bot-comments` · `pr-developer-comments` · `portability` · `refs` · `seeder` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder` |
+| `fix` | 1 | `ci` · `pr-comments` · `pr-bot-comments` · `pr-developer-comments` · `portability` · `refs` · `seeder` · `comments` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder`; `comments` added 2026-06-22 — audits the **code comments** in the current branch's diff (simplify / shorten / remove), distinct from the PR-review-thread `pr-comments` sub |
 | `optimize` | 1 | `agents-dir` · `augmentignore` · `rtk` · `skills` | `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` · former `/optimize agents` and `/optimize agents-md` moved to the `/agents` file-family cluster 2026-05-09; `/agents prepare/audit/cleanup` collapsed into the single `/optimize agents-dir` (flags or wizard) per the agent-doc consolidation |
 | `feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` · `dev` | `feature-explore` · `feature-plan` · `feature-refactor` · `feature-roadmap` · `feature-dev` |
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
