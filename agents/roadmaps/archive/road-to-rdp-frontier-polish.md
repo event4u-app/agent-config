@@ -6,6 +6,18 @@ parent_roadmap: road-to-rdp-eval-and-promotion
 
 # Roadmap: RDP frontier polish — orchestrator decision, kernel de-prescription, L7 (follow-up)
 
+> **COMPLETE + closed (2026-06-22).** Phase 1 settled the orchestrator on data
+> (L6 keep-scoped, N=16 + independent rater + 16/16 gate validation; encoded in
+> the `reasoning-orchestrator` skill). Phase 2 (L7) decided **no kernel
+> promotion** — notes-first stays tier-2 (evidence not hardened enough for an
+> always-on rule). Phase 3 (kernel de-prescription) **cancelled** — principle-
+> based, not per-rule eval-validated; weakening a load-bearing always-on rule
+> without strong-host friction telemetry is net-negative-risk (council
+> claude-sonnet-4-5 + gpt-4o, peer-review, 2026-06-22). No kernel edit, no soak.
+> **Reopen trigger** for Phase 2/3: hardened multi-rater / A-B / strong-host
+> friction evidence — then a fresh roadmap with pre-registered kill-switch
+> thresholds. Evidence: `tests/reasoning-layer-eval/RESULTS-L6-largeN-2026-06-22.md`.
+
 > **Spawned 2026-06-17** from the closed `road-to-rdp-eval-and-promotion` (now
 > archived). That roadmap produced + analysed the eval **data**; this one carries
 > the work the data **could not settle autonomously** — each item is either a
@@ -52,26 +64,56 @@ hasn't backed.
 
 ## Phase 2 — notes-first kernel promotion (L7), if maintainer elects
 
-- [ ] Only if the maintainer judges the (hardened, multi-rater) evidence
+- [x] Only if the maintainer judges the (hardened, multi-rater) evidence
       load-bearing: promote `notes-first-reasoning` to tier-1 kernel via its own
       PR + a new ADR (RDP architecture + kernel rationale) + ≥24h soak. Default
       from the 2026-06-17 run is **stay tier-2 auto** (no promotion).
+      <!-- DECIDED 2026-06-22: NO PROMOTION — notes-first stays tier-2 auto.
+      Council (claude-sonnet-4-5 + gpt-4o, peer-review) flagged an asymmetric
+      evidence bar: the orchestrator encoding required an independent rater, but
+      the L7 load-bearing claim rests on single-rater + ceiling-caveated data —
+      insufficient to grow the always-on kernel. Zero-refusals is met but not
+      sufficient alone. No kernel edit → no soak. Reopen only on hardened
+      multi-rater / A-B evidence (then own PR + ADR + ≥24h soak). -->
 
 ## Phase 3 — Frontier-serving de-prescription (human-reviewed, kernel = soak-gated)
 
-- [ ] **Batch K (kernel, own-PR + ≥24h soak each):** `verify-before-complete`
+> **CANCELLED 2026-06-22 (council, claude-sonnet-4-5 + gpt-4o, peer-review).**
+> The justification for de-prescribing these rules is the operating-profile
+> *principle* (over-prescription hurts strong hosts), **not** a per-rule eval
+> result — the L6/quality evals validated the RDP layer + orchestrator scoping,
+> never the de-prescription of any specific kernel rule. The default for a
+> load-bearing always-on rule is *don't touch it*; the burden of proof is on the
+> change, and there is no strong-host friction telemetry or A-B data to meet it.
+> "Scope down to one" was rejected as compromise theater (insufficient evidence
+> for four is insufficient for one); `verify-before-complete` is the worst
+> candidate (it governs correctness — weakening it lets wrong answers slip).
+> **Reopen trigger:** real strong-host friction signal (telemetry or A-B), with a
+> pre-registered kill-switch threshold defined *before* any soak. Until then, a
+> kernel-soak PR on principle alone is net-negative-risk.
+
+- [-] **Batch K (kernel, own-PR + ≥24h soak each):** `verify-before-complete`
       Gate, `language-and-tone` pre-send gate, + the two L15 refinements in
       `direct-answers` / `scope-control`. Iron-Law fences preserved byte-for-byte.
-- [ ] **Batch R (non-kernel auto rules, reviewed — not a blind sweep):**
+      <!-- CANCELLED 2026-06-22 (council): principle-based, not per-rule
+      eval-validated; weakening a load-bearing always-on rule without strong-host
+      friction evidence is net-negative-risk. Reopen on telemetry/A-B data. -->
+- [-] **Batch R (non-kernel auto rules, reviewed — not a blind sweep):**
       `artifact-drafting-protocol` Phase A, `no-roadmap-references` "what to do
       instead", `source-of-truth` checkpoints, `improve-before-implement` "what to
       check" — touch the procedure, never the Iron-Law fence.
-- [ ] **Batch S (skills, low priority — on-demand detail):**
+      <!-- CANCELLED 2026-06-22 (council): bundled with Batch K as scope-creep;
+      same evidence gap. Reopen with Batch K on real signal. -->
+- [-] **Batch S (skills, low priority — on-demand detail):**
       `verify-completion-evidence`, `learning-to-rule-or-skill`,
       `systematic-debugging` Phase 4, `condense-memory`.
-- [ ] Re-run the quality-eval delta on the strong-reasoning band after the polish
+      <!-- CANCELLED 2026-06-22 (council): low-priority on-demand detail the
+      operating-profile deliberately keeps; no evidence it harms. -->
+- [-] Re-run the quality-eval delta on the strong-reasoning band after the polish
       lands — confirm no standard-host regression (the eval-dependent check
       carried over from the parent's Phase-3).
+      <!-- CANCELLED 2026-06-22: moot — no polish lands (Phase 3 cancelled). The
+      pre-polish strong-band data already showed no regression (+25pp). -->
 
 ## Acceptance criteria
 
