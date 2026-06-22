@@ -108,12 +108,19 @@ corrects this:
 - The global surface is **secrets** (provider keys, already global) plus the
   curated identity **whitelist** (`MERGEABLE_KEYS`) — not all of `personal.*`,
   not council config, not personas.
-- **Council configuration and personas stay project-local** (version-controlled).
-  The `MERGEABLE_KEYS` whitelist is a **security trust boundary**: an untrusted
-  project repo must not be able to escalate `ai_council` / arbitrary `personal.*`
-  into user scope. Widening the whitelist now requires a threat model.
-- The key name is **`ai_council`** (canonical, in `agents/settings/.ai-council.yml`),
-  never `agent_council`.
+- **Council config is NOT on the `MERGEABLE_KEYS` whitelist.** _(Placement
+  amended: per [ADR-093](ADR-093-ai-council-config-user-global.md) →
+  [ADR-104](ADR-104-ai-council-config-global-only.md) the council config
+  is now **user-global** at `~/.event4u/agent-config/settings/.ai-council.yml`,
+  never project-local — but it is its own dedicated `.ai-council.yml`, not a
+  merged `.agent-settings.yml` key, so it stays off this whitelist.)_ Personas
+  stay project-local (version-controlled). The `MERGEABLE_KEYS` whitelist is a
+  **security trust boundary**: an untrusted project repo must not be able to
+  escalate arbitrary `personal.*` into user scope. Widening the whitelist now
+  requires a threat model.
+- The council config key name is **`ai_council`** (canonical), never
+  `agent_council`. It lives in the user-global `.ai-council.yml` (ADR-104),
+  not under `.agent-settings.yml`.
 
 This amendment narrows ADR-020's wording; the global-only **consumer install**
 decision (distributed content writes only to `~/.event4u/agent-config/`) is

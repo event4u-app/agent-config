@@ -2,8 +2,10 @@
  * Thinking-style advisors — replace-mode call planning (Phase 6).
  *
  * TypeScript twin of `src/scripts/ai_council/advisors.py` (ADR-200 —
- * Python→TS migration, Phase 1). When `agents/settings/.ai-council.yml`
- * enables an advisor (e.g. `contrarian` bound to `member: anthropic`), the
+ * Python→TS migration, Phase 1). When the user-global
+ * `~/.event4u/agent-config/settings/.ai-council.yml` (always global —
+ * ADR-104) enables an advisor (e.g. `contrarian` bound to
+ * `member: anthropic`), the
  * orchestrator REPLACES the matching plain-member call with an
  * advisor-persona call on the same provider. Same total call count as a
  * plain run; bounded extra cost beyond the persona-prompt token delta.

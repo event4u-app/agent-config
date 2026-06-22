@@ -6,8 +6,9 @@
  * surface and validation behaviour byte-for-byte: same exported
  * snake_case names, same defaults, same error messages, same precedence.
  *
- * Reads `agents/settings/.ai-council.yml` per the contract in
- * `docs/contracts/ai-council-config.md`. Replaces the fragmented
+ * Reads the user-global `~/.event4u/agent-config/settings/.ai-council.yml`
+ * per the contract in `docs/contracts/ai-council-config.md` (council
+ * config is ALWAYS user-global — ADR-104). Replaces the fragmented
  * `.agent-settings.yml` `ai_council` block (Phase 0 migration).
  *
  * Validation contract (8 rules, all enforced at load time):
@@ -93,7 +94,7 @@ export type PathLike = string;
 
 // ── error type ─────────────────────────────────────────────────────
 
-/** Raised when `agents/settings/.ai-council.yml` violates the schema. */
+/** Raised when the user-global `.ai-council.yml` violates the schema. */
 export class CouncilConfigError extends Error {
     constructor(message: string) {
         super(message);
@@ -562,8 +563,10 @@ export const COUNCIL_CONFIG_USER_GLOBAL_REL = 'settings/.ai-council.yml';
 
 /**
  * Env var pinning the council config to an explicit absolute path, ahead
- * of the project → user-global search. Mirrors `EVENT4U_CONFIG_HOME` but
- * targets the config file itself (tests / power users).
+ * of the user-global default. Mirrors `EVENT4U_CONFIG_HOME` but targets
+ * the config file itself (tests / power users). This is the ONLY escape
+ * from the user-global location — it is an explicit absolute path, never
+ * a "search the project" path.
  */
 export const COUNCIL_CONFIG_ENV = 'AI_COUNCIL_CONFIG';
 
@@ -598,13 +601,23 @@ function _isAbsoluteLikePython(p: string): boolean {
 /**
  * Resolve which `.ai-council.yml` the council reads.
  *
+ * **The council config is ALWAYS user-global.** It is a per-developer
+ * facility configured once and works in every project, worktree, and
+ * CWD — including consumer repos that carry no council file of their
+ * own. The project tree is NEVER searched for council config (ADR-104,
+ * superseding the project-local override kept by ADR-093).
+ *
  * Precedence (first match wins):
  *
  * 1. `$AI_COUNCIL_CONFIG` — explicit absolute override (tests / power
- *    users). Honoured even when the target is absent.
- * 2. Project-local `<project_root>/agents/settings/.ai-council.yml`.
- * 3. User-global `~/.event4u/agent-config/settings/.ai-council.yml`
+ *    users). Honoured even when the target is absent. This is an
+ *    explicit path, not a project search.
+ * 2. User-global `~/.event4u/agent-config/settings/.ai-council.yml`
  *    (with the legacy `~/.config/agent-config/` read-fallback).
+ *
+ * `project_root` is accepted for signature stability with callers but is
+ * NOT consulted for config resolution — the council never reads
+ * `<project_root>/agents/settings/.ai-council.yml`.
  *
  * Always returns a path (never `null`): when nothing exists yet it
  * returns the user-global write target.
@@ -613,19 +626,11 @@ export function resolve_config_path(
     project_root: PathLike,
     options: { env?: user_global_paths.EnvMap | null } = {},
 ): PathLike {
+    void project_root; // intentionally unused — council config is always user-global (ADR-104).
     const env_map = options.env != null ? options.env : process.env;
     const override = env_map[COUNCIL_CONFIG_ENV];
     if (override) {
         return _expanduser(override);
-    }
-    const project_path = path.join(
-        project_root,
-        'agents',
-        'settings',
-        COUNCIL_CONFIG_RELNAME,
-    );
-    if (fs.existsSync(project_path)) {
-        return project_path;
     }
     const found = user_global_paths.resolve_with_fallback(
         COUNCIL_CONFIG_USER_GLOBAL_REL,

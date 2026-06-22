@@ -35,7 +35,34 @@ Do NOT use when:
 * The artefact contains secrets that cannot be redacted with the
   bundler's pattern set → ask the user before sending.
 * The user has not configured any council member → state that and stop;
-  do not silently fall back to anything.
+  do not silently fall back to anything. **But "not configured" is
+  decided by the CLI, never by the project tree** — see the rule below.
+
+## Configuration is ALWAYS user-global
+
+```
+THE COUNCIL CONFIG IS ALWAYS USER-GLOBAL. NEVER SEARCH THE PROJECT FOR IT.
+THE ABSENCE OF A COUNCIL FILE IN A PROJECT SAYS NOTHING ABOUT WHETHER
+THE COUNCIL IS CONFIGURED. ONLY THE CLI / RESOLVER DECIDES THAT.
+```
+
+Council config lives at one place only:
+`~/.event4u/agent-config/settings/.ai-council.yml` (per
+[ADR-104](../../../docs/decisions/ADR-104-ai-council-config-global-only.md),
+superseding ADR-093). Configured **once per developer**; works in **every**
+project, worktree, and CWD — including consumer repos carrying none of this
+package's internals.
+
+Before claiming the council unavailable, run the CLI (`council:estimate`) and
+read its exit code + message. **Never** conclude "council not configured in
+this project" from missing project files: `scripts/ai_council` (package-internal,
+absent from every consumer repo), `.agent-settings.yml` (legacy block removed in
+ADR-093), or a project-local `.ai-council.yml` (never read — ADR-104). Eyeballing
+the project for these, then deciding solo instead of running the resolver, is the
+canonical failure ADR-104 stops.
+
+Only escape from user-global: `$AI_COUNCIL_CONFIG`, an explicit absolute path
+for tests / power users — still not a project search.
 
 ## When NOT to invoke — necessity self-check
 

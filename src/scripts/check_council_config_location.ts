@@ -9,11 +9,12 @@
  * and the same `<!-- council-config-allowed -->` escape pragma. No behaviour
  * changes — latent bugs replicated.
  *
- * Per ADR-093 the council reads a dedicated `.ai-council.yml` — resolved
- * project-local (`agents/settings/.ai-council.yml`) first, else user-global
- * (`~/.event4u/agent-config/settings/.ai-council.yml`). Keys are top-level in
- * that file; the legacy `ai_council.*` block under `.agent-settings.yml` was
- * removed in Phase 0.
+ * Per ADR-104 (superseding ADR-093) the council reads a dedicated
+ * `.ai-council.yml` resolved ALWAYS from the user-global location
+ * (`~/.event4u/agent-config/settings/.ai-council.yml`) — the project tree
+ * is never searched (the only escape is the explicit `$AI_COUNCIL_CONFIG`
+ * path). Keys are top-level in that file; the legacy `ai_council.*` block
+ * under `.agent-settings.yml` was removed in Phase 0.
  *
  * What it flags, in the council command/skill surfaces + the config contract:
  *

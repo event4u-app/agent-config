@@ -304,15 +304,18 @@ describe('resolve_config_path — precedence', () => {
         expect(cfg.resolve_config_path(project, { env })).toBe(globalCfg);
     });
 
-    it('project overrides global', () => {
+    it('project file is ignored — council config is always user-global (ADR-104)', () => {
         const tmp = make_tmp();
         const { env, globalCfg, project } = sandbox(tmp);
         write_file(globalCfg, 'enabled: false\n');
-        const projectCfg = write_file(
+        // A project-local council file MUST NOT be picked up: the council
+        // never searches the project tree (ADR-104, supersedes ADR-093's
+        // project-local override).
+        write_file(
             path.join(project, 'agents', 'settings', cfg.COUNCIL_CONFIG_RELNAME),
             'enabled: false\n',
         );
-        expect(cfg.resolve_config_path(project, { env })).toBe(projectCfg);
+        expect(cfg.resolve_config_path(project, { env })).toBe(globalCfg);
     });
 
     it('env override wins', () => {

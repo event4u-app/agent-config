@@ -33,23 +33,30 @@ fallback during the v2.4 namespace transition). This is where a single
 developer enables members, pins models, and sets caps once — and the
 council then works in **every** project they open, with no per-project
 file to check in or accidentally commit. See
-[ADR-093](../decisions/ADR-093-ai-council-config-user-global.md).
+[ADR-093](../decisions/ADR-093-ai-council-config-user-global.md) and
+[ADR-104](../decisions/ADR-104-ai-council-config-global-only.md).
 
-`scripts/ai_council/config.py:resolve_config_path` resolves the active
-file with this precedence (first match wins):
+**The council config is ALWAYS user-global. The project tree is NEVER
+searched for it.** `scripts/ai_council/config.ts:resolve_config_path`
+resolves the active file with this precedence (first match wins):
 
 1. **`$AI_COUNCIL_CONFIG`** — an explicit absolute path. Honoured even
    when the target is absent (so a typo surfaces as "create it here"
    rather than silently falling back). Primarily for tests / power users.
-2. **Project-local** `<project_root>/agents/settings/.ai-council.yml` —
-   only when a consumer project deliberately checks in its own council
-   config. This **overrides** the user-global file for that project.
-3. **User-global** `~/.event4u/agent-config/settings/.ai-council.yml` — the
+   This is an explicit path, not a project search.
+2. **User-global** `~/.event4u/agent-config/settings/.ai-council.yml` — the
    canonical default described above.
 
-When none exists, the loader reports the user-global path as the place to
-create it. `agents/templates/.ai-council.yml.example` ships the documented
-shape to copy from. The legacy `ai_council.*` block under
+There is **no project-local lookup.** A `<project_root>/agents/settings/.ai-council.yml`
+in any project (including this package's own tree) is ignored — the
+council never reads it (ADR-104, superseding the project-local override
+ADR-093 had kept). The absence of a council file *in a project* therefore
+says **nothing** about whether the council is configured; only the
+user-global file (or the `$AI_COUNCIL_CONFIG` override) decides that.
+
+When neither exists, the loader reports the user-global path as the place
+to create it. `agents/templates/.ai-council.yml.example` ships the
+documented shape to copy from. The legacy `ai_council.*` block under
 `.agent-settings.yml` remains removed (Phase 0 Step 5); a one-line
 breadcrumb there points at this contract.
 
