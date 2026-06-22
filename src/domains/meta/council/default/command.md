@@ -88,31 +88,39 @@ Neutrality — context-handoff).
 
 ### 2. Check the council is configured + price table fresh
 
-Council config lives in **`.ai-council.yml`**, NOT in `.agent-settings.yml`.
-The CLI (`scripts/ai_council/config.py:resolve_config_path`, per
-[ADR-093](../../../docs/decisions/ADR-093-ai-council-config-user-global.md))
+Council config is **ALWAYS user-global** and lives in **`.ai-council.yml`**,
+NOT in `.agent-settings.yml`, NOT in the project tree. The CLI
+(`scripts/ai_council/config.ts:resolve_config_path`, per
+[ADR-104](../../../docs/decisions/ADR-104-ai-council-config-global-only.md),
+superseding [ADR-093](../../../docs/decisions/ADR-093-ai-council-config-user-global.md))
 resolves it in this order — first hit wins:
 
-1. Project-local `<project_root>/agents/settings/.ai-council.yml` (if present).
+1. `$AI_COUNCIL_CONFIG` — explicit absolute path (tests / power users),
+   honoured even when absent. An explicit path, never a project search.
 2. User-global `~/.event4u/agent-config/settings/.ai-council.yml` — the
-   default home; one global config serves every project.
+   one and only home; this single global config serves every project.
 
-Keys are **top-level** in that file (`enabled`, `defaults:`, `members:`).
-There is no `ai_council:` parent block, and the legacy `ai_council.*` block
-under `.agent-settings.yml` was removed in ADR-093 — never read or recommend
-that path for council config.
+There is **no project-local lookup.** The council never reads
+`<project_root>/agents/settings/.ai-council.yml`, `scripts/ai_council`, or
+any project file. Keys are **top-level** in the global file (`enabled`,
+`defaults:`, `members:`). There is no `ai_council:` parent block, and the
+legacy `ai_council.*` block under `.agent-settings.yml` was removed in
+ADR-093 — never read or recommend that path for council config.
 
 ```
-NEVER claim the council "needs `.agent-settings.yml` set up" or an
-`ai_council` block. The CLI's `resolve_config_path` is authoritative:
-run `council:estimate` (Step 3) and read its exit code + message before
-making any "not configured" claim. A user-global `.ai-council.yml` with
-`enabled: true` works from EVERY project, including consumer repos that
-have no project-local config.
+THE COUNCIL CONFIG IS ALWAYS GLOBAL. NEVER SEARCH THE PROJECT FOR IT.
+NEVER claim the council "is not configured in this project". Never read
+project files — not `.agent-settings.yml`, not `scripts/ai_council` — to
+decide that. The ABSENCE OF ANY COUNCIL FILE IN THE PROJECT SAYS NOTHING
+about whether the council is configured. The CLI's `resolve_config_path`
+is authoritative: run `council:estimate` (Step 3) and read its exit code
++ message before making ANY "not configured" claim. A user-global
+`.ai-council.yml` with `enabled: true` works from EVERY project —
+consumer repos, fresh worktrees, any CWD — with zero per-project setup.
 ```
 
 The CLI is the single source of truth for the configured-check — do not
-hand-parse the YAML to second-guess it. Map its outcomes (Step 4 exit
+hand-parse the YAML, and never eyeball the project tree, to second-guess it. Map its outcomes (Step 4 exit
 codes, plus the **CLI exits 2** cases below):
 
 - `enabled: false` (top-level in the resolved `.ai-council.yml`) → CLI exits 2
@@ -279,11 +287,9 @@ council can act on the project directly.
 ## Failure modes
 
 - **CLI exits 2, "ai_council.enabled is false"** → tell the user to set
-  top-level `enabled: true` in the resolved `.ai-council.yml` (user-global
-  `~/.event4u/agent-config/settings/.ai-council.yml`, or a project-local
-  `<project_root>/agents/settings/.ai-council.yml`) — never in
-  `.agent-settings.yml`. Do not
-  flip it autonomously.
+  top-level `enabled: true` in the user-global
+  `~/.event4u/agent-config/settings/.ai-council.yml` — never in a project
+  file, never in `.agent-settings.yml`. Do not flip it autonomously.
 - **CLI exits 2, "no council member has `enabled: true`"** → list the
   install commands (`./agent-config keys:install-anthropic`,
   `./agent-config keys:install-openai`) and stop.

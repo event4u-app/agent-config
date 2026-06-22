@@ -13,7 +13,17 @@ type: decision
 
 ## Status
 
-**Accepted** · 2026-06-03. Locks the AI-council convergence
+**Accepted** · 2026-06-03. **Council-config *placement* superseded by
+[ADR-093](ADR-093-ai-council-config-user-global.md) → [ADR-104](ADR-104-ai-council-config-global-only.md)**
+(council config now lives user-global at
+`~/.event4u/agent-config/settings/.ai-council.yml`, never project-local).
+The **trust-boundary decision below still stands**: `ai_council` is not on
+the user-global *settings merge whitelist* (`.agent-settings.yml` keys) —
+the council reads its own dedicated `.ai-council.yml`, not a merged
+settings key. Wherever this ADR says council config "lives project-local",
+read "lives user-global per ADR-104".
+
+Locks the AI-council convergence
 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, design mode + peer-review,
 2026-06-03) on where the source of truth for personal preferences and AI-council
 configuration lives. Refines [`ADR-020`](ADR-020-global-only-consumer-scope.md)

@@ -4,7 +4,7 @@ status: accepted
 date: 2026-06-13
 decision: ai-council-config-user-global
 supersedes: —
-superseded_by: —
+superseded_by: 104
 phase: ai-council-config-relocation
 type: structural
 ---
@@ -13,9 +13,15 @@ type: structural
 
 ## Status
 
-**Accepted** · 2026-06-13. Maintainer directive (standing, restated): the
-council is a per-developer facility and must be configured once, globally,
-not re-declared per project.
+**Accepted** · 2026-06-13. **Partially superseded by
+[ADR-104](ADR-104-ai-council-config-global-only.md)** (2026-06-22): the
+user-global relocation stands, but the project-local override this ADR
+*kept* (precedence rule 2 in § Decision) is removed — the council is now
+**global-only** and never searches the project tree.
+
+Maintainer directive (standing, restated): the council is a per-developer
+facility and must be configured once, globally, not re-declared per
+project.
 
 ## Context
 
