@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**64 / 143 steps done · 45%**
+**72 / 189 steps done · 38%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
 ```
 
 ## Open roadmaps
@@ -17,9 +17,11 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 2 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 4 | [road-to-recursive-verification.md](roadmaps/road-to-recursive-verification.md) | 8 | 26 | 18 | 8 | 0 | 0 | ███░░░░░░░ 31% |
+| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -33,6 +35,19 @@
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Benchmark & default-flip (carried from parent Phase 6) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
+### [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md)
+
+**Road to operator-runtime harvest — cross-model parity is the keystone; gate the rest on it** — 0 / 20 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Cross-model e2e parity (keystone; everything downstream gates on it) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 0b | Output-format governance (decision-gated on P0 evidence; NOT a first-class P2) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 1 | `finding_floor` eval kind (after Phase 0; calibrated, not guessed) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | size-budget undershoot-floor + audited override (after Phase 1) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| G | (GATED) — model-overlays — open ONLY on a Phase-0 RDP failure | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | (parallel track) — product surface: QA-orchestration skill + lifecycle packaging | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
 **Road to py2ts Teardown Completion** — 8 / 21 done (38%)
@@ -44,6 +59,21 @@
 | 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
 | 2b | AI-council live-call layer (py2ts gap — transport now wired) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consumer + merge readiness | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+
+### [road-to-recursive-verification.md](roadmaps/road-to-recursive-verification.md)
+
+**Road to recursive self-verification — the one retraining-free Fugu mechanism, measured capability-axis-first** — 8 / 26 done (31%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Council-lock the gate before any live spend | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 1 | Mechanism design (no API spend) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Integrate, don't reinvent (no API spend) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 3 | Benchmark (host-explicit, capability axis first) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 3a | pre — human-preference pre-test (cheapest, runs FIRST, ~$15) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3a | weak-host go/no-go probe (three baselines, gated on 3a-pre) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3b | strong-host slice (gated on 3a passing) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | cross-vendor recursive pool (most expensive, gated last) | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
