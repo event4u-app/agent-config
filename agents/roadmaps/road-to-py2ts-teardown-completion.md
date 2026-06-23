@@ -126,6 +126,21 @@ stay open below — not force-marked done.
   - **shared python helper modules** (`tests/_lib/parity_oracle.ts`,
     `tests/scripts/_mcp_server.ts`, `_bench_wave8d.ts`, `_bench_ab.ts`) +
     their importers — resolve after their consumers are de-pythonized.
+  - **Conversion is NOT a blind snapshot — determinism trap (verified
+    2026-06-23).** A parity rig agrees byte-for-byte across py/tsx *for the
+    same inputs* even when the output is machine-dependent (it compares two
+    live runs). Dropping the python side and freezing the tsx output as the
+    expected value bakes the **runner's** state into the golden → CI-flaky.
+    Each conversion must first establish the file's determinism contract and
+    pin the controlling input before snapshotting. Known traps found in the
+    `cli/python/workspace_*` cluster: `cli_present`/`effective_tier` depend on
+    **PATH** (host-CLI resolution — but `PATH=''` also breaks the `tsx`
+    launcher's `node` lookup, so neutralise via a controlled fixture PATH, not
+    an empty one); `workspace_explain` has **float round-half-to-even**
+    (`_pyFixed2`: 0.125→0.12) and **relative-time** (`_human_relative` reads
+    the live clock) surfaces. Prefer asserting the documented contract /
+    masked (`norm()`) output over a raw full-output snapshot. Per-file work,
+    not a codemod.
 - [x] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
   judgement** (council B1). <!-- DONE 2026-06-23: 0 runIf(py3)/runIf(PY) blocks remain repo-wide (21 purged #639 + 4 all-parity CLI rigs converted to python-free intent tests). The "269" was a stale count; the real gated surface was 25 files. --> Per file: if the `runIf(py3)` block calls
   `readOracleSnapshot(...)` with **no** `captureSnapshot(...)` in the same block
