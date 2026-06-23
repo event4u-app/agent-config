@@ -1,47 +1,16 @@
-// Golden-parity tests for work_engine/directives/backend/report.ts vs
-// report.py (ADR-094 py2ts Phase 1 — backend directive set).
+// Intent tests for work_engine/directives/backend/report.ts (py2ts ADR-094
+// Phase 1 — backend directive set).
 //
-// `report.py` imports `...delivery_state` + `...persona_policy`, so it loads as
-// a real package member via `sys.path` + import. The renderer is pure — it
-// reads DeliveryState and writes `state.report`. Both engines build the same
-// DeliveryState fixture, run, and emit the rendered `state.report` string
-// (raw, not JSON-wrapped) for a byte-exact compare. Coverage: every section's
+// Was a python3-vs-tsx byte-parity rig; the `.py` original is gone, so this now
+// asserts the tsx renderer's own contract directly. The renderer is pure — it
+// reads DeliveryState and writes `state.report`. Coverage: every section's
 // populated + empty body, the memory-that-mattered drop rule, the visual-
 // preview gating, follow-up aggregation order, kv-block rendering, and the
 // advisory persona's suppressed next-commands section. No non-determinism.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { AMBIGUITIES, run } from '../../../src/agent-src/templates/scripts/work_engine/directives/backend/report.js';
 import { DeliveryState } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-/** Python driver: run report.run, emit the raw rendered `state.report`. */
-function runPy(stateJson: string): string {
-    const code = [
-        'import sys, json, importlib',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        'mod = importlib.import_module("work_engine.directives.backend.report")',
-        'from work_engine.delivery_state import DeliveryState',
-        'payload = json.loads(sys.argv[1])',
-        'st = DeliveryState(**payload)',
-        'mod.run(st)',
-        'sys.stdout.write(st.report)',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, stateJson], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
 
 function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): string {
     const st = new DeliveryState(state);
@@ -49,20 +18,13 @@ function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): string {
     return st.report;
 }
 
-function pyFixture(state: ConstructorParameters<typeof DeliveryState>[0]): string {
-    return JSON.stringify(state);
-}
-
-const py = hasPython3();
-const describeParity = py ? describe : describe.skip;
-
 describe('directives/backend/report — AMBIGUITIES', () => {
     it('declares no surfaces (pure renderer)', () => {
         expect(AMBIGUITIES).toEqual([]);
     });
 });
 
-describeParity('directives/backend/report — golden parity (ts == py)', () => {
+describe('directives/backend/report — rendered report', () => {
     const cases: Array<[string, ConstructorParameters<typeof DeliveryState>[0]]> = [
         ['minimal state (all empties / placeholders)', { ticket: {} }],
         [
@@ -134,6 +96,6 @@ describeParity('directives/backend/report — golden parity (ts == py)', () => {
     ];
 
     it.each(cases)('%s', (_label, state) => {
-        expect(runTs(state)).toBe(runPy(pyFixture(state)));
+        expect(runTs(state)).toMatchSnapshot();
     });
 });

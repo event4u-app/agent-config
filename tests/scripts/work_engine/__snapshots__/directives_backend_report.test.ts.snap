@@ -1,0 +1,423 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`directives/backend/report — rendered report > advisory persona suppresses next-commands 1`] = `
+"## Ticket
+
+R-9 — (no title)
+
+## Persona
+
+advisory
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_"
+`;
+
+exports[`directives/backend/report — rendered report > follow-ups aggregated from plan/verify/tests in order 1`] = `
+"## Ticket
+
+R-8 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+{'steps': ['x'], 'followups': [{'note': 'plan fup', 'anchor': 'P#1'}]}
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+- **verdict:** success
+- **followups:** [{'note': 'test fup'}]
+
+## Verify
+
+- **verdict:** success
+- **followups:** [{'title': 'verify fup'}]
+
+## Follow-ups
+
+- plan fup — \`P#1\`
+- verify fup
+- test fup
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > fully populated, verify success → both next-commands 1`] = `
+"## Ticket
+
+R-1 — Build the thing
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+1. **Step A** — do A
+2. plain step
+
+## Changes
+
+- \`a.ts\` (L1-L9) — add
+- \`b.ts\`
+
+## Tests
+
+- **verdict:** success
+- **targeted:** 12
+
+## Verify
+
+- **verdict:** success
+- **confidence:** high
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`
+- \`/create-pr\`"
+`;
+
+exports[`directives/backend/report — rendered report > memory all non-influential → section dropped 1`] = `
+"## Ticket
+
+R-4 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > memory that mattered drops non-influential hits 1`] = `
+"## Ticket
+
+R-3 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Memory that mattered
+
+- \`m1\` (domain-invariants) — mattered
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > minimal state (all empties / placeholders) 1`] = `
+"## Ticket
+
+(no id) — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > string plan body 1`] = `
+"## Ticket
+
+R-2 — T
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+do this thing
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > tests as a plain string (kv-block string branch) 1`] = `
+"## Ticket
+
+R-11 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+all good
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > verify not success → only /commit suggested 1`] = `
+"## Ticket
+
+R-10 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > visual preview render_ok but no paths → dropped 1`] = `
+"## Ticket
+
+R-7 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > visual preview rendered (render_ok + paths) 1`] = `
+"## Ticket
+
+R-5 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Visual preview
+
+- Screenshot: \`shot.png\`
+- DOM dump: \`dom.html\`
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;
+
+exports[`directives/backend/report — rendered report > visual preview skipped (render_ok false) → dropped 1`] = `
+"## Ticket
+
+R-6 — (no title)
+
+## Persona
+
+senior-engineer
+
+## Plan
+
+_(no plan recorded)_
+
+## Changes
+
+_(no file changes recorded)_
+
+## Tests
+
+_(no tests ran)_
+
+## Verify
+
+_(no verify verdict)_
+
+## Follow-ups
+
+_(none)_
+
+## Suggested next commands
+
+- \`/commit\`"
+`;

@@ -1,56 +1,20 @@
-// Golden-parity tests for work_engine/directives/backend/implement.ts vs
-// implement.py (ADR-094 py2ts Phase 1 — backend directive set).
+// Intent tests for work_engine/directives/backend/implement.ts (ADR-094 py2ts
+// Phase 1 — backend directive set).
 //
-// `implement.py` imports `...delivery_state` and `...persona_policy`, so it
-// loads as a real package member via `sys.path` + import. Persona gating
-// (advisory short-circuits to SUCCESS) is covered alongside the plan-gate and
-// changes-shape paths. TS twin in-process; Python via python3 subprocess;
-// byte-exact `{outcome, questions, message}` compare. No non-determinism.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+// Was a python3-vs-tsx golden-parity rig; the `.py` original is gone, so this
+// now asserts the tsx module's own contract directly. `run()` is exercised
+// in-process against a `DeliveryState` built from each fixture and the full
+// `{outcome, questions, message}` result is snapshotted. The persona gate,
+// plan-gate, and changes-shape paths are all covered. No non-determinism.
 import { describe, expect, it } from 'vitest';
 
 import { AMBIGUITIES, run } from '../../../src/agent-src/templates/scripts/work_engine/directives/backend/implement.js';
 import { DeliveryState, type StepResult } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
+function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): Pick<StepResult, 'outcome' | 'questions' | 'message'> {
+    const r = run(new DeliveryState(state));
+    return { outcome: r.outcome, questions: r.questions, message: r.message };
 }
-
-function runPy(moduleName: string, stateJson: string): string {
-    const code = [
-        'import sys, json, importlib',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        `mod = importlib.import_module("work_engine.directives.backend.${moduleName}")`,
-        'from work_engine.delivery_state import DeliveryState',
-        'payload = json.loads(sys.argv[1])',
-        'st = DeliveryState(**payload)',
-        'r = mod.run(st)',
-        'out = {"outcome": r.outcome.value, "questions": r.questions, "message": r.message}',
-        'sys.stdout.write(json.dumps(out, indent=2, ensure_ascii=False))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, stateJson], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
-
-function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): string {
-    const r: StepResult = run(new DeliveryState(state));
-    return JSON.stringify({ outcome: r.outcome, questions: r.questions, message: r.message }, null, 2);
-}
-
-function pyFixture(state: ConstructorParameters<typeof DeliveryState>[0]): string {
-    return JSON.stringify(state);
-}
-
-const py = hasPython3();
-const describeParity = py ? describe : describe.skip;
 
 const ok = { plan: 'success' };
 
@@ -64,46 +28,165 @@ describe('directives/backend/implement — AMBIGUITIES', () => {
     });
 });
 
-describeParity('directives/backend/implement — golden parity (ts == py)', () => {
-    const cases: Array<[string, ConstructorParameters<typeof DeliveryState>[0]]> = [
-        [
-            'advisory persona → SUCCESS short-circuit (skip)',
-            { ticket: { id: 'I-1' }, persona: 'advisory', outcomes: ok },
-        ],
-        ['plan not success → BLOCKED precondition', { ticket: { id: 'I-2' }, outcomes: {} }],
-        ['empty changes → delegate apply-plan', { ticket: { id: 'I-3' }, outcomes: ok }],
-        [
-            'valid changes → SUCCESS',
-            { ticket: { id: 'I-4' }, changes: [{ path: 'a.ts' }, { file: 'b.ts' }], outcomes: ok },
-        ],
-        [
-            'malformed change (no path/file) → BLOCKED shape',
-            { ticket: { id: 'I-5' }, changes: [{ purpose: 'x' }], outcomes: ok },
-        ],
-        [
-            'malformed change (non-dict entry) → BLOCKED shape',
-            { ticket: { id: 'I-6' }, changes: ['not a dict'] as unknown as Array<Record<string, unknown>>, outcomes: ok },
-        ],
-        [
-            'malformed change (blank path) → BLOCKED shape',
-            { ticket: { id: 'I-7' }, changes: [{ path: '   ' }], outcomes: ok },
-        ],
-        [
-            'multiple malformed changes → BLOCKED shape (joined)',
-            { ticket: { id: 'I-8' }, changes: ['x', { why: 'y' }] as unknown as Array<Record<string, unknown>>, outcomes: ok },
-        ],
-        [
-            'qa persona behaves like senior (no skip) → delegate',
-            { ticket: { id: 'I-9' }, persona: 'qa', outcomes: ok },
-        ],
-        [
-            'path falsy falls back to file key → SUCCESS',
-            { ticket: { id: 'I-10' }, changes: [{ path: '', file: 'real.ts' }], outcomes: ok },
-        ],
-        ['no ticket id, delegate → "(no id)"', { ticket: {}, outcomes: ok }],
-    ];
+describe('directives/backend/implement — run() contract', () => {
+    it('advisory persona → SUCCESS short-circuit', () => {
+        expect(runTs({ ticket: { id: 'I-1' }, persona: 'advisory', outcomes: ok })).toMatchInlineSnapshot(`
+          {
+            "message": "implement skipped: persona \`advisory\` is plan-only.",
+            "outcome": "success",
+            "questions": [],
+          }
+        `);
+    });
 
-    it.each(cases)('%s', (_label, state) => {
-        expect(runTs(state)).toBe(runPy('implement', pyFixture(state)));
+    it('plan not success → BLOCKED precondition', () => {
+        expect(runTs({ ticket: { id: 'I-2' }, outcomes: {} })).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-2 cannot implement: plan gate did not pass.",
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket I-2 — implement gate refused: \`plan\` step did not complete successfully.",
+              "> 1. Re-run \`/implement-ticket\` from the start",
+              "> 2. Abort",
+            ],
+          }
+        `);
+    });
+
+    it('empty changes → delegate apply-plan', () => {
+        expect(runTs({ ticket: { id: 'I-3' }, outcomes: ok })).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-3 needs its plan applied before testing.",
+            "outcome": "blocked",
+            "questions": [
+              "@agent-directive: apply-plan ticket=I-3",
+              "> Ticket I-3 — applying the recorded plan under \`minimal-safe-diff\` + \`scope-control\`.",
+              "> 1. Continue — apply the plan as recorded",
+              "> 2. Abort — stop before any edits are made",
+            ],
+          }
+        `);
+    });
+
+    it('valid changes → SUCCESS', () => {
+        expect(
+            runTs({ ticket: { id: 'I-4' }, changes: [{ path: 'a.ts' }, { file: 'b.ts' }], outcomes: ok }),
+        ).toMatchInlineSnapshot(`
+          {
+            "message": "",
+            "outcome": "success",
+            "questions": [],
+          }
+        `);
+    });
+
+    it('malformed change (no path/file) → BLOCKED shape', () => {
+        expect(runTs({ ticket: { id: 'I-5' }, changes: [{ purpose: 'x' }], outcomes: ok })).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-5 changes shape invalid: change #1 has no path.",
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket I-5 — recorded changes are malformed: change #1 has no path.",
+              "> 1. Re-run \`apply-plan\` and resume",
+              "> 2. Abort — changes cannot be trusted",
+            ],
+          }
+        `);
+    });
+
+    it('malformed change (non-dict entry) → BLOCKED shape', () => {
+        expect(
+            runTs({
+                ticket: { id: 'I-6' },
+                changes: ['not a dict'] as unknown as Array<Record<string, unknown>>,
+                outcomes: ok,
+            }),
+        ).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-6 changes shape invalid: change #1 is not a dict.",
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket I-6 — recorded changes are malformed: change #1 is not a dict.",
+              "> 1. Re-run \`apply-plan\` and resume",
+              "> 2. Abort — changes cannot be trusted",
+            ],
+          }
+        `);
+    });
+
+    it('malformed change (blank path) → BLOCKED shape', () => {
+        expect(runTs({ ticket: { id: 'I-7' }, changes: [{ path: '   ' }], outcomes: ok })).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-7 changes shape invalid: change #1 has no path.",
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket I-7 — recorded changes are malformed: change #1 has no path.",
+              "> 1. Re-run \`apply-plan\` and resume",
+              "> 2. Abort — changes cannot be trusted",
+            ],
+          }
+        `);
+    });
+
+    it('multiple malformed changes → BLOCKED shape (joined)', () => {
+        expect(
+            runTs({
+                ticket: { id: 'I-8' },
+                changes: ['x', { why: 'y' }] as unknown as Array<Record<string, unknown>>,
+                outcomes: ok,
+            }),
+        ).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-8 changes shape invalid: change #1 is not a dict; change #2 has no path.",
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket I-8 — recorded changes are malformed: change #1 is not a dict; change #2 has no path.",
+              "> 1. Re-run \`apply-plan\` and resume",
+              "> 2. Abort — changes cannot be trusted",
+            ],
+          }
+        `);
+    });
+
+    it('qa persona behaves like senior (no skip) → delegate', () => {
+        expect(runTs({ ticket: { id: 'I-9' }, persona: 'qa', outcomes: ok })).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket I-9 needs its plan applied before testing.",
+            "outcome": "blocked",
+            "questions": [
+              "@agent-directive: apply-plan ticket=I-9",
+              "> Ticket I-9 — applying the recorded plan under \`minimal-safe-diff\` + \`scope-control\`.",
+              "> 1. Continue — apply the plan as recorded",
+              "> 2. Abort — stop before any edits are made",
+            ],
+          }
+        `);
+    });
+
+    it('path falsy falls back to file key → SUCCESS', () => {
+        expect(
+            runTs({ ticket: { id: 'I-10' }, changes: [{ path: '', file: 'real.ts' }], outcomes: ok }),
+        ).toMatchInlineSnapshot(`
+          {
+            "message": "",
+            "outcome": "success",
+            "questions": [],
+          }
+        `);
+    });
+
+    it('no ticket id, delegate → "(no id)"', () => {
+        expect(runTs({ ticket: {}, outcomes: ok })).toMatchInlineSnapshot(`
+          {
+            "message": "Ticket (no id) needs its plan applied before testing.",
+            "outcome": "blocked",
+            "questions": [
+              "@agent-directive: apply-plan ticket=(no id)",
+              "> Ticket (no id) — applying the recorded plan under \`minimal-safe-diff\` + \`scope-control\`.",
+              "> 1. Continue — apply the plan as recorded",
+              "> 2. Abort — stop before any edits are made",
+            ],
+          }
+        `);
     });
 });

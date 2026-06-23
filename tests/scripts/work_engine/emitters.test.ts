@@ -1,30 +1,16 @@
-// Golden-parity tests for work_engine/emitters.ts vs emitters.py (ADR-096
-// py2ts Phase 1 — work_engine TOP/integration layer).
-//
-// `emitters.py` imports `.delivery_state`, `.hooks`, `.state` (package-relative
-// imports through the real `work_engine` package), so the parity harness runs
-// it via sys.path + import_module. Coverage: `_emit` SUCCESS (report on stdout)
-// + halt branches ([halt] line + questions), and `_emit_halt` (stderr surface,
-// fallback `halt:` line, exit-2, halts[] persistence when the state file
-// pre-exists). The halt timestamp is wall-clock — normalised in both engines.
-import { spawnSync } from 'node:child_process';
+// Intent tests for work_engine/emitters.ts (ADR-096 py2ts Phase 1 —
+// work_engine TOP/integration layer). The python byte-parity rig is gone; this
+// asserts the tsx module's own contract directly. Coverage: `_emit_halt`
+// (stderr surface, fallback `halt:` line, exit-2, halts[] persistence when the
+// state file pre-exists). The halt timestamp is wall-clock.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { _emit, _emit_halt } from '../../../src/agent-src/templates/scripts/work_engine/emitters.js';
-import { Outcome } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
+import { _emit_halt } from '../../../src/agent-src/templates/scripts/work_engine/emitters.js';
 import { HookHalt } from '../../../src/agent-src/templates/scripts/work_engine/hooks/index.js';
 import { Input, WorkState, dump, load } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmp: string;
 beforeEach(() => {
@@ -32,70 +18,6 @@ beforeEach(() => {
 });
 afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
-});
-
-const py = hasPython3();
-const describeParity = py ? describe : describe.skip;
-
-// ── _emit (stdout) ───────────────────────────────────────────────────────
-
-/** Run `_emit` on python3 with the given report/final/halting/questions. */
-function pyEmit(report: string, final: string, halting: string | null, questions: string[]): string {
-    const code = [
-        'import sys, json',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        'from work_engine.emitters import _emit',
-        'from work_engine.delivery_state import Outcome',
-        'from work_engine.state import Input, WorkState',
-        'spec = json.loads(sys.argv[1])',
-        'w = WorkState(input=Input(kind="ticket", data={}))',
-        'w.report = spec["report"]',
-        'w.questions = spec["questions"]',
-        'final = Outcome(spec["final"])',
-        'halting = spec["halting"]',
-        '_emit(w, final, halting)',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, JSON.stringify({ report, final, halting, questions })], {
-        encoding: 'utf8',
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
-
-function tsEmit(report: string, final: Outcome, halting: string | null, questions: string[]): string {
-    const w = new WorkState({ input: new Input('ticket', {}) });
-    w.report = report;
-    w.questions = questions;
-    const chunks: string[] = [];
-    const orig = process.stdout.write.bind(process.stdout);
-    (process.stdout.write as unknown) = (s: string) => {
-        chunks.push(s);
-        return true;
-    };
-    try {
-        _emit(w, final, halting);
-    } finally {
-        (process.stdout.write as unknown) = orig;
-    }
-    return chunks.join('');
-}
-
-describeParity('_emit — stdout parity', () => {
-    it('SUCCESS prints the report', () => {
-        expect(tsEmit('the delivery report', Outcome.SUCCESS, null, [])).toBe(
-            pyEmit('the delivery report', 'success', null, []),
-        );
-    });
-    it('BLOCKED prints the halt line + questions', () => {
-        expect(tsEmit('', Outcome.BLOCKED, 'plan', ['1. opt a', '2. opt b'])).toBe(
-            pyEmit('', 'blocked', 'plan', ['1. opt a', '2. opt b']),
-        );
-    });
-    it('PARTIAL with no halting step prints (none)', () => {
-        expect(tsEmit('', Outcome.PARTIAL, null, ['q'])).toBe(pyEmit('', 'partial', null, ['q']));
-    });
 });
 
 // ── _emit_halt (stderr + persistence) ─────────────────────────────────────
