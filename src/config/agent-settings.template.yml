@@ -417,10 +417,57 @@ design:
 
 # --- Subagent orchestration ---
 #
-# Controls model selection and parallelism for subagent-based workflows
-# (/do-and-judge, /do-in-steps, /judge). Empty values fall back to the
-# runtime defaults described in .augment/contexts/subagent-configuration.md.
+# Controls model selection, parallelism, and AUTOMATIC orchestration for
+# subagent-based workflows (/do-and-judge, /do-in-steps, /judge, and the
+# auto-dispatch layer). Empty values fall back to the runtime defaults
+# described in .augment/contexts/subagent-configuration.md and
+# .augment/contexts/execution/auto-orchestration-activation.md.
 subagents:
+  # Global master switch for the whole subagent layer.
+  # true (default) = the layer is available; false = fully disabled, the
+  # canonical kill-switch (no auto-dispatch, no model routing, in-session only).
+  enabled: true
+
+  # Automatic-dispatch mode:  off | ask | on
+  #
+  # off = never auto-dispatch; subagents only via an explicit command.
+  # ask = classify the task; when delegable, ask once before dispatching.
+  # on  = auto-dispatch delegable tasks without asking (surface the choice
+  #       in one line).
+  #
+  # Initial SHIPPED default is `ask` on hosts whose capability manifest reports
+  # `subagent_spawn: true`, and `off` on hosts without a subagent primitive.
+  # The shipped default flips toward `on` (host-gated) only behind the Phase-6
+  # benchmark gate of road-to-auto-subagent-orchestration.md — never on an
+  # unmeasured claim. Auto-dispatch is also a no-op wherever the host manifest
+  # reports `subagent_spawn: false`, regardless of this value.
+  auto: ask
+
+  # Route delegable sub-tasks to the lowest-capable model tier (cost + speed
+  # via model downshift). true (default) = downshift per declared model_tier;
+  # false = every subagent runs on the session tier.
+  downshift: true
+
+  # Prefer a separate-quota-pool model for delegable sub-tasks WHERE the host
+  # manifest reports `separate_quota_pool: true` (e.g. a subscription whose
+  # Sonnet allowance is distinct from Opus). Optional bonus only — behaviour is
+  # identical (minus the quota win) where unsupported. Never load-bearing.
+  quota_arbitrage: true
+
+  # Optional per-tier model map for downshift routing. Empty value = use the
+  # tier's runtime default (see model-recommendations.md). Keys are the
+  # vendor-neutral capability bands.
+  model_map:
+    lite: ""
+    medium: ""
+    high: ""
+
+  # Optional host-capability override (see
+  # .augment/contexts/execution/host-capability-manifest.md). Any field set
+  # here wins; any field omitted falls back to the all-false safe default.
+  # Leave empty to let the agent resolve the manifest from host knowledge.
+  host_capabilities: {}
+
   # Model for implementer subagents (empty = same tier as the session model)
   implementer_model: ""
 

@@ -87,6 +87,13 @@ Single-line. The pretty-printed reference shape:
 Unknown trailing fields are forward-compat extensions; readers MUST
 NOT raise on them.
 
+A line MAY carry an optional `orchestration` object when the run was
+produced by the auto-dispatch orchestration layer. It is additive and
+non-breaking — `schema_version` is unchanged, no existing field is
+removed or renamed, and readers that do not understand it ignore it per
+the forward-compat rule above. Its shape lives in
+[`orchestration-telemetry.md`](../../src/agent-src/contexts/execution/orchestration-telemetry.md).
+
 ## Privacy floor
 
 Lines MUST NOT contain:
