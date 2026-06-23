@@ -393,6 +393,28 @@ quality:
   #         themselves (default — saves agent runtime and tokens)
   wait_for_remote_ci: false
 
+# --- Design fidelity ---
+#
+# Controls how strictly the agent must follow a user-provided, finished
+# design — a prototype, mockup, screenshot, or design-system file. Consumed
+# by the `design-fidelity` rule. The provided design is the spec, not a
+# starting point for the agent's own taste.
+design:
+  # strict | structural | hard-floor  (default: strict)
+  #
+  # strict     = build it 1:1. EVERY visible deviation (font, control type,
+  #              component, layout, spacing, colour, an omitted/added element)
+  #              needs explicit confirmation. A "better" idea is surfaced as a
+  #              numbered option, never executed.
+  # structural = structure is locked (fonts, control types, component set,
+  #              layout, no omissions still need confirmation). Where the spec
+  #              is genuinely silent (hover / empty / error states), the agent
+  #              may fill the gap in the spec's style and MUST state the
+  #              assumption.
+  # hard-floor = any deviation is a Hard-Floor action (never autonomous; no
+  #              autonomy setting, roadmap, or standing instruction lifts it).
+  fidelity_mode: strict
+
 # --- Subagent orchestration ---
 #
 # Controls model selection and parallelism for subagent-based workflows

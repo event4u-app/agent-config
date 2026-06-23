@@ -249,6 +249,7 @@
   "rules/commit-policy.md": "19d0589e317612441017aa41a50b967d002f3479747875e9ef8eb33995da2bd7",
   "rules/context-hygiene.md": "9bc882a8ae5eda22ff03c10be4600441370347aa6899dd29fa606a5e577525c1",
   "rules/copilot-routing.md": "64d107d611d56f067701b9b387d82989e9c72b08f5d37d31f48d499809a5ee16",
+  "rules/design-fidelity.md": "07dbd468877bd7b06684a0242b8d1969d10f1f2316251e766034e1a2ee7fa1f3",
   "rules/devcontainer-routing.md": "09eeef7117784bb43d8174d3ed54e2dd19a68dcc7f0f87f4058269659310471b",
   "rules/direct-answers.md": "83c0837696d23649ba2496cfd444dc5cc36e12710c6dd1b466abbe9d5fd51a8a",
   "rules/docker-commands.md": "690fbb146a1733781aa8fb179d2346cecbd66321eb14d9f0d854682293f1c7ba",

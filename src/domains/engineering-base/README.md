@@ -8,16 +8,17 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `7.0.2`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 93
+- **artefacts**: 94
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (17)
+## Rules (18)
 
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
+- **`design-fidelity`** — A provided prototype / mockup / design system is the run's spec — build it 1:1; never swap fonts, controls, components, or layout without confirmation. Strictness: design.fidelity_mode.
 - **`docker-commands`** — Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
 - **`engineering-safety-floor`** — Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers

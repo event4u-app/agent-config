@@ -72,6 +72,17 @@
           "enum": ["off", "on", "ask"]
         }
       }
+    },
+    "design": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "fidelity_mode": {
+          "type": "string",
+          "enum": ["strict", "structural", "hard-floor"],
+          "description": "How strictly the agent must follow a user-provided prototype / mockup / design system. Consumed by the design-fidelity rule. strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous."
+        }
+      }
     }
   }
 }
