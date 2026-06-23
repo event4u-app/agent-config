@@ -41,11 +41,32 @@ private-data leg stays narrow: the composer rejects inline bodies (multi-line /
 oversized entries), accepts only ref-like tokens, and caps the count. Anything
 dropped is recorded in `warnings` and surfaced — never silently widened.
 
+## Bundle resolver — bind to the existing surfaces
+
+The brief is **resolved**, not hand-built. `resolveBundle(slice)` maps a task
+slice to a concrete bundle by selecting from what the package already ships — no
+parallel registry:
+
+- **Role-profile via reused `judge-*` lenses** — a review slice → `judge-code-quality`,
+  security → `judge-security-auditor`, tests → `judge-test-coverage`, bug-hunt →
+  `judge-bug-hunter`. The lens rides as the leading persona so the subagent loads it.
+- **Role-mode** per slice kind (review → `reviewer`, tests → `tester`, plan → `planner`, …).
+- **Tier** per slice kind (`lite|medium|high`), consumed by `subagent-routing`.
+- **Knowledge refs** filtered by the **ADR-100 guard** (`filterKnowledgeByPolicy`):
+  a cross-project bundle drops `proprietary` refs; the drop is recorded.
+
+Every resolved bundle emits an auditable `(role_mode, judge_lens, tier,
+knowledge_ref_count, dropped_proprietary)` signature (`bundleAuditLine`) into the
+[`orchestration-telemetry`](orchestration-telemetry.md) object — counts + ids
+only, never bodies.
+
 ## Reference implementation
 
 [`src/scripts/_lib/subagent_spawn.ts`](../../../../src/scripts/_lib/subagent_spawn.ts)
-(`composeSpawnBrief`), covered by
-[`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts).
+(`composeSpawnBrief`) + [`src/scripts/_lib/subagent_bundle.ts`](../../../../src/scripts/_lib/subagent_bundle.ts)
+(`resolveBundle`, `filterKnowledgeByPolicy`, `bundleAuditLine`), covered by
+[`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts)
++ [`tests/scripts/_lib_subagent_bundle.test.ts`](../../../../tests/scripts/_lib_subagent_bundle.test.ts).
 
 ## Related
 

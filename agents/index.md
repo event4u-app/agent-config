@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **584 artefacts** in this package.
+Maintainer-facing index of all **585 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -263,7 +263,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (89)
+## Rules (90)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -283,6 +283,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`commit-policy`](../src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
 | rule | [`context-hygiene`](../src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config |
+| rule | [`delegation-policy`](../src/rules/delegation-policy.md) | auto | Delegable multi-part work + auto-orchestration enabled — decompose, tier-size each slice, dispatch to subagents instead of doing it all in-session |
 | rule | [`design-fidelity`](../src/rules/design-fidelity.md) | auto | A provided prototype / mockup / design system is the run's spec — build it 1:1; never swap fonts, controls, components, or layout without confirmation. Strictness: design.fidelity_mode. |
 | rule | [`devcontainer-routing`](../src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill |
 | rule | [`direct-answers`](../src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |

@@ -69,3 +69,4 @@ This is the canonical disable — no code change, effective on the next run.
 - [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 budget.
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — `enabled`/`auto` keys.
 - [`orchestration-telemetry`](orchestration-telemetry.md) — the audit signals the guardrails read.
+- [`subagent-response-contract`](subagent-response-contract.md) — the structured body returned inside this 4-status envelope + the orchestrator's synthesis duties.
