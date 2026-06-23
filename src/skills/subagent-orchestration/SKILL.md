@@ -56,6 +56,16 @@ parallel subagents **by default** and keep working while they run (async), rathe
 than blocking on each return — intervene only if one goes off track. Engage per
 [`rdp-gate`](../../contexts/execution/rdp-gate.md).
 
+### Settings-gated auto-dispatch
+
+"By default" is governed by the [`delegation-policy`](../../rules/delegation-policy.md)
+rule — the single source of the auto-trigger. It gates on the activation context
+([`auto-orchestration-activation`](../../contexts/execution/auto-orchestration-activation.md)):
+dispatch only when `subagents.enabled`, `subagents.auto != off`, the host
+manifest reports `subagent_spawn: true`, and the task is classified delegable.
+`auto: ask` → ask once; `auto: on` → surface mode + per-subtask tiers in one
+line; any gate failing → in-session no-op. Never lifts a safety floor.
+
 ## The seven modes
 
 Each mode has a decision row: when to use, when not, and the expected

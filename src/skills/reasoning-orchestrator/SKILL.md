@@ -79,7 +79,9 @@ Each link **delegates** to the artifact that owns it (no duplication):
    the response ([`notes-first-reasoning`](../../rules/notes-first-reasoning.md)).
 4. **gather** — resolve the load-bearing unknown first
    ([`complexity-first-planning`](../complexity-first-planning/SKILL.md)); dispatch
-   independent subtasks async ([`subagent-orchestration` § RDP](../subagent-orchestration/SKILL.md)).
+   independent subtasks async ([`subagent-orchestration` § RDP](../subagent-orchestration/SKILL.md)),
+   auto-triggered by the [`delegation-policy`](../../rules/delegation-policy.md) rule
+   (gates on `subagents.enabled`/`auto` + host manifest).
 5. **audit** — check progress against real tool results
    ([`verify-before-complete`](../../rules/verify-before-complete.md)).
 6. **verify** — fresh-context verifier on the structural-complexity gate

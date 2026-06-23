@@ -35,9 +35,9 @@ In practice that hedge produced a recurring, infuriating failure mode that
 the loader's own correctness did *not* prevent — because the failure was
 in the **agent's mental model**, not the resolver:
 
-> *"Council war in diesem Projekt nicht konfiguriert (kein
-> `.agent-settings.yml`/`scripts/ai_council`), daher habe ich die eine
-> Architektur-Gabel selbst entschieden."*
+> *"Council war in diesem Projekt nicht konfiguriert (kein <!-- md-language-check: ignore -->
+> `.agent-settings.yml`/`scripts/ai_council`), daher habe ich die eine <!-- md-language-check: ignore -->
+> Architektur-Gabel selbst entschieden."* <!-- md-language-check: ignore -->
 
 An agent working in a consumer project, asked to consult the council on an
 architecture fork, looked **in the project** for council artefacts — the

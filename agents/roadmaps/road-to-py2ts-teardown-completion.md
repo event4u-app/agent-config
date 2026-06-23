@@ -45,7 +45,7 @@ parent_roadmap: py2ts-teardown
 ## Disposition (2026-06-23) — autonomous-boundary council ruling + progress
 
 AI council (claude-sonnet-4-5 + gpt-4o, deep, `user_explicit`,
-`agents/runtime/council/responses/py2ts-boundary-2026-06-23.json`) ruled on the
+`agents/runtime/council/responses/py2ts-boundary-2026-06-23.json`) ruled on the <!-- council-ref-allowed: predecessor council trace (transient roadmap citation) -->
 post-merge reality: the Phase 0 oracle-integrity gate is **unsatisfiable** (no
 ref carries `python3` + the original `.py` anymore — deleted), BUT it was a
 *validation strategy*, not an *action prerequisite*. The integrity risk is
@@ -314,4 +314,4 @@ pre-flight gates above; the original draft had real sequencing + procedure gaps.
 
 ### Predecessor council trace
 
-`agents/runtime/council/responses/py2ts-teardown-completion-roadmap.json` (this run).
+`agents/runtime/council/responses/py2ts-teardown-completion-roadmap.json` (this run). <!-- council-ref-allowed: predecessor council trace (transient roadmap citation) -->

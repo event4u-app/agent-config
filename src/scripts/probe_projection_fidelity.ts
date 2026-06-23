@@ -154,7 +154,13 @@ function check_entry(entry: Record<string, unknown>): EntryResult {
     for (const [tool, spec] of Object.entries(checks)) {
         const result: CheckResult = { status: 'pass', details: [] };
         const expect_present = 'present' in spec ? Boolean(spec['present']) : true;
-        const pathLocated = locate(tool, out.type, entry['source'] as string);
+        // Honor an explicit per-tool `location` from the fixture when present
+        // (e.g. a renamed command whose projection stem differs from its source
+        // stem); otherwise derive the path from the artefact source.
+        const explicitLoc = spec['location'] as string | undefined;
+        const pathLocated = typeof explicitLoc === 'string'
+            ? (fs.existsSync(path.join(ROOT, explicitLoc)) ? path.join(ROOT, explicitLoc) : null)
+            : locate(tool, out.type, entry['source'] as string);
 
         if (tool === 'windsurf' && spec['concatenated_in']) {
             const fp = path.join(ROOT, spec['concatenated_in'] as string);

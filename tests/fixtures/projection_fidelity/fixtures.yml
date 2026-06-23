@@ -80,12 +80,12 @@ entries:
     tier: command
     checks:
       augment: { present: true, location: .augment/commands/commit.md }
-      claude: { present: true, location: .claude/skills/commit/SKILL.md }
+      claude: { present: true, location: .claude/skills/git-commit/SKILL.md }
       cursor_commands:
         present: true
-        location: .cursor/commands/commit.md
+        location: .cursor/commands/git-commit.md
         frontmatter_keys: [name, description]
       windsurf_workflows:
         present: true
-        location: .windsurf/workflows/commit.md
+        location: .windsurf/workflows/git-commit.md
       cline: { present: false, rationale: "Cline has no command surface" }
