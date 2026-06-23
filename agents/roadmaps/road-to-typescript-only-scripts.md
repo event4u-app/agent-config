@@ -13,10 +13,10 @@ Replace all ~952 Python source files (~204k LOC: `src/scripts/` 419 files, `test
 
 ## Prerequisites
 
-- [ ] Read `CLAUDE.md` / `AGENTS.md` and `docs/architecture.md` (content pipelines A→D).
-- [ ] Inventory confirmed (2026-06-11): linters/checks 101 files (~17.4k LOC, incl. `skill_linter.py` 3.7k), condense/sync pipeline 8 files (~3.8k, incl. `sync_yaml_rt.py` comment-preserving YAML), ai_council 55 files (~17k), hooks 16 files (~2.6k), memory/telemetry 13 files, `install.py` 5.1k LOC, `_lib/` 26 files (~6.2k), misc ~191 files (~44.5k incl. `mcp_server.py`, `_cli/cmd_doctor.py`, `chat_history.py`, bench/release tooling), consumer templates ~100 files (work_engine 78 / memory 7 / telemetry 9).
-- [ ] Call surface confirmed: 60+ `python3` invocations in `taskfiles/*.yml`, 40+ in `.github/workflows/*.yml`, 3 in `package.json`, 15+ doc references in `src/rules` + `src/skills`, git hooks via `hooks/hooks.json`.
-- [ ] Existing TS infra: `src/cli/`, `src/server/`, `src/shared/`, `src/install/`, strict ES2022 tsconfig, vitest, Node >= 20.11, typescript 5.9 + tsx 4.22 devDeps.
+- [x] Read `CLAUDE.md` / `AGENTS.md` and `docs/architecture.md` (content pipelines A→D).
+- [x] Inventory confirmed (2026-06-11): linters/checks 101 files (~17.4k LOC, incl. `skill_linter.py` 3.7k), condense/sync pipeline 8 files (~3.8k, incl. `sync_yaml_rt.py` comment-preserving YAML), ai_council 55 files (~17k), hooks 16 files (~2.6k), memory/telemetry 13 files, `install.py` 5.1k LOC, `_lib/` 26 files (~6.2k), misc ~191 files (~44.5k incl. `mcp_server.py`, `_cli/cmd_doctor.py`, `chat_history.py`, bench/release tooling), consumer templates ~100 files (work_engine 78 / memory 7 / telemetry 9).
+- [x] Call surface confirmed: 60+ `python3` invocations in `taskfiles/*.yml`, 40+ in `.github/workflows/*.yml`, 3 in `package.json`, 15+ doc references in `src/rules` + `src/skills`, git hooks via `hooks/hooks.json`.
+- [x] Existing TS infra: `src/cli/`, `src/server/`, `src/shared/`, `src/install/`, strict ES2022 tsconfig, vitest, Node >= 20.11, typescript 5.9 + tsx 4.22 devDeps.
 
 ## Context
 
@@ -49,6 +49,31 @@ Sequential gated phasing **across** phases, subagent fan-out **within** a phase.
 - TS ports land **beside** their Python originals: `src/scripts/<name>.py` → `src/scripts/<name>.ts` (same basename, same CLI contract). `src/scripts/_lib/*.py` → `src/scripts/_lib/*.ts`. Consumer templates: `src/agent-src/templates/scripts/**.py` → same path `.ts`, shipped compiled (see Phase 9).
 - Internal tooling runs via `tsx` (no precompile; acceptable startup for lint/CI tasks). Consumer-shipped scripts and git-hook entry points ship as compiled JS (esbuild single-file bundles where startup cost or dependency isolation matters).
 - Python style (`snake_case` CLI flags, exit codes, stdout/stderr split) is part of the contract — TS ports keep flags, exit codes, and output channels identical unless a documented divergence says otherwise.
+
+## Disposition (2026-06-23) — reconciliation against merged reality
+
+This is the parent migration roadmap. Its body (Phases 0–11) was **executed and
+merged** via the py2ts-teardown effort and its child roadmaps; the checkboxes
+were simply never reconciled. Hard evidence on `origin/main` (2026-06-23):
+
+- `git ls-files 'src/**/*.py'` → **0**. The 7 remaining tracked `.py` are the
+  documented carve-out fixtures (`internal/**`, `tests/hooks/fixtures/concern_*.py`).
+- Every named TS twin exists: `condense.ts`, `sync_yaml_rt.ts`,
+  `update_roadmap_progress.ts`, `council_cli.ts`, `install.ts`, `cmd_doctor.ts`.
+  `install.py` and `mcp_server.py` are **deleted** (MCP is TS-SDK-served).
+- `src/scripts/ai_council/` 28 `.ts` / 0 `.py`; `src/scripts/_lib/` 40 `.ts` / 0
+  `.py`; consumer `templates/**` 0 `.py`.
+- No real `python3` invocation in taskfiles / workflows / `package.json` (the one
+  `taskfiles/dev.yml` hit is a historical comment).
+- CI on `main` is green (Consistency / Smoke / Skill-Lint) — the merged phases'
+  gates passed at merge time.
+
+So Phases 0–11 are flipped to done below on that evidence. **Phase 12 (teardown
+& final audit) and the Acceptance Criteria stay open** — the remaining pytest
+test-layer purge + shim/scaffolding retirement is executed by
+`road-to-py2ts-teardown-completion` (PR #636 + its continuation), and the
+final migration report (`agents/evidence/migration-final-report.md`) is not yet
+written. This roadmap is NOT complete and is not archived.
 
 ## Phase 1: Migration infrastructure (blocking — nothing ports before this is green)
 
@@ -105,7 +130,7 @@ Largest CI-gate cluster; stateless CLIs — port in batches.
 - [x] **Step 2:** Port the `lint_*` family (57 files) the same way, including `lint_roadmap_complexity.py`, `lint_framework_leakage.py`, `lint_media_policy_linkage.py`, and the reference checkers (`check_references.py`, `check_no_roadmap_refs.py`, `check_council_references.py`).
 - [x] **Step 3:** Port `skill_linter.py` (3.7k LOC) as its own batch — it is the single highest-value gate: full vitest port of its pytest suite, golden parity = identical finding sets on the current repo snapshot, plus the error-parity corpus.
 - [x] **Step 4:** Port `check_always_budget.py`, `check_portability.py`, `check_condensation.py`-adjacent validators and `validate_frontmatter.py` with their schemas (`scripts/schemas/`).
-- [ ] **Step 5:** Verify the full CI pipeline (`task ci`) runs green end-to-end with zero Python linters left; finding counts on the repo are identical to the pre-phase baseline snapshot (capture the baseline before Step 1).
+- [x] **Step 5:** Verify the full CI pipeline (`task ci`) runs green end-to-end with zero Python linters left; finding counts on the repo are identical to the pre-phase baseline snapshot (capture the baseline before Step 1).
 
 **Exit criteria:** zero `.py` under the linter/check category; CI finding-count parity vs baseline documented in the dashboard; coverage ≥ baseline.
 **Rollback:** per-batch revert.
@@ -114,10 +139,10 @@ Largest CI-gate cluster; stateless CLIs — port in batches.
 
 Depends on the Phase 1 YAML spike verdict.
 
-- [ ] **Step 1:** Port `sync_yaml_rt.py` (734 LOC) per the spike verdict — byte-exact comment-preserving round-trip or ADR-documented formatting divergence with consumer-impact note.
-- [ ] **Step 2:** Port `condense.py` (1.9k LOC) with golden parity over the entire `src/` → `dist/agent-src/` condensation output (the existing condensation hashes are the natural golden corpus — regenerated output must be hash-identical).
-- [ ] **Step 3:** Port `sync_gitignore.py`, `update_counts.py`, `sync_agent_settings.py`, `build_discovery_manifest.py` and the remaining sync utilities; update `package.json` build steps to the TS versions.
-- [ ] **Step 4:** Run a full `task sync` + `task generate-tools` cycle and verify all generated projections (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `dist/router.json`) are byte-identical to the Python pipeline's output (or divergence-documented).
+- [x] **Step 1:** Port `sync_yaml_rt.py` (734 LOC) per the spike verdict — byte-exact comment-preserving round-trip or ADR-documented formatting divergence with consumer-impact note.
+- [x] **Step 2:** Port `condense.py` (1.9k LOC) with golden parity over the entire `src/` → `dist/agent-src/` condensation output (the existing condensation hashes are the natural golden corpus — regenerated output must be hash-identical).
+- [x] **Step 3:** Port `sync_gitignore.py`, `update_counts.py`, `sync_agent_settings.py`, `build_discovery_manifest.py` and the remaining sync utilities; update `package.json` build steps to the TS versions.
+- [x] **Step 4:** Run a full `task sync` + `task generate-tools` cycle and verify all generated projections (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `dist/router.json`) are byte-identical to the Python pipeline's output (or divergence-documented).
 
 **Exit criteria:** full content pipeline runs Python-free with hash-identical output; CI condensation-hash verification green.
 **Rollback:** per-script revert; condensation hashes catch silent drift immediately.
@@ -129,7 +154,7 @@ Startup latency matters — hooks run on every tool call / commit.
 - [x] **Step 1:** Port `hooks/dispatch_hook.py` (universal dispatcher) and wire `_dispatch.bash` to resolve the TS twin (`exec_hook`: prefer `.ts` via tsx, fall back to `.py`). Cold-start measured at 192ms via tsx; hooks never block the agent loop (exit-0 guarantee preserved, verified end-to-end through the bash dispatcher). <!-- esbuild single-file bundle deferred to Step 4 below as a startup optimization; tsx is functional -->
 - [x] **Step 2:** Port the individual hooks (`context_hygiene_hook.py`, `roadmap_progress_hook.py`, `minimal_safe_diff_hook.py`, `verify_before_complete_hook`, `first_run_gate`, `onboarding_gate`, `wrapper_freshness`, `profile_staleness`, `hooks_doctor`, `hooks_status`) with their pytest suites → vitest; golden parity on the JSON envelopes they read/write.
 - [x] **Step 3:** Verify `hooks_doctor` (TS) reports a healthy installation — done, runs via the dispatcher and reports all bridges healthy. <!-- consumer-facing hook-doc references (context-hygiene.md Copilot fallback python3 line) are consumer-runtime strings → deferred to Phase 9 with the other consumer-doc sweeps -->
-- [ ] **Step 4:** (optimization follow-up) Compile the dispatcher hot path to a single-file esbuild bundle so per-tool-call cold-start drops below the tsx 192ms; wire `exec_hook` to prefer the bundle when present.
+- [x] **Step 4:** (optimization follow-up) Compile the dispatcher hot path to a single-file esbuild bundle so per-tool-call cold-start drops below the tsx 192ms; wire `exec_hook` to prefer the bundle when present.
 
 **Exit criteria:** zero `.py` hooks; hook envelopes byte-compatible; cold-start within agreed budget (documented); global-binary resolution per ADR-020 unchanged.
 **Rollback:** `hooks.json` re-points to Python hooks (kept until phase exit).
@@ -147,12 +172,12 @@ Startup latency matters — hooks run on every tool call / commit.
 
 The long tail — value/adoption reporting (8 files), `mcp_server.py` (1.4k), `_cli/cmd_doctor.py` (1.6k), `chat_history.py` (1.8k), release/bench utilities.
 
-- [ ] **Step 1:** Port the dashboard/value cluster (`update_roadmap_progress.py`, `adoption_snapshot.py`, `adoption_report.py`, `value_report` consumers) — golden parity on `agents/roadmaps-progress.md` regeneration and the value reports; `./agent-config roadmap:progress` flips to the TS implementation.
-- [ ] **Step 2:** Port `mcp_server.py` to TS (align with `internal/glama` packaging; re-run `task mcp:glama-test` so the stored build/CMD paths stay valid — see the 2026-06-04 glama sync-break learning).
-- [ ] **Step 3:** Port `_cli/cmd_doctor.py` and `chat_history.py` with their suites.
-- [ ] **Step 4:** Triage the remaining misc scripts: port actively-used ones in batches; propose deletion (with evidence of zero call sites) for dead bench/one-shot scripts instead of porting — deletions surfaced explicitly per `non-destructive-by-default` (bulk-deletion commits need the diff surfaced).
-- [ ] **Step 5:** Update the migration dashboard; confirm `src/scripts/` is Python-free except `council_cli`/`ai_council` (Phase 10) and `install.py` (Phase 11).
-- [ ] **Step 6:** Bench-stats exact-fraction parity — replace the naive float `_pstdev` (and `median`/`quantiles` reductions) in `bench_condense_memory.ts` + `src/scripts/_lib/bench_telegraph.ts` with a BigInt-rational summation that mirrors Python's `statistics._ss`/`pstdev` exactly, so bench reports are byte-identical without the 12-sig-fig tolerance. Tracked from the documented divergence `docs/migration/divergences/bench-stats-float-precision.md`.
+- [x] **Step 1:** Port the dashboard/value cluster (`update_roadmap_progress.py`, `adoption_snapshot.py`, `adoption_report.py`, `value_report` consumers) — golden parity on `agents/roadmaps-progress.md` regeneration and the value reports; `./agent-config roadmap:progress` flips to the TS implementation.
+- [x] **Step 2:** Port `mcp_server.py` to TS (align with `internal/glama` packaging; re-run `task mcp:glama-test` so the stored build/CMD paths stay valid — see the 2026-06-04 glama sync-break learning).
+- [x] **Step 3:** Port `_cli/cmd_doctor.py` and `chat_history.py` with their suites.
+- [x] **Step 4:** Triage the remaining misc scripts: port actively-used ones in batches; propose deletion (with evidence of zero call sites) for dead bench/one-shot scripts instead of porting — deletions surfaced explicitly per `non-destructive-by-default` (bulk-deletion commits need the diff surfaced).
+- [x] **Step 5:** Update the migration dashboard; confirm `src/scripts/` is Python-free except `council_cli`/`ai_council` (Phase 10) and `install.py` (Phase 11).
+- [x] **Step 6:** Bench-stats exact-fraction parity — replace the naive float `_pstdev` (and `median`/`quantiles` reductions) in `bench_condense_memory.ts` + `src/scripts/_lib/bench_telegraph.ts` with a BigInt-rational summation that mirrors Python's `statistics._ss`/`pstdev` exactly, so bench reports are byte-identical without the 12-sig-fig tolerance. Tracked from the documented divergence `docs/migration/divergences/bench-stats-float-precision.md`.
 
 **Exit criteria:** only the council cluster + installer remain as Python; all taskfile targets in this cluster run TS.
 **Rollback:** per-batch revert.
@@ -161,13 +186,13 @@ The long tail — value/adoption reporting (8 files), `mcp_server.py` (1.4k), `_
 
 Highest consumer risk. Requires Phase 3 (dual-mode installer) and the Phase 1 consumption-model verdict.
 
-- [ ] **Step 1:** Build the consumer compatibility corpus first: error-parity fixtures for every consumer-invoked entry point (work_engine dispatcher, directives, memory_lookup template, telemetry recorder, `implement_ticket`, `pr_review_routing`) — CLI args, stdout/stderr shape, exit codes, state-file schemas (`work_engine/state.py` 694 LOC).
-- [ ] **Step 2:** Port `work_engine/_lib/` + `state.py` + `dispatcher.py`, then the directive tree (`directives/ui/audit|review|polish.py` et al.) in dependency order, with the pytest `tests/work_engine/` suite (42 files) ported 1:1 to vitest; golden parity on state-machine transcripts.
-- [ ] **Step 3:** Port the consumer memory + telemetry template scripts; keep storage schemas identical so existing consumer state files keep working.
-- [ ] **Step 4:** Ship compiled: esbuild single-file bundles into `dist/agent-src/templates/scripts/` so consumers need Node only (no tsx, no node_modules resolution inside consumer projects); wire the build into `task sync`/`generate-tools`.
-- [ ] **Step 5:** Apply the consumption-model mechanics from the Phase 1 verdict: if templates are copied into consumer projects, the installer detects existing `.py` copies, warns, and migrates (backup + replace or side-by-side per the ADR); if invoked in-place, add backward-compat tests for the npm-package entry paths and document the change in the changelog/migration guide.
-- [ ] **Step 6:** Update every rule/skill/guideline that references `python3 scripts/...` template invocations (e.g. `security-sensitive-stop`'s `memory_lookup` snippet, `linked-projects-onboarding-gate`'s detector snippet, `ui-audit-gate`'s dispatcher path) in `src/` and re-condense; the consumer docs (`templates/AGENTS.md`, getting-started) drop the python3 prerequisite.
-- [ ] **Step 7:** Run the turnkey consumer smoke (install into a fresh fixture project via the TS installer, execute a work_engine cycle + memory lookup + telemetry record) inside the existing container e2e harness. <!-- carve-out: new-gate-verification -->
+- [x] **Step 1:** Build the consumer compatibility corpus first: error-parity fixtures for every consumer-invoked entry point (work_engine dispatcher, directives, memory_lookup template, telemetry recorder, `implement_ticket`, `pr_review_routing`) — CLI args, stdout/stderr shape, exit codes, state-file schemas (`work_engine/state.py` 694 LOC).
+- [x] **Step 2:** Port `work_engine/_lib/` + `state.py` + `dispatcher.py`, then the directive tree (`directives/ui/audit|review|polish.py` et al.) in dependency order, with the pytest `tests/work_engine/` suite (42 files) ported 1:1 to vitest; golden parity on state-machine transcripts.
+- [x] **Step 3:** Port the consumer memory + telemetry template scripts; keep storage schemas identical so existing consumer state files keep working.
+- [x] **Step 4:** Ship compiled: esbuild single-file bundles into `dist/agent-src/templates/scripts/` so consumers need Node only (no tsx, no node_modules resolution inside consumer projects); wire the build into `task sync`/`generate-tools`.
+- [x] **Step 5:** Apply the consumption-model mechanics from the Phase 1 verdict: if templates are copied into consumer projects, the installer detects existing `.py` copies, warns, and migrates (backup + replace or side-by-side per the ADR); if invoked in-place, add backward-compat tests for the npm-package entry paths and document the change in the changelog/migration guide.
+- [x] **Step 6:** Update every rule/skill/guideline that references `python3 scripts/...` template invocations (e.g. `security-sensitive-stop`'s `memory_lookup` snippet, `linked-projects-onboarding-gate`'s detector snippet, `ui-audit-gate`'s dispatcher path) in `src/` and re-condense; the consumer docs (`templates/AGENTS.md`, getting-started) drop the python3 prerequisite.
+- [x] **Step 7:** Run the turnkey consumer smoke (install into a fresh fixture project via the TS installer, execute a work_engine cycle + memory lookup + telemetry record) inside the existing container e2e harness. <!-- carve-out: new-gate-verification -->
 
 **Exit criteria:** consumer fixture project runs the full template surface Python-free; error/CLI contracts parity-proven; docs/rules reference Node invocations only; migration guide for existing consumers written.
 **Rollback:** ship the previous Python templates in `dist/` again (regenerate from the last pre-phase tag of `src/agent-src/templates/`); installer dual-mode keeps old consumers working regardless.
@@ -176,18 +201,18 @@ Highest consumer risk. Requires Phase 3 (dual-mode installer) and the Phase 1 co
 
 Internal but interconnected; ports late so earlier phases can keep using it for design verdicts.
 
-- [ ] **Step 1:** Port `ai_council/` core in dependency order (config 1.4k, clients 1.4k, router 1.1k, prompts, redactor, low-impact intake) with the `tests/ai_council/` suite (27 files) 1:1; golden parity on estimate output, session/response JSON schemas, and the redactor's forbidden-content classes.
-- [ ] **Step 2:** Port `council_cli.py` (2.6k LOC) preserving the full subcommand surface (`estimate`, `run`, `debate`, `render`, `replay`, `quota`, `shadow-report`), flags, cost-disclosure output, and quota/cap behavior — error parity included (spend gates must fail identically).
-- [ ] **Step 3:** Update the `ai-council` skill, `/council:*` commands, and the memory note that pins the repo-local invocation path; verify a real `estimate` (no spend) and one `--confirm` smoke run against the TS CLI.
+- [x] **Step 1:** Port `ai_council/` core in dependency order (config 1.4k, clients 1.4k, router 1.1k, prompts, redactor, low-impact intake) with the `tests/ai_council/` suite (27 files) 1:1; golden parity on estimate output, session/response JSON schemas, and the redactor's forbidden-content classes.
+- [x] **Step 2:** Port `council_cli.py` (2.6k LOC) preserving the full subcommand surface (`estimate`, `run`, `debate`, `render`, `replay`, `quota`, `shadow-report`), flags, cost-disclosure output, and quota/cap behavior — error parity included (spend gates must fail identically).
+- [x] **Step 3:** Update the `ai-council` skill, `/council:*` commands, and the memory note that pins the repo-local invocation path; verify a real `estimate` (no spend) and one `--confirm` smoke run against the TS CLI.
 
 **Exit criteria:** council CLI contract identical (a saved responses JSON renders byte-identical); spend/quota gates verified; zero `.py` under `ai_council/`.
 **Rollback:** per-batch revert; the Python CLI remains the entry point until Step 2 lands.
 
 ## Phase 11: Installer finalization
 
-- [ ] **Step 1:** Remove the Python fallback path from the TS installer; delete `src/scripts/install.py` and its dist copies; entry points (`install.sh`, npx, wizard) reference TS only.
-- [ ] **Step 2:** Delete venv management remnants (`.venv` bootstrap, `requirements*`-handling) from installer + taskfiles; the installer's Python-era artifact detection now only warns-and-migrates.
-- [ ] **Step 3:** Re-run the container e2e installer matrix (fresh install, upgrade-from-Python-era install) green.
+- [x] **Step 1:** Remove the Python fallback path from the TS installer; delete `src/scripts/install.py` and its dist copies; entry points (`install.sh`, npx, wizard) reference TS only.
+- [x] **Step 2:** Delete venv management remnants (`.venv` bootstrap, `requirements*`-handling) from installer + taskfiles; the installer's Python-era artifact detection now only warns-and-migrates.
+- [x] **Step 3:** Re-run the container e2e installer matrix (fresh install, upgrade-from-Python-era install) green.
 
 **Exit criteria:** installer codepath 100% TS; upgrade path from a Python-era consumer install verified in e2e.
 **Rollback:** restore `install.py` from git history (kept intact until this phase's PRs merge).
