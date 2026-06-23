@@ -140,14 +140,26 @@ function _inbound_ref_rewrite(
     old_rel: string,
     new_rel: string,
     dry_run: boolean,
+    tracked = true,
 ): string[] {
-    const grep = _run(['git', 'grep', '-l', '--', old_rel], root);
     const changed: string[] = [];
-    if (grep.returncode !== 0) {
-        // 1 = no matches, fine
-        return changed;
+    // Tracked repo → `git grep` (fast, index-aware). Untracked fallback (gap A)
+    // → walk the filesystem, since `git grep` only sees committed content and
+    // would miss every inbound ref in a pre-first-commit consumer.
+    let candidates: string[];
+    if (tracked) {
+        const grep = _run(['git', 'grep', '-l', '--', old_rel], root);
+        if (grep.returncode === 1) {
+            return changed; // no matches
+        }
+        candidates =
+            grep.returncode === 0
+                ? _splitlines(grep.stdout).map((l) => l.trim())
+                : _fs_grep_files(root, old_rel); // git grep unusable → fs walk
+    } else {
+        candidates = _fs_grep_files(root, old_rel);
     }
-    for (const line of _splitlines(grep.stdout)) {
+    for (const line of candidates) {
         const rel = line.trim();
         if (!rel || rel === old_rel) {
             // skip the roadmap file itself
@@ -176,14 +188,86 @@ function _replaceAll(text: string, oldStr: string, newStr: string): string {
     return text.split(oldStr).join(newStr);
 }
 
-function _git_mv(root: string, src_rel: string, dst_rel: string, dry_run: boolean): boolean {
+interface MoveResult {
+    /** the move (or dry-run no-op) succeeded */
+    ok: boolean;
+    /** the move went through `git mv` (tracked); false → plain filesystem
+     *  rename was used because the repo has no commits / the file is untracked.
+     *  The caller rewrites inbound refs on the filesystem (not via `git add`)
+     *  when this is false. */
+    tracked: boolean;
+}
+
+/**
+ * Move `src_rel` → `dst_rel`, preferring `git mv`.
+ *
+ * Untracked-safe (road-to-roadmap-archival-robustness, gap A): a consumer that
+ * closed a roadmap in a pre-first-commit / untracked working tree cannot use
+ * `git mv` (it errors). Instead of printing `git mv failed` and leaving the
+ * completed roadmap to rot in the active tree, fall back to a plain
+ * `fs.renameSync`. The TS-only enhancement post-dates the deleted Python twin
+ * (ADR-200), so there is no byte-parity obligation on this failure path.
+ */
+function _git_mv(root: string, src_rel: string, dst_rel: string, dry_run: boolean): MoveResult {
     const dst = path.join(root, dst_rel);
-    if (!dry_run) {
-        fs.mkdirSync(path.dirname(dst), { recursive: true });
-        const cp = _run(['git', 'mv', src_rel, dst_rel], root);
-        return cp.returncode === 0;
+    if (dry_run) {
+        return { ok: true, tracked: true };
     }
-    return true;
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    const cp = _run(['git', 'mv', src_rel, dst_rel], root);
+    if (cp.returncode === 0) {
+        return { ok: true, tracked: true };
+    }
+    // Fallback: untracked file or a repo with no commits — plain rename.
+    try {
+        fs.renameSync(path.join(root, src_rel), dst);
+        return { ok: true, tracked: false };
+    } catch {
+        return { ok: false, tracked: false };
+    }
+}
+
+/**
+ * Repo-relative paths of files containing `needle`, by walking the filesystem.
+ *
+ * The untracked fallback for `_inbound_ref_rewrite`: `git grep` only sees
+ * tracked content, so in a pre-first-commit consumer it misses every inbound
+ * reference. Walk the tree (skipping `.git` / `node_modules` and obvious binary
+ * trees), read text files, and match the literal path. Bounded by skipping the
+ * heavy dirs; an untracked consumer's tree is small.
+ */
+function _fs_grep_files(root: string, needle: string): string[] {
+    const SKIP = new Set(['.git', 'node_modules', '.augment', 'dist']);
+    const hits: string[] = [];
+    const walk = (dirAbs: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dirAbs, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries) {
+            if (e.name.startsWith('.git') || SKIP.has(e.name)) {
+                continue;
+            }
+            const abs = path.join(dirAbs, e.name);
+            if (e.isDirectory()) {
+                walk(abs);
+            } else if (e.isFile() && /\.(md|json|ya?ml|ts|js|txt)$/.test(e.name)) {
+                let text: string;
+                try {
+                    text = fs.readFileSync(abs, { encoding: 'utf-8' });
+                } catch {
+                    continue;
+                }
+                if (text.includes(needle)) {
+                    hits.push(path.relative(root, abs).split(path.sep).join('/'));
+                }
+            }
+        }
+    };
+    walk(root);
+    return hits;
 }
 
 interface ArchiveRecord {
@@ -222,12 +306,15 @@ function archive_completed(
             continue; // complete, but not this branch's work
         }
         const new_rel = `agents/roadmaps/archive/${stats.rel}`;
-        if (!_git_mv(root, old_rel, new_rel, dry_run)) {
-            process.stderr.write(`  ⚠️  git mv failed for ${old_rel}\n`);
+        const mv = _git_mv(root, old_rel, new_rel, dry_run);
+        if (!mv.ok) {
+            process.stderr.write(`  ⚠️  could not archive ${old_rel} (mv failed)\n`);
             continue;
         }
-        const refs = _inbound_ref_rewrite(root, old_rel, new_rel, dry_run);
-        if (!dry_run && refs.length) {
+        const refs = _inbound_ref_rewrite(root, old_rel, new_rel, dry_run, mv.tracked);
+        // Stage rewritten refs only in a tracked repo; an untracked consumer's
+        // files are not in the index, so the filesystem rewrite is the whole job.
+        if (!dry_run && refs.length && mv.tracked) {
             _run(['git', 'add', '--', ...refs], root);
         }
         archived.push({ roadmap: old_rel, archived_to: new_rel, refs_migrated: refs });

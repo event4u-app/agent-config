@@ -52,51 +52,63 @@ Grounding in source (`src/agent-src/scripts/`):
   commits/remote.
 - `update_roadmap_progress.py` — `--check` exit-1 backstop is CI-only.
 
+## Disposition (2026-06-23)
+
+Scope cut (Phase 0 step 2): **all three gaps ship in this roadmap** — (A)
+untracked-safe `mv`, (B) PR-decoupled trigger, (C) non-CI backstop. None was
+deferred. Evidence basis (Phase 0 step 1): the capisco repro is documented in
+"Canonical repro" above, and the fix is locked by a **permanent regression
+test** (`tests/scripts/archive_completed_roadmaps.test.ts` → "untracked-safe
+(TS-only)") rather than a one-off `agents/evidence/` capture — the test is the
+durable, re-runnable reproduction + proof. Phase 0 step 3: confirmed no existing
+standalone archive command under `src/domains/product-basic/roadmap/` — this
+roadmap extends the existing `archive_completed_roadmaps` script, no new command.
+
 ## Phase 0 — Confirm gaps, decide scope
 
-- [ ] Reproduce the capisco failure in a throwaway untracked dir: close a
+- [x] Reproduce the capisco failure in a throwaway untracked dir: close a
   roadmap, run the loop's § 6 archival path, confirm `git mv` fails and the
   roadmap stays put. Capture the exact failure mode under
   `agents/evidence/`.
-- [ ] Decide which of the three gaps ship in this roadmap vs defer: (A) git-only
+- [x] Decide which of the three gaps ship in this roadmap vs defer: (A) git-only
   `mv`, (B) PR-decoupled trigger, (C) non-CI backstop. Record the cut in this
   file's body.
-- [ ] Confirm no existing standalone archive command already covers this
+- [x] Confirm no existing standalone archive command already covers this
   (`grep` `src/domains/product-basic/roadmap/` for an `archive` command) — extend
   if found, new command only if a real gap.
 
 ## Phase 1 — Untracked-safe archival (gap A)
 
-- [ ] `archive_completed_roadmaps.py`: detect when a target file is untracked
+- [x] `archive_completed_roadmaps.py`: detect when a target file is untracked
   (or the repo has no commits) and fall back from `git mv` to a plain
   `mv` + working-tree ref-rewrite, instead of printing `git mv failed` and
   skipping.
-- [ ] Same fallback for the inbound-reference rewrite step — operate on the
+- [x] Same fallback for the inbound-reference rewrite step — operate on the
   filesystem, not on the git index, when untracked.
-- [ ] Unit test: untracked repo → roadmap archived, refs rewritten, dashboard
+- [x] Unit test: untracked repo → roadmap archived, refs rewritten, dashboard
   regenerated, exit 0 (no `git mv failed` on stderr).
 
 ## Phase 2 — PR-decoupled trigger (gap B)
 
-- [ ] Make `/roadmap:process-*` § 6 invoke `archive_completed_roadmaps.py --all`
+- [x] Make `/roadmap:process-*` § 6 invoke `archive_completed_roadmaps.py --all`
   (script path) as the primary archival path, with the documented manual
   procedure as fallback only when the script is absent — not the other way
   round. Update `roadmap-process-loop.md` § 6 accordingly.
-- [ ] When the archive/regen scripts are **not vendored** in the consumer,
+- [x] When the archive/regen scripts are **not vendored** in the consumer,
   the loop must emit a clear one-line instruction (run `agents:init` / vendor
   the scripts) rather than silently delegating to a manual `git mv` that fails.
-- [ ] Keep the `/create-pr` § 1c trigger as-is — this phase adds a second,
+- [x] Keep the `/create-pr` § 1c trigger as-is — this phase adds a second,
   PR-independent entry point; it does not remove the PR-gate.
 
 ## Phase 3 — Non-CI backstop + honest provenance (gap C)
 
-- [ ] Dashboard regen surfaces a visible banner when `count_open == 0` roadmaps
+- [x] Dashboard regen surfaces a visible banner when `count_open == 0` roadmaps
   remain in the active tree (not yet archived) — so "completed but unarchived"
   is visible without CI.
-- [ ] Fix the generated dashboard header: emit the **actual** regen path for the
+- [x] Fix the generated dashboard header: emit the **actual** regen path for the
   consumer (or a generic line), never a hardcoded `.augment/scripts/...` that may
   not exist in that project.
-- [ ] Document the manual archival fallback (mkdir `archive/`, `mv`, ref-rewrite,
+- [x] Document the manual archival fallback (mkdir `archive/`, `mv`, ref-rewrite,
   regen) in `roadmap-management` so a script-less consumer has a correct path.
 
 ## Acceptance criteria

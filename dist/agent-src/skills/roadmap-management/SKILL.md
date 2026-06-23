@@ -43,6 +43,23 @@ rule. Batching multiple edits in one response is fine — one final
 regeneration before replying is enough. But the response must not end
 without it.
 
+### Archival — preferred sweep, untracked-safe manual fallback
+
+Robust path: `archive_completed_roadmaps --all` — detects complete
+(`count_open == 0`, `count_deferred == 0`), moves to `agents/roadmaps/archive/`
+(`git mv` tracked, plain `mv` untracked / no-commit), rewrites inbound refs,
+regens dashboard. PR-independent.
+
+**Manual fallback (script not vendored)** — same response, never leave a
+100 %-complete roadmap active because `git mv` failed:
+
+1. `mkdir -p agents/roadmaps/archive`.
+2. `git mv agents/roadmaps/<x>.md agents/roadmaps/archive/<x>.md` (tracked); plain
+   `mv` if untracked / no commits.
+3. Rewrite inbound `agents/roadmaps/<x>.md` → `agents/roadmaps/archive/<x>.md`
+   across the tree (working tree, not just index, when untracked).
+4. Regenerate `agents/roadmaps-progress.md`.
+
 ## Procedure: Manage a roadmap
 
 1. **Identify need** — Is this a multi-step change that spans sessions or agents?
