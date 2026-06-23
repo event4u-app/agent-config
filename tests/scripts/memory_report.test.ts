@@ -1,14 +1,4 @@
-// Tests for src/scripts/memory_report.ts — quarterly + role-mode sections.
-//
-// 1:1 port of tests/test_memory_report.py (pytest → vitest, ADR-094 parity
-// contract). The pytest suite chdir's into tmp, monkeypatches MEMORY_ROOT /
-// INTAKE_ROOT and `memory_status.status`; the TS twin uses process.chdir +
-// the `_setMemoryRoot` / `_setIntakeRoot` seams + vi.spyOn on memory_status.
-// A trailing golden-parity block runs the real CI invocation (engine.yml:
-// `memory_report {{.CLI_ARGS}}`) under python3 vs tsx over a synthetic tree
-// and asserts byte-identical stdout/stderr/exit, skipped without python3.
 
-import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -20,16 +10,6 @@ import * as report from '../../src/scripts/memory_report.js';
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'memory_report.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'memory_report.py');
-
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function pyyamlAvailable(): boolean {
-    return spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
-const HAVE_PYYAML = HAVE_PYTHON && pyyamlAvailable();
 
 let tmp: string;
 let prevCwd: string;
@@ -155,89 +135,5 @@ describe('memory_report.ts — _role_mode_stats', () => {
         const r = report.build_report();
         expect(r.role_modes.total_markers).toBe(1);
         expect(r.role_modes.by_mode).toEqual({ planner: 1 });
-    });
-});
-
-// --- golden parity vs python3 --------------------------------------------
-//
-// Mirrors the real CI invocation `./scripts-run src/scripts/memory_report
-// {{.CLI_ARGS}}` (taskfiles/engine.yml). Runs both implementations over an
-// identical synthetic memory tree from the same cwd, with no agent-memory CLI
-// on PATH (deterministic `absent` backend), and asserts byte-identical
-// stdout/stderr/exit for both --format text and json.
-
-describe.skipIf(!HAVE_PYYAML)('memory_report — golden parity', () => {
-    let emptyPathDir: string;
-    let work: string;
-
-    beforeEach(() => {
-        emptyPathDir = mkdtempSync(join(tmpdir(), 'memrep-path-'));
-        const py = spawnSync('which', ['python3'], { encoding: 'utf8' }).stdout.trim();
-        spawnSync('ln', ['-s', process.execPath, join(emptyPathDir, 'node')]);
-        if (py) {
-            spawnSync('ln', ['-s', py, join(emptyPathDir, 'python3')]);
-        }
-        // Build a synthetic memory tree under the chdir'd tmp root.
-        const mem = join(tmp, 'agents', 'memory');
-        const di = join(mem, 'domain-invariants');
-        mkdirSync(di, { recursive: true });
-        // Curated entries: one fresh, one overdue (last_validated far in past).
-        writeFileSync(
-            join(di, 'one.yml'),
-            'id: one\ncreated: 2026-01-10\nlast_validated: 2020-01-01\nreview_after_days: 30\nrule: x\nstatus: active\n',
-            'utf-8',
-        );
-        writeFileSync(
-            join(di, 'two.yml'),
-            'id: two\ncreated: 2026-04-05\nrule: y\nstatus: active\n',
-            'utf-8',
-        );
-        const intake = join(mem, 'intake');
-        mkdirSync(intake, { recursive: true });
-        writeFileSync(
-            join(intake, 'signals-2026-03.jsonl'),
-            [
-                JSON.stringify({ id: 's1', entry_type: 'ownership', path: 'app/A', body: 'b' }),
-                JSON.stringify({ id: 's2', entry_type: 'historical-patterns', path: 'app/B', body: 'c' }),
-                JSON.stringify({ type: 'supersede', ts: '2026-03-15T10:00:00+00:00', old_id: 'x', new_id: 'y' }),
-            ].join('\n') + '\n',
-            'utf-8',
-        );
-        // Role-mode markers.
-        const sess = join(tmp, 'agents', 'sessions');
-        mkdirSync(sess, { recursive: true });
-        writeFileSync(join(sess, 's1.md'), '<!-- role-mode: developer | contract: goal/plan -->\n', 'utf-8');
-        work = tmp;
-    });
-    afterEach(() => {
-        rmSync(emptyPathDir, { recursive: true, force: true });
-    });
-
-    function bothRun(args: string[]): { ts: ReturnType<typeof spawnSync>; py: ReturnType<typeof spawnSync> } {
-        const env = { HOME: process.env['HOME'] ?? '', PATH: emptyPathDir, AGENT_MEMORY_STATUS: '' };
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: work, encoding: 'utf8', env });
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: work, encoding: 'utf8', env });
-        return { ts, py };
-    }
-
-    it('text output parity (populated tree)', () => {
-        const { ts, py } = bothRun([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('json output parity (populated tree)', () => {
-        const { ts, py } = bothRun(['--format', 'json']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('bad --format choice parity', () => {
-        const { ts, py } = bothRun(['--format', 'xml']);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
     });
 });

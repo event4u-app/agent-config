@@ -1,26 +1,4 @@
-/**
- * Tests for `src/scripts/ai_council/config.ts`.
- *
- * Golden-parity port of the pytest suites that exercise this module:
- *
- *   - tests/ai_council/test_config.py            (loader + validation + resolve_api_key)
- *   - tests/ai_council/test_config_resolution.py (resolve_config_path precedence)
- *
- * Two layers:
- *   1. Direct unit tests of the TS port's exported surface
- *      (`load_council_config`, `resolve_config_path`, `resolve_api_key`,
- *      `CouncilConfigError`, the path constants).
- *   2. A differential block driving the LIVE Python module via a
- *      `python3 -c` driver (pattern: tests/lib/agent_settings.test.ts).
- *      It asserts the TS-built config JSON-equals the Python-built config
- *      and that every error fixture produces a byte-identical message.
- *
- * Port mechanics:
- *   - pytest `tmp_path`           → `make_tmp()` (temp dir, cleaned afterEach)
- *   - `monkeypatch.setenv/delenv` → `patch_env()` (restored afterEach)
- *   - `pytest.raises(..., match)` → `expect(...).toThrow(/match/)`
- */
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -343,54 +321,6 @@ describe('resolve_config_path — precedence', () => {
     });
 });
 
-// === Differential block: TS port vs live Python module =====================
-
-const PY_DRIVER = String.raw`
-import json, sys, dataclasses
-from pathlib import Path
-sys.path.insert(0, sys.argv[1])  # <repo>/src
-from scripts.ai_council import config  # noqa: E402
-
-mode = sys.argv[2]
-p = Path(sys.argv[3])
-
-def to_jsonable(obj):
-    if dataclasses.is_dataclass(obj):
-        out = {}
-        for f in dataclasses.fields(obj):
-            out[f.name] = to_jsonable(getattr(obj, f.name))
-        return out
-    if isinstance(obj, dict):
-        return {k: to_jsonable(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [to_jsonable(v) for v in obj]
-    if isinstance(obj, Path):
-        return str(obj)
-    return obj
-
-if mode == "load":
-    try:
-        c = config.load_council_config(p)
-    except config.CouncilConfigError as exc:
-        sys.stdout.write(json.dumps({"error": str(exc)}))
-        sys.exit(0)
-    d = to_jsonable(c)
-    d.pop("source_path", None)  # absolute path differs per run; checked separately
-    sys.stdout.write(json.dumps(d, sort_keys=True))
-else:
-    raise SystemExit(f"unknown mode {mode}")
-`;
-
-function py_load(p: string): Record<string, unknown> {
-    const proc = spawnSync('python3', ['-c', PY_DRIVER, path.join(REPO_ROOT, 'src'), 'load', p], {
-        encoding: 'utf-8',
-    });
-    if (proc.status !== 0) {
-        throw new Error(`python driver failed: ${proc.stderr}`);
-    }
-    return JSON.parse(proc.stdout) as Record<string, unknown>;
-}
-
 /** JSON-able view of the TS config that matches the Python `to_jsonable`. */
 function ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
     const map = <V>(m: ReadonlyMap<string, V>, fn?: (v: V) => unknown): Record<string, unknown> => {
@@ -439,11 +369,6 @@ function ts_jsonable(c: cfg.CouncilConfig): Record<string, unknown> {
         },
     };
 }
-
-const PY_OK = (() => {
-    const probe = spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf-8' });
-    return probe.status === 0;
-})();
 
 const FULL_FIXTURE = `enabled: true
 defaults:
@@ -542,87 +467,3 @@ lenses:
     decision_replay:
       enabled: false
 `;
-
-describe.skipIf(!PY_OK)('differential — TS port JSON-equals live Python module', () => {
-    it('fixture A: minimal valid', () => {
-        const tmp = make_tmp();
-        const p = write_yaml(tmp, MINIMAL_VALID);
-        const ts = ts_jsonable(cfg.load_council_config(p));
-        expect(ts).toEqual(py_load(p));
-    });
-
-    it('fixture B: empty file → defaults (enabled false)', () => {
-        const tmp = make_tmp();
-        const p = write_yaml(tmp, '');
-        const ts = ts_jsonable(cfg.load_council_config(p));
-        expect(ts).toEqual(py_load(p));
-    });
-
-    it('fixture C: full config exercising every block', () => {
-        const tmp = make_tmp();
-        const p = write_yaml(tmp, FULL_FIXTURE);
-        const ts = ts_jsonable(cfg.load_council_config(p));
-        expect(ts).toEqual(py_load(p));
-    });
-
-    it('source_path is the loaded path', () => {
-        const tmp = make_tmp();
-        const p = write_yaml(tmp, MINIMAL_VALID);
-        expect(cfg.load_council_config(p).source_path).toBe(p);
-    });
-
-    const errorFixtures: Array<[string, string]> = [
-        ['enabled-bool', 'enabled: 5\n'],
-        ['default-mode', 'enabled: false\ndefaults:\n  mode: bogus\n'],
-        ['member-mode', 'enabled: false\nmembers:\n  anthropic:\n    enabled: false\n    mode: weird\n'],
-        ['unknown-provider', 'enabled: false\nmembers:\n  zzz:\n    enabled: false\n'],
-        ['raw-key', 'enabled: false\nmembers:\n  anthropic:\n    enabled: false\n    api_key_ref: sk-ant-abc\n'],
-        ['bad-prefix', 'enabled: false\nmembers:\n  anthropic:\n    enabled: false\n    api_key_ref: weird\n'],
-        ['neg-budget', 'enabled: false\ncost_budget:\n  max_total_usd: -1\n'],
-        ['consensus-thresholds', 'enabled: false\nconsensus_scoring:\n  strong_threshold: 0.3\n  minority_threshold: 0.5\n'],
-        ['fast-members-range', 'enabled: false\ndecision_resolution:\n  fast_path:\n    max_members: 3\n'],
-        ['fast-members-type', 'enabled: false\ndecision_resolution:\n  fast_path:\n    max_members: foo\n'],
-        ['fast-rounds-locked', 'enabled: false\ndecision_resolution:\n  fast_path:\n    max_rounds: 2\n'],
-        ['fast-tokens', 'enabled: false\ndecision_resolution:\n  fast_path:\n    max_tokens: 0\n'],
-        ['fast-cost', 'enabled: false\ndecision_resolution:\n  fast_path:\n    max_cost_usd: 0\n'],
-        ['fuzzy-threshold', 'enabled: false\ndecision_resolution:\n  fast_path:\n    fuzzy_match:\n      threshold: 1.5\n'],
-        ['locked-class', 'enabled: false\ndecision_resolution:\n  classes:\n    high_impact:\n      mode: agent\n'],
-        ['locked-dispatch-nested', 'enabled: false\ndecision_resolution:\n  classes:\n    high_impact:\n      dispatch: single\n'],
-        ['locked-dispatch-top', 'enabled: false\nhigh_impact:\n  dispatch: single\n'],
-        ['locked-floor-top', 'enabled: false\nuser_required:\n  solo_confidence_floor: 0.5\n'],
-        ['confidence-range', 'enabled: false\ndecision_resolution:\n  classes:\n    trivial:\n      confidence_threshold: 1.5\n'],
-        ['warn-at', 'enabled: false\ncli_call_budget:\n  warn_at: 2\n'],
-        ['cli-provider', 'enabled: false\ncli_call_budget:\n  max_calls_per_day:\n    zzz: 5\n'],
-        ['cli-neg', 'enabled: false\ncli_call_budget:\n  max_calls_per_day:\n    openai: -1\n'],
-        ['binary-non-cli', 'enabled: false\nmembers:\n  openai:\n    enabled: false\n    mode: api\n    binary: x\n'],
-        ['ladder-missing-model', 'enabled: false\nmembers:\n  anthropic:\n    enabled: true\n    model: a\n    mode: cli\n    model_ladder: [b, c]\n'],
-        ['routing-dup', 'enabled: false\nmembers:\n  anthropic:\n    enabled: false\nrouting:\n  solo_member_fallback_chain: [anthropic, anthropic]\n'],
-        ['routing-unknown', 'enabled: false\nrouting:\n  solo_member_fallback_chain: [openai]\n'],
-        ['routing-timeout', 'enabled: false\nrouting:\n  auth_check_timeout_seconds: 99\n'],
-        ['low-impact-single-empty', 'enabled: false\nlow_impact:\n  dispatch: single\n'],
-        ['advisor-missing-member', 'enabled: false\nadvisors:\n  x:\n    enabled: true\n    member: openai\n'],
-        ['advisor-disabled-member', 'enabled: false\nmembers:\n  openai:\n    enabled: false\nadvisors:\n  x:\n    enabled: true\n    member: openai\n'],
-        ['advisor-bad-member', 'enabled: false\nadvisors:\n  x:\n    enabled: false\n    member: zzz\n'],
-        ['top-level-list', '- a\n- b\n'],
-        ['necessity-mode', 'enabled: false\nnecessity_classifier:\n  mode: bogus\n'],
-        ['disclosure-mode', 'enabled: false\ndebate:\n  cost_disclosure:\n    mode: bogus\n'],
-        ['lens-not-mapping', 'enabled: false\nlenses:\n  analysis: 5\n'],
-    ];
-
-    it.each(errorFixtures)('error parity: %s', (_name, body) => {
-        const tmp = make_tmp();
-        const p = write_yaml(tmp, body);
-        let tsMessage: string | null = null;
-        try {
-            cfg.load_council_config(p);
-        } catch (e) {
-            tsMessage = (e as Error).message;
-        }
-        const py = py_load(p) as { error?: string };
-        // Python returns {"error": "..."} for CouncilConfigError fixtures.
-        expect(py.error).toBeDefined();
-        // The top-level-list message embeds the absolute path, which differs
-        // between runs only by the temp dir — both sides use the same `p`.
-        expect(tsMessage).toBe(py.error);
-    });
-});

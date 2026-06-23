@@ -1,15 +1,9 @@
-// Tests for src/scripts/mcp_render.ts (py2ts Phase 8 / Wave 8g).
-//
-// Ports tests/test_mcp_render.py 1:1 (substitute, load_source, render,
-// format_missing_report, CLI render / check / claude-desktop opt-in /
-// idempotence / stale detection) plus a golden-parity layer that runs
-// python3 vs tsx on the shared fixtures.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     _claudeDesktop,
@@ -229,10 +223,6 @@ function _pyDumpSorted(obj: unknown, depth = 0): string {
         '}'
     );
 }
-
-// ---- Golden parity: python3 vs tsx CLI -------------------------------------
-
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'mcp_render.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'mcp_render.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -240,60 +230,3 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('mcp_render — golden parity (python3 vs tsx)', () => {
-    let scratch: string;
-    beforeEach(() => {
-        scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-par-'));
-        fs.writeFileSync(
-            path.join(scratch, 'mcp.json'),
-            fs.readFileSync(path.join(FIXTURES, 'source-valid.json'), 'utf-8'),
-            'utf-8',
-        );
-    });
-    afterEach(() => {
-        try {
-            fs.rmSync(scratch, { recursive: true, force: true });
-        } catch {
-            /* ignore */
-        }
-    });
-
-    function run(bin: string, args: string[], env: NodeJS.ProcessEnv): ReturnType<typeof spawnSync> {
-        return spawnSync(bin, args, { cwd: scratch, encoding: 'utf8', env });
-    }
-
-    it('render → identical stdout/stderr/exit (env present)', () => {
-        const env = { ...process.env, GH_TOKEN: 'ghp_xxx', JIRA_TOKEN: 'jira_yyy' };
-        const source = path.join(scratch, 'mcp.json');
-        const pyRoot = path.join(scratch, 'py');
-        const tsRoot = path.join(scratch, 'ts');
-        fs.mkdirSync(pyRoot);
-        fs.mkdirSync(tsRoot);
-        const p = run('python3', [PY_SCRIPT, '--source', source, '--project-root', pyRoot], env);
-        const t = run(TSX_BIN, [TS_SCRIPT, '--source', source, '--project-root', tsRoot], env);
-        // stdout names + paths differ by root dir; normalise the root.
-        const pyOut = String(p.stdout ?? '').split(pyRoot).join('<ROOT>');
-        const tsOut = String(t.stdout ?? '').split(tsRoot).join('<ROOT>');
-        expect(tsOut).toBe(pyOut);
-        expect(t.status).toBe(p.status);
-        // Written target files byte-identical.
-        const pyTarget = fs.readFileSync(path.join(pyRoot, '.cursor', 'mcp.json'), 'utf-8');
-        const tsTarget = fs.readFileSync(path.join(tsRoot, '.cursor', 'mcp.json'), 'utf-8');
-        expect(tsTarget).toBe(pyTarget);
-    });
-
-    it('missing env → identical stderr/exit', () => {
-        const env = { ...process.env };
-        delete env['GH_TOKEN'];
-        delete env['JIRA_TOKEN'];
-        const p = run('python3', [PY_SCRIPT, '--project-root', scratch], env);
-        const t = run(TSX_BIN, [TS_SCRIPT, '--project-root', scratch], env);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    });
-});

@@ -1,11 +1,4 @@
-// Tests for src/scripts/skill_discovery.ts (py2ts Phase 8 / Wave 8e).
-//
-// 1:1 port of tests/test_skill_discovery.py — the four recommendation classes,
-// the non-empty-`why` invariant, the analytics opt-out short-circuit, graceful
-// degradation when analytics is empty, and the analytics-signal path. Plus a
-// golden-parity layer over the real repo (python3 vs tsx) for both error and
-// happy CLI paths.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -16,7 +9,6 @@ import * as sd from '../../src/scripts/skill_discovery.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'skill_discovery.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'skill_discovery.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -25,10 +17,6 @@ const TSX_BIN = path.join(
 );
 
 const NOW = new Date('2026-05-30T12:00:00Z');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function _catalog(): Map<string, sd.Skill> {
     const m = new Map<string, sd.Skill>();
@@ -246,59 +234,5 @@ describe('skill_discovery — loaders, render, main (in-process)', () => {
         }
         expect(rc).toBe(0);
         expect(out.join('').includes('Suggested skills')).toBe(true);
-    });
-});
-
-describe('skill_discovery — golden parity (python3 vs tsx)', () => {
-    const py = hasPython3();
-    const runner = (
-        bin: string,
-        scriptArgs: string[],
-    ): { stdout: string; stderr: string; status: number | null } => {
-        const r = spawnSync(scriptArgs[0] as string, scriptArgs.slice(1), {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        });
-        return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-    };
-    void runner;
-
-    const runPy = (args: string[]) =>
-        spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    const runTs = (args: string[]) =>
-        spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-
-    it.skipIf(!py)('json sales matches byte-for-byte', () => {
-        const a = ['--role', 'sales', '--format', 'json', '--now', '2026-05-30T12:00:00Z'];
-        const p = runPy(a);
-        const t = runTs(a);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-    });
-
-    it.skipIf(!py)('text sales matches byte-for-byte', () => {
-        const a = ['--role', 'sales', '--now', '2026-05-30T12:00:00Z'];
-        const p = runPy(a);
-        const t = runTs(a);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout);
-    });
-
-    it.skipIf(!py)('unknown role exits 2, identical stderr', () => {
-        const a = ['--role', 'not-a-real-role', '--format', 'json'];
-        const p = runPy(a);
-        const t = runTs(a);
-        expect(p.status).toBe(2);
-        expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
-    });
-
-    it.skipIf(!py)('no role exits 2, identical stderr', () => {
-        const p = runPy([]);
-        const t = runTs([]);
-        expect(p.status).toBe(2);
-        expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
     });
 });

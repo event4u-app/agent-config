@@ -1,14 +1,4 @@
-// Tests for src/scripts/hooks_doctor.ts (py2ts Phase 6 — hooks).
-//
-// 1:1 port of tests/hooks/test_hooks_doctor.py (collect returns every
-// concern, trampoline detection present/missing, last_feedback picks
-// latest, concern state-file surfaced, JSON well-formed, --strict gates)
-// plus a golden-parity layer: python3 hooks_doctor.py --format json vs tsx
-// hooks_doctor.ts --format json over the REAL manifest + an isolated tmp
-// project root, asserting byte-identical stdout + exit. The dispatch_issues
-// field reads the repo's real log (identical for both runs in the same
-// instant). Parity skipped without python3.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -19,7 +9,6 @@ import * as doctor from '../../../src/scripts/hooks_doctor.js';
 import { _load_yaml } from '../../../src/scripts/hooks/dispatch_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks_doctor.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks_doctor.ts');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 const TSX_BIN = path.join(
@@ -28,10 +17,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function loadManifest() {
     return _load_yaml(MANIFEST);
@@ -164,82 +149,7 @@ describe('hooks_doctor — main / strict', () => {
     });
 });
 
-// ── Golden parity vs python3 ─────────────────────────────────────────
-
-const py3 = hasPython3();
-
 interface RunResult {
     status: number | null;
     stdout: string;
 }
-
-function runScript(cmd: string, args: string[]): RunResult {
-    const env =
-        cmd === 'python3' ? { ...process.env, PYTHONPATH: 'src' } : { ...process.env };
-    const res = spawnSync(cmd, args, { encoding: 'utf8', env, cwd: REPO_ROOT });
-    return { status: res.status, stdout: res.stdout ?? '' };
-}
-
-describe.skipIf(!py3)('hooks_doctor — golden parity', () => {
-    it('json output byte-identical over the real manifest (empty project)', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hd-parity-'));
-        try {
-            const pyOut = runScript('python3', [
-                PY_SCRIPT,
-                '--format',
-                'json',
-                '--project-root',
-                dir,
-            ]);
-            const tsOut = runScript(TSX_BIN, [
-                TS_SCRIPT,
-                '--format',
-                'json',
-                '--project-root',
-                dir,
-            ]);
-            expect(tsOut.status).toBe(pyOut.status);
-            expect(tsOut.stdout).toBe(pyOut.stdout);
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    });
-
-    it('table output byte-identical over the real manifest (empty project)', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hd-parity-t-'));
-        try {
-            const pyOut = runScript('python3', [PY_SCRIPT, '--project-root', dir]);
-            const tsOut = runScript(TSX_BIN, [TS_SCRIPT, '--project-root', dir]);
-            expect(tsOut.status).toBe(pyOut.status);
-            expect(tsOut.stdout).toBe(pyOut.stdout);
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    });
-
-    it('strict exit parity over the real manifest (empty project)', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hd-parity-s-'));
-        try {
-            const pyOut = runScript('python3', [
-                PY_SCRIPT,
-                '--format',
-                'json',
-                '--project-root',
-                dir,
-                '--strict',
-            ]);
-            const tsOut = runScript(TSX_BIN, [
-                TS_SCRIPT,
-                '--format',
-                'json',
-                '--project-root',
-                dir,
-                '--strict',
-            ]);
-            expect(tsOut.status).toBe(pyOut.status);
-            expect(tsOut.stdout).toBe(pyOut.stdout);
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    });
-});

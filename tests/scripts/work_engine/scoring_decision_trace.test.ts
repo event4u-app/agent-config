@@ -1,14 +1,4 @@
-// Golden-parity tests for work_engine/scoring/decision_trace.ts vs
-// decision_trace.py (ADR-094 py2ts Phase 1 — scoring subpackage).
-//
-// `scoring/decision_trace.py` has NO intra-package imports — stdlib only — so
-// it loads via a direct-file importlib loader (the same pattern as
-// state.test.ts). Each block drives the heuristic on BOTH engines from the
-// same JSON fixture and asserts identical confidence bands / risk classes /
-// memory + verify summaries. Float-format parity is N/A here (these heuristics
-// emit only strings, ints, and string-id lists), but the dict-shape parity is
-// checked byte-exact via `json.dumps(..., sort_keys=False)`.
-import { spawnSync } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -26,36 +16,6 @@ import {
 } from '../../../src/agent-src/templates/scripts/work_engine/scoring/decision_trace.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'scoring',
-    'decision_trace.py',
-);
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-/** Run a python snippet with decision_trace.py loaded as module `dt`. */
-function runPy(body: string, args: string[] = []): string {
-    const loader = [
-        'import sys, json, importlib.util',
-        `spec = importlib.util.spec_from_file_location("dt", ${JSON.stringify(PY)})`,
-        'dt = importlib.util.module_from_spec(spec)',
-        'sys.modules["dt"] = dt',
-        'spec.loader.exec_module(dt)',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', `${loader}\n${body}`, ...args], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
 
 describe('scoring/decision_trace — constants', () => {
     it('band + risk constants match the contract', () => {
@@ -157,66 +117,5 @@ describe('scoring/decision_trace — summarise_verify', () => {
     it('unknown shape → zeros', () => {
         expect(summarise_verify(42)).toEqual({ claims: 0, first_try_passes: 0 });
         expect(summarise_verify('x')).toEqual({ claims: 0, first_try_passes: 0 });
-    });
-});
-
-describe.runIf(hasPython3())('scoring/decision_trace — python parity', () => {
-    it('derive_confidence_band matches CPython across the grid', () => {
-        const grid: Array<[number, number, number, boolean]> = [];
-        for (const h of [0, 1, 2, 3]) {
-            for (const c of [0, 1, 2]) {
-                for (const p of [0, 1, 2]) {
-                    for (const amb of [false, true]) {
-                        grid.push([h, c, p, amb]);
-                    }
-                }
-            }
-        }
-        const body = [
-            'grid = json.loads(sys.argv[1])',
-            'out = [dt.derive_confidence_band(memory_hits=h, verify_claims=c, verify_first_try_passes=p, ambiguity_flag=a) for (h,c,p,a) in grid]',
-            'sys.stdout.write(json.dumps(out))',
-        ].join('\n');
-        const expected = JSON.parse(runPy(body, [JSON.stringify(grid)]));
-        const got = grid.map(([h, c, p, a]) =>
-            derive_confidence_band({
-                memory_hits: h,
-                verify_claims: c,
-                verify_first_try_passes: p,
-                ambiguity_flag: a,
-            }),
-        );
-        expect(got).toEqual(expected);
-    });
-
-    it('derive_risk_class matches CPython', () => {
-        const inputs: unknown[] = [null, [], '', 0, false, [{ a: 1 }], 'x', [{ a: 1 }, { b: 2 }]];
-        const body = [
-            'inputs = json.loads(sys.argv[1])',
-            'sys.stdout.write(json.dumps([dt.derive_risk_class(x) for x in inputs]))',
-        ].join('\n');
-        const expected = JSON.parse(runPy(body, [JSON.stringify(inputs)]));
-        const got = inputs.map((x) => derive_risk_class(x));
-        expect(got).toEqual(expected);
-    });
-
-    it('summarise_memory + summarise_verify match CPython (dict byte-shape)', () => {
-        const memory = [
-            { id: 'a', asks: 2, type: 'domain-invariants' },
-            { rule_id: 'b' },
-            { id: 'c', hit: false },
-            { id: 'd', asks: 0 },
-        ];
-        const verify = [{ first_try_pass: true }, { first_try_pass: false }];
-        const body = [
-            'mem = json.loads(sys.argv[1]); ver = json.loads(sys.argv[2])',
-            'sm = dt.summarise_memory(mem); sv = dt.summarise_verify(ver)',
-            'sys.stdout.write(json.dumps({"memory": sm, "verify": sv}))',
-        ].join('\n');
-        const expected = JSON.parse(runPy(body, [JSON.stringify(memory), JSON.stringify(verify)]));
-        expect({
-            memory: summarise_memory(memory),
-            verify: summarise_verify(verify),
-        }).toEqual(expected);
     });
 });

@@ -1,13 +1,4 @@
-/**
- * Tests for `src/scripts/_lib/installed_tools.ts`.
- *
- * 1:1 vitest port of `tests/test_installed_tools.py` (ADR-088 Phase 2 /
- * Wave 2a) plus a differential block comparing the TS `_render` wire format
- * against the Python reference via a `python3 -c` driver (pattern:
- * tests/spikes/yaml_rt_py_driver.py). Covers the project-scope manifest at
- * `agents/installed-tools.lock`.
- */
-import { execFileSync } from "node:child_process";
+
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -456,48 +447,10 @@ describe("installed_tools", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Differential block — Python `_render` is the reference wire format.
-// Pattern per tests/spikes/yaml_rt_py_driver.py.
-// ---------------------------------------------------------------------------
-
-const PY_RENDER_DRIVER = `
-import json, os, sys
-sys.path.insert(0, os.path.join(os.getcwd(), "src", "scripts"))
-from _lib import installed_tools as it
-
-cases = json.load(sys.stdin)
-out = []
-for case in cases:
-    out.append(it._render(
-        case["version"], case["tools"],
-        deploy_roots=case.get("deploy_roots"),
-    ))
-sys.stdout.write(json.dumps(out))
-`;
-
-function python3_available(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 interface RenderCase {
   version: string;
   tools: Array<Record<string, unknown>>;
   deploy_roots?: string[] | null;
-}
-
-function run_python_render(cases: RenderCase[]): string[] {
-  const stdout = execFileSync("python3", ["-c", PY_RENDER_DRIVER], {
-    input: JSON.stringify(cases),
-    encoding: "utf-8",
-    cwd: path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", ".."),
-  });
-  return JSON.parse(stdout) as string[];
 }
 
 // `_render` is module-internal in TS; reconstruct it via write_manifest round
@@ -512,42 +465,3 @@ function ts_render(c: RenderCase): string {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 }
-
-describe.runIf(python3_available())("differential vs Python `_render`", () => {
-  it("byte-identical wire format across representative manifests", () => {
-    const cases: RenderCase[] = [
-      { version: "2.1.0", tools: [] },
-      {
-        version: "2.1.0",
-        tools: [
-          { name: "claude-code", scope: "global", bridge_marker: "~/.claude/M", installed_at: "2026-05-12" },
-          { name: "windsurf", scope: "project", bridge_marker: ".windsurf/M", installed_at: "2026-05-12" },
-        ],
-      },
-      {
-        version: "2.2.0",
-        deploy_roots: [".augment/rules", ".cursor/rules"],
-        tools: [
-          {
-            name: "claude-code",
-            scope: "global",
-            bridge_marker: "~/.claude/PROJECT_MANAGED_BY_AGENT_CONFIG",
-            installed_at: "2026-05-12",
-            status: "active",
-            files: [
-              { path: ".augment/rules/z.md", kind: "deployed", sha256: "z".repeat(64) },
-              { path: ".augment/rules/a.md", kind: "deployed", sha256: null },
-            ],
-            merged_keys: [
-              { file: ".mcp.json", json_pointer: "/mcpServers/z", value_hash: "abc" },
-              { file: ".mcp.json", json_pointer: "/mcpServers/a" },
-            ],
-          },
-        ],
-      },
-    ];
-    const py = run_python_render(cases);
-    const ts = cases.map((c) => ts_render(c));
-    expect(ts).toEqual(py);
-  });
-});

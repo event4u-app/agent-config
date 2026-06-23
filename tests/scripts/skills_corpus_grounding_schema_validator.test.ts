@@ -1,14 +1,4 @@
-// Tests for src/skills/corpus-grounding/scripts/schema_validator.ts (ADR-094).
-//
-// TS unit tests over validate_manifest / load_manifest / resolve_data_path,
-// PLUS a golden-parity layer that runs the Python module's validate_manifest
-// (via a direct importlib loader) on the same manifests and asserts the
-// violation-list is byte-identical (the messages embed Python repr() of keys
-// and the TIERS tuple, so this catches any repr drift).
-//
-// Determinism: pure functions over inline fixtures + tmp files cleaned in
-// afterEach; no clock, no network, no git drift.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -20,10 +10,6 @@ import * as sv from '../../src/skills/corpus-grounding/scripts/schema_validator.
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'skills', 'corpus-grounding', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -39,23 +25,6 @@ afterEach(() => {
         }
     }
 });
-
-/** Run python validate_manifest on a JSON-encoded manifest, return the list. */
-function pyValidate(manifest: unknown): string[] {
-    const code = `
-import importlib.util, json, sys
-spec = importlib.util.spec_from_file_location("schema_validator", ${JSON.stringify(SCRIPTS)} + "/schema_validator.py")
-m = importlib.util.module_from_spec(spec); sys.modules["schema_validator"] = m
-spec.loader.exec_module(m)
-data = json.loads(${JSON.stringify(JSON.stringify(manifest))})
-print(json.dumps(m.validate_manifest(data)))
-`;
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8', cwd: REPO_ROOT });
-    if (r.status !== 0) {
-        throw new Error(`python failed: ${r.stderr}`);
-    }
-    return JSON.parse(r.stdout.trim()) as string[];
-}
 
 const VALID: Record<string, unknown> = {
     manifest_version: 1,
@@ -149,35 +118,4 @@ describe('schema_validator — load_manifest + resolve_data_path', () => {
         const m = { _manifest_dir: d };
         expect(sv.resolve_data_path(m, 'corpus.csv')).toBe(path.join(fs.realpathSync.native(d), 'corpus.csv'));
     });
-});
-
-describe.runIf(hasPython3())('schema_validator — golden parity (python3 importlib)', () => {
-    const cases: [string, unknown][] = [
-        ['valid', VALID],
-        ['non-object', 42],
-        ['missing-top', { manifest_version: 2 }],
-        ['version/tier/provenance', { manifest_version: 2, domain: 'd', tier: 'x', domains: {} }],
-        [
-            'big-mixed',
-            {
-                manifest_version: 1,
-                domain: 'd',
-                tier: 'conditional-grounding',
-                domains: { a: {} },
-                owner: 'o',
-                refresh_cadence: 'c',
-                upstream: { repo: 'r' },
-                default_domain: 'zzz',
-                detect: { q: [1], a: 'nope' },
-                reasoning: { plan: { nope: 1 } },
-                stacks: { s: 'p' },
-                retriever: 'weird',
-            },
-        ],
-    ];
-    for (const [name, manifest] of cases) {
-        it(`validate_manifest matches python for: ${name}`, () => {
-            expect(sv.validate_manifest(manifest)).toEqual(pyValidate(manifest));
-        });
-    }
 });

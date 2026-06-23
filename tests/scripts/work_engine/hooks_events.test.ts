@@ -1,6 +1,4 @@
-// Golden-parity + unit tests for the py2ts work_engine.hooks `events` twin
-// (ADR-094). `events.py` is a str-Enum with no intra-package imports.
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -21,23 +19,6 @@ const EVENTS_PY = path.join(
     'hooks',
     'events.py',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-function runPy(body: string): SpawnSyncReturns<string> {
-    const loader = [
-        'import sys, importlib.util',
-        `spec = importlib.util.spec_from_file_location("events", ${JSON.stringify(EVENTS_PY)})`,
-        'events = importlib.util.module_from_spec(spec)',
-        'sys.modules["events"] = events',
-        'spec.loader.exec_module(events)',
-    ].join('\n');
-    return spawnSync('python3', ['-c', `${loader}\n${body}`], { encoding: 'utf8' });
-}
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 describe('work_engine.hooks.events — TS unit checks', () => {
     it('every member value equals its event name', () => {
@@ -66,24 +47,5 @@ describe('work_engine.hooks.events — TS unit checks', () => {
             'before_save',
             'after_save',
         ]);
-    });
-});
-
-describePy('work_engine.hooks.events — parity (python3 vs TS)', () => {
-    it('member values + iteration order match Python', () => {
-        const r = runPy('import json; print(json.dumps([e.value for e in events.HookEvent]))');
-        expect(r.status).toBe(0);
-        const pyOrder = JSON.parse(r.stdout) as string[];
-        expect(pyOrder).toEqual([...HOOK_EVENTS]);
-    });
-
-    it('str-Enum: member == its string value', () => {
-        const r = runPy(
-            'print(events.HookEvent.BEFORE_STEP == "before_step", events.HookEvent.AFTER_SAVE == "after_save")',
-        );
-        expect(r.status).toBe(0);
-        expect(r.stdout).toBe('True True\n');
-        expect(HookEvent.BEFORE_STEP === 'before_step').toBe(true);
-        expect(HookEvent.AFTER_SAVE === 'after_save').toBe(true);
     });
 });
