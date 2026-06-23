@@ -577,6 +577,27 @@
         24
       ],
       "reason": "Single Laravel-shape example for per-module agents directory (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": "src/skills/code-review/SKILL.md",
+      "lines": [
+        214
+      ],
+      "reason": "Cross-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) — multi-ecosystem documentation"
+    },
+    {
+      "file": "src/skills/context-document/SKILL.md",
+      "lines": [
+        82
+      ],
+      "reason": "Laravel example path inside a stack-agnostic module-context table"
+    },
+    {
+      "file": "src/skills/iconography/SKILL.md",
+      "lines": [
+        29
+      ],
+      "reason": "Cross-stack UI-stack enumeration (React, Blade, Tailwind)"
     }
   ]
 }

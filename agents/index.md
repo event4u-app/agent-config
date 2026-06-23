@@ -1,10 +1,10 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **582 artefacts** in this package.
+Maintainer-facing index of all **584 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
-> **Regenerate:** `python3 scripts/generate_index.py`
-> **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
+> **Regenerate:** `./scripts-run src/scripts/generate_index`
+> **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
 ## Skills (251)
@@ -263,7 +263,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (88)
+## Rules (89)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -283,6 +283,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`commit-policy`](../src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
 | rule | [`context-hygiene`](../src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config |
+| rule | [`design-fidelity`](../src/rules/design-fidelity.md) | auto | A provided prototype / mockup / design system is the run's spec — build it 1:1; never swap fonts, controls, components, or layout without confirmation. Strictness: design.fidelity_mode. |
 | rule | [`devcontainer-routing`](../src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill |
 | rule | [`direct-answers`](../src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`docker-commands`](../src/rules/docker-commands.md) | auto | Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool |
@@ -356,7 +357,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (161)
+## Commands (162)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -421,6 +422,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`feature-roadmap`](../src/domains/engineering-base/feature/roadmap/command.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
 | command | [`fix`](../src/domains/engineering-base/fix/command.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments |
 | command | [`fix-ci`](../src/domains/engineering-base/fix/ci/command.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
+| command | [`fix-comments`](../src/domains/engineering-base/fix/comments/command.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../src/domains/engineering-base/fix/portability/command.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments`](../src/domains/engineering-base/fix/pr-comments/command.md) | cluster: fix | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
 | command | [`fix-refs`](../src/domains/engineering-base/fix/refs/command.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |

@@ -1,10 +1,10 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **581 public artefacts** shipped by
+Consumer-facing catalog of all **583 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
-> **Regenerate:** `python3 scripts/generate_index.py`
+> **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
 ## Skills (251)
@@ -263,7 +263,7 @@ are excluded.
 | skill | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (87)
+## Rules (88)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -283,6 +283,7 @@ are excluded.
 | rule | [`commit-policy`](../dist/agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
 | rule | [`context-hygiene`](../dist/agent-src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../dist/agent-src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config |
+| rule | [`design-fidelity`](../dist/agent-src/rules/design-fidelity.md) | auto | A provided prototype / mockup / design system is the run's spec — build it 1:1; never swap fonts, controls, components, or layout without confirmation. Strictness: design.fidelity_mode. |
 | rule | [`devcontainer-routing`](../dist/agent-src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill |
 | rule | [`direct-answers`](../dist/agent-src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`docker-commands`](../dist/agent-src/rules/docker-commands.md) | auto | Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool |
@@ -355,7 +356,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (161)
+## Commands (162)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -420,6 +421,7 @@ are excluded.
 | command | [`feature-roadmap`](../dist/agent-src/commands/feature/roadmap.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
 | command | [`fix`](../dist/agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments |
 | command | [`fix-ci`](../dist/agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
+| command | [`fix-comments`](../dist/agent-src/commands/fix/comments.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../dist/agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
 | command | [`fix-refs`](../dist/agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
