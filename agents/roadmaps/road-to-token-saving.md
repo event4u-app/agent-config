@@ -90,6 +90,31 @@ resolved (council, above), so execution does not stop to ask which lever to pull
 - **Phase 6 (retire telegraph-speak) is unblocked and parallel** — zero
   dependencies; can land before Phase 0 completes.
 
+## Disposition (2026-06-23) — autonomous / human-measurement split
+
+The autonomous-mandate master-plan council (claude-sonnet-4-5 + gpt-4o, deep,
+`agents/runtime/council/responses/master-plan-2026-06-23.json`) drew the
+autonomous/deferred boundary for this 52-step roadmap. The verdict-gated phases —
+**Phase 4** (thin-projection flip, the −46k lever), **Phase 6** (retire
+telegraph-speak, gated on the real-tokenizer net-negative finding), **Phase 7**
+(condensation-ROI decision), and **Phase 9** (rule-surface audit, after thin is
+proven) — require a human-judged paired experiment, a host-compliance
+falsification, and a production-shaping rollout decision that an unattended agent
+**cannot** credibly produce or sign off. They are split into
+[`later/road-to-token-saving-HUMAN-MEASUREMENT.md`](later/road-to-token-saving-HUMAN-MEASUREMENT.md)
+(parked `later`, resumes when the operator has run the measurement harness).
+
+**Autonomous track (this roadmap):** Phase 0 (build the measurement *harness* —
+real tokenizer, golden set, paired-judge harness, host-compliance probe — the
+*scaffolding*, not the human verdict run), Phases 1–3 (RTK scope/triggers/wrap
+hook + snapshot tests), Phase 5 + Phase 8 (the CI invariant + budget linter —
+the linter machinery, with the Phase-0-derived threshold applied once measured),
+and Phase 10 (backlog triage). These are buildable disabled-by-default without a
+human verdict and are the next focused execution unit — NOT yet started here
+(building measurement infrastructure under an exhausted context would risk the
+measure-first discipline this roadmap is locked on). All 52 items remain `[ ]`;
+none is force-marked done.
+
 ## Phase 0 — Measurement substrate (the prerequisite to every cut)
 
 Council D2, promoted to D0: no architectural cut on a ±25% chars/4 estimate.

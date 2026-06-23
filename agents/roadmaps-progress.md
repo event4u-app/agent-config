@@ -6,10 +6,10 @@
 
 ## Overall
 
-**34 / 134 steps done · 25%**
+**59 / 134 steps done · 44%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   25%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 17 | 14 | 3 | 0 | 0 | ██░░░░░░░░ 18% |
 | 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 36 | 31 | 0 | 0 | █████░░░░░ 46% |
+| 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -56,21 +56,21 @@
 
 ### [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md)
 
-**TypeScript-only scripts — full Python → TypeScript migration** — 31 / 67 done (46%)
+**TypeScript-only scripts — full Python → TypeScript migration** — 56 / 67 done (84%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Migration infrastructure (blocking — nothing ports before this is green) | ✅ done | 0 | 13 | 0 | 0 | 100% |
 | 2 | Shared libraries (`src/scripts/_lib/` — 26 files, ~6.2k LOC) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Dual-mode installer (consumer trust boundary) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Linters & CI checks (101 files, ~17.4k LOC) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
-| 5 | Condensation & sync pipeline (8 files, ~3.8k LOC) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | Hooks (16 files, ~2.6k LOC) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 4 | Linters & CI checks (101 files, ~17.4k LOC) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 5 | Condensation & sync pipeline (8 files, ~3.8k LOC) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 6 | Hooks (16 files, ~2.6k LOC) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 7 | Memory & telemetry (dev-side, 13 files, ~3.1k LOC) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 8 | Reporting, MCP, doctor & misc tooling (~199 files, ~46k LOC) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 9 | Consumer-shipped templates (work_engine 78 / memory 7 / telemetry 9 / misc ~6 files, ~17.4k LOC) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 10 | AI council (55 files, ~17k LOC) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 11 | Installer finalization | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 8 | Reporting, MCP, doctor & misc tooling (~199 files, ~46k LOC) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 9 | Consumer-shipped templates (work_engine 78 / memory 7 / telemetry 9 / misc ~6 files, ~17.4k LOC) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 10 | AI council (55 files, ~17k LOC) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 11 | Installer finalization | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 12 | Teardown & final audit | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 
 ---
