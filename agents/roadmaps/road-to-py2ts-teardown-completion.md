@@ -129,7 +129,22 @@ stay open below — not force-marked done.
       host-CLI detection) + `COLUMNS`, reusing each file's `norm()` masking
       for clock/random/mtime/tmp-path, and round-trip + structural asserts for
       randomized crypto. **This recipe generalises to the rest of the
-      sole-coverage tail.** Remaining sole-coverage ≈96.
+      sole-coverage tail.**
+    - [x] **`work_engine/*` cluster de-pythonized (21 files, 2026-06-23).**
+      Mixed files (parity block + real TS-side tests) had only the python parity
+      block + dead `hasPython3`/`runPy`/`PY_SCRIPT` helpers removed (coverage
+      kept); pure in-process rigs (`cli`, `directives_backend_analyze` + the 5
+      `directives_backend_*`) converted to intent tests asserting the tsx
+      module's own `run()` output. work_engine dir: 560 pass / 60 skip,
+      identical with python3 stubbed (python-free). **Still deferred in
+      work_engine:** `_hooks_pyloader.ts` (shared helper imported by 11
+      `hooks_*` tests — neutralise only after those consumers are converted) +
+      4 files an interrupted subagent never reached
+      (`directives_backend_test`, `directives_backend_verify`,
+      `directives_init`, `directives_mixed_init` — all MIXED, same purge recipe).
+    - Remaining spawn-file tail after these two clusters: ~99 (was 144 − 12
+      workspace − 21 work_engine − the 12/21 overlap already counted; recompute
+      via `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`).
   - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
     the codemod did not fully prune; finish per-file.
   - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)
