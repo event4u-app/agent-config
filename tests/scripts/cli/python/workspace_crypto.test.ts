@@ -1,34 +1,26 @@
-// Golden-parity tests for src/cli/python/workspace_crypto.ts (py2ts ADR-200 —
-// the workspace encryption-at-rest CLI, ADR-062 / ADR-064).
+// Intent tests for src/cli/python/workspace_crypto.ts (py2ts ADR-200 — the
+// workspace encryption-at-rest CLI, ADR-062 / ADR-064).
 //
-// Strategy: run `python3 src/cli/python/workspace_crypto.py` vs
-// `tsx src/cli/python/workspace_crypto.ts` and byte-compare stdout / stderr /
-// exit. The CLI surfaces that DON'T need the crypto library — `status`,
-// `rotate-key` json output, `is_enabled` parsing, arg/usage errors — are pure
-// byte-parity. The argparse `--help` BODY is NOT byte-compared (only the
-// `usage:` line) per the porting contract.
+// Was a python3-vs-tsx byte-parity rig; the `.py` original is gone, so this now
+// asserts the tsx CLI's own contract directly. Every case spawns the tsx
+// launcher with a **node-only PATH** (a temp dir holding just a `node` symlink)
+// so the runner's installed CLIs cannot leak into behaviour, and COLUMNS=200 so
+// argparse usage/error lines never re-wrap to terminal width.
 //
-// Crypto parity is NOT a byte-equal-output assertion: the nonce is random
-// (`secrets.token_bytes(12)` / `crypto.randomBytes(12)`), so two encrypt runs
-// NEVER produce the same envelope. The real byte-parity proof for crypto is
-// cross-language ENVELOPE INTEROP: ts-encrypt then py-DECRYPT round-trips to the
-// original plaintext, AND py-encrypt then ts-decrypt round-trips — using a
-// shared `AGENT_CONFIG_WORKSPACE_KEY` env so both languages resolve the same
-// key. Plus a fixed assertion on the `AC1\0\x01` envelope header. These crypto
-// cases are GUARDED on python3 having the `cryptography` package importable;
-// when it is absent the Python encrypt/decrypt subcommands raise a RuntimeError
-// and cross-decrypt is impossible, so those cases skip (the non-crypto cases
-// still run).
-//
-// DOCUMENTED DIVERGENCE — master-key resolution. Python's order is
-// override → env → keyring → file; Node has no keyring binding (keyring branch
-// unavailable → file path). To make py and ts agree we force the explicit-key
-// path with a shared `AGENT_CONFIG_WORKSPACE_KEY`. `rotate-key` and the file
-// fallback are exercised with `HOME` pointed at a temp dir so the real
-// `~/.event4u` is never touched.
+// Determinism for crypto: AES-256-GCM uses a random 96-bit nonce
+// (`crypto.randomBytes(12)`), so two encrypt runs NEVER produce the same
+// envelope — raw ciphertext is therefore NEVER snapshotted. Crypto cases assert
+// the ROUND-TRIP contract instead (encrypt → decrypt → original plaintext) plus
+// structural invariants (exit codes, the fixed `AC1\0\x01` envelope header,
+// plaintext pass-through). A shared explicit `AGENT_CONFIG_WORKSPACE_KEY` forces
+// the same master key for encrypt and decrypt; HOME is pointed at a temp dir so
+// the real ~/.event4u key store is never touched by rotate-key / file fallback.
+// All assertions here are reproducible on any machine at any run.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import { mkdtempSync, symlinkSync } from 'node:fs';
 import * as os from 'node:os';
+import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -45,28 +37,15 @@ const REPO_ROOT = path.resolve(
     '..',
 );
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'workspace_crypto.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'workspace_crypto.py');
 const TSX_BIN = path.resolve(
     REPO_ROOT,
     process.env['TSX_BIN'] ??
         path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-function hasCryptography(): boolean {
-    if (!py3) return false;
-    const r = spawnSync(
-        'python3',
-        ['-c', 'from cryptography.hazmat.primitives.ciphers.aead import AESGCM'],
-        { encoding: 'utf8' },
-    );
-    return r.status === 0;
-}
-const crypto = hasCryptography();
+// node-only PATH → no installed CLI leaks into behaviour (only `node` resolves).
+const NODE_ONLY_DIR = mkdtempSync(path.join(tmpdir(), 'wscrypto-nodeonly-'));
+symlinkSync(process.execPath, path.join(NODE_ONLY_DIR, 'node'));
 
 interface RunResult {
     status: number | null;
@@ -74,35 +53,13 @@ interface RunResult {
     stderr: string;
 }
 
-function runPy(args: string[], cwd: string, extraEnv: Record<string, string> = {}): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd,
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src'), ...extraEnv },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-
 function runTs(args: string[], cwd: string, extraEnv: Record<string, string> = {}): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
         cwd,
         encoding: 'utf8',
-        env: { ...process.env, ...extraEnv },
+        env: { ...process.env, PATH: NODE_ONLY_DIR, COLUMNS: '200', ...extraEnv },
     });
     return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-
-/** Assert py and ts agree byte-for-byte + same exit, for a single invocation. */
-function expectParity(
-    args: string[],
-    cwd: string,
-    extraEnv: Record<string, string> = {},
-): void {
-    const p = runPy(args, cwd, extraEnv);
-    const t = runTs(args, cwd, extraEnv);
-    expect(t.status).toBe(p.status);
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
 }
 
 // ---------------------------------------------------------------------------
@@ -125,187 +82,327 @@ function writeSettings(body: string): void {
     fs.writeFileSync(path.join(tmp, '.agent-settings.yml'), body);
 }
 
-const d = py3 ? describe : describe.skip;
-
 // ---------------------------------------------------------------------------
-// status — is_enabled parsing (no crypto library required)
+// status — is_enabled parsing (no crypto key required)
 // ---------------------------------------------------------------------------
 
-d('workspace_crypto — status / is_enabled', () => {
+describe('workspace_crypto — status / is_enabled', () => {
     it('no settings file → enabled false', () => {
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": false}
+          ",
+          }
+        `);
     });
 
     it('workspace.encrypt_at_rest: on → enabled true', () => {
         writeSettings('workspace:\n  encrypt_at_rest: on\n');
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 
     it('encrypt_at_rest: true → enabled true', () => {
         writeSettings('workspace:\n  encrypt_at_rest: true\n');
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 
     it('quoted yes value → enabled true', () => {
         writeSettings("workspace:\n  encrypt_at_rest: 'yes'\n");
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 
     it('encrypt_at_rest: 1 → enabled true', () => {
         writeSettings('workspace:\n  encrypt_at_rest: 1\n');
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 
     it('encrypt_at_rest: off → enabled false', () => {
         writeSettings('workspace:\n  encrypt_at_rest: off\n');
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": false}
+          ",
+          }
+        `);
     });
 
     it('key outside the workspace block is ignored → enabled false', () => {
         writeSettings('other:\n  encrypt_at_rest: on\nworkspace:\n  foo: bar\n');
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": false}
+          ",
+          }
+        `);
     });
 
     it('comments + blank lines are skipped', () => {
         writeSettings('# header\n\nworkspace:\n  # inner comment\n  encrypt_at_rest: on\n');
-        expectParity(['status'], tmp);
+        expect(runTs(['status'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 
     it('AGENT_CONFIG_NO_ENCRYPTION force-disables even when settings say on', () => {
         writeSettings('workspace:\n  encrypt_at_rest: on\n');
-        expectParity(['status'], tmp, { AGENT_CONFIG_NO_ENCRYPTION: '1' });
+        expect(runTs(['status'], tmp, { AGENT_CONFIG_NO_ENCRYPTION: '1' })).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": false}
+          ",
+          }
+        `);
     });
 
     it('AGENT_CONFIG_NO_ENCRYPTION=0 does NOT force-disable', () => {
         writeSettings('workspace:\n  encrypt_at_rest: on\n');
-        expectParity(['status'], tmp, { AGENT_CONFIG_NO_ENCRYPTION: '0' });
+        expect(runTs(['status'], tmp, { AGENT_CONFIG_NO_ENCRYPTION: '0' })).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 
     it('AGENT_CONFIG_NO_ENCRYPTION empty does NOT force-disable', () => {
         writeSettings('workspace:\n  encrypt_at_rest: on\n');
-        expectParity(['status'], tmp, { AGENT_CONFIG_NO_ENCRYPTION: '' });
+        expect(runTs(['status'], tmp, { AGENT_CONFIG_NO_ENCRYPTION: '' })).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"enabled": true}
+          ",
+          }
+        `);
     });
 });
 
 // ---------------------------------------------------------------------------
-// rotate-key — json output (no crypto library required; HOME redirected)
+// rotate-key — json output (HOME redirected so the real keyfile is untouched)
 // ---------------------------------------------------------------------------
 
-d('workspace_crypto — rotate-key', () => {
+describe('workspace_crypto — rotate-key', () => {
     it('emits {"rotated": true} and exits 0', () => {
-        expectParity(['rotate-key'], tmp, { HOME: home });
+        expect(runTs(['rotate-key'], tmp, { HOME: home })).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"rotated": true}
+          ",
+          }
+        `);
     });
 });
 
 // ---------------------------------------------------------------------------
-// arg / usage errors (no crypto library required)
+// arg / usage errors
 // ---------------------------------------------------------------------------
 
-d('workspace_crypto — arg errors', () => {
+describe('workspace_crypto — arg errors', () => {
     it('no args → required cmd', () => {
-        expectParity([], tmp);
+        expect(runTs([], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto [-h] {encrypt,decrypt,status,rotate-key} ...
+          workspace_crypto: error: the following arguments are required: cmd
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('invalid choice', () => {
-        expectParity(['bogus'], tmp);
+        expect(runTs(['bogus'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto [-h] {encrypt,decrypt,status,rotate-key} ...
+          workspace_crypto: error: argument cmd: invalid choice: 'bogus' (choose from 'encrypt', 'decrypt', 'status', 'rotate-key')
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('encrypt with no options → required --in, --out', () => {
-        expectParity(['encrypt'], tmp);
+        expect(runTs(['encrypt'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto encrypt [-h] --in SRC --out DST
+          workspace_crypto encrypt: error: the following arguments are required: --in, --out
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('encrypt with only --in → required --out', () => {
-        expectParity(['encrypt', '--in', 'a'], tmp);
+        expect(runTs(['encrypt', '--in', 'a'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto encrypt [-h] --in SRC --out DST
+          workspace_crypto encrypt: error: the following arguments are required: --out
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('decrypt with no options → required --in, --out', () => {
-        expectParity(['decrypt'], tmp);
+        expect(runTs(['decrypt'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto decrypt [-h] --in SRC --out DST
+          workspace_crypto decrypt: error: the following arguments are required: --in, --out
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('encrypt extra positional → unrecognized (top-level)', () => {
-        expectParity(['encrypt', '--in', 'a', '--out', 'b', 'extra'], tmp);
+        expect(runTs(['encrypt', '--in', 'a', '--out', 'b', 'extra'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto [-h] {encrypt,decrypt,status,rotate-key} ...
+          workspace_crypto: error: unrecognized arguments: extra
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('status with extra positional → unrecognized', () => {
-        expectParity(['status', 'foo'], tmp);
+        expect(runTs(['status', 'foo'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto [-h] {encrypt,decrypt,status,rotate-key} ...
+          workspace_crypto: error: unrecognized arguments: foo
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('rotate-key with extra positional → unrecognized', () => {
-        expectParity(['rotate-key', 'foo'], tmp);
+        expect(runTs(['rotate-key', 'foo'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_crypto [-h] {encrypt,decrypt,status,rotate-key} ...
+          workspace_crypto: error: unrecognized arguments: foo
+          ",
+            "stdout": "",
+          }
+        `);
     });
 
     it('top-level -h usage line (body NOT compared)', () => {
-        const p = runPy(['-h'], tmp);
         const t = runTs(['-h'], tmp);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
+        expect(t.status).toBe(0);
+        expect(t.stdout.split('\n')[0]).toBe(
+            'usage: workspace_crypto [-h] {encrypt,decrypt,status,rotate-key} ...',
+        );
     });
 
     it('encrypt -h usage line (body NOT compared)', () => {
-        const p = runPy(['encrypt', '-h'], tmp);
         const t = runTs(['encrypt', '-h'], tmp);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
+        expect(t.status).toBe(0);
+        expect(t.stdout.split('\n')[0]).toBe(
+            'usage: workspace_crypto encrypt [-h] --in SRC --out DST',
+        );
     });
 });
 
 // ---------------------------------------------------------------------------
-// crypto interop — cross-language envelope round-trips + envelope header.
-// GUARDED: requires python3 with the `cryptography` package.
+// crypto — round-trip + structural envelope invariants (NO ciphertext snapshot:
+// the random nonce makes raw envelopes non-reproducible).
 // ---------------------------------------------------------------------------
 
-const c = crypto ? describe : describe.skip;
-
-// A fixed, valid base64-of-32-bytes key shared by both languages so they
-// resolve the SAME master key (override the env-key path, never the keyring).
+// A fixed, valid base64-of-32-bytes key so encrypt and decrypt resolve the SAME
+// master key (override the env-key path, never the keyfile).
 const SHARED_KEY = 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=';
 
-c('workspace_crypto — crypto interop', () => {
+describe('workspace_crypto — crypto', () => {
     it('SHARED_KEY decodes to exactly 32 bytes (test invariant)', () => {
         expect(Buffer.from(SHARED_KEY, 'base64').length).toBe(32);
     });
 
-    it('ts-encrypt → py-decrypt round-trips to original plaintext', () => {
+    it('encrypt → decrypt round-trips to original plaintext', () => {
         const plain = path.join(tmp, 'plain.txt');
         const enc = path.join(tmp, 'ts.enc');
-        const back = path.join(tmp, 'ts-then-py.txt');
+        const back = path.join(tmp, 'ts-then-ts.txt');
         const data = 'cross-language secret 🔐\nline two\n';
         fs.writeFileSync(plain, data);
         const env = { AGENT_CONFIG_WORKSPACE_KEY: SHARED_KEY };
         const e = runTs(['encrypt', '--in', plain, '--out', enc], tmp, env);
-        expect(e.status).toBe(0);
-        const dres = runPy(['decrypt', '--in', enc, '--out', back], tmp, env);
-        expect(dres.status).toBe(0);
-        expect(fs.readFileSync(back, 'utf-8')).toBe(data);
-    });
-
-    it('py-encrypt → ts-decrypt round-trips to original plaintext', () => {
-        const plain = path.join(tmp, 'plain.txt');
-        const enc = path.join(tmp, 'py.enc');
-        const back = path.join(tmp, 'py-then-ts.txt');
-        const data = 'cross-language secret 🔐\nline two\n';
-        fs.writeFileSync(plain, data);
-        const env = { AGENT_CONFIG_WORKSPACE_KEY: SHARED_KEY };
-        const e = runPy(['encrypt', '--in', plain, '--out', enc], tmp, env);
         expect(e.status).toBe(0);
         const dres = runTs(['decrypt', '--in', enc, '--out', back], tmp, env);
         expect(dres.status).toBe(0);
         expect(fs.readFileSync(back, 'utf-8')).toBe(data);
     });
 
-    it('both languages emit the same AC1\\0\\x01 envelope header', () => {
+    it('emits the AC1\\0\\x01 envelope header', () => {
         const plain = path.join(tmp, 'plain.txt');
         fs.writeFileSync(plain, 'header-check');
         const env = { AGENT_CONFIG_WORKSPACE_KEY: SHARED_KEY };
-        const tsEnc = path.join(tmp, 'ts.enc');
-        const pyEnc = path.join(tmp, 'py.enc');
-        runTs(['encrypt', '--in', plain, '--out', tsEnc], tmp, env);
-        runPy(['encrypt', '--in', plain, '--out', pyEnc], tmp, env);
+        const enc = path.join(tmp, 'ts.enc');
+        const e = runTs(['encrypt', '--in', plain, '--out', enc], tmp, env);
+        expect(e.status).toBe(0);
         const header = Buffer.from([0x41, 0x43, 0x31, 0x00, 0x01]); // "AC1\0" + version 1
-        const tsHead = fs.readFileSync(tsEnc).subarray(0, 5);
-        const pyHead = fs.readFileSync(pyEnc).subarray(0, 5);
-        expect(tsHead.equals(header)).toBe(true);
-        expect(pyHead.equals(header)).toBe(true);
+        const head = fs.readFileSync(enc).subarray(0, 5);
+        expect(head.equals(header)).toBe(true);
+    });
+
+    it('two encrypt runs of the same plaintext produce different envelopes (random nonce)', () => {
+        const plain = path.join(tmp, 'plain.txt');
+        fs.writeFileSync(plain, 'nonce-uniqueness');
+        const env = { AGENT_CONFIG_WORKSPACE_KEY: SHARED_KEY };
+        const encA = path.join(tmp, 'a.enc');
+        const encB = path.join(tmp, 'b.enc');
+        expect(runTs(['encrypt', '--in', plain, '--out', encA], tmp, env).status).toBe(0);
+        expect(runTs(['encrypt', '--in', plain, '--out', encB], tmp, env).status).toBe(0);
+        expect(fs.readFileSync(encA).equals(fs.readFileSync(encB))).toBe(false);
     });
 
     it('decrypt passes a plaintext (no-magic) payload through unchanged', () => {
@@ -314,13 +411,8 @@ c('workspace_crypto — crypto interop', () => {
         const data = 'not an envelope — plaintext written when flag off\n';
         fs.writeFileSync(plain, data);
         const env = { AGENT_CONFIG_WORKSPACE_KEY: SHARED_KEY };
-        const ptres = runPy(['decrypt', '--in', plain, '--out', out], tmp, env);
-        const ptOut = fs.readFileSync(out, 'utf-8');
-        const tdres = runTs(['decrypt', '--in', plain, '--out', out], tmp, env);
-        const tOut = fs.readFileSync(out, 'utf-8');
-        expect(ptres.status).toBe(0);
-        expect(tdres.status).toBe(0);
-        expect(ptOut).toBe(data);
-        expect(tOut).toBe(data);
+        const dres = runTs(['decrypt', '--in', plain, '--out', out], tmp, env);
+        expect(dres.status).toBe(0);
+        expect(fs.readFileSync(out, 'utf-8')).toBe(data);
     });
 });

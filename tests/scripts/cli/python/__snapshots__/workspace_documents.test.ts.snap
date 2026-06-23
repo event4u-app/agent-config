@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`workspace_documents — argparse errors > create -h usage line 1`] = `
+"usage: workspace_documents create [-h] --type TYPE --title TITLE --body-file
+                                  BODY_FILE [--role ROLE] [--session SESSION]
+                                  [--prompt PROMPT]"
+`;
+
+exports[`workspace_documents — argparse errors > decrypt-all -h usage line 1`] = `"usage: workspace_documents decrypt-all [-h] [--root ROOT]"`;
+
+exports[`workspace_documents — argparse errors > export -h usage line 1`] = `"usage: workspace_documents export [-h] --to TO [--format FORMAT] type slug"`;
+
+exports[`workspace_documents — argparse errors > list -h usage line 1`] = `
+"usage: workspace_documents list [-h] [--type TYPE] [--role ROLE]
+                                [--limit LIMIT] [--root ROOT] [--json]"
+`;
+
+exports[`workspace_documents — argparse errors > migrate -h usage line 1`] = `"usage: workspace_documents migrate [-h] [--root ROOT]"`;
+
+exports[`workspace_documents — argparse errors > read -h usage line 1`] = `"usage: workspace_documents read [-h] type slug"`;
+
+exports[`workspace_documents — argparse errors > rekey -h usage line 1`] = `"usage: workspace_documents rekey [-h] [--root ROOT]"`;
+
+exports[`workspace_documents — argparse errors > save -h usage line 1`] = `
+"usage: workspace_documents save [-h] --body-file BODY_FILE [--actor ACTOR]
+                                type slug"
+`;
