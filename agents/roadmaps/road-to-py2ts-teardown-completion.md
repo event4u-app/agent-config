@@ -112,6 +112,12 @@ stay open below — not force-marked done.
     removing it empties the file → each needs the convert-or-delete judgment
     (is the `.ts` module covered elsewhere? delete : convert to a python-free
     intent test). This is the "19 raw `main()`-only rigs" item below, grown.
+    Coverage triage of the full 144-file tail (name-grep heuristic): **≈36
+    have another test importing the same module** (delete candidates — confirm
+    the sibling actually covers the rig's surface per council N2 before
+    deleting), **≈108 are sole coverage** (convert to a python-free intent
+    test). Both halves still need per-file confirmation; neither is a blind
+    batch.
   - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
     the codemod did not fully prune; finish per-file.
   - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)
