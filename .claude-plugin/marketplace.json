@@ -387,6 +387,7 @@
         "./dist/agent-src/skills/readme-writing-package",
         "./dist/agent-src/skills/reasoning-orchestrator",
         "./dist/agent-src/skills/receiving-code-review",
+        "./dist/agent-src/skills/recursive-verification",
         "./dist/agent-src/skills/refine-prompt",
         "./dist/agent-src/skills/refine-ticket",
         "./dist/agent-src/skills/release-comms",

@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `7.0.2`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 245
+- **artefacts**: 246
 
 ## Commands (120)
 
@@ -198,7 +198,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 
-## Skills (62)
+## Skills (63)
 
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
@@ -244,6 +244,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`readme-writing`** — Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience.
 - **`readme-writing-package`** — Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding.
 - **`reasoning-orchestrator`** — Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills.
+- **`recursive-verification`** — Use to run a depth-bounded self-correction loop (attempt → critic verdict → re-attempt) as a tunable test-time compute knob — a do-and-judge specialisation, default off, capability-gated.
 - **`refine-prompt`** — Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work "…"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
 - **`repomix-packer`** — Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.

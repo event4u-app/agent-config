@@ -59,6 +59,20 @@ made by the user directly or by the agent on request, following the
 # custom   = ignore profile — every matrix value must be set explicitly.
 rule_loading_tier: balanced
 
+# --- Per-skill model auto-switch (ADR-035) ---
+# Skills declare a vendor-neutral `model_tier` (lite|medium|high); the generator
+# maps it to a native Claude model (high→opus, medium→sonnet, lite→haiku).
+#   suggest = (default) never emit a native Claude `model:` key; the
+#             model-recommendation rule names the tier as a one-question
+#             suggestion on every surface. Your explicit /model choice is
+#             never silently overridden.
+#   auto    = render a native Claude `model:` into lite/medium/high-tier skills
+#             so Claude Code switches automatically for that turn (reverts on
+#             the next prompt); suggest on surfaces without a native override.
+#   off     = inert — no native key, no suggestion.
+model:
+  auto_switch: suggest
+
 # --- Personal preferences ---
 personal:
   # IDE to use for opening files (code, phpstorm, cursor)
@@ -209,14 +223,20 @@ pipelines:
 # response — that cadence is governed by `roadmap-progress-sync` and
 # is non-negotiable. This setting only governs *quality tool runs*.
 roadmap:
-  # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
-  #   true  = default. Command name names the scope; a discoverable single
-  #           active roadmap (or a named one) starts the loop immediately,
-  #           resolved config surfaced inline so a wrong pick can still be
-  #           aborted mid-stream.
-  #   false = legacy. Shows the pre-run summary with numbered options and
-  #           waits. Gate is still shown regardless when the roadmap is
-  #           ambiguous or a scope / cadence conflict has no default.
+  # Skip the pre-run confirmation gate when /roadmap:process-step|phase|full
+  # is invoked (true, false).
+  #   true  = default. The command name itself names the scope; if a
+  #           single active roadmap is discoverable (or the user named
+  #           one), the loop starts immediately. The resolved roadmap /
+  #           cadence / council setting are surfaced inline as a one-shot
+  #           note so an unwanted pick can still be aborted mid-stream.
+  #   false = legacy. The loop shows the pre-run summary with numbered
+  #           options (Go / Different roadmap / Different scope / Toggle
+  #           council / Abort) and waits for input.
+  # The gate is still shown — regardless of this flag — when the roadmap
+  # is ambiguous (multiple active, none named) or a scope / cadence
+  # conflict has no sensible default. The flag suppresses the
+  # confirmation, never a genuine "which roadmap?" question.
   skip_pre_run_gate: true
 
   # When to run quality tools during /roadmap:process-step|phase|full.
@@ -256,6 +276,23 @@ subagents:
   # Maximum number of parallel subagent invocations (integer, default 3)
   # Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
+
+# --- Recursive self-verification (see skills/recursive-verification) ---
+verification:
+  # off | ask | on  (default: off)
+  # Depth-bounded self-correction loop (attempt -> critic verdict ->
+  # conditional re-attempt) as a tunable test-time compute knob.
+  # off = inert; ask = ask once before looping; on = loop up to max_depth.
+  # The shipped per-host default flips off -> on/ask ONLY on a passing
+  # capability-axis bench:ab gate cell (orchestration-benchmark-gate);
+  # a discipline-only or honest-null result keeps it off.
+  recursive: off
+
+  # Hard cap on correction rounds (integer, default 1).
+  # 1 = a single critic pass (effectively inert beyond one review) until
+  # a benchmark gate authorises deeper recursion. Each level is one
+  # verify-budget unit; the loop also stops on accept / no-progress.
+  max_depth: 1
 
 # --- Git worktrees ---
 worktrees:
@@ -432,18 +469,26 @@ telemetry:
       path: .agent-engagement.jsonl
 
 # --- Linked projects (cross-repo awareness, local-only) ---
-# IDE-attached sibling repos in scope for proactive cross-repo awareness.
-# BELONGS IN `.agent-settings.local.yml` (in agents/settings/) (per-machine, gitignored) — sibling
-# paths differ per developer, never commit them. Each entry: path (absolute,
-# auto-filled by detection) + include (true = in scope, false = declined,
-# never re-prompted). Detection skips bloat dirs; a sibling over max_files is
-# flagged `large` (awareness only), never excluded. See ADR-032 +
-# docs/guides/cross-repo-linked-projects.md. Agent never bulk-includes sibling
-# files — passive awareness only.
+#
+# Sibling repositories the IDE has attached to this project (PhpStorm
+# .idea/modules.xml + vcs.xml, VS Code *.code-workspace). When a sibling is
+# opted in, the agent proactively considers cross-repo impact (API contract /
+# shared-type changes) and warns — it does NOT bulk-include the sibling's
+# files. See docs/guides/cross-repo-linked-projects.md and ADR-032.
+#
+# THIS KEY BELONGS IN `.agent-settings.local.yml` (in agents/settings/) (the per-machine, gitignored
+# override layer), NOT in the committed `.agent-settings.yml`: sibling paths
+# differ per developer and must never be committed. Each entry:
+#   - path:    absolute path to the sibling repo root (auto-filled by detection)
+#   - include: true = in scope (proactive awareness); false = declined, never
+#              re-prompted.
+# Detection auto-skips bloat dirs (node_modules/.git/dist/build/.venv/target);
+# a sibling over `max_files` is flagged `large` (awareness only), never excluded.
 linked_projects: []
   # - path: /abs/path/to/sibling-repo
   #   include: true
-linked_projects_max_files: 20000   # ceiling for the `large` flag; never excludes
+# Optional ceiling for the `large` flag (does not exclude). Default 20000.
+linked_projects_max_files: 20000
 ```
 
 ## Settings Reference
@@ -468,7 +513,7 @@ the canonical narrative lives in
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
-| `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
+| `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` (default) defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. `off` is the legacy ask-everything mode. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
 | `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
@@ -487,7 +532,7 @@ the canonical narrative lives in
 | `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
-| `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts immediately — resolved roadmap / cadence / council surfaced inline so an unwanted pick can still be aborted. When `false`: shows the pre-run summary with numbered options and waits. Gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no default. |
+| `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |
 | `quality.local_auto_run` | `true`, `false` | `true` | When `true`: agent runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) autonomously when work is ready for verification. When `false`: agent asks before running locally. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs require the agent to surface the gap before claiming completion. |
 | `quality.wait_for_remote_ci` | `true`, `false` | `false` | When `true`: after `git push`, the agent polls GitHub check-runs / pipeline status on the PR and reports green / red before handing back. When `false`: agent pushes and hands back immediately; the user inspects CI themselves (default — saves agent runtime and tokens). |

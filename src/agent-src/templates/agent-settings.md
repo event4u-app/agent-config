@@ -277,6 +277,23 @@ subagents:
   # Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
 
+# --- Recursive self-verification (see skills/recursive-verification) ---
+verification:
+  # off | ask | on  (default: off)
+  # Depth-bounded self-correction loop (attempt -> critic verdict ->
+  # conditional re-attempt) as a tunable test-time compute knob.
+  # off = inert; ask = ask once before looping; on = loop up to max_depth.
+  # The shipped per-host default flips off -> on/ask ONLY on a passing
+  # capability-axis bench:ab gate cell (orchestration-benchmark-gate);
+  # a discipline-only or honest-null result keeps it off.
+  recursive: off
+
+  # Hard cap on correction rounds (integer, default 1).
+  # 1 = a single critic pass (effectively inert beyond one review) until
+  # a benchmark gate authorises deeper recursion. Each level is one
+  # verify-budget unit; the loop also stops on accept / no-progress.
+  max_depth: 1
+
 # --- Git worktrees ---
 worktrees:
   # off | on | ask  (default: ask)
