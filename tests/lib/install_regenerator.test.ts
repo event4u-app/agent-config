@@ -1,14 +1,4 @@
-/**
- * Tests for `src/scripts/_lib/install_regenerator.ts`.
- *
- * No Python suite exists for `install_regenerator.py` (grep of tests/ finds
- * none), so this is a focused differential suite (ADR-088 Phase 2 / Wave 2a):
- * a 1:1 behavioral set of unit tests plus a `python3 -c` driver block asserting
- * the TS twin's `package_source` / `install_regenerator` / `is_installed`
- * outputs match the Python reference on identical synthetic package + consumer
- * trees (pattern: tests/spikes/yaml_rt_py_driver.py).
- */
-import { execFileSync } from "node:child_process";
+
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -117,53 +107,7 @@ describe("install_regenerator", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Differential block — Python `install_regenerator.py` is the reference.
-// Pattern per tests/spikes/yaml_rt_py_driver.py.
-// ---------------------------------------------------------------------------
-
-function python3_available(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
-
-const PY_DRIVER = `
-import json, os, sys
-sys.path.insert(0, os.path.join(os.getcwd(), "src", "scripts"))
-from _lib import install_regenerator as reg
-from pathlib import Path
-
-payload = json.load(sys.stdin)
-pkg = Path(payload["pkg"])
-consumer = Path(payload["consumer"])
-src = reg.package_source(pkg)
-ok, msg = reg.install_regenerator(pkg, consumer)
-out = {
-    "package_source_basename": (src.name if src is not None else None),
-    "package_source_is_none": src is None,
-    "ok": ok,
-    # Normalise the message to a stable shape (drop the absolute target path).
-    "msg_kind": (
-        "missing" if "not found" in msg
-        else "current" if "already current" in msg
-        else "installed" if "installed at" in msg
-        else "other"
-    ),
-    "is_installed": reg.is_installed(consumer),
-    "target_exists": reg.consumer_target(consumer).is_file(),
-    "content": (
-        reg.consumer_target(consumer).read_text(encoding="utf-8")
-        if reg.consumer_target(consumer).is_file() else None
-    ),
-}
-sys.stdout.write(json.dumps(out))
-`;
 
 interface DriverOut {
   package_source_basename: string | null;
@@ -174,66 +118,3 @@ interface DriverOut {
   target_exists: boolean;
   content: string | null;
 }
-
-describe.runIf(python3_available())("differential vs Python install_regenerator", () => {
-  function ts_run(pkg: string, consumer: string): DriverOut {
-    const src = reg.package_source(pkg);
-    const [ok, msg] = reg.install_regenerator(pkg, consumer);
-    const target = reg.consumer_target(consumer);
-    const target_exists = fs.existsSync(target) && fs.statSync(target).isFile();
-    const msg_kind = msg.includes("not found")
-      ? "missing"
-      : msg.includes("already current")
-        ? "current"
-        : msg.includes("installed at")
-          ? "installed"
-          : "other";
-    return {
-      package_source_basename: src === null ? null : path.basename(src),
-      package_source_is_none: src === null,
-      ok,
-      msg_kind,
-      is_installed: reg.is_installed(consumer),
-      target_exists,
-      content: target_exists ? fs.readFileSync(target, "utf-8") : null,
-    };
-  }
-
-  function py_run(pkg: string, consumer: string): DriverOut {
-    const stdout = execFileSync("python3", ["-c", PY_DRIVER], {
-      input: JSON.stringify({ pkg, consumer }),
-      encoding: "utf-8",
-      cwd: REPO_ROOT,
-    });
-    return JSON.parse(stdout) as DriverOut;
-  }
-
-  it("src/agent-src source: install behaves identically", () => {
-    // Two independent identical trees → run Python on one, TS on the other.
-    const py_pkg = tp("py", "pkg");
-    const py_consumer = tp("py", "consumer");
-    const ts_pkg = tp("ts", "pkg");
-    const ts_consumer = tp("ts", "consumer");
-    for (const pkg of [py_pkg, ts_pkg]) {
-      write_file(path.join(pkg, "src", "agent-src", REL), "#!/usr/bin/env python3\nbody\n");
-    }
-    expect(ts_run(ts_pkg, ts_consumer)).toEqual(py_run(py_pkg, py_consumer));
-  });
-
-  it("missing source: both report the same failure shape", () => {
-    const py_pkg = tp("py2", "empty");
-    const ts_pkg = tp("ts2", "empty");
-    fs.mkdirSync(py_pkg, { recursive: true });
-    fs.mkdirSync(ts_pkg, { recursive: true });
-    expect(ts_run(ts_pkg, tp("ts2", "consumer"))).toEqual(py_run(py_pkg, tp("py2", "consumer")));
-  });
-
-  it("dist/agent-src fallthrough source: identical resolution", () => {
-    const py_pkg = tp("py3", "pkg");
-    const ts_pkg = tp("ts3", "pkg");
-    for (const pkg of [py_pkg, ts_pkg]) {
-      write_file(path.join(pkg, "dist/agent-src", REL), "dist-body\n");
-    }
-    expect(ts_run(ts_pkg, tp("ts3", "consumer"))).toEqual(py_run(py_pkg, tp("py3", "consumer")));
-  });
-});

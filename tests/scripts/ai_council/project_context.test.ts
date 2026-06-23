@@ -1,10 +1,4 @@
-// Tests for src/scripts/ai_council/project_context.ts (py2ts Phase 1).
-//
-// Reads composer.json / package.json / README.md from a fixture root and
-// derives a neutral ProjectContext. Golden-parity against the Python twin via
-// direct-file import (registered in sys.modules so the dataclass annotations
-// resolve under Python 3.9).
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -16,30 +10,6 @@ import {
     REPO_PURPOSE_MAX_CHARS,
     detect_project_context,
 } from '../../../src/scripts/ai_council/project_context.js';
-
-const PY_MOD = 'src/scripts/ai_council/project_context.py';
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-/** Detect via the Python twin; returns {name,stack,repo_purpose} JSON. */
-function pyDetect(root: string): string {
-    const code = [
-        'import importlib.util, sys, json',
-        `spec = importlib.util.spec_from_file_location("pc", ${JSON.stringify(PY_MOD)})`,
-        'pc = importlib.util.module_from_spec(spec)',
-        'sys.modules["pc"] = pc',
-        'spec.loader.exec_module(pc)',
-        `c = pc.detect_project_context(pc.Path(${JSON.stringify(root)}))`,
-        'print(json.dumps({"name": c.name, "stack": c.stack, "repo_purpose": c.repo_purpose, "empty": c.is_empty()}))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return r.stdout.trim();
-}
 
 const created: string[] = [];
 
@@ -163,18 +133,5 @@ describe('project_context — derivation', () => {
         // composer.json invalid, package.json is an array (not dict) → both null.
         expect(c.stack).toBeNull();
         expect(c.repo_purpose).toBe('Plain purpose line here describing things.');
-    });
-});
-
-describe.runIf(hasPython3())('project_context — golden parity vs CPython twin', () => {
-    const fx = fixtures();
-    it.each(Object.keys(fx))('fixture %s matches', (key) => {
-        const root = mkRoot(fx[key] as Record<string, string>);
-        expect(JSON.parse(tsJson(root))).toEqual(JSON.parse(pyDetect(root)));
-    });
-
-    it('empty directory matches (dir-name fallback)', () => {
-        const root = mkRoot({});
-        expect(JSON.parse(tsJson(root))).toEqual(JSON.parse(pyDetect(root)));
     });
 });

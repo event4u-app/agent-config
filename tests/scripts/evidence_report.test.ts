@@ -11,7 +11,7 @@
 // explicit `--observed-at`, normalize the header lines before comparing the
 // written file, and assert on exit/stdout for the rest.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -25,7 +25,6 @@ const TSX_BIN = (() => {
     return join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 })();
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'evidence_report.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'evidence_report.py');
 const SESSION_REL = 'agents/memory/knowledge/session/evidence-report.md';
 
 interface RunResult {
@@ -38,17 +37,6 @@ function runTs(args: readonly string[], cwd: string = REPO_ROOT): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8' });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-
-function runPy(args: readonly string[], cwd: string = REPO_ROOT): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd, encoding: 'utf8' });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
-
-function pythonAvailable(): boolean {
-    const r = spawnSync('python3', ['--version'], { encoding: 'utf8' });
-    return r.status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 let tmp: string;
 beforeEach(() => {
@@ -201,126 +189,5 @@ describe('evidence_report.ts', () => {
         const r = runTs(['add', '--bucket', 'nope', '--claim', 'x']);
         expect(r.status).toBe(2);
         expect(r.stderr).toContain("argument --bucket: invalid choice: 'nope'");
-    });
-
-    // --- golden parity vs python3 -------------------------------------------
-    describe.skipIf(!HAVE_PYTHON || !existsSync(PY_SCRIPT))('golden parity', () => {
-        /** Build a committed git repo so `head` resolves to a short SHA. */
-        function gitRepo(dir: string): void {
-            spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: dir });
-            spawnSync('git', ['config', 'user.email', 't@e.x'], { cwd: dir });
-            spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
-            spawnSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
-            writeFileSync(join(dir, 'f'), 'x\n');
-            spawnSync('git', ['add', '-A'], { cwd: dir });
-            spawnSync('git', ['commit', '-q', '-m', 'c'], { cwd: dir });
-        }
-
-        it('init written file byte-identical (header normalized)', () => {
-            const pyDir = join(tmp, 'py');
-            const tsDir = join(tmp, 'ts');
-            mkdirSync(pyDir);
-            mkdirSync(tsDir);
-            gitRepo(pyDir);
-            gitRepo(tsDir);
-            const py = runPy(['--root', pyDir, 'init', '--task', 'demo task'], pyDir);
-            const ts = runTs(['--root', tsDir, 'init', '--task', 'demo task'], tsDir);
-            // stdout uses the relative session path → identical.
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-            // Written file matches once the time/SHA header lines are normalized.
-            expect(normHeader(readSession(tsDir))).toBe(normHeader(readSession(pyDir)));
-        });
-
-        it('add (verified + gaps) written file byte-identical', () => {
-            const pyDir = join(tmp, 'py2');
-            const tsDir = join(tmp, 'ts2');
-            mkdirSync(pyDir);
-            mkdirSync(tsDir);
-            gitRepo(pyDir);
-            gitRepo(tsDir);
-            const seq: string[][] = [
-                ['init', '--task', 'demo'],
-                [
-                    'add',
-                    '--bucket',
-                    'verified',
-                    '--claim',
-                    'Card claims X holds',
-                    '--source',
-                    'a.ts:10',
-                    '--version',
-                    'v1',
-                    '--observed-at',
-                    '2026-01-01T00:00:00+00:00',
-                ],
-                [
-                    'add',
-                    '--bucket',
-                    'gaps',
-                    '--claim',
-                    'Y not yet searched',
-                    '--searched',
-                    'a,b',
-                    '--not-searched',
-                    'c,d',
-                    '--observed-at',
-                    '2026-01-01T00:00:00+00:00',
-                ],
-            ];
-            for (const a of seq) {
-                const py = runPy(['--root', pyDir, ...a], pyDir);
-                const ts = runTs(['--root', tsDir, ...a], tsDir);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.status).toBe(py.status);
-            }
-            expect(normHeader(readSession(tsDir))).toBe(normHeader(readSession(pyDir)));
-        });
-
-        it('git-state clean byte-identical', () => {
-            const dir = join(tmp, 'g');
-            mkdirSync(dir);
-            gitRepo(dir);
-            const py = runPy(['--root', dir, 'git-state'], dir);
-            const ts = runTs(['--root', dir, 'git-state'], dir);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-
-        it('git-state merge-in-progress byte-identical', () => {
-            const dir = join(tmp, 'gm');
-            mkdirSync(dir);
-            gitRepo(dir);
-            writeFileSync(join(dir, '.git', 'MERGE_HEAD'), 'deadbeef\n');
-            const py = runPy(['--root', dir, 'git-state'], dir);
-            const ts = runTs(['--root', dir, 'git-state'], dir);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-
-        it('add before init byte-identical', () => {
-            const dir = join(tmp, 'ni');
-            mkdirSync(dir);
-            const args = ['--root', dir, 'add', '--bucket', 'verified', '--claim', 'x'];
-            const py = runPy(args, dir);
-            const ts = runTs(args, dir);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-
-        it('arg-error paths byte-identical', () => {
-            for (const args of [[], ['bogus'], ['add'], ['add', '--bucket', 'nope', '--claim', 'x']]) {
-                const py = runPy(args);
-                const ts = runTs(args);
-                expect(ts.stdout, JSON.stringify(args)).toBe(py.stdout);
-                expect(ts.stderr, JSON.stringify(args)).toBe(py.stderr);
-                expect(ts.status, JSON.stringify(args)).toBe(py.status);
-            }
-        });
     });
 });

@@ -1,10 +1,4 @@
-// Tests for src/scripts/check_memory_proposal.ts (py2ts Phase 4 / Wave 4c).
-//
-// 1:1 port of tests/test_check_memory_proposal.py — the pytest fixture's
-// `monkeypatch.chdir` + `monkeypatch.setattr(gate, "INTAKE_ROOT", ...)` maps
-// to _set_intake_root_for_test() pointed at a temp intake dir. Plus a
-// golden-parity layer on the REAL REPO (skipped without python3).
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,17 +9,12 @@ import * as gate from '../../src/scripts/check_memory_proposal.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_memory_proposal.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_memory_proposal.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 let tmp: string;
 let intakeRoot: string;
@@ -120,42 +109,4 @@ describe('check_memory_proposal — promotion gate (ported pytest)', () => {
         writeIntake([{ id: 'sig-1', entry_type: 'ownership', path: 'a', body: 'b' }]);
         expect(gate._find_intake('sig-missing')).toBeNull();
     });
-});
-
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_memory_proposal — golden parity (python3 vs tsx)', () => {
-    let pdir: string;
-    beforeEach(() => {
-        pdir = fs.mkdtempSync(path.join(os.tmpdir(), 'mp-gp-'));
-    });
-    afterEach(() => {
-        fs.rmSync(pdir, { recursive: true, force: true });
-    });
-
-    function run(bin: string, script: string, args: readonly string[]) {
-        return spawnSync(bin, [script, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-
-    it('intake-id not found matches (exit 1, stderr)', () => {
-        const args = ['--intake-id', 'sig-does-not-exist-xyz'];
-        const py = run('python3', PY_SCRIPT, args);
-        const ts = run(TSX_BIN, TS_SCRIPT, args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    for (const fmt of ['text', 'json'] as const) {
-        it(`proposal gate-fail matches (--format ${fmt})`, () => {
-            const yml = path.join(pdir, 'p.yml');
-            fs.writeFileSync(yml, 'id: x\nentry_type: ownership\nbody: owner\n', 'utf-8');
-            const args = ['--proposal', yml, '--format', fmt];
-            const py = run('python3', PY_SCRIPT, args);
-            const ts = run(TSX_BIN, TS_SCRIPT, args);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-    }
 });

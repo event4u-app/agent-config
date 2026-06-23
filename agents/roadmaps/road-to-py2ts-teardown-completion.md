@@ -99,6 +99,33 @@ stay open below — not force-marked done.
 > escalate to manual review. Full python-free `vitest run` green is the Phase-1
 > exit gate.
 
+- [x] **MIXED files — obsolete parity blocks purged (94 files, 2026-06-23).**
+  All test files that carry an obsolete live `python3↔tsx` parity block **and**
+  retain non-python coverage had the parity block + its dead probe/gate/alias
+  chain + dead imports removed (AST codemod over four gating idioms:
+  `(describe|it|test).skipIf`, `.runIf`, `describePy`/`itPy`/`describeParity`
+  aliases, and whole `… parity (python3 vs tsx)` describes). Verified by the
+  **passing-test-count invariant** (4769 → 4769, zero coverage loss) + zero
+  python-spawn residue in the changed set. The remaining ~144 spawn-files are
+  the bespoke tail below and stay shim-gated until handled:
+  - **~97 pure-parity rigs** — the file's *only* tests are the parity block;
+    removing it empties the file → each needs the convert-or-delete judgment
+    (is the `.ts` module covered elsewhere? delete : convert to a python-free
+    intent test). This is the "19 raw `main()`-only rigs" item below, grown.
+    Coverage triage of the full 144-file tail (name-grep heuristic): **≈36
+    have another test importing the same module** (delete candidates — confirm
+    the sibling actually covers the rig's surface per council N2 before
+    deleting), **≈108 are sole coverage** (convert to a python-free intent
+    test). Both halves still need per-file confirmation; neither is a blind
+    batch.
+  - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
+    the codemod did not fully prune; finish per-file.
+  - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)
+    — a real ungated test lives inside a parity-named describe; split, don't
+    bulk-delete.
+  - **shared python helper modules** (`tests/_lib/parity_oracle.ts`,
+    `tests/scripts/_mcp_server.ts`, `_bench_wave8d.ts`, `_bench_ab.ts`) +
+    their importers — resolve after their consumers are de-pythonized.
 - [x] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
   judgement** (council B1). <!-- DONE 2026-06-23: 0 runIf(py3)/runIf(PY) blocks remain repo-wide (21 purged #639 + 4 all-parity CLI rigs converted to python-free intent tests). The "269" was a stale count; the real gated surface was 25 files. --> Per file: if the `runIf(py3)` block calls
   `readOracleSnapshot(...)` with **no** `captureSnapshot(...)` in the same block

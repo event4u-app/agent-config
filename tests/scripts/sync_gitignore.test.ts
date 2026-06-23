@@ -1,15 +1,4 @@
-// Tests for src/scripts/sync_gitignore.ts (py2ts Phase 5).
-//
-// Two layers:
-//   1. 1:1 port of tests/test_sync_gitignore.py — the behavioural spec
-//      (template parsing, block location, append-only / replace / cleanup-legacy
-//      sync, dry-run diff, exit codes). main() is exercised through a process
-//      stdout/stderr capture seam since the Python suite asserts on capsys.
-//   2. Golden parity on the REAL REPO: python3 vs tsx produce byte-identical
-//      rewritten .gitignore + stdout/stderr/exit on the shipped template, and
-//      the committed .gitignore reproduces with ZERO drift. Skipped when
-//      python3 is absent.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -20,7 +9,6 @@ import * as sg from '../../src/scripts/sync_gitignore.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'sync_gitignore.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'sync_gitignore.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -443,91 +431,4 @@ describe('sync_gitignore — ported behavioural spec', () => {
         expect(fs.statSync(gitignore).mtimeMs).toBe(mtimeBefore);
     });
 });
-
-// --- Layer 2: golden parity on the REAL REPO -------------------------------
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 const COMMITTED_GITIGNORE = path.join(REPO_ROOT, '.gitignore');
-const runnable = py3 && fs.existsSync(COMMITTED_GITIGNORE);
-
-describe.skipIf(!runnable)('sync_gitignore — golden parity (python3 vs tsx)', () => {
-    let work: string;
-    let gi: string;
-    let tpl: string;
-    beforeEach(() => {
-        work = fs.mkdtempSync(path.join(os.tmpdir(), 'sgign-gp-'));
-        gi = path.join(work, '.gitignore');
-        tpl = path.join(work, 'tpl.txt');
-        fs.writeFileSync(tpl, TEMPLATE_CONTENT, 'utf-8');
-    });
-    afterEach(() => {
-        fs.rmSync(work, { recursive: true, force: true });
-    });
-
-    it('fresh-block write is byte-identical (file + stdout + exit)', () => {
-        fs.writeFileSync(gi, '/vendor/\n/node_modules/\n', 'utf-8');
-        const pyGi = path.join(work, 'py.gitignore');
-        fs.copyFileSync(gi, pyGi);
-        const py = spawnSync('python3', [PY_SCRIPT, '--path', pyGi, '--template', tpl], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        const tsGi = path.join(work, 'ts.gitignore');
-        fs.writeFileSync(tsGi, '/vendor/\n/node_modules/\n', 'utf-8');
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--path', tsGi, '--template', tpl], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        expect(ts.status).toBe(py.status);
-        // Path differs in the message; strip the path token then compare.
-        const strip = (s: string): string => s.replace(/py\.gitignore|ts\.gitignore/g, 'X.gitignore');
-        expect(strip(ts.stdout)).toBe(strip(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-        expect(fs.readFileSync(tsGi, 'utf-8')).toBe(fs.readFileSync(pyGi, 'utf-8'));
-    });
-
-    it('dry-run diff against shipped template is byte-identical', () => {
-        fs.writeFileSync(gi, '/vendor/\n', 'utf-8');
-        const py = spawnSync('python3', [PY_SCRIPT, '--path', gi, '--template', sg.DEFAULT_TEMPLATE, '--dry-run'], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--path', gi, '--template', sg.DEFAULT_TEMPLATE, '--dry-run'], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('shipped template synced onto the real repo .gitignore is byte-identical py vs tsx', () => {
-        // NOTE: this package repo's own .gitignore carries NO managed block —
-        // sync_gitignore is a consumer-facing writer, so there is no committed
-        // block to reproduce here. The golden contract is therefore python3 vs
-        // tsx byte-identical output against a COPY of the real .gitignore + the
-        // shipped template. The real repo .gitignore is never touched.
-        const original = fs.readFileSync(COMMITTED_GITIGNORE, 'utf-8');
-        const tsCopy = path.join(work, 'real.ts.gitignore');
-        const pyCopy = path.join(work, 'real.py.gitignore');
-        fs.writeFileSync(tsCopy, original, 'utf-8');
-        fs.writeFileSync(pyCopy, original, 'utf-8');
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--path', tsCopy, '--template', sg.DEFAULT_TEMPLATE, '--quiet'], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        const py = spawnSync('python3', [PY_SCRIPT, '--path', pyCopy, '--template', sg.DEFAULT_TEMPLATE, '--quiet'], {
-            encoding: 'utf8',
-            cwd: REPO_ROOT,
-        });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(fs.readFileSync(tsCopy, 'utf-8')).toBe(fs.readFileSync(pyCopy, 'utf-8'));
-        // The real repo .gitignore must be untouched by either run.
-        expect(fs.readFileSync(COMMITTED_GITIGNORE, 'utf-8')).toBe(original);
-    });
-});

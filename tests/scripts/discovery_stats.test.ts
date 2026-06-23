@@ -15,7 +15,6 @@ import * as ds from '../../src/scripts/discovery_stats.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'discovery_stats.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'discovery_stats.py');
 const DEFAULT_MANIFEST = path.join(REPO_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -24,17 +23,8 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
 function runTs(args: string[]): { status: number; stdout: string; stderr: string } {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
-
-function runPy(args: string[]): { status: number; stdout: string; stderr: string } {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
 
@@ -104,66 +94,4 @@ describe('discovery_stats — main exit codes', () => {
         // unassigned_count is 0 → falsy → not printed.
         expect(r.stdout).not.toContain('unassigned');
     });
-});
-
-describe.runIf(hasPython3())('discovery_stats — golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-gold-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    it.runIf(fs.existsSync(DEFAULT_MANIFEST))('byte-identical on the real manifest (no args)', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    for (const name of ['missing', 'bad', 'no-stats', 'rich']) {
-        it(`byte-identical for the ${name} fixture`, () => {
-            let arg: string;
-            if (name === 'missing') {
-                arg = path.join(tmp, 'nope.json');
-            } else {
-                const p = path.join(tmp, `${name}.json`);
-                if (name === 'bad') {
-                    fs.writeFileSync(p, '{not json');
-                } else if (name === 'no-stats') {
-                    fs.writeFileSync(p, JSON.stringify({ x: 1 }));
-                } else {
-                    fs.writeFileSync(
-                        p,
-                        JSON.stringify({
-                            stats: {
-                                total_artefacts: 12,
-                                by_category: { skill: 8, rule: 3, command: 1 },
-                                by_lifecycle: { stable: 10, beta: 2 },
-                                by_trust_level: { core: 9, professional: 3 },
-                                unassigned_count: 2,
-                                documented_unassigned_count: 1,
-                            },
-                        }),
-                    );
-                }
-                arg = p;
-            }
-            const py = runPy(['--manifest', arg]);
-            const ts = runTs(['--manifest', arg]);
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            // stderr error prose is interpreter-dependent for two cases:
-            //  - 'bad'  → JSONDecodeError message text differs;
-            //  - 'rich' → an absolute --manifest outside ROOT triggers the
-            //             latent `relative_to` ValueError (traceback prose).
-            // Both compare exit code + stdout (a stable parity contract); the
-            // stable 'missing' / 'no-stats' messages are compared in full.
-            if (name !== 'bad' && name !== 'rich') {
-                expect(ts.stderr).toBe(py.stderr);
-            }
-        });
-    }
 });

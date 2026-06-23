@@ -15,17 +15,12 @@ import { validate } from '../../src/scripts/validate_telegraph_carveouts.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_telegraph_carveouts.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_telegraph_carveouts.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const PASS_PAIRS: Array<[string, string]> = [
     [
@@ -117,34 +112,4 @@ describe('validate_telegraph_carveouts — CLI', () => {
         expect(r.status).toBe(1);
         expect(r.stdout).toContain('DRIFT DETECTED');
     });
-});
-
-// --- Golden parity on a representative drift pair ---------------------------
-
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('validate_telegraph_carveouts — golden parity (python3 vs tsx)', () => {
-    function runPair(bin: string, script: string, pre: string, post: string) {
-        const td = fs.mkdtempSync(path.join(os.tmpdir(), 'tcg-'));
-        try {
-            const preP = path.join(td, 'pre.md');
-            const postP = path.join(td, 'post.md');
-            fs.writeFileSync(preP, pre, 'utf-8');
-            fs.writeFileSync(postP, post, 'utf-8');
-            return spawnSync(bin, [script, preP, postP], { cwd: REPO_ROOT, encoding: 'utf8' });
-        } finally {
-            fs.rmSync(td, { recursive: true, force: true });
-        }
-    }
-
-    it.each([...PASS_PAIRS.map((p) => [p[0], p[1]] as const), ...FAIL_PAIRS.map((p) => [p[0], p[1]] as const)])(
-        'matches byte-for-byte (pair %#)',
-        (pre, post) => {
-            const py = runPair('python3', PY_SCRIPT, pre, post);
-            const ts = runPair(TSX_BIN, TS_SCRIPT, pre, post);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        },
-    );
 });

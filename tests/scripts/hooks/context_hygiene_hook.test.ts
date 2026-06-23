@@ -14,7 +14,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { main, run, STATE_DIR, STATE_FILE } from '../../../src/scripts/context_hygiene_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'context_hygiene_hook.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'context_hygiene_hook.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -22,10 +21,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function state(root: string): Record<string, unknown> {
     return JSON.parse(fs.readFileSync(path.join(root, STATE_FILE), 'utf8'));
@@ -165,76 +160,9 @@ describe('context_hygiene — tracker behaviour', () => {
     });
 });
 
-// ── Golden parity vs python3 ─────────────────────────────────────────
-
-const py3 = hasPython3();
-
 interface RunResult {
     status: number | null;
     stdout: string;
     stderr: string;
     state: Record<string, unknown> | null;
 }
-
-function runScript(cmd: string, args: string[], cwd: string, input: string): RunResult {
-    const res = spawnSync(cmd, args, {
-        input,
-        encoding: 'utf8',
-        cwd,
-        env: { ...process.env },
-    });
-    const sf = path.join(cwd, STATE_FILE);
-    let parsed: Record<string, unknown> | null = null;
-    if (fs.existsSync(sf)) {
-        parsed = JSON.parse(fs.readFileSync(sf, 'utf8'));
-        if (parsed && 'checked_at' in parsed) parsed['checked_at'] = '<TS>';
-    }
-    return { status: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '', state: parsed };
-}
-
-describe.skipIf(!py3)('context_hygiene — golden parity', () => {
-    function scenario(name: string, inputs: string[], args: string[] = ['--platform', 'augment']): void {
-        it(name, () => {
-            const pyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ch-py-'));
-            const tsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ch-ts-'));
-            try {
-                let py: RunResult = { status: 0, stdout: '', stderr: '', state: null };
-                let ts: RunResult = { status: 0, stdout: '', stderr: '', state: null };
-                for (const input of inputs) {
-                    py = runScript('python3', [PY_SCRIPT, ...args], pyDir, input);
-                    ts = runScript(TSX_BIN, [TS_SCRIPT, ...args], tsDir, input);
-                }
-                expect(ts.status).toBe(py.status);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.state).toEqual(py.state);
-            } finally {
-                fs.rmSync(pyDir, { recursive: true, force: true });
-                fs.rmSync(tsDir, { recursive: true, force: true });
-            }
-        });
-    }
-
-    scenario('single tool call', [JSON.stringify({ tool_name: 'view' })]);
-    scenario('three same → loop', [
-        JSON.stringify({ tool_name: 'view' }),
-        JSON.stringify({ tool_name: 'view' }),
-        JSON.stringify({ tool_name: 'view' }),
-    ]);
-    scenario('alt keys', [JSON.stringify({ toolName: 'A' }), JSON.stringify({ tool: 'B' })]);
-    scenario('empty stdin', ['']);
-    scenario('no tool_name', [JSON.stringify({ foo: 'bar' })]);
-    scenario('malformed json', ['{not json']);
-    scenario(
-        'envelope-wrapped payload',
-        [
-            JSON.stringify({
-                schema_version: 1,
-                platform: 'augment',
-                event: 'post_tool_use',
-                payload: { tool_name: 'view' },
-            }),
-        ],
-    );
-    scenario('verbose stderr line', [JSON.stringify({ tool_name: 'view' })], ['--verbose']);
-});

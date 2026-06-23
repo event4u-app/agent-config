@@ -6,7 +6,7 @@
 // golden-parity block runs python3 + tsx on identical fixtures and asserts
 // byte-identical stdout+stderr+exit, skipped when python3 is absent.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -19,7 +19,6 @@ const TSX_BIN = join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'check_memory.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'check_memory.py');
 
 interface RunResult {
     readonly status: number;
@@ -31,17 +30,6 @@ function runTs(args: readonly string[], cwd: string = REPO_ROOT): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8' });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-
-function runPy(args: readonly string[], cwd: string = REPO_ROOT): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd, encoding: 'utf8' });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
-
-function pythonAvailable(): boolean {
-    const r = spawnSync('python3', ['--version'], { encoding: 'utf8' });
-    return r.status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 // dedent helper mirroring textwrap.dedent on the leading common indent.
 function dedent(s: string): string {
@@ -468,125 +456,5 @@ describe('check_memory.ts', () => {
         const result = runAppendOnly(tmp, 'HEAD~1');
         expect(result.status, result.stdout + result.stderr).toBe(0);
         expect(result.stdout).not.toContain('append-only violation');
-    });
-
-    // --- golden parity vs python3 -------------------------------------------
-    // Byte-identical stdout+stderr+exit on a synthetic fixture tree. The
-    // malformed-YAML class-name suffix and --shadow-report are excluded per
-    // docs/migration/divergences/src-scripts-check_memory.md.
-
-    describe.skipIf(!HAVE_PYTHON || !existsSync(PY_SCRIPT))('golden parity', () => {
-        function buildTree(): string {
-            const root = join(tmp, 'gmem');
-            const di = join(root, 'domain-invariants');
-            mkdirSync(di, { recursive: true });
-            writeFileSync(
-                join(di, 'mixed.yml'),
-                dedent(`
-                version: 1
-                entries:
-                  - id: dup
-                    status: wrong
-                    confidence: super
-                    source: ["https://example.com"]
-                    owner: team-x
-                    last_validated: 2020-01-01
-                    review_after_days: 90
-                  - id: dup
-                    status: active
-                    confidence: high
-                    priority: bogus
-                    source: ["https://example.com"]
-                    owner: team-x
-                    last_validated: 2026-01-01
-                    review_after_days: 90
-                    rule: "api_key=sk-1234567890abcdef"
-                    note: "We fixed this yesterday after the outage hit prod."
-            `),
-                'utf-8',
-            );
-            // An unknown-type file + a critical-stale entry.
-            const ud = join(root, 'mystery-type');
-            mkdirSync(ud, { recursive: true });
-            writeFileSync(
-                join(ud, 'x.yml'),
-                dedent(`
-                version: 1
-                entries:
-                  - id: crit
-                    status: active
-                    confidence: high
-                    priority: critical
-                    source: ["https://example.com"]
-                    owner: team-x
-                    last_validated: 2020-01-01
-                    review_after_days: 3650
-            `),
-                'utf-8',
-            );
-            return root;
-        }
-
-        it('text format byte-identical', () => {
-            const root = buildTree();
-            const py = runPy(['--path', root, '--format', 'text']);
-            const ts = runTs(['--path', root, '--format', 'text']);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-
-        it('json format byte-identical', () => {
-            const root = buildTree();
-            const py = runPy(['--path', root, '--format', 'json']);
-            const ts = runTs(['--path', root, '--format', 'json']);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-
-        it('missing path byte-identical (text + json)', () => {
-            const missing = join(tmp, 'nope');
-            for (const fmt of ['text', 'json']) {
-                const py = runPy(['--path', missing, '--format', fmt]);
-                const ts = runTs(['--path', missing, '--format', fmt]);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.status).toBe(py.status);
-            }
-        });
-
-        it('append-only in-place edit byte-identical', () => {
-            const dir = join(tmp, 'repo');
-            mkdirSync(dir);
-            spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: dir });
-            spawnSync('git', ['config', 'user.email', 't@e.x'], { cwd: dir });
-            spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
-            spawnSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
-            const intake = join(dir, 'agents', 'memory', 'intake');
-            mkdirSync(intake, { recursive: true });
-            writeFileSync(join(intake, 'x.jsonl'), '{"id":"a"}\n{"id":"b"}\n');
-            spawnSync('git', ['add', '-A'], { cwd: dir });
-            spawnSync('git', ['commit', '-q', '-m', 'base'], { cwd: dir });
-            writeFileSync(join(intake, 'x.jsonl'), '{"id":"a-MOD"}\n{"id":"b"}\n');
-            spawnSync('git', ['add', '-A'], { cwd: dir });
-            spawnSync('git', ['commit', '-q', '-m', 'mut'], { cwd: dir });
-            const py = runPy(['--append-only', '--base', 'HEAD~1', '--format', 'text'], dir);
-            const ts = runTs(['--append-only', '--base', 'HEAD~1', '--format', 'text'], dir);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-
-        it('real example memory dir byte-identical (text + json)', () => {
-            const dir = join(REPO_ROOT, 'src', 'agent-src', 'templates', 'agents', 'memory');
-            for (const fmt of ['text', 'json']) {
-                const py = runPy(['--path', dir, '--format', fmt]);
-                const ts = runTs(['--path', dir, '--format', fmt]);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.status).toBe(py.status);
-            }
-        });
     });
 });

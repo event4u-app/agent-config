@@ -1,20 +1,4 @@
-// Golden-parity tests for work_engine/cli_args.ts vs cli_args.py (ADR-094 py2ts
-// Phase 1). The Python source exposes `_build_parser()` returning an argparse
-// parser; the TS twin exposes `parse_args(argv)` mirroring argparse's runtime
-// behaviour for the declared flags. We compare the parsed NAMESPACE (paths as
-// strings, snake_case dests) and the EXIT CODE on every path — but NOT the
-// --help / error prose (ADR-094 explicitly excludes argparse help/usage text
-// from byte-comparison; the contract is exit-code + namespace parity).
-//
-// argparse surfaces exercised: long-option prefix abbreviation (unambiguous →
-// expand; ambiguous → exit 2; --help in the candidate set), `--flag=value` /
-// `--flag value`, store_true flags, explicit-value-on-store_true → exit 2,
-// missing value → exit 2, unknown flag → exit 2, -h/--help → exit 0.
-//
-// Python runs via a child process that catches SystemExit and prints either the
-// namespace JSON (success) or `EXIT <code>`; the work_engine module is loaded
-// with the shared direct-file importlib loader.
-import { spawnSync } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,47 +16,6 @@ import {
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const WE = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts', 'work_engine');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-/** Run the Python parser on `argv`; return the namespace dict or the exit code. */
-function pyParse(argv: string[]): { ok: true; ns: Record<string, unknown> } | { ok: false; code: number } {
-    const code = [
-        'import importlib.util, sys, json, pathlib',
-        `WE = pathlib.Path(${JSON.stringify(WE)})`,
-        `REPO = pathlib.Path(${JSON.stringify(REPO_ROOT)})`,
-        'sys.path.insert(0, str(WE)); sys.path.insert(0, str(REPO))',
-        'sp = importlib.util.spec_from_file_location("we_cli_args", WE / "cli_args.py")',
-        'm = importlib.util.module_from_spec(sp); sys.modules[sp.name] = m; sp.loader.exec_module(m)',
-        'argv = json.loads(sys.argv[1])',
-        'p = m._build_parser()',
-        'import io, contextlib',
-        // Suppress argparse's --help / usage / error prose (NOT a parity
-        // surface, ADR-094) so only our OK/EXIT marker reaches the captured
-        // stdout. The marker is written to the real stdout fd after the
-        // redirect block exits.
-        'marker = None',
-        'try:',
-        '    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):',
-        '        ns = p.parse_args(argv)',
-        '    d = {k: (str(v) if isinstance(v, pathlib.Path) else v) for k, v in vars(ns).items()}',
-        '    marker = "OK\\t" + json.dumps(d)',
-        'except SystemExit as e:',
-        '    marker = "EXIT\\t" + str(int(e.code or 0))',
-        'print(marker)',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, JSON.stringify(argv)], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 crashed (status ${r.status}): ${r.stderr}`);
-    }
-    const out = r.stdout.trim();
-    if (out.startsWith('OK\t')) {
-        return { ok: true, ns: JSON.parse(out.slice(3)) as Record<string, unknown> };
-    }
-    return { ok: false, code: parseInt(out.slice(5), 10) };
-}
 
 /** Run the TS parser on `argv`; return the namespace or the exit code. */
 function tsParse(argv: string[]): { ok: true; ns: ParsedArgs } | { ok: false; code: number } {
@@ -174,76 +117,5 @@ describe('work_engine/cli_args', () => {
     it('-h / --help → exit 0', () => {
         expect(tsParse(['-h'])).toEqual({ ok: false, code: 0 });
         expect(tsParse(['--help'])).toEqual({ ok: false, code: 0 });
-    });
-
-    describe.runIf(hasPython3())('python parity', () => {
-        // Cases that should parse cleanly. Compare the whole namespace.
-        const okCases: string[][] = [
-            [],
-            ['--no-hooks'],
-            ['--state-file', 'x.json'],
-            ['--state-file=y.json'],
-            ['--ticket-file', 't.json', '--persona', 'qa'],
-            ['--prompt-file', 'p.txt'],
-            ['--diff-file', 'd.patch'],
-            ['--file-file', 'f.txt'],
-            ['--hooks-config', '.agent-settings.yml', '--no-hooks'],
-            ['--state', 'abbrev.json'], // unambiguous prefix
-            ['--no'], // unambiguous prefix → --no-hooks
-            ['--pr', 'q.txt'], // --pr → --prompt-file (unambiguous)
-        ];
-
-        it.each(okCases.map((c) => [JSON.stringify(c), c] as [string, string[]]))(
-            'namespace parity for argv=%s',
-            (_label, argv) => {
-                const expected = pyParse(argv);
-                const got = tsParse(argv);
-                expect(expected.ok).toBe(true);
-                expect(got.ok).toBe(true);
-                if (expected.ok && got.ok) {
-                    expect(got.ns).toEqual(expected.ns);
-                }
-            },
-        );
-
-        // Cases that should exit 2. Compare the exit code only (not prose).
-        const exit2Cases: string[][] = [
-            ['--bogus'],
-            ['--state-file'], // missing value
-            ['--no-hooks=x'], // explicit value on store_true
-            ['--p', 'x'], // ambiguous abbreviation
-            ['extra-positional'],
-            ['--ticket-file'], // missing value
-            ['-x'], // unknown short
-        ];
-
-        it.each(exit2Cases.map((c) => [JSON.stringify(c), c] as [string, string[]]))(
-            'exit-2 parity for argv=%s',
-            (_label, argv) => {
-                const expected = pyParse(argv);
-                const got = tsParse(argv);
-                expect(expected.ok).toBe(false);
-                expect(got.ok).toBe(false);
-                if (!expected.ok && !got.ok) {
-                    expect(got.code).toBe(expected.code);
-                    expect(got.code).toBe(2);
-                }
-            },
-        );
-
-        const helpCases: string[][] = [['-h'], ['--help']];
-        it.each(helpCases.map((c) => [JSON.stringify(c), c] as [string, string[]]))(
-            'help exit-0 parity for argv=%s',
-            (_label, argv) => {
-                const expected = pyParse(argv);
-                const got = tsParse(argv);
-                expect(expected.ok).toBe(false);
-                expect(got.ok).toBe(false);
-                if (!expected.ok && !got.ok) {
-                    expect(got.code).toBe(expected.code);
-                    expect(got.code).toBe(0);
-                }
-            },
-        );
     });
 });

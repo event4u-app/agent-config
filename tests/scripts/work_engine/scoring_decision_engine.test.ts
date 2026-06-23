@@ -1,15 +1,4 @@
-// Golden-parity tests for work_engine/scoring/decision_engine.ts vs
-// decision_engine.py (ADR-094 py2ts Phase 1 — scoring subpackage).
-//
-// `scoring/decision_engine.py` imports only stdlib (`os`, `dataclasses`,
-// `typing`) — loaded via the direct-file importlib loader. Covers: parse()
-// defaults / unknown-key rejection / per-field coercion + error text,
-// evaluate_gates() conflict-priority + per-phase routing + action resolution
-// (with an injected is_interactive so the TTY/CI path is deterministic), and
-// the gate-reason strings (which carry `repr()`-formatted values — a byte
-// surface). The `CI` env path is exercised by passing is_interactive
-// explicitly so the suite stays deterministic regardless of the runner env.
-import { spawnSync } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -25,79 +14,6 @@ import {
 } from '../../../src/agent-src/templates/scripts/work_engine/scoring/decision_engine.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'scoring',
-    'decision_engine.py',
-);
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-const PY_LOADER = [
-    'import sys, json, importlib.util, dataclasses',
-    `spec = importlib.util.spec_from_file_location("de", ${JSON.stringify(PY)})`,
-    'de = importlib.util.module_from_spec(spec)',
-    'sys.modules["de"] = de',
-    'spec.loader.exec_module(de)',
-].join('\n');
-
-/** Python: parse(data) → asdict, or {"error": <msg>} on DecisionEngineConfigError. */
-function pyParse(data: unknown): unknown {
-    const body = [
-        'data = json.loads(sys.argv[1])',
-        'try:',
-        '    s = de.parse(data)',
-        '    sys.stdout.write(json.dumps(dataclasses.asdict(s)))',
-        'except de.DecisionEngineConfigError as exc:',
-        '    sys.stdout.write(json.dumps({"error": str(exc)}))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', `${PY_LOADER}\n${body}`, JSON.stringify(data ?? null)], {
-        encoding: 'utf8',
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return JSON.parse(r.stdout);
-}
-
-/** Python: evaluate_gates(parse(settings), ...) with a fixed is_interactive. */
-function pyEvaluate(
-    settings: Record<string, unknown>,
-    phase: string,
-    confidence_band: string | null,
-    risk_class: string | null,
-    memory_hits: number,
-    interactive: boolean,
-): unknown {
-    const body = [
-        'p = json.loads(sys.argv[1])',
-        's = de.parse(p["settings"])',
-        'dec = de.evaluate_gates(s, phase=p["phase"], confidence_band=p["cb"], risk_class=p["rc"], memory_hits=p["mh"], is_interactive=lambda: p["interactive"])',
-        'sys.stdout.write(json.dumps(dataclasses.asdict(dec) if dec is not None else None))',
-    ].join('\n');
-    const payload = {
-        settings,
-        phase,
-        cb: confidence_band,
-        rc: risk_class,
-        mh: memory_hits,
-        interactive,
-    };
-    const r = spawnSync('python3', ['-c', `${PY_LOADER}\n${body}`, JSON.stringify(payload)], {
-        encoding: 'utf8',
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return JSON.parse(r.stdout);
-}
 
 function gateToDict(d: GateDecision | null): unknown {
     if (d === null) {
@@ -322,36 +238,3 @@ const EVAL_CASES: Array<{
         interactive: true,
     },
 ];
-
-describe.runIf(hasPython3())('scoring/decision_engine — python parity', () => {
-    it.each(PARSE_CASES.map((c, i) => [i, c] as const))(
-        'parse case #%i matches CPython (settings or error text)',
-        (_i, data) => {
-            const expected = pyParse(data) as Record<string, unknown>;
-            let got: Record<string, unknown>;
-            try {
-                got = settingsToDict(parse(data));
-            } catch (e) {
-                got = { error: (e as Error).message };
-            }
-            expect(got).toEqual(expected);
-        },
-    );
-
-    it.each(EVAL_CASES.map((c, i) => [i, c] as const))(
-        'evaluate_gates case #%i matches CPython',
-        (_i, c) => {
-            const expected = pyEvaluate(c.settings, c.phase, c.cb, c.rc, c.mh, c.interactive);
-            const got = gateToDict(
-                evaluate_gates(parse(c.settings), {
-                    phase: c.phase,
-                    confidence_band: c.cb,
-                    risk_class: c.rc,
-                    memory_hits: c.mh,
-                    is_interactive: () => c.interactive,
-                }),
-            );
-            expect(got).toEqual(expected);
-        },
-    );
-});

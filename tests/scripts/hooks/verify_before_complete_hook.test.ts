@@ -1,11 +1,4 @@
-// Tests for src/scripts/verify_before_complete_hook.ts (py2ts Phase 6 — hooks).
-//
-// 1:1 port of tests/test_verify_before_complete_hook.py (per-turn
-// verification tracker across six platform envelope shapes) plus a
-// golden-parity layer: python3 vs tsx fed identical envelope stdin + argv
-// in isolated tmp projects, asserting identical exit + identical state JSON
-// (wall-clock fields normalised). Parity skipped without python3.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { run, STATE_FILE } from '../../../src/scripts/verify_before_complete_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_before_complete_hook.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_before_complete_hook.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -23,10 +15,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function state(root: string): Record<string, unknown> {
     return JSON.parse(fs.readFileSync(path.join(root, STATE_FILE), 'utf8'));
@@ -168,10 +156,6 @@ describe('verify_before_complete — tracker behaviour', () => {
     });
 });
 
-// ── Golden parity vs python3 ─────────────────────────────────────────
-
-const py3 = hasPython3();
-
 interface RunResult {
     status: number | null;
     stdout: string;
@@ -190,81 +174,3 @@ function normalize(parsed: Record<string, unknown> | null): Record<string, unkno
     }
     return parsed;
 }
-
-function runScript(cmd: string, args: string[], cwd: string, input: string): RunResult {
-    const res = spawnSync(cmd, args, { input, encoding: 'utf8', cwd, env: { ...process.env } });
-    const sf = path.join(cwd, STATE_FILE);
-    let parsed: Record<string, unknown> | null = null;
-    if (fs.existsSync(sf)) {
-        parsed = normalize(JSON.parse(fs.readFileSync(sf, 'utf8')));
-    }
-    return { status: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '', state: parsed };
-}
-
-describe.skipIf(!py3)('verify_before_complete — golden parity', () => {
-    const env = (event: string, payload: Record<string, unknown>, sid = 's1', platform = 'augment') =>
-        JSON.stringify({
-            schema_version: 1,
-            platform,
-            event,
-            native_event: event,
-            session_id: sid,
-            workspace_root: '/work',
-            payload,
-        });
-
-    function scenario(name: string, steps: string[], args: string[] = ['--platform', 'augment']): void {
-        it(name, () => {
-            const pyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vbc-py-'));
-            const tsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vbc-ts-'));
-            try {
-                let py: RunResult = { status: 0, stdout: '', stderr: '', state: null };
-                let ts: RunResult = { status: 0, stdout: '', stderr: '', state: null };
-                for (const input of steps) {
-                    py = runScript('python3', [PY_SCRIPT, ...args], pyDir, input);
-                    ts = runScript(TSX_BIN, [TS_SCRIPT, ...args], tsDir, input);
-                }
-                expect(ts.status).toBe(py.status);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.state).toEqual(py.state);
-            } finally {
-                fs.rmSync(pyDir, { recursive: true, force: true });
-                fs.rmSync(tsDir, { recursive: true, force: true });
-            }
-        });
-    }
-
-    scenario('session_start only', [env('session_start', {})]);
-    scenario('pytest verification', [
-        env('session_start', {}),
-        env('post_tool_use', {
-            tool_name: 'launch-process',
-            tool_input: { command: '.venv/bin/python3 -m pytest -q' },
-        }),
-    ]);
-    scenario('task ci across claude Bash', [
-        env('session_start', {}, 's1', 'claude'),
-        env(
-            'post_tool_use',
-            { tool_name: 'Bash', tool_input: { command: 'task sync && task ci' } },
-            's1',
-            'claude',
-        ),
-    ]);
-    scenario('non-verification command', [
-        env('session_start', {}),
-        env('post_tool_use', { tool_name: 'launch-process', tool_input: { command: 'ls -la' } }),
-    ]);
-    scenario('stop event', [env('session_start', {}), env('stop', {})]);
-    scenario('session id change resets', [
-        env('session_start', {}, 's1'),
-        env('post_tool_use', { tool_name: 'launch-process', tool_input: { command: 'pytest -q' } }, 's1'),
-        env('session_start', {}, 's2'),
-    ]);
-    scenario('malformed stdin', ['not json']);
-    scenario('empty stdin', ['']);
-    scenario('verbose stderr line', [
-        env('post_tool_use', { tool_name: 'Bash', tool_input: { command: 'go test ./...' } }, 's3'),
-    ], ['--verbose']);
-});

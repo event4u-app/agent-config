@@ -9,7 +9,6 @@
  * gate 2, golden replay).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -252,38 +251,6 @@ describe("score_task — individual criteria", () => {
   });
 });
 
-// ─── differential parity vs the Python original ──────────────────────────────
-
-function python_available(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Drive the Python `score_task` over a JSON envelope from stdin describing
- * the task, the snapshots, and on-disk files, and print the result JSON.
- */
-const PY_DRIVER = `
-import json, sys, pathlib, tempfile
-sys.path.insert(0, "src")
-from scripts._lib import bench_ab_scoring as scoring
-
-payload = json.loads(sys.stdin.read())
-clone_root = pathlib.Path(payload["clone_root"])
-result = scoring.score_task(
-    payload["task"],
-    pre_snapshot=payload["pre_snapshot"],
-    post_snapshot=payload["post_snapshot"],
-    clone_root=clone_root,
-    transcript=payload["transcript"],
-)
-print(json.dumps(result, sort_keys=True))
-`;
-
 interface Fixture {
   name: string;
   task: Record<string, unknown>;
@@ -352,56 +319,6 @@ const FIXTURES: Fixture[] = [
     files: { "api.ts": "export const alpha = 1;" },
   },
 ];
-
-describe.skipIf(!python_available())(
-  "differential: TS twin vs Python original",
-  () => {
-    for (const fx of FIXTURES) {
-      it(`scoring is JSON-identical: ${fx.name}`, () => {
-        // Stage a shared clone dir for both runtimes.
-        const diffRoot = fs.mkdtempSync(
-          path.join(os.tmpdir(), "bench-ab-scoring-diff-"),
-        );
-        try {
-          for (const [rel, body] of Object.entries(fx.files)) {
-            const full = path.join(diffRoot, rel);
-            fs.mkdirSync(path.dirname(full), { recursive: true });
-            fs.writeFileSync(full, body);
-          }
-
-          const inputs = {
-            pre_snapshot: fx.pre_snapshot,
-            post_snapshot: fx.post_snapshot,
-            clone_root: diffRoot,
-            transcript: fx.transcript,
-          };
-
-          const ts = score_task(fx.task, inputs);
-
-          const envelope = JSON.stringify({
-            task: fx.task,
-            pre_snapshot: fx.pre_snapshot,
-            post_snapshot: fx.post_snapshot,
-            clone_root: diffRoot,
-            transcript: fx.transcript,
-          });
-          const pyOut = execFileSync("python3", ["-c", PY_DRIVER], {
-            cwd: ROOT,
-            input: envelope,
-            encoding: "utf-8",
-            maxBuffer: 16 * 1024 * 1024,
-          });
-          const py = JSON.parse(pyOut);
-
-          // Compare via canonical JSON (sorted keys) so field order is irrelevant.
-          expect(canonical(ts)).toEqual(canonical(py));
-        } finally {
-          fs.rmSync(diffRoot, { recursive: true, force: true });
-        }
-      });
-    }
-  },
-);
 
 /** Recursively sort object keys so structural compare ignores field order. */
 function canonical(value: unknown): unknown {

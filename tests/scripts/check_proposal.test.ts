@@ -6,7 +6,7 @@
 // fixtures and asserts byte-identical stdout+stderr+exit, skipped when
 // python3 is absent.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -20,7 +20,6 @@ const TSX_BIN = join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'check_proposal.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'check_proposal.py');
 
 const TEMPLATE = resolve_logical('templates/agents/proposal.example.md');
 if (TEMPLATE === null) {
@@ -37,16 +36,6 @@ function runTs(args: readonly string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-
-function runPy(args: readonly string[]): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
-
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 function run(path: string, fmt = 'text'): RunResult {
     return runTs(['--format', fmt, path]);
@@ -278,82 +267,5 @@ describe('check_proposal.ts', () => {
         const result = run(target);
         expect(result.stdout).toContain('rate-limit');
         expect(result.status, result.stdout).toBe(0);
-    });
-
-    // --- golden parity vs python3 -------------------------------------------
-    // Byte-identical stdout+stderr+exit on identical fixtures. check_proposal
-    // has full parity (no documented divergence).
-
-    describe.skipIf(!HAVE_PYTHON || !existsSync(PY_SCRIPT))('golden parity', () => {
-        function assertParity(path: string, fmt: string): void {
-            const py = runPy(['--format', fmt, path]);
-            const ts = runTs(['--format', fmt, path]);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        }
-
-        it('valid proposal byte-identical (text + json)', () => {
-            const p = join(tmp, 'valid.md');
-            writeFileSync(p, validProposal(), 'utf-8');
-            assertParity(p, 'text');
-            assertParity(p, 'json');
-        });
-
-        it('missing-frontmatter byte-identical (text + json, non-ascii ≥)', () => {
-            const p = join(tmp, 'bad.md');
-            writeFileSync(p, '---\nproposal_id: x\n---\n\n# body\n', 'utf-8');
-            assertParity(p, 'text');
-            assertParity(p, 'json');
-        });
-
-        it('invalid-vocabulary byte-identical', () => {
-            let body = validProposal().replace('type: rule', 'type: widget');
-            body = body.replace('scope: package', 'scope: cosmic');
-            body = body.replace('stage: proposed', 'stage: bogus');
-            const p = join(tmp, 'voc.md');
-            writeFileSync(p, body, 'utf-8');
-            assertParity(p, 'text');
-            assertParity(p, 'json');
-        });
-
-        it('upstream originating-project placeholder byte-identical', () => {
-            let text = validProposal().replace('stage: proposed', 'stage: upstream');
-            text = text.replace(
-                '## 10. Upstream PR\n\nPending.',
-                '## 10. Upstream PR\n\n- Originating project: <consumer repo slug; metadata only>',
-            );
-            const p = join(tmp, 'up.md');
-            writeFileSync(p, text, 'utf-8');
-            assertParity(p, 'text');
-            assertParity(p, 'json');
-        });
-
-        it('nonexistent path byte-identical (stderr + exit 3)', () => {
-            const missing = join(tmp, 'nope.md');
-            assertParity(missing, 'text');
-        });
-
-        it('rate-limit byte-identical', () => {
-            const proposals = join(tmp, 'proposals');
-            mkdirSync(proposals);
-            const today = new Date();
-            const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            for (let i = 0; i < 6; i += 1) {
-                writeFileSync(
-                    join(proposals, `p${i}.md`),
-                    `---\nproposal_id: p${i}\ntype: rule\nscope: project\nstage: proposed\nauthor: t\ncreated: ${iso}\nlast_updated: ${iso}\n---\n\n# body\n`,
-                    'utf-8',
-                );
-            }
-            const target = join(proposals, 'current.md');
-            writeFileSync(target, validProposal(), 'utf-8');
-            assertParity(target, 'text');
-        });
-
-        it('real example template byte-identical (text + json)', () => {
-            assertParity(TEMPLATE as string, 'text');
-            assertParity(TEMPLATE as string, 'json');
-        });
     });
 });
