@@ -99,8 +99,8 @@ stay open below — not force-marked done.
 > escalate to manual review. Full python-free `vitest run` green is the Phase-1
 > exit gate.
 
-- [ ] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
-  judgement** (council B1). Per file: if the `runIf(py3)` block calls
+- [x] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
+  judgement** (council B1). <!-- DONE 2026-06-23: 0 runIf(py3)/runIf(PY) blocks remain repo-wide (21 purged #639 + 4 all-parity CLI rigs converted to python-free intent tests). The "269" was a stale count; the real gated surface was 25 files. --> Per file: if the `runIf(py3)` block calls
   `readOracleSnapshot(...)` with **no** `captureSnapshot(...)` in the same block
   → **stale** (the gate is vestigial; drop it so the block runs python-free).
   If the block *captures* a snapshot that any other file reads (corpus
@@ -139,11 +139,18 @@ stay open below — not force-marked done.
   time-limited-buffer divergence — see review): `no-python-in-src.yml` fails the
   build if `git ls-files 'src/**/*.py'` is non-empty. Survives post-merge; not
   time-limited. <!-- done 2026-06-23: .github/workflows/no-python-in-src.yml -->
-- [ ] **Purge the 21 mixed python-gated test files** (dead `runIf(py3)` /
-  `it.runIf(PY)` golden-parity blocks + plumbing) — **DONE 2026-06-23** (231
-  passed / 0 failed across the 25 run together; `compile_corpus` edge cases
-  converted to python-free TS). The 4 all-parity CLI rigs + shim removal are the
-  coupled continuation (see Disposition). <!-- partial: 21/25 -->
+- [x] **Eliminate all 25 python-gated test files** — **DONE 2026-06-23.** 21
+  mixed files purged of dead `runIf(py3)` / `it.runIf(PY)` golden-parity blocks
+  (#639); the 4 remaining *all-parity* CLI rigs (`council_cli`, `council_prune`,
+  `implement_ticket_main`, `update_roadmap_progress`) **converted** to python-free
+  intent tests (47 passed) — they assert the tsx twins' own contract directly
+  instead of byte-comparing the deleted python CLI. `compile_corpus` edge cases
+  likewise converted, not deleted. **0 `runIf(py3)` / `runIf(PY)` repo-wide.**
+- [ ] **Retire the shim + the live-python3 harness sites** — coupled tail:
+  `tests/scripts/lint_regression.test.ts` still drives the python-spawning
+  `lint_regression.ts` baseline harness; resolve that + `parity/replay.ts` FIRST,
+  then remove `tests/_lib/python-free-env.ts`, proven green-by-construction with a
+  full python-free `vitest run` (see Phase 1 "Retire" item below + Phase 2).
 - [ ] Confirm remote CI green on `python2ts` with the new guard in place.
 
 ## Phase 2b — AI-council live-call layer (py2ts gap — transport now wired)
