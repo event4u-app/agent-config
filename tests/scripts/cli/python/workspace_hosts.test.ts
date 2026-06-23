@@ -1,37 +1,35 @@
-// Golden-parity tests for src/cli/python/workspace_hosts.ts (py2ts ADR-200 —
+// Intent tests for src/cli/python/workspace_hosts.ts (py2ts ADR-200 —
 // host-agent tier detection, ADR-068).
 //
-// Strategy: run `python3 workspace_hosts.py` vs `tsx workspace_hosts.ts` and
-// byte-compare stdout / stderr / exit. Detection is side-effect-free and
-// deterministic (it only reads the static HOST_INVENTORY + checks PATH via
-// `shutil.which` / a PATH walk), so the two languages agree byte-for-byte on
-// every surface. To make `cli_present` deterministic regardless of which host
-// CLIs happen to be installed on the runner, every case that asserts the
-// detect/list payload runs with `PATH=''` so NO host CLI resolves — both
-// languages then report `cli_present:false` / `effective_tier:3` identically.
-//
-// Coverage: detect known (tier-1 + tier-3) / unknown, list text + --json,
-// --json detect, and the full argparse error surface (no-args, bad subcommand,
-// missing positional, extra positional, unknown flag). The argparse `--help`
-// BODY is NOT byte-compared (only the `usage:` line) per the porting contract.
+// Was a python3-vs-tsx byte-parity rig; the `.py` original is gone, so this now
+// asserts the tsx CLI's own contract directly. Detection is side-effect-free
+// and reads the static HOST_INVENTORY + probes PATH (`shutil.which` semantics).
+// To stay deterministic regardless of which host CLIs are installed on the
+// runner, every case spawns with a **node-only PATH** (a temp dir holding just a
+// `node` symlink) so the tsx launcher resolves but NO host CLI does — every host
+// then reports `cli_present:false` / `effective_tier:3`. COLUMNS=200 forces
+// single-line usage so arg-error stderr does not re-wrap to terminal width.
+import { mkdtempSync, symlinkSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'workspace_hosts.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'workspace_hosts.py');
 const TSX_BIN = path.resolve(
     REPO_ROOT,
     process.env['TSX_BIN'] ??
         path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
+// node-only PATH → deterministic host-CLI detection (nothing but `node` resolves).
+const NODE_ONLY_DIR = mkdtempSync(path.join(tmpdir(), 'ws-hosts-nodeonly-'));
+symlinkSync(process.execPath, path.join(NODE_ONLY_DIR, 'node'));
+afterAll(() => {
+    // temp dir is left for the OS to reap; nothing sensitive.
+});
 
 interface RunResult {
     status: number | null;
@@ -39,88 +37,181 @@ interface RunResult {
     stderr: string;
 }
 
-function runPy(args: string[], extraEnv: Record<string, string> = {}): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src'), ...extraEnv },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-
-function runTs(args: string[], extraEnv: Record<string, string> = {}): RunResult {
+function runTs(args: string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
         encoding: 'utf8',
-        env: { ...process.env, ...extraEnv },
+        env: { ...process.env, PATH: NODE_ONLY_DIR, COLUMNS: '200' },
     });
     return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
 
-
-function expectParity(args: string[], extraEnv: Record<string, string> = {}): void {
-    const p = runPy(args, extraEnv);
-    const t = runTs(args, extraEnv);
-    expect(t.status).toBe(p.status);
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
-}
-
-describe.skipIf(!py3)('workspace_hosts — detect', () => {
+describe('workspace_hosts — detect', () => {
     it('tier-1 known host (no CLI on PATH → demotes to tier 3)', () => {
-        expectParity(['detect', 'claude-code']);
+        expect(runTs(['detect', 'claude-code'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"cli": "claude", "cli_present": false, "effective_tier": 3, "host": "claude-code", "inventory_tier": 1, "known": true, "mode": "handoff"}
+          ",
+          }
+        `);
     });
     it('tier-3 known host', () => {
-        expectParity(['detect', 'augment']);
+        expect(runTs(['detect', 'augment'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"cli": null, "cli_present": false, "effective_tier": 3, "host": "augment", "inventory_tier": 3, "known": true, "mode": "handoff"}
+          ",
+          }
+        `);
     });
     it('unknown host (fail-soft, exit 1)', () => {
-        expectParity(['detect', 'nope']);
+        expect(runTs(['detect', 'nope'])).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "",
+            "stdout": "{"cli": null, "cli_present": false, "effective_tier": 3, "host": "nope", "inventory_tier": null, "known": false, "mode": "handoff"}
+          ",
+          }
+        `);
     });
     it('detect --json', () => {
-        expectParity(['detect', 'codex', '--json']);
+        expect(runTs(['detect', 'codex', '--json'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"cli": "codex", "cli_present": false, "effective_tier": 3, "host": "codex", "inventory_tier": 1, "known": true, "mode": "handoff"}
+          ",
+          }
+        `);
     });
-    it('detect --json= inline (none here, but flag before positional)', () => {
-        expectParity(['detect', '--json', 'gemini']);
+    it('detect --json before positional', () => {
+        expect(runTs(['detect', '--json', 'gemini'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"cli": "gemini", "cli_present": false, "effective_tier": 3, "host": "gemini", "inventory_tier": 1, "known": true, "mode": "handoff"}
+          ",
+          }
+        `);
     });
 });
 
-describe.skipIf(!py3)('workspace_hosts — list', () => {
+describe('workspace_hosts — list', () => {
     it('list (text)', () => {
-        expectParity(['list']);
+        expect(runTs(['list'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "augment	tier3	no-cli
+          claude-code	tier1	no-cli
+          cline	tier3	no-cli
+          codex	tier1	no-cli
+          cursor	tier3	no-cli
+          gemini	tier1	no-cli
+          windsurf	tier3	no-cli
+          ",
+          }
+        `);
     });
     it('list --json', () => {
-        expectParity(['list', '--json']);
+        expect(runTs(['list', '--json'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "[{"cli": null, "cli_present": false, "effective_tier": 3, "host": "augment", "inventory_tier": 3, "known": true, "mode": "handoff"}, {"cli": "claude", "cli_present": false, "effective_tier": 3, "host": "claude-code", "inventory_tier": 1, "known": true, "mode": "handoff"}, {"cli": null, "cli_present": false, "effective_tier": 3, "host": "cline", "inventory_tier": 3, "known": true, "mode": "handoff"}, {"cli": "codex", "cli_present": false, "effective_tier": 3, "host": "codex", "inventory_tier": 1, "known": true, "mode": "handoff"}, {"cli": null, "cli_present": false, "effective_tier": 3, "host": "cursor", "inventory_tier": 3, "known": true, "mode": "handoff"}, {"cli": "gemini", "cli_present": false, "effective_tier": 3, "host": "gemini", "inventory_tier": 1, "known": true, "mode": "handoff"}, {"cli": null, "cli_present": false, "effective_tier": 3, "host": "windsurf", "inventory_tier": 3, "known": true, "mode": "handoff"}]
+          ",
+          }
+        `);
     });
 });
 
-describe.skipIf(!py3)('workspace_hosts — argparse errors', () => {
+describe('workspace_hosts — argparse errors', () => {
     it('no args → required cmd, exit 2', () => {
-        expectParity([]);
+        expect(runTs([])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_hosts [-h] {detect,list} ...
+          workspace_hosts: error: the following arguments are required: cmd
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('bad subcommand → invalid choice, exit 2', () => {
-        expectParity(['bogus']);
+        expect(runTs(['bogus'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_hosts [-h] {detect,list} ...
+          workspace_hosts: error: argument cmd: invalid choice: 'bogus' (choose from 'detect', 'list')
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('detect missing host_id → exit 2', () => {
-        expectParity(['detect']);
+        expect(runTs(['detect'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_hosts detect [-h] [--json] host_id
+          workspace_hosts detect: error: the following arguments are required: host_id
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('detect extra positional → unrecognized, exit 2', () => {
-        expectParity(['detect', 'a', 'b']);
+        expect(runTs(['detect', 'a', 'b'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_hosts [-h] {detect,list} ...
+          workspace_hosts: error: unrecognized arguments: b
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('detect unknown flag → unrecognized, exit 2', () => {
-        expectParity(['detect', '--bogus', 'x']);
+        expect(runTs(['detect', '--bogus', 'x'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_hosts [-h] {detect,list} ...
+          workspace_hosts: error: unrecognized arguments: --bogus
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('list extra positional → unrecognized, exit 2', () => {
-        expectParity(['list', 'extra']);
+        expect(runTs(['list', 'extra'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_hosts [-h] {detect,list} ...
+          workspace_hosts: error: unrecognized arguments: extra
+          ",
+            "stdout": "",
+          }
+        `);
     });
-    it('top-level -h → usage line + exit 0', () => {
-        // Body differs (argparse re-wraps); assert the usage line + exit only.
-        const p = runPy(['-h']);
-        const t = runTs(['-h']);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
+    it('top-level -h → usage + exit 0', () => {
+        expect(runTs(['-h'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "usage: workspace_hosts [-h] {detect,list} ...
+          ",
+          }
+        `);
     });
-    it('detect -h → subparser usage line + exit 0', () => {
-        const p = runPy(['detect', '-h']);
-        const t = runTs(['detect', '-h']);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
+    it('detect -h → subparser usage + exit 0', () => {
+        expect(runTs(['detect', '-h'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "usage: workspace_hosts detect [-h] [--json] host_id
+          ",
+          }
+        `);
     });
 });
