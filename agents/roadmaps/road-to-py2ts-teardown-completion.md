@@ -142,9 +142,11 @@ stay open below — not force-marked done.
       4 files an interrupted subagent never reached
       (`directives_backend_test`, `directives_backend_verify`,
       `directives_init`, `directives_mixed_init` — all MIXED, same purge recipe).
-    - Remaining spawn-file tail after these two clusters: ~99 (was 144 − 12
-      workspace − 21 work_engine − the 12/21 overlap already counted; recompute
-      via `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`).
+    - **Remaining spawn-file tail after these two clusters: 108** (measured
+      `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`). Next
+      coherent groups: `_cli/cmd_*` (~17, likely delete-candidates covered by
+      `cli-e2e` → bulk-deletion needs Hard-Floor surfacing), `templates_*`
+      memory/telemetry (~10), `ai_council` (3), and singletons.
   - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
     the codemod did not fully prune; finish per-file.
   - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)
