@@ -6,17 +6,17 @@
 
 ## Overall
 
-**59 / 134 steps done · 44%**
+**61 / 135 steps done · 45%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 17 | 14 | 3 | 0 | 0 | ██░░░░░░░░ 18% |
+| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 18 | 13 | 5 | 0 | 0 | ███░░░░░░░ 28% |
 | 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
@@ -26,13 +26,13 @@
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
-**Road to py2ts Teardown Completion** — 3 / 17 done (18%)
+**Road to py2ts Teardown Completion** — 5 / 18 done (28%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Pre-flight gates (block Phase 1) — council-mandated | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 1 | Purge the remaining live-python test layer | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
+| 1 | Purge the remaining live-python test layer | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
 | 2b | AI-council live-call layer (py2ts gap — transport now wired) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consumer + merge readiness | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
