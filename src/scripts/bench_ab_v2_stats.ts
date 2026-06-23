@@ -41,6 +41,11 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['package', 'vanilla', 'package lift'],
     ['package-rdp', 'package', 'RDP lift'],
     ['package', 'placebo', 'attribution (content vs length)'],
+    // ADR-106: recursion's NOVEL lift over rules-only (D₂ − D₁). The analyse()
+    // loop is arm-guarded (`arms.includes(t) && arms.includes(b)`), so this row
+    // renders ONLY when a `package-recursive` arm is present — existing runs
+    // (no such arm) are byte-identical, golden parity preserved.
+    ['package-recursive', 'package', 'recursion novel lift (D₂ − D₁)'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────
@@ -330,6 +335,40 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             rank_biserial: PF(wil.rank_biserial),
             n_nonzero: wil.n,
         },
+    };
+}
+
+/**
+ * Recursion's NOVEL discipline lift over rules-only (ADR-106).
+ *
+ * Compares the `package-recursive` arm (D₂ = rules + recursion) against
+ * `package` (D₁ = rules only) via the existing pure `compare()`, so recursion's
+ * marginal lift `D₂ − D₁` is a measured fact, never an assumed redundancy.
+ *
+ * ADDITIVE: does NOT touch the rendered COMPARISONS path — existing CLI output
+ * (and its golden-parity tests) are unaffected. Returns `null` when no
+ * `package-recursive` arm is present in the records, so a future renderer can
+ * skip the block cleanly for non-recursion runs.
+ *
+ * NOTE (Phase 2b live-integration, NOT done here): wiring this into the rendered
+ * stats output (a guarded COMPARISONS entry + a golden-parity fixture refresh)
+ * and producing the `package-recursive` arm itself (a multi-call recursion loop
+ * the single-`--print` runner does not yet support) require the live bench and
+ * are deferred to the supervised Phase 3 session.
+ */
+export const RECURSIVE_ARM = 'package-recursive';
+export const RECURSIVE_BASELINE_ARM = 'package';
+
+export function recursiveNovelLift(records: Dict[]): Dict | null {
+    const hasRecursion = records.some((rec) => {
+        const runs = _dictOr(rec['arms'])[RECURSIVE_ARM];
+        return Array.isArray(runs) && runs.length > 0;
+    });
+    if (!hasRecursion) return null;
+    return {
+        label: 'recursion novel lift (D₂ − D₁)',
+        arms: [RECURSIVE_ARM, RECURSIVE_BASELINE_ARM],
+        ...compare(records, RECURSIVE_ARM, RECURSIVE_BASELINE_ARM),
     };
 }
 

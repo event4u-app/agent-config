@@ -23,7 +23,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { mcnemar_exact, cohens_h, wilcoxon } from '../../src/scripts/bench_ab_v2_stats.js';
+import { mcnemar_exact, cohens_h, wilcoxon, recursiveNovelLift, analyse } from '../../src/scripts/bench_ab_v2_stats.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
@@ -290,5 +290,55 @@ describe('bench_ab_v2_stats — --help', () => {
         const ts = runTs(['--help']);
         expect(ts.status).toBe(0);
         expect(ts.stdout.startsWith('usage: bench_ab_v2_stats.py')).toBe(true);
+    });
+});
+
+describe('recursiveNovelLift (ADR-106 — D₂ − D₁, additive, golden-parity-safe)', () => {
+    const mkRec = (recDisc: number, pkgDisc: number, recPass: boolean, pkgPass: boolean) => ({
+        arms: {
+            'package-recursive': [{ capability_pass: recPass, discipline_score: recDisc, errored: false }],
+            package: [{ capability_pass: pkgPass, discipline_score: pkgDisc, errored: false }],
+        },
+    });
+
+    it('returns null when no package-recursive arm is present (existing runs unaffected)', () => {
+        const recs = [{ arms: { package: [{ capability_pass: true, discipline_score: 1, errored: false }] } }];
+        expect(recursiveNovelLift(recs)).toBeNull();
+    });
+
+    it('computes the discipline delta D₂ − D₁ over the recursion arm', () => {
+        const r = recursiveNovelLift([mkRec(1.0, 0.5, true, true), mkRec(1.0, 0.5, true, true)]) as Record<
+            string,
+            unknown
+        >;
+        expect(r).not.toBeNull();
+        expect(r.arms).toEqual(['package-recursive', 'package']);
+        expect(r.label).toBe('recursion novel lift (D₂ − D₁)');
+        // mean_delta is wrapped in the PF() Python-float carrier ({ value }).
+        const disc = r.discipline as Record<string, { value: number }>;
+        expect(disc.mean_delta.value).toBeCloseTo(0.5, 4);
+    });
+
+    it('a flat recursion arm (D₂ == D₁) yields a zero novel lift', () => {
+        const r = recursiveNovelLift([mkRec(1.0, 1.0, true, true), mkRec(1.0, 1.0, true, true)]) as Record<
+            string,
+            unknown
+        >;
+        const disc = r.discipline as Record<string, { value: number }>;
+        expect(disc.mean_delta.value).toBe(0);
+    });
+
+    it('analyse() renders the recursion comparison ONLY when the arm is present (golden-parity-safe)', () => {
+        const records = [mkRec(1.0, 0.5, true, true), mkRec(1.0, 0.5, true, true)];
+        const labelsOf = (a: Record<string, unknown>) =>
+            (a.comparisons as Array<Record<string, unknown>>).map((c) => c.label);
+
+        // Arm present → the recursion row is emitted.
+        const withArm = analyse({ records, arms: ['package', 'package-recursive'] });
+        expect(labelsOf(withArm)).toContain('recursion novel lift (D₂ − D₁)');
+
+        // Arm absent → arm-guard skips it; existing comparisons unaffected.
+        const withoutArm = analyse({ records, arms: ['package', 'vanilla'] });
+        expect(labelsOf(withoutArm)).not.toContain('recursion novel lift (D₂ − D₁)');
     });
 });
