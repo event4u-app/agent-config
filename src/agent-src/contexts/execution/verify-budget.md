@@ -48,3 +48,4 @@ small to carry risk, where the deterministic check is sufficient evidence.
 - [`verify-before-complete`](../../rules/verify-before-complete.md) — the Iron Law this preserves.
 - [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md) — the cross-model judge law.
 - [`orchestration-telemetry`](orchestration-telemetry.md) — where `verify_mode` is recorded.
+- [`subagent-response-contract`](subagent-response-contract.md) — a low-confidence mutating finding forces the full judge path (`forcesJudge`).
