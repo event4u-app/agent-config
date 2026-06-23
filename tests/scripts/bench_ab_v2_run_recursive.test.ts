@@ -36,7 +36,7 @@ describe('run_one_recursive — loop control flow (ADR-106, mocked seam)', () =>
         expect(r.depth_reached).toBe(0);
         expect(r.capability_pass).toBe(true);
         expect(log).toHaveLength(1); // only the depth-0 attempt ran
-        expect(log[0].verdict).toBeNull();
+        expect(log[0]!.verdict).toBeNull();
     });
 
     it('re-attempts once then accepts; threads a depth-0 verdict into depth 1', () => {
@@ -49,7 +49,7 @@ describe('run_one_recursive — loop control flow (ADR-106, mocked seam)', () =>
         expect(r.stop_reason).toBe('accept');
         expect(r.depth_reached).toBe(1);
         expect(log).toHaveLength(2);
-        expect(log[1].verdict).toContain('depth 0'); // verdict threaded into the re-attempt
+        expect(log[1]!.verdict).toContain('depth 0'); // verdict threaded into the re-attempt
     });
 
     it('stops at max_depth when no attempt passes (hard compute cap)', () => {

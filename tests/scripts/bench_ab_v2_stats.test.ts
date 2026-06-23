@@ -316,7 +316,7 @@ describe('recursiveNovelLift (ADR-106 — D₂ − D₁, additive, golden-parity
         expect(r.label).toBe('recursion novel lift (D₂ − D₁)');
         // mean_delta is wrapped in the PF() Python-float carrier ({ value }).
         const disc = r.discipline as Record<string, { value: number }>;
-        expect(disc.mean_delta.value).toBeCloseTo(0.5, 4);
+        expect(disc.mean_delta!.value).toBeCloseTo(0.5, 4);
     });
 
     it('a flat recursion arm (D₂ == D₁) yields a zero novel lift', () => {
@@ -325,7 +325,7 @@ describe('recursiveNovelLift (ADR-106 — D₂ − D₁, additive, golden-parity
             unknown
         >;
         const disc = r.discipline as Record<string, { value: number }>;
-        expect(disc.mean_delta.value).toBe(0);
+        expect(disc.mean_delta!.value).toBe(0);
     });
 
     it('analyse() renders the recursion comparison ONLY when the arm is present (golden-parity-safe)', () => {
