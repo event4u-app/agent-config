@@ -1,22 +1,13 @@
-// Golden-parity tests for work_engine/dispatcher.ts vs dispatcher.py (ADR-096
-// py2ts Phase 1 — work_engine TOP/integration layer).
+// Intent tests for work_engine/dispatcher.ts (ADR-096 py2ts Phase 1 —
+// work_engine TOP/integration layer). The python byte-parity rig is gone; this
+// asserts the tsx module's own contract directly.
 //
-// `dispatcher.py` imports `.delivery_state`, `.hooks`, `.state` and (via
-// `load_directive_set`) the real `directives.<set>` packages. The parity rig
-// runs it through the real `work_engine` package on sys.path. The dispatch loop
-// itself (`dispatch`) is driven with synthetic step maps so the success /
-// blocked / partial / resume-skip / missing-step / no-questions invariants are
-// exercised deterministically on both engines, comparing the resulting
-// `(outcome, halting, state.outcomes, state.questions)` byte-for-byte.
-//
-// The directive-set resolution surface (select_directive_set / load /
-// assert_kind_supported) is exercised against the real four sets — TS resolves
-// them statically, Python via import_module; both produce the canonical
-// eight-step order and the same error text for the typo / unsupported-kind
-// paths.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+// The dispatch loop (`dispatch`) is driven with synthetic step maps so the
+// success / blocked / partial / resume-skip / missing-step / no-questions
+// invariants are exercised deterministically. The directive-set resolution
+// surface (select_directive_set / load / assert_kind_supported) is exercised
+// against the real four sets — they produce the canonical eight-step order and
+// raise on the typo / unsupported-kind paths.
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -36,17 +27,7 @@ import {
 } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 import { Input, WorkState } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-const py = hasPython3();
-const describeParity = py ? describe : describe.skip;
-
-// ── dispatch() — synthetic step maps, both engines ────────────────────────
+// ── dispatch() — synthetic step maps ──────────────────────────────────────
 
 // A "step plan" is a JSON-serialisable map of {stepName: {outcome, questions}}.
 // Both engines build a step map from it where each handler returns the declared
@@ -65,46 +46,6 @@ function tsStepMap(plan: StepPlan): Map<string, Step> {
         );
     }
     return m;
-}
-
-function tsDispatch(plan: StepPlan, preOutcomes: Record<string, string> = {}): string {
-    const st = new DeliveryState({ ticket: { id: 'T' }, outcomes: { ...preOutcomes } });
-    const [final, halting] = dispatch(st, tsStepMap(plan));
-    return JSON.stringify(
-        { final, halting, outcomes: st.outcomes, questions: st.questions },
-        null,
-        2,
-    );
-}
-
-function pyDispatch(plan: StepPlan, preOutcomes: Record<string, string> = {}): string {
-    const code = [
-        'import sys, json',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        'from work_engine.dispatcher import dispatch, STEP_ORDER',
-        'from work_engine.delivery_state import DeliveryState, Outcome, StepResult',
-        'plan = json.loads(sys.argv[1])',
-        'pre = json.loads(sys.argv[2])',
-        'def make(name):',
-        '    spec = plan.get(name)',
-        '    outcome = Outcome(spec["outcome"]) if spec else Outcome.SUCCESS',
-        '    questions = spec.get("questions", []) if spec else []',
-        '    def handler(state):',
-        '        return StepResult(outcome=outcome, questions=list(questions))',
-        '    return handler',
-        'steps = {name: make(name) for name in STEP_ORDER}',
-        'st = DeliveryState(ticket={"id": "T"}, outcomes=dict(pre))',
-        'final, halting = dispatch(st, steps)',
-        'out = {"final": final.value, "halting": halting, "outcomes": st.outcomes, "questions": st.questions}',
-        'sys.stdout.write(json.dumps(out, indent=2, ensure_ascii=False))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, JSON.stringify(plan), JSON.stringify(preOutcomes)], {
-        encoding: 'utf8',
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
 }
 
 describe('dispatch — local invariants', () => {
@@ -128,38 +69,7 @@ describe('dispatch — local invariants', () => {
     });
 });
 
-describeParity('dispatch — golden parity', () => {
-    const PLANS: Array<[string, StepPlan, Record<string, string>]> = [
-        ['all success', {}, {}],
-        ['blocked at plan', { plan: { outcome: 'blocked', questions: ['1. a', '2. b'] } }, {}],
-        ['partial at verify', { verify: { outcome: 'partial', questions: ['1. retry'] } }, {}],
-        ['blocked at refine (first step)', { refine: { outcome: 'blocked', questions: ['q'] } }, {}],
-        ['resume skips already-success steps', { test: { outcome: 'blocked', questions: ['q'] } }, { refine: 'success', memory: 'success', analyze: 'success', plan: 'success', implement: 'success' }],
-        ['resume: all already success', {}, { refine: 'success', memory: 'success', analyze: 'success', plan: 'success', implement: 'success', test: 'success', verify: 'success', report: 'success' }],
-    ];
-    for (const [name, plan, pre] of PLANS) {
-        it(name, () => {
-            expect(tsDispatch(plan, pre)).toBe(pyDispatch(plan, pre));
-        });
-    }
-});
-
 // ── select_directive_set / load / assert_kind_supported ───────────────────
-
-function pyResolve(body: string): string {
-    const code = [
-        'import sys, json',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        'from work_engine import dispatcher as d',
-        'from work_engine.state import Input, WorkState',
-        body,
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
 
 describe('select_directive_set — local', () => {
     it('reads WorkState.directive_set', () => {
@@ -172,29 +82,6 @@ describe('select_directive_set — local', () => {
     it('throws ValueError on an unknown set', () => {
         const w = new WorkState({ input: new Input('ticket', {}), directive_set: 'nope' });
         expect(() => select_directive_set(w)).toThrow(ValueError);
-    });
-});
-
-describeParity('select_directive_set — error-text parity', () => {
-    it('unknown-set message matches python3', () => {
-        const tsMsg = (() => {
-            try {
-                const w = new WorkState({ input: new Input('ticket', {}), directive_set: 'nope' });
-                select_directive_set(w);
-                return '__NO_ERROR__';
-            } catch (e) {
-                return (e as Error).message;
-            }
-        })();
-        const pyMsg = pyResolve([
-            'w = WorkState(input=Input(kind="ticket", data={}), directive_set="nope")',
-            'try:',
-            '    d.select_directive_set(w)',
-            '    sys.stdout.write("__NO_ERROR__")',
-            'except ValueError as exc:',
-            '    sys.stdout.write(str(exc))',
-        ].join('\n'));
-        expect(tsMsg).toBe(pyMsg);
     });
 });
 
@@ -221,26 +108,5 @@ describe('assert_kind_supported — real sets', () => {
         for (const k of ['ticket', 'prompt', 'diff', 'file']) {
             expect(() => assert_kind_supported(k, 'ui')).not.toThrow();
         }
-    });
-});
-
-describeParity('assert_kind_supported — error-text parity', () => {
-    it('unsupported-kind message matches python3', () => {
-        const tsMsg = (() => {
-            try {
-                assert_kind_supported('diff', 'backend');
-                return '__NO_ERROR__';
-            } catch (e) {
-                return (e as Error).message;
-            }
-        })();
-        const pyMsg = pyResolve([
-            'try:',
-            '    d.assert_kind_supported("diff", "backend")',
-            '    sys.stdout.write("__NO_ERROR__")',
-            'except NotImplementedError as exc:',
-            '    sys.stdout.write(str(exc))',
-        ].join('\n'));
-        expect(tsMsg).toBe(pyMsg);
     });
 });

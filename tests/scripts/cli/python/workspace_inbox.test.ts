@@ -1,40 +1,42 @@
-// Golden-parity tests for src/cli/python/workspace_inbox.ts (py2ts ADR-200 —
+// Intent tests for src/cli/python/workspace_inbox.ts (py2ts ADR-200 —
 // Tier-3 host hand-off inbox, ADR-023 Tier 3 / ADR-065).
 //
-// Strategy: run `python3 workspace_inbox.py` vs `tsx workspace_inbox.ts` and
-// byte-compare stdout / stderr / exit. The store writes files into a
+// Was a python3-vs-tsx byte-parity rig; the `.py` original is gone, so this now
+// asserts the tsx CLI's own contract directly. The store writes files into a
 // `<root>/<id>.md` where `<id>` is `<UTC-stamp>-<8 random hex>` and the
-// frontmatter carries `created_at` (UTC second) — both NONDETERMINISTIC and
-// differing py-vs-ts. So functional cases run each language in a SEPARATE
-// hermetic `<tmp>/workspace/inbox` root, replay the SAME command, then
+// frontmatter carries `created_at` (UTC second) — both NONDETERMINISTIC. So
+// functional cases run in a hermetic `<tmp>/workspace/inbox` root, then
 // `norm()` masks the random id, the timestamp, and the tmp root before
-// comparing — leaving the structural payload (banner shape, frontmatter keys,
-// scrubbed body, JSON shape, ordering) a true byte-for-byte assertion.
+// snapshotting — leaving the structural payload (banner shape, frontmatter
+// keys, scrubbed body, JSON shape, ordering) a reproducible assertion.
 //
 // `_validate_cli_root` requires `--root` to be a `.../workspace/inbox` dir, so
-// every root is `<tmp>/workspace/inbox`. The `--help` BODY is NOT byte-compared
-// (only the `usage:` line) per the porting contract; the Python runs force
-// COLUMNS=80 so the multi-line usage strings byte-match the TS hardcoded form.
+// every root is `<tmp>/workspace/inbox`. To stay deterministic regardless of
+// which host CLIs are installed on the runner, every case spawns with a
+// **node-only PATH** (a temp dir holding just a `node` symlink) so the tsx
+// launcher resolves but no host CLI does. COLUMNS=80 forces the multi-line
+// usage strings to a stable width.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'workspace_inbox.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'workspace_inbox.py');
 const TSX_BIN = path.resolve(
     REPO_ROOT,
     process.env['TSX_BIN'] ??
         path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
+// node-only PATH → deterministic regardless of installed host CLIs.
+const NODE_ONLY_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-inbox-nodeonly-'));
+fs.symlinkSync(process.execPath, path.join(NODE_ONLY_DIR, 'node'));
+afterAll(() => {
+    fs.rmSync(NODE_ONLY_DIR, { recursive: true, force: true });
+});
 
 interface RunResult {
     status: number | null;
@@ -42,20 +44,10 @@ interface RunResult {
     stderr: string;
 }
 
-const COLS80 = { COLUMNS: '80' };
-
-function runPy(args: string[], extraEnv: Record<string, string> = {}): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src'), ...COLS80, ...extraEnv },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-
-function runTs(args: string[], extraEnv: Record<string, string> = {}): RunResult {
+function runTs(args: string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
         encoding: 'utf8',
-        env: { ...process.env, ...COLS80, ...extraEnv },
+        env: { ...process.env, PATH: NODE_ONLY_DIR, COLUMNS: '80' },
     });
     return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
@@ -80,29 +72,26 @@ function norm(text: string, roots: string[]): string {
     return out;
 }
 
-/** Byte-exact parity (deterministic surfaces: usage / arg errors). */
-function expectParityExact(args: string[]): void {
-    const p = runPy(args);
-    const t = runTs(args);
-    expect(t.status).toBe(p.status);
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
+interface NormResult {
+    status: number | null;
+    stdout: string;
+    stderr: string;
 }
 
-let pyRoot: string;
+/** runTs + norm on both streams (for snapshotting nondeterministic surfaces). */
+function runTsNorm(args: string[], roots: string[]): NormResult {
+    const r = runTs(args);
+    return { status: r.status, stdout: norm(r.stdout, roots), stderr: norm(r.stderr, roots) };
+}
+
 let tsRoot: string;
-let pyTmp: string;
 let tsTmp: string;
 beforeEach(() => {
-    pyTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wsinbox-py-'));
     tsTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wsinbox-ts-'));
-    pyRoot = path.join(pyTmp, 'workspace', 'inbox');
     tsRoot = path.join(tsTmp, 'workspace', 'inbox');
-    fs.mkdirSync(pyRoot, { recursive: true });
     fs.mkdirSync(tsRoot, { recursive: true });
 });
 afterEach(() => {
-    fs.rmSync(pyTmp, { recursive: true, force: true });
     fs.rmSync(tsTmp, { recursive: true, force: true });
 });
 
@@ -112,176 +101,538 @@ function bodyFile(dir: string, content: string): string {
     return p;
 }
 
-describe.skipIf(!py3)('workspace_inbox — write + read + list + forget', () => {
-    it('write returns id/path/banner (normalized parity)', () => {
-        const pb = bodyFile(pyTmp, 'Customer wants a quote.\n');
+describe('workspace_inbox — write + read + list + forget', () => {
+    it('write returns id/path/banner (normalized)', () => {
         const tb = bodyFile(tsTmp, 'Customer wants a quote.\n');
-        const p = runPy(['write', '--role', 'sales', '--task', 'draft offer', '--body-file', pb, '--root', pyRoot]);
-        const t = runTs(['write', '--role', 'sales', '--task', 'draft offer', '--body-file', tb, '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(norm(t.stdout, [tsRoot, tsTmp])).toBe(norm(p.stdout, [pyRoot, pyTmp]));
+        const t = runTs([
+            'write',
+            '--role',
+            'sales',
+            '--task',
+            'draft offer',
+            '--body-file',
+            tb,
+            '--root',
+            tsRoot,
+        ]);
+        expect(t.status).toBe(0);
+        expect(norm(t.stdout, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
+          "{"banner": "Tier-3 hand-off ready: copy /private<TMP>/<ID>.md into your host, then open it.", "id": "<ID>", "path": "/private<TMP>/<ID>.md"}
+          "
+        `);
     });
 
     it('write scrubs a secret in body + task', () => {
         const secret = 'AKIAIOSFODNN7EXAMPLE';
-        const pb = bodyFile(pyTmp, `key here: ${secret}\n`);
         const tb = bodyFile(tsTmp, `key here: ${secret}\n`);
-        runPy(['write', '--role', 'r', '--task', `t ${secret}`, '--body-file', pb, '--root', pyRoot]);
         runTs(['write', '--role', 'r', '--task', `t ${secret}`, '--body-file', tb, '--root', tsRoot]);
-        // Read each back and compare normalized file bodies; secret must be gone.
-        const pf = fs.readdirSync(pyRoot)[0] as string;
         const tf = fs.readdirSync(tsRoot)[0] as string;
-        const pTxt = fs.readFileSync(path.join(pyRoot, pf), 'utf8');
         const tTxt = fs.readFileSync(path.join(tsRoot, tf), 'utf8');
-        expect(pTxt).not.toContain(secret);
         expect(tTxt).not.toContain(secret);
-        expect(norm(tTxt, [tsRoot, tsTmp])).toBe(norm(pTxt, [pyRoot, pyTmp]));
+        expect(norm(tTxt, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
+          "---
+          id: <ID>
+          role: r
+          task: t [SECRET]
+          created_at: <TS>
+          ---
+
+          key here: [SECRET]
+          "
+        `);
     });
 
     it('write with --skill-hint pre-renders a skill section', () => {
-        // Use a present skill if any; else a missing one (note section). Either
-        // way the two languages must render identically.
         const hint = 'docker';
-        const pb = bodyFile(pyTmp, 'Base prompt.\n');
         const tb = bodyFile(tsTmp, 'Base prompt.\n');
-        runPy(['write', '--role', 'r', '--task', 't', '--body-file', pb, '--skill-hint', hint, '--root', pyRoot]);
-        runTs(['write', '--role', 'r', '--task', 't', '--body-file', tb, '--skill-hint', hint, '--root', tsRoot]);
-        const pTxt = fs.readFileSync(path.join(pyRoot, fs.readdirSync(pyRoot)[0] as string), 'utf8');
+        runTs([
+            'write',
+            '--role',
+            'r',
+            '--task',
+            't',
+            '--body-file',
+            tb,
+            '--skill-hint',
+            hint,
+            '--root',
+            tsRoot,
+        ]);
         const tTxt = fs.readFileSync(path.join(tsRoot, fs.readdirSync(tsRoot)[0] as string), 'utf8');
-        expect(norm(tTxt, [tsRoot, tsTmp])).toBe(norm(pTxt, [pyRoot, pyTmp]));
+        expect(norm(tTxt, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
+          "---
+          id: <ID>
+          role: r
+          task: t
+          created_at: <TS>
+          ---
+
+          Base prompt.
+
+
+          ## Skill context: docker
+
+          _Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'._
+
+          # docker
+
+          ## When to use
+
+          Use this skill when working with Docker configuration, container setup, Dockerfile changes, or docker-compose modifications.
+
+
+          Do NOT use when:
+          - Production deployment (use \`aws-infrastructure\` skill)
+          - Codespaces setup (use \`devcontainer\` skill)
+
+          ## Procedure: Modify Docker setup
+
+          1. **Gather context** — read project Docker docs in \`agents/\` or \`Docs/\`, check \`Makefile\`/\`Taskfile.yml\` for targets, read \`docker-compose.yml\`/\`compose.yaml\` for service layout.
+          2. **Identify scope** — determine which service(s) are affected (PHP, NGINX, worker, scheduler, database).
+          3. **Inspect current state** — run \`docker compose ps\` to see running containers and their health status.
+          4. **Make the change** — edit the relevant file (Dockerfile, compose file, NGINX config, Makefile target). Follow the conventions in the reference sections below.
+          5. **Rebuild affected containers** — \`docker compose build <service>\` (add \`--no-cache\` if Dockerfile base layers changed).
+          6. **Verify** — \`docker compose up -d\`, check \`docker compose ps\` for healthy status, run a smoke test (e.g., \`make test-quick\` or \`curl localhost\`).
+
+          ## Project architecture
+
+          ### Dockerfile (\`.docker/Dockerfile\`)
+
+          Multi-stage build with these targets:
+
+          | Stage | Purpose |
+          |---|---|
+          | \`base\` | Alpine + PHP-FPM + system packages + extensions |
+          | \`dev\` | Development: Xdebug, dev tools, Composer dev deps |
+          | \`pro\` | Production: optimized, no dev deps, New Relic agent |
+
+          Key build args:
+          - \`PHP_VERSION\` — extracted from Dockerfile, used by CI
+          - \`COMPOSER_AUTH\` — private registry access (passed as secret)
+          - \`CACHEBUST\` — weekly cache invalidation (\`date +%Y-%U\`)
+          - \`COMPOSER_NO_DEV\` — \`1\` for production, \`0\` for dev
+
+          ### Dual-container architecture (PHP projects)
+
+          Some projects run two PHP-FPM containers simultaneously (fast + Xdebug):
+
+          | Container | Purpose | PHP-FPM mode |
+          |---|---|---|
+          | \`{project}-php\` | Fast execution, no debugger | \`pm = dynamic\` |
+          | \`{project}-php-xdebug\` | Xdebug enabled, debugging | \`pm = ondemand\` |
+
+          NGINX routes requests based on HTTP headers:
+          - No header → fast container
+          - \`X-Xdebug-Enable: 1\` or \`X-Debug-Session: PHPSTORM\` → Xdebug container
+
+          ### docker-compose services
+
+          Read \`docker-compose.yml\` / \`compose.yaml\` to discover the actual service names. Common patterns:
+
+          | Service type | Description |
+          |---|---|
+          | PHP-FPM | Main application server |
+          | PHP-FPM + Xdebug | Debugging container |
+          | NGINX | Reverse proxy |
+          | Queue worker | Background job processing (e.g., Horizon) |
+          | Scheduler | Cron/task scheduler |
+          | Database | MariaDB / MySQL / PostgreSQL |
+          | Cache | Redis / Memcached |
+
+          ## Conventions
+
+          ### Container commands
+
+          - **Always execute PHP commands inside the container**, never on the host.
+          - Use \`docker compose exec -T <service> ...\` for non-interactive (scripts, CI).
+          - Use \`make console\` for interactive shell access.
+          - Use \`make console-xdebug\` for Xdebug container access.
+
+          ### Image building
+
+          - Production images use \`target: pro\` — no dev dependencies.
+          - Check the project's CI/CD config for target platform and registry.
+          - Docker Hub login may be needed for pulling base images (rate limits).
+
+          ### PHP extensions
+
+          Extensions are installed via \`mlocati/php-extension-installer\`:
+          - Check the Dockerfile for the current list.
+          - Add new extensions in the \`base\` stage so they're available in all targets.
+
+          ### Environment files
+
+          - \`.env\` is NOT baked into the Docker image.
+          - Production: \`.env\` is fetched from **AWS Secrets Manager** at deploy time.
+          - Development: \`.env\` is mounted via docker-compose volumes.
+
+          ## Makefile targets
+
+          Always check the \`Makefile\` for available targets before using raw docker commands:
+
+          \`\`\`
+          make start              # Start all containers
+          make stop               # Stop all containers
+          make console            # Enter PHP container (bash)
+          make console-xdebug     # Enter Xdebug PHP container
+          make composer-install   # Run composer install in container
+          make migrate            # Run migrations
+          make migrate-and-seed   # Run migrations + seed
+          make test               # Run all tests (parallel)
+          \`\`\`
+
+
+          ## Container orchestration
+
+          ### Environment synchronization
+
+          When the development environment is out of sync (missing containers, wrong state):
+
+          1. **Check status** — \`docker compose ps\` to see which services are running.
+          2. **Start missing services** — \`make start\` or \`docker compose up -d\`.
+          3. **Rebuild if needed** — \`docker compose build --no-cache <service>\` after Dockerfile changes.
+          4. **Reset state** — \`make migrate-and-seed\` after fresh container start.
+
+          ### Common sync issues
+
+          | Symptom | Cause | Fix |
+          |---|---|---|
+          | "Connection refused" | Container not running | \`make start\` |
+          | "Table not found" | Migrations not run | \`make migrate-and-seed\` |
+          | "Class not found" | Composer not installed | \`make composer-install\` |
+          | Old PHP version | Image not rebuilt | \`docker compose build <php-service>\` |
+          | Extension missing | Dockerfile changed | Rebuild with \`--no-cache\` |
+
+          ### Multi-project orchestration
+
+          When running multiple projects simultaneously:
+          - Check for **port conflicts** — each project needs unique exposed ports.
+          - Use **Traefik** (see \`traefik\` skill) for routing by domain instead of port.
+          - Shared services (MariaDB, Redis) can be in a dedicated \`docker-compose.shared.yml\`.
+
+          ## Security hardening checklist
+
+          When creating or reviewing Dockerfiles:
+
+          - [ ] **Non-root user** — create user with specific UID/GID, use \`USER\` directive before \`CMD\`.
+          - [ ] **No secrets in layers** — never \`ENV\` or \`COPY\` secrets. Use \`--mount=type=secret\` (BuildKit) or runtime secrets.
+          - [ ] **Minimal packages** — only install what's needed. Remove package manager cache in the same \`RUN\` layer.
+          - [ ] **Read-only root filesystem** — use \`--read-only\` flag where possible, mount writable dirs explicitly.
+          - [ ] **No \`latest\` tag** — pin base image versions (\`node:18.19-alpine\`, not \`node:latest\`).
+          - [ ] **Scan images** — use \`docker scout quickview\` or Trivy for vulnerability scanning.
+
+          \`\`\`dockerfile
+          # Security pattern
+          RUN addgroup -g 1001 -S appgroup && \\
+              adduser -S appuser -u 1001 -G appgroup
+          COPY --chown=appuser:appgroup . .
+          USER 1001
+          \`\`\`
+
+          ## Health check patterns
+
+          Always add health checks to long-running services:
+
+          \`\`\`dockerfile
+          HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\
+            CMD curl -f http://localhost:8080/health || exit 1
+          \`\`\`
+
+          In docker-compose, use \`condition: service_healthy\` for dependency ordering:
+
+          \`\`\`yaml
+          services:
+            app:
+              depends_on:
+                db:
+                  condition: service_healthy
+          \`\`\`
+
+          ## Image size optimization
+
+          | Technique | Impact | When |
+          |---|---|---|
+          | Multi-stage builds | **High** | Always — separate build from runtime |
+          | Alpine base images | **High** | When compatibility allows |
+          | Distroless images | **High** | Production, no shell needed |
+          | \`.dockerignore\` | **Medium** | Always — exclude \`node_modules\`, \`.git\`, \`tests\`, docs |
+          | Combine \`RUN\` layers | **Medium** | When installing packages + cleaning cache |
+          | Copy only artifacts | **Medium** | \`COPY --from=build\` only what's needed |
+
+          ## Build cache optimization
+
+          Use BuildKit cache mounts for package managers:
+
+          \`\`\`dockerfile
+          # Composer (PHP)
+          RUN --mount=type=cache,target=/root/.composer/cache \\
+              composer install --no-dev --optimize-autoloader
+
+          # npm (Node.js)
+          RUN --mount=type=cache,target=/root/.npm \\
+              npm ci --only=production
+          \`\`\`
+
+          **Layer ordering for cache efficiency:**
+          1. System packages (changes rarely)
+          2. Dependency files (\`composer.json\`, \`package.json\`) — changes sometimes
+          3. \`RUN install\` — cached if dependency files unchanged
+          4. Source code (\`COPY . .\`) — changes often, last layer
+
+          ## Output format
+
+          1. Modified Docker configuration files (Dockerfile, docker-compose.yml)
+          2. Updated Makefile targets if applicable
+          3. Rebuild/restart instructions for affected containers
+
+          ## Auto-trigger keywords
+
+          - Docker
+          - docker-compose
+          - container
+          - Dockerfile
+          - PHP container
+
+          ## Gotcha
+
+          - All PHP commands (artisan, composer, phpunit) must run INSIDE the PHP container — never on the host.
+          - The fast container and Xdebug container share the same codebase but have different PHP configs — don't confuse them.
+          - \`docker compose down -v\` destroys volumes including the DB — use \`down\` without \`-v\` unless you mean it.
+          - The model forgets to use \`docker compose exec -T\` (no TTY) when running in scripts or CI.
+
+          ## Do NOT
+
+          - Do NOT change the base Alpine or PHP version without checking CI compatibility.
+          - Do NOT add dev-only tools to the \`pro\` stage.
+          - Do NOT hardcode secrets in the Dockerfile — use build args or runtime secrets.
+          - Do NOT change \`platform\` without verifying AWS runner architecture.
+
+          ## Related
+
+          - **Skill:** \`traefik\` — local reverse proxy with real domains and HTTPS
+          - **Skill:** \`devcontainer\` — DevContainer and Codespaces setup
+          - **Skill:** \`php-debugging\` — Xdebug dual-container architecture
+          - **Rule:** \`docker-commands.md\` — all PHP commands run inside Docker
+
+          "
+        `);
     });
 
     it('read returns the file body (normalized)', () => {
-        const pb = bodyFile(pyTmp, 'Read me.\n');
         const tb = bodyFile(tsTmp, 'Read me.\n');
-        const pw = JSON.parse(
-            runPy(['write', '--role', 'a', '--task', 'b', '--body-file', pb, '--root', pyRoot]).stdout,
-        );
         const tw = JSON.parse(
             runTs(['write', '--role', 'a', '--task', 'b', '--body-file', tb, '--root', tsRoot]).stdout,
         );
-        const p = runPy(['read', pw.id, '--root', pyRoot]);
         const t = runTs(['read', tw.id, '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(norm(t.stdout, [tsRoot, tsTmp])).toBe(norm(p.stdout, [pyRoot, pyTmp]));
+        expect(t.status).toBe(0);
+        expect(norm(t.stdout, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
+          "---
+          id: <ID>
+          role: a
+          task: b
+          created_at: <TS>
+          ---
+
+          Read me.
+          "
+        `);
     });
 
     it('read missing → stderr + exit 1', () => {
-        const p = runPy(['read', 'nope', '--root', pyRoot]);
         const t = runTs(['read', 'nope', '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout);
-        // stderr names the id (deterministic) — compare directly.
-        expect(t.stderr).toBe(p.stderr);
+        expect(t.status).toBe(1);
+        expect(t.stdout).toMatchInlineSnapshot(`""`);
+        expect(t.stderr).toMatchInlineSnapshot(`
+          "workspace_inbox: no such hand-off nope
+          "
+        `);
     });
 
     it('list --json (single entry, normalized)', () => {
-        const pb = bodyFile(pyTmp, 'x\n');
         const tb = bodyFile(tsTmp, 'x\n');
-        runPy(['write', '--role', 'sales', '--task', 'one', '--body-file', pb, '--session', 's1', '--root', pyRoot]);
-        runTs(['write', '--role', 'sales', '--task', 'one', '--body-file', tb, '--session', 's1', '--root', tsRoot]);
-        const p = runPy(['list', '--json', '--root', pyRoot]);
+        runTs([
+            'write',
+            '--role',
+            'sales',
+            '--task',
+            'one',
+            '--body-file',
+            tb,
+            '--session',
+            's1',
+            '--root',
+            tsRoot,
+        ]);
         const t = runTs(['list', '--json', '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(norm(t.stdout, [tsRoot, tsTmp])).toBe(norm(p.stdout, [pyRoot, pyTmp]));
+        expect(t.status).toBe(0);
+        expect(norm(t.stdout, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
+          "[{"created_at": "<TS>", "id": "<ID>", "path": "/private<TMP>/<ID>.md", "role": "sales", "session": "s1", "task": "one"}]
+          "
+        `);
     });
 
     it('list text (per-line JSON, empty root)', () => {
-        const p = runPy(['list', '--root', pyRoot]);
         const t = runTs(['list', '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout); // both empty
+        expect(t.status).toBe(0);
+        expect(t.stdout).toMatchInlineSnapshot(`""`);
     });
 
     it('forget present → exit 0; absent → exit 1', () => {
-        const pb = bodyFile(pyTmp, 'x\n');
         const tb = bodyFile(tsTmp, 'x\n');
-        const pid = JSON.parse(
-            runPy(['write', '--role', 'a', '--task', 'b', '--body-file', pb, '--root', pyRoot]).stdout,
-        ).id;
         const tid = JSON.parse(
             runTs(['write', '--role', 'a', '--task', 'b', '--body-file', tb, '--root', tsRoot]).stdout,
         ).id;
-        expect(runTs(['forget', tid, '--root', tsRoot]).status).toBe(
-            runPy(['forget', pid, '--root', pyRoot]).status,
-        );
+        expect(runTs(['forget', tid, '--root', tsRoot]).status).toBe(0);
         // forget again → absent → exit 1.
-        expect(runTs(['forget', tid, '--root', tsRoot]).status).toBe(
-            runPy(['forget', pid, '--root', pyRoot]).status,
-        );
+        expect(runTs(['forget', tid, '--root', tsRoot]).status).toBe(1);
     });
 
     it('prune drops nothing recent → {"pruned": 0}', () => {
-        const pb = bodyFile(pyTmp, 'x\n');
         const tb = bodyFile(tsTmp, 'x\n');
-        runPy(['write', '--role', 'a', '--task', 'b', '--body-file', pb, '--root', pyRoot]);
         runTs(['write', '--role', 'a', '--task', 'b', '--body-file', tb, '--root', tsRoot]);
-        const p = runPy(['prune', '--root', pyRoot]);
         const t = runTs(['prune', '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout); // {"pruned": 0}
+        expect(t.status).toBe(0);
+        expect(t.stdout).toMatchInlineSnapshot(`
+          "{"pruned": 0}
+          "
+        `);
     });
 
     it('prune --max-age-hours 0 drops everything', () => {
-        const pb = bodyFile(pyTmp, 'x\n');
         const tb = bodyFile(tsTmp, 'x\n');
-        runPy(['write', '--role', 'a', '--task', 'b', '--body-file', pb, '--root', pyRoot]);
         runTs(['write', '--role', 'a', '--task', 'b', '--body-file', tb, '--root', tsRoot]);
-        const p = runPy(['prune', '--max-age-hours', '0', '--root', pyRoot]);
         const t = runTs(['prune', '--max-age-hours', '0', '--root', tsRoot]);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout); // {"pruned": 1}
+        expect(t.status).toBe(0);
+        expect(t.stdout).toMatchInlineSnapshot(`
+          "{"pruned": 1}
+          "
+        `);
     });
 });
 
-describe.skipIf(!py3)('workspace_inbox — argparse + root validation errors', () => {
+describe('workspace_inbox — argparse + root validation errors', () => {
     it('no args → required cmd, exit 2', () => {
-        expectParityExact([]);
+        expect(runTs([])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox [-h] {write,read,list,forget,prune} ...
+          workspace_inbox: error: the following arguments are required: cmd
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('bad subcommand → invalid choice, exit 2', () => {
-        expectParityExact(['bogus']);
+        expect(runTs(['bogus'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox [-h] {write,read,list,forget,prune} ...
+          workspace_inbox: error: argument cmd: invalid choice: 'bogus' (choose from 'write', 'read', 'list', 'forget', 'prune')
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('write missing all required → exit 2', () => {
-        expectParityExact(['write']);
+        expect(runTs(['write'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox write [-h] --role ROLE --task TASK --body-file
+                                       BODY_FILE [--session SESSION]
+                                       [--skill-hint SKILL_HINT] [--root ROOT]
+          workspace_inbox write: error: the following arguments are required: --role, --task, --body-file
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('read missing inbox_id → exit 2', () => {
-        expectParityExact(['read']);
+        expect(runTs(['read'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox read [-h] [--root ROOT] inbox_id
+          workspace_inbox read: error: the following arguments are required: inbox_id
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('forget missing inbox_id → exit 2', () => {
-        expectParityExact(['forget']);
+        expect(runTs(['forget'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox forget [-h] [--root ROOT] inbox_id
+          workspace_inbox forget: error: the following arguments are required: inbox_id
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('list bad --limit int → exit 2', () => {
-        expectParityExact(['list', '--limit', 'abc']);
+        expect(runTs(['list', '--limit', 'abc'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox list [-h] [--limit LIMIT] [--json] [--root ROOT]
+          workspace_inbox list: error: argument --limit: invalid int value: 'abc'
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('prune bad --max-age-hours int → exit 2', () => {
-        expectParityExact(['prune', '--max-age-hours', 'xyz']);
+        expect(runTs(['prune', '--max-age-hours', 'xyz'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: workspace_inbox prune [-h] [--max-age-hours MAX_AGE_HOURS]
+                                       [--root ROOT]
+          workspace_inbox prune: error: argument --max-age-hours: invalid int value: 'xyz'
+          ",
+            "stdout": "",
+          }
+        `);
     });
     it('--root not a workspace/inbox dir → SystemExit, exit 1', () => {
-        expectParityExact(['list', '--root', '/tmp/not-an-inbox']);
+        // Normalize the tmp path embedded in the error so the snapshot is stable.
+        expect(runTsNorm(['list', '--root', '/tmp/not-an-inbox'], ['/tmp/not-an-inbox'])).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "workspace_inbox: --root must be a .../workspace/inbox dir, got '<TMP>'
+          ",
+            "stdout": "",
+          }
+        `);
     });
-    it('write -h → usage line + exit 0', () => {
-        const p = runPy(['write', '-h']);
-        const t = runTs(['write', '-h']);
-        expect(t.status).toBe(p.status);
-        // Compare the wrapped usage block (lines until the first blank line).
-        // TS prints usage only (no body); Python prints usage + blank + body.
-        // Compare the usage block, trimming the trailing newline difference.
-        const usageOf = (s: string): string => (s.split('\n\n')[0] as string).trimEnd();
-        expect(usageOf(t.stdout)).toBe(usageOf(p.stdout));
+    it('write -h → usage + exit 0', () => {
+        expect(runTs(['write', '-h'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "usage: workspace_inbox write [-h] --role ROLE --task TASK --body-file
+                                       BODY_FILE [--session SESSION]
+                                       [--skill-hint SKILL_HINT] [--root ROOT]
+          ",
+          }
+        `);
     });
-    it('prune -h → usage line + exit 0', () => {
-        const p = runPy(['prune', '-h']);
-        const t = runTs(['prune', '-h']);
-        expect(t.status).toBe(p.status);
-        // TS prints usage only (no body); Python prints usage + blank + body.
-        // Compare the usage block, trimming the trailing newline difference.
-        const usageOf = (s: string): string => (s.split('\n\n')[0] as string).trimEnd();
-        expect(usageOf(t.stdout)).toBe(usageOf(p.stdout));
+    it('prune -h → usage + exit 0', () => {
+        expect(runTs(['prune', '-h'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "usage: workspace_inbox prune [-h] [--max-age-hours MAX_AGE_HOURS]
+                                       [--root ROOT]
+          ",
+          }
+        `);
     });
-    it('top-level -h → usage line + exit 0', () => {
-        const p = runPy(['-h']);
-        const t = runTs(['-h']);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
+    it('top-level -h → usage + exit 0', () => {
+        expect(runTs(['-h'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "usage: workspace_inbox [-h] {write,read,list,forget,prune} ...
+          ",
+          }
+        `);
     });
 });

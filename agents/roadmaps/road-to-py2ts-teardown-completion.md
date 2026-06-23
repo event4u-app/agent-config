@@ -118,6 +118,35 @@ stay open below — not force-marked done.
     deleting), **≈108 are sole coverage** (convert to a python-free intent
     test). Both halves still need per-file confirmation; neither is a blind
     batch.
+    - [x] **`cli/python/workspace_*` cluster converted (12 files, 2026-06-23).**
+      `workspace_hosts` (reference) + skills, secrets, roles, sessions,
+      analytics, inbox, documents, crypto, drive_health, render, explain →
+      python-free intent tests. **+346 real passing tests** (were skipped
+      parity blocks); proven python-free (whole cluster green with `python3`
+      shadowed by a failing stub) and regression-stable. Recipe: drop the
+      python side, assert the tsx contract via inline snapshots under a
+      **node-only PATH** (temp dir + lone `node` symlink → deterministic
+      host-CLI detection) + `COLUMNS`, reusing each file's `norm()` masking
+      for clock/random/mtime/tmp-path, and round-trip + structural asserts for
+      randomized crypto. **This recipe generalises to the rest of the
+      sole-coverage tail.**
+    - [x] **`work_engine/*` cluster de-pythonized (21 files, 2026-06-23).**
+      Mixed files (parity block + real TS-side tests) had only the python parity
+      block + dead `hasPython3`/`runPy`/`PY_SCRIPT` helpers removed (coverage
+      kept); pure in-process rigs (`cli`, `directives_backend_analyze` + the 5
+      `directives_backend_*`) converted to intent tests asserting the tsx
+      module's own `run()` output. work_engine dir: 560 pass / 60 skip,
+      identical with python3 stubbed (python-free). **Still deferred in
+      work_engine:** `_hooks_pyloader.ts` (shared helper imported by 11
+      `hooks_*` tests — neutralise only after those consumers are converted) +
+      4 files an interrupted subagent never reached
+      (`directives_backend_test`, `directives_backend_verify`,
+      `directives_init`, `directives_mixed_init` — all MIXED, same purge recipe).
+    - **Remaining spawn-file tail after these two clusters: 108** (measured
+      `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`). Next
+      coherent groups: `_cli/cmd_*` (~17, likely delete-candidates covered by
+      `cli-e2e` → bulk-deletion needs Hard-Floor surfacing), `templates_*`
+      memory/telemetry (~10), `ai_council` (3), and singletons.
   - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
     the codemod did not fully prune; finish per-file.
   - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)

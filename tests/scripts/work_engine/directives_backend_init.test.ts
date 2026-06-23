@@ -1,15 +1,12 @@
-// Golden-parity tests for work_engine/directives/backend/index.ts vs
-// directives/backend/__init__.py (ADR-096 py2ts Phase 1 — work_engine
-// TOP/integration layer).
+// Intent tests for work_engine/directives/backend/index.ts (ADR-096 py2ts
+// Phase 1 — work_engine TOP/integration layer).
 //
-// The wiring module exposes DIRECTIVE_SET_NAME, SUPPORTED_KINDS, get_steps(),
-// and all_ambiguities(). get_steps() returns callables (not JSON-comparable),
-// so parity is on the *step-name order* and the all_ambiguities() structure
-// (per-step ambiguity code lists). The Python package is imported via
-// sys.path + import_module (siblings exist as .py until the Phase-12 sweep).
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+// Was a python3-vs-tsx golden-parity rig; the `.py` original is gone, so this
+// now asserts the tsx wiring module's own contract directly. The module exposes
+// DIRECTIVE_SET_NAME, SUPPORTED_KINDS, get_steps(), and all_ambiguities().
+// get_steps() returns callables (not snapshot-comparable), so the structural
+// assertion is on the step-name order plus the all_ambiguities() per-step code
+// lists. A `{name, kinds, step_order, ambiguities}` summary is snapshotted.
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -19,48 +16,17 @@ import {
     get_steps,
 } from '../../../src/agent-src/templates/scripts/work_engine/directives/backend/index.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-/** Emit `{name, kinds, step_order, ambiguities}` for the backend set on py3. */
-function pySummary(): string {
-    const code = [
-        'import sys, json',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        'm = __import__("work_engine.directives.backend", fromlist=["x"])',
-        'amb = {k: [a.get("code") for a in v] for k, v in m.all_ambiguities().items()}',
-        'out = {',
-        '  "name": m.DIRECTIVE_SET_NAME,',
-        '  "kinds": list(m.SUPPORTED_KINDS),',
-        '  "step_order": list(m.get_steps().keys()),',
-        '  "ambiguities": amb,',
-        '}',
-        'sys.stdout.write(json.dumps(out, indent=2, ensure_ascii=False, sort_keys=True))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
-
-function tsSummary(): string {
+function tsSummary(): unknown {
     const amb: Record<string, Array<string | undefined>> = {};
     for (const [k, v] of Object.entries(all_ambiguities())) {
         amb[k] = v.map((a) => a['code']);
     }
-    const out = {
+    return _sortKeys({
         name: DIRECTIVE_SET_NAME,
         kinds: [...SUPPORTED_KINDS],
         step_order: [...get_steps().keys()],
         ambiguities: amb,
-    };
-    // sort_keys parity: re-serialise with sorted keys.
-    return JSON.stringify(_sortKeys(out), null, 2);
+    });
 }
 
 function _sortKeys(value: unknown): unknown {
@@ -76,9 +42,6 @@ function _sortKeys(value: unknown): unknown {
     }
     return value;
 }
-
-const py = hasPython3();
-const describeParity = py ? describe : describe.skip;
 
 describe('directives/backend index — shape', () => {
     it('DIRECTIVE_SET_NAME + SUPPORTED_KINDS', () => {
@@ -99,8 +62,66 @@ describe('directives/backend index — shape', () => {
     });
 });
 
-describeParity('directives/backend index — golden parity', () => {
-    it('matches python3 (name + kinds + order + ambiguity codes)', () => {
-        expect(tsSummary()).toBe(pySummary());
+describe('directives/backend index — summary contract', () => {
+    it('name + kinds + step order + per-step ambiguity codes', () => {
+        expect(tsSummary()).toMatchInlineSnapshot(`
+          {
+            "ambiguities": {
+              "analyze": [
+                "upstream_refine_failed",
+                "upstream_memory_failed",
+                "lost_ac",
+              ],
+              "implement": [
+                "upstream_plan_failed",
+                "empty_changes_delegate",
+                "malformed_changes",
+              ],
+              "memory": [],
+              "plan": [
+                "upstream_analyze_failed",
+                "empty_plan_delegate",
+                "malformed_plan",
+              ],
+              "refine": [
+                "missing_id",
+                "trivial_title",
+                "missing_or_vague_ac",
+                "prompt_unrefined",
+                "prompt_medium_confidence",
+                "prompt_low_confidence",
+                "prompt_ui_intent",
+              ],
+              "report": [],
+              "test": [
+                "upstream_implement_failed",
+                "empty_tests_delegate",
+                "malformed_tests",
+                "bad_test_verdict",
+              ],
+              "verify": [
+                "upstream_test_failed",
+                "empty_verify_delegate",
+                "malformed_verify",
+                "bad_verify_verdict",
+              ],
+            },
+            "kinds": [
+              "ticket",
+              "prompt",
+            ],
+            "name": "backend",
+            "step_order": [
+              "refine",
+              "memory",
+              "analyze",
+              "plan",
+              "implement",
+              "test",
+              "verify",
+              "report",
+            ],
+          }
+        `);
     });
 });
