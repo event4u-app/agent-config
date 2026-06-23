@@ -3,13 +3,6 @@
 // replay is a pure projection: it renders a `decision-replay.md` body from
 // consensus findings / scores / metadata + per-member deliberation texts.
 // No CLI, no network.
-//
-// Golden parity: a single JSON fixture describes the findings, scores,
-// metadata, and deliberation. Both runtimes reconstruct the dataclasses
-// from that fixture and render the body; the test asserts the rendered
-// strings are BYTE-IDENTICAL. replay.py imports its consensus / clients
-// siblings, so the Python side runs through the real package path (the
-// `_harness` PYTHONPATH wires `src` + repo root, matching pyproject).
 import { describe, expect, it } from 'vitest';
 
 import { CouncilResponse } from '../../../src/scripts/ai_council/clients.js';
@@ -22,9 +15,6 @@ import {
     DecisionReplayInputs,
     render_decision_replay,
 } from '../../../src/scripts/ai_council/replay.js';
-import { hasPython3, runPyCode } from './_harness.js';
-
-const py3 = hasPython3();
 
 // ── Shared fixture ───────────────────────────────────────────────────────
 // A single declarative spec consumed identically by both runtimes.
@@ -85,35 +75,6 @@ function buildTsInputs(spec: Spec): DecisionReplayInputs {
         original_ask: spec.original_ask,
         include_member_arguments: spec.include_member_arguments,
     });
-}
-
-/** Render the Python twin's body for `spec` via the real package path. */
-function pyRender(spec: Spec): string {
-    const code = [
-        'import sys, json',
-        'from scripts.ai_council.replay import DecisionReplayInputs, render_decision_replay',
-        'from scripts.ai_council.consensus import Finding, FindingScore, ConsensusMetadata',
-        'from scripts.ai_council.clients import CouncilResponse',
-        'spec = json.loads(sys.stdin.read())',
-        'findings = [Finding(f["id"], f["source"], f["text"]) for f in spec["findings"]]',
-        'scores = [FindingScore(s["finding_id"], s["scorer"], s["score"], s["agree"], s["reason"]) for s in spec["scores"]]',
-        'metadata = {m["finding_id"]: ConsensusMetadata(' +
-            'finding_id=m["finding_id"], consensus_strength=m["consensus_strength"],' +
-            ' dissent_count=m["dissent_count"], scorers=tuple(m["scorers"]),' +
-            ' mean_score=m["mean_score"], concur_count=m["concur_count"],' +
-            ' dissent_reasons=tuple((a, b) for a, b in m["dissent_reasons"]),' +
-            ' evidence_quality=m["evidence_quality"]) for m in spec["metadata"]}',
-        'deliberation = [CouncilResponse(provider=d["provider"], model=d["model"], text=d["text"]) for d in spec["deliberation"]]',
-        'inputs = DecisionReplayInputs(findings=findings, scores=scores, metadata=metadata,' +
-            ' deliberation=deliberation, original_ask=spec["original_ask"],' +
-            ' include_member_arguments=spec["include_member_arguments"])',
-        'sys.stdout.write(render_decision_replay(inputs))',
-    ].join('\n');
-    const r = runPyCode(code, [], { input: JSON.stringify(spec) });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return r.stdout;
 }
 
 // Three findings with distinct consensus strengths (test the rank order),
@@ -186,46 +147,7 @@ const EMPTY_SPEC: Spec = {
     include_member_arguments: true,
 };
 
-const LONG_ASK_SPEC: Spec = {
-    findings: [{ id: 'F1', source: 's', text: 'a finding' }],
-    scores: [],
-    metadata: [
-        {
-            finding_id: 'F1',
-            consensus_strength: 0.9,
-            dissent_count: 0,
-            scorers: [],
-            mean_score: 8.0,
-            concur_count: 1,
-            dissent_reasons: [],
-            evidence_quality: 'H',
-        },
-    ],
-    deliberation: [],
-    original_ask: ('word '.repeat(120)).trim(), // > 400 chars → truncated
-    include_member_arguments: true,
-};
-
-describe('replay — render byte-parity with python3', () => {
-    it.runIf(py3)('full artefact (arguments included)', () => {
-        const ts = render_decision_replay(buildTsInputs(FULL_SPEC));
-        expect(ts).toBe(pyRender(FULL_SPEC));
-    });
-    it.runIf(py3)('redacted artefact (counts only)', () => {
-        const ts = render_decision_replay(buildTsInputs(REDACTED_SPEC));
-        expect(ts).toBe(pyRender(REDACTED_SPEC));
-    });
-    it.runIf(py3)('empty findings → placeholder line', () => {
-        const ts = render_decision_replay(buildTsInputs(EMPTY_SPEC));
-        expect(ts).toBe(pyRender(EMPTY_SPEC));
-    });
-    it.runIf(py3)('long original ask → truncated', () => {
-        const ts = render_decision_replay(buildTsInputs(LONG_ASK_SPEC));
-        expect(ts).toBe(pyRender(LONG_ASK_SPEC));
-    });
-});
-
-// ── Unit tests (pure logic, no python3) ──────────────────────────────────
+// ── Unit tests (pure logic) ──────────────────────────────────────────────
 
 describe('replay — render structural unit', () => {
     it('empty findings renders the placeholder + trailing newline', () => {

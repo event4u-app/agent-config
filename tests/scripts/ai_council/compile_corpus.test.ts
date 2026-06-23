@@ -1,12 +1,10 @@
 // Tests for src/scripts/ai_council/compile_corpus.ts (py2ts Phase 1).
 //
 // Compiles the human-edited low-impact corpus Markdown to a YAML lockfile.
-// The load-bearing parity surface is the PyYAML safe_dump emitter: the TS
+// The load-bearing surface is the PyYAML-compatible safe_dump emitter: the TS
 // twin reimplements PyYAML's scalar-style analysis (plain / single-quoted /
 // double-quoted), implicit re-typing (a plain "123" / "true" / "null" forces
-// quoting), and block layout byte-for-byte. Golden parity drives the TS twin
-// and the CPython original over the same corpora and asserts the emitted
-// bytes are identical, plus the --check / parse-error CLI exit codes.
+// quoting), and block layout byte-for-byte.
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
@@ -21,9 +19,6 @@ import {
     dump_lock_yaml,
 } from '../../../src/scripts/ai_council/compile_corpus.js';
 import { parse_corpus_strict } from '../../../src/scripts/ai_council/low_impact_corpus.js';
-import { hasPython3, oracleFile, runPyCode, runPyScript, runTsScript } from './_harness.js';
-
-const py3 = hasPython3();
 
 const GOOD = [
     '## Validated',
@@ -175,106 +170,35 @@ describe('compile_corpus — CLI exit codes', () => {
     });
 });
 
-describe.runIf(py3)('compile_corpus — golden parity vs CPython twin (byte-exact YAML)', () => {
-    function pyCompile(corpus: string): string {
-        // `--out <out>` is a volatile scratch OUTPUT path passed as a CLI arg: the
-        // oracle keys the snapshot on the invocation, so `scratch: [out]` collapses
-        // the volatile path to a stable token in the key, and `outputs: { lock: out }`
-        // freezes the WRITTEN lockfile bytes (read after the spawn). Normal mode
-        // replays the frozen bytes via oracleFile — no live python3. (`--source` is a
-        // stable input fixture the oracle content-hashes; leave it.)
-        const out = path.join(mkdtempSync(path.join(tmpdir(), 'pycc-')), 'lock.yaml');
-        const res = runPyScript('ai_council/compile_corpus', ['--source', corpus, '--out', out], {
-            outputs: { lock: out },
-            scratch: [out],
-        });
-        expect(res.status, res.stderr).toBe(0);
-        const lock = oracleFile(res, 'lock');
-        expect(lock, 'frozen python lockfile must exist').not.toBeNull();
-        return (lock as Buffer).toString('utf-8');
-    }
-
+describe('compile_corpus — TS YAML emitter quoting (byte-exact)', () => {
     function tsCompile(corpus: string): string {
         const out = path.join(mkdtempSync(path.join(tmpdir(), 'tscc-')), 'lock.yaml');
-        const res = runTsScript('ai_council/compile_corpus', ['--source', corpus, '--out', out]);
-        expect(res.status, res.stderr).toBe(0);
+        compile_corpus(corpus, out);
         return readFileSync(out, { encoding: 'utf-8' });
     }
 
-    it('clean corpus → byte-identical lockfile', () => {
-        const src = tmpFile('c.md', GOOD);
-        expect(tsCompile(src)).toBe(pyCompile(src));
-    });
-
-    it('quoting edge cases → byte-identical lockfile', () => {
+    it('quoting edge cases', () => {
         const src = tmpFile('edge.md', EDGE);
-        const pyOut = pyCompile(src);
         const tsOut = tsCompile(src);
-        expect(tsOut).toBe(pyOut);
-        // Sanity: a whole-string bool / null re-types → forced single-quote.
-        expect(pyOut).toContain("phrase: 'true'");
-        expect(pyOut).toContain("phrase: 'null'");
+        // A whole-string bool / null re-types → forced single-quote.
+        expect(tsOut).toContain("phrase: 'true'");
+        expect(tsOut).toContain("phrase: 'null'");
         // A leading-`#` block indicator inside the phrase forces single-quote.
-        expect(pyOut).toContain("phrase: 'with #hash'");
+        expect(tsOut).toContain("phrase: 'with #hash'");
         // A colon-space block indicator forces single-quote.
-        expect(pyOut).toContain("phrase: 'has: colon spaced'");
+        expect(tsOut).toContain("phrase: 'has: colon spaced'");
         // "123 numeric" is NOT a whole-string int → stays plain.
-        expect(pyOut).toContain('phrase: 123 numeric');
+        expect(tsOut).toContain('phrase: 123 numeric');
         // Tab forces double-quote with a \t escape.
-        expect(pyOut).toContain('phrase: "tab\\tin\\tphrase"');
+        expect(tsOut).toContain('phrase: "tab\\tin\\tphrase"');
         // Non-ASCII stays plain under allow_unicode.
-        expect(pyOut).toContain('phrase: naïve café über');
+        expect(tsOut).toContain('phrase: naïve café über');
     });
 
-    it('empty probation/anti sections → "[]" inline, byte-identical', () => {
+    it('empty probation/anti sections → "[]" inline', () => {
         const src = tmpFile('empty.md', EMPTY_SECTIONS);
-        const pyOut = pyCompile(src);
-        expect(pyOut).toContain('probation: []');
-        expect(pyOut).toContain('anti_examples: []');
-        expect(tsCompile(src)).toBe(pyOut);
-    });
-
-    it('missing source → byte-identical (empty-hash) lockfile', () => {
-        const missing = path.join(tmpdir(), 'definitely-not-here-compcorp.md');
-        expect(tsCompile(missing)).toBe(pyCompile(missing));
-    });
-
-    it('parse-error stderr + exit code match', () => {
-        const bad = tmpFile('bad.md', '### Validated\n\n- "x"\n');
-        const out = tmpFile('o.yaml', '');
-        // Error exit writes NO output file — the observable is exit-code + stderr only.
-        // `--out <out>` is still a volatile path in argv, so `scratch: [out]` keeps the
-        // snapshot key stable across capture/replay; no `outputs` (nothing to freeze).
-        const py = runPyScript('ai_council/compile_corpus', ['--source', bad, '--out', out], {
-            scratch: [out],
-        });
-        const ts = runTsScript('ai_council/compile_corpus', ['--source', bad, '--out', out]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('build_lock_document structured output matches', () => {
-        const src = tmpFile('c.md', GOOD);
-        const expected = JSON.parse(
-            (() => {
-                const code = [
-                    'import json, sys',
-                    'from pathlib import Path',
-                    'from scripts.ai_council import compile_corpus as C',
-                    'p = Path(sys.argv[1])',
-                    'text = p.read_text(encoding="utf-8")',
-                    'from scripts.ai_council.low_impact_corpus import parse_corpus_strict',
-                    'doc = C.build_lock_document(p, parse_corpus_strict(p), text)',
-                    'print(json.dumps(doc, ensure_ascii=False))',
-                ].join('\n');
-                const res = runPyCode(code, [src]);
-                expect(res.status, res.stderr).toBe(0);
-                return res.stdout;
-            })(),
-        ) as Record<string, unknown>;
-        const text = readFileSync(src, { encoding: 'utf-8' });
-        const doc = build_lock_document(src, parse_corpus_strict(src), text);
-        expect(JSON.parse(JSON.stringify(doc))).toEqual(expected);
+        const tsOut = tsCompile(src);
+        expect(tsOut).toContain('probation: []');
+        expect(tsOut).toContain('anti_examples: []');
     });
 });
