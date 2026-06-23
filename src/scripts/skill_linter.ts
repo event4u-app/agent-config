@@ -1407,6 +1407,7 @@ export function lint_skill(p: string, text: string): LintResult {
     const skillName = basename(p) === 'SKILL.md' ? parentName(p) : stem(p);
     if (skillName && !skillName.includes('-') && skillName.length >= 3) {
         const ALLOWED_BARE_NOUNS = new Set([
+            'brand',
             'database',
             'devcontainer',
             'docker',
@@ -1414,12 +1415,14 @@ export function lint_skill(p: string, text: string): LintResult {
             'flux',
             'forecasting',
             'grafana',
+            'iconography',
             'laravel',
             'livewire',
             'markitdown',
             'mcp',
             'openapi',
             'performance',
+            'premortem',
             'security',
             'terraform',
             'terragrunt',
