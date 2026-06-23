@@ -67,14 +67,20 @@ type Dict = Record<string, unknown>;
 interface ArmSpec {
     setting_sources: string | null;
     inject: string | null; // None | "rdp" | "placebo"
+    recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
+// `package-recursive` (ADR-106's D₂) reuses the real-plugin `package` config but
+// runs the recursion loop instead of a single --print. It only executes when
+// explicitly selected (`--arms package-recursive`); the four default arms are
+// untouched, so existing runs and their golden-parity outputs are unchanged.
 const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
     placebo: { setting_sources: 'project,local', inject: 'placebo' },
+    'package-recursive': { setting_sources: null, inject: null, recursive: true },
 };
 
 /**
@@ -165,10 +171,14 @@ interface RunOneOpts {
     timeout: number;
     placebo_chars: number;
     sp_dir: string;
+    max_depth?: number | null; // recursion arm only — hard cap on correction rounds (default 1)
 }
 
 export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const spec = ARMS[arm] as ArmSpec;
+    if (spec.recursive) {
+        return run_one_recursive(task, opts);
+    }
     const [clone, fixture] = reset_fixture(task);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let sp_file: string | null = null;
@@ -195,6 +205,107 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         discipline_pass: score.discipline_pass,
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
+    };
+}
+
+export interface RecursiveAttempt {
+    run: Dict;
+    score: scoring.ScoreResultV2;
+}
+
+/**
+ * ADR-106 D₂ arm — depth-bounded recursive self-verification.
+ *
+ * Loop: attempt → critic verdict → conditional re-attempt, depth = hard compute
+ * cap. The critic is the DETERMINISTIC v2 scorer (accept iff the attempt is both
+ * capability- AND discipline-passing) — cheapest critic, no extra model call,
+ * fully testable. A model-based / cross-vendor critic is a later option (see
+ * road-to-recursive-verification.md Phase 4).
+ *
+ * `attemptFn(depth, priorVerdict)` is an injectable seam: the default runs the
+ * real `package`-config agent (prior verdict threaded as the system prompt on
+ * re-attempts) and scores it; tests inject a scripted attemptFn to exercise the
+ * loop control flow with NO live model call.
+ *
+ * Verifies the loop's CONTROL FLOW (stop conditions, depth cap, verdict
+ * threading). Whether recursion actually lifts capability/discipline is the
+ * empirical question the live `bench:ab` run answers — not asserted here.
+ */
+export function run_one_recursive(
+    task: Dict,
+    opts: RunOneOpts,
+    attemptFn?: (depth: number, priorVerdict: string | null) => RecursiveAttempt,
+): Dict {
+    const maxDepth = Math.max(0, opts.max_depth ?? 1);
+    const makeAttempt =
+        attemptFn ??
+        ((depth: number, priorVerdict: string | null): RecursiveAttempt => {
+            const [clone, fixture] = reset_fixture(task);
+            let sp_file: string | null = null;
+            if (priorVerdict) {
+                sp_file = path.join(opts.sp_dir, `.sp-recursive-${depth}.txt`);
+                fs.writeFileSync(sp_file, priorVerdict, { encoding: 'utf-8' });
+            }
+            const run = v1.run_live(task, clone, opts.timeout, {
+                sysprompt_file: sp_file,
+                setting_sources: (ARMS['package'] as ArmSpec).setting_sources,
+                max_budget: opts.max_budget,
+                model: opts.model,
+            }) as unknown as Dict;
+            const score = scoring.score_task_v2(task, {
+                fixture_root: fixture,
+                clone_root: clone,
+                transcript: String(run['transcript'] ?? ''),
+            });
+            return { run, score };
+        });
+
+    const accepts = (s: scoring.ScoreResultV2): boolean => Boolean(s.capability_pass) && Boolean(s.discipline_pass);
+
+    let depth = 0;
+    let prior: RecursiveAttempt | null = null;
+    let attempt = makeAttempt(0, null);
+    let stop_reason: string;
+    let last_verdict_len = 0;
+    for (;;) {
+        const s = attempt.score;
+        if (accepts(s)) {
+            stop_reason = 'accept';
+            break;
+        }
+        if (depth >= maxDepth) {
+            stop_reason = 'max_depth';
+            break;
+        }
+        if (
+            prior !== null &&
+            s.discipline_score === prior.score.discipline_score &&
+            Boolean(s.capability_pass) === Boolean(prior.score.capability_pass)
+        ) {
+            stop_reason = 'no_progress';
+            break;
+        }
+        depth += 1;
+        const verdict =
+            `Prior attempt (depth ${depth - 1}) did not pass: ` +
+            `capability=${s.capability_pass}, discipline=${s.discipline_score}. ` +
+            `Revise to satisfy the unmet acceptance criteria; change only what the task requires.`;
+        last_verdict_len = verdict.length;
+        prior = attempt;
+        attempt = makeAttempt(depth, verdict);
+    }
+
+    const { run, score } = attempt;
+    return {
+        errored: _pyBool(run['errored']),
+        reason: run['reason'] ?? null,
+        capability_pass: score.capability_pass,
+        discipline_score: new PyFloat(score.discipline_score),
+        discipline_pass: score.discipline_pass,
+        metrics: trajectory_metrics(run, score),
+        injected_chars: last_verdict_len,
+        depth_reached: depth,
+        stop_reason,
     };
 }
 
