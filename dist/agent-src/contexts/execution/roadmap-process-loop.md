@@ -259,9 +259,14 @@ Loop MUST:
    On picks 3 / 4 / 5 → apply change, re-evaluate decision table,
    archive when gate clears.
 
-`count_deferred == 0` → archive proceeds via
-[`roadmap-management`](../../skills/roadmap-management/SKILL.md) skill
-(`git mv`, regen).
+`count_deferred == 0` → archive. **Primary:** `archive_completed_roadmaps --all`
+— untracked-safe (`git mv`, or plain `mv` in a pre-first-commit / untracked
+consumer), rewrites inbound refs (index when tracked, filesystem when not),
+regens dashboard; PR-independent (gap B). **Fallback (script not vendored):**
+emit a one-line vendor instruction (`agents:init`), then the manual procedure in
+[`roadmap-management`](../../skills/roadmap-management/SKILL.md) (mkdir
+`archive/`, `mv`, ref-rewrite, regen). NEVER silently `git mv` (fails on
+untracked, leaves a completed roadmap rotting).
 
 ## Scope deltas — what each wrapper binds
 

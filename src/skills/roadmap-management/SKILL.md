@@ -43,6 +43,27 @@ rule. Batching multiple edits in one response is fine — one final
 regeneration before replying is enough. But the response must not end
 without it.
 
+### Archival — preferred sweep, untracked-safe manual fallback
+
+The robust path is the `archive_completed_roadmaps --all` sweep: it detects a
+completed roadmap (`count_open == 0`, `count_deferred == 0`), moves it to
+`agents/roadmaps/archive/` — `git mv` in a tracked repo, a plain `mv` in a
+pre-first-commit / untracked one — rewrites inbound refs, and regenerates the
+dashboard. It is **PR-independent**: it does not need `/create-pr` to have run.
+
+**Manual fallback — script-less consumer** (the sweep is not vendored). Do it by
+hand, in the same response, and never leave a 100 %-complete roadmap in the
+active tree because `git mv` failed:
+
+1. `mkdir -p agents/roadmaps/archive`.
+2. Move the file — `git mv agents/roadmaps/<x>.md agents/roadmaps/archive/<x>.md`
+   in a tracked repo; a plain `mv` if the file is untracked or the repo has no
+   commits (`git mv` errors there).
+3. Rewrite inbound full-path references `agents/roadmaps/<x>.md` →
+   `agents/roadmaps/archive/<x>.md` across the tree — on the working tree, not
+   just the git index, when untracked.
+4. Regenerate `agents/roadmaps-progress.md`.
+
 ## Procedure: Manage a roadmap
 
 1. **Identify need** — Is this a multi-step change that spans sessions or agents?

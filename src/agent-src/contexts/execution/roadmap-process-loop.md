@@ -260,9 +260,18 @@ The loop MUST:
    On picks 3 / 4 / 5 → apply the change, re-evaluate the decision
    table, archive when the gate clears.
 
-`count_deferred == 0` → archive proceeds via the
-[`roadmap-management`](../../skills/roadmap-management/SKILL.md) skill
-(`git mv`, regen).
+`count_deferred == 0` → archive. **Primary path:** run the
+`archive_completed_roadmaps --all` sweep — it is untracked-safe (`git mv`,
+or a plain `mv` in a pre-first-commit / untracked consumer), rewrites inbound
+refs (on the index when tracked, on the filesystem when not), and regenerates
+the dashboard. This entry point is **PR-independent** (gap B): it does not need
+`/create-pr` to have run. **Fallback only when that script is not vendored** in
+the consumer: emit a one-line instruction to vendor it (run `agents:init`),
+then apply the manual procedure in
+[`roadmap-management`](../../skills/roadmap-management/SKILL.md) (mkdir
+`archive/`, `mv`, inbound-ref rewrite, dashboard regen). NEVER silently
+delegate to a bare `git mv` that fails on untracked files and leaves a
+completed roadmap rotting in the active tree.
 
 ## Scope deltas — what each wrapper binds
 

@@ -198,3 +198,64 @@ describe.runIf(ready)('archive_completed_roadmaps — golden parity (python3 vs 
         expect(ts.stdout.includes('usage: archive_completed_roadmaps.py')).toBe(true);
     });
 });
+
+// Untracked-safe archival (road-to-roadmap-archival-robustness, gap A).
+// TS-only enhancement (the Python twin was deleted in ADR-200), so this is
+// driven against the `.ts` engine alone — no python parity. A pre-first-commit
+// / untracked consumer (the canonical capisco repro: zero commits, everything
+// untracked) must still get a completed roadmap archived, with inbound refs
+// rewritten on the filesystem and the dashboard regenerated, and WITHOUT a
+// `git mv failed` / `could not archive` warning on stderr.
+describe.runIf(hasGit())('archive_completed_roadmaps — untracked-safe (TS-only)', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'acr-untracked-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    /** A git repo with files written but NEVER committed (everything untracked). */
+    function initUncommitted(dir: string, files: Record<string, string>): void {
+        fs.mkdirSync(dir, { recursive: true });
+        git(dir, 'init', '-q');
+        git(dir, 'config', 'user.email', 'untracked@test.local');
+        git(dir, 'config', 'user.name', 'untracked');
+        for (const [rel, body] of Object.entries(files)) {
+            const fp = path.join(dir, rel);
+            fs.mkdirSync(path.dirname(fp), { recursive: true });
+            fs.writeFileSync(fp, body, 'utf-8');
+        }
+        // deliberately NO `git add` / `git commit` — the whole point.
+    }
+
+    it('--all on a no-commit repo: archives via plain-mv fallback, rewrites refs on disk, exit 0, no warning', () => {
+        const repo = path.join(tmp, 'untracked');
+        initUncommitted(repo, {
+            'agents/roadmaps/road-to-complete.md': COMPLETE,
+            'agents/roadmaps/road-to-open.md': OPEN,
+            'docs/some-adr.md': 'See agents/roadmaps/road-to-complete.md for detail.\n',
+        });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.status, 'exit').toBe(0);
+        // The untracked fallback must NOT emit the failure warning.
+        expect(ts.stderr).not.toMatch(/git mv failed|could not archive/);
+        expect(ts.stdout, 'stdout').toMatch(/✅\s+Archived: agents\/roadmaps\/road-to-complete\.md/);
+
+        // Complete roadmap relocated to archive/ (plain rename); open one stayed.
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-complete.md'))).toBe(true);
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/road-to-complete.md'))).toBe(false);
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/road-to-open.md'))).toBe(true);
+
+        // Inbound ref rewritten on the filesystem (git grep would have missed it
+        // — the file is untracked — so this proves the fs-walk fallback ran).
+        const adr = fs.readFileSync(path.join(repo, 'docs/some-adr.md'), 'utf-8');
+        expect(adr.includes('agents/roadmaps/archive/road-to-complete.md')).toBe(true);
+        expect(adr.includes('agents/roadmaps/road-to-complete.md for')).toBe(false);
+
+        // Dashboard regenerated even in the untracked tree.
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps-progress.md'))).toBe(true);
+    });
+});
