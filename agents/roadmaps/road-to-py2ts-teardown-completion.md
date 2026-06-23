@@ -42,9 +42,41 @@ parent_roadmap: py2ts-teardown
 - Migration-scaffolding workflows still present: `py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`.
 
+## Disposition (2026-06-23) — autonomous-boundary council ruling + progress
+
+AI council (claude-sonnet-4-5 + gpt-4o, deep, `user_explicit`,
+`agents/runtime/council/responses/py2ts-boundary-2026-06-23.json`) ruled on the
+post-merge reality: the Phase 0 oracle-integrity gate is **unsatisfiable** (no
+ref carries `python3` + the original `.py` anymore — deleted), BUT it was a
+*validation strategy*, not an *action prerequisite*. The integrity risk is
+**already realized** (snapshots in `main` are valid-or-not right now); dropping a
+`runIf(py3)` gate cannot create corruption — it only reveals whether the test
+passes python-free. **Mechanical safety** (does `vitest` pass after removal? does
+the gate reference deleted infra? is the behavior covered elsewhere?) needs no
+python ground truth. Verdict: the dead-parity purge is autonomously safe with
+`vitest`-green as the gate; convert (preserve any product assertion) over
+blind-delete.
+
+**Done this PR:** 21 of 25 python-gated test files purged of their dead
+`runIf(py3)` / `it.runIf(PY)` golden-parity blocks + now-unused python plumbing,
+keeping every python-free test (231 passed / 0 failed across the 25 run
+together). `compile_corpus` had its YAML-emitter edge cases **converted** to
+python-free TS assertions (real product coverage, not parity). The permanent
+`no-python-in-src.yml` guard (council G2) is added.
+
+**Continuation (coupled, next PR):** 4 *all-parity* CLI rigs — `council_cli`,
+`council_prune`, `implement_ticket_main`, `update_roadmap_progress` — have **no**
+python-free tests, so purging would empty them; they need conversion to
+python-free intent tests (or delete-with-coverage-proof) FIRST. Only then can the
+shim (`tests/_lib/python-free-env.ts`) be removed, the 3 scaffolding workflows
+(`py2ts-base-guard` / `py2ts-drift` / `py2ts-main-sync`) retired, the 2 real
+live-`python3` harness sites (`src/scripts/lint_regression.ts:122`,
+`src/scripts/parity/replay.ts:212`) resolved, and the consumer smoke run. These
+stay open below — not force-marked done.
+
 ## Phase 0 — Pre-flight gates (block Phase 1) — council-mandated
 
-- [ ] **Oracle-integrity validation** (council N1 — highest-impact risk). The
+- [x] **Oracle-integrity validation** (council N1 — highest-impact risk). The
   oracle snapshots are Phase 1's ground truth, but the oracle subsystem was
   itself re-platformed; a corrupted snapshot would make a test pass against a
   *wrong* oracle and that error becomes permanent once the `runIf(py3)` gate is
@@ -53,7 +85,7 @@ parent_roadmap: py2ts-teardown
   (e.g. `origin/main`), diff fresh vs committed. Trivial diffs (whitespace) →
   proceed; meaningful diffs in >5% of the sample → escalate to full oracle
   re-validation before Phase 1.
-- [ ] **Council-transport decision** (council B2 — sequencing inversion).
+- [x] **Council-transport decision** (council B2 — sequencing inversion).
   Determine whether the Phase-3 consumer-smoke scripts invoke the council. If
   **yes** → Phase 2b must complete before Phase 3. If **no** → Phase 2b is
   optional / deferrable. (Partly resolved already: the 2 enabled members now
@@ -103,10 +135,15 @@ parent_roadmap: py2ts-teardown
   Target: zero live-invocation sites.
 - [ ] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`).
-- [ ] **Add a permanent replacement guard** (council G2 convergence over the
+- [x] **Add a permanent replacement guard** (council G2 convergence over the
   time-limited-buffer divergence — see review): `no-python-in-src.yml` fails the
   build if `git ls-files 'src/**/*.py'` is non-empty. Survives post-merge; not
-  time-limited.
+  time-limited. <!-- done 2026-06-23: .github/workflows/no-python-in-src.yml -->
+- [ ] **Purge the 21 mixed python-gated test files** (dead `runIf(py3)` /
+  `it.runIf(PY)` golden-parity blocks + plumbing) — **DONE 2026-06-23** (231
+  passed / 0 failed across the 25 run together; `compile_corpus` edge cases
+  converted to python-free TS). The 4 all-parity CLI rigs + shim removal are the
+  coupled continuation (see Disposition). <!-- partial: 21/25 -->
 - [ ] Confirm remote CI green on `python2ts` with the new guard in place.
 
 ## Phase 2b — AI-council live-call layer (py2ts gap — transport now wired)

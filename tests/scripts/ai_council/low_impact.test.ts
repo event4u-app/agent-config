@@ -16,26 +16,6 @@
 // transport. Members are duck-typed `MemberConfig`-shaped objects; the config
 // is a duck-typed `LowImpactFastPathConfig`-shaped object (only max_members /
 // max_tokens / max_cost_usd are read by the planner).
-//
-// Golden parity drives the LIVE Python twin via a `python3 -c` importlib
-// direct-file load. low_impact.py imports its siblings at module top
-// (`from scripts.ai_council...`), so the loader runs with PYTHONPATH=src:.
-// (mirroring pyproject `pythonpath = ["src", "."]`); the siblings lazy-import
-// their SDKs inside `ask()`, so no network at import time.
-//
-// Normalisation (ADR-094):
-// - The clock is injected (`now=...`) on both sides → the ISO8601 timestamp in
-//   the session-log line is deterministic; no timestamp normalisation needed.
-// - `latency_ms` never reaches a compared surface (markers + log line don't
-//   carry it).
-// - One intentional divergence (cited at its assertion): the `client raised:
-//   <repr>` member-error string differs between Python `RuntimeError('boom')`
-//   and JS `Error('boom')`. It is NOT a marker surface — the aborted marker
-//   carries only `members tried: <names>`, so every compared marker stays
-//   byte-identical. The error-string field itself is asserted structurally
-//   (prefix + member), not byte-compared, for that one path.
-import { spawnSync } from 'node:child_process';
-
 import { describe, expect, it } from 'vitest';
 
 import { CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
@@ -51,62 +31,6 @@ import {
     resolve_low_impact,
     select_fast_path_members,
 } from '../../../src/scripts/ai_council/low_impact.js';
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-// ── Python driver: importlib direct-file load + duck-typed mock member ────
-//
-// `Mem` is a MemberConfig-shaped duck; `Cfg` a LowImpactFastPathConfig-shaped
-// duck; `Mock` an ExternalAIClient-shaped duck whose ask() returns a canned
-// response. A fixed clock is passed so the session-log timestamp is stable.
-const PY_PREAMBLE = `
-import importlib.util, sys, json
-from datetime import datetime, timezone
-_spec = importlib.util.spec_from_file_location("li", "src/scripts/ai_council/low_impact.py")
-li = importlib.util.module_from_spec(_spec)
-sys.modules["li"] = li
-_spec.loader.exec_module(li)
-from scripts.ai_council.clients import CouncilResponse
-
-class Mem:
-    def __init__(self, name, enabled=True, pli=True):
-        self.name = name; self.enabled = enabled; self.participate_low_impact = pli
-        self.model = "m"; self.api_key_ref = None
-
-class Cfg:
-    def __init__(self, max_members=2, max_tokens=400, max_cost_usd=0.05):
-        self.max_members = max_members; self.max_tokens = max_tokens
-        self.max_cost_usd = max_cost_usd
-
-class Mock:
-    def __init__(self, name, model="m", text="", err=None, it=10, ot=20, raises=False):
-        self.name = name; self.model = model; self._t = text; self._e = err
-        self._it = it; self._ot = ot; self._raises = raises
-        self.billable = True; self.transport = "api"; self.subscription_label = ""
-    def ask(self, sp, up, max_tokens=None):
-        if self._raises:
-            raise RuntimeError("boom")
-        return CouncilResponse(provider=self.name, model=self.model, text=self._t,
-                               error=self._e, input_tokens=self._it, output_tokens=self._ot)
-
-FIXED = datetime(2026, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
-CLOCK = lambda: FIXED
-`;
-
-function py(snippet: string): string {
-    const code = `${PY_PREAMBLE}\n${snippet}`;
-    const r = spawnSync('python3', ['-c', code], {
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: ['src', '.'].join(':') },
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return r.stdout;
-}
 
 // ── TS stubs (mirror the Python ducks) ───────────────────────────────────
 
@@ -194,19 +118,6 @@ describe('low_impact — fast-path markers (byte-for-byte)', () => {
         expect(res.session_log_line).toBe('');
     });
 
-    it.runIf(py3)('UNAVAILABLE marker matches python3', () => {
-        const plan = plan_fast_path({}, cfg());
-        const res = resolve_low_impact('q', plan, {});
-        const out = py(
-            'plan = li.plan_fast_path({}, Cfg())\n' +
-                'r = li.resolve_low_impact("q", plan, {})\n' +
-                'print(json.dumps({"status": r.status, "marker": r.marker, "log": r.session_log_line}))\n',
-        );
-        expect({ status: res.status, marker: res.marker, log: res.session_log_line }).toEqual(
-            JSON.parse(out),
-        );
-    });
-
     it('RESOLVED marker — single member', () => {
         const plan = plan_fast_path({ anthropic: mem('anthropic') }, cfg(1));
         const clients = { anthropic: new Mock('anthropic', { text: 'use a DTO\nclearer contract' }) };
@@ -256,73 +167,6 @@ describe('low_impact — fast-path markers (byte-for-byte)', () => {
             '> Low-impact council aborted (all members failed) — escalating to user: members tried: anthropic, openai.',
         );
     });
-
-    it.runIf(py3)('all four markers + answer + log match python3', () => {
-        // Drive resolved(single), resolved(consensus), split, aborted on both
-        // sides with the SAME stubbed transport + fixed clock.
-        const tsCases: unknown[] = [];
-
-        // resolved single
-        {
-            const plan = plan_fast_path({ a: mem('a') }, cfg(1));
-            const r = resolve_low_impact('q', plan, { a: new Mock('a', { text: 'ans\nwhy' }) }, null, CLOCK);
-            tsCases.push({ status: r.status, marker: r.marker, answer: r.answer, log: r.session_log_line });
-        }
-        // resolved consensus
-        {
-            const plan = plan_fast_path({ a: mem('a'), b: mem('b') }, cfg(2));
-            const r = resolve_low_impact(
-                'q',
-                plan,
-                { a: new Mock('a', { text: 'Yes.\nx' }), b: new Mock('b', { text: 'yes\ny' }) },
-                null,
-                CLOCK,
-            );
-            tsCases.push({ status: r.status, marker: r.marker, answer: r.answer, log: r.session_log_line });
-        }
-        // split
-        {
-            const plan = plan_fast_path({ a: mem('a'), b: mem('b') }, cfg(2));
-            const r = resolve_low_impact(
-                'q',
-                plan,
-                { a: new Mock('a', { text: 'yes' }), b: new Mock('b', { text: 'no' }) },
-                null,
-                CLOCK,
-            );
-            tsCases.push({ status: r.status, marker: r.marker, answer: r.answer, log: r.session_log_line });
-        }
-        // aborted
-        {
-            const plan = plan_fast_path({ a: mem('a'), b: mem('b') }, cfg(2));
-            const r = resolve_low_impact(
-                'q',
-                plan,
-                { a: new Mock('a', { error: 'rate limited' }), b: new Mock('b', { text: '' }) },
-                null,
-                CLOCK,
-            );
-            tsCases.push({ status: r.status, marker: r.marker, answer: r.answer, log: r.session_log_line });
-        }
-
-        const out = py(
-            'cases = []\n' +
-                'plan = li.plan_fast_path({"a": Mem("a")}, Cfg(max_members=1))\n' +
-                'r = li.resolve_low_impact("q", plan, {"a": Mock("a", text="ans\\nwhy")}, now=CLOCK)\n' +
-                'cases.append({"status": r.status, "marker": r.marker, "answer": r.answer, "log": r.session_log_line})\n' +
-                'plan = li.plan_fast_path({"a": Mem("a"), "b": Mem("b")}, Cfg(max_members=2))\n' +
-                'r = li.resolve_low_impact("q", plan, {"a": Mock("a", text="Yes.\\nx"), "b": Mock("b", text="yes\\ny")}, now=CLOCK)\n' +
-                'cases.append({"status": r.status, "marker": r.marker, "answer": r.answer, "log": r.session_log_line})\n' +
-                'plan = li.plan_fast_path({"a": Mem("a"), "b": Mem("b")}, Cfg(max_members=2))\n' +
-                'r = li.resolve_low_impact("q", plan, {"a": Mock("a", text="yes"), "b": Mock("b", text="no")}, now=CLOCK)\n' +
-                'cases.append({"status": r.status, "marker": r.marker, "answer": r.answer, "log": r.session_log_line})\n' +
-                'plan = li.plan_fast_path({"a": Mem("a"), "b": Mem("b")}, Cfg(max_members=2))\n' +
-                'r = li.resolve_low_impact("q", plan, {"a": Mock("a", err="rate limited"), "b": Mock("b", text="")}, now=CLOCK)\n' +
-                'cases.append({"status": r.status, "marker": r.marker, "answer": r.answer, "log": r.session_log_line})\n' +
-                'print(json.dumps(cases))\n',
-        );
-        expect(tsCases).toEqual(JSON.parse(out));
-    });
 });
 
 // ───────────────────────────────────────────────────────────────────────
@@ -359,25 +203,6 @@ describe('low_impact — plan_fast_path / select / budget', () => {
         expect(none.marker).toBe('');
         expect(none.reason).toContain('participate_low_impact: true');
     });
-
-    it.runIf(py3)('plan marker + budget fields match python3', () => {
-        const plan = plan_fast_path({ openai: mem('openai'), anthropic: mem('anthropic') }, cfg(1, 250, 0.123));
-        const tsView = {
-            marker: plan.marker,
-            members: plan.members.map((m) => m.name),
-            in: plan.budget.max_input_tokens,
-            out: plan.budget.max_output_tokens,
-            calls: plan.budget.max_calls,
-            usd: plan.budget.max_total_usd,
-        };
-        const out = py(
-            'plan = li.plan_fast_path({"openai": Mem("openai"), "anthropic": Mem("anthropic")}, Cfg(max_members=1, max_tokens=250, max_cost_usd=0.123))\n' +
-                'print(json.dumps({"marker": plan.marker, "members": [m.name for m in plan.members],' +
-                ' "in": plan.budget.max_input_tokens, "out": plan.budget.max_output_tokens,' +
-                ' "calls": plan.budget.max_calls, "usd": plan.budget.max_total_usd}))\n',
-        );
-        expect(tsView).toEqual(JSON.parse(out));
-    });
 });
 
 // ───────────────────────────────────────────────────────────────────────
@@ -400,21 +225,6 @@ describe('low_impact — cost cap', () => {
         expect(res.marker).toBe(
             '> Low-impact council aborted (all members failed) — escalating to user: members tried: a.',
         );
-    });
-
-    it.runIf(py3)('cost-cap abort matches python3', () => {
-        const plan = plan_fast_path({ a: mem('a') }, cfg(1, 400, 0.01));
-        const res = resolve_low_impact('q', plan, { a: new Mock('a', { text: 'x' }) }, priceTable, CLOCK);
-        const out = py(
-            'class PT:\n' +
-                '    def lookup(self, p, m):\n' +
-                '        class P: input_per_1m_usd = 1000000; output_per_1m_usd = 1000000\n' +
-                '        return P()\n' +
-                'plan = li.plan_fast_path({"a": Mem("a")}, Cfg(max_members=1, max_tokens=400, max_cost_usd=0.01))\n' +
-                'r = li.resolve_low_impact("q", plan, {"a": Mock("a", text="x")}, price_table=PT(), now=CLOCK)\n' +
-                'print(json.dumps({"status": r.status, "marker": r.marker}))\n',
-        );
-        expect({ status: res.status, marker: res.marker }).toEqual(JSON.parse(out));
     });
 });
 
@@ -493,25 +303,6 @@ describe('low_impact — parse_low_impact_log / render_low_impact_stats', () => 
             '# Low-impact fast-path · session summary\n\n- attempts: 0\n- status: (none)\n- total cost: $0.0000\n',
         );
     });
-
-    it.runIf(py3)('parse + render match python3', () => {
-        const stats = parse_low_impact_log(LOG);
-        const tsView = {
-            total: stats.total,
-            by_status: Object.fromEntries(stats.by_status),
-            by_member: Object.fromEntries(stats.by_member),
-            cost: stats.total_cost_usd,
-            rendered: render_low_impact_stats(stats),
-        };
-        const out = py(
-            `log = ${JSON.stringify(LOG)}\n` +
-                's = li.parse_low_impact_log(log)\n' +
-                'print(json.dumps({"total": s.total, "by_status": s.by_status,' +
-                ' "by_member": s.by_member, "cost": s.total_cost_usd,' +
-                ' "rendered": li.render_low_impact_stats(s)}))\n',
-        );
-        expect(tsView).toEqual(JSON.parse(out));
-    });
 });
 
 // ───────────────────────────────────────────────────────────────────────
@@ -585,44 +376,6 @@ describe('low_impact — classify_impact_with_corpus_fuzzy', () => {
             );
             expect(v.impact_class).toBe('low_impact');
             expect(v.category).toBe('corpus_validated_fuzzy');
-        } finally {
-            rmSync(dir, { recursive: true, force: true });
-        }
-    });
-
-    it.runIf(py3)('fuzzy classifier matches python3 across cases', async () => {
-        const { dir, file } = writeCorpus(
-            ['use composition over inheritance here', 'prefer a value object for money'],
-            ['drop the production database now'],
-        );
-        try {
-            const cases: Array<{ q: string; th: number }> = [
-                { q: 'use composition over inheritance here.', th: 0.9 },
-                { q: 'totally unrelated sentence about widgets', th: 0.9 },
-                { q: 'prefer a value object for money', th: 0.92 },
-                { q: '', th: 0.9 },
-            ];
-            const tsView = [];
-            for (const c of cases) {
-                const v = await classify_impact_with_corpus_fuzzy(c.q, [file], { threshold: c.th });
-                tsView.push({
-                    cls: v.impact_class,
-                    conf: v.confidence,
-                    rationale: v.rationale,
-                    category: v.category,
-                });
-            }
-            const out = py(
-                `casesj = ${JSON.stringify(cases)}\n` +
-                    `corpus = ${JSON.stringify(file)}\n` +
-                    'res = []\n' +
-                    'for c in casesj:\n' +
-                    '    v = li.classify_impact_with_corpus_fuzzy(c["q"], (corpus,), threshold=c["th"])\n' +
-                    '    res.append({"cls": v.impact_class, "conf": v.confidence,' +
-                    ' "rationale": v.rationale, "category": v.category})\n' +
-                    'print(json.dumps(res))\n',
-            );
-            expect(tsView).toEqual(JSON.parse(out));
         } finally {
             rmSync(dir, { recursive: true, force: true });
         }

@@ -1,12 +1,10 @@
 // Tests for src/scripts/ai_council/shadow_dispatch.ts (py2ts Phase 1).
 //
-// Shadow-mode dispatch for low-impact solo decisions. Golden parity against
-// the CPython twin covers: the seeded-rng Bernoulli sampler (PyRandom mirrors
-// CPython's Mersenne-Twister `random()`), the JSONL row format (default
-// json.dumps separators + ensure_ascii=True), the privacy-floor drop, the
-// rolling-window disagreement / escalation rates over a fixed log, the SLO
-// status thresholds, and the banner string (·, en-dash, em-dash literals +
-// the `{:.1f}` banker's-rounding format).
+// Shadow-mode dispatch for low-impact solo decisions: the seeded-rng Bernoulli
+// sampler (PyRandom mirrors CPython's Mersenne-Twister `random()`), the JSONL
+// row format, the privacy-floor drop, the rolling-window disagreement /
+// escalation rates over a fixed log, the SLO status thresholds, and the banner
+// string.
 import { mkdtempSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
@@ -24,9 +22,6 @@ import {
     slo_banner,
     slo_status,
 } from '../../../src/scripts/ai_council/shadow_dispatch.js';
-import { hasPython3, oracleFile, runPyCode } from './_harness.js';
-
-const py3 = hasPython3();
 
 // A fixed log with three in-window rows (2/3 disagree, 1/3 escalated), one
 // out-of-window row, one garbage line, and one unparsable-timestamp row.
@@ -122,126 +117,5 @@ describe('shadow_dispatch — pure functions', () => {
         expect(row.solo_verdict).toBe('yes');
         expect(row.escalated).toBe(true);
         expect(row.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/u);
-    });
-});
-
-describe.runIf(py3)('shadow_dispatch — golden parity vs CPython twin', () => {
-    it('should_shadow seeded-rng sequence matches CPython', () => {
-        const code = [
-            'import json, random, sys',
-            'from scripts.ai_council.shadow_dispatch import should_shadow',
-            'r = random.Random(int(sys.argv[1]))',
-            'print(json.dumps([should_shadow(0.3, rng=r) for _ in range(8)]))',
-        ].join('\n');
-        const res = runPyCode(code, ['42']);
-        expect(res.status, res.stderr).toBe(0);
-        const expected = JSON.parse(res.stdout) as boolean[];
-        const r = new PyRandom(42);
-        const out: boolean[] = [];
-        for (let i = 0; i < 8; i += 1) {
-            out.push(should_shadow(0.3, { rng: r }));
-        }
-        expect(out).toEqual(expected);
-    });
-
-    it('compute_* + slo_banner match over the fixed log', () => {
-        const log = tmpFile('s.jsonl', LOG_ROWS);
-        const code = [
-            'import json, sys',
-            'from datetime import datetime, timezone',
-            'from pathlib import Path',
-            'from scripts.ai_council import shadow_dispatch as S',
-            'now = datetime(2026, 6, 14, 0, 0, 0, tzinfo=timezone.utc)',
-            'lp = Path(sys.argv[1])',
-            'dr, dn = S.compute_disagreement_rate(lp, window_days=7, now=now)',
-            'er, en = S.compute_escalation_rate(lp, window_days=7, now=now)',
-            'print(json.dumps({',
-            '  "dr": dr, "dn": dn, "er": er, "en": en,',
-            '  "ok": S.slo_banner(0.0333, 30),',
-            '  "warn": S.slo_banner(0.06, 50, escalation_rate=0.025),',
-            '  "breach": S.slo_banner(0.095, 100),',
-            '  "round_half_even": [S.slo_banner(0.025, 40), S.slo_banner(0.035, 40)],',
-            '}, ensure_ascii=False))',
-        ].join('\n');
-        const res = runPyCode(code, [log]);
-        expect(res.status, res.stderr).toBe(0);
-        const exp = JSON.parse(res.stdout) as Record<string, unknown>;
-
-        const [dr, dn] = compute_disagreement_rate(log, { windowDays: 7, now: new Date(NOW_MS) });
-        const [er, en] = compute_escalation_rate(log, { windowDays: 7, now: new Date(NOW_MS) });
-        expect(dr).toBe(exp['dr']);
-        expect(dn).toBe(exp['dn']);
-        expect(er).toBe(exp['er']);
-        expect(en).toBe(exp['en']);
-        expect(slo_banner(0.0333, 30)).toBe(exp['ok']);
-        expect(slo_banner(0.06, 50, { escalationRate: 0.025 })).toBe(exp['warn']);
-        expect(slo_banner(0.095, 100)).toBe(exp['breach']);
-        expect([slo_banner(0.025, 40), slo_banner(0.035, 40)]).toEqual(exp['round_half_even']);
-    });
-
-    it('record_shadow_decision JSONL row matches (timestamp normalised)', () => {
-        const tsLog = tmpFile('ts.jsonl', '');
-        unlinkSync(tsLog);
-        record_shadow_decision(tsLog, {
-            query: 'café query with emoji 😀 and ports',
-            soloVerdict: 'yes',
-            fullVerdict: 'no',
-            escalated: true,
-            escalationReason: 'low-conf',
-        });
-        const tsRow = readFileSync(tsLog, { encoding: 'utf-8' }).replace(
-            /"timestamp": "[^"]+"/u,
-            '"timestamp": "<TS>"',
-        );
-
-        // Oracle v3 — the observable python artefact is the WRITTEN LOG FILE,
-        // not stdout. The log path is baked into the code body (not passed as
-        // argv): a volatile path passed as an ARG keys on the file's
-        // post-write contents, which embed a live timestamp → the snapshot key
-        // drifts on every capture. Baking it inline collapses the quoted path
-        // to `<abspath>` (stableInlineKeyMaterial), so the key stays stable.
-        const pyLog = tmpFile('py.jsonl', '');
-        const code = [
-            'from pathlib import Path',
-            'from scripts.ai_council.shadow_dispatch import record_shadow_decision',
-            `lp = Path(${JSON.stringify(pyLog)})`,
-            'record_shadow_decision(lp, query="café query with emoji 😀 and ports",'
-                + ' solo_verdict="yes", full_verdict="no", escalated=True,'
-                + ' escalation_reason="low-conf")',
-        ].join('\n');
-        const res = runPyCode(code, [], { outputs: { log: pyLog } });
-        expect(res.status, res.stderr).toBe(0);
-        const py = oracleFile(res, 'log');
-        expect(py, 'frozen python log must exist').not.toBeNull();
-        const pyRow = (py as Buffer).toString('utf-8').replace(
-            /"timestamp": "[^"]+"/u,
-            '"timestamp": "<TS>"',
-        );
-        expect(tsRow).toBe(pyRow);
-    });
-
-    it('privacy-drop returns None on both sides', () => {
-        const code = [
-            'import json, sys',
-            'from pathlib import Path',
-            'from scripts.ai_council.shadow_dispatch import record_shadow_decision',
-            'lp = Path(sys.argv[1])',
-            'r = record_shadow_decision(lp, query="Authorization: Bearer zzz",'
-                + ' solo_verdict="a", full_verdict="a")',
-            'print(json.dumps(r is None))',
-        ].join('\n');
-        const pyLog = tmpFile('p.jsonl', '');
-        const res = runPyCode(code, [pyLog]);
-        expect(res.status, res.stderr).toBe(0);
-        expect(JSON.parse(res.stdout)).toBe(true);
-
-        const tsLog = tmpFile('t.jsonl', '');
-        unlinkSync(tsLog);
-        const dropped = record_shadow_decision(tsLog, {
-            query: 'Authorization: Bearer zzz',
-            soloVerdict: 'a',
-            fullVerdict: 'a',
-        });
-        expect(dropped).toBeNull();
     });
 });

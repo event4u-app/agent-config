@@ -1,10 +1,6 @@
 // Tests for src/scripts/ai_council/redact_low_impact_entry.ts (py2ts Phase 1).
 //
-// SECURITY-SENSITIVE twin: the redaction regexes and refusal markers must
-// match the Python original byte-for-byte. Golden-parity is run against the
-// CPython twin (imported as a package member so its `from
-// scripts.ai_council.config import _RAW_KEY_PREFIXES` resolves), comparing the
-// structured result (ok / violations / summary) on fixtures that hit each of
+// SECURITY-SENSITIVE: the redaction regexes and refusal markers cover each of
 // the eight forbidden-content classes.
 //
 // Secret-shaped / email / path tokens are ASSEMBLED FROM ESCAPE SEQUENCES so
@@ -17,41 +13,15 @@ import type {
 import {
     redact_low_impact_entry,
 } from '../../../src/scripts/ai_council/redact_low_impact_entry.js';
-import { hasPython3, runPyCode } from './_harness.js';
-
-const py3 = hasPython3();
 
 // ── fixtures assembled from parts (never a literal secret) ────────────────
 const SK = 'sk-' + 'A'.repeat(10); // raw-key prefix class
-const SK_ANT = 'sk-ant-' + 'B'.repeat(10);
 const EMAIL = 'al' + 'ice' + '@' + 'exa' + 'mple.com';
 const UPATH = '/Users' + '/bob/proj/file.ts';
 const HOST = 'api.corp.' + 'internal';
 const MONEY = '$' + '1,234.56';
 const LONG = 'x'.repeat(45); // > 40 chars inside backticks
 const API_KEY = 'api_key' + ': ' + 'C'.repeat(14);
-
-/** Run the redactor in CPython via the package import, return the JSON dict. */
-function pyRedact(text: string, kwargs = '{}'): {
-    ok: boolean;
-    summary: string;
-    violations: Array<[string, string, string]>;
-} {
-    const code = [
-        'import json, sys',
-        'from scripts.ai_council.redact_low_impact_entry import redact_low_impact_entry',
-        'text = sys.argv[1]',
-        'kw = json.loads(sys.argv[2])',
-        'r = redact_low_impact_entry(text, **kw)',
-        'print(json.dumps({"ok": r.ok, "summary": r.summary(), '
-            + '"violations": [[v.category, v.snippet, v.note] for v in r.violations]}, ensure_ascii=False))',
-    ].join('\n');
-    const res = runPyCode(code, [text, kwargs]);
-    if (res.status !== 0) {
-        throw new Error(`python3 failed: ${res.stderr}`);
-    }
-    return JSON.parse(res.stdout);
-}
 
 function tsTuples(r: RedactionResult): Array<[string, string, string]> {
     return r.violations.map((v) => [v.category, v.snippet, v.note]);
@@ -147,54 +117,5 @@ describe('redact_low_impact_entry — RedactionResult.summary()', () => {
         const r = redact_low_impact_entry(`${EMAIL} and ${MONEY}`);
         expect(r.summary().startsWith('redaction REFUSED — ')).toBe(true);
         expect(r.summary()).toContain(`email: '${EMAIL}'`);
-    });
-});
-
-describe.runIf(py3)('redact_low_impact_entry — golden parity vs CPython twin', () => {
-    const cases: Array<{ desc: string; text: string; kwargs?: string }> = [
-        { desc: 'clean', text: 'plain decision about caching' },
-        { desc: 'raw-key secret', text: `leak ${SK}` },
-        { desc: 'sk-ant secret', text: `anthropic ${SK_ANT}` },
-        { desc: 'inline api_key', text: `${API_KEY}` },
-        { desc: 'email', text: `mail ${EMAIL}` },
-        { desc: 'unix path', text: `path ${UPATH}` },
-        { desc: 'windows path', text: 'path C:\\Users\\bob\\f.txt here' },
-        { desc: 'internal host', text: `host ${HOST}` },
-        { desc: 'money usd-code', text: 'cost USD 1000 total' },
-        { desc: 'money symbol', text: `cost ${MONEY}` },
-        { desc: 'long code', text: 'code `' + LONG + '`' },
-        {
-            desc: 'all-classes combined + kwargs',
-            text: `${SK} ${EMAIL} ${UPATH} ${HOST} ${MONEY} \`${LONG}\` ${API_KEY} acme tbl`,
-            kwargs: JSON.stringify({
-                repo_root: '/Users/bob',
-                private_domains: ['priv.example'],
-                customer_names: ['acme'],
-                sql_identifiers: ['tbl'],
-            }),
-        },
-    ];
-
-    const tsKwargs = (k?: string): Parameters<typeof redact_low_impact_entry>[1] => {
-        if (!k) {
-            return {};
-        }
-        const obj = JSON.parse(k) as Record<string, unknown>;
-        return {
-            repoRoot: (obj['repo_root'] as string) ?? null,
-            privateDomains: (obj['private_domains'] as string[]) ?? [],
-            customerNames: (obj['customer_names'] as string[]) ?? [],
-            sqlIdentifiers: (obj['sql_identifiers'] as string[]) ?? [],
-        };
-    };
-
-    it.each(cases)('$desc', ({ text, kwargs }) => {
-        const expected = pyRedact(text, kwargs ?? '{}');
-        const r = redact_low_impact_entry(text, tsKwargs(kwargs));
-        // Structured parity (JSON whitespace differs between json.dumps and
-        // JSON.stringify; the content is what matters — same as modes.test.ts).
-        expect(r.ok).toBe(expected.ok);
-        expect(tsTuples(r)).toEqual(expected.violations);
-        expect(r.summary()).toBe(expected.summary);
     });
 });

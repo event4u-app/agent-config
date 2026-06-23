@@ -1,9 +1,7 @@
 // Tests for src/scripts/ai_council/low_impact_intake.ts (py2ts Phase 1).
 //
-// Pure-text, deterministic corpus mutator. Golden-parity against the CPython
-// twin: both runtimes record the SAME intake outcome AND write the SAME corpus
-// bytes (the write path is the load-bearing parity surface). `today` is passed
-// explicitly to remove the only non-deterministic input (UTC date).
+// Pure-text, deterministic corpus mutator. `today` is passed explicitly to
+// remove the only non-deterministic input (UTC date).
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
@@ -16,9 +14,6 @@ import {
     normalise,
     record_intake,
 } from '../../../src/scripts/ai_council/low_impact_intake.js';
-import { hasPython3, oracleFile, runPyCode } from './_harness.js';
-
-const py3 = hasPython3();
 
 const CORPUS = [
     '# Low-Impact Decisions',
@@ -99,56 +94,5 @@ describe('low_impact_intake — record_intake outcomes', () => {
         expect(readFileSync(p, 'utf-8')).toContain(
             '- "brand new question here" — first-seen 2026-06-03 · seen [2026-06-03]',
         );
-    });
-});
-
-describe.runIf(py3)('low_impact_intake — golden parity vs CPython twin', () => {
-    // Each case writes the SAME corpus to two temp files, records the same
-    // intake in CPython and TS, then asserts identical outcome + identical
-    // resulting bytes.
-    const cases: Array<{ desc: string; question: string; today: string }> = [
-        { desc: 'appended_seen', question: 'How do I run tests?', today: '2026-06-02' },
-        { desc: 'noop same-day', question: 'how do i run tests', today: '2026-05-01' },
-        { desc: 'duplicate_validated', question: 'what port does the app use', today: '2026-06-02' },
-        { desc: 'new_probation', question: 'A brand-new, punctuated question!', today: '2026-06-03' },
-    ];
-
-    it.each(cases)('$desc', ({ question, today }) => {
-        const pyPath = tmpCorpus();
-        const tsPath = tmpCorpus();
-
-        // The volatile output path is baked into the code body (not passed as
-        // argv): the inline-code key collapses quoted absolute paths to a stable
-        // placeholder (stableInlineKeyMaterial), so the snapshot key stays stable
-        // across the capture run (file present) and every replay run (fresh tmp
-        // dir). A volatile path passed as an ARG would key on file
-        // existence/content and diverge capture-vs-replay. `question`/`today` are
-        // stable strings — they STAY as argv (indices shift to [1]/[2] now that
-        // pyPath has left argv).
-        const code = [
-            'import json, sys',
-            'from scripts.ai_council.low_impact_intake import record_intake',
-            'from pathlib import Path',
-            `p = ${JSON.stringify(pyPath)}`,
-            'q, today = sys.argv[1], sys.argv[2]',
-            'r = record_intake(Path(p), q, today=today)',
-            'print(json.dumps([r.kind, r.question, r.today, r.note]))',
-        ].join('\n');
-        // Oracle v3 — the python side has TWO observable artefacts: the JSON
-        // outcome on stdout AND the rewritten corpus FILE at pyPath. Declare the
-        // file as a frozen output: capture mode reads pyPath after the spawn and
-        // freezes its bytes; normal mode replays them with no live python3.
-        const res = runPyCode(code, [question, today], { outputs: { corpus: pyPath } });
-        expect(res.status, res.stderr).toBe(0);
-        const pyOutcome = JSON.parse(res.stdout) as [string, string, string, string];
-
-        const tsR = record_intake(tsPath, question, { today });
-        expect([tsR.kind, tsR.question, tsR.today, tsR.note]).toEqual(pyOutcome);
-
-        // The corpus bytes written by each runtime must be identical. The .ts
-        // twin writes tsPath live; compare against the frozen python golden.
-        const corpus = oracleFile(res, 'corpus');
-        expect(corpus, 'frozen python corpus must exist').not.toBeNull();
-        expect(readFileSync(tsPath, 'utf-8')).toBe((corpus as Buffer).toString('utf-8'));
     });
 });

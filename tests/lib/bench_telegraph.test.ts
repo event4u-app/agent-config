@@ -1,14 +1,10 @@
 /**
- * Vitest twin parity suite for the telegraph bench core
- * (`src/scripts/_lib/bench_telegraph.ts`). No pre-existing pytest suite
- * exists for this module, so this is a focused differential suite:
- * carve-out detection, three-arm aggregation, cost math, and the
- * savings properties are run on shared synthetic data through both the
- * TypeScript port and the Python original (via
- * `tests/lib/bench_telegraph_py_driver.py`) and asserted byte-/value-
- * identical (ADR-088 py2ts Phase 2 / Wave 2a).
+ * Vitest twin suite for the telegraph bench core
+ * (`src/scripts/_lib/bench_telegraph.ts`). Focused unit suite over
+ * carve-out detection, three-arm aggregation, cost math, the savings
+ * properties, corpus loading, and the orchestrator on shared synthetic
+ * data (ADR-088 py2ts Phase 2 / Wave 2a).
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -22,7 +18,6 @@ import {
     SYSTEM_PROMPT_TERSE,
     SYSTEM_PROMPT_UNCONDENSED,
     ARM_SYSTEM_PROMPT,
-    aggregate_results,
     carve_out_chars,
     compute_cost,
     load_corpus,
@@ -33,27 +28,7 @@ import {
 } from '../../src/scripts/_lib/bench_telegraph.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
-const DRIVER = path.join(HERE, 'bench_telegraph_py_driver.py');
 const REPO_ROOT = path.resolve(HERE, '..', '..');
-
-function pyDriver(spec: unknown): string {
-    return execFileSync('python3', [DRIVER], {
-        input: Buffer.from(JSON.stringify(spec), 'utf-8'),
-        maxBuffer: 16 * 1024 * 1024,
-        cwd: REPO_ROOT,
-    }).toString('utf-8');
-}
-
-function pythonAvailable(): boolean {
-    try {
-        execFileSync('python3', ['--version'], { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-const PY = pythonAvailable();
 
 // ── synthetic spec helpers ────────────────────────────────────────────────
 
@@ -144,28 +119,7 @@ describe('bench_telegraph — constants', () => {
 
 // ── carve_out_chars ─────────────────────────────────────────────────────────
 
-const CARVE_TEXTS = [
-    '',
-    'just plain prose with no markers at all',
-    '```\ncode block\n```',
-    'inline `path/to/file` span',
-    '1. first option\n2. second option',
-    '> 3. quoted numbered line',
-    '❌ failed\n⚠️ warned\n✅ passed',
-    '| a | b |\n| 1 | 2 |',
-    '**Recommendation:** pick 1',
-    '**Empfehlung:** nimm 1',
-    'overlap ```a `b` c``` then `d` and 1. item',
-    'mix\n| t | u |\n❌ bad\n`code`\n```\nblk\n```',
-];
-
-describe('bench_telegraph — carve_out_chars (differential vs Python)', () => {
-    it.runIf(PY)('matches Python carve_out_chars for every sample text', () => {
-        const tsOut = CARVE_TEXTS.map((t) => carve_out_chars(t));
-        const pyOut = JSON.parse(pyDriver({ mode: 'carve_out', texts: CARVE_TEXTS })) as number[];
-        expect(tsOut).toEqual(pyOut);
-    });
-
+describe('bench_telegraph — carve_out_chars', () => {
     it('returns 0 for empty string', () => {
         expect(carve_out_chars('')).toBe(0);
     });
@@ -220,26 +174,9 @@ describe('bench_telegraph — result dataclasses', () => {
     });
 });
 
-// ── aggregate_results (differential) ────────────────────────────────────────
+// ── compute_cost ────────────────────────────────────────────────────────────
 
-describe('bench_telegraph — aggregate_results (differential vs Python)', () => {
-    it.runIf(PY)('matches Python aggregate block on synthetic results', () => {
-        const ts = aggregate_results(buildResults(SAMPLE_SPECS));
-        const py = JSON.parse(pyDriver({ mode: 'aggregate', results: SAMPLE_SPECS }));
-        expect(ts).toEqual(py);
-    });
-});
-
-// ── compute_cost (differential) ─────────────────────────────────────────────
-
-describe('bench_telegraph — compute_cost (differential vs Python)', () => {
-    it.runIf(PY)('matches Python cost block (incl. rounding)', () => {
-        const pricing = { input: 3.0, output: 15.0 };
-        const ts = compute_cost(buildResults(SAMPLE_SPECS), pricing);
-        const py = JSON.parse(pyDriver({ mode: 'compute_cost', results: SAMPLE_SPECS, pricing }));
-        expect(ts).toEqual(py);
-    });
-
+describe('bench_telegraph — compute_cost', () => {
     it('counts errors per arm', () => {
         const specs: PromptSpec[] = [
             {
