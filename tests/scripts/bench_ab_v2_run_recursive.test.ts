@@ -72,6 +72,22 @@ describe('run_one_recursive — loop control flow (ADR-106, mocked seam)', () =>
         expect(r.depth_reached).toBe(1);
     });
 
+    it('onAttempt fires once per attempt with depth + output (pair capture)', () => {
+        const seen: Array<{ depth: number; output: string | undefined }> = [];
+        const af = (depth: number): RecursiveAttempt => ({
+            run: mkRun(),
+            score: (depth === 0
+                ? mkScore(true, false, 0.5)
+                : mkScore(true, true, 1.0)) as unknown as RecursiveAttempt['score'],
+            output: `output-depth-${depth}`,
+        });
+        run_one_recursive({} as Record<string, unknown>, opts(1), af, (d, a) => seen.push({ depth: d, output: a.output }));
+        expect(seen).toEqual([
+            { depth: 0, output: 'output-depth-0' },
+            { depth: 1, output: 'output-depth-1' },
+        ]);
+    });
+
     it('max_depth 0 → single attempt, never re-attempts even if failing', () => {
         const log: Array<{ depth: number; verdict: string | null }> = [];
         const r = run_one_recursive(
