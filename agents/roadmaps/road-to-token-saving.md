@@ -93,7 +93,7 @@ resolved (council, above), so execution does not stop to ask which lever to pull
 ## Disposition (2026-06-23) — autonomous / human-measurement split
 
 The autonomous-mandate master-plan council (claude-sonnet-4-5 + gpt-4o, deep,
-`agents/runtime/council/responses/master-plan-2026-06-23.json`) drew the
+`agents/runtime/council/responses/master-plan-2026-06-23.json`) drew the <!-- council-ref-allowed: predecessor council trace (transient roadmap citation) -->
 autonomous/deferred boundary for this 52-step roadmap. The verdict-gated phases —
 **Phase 4** (thin-projection flip, the −46k lever), **Phase 6** (retire
 telegraph-speak, gated on the real-tokenizer net-negative finding), **Phase 7**

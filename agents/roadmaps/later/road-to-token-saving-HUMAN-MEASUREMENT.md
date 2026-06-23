@@ -10,7 +10,7 @@ parent_roadmap: token-saving
 
 > Split off `road-to-token-saving.md` per the autonomous-mandate master-plan
 > council (claude-sonnet-4-5 + gpt-4o, deep, 2026-06-23,
-> `agents/runtime/council/responses/master-plan-2026-06-23.json`). The council
+> `agents/runtime/council/responses/master-plan-2026-06-23.json`). The council <!-- council-ref-allowed: predecessor council trace (transient roadmap citation) -->
 > defined the autonomous/deferred boundary for the 52-step token-saving roadmap:
 > an unattended agent can build the measurement *harness* and the disabled-by-
 > default scaffolding, but it **cannot** produce the trustworthy human-judged

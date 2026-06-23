@@ -199,4 +199,4 @@ pre-flight gates above; the original draft had real sequencing + procedure gaps.
 
 ### Predecessor council trace
 
-`agents/runtime/council/responses/py2ts-teardown-completion-roadmap.json` (this run).
+`agents/runtime/council/responses/py2ts-teardown-completion-roadmap.json` (this run). <!-- council-ref-allowed: predecessor council trace (transient roadmap citation) -->
