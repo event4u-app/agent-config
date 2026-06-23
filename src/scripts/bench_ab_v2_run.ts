@@ -211,6 +211,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
 export interface RecursiveAttempt {
     run: Dict;
     score: scoring.ScoreResultV2;
+    output?: string; // pair-capture: changed-file contents at this depth (for human-preference judging)
 }
 
 /**
@@ -235,6 +236,7 @@ export function run_one_recursive(
     task: Dict,
     opts: RunOneOpts,
     attemptFn?: (depth: number, priorVerdict: string | null) => RecursiveAttempt,
+    onAttempt?: (depth: number, attempt: RecursiveAttempt) => void,
 ): Dict {
     const maxDepth = Math.max(0, opts.max_depth ?? 1);
     const makeAttempt =
@@ -257,7 +259,19 @@ export function run_one_recursive(
                 clone_root: clone,
                 transcript: String(run['transcript'] ?? ''),
             });
-            return { run, score };
+            // Capture the attempt's output (changed-file contents) for the
+            // human-preference pair, before the next depth resets the clone.
+            const output = score.files_changed
+                .map((f: string) => {
+                    try {
+                        return `--- ${f} ---\n${fs.readFileSync(path.join(clone, f), 'utf-8')}`;
+                    } catch {
+                        return `--- ${f} --- (unreadable)`;
+                    }
+                })
+                .join('\n\n')
+                .slice(0, 4000);
+            return { run, score, output };
         });
 
     const accepts = (s: scoring.ScoreResultV2): boolean => Boolean(s.capability_pass) && Boolean(s.discipline_pass);
@@ -265,6 +279,7 @@ export function run_one_recursive(
     let depth = 0;
     let prior: RecursiveAttempt | null = null;
     let attempt = makeAttempt(0, null);
+    onAttempt?.(0, attempt);
     let stop_reason: string;
     let last_verdict_len = 0;
     for (;;) {
@@ -293,6 +308,7 @@ export function run_one_recursive(
         last_verdict_len = verdict.length;
         prior = attempt;
         attempt = makeAttempt(depth, verdict);
+        onAttempt?.(depth, attempt);
     }
 
     const { run, score } = attempt;
