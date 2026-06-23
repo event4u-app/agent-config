@@ -65,6 +65,11 @@ function norm(text: string, roots: string[]): string {
         }
         out = out.split(real).join('<TMP>');
     }
+    // macOS resolves the temp root to a `/private`-prefixed realpath; when the
+    // bare-root replacement fires on the inner `/var/...` substring it leaves a
+    // stray `/private` before the marker. Collapse it so the snapshot is
+    // identical on Linux CI (temp paths there carry no `/private` prefix).
+    out = out.split('/private<TMP>').join('<TMP>');
     // <YYYYMMDDTHHMMSSZ>-<8 hex> id token.
     out = out.replace(/\d{8}T\d{6}Z-[0-9a-f]{8}/g, '<ID>');
     // created_at ISO second (frontmatter + JSON).
@@ -117,7 +122,7 @@ describe('workspace_inbox — write + read + list + forget', () => {
         ]);
         expect(t.status).toBe(0);
         expect(norm(t.stdout, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
-          "{"banner": "Tier-3 hand-off ready: copy /private<TMP>/<ID>.md into your host, then open it.", "id": "<ID>", "path": "/private<TMP>/<ID>.md"}
+          "{"banner": "Tier-3 hand-off ready: copy <TMP>/<ID>.md into your host, then open it.", "id": "<ID>", "path": "<TMP>/<ID>.md"}
           "
         `);
     });
@@ -466,7 +471,7 @@ describe('workspace_inbox — write + read + list + forget', () => {
         const t = runTs(['list', '--json', '--root', tsRoot]);
         expect(t.status).toBe(0);
         expect(norm(t.stdout, [tsRoot, tsTmp])).toMatchInlineSnapshot(`
-          "[{"created_at": "<TS>", "id": "<ID>", "path": "/private<TMP>/<ID>.md", "role": "sales", "session": "s1", "task": "one"}]
+          "[{"created_at": "<TS>", "id": "<ID>", "path": "<TMP>/<ID>.md", "role": "sales", "session": "s1", "task": "one"}]
           "
         `);
     });
