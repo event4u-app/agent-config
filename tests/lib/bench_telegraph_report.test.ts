@@ -1,47 +1,19 @@
 /**
- * Vitest twin parity suite for the telegraph bench serializer
- * (`src/scripts/_lib/bench_telegraph_report.ts`). No pre-existing pytest
- * suite exists, so this is a focused differential suite: the rendered
- * Markdown and the JSON report dict are produced on shared synthetic
- * bench data by both the TS port and the Python original (via
- * `tests/lib/bench_telegraph_py_driver.py`) and asserted byte-identical
- * (ADR-088 py2ts Phase 2 / Wave 2a, parity gate — byte-exact renderer).
+ * Vitest twin suite for the telegraph bench serializer
+ * (`src/scripts/_lib/bench_telegraph_report.ts`). Focused unit suite over
+ * the report dict structural invariants built on shared synthetic bench
+ * data (ADR-088 py2ts Phase 2 / Wave 2a).
  */
-import { execFileSync } from 'node:child_process';
-import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
-
 import {
     ArmResult,
     PromptResult,
     carve_out_chars,
 } from '../../src/scripts/_lib/bench_telegraph.js';
+import { describe, expect, it } from 'vitest';
+
 import {
     build_telegraph_report,
-    render_telegraph_markdown,
 } from '../../src/scripts/_lib/bench_telegraph_report.js';
-
-const HERE = path.dirname(new URL(import.meta.url).pathname);
-const DRIVER = path.join(HERE, 'bench_telegraph_py_driver.py');
-const REPO_ROOT = path.resolve(HERE, '..', '..');
-
-function pyDriver(spec: unknown): string {
-    return execFileSync('python3', [DRIVER], {
-        input: Buffer.from(JSON.stringify(spec), 'utf-8'),
-        maxBuffer: 16 * 1024 * 1024,
-        cwd: REPO_ROOT,
-    }).toString('utf-8');
-}
-
-function pythonAvailable(): boolean {
-    try {
-        execFileSync('python3', ['--version'], { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-const PY = pythonAvailable();
 
 interface ArmSpec {
     text: string;
@@ -115,45 +87,6 @@ const SPECS: PromptSpec[] = [
         },
     },
 ];
-
-// A partial prompt (only condensed + uncondensed) to drive the savings_vs_terse
-// null path and the "—" cell, plus an error arm to flip verdict → partial.
-const SPECS_PARTIAL: PromptSpec[] = [
-    {
-        id: 'telegraph-05',
-        category: 'status-marker',
-        expected_carve_out_pct: 0.4,
-        arms: {
-            condensed: { text: '❌ bad\n`ci`', input_tokens: 12, output_tokens: 9, latency_ms: 33 },
-            uncondensed: { text: 'three checks ran here', input_tokens: 12, output_tokens: 21, latency_ms: 44, error: 'rate_limited' },
-        },
-    },
-];
-
-describe('bench_telegraph_report — render_telegraph_markdown (byte-exact vs Python)', () => {
-    it.runIf(PY)('matches Python Markdown on the multi-prompt sample', () => {
-        const report = build_telegraph_report({ results: buildResults(SPECS), ...META });
-        const ts = render_telegraph_markdown(report);
-        const py = pyDriver({ mode: 'telegraph_md', results: SPECS, meta: META });
-        expect(ts).toBe(py);
-    });
-
-    it.runIf(PY)('matches Python Markdown on the partial/error sample (verdict=partial, "—" cells)', () => {
-        const report = build_telegraph_report({ results: buildResults(SPECS_PARTIAL), ...META });
-        const ts = render_telegraph_markdown(report);
-        const py = pyDriver({ mode: 'telegraph_md', results: SPECS_PARTIAL, meta: META });
-        expect(ts).toBe(py);
-        expect(report.verdict.overall).toBe('partial');
-    });
-});
-
-describe('bench_telegraph_report — build_telegraph_report JSON (deep-equal vs Python)', () => {
-    it.runIf(PY)('produces the same report dict structure + values', () => {
-        const report = build_telegraph_report({ results: buildResults(SPECS), ...META });
-        const py = JSON.parse(pyDriver({ mode: 'telegraph_json', results: SPECS, meta: META }));
-        expect(report).toEqual(py);
-    });
-});
 
 describe('bench_telegraph_report — structural invariants', () => {
     it('schema_version is telegraph-v1; cost carries live-api fields', () => {

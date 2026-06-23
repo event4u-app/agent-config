@@ -1,11 +1,9 @@
 // Tests for src/scripts/ai_council/learn_low_impact_preview.ts (py2ts Phase 1).
 //
 // Preview builder for `/memory learn-low-impact`. Pure parse + redaction +
-// render. Golden parity against the CPython twin covers the bucketing
-// (promoted / refused / already-seeded), the provenance-SHA extraction, and
-// the three render surfaces (render / render_diff / render_pr_body) byte-for-
-// byte — including the refused-entry `reason()` string that threads the
-// redactor's violations through.
+// render. Covers the bucketing (promoted / refused / already-seeded), the
+// provenance-SHA extraction, and the refused-entry `reason()` string that
+// threads the redactor's violations through.
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
@@ -18,9 +16,6 @@ import {
     LearnLowImpactPreview,
     build_preview,
 } from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
-import { hasPython3, runPyCode } from './_harness.js';
-
-const py3 = hasPython3();
 
 // A leaked path + an email → both refused by the redactor. Assembled from
 // parts so this test file does not embed a literal home path / address that
@@ -137,103 +132,5 @@ describe('learn_low_impact_preview — bucketing + flags', () => {
     it('build_preview returns a LearnLowImpactPreview', () => {
         const p = build_preview(tmpFile('c.md', corpus()), '/no/such/seed.md');
         expect(p).toBeInstanceOf(LearnLowImpactPreview);
-    });
-});
-
-describe.runIf(py3)('learn_low_impact_preview — golden parity vs CPython twin', () => {
-    // The render echoes the `seed:` path verbatim, which is a per-run
-    // `os.tmpdir()` fixture — volatile across the capture run (frozen into the
-    // snapshot) and the normal run (the live TS render). Strip every temp
-    // fixture path to a stable token so the snapshot is machine-independent;
-    // the SAME normalize is applied to the python side (via the harness) AND
-    // to the TS render, per the parity-oracle normalize contract.
-    const stripTmpPaths = (s: string): string =>
-        s.replace(/(?:\/[^\s"']+)?\/[a-z]+\.md/g, '<fixture>.md');
-
-    /** Run build_preview in CPython, return [render, render_diff, render_pr_body]. */
-    function pyRender(
-        corpusPath: string,
-        seedPath: string,
-        repoSlug: string,
-        leakPath: string,
-    ): [string, string, string, boolean, boolean, string] {
-        const code = [
-            'import json, sys',
-            'from scripts.ai_council.learn_low_impact_preview import build_preview',
-            'corpus, seed, slug, leak = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]',
-            'p = build_preview(corpus, seed, repo_slug=slug, repo_root=leak)',
-            'print(json.dumps([p.render(), p.render_diff(), p.render_pr_body(),'
-                + ' p.has_work, p.would_open_pr, p.last_upstreamed_sha], ensure_ascii=False))',
-        ].join('\n');
-        const res = runPyCode(code, [corpusPath, seedPath, repoSlug, leakPath], {
-            normalize: stripTmpPaths,
-        });
-        expect(res.status, res.stderr).toBe(0);
-        // The python JSON is normalized as a whole; the embedded render strings
-        // already have their fixture paths tokenised. Apply the same token to
-        // the TS renders below before comparing.
-        return JSON.parse(res.stdout) as [string, string, string, boolean, boolean, string];
-    }
-
-    it('render / render_diff / render_pr_body byte-match (mixed buckets)', () => {
-        const c = tmpFile('c.md', corpus({ upstreamed: 'abcdef0123456789abcdef0123456789abcdef01' }));
-        const s = tmpFile('s.md', SEED);
-        const [render, diff, prBody, hasWork, wouldOpen, sha] = pyRender(c, s, 'acme/widgets', '');
-        const p = build_preview(c, s, { repoSlug: 'acme/widgets' });
-        expect(stripTmpPaths(p.render())).toBe(render);
-        expect(stripTmpPaths(p.render_diff())).toBe(diff);
-        expect(stripTmpPaths(p.render_pr_body())).toBe(prBody);
-        expect(p.has_work).toBe(hasWork);
-        expect(p.would_open_pr).toBe(wouldOpen);
-        expect(p.last_upstreamed_sha).toBe(sha);
-    });
-
-    it('no-work + empty-slug render byte-match', () => {
-        // Empty corpus (only anchors) → nothing to upstream.
-        const empty = [
-            '## Validated',
-            '',
-            '<!-- intake-anchor: validated -->',
-            '',
-            '## On Probation',
-            '',
-            '<!-- intake-anchor: probation -->',
-            '',
-            '## Anti-Examples (Always Ask User)',
-            '',
-            '- "z?"',
-            '',
-        ].join('\n');
-        const c = tmpFile('e.md', empty);
-        const [render, diff, prBody] = pyRender(c, '/no/such/seed.md', '', '');
-        const p = build_preview(c, '/no/such/seed.md');
-        expect(stripTmpPaths(p.render())).toBe(render);
-        expect(stripTmpPaths(p.render_diff())).toBe(diff);
-        expect(stripTmpPaths(p.render_pr_body())).toBe(prBody);
-    });
-
-    it('refused-only render + reason() byte-match', () => {
-        const refusedOnly = [
-            '## Validated',
-            '',
-            '<!-- intake-anchor: validated -->',
-            '',
-            `- "reach ${LEAK_EMAIL} now"`,
-            '',
-            '## On Probation',
-            '',
-            '<!-- intake-anchor: probation -->',
-            '',
-            '## Anti-Examples (Always Ask User)',
-            '',
-            '- "z?"',
-            '',
-        ].join('\n');
-        const c = tmpFile('r.md', refusedOnly);
-        const [render, diff, prBody] = pyRender(c, '/no/such/seed.md', 'acme/widgets', '');
-        const p = build_preview(c, '/no/such/seed.md', { repoSlug: 'acme/widgets' });
-        expect(stripTmpPaths(p.render())).toBe(render);
-        expect(stripTmpPaths(p.render_diff())).toBe(diff);
-        expect(stripTmpPaths(p.render_pr_body())).toBe(prBody);
     });
 });

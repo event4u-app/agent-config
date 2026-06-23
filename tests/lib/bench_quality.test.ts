@@ -1,42 +1,17 @@
 /**
- * Vitest twin parity suite for the bench quality probe
- * (`src/scripts/_lib/bench_quality.ts`). No pre-existing pytest suite
- * exists, so this is a focused differential suite: `score_corpus` is run
- * on shared synthetic prompt sets (rubric + regex assertions, with and
- * without an agent-output file) by both the TS port and the Python
- * original (via `tests/lib/bench_quality_py_driver.py`) and the result
- * blocks are asserted value-identical, including the
- * round-half-to-even `quality_score` (ADR-088 py2ts Phase 2 / Wave 2a).
+ * Vitest twin suite for the bench quality probe
+ * (`src/scripts/_lib/bench_quality.ts`). Focused unit suite: `score_corpus`
+ * is run on shared synthetic prompt sets (rubric + regex assertions, with
+ * and without an agent-output file) and the result blocks are asserted,
+ * including the round-half-to-even `quality_score`
+ * (ADR-088 py2ts Phase 2 / Wave 2a).
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { score_corpus, type Prompt } from '../../src/scripts/_lib/bench_quality.js';
-
-const HERE = path.dirname(new URL(import.meta.url).pathname);
-const DRIVER = path.join(HERE, 'bench_quality_py_driver.py');
-const REPO_ROOT = path.resolve(HERE, '..', '..');
-
-function pyDriver(spec: unknown): unknown {
-    const out = execFileSync('python3', [DRIVER], {
-        input: Buffer.from(JSON.stringify(spec), 'utf-8'),
-        maxBuffer: 16 * 1024 * 1024,
-        cwd: REPO_ROOT,
-    }).toString('utf-8');
-    return JSON.parse(out);
-}
-function pythonAvailable(): boolean {
-    try {
-        execFileSync('python3', ['--version'], { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-const PY = pythonAvailable();
 
 // Prompt set: rubric (must_include / must_not_include / length_words) +
 // regex assertion + a prompt with no assertion (excluded from `declared`).
@@ -60,12 +35,6 @@ const OUTPUTS: Record<string, string> = {
 };
 
 describe('bench_quality — score_corpus not_collected (no agent output)', () => {
-    it.runIf(PY)('matches Python not_collected block', () => {
-        const ts = score_corpus(PROMPTS, null);
-        const py = pyDriver({ prompts: PROMPTS, agent_output_path: null });
-        expect(ts).toEqual(py);
-    });
-
     it('reports not_collected with the declared assertions only', () => {
         const block = score_corpus(PROMPTS, null);
         expect(block.source).toBe('not_collected');
@@ -90,17 +59,6 @@ describe('bench_quality — score_corpus scored (with agent output)', () => {
             fs.rmSync(tmp, { recursive: true, force: true });
             tmp = null;
         }
-    });
-
-    it.runIf(PY)('matches Python scored block (incl. round-half-to-even score)', () => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-q-'));
-        const outPath = path.join(tmp, 'out.json');
-        fs.writeFileSync(outPath, JSON.stringify(OUTPUTS), 'utf-8');
-        const ts = score_corpus(PROMPTS, outPath);
-        const py = pyDriver({ prompts: PROMPTS, agent_output_path: outPath }) as Record<string, unknown>;
-        // `source` is the absolute path → identical because both run from REPO_ROOT
-        // with the same tmp path; assert the rest deep-equal and source equal.
-        expect(ts).toEqual(py);
     });
 
     it('scores 4/5 declared → 0.8 with the expected per-prompt verdicts', () => {
@@ -130,8 +88,8 @@ describe('bench_quality — banker rounding of quality_score', () => {
         }
     });
 
-    // 1/3 passing → round(0.3333…, 4) = 0.3333. Verify against Python.
-    it.runIf(PY)('matches Python round(passing/total, 4) for a thirds ratio', () => {
+    // 1/3 passing → round(0.3333…, 4) = 0.3333.
+    it('rounds passing/total to 4 places for a thirds ratio', () => {
         const prompts: Prompt[] = [
             { id: 't-1', rubric: { must_include: ['a'] } },
             { id: 't-2', rubric: { must_include: ['b'] } },
@@ -142,8 +100,6 @@ describe('bench_quality — banker rounding of quality_score', () => {
         const outPath = path.join(tmp, 'out.json');
         fs.writeFileSync(outPath, JSON.stringify(outputs), 'utf-8');
         const ts = score_corpus(prompts, outPath);
-        const py = pyDriver({ prompts, agent_output_path: outPath });
-        expect(ts).toEqual(py);
         expect(ts.quality_score).toBe(0.3333);
     });
 });

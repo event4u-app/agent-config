@@ -12,7 +12,6 @@
  *   parity gate 2, golden replay).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -200,36 +199,6 @@ describe("aggregate_sessions", () => {
   });
 });
 
-// ─── differential parity vs the Python original ──────────────────────────────
-
-function python_available(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function yaml_available(): boolean {
-  try {
-    execFileSync("python3", ["-c", "import yaml"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const PY_DRIVER = `
-import json, sys
-sys.path.insert(0, "src")
-from pathlib import Path
-from scripts._lib import bench_cost as cost
-sessions = Path(sys.argv[1])
-pricing = Path(sys.argv[2])
-print(json.dumps(cost.aggregate_sessions(sessions, pricing), sort_keys=True))
-`;
-
 interface CostFixture {
   name: string;
   sessions: object[];
@@ -293,31 +262,6 @@ const FIXTURES: CostFixture[] = [
     ],
   },
 ];
-
-describe.skipIf(!python_available() || !yaml_available())(
-  "differential: TS twin vs Python original",
-  () => {
-    for (const fx of FIXTURES) {
-      it(`aggregate_sessions is JSON-identical: ${fx.name}`, () => {
-        const pricing = path.join(tmp, "pricing.yaml");
-        fs.writeFileSync(pricing, PRICING_YAML);
-        const sessions = path.join(tmp, `sessions-${slug(fx.name)}.jsonl`);
-        fs.writeFileSync(
-          sessions,
-          fx.sessions.map((s) => JSON.stringify(s)).join("\n") + "\n",
-        );
-
-        const ts = aggregate_sessions(sessions, pricing);
-        const pyOut = execFileSync("python3", ["-c", PY_DRIVER, sessions, pricing], {
-          cwd: ROOT,
-          encoding: "utf-8",
-        });
-        const py = JSON.parse(pyOut);
-        expect(canonical(ts)).toEqual(canonical(py));
-      });
-    }
-  },
-);
 
 function slug(s: string): string {
   return s.replace(/[^a-z0-9]+/gi, "-");

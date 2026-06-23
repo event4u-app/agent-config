@@ -1,13 +1,4 @@
-// Tests for src/scripts/skill_preview.ts (py2ts Phase 8 / Wave 8e).
-//
-// Ported 1:1 from tests/test_skill_preview.py (same fixtures, same assertions)
-// driven in-process via the `_setSkillsDirForTest` seam (mirrors the pytest
-// `monkeypatch.setattr(sp, "SKILLS_DIR", root)`), plus:
-//   - a golden-parity layer (python3 vs tsx) on the real repo for a real skill
-//     (plain / technical / json) and the structured-error CLI path; stdout,
-//     stderr, and exit code are asserted byte-identical. Read-only — no repo
-//     state is mutated, so no snapshot/restore is needed.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -25,7 +16,6 @@ import {
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'skill_preview.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'skill_preview.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -148,49 +138,4 @@ describe('skill_preview — in-process (ported from test_skill_preview.py)', () 
         expect(tech).toContain('Declared steps');
         expect(tech).toContain('1. Look at the thing');
     });
-});
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function runTs(args: string[]): { stdout: string; stderr: string; status: number | null } {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
-function runPy(args: string[]): { stdout: string; stderr: string; status: number | null } {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
-
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('skill_preview — golden parity (python3 vs tsx)', () => {
-    it('CLI structured error exits 2 (ported from pytest)', () => {
-        const p = runPy(['definitely-not-a-skill', '--format', 'json']);
-        const t = runTs(['definitely-not-a-skill', '--format', 'json']);
-        expect(t.status).toBe(2);
-        expect(t.stdout).toContain('error');
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    });
-
-    it('real manual skill smoke (ported from pytest)', () => {
-        const t = runTs(['accessibility-auditor']);
-        expect(t.status).toBe(0);
-        expect(t.stdout.toLowerCase()).toContain('instructional only');
-    });
-
-    it.each(['accessibility-auditor', 'ai-council', 'code-review', 'docker'])(
-        'plain / technical / json byte-identical for %s',
-        (skill) => {
-            for (const mode of [[], ['--technical'], ['--format', 'json']]) {
-                const p = runPy([skill, ...mode]);
-                const t = runTs([skill, ...mode]);
-                expect(t.stdout, `${skill} ${mode.join(' ')} stdout`).toBe(p.stdout);
-                expect(t.stderr, `${skill} ${mode.join(' ')} stderr`).toBe(p.stderr);
-                expect(t.status, `${skill} ${mode.join(' ')} exit`).toBe(p.status);
-            }
-        },
-    );
 });

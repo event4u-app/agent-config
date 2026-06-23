@@ -1,18 +1,4 @@
-// Golden-parity tests for work_engine/orchestration.ts vs orchestration.py
-// (ADR-094 py2ts Phase 1). Covers the deterministic bookkeeping surface:
-// _interpolate (scalar / nested dict / list / unknown-ref KeyError),
-// _when_passes (success/failure guards, output==literal, unsupported → ValueError),
-// iter_steps (input merge + defaults, when-skip, halt-on-failure), record_result
-// (results capture + halt), resolve_outputs. Both sides parse the SAME YAML
-// fixture: the TS twin's _load_pipeline dynamically imports the resolved
-// scripts/hooks/dispatch_hook.ts (the faithful analogue of the Python importlib
-// load of dispatch_hook.py::_load_yaml), so the loaders see the same shape.
-//
-// Python is loaded via the shared direct-file importlib loader; orchestration
-// itself dynamically importlib-loads dispatch_hook.py at runtime, so the repo
-// root must be on sys.path. Driver scripts run a full traversal and dump the
-// captured descriptors / state as JSON for byte-comparison against the TS run.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -36,10 +22,6 @@ import {
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const WE = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts', 'work_engine');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
 const tmpDirs: string[] = [];
 function mkPipe(yaml: string): string {
     const d = fs.mkdtempSync(path.join(os.tmpdir(), 'orch-'));
@@ -56,50 +38,6 @@ afterEach(() => {
         }
     }
 });
-
-// Python driver: load orchestration via importlib, run a scripted traversal that
-// mirrors the TS driver below, and dump JSON. `mode` selects the scenario.
-function pyDrive(pipePath: string, mode: string, inputs: Record<string, string>): unknown {
-    const code = [
-        'import importlib.util, sys, json, pathlib',
-        `WE = pathlib.Path(${JSON.stringify(WE)})`,
-        `REPO = pathlib.Path(${JSON.stringify(REPO_ROOT)})`,
-        'sys.path.insert(0, str(WE)); sys.path.insert(0, str(REPO))',
-        'def _load(name):',
-        '    sp = importlib.util.spec_from_file_location("we_"+name, WE / (name + ".py"))',
-        '    m = importlib.util.module_from_spec(sp); sys.modules[sp.name] = m; sp.loader.exec_module(m)',
-        '    return m',
-        'orch = _load("orchestration")',
-        'pipe = pathlib.Path(sys.argv[1]); mode = sys.argv[2]; inputs = json.loads(sys.argv[3])',
-        'def stable(desc):',
-        '    return {k: v for k, v in desc.items() if k != "_state"}',
-        'if mode == "all-success":',
-        '    descs = []',
-        '    it = orch.iter_steps(pipe, inputs)',
-        '    state = None',
-        '    for d in it:',
-        '        descs.append(stable(d)); state = d["_state"]',
-        '        orch.record_result(d, success=True, output=d["id"].upper()+"-OUT")',
-        '    outs = orch.resolve_outputs(pipe, state) if state is not None else {}',
-        '    print(json.dumps({"descs": descs, "outputs": outs, "halted": state.halted if state else False}))',
-        'elif mode == "fail-first":',
-        '    descs = []; it = orch.iter_steps(pipe, inputs); state = None',
-        '    for d in it:',
-        '        descs.append(stable(d)); state = d["_state"]',
-        '        orch.record_result(d, success=False, error="boom")',
-        '    print(json.dumps({"descs": descs, "halted": state.halted, "halt_reason": state.halt_reason}))',
-        'elif mode == "iter-only":',
-        '    descs = [stable(d) for d in orch.iter_steps(pipe, inputs)]',
-        '    print(json.dumps({"descs": descs}))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, pipePath, mode, JSON.stringify(inputs)], {
-        encoding: 'utf8',
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return JSON.parse(r.stdout.trim());
-}
 
 function stable(desc: StepDescriptor): Record<string, unknown> {
     const { _state, ...rest } = desc;
@@ -261,43 +199,5 @@ describe('work_engine/orchestration — pure helpers', () => {
             descs: Array<Record<string, unknown>>;
         };
         expect(out.descs[0]).toEqual({ id: 'a', kind: 'skill', ref: 'foo', with: { q: 'world' } });
-    });
-});
-
-describe.runIf(hasPython3())('work_engine/orchestration — python parity', () => {
-    it('all-success traversal matches CPython (descs + outputs)', async () => {
-        const pipe = mkPipe(LINEAR_PIPE);
-        const expected = pyDrive(pipe, 'all-success', {});
-        const got = await tsDrive(pipe, 'all-success', {});
-        expect(got).toEqual(expected);
-    });
-
-    it('all-success with provided inputs matches CPython', async () => {
-        const pipe = mkPipe(LINEAR_PIPE);
-        const expected = pyDrive(pipe, 'all-success', { topic: 'world' });
-        const got = await tsDrive(pipe, 'all-success', { topic: 'world' });
-        expect(got).toEqual(expected);
-    });
-
-    it('fail-first halts identically (no further steps yielded)', async () => {
-        const pipe = mkPipe(LINEAR_PIPE);
-        const expected = pyDrive(pipe, 'fail-first', {});
-        const got = await tsDrive(pipe, 'fail-first', {});
-        expect(got).toEqual(expected);
-    });
-
-    it('when-guard pipeline yields the same surviving steps', async () => {
-        // a succeeds → b (a.failure) skipped, c (a.success) runs.
-        const pipe = mkPipe(GUARD_PIPE);
-        const expected = pyDrive(pipe, 'all-success', {});
-        const got = await tsDrive(pipe, 'all-success', {});
-        expect(got).toEqual(expected);
-    });
-
-    it('iter-only descriptor stream matches CPython', async () => {
-        const pipe = mkPipe(LINEAR_PIPE);
-        const expected = pyDrive(pipe, 'iter-only', { topic: 'mirror' });
-        const got = await tsDrive(pipe, 'iter-only', { topic: 'mirror' });
-        expect(got).toEqual(expected);
     });
 });

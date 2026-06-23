@@ -6,10 +6,10 @@
 
 ## Overall
 
-**56 / 138 steps done · 41%**
+**62 / 141 steps done · 44%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 16 | 16 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 19 | 13 | 6 | 0 | 0 | ███░░░░░░░ 32% |
 | 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
@@ -35,13 +35,13 @@
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
-**Road to py2ts Teardown Completion** — 0 / 16 done (0%)
+**Road to py2ts Teardown Completion** — 6 / 19 done (32%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Pre-flight gates (block Phase 1) — council-mandated | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 1 | Purge the remaining live-python test layer | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | CI + scaffolding cleanup (requires Phase 1 complete) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Pre-flight gates (block Phase 1) — council-mandated | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 1 | Purge the remaining live-python test layer | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+| 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
 | 2b | AI-council live-call layer (py2ts gap — transport now wired) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consumer + merge readiness | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 

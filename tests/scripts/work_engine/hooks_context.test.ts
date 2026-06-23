@@ -1,6 +1,4 @@
-// Golden-parity + unit tests for the py2ts work_engine.hooks `context` twin
-// (ADR-094). `context.py` is a dataclass with stdlib-only imports.
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -18,23 +16,6 @@ const CONTEXT_PY = path.join(
     'hooks',
     'context.py',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-function runPy(body: string): SpawnSyncReturns<string> {
-    const loader = [
-        'import sys, importlib.util',
-        `spec = importlib.util.spec_from_file_location("context", ${JSON.stringify(CONTEXT_PY)})`,
-        'context = importlib.util.module_from_spec(spec)',
-        'sys.modules["context"] = context',
-        'spec.loader.exec_module(context)',
-    ].join('\n');
-    return spawnSync('python3', ['-c', `${loader}\n${body}`], { encoding: 'utf8' });
-}
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 describe('work_engine.hooks.context — TS unit checks', () => {
     it('all fields default to null / empty extra', () => {
@@ -66,42 +47,5 @@ describe('work_engine.hooks.context — TS unit checks', () => {
         expect(c.set_name).toBe('backend');
         expect(c.halting).toBe('phase');
         expect(c.work).toBeNull();
-    });
-});
-
-describePy('work_engine.hooks.context — parity (python3 vs TS)', () => {
-    it('default field set + None-defaults match the dataclass', () => {
-        const r = runPy(
-            [
-                'import dataclasses, json',
-                'c = context.HookContext()',
-                'd = dataclasses.asdict(c)',
-                'print(json.dumps(d, default=str))',
-            ].join('\n'),
-        );
-        expect(r.status).toBe(0);
-        const py = JSON.parse(r.stdout) as Record<string, unknown>;
-        const c = new HookContext();
-        // Same field names, all None/empty.
-        expect(Object.keys(py).sort()).toEqual(
-            [
-                'args',
-                'delivery',
-                'exception',
-                'extra',
-                'final',
-                'fmt',
-                'halting',
-                'result',
-                'set_name',
-                'state_file',
-                'step_name',
-                'work',
-            ].sort(),
-        );
-        expect(py['step_name']).toBeNull();
-        expect(py['extra']).toEqual({});
-        expect(c.step_name).toBeNull();
-        expect(c.extra).toEqual({});
     });
 });

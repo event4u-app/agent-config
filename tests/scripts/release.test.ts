@@ -53,14 +53,9 @@ import {
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'release.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'release.py');
 const TSX_BIN =
     process.env.TSX_BIN ??
     path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmpFile(name: string, content: string): string {
@@ -415,10 +410,6 @@ interface RunOut {
     stderr: string;
     status: number | null;
 }
-function runPy(args: string[]): RunOut {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
 function runTs(args: string[]): RunOut {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
     return { stdout: r.stdout, stderr: r.stderr, status: r.status };
@@ -494,52 +485,6 @@ function normalizeDryRun(s: string): string {
         .replace(/[0-9a-f]{40}/g, 'SHA40') // normalize: full commit SHA
         .replace(/[0-9a-f]{7}\b/g, 'SHA7'); // normalize: short SHA
 }
-
-describe.runIf(hasPython3())('release CLI — golden parity (python3 vs tsx)', () => {
-    it('--help → exit 0, stable usage token', () => {
-        const py = runPy(['--help']);
-        const ts = runTs(['--help']);
-        // argparse help BODY is COLUMNS-dependent → assert exit + token only.
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(py.stdout).toContain('usage:');
-        expect(ts.stdout).toContain('usage:');
-        expect(ts.stdout).toContain('--as');
-    });
-
-    it('-h → exit 0', () => {
-        expect(runPy(['-h']).status).toBe(0);
-        expect(runTs(['-h']).status).toBe(0);
-    });
-
-    it('bad --as choice → exit 2, stable error token', () => {
-        const py = runPy(['--as=bogus']);
-        const ts = runTs(['--as=bogus']);
-        expect(py.status).toBe(2);
-        expect(ts.status).toBe(2);
-        // usage block wraps to terminal width (env-dependent) → assert the line.
-        expect(py.stderr).toContain("argument --as: invalid choice: 'bogus'");
-        expect(ts.stderr).toContain("argument --as: invalid choice: 'bogus'");
-    });
-
-    it('unknown flag → exit 2, stable error token', () => {
-        const py = runPy(['--nope']);
-        const ts = runTs(['--nope']);
-        expect(py.status).toBe(2);
-        expect(ts.status).toBe(2);
-        expect(py.stderr).toContain('unrecognized arguments: --nope');
-        expect(ts.stderr).toContain('unrecognized arguments: --nope');
-    });
-
-    it('--dry-run → exit 0, byte-identical (normalized date + SHAs)', () => {
-        const py = runPy(['--dry-run']);
-        const ts = runTs(['--dry-run']);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(normalizeDryRun(ts.stdout)).toBe(normalizeDryRun(py.stdout));
-        expect(ts.stderr).toBe(py.stderr);
-    });
-});
 
 // ─── era-split gate — newest-release exemption (regression) ───────────────────
 // The gate in main() must measure the *accumulated* era body (newest release

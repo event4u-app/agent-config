@@ -229,9 +229,7 @@ const TSX_BIN = join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-const PY = join(REPO_ROOT, 'src', 'scripts', 'check_always_budget.py');
 const TS = join(REPO_ROOT, 'src', 'scripts', 'check_always_budget.ts');
-const HAS_PYTHON3 = spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
 
 interface RunResult {
     status: number | null;
@@ -243,30 +241,3 @@ function run(bin: string, scriptArgs: readonly string[]): RunResult {
     const r = spawnSync(bin, scriptArgs, { cwd: REPO_ROOT, encoding: 'utf8' });
     return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
-
-function assertParity(args: readonly string[]): void {
-    const py = run('python3', [PY, ...args]);
-    const ts = run(TSX_BIN, [TS, ...args]);
-    expect(ts.stdout).toBe(py.stdout);
-    expect(ts.stderr).toBe(py.stderr);
-    expect(ts.status).toBe(py.status);
-}
-
-describe.skipIf(!HAS_PYTHON3)('check_always_budget golden parity — real repo', () => {
-    // --no-trend keeps the run pure (the default writes .github/budget-trend.jsonl).
-    it('matches Python on --no-trend (full breakdown)', () => {
-        assertParity(['--no-trend']);
-    });
-
-    it('matches Python on --no-trend --quiet', () => {
-        assertParity(['--no-trend', '--quiet']);
-    });
-
-    it('matches Python on an unknown flag (exit 2)', () => {
-        const py = run('python3', [PY, '--bogus']);
-        const ts = run(TSX_BIN, [TS, '--bogus']);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
-    });
-});

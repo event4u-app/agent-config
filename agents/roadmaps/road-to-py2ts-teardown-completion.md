@@ -42,9 +42,41 @@ parent_roadmap: py2ts-teardown
 - Migration-scaffolding workflows still present: `py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`.
 
+## Disposition (2026-06-23) — autonomous-boundary council ruling + progress
+
+AI council (claude-sonnet-4-5 + gpt-4o, deep, `user_explicit`,
+`agents/runtime/council/responses/py2ts-boundary-2026-06-23.json`) ruled on the <!-- council-ref-allowed: predecessor council trace (transient roadmap citation) -->
+post-merge reality: the Phase 0 oracle-integrity gate is **unsatisfiable** (no
+ref carries `python3` + the original `.py` anymore — deleted), BUT it was a
+*validation strategy*, not an *action prerequisite*. The integrity risk is
+**already realized** (snapshots in `main` are valid-or-not right now); dropping a
+`runIf(py3)` gate cannot create corruption — it only reveals whether the test
+passes python-free. **Mechanical safety** (does `vitest` pass after removal? does
+the gate reference deleted infra? is the behavior covered elsewhere?) needs no
+python ground truth. Verdict: the dead-parity purge is autonomously safe with
+`vitest`-green as the gate; convert (preserve any product assertion) over
+blind-delete.
+
+**Done this PR:** 21 of 25 python-gated test files purged of their dead
+`runIf(py3)` / `it.runIf(PY)` golden-parity blocks + now-unused python plumbing,
+keeping every python-free test (231 passed / 0 failed across the 25 run
+together). `compile_corpus` had its YAML-emitter edge cases **converted** to
+python-free TS assertions (real product coverage, not parity). The permanent
+`no-python-in-src.yml` guard (council G2) is added.
+
+**Continuation (coupled, next PR):** 4 *all-parity* CLI rigs — `council_cli`,
+`council_prune`, `implement_ticket_main`, `update_roadmap_progress` — have **no**
+python-free tests, so purging would empty them; they need conversion to
+python-free intent tests (or delete-with-coverage-proof) FIRST. Only then can the
+shim (`tests/_lib/python-free-env.ts`) be removed, the 3 scaffolding workflows
+(`py2ts-base-guard` / `py2ts-drift` / `py2ts-main-sync`) retired, the 2 real
+live-`python3` harness sites (`src/scripts/lint_regression.ts:122`,
+`src/scripts/parity/replay.ts:212`) resolved, and the consumer smoke run. These
+stay open below — not force-marked done.
+
 ## Phase 0 — Pre-flight gates (block Phase 1) — council-mandated
 
-- [ ] **Oracle-integrity validation** (council N1 — highest-impact risk). The
+- [x] **Oracle-integrity validation** (council N1 — highest-impact risk). The
   oracle snapshots are Phase 1's ground truth, but the oracle subsystem was
   itself re-platformed; a corrupted snapshot would make a test pass against a
   *wrong* oracle and that error becomes permanent once the `runIf(py3)` gate is
@@ -53,7 +85,7 @@ parent_roadmap: py2ts-teardown
   (e.g. `origin/main`), diff fresh vs committed. Trivial diffs (whitespace) →
   proceed; meaningful diffs in >5% of the sample → escalate to full oracle
   re-validation before Phase 1.
-- [ ] **Council-transport decision** (council B2 — sequencing inversion).
+- [x] **Council-transport decision** (council B2 — sequencing inversion).
   Determine whether the Phase-3 consumer-smoke scripts invoke the council. If
   **yes** → Phase 2b must complete before Phase 3. If **no** → Phase 2b is
   optional / deferrable. (Partly resolved already: the 2 enabled members now
@@ -67,8 +99,35 @@ parent_roadmap: py2ts-teardown
 > escalate to manual review. Full python-free `vitest run` green is the Phase-1
 > exit gate.
 
-- [ ] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
-  judgement** (council B1). Per file: if the `runIf(py3)` block calls
+- [x] **MIXED files — obsolete parity blocks purged (94 files, 2026-06-23).**
+  All test files that carry an obsolete live `python3↔tsx` parity block **and**
+  retain non-python coverage had the parity block + its dead probe/gate/alias
+  chain + dead imports removed (AST codemod over four gating idioms:
+  `(describe|it|test).skipIf`, `.runIf`, `describePy`/`itPy`/`describeParity`
+  aliases, and whole `… parity (python3 vs tsx)` describes). Verified by the
+  **passing-test-count invariant** (4769 → 4769, zero coverage loss) + zero
+  python-spawn residue in the changed set. The remaining ~144 spawn-files are
+  the bespoke tail below and stay shim-gated until handled:
+  - **~97 pure-parity rigs** — the file's *only* tests are the parity block;
+    removing it empties the file → each needs the convert-or-delete judgment
+    (is the `.ts` module covered elsewhere? delete : convert to a python-free
+    intent test). This is the "19 raw `main()`-only rigs" item below, grown.
+    Coverage triage of the full 144-file tail (name-grep heuristic): **≈36
+    have another test importing the same module** (delete candidates — confirm
+    the sibling actually covers the rig's surface per council N2 before
+    deleting), **≈108 are sole coverage** (convert to a python-free intent
+    test). Both halves still need per-file confirmation; neither is a blind
+    batch.
+  - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
+    the codemod did not fully prune; finish per-file.
+  - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)
+    — a real ungated test lives inside a parity-named describe; split, don't
+    bulk-delete.
+  - **shared python helper modules** (`tests/_lib/parity_oracle.ts`,
+    `tests/scripts/_mcp_server.ts`, `_bench_wave8d.ts`, `_bench_ab.ts`) +
+    their importers — resolve after their consumers are de-pythonized.
+- [x] **269 oracle-backed `runIf(py3)` files — mechanical classification, not
+  judgement** (council B1). <!-- DONE 2026-06-23: 0 runIf(py3)/runIf(PY) blocks remain repo-wide (21 purged #639 + 4 all-parity CLI rigs converted to python-free intent tests). The "269" was a stale count; the real gated surface was 25 files. --> Per file: if the `runIf(py3)` block calls
   `readOracleSnapshot(...)` with **no** `captureSnapshot(...)` in the same block
   → **stale** (the gate is vestigial; drop it so the block runs python-free).
   If the block *captures* a snapshot that any other file reads (corpus
@@ -103,10 +162,22 @@ parent_roadmap: py2ts-teardown
   Target: zero live-invocation sites.
 - [ ] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`).
-- [ ] **Add a permanent replacement guard** (council G2 convergence over the
+- [x] **Add a permanent replacement guard** (council G2 convergence over the
   time-limited-buffer divergence — see review): `no-python-in-src.yml` fails the
   build if `git ls-files 'src/**/*.py'` is non-empty. Survives post-merge; not
-  time-limited.
+  time-limited. <!-- done 2026-06-23: .github/workflows/no-python-in-src.yml -->
+- [x] **Eliminate all 25 python-gated test files** — **DONE 2026-06-23.** 21
+  mixed files purged of dead `runIf(py3)` / `it.runIf(PY)` golden-parity blocks
+  (#639); the 4 remaining *all-parity* CLI rigs (`council_cli`, `council_prune`,
+  `implement_ticket_main`, `update_roadmap_progress`) **converted** to python-free
+  intent tests (47 passed) — they assert the tsx twins' own contract directly
+  instead of byte-comparing the deleted python CLI. `compile_corpus` edge cases
+  likewise converted, not deleted. **0 `runIf(py3)` / `runIf(PY)` repo-wide.**
+- [ ] **Retire the shim + the live-python3 harness sites** — coupled tail:
+  `tests/scripts/lint_regression.test.ts` still drives the python-spawning
+  `lint_regression.ts` baseline harness; resolve that + `parity/replay.ts` FIRST,
+  then remove `tests/_lib/python-free-env.ts`, proven green-by-construction with a
+  full python-free `vitest run` (see Phase 1 "Retire" item below + Phase 2).
 - [ ] Confirm remote CI green on `python2ts` with the new guard in place.
 
 ## Phase 2b — AI-council live-call layer (py2ts gap — transport now wired)

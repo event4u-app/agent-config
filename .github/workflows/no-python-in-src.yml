@@ -1,0 +1,51 @@
+name: No Python in src
+
+# Permanent post-teardown guard (road-to-py2ts-teardown-completion, council
+# G2 convergence — a permanent guard over a time-boxed buffer). The Python →
+# TypeScript teardown removed every `src/**/*.py`; this guard makes the
+# regression impossible: it fails the build if a Python file ever reappears
+# under the package source tree. Unlike the migration-scaffolding workflows
+# (py2ts-base-guard / py2ts-drift / py2ts-main-sync), this one is NOT
+# time-limited — it survives the python2ts → main merge and stays on main.
+#
+# Scope note: only `src/**/*.py` is gated. Intentional fixtures elsewhere
+# (tests/hooks/fixtures/concern_*.py, internal/**) are allowed — they are
+# data, not package source.
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - ".github/workflows/no-python-in-src.yml"
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "src/**"
+      - ".github/workflows/no-python-in-src.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  no-python-in-src:
+    name: no-python-in-src
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if any src/**/*.py exists
+        run: |
+          set -euo pipefail
+          hits="$(git ls-files 'src/**/*.py')"
+          if [ -n "$hits" ]; then
+            echo "::error::Python file(s) reappeared under src/ — the package source tree is TypeScript-only (post py2ts teardown). Remove or relocate:"
+            echo "$hits"
+            exit 1
+          fi
+          echo "OK — no src/**/*.py."

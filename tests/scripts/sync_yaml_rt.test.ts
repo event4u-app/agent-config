@@ -1,18 +1,5 @@
-/**
- * Production-port test for `src/scripts/sync_yaml_rt.ts`.
- *
- * Mirrors `tests/test_sync_round_trip.py` 1:1 (parse/emit/merge/heal/sync)
- * and adds golden differential parity against the live Python module
- * (`src/scripts/sync_yaml_rt.py`) via a `python3 -c` driver, over:
- *   - the spike's 12-fixture corpus (parse -> emit), and
- *   - the `tests/fixtures/sync_yaml_rt/` corpus (parse -> emit and full sync),
- *   - the synthetic merge / sync scenarios from the Python suite.
- *
- * The Python suite is the behavioral oracle (ADR-094). The differential
- * gate (skipped when python3 is absent) proves byte-identical behaviour.
- */
-import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -24,47 +11,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const RT_FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'sync_yaml_rt');
 const SPIKE_FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'spikes', 'fixtures', 'yaml-rt');
-const PY_MODULE_DIR = path.join(REPO_ROOT, 'src', 'scripts');
 
 function read(dir: string, name: string): string {
   return readFileSync(path.join(dir, name), 'utf-8');
-}
-
-// --- python3 availability gate for the differential parity tests ---------
-
-function pythonAvailable(): boolean {
-  try {
-    execFileSync('python3', ['--version'], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-}
-const HAS_PYTHON = pythonAvailable();
-
-/** Run an op (`emit_parse` | `sync`) through the live Python module. */
-function pyDriver(op: 'emit_parse' | 'sync', userText: string, templateText = ''): string {
-  const driver = [
-    'import sys, pathlib',
-    `sys.path.insert(0, ${JSON.stringify(PY_MODULE_DIR)})`,
-    'import sync_yaml_rt as rt',
-    'op = sys.argv[1]',
-    'data = sys.stdin.buffer.read().decode("utf-8")',
-    // Split user / template on a NUL sentinel for the sync op.
-    'if op == "sync":',
-    '    user, _, template = data.partition("\\x00")',
-    '    out = rt.sync(user, template)',
-    'else:',
-    '    out = rt.emit(rt.parse(data))',
-    'sys.stdout.buffer.write(out.encode("utf-8"))',
-    'sys.stdout.buffer.flush()',
-  ].join('\n');
-  const input = op === 'sync' ? `${userText}\x00${templateText}` : userText;
-  const out = execFileSync('python3', ['-c', driver, op], {
-    input: Buffer.from(input, 'utf-8'),
-    maxBuffer: 16 * 1024 * 1024,
-  });
-  return out.toString('utf-8');
 }
 
 // =====================================================================
@@ -364,66 +313,4 @@ describe('module API surface', () => {
     expect(typeof heal_user_block).toBe('function');
     expect(typeof sync).toBe('function');
   });
-});
-
-// =====================================================================
-// Golden differential parity vs. the live Python module
-// =====================================================================
-
-describe.skipIf(!HAS_PYTHON)('golden parity — TS vs Python sync_yaml_rt', () => {
-  // (a) parse -> emit over the spike's 12-fixture corpus.
-  const spikeFixtures = readdirSync(SPIKE_FIXTURE_DIR)
-    .filter((n) => n.endsWith('.yml'))
-    .sort();
-  for (const name of spikeFixtures) {
-    it(`spike/${name}: emit(parse) byte-identical to Python`, () => {
-      const input = read(SPIKE_FIXTURE_DIR, name);
-      expect(emit(parse(input))).toBe(pyDriver('emit_parse', input));
-    });
-  }
-
-  // (b) parse -> emit over the sync_yaml_rt fixture corpus.
-  const rtFixtures = existsSync(RT_FIXTURE_DIR)
-    ? readdirSync(RT_FIXTURE_DIR)
-        .filter((n) => n.endsWith('.yml'))
-        .sort()
-    : [];
-  for (const name of rtFixtures) {
-    it(`sync_yaml_rt/${name}: emit(parse) byte-identical to Python`, () => {
-      const input = read(RT_FIXTURE_DIR, name);
-      expect(emit(parse(input))).toBe(pyDriver('emit_parse', input));
-    });
-  }
-
-  // (c) full sync over the fixture corpus against template-basic.yml.
-  const templateBasic = read(RT_FIXTURE_DIR, 'template-basic.yml');
-  for (const name of rtFixtures) {
-    if (name === 'template-basic.yml' || name === 'empty.yml') continue;
-    it(`sync_yaml_rt/${name}: sync byte-identical to Python`, () => {
-      const userText = read(RT_FIXTURE_DIR, name);
-      expect(sync(userText, templateBasic)).toBe(pyDriver('sync', userText, templateBasic));
-    });
-  }
-
-  // (d) synthetic merge / sync scenarios mirrored from the Python suite.
-  const scenarios: Array<[string, string, string]> = [
-    [
-      'leaf-insert',
-      'personal:\n  ide: phpstorm\n  user_name: Matze\n',
-      "personal:\n  ide: ''\n  open_edited_files: false\n  user_name: ''\n",
-    ],
-    ['top-section-append', 'personal:\n  ide: phpstorm\n', "personal:\n  ide: ''\n\nonboarding:\n  onboarded: false\n"],
-    ['reordered-keys', 'section:\n  a: 1\n  c: 3\n  b: 2\n', 'section:\n  a: 0\n  b: 0\n  c: 0\n  d: 0\n'],
-    ['between-siblings', 'section:\n  a: 1\n  c: 3\n  b: 2\n', 'section:\n  a: 0\n  b: 0\n  b2: x\n  c: 0\n'],
-    ['three-level', 'a:\n  x:\n    p: 1\n', 'a:\n  x:\n    p: 0\n    q: 9\n'],
-    ['scalar-not-overwritten', 'personal: null\nrule_loading_tier: minimal\n', "rule_loading_tier: minimal\npersonal:\n  ide: ''\n  user_name: ''\n"],
-    ['crlf-user', 'personal:\r\n  ide: phpstorm\r\n', "personal:\n  ide: ''\n  user_name: ''\n"],
-    ['orphan-comment', '_user:\n  custom_orphan:  # only a comment\n', ''],
-    ['rehome', '_user:\n  _user:\n    rule_loading_tier: balanced\n  custom_orphan_key: keep\n', 'rule_loading_tier: minimal\n'],
-  ];
-  for (const [label, userText, templateText] of scenarios) {
-    it(`scenario/${label}: sync byte-identical to Python`, () => {
-      expect(sync(userText, templateText)).toBe(pyDriver('sync', userText, templateText));
-    });
-  }
 });

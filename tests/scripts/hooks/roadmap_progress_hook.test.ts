@@ -1,17 +1,4 @@
-// Tests for src/scripts/roadmap_progress_hook.ts (py2ts Phase 6 — hooks).
-//
-// 1:1 port of tests/test_roadmap_progress_hook.py (path-filter logic,
-// write-tool gating, regenerator dispatch, never-block guarantee) plus a
-// golden-parity layer.
-//
-// The hook re-shells to the GENERATED `update_roadmap_progress.ts`
-// regenerator (a `.ts` script), running it through the repo-local `tsx`
-// binary. The unit tests build a self-contained sentinel `.ts` regenerator
-// and run the hook in-process (which spawns tsx), so they require tsx — they
-// skipIf the tsx binary is absent. The golden-parity layer spawns both the
-// deleted Python hook (`roadmap_progress_hook.py`) and the TS hook for a
-// byte-for-byte compare, so it still requires python3.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -28,7 +15,6 @@ import {
 } from '../../../src/scripts/roadmap_progress_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'roadmap_progress_hook.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'roadmap_progress_hook.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -37,15 +23,9 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
 function hasTsx(): boolean {
     return fs.existsSync(TSX_BIN);
 }
-
-const py3 = hasPython3();
 const tsx = hasTsx();
 
 // Restore the default _package_roots after every test (parallels pytest's
@@ -294,22 +274,6 @@ interface RunResult {
     markerExists: boolean;
 }
 
-function runScript(
-    cmd: string,
-    args: string[],
-    cwd: string,
-    input: string,
-    marker: string,
-): RunResult {
-    const res = spawnSync(cmd, args, { input, encoding: 'utf8', cwd, env: { ...process.env } });
-    return {
-        status: res.status,
-        stdout: res.stdout ?? '',
-        stderr: res.stderr ?? '',
-        markerExists: fs.existsSync(marker),
-    };
-}
-
 // Build a consumer dir with a sentinel .py regenerator whose marker lives
 // INSIDE the consumer dir (so the two parity dirs stay isolated).
 function makeParityDir(prefix: string): { dir: string; marker: string } {
@@ -325,63 +289,3 @@ function makeParityDir(prefix: string): { dir: string; marker: string } {
     );
     return { dir, marker };
 }
-
-describe.skipIf(!py3)('roadmap_progress — golden parity', () => {
-    function scenario(name: string, input: string, args: string[] = ['--platform', 'augment']): void {
-        it(name, () => {
-            const py = makeParityDir('rp-par-py-');
-            const ts = makeParityDir('rp-par-ts-');
-            try {
-                const pyOut = runScript('python3', [PY_SCRIPT, ...args], py.dir, input, py.marker);
-                const tsOut = runScript(TSX_BIN, [TS_SCRIPT, ...args], ts.dir, input, ts.marker);
-                expect(tsOut.status).toBe(pyOut.status);
-                expect(tsOut.stdout).toBe(pyOut.stdout);
-                expect(tsOut.stderr).toBe(pyOut.stderr);
-                expect(tsOut.markerExists).toBe(pyOut.markerExists);
-            } finally {
-                fs.rmSync(py.dir, { recursive: true, force: true });
-                fs.rmSync(ts.dir, { recursive: true, force: true });
-            }
-        });
-    }
-
-    scenario(
-        'roadmap edit regenerates',
-        JSON.stringify({
-            hook_event_name: 'PostToolUse',
-            tool_name: 'save-file',
-            tool_input: { path: 'agents/roadmaps/new.md' },
-        }),
-    );
-    scenario(
-        'non-writer tool skips',
-        JSON.stringify({
-            hook_event_name: 'PostToolUse',
-            tool_name: 'view',
-            file_changes: [{ path: 'agents/roadmaps/x.md' }],
-        }),
-    );
-    scenario(
-        'out-of-roadmap path skips',
-        JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'save-file', tool_input: { path: 'src/x.php' } }),
-    );
-    scenario(
-        'archive path skips',
-        JSON.stringify({
-            hook_event_name: 'PostToolUse',
-            tool_name: 'str-replace-editor',
-            file_changes: [{ path: 'agents/roadmaps/archive/old.md' }],
-        }),
-    );
-    scenario('malformed stdin', 'not json {');
-    scenario('empty stdin', '');
-    scenario(
-        'verbose stderr line',
-        JSON.stringify({
-            hook_event_name: 'PostToolUse',
-            tool_name: 'save-file',
-            tool_input: { path: 'agents/roadmaps/new.md' },
-        }),
-        ['--verbose'],
-    );
-});

@@ -1,23 +1,4 @@
-/**
- * Tests for `src/scripts/_lib/agents_overlay.ts`.
- *
- * 1:1 vitest port of `tests/test_agents_overlay.py` — the cascade
- * resolver contract suite. Covers every branch of `resolve_overlay`:
- * no-intermediate, one-intermediate-layer, CWD-wins, user-global
- * `overrides/` asymmetry, user-global `contexts/`/`decisions/` skip,
- * full chain, submodule `.git`-file, no-`.git`, and invalid-kind throw.
- *
- * Plus a differential block comparing the TS port's resolved path
- * against the live Python module via a `python3` driver (pattern:
- * tests/lib/agent_settings.test.ts).
- *
- * Port mechanics:
- *   - pytest `tmp_path`                 → `make_tmp()` (cleaned afterEach)
- *   - `_isolated_user_global` fixture   → `isolate_user_global()` (restored afterEach)
- *   - `pytest.raises(ValueError)`       → `expect(...).toThrow(...)`
- *   - `.read_text()`                    → `fs.readFileSync(..., 'utf-8')`
- */
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -215,26 +196,6 @@ describe('submodule + no-.git edge cases', () => {
 
 const DRIVER = path.join(REPO_ROOT, 'tests', 'lib', 'agents_overlay_py_driver.py');
 
-/**
- * Drive the Python module with the same user-global redirect + inputs and
- * return its JSON. The driver emits the resolved path relative to `cwd`
- * (or `user-global:`-prefixed when it lives under the user-global dir).
- */
-function py_driver(
-    user_global_agents_dir: string,
-    name: string,
-    kind: string,
-    cwd: string,
-): unknown {
-    const proc = spawnSync('python3', [DRIVER, user_global_agents_dir, name, kind, cwd], {
-        encoding: 'utf-8',
-    });
-    if (proc.status !== 0) {
-        throw new Error(`python driver failed: ${proc.stderr}`);
-    }
-    return JSON.parse(proc.stdout);
-}
-
 /** Encode a TS `resolve_overlay` result the same way the driver does. */
 function ts_encode(
     resolved: string | null,
@@ -275,53 +236,3 @@ function ts_run(
     const resolved = ao.resolve_overlay(name, kind, cwd);
     return ts_encode(resolved, cwd, user_global_agents_dir);
 }
-
-const PY_OK = (() => {
-    const probe = spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf-8' });
-    return probe.status === 0;
-})();
-
-describe.skipIf(!PY_OK)('differential — TS port JSON-equals live Python module', () => {
-    it('fixture A: full chain — deepest in-project wins', () => {
-        const tmp = make_tmp();
-        const fake_global = isolate_user_global(tmp);
-        init_git_dir(tmp);
-        write_overlay(path.dirname(fake_global), 'overrides', 'p', 'user');
-        write_overlay(tmp, 'overrides', 'p', 'root');
-        const mid = mkdirp(path.join(tmp, 'mid'));
-        write_overlay(mid, 'overrides', 'p', 'mid');
-        const deep = mkdirp(path.join(mid, 'deep'));
-        write_overlay(deep, 'overrides', 'p', 'deep');
-        const ts = ts_run(fake_global, 'p', 'overrides', deep);
-        expect(ts).toEqual(py_driver(fake_global, 'p', 'overrides', deep));
-    });
-
-    it('fixture B: user-global overrides hit (no in-project layer)', () => {
-        const tmp = make_tmp();
-        const fake_global = isolate_user_global(tmp);
-        init_git_dir(tmp);
-        write_overlay(path.dirname(fake_global), 'overrides', 'personal', 'user');
-        const deep = mkdirp(path.join(tmp, 'sub'));
-        const ts = ts_run(fake_global, 'personal', 'overrides', deep);
-        expect(ts).toEqual(py_driver(fake_global, 'personal', 'overrides', deep));
-    });
-
-    it('fixture C: contexts skips user-global → null', () => {
-        const tmp = make_tmp();
-        const fake_global = isolate_user_global(tmp);
-        init_git_dir(tmp);
-        write_overlay(path.dirname(fake_global), 'contexts', 'leaked', 'user');
-        const deep = mkdirp(path.join(tmp, 'sub'));
-        const ts = ts_run(fake_global, 'leaked', 'contexts', deep);
-        expect(ts).toEqual(py_driver(fake_global, 'leaked', 'contexts', deep));
-        expect(ts).toEqual({ path: null });
-    });
-
-    it('fixture D: invalid kind → error shape', () => {
-        const tmp = make_tmp();
-        const fake_global = isolate_user_global(tmp);
-        const py = py_driver(fake_global, 'foo', 'roadmaps', tmp) as { error?: string };
-        expect(py.error).toBeDefined();
-        expect(() => ao.resolve_overlay('foo', 'roadmaps', tmp)).toThrow(/not cascade-eligible/);
-    });
-});

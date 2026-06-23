@@ -1,15 +1,4 @@
-// Tests for src/scripts/migrate_command_suggestions.ts (py2ts Phase 8 / Wave 8e).
-//
-// No pytest suite existed. This is a focused differential suite that NEVER
-// touches the live repo — every run targets a fresh temp command dir:
-//   1. In-process unit checks of build_block / migrate_one (eligible, ineligible,
-//      already-present skip, idempotent re-run, escaping of inner quotes).
-//   2. A writer golden-parity layer: a Python driver patches the module's
-//      COMMANDS_DIR onto a temp fixture and runs main(); the TS twin runs the
-//      same fixture via `_setCommandsDirForTest` + main(). Stdout summary,
-//      stderr WARNING, exit code, and every rewritten file are asserted
-//      byte-identical. Skipped without python3.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -31,10 +20,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const FM_COMMIT = '---\nname: commit\ndescription: Commit changes.\n---\n\n# commit\n\nbody.\n';
 const FM_MODE = '---\nname: mode\ndescription: Switch mode.\n---\n\n# mode\n\nbody.\n';
@@ -111,72 +96,5 @@ describe('migrate_command_suggestions — in-process units', () => {
         writeFixture(tmp);
         _setCommandsDirForTest(tmp);
         expect(main()).toBe(1); // 3 files != table count
-    });
-});
-
-const py3 = hasPython3();
-
-function runPyDriver(commandsDir: string): { stdout: string; stderr: string; status: number | null } {
-    const driver = `import sys, importlib
-sys.path.insert(0, ${JSON.stringify(path.join(REPO_ROOT, 'src', 'scripts'))})
-from pathlib import Path
-m = importlib.import_module("migrate_command_suggestions")
-m.COMMANDS_DIR = Path(sys.argv[1])
-raise SystemExit(m.main())
-`;
-    const r = spawnSync('python3', ['-c', driver, commandsDir], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
-
-function runTsDriver(commandsDir: string): { stdout: string; stderr: string; status: number | null } {
-    const driver = `import { _setCommandsDirForTest, main } from ${JSON.stringify(
-        path.join(REPO_ROOT, 'src', 'scripts', 'migrate_command_suggestions.ts'),
-    )};
-_setCommandsDirForTest(process.argv[1]);
-process.exit(main());
-`;
-    const r = spawnSync(TSX_BIN, ['-e', driver, commandsDir], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
-
-describe.skipIf(!py3)('migrate_command_suggestions — writer golden parity (temp fixtures)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcs-par-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    it('rewrites + stdout + stderr + exit byte-identical (mixed fixture)', () => {
-        const pyDir = path.join(tmp, 'py');
-        const tsDir = path.join(tmp, 'ts');
-        writeFixture(pyDir);
-        writeFixture(tsDir);
-        const p = runPyDriver(pyDir);
-        const t = runTsDriver(tsDir);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-        for (const f of ['commit.md', 'mode.md', 'work.md']) {
-            expect(fs.readFileSync(path.join(tsDir, f), 'utf-8'), f).toBe(
-                fs.readFileSync(path.join(pyDir, f), 'utf-8'),
-            );
-        }
-    });
-
-    it('not-classified command → exit 1 with identical stderr message', () => {
-        const pyDir = path.join(tmp, 'py');
-        const tsDir = path.join(tmp, 'ts');
-        const body = '---\nname: not-a-real-command\ndescription: x.\n---\n\n# x\n';
-        fs.mkdirSync(pyDir, { recursive: true });
-        fs.mkdirSync(tsDir, { recursive: true });
-        fs.writeFileSync(path.join(pyDir, 'not-a-real-command.md'), body, 'utf-8');
-        fs.writeFileSync(path.join(tsDir, 'not-a-real-command.md'), body, 'utf-8');
-        const p = runPyDriver(pyDir);
-        const t = runTsDriver(tsDir);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
     });
 });

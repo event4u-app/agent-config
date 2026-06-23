@@ -1,17 +1,4 @@
-// GT-CS goldens — end-to-end suggestion engine acceptance tests.
-//
-// 1:1 port of tests/test_command_suggester_goldens.py (pytest → vitest,
-// ADR-094 parity contract). Nine cases mirror the
-// `road-to-context-aware-command-suggestion` acceptance criteria. Each runs
-// `load_commands → match → rank → apply_cooldown → render` against the real
-// `dist/agent-src/commands/` directory and asserts the structural invariants
-// the rule contract promises.
-//
-// A trailing golden-parity block runs python3 + the in-process TS driver on
-// the identical command catalogue and asserts byte-identical canonical JSON
-// (timing excluded — the pipeline uses a fresh cooldown store, no clock leaks).
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -27,13 +14,7 @@ import {
     render,
 } from '../../src/scripts/command_suggester/index.js';
 import type { CommandSpec, Match } from '../../src/scripts/command_suggester/types.js';
-import {
-    COMMANDS_DIR,
-    PY_DRIVER,
-    REPO_ROOT,
-    commandsDirExists,
-    runDriver,
-} from './_command_suggester.js';
+import { COMMANDS_DIR } from './_command_suggester.js';
 
 const _RULE_RESOLVED = resolve_logical('rules/command-suggestion-policy.md');
 if (_RULE_RESOLVED === null) {
@@ -132,30 +113,4 @@ describe('GT-CS goldens', () => {
         const { ranked } = suggest(msg);
         expect(ranked.every((m) => m.command !== 'git-commit' && m.command !== 'git-commit-in-chunks')).toBe(true);
     });
-});
-
-// ---------------------------------------------------------------------------
-// Golden parity — python3 driver vs in-process TS driver, byte-identical.
-// Timing excluded (fresh cooldown store, no record_shown, no clock leak).
-// ---------------------------------------------------------------------------
-
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
-
-describe('golden parity (python3 vs tsx)', () => {
-    it.skipIf(!HAVE_PYTHON || !commandsDirExists())(
-        'canonical JSON is byte-identical',
-        () => {
-            const py = spawnSync('python3', [PY_DRIVER, COMMANDS_DIR], {
-                cwd: REPO_ROOT,
-                encoding: 'utf8',
-                maxBuffer: 64 * 1024 * 1024,
-            });
-            expect(py.status).toBe(0);
-            const ts = runDriver(COMMANDS_DIR);
-            expect(ts).toBe(py.stdout);
-        },
-    );
 });

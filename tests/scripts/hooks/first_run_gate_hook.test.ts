@@ -1,12 +1,4 @@
-// Tests for src/scripts/first_run_gate_hook.ts (py2ts Phase 6 — hooks).
-//
-// 1:1 port of tests/hooks/test_first_run_gate.py (fixtures A/B/C —
-// enabled+unscaffolded, enabled+complete, not-enabled) plus a golden-parity
-// layer: python3 first_run_gate_hook.py vs tsx first_run_gate_hook.ts fed
-// identical stdin + CLAUDE_PROJECT_DIR, asserting byte-identical
-// stdout+stderr+exit AND identical action-file writes in an isolated tmp
-// project. Parity skipped without python3.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -16,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { run } from '../../../src/scripts/first_run_gate_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'first_run_gate_hook.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'first_run_gate_hook.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -25,10 +16,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 const ACTION_FILE = '.augment/.first-run-action-needed.md';
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function makeSettings(root: string, pluginEnabled: boolean): void {
     const target = path.join(root, '.claude', 'settings.json');
@@ -180,80 +167,9 @@ describe('first_run_gate — replay mode', () => {
     });
 });
 
-// ── Golden parity vs python3 ─────────────────────────────────────────
-
-const py3 = hasPython3();
-
 interface RunResult {
     stdout: string;
     stderr: string;
     status: number | null;
     actionFile: string | null;
 }
-
-function runScript(cmd: string, args: string[], projectDir: string): RunResult {
-    const res = spawnSync(cmd, args, {
-        input: '{"hook_event_name": "session_start", "session_id": "s1"}',
-        encoding: 'utf8',
-        env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir, AGENT_CONFIG_REPLAY: '' },
-    });
-    const af = path.join(projectDir, ACTION_FILE);
-    return {
-        stdout: res.stdout ?? '',
-        // strip the project-dir absolute path so the two runs compare equal
-        // (the script only mentions a relative file path in stderr).
-        stderr: res.stderr ?? '',
-        status: res.status,
-        actionFile: fs.existsSync(af) ? fs.readFileSync(af, 'utf8') : null,
-    };
-}
-
-describe.skipIf(!py3)('first_run_gate — golden parity', () => {
-    function scenario(name: string, setup: (root: string) => void): void {
-        it(name, () => {
-            const pyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'frg-py-'));
-            const tsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'frg-ts-'));
-            try {
-                setup(pyDir);
-                setup(tsDir);
-                const pyOut = runScript('python3', [PY_SCRIPT, '--platform', 'claude'], pyDir);
-                const tsOut = runScript(TSX_BIN, [TS_SCRIPT, '--platform', 'claude'], tsDir);
-                expect(tsOut.status).toBe(pyOut.status);
-                expect(tsOut.stdout).toBe(pyOut.stdout);
-                expect(tsOut.stderr).toBe(pyOut.stderr);
-                expect(tsOut.actionFile).toBe(pyOut.actionFile);
-            } finally {
-                fs.rmSync(pyDir, { recursive: true, force: true });
-                fs.rmSync(tsDir, { recursive: true, force: true });
-            }
-        });
-    }
-
-    scenario('enabled + unscaffolded', (root) => {
-        const t = path.join(root, '.claude', 'settings.json');
-        fs.mkdirSync(path.dirname(t), { recursive: true });
-        fs.writeFileSync(
-            t,
-            JSON.stringify({ enabledPlugins: { 'agent-config@event4u-agent-config': true } }),
-        );
-    });
-
-    scenario('not enabled (no settings)', () => {
-        /* empty project */
-    });
-
-    scenario('enabled + complete', (root) => {
-        const t = path.join(root, '.claude', 'settings.json');
-        fs.mkdirSync(path.dirname(t), { recursive: true });
-        fs.writeFileSync(
-            t,
-            JSON.stringify({ enabledPlugins: { 'agent-config@event4u-agent-config': true } }),
-        );
-        const ac = path.join(root, 'agent-config');
-        fs.writeFileSync(ac, '#!/bin/sh\nexit 0\n');
-        fs.chmodSync(ac, 0o755);
-        const reg = path.join(root, '.augment', 'scripts', 'update_roadmap_progress.py');
-        fs.mkdirSync(path.dirname(reg), { recursive: true });
-        fs.writeFileSync(reg, '#!/usr/bin/env python3\n');
-    });
-});

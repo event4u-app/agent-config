@@ -1,35 +1,14 @@
-// Tests for src/scripts/bench_condense_memory.ts (Phase 2 / Step 11 offline bench).
-//
-// The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-094 parity contract): the pure transform layer
-// (`chars_to_tokens`, `aggregate`, `render_md`) is differential-tested against
-// a tiny python3 harness, and a golden-parity block runs the full bench
-// end-to-end under python3 vs tsx, asserting byte-identical generated reports
-// (modulo the per-run `generated_at` timestamp) with a snapshot+restore guard
-// so the git-tracked report files are left untouched. Skipped without python3.
 
-import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { aggregate, chars_to_tokens, render_md } from '../../src/scripts/bench_condense_memory.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_condense_memory.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_condense_memory.py');
 const REPORT_JSON = join(REPO_ROOT, 'internal', 'bench', 'reports', 'telegraph-v2.json');
 const REPORT_MD = join(REPO_ROOT, 'internal', 'bench', 'reports', 'telegraph-v2.md');
-
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function pyyamlAvailable(): boolean {
-    return spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
-const HAVE_PYYAML = HAVE_PYTHON && pyyamlAvailable();
 
 describe('bench_condense_memory.ts — pure helpers', () => {
     it('chars_to_tokens uses banker rounding (round(n/4))', () => {
@@ -55,104 +34,6 @@ describe('bench_condense_memory.ts — pure helpers', () => {
         expect(agg.p10_saving_pct).toBeCloseTo(Math.min(10, 25, -20), 9);
         expect(agg.p90_saving_pct).toBeCloseTo(Math.max(10, 25, -20), 9);
         expect(Object.keys(agg.by_category_median_pct).sort()).toEqual(['cat1', 'cat2']);
-    });
-});
-
-describe.skipIf(!HAVE_PYTHON)('bench_condense_memory — differential pure layer vs python', () => {
-    it('aggregate matches python statistics for >=10 savings', () => {
-        const rows = [...Array(12).keys()].map((i) => mkRow(`f${i}.md`, i % 2 === 0 ? 'cat1' : 'cat2', 1000, 1000 - i * 7));
-        const tsAgg = aggregate(rows) as unknown as Record<string, unknown>;
-        const pyAgg = pyAggregate(rows);
-        expect(roundAll(tsAgg)).toEqual(roundAll(pyAgg));
-    });
-
-    it('render_md matches python for a fixed payload', () => {
-        const payload = {
-            generated_at: '2026-06-01T00:00:00Z',
-            schema: 'telegraph-v2',
-            rows: [
-                mkRow('AGENTS.md', 'thin-root-package', 1234, 1300),
-                mkRow('docs/x.md', 'prose-heavy-contract', 9000, 8500),
-                { path: 'missing.md', category: 'rule-classification', error: 'not-found' },
-            ],
-            aggregate: aggregate([
-                mkRow('AGENTS.md', 'thin-root-package', 1234, 1300),
-                mkRow('docs/x.md', 'prose-heavy-contract', 9000, 8500),
-                { path: 'missing.md', category: 'rule-classification', error: 'not-found' },
-            ]),
-        };
-        const tsMd = render_md(payload);
-        const pyMd = pyRenderMd(payload);
-        expect(tsMd).toBe(pyMd);
-    });
-});
-
-// --- golden parity: full bench end-to-end (snapshot+restore) -------------
-
-describe.skipIf(!HAVE_PYYAML)('bench_condense_memory — golden parity (full run)', () => {
-    let snapJson: string | null;
-    let snapMd: string | null;
-    beforeEach(() => {
-        snapJson = existsSync(REPORT_JSON) ? readFileSync(REPORT_JSON, 'utf-8') : null;
-        snapMd = existsSync(REPORT_MD) ? readFileSync(REPORT_MD, 'utf-8') : null;
-    });
-    afterEach(() => {
-        // Restore the git-tracked report files to their pre-test bytes so the
-        // working tree is left exactly as found (zero git drift).
-        if (snapJson !== null) {
-            writeFileSync(REPORT_JSON, snapJson, 'utf-8');
-        } else if (existsSync(REPORT_JSON)) {
-            rmSync(REPORT_JSON);
-        }
-        if (snapMd !== null) {
-            writeFileSync(REPORT_MD, snapMd, 'utf-8');
-        } else if (existsSync(REPORT_MD)) {
-            rmSync(REPORT_MD);
-        }
-    });
-
-    it('python vs tsx produce byte-identical reports (modulo generated_at)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(py.status, py.stderr).toBe(0);
-        const pyJson = readFileSync(REPORT_JSON, 'utf-8');
-        const pyMd = readFileSync(REPORT_MD, 'utf-8');
-
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.status, ts.stderr).toBe(0);
-        const tsJson = readFileSync(REPORT_JSON, 'utf-8');
-        const tsMd = readFileSync(REPORT_MD, 'utf-8');
-
-        // Documented parity divergence (AI-council 2026-06-13, sub-decision 1;
-        // see docs/migration/divergences/bench-stats-float-precision.md): Python's
-        // `statistics.{pstdev,median,quantiles}` sum exactly via `Fraction` then
-        // convert to float once, while the TS twins use naive float reduction.
-        // For most inputs the results are bit-identical; some inputs diverge by a
-        // single ULP (e.g. stdev_saving_pct 3.544402882224057 vs …576). Tolerate
-        // that by rounding non-integer numbers to 12 significant figures before
-        // comparison — fine-grained enough to catch any real (>12-sig) drift, the
-        // exact-Fraction stats twin is a tracked follow-up. Integers (char counts,
-        // call/error tallies) are NOT rounded, so structural drift still fails.
-        const roundFloats = (v: unknown): unknown => {
-            if (typeof v === 'number') return Number.isInteger(v) ? v : Number(v.toPrecision(12));
-            if (Array.isArray(v)) return v.map(roundFloats);
-            if (v && typeof v === 'object') {
-                const o: Record<string, unknown> = {};
-                for (const k of Object.keys(v as Record<string, unknown>)) {
-                    o[k] = roundFloats((v as Record<string, unknown>)[k]);
-                }
-                return o;
-            }
-            return v;
-        };
-        const normJson = (s: string): string =>
-            JSON.stringify(roundFloats(JSON.parse(s.replace(/"generated_at": "[^"]*"/, '"generated_at": "TS"'))));
-        const normMd = (s: string): string => s.replace(/\*\*Generated:\*\* .*/, '**Generated:** TS');
-        expect(normJson(tsJson)).toBe(normJson(pyJson));
-        expect(normMd(tsMd)).toBe(normMd(pyMd));
-
-        // stdout lines: "wrote: <json>" / "wrote: <md>" / "median saving: <pct>".
-        const normOut = (s: string): string => s;
-        expect(normOut(ts.stdout)).toBe(normOut(py.stdout));
     });
 });
 
@@ -204,36 +85,4 @@ function roundAll(agg: Record<string, unknown>): Record<string, unknown> {
         }
     }
     return out;
-}
-
-/** Run python's aggregate() over the same rows via the real module. */
-function pyAggregate(rows: unknown[]): Record<string, unknown> {
-    const code = [
-        'import json, sys',
-        `sys.path.insert(0, ${JSON.stringify(join(REPO_ROOT, 'src', 'scripts'))})`,
-        'import bench_condense_memory as b',
-        'rows = json.loads(sys.stdin.read())',
-        'print(json.dumps(b.aggregate(rows)))',
-    ].join('\n');
-    const res = spawnSync('python3', ['-c', code], { input: JSON.stringify(rows), encoding: 'utf8' });
-    if (res.status !== 0) {
-        throw new Error(`py aggregate failed: ${res.stderr}`);
-    }
-    return JSON.parse(res.stdout) as Record<string, unknown>;
-}
-
-/** Run python's render_md() over the same payload via the real module. */
-function pyRenderMd(payload: unknown): string {
-    const code = [
-        'import json, sys',
-        `sys.path.insert(0, ${JSON.stringify(join(REPO_ROOT, 'src', 'scripts'))})`,
-        'import bench_condense_memory as b',
-        'payload = json.loads(sys.stdin.read())',
-        'sys.stdout.write(b.render_md(payload))',
-    ].join('\n');
-    const res = spawnSync('python3', ['-c', code], { input: JSON.stringify(payload), encoding: 'utf8' });
-    if (res.status !== 0) {
-        throw new Error(`py render_md failed: ${res.stderr}`);
-    }
-    return res.stdout;
 }

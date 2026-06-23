@@ -1,18 +1,4 @@
-/**
- * Tests for `src/scripts/_lib/installed_lock.ts`.
- *
- * 1:1 vitest port of the module-level unit tests in
- * `tests/test_installed_lock.py` (ADR-088 Phase 2 / Wave 2a). The Python suite
- * also exercises `install.install_global` and `cmd_update._refresh_global_lockfile`
- * integration paths — those depend on `scripts/install.py` and
- * `scripts/_cli/cmd_update.py`, which are NOT in this wave's batch and remain
- * Python. Those integration tests stay in the Python suite until their owning
- * modules are ported; they are intentionally out of scope here.
- *
- * A differential block compares the TS lockfile wire format against the Python
- * reference via a `python3 -c` driver (pattern: tests/spikes/yaml_rt_py_driver.py).
- */
-import { execFileSync } from "node:child_process";
+
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -202,84 +188,8 @@ describe("installed_lock module", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Differential block — Python `_render` is the reference wire format.
-// Pattern per tests/spikes/yaml_rt_py_driver.py.
-// ---------------------------------------------------------------------------
-
-const PY_RENDER_DRIVER = `
-import json, os, sys
-sys.path.insert(0, os.path.join(os.getcwd(), "src"))
-from scripts._lib import installed_lock as il
-
-cases = json.load(sys.stdin)
-out = []
-for case in cases:
-    out.append(il._render(case["version"], case["tools"], case["installed_at"]))
-sys.stdout.write(json.dumps(out))
-`;
-
-function python3_available(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 interface RenderCase {
   version: string;
   tools: string[];
   installed_at: string;
 }
-
-function run_python_render(cases: RenderCase[]): string[] {
-  const stdout = execFileSync("python3", ["-c", PY_RENDER_DRIVER], {
-    input: JSON.stringify(cases),
-    encoding: "utf-8",
-    cwd: path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", ".."),
-  });
-  return JSON.parse(stdout) as string[];
-}
-
-// Reconstruct the TS wire format via write_lockfile on disk with a fixed
-// timestamp so the differential compares the exact bytes both renderers emit.
-function ts_render(c: RenderCase): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "il-diff-"));
-  try {
-    const target = path.join(dir, "installed.lock");
-    // The Python driver already de-dups/sorts via _render's caller in the
-    // module path; _render itself takes the tools list verbatim. To compare
-    // _render output directly, bypass write_lockfile's sorted(set(...)) and
-    // pass an already-sorted-unique list (the driver passes tools verbatim).
-    // We mirror by sorting+deduping here too, matching write_lockfile.
-    const sorted_unique = [...new Set(c.tools)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    installed_lock.write_lockfile(c.version, sorted_unique, {
-      path: target,
-      now: new Date(`${c.installed_at.replace(/Z$/, "")}Z`),
-    });
-    return fs.readFileSync(target, "utf-8");
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
-}
-
-describe.runIf(python3_available())("differential vs Python `_render`", () => {
-  it("byte-identical lockfile wire format", () => {
-    // Pass already-sorted-unique tool lists so `_render` (verbatim) and
-    // write_lockfile (sorted(set(...))) agree.
-    const cases: RenderCase[] = [
-      { version: "2.1.0", tools: [], installed_at: "2024-01-02T03:04:05Z" },
-      { version: "2.0.5", tools: ["aider", "codex"], installed_at: "2025-06-11T12:00:00Z" },
-      {
-        version: "v3.0.0-rc1",
-        tools: ["aider", "claude-code", "cursor", "windsurf", "zed"],
-        installed_at: "2026-12-31T23:59:59Z",
-      },
-    ];
-    const py = run_python_render(cases);
-    const ts = cases.map((c) => ts_render(c));
-    expect(ts).toEqual(py);
-  });
-});

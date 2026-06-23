@@ -1,18 +1,4 @@
-// Tests for src/scripts/build_discovery_manifest.ts (py2ts Phase 5).
-//
-// Two layers:
-//   1. A 1:1 port of tests/test_build_discovery_manifest.py — the ADR-015
-//      builder contract (checksum, optional requires, stats, determinism,
-//      orphan / deprecation / trust reports, workspace / pack sub-views), run
-//      against a tmp fixture tree with the module path config injected via
-//      `_setConfigForTest` (mirrors the pytest monkeypatch of mod.ROOT / SRC /
-//      VOCAB_DIR / artefact_roots / resolve_logical).
-//   2. A golden-parity layer on the REAL REPO: python3 build + tsx build are
-//      asserted byte-identical (generated_at normalized), and
-//      validate_discovery_manifest.py is asserted to PASS on the TS-built
-//      manifest. The committed manifest is restored afterwards. Skipped when
-//      python3 is unavailable.
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -396,14 +382,6 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         expect(sortKeys(mod._packs_view(m1))).toBe(sortKeys(mod._packs_view(m2)));
     });
 });
-
-// --- Layer 2: golden parity on the REAL REPO -------------------------------
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_discovery_manifest.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_discovery_manifest.ts');
 const VALIDATE_PY = path.join(REPO_ROOT, 'src', 'scripts', 'validate_discovery_manifest.py');
 const COMMITTED = path.join(REPO_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
@@ -420,53 +398,3 @@ function normalizeGeneratedAt(jsonText: string): string {
     obj.generated_at = '<normalised>';
     return JSON.stringify(obj, Object.keys(obj).sort(), 2);
 }
-
-const py3 = hasPython3();
-const runnable = py3 && fs.existsSync(COMMITTED);
-
-// --- Layer 3: visibility golden parity on a synthetic command fixture ------
-//
-// Self-contained: builds a tmp repo carrying command artefacts with explicit
-// `visibility:` AND tier-only (derive-path) frontmatter, then asserts the
-// python3 build and the tsx build emit a byte-identical manifest
-// (generated_at + scanner_version normalized — the latter hashes a different
-// file per runtime). This guarantees the ADR-092 visibility emission can never
-// silently regress in the TS twin, independent of whatever the real repo's
-// commands happen to carry. Skipped when python3 is unavailable.
-
-
-// Python driver: monkeypatch the module roots at the tmp fixture, build,
-// finalise, normalize the wall-clock + self-hash fields, print serialized JSON.
-
-describe.skipIf(!runnable)('build_discovery_manifest — golden parity (python3 vs tsx)', () => {
-    it('manifest stdout is byte-identical (generated_at normalized)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], big);
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], big);
-        expect(ts.status).toBe(0);
-        expect(py.status).toBe(0);
-        // Strip only the generated_at line; everything else (incl. checksum,
-        // scanner_version) must match byte-for-byte.
-        const strip = (s: string): string =>
-            s.replace(/"generated_at": "[^"]*"/g, '"generated_at": "<X>"');
-        expect(strip(ts.stdout)).toBe(strip(py.stdout));
-        // Belt-and-braces: structural deep-equal too.
-        expect(normalizeGeneratedAt(ts.stdout)).toBe(normalizeGeneratedAt(py.stdout));
-    });
-
-    it('TS-built manifest passes validate_discovery_manifest.py', () => {
-        // The committed manifest is gitignored/generated. Snapshot it, overwrite
-        // with the TS build, assert the Python validator (which re-builds with
-        // the Python scanner and diffs) passes, then restore.
-        const original = fs.readFileSync(COMMITTED, 'utf-8');
-        try {
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT], big);
-            expect(ts.status).toBe(0);
-            fs.writeFileSync(COMMITTED, ts.stdout, 'utf-8');
-            const validated = spawnSync('python3', [VALIDATE_PY, '--quiet'], big);
-            expect(validated.stderr).toBe('');
-            expect(validated.status).toBe(0);
-        } finally {
-            fs.writeFileSync(COMMITTED, original, 'utf-8');
-        }
-    });
-});

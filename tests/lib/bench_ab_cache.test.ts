@@ -21,7 +21,6 @@
  * directly.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -144,74 +143,6 @@ describe("hash_file", () => {
     expect(hash_file(p)).toBe(expected);
   });
 });
-
-// ─── differential parity vs the Python original ──────────────────────────────
-
-function python_available(): boolean {
-  try {
-    execFileSync("python3", ["--version"], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const PY_TO_DICT_DRIVER = `
-import json, sys
-sys.path.insert(0, "src")
-from scripts._lib import bench_ab_cache as cache
-d = json.loads(sys.stdin.read())
-key = cache.CacheKey(d["corpus_hash"], d["claude_cli_version"], d["target_shape_hash"])
-sys.stdout.write(json.dumps(key.to_dict()))
-`;
-
-const PY_HASH_DRIVER = `
-import sys
-sys.path.insert(0, "src")
-from pathlib import Path
-from scripts._lib import bench_ab_cache as cache
-sys.stdout.write(cache.hash_file(Path(sys.argv[1])))
-`;
-
-describe.skipIf(!python_available())(
-  "differential: TS twin vs Python original",
-  () => {
-    it("CacheKey.to_dict() JSON is byte-identical", () => {
-      const fields = {
-        corpus_hash: "deadbeefdeadbeef",
-        claude_cli_version: "claude 0.9.1 (Build 12345)",
-        target_shape_hash: "0011223344556677",
-      };
-      const ts = JSON.stringify(new CacheKey(
-        fields.corpus_hash,
-        fields.claude_cli_version,
-        fields.target_shape_hash,
-      ).to_dict());
-      // Python json.dumps default has no spaces between items? No — default
-      // uses ", " and ": " separators. Compare against the actual Python output.
-      const py = execFileSync("python3", ["-c", PY_TO_DICT_DRIVER], {
-        cwd: ROOT,
-        input: JSON.stringify(fields),
-        encoding: "utf-8",
-      });
-      // Normalize JS compact form vs Python default-separator form by parsing
-      // both and re-dumping with the same canonical separators, AND assert the
-      // field ORDER is identical (the byte-exact contract for the report key).
-      expect(orderedPairs(ts)).toEqual(orderedPairs(py));
-    });
-
-    it("hash_file digest matches over a real file", () => {
-      const p = path.join(tmp, "corpus.yaml");
-      fs.writeFileSync(p, "tasks:\n  - id: one\n  - id: two\n");
-      const tsHash = hash_file(p);
-      const pyHash = execFileSync("python3", ["-c", PY_HASH_DRIVER, p], {
-        cwd: ROOT,
-        encoding: "utf-8",
-      });
-      expect(tsHash).toBe(pyHash.trim());
-    });
-  },
-);
 
 /** Parse a JSON object and return its [key, value] pairs in source order. */
 function orderedPairs(jsonText: string): Array<[string, unknown]> {

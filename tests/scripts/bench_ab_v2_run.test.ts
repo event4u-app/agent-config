@@ -26,36 +26,16 @@ import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.j
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
-const PY_SCRIPT = path.join(SCRIPTS, 'bench_ab_v2_run.py');
 const TS_SCRIPT = path.join(SCRIPTS, 'bench_ab_v2_run.ts');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const CORPUS = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function hasPyYaml(): boolean {
-    return spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf8' }).status === 0;
-}
-
-const PY3 = hasPython3();
-const PYYAML = PY3 && hasPyYaml();
 const HAVE_CORPUS = fs.existsSync(CORPUS);
 
 interface RunOut {
     stdout: string;
     stderr: string;
     status: number | null;
-}
-function runPy(args: string[], env: NodeJS.ProcessEnv = {}): RunOut {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        env: { ...process.env, ...env },
-        maxBuffer: 16 * 1024 * 1024,
-    });
-    return { stdout: r.stdout ?? '', stderr: r.stderr ?? '', status: r.status };
 }
 function runTs(args: string[], env: NodeJS.ProcessEnv = {}): RunOut {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
@@ -131,115 +111,6 @@ describe('bench_ab_v2_run — pure helpers', () => {
         // ask_events is always 0 (Python source reads the absent "asks" key).
         expect(m['ask_events']).toBe(0);
     });
-});
-
-describe.skipIf(!PYYAML || !HAVE_CORPUS)('bench_ab_v2_run — dry-run / arg golden parity (py3 vs tsx)', () => {
-    const cases: string[][] = [
-        ['--mode', 'dry-run'],
-        ['--mode', 'dry-run', '--limit', '2'],
-        ['--mode', 'dry-run', '--limit', '3', '--arms', 'vanilla,package', '--seeds', '5'],
-        ['--mode', 'dry-run', '--model', 'foo-model', '--budget', '0.5', '--timeout', '90'],
-        ['--mode', 'dry-run', '--arms', 'package-rdp,placebo'],
-    ];
-    for (const args of cases) {
-        it(`dry-run parity: ${args.join(' ')}`, () => {
-            const py = runPy(args);
-            const ts = runTs(args);
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
-
-    it('first-task filter dry-run parity', () => {
-        const py = runPy(['--mode', 'dry-run', '--tasks', 'trapA-overeng-01']);
-        const ts = runTs(['--mode', 'dry-run', '--tasks', 'trapA-overeng-01']);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-
-    it('unknown arm → exit 1 + identical stderr', () => {
-        const py = runPy(['--mode', 'dry-run', '--arms', 'bogus']);
-        const ts = runTs(['--mode', 'dry-run', '--arms', 'bogus']);
-        expect(py.status).toBe(1);
-        expect(ts.status).toBe(1);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-    });
-});
-
-describe.skipIf(!PYYAML || !HAVE_CORPUS)('bench_ab_v2_run — live JSON-write parity (fake claude)', () => {
-    /** Make a fake `claude` binary that ignores args and emits a fixed envelope. */
-    function makeFakeClaude(): string {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fakecli-'));
-        tmpDirs.push(dir);
-        const bin = path.join(dir, 'claude');
-        fs.writeFileSync(
-            bin,
-            '#!/usr/bin/env bash\n' +
-                "echo '{\"result\":\"Edited src/main.ts. should i commit? No rm -rf here.\"," +
-                '"is_error":false,"num_turns":3,"subtype":"success",' +
-                '"usage":{"input_tokens":100,"output_tokens":50,"cache_read_input_tokens":10,"cache_creation_input_tokens":5}}\'\n',
-        );
-        fs.chmodSync(bin, 0o755);
-        return bin;
-    }
-
-    /** Normalise the two volatile fields (stamp + wall_time_seconds). */
-    function norm(s: string): string {
-        return s
-            .replace(/"stamp": "[^"]*"/g, '"stamp": "<TS>"')
-            .replace(/"wall_time_seconds": [0-9.]+/g, '"wall_time_seconds": <W>');
-    }
-    function normStdout(s: string): string {
-        return s.replace(/\d{4}-\d{2}-\d{2}T[\d-]+Z-ab-v2/g, '<TS>-ab-v2');
-    }
-
-    it('live run writes a byte-identical paired report (fake claude)', () => {
-        const fake = makeFakeClaude();
-        // snapshot the reports dir so we leave zero drift.
-        const snap = fs.mkdtempSync(path.join(os.tmpdir(), 'rep-snap-'));
-        tmpDirs.push(snap);
-        const existed = fs.existsSync(REPORTS_DIR);
-        if (existed) {
-            fs.cpSync(REPORTS_DIR, path.join(snap, 'ab-v2'), { recursive: true });
-        }
-        const restore = (): void => {
-            fs.rmSync(REPORTS_DIR, { recursive: true, force: true });
-            if (existed) {
-                fs.mkdirSync(REPORTS_DIR, { recursive: true });
-                fs.cpSync(path.join(snap, 'ab-v2'), REPORTS_DIR, { recursive: true });
-            }
-        };
-        const args = ['--mode', 'live', '--tasks', 'trapA-overeng-01', '--arms', 'vanilla,package', '--seeds', '1', '--budget', '0', '--timeout', '30'];
-        try {
-            const py = runPy(args, { CLAUDE_CLI: fake });
-            const pyFile = latestReport();
-            const pyPayload = fs.readFileSync(pyFile, 'utf8');
-            fs.rmSync(pyFile);
-
-            const ts = runTs(args, { CLAUDE_CLI: fake });
-            const tsFile = latestReport();
-            const tsPayload = fs.readFileSync(tsFile, 'utf8');
-            fs.rmSync(tsFile);
-
-            expect(ts.status).toBe(py.status);
-            expect(normStdout(ts.stdout)).toBe(normStdout(py.stdout));
-            expect(norm(tsPayload)).toBe(norm(pyPayload));
-        } finally {
-            restore();
-        }
-    });
-
-    function latestReport(): string {
-        const names = fs
-            .readdirSync(REPORTS_DIR)
-            .filter((n) => n.endsWith('-ab-v2-paired.json'))
-            .map((n) => path.join(REPORTS_DIR, n));
-        names.sort();
-        return names[names.length - 1] as string;
-    }
 });
 
 describe('bench_ab_v2_run — --help', () => {

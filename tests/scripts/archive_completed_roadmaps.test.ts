@@ -32,10 +32,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 function hasGit(): boolean {
     return spawnSync('git', ['--version'], { encoding: 'utf8' }).status === 0;
 }
@@ -48,10 +44,6 @@ function childEnv(): NodeJS.ProcessEnv {
         // update_roadmap_progress module; PYTHONPATH covers src/ packages too.
         PYTHONPATH: `${path.join(REPO_ROOT, 'src')}:${path.dirname(PY_SCRIPT)}`,
     };
-}
-
-function runPy(args: string[], cwd: string): SpawnSyncReturns<string> {
-    return spawnSync('python3', [PY_SCRIPT, ...args], { cwd, env: childEnv(), encoding: 'utf8' });
 }
 function runTs(args: string[], cwd: string): SpawnSyncReturns<string> {
     return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, env: childEnv(), encoding: 'utf8' });
@@ -80,124 +72,6 @@ function initRepo(dir: string, files: Record<string, string>): void {
 const COMPLETE = ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n');
 const OPEN = ['# Open', '', '## Phase 1 — Go', '- [ ] not done', ''].join('\n');
 const DEFERRED = ['# Deferred', '', '## Phase 1 — Wait', '- [x] done', '- [~] later', ''].join('\n');
-
-const ready = hasPython3() && hasGit();
-
-describe.runIf(ready)('archive_completed_roadmaps — golden parity (python3 vs tsx)', () => {
-    let tmp: string;
-    beforeEach(() => {
-        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'acr-parity-'));
-    });
-    afterEach(() => {
-        fs.rmSync(tmp, { recursive: true, force: true });
-    });
-
-    /** `--dry-run` touches nothing → drive both engines in the SAME repo and byte-compare. */
-    function expectDryMatch(args: string[], files: Record<string, string>): void {
-        const repo = path.join(tmp, 'shared');
-        initRepo(repo, files);
-        const py = runPy(args, repo);
-        const ts = runTs(args, repo);
-        expect(ts.status, 'exit').toBe(py.status);
-        expect(ts.stdout, 'stdout').toBe(py.stdout);
-        expect(ts.stderr, 'stderr').toBe(py.stderr);
-    }
-
-    it('--all --dry-run: lists complete roadmaps, skips open/deferred — byte-identical', () => {
-        expectDryMatch(['--all', '--dry-run'], {
-            'agents/roadmaps/road-to-complete.md': COMPLETE,
-            'agents/roadmaps/road-to-open.md': OPEN,
-            'agents/roadmaps/road-to-deferred.md': DEFERRED,
-        });
-    });
-
-    it('--all --dry-run: ref-migration count reported when an inbound ref exists', () => {
-        expectDryMatch(['--all', '--dry-run'], {
-            'agents/roadmaps/road-to-complete.md': COMPLETE,
-            // An inbound full-path reference → " (1 ref(s) migrated)" suffix.
-            'docs/some-adr.md': 'See agents/roadmaps/road-to-complete.md for detail.\n',
-        });
-    });
-
-    it('changed-only default with unresolvable base → stderr warning, exit 0, byte-identical', () => {
-        // A fresh `git init` repo has no `origin/main`, so the changed-only
-        // scope cannot resolve → the conservative "skipping" warning fires.
-        expectDryMatch([], {
-            'agents/roadmaps/road-to-complete.md': COMPLETE,
-        });
-    });
-
-    it('--all: no completed roadmaps → "ℹ️ No completed roadmaps" byte-identical', () => {
-        expectDryMatch(['--all'], {
-            'agents/roadmaps/road-to-open.md': OPEN,
-            'agents/roadmaps/road-to-deferred.md': DEFERRED,
-        });
-    });
-
-    it('--all: no agents/roadmaps dir → "ℹ️ No completed roadmaps" byte-identical', () => {
-        expectDryMatch(['--all'], {
-            'README.md': '# repo\n',
-        });
-    });
-
-    it('--all (mutating): both engines git-mv the same files to archive/ + rewrite the same refs', () => {
-        const files: Record<string, string> = {
-            'agents/roadmaps/road-to-complete.md': COMPLETE,
-            'agents/roadmaps/road-to-open.md': OPEN,
-            'docs/some-adr.md': 'See agents/roadmaps/road-to-complete.md for detail.\n',
-        };
-        const pyRepo = path.join(tmp, 'py-repo');
-        const tsRepo = path.join(tmp, 'ts-repo');
-        initRepo(pyRepo, files);
-        initRepo(tsRepo, files);
-
-        const py = runPy(['--all'], pyRepo);
-        const ts = runTs(['--all'], tsRepo);
-        expect(ts.status, 'exit').toBe(py.status);
-        expect(ts.stdout, 'stdout').toBe(py.stdout);
-        expect(ts.stderr, 'stderr').toBe(py.stderr);
-
-        // The complete roadmap moved to archive/ in BOTH repos; the open one did not.
-        for (const repo of [pyRepo, tsRepo]) {
-            expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-complete.md')), repo).toBe(true);
-            expect(fs.existsSync(path.join(repo, 'agents/roadmaps/road-to-complete.md')), repo).toBe(false);
-            expect(fs.existsSync(path.join(repo, 'agents/roadmaps/road-to-open.md')), repo).toBe(true);
-            // Inbound ref rewritten to the archive path.
-            const adr = fs.readFileSync(path.join(repo, 'docs/some-adr.md'), 'utf-8');
-            expect(adr.includes('agents/roadmaps/archive/road-to-complete.md'), repo).toBe(true);
-            expect(adr.includes('agents/roadmaps/road-to-complete.md for'), repo).toBe(false);
-        }
-
-        // The two repos' staged trees match (port-name diff is impossible — repo
-        // names never appear in tracked content). Compare `git status --porcelain`.
-        const norm = (s: string): string => s.trim();
-        expect(norm(git(tsRepo, 'status', '--porcelain').stdout)).toBe(
-            norm(git(pyRepo, 'status', '--porcelain').stdout),
-        );
-    });
-
-    it('unknown arg → exit 2, usage banner byte-identical', () => {
-        const repo = path.join(tmp, 'r');
-        initRepo(repo, { 'README.md': '# r\n' });
-        const py = runPy(['--bogus'], repo);
-        const ts = runTs(['--bogus'], repo);
-        expect(ts.status, 'exit').toBe(py.status);
-        expect(py.status).toBe(2);
-        expect(ts.stderr, 'stderr').toBe(py.stderr);
-        expect(ts.stdout, 'stdout').toBe(py.stdout);
-    });
-
-    it('--help → exit 0, usage token present (prose not byte-compared)', () => {
-        const repo = path.join(tmp, 'rh');
-        initRepo(repo, { 'README.md': '# r\n' });
-        const py = runPy(['--help'], repo);
-        const ts = runTs(['--help'], repo);
-        expect(ts.status, 'exit').toBe(py.status);
-        expect(py.status).toBe(0);
-        expect(py.stdout.includes('usage: archive_completed_roadmaps.py')).toBe(true);
-        expect(ts.stdout.includes('usage: archive_completed_roadmaps.py')).toBe(true);
-    });
-});
 
 // Untracked-safe archival (road-to-roadmap-archival-robustness, gap A).
 // TS-only enhancement (the Python twin was deleted in ADR-200), so this is

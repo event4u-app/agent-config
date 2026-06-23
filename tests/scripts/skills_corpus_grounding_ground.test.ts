@@ -30,7 +30,6 @@ import * as de from '../../src/skills/corpus-grounding/scripts/decision_engine.j
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'skills', 'corpus-grounding', 'scripts');
-const PY = path.join(SCRIPTS, 'ground.py');
 const TS = path.join(SCRIPTS, 'ground.ts');
 const TSX = path.join(
     REPO_ROOT,
@@ -39,10 +38,6 @@ const TSX = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 const TSX_BIN = process.env.TSX_BIN ? path.resolve(REPO_ROOT, process.env.TSX_BIN) : TSX;
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -138,15 +133,6 @@ function run(bin: string, args: string[]): SpawnSyncReturns<string> {
     return spawnSync(bin, args, { encoding: 'utf8', cwd: REPO_ROOT });
 }
 
-function assertParity(args: string[], normalize?: (s: string) => string): void {
-    const py = run('python3', [PY, ...args]);
-    const ts = run(TSX_BIN, [TS, ...args]);
-    const norm = normalize ?? ((s: string): string => s);
-    expect(ts.status).toBe(py.status);
-    expect(norm(ts.stdout)).toBe(norm(py.stdout));
-    expect(norm(ts.stderr)).toBe(norm(py.stderr));
-}
-
 // ── TS unit tests (pure helpers / async ground) ─────────────────────────────
 
 describe('decision_engine — detect_domain', () => {
@@ -191,143 +177,5 @@ describe('decision_engine — ground (async) on a real fixture', () => {
         expect(grounded.category).toBe('Dashboard Grid');
         expect((grounded.confidence as Record<string, unknown>).label).toBeDefined();
         expect(Array.isArray(grounded.evidence_gap)).toBe(true);
-    });
-});
-
-// ── Golden parity (python3 vs tsx) ──────────────────────────────────────────
-
-describe.runIf(hasPython3())('ground — golden parity (python3 vs tsx)', () => {
-    it('validate (valid) — OK + exit 0', () => {
-        const { manifest } = buildFixture();
-        assertParity(['validate', '--manifest', manifest]);
-    });
-
-    it('validate (invalid) — INVALID list + exit 1', () => {
-        const dir = mkTmp();
-        const bad = path.join(dir, 'bad.json');
-        fs.writeFileSync(bad, '{"manifest_version": 2}');
-        assertParity(['validate', '--manifest', bad]);
-    });
-
-    it('search auto-detect domain (--json)', () => {
-        const { manifest } = buildFixture();
-        assertParity(['search', '--manifest', manifest, 'muted calm palette', '--json']);
-    });
-
-    it('search explicit domain (text render)', () => {
-        const { manifest } = buildFixture();
-        assertParity(['search', '--manifest', manifest, '--domain', 'color', 'vibrant bold']);
-    });
-
-    it('search structured retriever + filter (--json)', () => {
-        const { manifest } = buildFixture();
-        assertParity([
-            'search', '--manifest', manifest, '--domain', 'color',
-            '--filter', 'Severity=HIGH', '--retriever', 'structured', 'x', '--json',
-        ]);
-    });
-
-    it('search hybrid retriever + empty query falls back to stable order', () => {
-        const { manifest } = buildFixture();
-        assertParity(['search', '--manifest', manifest, '--domain', 'color', '--retriever', 'hybrid', '', '--json']);
-    });
-
-    it('search repeated --filter (list value)', () => {
-        const { manifest } = buildFixture();
-        assertParity([
-            'search', '--manifest', manifest, '--domain', 'color',
-            '--filter', 'Severity=HIGH', '--filter', 'Severity=LOW', 'palette', '--json',
-        ]);
-    });
-
-    it('search no match → confidence 0.0 + evidence gap', () => {
-        const { manifest } = buildFixture();
-        assertParity(['search', '--manifest', manifest, '--domain', 'color', 'zzz nonexistent qqq', '--json']);
-    });
-
-    it('search file-not-found → error dict + exit 1 (path normalised)', () => {
-        const { dir, lookupOnly } = buildFixture();
-        const norm = (s: string): string => s.split(dir).join('DIR').split(fs.realpathSync.native(dir)).join('DIR');
-        assertParity(['search', '--manifest', lookupOnly, '--domain', 'color', 'x', '--json'], norm);
-    });
-
-    it('search unknown domain → error dict + exit 1', () => {
-        const { manifest } = buildFixture();
-        assertParity(['search', '--manifest', manifest, '--domain', 'bogus', 'x', '--json']);
-    });
-
-    it('search unknown stack → error dict + exit 1', () => {
-        const { manifest } = buildFixture();
-        assertParity(['search', '--manifest', manifest, '--stack', 'react', 'x', '--json']);
-    });
-
-    it('ground (--json) — full reasoning plan + aggregate confidence', () => {
-        const { manifest } = buildFixture();
-        assertParity(['ground', '--manifest', manifest, 'dashboard with muted palette', '--json']);
-    });
-
-    it('ground (markdown render)', () => {
-        const { manifest } = buildFixture();
-        assertParity(['ground', '--manifest', manifest, 'dashboard with muted palette']);
-    });
-
-    it('ground with --context flags', () => {
-        const { manifest } = buildFixture();
-        assertParity([
-            'ground', '--manifest', manifest, 'dashboard data heavy',
-            '--context', '{"dark_mode": true}', '--json',
-        ]);
-    });
-
-    it('ground manifest-not-found → Error on stderr + exit 1', () => {
-        const dir = mkTmp();
-        const missing = path.join(dir, 'nope.json');
-        const norm = (s: string): string => s.split(dir).join('DIR').split(fs.realpathSync.native(dir)).join('DIR');
-        assertParity(['ground', '--manifest', missing, 'x'], norm);
-    });
-
-    it('ground on a lookup-only manifest → ManifestError on stderr + exit 1', () => {
-        const { lookupOnly } = buildFixture();
-        assertParity(['ground', '--manifest', lookupOnly, 'x']);
-    });
-
-    it('ground --persist writes a byte-identical MASTER.md + page override', () => {
-        const { manifest } = buildFixture();
-        const pyDir = mkTmp();
-        const tsDir = mkTmp();
-        const py = run('python3', [PY, 'ground', '--manifest', manifest, 'Lux Store', '--persist', pyDir, '--page', 'Home', '--json']);
-        const ts = run(TSX_BIN, [TS, 'ground', '--manifest', manifest, 'Lux Store', '--persist', tsDir, '--page', 'Home', '--json']);
-        expect(ts.status).toBe(py.status);
-        // stdout embeds the persist dir path; normalise it.
-        expect(ts.stdout.split(tsDir).join('DIR')).toBe(py.stdout.split(pyDir).join('DIR'));
-        expect(ts.stderr).toBe(py.stderr);
-        const rel = path.join('design-system', 'lux-store');
-        expect(fs.readFileSync(path.join(tsDir, rel, 'MASTER.md'), 'utf8')).toBe(
-            fs.readFileSync(path.join(pyDir, rel, 'MASTER.md'), 'utf8'),
-        );
-        expect(fs.readFileSync(path.join(tsDir, rel, 'pages', 'home.md'), 'utf8')).toBe(
-            fs.readFileSync(path.join(pyDir, rel, 'pages', 'home.md'), 'utf8'),
-        );
-    });
-
-    it('reasoning.rules_module escape hatch — importlib (.py) vs dynamic import (.ts)', () => {
-        const { dir, manifest } = buildFixture();
-        // Matched module pair beside the manifest: .py for python, .ts for the twin.
-        fs.writeFileSync(
-            path.join(dir, 'custom_rules.py'),
-            'def evaluate(rules, query, context):\n' +
-                '    return {"matched": {"CUSTOM": "fired:" + query}, "unmatched": dict(rules)}\n',
-        );
-        fs.writeFileSync(
-            path.join(dir, 'custom_rules.ts'),
-            'export function evaluate(rules: Record<string, unknown>, query: string, _context: Record<string, unknown>) {\n' +
-                '    return { matched: { CUSTOM: "fired:" + query }, unmatched: { ...rules } };\n' +
-                '}\n',
-        );
-        const m = JSON.parse(fs.readFileSync(manifest, 'utf8')) as Record<string, unknown>;
-        (m.reasoning as Record<string, unknown>).rules_module = 'custom_rules.py';
-        const custom = path.join(dir, 'm_custom.json');
-        fs.writeFileSync(custom, JSON.stringify(m));
-        assertParity(['ground', '--manifest', custom, 'dashboard with muted palette', '--json']);
     });
 });

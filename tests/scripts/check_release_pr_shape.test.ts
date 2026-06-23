@@ -1,9 +1,4 @@
-// Tests for src/scripts/check_release_pr_shape.ts (py2ts Phase 4 / Wave 4c).
-//
-// 1:1 port of tests/test_check_release_pr_shape.py — check() + _matches()
-// drive the allowlist; stdout is captured. Plus golden parity on the REAL
-// REPO via the --files path (no gh dependency; skipped without python3).
-import { spawnSync } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -12,17 +7,12 @@ import * as shape from '../../src/scripts/check_release_pr_shape.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_release_pr_shape.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_release_pr_shape.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function runCheck(files: readonly string[]): { code: number; out: string } {
     const out: string[] = [];
@@ -131,26 +121,4 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches('src/packs/core/README.md')).toBe(true);
         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
     });
-});
-
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('check_release_pr_shape — golden parity (python3 vs tsx)', () => {
-    function run(bin: string, script: string, args: readonly string[]) {
-        return spawnSync(bin, [script, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    }
-    const cases: string[][] = [
-        ['--files=package.json,CHANGELOG.md,src/packs/core/pack.yaml'],
-        ['--files=package.json,src/scripts/install.py'],
-        ['--files='],
-    ];
-    for (const args of cases) {
-        it(`matches byte-for-byte: ${args[0]}`, () => {
-            const py = run('python3', PY_SCRIPT, args);
-            const ts = run(TSX_BIN, TS_SCRIPT, args);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(ts.status).toBe(py.status);
-        });
-    }
 });

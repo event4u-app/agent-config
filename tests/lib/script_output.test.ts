@@ -1,22 +1,4 @@
-/**
- * Tests for `src/scripts/_lib/script_output.ts`.
- *
- * 1:1 vitest port of `tests/test_script_output.py` (the Phase 10.2
- * helper-module contract suite): resolution order, level behaviour
- * (silent / minimal / verbose), env-var inheritance, end-of-run summary
- * collapse, and the stdout/stderr channel split.
- *
- * Plus a differential block comparing the TS port's resolved level +
- * exported env value against the live Python module via a `python3`
- * driver (pattern: tests/lib/agent_settings.test.ts + the spike drivers).
- *
- * Port mechanics:
- *   - pytest `tmp_path`             → `make_tmp()` (temp dir, cleaned afterEach)
- *   - `monkeypatch.setenv/delenv`   → `patch_env()` (restored afterEach)
- *   - `capsys`                      → `capture()` (process.stdout/stderr.write spies)
- *   - autouse `_reset_state`        → beforeEach: clear env + reset_level()
- */
-import { spawnSync } from 'node:child_process';
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -221,16 +203,6 @@ describe('emitters — level behaviour', () => {
 
 const DRIVER = path.join(REPO_ROOT, 'tests', 'lib', 'script_output_py_driver.py');
 
-function py_driver(settings_arg: string, env: Record<string, string | null> = {}): unknown {
-    const proc = spawnSync('python3', [DRIVER, settings_arg, JSON.stringify(env)], {
-        encoding: 'utf-8',
-    });
-    if (proc.status !== 0) {
-        throw new Error(`python driver failed: ${proc.stderr}`);
-    }
-    return JSON.parse(proc.stdout);
-}
-
 /**
  * Resolve in the TS module under a clean env applied like the driver does
  * (null deletes the key), capturing the exported value, then restore.
@@ -265,45 +237,3 @@ function ts_resolve(
         }
     }
 }
-
-const PY_OK = (() => {
-    const probe = spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf-8' });
-    return probe.status === 0;
-})();
-
-describe.skipIf(!PY_OK)('differential — TS port JSON-equals live Python module', () => {
-    const clean_env = { [so.ENV_VAR]: null, [so.ENV_ALIAS]: null };
-
-    it('fixture A: settings verbose, no env (settings cascade)', () => {
-        const p = write_settings(make_tmp(), 'verbose');
-        const ts = ts_resolve(p, clean_env);
-        expect(ts).toEqual(py_driver(p, clean_env));
-        expect(ts).toEqual({ level: 'verbose', exported: 'verbose' });
-    });
-
-    it('fixture B: settings silent, env var overrides to minimal', () => {
-        const p = write_settings(make_tmp(), 'silent');
-        const env = { ...clean_env, [so.ENV_VAR]: 'minimal' };
-        const ts = ts_resolve(p, env);
-        expect(ts).toEqual(py_driver(p, env));
-        expect(ts).toEqual({ level: 'minimal', exported: 'minimal' });
-    });
-
-    it('fixture C: missing settings file, alias forces verbose', () => {
-        const tmp = make_tmp();
-        const missing = path.join(tmp, 'nope.yml');
-        const env = { ...clean_env, [so.ENV_ALIAS]: '1' };
-        const ts = ts_resolve(missing, env);
-        expect(ts).toEqual(py_driver(missing, env));
-        expect(ts).toEqual({ level: 'verbose', exported: 'verbose' });
-    });
-
-    it('fixture D: invalid settings value, clean env → default minimal', () => {
-        const tmp = make_tmp();
-        const p = path.join(tmp, '.agent-settings.yml');
-        fs.writeFileSync(p, 'verbosity:\n  script_output: chatty\n', 'utf-8');
-        const ts = ts_resolve(p, clean_env);
-        expect(ts).toEqual(py_driver(p, clean_env));
-        expect(ts).toEqual({ level: 'minimal', exported: 'minimal' });
-    });
-});

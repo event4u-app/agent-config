@@ -1,10 +1,9 @@
 // Tests for src/scripts/ai_council/bundler.ts (py2ts Phase 1).
 //
-// Context bundling for council consultations. Golden-parity against the
-// CPython twin covers redaction (fail-closed, line-wise), the size guard
-// (fail-loud BundleTooLarge), file/roadmap bundling + exclusions, and the git
-// diff + surrounding-signature path (driven against a throwaway git repo so
-// the diff bytes are deterministic).
+// Context bundling for council consultations. Covers redaction (fail-closed,
+// line-wise), the size guard (fail-loud BundleTooLarge), file/roadmap bundling
+// + exclusions, and the git diff + surrounding-signature path (driven against a
+// throwaway git repo so the diff bytes are deterministic).
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,7 +13,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
     BundleTooLarge,
-    type CouncilContext,
     FileNotFoundError,
     MAX_BUNDLE_BYTES,
     bundle_diff,
@@ -24,9 +22,6 @@ import {
     bundle_roadmap,
     redact,
 } from '../../../src/scripts/ai_council/bundler.js';
-import { hasPython3, runPyCode } from './_harness.js';
-
-const py3 = hasPython3();
 
 // Secret-shaped tokens assembled from parts so this test file does not trip
 // secret-scanning linters.
@@ -121,141 +116,5 @@ describe('bundler — git diff', () => {
         const ctx = bundle_diff_with_context('HEAD~1', 'HEAD', { cwd: repo });
         expect(ctx.text).toContain('## Surrounding signatures');
         expect(ctx.manifest[ctx.manifest.length - 1]).toMatch(/surrounding signatures for \d+ file/);
-    });
-});
-
-describe.runIf(py3)('bundler — golden parity vs CPython twin', () => {
-    // Build a normalize that collapses each volatile scratch abs-path (a per-test
-    // makeGitRepo()/tmpDir() dir) to a stable `<scratch:i>` token. The frozen
-    // golden bakes the capture-run abs path into manifest/excluded/`### <path>`
-    // headers; a fresh replay run mints a different tmp dir, so the python golden
-    // and the .ts side must BOTH have that path replaced before comparison.
-    // git-diff bodies carry no abs path (a/ b/ relative; index SHAs are
-    // content-derived → deterministic), so a scratch-only normalize is a no-op
-    // for the diff cases beyond key-stabilisation.
-    const makeNormalize =
-        (scratch: string[]) =>
-        (s: string): string => {
-            let out = s;
-            scratch.forEach((p, i) => {
-                out = out.split(p).join(`<scratch:${i}>`);
-            });
-            return out;
-        };
-
-    function pyBundle(snippet: string, args: string[], scratch?: string[]): unknown {
-        const code = [
-            'import json, sys',
-            'from scripts.ai_council import bundler as B',
-            snippet,
-        ].join('\n');
-        const normalize = scratch ? makeNormalize(scratch) : undefined;
-        const res = runPyCode(code, args, {
-            ...(scratch ? { scratch } : {}),
-            ...(normalize ? { normalize } : {}),
-        });
-        expect(res.status, res.stderr).toBe(0);
-        return JSON.parse(res.stdout);
-    }
-
-    const ctxToObj = (c: CouncilContext): Record<string, unknown> => ({
-        mode: c.mode,
-        text: c.text,
-        manifest: c.manifest,
-        excluded: c.excluded,
-    });
-
-    // Symmetric normalize: the python golden was frozen with scratch paths
-    // collapsed to `<scratch:i>`; apply the identical replacement to the .ts ctx
-    // object (round-trip through JSON so it reaches text/manifest/excluded) before
-    // comparing against the parsed-from-normalized-python `expected`.
-    const ctxToObjNorm = (c: CouncilContext, scratch: string[]): Record<string, unknown> => {
-        let json = JSON.stringify(ctxToObj(c));
-        scratch.forEach((p, i) => {
-            json = json.split(p).join(`<scratch:${i}>`);
-        });
-        return JSON.parse(json) as Record<string, unknown>;
-    };
-
-    const dumpCtx =
-        'def dump(c):\n    return {"mode": c.mode, "text": c.text, "manifest": c.manifest, "excluded": c.excluded}\n';
-
-    it('redact() matches line-wise', () => {
-        const input = `n\nAuthorization: x\nsecret: y\n${SK_ANT}\n${SK_OPENAI}\nz`;
-        const expected = pyBundle('print(json.dumps(B.redact(sys.argv[1])))', [input]) as string;
-        expect(redact(input)).toBe(expected);
-    });
-
-    it('bundle_prompt matches', () => {
-        const text = 'hello\npassword=abc\nworld';
-        const expected = pyBundle(dumpCtx + 'print(json.dumps(dump(B.bundle_prompt(sys.argv[1]))))', [
-            text,
-        ]);
-        expect(ctxToObj(bundle_prompt(text))).toEqual(expected);
-    });
-
-    it('bundle_files matches (incl. exclusions)', () => {
-        const dir = tmpDir();
-        const ok = path.join(dir, 'a.txt');
-        writeFileSync(ok, 'line\ntoken: secret\nend', { encoding: 'utf-8' });
-        const missing = path.join(dir, 'gone.txt');
-        const expected = pyBundle(
-            dumpCtx + 'print(json.dumps(dump(B.bundle_files([sys.argv[1], sys.argv[2]]))))',
-            [ok, missing],
-            [dir],
-        );
-        expect(ctxToObjNorm(bundle_files([ok, missing]), [dir])).toEqual(expected);
-    });
-
-    it('bundle_roadmap matches', () => {
-        const dir = tmpDir();
-        const rm = path.join(dir, 'road.md');
-        writeFileSync(rm, '## Roadmap\nsecret: hunter2\nplain\n', { encoding: 'utf-8' });
-        const expected = pyBundle(
-            dumpCtx + 'print(json.dumps(dump(B.bundle_roadmap(sys.argv[1]))))',
-            [rm],
-            [dir],
-        );
-        expect(ctxToObjNorm(bundle_roadmap(rm), [dir])).toEqual(expected);
-    });
-
-    it('BundleTooLarge message matches', () => {
-        const expected = pyBundle(
-            'try:\n'
-                + '    B.bundle_prompt("x" * (50 * 1024 + 1))\n'
-                + '    print(json.dumps("NO RAISE"))\n'
-                + 'except B.BundleTooLarge as e:\n'
-                + '    print(json.dumps(str(e)))',
-            [],
-        ) as string;
-        try {
-            bundle_prompt('x'.repeat(MAX_BUNDLE_BYTES + 1));
-            throw new Error('expected throw');
-        } catch (e) {
-            expect((e as Error).message).toBe(expected);
-        }
-    });
-
-    it('bundle_diff matches against a fixed git repo', () => {
-        const repo = makeGitRepo();
-        const expected = pyBundle(
-            dumpCtx + 'print(json.dumps(dump(B.bundle_diff("HEAD~1", "HEAD", cwd=sys.argv[1]))))',
-            [repo],
-            [repo],
-        );
-        expect(ctxToObjNorm(bundle_diff('HEAD~1', 'HEAD', { cwd: repo }), [repo])).toEqual(expected);
-    });
-
-    it('bundle_diff_with_context matches (signature section)', () => {
-        const repo = makeGitRepo();
-        const expected = pyBundle(
-            dumpCtx
-                + 'print(json.dumps(dump(B.bundle_diff_with_context("HEAD~1", "HEAD", cwd=sys.argv[1]))))',
-            [repo],
-            [repo],
-        );
-        expect(ctxToObjNorm(bundle_diff_with_context('HEAD~1', 'HEAD', { cwd: repo }), [repo])).toEqual(
-            expected,
-        );
     });
 });

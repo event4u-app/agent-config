@@ -12,7 +12,7 @@
 // freshness test), the golden-parity fixtures live under a temp directory
 // INSIDE the repo (the real-usage shape) and are passed as a relative `--dir`.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -26,7 +26,6 @@ const TSX_BIN = (() => {
     return join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 })();
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'check_knowledge_cards.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'check_knowledge_cards.py');
 
 interface RunResult {
     readonly status: number;
@@ -38,17 +37,6 @@ function runTs(args: readonly string[], cwd: string = REPO_ROOT): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8' });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-
-function runPy(args: readonly string[], cwd: string = REPO_ROOT): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd, encoding: 'utf8' });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
-
-function pythonAvailable(): boolean {
-    const r = spawnSync('python3', ['--version'], { encoding: 'utf8' });
-    return r.status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 // A card directory that lives INSIDE the repo, so finding paths relativize to
 // ROOT identically across python3 and tsx. Created fresh per test, removed after.
@@ -212,61 +200,5 @@ describe('check_knowledge_cards.ts', () => {
         const r = runTs(['--bogus']);
         expect(r.status).toBe(2);
         expect(r.stderr).toContain('unrecognized arguments: --bogus');
-    });
-
-    // --- golden parity vs python3 -------------------------------------------
-    describe.skipIf(!HAVE_PYTHON || !existsSync(PY_SCRIPT))('golden parity', () => {
-        function parity(args: string[]): void {
-            const py = runPy(args);
-            const ts = runTs(args);
-            expect(ts.stdout, JSON.stringify(args)).toBe(py.stdout);
-            expect(ts.stderr, JSON.stringify(args)).toBe(py.stderr);
-            expect(ts.status, JSON.stringify(args)).toBe(py.status);
-        }
-
-        it('mixed-failure tree byte-identical (text)', () => {
-            writeCard('big.md', `---\ntrust: t\ntype: anti-hallucination\nlinks:\n  authoritative: nope/missing.md\n---\n${'l\n'.repeat(200)}`);
-            writeCard(
-                'span.md',
-                `---\ntrust: t\ntype: anti-hallucination\nlinks:\n  authoritative: https://example.com\n---\nobserved_at: 2026-01-01\nobserved_at: 2026-03-01\n`,
-            );
-            writeCard(
-                'sha.md',
-                `---\ntrust: t\ntype: anti-hallucination\nlinks:\n  authoritative: https://example.com\n---\nsource_version: abcdef1\nsource_version: 1234567\n`,
-            );
-            writeCard('bad.md', `---\nfoo: bar\n---\nBody.\n`);
-            parity(['--dir', cardDirRel]);
-        });
-
-        it('valid card byte-identical', () => {
-            writeCard('good.md', VALID);
-            parity(['--dir', cardDirRel]);
-        });
-
-        it('missing + empty dir byte-identical', () => {
-            parity(['--dir', join(cardDirRel, 'nope')]);
-            parity(['--dir', cardDirRel]);
-        });
-
-        it('strict mode byte-identical', () => {
-            writeCard(
-                's.md',
-                `---\ntrust: t\ntype: anti-hallucination\nlinks:\n  authoritative: https://example.com\n---\nfact source=src/scripts/no_such.zzz:9\n`,
-            );
-            parity(['--dir', cardDirRel, '--strict']);
-        });
-
-        it('freshness warning byte-identical (relative dir)', () => {
-            writeCard(
-                'fresh.md',
-                `---\ntrust: t\ntype: anti-hallucination\nlinks:\n  authoritative: https://example.com\n---\nobserved_at: 2020-01-01\n`,
-            );
-            parity(['--dir', cardDirRel, '--freshness-days', '30']);
-        });
-
-        it('arg-error paths byte-identical', () => {
-            parity(['--freshness-days', 'abc']);
-            parity(['--bogus']);
-        });
     });
 });

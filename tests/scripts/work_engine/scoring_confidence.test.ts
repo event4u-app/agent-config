@@ -1,17 +1,4 @@
-// Golden-parity tests for work_engine/scoring/confidence.ts vs confidence.py
-// (ADR-094 py2ts Phase 1 — scoring subpackage).
-//
-// `scoring/confidence.py` has NO intra-package imports (stdlib `re` +
-// `dataclasses` only) — loaded via the direct-file importlib loader. The
-// scorer is float-heavy (normalised score = round(total/10, 4)), so the
-// parity bar is: identical band, identical score float, identical per-dimension
-// breakdown, identical reasons list, identical ui_intent — over a corpus of
-// real-shaped prompts that exercise every rubric branch. The Python side dumps
-// the dataclass via dataclasses.asdict + json; the TS side dumps the frozen
-// ConfidenceScore the same way. ASCII-only prompts keep `\b` / `\w` regex
-// semantics identical across Python (Unicode) and JS (ASCII) — a documented
-// parity boundary (ADR-094).
-import { spawnSync } from 'node:child_process';
+
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -26,20 +13,6 @@ import {
 } from '../../../src/agent-src/templates/scripts/work_engine/scoring/confidence.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'scoring',
-    'confidence.py',
-);
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 /** asdict-equivalent projection in Python field order. */
 function asdict(c: ConfidenceScore): Record<string, unknown> {
@@ -50,31 +23,6 @@ function asdict(c: ConfidenceScore): Record<string, unknown> {
         reasons: c.reasons,
         ui_intent: c.ui_intent,
     };
-}
-
-/** Python: score(raw, ac, assumptions) then dataclasses.asdict → JSON. */
-function pyScore(raw: string, ac: string[] | null, assumptions: string[] | null): unknown {
-    const loader = [
-        'import sys, json, importlib.util, dataclasses',
-        `spec = importlib.util.spec_from_file_location("conf", ${JSON.stringify(PY)})`,
-        'conf = importlib.util.module_from_spec(spec)',
-        'sys.modules["conf"] = conf',
-        'spec.loader.exec_module(conf)',
-    ].join('\n');
-    const body = [
-        'payload = json.loads(sys.argv[1])',
-        'res = conf.score(raw=payload["raw"], ac=payload["ac"], assumptions=payload["assumptions"])',
-        'sys.stdout.write(json.dumps(dataclasses.asdict(res)))',
-    ].join('\n');
-    const r = spawnSync(
-        'python3',
-        ['-c', `${loader}\n${body}`, JSON.stringify({ raw, ac, assumptions })],
-        { encoding: 'utf8' },
-    );
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return JSON.parse(r.stdout);
 }
 
 describe('scoring/confidence — exported constants', () => {
@@ -164,26 +112,3 @@ const PROMPTS: Array<{ raw: string; ac: string[] | null; assumptions: string[] |
     { raw: 'tune the redis cache', ac: null, assumptions: null },
     { raw: 'document the webhook handler in handler.ts', ac: ['must explain payload'], assumptions: null },
 ];
-
-describe.runIf(hasPython3())('scoring/confidence — python parity', () => {
-    it.each(PROMPTS.map((p, i) => [i, p] as const))(
-        'prompt #%i scores byte-identical to CPython',
-        (_i, p) => {
-            const expected = pyScore(p.raw, p.ac, p.assumptions);
-            const got = asdict(score({ raw: p.raw, ac: p.ac, assumptions: p.assumptions }));
-            expect(got).toEqual(expected);
-        },
-    );
-
-    it('score float matches CPython for every total 0..10 (round/2-decimal parity)', () => {
-        // Build prompts that deterministically hit each total via dimension
-        // combinations is hard; instead assert the normalisation directly by
-        // re-deriving from the dimensions both engines report on the corpus.
-        for (const p of PROMPTS) {
-            const expected = pyScore(p.raw, p.ac, p.assumptions) as { score: number };
-            const got = score({ raw: p.raw, ac: p.ac, assumptions: p.assumptions });
-            // Exact float equality — round-half-even on total/10 must agree.
-            expect(got.score).toBe(expected.score);
-        }
-    });
-});

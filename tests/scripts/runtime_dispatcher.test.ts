@@ -19,7 +19,7 @@
 //        the original, `runtime_dispatcher` for the twin per the established
 //        py2ts stem convention) and varies across CPython versions, so the
 //        migration contract for those is channel + exit code, not byte prose.
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,20 +36,7 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-const PY = path.join(REPO_ROOT, 'src', 'scripts', 'runtime_dispatcher.py');
 const TS = path.join(REPO_ROOT, 'src', 'scripts', 'runtime_dispatcher.ts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
-function runPy(args: string[]): SpawnSyncReturns<string> {
-    return spawnSync('python3', [PY, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-}
-function runTs(args: string[]): SpawnSyncReturns<string> {
-    return spawnSync(TSX_BIN, [TS, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-}
 
 function skill(args: {
     name: string;
@@ -158,129 +145,5 @@ describe('runtime_dispatcher — dispatch (pure)', () => {
             'reason',
         ]);
         expect(d.warnings).toEqual([]);
-    });
-});
-
-// --- Layer 2: golden parity (python3 vs tsx) ---------------------------------
-
-describe.skipIf(!py3)('runtime_dispatcher — golden parity, deterministic paths', () => {
-    function bothEqual(args: string[]): void {
-        const p = runPy(args);
-        const t = runTs(args);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-    }
-
-    it('resolve --skill <real> --format json → identical', () => {
-        bothEqual(['resolve', '--skill', 'lint-skills', '--root', '.', '--format', 'json']);
-    });
-
-    it('resolve --skill <real> --format text → identical', () => {
-        bothEqual(['resolve', '--skill', 'lint-skills', '--root', '.', '--format', 'text']);
-    });
-
-    it('flat --skill <real> (no subcommand, defaults to resolve) → identical', () => {
-        bothEqual(['--skill', 'lint-skills', '--root', '.', '--format', 'json']);
-    });
-
-    it('resolve --skill <not-found> --format json → identical (exit 1)', () => {
-        const p = runPy(['resolve', '--skill', '__no_such_skill__', '--root', '.', '--format', 'json']);
-        const t = runTs(['resolve', '--skill', '__no_such_skill__', '--root', '.', '--format', 'json']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-        expect(t.status).toBe(1);
-    });
-
-    it('resolve --skill <not-found> --format text → identical (exit 1)', () => {
-        bothEqual(['resolve', '--skill', '__no_such_skill__', '--root', '.', '--format', 'text']);
-    });
-
-    it('run --skill <not-found> → identical HandlerError (exit 2)', () => {
-        const p = runPy(['run', '--skill', '__no_such_skill__', '--root', '.']);
-        const t = runTs(['run', '--skill', '__no_such_skill__', '--root', '.']);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
-        expect(t.status).toBe(2);
-    });
-});
-
-describe.skipIf(!py3)('runtime_dispatcher — golden parity, run --output (duration normalized)', () => {
-    // `run` shells out a real skill; its ExecutionResult carries `duration_ms`
-    // (wall-clock) and possibly skill-dependent stdout/stderr. We normalize the
-    // single non-deterministic field (`duration_ms` → 0) on both the printed
-    // JSON and the persisted --output JSON, then assert byte parity on the rest.
-    function normalize(jsonText: string): string {
-        const obj = JSON.parse(jsonText) as Record<string, unknown>;
-        obj.duration_ms = 0;
-        return JSON.stringify(obj, null, 2);
-    }
-
-    it('run --skill check-refs --output FILE --format json → identical (duration zeroed)', () => {
-        const args = (out: string): string[] => [
-            'run',
-            '--skill',
-            'check-refs',
-            '--root',
-            '.',
-            '--output',
-            out,
-            '--format',
-            'json',
-        ];
-        const p = runPy(args('/tmp/rd_py_out.json'));
-        const t = runTs(args('/tmp/rd_ts_out.json'));
-        expect(t.status).toBe(p.status);
-        // Printed JSON (stdout) parity after normalizing duration.
-        expect(normalize(t.stdout)).toBe(normalize(p.stdout));
-        // Persisted --output JSON parity after normalizing duration.
-        expect(normalize(fs.readFileSync('/tmp/rd_ts_out.json', 'utf8'))).toBe(
-            normalize(fs.readFileSync('/tmp/rd_py_out.json', 'utf8')),
-        );
-        // The persisted file ends with a trailing newline on both sides.
-        expect(fs.readFileSync('/tmp/rd_ts_out.json', 'utf8').endsWith('\n')).toBe(true);
-        fs.rmSync('/tmp/rd_py_out.json', { force: true });
-        fs.rmSync('/tmp/rd_ts_out.json', { force: true });
-    });
-});
-
-describe.skipIf(!py3)('runtime_dispatcher — argparse error paths (exit + channel only)', () => {
-    // argparse usage/error prose embeds `prog` and differs across CPython
-    // versions; the migration contract here is exit 2 + non-empty stderr.
-    function exit2Both(args: string[]): void {
-        const p = runPy(args);
-        const t = runTs(args);
-        expect(t.status).toBe(2);
-        expect(p.status).toBe(2);
-        expect(t.stderr.length).toBeGreaterThan(0);
-        expect(p.stderr.length).toBeGreaterThan(0);
-        expect(t.stdout).toBe('');
-        expect(p.stdout).toBe('');
-    }
-
-    it('no args (defaults to resolve, --skill missing) → exit 2', () => {
-        exit2Both([]);
-    });
-
-    it('resolve subcommand without --skill → exit 2', () => {
-        exit2Both(['resolve']);
-    });
-
-    it('run subcommand without --skill → exit 2', () => {
-        exit2Both(['run']);
-    });
-
-    it('unrecognized flag → exit 2', () => {
-        exit2Both(['--bogus']);
-    });
-
-    it('invalid --format choice → exit 2', () => {
-        exit2Both(['resolve', '--skill', 'x', '--format', 'bad']);
-    });
-
-    it('invalid subcommand → exit 2', () => {
-        exit2Both(['frobnicate']);
     });
 });
