@@ -17,6 +17,14 @@ the whole of its authority.
 - **Its method** — how it searches, reads, reasons, or drafts within that slice.
 - **Its return** — a conclusion + evidence, sized to what the orchestrator asked for (structured output when a schema was given).
 
+> **Explainability is durable, not host-ephemeral.** The return must carry a brief
+> *why + evidence* (which sources/steps led to the conclusion) **in the artefact /
+> output itself**, not only in the host's session reasoning. A user opening the
+> result later — possibly across sessions — must be able to trace the *why* without
+> reassembling provider chat logs. This is the reasoning-in-notes discipline applied
+> to delegation: conclusions + evidence travel with the output, raw chain-of-thought
+> does not.
+
 ### A subagent must NEVER own
 
 - **Task meaning** — it does not redefine, broaden, or reinterpret the parent task. An ambiguous slice returns "ambiguous + why", it does not guess a bigger task.
