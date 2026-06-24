@@ -25,6 +25,7 @@ const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const worktreeMode = z.enum(['off', 'on', 'ask']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
+const richSkillsMode = z.enum(['on', 'ask', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
@@ -192,6 +193,11 @@ export const settingsSchema = z.object({
             'How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous.',
         ),
     }).default({ fidelity_mode: 'strict' }),
+    tokens: z.object({
+        rich_skills: richSkillsMode.default('on').describe(
+            'Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading.',
+        ),
+    }).default({ rich_skills: 'on' }),
     reasoning: z.object({
         enabled: z.boolean().default(true).describe(
             'Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead).',

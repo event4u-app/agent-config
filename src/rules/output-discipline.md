@@ -3,7 +3,7 @@ type: "auto"
 tier: "2a"
 description: "Prohibits placeholder-prose output in generated code and UI — no truncation shorthands; on budget overflow emit a clean PAUSED breakpoint instead"
 triggers:
-  - intent: "generating code, UI components, or multi-section output"
+  - intent: "generating code or multi-section output"
   - keyword: "// rest of component"
   - keyword: "for brevity"
   - keyword: "rest follows the same pattern"

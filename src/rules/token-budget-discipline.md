@@ -3,8 +3,9 @@ type: "auto"
 tier: "2a"
 description: "Governs token_budget_class: rich skills — exempt them from telegraph-speak + thin-projector trimming; enforce the 15% cap + justification requirement"
 triggers:
-  - keyword: "token_budget_class: rich"
-  - intent: "editing a skill with token_budget_class: rich"
+  - keyword: "token_budget_class"
+  - keyword: "rich skill"
+  - intent: "editing a rich-tagged skill"
 workspaces:
   - agent-config-maintainer
 packs:
