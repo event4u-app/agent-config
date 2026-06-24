@@ -50,6 +50,7 @@ itself a useful result.
 
 ## See also
 
+- [Capability Boundary Matrix](../../contracts/capability-boundary.md) — per-pack safety posture (default-install / consent / council / disclaimer / eval / risk_class).
 - [ADR-107 — Legal domain-pack adoption](../../decisions/ADR-107-legal-domain-pack-adoption.md)
 - `domain-adoption-policy` (rule) — the three gates before opening any domain.
 - `domain-eval-anti-pattern.md` — why the legal eval is a regression harness, not an objective gate.

@@ -459,6 +459,11 @@ tasks:
     desc: Validate src/config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
     cmd: ./scripts-run src/scripts/lint_discovery_vocabulary {{.QUIET_FLAG}}
 
+  lint-pack-risk-class:
+    silent: true
+    desc: Enforce the risk_class invariant — a high-risk pack must be off-by-default + consent + lab (road-to-capability-governance Phase 2)
+    cmd: ./scripts-run src/scripts/lint_pack_risk_class {{.QUIET_FLAG}}
+
   lint-profile-overlay-set-only:
     silent: true
     desc: Freeze the set-only overlay invariant — aliases resolve only to pack-id sets, no scalar audience-hint / precedence key feeds runtime.active_packs (session-profile-observability Phase 3, ADR-010 addendum)

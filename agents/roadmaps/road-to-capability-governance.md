@@ -27,9 +27,9 @@ status: ready
 > the safety posture at a glance. Documentation-first — makes the invisible
 > visible without committing to enforcement machinery.
 
-- [ ] **1.1 — Author `docs/contracts/capability-boundary.md`** — one row per pack with columns: `default_install` (yes/no) · `requires_consent` · `requires_council` · `requires_disclaimer` · `has_eval` · `risk_class` (low/medium/high) · `surface_tier` · `promotion_gate`. Populate every current pack from existing `packs.yml` metadata; legal-review-prep = the high-risk exemplar.
-- [ ] **1.2 — Link it** from `docs/contracts/package-self-orientation.md` + the pack-architecture guideline so it is discoverable, not buried.
-- [ ] **1.3 — Verify** — every pack in `packs.yml` appears exactly once; `check-refs` green.
+- [x] **1.1 — Author `docs/contracts/capability-boundary.md`** — one row per pack with columns: `default_install` (yes/no) · `requires_consent` · `requires_council` · `requires_disclaimer` · `has_eval` · `risk_class` (low/medium/high) · `surface_tier` · `promotion_gate`. Populate every current pack from existing `packs.yml` metadata; legal-review-prep = the high-risk exemplar.
+- [x] **1.2 — Link it** from `docs/contracts/package-self-orientation.md` + the pack-architecture guideline so it is discoverable, not buried.
+- [x] **1.3 — Verify** — every pack in `packs.yml` appears exactly once; `check-refs` green.
 
 ## Phase 2 — risk_class as documented pack metadata
 
@@ -37,9 +37,9 @@ status: ready
 > Phase 4) into a cross-pack `risk_class` field — documentation + validation only;
 > behavioural enforcement stays per-pack in the floors.
 
-- [ ] **2.1 — Add `risk_class: low|medium|high`** to the pack frontmatter schema + `generate_pack_manifests.ts`; backfill every pack (default `low`; legal-review-prep `high`).
-- [ ] **2.2 — Validate** — a lint check that `risk_class: high` ⇒ `default_install: false` + `requires_consent: true` + `surface_tier: lab` (the legal posture becomes the enforced shape for any future high-risk pack).
-- [ ] **2.3 — Verify** — lint passes on current packs; fails on a simulated `high` pack that defaults on.
+- [x] **2.1 — Add `risk_class: low|medium|high`** to the pack frontmatter schema + `generate_pack_manifests.ts`; backfill every pack (default `low`; legal-review-prep `high`). <!-- impl: source-only field in packs.yml (matches risk_profile; generator ignores it, no pack.yaml schema change); default low = omitted, non-low marked -->
+- [x] **2.2 — Validate** — a lint check that `risk_class: high` ⇒ `default_install: false` + `requires_consent: true` + `surface_tier: lab` (the legal posture becomes the enforced shape for any future high-risk pack).
+- [x] **2.3 — Verify** — lint passes on current packs; fails on a simulated `high` pack that defaults on.
 
 ## Phase 3 — Skill-growth gate
 

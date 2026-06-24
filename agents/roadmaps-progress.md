@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**88 / 205 steps done · 43%**
+**70 / 180 steps done · 39%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   39%
 ```
 
 ## Open roadmaps
@@ -17,12 +17,11 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md) | 7 | 25 | 1 | 24 | 0 | 0 | ██████████ 96% |
-| 4 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 2 | [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md) | 6 | 17 | 11 | 6 | 0 | 0 | ████░░░░░░ 35% |
+| 3 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -38,30 +37,16 @@
 
 ### [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md)
 
-**Road to capability governance — boundary matrix, risk-class, growth gate** — 0 / 17 done (0%)
+**Road to capability governance — boundary matrix, risk-class, growth gate** — 6 / 17 done (35%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Capability boundary matrix (documentation) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | risk_class as documented pack metadata | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Capability boundary matrix (documentation) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | risk_class as documented pack metadata | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | Skill-growth gate | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Subagent-boundary contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Capability lifecycle | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | Deferred / rejected (recorded) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-### [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md)
-
-**Road to legal-review-prep — rename, consent-gate, council-gate, hard STOP** — 24 / 25 done (96%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Rename `legal` → `legal-review-prep` | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 1 | Hard individual-case STOP (not a hedge) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Install/setup consent gate ("I understand this is not legal advice") | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Council + deep-research gate (defense-in-depth) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 4 | High-risk pack metadata | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 5 | Attorney-framing-review promotion tripwire | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 6 | Deferred / rejected (recorded) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md)
 

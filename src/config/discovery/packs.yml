@@ -167,6 +167,7 @@
   workspaces: [finance, founder]
   trust_level_default: professional
   domain: finance
+  risk_class: medium   # advisory (finance-safety-floor): not-financial-advice disclaimer
   size_class: medium
   onboarding:
     first_win_doc: FIRST_WIN.md
@@ -180,6 +181,7 @@
   requires: [finance-basic]
   trust_level_default: core
   domain: finance
+  risk_class: medium   # advisory (finance-safety-floor)
   size_class: medium
 
 - id: gtm-sales
@@ -223,6 +225,7 @@
   trust_level_default: core
   domain: founder
   size_class: medium
+  risk_class: medium   # advisory (strategy-safety-floor)
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: vision-articulation
@@ -250,6 +253,7 @@
   size_class: medium
   # High-risk posture (road-to-legal-review-prep Phase 4). Documentation-first;
   # enforcement lives in the legal-safety-floor rule + consent gate + lint.
+  risk_class: high
   risk_profile: rdg_regulated_eu_de
   requires_explicit_consent: true
   requires_council: true
