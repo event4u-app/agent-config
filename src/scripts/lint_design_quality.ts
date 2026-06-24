@@ -44,10 +44,6 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const _HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(_HERE, "..", "..");
 
 interface Finding {
   rule: string;

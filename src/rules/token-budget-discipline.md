@@ -13,7 +13,7 @@ packs:
 
 # Token Budget Discipline
 
-## Iron Law — `rich` skills load in full, `lean` skills compress
+## Iron Law — rich skills load in full, lean skills compress
 
 ```
 SKILLS MARKED token_budget_class: rich ARE INTENTIONALLY DETAILED.
@@ -32,7 +32,7 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
 | `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–5000 tokens |
 
 Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) to determine
-whether `rich` skills may load in full. If `off`, treat `rich` skills as
+whether rich skills may load in full. If `off`, treat them as
 `standard`. If `ask`, surface the estimated token delta (≈ skill file size in
 chars / 4) and wait for user confirmation; cache the answer for the session.
 
@@ -51,14 +51,14 @@ A skill claiming `rich` MUST satisfy ALL three:
    carry a `load_context` pointer instead.
 
 3. **≤ 15 % of the suite's skills may claim `rich`** — the CI linter counts
-   `rich` skills and hard-fails if the ratio is exceeded. With ~230 skills, the
+   rich-tagged skills and hard-fails if the ratio is exceeded. With ~230 skills, the
    cap is ~35. Do not claim `rich` for convenience; claim it only for
    irreducible-complexity skills.
 
 ## Telegraph-speak amendment
 
 The `telegraph-speak` rule (Tier 1, always-on) **exempts** skills marked
-`token_budget_class: rich`. When a `rich` skill is active:
+`token_budget_class: rich`. When such a skill is active:
 
 - Do not apply telegraph-speak condensation to its guidance prose
 - Do not drop articles, linking auxiliaries, or extended examples
@@ -69,7 +69,7 @@ This exemption is limited to the skill's guidance content; reply prose from the
 *agent* (not from the skill body) remains subject to telegraph-speak unless the
 user has set `telegraph.speak_scope: off`.
 
-## Candidate `rich` skills (justified, not exhaustive)
+## Candidate rich skills (justified, not exhaustive)
 
 These skills are approved `rich` by this roadmap's council:
 
@@ -84,7 +84,7 @@ These skills are approved `rich` by this roadmap's council:
 
 - `tokens.rich_skills` setting in `.agent-settings.yml` (consumer override)
 - `lint_token_budget_discipline.ts` (cap + justification CI check)
-- `telegraph-speak.md` (amended to except `rich` skills)
+- `telegraph-speak.md` (amended to except rich-tagged skills)
 
 ## See also
 

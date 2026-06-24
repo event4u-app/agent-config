@@ -42,8 +42,8 @@ in a broken state:
 | `[Your component here]` / `<YourComponentName>` | Use the actual component name or write the component |
 | `Lorem ipsum` / `dolor sit amet` in UI output intended for review | Use realistic placeholder content or ask for content |
 
-The banned patterns above are also detected by `lint_output_slop.py` (see
-`src/scripts/lint_output_slop.py`) — violations cause a CI exit-code-2.
+The banned patterns above are also detected by `lint_output_slop.ts` (see
+`src/scripts/lint_output_slop.ts`) — violations cause a CI exit-code-2.
 
 ## On budget overflow — PAUSED protocol
 
@@ -82,4 +82,4 @@ Or for a whole file: `// lint-output-slop-disable-file impl-placeholder -- test 
 
 - `verify-before-complete` — no completion claim without evidence
 - `downstream-changes` — every edit is incomplete until all callers are updated
-- `src/scripts/lint_output_slop.py` — the CI linter enforcing this rule
+- `src/scripts/lint_output_slop.ts` — the CI linter enforcing this rule
