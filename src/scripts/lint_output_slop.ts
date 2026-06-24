@@ -115,7 +115,7 @@ interface Ignore {
 function parseIgnores(lines: string[]): Ignore[] {
   const ignores: Ignore[] = [];
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i] ?? "";
     const fileMatch = /lint-output-slop-disable-file\s*([\w-]+(?:,\s*[\w-]+)*)?/i.exec(line);
     if (fileMatch) {
       const rules = fileMatch[1] ? fileMatch[1].split(",").map((r) => r.trim()) : [];
@@ -158,7 +158,7 @@ function scanFile(filePath: string): Finding[] {
   let inCodeBlock = false;
   for (let i = 0; i < lines.length; i++) {
     const lineNum = i + 1;
-    const line = lines[i];
+    const line = lines[i] ?? "";
 
     // Toggle code-fence state
     if (/^```/.test(line) || /^~~~/.test(line)) {

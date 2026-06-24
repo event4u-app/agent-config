@@ -71,12 +71,12 @@ function checkFontSize(lines: string[], filePath: string): Finding[] {
 
   let inBodySelector = false;
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i] ?? "";
     if (bodySelectors.test(line)) inBodySelector = true;
     if (line.includes("}")) inBodySelector = false;
 
     const match = fontSizePattern.exec(line);
-    if (match && inBodySelector) {
+    if (match && match[1] && inBodySelector) {
       const size = parseFloat(match[1]);
       if (size > 0 && size < 14) {
         findings.push({
@@ -122,15 +122,18 @@ function checkHeadingHierarchy(content: string, filePath: string): Finding[] {
 
   let match;
   while ((match = headingPattern.exec(content)) !== null) {
-    headings.push({ level: parseInt(match[1]), index: match.index });
+    headings.push({ level: parseInt(match[1] ?? "0"), index: match.index });
   }
 
   for (let i = 1; i < headings.length; i++) {
-    const prev = headings[i - 1].level;
-    const curr = headings[i].level;
+    const prevH = headings[i - 1];
+    const currH = headings[i];
+    if (!prevH || !currH) continue;
+    const prev = prevH.level;
+    const curr = currH.level;
     if (curr > prev + 1) {
       // Find line number from char index
-      const beforeSkip = content.slice(0, headings[i].index);
+      const beforeSkip = content.slice(0, currH.index);
       const lineNum = (beforeSkip.match(/\n/g) ?? []).length + 1;
       findings.push({
         rule: "dq5-heading-skip",
@@ -197,21 +200,21 @@ function parseIgnores(lines: string[]): Map<string, Set<number>> {
   const ignores = new Map<string, Set<number>>();
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i] ?? "";
     const fileMatch = /design-quality-disable\s+([\w-]+)/i.exec(line);
-    if (fileMatch && !line.includes("next-line") && !line.includes("-line ")) {
+    if (fileMatch && fileMatch[1] && !line.includes("next-line") && !line.includes("-line ")) {
       const rule = fileMatch[1].toLowerCase();
       ignores.set(rule, new Set([...Array(9999).keys()].map((n) => n + 1)));
     }
     const nextMatch = /design-quality-disable-next-line\s+([\w-]+)/i.exec(line);
-    if (nextMatch) {
+    if (nextMatch && nextMatch[1]) {
       const rule = nextMatch[1].toLowerCase();
       const set = ignores.get(rule) ?? new Set<number>();
       set.add(i + 2);
       ignores.set(rule, set);
     }
     const lineMatch = /design-quality-disable-line\s+([\w-]+)/i.exec(line);
-    if (lineMatch) {
+    if (lineMatch && lineMatch[1]) {
       const rule = lineMatch[1].toLowerCase();
       const set = ignores.get(rule) ?? new Set<number>();
       set.add(i + 1);
@@ -252,10 +255,8 @@ function main(): void {
 
   // --dir <path> or default to scanning consumer project src/
   const dirIdx = args.indexOf("--dir");
-  const scanDir =
-    dirIdx >= 0 && args[dirIdx + 1]
-      ? path.resolve(args[dirIdx + 1])
-      : path.resolve(process.cwd(), "src");
+  const dirArg = dirIdx >= 0 ? args[dirIdx + 1] : undefined;
+  const scanDir = dirArg ? path.resolve(dirArg) : path.resolve(process.cwd(), "src");
 
   if (!fs.existsSync(scanDir)) {
     if (!quiet) process.stderr.write(`[lint_design_quality] scan directory not found: ${scanDir}\n`);
