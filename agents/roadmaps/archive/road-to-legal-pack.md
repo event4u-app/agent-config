@@ -66,11 +66,16 @@ epistemic point now without foreclosing a funded asset later.
 ## Phase 0 — Gates, scope, floor (before any skill)
 
 - [x] **0.1 — Gate 1 (demand):** record demand + EU/GDPR context in `agents/settings/contexts/`.
-- [ ] **0.2 — Gate 2 (maintenance owner) — BLOCKING:** name a single maintainer + a
-  refresh cadence (quarterly min) **and an objective qualification check** — the
-  maintainer's EU/DE legal-domain competence is confirmed by external/adversarial review,
-  **not self-assessment** (the whole eval/floor soundness rests on this). Pack stays
-  `[-] gated` until confirmed. <!-- owner-gate: needs user confirmation -->
+- [x] **0.2 — Gate 2 — RESOLVED 2026-06-24 (maintainer decision): no owner gate; a
+  test-enforced always-present disclaimer instead.** We do not require a named
+  maintenance owner / external legal-qualification. The assurance is that the
+  "not legal advice / no substitute for a lawyer" notice is **always present and
+  verified by tests** — in every legal skill, mandated into the chat output, in the
+  main README, and as a dedicated legal-pack notice. Gate = `tests/scripts/legal-disclaimer-presence.test.ts`
+  (6 assertions, in the CI test suite) + `lint_legal_pack`. The pack stays
+  `experimental`/`lab` as the conservative default for a high-risk legal domain
+  (the disclaimer + RDG individual-case guardrail are the protection, not a tier);
+  promotion is a separate future decision. <!-- owner-gate: replaced by test-enforced disclaimer -->
 - [x] **0.3 — Gate 3 (CI-tooling):** legal skills are validated (skill_linter +
   trigger-evals + Phase-1 linters + Phase-3 regression harness), not platform-bound.
 - [x] **0.4 — Scope: EU/DE-only hard refusal.** Encode in `src/domains/legal/pack.yaml`
@@ -88,11 +93,11 @@ epistemic point now without foreclosing a funded asset later.
   not instructions**; **(h) GREEN×non-lawyer → attorney gate** (a "standard-approve"
   severity for a non-lawyer never self-approves); **(i) every skill output carries
   `⚠️ Attorney review required on material use` in the body, not a footnote.**
-- [ ] **0.6 — Conditional product-liability meta-gate:** if commercial (Pro-tier)
-  distribution is planned, a licensed attorney reviews the **pack itself** (floor +
-  skill procedures + the regression-harness design) before ship — provider liability is
-  distinct from per-output oversight. N/A for internal/open-source.
-  <!-- meta-gate: conditional on commercial distribution -->
+- [x] **0.6 — Conditional product-liability meta-gate — RESOLVED N/A (2026-06-24).** The
+  suite is **open-source forever, no commercial / Pro tier** (ADR-108) — the gate never
+  fires. End-user reliance is covered by the non-removable disclaimer + per-output
+  attorney-review line in `legal-safety-floor`. Reopening requires a superseding ADR.
+  <!-- meta-gate: resolved N/A — OSS-forever per ADR-108 -->
 - [x] **0.7 — ADR** (`skill:adr-create`): domain adoption, EU/DE-only scope, the
   regression-vs-objective-eval split, the rejections (Phase 6), and the N=1 reversal.
 - [x] **0.8 — Retrospective pattern note (NOT a design driver):** after legal is built,
@@ -162,7 +167,7 @@ epistemic point now without foreclosing a funded asset later.
 - [x] **3.2 — Baseline + regression gate:** first skill run sets the baseline; later
   changes must not regress against it. The gate is a *consistency* check, never a
   correctness threshold; the threshold lives *below* the ~F1 0.62 cap by construction.
-- [ ] **3.3 — Verify:** harness flags a deliberately regressed skill; no skill claims correctness.
+- [x] **3.3 — Verify:** harness flags a deliberately regressed skill (worked demonstration in `src/domains/legal/evals/README.md` — a GREEN verdict on the processor sub-processor clause mismatches the fixture's expected RED → regression flagged); "no skill claims correctness" is lint-enforced. The automated cross-model runner + attorney spot-validation (≥0.7) remain the demand+funding-gated objective track (5.1), which ties to Gate 2 (0.2).
 
 ## Phase 4 — Practice-profile mechanism (the keystone, adapted not cloned)
 

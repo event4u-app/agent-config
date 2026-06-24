@@ -83,6 +83,8 @@ is platform operation, not a user-work flow.)
 
 > **Creative Pack — cinematic AI video.** script → character-locked image → motion+audio prompt → provider render → stitched clip, with `AIV_DRYRUN=true` as the cost-safety default. A first-class capability inside the **content / creator** experience — no longer the package's headline. See [`/video:from-script`](.augment/commands/video/from-script.md).
 
+> **Legal Pack — not legal advice.** The EU/DE legal pack (contract/NDA/DPA review, triage) is a **research-and-drafting aid only** — it does not provide legal advice, does not replace a qualified lawyer, and must not be relied on for any concrete matter. It produces general information and general templates, never individual-case examination. Read [`LEGAL_NOTICE.md`](LEGAL_NOTICE.md) before use.
+
 <details>
 <summary><b>Catalog at a glance</b> — raw artefact counts (maintainer reference)</summary>
 

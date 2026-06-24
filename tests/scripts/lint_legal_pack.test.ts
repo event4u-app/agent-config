@@ -60,6 +60,22 @@ describe('lint_legal_pack — synthetic fixtures', () => {
         expect(lintLegalPack(root)).toEqual([]);
     });
 
+    it('flags definitive legal language in a skill body', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-lint-'));
+        tmpDirs.push(root);
+        makeSkill(root, 'def', 'packs:\n  - legal', '# d\nJurisdiction: EU\nAttorney review required on material use\nThis contract is valid and you are required to sign.\n');
+        const v = lintLegalPack(root);
+        expect(v.some((x) => x.rule === 'definitive-language')).toBe(true);
+    });
+
+    it('does NOT flag definitive phrases inside negative-example/guidance lines', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-lint-'));
+        tmpDirs.push(root);
+        makeSkill(root, 'guide', 'packs:\n  - legal', '# g\nJurisdiction: DE\nAttorney review required on material use\nDo NOT say "this contract is valid"; instead flag it for review.\n');
+        const v = lintLegalPack(root);
+        expect(v.some((x) => x.rule === 'definitive-language')).toBe(false);
+    });
+
     it('flags an invalid freshness_window shape when declared', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-lint-'));
         tmpDirs.push(root);

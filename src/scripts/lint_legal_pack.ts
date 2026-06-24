@@ -35,6 +35,20 @@ const ATTORNEY_LINE = 'Attorney review required on material use';
 const JURISDICTION_TAG = 'Jurisdiction:';
 const FRESHNESS_WINDOW_RE = /^\d+\s+(day|days|month|months|year|years)$/;
 
+// D4 — definitive-legal-language blocklist (the floor bans these; this is the
+// deterministic backstop over skill bodies). Narrow on purpose; the floor's
+// prompt layer is the primary enforcement.
+const DEFINITIVE_PATTERNS: readonly (readonly [RegExp, string])[] = [
+    [/\bthis (contract|nda|agreement|dpa|clause) is (valid|enforceable|compliant|legal|illegal)\b/i, 'definitive validity/compliance verdict'],
+    [/\b(is|are) (fully |now )?gdpr[- ]compliant\b/i, 'definitive GDPR-compliance claim'],
+    [/\byou are (legally )?required to\b/i, 'definitive legal obligation'],
+    [/\byou will (win|lose|prevail)\b/i, 'outcome prediction'],
+    [/\byour chances (of success )?are\b/i, 'success prognosis'],
+];
+// A line is exempt when it is clearly a negative example / guidance / quote —
+// so "Do NOT say 'this contract is valid'" or "Forbidden: …" never false-positive.
+const NEG_EXAMPLE_RE = /(never|avoid|forbidden|do not|don'?t|instead|rather than|not say|→|⚠️)/i;
+
 function _print(msg: string): void {
     if (!QUIET) process.stdout.write(`${msg}\n`);
 }
@@ -93,6 +107,15 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
         const fw = /(^|\n)freshness_window:\s*"?([^"\n]+)"?/.exec(fm);
         if (fw && !FRESHNESS_WINDOW_RE.test((fw[2] ?? '').trim())) {
             violations.push({ file: rel, rule: 'freshness', msg: `freshness_window "${fw[2]}" is not a valid "<N> days|months|years" shape` });
+        }
+        // 4.1 — no definitive legal language (line-scoped, skips negative examples)
+        for (const line of body.split('\n')) {
+            if (NEG_EXAMPLE_RE.test(line)) continue;
+            for (const [re, label] of DEFINITIVE_PATTERNS) {
+                if (re.test(line)) {
+                    violations.push({ file: rel, rule: 'definitive-language', msg: `${label}: ${line.trim().slice(0, 80)}` });
+                }
+            }
         }
     }
     return violations;
