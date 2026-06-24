@@ -13,7 +13,7 @@ type: prospective
 
 ## Status
 
-**Accepted** · 2026-06-24 · three AI-council rounds (anthropic/claude-sonnet-4-5 + openai/gpt-4o; the curl-timeout fix landed mid-series so rounds 2–3 ran two-voice). Implementing roadmap: `agents/roadmaps/road-to-legal-pack.md`.
+**Accepted** · 2026-06-24 · three AI-council rounds (anthropic/claude-sonnet-4-5 + openai/gpt-4o; the curl-timeout fix landed mid-series so rounds 2–3 ran two-voice). Implementing roadmap: road-to-legal-pack (archived on completion).
 
 ## Context
 
@@ -37,7 +37,7 @@ matter-workspace (too heavy), scheduled watchers, community-skill installer hub,
 
 ## Consequences
 
-- The pack ships `trust_level_default: experimental` / `surface_tier: lab` — **gated** until the Gate-2 maintenance owner + external qualification check is confirmed (a human gate this ADR cannot self-satisfy).
+- The pack ships `trust_level_default: experimental` / `surface_tier: lab` as the **conservative default for a high-risk legal domain**. Gate 2 was **resolved 2026-06-24 by maintainer decision: no named-owner / external-qualification gate** — the protection is the always-present, **test-enforced** not-legal-advice notice (every skill · chat output · README · dedicated legal-pack notice; `tests/scripts/legal-disclaimer-presence.test.ts`) plus the RDG individual-case guardrail. Tier promotion is a separate future decision.
 - A reusable domain-pack sequence (Safety-Floor → Enforcement → Evals → Skills → Practice-Profile) is **documented retrospectively**, validated against a second domain before promotion to a rule (per `domain-pack-extraction-when-triggered`, N=2) — it does not drive legal's design.
 
 ## Alternatives considered
@@ -46,6 +46,6 @@ Jurisdiction-neutral-with-EU-default (rejected — maximizes the maintenance sur
 
 ## References
 
-- [`agents/roadmaps/road-to-legal-pack.md`](../../agents/roadmaps/road-to-legal-pack.md)
+- road-to-legal-pack — the implementing roadmap (archived on completion)
 - [ADR-013 — Discovery Frontmatter Contract](ADR-013-discovery-frontmatter-contract.md) (vocabulary amendment, same series)
 - `rule:legal-safety-floor`, `rule:domain-adoption-policy`, `rule:domain-safety-disclaimer`

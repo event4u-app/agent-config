@@ -1,7 +1,7 @@
 # Legal pack — demand signal + scope decision (domain-adoption Gate 1 + Gate 3)
 
 > Context note recording the `domain-adoption-policy` evidence so the case is not
-> relitigated. Companion to ADR-107 and `agents/roadmaps/road-to-legal-pack.md`.
+> relitigated. Companion to ADR-107 and the road-to-legal-pack roadmap.
 
 ## Gate 1 — demand signal (met)
 

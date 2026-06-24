@@ -66,11 +66,16 @@ epistemic point now without foreclosing a funded asset later.
 ## Phase 0 — Gates, scope, floor (before any skill)
 
 - [x] **0.1 — Gate 1 (demand):** record demand + EU/GDPR context in `agents/settings/contexts/`.
-- [ ] **0.2 — Gate 2 (maintenance owner) — BLOCKING:** name a single maintainer + a
-  refresh cadence (quarterly min) **and an objective qualification check** — the
-  maintainer's EU/DE legal-domain competence is confirmed by external/adversarial review,
-  **not self-assessment** (the whole eval/floor soundness rests on this). Pack stays
-  `[-] gated` until confirmed. <!-- owner-gate: needs user confirmation -->
+- [x] **0.2 — Gate 2 — RESOLVED 2026-06-24 (maintainer decision): no owner gate; a
+  test-enforced always-present disclaimer instead.** We do not require a named
+  maintenance owner / external legal-qualification. The assurance is that the
+  "not legal advice / no substitute for a lawyer" notice is **always present and
+  verified by tests** — in every legal skill, mandated into the chat output, in the
+  main README, and as a dedicated legal-pack notice. Gate = `tests/scripts/legal-disclaimer-presence.test.ts`
+  (6 assertions, in the CI test suite) + `lint_legal_pack`. The pack stays
+  `experimental`/`lab` as the conservative default for a high-risk legal domain
+  (the disclaimer + RDG individual-case guardrail are the protection, not a tier);
+  promotion is a separate future decision. <!-- owner-gate: replaced by test-enforced disclaimer -->
 - [x] **0.3 — Gate 3 (CI-tooling):** legal skills are validated (skill_linter +
   trigger-evals + Phase-1 linters + Phase-3 regression harness), not platform-bound.
 - [x] **0.4 — Scope: EU/DE-only hard refusal.** Encode in `src/domains/legal/pack.yaml`

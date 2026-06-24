@@ -43,4 +43,4 @@ Consequences for governance:
 
 - [ADR-107 — Legal domain-pack adoption](ADR-107-legal-domain-pack-adoption.md) (§ 0.6 conditional gate, now resolved N/A)
 - `rule:legal-safety-floor` § Distribution + § What this pack is — and is not
-- [`agents/roadmaps/road-to-legal-pack.md`](../../agents/roadmaps/road-to-legal-pack.md) § 0.6
+- road-to-legal-pack § 0.6 (archived on completion)
