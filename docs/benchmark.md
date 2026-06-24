@@ -109,3 +109,13 @@ Cost axis: each recursion run is up to 2× the host calls of a single pass, for 
 - Roadmap: `agents/roadmaps/archive/road-to-recursive-verification.md` (closed honest-null).
 - Gate logic: `recursiveGateVerdict` / `resolveRecursiveDefault` (`orchestration_gate.ts`); on a
   falsified gate `resolveRecursiveDefault` resolves `off` — no shipped-default flip.
+
+**Follow-up disposition — TERMINAL** (AI council, anthropic/claude-sonnet-4-5 +
+openai/gpt-4o, 2026-06-24, deep tier). Both members converged: do **not** pursue a
+model-critic / cross-vendor variant. The 72% first-pass rate shows recursion solves the
+wrong problem — cost scales with *all* tasks, benefit only on the ~28% tail (best-case
+~4–6% lift, would need n≥200 to detect); a model-critic would mostly fire more often and
+produce more null-lift re-attempts at higher cost. The real lever is **refining the rules
+on the 28% failure tail** (applies to 100% of tasks at zero marginal cost), not recursion.
+Recursion-as-a-class is closed; the model-critic's contextual-quality angle, if ever
+wanted, is a *different* (quality-review) product, not a recursion follow-up.
