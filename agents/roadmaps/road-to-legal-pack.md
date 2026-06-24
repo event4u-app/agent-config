@@ -88,11 +88,11 @@ epistemic point now without foreclosing a funded asset later.
   not instructions**; **(h) GREEN×non-lawyer → attorney gate** (a "standard-approve"
   severity for a non-lawyer never self-approves); **(i) every skill output carries
   `⚠️ Attorney review required on material use` in the body, not a footnote.**
-- [ ] **0.6 — Conditional product-liability meta-gate:** if commercial (Pro-tier)
-  distribution is planned, a licensed attorney reviews the **pack itself** (floor +
-  skill procedures + the regression-harness design) before ship — provider liability is
-  distinct from per-output oversight. N/A for internal/open-source.
-  <!-- meta-gate: conditional on commercial distribution -->
+- [x] **0.6 — Conditional product-liability meta-gate — RESOLVED N/A (2026-06-24).** The
+  suite is **open-source forever, no commercial / Pro tier** (ADR-108) — the gate never
+  fires. End-user reliance is covered by the non-removable disclaimer + per-output
+  attorney-review line in `legal-safety-floor`. Reopening requires a superseding ADR.
+  <!-- meta-gate: resolved N/A — OSS-forever per ADR-108 -->
 - [x] **0.7 — ADR** (`skill:adr-create`): domain adoption, EU/DE-only scope, the
   regression-vs-objective-eval split, the rejections (Phase 6), and the N=1 reversal.
 - [x] **0.8 — Retrospective pattern note (NOT a design driver):** after legal is built,
@@ -162,7 +162,7 @@ epistemic point now without foreclosing a funded asset later.
 - [x] **3.2 — Baseline + regression gate:** first skill run sets the baseline; later
   changes must not regress against it. The gate is a *consistency* check, never a
   correctness threshold; the threshold lives *below* the ~F1 0.62 cap by construction.
-- [ ] **3.3 — Verify:** harness flags a deliberately regressed skill; no skill claims correctness.
+- [x] **3.3 — Verify:** harness flags a deliberately regressed skill (worked demonstration in `src/domains/legal/evals/README.md` — a GREEN verdict on the processor sub-processor clause mismatches the fixture's expected RED → regression flagged); "no skill claims correctness" is lint-enforced. The automated cross-model runner + attorney spot-validation (≥0.7) remain the demand+funding-gated objective track (5.1), which ties to Gate 2 (0.2).
 
 ## Phase 4 — Practice-profile mechanism (the keystone, adapted not cloned)
 
