@@ -390,6 +390,14 @@ export const settingsSchema = z.object({
             'Enable the `agent-config explain last` command, which prints the reasoning behind the agent\'s most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface.',
         ),
     }),
+    legal_review_prep: z.object({
+        acknowledged: z.boolean().default(false).describe(
+            'I understand the legal-review-prep pack provides templates and general information ONLY — it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked.',
+        ),
+        consented_at: z.string().default('').describe(
+            'ISO timestamp recorded when the legal-review-prep acknowledgment was given. Set automatically by the setup wizard; leave empty otherwise.',
+        ),
+    }).default({ acknowledged: false, consented_at: '' }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

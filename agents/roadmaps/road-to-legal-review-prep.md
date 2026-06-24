@@ -50,10 +50,10 @@ status: ready
 > Council (both voices, both rounds): YES. Active consent ≠ passive disclaimer —
 > materially helps civil-liability / host-ToS / expectation (not an RDG cure).
 
-- [ ] **2.1 — Settings flag** `legal_review_prep.acknowledged: true` (+ timestamp) in the settings schema (`src/server/schemas/settings.ts` + `.agent-settings` template).
-- [ ] **2.2 — Wizard step** — when the pack is selected in the setup wizard (`src/server/routes/wizard.ts`), require an explicit checkbox: *"This pack provides templates and general information ONLY — not legal advice, no attorney-client relationship. Individual cases need a lawyer. I understand."* Unchecked → pack not activated.
-- [ ] **2.3 — Floor enforcement** — the floor refuses legal-review-prep skills until `acknowledged: true` (fail-closed), pointing the user to the wizard / settings.
-- [ ] **2.4 — Verify** — wizard step renders + persists the flag; floor-refusal path tested.
+- [x] **2.1 — Settings flag** `legal_review_prep.acknowledged: true` (+ timestamp) in the settings schema (`src/server/schemas/settings.ts` + `.agent-settings` template).
+- [x] **2.2 — Wizard step** — when the pack is selected in the setup wizard (`src/server/routes/wizard.ts`), require an explicit checkbox: *"This pack provides templates and general information ONLY — not legal advice, no attorney-client relationship. Individual cases need a lawyer. I understand."* Unchecked → pack not activated.
+- [x] **2.3 — Floor enforcement** — the floor refuses legal-review-prep skills until `acknowledged: true` (fail-closed), pointing the user to the wizard / settings.
+- [x] **2.4 — Verify** — wizard step renders + persists the flag; floor-refusal path tested.
 
 ## Phase 3 — Council + deep-research gate (defense-in-depth)
 

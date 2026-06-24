@@ -26,7 +26,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
 
     afterEach(async () => { await ctx.cleanup(); });
 
-    it('install mode lands on Step 1 (index 0) with 11 total steps', async () => {
+    it('install mode lands on Step 1 (index 0) with 12 total steps', async () => {
         ctx = await bootTestApp({ port: 41610, extendedSteps: true, initialStep: 0 });
         const res = await ctx.app.inject({
             method: 'GET',
@@ -36,12 +36,12 @@ describe('wizard initialStep (B0 dispatch)', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
-        expect(body.totalSteps).toBe(11);
+        expect(body.totalSteps).toBe(12);
         expect(body.extendedSteps).toBe(true);
         expect(body.startedAt).toBeNull();
     });
 
-    it('setup mode lands on the first settings step (index 4) with 11 total steps', async () => {
+    it('setup mode lands on the first settings step (index 4) with 12 total steps', async () => {
         ctx = await bootTestApp({ port: 41611, extendedSteps: true, initialStep: 4 });
         const res = await ctx.app.inject({
             method: 'GET',
@@ -51,7 +51,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(4);
-        expect(body.totalSteps).toBe(11);
+        expect(body.totalSteps).toBe(12);
         expect(body.extendedSteps).toBe(true);
         expect(body.startedAt).toBeNull();
     });
@@ -78,8 +78,8 @@ describe('wizard initialStep (B0 dispatch)', () => {
             headers: authHeaders(ctx.token, ctx.host),
         });
         const body = res.json() as StateBody;
-        expect(body.step).toBe(10);
-        expect(body.totalSteps).toBe(11);
+        expect(body.step).toBe(11);
+        expect(body.totalSteps).toBe(12);
     });
 
     it('clamps a negative initialStep to 0', async () => {

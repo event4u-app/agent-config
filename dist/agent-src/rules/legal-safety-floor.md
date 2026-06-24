@@ -56,6 +56,15 @@ THEY DO NOT REPLACE A LICENSED ATTORNEY. NO ONE MAY RELY ON THEM AS DEFINITIVE.
 
 Every output is a **draft / research aid for a human attorney to verify** — for first-pass review, issue-spotting, and drafts only. It is **not** legal advice, **not** a legal opinion, and **not** a substitute for a qualified lawyer in the relevant jurisdiction. Nobody should rely on it for a binding decision; treat it as a tool that makes attorney review faster, never as the review itself. This disclaimer is non-removable from the pack. See [`LEGAL_NOTICE.md`](../../LEGAL_NOTICE.md).
 
+## Consent gate — refuse until acknowledged
+
+```
+NO legal-review-prep SKILL RUNS UNTIL legal_review_prep.acknowledged: true.
+FAIL-CLOSED: NO ACKNOWLEDGMENT → REFUSE, POINT TO THE SETUP WIZARD.
+```
+
+Before any `legal-review-prep` skill produces output, read `legal_review_prep.acknowledged` from `.agent-settings.yml`. Missing / `false` → refuse and surface: *"The legal-review-prep pack is inactive until you acknowledge it is not legal advice. Run the setup wizard's legal-consent step, or set `legal_review_prep.acknowledged: true` in `.agent-settings.yml`."* This is active consent (set via the wizard checkbox), not a passive disclaimer — it manages reliance/expectation and host-ToS exposure; it does **not** cure RDG.
+
 ## Iron Law — general information only, never individual-case examination
 
 ```

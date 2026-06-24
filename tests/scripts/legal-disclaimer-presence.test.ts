@@ -72,6 +72,12 @@ describe('legal pack — the disclaimer is always present (gate replaces the own
         expect(readme).toContain('LEGAL_NOTICE.md');
     });
 
+    it('6) the floor carries the consent gate (refuse until acknowledged)', () => {
+        const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
+        expect(floor, 'floor missing the consent gate').toContain('legal_review_prep.acknowledged');
+        expect(floor.toLowerCase()).toMatch(/refuse|inactive|until/);
+    });
+
     it('5) the floor carries the hard individual-case STOP block (not just a hedge)', () => {
         const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
         expect(floor, 'floor missing the hard STOP marker').toContain('🛑 I must stop here');

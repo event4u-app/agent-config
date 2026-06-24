@@ -6,10 +6,10 @@
 
 ## Overall
 
-**71 / 205 steps done · 35%**
+**75 / 205 steps done · 37%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md) | 7 | 25 | 18 | 7 | 0 | 0 | ███░░░░░░░ 28% |
+| 3 | [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md) | 7 | 25 | 14 | 11 | 0 | 0 | ████░░░░░░ 44% |
 | 4 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -51,13 +51,13 @@
 
 ### [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md)
 
-**Road to legal-review-prep — rename, consent-gate, council-gate, hard STOP** — 7 / 25 done (28%)
+**Road to legal-review-prep — rename, consent-gate, council-gate, hard STOP** — 11 / 25 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Rename `legal` → `legal-review-prep` | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Hard individual-case STOP (not a hedge) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Install/setup consent gate ("I understand this is not legal advice") | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Install/setup consent gate ("I understand this is not legal advice") | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Council + deep-research gate (defense-in-depth) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | High-risk pack metadata | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Attorney-framing-review promotion tripwire | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
