@@ -144,6 +144,15 @@ Anti-cases:       <combinations the component refuses to support>
   every render, the child re-renders too. Stabilize via
   `useCallback` or hoist.
 
+## Cross-task design memory
+
+Before proposing a component, check the project root for `DESIGN.md`
+(written by `design-system-capture`). If present, apply its captured
+visual conventions (radius/shadow/motion/spacing) to the new component
+rather than deriving them from scratch. Flag any new design decision
+(e.g., a first-use of a new elevation tier) for capture:
+*"Suggest adding to DESIGN.md: [decision]."*
+
 ## Do NOT
 
 - Do NOT design a component without running

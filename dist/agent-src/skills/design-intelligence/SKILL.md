@@ -9,6 +9,7 @@ workspaces:
   - engineering
 packs:
   - frontend-design
+token_budget_class: rich
 trust:
   level: professional
 install:
@@ -47,6 +48,68 @@ Provenance + licenses: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 - Any pre-build selection question: which style / palette / font pairing /
   layout pattern / chart type / icon system fits this product.
 - Stack-idiom lookup before writing UI code (`--stack` axis).
+
+## Cross-task design memory — read DESIGN.md / PRODUCT.md first
+
+Before running the corpus grounding or producing any design brief, check
+the project root for `DESIGN.md` and/or `PRODUCT.md` (written by
+`design-system-capture`). If they exist:
+
+1. Read `DESIGN.md` — apply its captured visual decisions (radius, shadows,
+   motion, spacing) as **project constraints** that take precedence over
+   corpus suggestions. The corpus fills gaps; DESIGN.md overrides.
+2. Read `PRODUCT.md` — note interaction patterns that affect the design
+   (e.g., destructive-action policy, empty-state approach) so the brief
+   is consistent with existing product conventions.
+3. After generating the design brief: if a decision was made that isn't yet
+   in DESIGN.md (e.g., chose a specific shadow for a new elevated surface),
+   flag it for capture: *"Suggest adding to DESIGN.md: elevated surface shadow = …"*
+
+Boundary vs `brand-to-tokens`/`.tokens.json`:
+- `.tokens.json` = primitive definitions (gray-700 = #374151)
+- `DESIGN.md` = usage decisions (elevated surfaces use the gray-700 shadow, 8px radius)
+Both are consumed; DESIGN.md takes precedence for usage questions.
+
+## Design Read — articulate intent before generating
+
+Before producing any design brief or making any style selection, emit one
+line that declares the design read:
+
+```
+Reading this as: <page-kind> for <audience>, <vibe> language, leaning <design-system>.
+```
+
+Examples:
+- `Reading this as: SaaS dashboard for internal ops teams, functional language, leaning Radix/shadcn.`
+- `Reading this as: marketing landing for B2C consumer product, playful editorial, leaning custom tokens.`
+- `Reading this as: admin panel for technical users, dense/utilitarian language, leaning data-grid primitives.`
+
+**If context is incomplete:** state so and proceed exploratory — *"Design context incomplete: no audience defined; proposing exploratory direction, expect revision after audience is clarified."* Do NOT block on missing context; do NOT prompt the user with a gate; state the gap and continue.
+
+**Anti-Default Discipline — first-impulse check:** Before committing to any design direction, verify you are NOT defaulting to:
+- Purple/violet + cyan-on-dark gradient palette (AI color cliché)
+- Centered hero over a dark gradient mesh with a single CTA
+- Three equal-weight feature cards in a grid
+- Inter or Space Grotesk as the uncritical body font choice
+- "Premium consumer" cream/sand background + brass/clay accents
+
+If any of these was the first impulse, name a different direction or explicitly justify why this brief genuinely calls for it.
+
+## Honesty / real-system grounding
+
+When the brief maps to an official design system (Material Design, Fluent,
+Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
+
+1. **Install the real package** — do not hand-recreate its CSS or components.
+   Surface the install command (`npm install @shadcn/ui`, etc.) and link the
+   canonical documentation URL.
+2. **Never label an approximation as the official system.** If generating
+   approximate CSS for a system the project does not yet depend on, label it
+   explicitly: *"Approximation of Material Design elevation — not the official
+   `@mui/material` package; install the package for production use."*
+3. **If no official system is relevant:** pick a deliberate creative direction
+   (see Design Read above); never fall back to an unnamed generic aesthetic
+   (per `source-discovery-gate`: real source before guessing).
 
 ## Procedure: Produce a grounded design brief (`ui-design-brief` rebound)
 
@@ -169,6 +232,27 @@ guidance + docs URLs from here instead of memory.
 - Empty result ≠ error: surface the evidence gap and proceed on priors.
 - Keep queries product-shaped ("fintech dashboard", "luxury e-commerce
   mobile") — the detect map routes generic words to `style`.
+
+## Anti-slop discipline
+
+Before finalizing any design brief, cross-check against
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+— especially the Color (C1–C5), Typography (T7–T8), and Layout (L1–L2) sections.
+If the grounded corpus selection lands on a pattern in the catalog, either invoke
+the override condition or adjust the selection. Run the AI-slop originality
+self-test (catalog § "The AI-slop originality self-test") on the chosen aesthetic
+direction before emitting `design_confirmed`.
+
+## Why this skill is rich
+
+This skill carries 11 tabular CSVs (161-row UI-reasoning decision map,
+WCAG-adjusted color token sets, 84 styles, 73 font pairings, 25 chart rules, UX/
+react/mobile guidelines) plus 16 prose design-language specs and a 10-category
+pre-delivery checklist. Agents need to see the full corpus to make grounded
+selections — condensing to a summary destroys the evidence trail ("corpus
+row 47 justifies the palette choice") that the skill's output contract requires.
+Compressing the 16 design-language specs into fragments makes the style
+selection unreproducible and audit-unfriendly.
 
 ## Policies
 
