@@ -46,3 +46,18 @@ not finding-count distributions).
 
 - `dpa-art28-processor-subprocessor.md` — processor-side, sub-processor authorisation + flow-down.
 - `dpa-art28-controller-audit-deletion.md` — controller-side, audit rights + deletion/return.
+
+## Worked demonstration — the harness catches a regression (roadmap 3.3)
+
+A manual demonstration that the regression check is real (the automated cross-model
+runner remains the demand+funding-gated track; this is the consistency check by hand):
+
+- Fixture `dpa-art28-processor-subprocessor.md` declares **expected: sub-processor clause = RED** ("at its discretion" defeats the controller's Art. 28(2) authorisation right).
+- **Baseline run** of `dpa-review` flags that clause RED → matches expected → ✅ no regression.
+- **Deliberately regressed run** (a skill change that returns **GREEN / standard-approve** on the same clause) → produced `GREEN` ≠ expected `RED` → **regression flagged** ✗, ship blocked.
+
+This is exactly what the harness is for: it detects when a change makes a skill worse
+than its own labeled baseline. It makes **no correctness claim** — the label is
+self-labeled-provisional, and a human attorney owns correctness. The "no skill claims
+correctness" half of 3.3 is enforced statically (`lint_legal_pack` + the floor's
+attorney-review line); this worked example demonstrates the regression-detection half.
