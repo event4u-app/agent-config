@@ -118,6 +118,14 @@ current state on the next polish round.
 - Do NOT override Flux styles with conflicting Tailwind — use variants or slots.
 - Do NOT skip the `label` prop on form fields — accessibility.
 
+## Anti-slop
+
+Flux primitives carry sane defaults, but composition still drifts into slop —
+pull [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+and check Layout (L1/L2 hero-metric + identical-card grids) and Color
+(C1 gradient defaults) before shipping. Tailwind-level bans:
+[`tailwind-engineer`](../tailwind-engineer/SKILL.md).
+
 ## Auto-trigger keywords
 
 - Flux UI

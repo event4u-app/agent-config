@@ -8,6 +8,7 @@ workspaces:
   - engineering
 packs:
   - frontend-design
+token_budget_class: rich
 trust:
   level: professional
 install:
@@ -136,3 +137,16 @@ brand already registers fonts, use them and skip the filter.
   consumes the token system produced here.
 - [`brand`](../brand/SKILL.md) — supplies the archetype → pairing-filter
   Grounding (`typography` domain) consumed by stage 2.
+
+## Why this skill is rich
+
+Typography is one of the highest-leverage design decisions and one of the
+most commonly mis-applied by AI agents (defaulting to Inter + arbitrary sizes).
+The skill carries 73 curated font pairings (heading + body + mono combinations
+with Google Fonts URLs and Tailwind config), 6 worked-through modular-scale
+examples across different use-cases (marketing, dashboard, docs, e-commerce,
+SaaS, editorial), and per-pairing line-height + weight guidance. Condensing
+to "use a 1.25 modular scale" loses the worked examples that teach agents
+the difference between a 14/17.5/21.8/27.2 rounded scale and an invented
+arbitrary scale. Without the worked examples, agents produce: 16, 20, 24, 28
+(arbitrary) instead of a properly grounded typographic system.

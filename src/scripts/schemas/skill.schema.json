@@ -182,6 +182,11 @@
         "removable": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
+    },
+    "token_budget_class": {
+      "type": "string",
+      "enum": ["lean", "standard", "rich"],
+      "description": "Token-cost class for this skill. `lean` (default): subject to telegraph-speak condensation and thin-projector trimming; optimize for <500 tokens. `standard`: balanced guidance, normal condensation. `rich`: exempt from telegraph-speak and thin-projector trimming; detailed examples preserved; eager-load eligible; ≤15% of skills in a suite may be `rich` (CI-enforced). A `rich` skill MUST carry a '## Why this skill is rich' section explaining the irreducible complexity that makes condensation harmful. Governed by `token-budget-discipline` rule + `tokens.rich_skills` consumer setting. See docs/guidelines/token-budget-governance.md."
     }
   }
 }

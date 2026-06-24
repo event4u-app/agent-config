@@ -199,14 +199,86 @@ Step indicator (1 — 2 — 3)
 | Auto-playing content | Provide pause/stop control |
 | Tiny click targets | Min 44×44px touch target |
 
+## Motion — decision-tree and rationale
+
+Before adding any animation to a UI element, run through this decision tree:
+
+**1. Should this animate at all?**
+- Used 100+ times per day (keyboard shortcut, command palette)? **No animation. Why:** animations on high-frequency interactions feel sluggish; users wait for them on every invocation. Raycast has no open/close animation by design.
+- Triggered by user action with visible result (button → state change)? **Micro-feedback only (< 160ms).** Why: quick enough to feel instant, visible enough to confirm the action.
+- Modal/overlay/sheet entering/exiting? **Animate. Why:** position change needs motion to maintain spatial continuity.
+- Background process with no user action? **No animation.** Why: unexplained motion is disorienting.
+
+**2. Which easing?**
+- Entering (element appearing)? **ease-out** (starts fast, slows to rest). Why: the element arriving quickly signals responsiveness; the deceleration feels natural as it settles.
+- Exiting (element disappearing)? **ease-in** (starts slow, accelerates out). Why: the reverse is true — fast exit signals completion.
+- **Never ease-in for entering elements.** Why: ease-in delays the initial movement — the exact moment the user is watching most closely — making it feel slow even at the same total duration.
+- **Never bounce or elastic easing in UI.** Why: bounce draws attention to the animation itself, not the content; it feels dated.
+
+**3. How long?**
+- Button/micro-feedback: 100–160ms. Tooltip: 100ms. Dropdown open: 150–200ms. Modal: 200–350ms. Page transition: 300–500ms. Above 500ms: almost never.
+- **Never animate layout properties** (width, height, top, left, padding). Why: triggers browser layout recalculation on every frame; always solvable with `transform`.
+- **Always add `@media (prefers-reduced-motion: reduce)`** — gentler animation (reduced distance/opacity), NOT display:none. Why: vestibular disorders make motion UI unusable; reducing is better than removing.
+
+**4. What to animate?**
+Animate `transform` and `opacity` only. Why: these run on the GPU compositor thread, not the main thread; they never trigger layout or paint.
+`scale(0)` → `scale(1)` is wrong. Why: nothing in the real world appears from nothing. Use `scale(0.95)` + `opacity: 0` → `scale(1)` + `opacity: 1` instead.
+
 ## UX Principles
 
-1. **Feedback** — Every action gets a response (toast, loading state, success message)
-2. **Forgiveness** — Undo for destructive actions, confirmation for irreversible ones
-3. **Consistency** — Same patterns for same interactions across the app
-4. **Progressive disclosure** — Show basics first, details on demand
-5. **Loading states** — Skeleton screens or spinners, never blank screens
-6. **Error recovery** — Clear error messages with suggested actions
+1. **Feedback** — Every action gets a response (toast, loading state, success message). **Why:** users interpret no feedback as failure.
+2. **Forgiveness** — Undo beats confirmation dialogs. Users click through confirmations mindlessly. **Why:** remove destructively then show undo toast; actually delete after toast expires.
+3. **Consistency** — Same patterns for same interactions across the app. **Why:** predictability reduces cognitive load; inconsistency forces users to re-learn.
+4. **Progressive disclosure** — Show basics first, details on demand. **Why:** premature complexity overwhelms; reveal information as it becomes relevant.
+5. **Loading states** — Skeleton screens preferred over spinners. **Why:** skeletons reduce perceived wait time by showing structure immediately.
+6. **Error recovery** — Clear error messages with suggested actions. **Why:** "something went wrong" gives the user nothing to do; a specific message with a next step reduces support burden.
+
+## Cross-task design memory — read DESIGN.md / PRODUCT.md first
+
+Before applying any heuristics from this reference, check the project root
+for `DESIGN.md` and/or `PRODUCT.md` (written by `design-system-capture`):
+
+- `DESIGN.md` present → use its captured radius/shadow/motion/spacing as
+  project constraints. The heuristics in this skill are **fallbacks for
+  gaps**, not overrides for captured decisions.
+- `PRODUCT.md` present → honor its interaction patterns (empty-state approach,
+  mutation feedback policy, filter persistence) in any UI design that touches
+  those surfaces.
+
+Flag any new decision for future capture: *"This establishes a new pattern —
+suggest adding to PRODUCT.md: [pattern description]."*
+
+## Register — brand vs product
+
+Before applying heuristics, determine the register (see
+[`docs/guidelines/design-modes.md`](../../../docs/guidelines/design-modes.md)):
+brand mode (impression-first) vs product mode (task-first). Form-heavy, table-heavy,
+and dashboard surfaces are almost always product mode — favour the standard
+patterns in this skill (Form Design, Table Design) over expressive variance.
+Marketing/landing surfaces are brand mode — let the Aesthetic-direction section
+commit to a deliberate, distinctive direction.
+
+## Design Read — articulate intent before generating
+
+When this reference is cited for a UI planning task, emit one line declaring
+the design read before any heuristics are applied:
+
+```
+Reading this as: <page-kind> for <audience>, <vibe> language, leaning <design-system>.
+```
+
+**If context is incomplete:** state so and proceed exploratory — do NOT block.
+
+**Anti-Default Discipline:** Before committing to any layout or component
+pattern, verify you are NOT defaulting to:
+- Centered hero + 3-column feature grid + CTA (the "AI landing page" layout)
+- Side-stripe `border-left` accent cards (V1 in `design-antipatterns`)
+- Identical card grids with no visual rhythm (L2)
+- `Inter` or `Space Grotesk` as the uncritical font pick (T7)
+- Glassmorphism as a decoration device (V2)
+
+If any of these was the first impulse, choose a different approach or
+explicitly justify why this brief genuinely calls for it.
 
 ## Aesthetic direction
 
@@ -258,6 +330,14 @@ When this skill's content is folded into a design brief or review:
 - Don't design components without running `existing-ui-audit` first — the audit's component/token inventory is the canonical source for "what already exists in this project". Reinventing is the #1 failure mode.
 - Heuristics in this reference apply across stacks; do not promote them to project rules without checking the audit.
 - Mobile-first is not optional — every layout must work on 320px width.
+
+## Anti-slop discipline
+
+Before proposing any UI layout, component, or aesthetic direction, pull
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+and scan the Visual (V1–V7), Layout (L1–L8), and Quality-floors (Q1–Q12) sections.
+If the first-impulse design matches a listed pattern, either choose a different
+approach or explicitly invoke the override condition in the design brief.
 
 ## Do NOT
 

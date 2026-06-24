@@ -83,6 +83,18 @@
           "description": "How strictly the agent must follow a user-provided prototype / mockup / design system. Consumed by the design-fidelity rule. strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous."
         }
       }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Token-spend governance for skills marked token_budget_class: rich. See token-budget-discipline rule.",
+      "properties": {
+        "rich_skills": {
+          "type": "string",
+          "enum": ["on", "ask", "off"],
+          "description": "Controls whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak and thin-projector trimming). on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask the user once per session before loading."
+        }
+      }
     }
   }
 }

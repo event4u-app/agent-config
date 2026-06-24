@@ -9,6 +9,7 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+token_budget_class: rich
 ---
 
 # accessibility-auditor
@@ -146,3 +147,16 @@ Top 3 fixes:  <ordered by user impact>
   jurisdictions.
 - Do NOT close a finding by adjusting the test instead of the UI;
   the user's experience is the ground truth, not the test report.
+
+## Why this skill is rich
+
+WCAG 2.2 AA compliance is non-negotiable detail — each success criterion
+has a specific testable condition, failure mode, and remediation path.
+The skill carries the full WCAG criterion matrix with concrete test
+procedures (not just "check contrast"), keyboard-navigation patterns
+(roving tabindex, trap management, escape-key handling), ARIA role/
+property/state tables, and screen-reader-specific edge cases per
+assistive technology. Condensing to "check contrast and add aria-labels"
+loses the test procedures that turn a vague finding into a reproducible
+failure with a specific remedy. Accessibility bugs that are described
+vaguely cannot be verified as fixed.

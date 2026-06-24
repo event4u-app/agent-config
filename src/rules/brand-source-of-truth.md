@@ -51,7 +51,17 @@ corpus from quietly replacing a value the brand already defines.
   marked as corpus-sourced, until `brand-identity` defines real tokens.
 - Non-brand surfaces.
 
+## Design register note
+
+When a consumer brand profile is present, the brand register ("the impression IS
+the product") is active — use `brand-identity`, `iconography`, and
+`design-intelligence` as the primary skill cluster. For product/dashboard/admin
+surfaces within the same brand, the product register ("design serves the task")
+may apply per-surface. See [`docs/guidelines/design-modes.md`](../../docs/guidelines/design-modes.md)
+for the full Brand-mode vs Product-mode discriminator.
+
 ## See also
 
 - [`brand-consistency`](brand-consistency.md) — validates emitted artifacts against the authoritative brand profile this rule establishes.
 - [`brand`](../skills/brand/SKILL.md) — the gap-fill corpus this rule subordinates to consumer brand.
+- [`docs/guidelines/design-modes.md`](../../docs/guidelines/design-modes.md) — brand vs product register discriminator and routing.

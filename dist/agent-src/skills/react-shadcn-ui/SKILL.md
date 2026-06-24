@@ -34,9 +34,15 @@ wraps `npx shadcn@latest add <components>` — **the only subprocess+network
 surface in the adopted suite**. Per `runtime-safety` + the `execution`
 block above:
 
-1. **Propose, never silent-run** — show exact `npx` command + component list first (`--dry-run`); user confirms before live run.
-2. **Missing tool** → per `missing-tool-handling`: `npx`/Node absent → STOP and ask (install vs manual copy) — never silently work around.
-3. **Verify after run** — `components/ui/<name>.tsx` exists, `components.json` unchanged or sanely updated, before reporting success.
+1. **Propose, never silent-run** — always show the exact `npx` command +
+   component list first (use `--dry-run`); the user confirms before any
+   live run.
+2. **Missing tool** → per `missing-tool-handling`: if `npx`/Node is
+   absent, STOP and ask (install vs. manual component copy) — never
+   silently work around.
+3. **Verify after run** — confirm the component landed
+   (`components/ui/<name>.tsx` exists, `components.json` unchanged or
+   sanely updated) before reporting success.
 
 ## Compatibility
 
@@ -82,13 +88,19 @@ Do NOT use when:
   the generated primitives but is easy to remove during a refactor.
 - **Anti-AI-slop: shadcn-default look.** The out-of-the-box shadcn
   theme + `Inter`-as-system-fallback + neutral grays reads as
-  template across projects. Unless `state.ui_audit.design_tokens`
-  pins the neutral palette as the project's identity, the polish
-  step should match typography and color tokens to the design
-  brief's `aesthetic:` line (from `fe-design` aesthetic-direction).
-  Theme/font drift within a single audited project breaks
-  consistency — variation lives between projects, not between
+  template across projects (catalog T7/T8 + C5). Unless
+  `state.ui_audit.design_tokens` pins the neutral palette as the
+  project's identity, the polish step should match typography and color
+  tokens to the design brief's `aesthetic:` line (from `fe-design`
+  aesthetic-direction). Theme/font drift within a single audited project
+  breaks consistency — variation lives between projects, not between
   components in the same surface.
+- **Anti-AI-slop catalog + linter.** Pull
+  [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+  before the polish step (Visual V1–V7, Layout L1–L8 are the React-component
+  slop tells); the objective quality floors (WCAG contrast, focus-visible,
+  reduced-motion) are CI-enforced by
+  [`lint_design_quality`](../../../src/scripts/lint_design_quality.ts).
 
 ## Covered primitives
 

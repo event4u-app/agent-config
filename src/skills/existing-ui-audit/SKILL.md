@@ -208,6 +208,17 @@ violations will surface as new findings on every run.
 - Greenfield is detected, not assumed — a project with one Blade layout and no components is still greenfield only if tokens AND design system markers AND components are all empty.
 - Re-running the skill on a stale state-file: cache by `(composer.json mtime, package.json mtime)`; if either changed, re-audit and overwrite.
 
+## Anti-slop cross-reference
+
+When the audit inventory reveals an existing aesthetic direction (dominant color
+scheme, border-radius convention, motion patterns), cross-check the findings
+against
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md).
+If the existing UI already uses a listed anti-pattern, surface it as a design-debt
+finding (separate from the reuse inventory) — flag by entry ID and severity. The
+next design step can then decide whether to continue the existing pattern (for
+consistency) or introduce a corrective direction change.
+
 ## Do NOT
 
 - Do NOT advance to `directives/ui/design.py` or `apply.py` if `state.ui_audit` is empty.

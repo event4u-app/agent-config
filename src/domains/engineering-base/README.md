@@ -8,13 +8,13 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **version**: `7.1.0`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 95
+- **artefacts**: 96
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (19)
+## Rules (20)
 
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
@@ -29,6 +29,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`linked-projects-onboarding-gate`** — IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes
 - **`minimal-safe-diff`** — Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits, opportunistic refactors, or reformatting
 - **`non-destructive-by-default`** — Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass
+- **`output-discipline`** — Prohibits placeholder-prose output in generated code and UI — no truncation shorthands; on budget overflow emit a clean PAUSED breakpoint instead
 - **`scope-control`** — Scope control — no unsolicited architectural changes, refactors, or library replacements
 - **`security-sensitive-stop`** — Security-sensitive paths — auth, billing, tenants, secrets, uploads, webhooks, public endpoints — threat-model BEFORE editing
 - **`source-discovery-gate`** — Before coding/DB/API/vendor-package work — prove each structural fact against a real source (file:line · SDL · migration · probe) before planning
