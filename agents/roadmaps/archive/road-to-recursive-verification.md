@@ -235,7 +235,7 @@ ELSE off.
 
 ## Phase 4 — cross-vendor recursive pool (most expensive, gated last)
 
-- [-] Cross-vendor critic inside the recursion. <!-- cancelled: gated on Phase 3 passing, which it did not. A model/cross-vendor critic might fire more often than the deterministic scorer-as-critic — the one un-explored lever — but pursuing it is a new design (more spend) and out of scope for this honest-null closure. Captured for a future roadmap if revisited. -->
+- [-] Cross-vendor critic inside the recursion. <!-- cancelled: gated on Phase 3 passing, which it did not. The model/cross-vendor critic was the one un-explored lever, but a follow-up AI council (anthropic + openai, 2026-06-24, deep) converged TERMINAL — cost scales with all tasks, benefit only on the ~28% tail; a model-critic would mostly fire more often for more null-lift at higher cost. NO follow-up roadmap. The real lever is refining the rules on the failure tail. See docs/benchmark.md § Follow-up disposition. -->
 - [-] Iron Law / net-value gate for the cross-vendor critic. <!-- cancelled with the step above. -->
 
 ## Deferred (auditable-orchestration differentiator — reconsider after Phase 3)
