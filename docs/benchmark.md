@@ -73,3 +73,39 @@
 - Arms: vanilla (plugin off) · package (real plugin) · package-rdp (plugin + RDP rules) · placebo (plugin off + equal-length inert prose).
 - Corpus: `internal/bench/corpora/ab-trackb-v2.yaml` (5 trap archetypes). Scoring: `bench_ab_scoring_v2.py` (deterministic, no LLM judge).
 - Roadmap: `agents/roadmaps/road-to-discipline-axis-benchmark.md`.
+
+## Recursive self-verification (ADR-106) — HONEST-NULL
+
+> **Verdict: recursion is redundant with the always-on rules. `verification.recursive`
+> stays `off`. No model got "closer to Fable" — exactly what ADR-106's gate was built to
+> disconfirm.** The one retraining-free Sakana-Fugu mechanism (a depth-bounded
+> `attempt → critic verdict → re-attempt` loop) was built, shipped behind a gate, and
+> measured — and adds nothing over the rules.
+
+Measured the `package-recursive` arm (D₂ = rules + recursion, deterministic scorer-as-critic,
+`max_depth=1`) against `package` (D₁ = rules only) on a weak host (`claude-haiku-4-5`),
+`capH-debug` archetype × 6 seeds (n=54 paired):
+
+| axis | D₁ (rules) | D₂ (rules + recursion) | Δ (D₂ − D₁) | test |
+|---|---|---|---|---|
+| capability (pass-rate) | 87% | 87% | 0 | McNemar p=1.0, h=0.0 |
+| discipline (0–1) | 0.852 | 0.861 | +0.009 | Wilcoxon p=0.79, rb=0.33, n≠0=3 |
+
+**ADR-106 gate: FALSIFIED** — neither a capability lift (p=1.0) nor a *significant* novel
+discipline lift (p=0.79; only 3 discordant pairs, below the ≥6 the gate requires).
+
+**Why, despite a passing human pre-test.** Recursion fired on only **8/29** corpus tasks
+(~28%) and produced a differentiated output on **4/29** — with the rules active, the host's
+*first* attempt already passes the critic 72% of the time, so recursion is a no-op. A blind
+human pre-test on the 4 differentiated pairs preferred the recursion output **4/4**, but those
+cases are too rare and the aggregate marginal lift too small (n≠0=3) to register as
+significant. The pre-test looked positive on N=4; the paired benchmark falsified it — which is
+exactly why ADR-106 required the benchmark, not just the pre-test.
+
+**Honesty scope.** Weak host, `capH-debug` family, deterministic scorer-as-critic, `max_depth=1`.
+A model-based critic (Phase 4) was not pursued — gated on this result passing, which it did not.
+Cost axis: each recursion run is up to 2× the host calls of a single pass, for a null lift.
+
+- Roadmap: `agents/roadmaps/archive/road-to-recursive-verification.md` (closed honest-null).
+- Gate logic: `recursiveGateVerdict` / `resolveRecursiveDefault` (`orchestration_gate.ts`); on a
+  falsified gate `resolveRecursiveDefault` resolves `off` — no shipped-default flip.
