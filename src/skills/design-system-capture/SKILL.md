@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: design-system-capture
 description: "Write and maintain DESIGN.md + PRODUCT.md — captures visual decisions and interaction patterns so design tasks stay consistent across sessions without re-scanning past work."
 domain: engineering
