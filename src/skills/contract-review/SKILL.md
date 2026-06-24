@@ -4,12 +4,13 @@ name: contract-review
 description: "Use when reviewing a contract clause-by-clause from your party's side — buyer/seller/vendor/licensee. Triggers on 'review this contract', 'redline this MSA', 'is this clause a problem'."
 status: active
 tier: senior
+council_depth: deep
 domain: process
 recommended_for_user_types: [legal]
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
 install:

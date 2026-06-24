@@ -3,7 +3,7 @@
  * Lint the legal pack's deterministic safety-floor backstops.
  *
  * The `legal-safety-floor` rule is prose; this linter makes three of its
- * Iron-Law elements machine-checkable over every `packs: [legal]` skill —
+ * Iron-Law elements machine-checkable over every `packs: [legal-review-prep]` skill —
  * so they are governance, not just prompt instructions (road-to-legal-pack
  * Phase 1, the "deterministic hardening = differentiator" thesis):
  *
@@ -35,6 +35,45 @@ const ATTORNEY_LINE = 'Attorney review required on material use';
 const JURISDICTION_TAG = 'Jurisdiction:';
 const FRESHNESS_WINDOW_RE = /^\d+\s+(day|days|month|months|year|years)$/;
 
+// D5 — the floor must carry the hard individual-case STOP block (not just a
+// hedge). road-to-legal-review-prep Phase 1. Checked once, against the floor
+// rule, only on a real (default-dir) run.
+const FLOOR_RULE = path.join(REPO, 'src', 'rules', 'legal-safety-floor.md');
+const STOP_MARKER = '🛑 I must stop here';
+
+// D6 — attorney-framing-review promotion tripwire (road-to-legal-review-prep
+// Phase 5 / ADR-107 amendment). Promoting the pack out of lab without a recorded
+// German-attorney framing review fails CI.
+const PACKS_YML = path.join(REPO, 'src', 'config', 'discovery', 'packs.yml');
+const PACK_NOTICE = path.join(REPO, 'src', 'domains', 'legal-review-prep', 'LEGAL_NOTICE.md');
+const FRAMING_MARKER = /framing reviewed by\s+\S.*(rechtsanw|attorney|lawyer)/i;
+
+/**
+ * Pure promotion-gate check. `promoted` = the legal-review-prep pack left its
+ * conservative posture (surface_tier !== lab, or trust_level_default !==
+ * experimental, or default_install === true). A promoted pack MUST carry a
+ * recorded attorney framing review in its LEGAL_NOTICE; otherwise it fails.
+ */
+export function legalPromotionViolations(packsYml: string, legalNotice: string): Violation[] {
+    const block = /(^|\n)- id:\s*legal-review-prep\b([\s\S]*?)(?=\n- id:|\n*$)/.exec(packsYml);
+    if (block === null) return [];
+    const body = block[2] ?? '';
+    const tier = /(^|\n)\s*surface_tier:\s*([^\n#]+)/.exec(body)?.[2]?.trim();
+    const trust = /(^|\n)\s*trust_level_default:\s*([^\n#]+)/.exec(body)?.[2]?.trim();
+    const defInstall = /(^|\n)\s*default_install:\s*([^\n#]+)/.exec(body)?.[2]?.trim();
+    const promoted = (tier !== undefined && tier !== 'lab')
+        || (trust !== undefined && trust !== 'experimental')
+        || defInstall === 'true';
+    if (promoted && !FRAMING_MARKER.test(legalNotice)) {
+        return [{
+            file: path.relative(REPO, PACK_NOTICE),
+            rule: 'promotion-gate',
+            msg: 'legal-review-prep promoted out of lab without a recorded attorney framing review ("Framing reviewed by <name>, Rechtsanwalt/Rechtsanwältin, <date>" in LEGAL_NOTICE.md) — ADR-107 amendment',
+        }];
+    }
+    return [];
+}
+
 // D4 — definitive-legal-language blocklist (the floor bans these; this is the
 // deterministic backstop over skill bodies). Narrow on purpose; the floor's
 // prompt layer is the primary enforcement.
@@ -65,12 +104,12 @@ function _splitFrontmatter(content: string): [string | null, string] {
     return [content.slice(4, end), content.slice(end + 4)];
 }
 
-/** True when the frontmatter `packs:` block lists `legal`. */
+/** True when the frontmatter `packs:` block lists `legal-review-prep`. */
 function _isLegalPack(fm: string): boolean {
-    // Match a `packs:` block then a `- legal` item before the next top-level key.
+    // Match a `packs:` block then a `- legal-review-prep` item before the next top-level key.
     const m = /(^|\n)packs:\s*\n((?:\s*-\s*[^\n]+\n?)+)/.exec(fm);
     if (!m) return false;
-    return /(^|\n)\s*-\s*legal\s*$/m.test(m[2] ?? '');
+    return /(^|\n)\s*-\s*legal-review-prep\s*$/m.test(m[2] ?? '');
 }
 
 interface Violation {
@@ -103,6 +142,10 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
         if (!body.includes(JURISDICTION_TAG)) {
             violations.push({ file: rel, rule: 'jurisdiction-tag', msg: `missing the machine-checkable "${JURISDICTION_TAG}" tag` });
         }
+        // 1.2b council-gate — every legal work-product skill routes deep.
+        if (!/(^|\n)council_depth:\s*deep\s*(\n|$)/.test(fm)) {
+            violations.push({ file: rel, rule: 'council-depth', msg: 'missing `council_depth: deep` (legal work-product must route through the AI council / deep-research)' });
+        }
         // 1.3 freshness — only when declared
         const fw = /(^|\n)freshness_window:\s*"?([^"\n]+)"?/.exec(fm);
         if (fw && !FRESHNESS_WINDOW_RE.test((fw[2] ?? '').trim())) {
@@ -116,6 +159,21 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
                     violations.push({ file: rel, rule: 'definitive-language', msg: `${label}: ${line.trim().slice(0, 80)}` });
                 }
             }
+        }
+    }
+    // D5 — the floor itself must carry the hard individual-case STOP block.
+    // Only on a real run (synthetic-dir tests pass their own tmp skillsDir).
+    if (skillsDir === SKILLS_DIR && fs.existsSync(FLOOR_RULE)) {
+        if (!_readText(FLOOR_RULE).includes(STOP_MARKER)) {
+            violations.push({
+                file: path.relative(REPO, FLOOR_RULE),
+                rule: 'individual-case-stop',
+                msg: `the floor is missing the hard individual-case STOP block ("${STOP_MARKER}")`,
+            });
+        }
+        // D6 — promotion gate (real-run only).
+        if (fs.existsSync(PACKS_YML) && fs.existsSync(PACK_NOTICE)) {
+            violations.push(...legalPromotionViolations(_readText(PACKS_YML), _readText(PACK_NOTICE)));
         }
     }
     return violations;

@@ -4,12 +4,13 @@ name: legal-intake-triage
 description: "Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'."
 status: active
 tier: senior
+council_depth: deep
 domain: process
 recommended_for_user_types: [legal]
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
 install:

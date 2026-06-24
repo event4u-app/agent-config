@@ -4,12 +4,13 @@ name: legal-practice-profile
 description: "Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\"."
 status: active
 tier: senior
+council_depth: deep
 domain: process
 recommended_for_user_types: [legal]
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
 install:

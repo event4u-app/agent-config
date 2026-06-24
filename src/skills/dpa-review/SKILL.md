@@ -4,12 +4,13 @@ name: dpa-review
 description: "Use when reviewing a DPA as controller or processor against GDPR Art. 28 — GREEN/YELLOW/RED gap frame, never a final call. Triggers on \"review this DPA\", \"check this DPA\"."
 status: active
 tier: senior
+council_depth: deep
 domain: process
 recommended_for_user_types: [legal]
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
 install:

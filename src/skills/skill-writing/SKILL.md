@@ -121,6 +121,24 @@ Then run the Understand → Research → Draft sequence from the
 rule. Skip only on explicit *"just do it"* bypass or trivial edits
 (typo, link, single-line clarification).
 
+### 0b. Skill-growth gate (new skill only)
+
+The skill count keeps climbing; nothing forces *"should this be a new skill at
+all?"*. Before creating a **new** skill, answer these in the PR body — a new
+skill that cannot answer them is a merge / guideline / no-op in disguise:
+
+1. **Family** — which capability family does it join? (engineering, product, …)
+2. **Capability** — what does it do that no existing skill does? Name the gap.
+3. **Why not extend / merge** — which nearest skill did you consider folding into, and why is a separate skill better?
+4. **Why not a guideline** — is this executable workflow (skill) or reference material (guideline)? Guideline-shaped content does not become a skill.
+5. **Visibility tier** — `core` or `lab`? Which pack?
+
+**Surface overlap before deciding** — run `./scripts-run src/scripts/skill_overlap`
+(or `audit_skill_overlap`) and read the nearest matches; a high-overlap hit is a
+merge signal, not a green light. This gate is the authoring-time companion to the
+[capability-boundary matrix](../../../docs/contracts/capability-boundary.md): the
+matrix governs packs, this governs the skills inside them.
+
 ### 1. Define the trigger
 
 Write "When to use" first. This is the in-body trigger — it documents the

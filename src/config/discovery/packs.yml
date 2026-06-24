@@ -167,6 +167,7 @@
   workspaces: [finance, founder]
   trust_level_default: professional
   domain: finance
+  risk_class: medium   # advisory (finance-safety-floor): not-financial-advice disclaimer
   size_class: medium
   onboarding:
     first_win_doc: FIRST_WIN.md
@@ -180,6 +181,7 @@
   requires: [finance-basic]
   trust_level_default: core
   domain: finance
+  risk_class: medium   # advisory (finance-safety-floor)
   size_class: medium
 
 - id: gtm-sales
@@ -223,6 +225,7 @@
   trust_level_default: core
   domain: founder
   size_class: medium
+  risk_class: medium   # advisory (strategy-safety-floor)
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: vision-articulation
@@ -240,14 +243,22 @@
   workspaces: [construction]
   trust_level_default: professional
 
-- id: legal
-  label: Legal
-  description: "NOT LEGAL ADVICE — a research/drafting aid, not a substitute for a lawyer. In-house legal — EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. See LEGAL_NOTICE.md."
-  workspaces: [legal]
-  trust_level_default: experimental   # gated: ships lab-tier until the Gate-2 maintenance owner + qualification is confirmed (road-to-legal-pack Phase 0.2)
+- id: legal-review-prep
+  label: Legal Review Prep
+  description: "NOT LEGAL ADVICE — a research/drafting aid to PREPARE for attorney review, not a substitute for a lawyer. EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. Opt-in + council-gated. See LEGAL_NOTICE.md."
+  workspaces: [legal-review-prep]
+  trust_level_default: experimental
   surface_tier: lab
   domain: legal
   size_class: medium
+  # High-risk posture (road-to-legal-review-prep Phase 4). Documentation-first;
+  # enforcement lives in the legal-safety-floor rule + consent gate + lint.
+  risk_class: high
+  risk_profile: rdg_regulated_eu_de
+  requires_explicit_consent: true
+  requires_council: true
+  default_install: false
+  promotion_gate: attorney_framing_review
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: dpa-review

@@ -24,9 +24,9 @@ routes_to:
   - "skill:dpa-review"
   - "skill:legal-intake-triage"
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
   human_review_required: true
@@ -34,7 +34,7 @@ trust:
 
 # Legal Safety Floor
 
-Domain safety floor for legal-pack artefacts (contract/NDA/DPA review, legal triage). Auto-activates when `pack-legal` is installed. Sibling to `finance-safety-floor` / `strategy-safety-floor`. Every output is a **draft for attorney review**, never legal advice.
+Domain safety floor for the `legal-review-prep` pack (contract/NDA/DPA review, legal triage). Auto-activates when `pack-legal-review-prep` is installed. Sibling to `finance-safety-floor` / `strategy-safety-floor`. Every output is a **draft to PREPARE for attorney review**, never legal advice.
 
 ## Iron Law — no final legal call
 
@@ -54,6 +54,29 @@ THEY DO NOT REPLACE A LICENSED ATTORNEY. NO ONE MAY RELY ON THEM AS DEFINITIVE.
 
 Every output is a **draft / research aid for a human attorney to verify** — for first-pass review, issue-spotting, and drafts only. It is **not** legal advice, **not** a legal opinion, and **not** a substitute for a qualified lawyer in the relevant jurisdiction. Nobody should rely on it for a binding decision; treat it as a tool that makes attorney review faster, never as the review itself. This disclaimer is non-removable from the pack. See [`LEGAL_NOTICE.md`](../../LEGAL_NOTICE.md).
 
+## Consent gate — refuse until acknowledged
+
+```
+NO legal-review-prep SKILL RUNS UNTIL legal_review_prep.acknowledged: true.
+FAIL-CLOSED: NO ACKNOWLEDGMENT → REFUSE, POINT TO THE SETUP WIZARD.
+```
+
+Before any legal-review-prep skill produces output, read `legal_review_prep.acknowledged` from `.agent-settings.yml`. Missing / `false` → refuse and surface: *"The legal-review-prep pack is inactive until you acknowledge it is not legal advice. Run the setup wizard's legal-consent step, or set `legal_review_prep.acknowledged: true` in `.agent-settings.yml`."* This is active consent (set via the wizard checkbox), not a passive disclaimer — it manages reliance/expectation and host-ToS exposure; it does **not** cure RDG.
+
+## Iron Law — legal work-product is council / deep-research gated
+
+```
+WHEN legal_review_prep.require_council IS TRUE (DEFAULT), A LEGAL WORK-PRODUCT
+IS PRODUCED VIA A MULTI-MODEL COUNCIL / research:deep PASS — NEVER SINGLE-MODEL.
+FAIL-CLOSED: NO COUNCIL CONFIGURED → REFUSE. NO INFRA → NO OUTPUT, NOT BAD OUTPUT.
+```
+
+A **work-product** = a review, redline, gap-frame, or demand draft (not a one-line definition or a general-concept explanation). Every legal-review-prep skill carries `council_depth: deep`; when consulted it routes through the AI council (`--depth deep`) or `research:deep`. Single-model legal work-product is refused while `require_council: true`. When no council is configured, **fail closed** — refuse and say so; an unreviewed single-model legal draft is the worse outcome for a high-risk pack.
+
+**Honest enforcement boundary.** This is advisory + settings + lint enforcement, not a hard runtime hook — skills are prose the host reads; the floor, the `require_council` flag, and the `lint_legal_pack` `council_depth` check are the teeth, the host is *asked* to route through the council. The deep council (2026-06-24) found this defense-in-depth substantive (documented multi-stage review + reliance-bounding friction + audit trail), **not** an RDG cure: it improves quality and creates a record; it does **not** make the output reliable legal advice.
+
+**Audit pointer.** When a council / deep-research pass runs for a legal work-product, persist its pointer (timestamp · members · artefact hash) under `agents/runtime/council/responses/` so the "documented multi-stage review" claim is real, not asserted. No pass, no work-product.
+
 ## Iron Law — general information only, never individual-case examination
 
 ```
@@ -67,7 +90,22 @@ The line (German RDG § 2(1); a disclaimer does **not** cure crossing it): a reg
 - **Definitive individual application** — "this violates GDPR in your case", "you must terminate within 30 days".
 - **Dispute-specific drafting** — "draft the warning letter for *my* dispute with X", "write my response to this cease-and-desist".
 
-On a refusal, respond in shape: *"I can explain [general concept] and provide a general template, but I cannot determine how it applies to your specific situation — that requires individual legal examination by a qualified lawyer. Jurisdiction: [EU/DE]. Attorney review required."* Err toward refusal when more than ~3 case-specific facts are needed to answer.
+This is a hard **STOP**, not a hedge — do not continue the individual-case analysis. When the request crosses into individual-case territory (specific facts about *your* situation, outcome prediction, deadline-driven or definitive-action questions — "may I terminate?", "will I win?", "is this enforceable in my case?"), emit the STOP block and end the individual-case answer:
+
+```
+🛑 I must stop here — this needs a lawyer.
+
+Your request involves individual legal examination, which I cannot provide.
+This is a regulatory boundary (German RDG § 2(1)), not a gap in knowledge.
+Find a qualified lawyer:
+- Rechtsanwaltskammer (German bar) attorney search — https://www.rechtsanwaltskammer.de
+- Beratungshilfe (legal aid) — https://www.bmj.de
+
+I can still explain the general concept and provide a general template —
+just not how it applies to your specific situation.
+```
+
+Err toward the STOP when more than ~3 case-specific facts are needed to answer. The general-information path (concept + template) stays available; the STOP only terminates the *individual-case* branch, never the whole interaction.
 
 ## No definitive legal language
 

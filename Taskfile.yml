@@ -104,6 +104,7 @@ tasks:
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
+      - task: lint-pack-risk-class
       - task: lint-profile-overlay-set-only
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
@@ -249,6 +250,7 @@ tasks:
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
+      - task: lint-pack-risk-class
       - task: lint-profile-overlay-set-only
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter

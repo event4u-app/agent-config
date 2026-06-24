@@ -121,10 +121,11 @@ const LEGACY_SETTINGS_REL = '.agent-settings.yml';
 // Step count mirrors the UI's `getWizardSteps` plan in `src/ui/wizard/steps.ts`.
 // Bump in lockstep. Default flow = welcome + 7 core steps (editor, personality,
 // cost, roadmap-quality, memory, user-md, review) → 8. Extended mode prepends
-// the install-only lead (ai-tools + roles + packs) → 11. AI Council lives on
-// its own top-level surface (not a wizard step); modules on the Projekt surface.
+// the install-only lead (ai-tools + roles + packs + legal-consent) → 12. AI
+// Council lives on its own top-level surface (not a wizard step); modules on the
+// Projekt surface.
 const DEFAULT_TOTAL_STEPS = 8;
-const EXTENDED_TOTAL_STEPS = 11;
+const EXTENDED_TOTAL_STEPS = 12;
 
 /**
  * Discovery-manifest path. Resolved from the package root the server

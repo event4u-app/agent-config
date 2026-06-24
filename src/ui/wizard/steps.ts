@@ -94,6 +94,16 @@ const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
         subtitle: 'Founder-strategy, finance-basic, gtm-sales, ops-people, ai-video — pick zero or more. You can change this later.',
         kind: 'packs',
     },
+    {
+        id: 'legal-consent',
+        title: 'Legal review-prep — not legal advice',
+        navLabel: 'Legal consent',
+        subtitle: 'Only relevant if you picked the legal-review-prep pack. It provides templates and general information, never legal advice — check the box to acknowledge before it activates. Leave unchecked otherwise; the pack stays inactive.',
+        kind: 'form',
+        paths: [
+            'legal_review_prep.acknowledged',
+        ],
+    },
 ];
 
 const CORE_WIZARD_STEPS: readonly WizardStep[] = [

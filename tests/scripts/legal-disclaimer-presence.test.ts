@@ -35,7 +35,7 @@ function legalSkillFiles(): string[] {
         .readdirSync(SKILLS)
         .map((d) => path.join(SKILLS, d, 'SKILL.md'))
         .filter((f) => fs.existsSync(f))
-        .filter((f) => /(^|\n)packs:\s*\n(?:\s*-\s*[^\n]+\n?)*\s*-\s*legal\s*(\n|$)/.test(frontmatter(read(f))));
+        .filter((f) => /(^|\n)packs:\s*\n(?:\s*-\s*[^\n]+\n?)*\s*-\s*legal-review-prep\s*(\n|$)/.test(frontmatter(read(f))));
 }
 
 describe('legal pack — the disclaimer is always present (gate replaces the owner requirement)', () => {
@@ -72,11 +72,33 @@ describe('legal pack — the disclaimer is always present (gate replaces the own
         expect(readme).toContain('LEGAL_NOTICE.md');
     });
 
+    it('7) the floor council-gates work-product + every legal skill routes deep', () => {
+        const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
+        expect(floor, 'floor missing the council gate').toContain('legal_review_prep.require_council');
+        expect(floor.toLowerCase()).toMatch(/council|deep-research/);
+        for (const f of legalSkillFiles()) {
+            expect(frontmatter(read(f)), `${f} missing council_depth: deep`).toMatch(/(^|\n)council_depth:\s*deep\s*(\n|$)/);
+        }
+    });
+
+    it('6) the floor carries the consent gate (refuse until acknowledged)', () => {
+        const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
+        expect(floor, 'floor missing the consent gate').toContain('legal_review_prep.acknowledged');
+        expect(floor.toLowerCase()).toMatch(/refuse|inactive|until/);
+    });
+
+    it('5) the floor carries the hard individual-case STOP block (not just a hedge)', () => {
+        const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
+        expect(floor, 'floor missing the hard STOP marker').toContain('🛑 I must stop here');
+        // The STOP must point the user to a lawyer, not just refuse.
+        expect(floor).toMatch(/rechtsanwaltskammer|bar|lawyer|attorney/i);
+    });
+
     it('4) a repo-root LEGAL_NOTICE and a dedicated legal-pack notice both exist', () => {
         const root = path.join(REPO, 'LEGAL_NOTICE.md');
-        const pack = path.join(REPO, 'src', 'domains', 'legal', 'LEGAL_NOTICE.md');
+        const pack = path.join(REPO, 'src', 'domains', 'legal-review-prep', 'LEGAL_NOTICE.md');
         expect(fs.existsSync(root), 'repo-root LEGAL_NOTICE.md missing').toBe(true);
-        expect(fs.existsSync(pack), 'dedicated src/domains/legal/LEGAL_NOTICE.md missing').toBe(true);
+        expect(fs.existsSync(pack), 'dedicated src/domains/legal-review-prep/LEGAL_NOTICE.md missing').toBe(true);
         expect(read(root)).toMatch(NOT_LEGAL_ADVICE);
         expect(read(pack)).toMatch(NOT_LEGAL_ADVICE);
     });

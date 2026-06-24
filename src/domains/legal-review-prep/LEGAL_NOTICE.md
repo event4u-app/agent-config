@@ -26,9 +26,27 @@ positions**; your positions live in the practice profile (`legal-practice-profil
 
 ## Guardrails (enforced)
 
-`rule:legal-safety-floor` enforces: no-final-legal-call · individual-case refusal ·
-no definitive legal language · mandatory attorney-review line + `Jurisdiction:` tag
-on every output (CI-checked by `lint_legal_pack`) · GREEN×non-lawyer → attorney gate.
+`rule:legal-safety-floor` enforces: no-final-legal-call · install consent gate
+(inactive until acknowledged) · hard individual-case STOP · council / deep-research
+gate on work-product (fail-closed) · no definitive legal language · mandatory
+attorney-review line + `Jurisdiction:` tag on every output (CI-checked by
+`lint_legal_pack`) · GREEN×non-lawyer → attorney gate.
+
+> The council / multi-model gate is **defense-in-depth** — it improves quality and
+> creates an audit trail of the review. It does **not** make output reliable legal
+> advice and does not cure the individual-case boundary above. Attorney review
+> still required.
+
+## Promotion gate
+
+This pack ships **lab-tier / experimental, off by default** on purpose. Promoting
+it (out of `lab`, default-on, or any hosted surface) is **blocked** until a
+licensed German attorney has reviewed the *framing* (the safety floor, this
+notice, the RDG individual-case wording) and the review is recorded here as:
+`Framing reviewed by <name>, Rechtsanwalt/Rechtsanwältin, <date>`. Enforced by
+`lint_legal_pack` (ADR-107 amendment, 2026-06-24).
+
+_Attorney framing review: not yet performed — pack stays lab-tier._
 
 ## Distribution
 

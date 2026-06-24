@@ -156,5 +156,8 @@ layout + cloud-bundle pipeline:
 3. Commit in logical chunks with Conventional Commits.
 4. Open a PR against `main`.
 
+Per-pack safety posture (default-install / consent / council / disclaimer /
+risk_class): [`capability-boundary.md`](capability-boundary.md).
+
 User-facing story: [`README.md`](../../README.md). Architecture
 deep-dive: [`docs/architecture.md`](../architecture.md).
