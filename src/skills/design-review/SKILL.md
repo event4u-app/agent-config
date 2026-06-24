@@ -299,6 +299,14 @@ as a reference. After the structured review phases, add an explicit
 3. Run the AI-slop originality self-test on the overall aesthetic direction.
    Report the result (pass / flag / fail) with one sentence of evidence.
 
+For the **objective quality floors** (WCAG contrast, font-size, line-length,
+reduced-motion, heading hierarchy, focus indicator), do NOT eyeball them —
+cite [`lint_design_quality`](../../../src/scripts/lint_design_quality.ts)
+output for the consumer project (Q1–Q6 in the catalog). The review owns the
+*subjective* anti-slop judgment (Visual / Typography / Color / Layout taste);
+the linter owns the *objective* floors; `accessibility-auditor` owns the WCAG
+*audit method*. Cite, don't re-derive.
+
 ## Do NOT
 
 - Do NOT skip accessibility testing — it's not optional.

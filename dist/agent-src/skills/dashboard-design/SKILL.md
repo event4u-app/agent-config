@@ -23,11 +23,17 @@ Do NOT use when:
 
 ## Procedure: Design a dashboard
 
-Ground chart-type choice in the adopted data-viz corpus, not memory:
-`ground.py search --manifest <skills-root>/design-intelligence/data/manifest.json
---domain chart "<data shape>"` → best chart type, when-NOT-to-use, volume
-threshold, a11y grade + colorblind fallback, library recommendation
-([`design-intelligence`](../design-intelligence/SKILL.md)).
+1. **Inspect the data sources** — Identify which signals already exist (logs, metrics, app queries) and where they live (Grafana / Loki / app DB) before designing a new panel.
+2. **Pick the surface** — Use the decision tables below to choose Grafana, app dashboard, or embed; document audience and refresh cadence.
+3. **Draft the layout** — Sketch panels, choose visualization per signal (RED / USE / Golden Signals), define filters and thresholds.
+   **Ground the chart-type choice** in the adopted data-viz corpus instead
+   of memory: `ground.py search --manifest
+   <skills-root>/design-intelligence/data/manifest.json --domain chart
+   "<data shape>"` returns the best chart type, when-NOT-to-use, data-volume
+   threshold, a11y grade + colorblind fallback, and a library
+   recommendation per row (see
+   [`design-intelligence`](../design-intelligence/SKILL.md)).
+4. **Implement and verify** — Build the dashboard, load realistic data, and confirm every panel answers a named question for the named audience.
 
 | Domain | Technology | Purpose |
 |---|---|---|
@@ -119,6 +125,16 @@ Config required: `allow_embedding = true`, `cookie_samesite = none` (cross-origi
 - Do NOT create dashboards with more than 8 panels — cognitive overload.
 - Do NOT mix ops metrics with business KPIs on the same dashboard.
 - Do NOT show admin data without tenant scoping.
+
+## Anti-slop
+
+Dashboards have their own signature tell: the **hero-metric template** (giant
+number + small label + a row of stats + gradient) is L1 in
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md).
+Pull the catalog and check L1–L3 (hero-metric, identical-card grids, monotonous
+spacing) before finalizing the layout — a dashboard is product-mode
+(`docs/guidelines/design-modes.md`): design serves the task, so favour data
+density and earned familiarity over decorative variance.
 
 ## Auto-trigger keywords
 

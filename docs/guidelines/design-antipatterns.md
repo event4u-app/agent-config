@@ -20,6 +20,20 @@ or overrides. The enforceable subset (contrast ratio, font-size, heading
 hierarchy, reduced-motion, focus indicator) is in `lint_design_quality`
 (Phase 5).
 
+**Who owns what (boundary — avoid drift):**
+
+| Layer | Owns | Artifact |
+|---|---|---|
+| **Guidance** | Subjective taste — Visual / Typography / Color / Layout / Copy patterns, override judgment, the originality self-test | this catalog |
+| **Enforcement** | Objective floors — Q1–Q6 (WCAG contrast, font-size, line-length, reduced-motion, heading hierarchy, focus indicator) as exit-code-2 CI | `lint_design_quality` |
+| **Audit method** | HOW to test WCAG (keyboard nav, ARIA, screen-reader procedures) | `accessibility-auditor` |
+| **Stack manifestation** | Concrete Tailwind class / hex bans, shadcn defaults | `tailwind-engineer`, `react-shadcn-ui` (per `framework-neutrality-in-generic-skills`) |
+| **Register** | Brand mode vs product mode — which patterns apply | `docs/guidelines/design-modes.md` |
+
+This catalog is the canonical *index*; it states the pattern stack-agnostically.
+The stack-specific bans live in the apply skills and link back here by entry ID.
+The objective floors are cited from the linter, never re-eyeballed by an agent.
+
 ---
 
 ## Visual

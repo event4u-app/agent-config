@@ -130,6 +130,14 @@ current state on the next polish round.
 - Do NOT nest Livewire components deeply — keep the tree shallow.
 - Do NOT expose sensitive data as public properties.
 
+## Anti-slop
+
+When a Livewire component renders UI, pull
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+for the Visual / Layout / Motion checks (loading states that animate layout
+properties — M2 — are a common Livewire `wire:loading` pitfall). Stack styling
+bans: [`tailwind-engineer`](../tailwind-engineer/SKILL.md).
+
 ## Auto-trigger keywords
 
 - Livewire

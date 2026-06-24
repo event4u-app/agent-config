@@ -51,11 +51,13 @@ radius, spacing, shadow, font-size to a configured token. If the design hands yo
 (`bg-[#3B82F6]`, `mt-[17px]`) are a smell — accept only with a
 one-line comment naming the design source.
 
-Token authoring (DTCG 3-layer, CSS-var/Tailwind generation):
-[`design-tokens`](../design-tokens/SKILL.md); its `tokens.py validate
---dir <path>` is the **single token-discipline linter** behind this rule.
-Greenfield config: bundled `scripts/tailwind_config_gen.py`
-(Apache-2.0-derived, pure templating) scaffolds `tailwind.config.{js,ts}`.
+Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
+in [`design-tokens`](../design-tokens/SKILL.md); its
+`tokens.py validate --dir <path>` is the **single token-discipline
+linter** — the mechanical check behind this rule (no hardcoded hex / px /
+rem outside the token files). Greenfield Tailwind config: bundled
+`scripts/tailwind_config_gen.py` (Apache-2.0-derived, pure templating)
+scaffolds `tailwind.config.{js,ts}` per framework.
 
 ### 2. Compose, don't inline
 
@@ -127,10 +129,18 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
   break the design system; they accumulate silently.
 - `@apply` inside component CSS interacts with PurgeCSS — keep it
   in files Tailwind scans, not in vendor CSS.
+- **Anti-AI-slop catalog.** The bullets below are the Tailwind-specific
+  manifestations of the stack-agnostic patterns in
+  [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+  (C1 gradients, T7 fonts, L1/L2 layout, V1 side-stripe). Pull the catalog
+  for the full list; the objective subset (contrast, font-size floor,
+  reduced-motion) is CI-enforced by
+  [`lint_design_quality`](../../../src/scripts/lint_design_quality.ts) for
+  consumer projects.
 - **Anti-AI-slop: gradients.** Unless audit-pinned or brief-explicit,
   avoid the default purple-to-blue / cyan-to-pink gradients on white —
-  they read as auto-generated. Reach for a single accent from the
-  token map, or a duotone built from configured tokens.
+  they read as auto-generated (catalog C1/C2). Reach for a single accent
+  from the token map, or a duotone built from configured tokens.
 - **Anti-AI-slop: typography.** Unless audit-pinned, avoid surfacing
   the system stack (`font-sans` fallback to Arial / Helvetica / Inter
   via system defaults) as the *visible* body face. If `tailwind.config`

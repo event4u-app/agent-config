@@ -248,6 +248,16 @@ for `DESIGN.md` and/or `PRODUCT.md` (written by `design-system-capture`):
 Flag any new decision for future capture: *"This establishes a new pattern —
 suggest adding to PRODUCT.md: [pattern description]."*
 
+## Register — brand vs product
+
+Before applying heuristics, determine the register (see
+[`docs/guidelines/design-modes.md`](../../../docs/guidelines/design-modes.md)):
+brand mode (impression-first) vs product mode (task-first). Form-heavy, table-heavy,
+and dashboard surfaces are almost always product mode — favour the standard
+patterns in this skill (Form Design, Table Design) over expressive variance.
+Marketing/landing surfaces are brand mode — let the Aesthetic-direction section
+commit to a deliberate, distinctive direction.
+
 ## Design Read — articulate intent before generating
 
 When this reference is cited for a UI planning task, emit one line declaring

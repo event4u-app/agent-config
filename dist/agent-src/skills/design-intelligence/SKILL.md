@@ -70,6 +70,17 @@ Boundary vs `brand-to-tokens`/`.tokens.json`:
 - `DESIGN.md` = usage decisions (elevated surfaces use the gray-700 shadow, 8px radius)
 Both are consumed; DESIGN.md takes precedence for usage questions.
 
+## Register — brand vs product
+
+Determine the design register before grounding (see
+[`docs/guidelines/design-modes.md`](../../../docs/guidelines/design-modes.md)):
+**brand mode** ("the impression IS the product" — marketing, landing, consumer
+first-impression) prioritizes distinctive selection; **product mode** ("design
+serves the task" — dashboard, admin, workflow) prioritizes earned familiarity
+and accessibility. The register changes which corpus selections are appropriate
+(distinctive palette/typography in brand mode; predictable, semantic in product
+mode). State the register in the Design Read line below.
+
 ## Design Read — articulate intent before generating
 
 Before producing any design brief or making any style selection, emit one

@@ -86,3 +86,4 @@ execution:
 - [`typography-system`](../typography-system/SKILL.md) — sibling visual-consistency skill.
 - [`fe-design`](../fe-design/SKILL.md) — broader frontend design discipline.
 - [`icon-consistency`](../../rules/icon-consistency.md) — enforced rule for set discipline across the project.
+- [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) — icon-relevant slop tells: V5 (hand-drawn SVG mixed with crisp icon-system icons) and T3 (small rounded-square icon tile above every feature heading — the universal AI feature-card template).

@@ -126,6 +126,16 @@ Config required: `allow_embedding = true`, `cookie_samesite = none` (cross-origi
 - Do NOT mix ops metrics with business KPIs on the same dashboard.
 - Do NOT show admin data without tenant scoping.
 
+## Anti-slop
+
+Dashboards have their own signature tell: the **hero-metric template** (giant
+number + small label + a row of stats + gradient) is L1 in
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md).
+Pull the catalog and check L1–L3 (hero-metric, identical-card grids, monotonous
+spacing) before finalizing the layout — a dashboard is product-mode
+(`docs/guidelines/design-modes.md`): design serves the task, so favour data
+density and earned familiarity over decorative variance.
+
 ## Auto-trigger keywords
 
 - dashboard
