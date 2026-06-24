@@ -29,7 +29,7 @@ Open a single, narrow `legal` pack — **not** a multi-plugin / multi-agent pari
 4. **Deterministic hardening is the differentiator.** Disclaimer-presence, jurisdiction-tag, and freshness linters; privilege markers extend `domain-safety-pii` + `lethal-trifecta-guard` (no new hook unless the extension demonstrably fails).
 5. **Eval = regression/consistency harness, not a correctness oracle.** Self-labeled fixtures narrowed to the maintainer's genuine-competence domain (EU DPA / GDPR Art. 28) with spot-validation; a multi-attorney gold set (inter-annotator ≥0.7) is a **demand+funding-gated** track, NOT parity-gated (legal matching is classification, not the finding-count distributions the cross-model-parity keystone calibrates). The eval achieves *measurement* objectivity (reliable regression detection), never *ground-truth* objectivity — correctness stays attorney review.
 6. **No personas** — procedure-not-personality; role focus lives in skill tags + the practice profile.
-7. **Conditional product-liability gate** — commercial (Pro-tier) ship would require licensed-attorney review of the pack itself. **Resolved N/A 2026-06-24:** the suite is open-source forever, no commercial tier (ADR-108) — the gate never fires; the non-removable disclaimer + per-output attorney-review line cover end-user reliance.
+7. **Conditional product-liability gate** — commercial (Pro-tier) ship requires licensed-attorney review of the pack itself.
 
 ## Rejections (recorded)
 

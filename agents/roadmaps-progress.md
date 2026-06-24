@@ -6,10 +6,10 @@
 
 ## Overall
 
-**100 / 200 steps done · 50%**
+**98 / 200 steps done · 49%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-legal-pack.md](roadmaps/road-to-legal-pack.md) | 6 | 37 | 1 | 36 | 0 | 0 | ██████████ 97% |
+| 2 | [road-to-legal-pack.md](roadmaps/road-to-legal-pack.md) | 6 | 37 | 3 | 34 | 0 | 0 | █████████░ 92% |
 | 3 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -37,14 +37,14 @@
 
 ### [road-to-legal-pack.md](roadmaps/road-to-legal-pack.md)
 
-**Road to a legal pack — built on its own legs, evaluated honestly** — 36 / 37 done (97%)
+**Road to a legal pack — built on its own legs, evaluated honestly** — 34 / 37 done (92%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Gates, scope, floor (before any skill) | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
+| 0 | Gates, scope, floor (before any skill) | 🟡 in progress | 2 | 8 | 0 | 0 | 80% |
 | 1 | Enforcement teeth (the floor's machine-checkable backstops) | ✅ done | 0 | 8 | 0 | 0 | 100% |
 | 2 | Core review skills (EU/DE-scoped, procedure-only, attorney-flagged) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Regression / consistency harness (NOT a correctness oracle) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Regression / consistency harness (NOT a correctness oracle) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 4 | Practice-profile mechanism (the keystone, adapted not cloned) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 5 | Deferred / gated / rejected (recorded, not built) | ✅ done | 0 | 8 | 0 | 0 | 100% |
 
