@@ -72,6 +72,13 @@ describe('legal pack — the disclaimer is always present (gate replaces the own
         expect(readme).toContain('LEGAL_NOTICE.md');
     });
 
+    it('5) the floor carries the hard individual-case STOP block (not just a hedge)', () => {
+        const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
+        expect(floor, 'floor missing the hard STOP marker').toContain('🛑 I must stop here');
+        // The STOP must point the user to a lawyer, not just refuse.
+        expect(floor).toMatch(/rechtsanwaltskammer|bar|lawyer|attorney/i);
+    });
+
     it('4) a repo-root LEGAL_NOTICE and a dedicated legal-pack notice both exist', () => {
         const root = path.join(REPO, 'LEGAL_NOTICE.md');
         const pack = path.join(REPO, 'src', 'domains', 'legal-review-prep', 'LEGAL_NOTICE.md');

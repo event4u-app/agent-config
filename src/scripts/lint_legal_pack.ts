@@ -35,6 +35,12 @@ const ATTORNEY_LINE = 'Attorney review required on material use';
 const JURISDICTION_TAG = 'Jurisdiction:';
 const FRESHNESS_WINDOW_RE = /^\d+\s+(day|days|month|months|year|years)$/;
 
+// D5 — the floor must carry the hard individual-case STOP block (not just a
+// hedge). road-to-legal-review-prep Phase 1. Checked once, against the floor
+// rule, only on a real (default-dir) run.
+const FLOOR_RULE = path.join(REPO, 'src', 'rules', 'legal-safety-floor.md');
+const STOP_MARKER = '🛑 I must stop here';
+
 // D4 — definitive-legal-language blocklist (the floor bans these; this is the
 // deterministic backstop over skill bodies). Narrow on purpose; the floor's
 // prompt layer is the primary enforcement.
@@ -116,6 +122,17 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
                     violations.push({ file: rel, rule: 'definitive-language', msg: `${label}: ${line.trim().slice(0, 80)}` });
                 }
             }
+        }
+    }
+    // D5 — the floor itself must carry the hard individual-case STOP block.
+    // Only on a real run (synthetic-dir tests pass their own tmp skillsDir).
+    if (skillsDir === SKILLS_DIR && fs.existsSync(FLOOR_RULE)) {
+        if (!_readText(FLOOR_RULE).includes(STOP_MARKER)) {
+            violations.push({
+                file: path.relative(REPO, FLOOR_RULE),
+                rule: 'individual-case-stop',
+                msg: `the floor is missing the hard individual-case STOP block ("${STOP_MARKER}")`,
+            });
         }
     }
     return violations;

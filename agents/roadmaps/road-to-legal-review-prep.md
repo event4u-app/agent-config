@@ -41,9 +41,9 @@ status: ready
 > The floor already refuses individual-case examination; council: word it as a loud
 > **STOP / termination**, not a disclaimer-shaped hedge.
 
-- [ ] **1.1 — Rewrite the floor's individual-case section** to an explicit STOP: on specific-facts / outcome-prediction / deadline-driven / definitive-action ("may I terminate?", "will I win?", "is this enforceable in my case?") → emit a `🛑 I must stop here — this needs a lawyer` block with attorney-search pointers (e.g. Rechtsanwaltskammer, Beratungshilfe) and **do not continue** the individual-case analysis. Keep general info/templates available separately.
-- [ ] **1.2 — Lint the STOP** — extend `lint_legal_pack` / the disclaimer test to assert each skill carries the STOP-on-individual-case instruction (presence check, not phrasing-fragile).
-- [ ] **1.3 — Verify** — lint + tests green.
+- [x] **1.1 — Rewrite the floor's individual-case section** to an explicit STOP: on specific-facts / outcome-prediction / deadline-driven / definitive-action ("may I terminate?", "will I win?", "is this enforceable in my case?") → emit a `🛑 I must stop here — this needs a lawyer` block with attorney-search pointers (e.g. Rechtsanwaltskammer, Beratungshilfe) and **do not continue** the individual-case analysis. Keep general info/templates available separately.
+- [x] **1.2 — Lint the STOP** — extend `lint_legal_pack` / the disclaimer test to assert each skill carries the STOP-on-individual-case instruction (presence check, not phrasing-fragile).
+- [x] **1.3 — Verify** — lint + tests green.
 
 ## Phase 2 — Install/setup consent gate ("I understand this is not legal advice")
 

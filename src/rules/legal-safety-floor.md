@@ -67,7 +67,22 @@ The line (German RDG § 2(1); a disclaimer does **not** cure crossing it): a reg
 - **Definitive individual application** — "this violates GDPR in your case", "you must terminate within 30 days".
 - **Dispute-specific drafting** — "draft the warning letter for *my* dispute with X", "write my response to this cease-and-desist".
 
-On a refusal, respond in shape: *"I can explain [general concept] and provide a general template, but I cannot determine how it applies to your specific situation — that requires individual legal examination by a qualified lawyer. Jurisdiction: [EU/DE]. Attorney review required."* Err toward refusal when more than ~3 case-specific facts are needed to answer.
+This is a hard **STOP**, not a hedge — do not continue the individual-case analysis. When the request crosses into individual-case territory (specific facts about *your* situation, outcome prediction, deadline-driven or definitive-action questions — "may I terminate?", "will I win?", "is this enforceable in my case?"), emit the STOP block and end the individual-case answer:
+
+```
+🛑 I must stop here — this needs a lawyer.
+
+Your request involves individual legal examination, which I cannot provide.
+This is a regulatory boundary (German RDG § 2(1)), not a gap in knowledge.
+Find a qualified lawyer:
+- Rechtsanwaltskammer (German bar) attorney search — https://www.rechtsanwaltskammer.de
+- Beratungshilfe (legal aid) — https://www.bmj.de
+
+I can still explain the general concept and provide a general template —
+just not how it applies to your specific situation.
+```
+
+Err toward the STOP when more than ~3 case-specific facts are needed to answer. The general-information path (concept + template) stays available; the STOP only terminates the *individual-case* branch, never the whole interaction.
 
 ## No definitive legal language
 
