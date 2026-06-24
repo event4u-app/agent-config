@@ -287,12 +287,18 @@ function _curlJsonPost(url: string, extraHeaders: string[], body: unknown): unkn
     for (const h of extraHeaders) {
         args.push('-H', h);
     }
+    // `--connect-timeout` fast-fails a dead host; `--max-time` lets curl abort
+    // itself cleanly (surfacing a real `curl exited` error with stderr) ~10s
+    // before the `spawnSync` timeout would kill it with an opaque ETIMEDOUT.
+    // A full 16k-token generation legitimately runs several minutes, so the
+    // ceiling is 300s, not 120s (the old value timed out long Anthropic calls).
+    args.push('--connect-timeout', '30', '--max-time', '290');
     args.push('-w', '\n%{http_code}', '--data-binary', '@-');
     const r = spawnSync('curl', args, {
         input: JSON.stringify(body),
         encoding: 'utf8',
         maxBuffer: 64 * 1024 * 1024,
-        timeout: 120_000,
+        timeout: 300_000,
     });
     if (r.error) {
         throw new Error(`curl spawn failed: ${(r.error as Error).message}`);

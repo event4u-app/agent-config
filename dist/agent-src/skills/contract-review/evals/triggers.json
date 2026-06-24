@@ -1,0 +1,17 @@
+{
+    "skill": "contract-review",
+    "last_eval": "2026-06-24",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for position-aware clause-by-clause review of a contract (EU/DE). Should-not-trigger covers near-miss neighbours: NDA triage (nda-triage), DPA review (dpa-review), 'is this a legal problem' triage (legal-intake-triage), and non-legal contract-of-work.",
+    "queries": [
+        { "q": "review this vendor MSA against our position as the buyer", "trigger": true },
+        { "q": "clause-by-clause review of this SaaS subscription agreement with redline suggestions", "trigger": true },
+        { "q": "prüfe diesen Vertrag klauselweise aus unserer Sicht als Lizenznehmer", "trigger": true },
+        { "q": "GREEN/YELLOW/RED review of this services agreement, we're the seller", "trigger": true },
+        { "q": "welche Klauseln in diesem Liefervertrag sind für uns riskant?", "trigger": true },
+        { "q": "is this NDA standard enough to just sign?", "trigger": false },
+        { "q": "review this data processing agreement against GDPR Art. 28", "trigger": false },
+        { "q": "is this even a legal problem or can we proceed?", "trigger": false },
+        { "q": "set up our legal playbook and jurisdiction", "trigger": false },
+        { "q": "review my pull request for code quality", "trigger": false }
+    ]
+}

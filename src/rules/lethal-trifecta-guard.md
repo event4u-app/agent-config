@@ -80,3 +80,4 @@ backstop.
 - [`security-sensitive-stop`](security-sensitive-stop.md) — threat-model before editing a sensitive surface.
 - [`non-destructive-by-default`](non-destructive-by-default.md) — the human-in-the-loop egress floor.
 - [`threat-modeling`](../skills/threat-modeling/SKILL.md) — abuse-case enumeration.
+- [`domain-safety-pii`](domain-safety-pii.md) § Surface 4 — legal privilege markers extend this egress gate (legal pack); a privileged document on an outbound path is blocked pending explicit confirmation.

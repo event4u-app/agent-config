@@ -74,7 +74,7 @@
     },
     "workspace_id": {
       "type": "string",
-      "enum": ["engineering", "product", "finance", "founder", "gtm", "ops", "small-business", "construction", "agent-config-maintainer"]
+      "enum": ["engineering", "product", "finance", "founder", "gtm", "ops", "small-business", "construction", "legal", "agent-config-maintainer"]
     },
     "pack_id": {
       "type": "string",
@@ -84,7 +84,7 @@
         "finance-basic", "finance-advanced",
         "gtm-sales", "gtm-marketing",
         "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "ai-image", "fun", "meta", "git", "frontend-design", "brand",
-        "memory", "analytics", "product-reasoning", "analysis-workbench"
+        "memory", "analytics", "product-reasoning", "analysis-workbench", "legal"
       ]
     },
     "lifecycle": {

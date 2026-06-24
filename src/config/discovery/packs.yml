@@ -240,6 +240,19 @@
   workspaces: [construction]
   trust_level_default: professional
 
+- id: legal
+  label: Legal
+  description: In-house legal — contract/NDA/DPA review and legal triage, EU/DE-scoped, playbook-driven, procedure-only (no default legal positions); every output a draft for attorney review.
+  workspaces: [legal]
+  trust_level_default: experimental   # gated: ships lab-tier until the Gate-2 maintenance owner + qualification is confirmed (road-to-legal-pack Phase 0.2)
+  surface_tier: lab
+  domain: legal
+  size_class: medium
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: dpa-review
+    time_to_first_value_minutes: 8
+
 - id: ai-video
   label: AI Video
   description: AI video pipeline.

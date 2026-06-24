@@ -1,0 +1,17 @@
+{
+    "skill": "legal-practice-profile",
+    "last_eval": "2026-06-24",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for setting up / updating the legal pack's practice profile (jurisdiction, role, escalation, playbook positions). Should-not-trigger covers near-miss neighbours that are actual reviews/triage, not configuration.",
+    "queries": [
+        { "q": "set up the legal pack", "trigger": true },
+        { "q": "configure our legal playbook positions and escalation owner", "trigger": true },
+        { "q": "richte das Legal-Pack ein — Jurisdiktion und Rolle", "trigger": true },
+        { "q": "update who reviews our RED contract items", "trigger": true },
+        { "q": "wer ist unser Eskalations-Owner für Verträge? leg das fest", "trigger": true },
+        { "q": "review this contract against our positions", "trigger": false },
+        { "q": "check this NDA — can we sign?", "trigger": false },
+        { "q": "review this DPA as controller", "trigger": false },
+        { "q": "is this a legal problem?", "trigger": false },
+        { "q": "set up my CI pipeline", "trigger": false }
+    ]
+}

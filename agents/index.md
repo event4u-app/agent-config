@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **585 artefacts** in this package.
+Maintainer-facing index of all **594 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (251)
+## Skills (257)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -57,6 +57,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`content-funnel-design`](../src/skills/content-funnel-design/SKILL.md) |  | Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'. |
 | skill | [`context-authoring`](../src/skills/context-authoring/SKILL.md) |  | Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel. |
 | skill | [`context-document`](../src/skills/context-document/SKILL.md) |  | Use when the user says \"create context\", \"document this area\", or wants a structured snapshot of a codebase area for agent orientation. |
+| skill | [`contract-review`](../src/skills/contract-review/SKILL.md) |  | Use when reviewing a contract clause-by-clause from your party's side — buyer/seller/vendor/licensee. Triggers on 'review this contract', 'redline this MSA', 'is this clause a problem'. |
 | skill | [`contracts-cognition`](../src/skills/contracts-cognition/SKILL.md) |  | Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actually binds. Triggers on 'review this contract', 'what does this MSA constrain'. |
 | skill | [`conventional-commits-writing`](../src/skills/conventional-commits-writing/SKILL.md) |  | Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
 | skill | [`copilot-agents-optimization`](../src/skills/copilot-agents-optimization/SKILL.md) |  | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
@@ -83,6 +84,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`discovery-interview`](../src/skills/discovery-interview/SKILL.md) |  | Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'. |
 | skill | [`doc-coauthoring`](../src/skills/doc-coauthoring/SKILL.md) |  | Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'. |
 | skill | [`docker`](../src/skills/docker/SKILL.md) |  | Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'. |
+| skill | [`dpa-review`](../src/skills/dpa-review/SKILL.md) |  | Use when reviewing a DPA as controller or processor against GDPR Art. 28 — GREEN/YELLOW/RED gap frame, never a final call. Triggers on \"review this DPA\", \"check this DPA\". |
 | skill | [`editorial-calendar`](../src/skills/editorial-calendar/SKILL.md) |  | Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'. |
 | skill | [`eloquent`](../src/skills/eloquent/SKILL.md) |  | Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions. |
 | skill | [`emit-tickets`](../src/skills/emit-tickets/SKILL.md) |  | Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'. |
@@ -135,6 +137,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`laravel-websocket`](../src/skills/laravel-websocket/SKILL.md) |  | Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels, Echo client. For non-Laravel WebSockets, use the stack-native skill. |
 | skill | [`launch-readiness`](../src/skills/launch-readiness/SKILL.md) |  | Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff. Triggers on 'ready to ship', 'launch checklist', 'rollout plan for X'. |
 | skill | [`learning-to-rule-or-skill`](../src/skills/learning-to-rule-or-skill/SKILL.md) |  | Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work. |
+| skill | [`legal-intake-triage`](../src/skills/legal-intake-triage/SKILL.md) |  | Use when triaging the quick legal-question channel + intake; classifies and ROUTES, never reviews. Triggers on 'is this a legal problem', 'do we need a lawyer for this', 'quick legal question'. |
+| skill | [`legal-practice-profile`](../src/skills/legal-practice-profile/SKILL.md) |  | Use when setting up the legal pack — captures jurisdiction, role, escalation, and playbook into a plain-prose profile every legal skill reads. Triggers on \"set up legal\", \"legal profile\". |
 | skill | [`lint-skills`](../src/skills/lint-skills/SKILL.md) |  | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
 | skill | [`livewire`](../src/skills/livewire/SKILL.md) |  | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`livewire-architect`](../src/skills/livewire-architect/SKILL.md) |  | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
@@ -154,6 +158,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`module-management`](../src/skills/module-management/SKILL.md) |  | Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`motion-choreographer`](../src/skills/motion-choreographer/SKILL.md) |  | Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
+| skill | [`nda-triage`](../src/skills/nda-triage/SKILL.md) |  | Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'. |
 | skill | [`nextjs-patterns`](../src/skills/nextjs-patterns/SKILL.md) |  | Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture. |
 | skill | [`okr-tree-modeling`](../src/skills/okr-tree-modeling/SKILL.md) |  | Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering. |
 | skill | [`onboarding-design`](../src/skills/onboarding-design/SKILL.md) |  | Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagnosis. Triggers on 'fix onboarding', 'why do new accounts churn fast'. |
@@ -201,6 +206,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`readme-writing-package`](../src/skills/readme-writing-package/SKILL.md) |  | Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding. |
 | skill | [`reasoning-orchestrator`](../src/skills/reasoning-orchestrator/SKILL.md) |  | Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills. |
 | skill | [`receiving-code-review`](../src/skills/receiving-code-review/SKILL.md) |  | Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'. |
+| skill | [`recursive-verification`](../src/skills/recursive-verification/SKILL.md) |  | Use to run a depth-bounded self-correction loop (attempt → critic verdict → re-attempt) as a tunable test-time compute knob — a do-and-judge specialisation, default off, capability-gated. |
 | skill | [`refine-prompt`](../src/skills/refine-prompt/SKILL.md) |  | Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'. |
 | skill | [`refine-ticket`](../src/skills/refine-ticket/SKILL.md) |  | Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt. |
 | skill | [`release-comms`](../src/skills/release-comms/SKILL.md) |  | Use when turning a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces, one source of truth. Triggers on 'announce the release', 'write changelog post'. |
@@ -263,7 +269,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (90)
+## Rules (91)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -307,6 +313,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`language-and-tone`](../src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-routing`](../src/rules/laravel-routing.md) | auto | Writing/reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to laravel skill |
 | rule | [`laravel-translations`](../src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization |
+| rule | [`legal-safety-floor`](../src/rules/legal-safety-floor.md) | auto | Legal-pack output (contract/NDA/DPA review, triage) — never a final legal call; role-conditional header + attorney-review line; EU/DE-only hard refusal; machine-checkable Jurisdiction tag |
 | rule | [`lethal-trifecta-guard`](../src/rules/lethal-trifecta-guard.md) | auto | Authoring a skill/command/tool that mixes private-data access + untrusted-content ingestion + external comms — break one leg of the lethal trifecta before shipping |
 | rule | [`linked-projects-onboarding-gate`](../src/rules/linked-projects-onboarding-gate.md) | auto | IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes |
 | rule | [`low-impact-corpus-privacy-floor`](../src/rules/low-impact-corpus-privacy-floor.md) | auto | Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus |
@@ -525,7 +532,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`video-storyboard`](../src/domains/ai-video/video/storyboard/command.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../src/domains/engineering-base/work/command.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (82)
+## Guidelines (84)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -540,6 +547,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`critical-thinking`](../docs/guidelines/agent-infra/critical-thinking.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
+| guideline | [`domain-eval-anti-pattern`](../docs/guidelines/agent-infra/domain-eval-anti-pattern.md) | agent-infra |  |
+| guideline | [`domain-pack-architecture`](../docs/guidelines/agent-infra/domain-pack-architecture.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`failure-signatures`](../docs/guidelines/agent-infra/failure-signatures.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |
