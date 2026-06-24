@@ -2,23 +2,15 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**84 / 220 steps done · 38%**
+**64 / 200 steps done · 32%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
 ```
-
-## ✅ Completed — pending archival
-
-These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but still sit in the active tree. They should be in `agents/roadmaps/archive/`. Run the archival sweep `archive_completed_roadmaps --all` (untracked-safe), or follow the manual fallback documented in the `roadmap-management` skill, then regenerate this dashboard.
-
-| Roadmap | Done | Total |
-|---|---:|---:|
-| [road-to-recursive-verification.md](roadmaps/road-to-recursive-verification.md) | 20 | 20 |
 
 ## Open roadmaps
 
@@ -28,9 +20,8 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 2 | [road-to-legal-pack.md](roadmaps/road-to-legal-pack.md) | 6 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 5 | [road-to-recursive-verification.md](roadmaps/road-to-recursive-verification.md) | 8 | 26 | 0 | 20 | 0 | 6 | ██████████ 100% |
-| 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -81,21 +72,6 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
 | 2b | AI-council live-call layer (py2ts gap — transport now wired) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consumer + merge readiness | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-
-### [road-to-recursive-verification.md](roadmaps/road-to-recursive-verification.md)
-
-**Road to recursive self-verification — the one retraining-free Fugu mechanism, measured capability-axis-first** — 20 / 20 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Council-lock the gate before any live spend | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 1 | Mechanism design (no API spend) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | Integrate, don't reinvent (no API spend) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Benchmark (host-explicit, capability axis first) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 3a | pre — human-preference pre-test (cheapest, runs FIRST, ~$15) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 3a | weak-host go/no-go probe (three baselines, gated on 3a-pre) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3b | strong-host slice (gated on 3a passing) | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
-| 4 | cross-vendor recursive pool (most expensive, gated last) | ✅ done | 0 | 8 | 0 | 4 | 100% |
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 

@@ -88,7 +88,7 @@ finding verdicted against repo evidence):
 - `src/scripts/_lib/orchestration_gate.ts` (`gateVerdict`,
   `resolveShippedDefault`) + `taskfiles/bench-ab.yml` + `docs/benchmark.md` — the
   gate plumbing and the paired McNemar/Wilcoxon A/B harness already exist (from
-  [`road-to-auto-subagent-orchestration-followup.md`](road-to-auto-subagent-orchestration-followup.md)).
+  [`road-to-auto-subagent-orchestration-followup.md`](../road-to-auto-subagent-orchestration-followup.md)).
   The gate below reuses them verbatim.
 - `src/skills/ai-council/SKILL.md` — only Phase 4 (cross-vendor critic) touches it.
 
@@ -134,7 +134,7 @@ finding verdicted against repo evidence):
 > wrong gate** — it *assumes* recursion's discipline lift is redundant with the
 > existing rules without measuring it. Locked gate (full reasoning + the host's
 > rejection of one member's misread in
-> [`ADR-106`](../../docs/decisions/ADR-106-recursive-verification-benchmark-gate.md)):
+> [`ADR-106`](../../../docs/decisions/ADR-106-recursive-verification-benchmark-gate.md)):
 > **capability-axis lift OR a *measured* novel discipline lift (`D₂ − D₁`,
 > recursion over rules-only) that clears a concrete cost ceiling and a human-
 > preference bar**, decided per **(host, family)** cell. A cheap ~$15 human-
@@ -182,7 +182,7 @@ finding verdicted against repo evidence):
 ## Phase 3 — Benchmark (host-explicit, capability axis first)
 
 Mirrors the locked gate shape from
-[`archive/road-to-discipline-axis-meso-pilot.md`](archive/road-to-discipline-axis-meso-pilot.md):
+[`road-to-discipline-axis-meso-pilot.md`](road-to-discipline-axis-meso-pilot.md):
 cheap weak-host probe first, strong-host slice second, cross-vendor last.
 
 ### Phase 3a-pre — human-preference pre-test (cheapest, runs FIRST, ~$15)
