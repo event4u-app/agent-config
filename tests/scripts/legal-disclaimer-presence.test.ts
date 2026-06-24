@@ -35,7 +35,7 @@ function legalSkillFiles(): string[] {
         .readdirSync(SKILLS)
         .map((d) => path.join(SKILLS, d, 'SKILL.md'))
         .filter((f) => fs.existsSync(f))
-        .filter((f) => /(^|\n)packs:\s*\n(?:\s*-\s*[^\n]+\n?)*\s*-\s*legal\s*(\n|$)/.test(frontmatter(read(f))));
+        .filter((f) => /(^|\n)packs:\s*\n(?:\s*-\s*[^\n]+\n?)*\s*-\s*legal-review-prep\s*(\n|$)/.test(frontmatter(read(f))));
 }
 
 describe('legal pack — the disclaimer is always present (gate replaces the owner requirement)', () => {
@@ -74,9 +74,9 @@ describe('legal pack — the disclaimer is always present (gate replaces the own
 
     it('4) a repo-root LEGAL_NOTICE and a dedicated legal-pack notice both exist', () => {
         const root = path.join(REPO, 'LEGAL_NOTICE.md');
-        const pack = path.join(REPO, 'src', 'domains', 'legal', 'LEGAL_NOTICE.md');
+        const pack = path.join(REPO, 'src', 'domains', 'legal-review-prep', 'LEGAL_NOTICE.md');
         expect(fs.existsSync(root), 'repo-root LEGAL_NOTICE.md missing').toBe(true);
-        expect(fs.existsSync(pack), 'dedicated src/domains/legal/LEGAL_NOTICE.md missing').toBe(true);
+        expect(fs.existsSync(pack), 'dedicated src/domains/legal-review-prep/LEGAL_NOTICE.md missing').toBe(true);
         expect(read(root)).toMatch(NOT_LEGAL_ADVICE);
         expect(read(pack)).toMatch(NOT_LEGAL_ADVICE);
     });

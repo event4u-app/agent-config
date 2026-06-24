@@ -24,9 +24,9 @@ routes_to:
   - "skill:dpa-review"
   - "skill:legal-intake-triage"
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
   human_review_required: true
@@ -34,7 +34,7 @@ trust:
 
 # Legal Safety Floor
 
-Domain safety floor for legal-pack artefacts (contract/NDA/DPA review, legal triage). Auto-activates when `pack-legal` is installed. Sibling to `finance-safety-floor` / `strategy-safety-floor`. Every output is a **draft for attorney review**, never legal advice.
+Domain safety floor for the `legal-review-prep` pack (contract/NDA/DPA review, legal triage). Auto-activates when `pack-legal-review-prep` is installed. Sibling to `finance-safety-floor` / `strategy-safety-floor`. Every output is a **draft to PREPARE for attorney review**, never legal advice.
 
 ## Iron Law — no final legal call
 

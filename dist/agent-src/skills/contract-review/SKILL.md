@@ -7,9 +7,9 @@ tier: senior
 domain: process
 recommended_for_user_types: [legal]
 workspaces:
-  - legal
+  - legal-review-prep
 packs:
-  - legal
+  - legal-review-prep
 trust:
   level: advisory
 install:

@@ -240,11 +240,11 @@
   workspaces: [construction]
   trust_level_default: professional
 
-- id: legal
-  label: Legal
-  description: "NOT LEGAL ADVICE — a research/drafting aid, not a substitute for a lawyer. In-house legal — EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. See LEGAL_NOTICE.md."
-  workspaces: [legal]
-  trust_level_default: experimental   # gated: ships lab-tier until the Gate-2 maintenance owner + qualification is confirmed (road-to-legal-pack Phase 0.2)
+- id: legal-review-prep
+  label: Legal Review Prep
+  description: "NOT LEGAL ADVICE — a research/drafting aid to PREPARE for attorney review, not a substitute for a lawyer. EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. Opt-in + council-gated. See LEGAL_NOTICE.md."
+  workspaces: [legal-review-prep]
+  trust_level_default: experimental
   surface_tier: lab
   domain: legal
   size_class: medium

@@ -3,7 +3,7 @@
  * Lint the legal pack's deterministic safety-floor backstops.
  *
  * The `legal-safety-floor` rule is prose; this linter makes three of its
- * Iron-Law elements machine-checkable over every `packs: [legal]` skill —
+ * Iron-Law elements machine-checkable over every `packs: [legal-review-prep]` skill —
  * so they are governance, not just prompt instructions (road-to-legal-pack
  * Phase 1, the "deterministic hardening = differentiator" thesis):
  *
@@ -65,12 +65,12 @@ function _splitFrontmatter(content: string): [string | null, string] {
     return [content.slice(4, end), content.slice(end + 4)];
 }
 
-/** True when the frontmatter `packs:` block lists `legal`. */
+/** True when the frontmatter `packs:` block lists `legal-review-prep`. */
 function _isLegalPack(fm: string): boolean {
-    // Match a `packs:` block then a `- legal` item before the next top-level key.
+    // Match a `packs:` block then a `- legal-review-prep` item before the next top-level key.
     const m = /(^|\n)packs:\s*\n((?:\s*-\s*[^\n]+\n?)+)/.exec(fm);
     if (!m) return false;
-    return /(^|\n)\s*-\s*legal\s*$/m.test(m[2] ?? '');
+    return /(^|\n)\s*-\s*legal-review-prep\s*$/m.test(m[2] ?? '');
 }
 
 interface Violation {

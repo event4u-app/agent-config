@@ -314,6 +314,19 @@ road-to-legal-pack Phase 0.2). Council-resolved across three rounds 2026-06-24
 (road-to-legal-pack). Additive, no rename; non-overlap with cost-profile and
 `profile.id` reservations holds.
 
+### 2026-06-24 — Rename `legal` → `legal-review-prep` (workspace + pack)
+
+Renamed the workspace id and pack id `legal` → `legal-review-prep` in both
+closed vocabularies, the schema enums, and all artefacts (`src/domains/legal/`
+→ `src/domains/legal-review-prep/`, the five skill frontmatters, the
+`legal-safety-floor` rule). Driven by a deep AI-council (3 rounds,
+anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-06-24) + ~8 external
+7.1.0 reviewers: the name `legal` reads as "legal advice" and undermines the
+not-legal-advice positioning; `legal-review-prep` names the actual capability
+(prepare for attorney review). The `domain: legal` classifier and the `legal`
+user-type are a different axis and are unchanged. Rename, not additive;
+non-overlap reservations still hold. See `road-to-legal-review-prep` Phase 0.
+
 ## Cross-references
 
 - [ADR-007 — Agent Discovery Scopes](ADR-007-agent-discovery-scopes.md):

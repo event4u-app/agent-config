@@ -21,6 +21,11 @@ type: prospective
 
 ## Decision
 
+> **Amendment (2026-06-24, deep-council).** The pack id was renamed `legal` →
+> `legal-review-prep` after this ADR, to stop the name itself reading as "legal
+> advice" (deep AI-council + 7.1.0 reviewers; see `road-to-legal-review-prep`).
+> Read every `legal` pack-id reference below as `legal-review-prep`.
+
 Open a single, narrow `legal` pack — **not** a multi-plugin / multi-agent parity clone.
 
 1. **Scope: EU/DE-only, hard refusal.** Every selectable jurisdiction is an implicit currency promise; for a single maintainer the smallest correct cut is EU/DE with "consult local counsel" for everything else. Encoded in the `legal-safety-floor` rule + the pack description; surfaced via a machine-checkable `Jurisdiction:` tag.

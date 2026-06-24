@@ -186,9 +186,9 @@ capability_areas:
       skills: ["deal-qualification-meddic", "expansion-playbook", "forecast-accuracy", "pipeline-strategy"]
       commands: []
   legal:
-    - id: legal
-      label: "Legal"
-      description: "In-house legal — contract/NDA/DPA review and legal triage, EU/DE-scoped, playbook-driven, procedure-only (no default legal positions); every output a draft for attorney review."
+    - id: legal-review-prep
+      label: "Legal Review Prep"
+      description: "NOT LEGAL ADVICE — a research/drafting aid to PREPARE for attorney review, not a substitute for a lawyer. EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. Opt-in + council-gated. See LEGAL_NOTICE.md."
       size_class: "medium"
       coverage: moderate
       skill_count: 5
