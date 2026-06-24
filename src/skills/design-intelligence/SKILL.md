@@ -112,8 +112,9 @@ When the brief maps to an official design system (Material Design, Fluent,
 Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
 
 1. **Install the real package** — do not hand-recreate its CSS or components.
-   Surface the install command (`npm install @shadcn/ui`, etc.) and link the
-   canonical documentation URL.
+   Surface the install command for the project's package manager (the
+   system's official package, e.g. the shadcn CLI or the `@mui/material`
+   distribution) and link the canonical documentation URL.
 2. **Never label an approximation as the official system.** If generating
    approximate CSS for a system the project does not yet depend on, label it
    explicitly: *"Approximation of Material Design elevation — not the official
