@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**64 / 163 steps done · 39%**
+**68 / 205 steps done · 33%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   39%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
 ```
 
 ## Open roadmaps
@@ -17,10 +17,12 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 2 | [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md) | 7 | 25 | 21 | 4 | 0 | 0 | ██░░░░░░░░ 16% |
+| 4 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -33,6 +35,33 @@
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Benchmark & default-flip (carried from parent Phase 6) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+
+### [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md)
+
+**Road to capability governance — boundary matrix, risk-class, growth gate** — 0 / 17 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Capability boundary matrix (documentation) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | risk_class as documented pack metadata | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Skill-growth gate | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Subagent-boundary contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Capability lifecycle | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Deferred / rejected (recorded) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+### [road-to-legal-review-prep.md](roadmaps/road-to-legal-review-prep.md)
+
+**Road to legal-review-prep — rename, consent-gate, council-gate, hard STOP** — 4 / 25 done (16%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Rename `legal` → `legal-review-prep` | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 1 | Hard individual-case STOP (not a hedge) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Install/setup consent gate ("I understand this is not legal advice") | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Council + deep-research gate (defense-in-depth) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | High-risk pack metadata | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Attorney-framing-review promotion tripwire | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Deferred / rejected (recorded) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md)
 
