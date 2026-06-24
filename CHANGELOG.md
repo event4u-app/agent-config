@@ -948,6 +948,45 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.2.0](https://github.com/event4u-app/agent-config/compare/7.1.0...7.2.0) (2026-06-24)
+
+### Features
+
+* **design-craft:** wire existing design/frontend skills into the anti-slop layer ([4ac512c](https://github.com/event4u-app/agent-config/commit/4ac512c294c47c54c04e71a12d2a85e6a8600d93))
+* **design-craft:** add anti-slop enforcement + design memory + token governance ([4c07b60](https://github.com/event4u-app/agent-config/commit/4c07b60195db52a938f41445a347a0bec3331bc2))
+* **product-clarity:** process wins (release-story, trunk-drift, explainability) ([f91b898](https://github.com/event4u-app/agent-config/commit/f91b898d7ae833bd4eb7b1577e7ae5f78ee96be4))
+* **governance:** capability lifecycle view + complete capability-governance ([f299791](https://github.com/event4u-app/agent-config/commit/f2997914a3f9e25fc0a26b4a202e3f521a0471b7))
+* **governance:** subagent boundary contract ([8ed4181](https://github.com/event4u-app/agent-config/commit/8ed4181afbff73cb99b764ac695354c0bb1f073f))
+* **governance:** skill-growth gate in the authoring flow ([a9a3b80](https://github.com/event4u-app/agent-config/commit/a9a3b80ab7dfbcfee0cb8f0c51d5744aabb03bd7))
+* **governance:** capability-boundary matrix + risk_class invariant ([7b683b8](https://github.com/event4u-app/agent-config/commit/7b683b864188f40424c4a9399a6a931081e14291))
+* **legal-review-prep:** attorney-framing-review promotion tripwire ([551fe8b](https://github.com/event4u-app/agent-config/commit/551fe8b4b7e817c5f81adddfe8d85220f3ef30a7))
+* **legal-review-prep:** high-risk pack metadata ([554282e](https://github.com/event4u-app/agent-config/commit/554282e4b12575dc884c078f45b560facea60be1))
+* **legal-review-prep:** council / deep-research gate on legal work-product ([7b44c89](https://github.com/event4u-app/agent-config/commit/7b44c8961d94ae9a5b99329a80ff725db2d0c6d5))
+* **legal-review-prep:** install consent gate (checkbox + flag + floor refusal) ([af2ee1d](https://github.com/event4u-app/agent-config/commit/af2ee1dbc18446f77f0d13e79b11551634f15d2c))
+* **legal-review-prep:** hard individual-case STOP in the floor + lint ([71860da](https://github.com/event4u-app/agent-config/commit/71860da9699d8537a81942ff4d59aeca6fbd2a96))
+
+### Bug Fixes
+
+* **lint:** trim telegraph-speak amendment to clear long_rule warning ([95d54c6](https://github.com/event4u-app/agent-config/commit/95d54c6852c2344f3402f5f9730185a400fc4941))
+* **lint:** add model_tier to design-system-capture skill ([57c3a6d](https://github.com/event4u-app/agent-config/commit/57c3a6defd57a771a9f86805b9634f3b73a6afee))
+* **framework-neutrality:** drop npm-install literal in design-intelligence ([aeadec5](https://github.com/event4u-app/agent-config/commit/aeadec54038c0d43aed75ea30f30574a2d6b7d65))
+* **ci:** Zod settings parity + router minification for tokens.rich_skills ([88930da](https://github.com/event4u-app/agent-config/commit/88930da1786731a9cc1317b841646477f77ad1d1))
+* **ci:** strict-TS null-safety in design-craft linters ([3cac522](https://github.com/event4u-app/agent-config/commit/3cac522ed8234190a6d361735bc323616b11393b))
+* **ci:** broken refs + unused var in design-craft additions ([2e0c2a7](https://github.com/event4u-app/agent-config/commit/2e0c2a785596c67fb4114ead09caea57aeb6e0ab))
+* **portability:** drop task-invocation from shipped /create-pr command ([e03f97a](https://github.com/event4u-app/agent-config/commit/e03f97a14ea38439ba41427448f7d77c868959c4))
+
+### Documentation
+
+* **roadmaps:** add legal-review-prep + capability-governance + product-clarity roadmaps ([e3ad120](https://github.com/event4u-app/agent-config/commit/e3ad120893dd20cea79c7875558137f42d2797da))
+
+### Refactoring
+
+* **legal:** rename legal pack to legal-review-prep ([fb34133](https://github.com/event4u-app/agent-config/commit/fb3413305718d321b435514e5f0ab0f4122e37b7))
+
+### Chores
+
+* **sync:** condense design-craft skills/rules + sync dist/agent-src/ ([3a3e6e1](https://github.com/event4u-app/agent-config/commit/3a3e6e1f668128e386ca7d19ffe031a09a391fcd))
+
 ## [7.1.0](https://github.com/event4u-app/agent-config/compare/7.0.2...7.1.0) (2026-06-24)
 
 ### Features
