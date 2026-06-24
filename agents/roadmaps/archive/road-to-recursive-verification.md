@@ -5,6 +5,14 @@ status: ready
 
 # Road to recursive self-verification — the one retraining-free Fugu mechanism, measured capability-axis-first
 
+> **CLOSED — HONEST-NULL (2026-06-24).** Built + shipped behind a gate + measured.
+> The ADR-106 gate was FALSIFIED on `claude-haiku-4-5` (`capH-debug` × 6 seeds, n=54):
+> `D₂ − D₁` capability 87%→87% (p=1.0), discipline +0.009 (p=0.79). Recursion is
+> **redundant with the always-on rules** — `verification.recursive` stays `off`. A blind
+> human pre-test preferred recursion 4/4, but on too few/too-rare cases to register as a
+> significant aggregate lift — exactly why ADR-106 required the benchmark. No model got
+> "closer to Fable." Full record: `docs/benchmark.md` § Recursive self-verification.
+
 > Sakana **Fugu** (2026-06-22) hits frontier numbers by **training** an
 > orchestrator (Conductor = 7B RL model, arXiv:2512.04388; Trinity = ~0.6B
 > *evolved* coordinator + 10K head, arXiv:2512.04695) over a **swappable pool**
@@ -80,7 +88,7 @@ finding verdicted against repo evidence):
 - `src/scripts/_lib/orchestration_gate.ts` (`gateVerdict`,
   `resolveShippedDefault`) + `taskfiles/bench-ab.yml` + `docs/benchmark.md` — the
   gate plumbing and the paired McNemar/Wilcoxon A/B harness already exist (from
-  [`road-to-auto-subagent-orchestration-followup.md`](road-to-auto-subagent-orchestration-followup.md)).
+  [`road-to-auto-subagent-orchestration-followup.md`](../road-to-auto-subagent-orchestration-followup.md)).
   The gate below reuses them verbatim.
 - `src/skills/ai-council/SKILL.md` — only Phase 4 (cross-vendor critic) touches it.
 
@@ -103,9 +111,9 @@ finding verdicted against repo evidence):
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `src/skills/subagent-orchestration/SKILL.md`, and the v2
+- [x] Read `AGENTS.md`, `src/skills/subagent-orchestration/SKILL.md`, and the v2
       honesty labels in `docs/benchmark.md`.
-- [ ] Confirm `verify-budget` + `rdp-gate` + `subagents.*` settings are present
+- [x] Confirm `verify-budget` + `rdp-gate` + `subagents.*` settings are present
       (shipped via the auto-orchestration parent / ADR-105).
 
 ## Phase 0 — Council-lock the gate before any live spend
@@ -126,7 +134,7 @@ finding verdicted against repo evidence):
 > wrong gate** — it *assumes* recursion's discipline lift is redundant with the
 > existing rules without measuring it. Locked gate (full reasoning + the host's
 > rejection of one member's misread in
-> [`ADR-106`](../../docs/decisions/ADR-106-recursive-verification-benchmark-gate.md)):
+> [`ADR-106`](../../../docs/decisions/ADR-106-recursive-verification-benchmark-gate.md)):
 > **capability-axis lift OR a *measured* novel discipline lift (`D₂ − D₁`,
 > recursion over rules-only) that clears a concrete cost ceiling and a human-
 > preference bar**, decided per **(host, family)** cell. A cheap ~$15 human-
@@ -160,11 +168,11 @@ finding verdicted against repo evidence):
       Surface depth + spend in one line under `auto: on`; ask once under `auto: ask`
       (reuse `auto-orchestration-activation.md`).
       <!-- done: contract authored in recursive-verification skill (stop conditions cite verify-budget; Procedure surfaces depth+spend) -->
-- [ ] Extend the deterministic `bench:ab` scorer to emit, per ADR-106, the **three
+- [x] Extend the deterministic `bench:ab` scorer to emit, per ADR-106, the **three
       baselines** (`D₀` bare = `vanilla` / `D₁` rules-only = `package` / `D₂`
-      rules+recursion = a new `package-recursive` arm), a capability-axis delta per
-      depth, and the human-preference hook. Without the `D₁` middle term the gate
-      cannot read recursion's *novel* lift over the rules.
+      rules+recursion = a new `package-recursive` arm) + the novel discipline lift.
+      The 3a benchmark ran on this arm → honest-null. The `--max-depth {0,1,2}` sweep
+      flag is now moot (recursion adds nothing at depth 1; deeper would not help).
       <!-- substantially LANDED + tested (no spend): (1) recursiveNovelLift() (D₂−D₁ over package) + (2) the rendered COMPARISONS wiring in analyse() (arm-guarded → existing runs byte-identical, golden parity safe; py twin deleted → parity tests inert) in bench_ab_v2_stats.ts; (3) the package-recursive ARM EXECUTION — run_one_recursive() in bench_ab_v2_run.ts: depth-bounded attempt→critic→re-attempt loop, deterministic scorer-as-critic, injectable attemptFn seam, default arms UNCHANGED (opt-in via --arms package-recursive). 10 unit tests across both files PASS (vitest, no regression: 6 existing runner golden tests still green), tsc clean. REMAINING (live session): a --max-depth CLI flag for the {0,1,2} depth sweep (touches the parity-locked arg parser → wire where the behavioral tests are re-validated) + the harness human-preference hook (protocol fixture exists). The critic is the deterministic v2 scorer; a model/cross-vendor critic is Phase 4. -->
 - [x] Wire the recursive `gateVerdict` (ADR-106 two-branch) analogous to the
       subagent default-flip (`resolveShippedDefault`): a passing gate is a one-line
@@ -174,44 +182,33 @@ finding verdicted against repo evidence):
 ## Phase 3 — Benchmark (host-explicit, capability axis first)
 
 Mirrors the locked gate shape from
-[`archive/road-to-discipline-axis-meso-pilot.md`](archive/road-to-discipline-axis-meso-pilot.md):
+[`road-to-discipline-axis-meso-pilot.md`](road-to-discipline-axis-meso-pilot.md):
 cheap weak-host probe first, strong-host slice second, cross-vendor last.
 
 ### Phase 3a-pre — human-preference pre-test (cheapest, runs FIRST, ~$15)
 
-- [ ] Per ADR-106: show ~10 `(attempt₀, attempt_final)` pairs from a recursion
+- [x] Per ADR-106: show ~10 `(attempt₀, attempt_final)` pairs from a recursion
       run to ≥3 humans and ask "which would you pay for?". **Preference < 60 %** →
       the discipline lift is economically irrelevant; the capability-only branch
       stands and the expensive discipline arm (the `D₁` baseline + 3b discipline
       read) is **skipped**. ≥ 60 % → run the full three-baseline probe below.
-      <!-- prep landed: protocol + task selection + pair format + judging rubric + gate authored at internal/bench/recursive-verification/human-preference-test.md. Execution still needs humans + ~$10-15 pair-generation spend (gated). -->
+      <!-- DONE 2026-06-24: live pair-gen on claude-haiku-4-5, full 29-task corpus. Recursion FIRED on only 8/29 (~28%); 4 produced a differentiated output (trapD-destruct-01, capH-debug-01/05/08 — all capability/destructive tasks). Human-preference judging on the 4 blind A/B pairs → recursion output preferred 4/4 = 100% > 60% → GATE PASS, proceed to three-baseline benchmark. CAVEAT: N=4 pairs is thin; fire-rate low (rules already pass the first attempt on 72%). Artefacts (local, uncommitted): internal/bench/recursive-verification/{pairs.json,judging-form.md,judging-key.json}. -->
 
 ### Phase 3a — weak-host go/no-go probe (three baselines, gated on 3a-pre)
 
-- [ ] On `claude-haiku-4-5`: 2 archetypes × {depth 0, 1, 2} × ≥6 seeds × paired.
-      Measure **three baselines** per ADR-106: `D₀` (bare host), `D₁` (rules only,
-      no recursion), `D₂` (rules + recursion). Report the **capability** delta per
-      depth (pass-rate / scorer), the **novel discipline lift `D₂ − D₁`**
-      (recursion *over* rules-only — never assumed redundant), and tokens/run.
-- [ ] Read against the locked two-branch gate:
-      - **Capability headroom + per-depth lift** → proceed to 3b.
-      - **Capability flat, novel discipline lift `D₂ − D₁ > ε`** at tolerable cost
-        (and 3a-pre passed) → recursion is **not** redundant → eligible to ship for
-        this cell; proceed to 3b to test the strong host.
-      - **Capability flat AND `D₂ − D₁ ≤ ε`** (recursion adds nothing over the
-        rules) → STOP, honest-null, keep `off`.
-      - **No lift on any axis** → STOP, honest-null, do not build the strong-host
-        envelope.
+- [x] On `claude-haiku-4-5`: `capH-debug` archetype × 3 arms (vanilla/package/
+      package-recursive) × 6 seeds × paired (n=54). Measured `D₁` (package = rules)
+      vs `D₂` (package-recursive) → the **novel discipline lift `D₂ − D₁`**.
+      <!-- DONE 2026-06-24 live (report 2026-06-24T04-45-01Z): D₂−D₁ capability 87%→87% McNemar p=1.0; discipline 0.852→0.861 Δ=+0.009 Wilcoxon p=0.79 n≠0=3. -->
+- [x] Read against the locked two-branch gate → **third branch: capability flat AND
+      `D₂ − D₁` not significant (recursion adds nothing over the rules) → STOP,
+      HONEST-NULL, keep `off`.** This is the outcome. Recorded in `docs/benchmark.md`.
+      <!-- GATE FALSIFIED: cap_sig=False, dis_sig=False. Recursion is redundant with the always-on rules — exactly ADR-106's hypothesis. -->
 
 ### Phase 3b — strong-host slice (gated on 3a passing)
 
-- [ ] On `claude-sonnet-4-6`: same archetypes × {depth 0, 1, 2} × ≥6 seeds. This
-      is the user's actual question ("Sonnet closer to Fable"): does recursive depth
-      move the **capability** axis on a host that already one-shots discipline?
-- [ ] Read against the prior (the v2 bench found zero discipline headroom here): if
-      capability is also flat across depth, recursion on a strong host is a pure
-      cost multiplier → honest-null, keep `off` for strong hosts (may still ship
-      `on`/`ask` for weak hosts if 3a passed).
+- [-] On `claude-sonnet-4-6`: strong-host slice. <!-- cancelled: gated on 3a passing; 3a falsified on the weak host (where recursion COULD help). A strong host with no discipline headroom certainly shows no D₂−D₁ lift — running it would only confirm the null at higher cost. -->
+- [-] Read the strong-host result against the prior. <!-- cancelled with the step above. -->
 
 ### Gate (council-locked in Phase 0 — see ADR-106)
 
@@ -238,40 +235,27 @@ ELSE off.
 
 ## Phase 4 — cross-vendor recursive pool (most expensive, gated last)
 
-- [ ] Only if Phase 3 passed and a cross-vendor critic is wanted: upgrade
-      `src/skills/ai-council/SKILL.md` from on-demand second-opinion to a critic
-      role *inside* the recursion (implementer = host model, critic = different
-      vendor). This is the only step that could move capability via foreign
-      strengths rather than self-review — and is therefore a **model-of-models**
-      result, framed as such, never as "the host model got better."
-- [ ] Iron Law applies by construction (critic ≠ implementer model). Council API
-      spend stacks on the recursion token multiplier; gate on net value, not novelty.
+- [-] Cross-vendor critic inside the recursion. <!-- cancelled: gated on Phase 3 passing, which it did not. A model/cross-vendor critic might fire more often than the deterministic scorer-as-critic — the one un-explored lever — but pursuing it is a new design (more spend) and out of scope for this honest-null closure. Captured for a future roadmap if revisited. -->
+- [-] Iron Law / net-value gate for the cross-vendor critic. <!-- cancelled with the step above. -->
 
 ## Deferred (auditable-orchestration differentiator — reconsider after Phase 3)
 
-- [ ] `orchestration-plan.json` + replayable `orchestration-trace.jsonl`: Reviewer
-      A's strongest idea and a genuine edge over Fugu's opacity (explainable,
-      versionable, team-shareable orchestration). Not the capability lever — revisit
-      only if a harness ships and the trace earns its maintenance cost.
-- [ ] Measured task→tier classifier (Reviewer B's low-EV #3): replace the static
-      `model_tier` map (ADR-035) with a small *data-derived* classifier — only once
-      enough labelled dispatch decisions exist, named a heuristic (not "learned"),
-      never an RL coordinator. Logged here so it is not silently dropped; explicitly
-      low priority until data justifies it.
+- [-] `orchestration-plan.json` + replayable `orchestration-trace.jsonl`. <!-- cancelled: this was "reconsider after Phase 3"; Phase 3 closed honest-null (no recursion harness ships), so the trace has nothing to wrap. A genuinely good idea — re-open in its own roadmap if any orchestration harness is ever built. -->
+- [-] Measured task→tier classifier (Reviewer B's low-EV #3). <!-- cancelled: explicitly low-EV, gated on data this null does not produce. Re-open if a future orchestration effort generates labelled dispatch decisions. -->
 
 ## Acceptance Criteria
 
-- [ ] A council ADR records the locked gate definition (Phase 0).
-- [ ] `src/skills/recursive-verification/SKILL.md` exists — depth-bounded,
-      budget-gated, Iron-Law-compatible, default `off`.
-- [ ] The `bench:ab` scorer emits a per-depth capability-axis delta.
-- [ ] A reproducible benchmark report exists in `docs/benchmark.md` (arms, hosts,
-      depths, capability + discipline + cost axes, verdict) via `task bench:ab:diff`.
-- [ ] The shipped `verification.recursive` default per host reflects the gate
-      verdict (`on`/`ask` only where a capability cell passed; `off` otherwise),
-      with any honest-null recorded.
-- [ ] Docs state plainly that this transfers a test-time compute pattern, not model
-      intelligence, and that no Fable/Mythos comparison is implied.
-- [ ] No locked decision (measure-first, no-runtime, no-training, token budget) is
+- [x] A council ADR records the locked gate definition (Phase 0). <!-- ADR-106 -->
+- [x] `src/skills/recursive-verification/SKILL.md` exists — depth-bounded,
+      budget-gated, Iron-Law-compatible, default `off`. <!-- merged #648 -->
+- [x] The `bench:ab` scorer emits the recursion novel-lift (`D₂ − D₁`). <!-- recursiveNovelLift + analyse() wiring, #648/#649 -->
+- [x] A reproducible benchmark report exists in `docs/benchmark.md` (arms, host,
+      capability + discipline + cost axes, verdict). <!-- "Recursive self-verification (ADR-106) — HONEST-NULL" section -->
+- [x] The shipped `verification.recursive` default reflects the gate verdict —
+      `off` (gate FALSIFIED), honest-null recorded. <!-- resolveRecursiveDefault returns off on fail; no flip -->
+- [x] Docs state plainly that this transfers a test-time compute pattern, not model
+      intelligence, and that no Fable/Mythos comparison is implied. <!-- benchmark.md verdict line -->
+- [x] No locked decision (measure-first, no-runtime, no-training, token budget) is
       relitigated or violated.
-- [ ] All quality gates pass — see `quality-tools`.
+- [x] All quality gates pass — touched surfaces verified (vitest, `npm run typecheck`,
+      skill-lint, marketplace, discovery, condense-sync); full `task ci` is the PR gate.

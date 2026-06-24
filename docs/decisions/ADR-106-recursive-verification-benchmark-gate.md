@@ -14,7 +14,7 @@ type: structural
 ## Status
 
 Accepted (2026-06-23). Locks the Phase 0 gate definition for
-[`road-to-recursive-verification.md`](../../agents/roadmaps/road-to-recursive-verification.md)
+[`road-to-recursive-verification.md`](../../agents/roadmaps/archive/road-to-recursive-verification.md)
 before any live `bench:ab` spend.
 
 ## Context
@@ -117,7 +117,7 @@ expansion waits until data justifies it.
 
 ## References
 
-- [`road-to-recursive-verification.md`](../../agents/roadmaps/road-to-recursive-verification.md)
+- [`road-to-recursive-verification.md`](../../agents/roadmaps/archive/road-to-recursive-verification.md)
 - [`docs/benchmark.md`](../benchmark.md) — the existing wrapper-lift A/B evidence.
 - Council round: anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-06-23, deep
   tier (3 rounds), $0.0762 actual.
