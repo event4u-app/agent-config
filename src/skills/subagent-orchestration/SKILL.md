@@ -364,3 +364,4 @@ the judge verdict.
 | Standalone judge on an existing diff | [`/judge`](../../commands/judge.md)  |
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |
+| What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |

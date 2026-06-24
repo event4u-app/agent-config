@@ -58,17 +58,13 @@ than blocking on each return — intervene only if one goes off track. Engage pe
 
 ### Settings-gated auto-dispatch
 
-"By default" is governed by `.agent-settings.yml`, not unconditional. Before
-auto-dispatch, run the activation gate
+"By default" is governed by the [`delegation-policy`](../../rules/delegation-policy.md)
+rule — the single source of the auto-trigger. It gates on the activation context
 ([`auto-orchestration-activation`](../../contexts/execution/auto-orchestration-activation.md)):
-dispatch only when `subagents.enabled` **and** `subagents.auto != off` **and**
-the [`host-capability-manifest`](../../contexts/execution/host-capability-manifest.md)
-reports `subagent_spawn: true` **and** the task is classified delegable
-([`auto-dispatch-classification`](../../contexts/execution/auto-dispatch-classification.md)).
-`auto: ask` → ask once (per [`user-interaction`](../../rules/user-interaction.md));
-`auto: on` → surface chosen mode + per-subtask tiers in one line. Any gate fails
-→ in-session. Auto-dispatch is the default where host + settings allow, a clean
-no-op elsewhere — never lifts a safety floor.
+dispatch only when `subagents.enabled`, `subagents.auto != off`, the host
+manifest reports `subagent_spawn: true`, and the task is classified delegable.
+`auto: ask` → ask once; `auto: on` → surface mode + per-subtask tiers in one
+line; any gate failing → in-session no-op. Never lifts a safety floor.
 
 ## The seven modes
 
@@ -368,3 +364,4 @@ the judge verdict.
 | Standalone judge on an existing diff | [`/judge`](../../commands/judge.md)  |
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |
+| What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |

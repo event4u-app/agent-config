@@ -56,9 +56,9 @@ status: ready
 > owns (delegation of a scoped task) vs what it must NOT own (task-meaning,
 > cross-task memory, pack-surface decisions, safety-floor bypass).
 
-- [ ] **4.1 — Author `docs/contracts/subagent-boundary.md`** — the ownership line: a subagent executes a scoped, named task and returns a conclusion; it does not redefine the parent task, does not bypass any floor (Hard Floor / safety floors apply inside subagents), does not silently expand scope.
-- [ ] **4.2 — Cross-link** from the Agent/Workflow orchestration docs + the relevant skills.
-- [ ] **4.3 — Verify** — contract referenced; `check-refs` green.
+- [x] **4.1 — Author `docs/contracts/subagent-boundary.md`** — the ownership line: a subagent executes a scoped, named task and returns a conclusion; it does not redefine the parent task, does not bypass any floor (Hard Floor / safety floors apply inside subagents), does not silently expand scope.
+- [x] **4.2 — Cross-link** from the Agent/Workflow orchestration docs + the relevant skills.
+- [x] **4.3 — Verify** — contract referenced; `check-refs` green.
 
 ## Phase 5 — Capability lifecycle
 
