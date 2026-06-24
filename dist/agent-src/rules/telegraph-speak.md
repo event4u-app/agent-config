@@ -81,14 +81,6 @@ Example: *"I will now check the file and see if it exists"* →
 | `telegraph.speak_scope` | `prose_only` | Runtime scope of telegraph grammar. |
 
 - Input-side memory condensation (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of `speak_scope` — see [`condense-memory`](../skills/condense-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
-
-## Amendment — `token_budget_class: rich` skills are exempt
-
-Skills marked `token_budget_class: rich` in their frontmatter are **exempt**
-from telegraph-speak condensation and thin-projector trimming. Their prose,
-examples, tables, and code blocks load and render in full, regardless of
-`telegraph.speak_scope`. This exemption is gated by `tokens.rich_skills` in
-`.agent-settings.yml` (default `on`). See `token-budget-discipline` rule for
-the full governance model and the ≤15% cap.
+- Skills marked `token_budget_class: rich` are **exempt** from telegraph condensation + thin-projector trimming (gated by `tokens.rich_skills`, default `on`) — full model in [`token-budget-discipline`](token-budget-discipline.md).
 
 Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).
