@@ -65,6 +65,20 @@ FAIL-CLOSED: NO ACKNOWLEDGMENT → REFUSE, POINT TO THE SETUP WIZARD.
 
 Before any `legal-review-prep` skill produces output, read `legal_review_prep.acknowledged` from `.agent-settings.yml`. Missing / `false` → refuse and surface: *"The legal-review-prep pack is inactive until you acknowledge it is not legal advice. Run the setup wizard's legal-consent step, or set `legal_review_prep.acknowledged: true` in `.agent-settings.yml`."* This is active consent (set via the wizard checkbox), not a passive disclaimer — it manages reliance/expectation and host-ToS exposure; it does **not** cure RDG.
 
+## Iron Law — legal work-product is council / deep-research gated
+
+```
+WHEN legal_review_prep.require_council IS TRUE (DEFAULT), A LEGAL WORK-PRODUCT
+IS PRODUCED VIA A MULTI-MODEL COUNCIL / research:deep PASS — NEVER SINGLE-MODEL.
+FAIL-CLOSED: NO COUNCIL CONFIGURED → REFUSE. NO INFRA → NO OUTPUT, NOT BAD OUTPUT.
+```
+
+A **work-product** = a review, redline, gap-frame, or demand draft (not a one-line definition or a general-concept explanation). Every legal-review-prep skill carries `council_depth: deep`; when consulted it routes through the AI council (`--depth deep`) or `research:deep`. Single-model legal work-product is refused while `require_council: true`. When no council is configured, **fail closed** — refuse and say so; an unreviewed single-model legal draft is the worse outcome for a high-risk pack.
+
+**Honest enforcement boundary.** This is advisory + settings + lint enforcement, not a hard runtime hook — skills are prose the host reads; the floor, the `require_council` flag, and the `lint_legal_pack` `council_depth` check are the teeth, the host is *asked* to route through the council. The deep council (2026-06-24) found this defense-in-depth substantive (documented multi-stage review + reliance-bounding friction + audit trail), **not** an RDG cure: it improves quality and creates a record; it does **not** make the output reliable legal advice.
+
+**Audit pointer.** When a council / deep-research pass runs for a legal work-product, persist its pointer (timestamp · members · artefact hash) under `agents/runtime/council/responses/` so the "documented multi-stage review" claim is real, not asserted. No pass, no work-product.
+
 ## Iron Law — general information only, never individual-case examination
 
 ```

@@ -793,6 +793,10 @@ explain:
 legal_review_prep:
   acknowledged: false
   consented_at: ""
+  # Gate legal work-product behind a multi-model council / deep-research pass
+  # (defense-in-depth + audit trail; fail-closed). Off lets single-model legal
+  # output through — not recommended for this high-risk pack.
+  require_council: true
 
 # ─── secrets ────────────────────────────────────────────────────────────────
 # Local-only secret material. This whole file is gitignored, so the key never

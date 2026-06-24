@@ -4,6 +4,7 @@ name: nda-triage
 description: "Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'."
 status: active
 tier: senior
+council_depth: deep
 domain: process
 recommended_for_user_types: [legal]
 workspaces:

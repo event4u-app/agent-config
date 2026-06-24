@@ -109,6 +109,10 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
         if (!body.includes(JURISDICTION_TAG)) {
             violations.push({ file: rel, rule: 'jurisdiction-tag', msg: `missing the machine-checkable "${JURISDICTION_TAG}" tag` });
         }
+        // 1.2b council-gate — every legal work-product skill routes deep.
+        if (!/(^|\n)council_depth:\s*deep\s*(\n|$)/.test(fm)) {
+            violations.push({ file: rel, rule: 'council-depth', msg: 'missing `council_depth: deep` (legal work-product must route through the AI council / deep-research)' });
+        }
         // 1.3 freshness — only when declared
         const fw = /(^|\n)freshness_window:\s*"?([^"\n]+)"?/.exec(fm);
         if (fw && !FRESHNESS_WINDOW_RE.test((fw[2] ?? '').trim())) {

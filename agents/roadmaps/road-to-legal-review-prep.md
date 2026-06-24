@@ -60,11 +60,11 @@ status: ready
 > The maintainer's core ask, validated by the deep council as substantive (audit
 > trail + reliance-bounding friction), with honest enforcement limits.
 
-- [ ] **3.1 — `council_depth: deep` frontmatter** on every legal-review-prep skill (existing key → deeper deliberation when consulted via the council).
-- [ ] **3.2 — `legal_review_prep.require_council: true` settings flag** (default true) + a floor Iron Law: a legal **work-product** (review, redline, gap-frame, demand draft) is produced via a council / `research:deep` pass — single-model legal output is refused; **fail-closed** when no council is configured (acceptable for a high-risk pack: no infra → no output, not unsafe output). Be explicit in the rule that this is advisory+settings enforcement, not hard runtime — the host is asked, the floor + flag + lint are the teeth.
-- [ ] **3.3 — Audit artefact** — when a council/deep-research pass runs for a legal work-product, persist the deliberation pointer (timestamp + members + artefact hash) so the "documented multi-stage review" rationale is real, not claimed.
-- [ ] **3.4 — Honest framing in the floor + LEGAL_NOTICE** — council deliberation improves quality + creates an audit trail; it does **not** make output reliable legal advice. State it plainly so the gate doesn't manufacture false confidence.
-- [ ] **3.5 — Verify** — flag round-trips; floor refuses a single-model legal work-product; lint asserts the council requirement is present per skill.
+- [x] **3.1 — `council_depth: deep` frontmatter** on every legal-review-prep skill (existing key → deeper deliberation when consulted via the council).
+- [x] **3.2 — `legal_review_prep.require_council: true` settings flag** (default true) + a floor Iron Law: a legal **work-product** (review, redline, gap-frame, demand draft) is produced via a council / `research:deep` pass — single-model legal output is refused; **fail-closed** when no council is configured (acceptable for a high-risk pack: no infra → no output, not unsafe output). Be explicit in the rule that this is advisory+settings enforcement, not hard runtime — the host is asked, the floor + flag + lint are the teeth.
+- [x] **3.3 — Audit artefact** — when a council/deep-research pass runs for a legal work-product, persist the deliberation pointer (timestamp + members + artefact hash) so the "documented multi-stage review" rationale is real, not claimed.
+- [x] **3.4 — Honest framing in the floor + LEGAL_NOTICE** — council deliberation improves quality + creates an audit trail; it does **not** make output reliable legal advice. State it plainly so the gate doesn't manufacture false confidence.
+- [x] **3.5 — Verify** — flag round-trips; floor refuses a single-model legal work-product; lint asserts the council requirement is present per skill.
 
 ## Phase 4 — High-risk pack metadata
 

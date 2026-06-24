@@ -72,6 +72,15 @@ describe('legal pack — the disclaimer is always present (gate replaces the own
         expect(readme).toContain('LEGAL_NOTICE.md');
     });
 
+    it('7) the floor council-gates work-product + every legal skill routes deep', () => {
+        const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
+        expect(floor, 'floor missing the council gate').toContain('legal_review_prep.require_council');
+        expect(floor.toLowerCase()).toMatch(/council|deep-research/);
+        for (const f of legalSkillFiles()) {
+            expect(frontmatter(read(f)), `${f} missing council_depth: deep`).toMatch(/(^|\n)council_depth:\s*deep\s*(\n|$)/);
+        }
+    });
+
     it('6) the floor carries the consent gate (refuse until acknowledged)', () => {
         const floor = read(path.join(REPO, 'src', 'rules', 'legal-safety-floor.md'));
         expect(floor, 'floor missing the consent gate').toContain('legal_review_prep.acknowledged');

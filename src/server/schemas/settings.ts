@@ -397,7 +397,10 @@ export const settingsSchema = z.object({
         consented_at: z.string().default('').describe(
             'ISO timestamp recorded when the legal-review-prep acknowledgment was given. Set automatically by the setup wizard; leave empty otherwise.',
         ),
-    }).default({ acknowledged: false, consented_at: '' }),
+        require_council: z.boolean().default(true).describe(
+            'Gate legal work-product behind a multi-model AI-council / deep-research pass (defense-in-depth: documented multi-stage review + audit trail; fail-closed when no council is configured). Leave on for the safest posture. Turning it off lets single-model legal output through — not recommended for a high-risk pack.',
+        ),
+    }).default({ acknowledged: false, consented_at: '', require_council: true }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
