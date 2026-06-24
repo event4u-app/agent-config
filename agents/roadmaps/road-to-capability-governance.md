@@ -46,9 +46,9 @@ status: ready
 > Reviewers: skill count keeps climbing; nothing forces "should this be a new
 > skill at all?" Make the question structural at authoring time.
 
-- [ ] **3.1 — Author the gate** — extend the artifact-drafting / skill-writing flow so a NEW skill must answer: which family · which capability (vs an existing one) · why not extend/merge · why not a guideline · visibility tier. Record the answers in the PR body.
-- [ ] **3.2 — Overlap surfacing** — wire `skill-overlap` evidence into the gate so near-duplicates are flagged before merge (reuse the existing overlap metric script).
-- [ ] **3.3 — Verify** — gate documented + referenced from the skill-writing skill; a dry-run on a deliberately-overlapping skill flags it.
+- [x] **3.1 — Author the gate** — extend the artifact-drafting / skill-writing flow so a NEW skill must answer: which family · which capability (vs an existing one) · why not extend/merge · why not a guideline · visibility tier. Record the answers in the PR body.
+- [x] **3.2 — Overlap surfacing** — wire `skill-overlap` evidence into the gate so near-duplicates are flagged before merge (reuse the existing overlap metric script).
+- [x] **3.3 — Verify** — gate documented + referenced from the skill-writing skill; a dry-run on a deliberately-overlapping skill flags it.
 
 ## Phase 4 — Subagent-boundary contract
 

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**70 / 180 steps done · 39%**
+**73 / 180 steps done · 41%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   39%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md) | 6 | 17 | 11 | 6 | 0 | 0 | ████░░░░░░ 35% |
+| 2 | [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md) | 6 | 17 | 8 | 9 | 0 | 0 | █████░░░░░ 53% |
 | 3 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -37,13 +37,13 @@
 
 ### [road-to-capability-governance.md](roadmaps/road-to-capability-governance.md)
 
-**Road to capability governance — boundary matrix, risk-class, growth gate** — 6 / 17 done (35%)
+**Road to capability governance — boundary matrix, risk-class, growth gate** — 9 / 17 done (53%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Capability boundary matrix (documentation) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | risk_class as documented pack metadata | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 3 | Skill-growth gate | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Skill-growth gate | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Subagent-boundary contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Capability lifecycle | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | Deferred / rejected (recorded) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
