@@ -61,7 +61,7 @@ NO legal-review-prep SKILL RUNS UNTIL legal_review_prep.acknowledged: true.
 FAIL-CLOSED: NO ACKNOWLEDGMENT → REFUSE, POINT TO THE SETUP WIZARD.
 ```
 
-Before any `legal-review-prep` skill produces output, read `legal_review_prep.acknowledged` from `.agent-settings.yml`. Missing / `false` → refuse and surface: *"The legal-review-prep pack is inactive until you acknowledge it is not legal advice. Run the setup wizard's legal-consent step, or set `legal_review_prep.acknowledged: true` in `.agent-settings.yml`."* This is active consent (set via the wizard checkbox), not a passive disclaimer — it manages reliance/expectation and host-ToS exposure; it does **not** cure RDG.
+Before any legal-review-prep skill produces output, read `legal_review_prep.acknowledged` from `.agent-settings.yml`. Missing / `false` → refuse and surface: *"The legal-review-prep pack is inactive until you acknowledge it is not legal advice. Run the setup wizard's legal-consent step, or set `legal_review_prep.acknowledged: true` in `.agent-settings.yml`."* This is active consent (set via the wizard checkbox), not a passive disclaimer — it manages reliance/expectation and host-ToS exposure; it does **not** cure RDG.
 
 ## Iron Law — legal work-product is council / deep-research gated
 

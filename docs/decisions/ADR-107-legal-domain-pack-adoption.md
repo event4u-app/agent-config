@@ -36,6 +36,20 @@ Open a single, narrow `legal` pack — **not** a multi-plugin / multi-agent pari
 6. **No personas** — procedure-not-personality; role focus lives in skill tags + the practice profile.
 7. **Conditional product-liability gate** — commercial (Pro-tier) ship would require licensed-attorney review of the pack itself. **Resolved N/A 2026-06-24:** the suite is open-source forever, no commercial tier (ADR-108) — the gate never fires; the non-removable disclaimer + per-output attorney-review line cover end-user reliance.
 
+## Amendment (2026-06-24, deep-council) — attorney-framing-review promotion tripwire
+
+Promotion of `legal-review-prep` out of `surface_tier: lab` / `trust_level_default:
+experimental`, flipping `default_install` to anything but `false`, or any
+commercial / hosted surface, is **blocked** until a licensed German attorney has
+reviewed the *framing* (the `legal-safety-floor` rule, `LEGAL_NOTICE.md`, and the
+RDG individual-case wording — **not** skill correctness) and the review is recorded
+in `LEGAL_NOTICE.md` as `Framing reviewed by <name>, Rechtsanwalt/Rechtsanwältin,
+<date>`. The deep AI-council (2026-06-24) scoped this as a bounded (~€300–800,
+1–2h) one-time gate, **not** a blocker for the current lab release (lab is
+explicitly unvetted; users opt in knowingly via the consent gate). Enforced by
+`lint_legal_pack` (`promotion-gate` rule): a promoted tier without the recorded
+marker fails CI.
+
 ## Rejections (recorded)
 
 matter-workspace (too heavy), scheduled watchers, community-skill installer hub, US-state employment tests, full litigation depth, bar-prep, Swiss cantonal depth, non-EU/DE jurisdictions, the cross-model-parity dependency for the eval (a false blocker, corrected in the full critique round).

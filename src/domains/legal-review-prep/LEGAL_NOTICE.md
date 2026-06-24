@@ -37,6 +37,17 @@ attorney-review line + `Jurisdiction:` tag on every output (CI-checked by
 > advice and does not cure the individual-case boundary above. Attorney review
 > still required.
 
+## Promotion gate
+
+This pack ships **lab-tier / experimental, off by default** on purpose. Promoting
+it (out of `lab`, default-on, or any hosted surface) is **blocked** until a
+licensed German attorney has reviewed the *framing* (the safety floor, this
+notice, the RDG individual-case wording) and the review is recorded here as:
+`Framing reviewed by <name>, Rechtsanwalt/Rechtsanwältin, <date>`. Enforced by
+`lint_legal_pack` (ADR-107 amendment, 2026-06-24).
+
+_Attorney framing review: not yet performed — pack stays lab-tier._
+
 ## Distribution
 
 Open-source (MIT), forever; no commercial / Pro tier (ADR-108). Use may also be

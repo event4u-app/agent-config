@@ -81,15 +81,15 @@ status: ready
 > (floor + LEGAL_NOTICE + RDG-refusal wording) — NOT skill correctness — gates any
 > promotion out of `lab`. Not a blocker for the lab release.
 
-- [ ] **5.1 — ADR + tripwire** — record (extend ADR-107 §7 / a new ADR) that promotion of legal-review-prep out of `surface_tier: lab` / `trust_level: experimental`, default-on, or any commercial/hosted surface is **blocked** until a licensed German attorney has reviewed the framing and the review (name, date, scope, outcome) is recorded in `LEGAL_NOTICE.md`.
-- [ ] **5.2 — Promotion guard** — a lint/check that fails if the pack's tier is promoted without the recorded attorney-framing-review marker.
-- [ ] **5.3 — Verify** — guard fails on a simulated premature promotion; passes at current lab tier.
+- [x] **5.1 — ADR + tripwire** — record (extend ADR-107 §7 / a new ADR) that promotion of legal-review-prep out of `surface_tier: lab` / `trust_level: experimental`, default-on, or any commercial/hosted surface is **blocked** until a licensed German attorney has reviewed the framing and the review (name, date, scope, outcome) is recorded in `LEGAL_NOTICE.md`.
+- [x] **5.2 — Promotion guard** — a lint/check that fails if the pack's tier is promoted without the recorded attorney-framing-review marker.
+- [x] **5.3 — Verify** — guard fails on a simulated premature promotion; passes at current lab tier.
 
 ## Phase 6 — Deferred / rejected (recorded)
 
-- [ ] **6.1 — Generic `risk_class` capability class + boundary-matrix framework** — deferred to `road-to-capability-governance` (N=2 discipline; legal is the first instance, extract the generic governance when a 2nd high-risk domain — medical/tax/compliance — actually arrives). Council split: anthropic defer (won), gpt-4o build-now.
-- [ ] **6.2 — Council-gating is NOT an RDG cure (recorded).** Only the individual-case refusal (Phase 1) addresses RDG. The council/consent/audit layers are civil-liability / host-ToS / reliance-management defense-in-depth. Do not let docs claim the gate makes output "compliant" or "reliable".
-- [ ] **6.3 — Hard runtime enforcement of "council-only"** — out of scope; skills are prose, the host can't be forced to shell out. The settings flag + floor + lint are the honest mechanism; revisit only if a host exposes a real pre-generation hook for this.
+- [x] **6.1 — Generic `risk_class` capability class + boundary-matrix framework** — deferred to `road-to-capability-governance` (N=2 discipline; legal is the first instance, extract the generic governance when a 2nd high-risk domain — medical/tax/compliance — actually arrives). Council split: anthropic defer (won), gpt-4o build-now.
+- [x] **6.2 — Council-gating is NOT an RDG cure (recorded).** Only the individual-case refusal (Phase 1) addresses RDG. The council/consent/audit layers are civil-liability / host-ToS / reliance-management defense-in-depth. Do not let docs claim the gate makes output "compliant" or "reliable".
+- [x] **6.3 — Hard runtime enforcement of "council-only"** — out of scope; skills are prose, the host can't be forced to shell out. The settings flag + floor + lint are the honest mechanism; revisit only if a host exposes a real pre-generation hook for this.
 
 ## Acceptance criteria
 

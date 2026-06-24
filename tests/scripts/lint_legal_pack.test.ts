@@ -7,7 +7,25 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { lintLegalPack } from '../../src/scripts/lint_legal_pack.js';
+import { lintLegalPack, legalPromotionViolations } from '../../src/scripts/lint_legal_pack.js';
+
+const LAB_PACK = '- id: legal-review-prep\n  surface_tier: lab\n  trust_level_default: experimental\n  default_install: false\n';
+const PROMOTED_PACK = '- id: legal-review-prep\n  surface_tier: core\n  trust_level_default: professional\n  default_install: true\n';
+const NO_REVIEW = '_Attorney framing review: not yet performed._';
+const REVIEWED = 'Framing reviewed by Erika Mustermann, Rechtsanwältin, 2026-07-01.';
+
+describe('lint_legal_pack — promotion gate', () => {
+    it('lab-tier pack needs no framing review', () => {
+        expect(legalPromotionViolations(LAB_PACK, NO_REVIEW)).toEqual([]);
+    });
+    it('promoted pack without a recorded framing review fails', () => {
+        const v = legalPromotionViolations(PROMOTED_PACK, NO_REVIEW);
+        expect(v.some((x) => x.rule === 'promotion-gate')).toBe(true);
+    });
+    it('promoted pack WITH a recorded framing review passes', () => {
+        expect(legalPromotionViolations(PROMOTED_PACK, REVIEWED)).toEqual([]);
+    });
+});
 
 const tmpDirs: string[] = [];
 
