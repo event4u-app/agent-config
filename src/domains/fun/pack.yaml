@@ -18,4 +18,4 @@ size_class: small
 suggests: []
 surface_tier: lab
 trust_level_default: experimental
-version: 7.0.2
+version: 7.1.0

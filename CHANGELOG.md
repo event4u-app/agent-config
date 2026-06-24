@@ -948,6 +948,84 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.1.0](https://github.com/event4u-app/agent-config/compare/7.0.2...7.1.0) (2026-06-24)
+
+### Features
+
+* **legal:** RDG individual-case guardrail + LEGAL_NOTICE + no-definitive-language lint ([23e76df](https://github.com/event4u-app/agent-config/commit/23e76df34c612ed9bcdace069040defda80c1226))
+* **legal:** lock open-source-forever stance + harden liability disclaimer (ADR-108); close 0.6 + 3.3 ([8d828a6](https://github.com/event4u-app/agent-config/commit/8d828a64de5d23fa1c298a78b3d67c6e70ffe4b7))
+* **legal:** lock open-source-forever stance + harden liability disclaimer (ADR-108); close 0.6 + 3.3 ([f45e4e9](https://github.com/event4u-app/agent-config/commit/f45e4e99f7cccd77efb2d62fe06cb4436bc2df9e))
+* **legal:** enforcement linter, privilege markers, eval harness, docs (Phases 1/1.5/3/5) ([cb06648](https://github.com/event4u-app/agent-config/commit/cb06648009dc12daab440a273eeb780d06f6e2fa))
+* **legal:** add governed EU/DE legal pack — floor, 5 skills, vocab (ADR-107) ([b0d531f](https://github.com/event4u-app/agent-config/commit/b0d531f2701b600c93cb1ba52f3dce50e21a6d6d))
+* **bench:** pair-capture seam for recursion arm (human-preference pretest) ([7211c04](https://github.com/event4u-app/agent-config/commit/7211c043bb712cea6c0a2e0de56ea5af79b70cce))
+* **bench:** recursion gate logic + novel-lift scorer + package-recursive arm ([e33ff7d](https://github.com/event4u-app/agent-config/commit/e33ff7d52572ea35bcb8f5b190336e83e737ab1d))
+* **recursive-verification:** add depth-bounded self-verification skill + gate ([4a0c519](https://github.com/event4u-app/agent-config/commit/4a0c519628a5244cc2859cdf484661c92be25783))
+* **subagents:** A1 rule body + A2 bundle resolver + A3 response envelope ([4a9fc9b](https://github.com/event4u-app/agent-config/commit/4a9fc9b3c44c256426b0c33f4448010e890adf13))
+* **subagents:** A1 — dedicated delegation-policy auto-trigger rule ([e60cb50](https://github.com/event4u-app/agent-config/commit/e60cb50fcfb55ccabdeab88b680ec707f8a4d122))
+* **subagents:** automatic, settings-gated subagent orchestration ([dba922c](https://github.com/event4u-app/agent-config/commit/dba922c1da2177ad8103f06fd4dce49cff95977d))
+* **py2ts:** purge dead python-parity test blocks + add permanent no-python-in-src guard ([e163468](https://github.com/event4u-app/agent-config/commit/e163468af8d2b70a7e4645db0dda719c3f761cb3))
+* **roadmaps:** robust completion→archival independent of PR flow, tracking, and vendored scripts ([a879334](https://github.com/event4u-app/agent-config/commit/a87933447797c848e0e09e5d9d0ade6d280ae794))
+* **rules:** add design-fidelity rule for provided-design adherence ([88bc654](https://github.com/event4u-app/agent-config/commit/88bc6541721a7d964d670fe80ac06385c4776762))
+* add /fix:comments command to audit and trim branch code comments ([b3127b8](https://github.com/event4u-app/agent-config/commit/b3127b86733357d8fe2a32e4b3e5fe1c15447e41))
+
+### Bug Fixes
+
+* **legal:** add 'legal' to discovery-manifest schema workspace + pack enums ([f7cc834](https://github.com/event4u-app/agent-config/commit/f7cc83415d6c7ffa7600512fba059c2513c3d4df))
+* **ai-council:** raise curl timeout to 300s + --max-time so long Anthropic generations don't ETIMEDOUT ([42048b9](https://github.com/event4u-app/agent-config/commit/42048b91a5361a9041deee172609a974d926d1da))
+* **roadmap:** commit legal-pack + dashboard + archived-roadmap link fixes ([1a6910a](https://github.com/event4u-app/agent-config/commit/1a6910a39beea7e5bfc0ff21167be1463d7bfd96))
+* **test:** satisfy noUncheckedIndexedAccess in recursion tests ([29d6d89](https://github.com/event4u-app/agent-config/commit/29d6d8920192b3ade000abf9e5c102871a3ba336))
+* **py2ts:** inbox snapshot — strip macOS /private prefix so Linux CI matches ([f19436e](https://github.com/event4u-app/agent-config/commit/f19436e4a6e1cdc6dba452330e293b4414f82125))
+* **py2ts:** typecheck — assert tuple element in workspace_secrets SCAN/OBJ_CASES ([aedf6ee](https://github.com/event4u-app/agent-config/commit/aedf6eeb98eb4e171544decf4bfc9511ad7868e2))
+* **ci:** allowlist brand/iconography/premortem bare-noun skill names ([1522311](https://github.com/event4u-app/agent-config/commit/152231156b8379ded27652c28c089806a4f33d1c))
+* **ci:** register new subagents.* keys in the settings schema ([2c817a6](https://github.com/event4u-app/agent-config/commit/2c817a631c6b2062d8e5e843c31513d932d27d6f))
+* **ci:** resolve pre-existing trunk gate drift ([8515b97](https://github.com/event4u-app/agent-config/commit/8515b9793608c077f058ac42621bf6e03160e163))
+* **schema:** default the design block so settings without it still validate ([86ee94e](https://github.com/event4u-app/agent-config/commit/86ee94e313f198fd109db7dfdd6bb93a7b6dc8c6))
+* **schema:** register design.fidelity_mode in settings parity schemas ([af56652](https://github.com/event4u-app/agent-config/commit/af5665258c9b5c02bc016d2e12bfa76befbe5d5d))
+* **council:** resolve config global-only — never search the project tree ([fcd81ff](https://github.com/event4u-app/agent-config/commit/fcd81ffe92e652db88c79ba29c05b2dc0e358850))
+
+### Documentation
+
+* **recursive-verification:** record council follow-up disposition — TERMINAL ([7d132be](https://github.com/event4u-app/agent-config/commit/7d132bec2b55c00359d1d906b7701de0317f28bf))
+* **recursive-verification:** record honest-null in benchmark.md + ADR-106 ref ([87da20f](https://github.com/event4u-app/agent-config/commit/87da20ff8217e771427153eabaf7edaec4e97669))
+* add subagent-orchestration onboarding map + sync roadmap dashboard ([01b798f](https://github.com/event4u-app/agent-config/commit/01b798f42b500b3c801292f65da90137304f9243))
+* **roadmap:** add operator-runtime-harvest roadmap ([a2a92b1](https://github.com/event4u-app/agent-config/commit/a2a92b145f630e55b440b7b4214359618bf70ac9))
+* **roadmap:** record measured remaining spawn-tail count (108) + next groups ([4426293](https://github.com/event4u-app/agent-config/commit/4426293da06dfc60ff914ab9a4bc9756675b96aa))
+* **roadmap:** archive completed auto-subagent-orchestration v2 + regenerate derived ([e8af760](https://github.com/event4u-app/agent-config/commit/e8af760c792b4b7f2a7c3d61a551d84e43904df6))
+* **roadmap:** mark work_engine cluster de-pythonized (21 files) ([0b36d5c](https://github.com/event4u-app/agent-config/commit/0b36d5c4999052f33cbc423296ecc9238a2b122c))
+* **roadmap:** mark workspace_* cluster converted (12 files, +346 tests) ([154db54](https://github.com/event4u-app/agent-config/commit/154db548375a787f9c19ed38a464db8edfd4b9cb))
+* **roadmap:** capture the py2ts conversion-tail determinism trap (per-file, not a codemod) ([439817c](https://github.com/event4u-app/agent-config/commit/439817c272216f81ed2e286990f27488f3321e64))
+* **roadmap:** auto-subagent-orchestration roadmap + follow-up ([5cdbc84](https://github.com/event4u-app/agent-config/commit/5cdbc8438b0e097c99f16ee438494ae66e234c77))
+* **roadmap:** refine py2ts tail triage (36 delete-candidates / 108 convert) ([985e3e3](https://github.com/event4u-app/agent-config/commit/985e3e35bdfb48309c2dc7259e0180a39fe71cd8))
+* **roadmap:** record py2ts parity-block purge + categorize the remaining tail ([1ac823c](https://github.com/event4u-app/agent-config/commit/1ac823ce1e927a473e6c2c973cbe2e33dfb96ffb))
+* **roadmaps:** split token-saving human-measurement track off the autonomous parent ([ac188ef](https://github.com/event4u-app/agent-config/commit/ac188ef4e7044f75baf87e393f7084dae383abe3))
+* **roadmaps:** reconcile road-to-typescript-only-scripts against merged reality ([9adf45b](https://github.com/event4u-app/agent-config/commit/9adf45b3294f38f70100feaec44867074b512a2b))
+* **rdp:** restore frontier-polish closure dispositions in the archived file ([e712620](https://github.com/event4u-app/agent-config/commit/e712620f74a83f5faa50bb8885b6a1d17117adcf))
+* **rdp:** close + archive road-to-rdp-frontier-polish (L7 no-promotion, Phase 3 cancelled) ([8945d5a](https://github.com/event4u-app/agent-config/commit/8945d5ad35b15c4b177ae368f389fb0445f0c856))
+
+### Tests
+
+* **legal:** replace Gate-2 owner requirement with a test-enforced disclaimer guarantee ([60112ac](https://github.com/event4u-app/agent-config/commit/60112ac9af01cc9f85491a0b6ccaa6bd17b4caa8))
+* **legal:** add trigger-eval sets for the 5 legal skills (5 should + 5 should-not, DE+EN) ([f451af2](https://github.com/event4u-app/agent-config/commit/f451af2a4d6ee1cfd357f69fe120a905ae26e525))
+* **py2ts:** de-pythonize 21 work_engine test files (purge parity blocks / convert pure rigs) ([2221cc8](https://github.com/event4u-app/agent-config/commit/2221cc8c268bb4d7e8f7eba59d58990f31c82dfb))
+* **py2ts:** convert the workspace_* CLI parity cluster to python-free intent tests ([6697dea](https://github.com/event4u-app/agent-config/commit/6697dea75a24f363f2053c4700d8438ec2725742))
+* **py2ts:** convert workspace_hosts parity rig to python-free intent test ([6f79864](https://github.com/event4u-app/agent-config/commit/6f798649ae2f27ca1381622025102b678f283f6d))
+* **py2ts:** purge obsolete python3-vs-tsx parity blocks from 94 mixed test files ([5e07191](https://github.com/event4u-app/agent-config/commit/5e07191639e01f74f47699e62798ce6b298cbc1f))
+* **py2ts:** convert the 4 all-parity CLI rigs to python-free intent tests ([aff202c](https://github.com/event4u-app/agent-config/commit/aff202c5eb81d2a87e9147e812a2fd53635dcae2))
+* **ci-time-ratio:** drop leaked root artifact, write relative --out under ignored test-results/ ([5152942](https://github.com/event4u-app/agent-config/commit/5152942c67711f3dfdb4b35b60c696fd633a6aaf))
+
+### Chores
+
+* **legal:** regenerate agents/index.md + docs/catalog.md for legal pack artefacts ([484d5da](https://github.com/event4u-app/agent-config/commit/484d5da21ff67dd7013919b99a03fd0de3c66c72))
+* **roadmap:** archive completed recursive-verification + add legal-pack + sync dashboard ([887fbe7](https://github.com/event4u-app/agent-config/commit/887fbe7b83be52e21d751965f3dad2152d80f1ce))
+* **roadmaps:** archive py2ts teardown evidence + superseded predecessor ([d11f6cd](https://github.com/event4u-app/agent-config/commit/d11f6cd1646c43e6bd8f210b0ac703a7059236e5))
+* **condense:** re-mark stale command hashes (pre-existing drift) ([836d2c9](https://github.com/event4u-app/agent-config/commit/836d2c9ae1987d630fdce431b0ae5fed9aeb9aca))
+* register fix-comments skill in marketplace.json ([214c5d1](https://github.com/event4u-app/agent-config/commit/214c5d147b53b65c9eef56ea0e72a2d1a9224633))
+* **roadmaps:** regenerate dashboard (frontier-polish Phase 1 = done) ([9172c18](https://github.com/event4u-app/agent-config/commit/9172c18f5c6b6ad82ca6457ddbad10069a895d31))
+
+### Other
+
+* Revert "feat(legal): lock open-source-forever stance + harden liability disclaimer (ADR-108); close 0.6 + 3.3" ([1f10272](https://github.com/event4u-app/agent-config/commit/1f1027229c841cda6110b64c59747b3607b092f6))
+
 ## [7.0.2](https://github.com/event4u-app/agent-config/compare/7.0.1...7.0.2) (2026-06-22)
 
 ### Bug Fixes

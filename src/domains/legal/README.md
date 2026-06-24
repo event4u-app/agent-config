@@ -5,7 +5,7 @@
 NOT LEGAL ADVICE — a research/drafting aid, not a substitute for a lawyer. In-house legal — EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. See LEGAL_NOTICE.md.
 
 - **id**: `legal`
-- **version**: `7.0.2`
+- **version**: `7.1.0`
 - **owner**: legal
 - **requires**: —
 - **artefacts**: 6
