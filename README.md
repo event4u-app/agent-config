@@ -86,7 +86,7 @@ is platform operation, not a user-work flow.)
 <details>
 <summary><b>Catalog at a glance</b> — raw artefact counts (maintainer reference)</summary>
 
-[![Skills](https://img.shields.io/badge/Skills-257-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-91-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-162-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-82-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-26-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+[![Skills](https://img.shields.io/badge/Skills-257-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-91-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-162-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-84-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-26-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 The headline is the **experience** (profile + packs), not the raw counts. Full catalog: [`docs/catalog.md`](docs/catalog.md).
 </details>

@@ -536,6 +536,11 @@ tasks:
     deps: [build-discovery-manifest]
     cmd: ./scripts-run src/scripts/lint_trust_coherence {{.QUIET_FLAG}}
 
+  lint-legal-pack:
+    silent: true
+    desc: Enforce the legal-safety-floor backstops (attorney-review line, Jurisdiction tag, freshness shape) over every legal-pack skill (road-to-legal-pack Phase 1)
+    cmd: ./scripts-run src/scripts/lint_legal_pack {{.QUIET_FLAG}}
+
   lint-explain-trace:
     silent: true
     desc: Validate an ExplainTrace v1 JSON file against docs/contracts/explain-trace.schema.json (explainability v2 Phase 1.2)

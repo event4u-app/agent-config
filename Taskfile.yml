@@ -113,6 +113,7 @@ tasks:
       - task: lint-frontmatter-boilerplate
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
+      - task: lint-legal-pack
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums
@@ -257,6 +258,7 @@ tasks:
       - task: lint-frontmatter-boilerplate
       - task: lint-model-tier-coverage
       - task: lint-trust-coherence
+      - task: lint-legal-pack
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums

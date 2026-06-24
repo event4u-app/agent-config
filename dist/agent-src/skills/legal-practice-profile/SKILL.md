@@ -75,7 +75,7 @@ Write the profile to the package config location (`.agent-settings.yml` legal se
 ## Output
 
 1. **Legal practice profile** *(plain prose)* — jurisdiction (within EU/DE), role, escalation owner + reviewer, per-skill playbook positions, with `[DEFAULT]` / `[PENDING]` markers, written to the package config location.
-2. **`profile-summary.md`** — what was captured, what stayed default, the seed-doc delta (if run), and which review skills are now configured vs still on `[configure]`.
+2. **`profile-summary.md`** — what was captured, what stayed default, the seed-doc delta (if run), and which review skills are now configured vs still on `[configure]`. Carries the `Jurisdiction:` tag and the body line: `> ⚠️ Attorney review required on material use. This is a draft for a licensed attorney, not legal advice and not a legal conclusion.` — the profile drives attorney-gated reviews; it is configuration support, not legal advice.
 
 ## Gotcha
 
