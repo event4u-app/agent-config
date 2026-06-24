@@ -1,0 +1,17 @@
+{
+    "skill": "legal-intake-triage",
+    "last_eval": "2026-06-24",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for the fast 'is this a legal problem?' triage + lightweight intake. Should-not-trigger covers near-miss neighbours that are substantive reviews (contract-review, nda-triage, dpa-review) or profile setup.",
+    "queries": [
+        { "q": "is this a legal problem or can we just proceed?", "trigger": true },
+        { "q": "do we need a lawyer for this, quick legal question", "trigger": true },
+        { "q": "müssen wir da Legal einbinden oder ist das unkritisch?", "trigger": true },
+        { "q": "triage this and route it to the right legal workflow", "trigger": true },
+        { "q": "kurze rechtliche Einschätzung: ist das ein Problem?", "trigger": true },
+        { "q": "review this NDA clause by clause", "trigger": false },
+        { "q": "GREEN/YELLOW/RED triage of this specific NDA", "trigger": false },
+        { "q": "review this DPA against Art. 28", "trigger": false },
+        { "q": "configure our escalation owner and jurisdiction", "trigger": false },
+        { "q": "estimate this engineering ticket", "trigger": false }
+    ]
+}

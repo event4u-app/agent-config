@@ -1,0 +1,17 @@
+{
+    "skill": "nda-triage",
+    "last_eval": "2026-06-24",
+    "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for fast GREEN/YELLOW/RED triage of an inbound NDA. Should-not-trigger covers near-miss neighbours: full clause review (contract-review), DPA review (dpa-review), legal triage (legal-intake-triage), profile setup.",
+    "queries": [
+        { "q": "check this NDA — can we sign it as-is?", "trigger": true },
+        { "q": "triage this inbound NDA: standard-approve, counsel, or full review?", "trigger": true },
+        { "q": "ist diese Geheimhaltungsvereinbarung Standard oder muss ein Anwalt drauf schauen?", "trigger": true },
+        { "q": "quick GREEN/YELLOW/RED on this mutual NDA", "trigger": true },
+        { "q": "kriegen wir diese NDA durch oder eskalieren?", "trigger": true },
+        { "q": "do a full clause-by-clause redline of this MSA", "trigger": false },
+        { "q": "review this DPA as processor against Art. 28", "trigger": false },
+        { "q": "is this a legal problem we need counsel for at all?", "trigger": false },
+        { "q": "configure our NDA standard positions", "trigger": false },
+        { "q": "summarize this PDF for the board", "trigger": false }
+    ]
+}
