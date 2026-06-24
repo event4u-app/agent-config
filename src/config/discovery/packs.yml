@@ -248,6 +248,13 @@
   surface_tier: lab
   domain: legal
   size_class: medium
+  # High-risk posture (road-to-legal-review-prep Phase 4). Documentation-first;
+  # enforcement lives in the legal-safety-floor rule + consent gate + lint.
+  risk_profile: rdg_regulated_eu_de
+  requires_explicit_consent: true
+  requires_council: true
+  default_install: false
+  promotion_gate: attorney_framing_review
   onboarding:
     first_win_doc: FIRST_WIN.md
     example_workflow: dpa-review

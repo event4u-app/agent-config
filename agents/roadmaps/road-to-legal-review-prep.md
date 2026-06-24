@@ -71,9 +71,9 @@ status: ready
 > Legal-specific now; the *generalizable* risk-class framework is deferred to
 > `road-to-capability-governance` (N=2 discipline — council split, anthropic won).
 
-- [ ] **4.1 — Pack frontmatter keys** on `legal-review-prep` in `packs.yml`: `risk_profile: rdg_regulated_eu_de`, `requires_explicit_consent: true`, `requires_council: true`, `default_install: false`, `promotion_gate: attorney_framing_review`. Documentation-first (enforcement lives in the floor + consent gate + lint).
-- [ ] **4.2 — Legal row in the capability-boundary doc** (the doc itself is built in `road-to-capability-governance`; this adds the legal-review-prep row: default=no · opt-in=yes · consent=yes · council=yes · disclaimer=yes · eval=yes · risk=high).
-- [ ] **4.3 — Verify** — frontmatter validates; pack stays `experimental`/`lab`, in no default profile.
+- [x] **4.1 — Pack frontmatter keys** on `legal-review-prep` in `packs.yml`: `risk_profile: rdg_regulated_eu_de`, `requires_explicit_consent: true`, `requires_council: true`, `default_install: false`, `promotion_gate: attorney_framing_review`. Documentation-first (enforcement lives in the floor + consent gate + lint).
+- [ ] **4.2 — Legal row in the capability-boundary doc <!-- delivered in road-to-capability-governance Phase 1 (same PR) -->** (the doc itself is built in `road-to-capability-governance`; this adds the legal-review-prep row: default=no · opt-in=yes · consent=yes · council=yes · disclaimer=yes · eval=yes · risk=high).
+- [x] **4.3 — Verify** — frontmatter validates; pack stays `experimental`/`lab`, in no default profile.
 
 ## Phase 5 — Attorney-framing-review promotion tripwire
 
