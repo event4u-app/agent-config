@@ -61,8 +61,7 @@ working. A PR opened against a stale base creates merge conflicts the
 moment another PR lands first — the exact failure that motivates this
 gate.
 
-Run, in order (or `task check-trunk-drift` for the scripted behind-check —
-[`check_trunk_drift`](../../../scripts/check_trunk_drift.ts), road-to-product-clarity Phase 4b):
+Run, in order:
 
 1. `git fetch origin {target-base} --quiet` (default: `main`).
 2. `git rev-list --count HEAD..origin/{target-base}` — number of

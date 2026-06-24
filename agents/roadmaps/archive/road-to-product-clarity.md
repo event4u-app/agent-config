@@ -41,12 +41,12 @@ status: ready
 ## Phase 4 — Release-story & process hardening
 
 - [x] **4.1 — Curated release story** — `docs/RELEASE_STORY_TEMPLATE.md` (what-changed-and-why per release, distinct from the raw changelog; deferred/known-limits section).
-- [x] **4.2 — Trunk-drift pre-PR check** — `src/scripts/check_trunk_drift.ts` (+ test, `task check-trunk-drift`, referenced from the `/create-pr` freshness gate): fails if the branch is behind origin/main. Advisory; wire into blocking CI per branch-protection policy.
+- [x] **4.2 — Trunk-drift pre-PR check** — `src/scripts/check_trunk_drift.ts` (+ test, `task check-trunk-drift`): fails if the branch is behind origin/main. Package-internal maintainer tool (kept out of the shipped `/create-pr` command for portability); advisory — wire into blocking CI per branch-protection policy.
 - [-] **4.3 — Version single-source** <!-- deferred: single source already holds — only package.json carries the version (no README badge / composer version); a guard is low-value until a 2nd version surface exists -->
 - [-] **4.4 — Pre-release consumer-install smoke** <!-- deferred → road-to-product-bets Phase 4 (council DECIDE-THEN-BUILD: "consumer = ?" undecided) -->
 
 ## Acceptance criteria
 
-- Process wins shipped: release-story template + trunk-drift check (tested, wired into /create-pr).
+- Process wins shipped: release-story template + trunk-drift check (script + test + task; package-internal).
 - Explainability: durable why+evidence in the subagent-boundary contract.
 - Product bets (simple/expert, connectors, consumer-smoke, full explainability) carried to `road-to-product-bets` (draft) with council rationale — deferred, not dropped.
