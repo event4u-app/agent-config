@@ -64,6 +64,13 @@
   default_packs: [construction]
   optional_packs: []
 
+- id: legal
+  label: Legal
+  description: In-house legal — contract/NDA/DPA review, privacy, legal triage (EU/DE scope).
+  example_roles: [In-house Counsel, DPO, Legal Ops]
+  default_packs: [legal]
+  optional_packs: []
+
 - id: agent-config-maintainer
   label: Maintainer
   description: Skills/rules/commands that maintain this package.

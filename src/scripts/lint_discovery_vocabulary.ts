@@ -29,6 +29,8 @@ const PACKS_YML = path.join(REPO_ROOT, 'src', 'config', 'discovery', 'packs.yml'
 const ADR_WORKSPACES: ReadonlySet<string> = new Set<string>([
     'engineering', 'product', 'finance', 'founder', 'gtm', 'ops',
     'small-business', 'construction', 'agent-config-maintainer',
+    // road-to-legal-pack Phase 0 (ADR-013 amendment, same PR).
+    'legal',
 ]);
 const ADR_PACKS: ReadonlySet<string> = new Set<string>([
     'engineering-base', 'php', 'laravel', 'symfony', 'javascript',
@@ -40,6 +42,10 @@ const ADR_PACKS: ReadonlySet<string> = new Set<string>([
     'memory', 'analytics', 'product-reasoning',
     // road-to-image-brand-typography Phase B (ADR-013 amendment, same PR).
     'brand',
+    // Pre-existing drift restore: present in packs.yml but missing from this set.
+    'ai-image', 'analysis-workbench',
+    // road-to-legal-pack Phase 0 (ADR-013 amendment, same PR).
+    'legal',
 ]);
 
 // ADR-010 non-overlap reservations.

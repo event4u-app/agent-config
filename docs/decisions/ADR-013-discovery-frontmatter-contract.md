@@ -93,6 +93,7 @@ install:
 | `ops` | Operations | Hiring, comp, perf, org design, runbooks. |
 | `small-business` | Small Business | Self-employed / SMB-shaped owner workflows. |
 | `construction` | Construction | Trade-business workflows (planning, quotes). |
+| `legal` | Legal | In-house legal — contract/NDA/DPA review, privacy, legal triage (EU/DE scope). |
 | `agent-config-maintainer` | Maintainer | Skills/rules/commands that maintain *this* package. |
 
 Amendments to the workspace list require an ADR-013 amendment.
@@ -120,6 +121,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `founder-strategy` | Vision, fundraising narrative, competitive moat. (Renamed from `founder` to honour the non-overlap rule against `profile.id: founder`.) |
 | `small-business` | SMB-shaped owner workflows. |
 | `construction` | Trade-business workflows. |
+| `legal` | In-house legal — EU/DE-scoped contract/NDA/DPA review and legal triage; procedure-only, attorney-review draft output. |
 | `ai-video` | AI video pipeline (per ADR-011, the only heavyweight domain). |
 | `fun` | Non-essential social/fun workflows (prediction-pool tips, etc.). Optional under the `small-business` workspace; `experimental` trust. |
 | `meta` | Artefacts that maintain *this* package (`agent-config` itself). |
@@ -294,6 +296,23 @@ consistency governance that constrains UI). Mirrored in
 `trust_level_default: professional`, `size_class: medium`. Council-resolved
 2026-06-13 (road-to-image-brand-typography Phase B). Additive, no rename;
 non-overlap with cost-profile and `profile.id` reservations holds.
+
+### 2026-06-24 — New `legal` workspace + `legal` pack
+
+Added workspace id `legal` and pack id `legal` to the closed vocabularies
+(in-house legal — EU/DE-scoped contract/NDA/DPA review and legal triage;
+procedure-only, no default legal positions; every output a draft for attorney
+review). Mirrored in
+[`src/config/discovery/workspaces.yml`](../../src/config/discovery/workspaces.yml),
+[`src/config/discovery/packs.yml`](../../src/config/discovery/packs.yml), and the
+`ADR_WORKSPACES` + `ADR_PACKS` sets in
+[`src/scripts/lint_discovery_vocabulary.ts`](../../src/scripts/lint_discovery_vocabulary.ts).
+`workspaces: [legal]`, `domain: legal`, `size_class: medium`,
+`trust_level_default: experimental`, `surface_tier: lab` (gated lab-tier until the
+Gate-2 maintenance owner + external qualification is confirmed —
+road-to-legal-pack Phase 0.2). Council-resolved across three rounds 2026-06-24
+(road-to-legal-pack). Additive, no rename; non-overlap with cost-profile and
+`profile.id` reservations holds.
 
 ## Cross-references
 
