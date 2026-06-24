@@ -66,14 +66,14 @@ status: ready
 > predictably (today `trust_level`/`surface_tier` exist but per-axis; reviewers
 > wanted one lifecycle).
 
-- [ ] **5.1 — Define the lifecycle** — `experimental → validated → recommended → deprecated` for packs/skills/missions, mapping onto the existing `trust_level` + `surface_tier` + eval-presence so it is a *view*, not a new axis. Document promotion criteria (e.g. validated ⇒ has eval; recommended ⇒ in a default profile + N consumers).
-- [ ] **5.2 — Surface it** in the capability-boundary matrix (Phase 1) as a derived column.
-- [ ] **5.3 — Verify** — lifecycle doc references real metadata fields; no new orthogonal axis introduced.
+- [x] **5.1 — Define the lifecycle** — `experimental → validated → recommended → deprecated` for packs/skills/missions, mapping onto the existing `trust_level` + `surface_tier` + eval-presence so it is a *view*, not a new axis. Document promotion criteria (e.g. validated ⇒ has eval; recommended ⇒ in a default profile + N consumers).
+- [x] **5.2 — Surface it** in the capability-boundary matrix (Phase 1) as a derived column.
+- [x] **5.3 — Verify** — lifecycle doc references real metadata fields; no new orthogonal axis introduced.
 
 ## Phase 6 — Deferred / rejected (recorded)
 
-- [ ] **6.1 — Enforced generic high-risk *framework*** (runtime gating engine, generic consent machinery) — deferred until N≥2 high-risk domains. The matrix + `risk_class` + per-pack floors are the honest current mechanism.
-- [ ] **6.2 — Auto-promotion of capabilities** — out of scope; promotion stays a human/maintainer decision (lifecycle is descriptive + criteria-documented, not automated).
+- [x] **6.1 — Enforced generic high-risk *framework*** (runtime gating engine, generic consent machinery) — deferred until N≥2 high-risk domains. The matrix + `risk_class` + per-pack floors are the honest current mechanism.
+- [x] **6.2 — Auto-promotion of capabilities** — out of scope; promotion stays a human/maintainer decision (lifecycle is descriptive + criteria-documented, not automated).
 
 ## Acceptance criteria
 

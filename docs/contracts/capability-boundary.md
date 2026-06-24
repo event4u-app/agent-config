@@ -36,6 +36,26 @@ moment it ships advisory-shaped output behind a domain safety floor, and to high
 only through the high-risk checklist (consent + council + disclaimer + eval +
 lab + promotion gate) — see `road-to-legal-review-prep` for the worked example.
 
+## Capability lifecycle (a view, not a new axis)
+
+Reviewers wanted one lifecycle vocabulary for promoting / retiring capabilities.
+This is a **derived view** over the metadata that already exists
+(`trust_level_default` + `surface_tier` + eval presence) — **not** a new field.
+Nothing to set; it is read off what is already there.
+
+| Lifecycle | Derived from | Promotion criterion (to reach it) |
+|---|---|---|
+| **experimental** | `surface_tier: lab` **or** `trust_level_default: experimental` | default for any new pack/skill |
+| **validated** | `surface_tier: core` **and** has an `evals/` (or regression harness) | a real eval exists + the pack left lab |
+| **recommended** | validated **and** in a default profile / ≥1 real consumer | adoption evidence, not just existence |
+| **deprecated** | a `deprecated`/`superseded_by` marker in frontmatter | a successor named (per the persona/skill deprecation discipline) |
+
+Read the lifecycle column off the matrix above: a `lab` + `experimental` pack
+(e.g. `legal-review-prep`, `ai-video`) is **experimental**; a `core` pack with an
+eval is **validated**; a `core` pack a profile ships is **recommended**.
+Promotion stays a human/maintainer decision (criteria-documented, never
+automated — see `road-to-capability-governance` Phase 6).
+
 ## See also
 
 - [`legal-safety-floor`](../../src/rules/legal-safety-floor.md) — the high-risk exemplar.
