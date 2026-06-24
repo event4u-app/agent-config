@@ -147,6 +147,7 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'cost.budgets.monthly',
             'cost.enforcement',
             'model.auto_switch',
+            'tokens.rich_skills',
         ],
     },
     {

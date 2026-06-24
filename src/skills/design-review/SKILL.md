@@ -116,6 +116,61 @@ Test at three viewports:
 - No placeholder text left in production.
 - Check browser console for JavaScript errors or warnings.
 
+## Reviewer posture
+
+**Approval is earned, not assumed. Default to flagging.**
+
+A design review is a skeptic's pass. The default verdict for every element
+is "this needs to justify itself" — not "this is probably fine." Approve
+explicitly when you have examined the evidence and found it sound.
+
+This posture prevents the failure of "nothing to report" reviews that miss
+real issues because the reviewer defaulted to charitable assumptions.
+
+## Subtraction-first remedial hierarchy
+
+When a finding warrants a remediation recommendation, prefer in this order:
+
+1. **Delete** — remove the element, animation, pattern, or copy entirely
+2. **Reduce** — make it smaller, shorter, subtler, less frequent
+3. **Fix the specific issue** — change easing, origin, duration, contrast, font
+4. **Make it interruptible** (for motion) — switch to transition/spring
+5. **Move to GPU** (for motion) — animate only transform/opacity
+6. **Polish** — the lowest-leverage fix; only if the above don't apply
+
+*"Delete the animation" is always the first option to consider, even before
+suggesting a different easing curve.* The same applies to decorative elements,
+excessive copy, and redundant UI chrome.
+
+## Before / After / Why output format
+
+When reporting a finding with a specific remediation, use this table format:
+
+| Field | Content |
+|---|---|
+| **Before** | The current state (quote the code, value, or describe the pattern) |
+| **After** | The corrected state (specific value or alternative) |
+| **Why** | The mechanism: why is Before wrong and After better? (one sentence, states the principle) |
+
+**Wrong format** (do not use):
+```
+Before:
+  button { transition: all 0.3s ease; }
+After:
+  button { transition: transform 0.2s ease-out, opacity 0.2s ease-out; }
+```
+
+**Right format:**
+
+| | |
+|---|---|
+| **Before** | `transition: all 0.3s ease` |
+| **After** | `transition: transform 0.2s ease-out, opacity 0.2s ease-out` |
+| **Why** | `transition: all` animates layout properties on every state change, causing browser reflow; enumerate only the properties that move. |
+
+The Why column carries the reasoning — it's the part that teaches the developer
+and prevents the same finding from recurring.
+
 ## Communication principles
 
 ### Problems over prescriptions
@@ -229,6 +284,20 @@ This is especially useful when the user provides a screenshot or Figma export as
 - Don't review design without understanding the user's constraints (time, resources, scope).
 - The model tends to suggest accessibility improvements that break the existing design system.
 - "Best practice" is not always the right choice — sometimes "good enough" ships faster.
+
+## Anti-slop scan
+
+During any design review, load
+[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
+as a reference. After the structured review phases, add an explicit
+**Anti-Slop Check** section to the review output:
+
+1. List any patterns from the catalog that appear in the reviewed UI (cite by
+   entry ID, e.g. V1, T2, C1).
+2. For each finding: note whether an override condition is in effect (if yes,
+   verify it is stated in the design brief; if not, flag as a finding).
+3. Run the AI-slop originality self-test on the overall aesthetic direction.
+   Report the result (pass / flag / fail) with one sentence of evidence.
 
 ## Do NOT
 

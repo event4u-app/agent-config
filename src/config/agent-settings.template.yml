@@ -84,6 +84,24 @@ rule_loading_tier: __RULE_LOADING_TIER__
 lean_projection:
   mode: eager-all
 
+# --- Token-rich skills governance ---
+#
+# Skills marked `token_budget_class: rich` in their frontmatter are exempt
+# from telegraph-speak condensation and thin-projector trimming. They load
+# their full content (examples, tables, code blocks) to maximize design-output
+# quality. This setting controls whether that extra spend is allowed globally.
+#
+# Values:
+#   on   — rich skills load in full (default; recommended for design-intensive workflows)
+#   off  — rich skills fall back to standard condensed behavior
+#   ask  — before loading a rich skill, the agent surfaces an estimated token
+#          delta (≈ file size in chars / 4, reported in tokens not dollars) and
+#          asks the user once; the answer is cached for the session
+#
+# Configurable in the browser setup wizard (Setup → Skills → Token budget).
+tokens:
+  rich_skills: on
+
 # --- Cost tracking + budget enforcement ---
 #
 # USD budgets evaluated against `agents/cost-tracking/sessions.jsonl` by

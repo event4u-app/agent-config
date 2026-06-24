@@ -1,0 +1,17 @@
+{
+  "description": "Routing eval for design-antipatterns guideline: should an agent pull this catalog for a given task?",
+  "should_pull": [
+    "Design a landing page for a new SaaS product",
+    "Review this UI mockup for AI-slop patterns",
+    "Create a feature card section with icons and descriptions",
+    "Generate a hero section with a big metric and supporting stats",
+    "The design looks generic — how do I make it more distinctive?"
+  ],
+  "should_not_pull": [
+    "Fix the authentication bug in the login controller",
+    "Write a migration to add the user_id column to the orders table",
+    "Set up the CI pipeline for the monorepo",
+    "Draft a customer email reply for a billing issue",
+    "Analyze the test coverage for the payment module"
+  ]
+}
