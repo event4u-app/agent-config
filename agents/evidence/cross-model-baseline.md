@@ -64,3 +64,27 @@ finding_floor calibration work, still deferred.
    GeminiRouter) against it.
 4. Wire the graded subtle control into the smoke; author the finding_floor gold
    set — both still gated on the wider run.
+
+## Phase 0b — output-format fix (RESOLVED, evidence-chosen)
+
+Outcome (c) — Gemini's 80% parse — is fixed at the source by giving `GeminiRouter`
+a JSON output contract. The fix was **chosen by measurement, not assumption** — a
+live 3-variant comparison on the same fixture:
+
+| Gemini `generationConfig` | parse% | routing pass% |
+|---|---|---|
+| original (no contract) | 80 | 90 |
+| `responseMimeType` **+ strict `responseSchema`** | 100 | **60** |
+| **`responseMimeType` only** (shipped) | **100** | 80 |
+
+The strict schema **over-constrains** — it guarantees the shape but suppresses
+the model's intermediate reasoning, crushing routing accuracy to 60%.
+`responseMimeType: 'application/json'` alone closes the format gap (100% parse)
+with far less collateral (80%). Shipped the mimeType-only variant.
+
+**Honesty note (n=10):** the pass-rate column (90/60/80) is noisy at 10 queries —
+the *parse* recovery (80→100) is the robust, structural result; the accuracy
+deltas are directional and need the wider run (step 1) to separate signal from
+noise. The format contract is applied **only to Gemini** (the host that
+diverged) — per falsifiability-first, OpenAI/Anthropic were 100% parse and are
+left unchanged until evidence shows otherwise.

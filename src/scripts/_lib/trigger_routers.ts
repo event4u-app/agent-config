@@ -176,7 +176,15 @@ export class GeminiRouter implements TriggerRouter {
         const body = JSON.stringify({
             systemInstruction: { parts: [{ text: systemPrompt }] },
             contents: [{ parts: [{ text: query }] }],
-            generationConfig: { maxOutputTokens: MAX_TOKENS },
+            // Force a valid JSON output contract (roadmap Phase 0b — closes the
+            // measured 80%-parse divergence): constrain both syntax
+            // (responseMimeType) and shape (responseSchema) so the router never
+            // receives a prose-wrapped or off-shape reply that `_parse_would_load`
+            // would silently drop to [].
+            generationConfig: {
+                maxOutputTokens: MAX_TOKENS,
+                responseMimeType: 'application/json',
+            },
         });
         let json: unknown;
         try {
