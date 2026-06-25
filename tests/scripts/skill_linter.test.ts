@@ -23,6 +23,7 @@ import {
     lint_file,
     lint_output_schema,
     parse_output_schema,
+    validate_evals_json,
     _resetRoleContractCacheForTest,
 } from '../../src/scripts/skill_linter.js';
 
@@ -51,6 +52,44 @@ function hasCode(result: LintResult, code: string): boolean {
 function hasError(result: LintResult): boolean {
     return result.issues.some((i: Issue) => i.severity === 'error');
 }
+
+describe('skill_linter — evals.json validation', () => {
+    function writeEvals(skill: string, evals: unknown): string {
+        const skillPath = writeFile(`skills/${skill}/SKILL.md`, `# ${skill}\n`);
+        writeFile(`skills/${skill}/evals/evals.json`, JSON.stringify(evals, null, 2));
+        return skillPath;
+    }
+
+    it('accepts the finding_floor assertion kind (regression: was rejected as unknown)', () => {
+        const issues = validate_evals_json(
+            writeEvals('demo', {
+                skill: 'demo',
+                scenarios: [
+                    { id: 's1', prompt: 'p', assertions: [{ kind: 'finding_floor', n: 2, pattern: '(?m)^\\s*[-*+]\\s+' }] },
+                    { id: 's2', prompt: 'p', assertions: [{ kind: 'finding_floor' }] },
+                ],
+            }),
+        );
+        expect(issues).toEqual([]);
+    });
+
+    it('flags a missing top-level skill field', () => {
+        const issues = validate_evals_json(
+            writeEvals('demo', { scenarios: [{ id: 's1', prompt: 'p', assertions: [{ kind: 'finding_floor', n: 1 }] }] }),
+        );
+        expect(issues.some((i: Issue) => i.code === 'evals_json_missing_skill')).toBe(true);
+    });
+
+    it('flags a non-numeric finding_floor n', () => {
+        const issues = validate_evals_json(
+            writeEvals('demo', {
+                skill: 'demo',
+                scenarios: [{ id: 's1', prompt: 'p', assertions: [{ kind: 'finding_floor', n: '2' }] }],
+            }),
+        );
+        expect(issues.some((i: Issue) => i.code === 'evals_json_assertion_field_type')).toBe(true);
+    });
+});
 
 describe('skill_linter — core MVP', () => {
     it('valid skill passes', () => {

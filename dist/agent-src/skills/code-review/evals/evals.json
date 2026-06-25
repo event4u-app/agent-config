@@ -1,4 +1,5 @@
 {
+  "skill": "code-review",
   "_calibration": "Starter behavioral fixtures (roadmap road-to-operator-runtime-harvest, Phase 1, line 182). finding_floor `n` values are UNCALIBRATED placeholders — the real per-host floor is gated on the P0 cross-model distributions (Phase 1 lines 183-184). Do not wire these as an enforcing CI gate until calibrated.",
   "scenarios": [
     {

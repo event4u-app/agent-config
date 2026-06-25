@@ -1667,7 +1667,7 @@ export function validate_evals_json(skillPath: string): Issue[] {
         );
         return issues;
     }
-    const validKinds = ['contains', 'file_exists', 'rubric'];
+    const validKinds = ['contains', 'file_exists', 'rubric', 'finding_floor'];
     const validKindsSet = new Set(validKinds);
     scenarios.forEach((scenario, idx) => {
         const loc = `scenarios[${idx}]`;
@@ -1709,15 +1709,31 @@ export function validate_evals_json(skillPath: string): Issue[] {
                 );
                 return;
             }
-            const requiredField = { contains: 'value', file_exists: 'path', rubric: 'criterion' }[kind] as string;
-            if (!(requiredField in a) || typeof a[requiredField] !== 'string') {
-                issues.push(
-                    new Issue(
-                        'warning',
-                        'evals_json_assertion_missing_field',
-                        `${aLoc} (kind=${kind}) missing required string field '${requiredField}'`,
-                    ),
-                );
+            if (kind === 'finding_floor') {
+                // finding_floor (run_skill_evals): `n` (number; runtime-defaults to
+                // 1) and `pattern` (regex string) are both OPTIONAL — validate type
+                // only when present, require neither.
+                if ('n' in a && typeof a.n !== 'number') {
+                    issues.push(
+                        new Issue('warning', 'evals_json_assertion_field_type', `${aLoc} (kind=finding_floor) 'n' must be a number`),
+                    );
+                }
+                if ('pattern' in a && typeof a.pattern !== 'string') {
+                    issues.push(
+                        new Issue('warning', 'evals_json_assertion_field_type', `${aLoc} (kind=finding_floor) 'pattern' must be a string`),
+                    );
+                }
+            } else {
+                const requiredField = { contains: 'value', file_exists: 'path', rubric: 'criterion' }[kind] as string;
+                if (!(requiredField in a) || typeof a[requiredField] !== 'string') {
+                    issues.push(
+                        new Issue(
+                            'warning',
+                            'evals_json_assertion_missing_field',
+                            `${aLoc} (kind=${kind}) missing required string field '${requiredField}'`,
+                        ),
+                    );
+                }
             }
         });
     });
