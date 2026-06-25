@@ -1,0 +1,64 @@
+name: Cross-model canary
+
+# Roadmap road-to-operator-runtime-harvest, T-005. Cost-bounded gate/periodic split:
+#   - gate (every PR touching the eval surface): DRY-RUN only — MockRouter, no
+#     spend, no secrets. Catches router/harness CODE regressions for free.
+#   - periodic (weekly) + manual dispatch: the LIVE cross-vendor matrix, but only
+#     when the API-key secrets are configured. Catches vendor model-update DRIFT
+#     that a periodic-only-or-never check would miss silently.
+#
+# To enable the live tier, add repo secrets ANTHROPIC_API_KEY / OPENAI_API_KEY /
+# GEMINI_API_KEY. Without them the live job is a no-op (logged), never a failure.
+
+on:
+  pull_request:
+    paths:
+      - "src/scripts/_lib/trigger_routers.ts"
+      - "src/scripts/cross_model_smoke.ts"
+      - "src/scripts/skill_trigger_eval.ts"
+      - ".github/workflows/cross-model-canary.yml"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  gate-dry-run:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Cross-model smoke (dry-run — MockRouter, no spend)
+        run: ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --dry-run --skills image-analyser
+
+  periodic-live:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Cross-model live smoke (skips if key secrets absent)
+        run: |
+          if [ -z "$GEMINI_API_KEY" ] || [ -z "$OPENAI_API_KEY" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::Cross-model live canary skipped — set ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY repo secrets to enable."
+            exit 0
+          fi
+          mkdir -p "$HOME/.event4u/agent-config"
+          ( umask 077
+            printf '%s' "$ANTHROPIC_API_KEY" > "$HOME/.event4u/agent-config/anthropic.key"
+            printf '%s' "$OPENAI_API_KEY" > "$HOME/.event4u/agent-config/openai.key"
+            printf '%s' "$GEMINI_API_KEY" > "$HOME/.event4u/agent-config/gemini.key" )
+          ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --skills image-analyser
