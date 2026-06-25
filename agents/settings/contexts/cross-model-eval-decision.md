@@ -54,3 +54,23 @@ Once 1–3 hold, T-004's `CodexRouter`/`GeminiRouter` can be built on the verifi
 injectable `TriggerRouter` seam (`skill_trigger_eval.ts:124`) — adding per-vendor
 key gates *alongside* the `sk-ant-` gate (`:416`), never weakening it — and the
 smoke can produce a real per-host result the rest of the chain calibrates on.
+
+## UPDATE — RESOLVED (Gemini key provided)
+
+The blocker is cleared. `gemini.key` is installed (`0600`); all three vendor
+legs were confirmed reachable by direct call (`HTTP 200` each). The earlier
+"Anthropic transport flaky" symptom was a **council-CLI transport artefact**,
+not a reachability problem — direct HTTP to `api.anthropic.com` works.
+
+T-004 was built (SDK-free fetch routers in `src/scripts/_lib/trigger_routers.ts`)
+and **run live** — see `agents/evidence/cross-model-baseline.md`. Headline:
+routing accuracy diverges (haiku 70% / gemini 90% / openai 100% on a thin 1-skill
+slice — likely a tier/capability effect, not a behavior gap) and **Gemini
+diverged on output format (80% parse)** → council outcome **(c) fired**, so
+Phase 0b (format governance) is now evidence-backed. Overlays stay shelved
+(no clean behavior-gap signal on a capability-confounded thin slice).
+
+Remaining open (not credential-blocked any more — these are scope/cost calls):
+T-005 gate-tier canary (running paid cross-vendor calls per-PR needs a
+cost-bounded design first), wider coverage than 1/258 skills, and the
+finding_floor calibration (needs the wider run).
