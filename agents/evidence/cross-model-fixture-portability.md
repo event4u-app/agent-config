@@ -42,8 +42,8 @@ alongside it.
 | 6 | Default model id | `src/scripts/skill_trigger_eval.ts:31` (`DEFAULT_MODEL = 'claude-sonnet-4-5'`) | Anthropic model id is the default. | Make default vendor-conditional; require explicit `--model` per vendor. |
 | 7 | Output-contract assumption | `src/scripts/skill_trigger_eval.ts:747-754` prompt + `:842` (`data['would_load']`) | The harness mandates a strict `{"would_load":[...]}` JSON reply; weaker instruction-followers may not honor the contract, skewing parity. | Vendor-neutral, but treat off-contract replies as a measured failure mode, not a harness crash; report parse-failure rate per vendor. |
 
-Trigger **fixtures** themselves (`queries[].q` / `trigger` — sample
-`src/skills/brand/.../triggers.json`) carry **no** vendor-specific
+Trigger **fixtures** themselves (the `queries[].q` / `trigger` entries in each
+skill's `triggers.json`) carry **no** vendor-specific
 citation-format, tool-call-shape, or output-format assumptions; the portability
 surface is entirely in the harness code (items 1, 3–6), not the fixture data.
 
