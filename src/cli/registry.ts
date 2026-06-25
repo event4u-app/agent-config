@@ -46,6 +46,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'commands', disposition: 'native', synopsis: 'List/explain the command surface from the discovery manifest (ls / explain subcommands).' },
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },
     { name: 'explain', disposition: 'delegate' },
+    { name: 'analyze-session', disposition: 'delegate', synopsis: 'Read-only post-session report from on-disk runtime state.' },
     { name: 'migrate', disposition: 'delegate' },
     { name: 'mcp:render', disposition: 'delegate' },
     { name: 'mcp:check', disposition: 'delegate' },
