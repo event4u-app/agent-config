@@ -190,8 +190,8 @@ it is not an Anthropic-only false baseline.
 Goal: catch suspicious skill *shrinkage*, distinguishable from legitimate small
 skills only once `finding_floor` exists.
 
-- [ ] <!-- open — not in this push: buildable + autonomous, but off-theme (budget discipline, not cross-model) and council-rated lowest/last. Quick follow-up on request. --> Extend `check_always_budget` / `measure_augment_budget` with an undershoot floor (skill below expected size = suspect truncation) and an override that requires a logged reason (`*_OVERRIDE_REASON` → audit log). <!-- carve-out: new-gate-verification -->
-- [ ] <!-- open — with the undershoot-floor item above (same Phase 2 follow-up) --> Add the catalog-token target (sum of always-on descriptions ≤ threshold) if not already covered — directly addresses the historical always-on-budget pressure.
+- [~] <!-- WON'T-BUILD-SPECULATIVELY (user-confirmed 2026-06-25): no truncation incident has occurred, so this would be a guard against a problem the evidence does not show — exactly the speculative governance this roadmap's ethos (honest-null; don't fix what isn't broken) rejects. The natural host scripts are delicate (check_always_budget = CI-tuned overshoot gate; measure_augment_budget = faithful-twin with golden tests), and for the always-budget a *drop* is normally desirable, not suspect. Reopen on a real truncation incident. --> Extend `check_always_budget` / `measure_augment_budget` with an undershoot floor (skill below expected size = suspect truncation) and an override that requires a logged reason (`*_OVERRIDE_REASON` → audit log).
+- [~] <!-- ~ALREADY-COVERED: `measure_augment_budget` already gates the whole always-on prompt against a 49,512-char cap, and that total already counts always-rule bodies AND auto-rule stubs *including their descriptions*. A separate description-sum cap would be largely redundant. Deferred unless a distinct, evidenced need appears. --> Add the catalog-token target (sum of always-on descriptions ≤ threshold) if not already covered — directly addresses the historical always-on-budget pressure.
 
 ## Phase G (GATED) — model-overlays — open ONLY on a Phase-0 RDP failure
 
