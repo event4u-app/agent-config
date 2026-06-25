@@ -21,7 +21,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { placebo_prose, status_bucket, trajectory_metrics, injected_text } from '../../src/scripts/bench_ab_v2_run.js';
+import { placebo_prose, status_bucket, trajectory_metrics, injected_text, hardened_blocks_text } from '../../src/scripts/bench_ab_v2_run.js';
 import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -77,6 +77,21 @@ describe('bench_ab_v2_run — pure helpers', () => {
         // rdp delegates to v1.system_prompt_for("with-rdp") — string or null.
         const rdp = injected_text('rdp', 2000);
         expect(rdp === null || typeof rdp === 'string').toBe(true);
+    });
+
+    it('injected_text: hardened returns the HARD CONSTRAINT blocks; hardened-placebo is length-matched', () => {
+        const hard = injected_text('hardened', 2000);
+        expect(hard).toBe(hardened_blocks_text());
+        // covers all three tier:safety-floor rules under test.
+        expect(hard).toContain('HARD CONSTRAINT');
+        expect(hard).toContain('commit-policy');
+        expect(hard).toContain('non-destructive-by-default');
+        expect(hard).toContain('scope-control');
+        // placebo control must match the hardened block length exactly, and carry
+        // none of the discipline-priming vocabulary (it is a pure length control).
+        const placebo = injected_text('hardened-placebo', 2000) as string;
+        expect(placebo.length).toBe(hardened_blocks_text().length);
+        expect(placebo).not.toContain('HARD CONSTRAINT');
     });
 
     it('status_bucket: completed / budget_limit / task_limit / validation_failed', () => {

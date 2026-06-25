@@ -4,17 +4,22 @@
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
+[![Skills](https://img.shields.io/badge/Skills-258-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-93-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-162-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-86-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-26-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
+
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
-Six role-shaped entry paths, one shared **skills + rules + commands** layer that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member — without locking you to a single model or vendor.
+**258 skills, 162 commands, 93 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 
-Three things this package ships that a README scan slides right past:
+It is both deep **and** disciplined — and honest about what it deliberately is not:
 
+- **Depth that routes itself** — 258 skills + 162 commands, with a capability router that loads the right one on intent, not a 500-artefact context dump.
+- **Governance on every host** — rules compiled into each tool's native format at projection time; deterministic runtime hooks added on hook-capable hosts ([enforcement by host](docs/enforcement-by-host.md)).
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
-- **Portability guard** — works in any project; source confidentiality is CI-enforced.
+
+**What it deliberately is *not*** — a content + governance layer, not a runtime: **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
 
 See exactly [what works on which host](docs/capability-matrix.md), or jump to [things you can do in a minute](docs/cookbook.md).
 
@@ -85,13 +90,7 @@ is platform operation, not a user-work flow.)
 
 > **Legal Pack — not legal advice.** The EU/DE legal pack (contract/NDA/DPA review, triage) is a **research-and-drafting aid only** — it does not provide legal advice, does not replace a qualified lawyer, and must not be relied on for any concrete matter. It produces general information and general templates, never individual-case examination. Read [`LEGAL_NOTICE.md`](LEGAL_NOTICE.md) before use.
 
-<details>
-<summary><b>Catalog at a glance</b> — raw artefact counts (maintainer reference)</summary>
-
-[![Skills](https://img.shields.io/badge/Skills-258-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-93-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-162-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-86-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-26-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
-
-The headline is the **experience** (profile + packs), not the raw counts. Full catalog: [`docs/catalog.md`](docs/catalog.md).
-</details>
+> Full catalog — every skill, rule, command, guideline: [`docs/catalog.md`](docs/catalog.md). The headline is the **experience** (profile + packs) **and** the depth behind it.
 
 ## Use it in your project
 
