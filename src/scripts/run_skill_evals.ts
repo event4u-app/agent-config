@@ -97,6 +97,39 @@ export function _spawn_subagent(
     );
 }
 
+/**
+ * Count "findings" in an eval output for the `finding_floor` assertion
+ * (roadmap `road-to-operator-runtime-harvest`, Phase 1). With an explicit
+ * `pattern`, counts non-overlapping global regex matches; without one, counts
+ * markdown list-item lines (the default shape a skill's findings take).
+ *
+ * Deterministic on purpose: this only *counts*. The substantive judgement —
+ * is each match a real finding, and what should `n` be per host — is the
+ * calibration layer (Phase 1 gold set + per-host floor), which is gated on the
+ * P0 cross-model distributions and therefore NOT wired here yet. So
+ * `finding_floor` is available as a mechanism and exercised by fixtures, but is
+ * not an enforcing CI gate until calibrated.
+ */
+export function _count_findings(output: string, pattern?: string): number {
+    if (pattern !== undefined && pattern !== '') {
+        let re: RegExp;
+        try {
+            re = new RegExp(pattern, 'g');
+        } catch {
+            return 0;
+        }
+        const m = output.match(re);
+        return m ? m.length : 0;
+    }
+    let count = 0;
+    for (const line of output.split('\n')) {
+        if (/^\s*(?:[-*+]|\d+[.)])\s+\S/.test(line)) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 export function _grade_assertions(
     output: string,
     run_dir: string,
@@ -119,6 +152,11 @@ export function _grade_assertions(
                 pass: null,
                 note: 'rubric grading requires sub-agent — fill in manually or via grader',
             });
+        } else if (kind === 'finding_floor') {
+            const n = (a['n'] as number | undefined) ?? 1;
+            const pattern = a['pattern'] as string | undefined;
+            const count = _count_findings(output, pattern);
+            results.push({ kind, n, count, pass: count >= n });
         } else {
             results.push({ kind: kind ?? null, pass: false, note: `unknown assertion kind ${_pyRepr(kind)}` });
         }

@@ -1,0 +1,20 @@
+{
+  "_calibration": "Starter behavioral fixtures (roadmap road-to-operator-runtime-harvest, Phase 1, line 182). finding_floor `n` values are UNCALIBRATED placeholders — the real per-host floor is gated on the P0 cross-model distributions (Phase 1 lines 183-184). Do not wire these as an enforcing CI gate until calibrated.",
+  "scenarios": [
+    {
+      "id": "diff-with-multiple-issues",
+      "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nfunction pay(amount) {\n  var x = amount\n  eval(userInput)\n  db.query('SELECT * FROM users WHERE id = ' + req.params.id)\n  return x\n}\n```",
+      "assertions": [
+        { "kind": "finding_floor", "n": 2 },
+        { "kind": "contains", "value": "eval" }
+      ]
+    },
+    {
+      "id": "clean-diff-few-findings",
+      "prompt": "Review this diff and list each distinct issue as its own bullet point:\n```js\nexport function add(a: number, b: number): number {\n  return a + b\n}\n```",
+      "assertions": [
+        { "kind": "finding_floor", "n": 0 }
+      ]
+    }
+  ]
+}

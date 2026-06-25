@@ -1,0 +1,12 @@
+{
+  "_calibration": "Starter behavioral fixtures (roadmap road-to-operator-runtime-harvest, Phase 1, line 182). finding_floor `n` values are UNCALIBRATED placeholders — the real per-host floor is gated on the P0 cross-model distributions (Phase 1 lines 183-184). Do not wire these as an enforcing CI gate until calibrated.",
+  "scenarios": [
+    {
+      "id": "stacktrace-root-cause-findings",
+      "prompt": "Analyze this failure and list each candidate cause as its own bullet point:\n```\nTypeError: Cannot read properties of undefined (reading 'id')\n  at resolveUser (auth.ts:42)\n  at middleware (auth.ts:11)\n```\nContext: intermittent; only on requests without a session cookie.",
+      "assertions": [
+        { "kind": "finding_floor", "n": 2, "pattern": "(?m)^\\s*[-*+]\\s+" }
+      ]
+    }
+  ]
+}
