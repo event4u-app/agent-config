@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**77 / 157 steps done · 49%**
+**64 / 143 steps done · 45%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -17,10 +17,9 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 1 | 13 | 6 | 0 | █████████░ 93% |
-| 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -33,19 +32,6 @@
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Benchmark & default-flip (carried from parent Phase 6) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-
-### [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md)
-
-**Road to operator-runtime harvest — cross-model parity is the keystone; gate the rest on it** — 13 / 14 done (93%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Cross-model e2e parity (keystone; everything downstream gates on it) | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 0b | Output-format governance (decision-gated on P0 evidence; NOT a first-class P2) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 1 | `finding_floor` eval kind (after Phase 0; calibrated, not guessed) | ✅ done | 0 | 3 | 2 | 0 | 100% |
-| 2 | size-budget undershoot-floor + audited override (after Phase 1) | ⏭️ skipped | 0 | 0 | 2 | 0 | 0% |
-| G | (GATED) — model-overlays — open ONLY on a Phase-0 RDP failure | ✅ done | 0 | 1 | 1 | 0 | 100% |
-| 3 | (parallel track) — product surface: QA-orchestration skill + lifecycle packaging | 🟡 in progress | 1 | 1 | 1 | 0 | 50% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
