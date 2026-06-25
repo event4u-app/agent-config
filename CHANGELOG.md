@@ -948,6 +948,47 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.3.0](https://github.com/event4u-app/agent-config/compare/7.2.0...7.3.0) (2026-06-25)
+
+### Features
+
+* **bench:** opt-in hardened arms for governance-enforcement eval ([af9a0e0](https://github.com/event4u-app/agent-config/commit/af9a0e07a2c2312f6b53782a8fcb44b2bde35635))
+* **evals:** cross-model canary workflow + robust smoke (T-005) ([d062095](https://github.com/event4u-app/agent-config/commit/d06209535731d27446768442c081fcac151b3f20))
+* **evals:** cross-model trigger smoke — SDK-free fetch routers + runner (Phase 0 T-004 keystone) ([1a8df9c](https://github.com/event4u-app/agent-config/commit/1a8df9cc83f2a9ace2e4a45eb9d66be6b51be5ae))
+* **evals:** finding_floor assertion kind — deterministic count gate (Phase 1) ([7f0e9e6](https://github.com/event4u-app/agent-config/commit/7f0e9e617a741b1f778d9cacdde145ef4a300994))
+* **evals:** graded negative-control discrimination primitive (Phase 0 T-003) ([5407121](https://github.com/event4u-app/agent-config/commit/54071210ecbfc8b6807fa37d726ea27654d22158))
+
+### Bug Fixes
+
+* **skills:** declare top-level skill field in bug-analyzer/code-review evals ([7c7f2e3](https://github.com/event4u-app/agent-config/commit/7c7f2e3adf181f2a1e936cb028538b3471e8f15e))
+* **skill-linter:** accept finding_floor eval assertion kind ([bb629f9](https://github.com/event4u-app/agent-config/commit/bb629f98c41c09912a6d67d31ceef25a49becb56))
+* **evals:** GeminiRouter JSON output contract — closes the format divergence (Phase 0b) ([f739b32](https://github.com/event4u-app/agent-config/commit/f739b320a1dcb54350d44a67009e634a421034ed))
+* **evals:** drop legacy-path literal from a comment (ADR-051 guard) ([48328f0](https://github.com/event4u-app/agent-config/commit/48328f0bd0f9c36cd8d0f11c2bbc206c49faefc6))
+* **harvest:** drop illustrative ellipsis path that tripped check_references ([94e6098](https://github.com/event4u-app/agent-config/commit/94e6098bf7d4a6e5127729db103a04b61dfc8f39))
+
+### Documentation
+
+* **roadmap:** enforcement honest-null; archive positioning roadmap ([226bf33](https://github.com/event4u-app/agent-config/commit/226bf3394b905a7dbd45fd74c55ab3a001ddaf2f))
+* **readme:** lead with capability; add host-enforcement matrix ([531327d](https://github.com/event4u-app/agent-config/commit/531327d465ed0cc2803b1ee1900d5b551dacbdc0))
+* **harvest:** wider-coverage baseline (10 skills) + agent-ide-plugin security-lessons note ([4a2aaaa](https://github.com/event4u-app/agent-config/commit/4a2aaaaac0b6fbd1467b254207690f5adaacf7d8))
+* **harvest:** Phase 0b resolved — record the 3-variant format-fix evidence + flip checkbox ([a64dcab](https://github.com/event4u-app/agent-config/commit/a64dcab235efb41170cb28fd4603ae2f3fd1de25))
+* **harvest:** cross-model baseline + outcome read (T-006); credential blocker resolved ([b4e8453](https://github.com/event4u-app/agent-config/commit/b4e84534064fe91f4609e2e06fbd04e957f2e2fa))
+* **harvest:** Phase 0 evidence — capability matrix, fixture-portability audit, vendor-credential gate decision ([cb64570](https://github.com/event4u-app/agent-config/commit/cb64570b414c3a4d2e3ec34dda70137f513bbfa5))
+
+### Tests
+
+* **evals:** starter behavioral evals.json fixtures (Phase 1, T-001 0-fixtures gap) ([dd6861b](https://github.com/event4u-app/agent-config/commit/dd6861bff4d66d7458468f0a9b2490ac088157c7))
+
+### Chores
+
+* **roadmap:** archive operator-runtime-harvest (core complete) + park residuals in later/ ([69ef1ac](https://github.com/event4u-app/agent-config/commit/69ef1ac91af47c3c462f4453f74eeb94fece310b))
+* **roadmap:** defer Phase 2 (won't-build-speculatively) — undershoot guard + catalog target ([9f37fa8](https://github.com/event4u-app/agent-config/commit/9f37fa8fcf29f1822a5739d916b5510047a9f23d))
+* **roadmap:** close T-005 + Phase G (honest-null) + plugin note; mark human/parallel residuals ([a0d7f80](https://github.com/event4u-app/agent-config/commit/a0d7f806ac5ed048b19b9c20e41ba392328f3393))
+* **roadmap:** Phase 0 — T-004 + T-006 done (live smoke ran); T-005 re-scoped (cost), Phase 0b actionable ([036e66f](https://github.com/event4u-app/agent-config/commit/036e66f98d3cc805e0128a86ab01ee15fd771bb1))
+* **dist:** sync eval-fixture projection for the new behavioral evals.json ([01cc089](https://github.com/event4u-app/agent-config/commit/01cc08994ebf11d7cf894822b73a4374b7ef0ee9))
+* **roadmap:** Phase 1 — finding_floor mechanism + fixtures done; calibration deferred on P0 ([3a5bc28](https://github.com/event4u-app/agent-config/commit/3a5bc28083206118352b1dd641d76326ac58114d))
+* **roadmap:** Phase 0 — mark T-000..T-003 done, T-004..T-006 deferred on credentials ([4f302ee](https://github.com/event4u-app/agent-config/commit/4f302ee9270b02488d1dce6d285520984d01ab40))
+
 ## [7.2.0](https://github.com/event4u-app/agent-config/compare/7.1.0...7.2.0) (2026-06-24)
 
 ### Features
