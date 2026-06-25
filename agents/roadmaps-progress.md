@@ -6,10 +6,10 @@
 
 ## Overall
 
-**68 / 160 steps done · 42%**
+**71 / 158 steps done · 45%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-auto-subagent-orchestration-followup.md](roadmaps/road-to-auto-subagent-orchestration-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 13 | 4 | 3 | 0 | ██░░░░░░░░ 24% |
+| 2 | [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md) | 6 | 20 | 8 | 7 | 5 | 0 | █████░░░░░ 47% |
 | 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
@@ -36,13 +36,13 @@
 
 ### [road-to-operator-runtime-harvest.md](roadmaps/road-to-operator-runtime-harvest.md)
 
-**Road to operator-runtime harvest — cross-model parity is the keystone; gate the rest on it** — 4 / 17 done (24%)
+**Road to operator-runtime harvest — cross-model parity is the keystone; gate the rest on it** — 7 / 15 done (47%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Cross-model e2e parity (keystone; everything downstream gates on it) | ✅ done | 0 | 4 | 3 | 0 | 100% |
 | 0b | Output-format governance (decision-gated on P0 evidence; NOT a first-class P2) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 1 | `finding_floor` eval kind (after Phase 0; calibrated, not guessed) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | `finding_floor` eval kind (after Phase 0; calibrated, not guessed) | ✅ done | 0 | 3 | 2 | 0 | 100% |
 | 2 | size-budget undershoot-floor + audited override (after Phase 1) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | G | (GATED) — model-overlays — open ONLY on a Phase-0 RDP failure | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | (parallel track) — product surface: QA-orchestration skill + lifecycle packaging | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
