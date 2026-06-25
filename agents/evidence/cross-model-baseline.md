@@ -88,3 +88,45 @@ deltas are directional and need the wider run (step 1) to separate signal from
 noise. The format contract is applied **only to Gemini** (the host that
 diverged) — per falsifiability-first, OpenAI/Anthropic were 100% parse and are
 left unchanged until evidence shows otherwise.
+
+## Wider coverage run — 10 skills (after the Gemini fix)
+
+Coverage **10 of 258 skills (3.9%)**, 100 queries/host, mid-tier models. Skills:
+agent-security-review, contract-review, decision-record, eloquent, iconography,
+image-analyser, nda-triage, php-coder, refine-ticket, skill-writing.
+(`estimate-ticket` was dropped — its `triggers.json` uses a legacy
+`should_trigger`/`should_not_trigger` shape; the smoke now skips-and-warns on
+unparseable fixtures rather than crashing.)
+
+| host | model | routing pass% | parse-proxy% | neg-control caught |
+|---|---|---|---|---|
+| anthropic | claude-haiku-4-5 | 74% | 100% | 48/48 |
+| openai | gpt-4o-mini | 80% | 100% | 42/48 |
+| gemini | gemini-2.5-flash | 65% | 86% | 48/48 |
+
+**Read (honest):**
+
+- **Routing parity is NOT uniform** — a real ~15pp spread (openai 80 / haiku 74 /
+  gemini 65) at a credible (no-longer-1-skill) slice. The multi-host claim cannot
+  be stated as "consistent across hosts" without qualification.
+- **But the spread is tier-confounded** — all three are the *weakest* model per
+  vendor (haiku / mini / flash). Per T-000, this is a capability/tier effect far
+  more than an RDP behavior gap. **Overlays stay shelved.** A capability-controlled
+  re-run (comparable tiers) is the next honest step before any behavior claim.
+- **OpenAI over-triggers**: 42/48 negative controls — 6 false-positives (loaded a
+  skill on a should-NOT query). A per-host precision quirk worth noting, not a
+  parity verdict.
+- **`parse-proxy%` caveat (important):** this metric counts a call as "ok" if it
+  returned *any* tokens/load — it is a coarse "got-a-response" proxy, NOT a strict
+  `would_load`-parsed rate. Gemini's 86% almost certainly reflects ~14% transient
+  empty/rate-limited responses under 100 rapid sequential calls (the `responseMimeType`
+  fix is in place), not format divergence. A strict per-call format-parse counter is
+  a follow-up refinement.
+- **Cost:** the `~$` column (≈$10.5 total) is the uncalibrated `estimate_cost`
+  table — a loose upper bound; real spend at haiku/mini/flash rates was materially
+  lower. Token counts are real.
+
+**Coverage honesty for the repositioning narrative:** "consistent across hosts"
+may be claimed for **at most ~3.9% of the suite, and even there only with the
+tier-confound caveat** — i.e., not yet a clean parity claim. Widening to
+comparable-tier models + more skills is the path to a defensible statement.

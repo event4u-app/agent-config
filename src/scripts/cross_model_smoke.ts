@@ -156,7 +156,17 @@ export async function runSmoke(opts: {
         for (const skill of opts.skills) {
             const trigPath = path.join('src', 'skills', skill, 'evals', 'triggers.json');
             if (!fs.existsSync(trigPath)) continue;
-            const [skillName, queries] = load_triggers(trigPath);
+            // Some fixtures use a legacy shape (`should_trigger`/`should_not_trigger`)
+            // instead of the unified `queries[]`. Skip-and-warn rather than crash the
+            // whole run — and never silently: the skip is surfaced on stderr.
+            let skillName: string;
+            let queries: Query[];
+            try {
+                [skillName, queries] = load_triggers(trigPath);
+            } catch (e) {
+                process.stderr.write(`skip ${skill}: unparseable triggers.json — ${(e as Error).message}\n`);
+                continue;
+            }
             fixtures += 1;
             const r = await runEvalAsync(skillName, queries, router, catalogue, model);
             q += r.result.queries.length;
