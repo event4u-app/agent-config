@@ -69,6 +69,33 @@ describe('run_skill_evals — _grade_assertions (pure)', () => {
         expect(r[1]!.note).toContain("unknown assertion kind 'mystery'");
     });
 
+    it('finding_floor: default counts markdown list items; pass iff count >= n', () => {
+        const out = '- a\n- b\n* c\n1. d\nplain line\n';
+        const r = _grade_assertions(out, '/tmp', [
+            { kind: 'finding_floor', n: 4 },
+            { kind: 'finding_floor', n: 5 },
+        ]);
+        expect(r[0]).toMatchObject({ kind: 'finding_floor', n: 4, count: 4, pass: true });
+        expect(r[1]).toMatchObject({ kind: 'finding_floor', n: 5, count: 4, pass: false });
+    });
+
+    it('finding_floor: explicit pattern counts global matches', () => {
+        const out = 'FINDING: x\nok\nFINDING: y\nFINDING: z\n';
+        const r = _grade_assertions(out, '/tmp', [
+            { kind: 'finding_floor', n: 3, pattern: 'FINDING:' },
+            { kind: 'finding_floor', n: 4, pattern: 'FINDING:' },
+        ]);
+        expect(r[0]!.count).toBe(3);
+        expect(r[0]!.pass).toBe(true);
+        expect(r[1]!.pass).toBe(false);
+    });
+
+    it('finding_floor: invalid regex → count 0, fails, does not throw', () => {
+        const r = _grade_assertions('a\nb', '/tmp', [{ kind: 'finding_floor', n: 1, pattern: '[' }]);
+        expect(r[0]!.count).toBe(0);
+        expect(r[0]!.pass).toBe(false);
+    });
+
     it('REPO_ROOT / SKILLS_ROOT resolve consistently', () => {
         expect(SKILLS_ROOT).toBe(path.join(MOD_REPO_ROOT, '.agent-src.uncondensed', 'skills'));
     });
