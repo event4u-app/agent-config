@@ -5,7 +5,7 @@
 Hiring loops, onboarding programs, comp banding.
 
 - **id**: `ops-people`
-- **version**: `7.2.0`
+- **version**: `7.3.0`
 - **owner**: ops
 - **requires**: —
 - **artefacts**: 8
