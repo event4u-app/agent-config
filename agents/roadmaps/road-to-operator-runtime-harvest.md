@@ -172,7 +172,7 @@ The output-shape fingerprint is **already measured** in P0 (T-004). This phase i
 the *decision*, not speculative building — the council (3rd pass) explicitly
 rejected promoting format governance to a first-class P2 without evidence.
 
-- [ ] **(c) FIRED in T-006 — now actionable** (Gemini 80% parse). Scope format governance (output schema / diff-format rules) distinct from RDP's behavioral governance, *and* name what it protects (ticket-bundle parser, `manifest.yml`, dispatcher). Decision note under `agents/settings/contexts/`. If shapes do not diverge, record that and close — do not build governance for a problem the evidence does not show.
+- [x] **(c) FIRED in T-006 → RESOLVED.** Fixed the Gemini format divergence at the source: `GeminiRouter` now sends a JSON output contract (`responseMimeType: 'application/json'`). Chosen by a live 3-variant comparison (strict `responseSchema` recovered parse to 100% but crushed routing accuracy 90%→60%; mimeType-only fixed parse with far less collateral) — see `agents/evidence/cross-model-baseline.md` § Phase 0b. Applied only to the host that diverged; broader output-schema governance not built (falsifiability-first — other hosts were 100% parse).
 
 ## Phase 1 — `finding_floor` eval kind (after Phase 0; calibrated, not guessed)
 
