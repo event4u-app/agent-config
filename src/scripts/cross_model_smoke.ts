@@ -133,9 +133,10 @@ export async function runSmoke(opts: {
     hosts: string[];
     dryRun: boolean;
 }): Promise<{ catalogue_size: number; fixtures: number; hosts: HostSummary[] }> {
-    // Read the catalogue from the source-of-truth tree, not load_skill_metas'
-    // legacy default (`.agent-src.uncondensed/skills`), which is absent in fresh
-    // clones / CI. Keeps the catalogue and the fixture paths on the same tree.
+    // Read the catalogue from the source-of-truth `src/skills` tree explicitly.
+    // load_skill_metas' built-in default points at a legacy tree that is absent
+    // in fresh clones / CI, so we pass the path rather than rely on the default.
+    // Keeps the catalogue and the fixture paths on the same tree.
     const catalogue = load_skill_metas(path.join('src', 'skills'));
     const summaries: HostSummary[] = [];
     let totalFixtures = 0;
