@@ -48,6 +48,16 @@ function malformedFetch(): FetchImpl {
     });
 }
 
+/** A fake fetch that records the request body it was called with. */
+function capturingFetch(jsonBody: unknown): { fetch: FetchImpl; lastBody: () => unknown } {
+    let captured: string | undefined;
+    const fetch: FetchImpl = async (_url, init) => {
+        captured = (init as { body?: string } | undefined)?.body;
+        return { ok: true, status: 200, json: async () => jsonBody };
+    };
+    return { fetch, lastBody: () => (captured ? JSON.parse(captured) : undefined) };
+}
+
 describe('OpenAiRouter', () => {
     it('parses loaded + token counts', async () => {
         const fetchImpl = fakeFetch({
@@ -92,6 +102,21 @@ describe('GeminiRouter', () => {
         expect(loaded).toEqual(['a', 'b']);
         expect(inTok).toBe(88);
         expect(outTok).toBe(4);
+    });
+
+    it('sends a JSON output contract (responseMimeType) — Phase 0b format fix', async () => {
+        // responseMimeType alone, NOT a strict responseSchema: a live 3-variant
+        // comparison showed the strict schema crushed routing accuracy (90%→60%)
+        // while mimeType-only fixed parse (80%→100%) with far less collateral.
+        const cap = capturingFetch({
+            candidates: [{ content: { parts: [{ text: WOULD_LOAD_TEXT }] } }],
+            usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 },
+        });
+        const r = new GeminiRouter({ apiKey: 'k', fetchImpl: cap.fetch });
+        await r.routeAsync('q', SKILLS);
+        const body = cap.lastBody() as { generationConfig?: { responseMimeType?: string; responseSchema?: unknown } };
+        expect(body.generationConfig?.responseMimeType).toBe('application/json');
+        expect(body.generationConfig?.responseSchema).toBeUndefined();
     });
 
     it('defaults to a flash model', () => {
