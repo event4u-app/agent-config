@@ -153,6 +153,9 @@ tasks:
       - task: validate-schema
       - task: lint-rule-budget
       - task: audit-tokens-budget
+      - task: check-token-regression
+      - task: check-token-quality-golden
+      - task: check-quality-regression
       - task: lint-skills
       - task: lint-role-experiences
       - task: lint-namespace
@@ -299,6 +302,9 @@ tasks:
       - task: validate-schema
       - task: lint-rule-budget
       - task: audit-tokens-budget
+      - task: check-token-regression
+      - task: check-token-quality-golden
+      - task: check-quality-regression
       - task: lint-skills-strict
       - task: lint-role-experiences
       - task: lint-namespace

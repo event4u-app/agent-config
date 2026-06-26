@@ -1,0 +1,10 @@
+{
+  "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)",
+  "metrics": {
+    "eager_rule_load": 74317,
+    "thin_rule_load": 14147,
+    "skill_descriptions": 10999,
+    "command_descriptions": 4998,
+    "mcp_schemas": 2942
+  }
+}
