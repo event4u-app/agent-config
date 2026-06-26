@@ -45,7 +45,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fix-ci`** — Fetch CI errors from GitHub Actions and fix them
 - **`fix-comments`** — Review the code comments touched by the current branch and simplify, shorten, or remove each one
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
-- **`fix-pr-comments`** — Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
+- **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files
 - **`fix-seeder`** — Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 - **`ghostwriter`** — Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).
