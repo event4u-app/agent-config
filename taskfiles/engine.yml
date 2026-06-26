@@ -154,6 +154,11 @@ tasks:
     desc: "Quality-regression gate (token-saving Phase 0): length-controlled paired judge over the golden set; fail if thin's win-rate < 48% vs eager. INERT until internal/bench/reports/quality-run.json exists (the thin-vs-eager judge run is the operator/cost gate), so CI stays green until then."
     cmd: ./scripts-run src/scripts/check_quality_regression
 
+  check-kernel-prefix-stability:
+    silent: true
+    desc: "Kernel-prefix byte-stability guard (token-saving Phase 5, cache-aware ordering): fail if the always-loaded kernel-rule prefix (ordered bodies) drifts from internal/bench/reports/kernel-prefix.json — a change there invalidates the KV-cache for every consumer. Re-anchor a deliberate, reviewed kernel edit in the same PR with `./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline`."
+    cmd: ./scripts-run src/scripts/check_kernel_prefix_stability
+
   probe-host-compliance:
     silent: true
     desc: "Thin-projection host-compliance probe (token-saving Phase 0). Mechanical: assert the projector demotes the canary fixture to a router pointer (body removed, still selectable); fails if not. Prints the LIVE per-host checklist (operator gate) for Claude Code / Cursor / Augment."

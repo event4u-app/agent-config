@@ -1,0 +1,15 @@
+{
+  "kernel_ids": [
+    "agent-authority",
+    "ask-when-uncertain",
+    "commit-policy",
+    "direct-answers",
+    "language-and-tone",
+    "no-cheap-questions",
+    "non-destructive-by-default",
+    "scope-control",
+    "user-interrupt-priority",
+    "verify-before-complete"
+  ],
+  "sha256": "cc06c1366875c6c14527902222afd946bdbde77d4b267b5a999f1dd214b070b0"
+}

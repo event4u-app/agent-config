@@ -156,6 +156,7 @@ tasks:
       - task: check-token-regression
       - task: check-token-quality-golden
       - task: check-quality-regression
+      - task: check-kernel-prefix-stability
       - task: lint-skills
       - task: lint-role-experiences
       - task: lint-namespace
@@ -305,6 +306,7 @@ tasks:
       - task: check-token-regression
       - task: check-token-quality-golden
       - task: check-quality-regression
+      - task: check-kernel-prefix-stability
       - task: lint-skills-strict
       - task: lint-role-experiences
       - task: lint-namespace

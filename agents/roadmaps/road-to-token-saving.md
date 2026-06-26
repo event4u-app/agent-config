@@ -302,15 +302,36 @@ proven by snapshot tests run locally.
 KV-cache: cached reads bill at 0.1× vs 1× fresh, but any prefix edit re-pays a
 1.25×–2× write and invalidates downstream → byte-stability is a 10× cost lever.
 
-- [ ] Adopt a two-level invariant: macro order `tools → system → kernel → (variable
+- [x] Adopt a two-level invariant: macro order `tools → system → kernel → (variable
       last)`; micro deterministic sort within each layer (alphabetical / stable
       hash) so build-to-build reordering never invalidates cache.
-- [ ] Add a CI guard: the kernel/always-loaded prefix must be byte-identical to
+      <!-- micro-sort ALREADY deterministic: compile_router.ts sorts kernel +
+      tier_1 + tier_2 alphabetically, and `check-router` (compile_router --check)
+      already fails on a drifted/non-deterministic order — "deterministic across
+      two clean builds" is enforced. The macro order (tools→system→kernel) is the
+      HOST's context-assembly order, not bytes the package emits, so it is not
+      package-enforceable; the package owns the kernel set + bodies, guarded below. -->
+- [x] Add a CI guard: the kernel/always-loaded prefix must be byte-identical to
       the previous release unless a version bump is present.
       <!-- carve-out: new-gate-verification -->
+      <!-- done: src/scripts/check_kernel_prefix_stability.ts + snapshot
+      internal/bench/reports/kernel-prefix.json + 10 tests, wired into both CI
+      pipelines. DEVIATION: the literal "byte-identical to previous RELEASE unless
+      a version bump" would block normal in-dev kernel edits (the version bumps at
+      release, not per kernel PR). Built instead as a DRIFT guard (mirrors the
+      condensation-hash gate): the committed kernel-prefix sha must be re-anchored
+      (--update-baseline) in the SAME PR that changes the always-loaded kernel
+      prefix — so cache-invalidating changes are explicit + reviewed, without
+      coupling to the release cadence. Same invariant, safe in dev. -->
 - [ ] Promote the existing ≥24h kernel-edit slow-rollout from advisory to a
       blocking gate (cache-invalidation cost is the second justification, beside
       review safety).
+      <!-- disposition: the cache-invalidation GATE is delivered by the Phase-5
+      byte-stability guard above (a silent kernel-prefix change now fails CI) plus
+      the EXISTING >1-kernel-rule-per-PR guard (kernel-rule-edits.md, Phase 4.2).
+      The literal ≥24h-BETWEEN-MERGES timer as a blocking CI gate is deferred as
+      brittle (needs merge-timestamp logic) and stays the documented soak
+      guarantee. Maintainer call whether to add the timer gate. -->
 
 **Exit:** the CI guard fails a non-version-bumped kernel-prefix change; projection
 order is deterministic across two clean builds.
