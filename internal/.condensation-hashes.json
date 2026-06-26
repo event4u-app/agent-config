@@ -253,7 +253,7 @@
   "rules/autonomous-execution.md": "d2042cd451f0909106904d149be20a7e692f295e144d474fc62be71ab0741862",
   "rules/brand-consistency.md": "bec663537d980b66657104ae748bb70a68ece6a8b02f3c5442cbc7c7fd58b05b",
   "rules/brand-source-of-truth.md": "b5166d1083e16a155b2767371c301f254669cd9257597aaaaca111669b0e4780",
-  "rules/cli-output-handling.md": "34f5757b4676ad6373879ba8b8d1bf96441a6c654aa471d3359ca828665faa12",
+  "rules/cli-output-handling.md": "a8447f7b352f357933287787c69dd9561a7f5bb4466cf96b5384baedd98cdfaf",
   "rules/command-suggestion-policy.md": "e43016ca32e7d671cce84fa1bf02d24abbd5ed5777ef8b1f77075eb5aaf38356",
   "rules/commit-conventions.md": "b0ccc9128cd36de9d587dd43a09c5b4cf7efaf1042301005d7e346670cd58e39",
   "rules/commit-policy.md": "19d0589e317612441017aa41a50b967d002f3479747875e9ef8eb33995da2bd7",
