@@ -6,10 +6,10 @@
 
 ## Overall
 
-**64 / 138 steps done · 46%**
+**64 / 122 steps done · 52%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 11 | 50 | 50 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
@@ -38,7 +38,7 @@
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 0 / 50 done (0%)
+**Road to token saving — measure, then cut, at constant quality** — 0 / 34 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -46,13 +46,9 @@
 | 1 | RTK everywhere (un-gate the scope) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Close the RTK trigger gap | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Deterministic RTK wrap hook + install verification | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Thin projection (the −46k lever), gated on Phase 0 | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Retire telegraph-speak (D3) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 7 | Condensation ROI decision (D4) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 8 | Always-loaded budget linter (D6) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 9 | Rule-surface audit (D7), after thin is proven | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 10 | Token-saving backlog (extensible umbrella) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
+| 10 | Token-saving backlog (extensible umbrella) | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 
 ### [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md)
 
