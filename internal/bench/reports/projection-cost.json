@@ -1,157 +1,225 @@
 {
   "description_catalog": {
     "commands_core_source": {
-      "chars": 22358,
-      "entries": 155,
-      "tokens_claude": 6211,
+      "chars": 23412,
+      "entries": 162,
+      "tokens_claude": 6503,
       "tokens_claude_exact": false,
-      "tokens_gpt": 5590,
-      "tokens_gpt_exact": false
+      "tokens_gpt": 4998,
+      "tokens_gpt_exact": true
     },
     "skills_core_source": {
-      "chars": 46680,
-      "entries": 238,
-      "tokens_claude": 12967,
+      "chars": 50762,
+      "entries": 258,
+      "tokens_claude": 14101,
       "tokens_claude_exact": false,
-      "tokens_gpt": 11670,
-      "tokens_gpt_exact": false
+      "tokens_gpt": 10999,
+      "tokens_gpt_exact": true
     },
     "skills_projected": {
-      "chars": 0,
-      "entries": 0,
-      "tokens_claude": 0,
+      "chars": 72852,
+      "entries": 412,
+      "tokens_claude": 20237,
       "tokens_claude_exact": false,
-      "tokens_gpt": 0,
-      "tokens_gpt_exact": false
+      "tokens_gpt": 15733,
+      "tokens_gpt_exact": true
     }
   },
-  "generated": "2026-06-16T03:12:51+00:00",
-  "longest_rules": [],
+  "generated": "2026-06-26T09:20:20+00:00",
+  "longest_rules": [
+    {
+      "chars": 12077,
+      "id": "legal-safety-floor",
+      "tokens_gpt": 2920
+    },
+    {
+      "chars": 9983,
+      "id": "roadmap-progress-sync",
+      "tokens_gpt": 2597
+    },
+    {
+      "chars": 8423,
+      "id": "git-history-discipline",
+      "tokens_gpt": 2133
+    },
+    {
+      "chars": 8430,
+      "id": "autonomous-execution",
+      "tokens_gpt": 2004
+    },
+    {
+      "chars": 7567,
+      "id": "domain-safety-pii",
+      "tokens_gpt": 1972
+    },
+    {
+      "chars": 7368,
+      "id": "domain-safety-disclaimer",
+      "tokens_gpt": 1770
+    },
+    {
+      "chars": 7188,
+      "id": "domain-adoption-policy",
+      "tokens_gpt": 1727
+    },
+    {
+      "chars": 6364,
+      "id": "roadmap-ci-steps-policy",
+      "tokens_gpt": 1656
+    },
+    {
+      "chars": 5573,
+      "id": "framework-neutrality-in-generic-skills",
+      "tokens_gpt": 1489
+    },
+    {
+      "chars": 6262,
+      "id": "no-roadmap-references",
+      "tokens_gpt": 1483
+    }
+  ],
   "mcp_tool_schemas": {
     "agent-config": {
       "chars": 13925,
       "over_subscription": false,
       "oversubscription_cap": 25,
       "tokens_claude": 3867,
-      "tokens_gpt": 3482,
-      "tokens_gpt_exact": false,
+      "tokens_gpt": 2942,
+      "tokens_gpt_exact": true,
       "tool_count": 20,
       "tools": [
         {
           "chars": 1585,
           "name": "chat_history_append",
-          "tokens_gpt": 396
+          "tokens_gpt": 335
         },
         {
           "chars": 1048,
           "name": "memory_lookup",
-          "tokens_gpt": 262
+          "tokens_gpt": 232
         },
         {
           "chars": 1014,
           "name": "chat_history_read",
-          "tokens_gpt": 254
+          "tokens_gpt": 220
         },
         {
           "chars": 887,
           "name": "memory_signal",
-          "tokens_gpt": 222
+          "tokens_gpt": 191
         },
         {
           "chars": 793,
           "name": "lint_skills",
-          "tokens_gpt": 198
-        },
-        {
-          "chars": 774,
-          "name": "skill_trigger_eval",
-          "tokens_gpt": 194
+          "tokens_gpt": 175
         },
         {
           "chars": 774,
           "name": "update_form_request_messages",
-          "tokens_gpt": 194
-        },
-        {
-          "chars": 678,
-          "name": "sync_agent_settings",
-          "tokens_gpt": 170
-        },
-        {
-          "chars": 668,
-          "name": "compile_router",
-          "tokens_gpt": 167
-        },
-        {
-          "chars": 669,
-          "name": "suggest_command",
-          "tokens_gpt": 167
+          "tokens_gpt": 157
         },
         {
           "chars": 652,
           "name": "read_resource_body",
-          "tokens_gpt": 163
+          "tokens_gpt": 151
         },
         {
-          "chars": 609,
-          "name": "suggest_skill_for_task",
-          "tokens_gpt": 152
+          "chars": 774,
+          "name": "skill_trigger_eval",
+          "tokens_gpt": 147
+        },
+        {
+          "chars": 668,
+          "name": "compile_router",
+          "tokens_gpt": 141
+        },
+        {
+          "chars": 678,
+          "name": "sync_agent_settings",
+          "tokens_gpt": 137
         },
         {
           "chars": 609,
           "name": "sync_gitignore",
-          "tokens_gpt": 152
+          "tokens_gpt": 131
         },
         {
           "chars": 580,
           "name": "run_tests",
-          "tokens_gpt": 145
+          "tokens_gpt": 130
         },
         {
-          "chars": 542,
-          "name": "mine_session",
-          "tokens_gpt": 136
+          "chars": 609,
+          "name": "suggest_skill_for_task",
+          "tokens_gpt": 127
+        },
+        {
+          "chars": 669,
+          "name": "suggest_command",
+          "tokens_gpt": 121
         },
         {
           "chars": 509,
           "name": "run_quality_checks",
-          "tokens_gpt": 127
+          "tokens_gpt": 113
+        },
+        {
+          "chars": 542,
+          "name": "mine_session",
+          "tokens_gpt": 106
         },
         {
           "chars": 415,
           "name": "list_rules",
-          "tokens_gpt": 104
+          "tokens_gpt": 91
         },
         {
           "chars": 388,
           "name": "list_skills",
-          "tokens_gpt": 97
-        },
-        {
-          "chars": 386,
-          "name": "list_commands",
-          "tokens_gpt": 96
+          "tokens_gpt": 80
         },
         {
           "chars": 345,
           "name": "memory_status",
-          "tokens_gpt": 86
+          "tokens_gpt": 79
+        },
+        {
+          "chars": 386,
+          "name": "list_commands",
+          "tokens_gpt": 78
         }
       ]
     }
   },
-  "rule_footprint": {},
-  "thin_projection": {
-    "eager_chars": 256463,
-    "eager_gpt": 64116,
-    "kernel_full": 10,
-    "non_kernel_thinned": 74,
-    "rules_total": 84,
-    "saved_gpt": 50338,
-    "saved_pct": 78.5,
-    "thin_chars": 55113,
-    "thin_gpt": 13778,
-    "token_method": "tokens_gpt: proxy (chars/4.0, tiktoken not installed); tokens_claude: proxy (chars/3.6)"
+  "rule_footprint": {
+    ".augment": {
+      "chars": 299529,
+      "files": 93,
+      "tokens_claude": 83202,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 74317,
+      "tokens_gpt_exact": true
+    },
+    ".claude": {
+      "chars": 291714,
+      "files": 91,
+      "tokens_claude": 81032,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 72409,
+      "tokens_gpt_exact": true
+    }
   },
-  "token_method": "tokens_gpt: proxy (chars/4.0, tiktoken not installed); tokens_claude: proxy (chars/3.6)"
+  "thin_projection": {
+    "eager_chars": 299529,
+    "eager_gpt": 74317,
+    "kernel_full": 10,
+    "non_kernel_thinned": 83,
+    "rules_total": 93,
+    "saved_gpt": 60170,
+    "saved_pct": 81,
+    "thin_chars": 59569,
+    "thin_gpt": 14147,
+    "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)"
+  },
+  "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)"
 }
