@@ -60,10 +60,6 @@ class ArgparseExit extends Error {
     }
 }
 
-function print(line = ''): void {
-    process.stdout.write(line + '\n');
-}
-
 function eprint(line = ''): void {
     process.stderr.write(line + '\n');
 }
