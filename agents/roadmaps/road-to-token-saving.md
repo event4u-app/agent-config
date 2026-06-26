@@ -100,9 +100,10 @@ telegraph-speak, gated on the real-tokenizer net-negative finding), **Phase 7**
 (condensation-ROI decision), and **Phase 9** (rule-surface audit, after thin is
 proven) — require a human-judged paired experiment, a host-compliance
 falsification, and a production-shaping rollout decision that an unattended agent
-**cannot** credibly produce or sign off. They are split into
+**cannot** credibly produce or sign off. They have been moved to
 [`later/road-to-token-saving-HUMAN-MEASUREMENT.md`](later/road-to-token-saving-HUMAN-MEASUREMENT.md)
-(parked `later`, resumes when the operator has run the measurement harness).
+(parked `later`, resumes when the operator has run the measurement harness) and
+are no longer duplicated here.
 
 **Autonomous track (this roadmap):** Phase 0 (build the measurement *harness* —
 real tokenizer, golden set, paired-judge harness, host-compliance probe — the
@@ -205,35 +206,6 @@ Convert RTK from advisory to deterministic; stop trusting the self-reported flag
 proven by snapshot tests run locally.
 **Rollback:** remove the manifest entry + script; Phases 1–2 advisory path stands.
 
-## Phase 4 — Thin projection (the −46k lever), gated on Phase 0
-
-Council D1: adopt globally, but only after Phase 0 evidence + host compliance.
-The #1 risk is silent breakage — 78 rules that stop firing while the build looks
-green.
-
-- [ ] Ship the falsification as a script (`task tokensave:falsify` or
-      `src/scripts/tokensave_falsify.py`) that runs gates (a)–(f) below and emits
-      a single pass/fail report — so the flip is data-gated and re-runnable, not
-      a manual checklist. <!-- carve-out: new-gate-verification -->
-- [ ] **Falsify before flipping** (all must pass): (a) all 78 demoted rules fire
-      on realistic invocations on every host; (b) host shows pointer not body
-      (Phase 0 probe) — if a host reconstructs bodies, thin is a no-op there →
-      block + escalate to the vendor; (c) real-tokenizer thin-vs-eager within ±10%
-      of the −46k estimate or the business case is void; (d) on-demand cache-hit
-      rate >90%; (e) p99 latency <1s; (f) no quality regression on the Phase 0
-      length-controlled judge.
-- [ ] Flip the default projection to `thin` behind a tight rollout: 48h opt-in
-      (env/profile) → 72h maintainer-forced → 10% → 50% → 100% within ≤7 days
-      (fast to avoid KV-cache fragmentation across thin/eager pools). Keep an
-      `eager` escape hatch live for 30 days.
-- [ ] Kill-switch (any → instant rollback): rule-firing <100% on the CI corpus,
-      host non-compliance, cache-hit <90%, p99 >1s, judge win-rate <48%.
-
-**Exit:** thin is the default; the falsification checklist passed; rollout
-completed with telemetry showing rule-firing at 100% and no quality regression.
-**Rollback:** flip `lean_projection.mode` back to `eager-all` (one setting);
-escape hatch covers in-flight sessions.
-
 ## Phase 5 — Cache-aware ordering as a CI invariant (D5)
 
 KV-cache: cached reads bill at 0.1× vs 1× fresh, but any prefix edit re-pays a
@@ -253,42 +225,6 @@ KV-cache: cached reads bill at 0.1× vs 1× fresh, but any prefix edit re-pays a
 order is deterministic across two clean builds.
 **Rollback:** demote the guard to warning.
 
-## Phase 6 — Retire telegraph-speak (D3)
-
-Net-negative, unmeasured, maintainer-scoped, redundant with `direct-answers`
-Iron-Law-3; BPE already single-tokens the articles it strips.
-
-- [ ] Delete `src/rules/telegraph-speak.md`, its CI gate
-      (`validate_telegraph_carveouts.py`), and settings keys (`telegraph.*`);
-      migrate any load-bearing carve-out semantics into `direct-answers` /
-      `preservation-guard` if not already covered.
-- [ ] Changelog note: removed telegraph-speak (redundant, measured net-negative).
-- [ ] Trace downstream refs (frugality-charter index, router, projections).
-
-**Exit:** telegraph-speak removed; brevity behaviour unchanged (covered by
-`direct-answers`), verified on the Phase 0 golden set (no quality delta).
-**Rollback:** restore from git; re-add the router entry.
-
-## Phase 7 — Condensation ROI decision (D4)
-
-Condensation returns ~1.1–1.7% on already-terse source — possibly measuring BPE
-noise, not signal — while carrying real CI/hash machinery. Thin projection makes
-rule-condensation largely moot (pointers don't need condensing).
-
-- [ ] Measure on the real tokenizer (Phase 0): does skills-condensation save ≥500
-      tokens? Is the pipeline deterministic (no temp>0 LLM step that would
-      invalidate KV-cache)? Does telegraph-style source tokenize *worse*
-      (bytes/token)? Is a condensed skill human-debuggable in <30s?
-- [ ] Decide per the gate: ≥500 tok AND deterministic AND readable → keep
-      skills-only, retire rule-condensation gates (moot under thin); otherwise
-      retire the pipeline entirely.
-- [ ] Apply the decision: remove the now-moot rule-condensation CI machinery if
-      retired.
-
-**Exit:** a measured ROI verdict + the pipeline scoped/retired accordingly; CI
-machinery matches the decision.
-**Rollback:** revert the scope change; re-enable condensation gates.
-
 ## Phase 8 — Always-loaded budget linter (D6)
 
 Make the always-loaded token surface a first-class, gated metric.
@@ -305,20 +241,6 @@ Make the always-loaded token surface a first-class, gated metric.
 **Exit:** the linter fails a synthetic over-budget always-loaded surface and
 passes the current one; threshold documented with its Phase 0 evidence.
 **Rollback:** demote the linter to warning.
-
-## Phase 9 — Rule-surface audit (D7), after thin is proven
-
-Once on-demand loading is proven viable, question whether 88 rules even need
-router entries.
-
-- [ ] Audit the 50 tier-2 rules: which genuinely need a router pointer vs could
-      move entirely to skill-triggered loading (zero always-loaded footprint)?
-- [ ] Move the qualifying rules; re-measure the always-loaded surface (Phase 8
-      linter) to confirm the reduction.
-
-**Exit:** tier-2 rules that don't need router entries are skill-triggered; the
-always-loaded surface measurably drops with no rule-firing regression.
-**Rollback:** restore router entries for any rule whose firing regressed.
 
 ## Phase 10 — Token-saving backlog (extensible umbrella)
 
@@ -345,16 +267,9 @@ stale candidates.
       (Phase 0).
 - [ ] RTK rule + skill are active in a consumer-shaped project; trigger gap closed;
       deterministic wrap hook ships with passing tests (Phases 1–3).
-- [ ] Thin projection is the default, having passed the full falsification
-      checklist with rule-firing at 100% and no quality regression (Phase 4).
 - [ ] Cache-aware ordering + kernel byte-stability are CI-enforced (Phase 5).
-- [ ] telegraph-speak is removed with no brevity-behaviour regression (Phase 6).
-- [ ] Condensation ROI is measured and the pipeline scoped/retired accordingly
-      (Phase 7).
 - [ ] An always-loaded budget linter gates CI at the quality-elbow threshold
       (Phase 8).
-- [ ] Tier-2 rules that don't need router entries are skill-triggered; always-
-      loaded surface measurably reduced (Phase 9).
 - [ ] The Phase 10 backlog is triaged (no stale candidates).
 - [ ] Every shipped lever carries a measured before/after at held-constant
       quality — no lever shipped on an unmeasured claim.
