@@ -64,6 +64,18 @@ concerns:
     script: src/scripts/hooks/block_no_verify.ts
     args: []
     fail_closed: true
+  # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
+  # live `which rtk` probe (not the self-reported flag). When rtk is installed
+  # and the agent is about to run a single verbose CLI command that is NOT
+  # completeness-critical, warns "re-run wrapped with rtk" (60–90% fewer output
+  # tokens). Warn only — never blocks (the v1 contract has no transparent
+  # rewrite); never fires when rtk is absent (silent plain-command fallback).
+  # Default-OFF (hooks.rtk_wrap.enabled). fail_closed: false — never break a
+  # command for a token optimization.
+  rtk-wrap:
+    script: src/scripts/hooks/rtk_wrap_hook.ts
+    args: []
+    fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -96,7 +108,7 @@ platforms:
     session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
-    pre_tool_use:     [block-no-verify]
+    pre_tool_use:     [block-no-verify, rtk-wrap]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   claude:
@@ -104,7 +116,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify]
+    pre_tool_use:     [block-no-verify, rtk-wrap]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -126,7 +138,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify]
+    pre_tool_use:     [block-no-verify, rtk-wrap]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
