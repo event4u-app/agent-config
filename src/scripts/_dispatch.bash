@@ -933,6 +933,13 @@ cmd_explain() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_explain.ts" "$@"
 }
 
+# `agent-config analyze-session` — read-only post-session report from on-disk
+# runtime state (.work-state.json + context-hygiene.json). No daemon, no
+# network, no model calls. See scripts/_cli/cmd_analyze_session.ts.
+cmd_analyze_session() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_analyze_session.ts" "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -991,6 +998,7 @@ main() {
     doctor)                  cmd_doctor "$@" ;;
     versions)                cmd_versions "$@" ;;
     explain)                 cmd_explain "$@" ;;
+    analyze-session)         cmd_analyze_session "$@" ;;
     help|--help|-h|"")
       # Optional `--tier=0|1|all` filter (default 0).
       local tier_arg="0"

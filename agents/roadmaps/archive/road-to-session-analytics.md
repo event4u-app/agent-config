@@ -22,11 +22,17 @@ identity (cf. [[council-ecc-parity-positioning]] do-not-cross list).
 
 ## Phase 1 — analyze-session
 
-- [ ] `agent-config analyze-session` — read the existing `work_engine` state and
-  emit a post-session report: turn count, file-churn (files touched / lines), and
-  an estimated token/cost band from logged context sizes. No live hooks, no daemon.
-- [ ] Verify: runs against a recorded `work_engine` state fixture; deterministic
-  output; no network / model calls.
+- [x] `agent-config analyze-session` — read-only post-session report from the
+  existing `.work-state.json` + `agents/runtime/state/context-hygiene.json`:
+  files touched (`changes`), per-directive outcomes (blocked flagged), halts, and
+  tool-call / loop activity. No live hooks, no daemon. Done 2026-06-25
+  (`src/scripts/_cli/cmd_analyze_session.ts`, registry + bash-dispatcher wired as
+  a `delegate` command mirroring `explain`). **Token/cost band dropped:**
+  source-discovery found NO per-session token/cost source in the package, so the
+  report prints an honest "not tracked" line rather than a fabricated estimate.
+- [x] Verify: 5/5 vitest (`tests/scripts/cmd_analyze_session.test.ts`) + registry
+  parity 5/5 + real run via the bash dispatcher against the GT-U10 fixture +
+  `tsc --noEmit` clean. Deterministic; no network / model. Done 2026-06-25.
 
 ## Acceptance criteria
 
