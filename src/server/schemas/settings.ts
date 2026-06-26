@@ -362,6 +362,11 @@ export const settingsSchema = z.object({
                 'PostToolUse prompt-injection scanner (road-to-security-pillar.md P3.2). Default off. When on, scans tool output (file reads, web fetches, MCP responses) for injection signatures and WARNS in context (never blocks). Runtime backstop on top of the always-on untrusted-input-defense rule; detection is probabilistic.',
             ),
         }).default({}),
+        rtk_wrap: z.object({
+            enabled: z.boolean().default(false).describe(
+                'PreToolUse RTK-wrap nudge (token-saving Phase 3). Default off. When on AND rtk is on PATH (a live probe — not a self-reported flag), warns (never blocks) "re-run wrapped with rtk" before a single verbose CLI command (git/npm/cargo/docker/…) for 60–90% token saving. Skips completeness-critical / piped / compound commands and git diff. No-op when rtk is absent.',
+            ),
+        }).default({}),
     }),
     decision_engine: z.object({
         surface_traces: z.boolean().default(false).describe(

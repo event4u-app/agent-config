@@ -722,6 +722,15 @@ hooks:
   injection_scan:
     enabled: false
 
+  # PreToolUse RTK-wrap nudge (token-saving Phase 3). Default-OFF. When enabled
+  # AND `rtk` is on PATH (a live probe — not a self-reported flag), warns (exit
+  # 2, never blocks) "re-run wrapped with rtk" before a single verbose CLI
+  # command (git/npm/cargo/docker/…), so verbose output is filtered for 60–90%
+  # token saving. Skips completeness-critical / piped / compound commands and
+  # `git diff`. No-op when rtk is absent. Opt in once you have rtk installed.
+  rtk_wrap:
+    enabled: false
+
 # --- Decision engine ---
 #
 # Controllable gates layered over the observability surface. Absent
