@@ -121,23 +121,58 @@ none is force-marked done.
 Council D2, promoted to D0: no architectural cut on a ±25% chars/4 estimate.
 Build the evidence rig first.
 
-- [ ] Add a real tokenizer (tiktoken `cl100k_base`) to the bench path; replace
+- [x] Add a real tokenizer (tiktoken `cl100k_base`) to the bench path; replace
       the chars/4 proxy in `projection-cost.json` / value-ladder with real counts
       (or record both and flag the delta).
+      <!-- done: js-tiktoken (cl100k_base) wired into src/scripts/_lib/token_count.ts
+      as a sync optional devDependency (graceful chars/4 fallback + measure_proxy
+      to record both). FINDING: chars/4 was UNDER-counting — eager rule load
+      64,116 → 74,317 GPT tok (+16%); thin-projection lever saved_gpt 50,338 →
+      60,170 (78.5% → 81%). Past proxy-based cut estimates understated both load
+      and savings. -->
 - [ ] Build a held-out golden set of ~30 tasks spanning all 88 rules, including
       multi-turn, conflicting-rule, and corner-case scenarios; hand-labelled
       expected outcomes (not LLM-generated).
-- [ ] Build a **length-controlled paired judge**: pairwise A/B in randomised
+      <!-- rig + initial labels DONE; full coverage operator-optional. Schema
+      TOKEN-QUALITY-GOLDEN-SCHEMA.md + validator check_token_quality_golden.ts
+      (structure + rule-coverage vs dist/router.json, --require-complete gate) +
+      11 tests, CI-wired (scaffold mode). Operator hand-labelled 30 tasks; rule
+      ids council-mapped (2026-06-26 claude+gpt) to real router ids — scaffold
+      VALID, all 4 scenarios present. Coverage 14/89; --require-complete stays red
+      until all rules covered (more tasks / multi-rule tags) — operator-optional,
+      non-blocking. Kept [ ] (not yet spanning all rules). -->
+- [x] Build a **length-controlled paired judge**: pairwise A/B in randomised
       order, swap-and-recheck for position/length bias, reject the judge if it
       flips; paired significance (Wilcoxon signed-rank). Evaluate `promptfoo` as
       the harness before hand-rolling.
+      <!-- done: hand-roll src/scripts/check_quality_regression.ts (council
+      2026-06-26 leaned promptfoo but conditioned — bias controls custom either
+      way + lean/offline package + Wilcoxon already exists, so hand-roll chosen,
+      no new dep). evaluatePair judges BOTH orders → reject-on-flip (position),
+      length-confound tracking, reuses bench_ab_v2_stats.wilcoxon; pluggable
+      JudgeFn (mock in 10 tests). The LIVE judge-model verdict run is the
+      operator/cost gate (produces internal/bench/reports/quality-run.json). -->
 - [ ] Add a **host-compliance probe**: ship a thin-projected canary rule, invoke
       its keyword on each supported host (Claude Code, Cursor, Augment), assert
       the rule fires AND the host shows the pointer, not the body.
-- [ ] Instrument latency p95/p99 for on-demand rule loads (not just mean).
-- [ ] Wire CI gates: token-regression (fail if a projection exceeds baseline
+      <!-- scaffold built: canary fixture tests/fixtures/host-compliance/ +
+      probe src/scripts/probe_host_compliance.ts (mechanical demotion via the real
+      thin_entry projector VERIFIED: body→pointer, still selectable) + 5 tests +
+      printed operator checklist. LIVE per-host invocation is the operator gate. -->
+- [x] Instrument latency p95/p99 for on-demand rule loads (not just mean).
+      <!-- done: src/scripts/bench_rule_load_latency.ts (non-kernel resolve+read,
+      warm-up + nearest-rank p50/p95/p99) + 6 tests, task bench-rule-load-latency.
+      FINDING: on-demand load is sub-ms with a tight tail (p50 0.009ms / p95 0.014ms
+      / p99 0.018ms) — pointer resolution does NOT erode the thin-projection win. -->
+- [x] Wire CI gates: token-regression (fail if a projection exceeds baseline
       >5%) and quality-regression (fail if thin's judge win-rate <48%).
       <!-- carve-out: new-gate-verification -->
+      <!-- done: BOTH wired into both CI pipelines (Taskfile.yml). token-regression
+      = check_token_regression.ts (5% relative over token-baseline.json, exact
+      tokenizer, method-switch = legitimate reset) + 6 tests, green locally.
+      quality-regression = check_quality_regression.ts (<48% thin win-rate) + 10
+      tests; INERT (exit 0) until internal/bench/reports/quality-run.json exists,
+      so CI stays green until the operator's live judge run produces it. -->
 
 **Exit:** a real-tokenizer before/after of thin vs eager on the golden set, with
 a length-controlled judge verdict and per-host compliance result, all reproducible
