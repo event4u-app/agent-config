@@ -948,6 +948,39 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.4.0](https://github.com/event4u-app/agent-config/compare/7.3.0...7.4.0) (2026-06-26)
+
+### Features
+
+* **bench:** thin-vs-eager quality-run producer (Phase 0 EXIT judge runner) ([0442fab](https://github.com/event4u-app/agent-config/commit/0442fab2004f09a5b2476a33c3393a157647082b))
+* **ci:** activate the always-loaded budget gate with provisional token caps (Phase 8) ([1bd765c](https://github.com/event4u-app/agent-config/commit/1bd765c91d12707eed6bd277d35de36c96298005))
+* **ci:** kernel-prefix byte-stability guard (token-saving Phase 5) ([90e2814](https://github.com/event4u-app/agent-config/commit/90e2814a10da9423be4851e50d1796b910ffd1fa))
+* **hooks:** deterministic RTK-wrap PreToolUse nudge (default-off, warn-only) ([82db01d](https://github.com/event4u-app/agent-config/commit/82db01d60d52295c16e4ee14eb96efbb13442807))
+* **rtk:** close the cli-output-handling trigger gap ([cc12c02](https://github.com/event4u-app/agent-config/commit/cc12c02cf115fc85bcd1989ab2d75252eb220684))
+* **fix-pr-comments:** commit+push before replying, then resolve threads ([23ae60b](https://github.com/event4u-app/agent-config/commit/23ae60be884ecafbebadacffaf9c5c0dd552d0ec))
+* **bench:** Phase 0 measurement rig — regression gates, golden set, latency + host probes ([5feb233](https://github.com/event4u-app/agent-config/commit/5feb2330abf557f65c8a929222dd12dc8e5d2537))
+* **bench:** wire real tiktoken (cl100k_base) into the token-measurement path ([d92e5d2](https://github.com/event4u-app/agent-config/commit/d92e5d2f842e99d9e71800f6098ecf0c400088c7))
+* **cli:** add read-only analyze-session post-session report ([8e3df94](https://github.com/event4u-app/agent-config/commit/8e3df9475b4dc54aae79f4c7518d10da1514bb24))
+
+### Bug Fixes
+
+* **hooks:** add hooks.rtk_wrap.enabled to the settings Zod schema ([4a34967](https://github.com/event4u-app/agent-config/commit/4a34967f7f72748b89199ec344cde897500903e1))
+* **cli:** drop unused print helper in analyze-session ([e4c5cde](https://github.com/event4u-app/agent-config/commit/e4c5cdeb0510031a1a7f86ca5d468a525fc185b8))
+
+### Documentation
+
+* **roadmap:** token-saving Phase 10 — triage the backlog candidates ([036b3e6](https://github.com/event4u-app/agent-config/commit/036b3e6a121673be75a49671d865e7e7aaaa9f29))
+* **roadmap:** token-saving Phase 8 — budget gate activated (elbow calibration deferred) ([8a9b3e3](https://github.com/event4u-app/agent-config/commit/8a9b3e3f9184e2e8efe0ff43d0420806b298f549))
+* **roadmap:** token-saving Phase 5 — cache-aware ordering CI invariant ([00d7181](https://github.com/event4u-app/agent-config/commit/00d7181899cebda62b4efcee3450130756483fe3))
+* **roadmap:** token-saving Phase 3 — RTK wrap hook landed ([b4d358f](https://github.com/event4u-app/agent-config/commit/b4d358f2eb7b8998e04f72b33c9f127db6a6358a))
+* **roadmap:** token-saving Phase 1 premise correction + Phase 2 trigger gap done ([25b42f2](https://github.com/event4u-app/agent-config/commit/25b42f21a5c640f2665dec70e3190dcff4cfc584))
+* **roadmap:** token-saving Phase 0 — rig landed (tokenizer/judge/latency/CI-gates) ([70ce1e5](https://github.com/event4u-app/agent-config/commit/70ce1e5e13db72046d350a51d0cde2af8c067b3c))
+* **roadmap:** de-duplicate token-saving — human-measurement phases live only in later/ ([7394f21](https://github.com/event4u-app/agent-config/commit/7394f217b64c76e5f74a6195659c1aec17e69e24))
+* **orchestration:** keep subagents.auto=ask (honest-null); re-gate flip on telemetry ([e5eed45](https://github.com/event4u-app/agent-config/commit/e5eed45ad5f3206871aa5eafab37cb9c101b2aa7))
+* **roadmap:** archive completed session-analytics ([461d86f](https://github.com/event4u-app/agent-config/commit/461d86f7aad1be2216ccd81cdf65b8ef6f7fe6a9))
+* **roadmap:** archive completed governance-moat; park cross-model eval in later/ ([b43893f](https://github.com/event4u-app/agent-config/commit/b43893fc6b060ddca285b6964087bff3fe0a02f0))
+* **governance:** document the compile-time governance moat ([fcd455d](https://github.com/event4u-app/agent-config/commit/fcd455d22b076011cd0e3b3d669687f8a7bb196a))
+
 ## [7.3.0](https://github.com/event4u-app/agent-config/compare/7.2.0...7.3.0) (2026-06-25)
 
 ### Features
