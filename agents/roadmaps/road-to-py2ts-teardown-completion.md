@@ -136,12 +136,18 @@ stay open below — not force-marked done.
       kept); pure in-process rigs (`cli`, `directives_backend_analyze` + the 5
       `directives_backend_*`) converted to intent tests asserting the tsx
       module's own `run()` output. work_engine dir: 560 pass / 60 skip,
-      identical with python3 stubbed (python-free). **Still deferred in
-      work_engine:** `_hooks_pyloader.ts` (shared helper imported by 11
-      `hooks_*` tests — neutralise only after those consumers are converted) +
-      4 files an interrupted subagent never reached
+      identical with python3 stubbed (python-free). The 4 MIXED directives
+      files an interrupted subagent never reached
       (`directives_backend_test`, `directives_backend_verify`,
-      `directives_init`, `directives_mixed_init` — all MIXED, same purge recipe).
+      `directives_init`, `directives_mixed_init`) are now **converted**
+      (2026-06-26): each parity block → a python-free intent test asserting the
+      tsx `run()` / module contract directly (inline snapshots for the 22
+      former byte-parity assertions; `directives_init`'s python-`__all__` half
+      dropped as it asserted no TS contract beyond the kept empty-marker test).
+      work_engine dir: 582 passed / 37 skipped / 0 failed, python-free.
+      **Still deferred in work_engine:** `_hooks_pyloader.ts` (shared helper
+      imported by 11 `hooks_*` tests — neutralise only after those consumers
+      are converted) — the remaining 37 skips above.
     - **Remaining spawn-file tail after these two clusters: 108** (measured
       `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`). Next
       coherent groups: `_cli/cmd_*` (~17, likely delete-candidates covered by
