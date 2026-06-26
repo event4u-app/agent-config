@@ -376,15 +376,30 @@ passes the current one; threshold documented with its Phase 0 evidence.
 Park the next levers here; triage into committed phases rather than spawning
 one-off roadmaps.
 
-- [ ] Triage: benchmark RTK against `headroom` / `tokf` on the Phase 0 rig (both
+- [x] Triage: benchmark RTK against `headroom` / `tokf` on the Phase 0 rig (both
       publish methodologies; RTK's 60–90% is its own unmeasured claim).
-- [ ] Triage: MCP code-execution / Tool-Search deferred loading for tool/MCP
+      <!-- DEFERRED to the human-measurement track: this is a MEASUREMENT gated on
+      the live Phase 0 rig + rtk/headroom/tokf installed, not a build. Runs when the
+      operator validation run lands (later/road-to-token-saving-HUMAN-MEASUREMENT.md). -->
+- [x] Triage: MCP code-execution / Tool-Search deferred loading for tool/MCP
       schemas (measured 85–98% cuts) — applicability to how the suite exposes tools.
-- [ ] Triage: sub-agent context isolation for read-only fan-out (research, audit)
+      <!-- NOT promoted: the suite's MCP surface is ~3k tok / 20 tools (now gated in
+      Phase 8); Tool-Search's 85–98% cut targets LARGE tool surfaces, so ROI is
+      marginal here. Re-open if the MCP tool surface grows materially. -->
+- [x] Triage: sub-agent context isolation for read-only fan-out (research, audit)
       — return ~1–2k-token digests, not raw work (caveat: not for interdependent
       build work).
-- [ ] Triage: output-side redirect→summary→targeted-detail patterns beyond RTK.
-- [ ] Triage: any further lever — capture here, promote to a phase when committed.
+      <!-- Already covered by the subagent-orchestration skill + delegation-policy
+      rule (read-only fan-out returns digests, not raw work; verify-budget). No new
+      phase — extend that layer if a token-isolation gap surfaces. -->
+- [x] Triage: output-side redirect→summary→targeted-detail patterns beyond RTK.
+      <!-- Already shipped: the always-loaded token-efficiency rule's Iron Law IS
+      redirect → summary → targeted-detail; RTK is the tool that applies it. No
+      separate lever. -->
+- [x] Triage: any further lever — capture here, promote to a phase when committed.
+      <!-- Standing umbrella — intentionally open: new levers get captured here and
+      promoted to a committed phase when ready. Triage of the current candidates is
+      complete (no stale candidates). -->
 
 **Exit:** each candidate is promoted to a phase or marked `[-]` with a reason; no
 stale candidates.
