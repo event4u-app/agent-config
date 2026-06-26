@@ -256,19 +256,42 @@ The rule fires only on `git/phpstan/rector/phpunit/composer`; the skill's
 
 Convert RTK from advisory to deterministic; stop trusting the self-reported flag.
 
-- [ ] Add a runtime `which rtk` probe; key wrapping decisions off the live probe,
+- [x] Add a runtime `which rtk` probe; key wrapping decisions off the live probe,
       not `personal.n`. Mismatch (flag vs reality) surfaces once; absent rtk →
       silent plain-command fallback, no nag.
-- [ ] Implement a `pre_tool_use` wrap hook modeled on `block_no_verify.py`: parse
+      <!-- done: rtk_available() scans PATH for an executable rtk (cross-platform).
+      Simplified vs the spec: the hook keys PURELY off the live probe and ignores
+      the self-reported flag entirely (the cleanest "stop trusting the flag"), so
+      there is no flag-vs-reality "mismatch surfaces once" notice — the flag is now
+      irrelevant. rtk absent → silent no-op (exit 0), no nag. -->
+- [x] Implement a `pre_tool_use` wrap hook modeled on `block_no_verify.py`: parse
       Bash, no-op when rtk absent, **denylist completeness-critical** (`git diff`,
       `rtk read`, already-piped, short commands), fail-open on parse error.
       Mechanism: deny-and-instruct (cross-platform exit-code envelope) where
       rewrite is unsupported; `updatedInput` rewrite where the host supports it.
-- [ ] Wire into `hook_manifest.yaml` for every supporting platform; respect
+      <!-- done: src/scripts/hooks/rtk_wrap_hook.ts reuses block_no_verify's
+      shlexSplit / _split_subcommands / _is_env_assignment. classify() denylists
+      git diff, rtk-wrapped, piped/compound, non-verbose programs; fail-OPEN on
+      parse error (never break a command). MECHANISM CORRECTION: the v1 dispatcher
+      contract (docs/contracts/hook-architecture-v1.md) is allow/block/warn ONLY —
+      there is NO transparent `updatedInput` rewrite (that field is Claude-native,
+      not in this contract). So the hook WARNS (exit 2, decision:warn) "re-run
+      wrapped: rtk <cmd>" — like the sibling injection_scan_hook (surface, don't
+      block); appropriate for a token optimization vs a safety floor. -->
+- [x] Wire into `hook_manifest.yaml` for every supporting platform; respect
       `lint_hook_concern_budget`; add a settings toggle (conservative default).
-- [ ] Snapshot tests under `tests/hooks/`: eligible wrapped/flagged, denylisted
+      <!-- done: rtk-wrap concern + pre_tool_use wiring for augment/claude/cowork
+      (matches block-no-verify's platform set — the only platforms with
+      pre_tool_use). Settings toggle hooks.rtk_wrap.enabled (default false).
+      lint-hook-manifest + lint-hook-concern-budget pass. -->
+- [x] Snapshot tests under `tests/hooks/`: eligible wrapped/flagged, denylisted
       untouched, rtk-absent no-op, parse-error fail-open.
       <!-- carve-out: new-gate-verification -->
+      <!-- done: tests/scripts/hooks/rtk_wrap_hook.test.ts (13 tests — classify
+      eligible/denylist/compound/parse-error/env-prefix + rtk_available probe).
+      End-to-end smoke confirmed: enabled+rtk+`git status`→warn exit 2;
+      `git diff`→no-op; disabled→no-op. (Location is tests/scripts/hooks/, the
+      block_no_verify test's convention, not tests/hooks/.) -->
 
 **Exit:** hook fires on an eligible command, leaves denylisted commands untouched,
 proven by snapshot tests run locally.
