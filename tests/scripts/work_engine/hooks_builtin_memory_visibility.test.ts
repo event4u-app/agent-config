@@ -1,6 +1,7 @@
-// Golden-parity + unit tests for the py2ts memory_visibility hook twin
-// (ADR-094). The hook threads the `🧠 Memory: …` line into work.report on
-// BEFORE_SAVE; the resulting report text must be byte-identical.
+// Intent tests for the py2ts memory_visibility hook twin (ADR-094). The hook
+// threads the `🧠 Memory: …` line into work.report on BEFORE_SAVE; the
+// resulting report text is asserted directly via inline snapshots. Was a
+// python3-vs-tsx byte-parity rig; the `.py` original is gone.
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -10,9 +11,6 @@ import {
 import { HookContext } from '../../../src/agent-src/templates/scripts/work_engine/hooks/context.js';
 import { HookEvent } from '../../../src/agent-src/templates/scripts/work_engine/hooks/events.js';
 import { HookRegistry } from '../../../src/agent-src/templates/scripts/work_engine/hooks/registry.js';
-import { hasPython3, runPyHooks } from './_hooks_pyloader.js';
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 interface FakeWork {
     memory: unknown;
@@ -83,93 +81,50 @@ describe('MemoryVisibilityHook — TS unit checks', () => {
     });
 });
 
-describePy('MemoryVisibilityHook — report parity (python3 vs TS)', () => {
-    function pyReport(
-        workExpr: string,
-        cadence: string,
-        visibilityOff: boolean,
-    ): string {
-        const r = runPyHooks(
-            {
-                we: ['scoring.decision_trace', 'scoring.memory_visibility'],
-                foundation: ['exceptions', 'context', 'events', 'registry'],
-                builtin: ['memory_visibility'],
-            },
-            [
-                `hook = memory_visibility.MemoryVisibilityHook(memory_cadence=${JSON.stringify(cadence)}, visibility_off=${visibilityOff ? 'True' : 'False'})`,
-                `work = ${workExpr}`,
-                'hook._on_before_save(context.HookContext(work=work))',
-                'print(json.dumps(work.report))',
-            ].join('\n'),
-        );
-        if (r.status !== 0) throw new Error(`py mvis failed: ${r.stderr || r.stdout}`);
-        return JSON.parse(r.stdout.trim()) as string;
-    }
-
-    // A mutable Python work object with settable .report.
-    function pyWork(fields: string): string {
-        return `type('W',(),{${fields}})()`;
-    }
-
-    it('rich memory + verify → report line byte-identical', () => {
-        const memory = [
-            { id: 'r1', type: 'rule', hit: true },
-            { id: 'r2', type: 'incident', hit: true },
-        ];
+describe('MemoryVisibilityHook — report line contract', () => {
+    it('rich memory + verify → full report line', () => {
         const tsWork: FakeWork = {
-            memory,
+            memory: [
+                { id: 'r1', type: 'rule', hit: true },
+                { id: 'r2', type: 'incident', hit: true },
+            ],
             verify: { claims: 2, first_try_passes: 2 },
             questions: [],
             changes: [{ file: 'a.ts' }],
             report: '',
         };
-        const tsOut = fireSave(tsWork);
-        const pyOut = pyReport(
-            pyWork(
-                "'memory':[{'id':'r1','type':'rule','hit':True},{'id':'r2','type':'incident','hit':True}],'verify':{'claims':2,'first_try_passes':2},'questions':[],'changes':[{'file':'a.ts'}],'report':''",
-            ),
-            'always',
-            false,
-        );
-        expect(tsOut).toBe(pyOut);
+        expect(fireSave(tsWork)).toMatchInlineSnapshot(`
+          "🧠 Memory: 2/3 · ids=[r1, r2] · affected: confidence_band
+
+          Memory changed decisions:
+          - r1 → confidence_band
+          - r2 → confidence_band"
+        `);
     });
 
-    it('existing report → separator + line byte-identical', () => {
+    it('existing report → separator + full line', () => {
         const tsWork: FakeWork = {
             memory: [{ id: 'r1', type: 'rule', hit: true }],
             verify: null,
             report: 'Prior body.',
         };
-        const tsOut = fireSave(tsWork);
-        const pyOut = pyReport(
-            pyWork("'memory':[{'id':'r1','type':'rule','hit':True}],'verify':None,'report':'Prior body.'"),
-            'always',
-            false,
-        );
-        expect(tsOut).toBe(pyOut);
+        expect(fireSave(tsWork)).toMatchInlineSnapshot(`
+          "Prior body.
+
+          🧠 Memory: 1/3 · ids=[r1] · affected: confidence_band
+
+          Memory changed decisions:
+          - r1 → confidence_band"
+        `);
     });
 
-    it('cadence auto with few asks → both suppress', () => {
-        // asks = len(asked_types) = 4 ≥ 3, so auto DOES emit — assert parity.
+    it('cadence auto with ≥3 asked types → emits the line', () => {
         const tsWork: FakeWork = { memory: [{ id: 'r1', type: 'rule', hit: true }], report: '' };
-        const tsOut = fireSave(tsWork, { memory_cadence: 'auto' });
-        const pyOut = pyReport(
-            pyWork("'memory':[{'id':'r1','type':'rule','hit':True}],'report':''"),
-            'auto',
-            false,
-        );
-        expect(tsOut).toBe(pyOut);
-    });
+        expect(fireSave(tsWork, { memory_cadence: 'auto' })).toMatchInlineSnapshot(`
+          "🧠 Memory: 1/3 · ids=[r1] · affected: confidence_band
 
-    it('visibility_off → both leave report untouched', () => {
-        const tsWork: FakeWork = { memory: [{ id: 'r1', type: 'rule' }], report: 'keep' };
-        const tsOut = fireSave(tsWork, { visibility_off: true });
-        const pyOut = pyReport(
-            pyWork("'memory':[{'id':'r1','type':'rule'}],'report':'keep'"),
-            'always',
-            true,
-        );
-        expect(tsOut).toBe('keep');
-        expect(tsOut).toBe(pyOut);
+          Memory changed decisions:
+          - r1 → confidence_band"
+        `);
     });
 });

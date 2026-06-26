@@ -1,24 +1,9 @@
-
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
     HOOK_EVENTS,
     HookEvent,
 } from '../../../src/agent-src/templates/scripts/work_engine/hooks/events.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const EVENTS_PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'hooks',
-    'events.py',
-);
 
 describe('work_engine.hooks.events — TS unit checks', () => {
     it('every member value equals its event name', () => {

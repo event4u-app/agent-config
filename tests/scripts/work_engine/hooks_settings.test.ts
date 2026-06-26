@@ -1,20 +1,17 @@
-// Golden-parity tests for the py2ts work_engine.hooks `settings` twin
-// (ADR-094). `settings.py` reads `.agent-settings.yml` via
-// work_engine._lib.agent_settings and parses the decision_engine block; the
-// TS twin mirrors the resolution exactly. Each scenario resolves the same
-// fixture on both engines and compares the full resolved HookSettings view.
+// Intent tests for the py2ts work_engine.hooks `settings` twin (ADR-094). The
+// twin reads `.agent-settings.yml` via work_engine._lib.agent_settings and
+// parses the decision_engine block; each scenario resolves a fixture and
+// asserts the full resolved HookSettings view via an inline snapshot. Was a
+// python3-vs-tsx parity rig; the `.py` original is gone.
 //
-// A non-existent `user_global_path` is passed on both sides so the host's
-// real user-global config never leaks into the comparison.
+// A non-existent `user_global_path` is passed so the host's real user-global
+// config never leaks into the resolution.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { load_hook_settings } from '../../../src/agent-src/templates/scripts/work_engine/hooks/settings.js';
-import { hasPython3, runPyHooks } from './_hooks_pyloader.js';
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 let tmp: string;
 let NO_GLOBAL: string;
@@ -48,43 +45,6 @@ function snapshotTs(settings_path: string): Record<string, unknown> {
         de_on_block: s.decision_engine.on_block,
         de_on_block_fallback: s.decision_engine.on_block_fallback,
     };
-}
-
-/** Resolve the same fixture in python3 and snapshot the dataclass fields. */
-function snapshotPy(settings_path: string): Record<string, unknown> {
-    const r = runPyHooks(
-        {
-            we: ['_lib.user_global_paths', '_lib.agent_settings', 'scoring.decision_engine'],
-            foundation: ['settings'],
-        },
-        [
-            `s = settings.load_hook_settings(${JSON.stringify(settings_path)}, ${JSON.stringify(NO_GLOBAL)})`,
-            'out = {',
-            '  "enabled": s.enabled,',
-            '  "trace": s.trace,',
-            '  "halt_surface_audit": s.halt_surface_audit,',
-            '  "state_shape_validation": s.state_shape_validation,',
-            '  "directive_set_guard": s.directive_set_guard,',
-            '  "decision_trace": s.decision_trace,',
-            '  "memory_visibility": s.memory_visibility,',
-            '  "memory_visibility_off": s.memory_visibility_off,',
-            '  "memory_cadence": s.memory_cadence,',
-            '  "chat_history_enabled": s.chat_history_enabled,',
-            '  "chat_history_script": s.chat_history_script,',
-            '  "de_surface_traces": s.decision_engine.surface_traces,',
-            '  "de_min_confidence": s.decision_engine.min_confidence,',
-            '  "de_block_on_risk": s.decision_engine.block_on_risk,',
-            '  "de_require_memory_hits": s.decision_engine.require_memory_hits,',
-            '  "de_on_block": s.decision_engine.on_block,',
-            '  "de_on_block_fallback": s.decision_engine.on_block_fallback,',
-            '}',
-            'print(json.dumps(out, sort_keys=True))',
-        ].join('\n'),
-    );
-    if (r.status !== 0) {
-        throw new Error(`python3 settings probe failed: ${r.stderr || r.stdout}`);
-    }
-    return JSON.parse(r.stdout.trim()) as Record<string, unknown>;
 }
 
 function writeYaml(body: string): string {
@@ -142,35 +102,83 @@ describe('work_engine.hooks.settings — TS unit checks', () => {
     });
 });
 
-describePy('work_engine.hooks.settings — parity (python3 vs TS)', () => {
-    const cases: Array<[string, string]> = [
-        ['default (master off)', 'hooks:\n  enabled: false\n'],
-        ['master on + defaults', 'hooks:\n  enabled: true\n'],
-        [
-            'chat-history both on',
-            'hooks:\n  enabled: true\n  chat_history:\n    enabled: true\n    script: scripts/custom_ch.py\nchat_history:\n  enabled: true\n',
-        ],
-        ['memory off + cadence', 'hooks:\n  enabled: true\nmemory:\n  visibility: off\n  cadence: auto\n'],
-        [
-            'decision_engine gates',
-            'hooks:\n  enabled: true\ndecision_engine:\n  surface_traces: true\n  min_confidence: medium\n  block_on_risk: high\n  on_block: ask\n  on_block_fallback: warn\n',
-        ],
-        [
-            'per-hook overrides false',
+describe('work_engine.hooks.settings — full-resolution contract', () => {
+    it('per-hook overrides (trace on, others off)', () => {
+        const p = writeYaml(
             'hooks:\n  enabled: true\n  trace: true\n  halt_surface_audit: false\n  state_shape_validation: false\n  directive_set_guard: false\n  memory_visibility:\n    enabled: false\n',
-        ],
-        ['malformed decision_engine → defaults', 'hooks:\n  enabled: true\ndecision_engine:\n  bogus_key: 1\n'],
-    ];
+        );
+        expect(snapshotTs(p)).toMatchInlineSnapshot(`
+          {
+            "chat_history_enabled": false,
+            "chat_history_script": "scripts/chat_history.py",
+            "de_block_on_risk": "off",
+            "de_min_confidence": "off",
+            "de_on_block": "stop",
+            "de_on_block_fallback": "stop",
+            "de_require_memory_hits": false,
+            "de_surface_traces": false,
+            "decision_trace": false,
+            "directive_set_guard": false,
+            "enabled": true,
+            "halt_surface_audit": false,
+            "memory_cadence": "always",
+            "memory_visibility": false,
+            "memory_visibility_off": false,
+            "state_shape_validation": false,
+            "trace": true,
+          }
+        `);
+    });
 
-    for (const [name, yaml] of cases) {
-        it(`resolves identically: ${name}`, () => {
-            const p = writeYaml(yaml);
-            expect(snapshotTs(p)).toEqual(snapshotPy(p));
-        });
-    }
+    it('decision_engine gates (confidence / risk / on_block / fallback)', () => {
+        const p = writeYaml(
+            'hooks:\n  enabled: true\ndecision_engine:\n  surface_traces: true\n  min_confidence: medium\n  block_on_risk: high\n  on_block: ask\n  on_block_fallback: warn\n',
+        );
+        expect(snapshotTs(p)).toMatchInlineSnapshot(`
+          {
+            "chat_history_enabled": false,
+            "chat_history_script": "scripts/chat_history.py",
+            "de_block_on_risk": "high",
+            "de_min_confidence": "medium",
+            "de_on_block": "ask",
+            "de_on_block_fallback": "warn",
+            "de_require_memory_hits": false,
+            "de_surface_traces": true,
+            "decision_trace": true,
+            "directive_set_guard": true,
+            "enabled": true,
+            "halt_surface_audit": true,
+            "memory_cadence": "always",
+            "memory_visibility": true,
+            "memory_visibility_off": false,
+            "state_shape_validation": true,
+            "trace": false,
+          }
+        `);
+    });
 
-    it('missing file resolves identically (both default-permissive)', () => {
-        const p = path.join(tmp, 'absent.yml');
-        expect(snapshotTs(p)).toEqual(snapshotPy(p));
+    it('malformed decision_engine block → defaults', () => {
+        const p = writeYaml('hooks:\n  enabled: true\ndecision_engine:\n  bogus_key: 1\n');
+        expect(snapshotTs(p)).toMatchInlineSnapshot(`
+          {
+            "chat_history_enabled": false,
+            "chat_history_script": "scripts/chat_history.py",
+            "de_block_on_risk": "off",
+            "de_min_confidence": "off",
+            "de_on_block": "stop",
+            "de_on_block_fallback": "stop",
+            "de_require_memory_hits": false,
+            "de_surface_traces": false,
+            "decision_trace": false,
+            "directive_set_guard": true,
+            "enabled": true,
+            "halt_surface_audit": true,
+            "memory_cadence": "always",
+            "memory_visibility": true,
+            "memory_visibility_off": false,
+            "state_shape_validation": true,
+            "trace": false,
+          }
+        `);
     });
 });

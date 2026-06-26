@@ -145,14 +145,20 @@ stay open below — not force-marked done.
       former byte-parity assertions; `directives_init`'s python-`__all__` half
       dropped as it asserted no TS contract beyond the kept empty-marker test).
       work_engine dir: 582 passed / 37 skipped / 0 failed, python-free.
-      **Still deferred in work_engine:** `_hooks_pyloader.ts` (shared helper
-      imported by 11 `hooks_*` tests — neutralise only after those consumers
-      are converted) — the remaining 37 skips above.
-    - **Remaining spawn-file tail after these two clusters: 108** (measured
-      `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`). Next
-      coherent groups: `_cli/cmd_*` (~17, likely delete-candidates covered by
-      `cli-e2e` → bulk-deletion needs Hard-Floor surfacing), `templates_*`
-      memory/telemetry (~10), `ai_council` (3), and singletons.
+      **work_engine is now fully python-free (2026-06-27).** The 11 `hooks_*`
+      consumers were converted (parity blocks dropped where they duplicated a
+      TS-unit assertion; the genuinely-unique edges — repr quote-switches,
+      `on_block=ask` ask-timeout, full decision-trace envelopes, memory-report
+      lines, settings full-resolution, chat-history payload escaping — preserved
+      as python-free inline snapshots), `_hooks_pyloader.ts` deleted, and 3
+      stray dead `*_PY` python-path consts (`hooks_context/events/exceptions`)
+      removed. **work_engine dir: 597 passed / 0 skipped / 0 failed.**
+    - **Remaining spawn-file tail (repo-wide): 103** (measured
+      `git grep -lE "spawnSync\\(['\"]python3?['\"]" -- 'tests/**'`; 0 under
+      work_engine). Next coherent groups: `_cli/cmd_*` (~17, likely
+      delete-candidates covered by `cli-e2e` → bulk-deletion needs Hard-Floor
+      surfacing), `templates_*` memory/telemetry (~10), `ai_council` (3), and
+      singletons.
   - **~30 leftover-spawn files** — a python spawn survives in a now-dead helper
     the codemod did not fully prune; finish per-file.
   - **2 woven-describe files** (`validate_frontmatter`, `ai_council/events_log`)

@@ -1,6 +1,9 @@
-// Golden-parity + unit tests for the py2ts halt_surface_audit hook twin
-// (ADR-094). Fires on ON_HALT, raises HookError (non-fatal) when the halt
-// surface is empty. Messages use `!r` repr on step_name.
+// Intent tests for the py2ts halt_surface_audit hook twin (ADR-094). Fires on
+// ON_HALT, raises HookError (non-fatal) when the halt surface is empty.
+// Messages use `!r` repr on step_name, asserted directly below. Was a
+// python3-vs-tsx parity rig; the `.py` original is gone, so the one parity
+// scenario the unit checks did not cover — the repr quote-switch on an
+// apostrophe-bearing step_name — is preserved as a python-free assertion.
 import { describe, expect, it } from 'vitest';
 
 import { HaltSurfaceAuditHook } from '../../../src/agent-src/templates/scripts/work_engine/hooks/builtin/halt_surface_audit.js';
@@ -8,9 +11,6 @@ import { HookContext } from '../../../src/agent-src/templates/scripts/work_engin
 import { HookError } from '../../../src/agent-src/templates/scripts/work_engine/hooks/exceptions.js';
 import { HookEvent } from '../../../src/agent-src/templates/scripts/work_engine/hooks/events.js';
 import { HookRegistry } from '../../../src/agent-src/templates/scripts/work_engine/hooks/registry.js';
-import { hasPython3, runPyHooks } from './_hooks_pyloader.js';
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 function fire(ctx: HookContext): HookError | null {
     const hook = new HaltSurfaceAuditHook();
@@ -63,48 +63,9 @@ describe('HaltSurfaceAuditHook — TS unit checks', () => {
             'halt at step None surfaced no questions (StepResult.questions empty); the user has nothing to act on',
         );
     });
-});
 
-describePy('HaltSurfaceAuditHook — message parity (python3 vs TS)', () => {
-    function pyAudit(snippet: string): string {
-        const r = runPyHooks(
-            {
-                foundation: ['exceptions', 'context', 'events', 'registry'],
-                builtin: ['halt_surface_audit'],
-            },
-            [
-                'hook = halt_surface_audit.HaltSurfaceAuditHook()',
-                snippet,
-                'msg = None',
-                'try:',
-                '    hook._audit(ctx)',
-                'except exceptions.HookError as e:',
-                '    msg = str(e)',
-                'print(json.dumps({"msg": msg}))',
-            ].join('\n'),
-        );
-        if (r.status !== 0) throw new Error(`py audit failed: ${r.stderr || r.stdout}`);
-        return (JSON.parse(r.stdout.trim()) as { msg: string | null }).msg ?? '<none>';
-    }
-
-    it('StepResult empty-questions message matches', () => {
-        const ts = fire(new HookContext({ step_name: 'refine', result: { questions: [] } }))?.message;
-        expect(ts).toBe(
-            pyAudit("ctx = context.HookContext(step_name='refine', result=type('R',(),{'questions':[]})())"),
-        );
-    });
-
-    it('hook-driven empty-delivery message matches', () => {
-        const ts = fire(new HookContext({ step_name: 'plan', delivery: { questions: [] } }))?.message;
-        expect(ts).toBe(
-            pyAudit("ctx = context.HookContext(step_name='plan', delivery=type('D',(),{'questions':[]})())"),
-        );
-    });
-
-    it('step_name with apostrophe → repr switches quotes, matches', () => {
-        const ts = fire(new HookContext({ step_name: "it's", result: { questions: [] } }))?.message;
-        expect(ts).toBe(
-            pyAudit("ctx = context.HookContext(step_name=\"it's\", result=type('R',(),{'questions':[]})())"),
-        );
+    it('step_name with apostrophe → repr switches to double quotes', () => {
+        const err = fire(new HookContext({ step_name: "it's", result: { questions: [] } }));
+        expect(err?.message).toMatchInlineSnapshot(`"halt at step "it's" surfaced no questions (StepResult.questions empty); the user has nothing to act on"`);
     });
 });

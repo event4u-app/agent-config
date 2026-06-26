@@ -1,6 +1,3 @@
-
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -8,18 +5,6 @@ import {
     HookHalt,
     _HookSignal,
 } from '../../../src/agent-src/templates/scripts/work_engine/hooks/exceptions.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const EXC_PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'hooks',
-    'exceptions.py',
-);
 
 describe('work_engine.hooks.exceptions — TS unit checks', () => {
     it('HookError and HookHalt extend _HookSignal and Error', () => {

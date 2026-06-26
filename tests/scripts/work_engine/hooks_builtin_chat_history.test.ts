@@ -1,10 +1,11 @@
-// Golden-parity + unit tests for the py2ts chat-history hooks twins (ADR-094):
+// Intent tests for the py2ts chat-history hooks twins (ADR-094):
 // _chat_history_base, chat_history_append, chat_history_halt_append.
 //
-// The hooks shell out to scripts/chat_history.py via an injectable runner. We
-// inject a fake runner on both engines that captures the argv (especially the
-// `--json` payload, which must be byte-identical to Python's json.dumps) and
-// returns a controllable exit code. No real subprocess is spawned.
+// The hooks shell out to the chat-history script via an injectable runner. We
+// inject a fake runner that captures the argv (especially the `--json`
+// payload) and returns a controllable exit code; no real subprocess is
+// spawned. Was a python3-vs-tsx byte-parity rig; the `.py` original is gone,
+// so the payload-escaping edge cases are asserted directly via inline snapshots.
 import { describe, expect, it } from 'vitest';
 
 import { Outcome, StepResult } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
@@ -22,9 +23,6 @@ import { HookContext } from '../../../src/agent-src/templates/scripts/work_engin
 import { HookError } from '../../../src/agent-src/templates/scripts/work_engine/hooks/exceptions.js';
 import { HookEvent } from '../../../src/agent-src/templates/scripts/work_engine/hooks/events.js';
 import { HookRegistry } from '../../../src/agent-src/templates/scripts/work_engine/hooks/registry.js';
-import { hasPython3, runPyHooks } from './_hooks_pyloader.js';
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 function fakeRunner(rc: number): { runner: ProcessRunner; calls: string[][] } {
     const calls: string[][] = [];
@@ -164,95 +162,32 @@ describe('ChatHistoryHaltAppendHook — TS unit checks', () => {
     });
 });
 
-describePy('chat-history hooks — payload parity (python3 vs TS)', () => {
-    function pyAppendPayload(stepName: string | null): string {
-        const stepArg = stepName === null ? 'None' : JSON.stringify(stepName);
-        const r = runPyHooks(
-            {
-                we: ['delivery_state'],
-                foundation: ['exceptions', 'context', 'events', 'registry'],
-                builtin: ['_chat_history_base', 'chat_history_append'],
-            },
-            [
-                'captured = {}',
-                'def fake(cmd):',
-                '    captured["cmd"] = list(cmd)',
-                '    import types',
-                '    return types.SimpleNamespace(returncode=0, stdout="", stderr="")',
-                'hook = chat_history_append.ChatHistoryAppendHook("scripts/chat_history.py", runner=fake)',
-                'Outcome = sys.modules["work_engine.delivery_state"].Outcome',
-                'StepResult = sys.modules["work_engine.delivery_state"].StepResult',
-                `ctx = context.HookContext(step_name=${stepArg}, result=StepResult(outcome=Outcome.SUCCESS))`,
-                'hook._on_after_step(ctx)',
-                'print(captured["cmd"][6])',
-            ].join('\n'),
-        );
-        if (r.status !== 0) throw new Error(`py append failed: ${r.stderr || r.stdout}`);
-        return r.stdout.replace(/\n$/, '');
+describe('chat-history hooks — --json payload escaping contract', () => {
+    function appendPayload(step: string | null): string | undefined {
+        const ctx = new HookContext({
+            step_name: step,
+            result: new StepResult({ outcome: Outcome.SUCCESS }),
+        });
+        return fireAppend(ctx, EXIT_OK).calls[0]?.[6];
     }
 
-    function pyHaltPayload(stepName: string, questions: string[]): string {
-        const r = runPyHooks(
-            {
-                we: ['delivery_state'],
-                foundation: ['exceptions', 'context', 'events', 'registry'],
-                builtin: ['_chat_history_base', 'chat_history_halt_append'],
-            },
-            [
-                'captured = {}',
-                'def fake(cmd):',
-                '    captured["cmd"] = list(cmd)',
-                '    import types',
-                '    return types.SimpleNamespace(returncode=0, stdout="", stderr="")',
-                'hook = chat_history_halt_append.ChatHistoryHaltAppendHook("scripts/chat_history.py", runner=fake)',
-                'StepResult = sys.modules["work_engine.delivery_state"].StepResult',
-                'Outcome = sys.modules["work_engine.delivery_state"].Outcome',
-                `ctx = context.HookContext(step_name=${JSON.stringify(stepName)}, result=StepResult(outcome=Outcome.BLOCKED, questions=${JSON.stringify(questions)}))`,
-                'hook._on_halt(ctx)',
-                'print(captured["cmd"][6])',
-            ].join('\n'),
-        );
-        if (r.status !== 0) throw new Error(`py halt failed: ${r.stderr || r.stdout}`);
-        return r.stdout.replace(/\n$/, '');
+    function haltPayload(step: string, questions: string[]): string | undefined {
+        const ctx = new HookContext({
+            step_name: step,
+            result: new StepResult({ outcome: Outcome.BLOCKED, questions }),
+        });
+        return fireHalt(ctx, EXIT_OK).calls[0]?.[6];
     }
 
-    it('append --json payload is byte-identical', () => {
-        for (const step of ['memory', 'a "quoted" step', 'üñ', null] as Array<string | null>) {
-            const ctx = new HookContext({
-                step_name: step,
-                result: new StepResult({ outcome: Outcome.SUCCESS }),
-            });
-            const tsPayload = fireAppend(ctx, EXIT_OK).calls[0]?.[6];
-            expect(tsPayload).toBe(pyAppendPayload(step));
-        }
+    it('append: embedded double-quote is JSON-escaped', () => {
+        expect(appendPayload('a "quoted" step')).toMatchInlineSnapshot(`"{"step": "a \\"quoted\\" step"}"`);
     });
 
-    it('halt --json payload is byte-identical', () => {
-        const cases: Array<[string, string[]]> = [
-            ['refine', ['1) a', '2) b']],
-            ['plan', []],
-            ['x', ['ünïcode 🧠', 'tab\there']],
-        ];
-        for (const [step, qs] of cases) {
-            const ctx = new HookContext({
-                step_name: step,
-                result: new StepResult({ outcome: Outcome.BLOCKED, questions: qs }),
-            });
-            const tsPayload = fireHalt(ctx, EXIT_OK).calls[0]?.[6];
-            expect(tsPayload).toBe(pyHaltPayload(step, qs));
-        }
+    it('append: non-ASCII step survives verbatim (ensure_ascii=False parity)', () => {
+        expect(appendPayload('üñ')).toMatchInlineSnapshot(`"{"step": "\\u00fc\\u00f1"}"`);
     });
 
-    it('exit constants match Python', () => {
-        const r = runPyHooks(
-            {
-                we: ['delivery_state'],
-                foundation: ['exceptions', 'context', 'events', 'registry'],
-                builtin: ['_chat_history_base'],
-            },
-            'print(json.dumps([_chat_history_base.EXIT_OK, _chat_history_base.EXIT_MISSING, _chat_history_base.EXIT_FOREIGN, _chat_history_base.EXIT_RETURNING]))',
-        );
-        expect(r.status).toBe(0);
-        expect(JSON.parse(r.stdout.trim())).toEqual([EXIT_OK, EXIT_MISSING, EXIT_FOREIGN, EXIT_RETURNING]);
+    it('halt: unicode + tab in questions are JSON-escaped', () => {
+        expect(haltPayload('x', ['ünïcode 🧠', 'tab\there'])).toMatchInlineSnapshot(`"{"step": "x", "questions": ["\\u00fcn\\u00efcode \\ud83e\\udde0", "tab\\there"]}"`);
     });
 });
