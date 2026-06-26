@@ -1,58 +1,24 @@
-// Golden-parity tests for work_engine/directives/backend/verify.ts vs
-// verify.py (ADR-094 py2ts Phase 1 — backend directive set).
+// Intent tests for work_engine/directives/backend/verify.ts (ADR-094 py2ts
+// Phase 1 — backend directive set).
 //
-// `verify.py` imports `...delivery_state` + `...persona_policy`, so it loads as
-// a real package member via `sys.path` + import. Covers persona gating
-// (advisory skip), verdict validation (`{verdict!r}` repr in the malformed
-// message), and the bad-verdict halt (`blocked` / `partial`). TS twin
-// in-process; Python via python3 subprocess; byte-exact compare. Malformed-
-// verdict fixtures use only None / plain strings for unambiguous repr. No
-// non-determinism.
-import { spawnSync } from 'node:child_process';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+// Was a python3-vs-tsx byte-parity rig; the `.py` original is gone, so this now
+// asserts the tsx directive's own contract directly. The TS twin is exercised
+// in-process: build a `DeliveryState` from a JSON fixture, run the directive,
+// and emit `{outcome, questions, message}` as canonical JSON for an inline
+// snapshot. Covers persona gating (advisory skip), verdict validation (the
+// `{verdict!r}`-style repr in the malformed message), and the bad-verdict halt
+// (`blocked` / `partial`). `run()` is a pure function of the fixture — no
+// clock / random / PATH — so the snapshots are deterministic.
 import { describe, expect, it } from 'vitest';
 
 import { AMBIGUITIES, run } from '../../../src/agent-src/templates/scripts/work_engine/directives/backend/verify.js';
 import { DeliveryState, type StepResult } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const SCRIPTS_ROOT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-function runPy(moduleName: string, stateJson: string): string {
-    const code = [
-        'import sys, json, importlib',
-        `sys.path.insert(0, ${JSON.stringify(SCRIPTS_ROOT)})`,
-        `mod = importlib.import_module("work_engine.directives.backend.${moduleName}")`,
-        'from work_engine.delivery_state import DeliveryState',
-        'payload = json.loads(sys.argv[1])',
-        'st = DeliveryState(**payload)',
-        'r = mod.run(st)',
-        'out = {"outcome": r.outcome.value, "questions": r.questions, "message": r.message}',
-        'sys.stdout.write(json.dumps(out, indent=2, ensure_ascii=False))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code, stateJson], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
-
+/** TS twin: build DeliveryState from the fixture, run, emit canonical JSON. */
 function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): string {
     const r: StepResult = run(new DeliveryState(state));
     return JSON.stringify({ outcome: r.outcome, questions: r.questions, message: r.message }, null, 2);
 }
-
-function pyFixture(state: ConstructorParameters<typeof DeliveryState>[0]): string {
-    return JSON.stringify(state);
-}
-
-const py = hasPython3();
-const describeParity = py ? describe : describe.skip;
 
 const ok = { test: 'success' };
 
@@ -67,30 +33,140 @@ describe('directives/backend/verify — AMBIGUITIES', () => {
     });
 });
 
-describeParity('directives/backend/verify — golden parity (ts == py)', () => {
-    const cases: Array<[string, ConstructorParameters<typeof DeliveryState>[0]]> = [
-        ['advisory persona → SUCCESS short-circuit', { ticket: { id: 'V-1' }, persona: 'advisory', outcomes: ok }],
-        ['test not success → BLOCKED precondition', { ticket: { id: 'V-2' }, outcomes: {} }],
-        ['empty verify → delegate review-changes', { ticket: { id: 'V-3' }, outcomes: ok }],
-        ['success verdict → SUCCESS', { ticket: { id: 'V-4' }, verify: { verdict: 'success' }, outcomes: ok }],
-        ['blocked verdict → BLOCKED bad verdict', { ticket: { id: 'V-5' }, verify: { verdict: 'blocked' }, outcomes: ok }],
-        ['partial verdict → BLOCKED bad verdict', { ticket: { id: 'V-6' }, verify: { verdict: 'partial' }, outcomes: ok }],
-        [
-            'verify not a dict → BLOCKED malformed (typename)',
-            { ticket: { id: 'V-7' }, verify: 'a string', outcomes: ok },
-        ],
-        [
-            'unknown verdict string → BLOCKED malformed (repr)',
-            { ticket: { id: 'V-8' }, verify: { verdict: 'failed' }, outcomes: ok },
-        ],
-        [
-            'missing verdict key (None) → BLOCKED malformed (repr None)',
-            { ticket: { id: 'V-9' }, verify: { confidence: 'high' }, outcomes: ok },
-        ],
-        ['no ticket id, delegate → "(no id)"', { ticket: {}, outcomes: ok }],
-    ];
+describe('directives/backend/verify — outcome contract', () => {
+    it('advisory persona → SUCCESS short-circuit', () => {
+        expect(runTs({ ticket: { id: 'V-1' }, persona: 'advisory', outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "success",
+            "questions": [],
+            "message": "verify skipped: persona \`advisory\` is plan-only."
+          }"
+        `);
+    });
 
-    it.each(cases)('%s', (_label, state) => {
-        expect(runTs(state)).toBe(runPy('verify', pyFixture(state)));
+    it('test not success → BLOCKED precondition', () => {
+        expect(runTs({ ticket: { id: 'V-2' }, outcomes: {} })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket V-2 — verify gate refused: \`test\` step did not complete successfully.",
+              "> 1. Re-run \`/implement-ticket\` from the start",
+              "> 2. Abort"
+            ],
+            "message": "Ticket V-2 cannot verify: test gate did not pass."
+          }"
+        `);
+    });
+
+    it('empty verify → delegate review-changes', () => {
+        expect(runTs({ ticket: { id: 'V-3' }, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "@agent-directive: review-changes ticket=V-3",
+              "> Ticket V-3 — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+              "> 1. Continue — run \`review-changes\` now",
+              "> 2. Abort — skip review (NOT recommended)"
+            ],
+            "message": "Ticket V-3 needs \`review-changes\` before the report."
+          }"
+        `);
+    });
+
+    it('success verdict → SUCCESS', () => {
+        expect(runTs({ ticket: { id: 'V-4' }, verify: { verdict: 'success' }, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "success",
+            "questions": [],
+            "message": ""
+          }"
+        `);
+    });
+
+    it('blocked verdict → BLOCKED bad verdict', () => {
+        expect(runTs({ ticket: { id: 'V-5' }, verify: { verdict: 'blocked' }, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket V-5 — \`review-changes\` reported \`blocked\`. The delivery report cannot claim completion on a non-success verdict (see \`verify-before-complete\`).",
+              "> 1. Address the findings and re-run \`review-changes\`",
+              "> 2. Continue anyway — override (NOT recommended)",
+              "> 3. Abort"
+            ],
+            "message": "Ticket V-5 verify verdict was \`blocked\`, not success."
+          }"
+        `);
+    });
+
+    it('partial verdict → BLOCKED bad verdict', () => {
+        expect(runTs({ ticket: { id: 'V-6' }, verify: { verdict: 'partial' }, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket V-6 — \`review-changes\` reported \`partial\`. The delivery report cannot claim completion on a non-success verdict (see \`verify-before-complete\`).",
+              "> 1. Address the findings and re-run \`review-changes\`",
+              "> 2. Continue anyway — override (NOT recommended)",
+              "> 3. Abort"
+            ],
+            "message": "Ticket V-6 verify verdict was \`partial\`, not success."
+          }"
+        `);
+    });
+
+    it('verify not a dict → BLOCKED malformed (typename)', () => {
+        expect(runTs({ ticket: { id: 'V-7' }, verify: 'a string', outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket V-7 — recorded verify output is malformed: state.verify must be a dict, got str.",
+              "> 1. Re-run \`review-changes\` and resume",
+              "> 2. Abort — verify verdict cannot be trusted"
+            ],
+            "message": "Ticket V-7 verify shape invalid: state.verify must be a dict, got str."
+          }"
+        `);
+    });
+
+    it('unknown verdict string → BLOCKED malformed (repr)', () => {
+        expect(runTs({ ticket: { id: 'V-8' }, verify: { verdict: 'failed' }, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket V-8 — recorded verify output is malformed: state.verify['verdict'] must be one of success, blocked, partial; got 'failed'.",
+              "> 1. Re-run \`review-changes\` and resume",
+              "> 2. Abort — verify verdict cannot be trusted"
+            ],
+            "message": "Ticket V-8 verify shape invalid: state.verify['verdict'] must be one of success, blocked, partial; got 'failed'."
+          }"
+        `);
+    });
+
+    it('missing verdict key (None) → BLOCKED malformed (repr None)', () => {
+        expect(runTs({ ticket: { id: 'V-9' }, verify: { confidence: 'high' }, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "> Ticket V-9 — recorded verify output is malformed: state.verify['verdict'] must be one of success, blocked, partial; got None.",
+              "> 1. Re-run \`review-changes\` and resume",
+              "> 2. Abort — verify verdict cannot be trusted"
+            ],
+            "message": "Ticket V-9 verify shape invalid: state.verify['verdict'] must be one of success, blocked, partial; got None."
+          }"
+        `);
+    });
+
+    it('no ticket id, delegate → "(no id)"', () => {
+        expect(runTs({ ticket: {}, outcomes: ok })).toMatchInlineSnapshot(`
+          "{
+            "outcome": "blocked",
+            "questions": [
+              "@agent-directive: review-changes ticket=(no id)",
+              "> Ticket (no id) — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+              "> 1. Continue — run \`review-changes\` now",
+              "> 2. Abort — skip review (NOT recommended)"
+            ],
+            "message": "Ticket (no id) needs \`review-changes\` before the report."
+          }"
+        `);
     });
 });
