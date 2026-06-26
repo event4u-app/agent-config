@@ -149,6 +149,11 @@ tasks:
     desc: "Measure on-demand (non-kernel) rule-load latency p50/p95/p99 (token-saving Phase 0). Mechanical resolve+read cost of `dist/agent-src/rules/<id>.md`; measurement only, never gates. `--write` → internal/bench/reports/rule-load-latency.json."
     cmd: ./scripts-run src/scripts/bench_rule_load_latency
 
+  bench-quality-run:
+    silent: true
+    desc: "Produce internal/bench/reports/quality-run.json — the thin-vs-eager length-controlled judge run that activates the check-quality-regression gate (Phase 0 EXIT). API-GATED: a live run needs an Anthropic key + costs $ (golden tasks × 2 arms + 2 judge calls). `--dry-run` proves the pipeline with no API; `--limit N` bounds a live run; then run `check-quality-regression`."
+    cmd: ./scripts-run src/scripts/bench_quality_run {{.CLI_ARGS}}
+
   check-quality-regression:
     silent: true
     desc: "Quality-regression gate (token-saving Phase 0): length-controlled paired judge over the golden set; fail if thin's win-rate < 48% vs eager. INERT until internal/bench/reports/quality-run.json exists (the thin-vs-eager judge run is the operator/cost gate), so CI stays green until then."
