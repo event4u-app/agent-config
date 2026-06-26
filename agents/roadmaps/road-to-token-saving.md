@@ -341,14 +341,31 @@ order is deterministic across two clean builds.
 
 Make the always-loaded token surface a first-class, gated metric.
 
-- [ ] Add a CI linter (learn from `ctxlint` / ECC `context-budget`) that sums the
+- [x] Add a CI linter (learn from `ctxlint` / ECC `context-budget`) that sums the
       always-loaded token surface (kernel + always-scanned skill descriptions +
       tier-1) and fails past a threshold.
       <!-- carve-out: new-gate-verification -->
+      <!-- done: the existing `audit-tokens-budget` gate (audit_initial_context
+      --fail-if-over-budget, already in both CI pipelines, live-computed) is now
+      ACTIVE — provisional token caps set on the always-scanned surfaces:
+      skill_catalog.gpt 12,500 (repointed from skills_projected→skills_core_source,
+      the 258 always-scanned descriptions), command_catalog.gpt 5,800,
+      mcp_schemas.gpt 3,500. rules.gpt stays advisory — the always-RULES surface
+      is gated char-based by `check_always_budget` (no redundant token cap). Logic
+      extracted to a pure `evaluate_budgets()` + 12 tests (synthetic over-budget
+      fails, current passes). NOTE: a kernel/tier-1 *aggregate* sum was not added
+      — the per-surface caps + check_always_budget already cover the floor. -->
 - [ ] Set the threshold at the **quality elbow** found in Phase 0 (context-rot:
       quality degrades well before the window fills), not at a % of max window.
+      <!-- PROVISIONAL caps in place (current + ~15% headroom = regression caps,
+      explicitly NOT the elbow). The context-rot quality elbow needs the Phase 0
+      live validation run (operator/cost-gated) — same key that unblocks the
+      thin-flip + RTK kernel-promotion. Re-anchor the caps with that evidence then. -->
 - [ ] Trim the 15 skill descriptions at the 202-char cap toward ~150; descriptions
       are always-scanned across ~250 skills.
+      <!-- deferred: delicate — descriptions drive skill SELECTION, so over-trimming
+      degrades it; should be done carefully + verified against the trigger/selection
+      bench, as its own change. Not blocking the gate above. -->
 
 **Exit:** the linter fails a synthetic over-budget always-loaded surface and
 passes the current one; threshold documented with its Phase 0 evidence.

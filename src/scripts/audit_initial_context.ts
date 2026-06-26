@@ -67,12 +67,40 @@ const MCP_SERVER_NAME = 'agent-config';
 const MCP_OVERSUBSCRIPTION_TOOL_CAP = 25;
 
 // Initial-token budget per surface (null = advisory only, no gate).
-const BUDGETS: Record<string, number | null> = {
+//
+// PROVISIONAL caps (token-saving Phase 8): regression caps at the current
+// surface + ~15% headroom — NOT the quality elbow. The context-rot quality
+// elbow (the roadmap's intended threshold) needs the Phase 0 live validation
+// run, which is operator/cost-gated; until then these caps stop SILENT growth
+// of the always-loaded token surface. Re-anchor with evidence once the elbow is
+// measured. `rules.gpt` stays advisory here — the always-RULES surface is gated
+// (char-based, extended size) by `check_always_budget`; a token cap would be
+// redundant.
+export const BUDGETS: Record<string, number | null> = {
     'rules.gpt': null,
-    'skill_catalog.gpt': null,
-    'command_catalog.gpt': null,
-    'mcp_schemas.gpt': null,
+    'skill_catalog.gpt': 12_500, // always-scanned skill descriptions (skills_core_source, 258); current ~10,999
+    'command_catalog.gpt': 5_800, // always-scanned command catalog; current ~5,005
+    'mcp_schemas.gpt': 3_500, // per-connected-client MCP tool schemas; current ~2,942
 };
+
+/**
+ * Pure budget check: return one breach line per surface whose measured token
+ * count exceeds its cap. A `null`/absent cap is advisory (never a breach).
+ * Exported so the gate's pass/fail logic is unit-testable (token-saving Phase 8).
+ */
+export function evaluate_budgets(
+    checks: Record<string, number>,
+    budgets: Record<string, number | null>,
+): string[] {
+    const breaches: string[] = [];
+    for (const [key, val] of Object.entries(checks)) {
+        const cap = budgets[key];
+        if (cap !== null && cap !== undefined && val > cap) {
+            breaches.push(`${key} ${val} > budget ${cap}`);
+        }
+    }
+    return breaches;
+}
 
 type Measure = token_count.Measure & { files?: number; entries?: number };
 
@@ -645,7 +673,6 @@ export function main(argv: string[] | null = null): number {
     const data = build();
 
     if (args.fail_if_over_budget) {
-        const breaches: string[] = [];
         const rfVals = Object.values(data.rule_footprint as Record<string, Measure>);
         const rf = rfVals.length > 0 ? (rfVals[0] as Measure) : ({} as Measure);
         const dc = data.description_catalog as Record<string, Measure>;
@@ -653,16 +680,14 @@ export function main(argv: string[] | null = null): number {
         const mcp_gpt = Object.values(mcp).reduce((acc, s) => acc + s.tokens_gpt, 0);
         const checks: Record<string, number> = {
             'rules.gpt': rf.tokens_gpt ?? 0,
-            'skill_catalog.gpt': (dc.skills_projected as Measure).tokens_gpt,
+            // The always-SCANNED skill descriptions (258 source skills) — the
+            // surface the host reads for selection — not the larger per-tool
+            // projected catalog (skills_projected, 412 entries). Phase 8.
+            'skill_catalog.gpt': (dc.skills_core_source as Measure).tokens_gpt,
             'command_catalog.gpt': (dc.commands_core_source as Measure).tokens_gpt,
             'mcp_schemas.gpt': mcp_gpt,
         };
-        for (const [key, val] of Object.entries(checks)) {
-            const cap = BUDGETS[key];
-            if (cap !== null && cap !== undefined && val > cap) {
-                breaches.push(`${key} ${val} > budget ${cap}`);
-            }
-        }
+        const breaches = evaluate_budgets(checks, BUDGETS);
         if (breaches.length > 0) {
             process.stdout.write('❌  initial-context budget: ' + breaches.join('; ') + '\n');
             return 1;
