@@ -185,17 +185,40 @@ Headline fix: RTK assets are maintainer-only → inactive in consumer projects.
 Council: if RTK is truly deterministic + safe, it belongs in the kernel, not a
 profile toggle — validate against the Phase 0 golden set, then promote.
 
-- [ ] Remove `workspaces: [agent-config-maintainer]` + reclassify `packs: [meta]`
+> **Correction (2026-06-26, verified).** The "maintainer-only / not shipped"
+> premise is obsolete. The `meta` pack is `always_on: true` (ADR-091,
+> 2026-06-13 — predates this roadmap), so the RTK rule + skill files already
+> project to EVERY consumer (in `dist/router.json` as tier_2; same
+> `meta`+`maintainer` tags as the kernel rule `direct-answers`). The real gate
+> is the PROFILE: the rule is tier_2, which fires only under the `full` profile;
+> the default is `balanced` (kernel + tier_1), so RTK auto-routing is off by
+> default. The fix is therefore a **tier_2 → kernel promotion** (the council's
+> "belongs in the kernel"), NOT a pack reclassification — which would move it
+> OUT of always_on and *reduce* reach.
+
+- [-] Remove `workspaces: [agent-config-maintainer]` + reclassify `packs: [meta]`
       → core scope on `src/rules/cli-output-handling.md` and
       `src/skills/rtk-output-filtering/SKILL.md`, so they load in every project.
+      <!-- cancelled 2026-06-26: premise obsolete (see Correction). Files ALREADY
+      load in every project via always_on `meta` + router tier_2 (verified). The
+      prescribed reclassify out of `meta` is counterproductive (drops always_on
+      shipping). The real lever — tier_2 → kernel — is the validation-gated step
+      below. -->
 - [ ] Run the Phase 0 golden set through RTK; confirm no output-completeness
       regression (ANSI/structured output, the `git diff` truncation denylist).
       If clean → promote RTK wrapping to always-on; if not → keep profile-gated
       and record the failing case.
+      <!-- THIS is the real Phase 1 lever (tier_2 → kernel promotion). Doubly
+      gated: (a) the golden-set validation run is operator/cost-gated (RTK binary
+      + live outputs); (b) a kernel-rule edit carries the scope-control
+      slow-rollout (own PR, ≥24h, not liftable by autonomy). Deferred. -->
 - [ ] Decide `/optimize rtk` exposure (default: keep internal — filter authoring
       is maintenance); ensure its scope does not block the rule/skill from loading.
 - [ ] Re-generate `dist/router.json`, discovery manifest, condensation, per-tool
       projections; confirm no asset assumed the maintainer-only scope.
+      <!-- router + condensation regen already done for the Phase 2 trigger change
+      (2026-06-26); reclassify-driven scope regen is moot (step 1 cancelled).
+      Verified no asset is gated out — always_on `meta` ships to all consumers. -->
 
 **Exit:** rule + skill resolve in a consumer-shaped project (no maintainer
 workspace), verified against `dist/router.json` + discovery manifest; RTK
@@ -207,14 +230,24 @@ golden-set regression result recorded.
 The rule fires only on `git/phpstan/rector/phpunit/composer`; the skill's
 "✅ Always" table covers far more.
 
-- [ ] Add missing trigger keywords to `cli-output-handling`: `npm`, `pnpm`,
+- [x] Add missing trigger keywords to `cli-output-handling`: `npm`, `pnpm`,
       `yarn`, `eslint`, `tsc`, `vitest`, `jest`, `pytest`, `ruff`, `mypy`,
       `pyright`, `cargo`, `go`, `golangci-lint`, `docker`, `kubectl`, `terraform`
       (reconciled against the skill table + `/optimize rtk` detection table).
-- [ ] De-duplicate: every "✅ Always" command has exactly one matching trigger;
+      <!-- done 2026-06-26: added as keywords, except `go` → phrases `go test` /
+      `go build` (a bare `go` keyword false-triggers on "go ahead"). Router
+      recompiled (tier-2=55), condensation hash updated; validate_frontmatter
+      0-fail, trigger-coverage 26/26, lint-rule-tiers pass. -->
+- [x] De-duplicate: every "✅ Always" command has exactly one matching trigger;
       every "❌/⛔" command has none.
+      <!-- reconciled vs the skill's Always/Never table (git/cargo/npm/phpunit/
+      phpstan/eslint/tsc/docker). The ⛔ cases (`git diff`, `rtk read`) are a
+      BEHAVIORAL denylist in the skill body, not trigger exclusions — `git` stays
+      a trigger; the skill body handles the git-diff carve-out. -->
 - [ ] Spot-check via trigger lookup (live trigger-eval is a human gate — hand the
       command to the user if needed).
+      <!-- static reconciliation done; the LIVE trigger-eval is operator-gated
+      (live-trigger-eval-human-gate) — hand to user for the live pass. -->
 
 **Exit:** every "✅ Always" command in the skill has a matching trigger.
 **Rollback:** revert the added triggers.
