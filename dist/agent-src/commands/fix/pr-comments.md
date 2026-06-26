@@ -7,7 +7,7 @@ visibility: internal
 cluster: fix
 sub: pr-comments
 skills: [php-coder, quality-tools]
-description: Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
+description: Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 suggestion:
   eligible: true
   trigger_description: "fix all PR review comments, resolve the review feedback"
@@ -131,7 +131,9 @@ Present numbered options. Always include a "leave as-is" / "skip" option.
 - Do NOT proceed until the user picks an option.
 - If the user wants a custom reply, let them dictate the text.
 - If the user asks a follow-up question, answer it before proceeding.
-- After the user chooses, apply the fix (or skip) and reply on GitHub.
+- After the user chooses, apply the fix (or skip) **locally** and record the
+  intended reply. Do NOT post the reply yet — replies + resolves happen in the
+  **Finalize** stage (after commit+push), so the change is already live.
 
 ### 4. Move to the next comment
 
@@ -141,16 +143,20 @@ Repeat until all comments are handled.
 
 ## Auto flow
 
-Process all comments without asking. For each comment:
+Process all comments without asking. For each comment, **apply the code fix
+locally and record the intended reply** — do NOT post the reply yet. All
+replies and thread resolves are posted in the **Finalize** stage below, *after*
+the fixes are committed and pushed, so every reply references code that is
+already live.
 
 **Bot comments:**
 1. Analyze whether the suggestion is valid.
-2. **If valid** — fix it and reply on GitHub.
-3. **If not valid** — reply on GitHub explaining why, do NOT change the code.
+2. **If valid** — apply the fix locally; record the reply.
+3. **If not valid** — record a reply explaining why, do NOT change the code.
 
 **Human reviewer comments:**
-1. **Clear code fix** — fix it and reply on GitHub.
-2. **Question** — reply with a concise explanation on GitHub.
+1. **Clear code fix** — apply the fix locally; record the reply.
+2. **Question** — record a concise explanation as the reply.
 3. **Ambiguous or a design decision** — do NOT guess; collect these and present
    them at the end: "These comments need your decision: …".
 
@@ -193,9 +199,32 @@ If `false` or `.agent-settings.yml` doesn't exist, do NOT add the prefix.
 Read `github.pr_reply_method` from `.agent-settings.yml` to determine the correct endpoint.
 See the `command-routing` skill → "GitHub API: Replying to PR review comments" for full details.
 
-## After all comments
+## Finalize — commit & push, THEN reply, THEN resolve
 
-1. Run a PHP syntax check (`php -l`) on all modified files to verify nothing is broken.
-2. Report a final summary: how many bot comments handled, how many reviewer
-   comments handled, how many files modified.
-3. **Do NOT commit or push.** Just apply the fixes locally and reply to all comments on GitHub.
+Run this **once**, after all comments are handled. The order is deliberate: the
+fix must be live on the PR branch *before* its reply claims it.
+
+1. **Syntax-check** the modified files (`php -l` for PHP) to verify nothing is broken.
+2. **Commit & push the fixes — before any reply.** If code was changed:
+   - Stage the review fixes and commit with a Conventional Commit subject
+     (e.g. `fix(review): address PR #<n> review comments`), per
+     `conventional-commits-writing` — no attribution footer, no emoji in the subject.
+   - Push to the PR branch so the fixes are live.
+   - **Authorization:** invoking `/fix:pr-comments` *is* the explicit authorization
+     for this commit + push (the command's contract — the `commit-policy`
+     "command invoked" exception, and the this-turn push authorization the
+     `non-destructive-by-default` Hard Floor requires). Never commit to a
+     production trunk; only the PR branch the comments are on.
+   - If **nothing** was changed (all comments were questions / explanations),
+     skip the commit + push.
+3. **Reply** to every handled comment (per the reply-style rules above), now that
+   the referenced fixes are pushed and live.
+4. **Resolve** the conversation for every handled comment — bot and human alike:
+   - Resolve each inline review thread via the GitHub GraphQL
+     `resolveReviewThread(input: {threadId: "<id>"})` mutation. Fetch the thread
+     node ids from `repository.pullRequest.reviewThreads` (GraphQL), match each
+     thread to the comment you just replied to, and resolve it.
+   - Top-level PR review comments that are not inline threads cannot be resolved
+     — the reply stands, leave them.
+5. **Final summary:** bot comments handled, reviewer comments handled, files
+   modified, the pushed commit sha (if any), and how many threads were resolved.
