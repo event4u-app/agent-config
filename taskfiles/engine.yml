@@ -133,6 +133,32 @@ tasks:
     desc: "Token-budget gate (Phase 1.4): fail if a measured initial-context surface exceeds its configured budget. Budgets are advisory (None) until Phase 3 sets them — passes today."
     cmd: ./scripts-run src/scripts/audit_initial_context --fail-if-over-budget
 
+  check-token-regression:
+    silent: true
+    desc: "Token-regression gate (token-saving Phase 0): regenerate the projection report, then fail if any tracked always-loaded/projected token surface grows >5% over internal/bench/reports/token-baseline.json. Re-anchor a deliberate increase with `./scripts-run src/scripts/check_token_regression --update-baseline`."
+    deps: [audit-tokens]
+    cmd: ./scripts-run src/scripts/check_token_regression
+
+  check-token-quality-golden:
+    silent: true
+    desc: "Validate the token-quality golden set structure + rule coverage (token-saving Phase 0). Scaffold mode: fails only on structural errors; stubs / uncovered rules are reported (operator fills labels). Add `--require-complete` for the operator-completion gate."
+    cmd: ./scripts-run src/scripts/check_token_quality_golden
+
+  bench-rule-load-latency:
+    silent: true
+    desc: "Measure on-demand (non-kernel) rule-load latency p50/p95/p99 (token-saving Phase 0). Mechanical resolve+read cost of `dist/agent-src/rules/<id>.md`; measurement only, never gates. `--write` → internal/bench/reports/rule-load-latency.json."
+    cmd: ./scripts-run src/scripts/bench_rule_load_latency
+
+  check-quality-regression:
+    silent: true
+    desc: "Quality-regression gate (token-saving Phase 0): length-controlled paired judge over the golden set; fail if thin's win-rate < 48% vs eager. INERT until internal/bench/reports/quality-run.json exists (the thin-vs-eager judge run is the operator/cost gate), so CI stays green until then."
+    cmd: ./scripts-run src/scripts/check_quality_regression
+
+  probe-host-compliance:
+    silent: true
+    desc: "Thin-projection host-compliance probe (token-saving Phase 0). Mechanical: assert the projector demotes the canary fixture to a router pointer (body removed, still selectable); fails if not. Prints the LIVE per-host checklist (operator gate) for Claude Code / Cursor / Augment."
+    cmd: ./scripts-run src/scripts/probe_host_compliance
+
   lean-projection-measure:
     silent: true
     desc: "Measure the thin-projection token delta (Phase 3.1): eager vs (kernel full + non-kernel pointers). Read-only — never writes the live projections. Set lean_projection.mode=thin + `task generate-tools` to actually thin (validate with bench:ab:live first)."

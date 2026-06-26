@@ -6,10 +6,10 @@
 
 ## Overall
 
-**64 / 122 steps done · 52%**
+**68 / 122 steps done · 56%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 30 | 4 | 0 | 0 | █░░░░░░░░░ 12% |
 | 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
@@ -38,11 +38,11 @@
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 0 / 34 done (0%)
+**Road to token saving — measure, then cut, at constant quality** — 4 / 34 done (12%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Measurement substrate (the prerequisite to every cut) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 0 | Measurement substrate (the prerequisite to every cut) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
 | 1 | RTK everywhere (un-gate the scope) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Close the RTK trigger gap | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Deterministic RTK wrap hook + install verification | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
