@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: brand-to-tokens
-description: "Derive a DTCG .tokens.json source of truth from confirmed brand decisions, emit CSS vars + Tailwind via design-tokens, and export locked brand deck templates. Use to turn a brand identity into tokens."
+description: "Turn a confirmed brand identity into a DTCG .tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates."
 domain: engineering
 personas: []
 workspaces:

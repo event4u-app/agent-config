@@ -59,12 +59,22 @@ length-controlled. Tools to learn from: `ctxlint`, `agent-skill-linter`, ECC
 
 ## Prerequisites
 
-- [ ] Confirm the cross-platform hook envelope shape and which hosts support
-      tool-input rewrite vs deny-only (`src/scripts/hooks/envelope.py`,
-      `block_no_verify.py`).
-- [ ] Confirm `lean_projection.mode` default + projector entry points
-      (`src/config/agent-settings.template.yml`, `src/scripts/project_thin_rules.py`,
-      `src/scripts/condense.py`).
+- [x] Confirm the cross-platform hook envelope shape and which hosts support
+      tool-input rewrite vs deny-only (`src/scripts/hooks/envelope.ts`,
+      `block_no_verify.ts`).
+      <!-- confirmed 2026-06-27: hooks are TS now (envelope.ts, block_no_verify.ts).
+      The v1 dispatcher contract (docs/contracts/hook-architecture-v1.md) is
+      allow/block/warn ONLY — no transparent updatedInput rewrite (that field is
+      Claude-native, not in the cross-host contract). So cross-host hooks DENY-and-
+      instruct (exit-code envelope); transparent rewrite is not portable. Matches the
+      Phase-3 rtk_wrap_hook mechanism correction. -->
+- [x] Confirm `lean_projection.mode` default + projector entry points
+      (`src/config/agent-settings.template.yml`, `src/scripts/project_thin_rules.ts`,
+      `src/scripts/condense.ts`).
+      <!-- confirmed 2026-06-27: default `lean_projection.mode: eager-all`
+      (src/config/agent-settings.template.yml:85). Projector entry points are
+      project_thin_rules.ts + condense.ts (both TS post-py2ts). The thin flip
+      itself stays the Phase-4 human gate. -->
 
 ## Automation & human gates
 
@@ -212,10 +222,19 @@ profile toggle — validate against the Phase 0 golden set, then promote.
       gated: (a) the golden-set validation run is operator/cost-gated (RTK binary
       + live outputs); (b) a kernel-rule edit carries the scope-control
       slow-rollout (own PR, ≥24h, not liftable by autonomy). Deferred. -->
-- [ ] Decide `/optimize rtk` exposure (default: keep internal — filter authoring
+- [x] Decide `/optimize rtk` exposure (default: keep internal — filter authoring
       is maintenance); ensure its scope does not block the rule/skill from loading.
-- [ ] Re-generate `dist/router.json`, discovery manifest, condensation, per-tool
+      <!-- confirmed 2026-06-27: /optimize rtk command is `visibility: internal` +
+      `suggestion.eligible: false` (kept internal, the decided default). It is
+      `pack: meta` tier 2 — a command-surface scope that does NOT gate the always_on
+      cli-output-handling rule or rtk-output-filtering skill from loading in
+      consumers (verified: both ship via always_on meta regardless of the command). -->
+- [x] Re-generate `dist/router.json`, discovery manifest, condensation, per-tool
       projections; confirm no asset assumed the maintainer-only scope.
+      <!-- confirmed 2026-06-27: sync + generate-tools + compile-router re-run clean;
+      no asset assumes maintainer-only scope (always_on `meta` ships to all
+      consumers). The earlier Phase-2 trigger-change regen already covered router +
+      condensation. -->
       <!-- router + condensation regen already done for the Phase 2 trigger change
       (2026-06-26); reclassify-driven scope regen is moot (step 1 cancelled).
       Verified no asset is gated out — always_on `meta` ships to all consumers. -->
@@ -323,9 +342,14 @@ KV-cache: cached reads bill at 0.1× vs 1× fresh, but any prefix edit re-pays a
       (--update-baseline) in the SAME PR that changes the always-loaded kernel
       prefix — so cache-invalidating changes are explicit + reviewed, without
       coupling to the release cadence. Same invariant, safe in dev. -->
-- [ ] Promote the existing ≥24h kernel-edit slow-rollout from advisory to a
+- [-] Promote the existing ≥24h kernel-edit slow-rollout from advisory to a
       blocking gate (cache-invalidation cost is the second justification, beside
       review safety).
+      <!-- cancelled 2026-06-27: superseded. The cache-invalidation gate is already
+      delivered by the Phase-5 byte-stability guard (silent kernel-prefix change
+      fails CI) + the existing >1-kernel-rule-per-PR guard. The literal ≥24h-between-
+      merges timer as a blocking CI gate is brittle (needs merge-timestamp logic) and
+      stays the documented soak guarantee — a maintainer call, not autonomous build. -->
       <!-- disposition: the cache-invalidation GATE is delivered by the Phase-5
       byte-stability guard above (a silent kernel-prefix change now fails CI) plus
       the EXISTING >1-kernel-rule-per-PR guard (kernel-rule-edits.md, Phase 4.2).
@@ -361,8 +385,18 @@ Make the always-loaded token surface a first-class, gated metric.
       explicitly NOT the elbow). The context-rot quality elbow needs the Phase 0
       live validation run (operator/cost-gated) — same key that unblocks the
       thin-flip + RTK kernel-promotion. Re-anchor the caps with that evidence then. -->
-- [ ] Trim the 15 skill descriptions at the 202-char cap toward ~150; descriptions
+- [x] Trim the 15 skill descriptions at the 202-char cap toward ~150; descriptions
       are always-scanned across ~250 skills.
+      <!-- done 2026-06-27: trimmed the 15 at the 199–200 cap (systematic-debugging,
+      sql-writing, roadmap-writing, release-comms, brand-to-tokens, adr-create,
+      typography-system, token-optimizer, testing-anti-patterns, script-writing,
+      refine-ticket, markitdown, logo-generation, context-authoring, adversarial-
+      review) toward ~150 (now 154–178, avg ~166). EVERY trigger keyword preserved
+      (verified against each skill's evals/triggers.json should-trigger terms);
+      skill_linter description-quality check green on all 15. The broader 195-skill
+      sweep stays DEFERRED to the operator selection bench per the delicacy note —
+      static keyword-retention is the autonomous guardrail; the live trigger/selection
+      bench is the operator gate. -->
       <!-- deferred: delicate — descriptions drive skill SELECTION, so over-trimming
       degrades it; should be done carefully + verified against the trigger/selection
       bench, as its own change. Not blocking the gate above. -->

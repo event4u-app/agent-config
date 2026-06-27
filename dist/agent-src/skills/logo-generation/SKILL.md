@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: logo-generation
-description: "Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path via a vector-native provider or LLM-authored SVG for simple marks. Use for logo or brand mark generation."
+description: "Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation."
 domain: product
 personas:
   - design-director

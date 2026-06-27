@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: context-authoring
-description: "Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel."
+description: "Use when filling knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive template walkthrough."
 domain: process
 workspaces:
   - agent-config-maintainer

@@ -201,7 +201,7 @@ Artefacts that maintain this package (agent-config itself).
 
 ## Skills (65)
 
-- **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
+- **`adr-create`** — Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
 - **`agents-md-thin-root`** — Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block.
 - **`ai-council`** — Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'.
@@ -212,7 +212,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 - **`complexity-first-planning`** — Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.
 - **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
-- **`context-authoring`** — Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
+- **`context-authoring`** — Use when filling knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive template walkthrough.
 - **`context-document`** — Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
 - **`copilot-config`** — Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`).
@@ -231,7 +231,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`judge-test-coverage`** — Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'.
 - **`learning-to-rule-or-skill`** — Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
 - **`lint-skills`** — Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
-- **`markitdown`** — Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
+- **`markitdown`** — Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
 - **`mcp`** — Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 - **`mcp-builder`** — Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
 - **`md-language-check`** — Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
@@ -252,18 +252,18 @@ Artefacts that maintain this package (agent-config itself).
 - **`repomix-packer`** — Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 - **`review-routing`** — Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
 - **`roadmap-management`** — Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking.
-- **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
+- **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phases, goal, acceptance criteria, council notes; fires even on 'write a plan for X' / 'draft a roadmap'.
 - **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
 - **`rule-refactor`** — Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
 - **`rule-writing`** — Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
-- **`script-writing`** — Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'.
+- **`script-writing`** — Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'.
 - **`sequential-thinking`** — ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks.
 - **`skill-improvement-pipeline`** — ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
 - **`skill-management`** — Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
 - **`skill-reviewer`** — Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations.
 - **`skill-writing`** — Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.
 - **`subagent-orchestration`** — Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml.
-- **`token-optimizer`** — Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action.
+- **`token-optimizer`** — Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset.
 - **`upstream-contribute`** — Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package.
 - **`verify-repair-loop`** — Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
 

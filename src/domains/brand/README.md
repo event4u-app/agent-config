@@ -30,4 +30,4 @@ Brand as a first-class UX layer — archetype/voice/identity grounding corpus, b
 - **`brand-audit`** — Audit how a brand is currently expressed across touchpoints and flag drift from its defined tokens, voice, and strategy. Use to inventory and critique an existing brand before changing it.
 - **`brand-identity`** — Define a brand identity constraint set from a confirmed strategy — colour story, type story, logo direction, imagery direction. Defines the tokens that token emission and asset generation consume.
 - **`brand-strategy`** — Ground a brand strategy from the corpus — archetype, opposable positioning, voice and tone, messaging framework. Use to decide who a brand is for, what it stands for, and how it sounds.
-- **`brand-to-tokens`** — Derive a DTCG .tokens.json source of truth from confirmed brand decisions, emit CSS vars + Tailwind via design-tokens, and export locked brand deck templates. Use to turn a brand identity into tokens.
+- **`brand-to-tokens`** — Turn a confirmed brand identity into a DTCG .tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates.
