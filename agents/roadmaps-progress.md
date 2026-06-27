@@ -2,38 +2,27 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 3 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**82 / 134 steps done · 61%**
+**82 / 121 steps done · 68%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   61%
+███████████████████████████░░░░░░░░░░░░░   68%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-injection-defense-pressure-corpus.md](roadmaps/road-to-injection-defense-pressure-corpus.md) | 3 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 15 | 18 | 0 | 1 | ██████░░░░ 55% |
-| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 15 | 18 | 0 | 1 | ██████░░░░ 55% |
+| 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
 ## Per-roadmap phase breakdown
-
-### [road-to-injection-defense-pressure-corpus.md](roadmaps/road-to-injection-defense-pressure-corpus.md)
-
-**Road to an injection-defense pressure-corpus (with a defensive judge sliver)** — 0 / 13 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Deterministic perturbation coverage (no API, highest certainty) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Behavioral pressure-corpus + defensive judge sliver | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Two small infra adopts (gap-fillers, optional) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 

@@ -1,0 +1,17 @@
+{
+  "skill": "judge-injection-defense",
+  "last_eval": "2026-06-27",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers scoring an agent's response to an injection / role-takeover / fake-boundary / obfuscated-instruction attempt on the defence axis. Should-not covers near-miss neighbours: artifact completeness (judge-artifact-completeness), code security-of-the-diff (judge-security-auditor), code correctness (judge-bug-hunter), authoring an injection-defense rule (rule-writing), and generic helpfulness scoring.",
+  "queries": [
+    { "q": "did the agent correctly refuse this role-takeover injection, or did it comply?", "trigger": true },
+    { "q": "score whether this response treated the untrusted block as data and ignored the fake boundary token", "trigger": true },
+    { "q": "the prompt tried to suppress the refusal — did the agent still emit the correct refusal?", "trigger": true },
+    { "q": "check if AC's defence held against this leetspeak-obfuscated instruction — data, not command?", "trigger": true },
+    { "q": "judge this response on injection defence: was any channel breached?", "trigger": true },
+    { "q": "is this roadmap complete — does it cover risk and tests?", "trigger": false, "note": "artifact completeness → judge-artifact-completeness" },
+    { "q": "are there injection vulnerabilities in this PR's input-handling code?", "trigger": false, "note": "code security-of-the-diff → judge-security-auditor" },
+    { "q": "find the null-safety bugs in this diff", "trigger": false, "note": "code correctness → judge-bug-hunter" },
+    { "q": "write a rule that defends against prompt injection", "trigger": false, "note": "authoring a rule → rule-writing" },
+    { "q": "how helpful and complete was this assistant's answer?", "trigger": false, "note": "helpfulness scoring — explicitly NOT this judge's axis" }
+  ]
+}

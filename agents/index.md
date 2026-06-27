@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **600 artefacts** in this package.
+Maintainer-facing index of all **601 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (259)
+## Skills (260)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -118,9 +118,10 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`incident-commander`](../src/skills/incident-commander/SKILL.md) |  | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../src/skills/jira-integration/SKILL.md) |  | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../src/skills/jobs-events/SKILL.md) |  | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
-| skill | [`judge-artifact-completeness`](../src/skills/judge-artifact-completeness/SKILL.md) |  | Use when scoring a roadmap, PR review, ADR, or ticket for completeness — acceptance criteria, risk, tests, migration effort, maintainability — dispatched by /refine-ticket, /adr-create, /review-chang… |
+| skill | [`judge-artifact-completeness`](../src/skills/judge-artifact-completeness/SKILL.md) |  | Use when scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates. |
 | skill | [`judge-bug-hunter`](../src/skills/judge-bug-hunter/SKILL.md) |  | Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'. |
 | skill | [`judge-code-quality`](../src/skills/judge-code-quality/SKILL.md) |  | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
+| skill | [`judge-injection-defense`](../src/skills/judge-injection-defense/SKILL.md) |  | Use when scoring whether an agent response correctly defended against an injection attempt — treated untrusted content as data, refused role-takeover, ignored fake boundaries, emitted the correct ref… |
 | skill | [`judge-security-auditor`](../src/skills/judge-security-auditor/SKILL.md) |  | Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-test-coverage`](../src/skills/judge-test-coverage/SKILL.md) |  | Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'. |
 | skill | [`laravel`](../src/skills/laravel/SKILL.md) |  | Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`. |
