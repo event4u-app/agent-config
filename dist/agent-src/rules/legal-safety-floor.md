@@ -54,7 +54,7 @@ THESE SKILLS ARE A RESEARCH-AND-DRAFTING AID, NOT LEGAL ADVICE.
 THEY DO NOT REPLACE A LICENSED ATTORNEY. NO ONE MAY RELY ON THEM AS DEFINITIVE.
 ```
 
-Every output is a **draft / research aid for a human attorney to verify** — for first-pass review, issue-spotting, and drafts only. It is **not** legal advice, **not** a legal opinion, and **not** a substitute for a qualified lawyer in the relevant jurisdiction. Nobody should rely on it for a binding decision; treat it as a tool that makes attorney review faster, never as the review itself. This disclaimer is non-removable from the pack. See [`LEGAL_NOTICE.md`](../../LEGAL_NOTICE.md).
+Every output is a **draft / research aid for a human attorney to verify** — for first-pass review, issue-spotting, and drafts only. It is **not** legal advice, **not** a legal opinion, and **not** a substitute for a qualified lawyer in the relevant jurisdiction. Nobody should rely on it for a binding decision; treat it as a tool that makes attorney review faster, never as the review itself. This disclaimer is non-removable from the pack. See [`LEGAL_NOTICE.md`](../../../LEGAL_NOTICE.md).
 
 ## Consent gate — refuse until acknowledged
 
@@ -174,7 +174,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## See also
 
-- [`LEGAL_NOTICE.md`](../../LEGAL_NOTICE.md) — repo-root legal notice (no advice / no attorney-client / no warranty)
+- [`LEGAL_NOTICE.md`](../../../LEGAL_NOTICE.md) — repo-root legal notice (no advice / no attorney-client / no warranty)
 - `domain-safety-disclaimer` — generic advisory-content floor (`not-legal-advice`)
 - `domain-safety-pii` — privilege/PII markers on drafts, logs, exports (Phase 1.5 extension)
 - `lethal-trifecta-guard` — egress gate the privilege-outbound block builds on
