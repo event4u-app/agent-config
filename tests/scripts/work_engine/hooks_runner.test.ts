@@ -1,14 +1,14 @@
-// Golden-parity + unit tests for the py2ts work_engine.hooks `runner` twin
+// Intent tests for the py2ts work_engine.hooks `runner` twin
 // (ADR-094). Exercises the three-tier error contract:
 //   HookError  → swallowed (warned), dispatch continues, emit returns null.
 //   HookHalt   → returned immediately, remaining callbacks skipped.
 //   other Err  → propagates unchanged.
 //
-// The runner emits its non-fatal warning via `warnings.warn` (Python) /
-// `process.stderr` (TS). That surface format is interpreter-internal and not
-// portable, so the parity layer asserts the *behavioural* contract (swallow +
-// continue + return value) and that *a* warning was emitted — it does not
-// byte-compare the warning text. Documented divergence per ADR-094 §6.
+// Was a python3-vs-tsx parity rig; the `.py` original is gone, so this asserts
+// the tsx runner's own contract directly. The runner emits its non-fatal
+// warning via `process.stderr` (TS); that surface is asserted via the `warn`
+// seam + a stderr collector below. (The former parity block only re-checked
+// the swallow/continue/return behaviour the unit checks already cover.)
 import { describe, expect, it } from 'vitest';
 
 import { HookContext } from '../../../src/agent-src/templates/scripts/work_engine/hooks/context.js';
@@ -16,9 +16,6 @@ import { HookEvent } from '../../../src/agent-src/templates/scripts/work_engine/
 import { HookError, HookHalt } from '../../../src/agent-src/templates/scripts/work_engine/hooks/exceptions.js';
 import { HookRegistry } from '../../../src/agent-src/templates/scripts/work_engine/hooks/registry.js';
 import { HookRunner } from '../../../src/agent-src/templates/scripts/work_engine/hooks/runner.js';
-import { hasPython3, runPyHooks } from './_hooks_pyloader.js';
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 function quietRunner(registry: HookRegistry): { runner: HookRunner; warnings: string[] } {
     const warnings: string[] = [];
@@ -119,76 +116,5 @@ describe('work_engine.hooks.runner — TS unit checks', () => {
             (process.stderr as unknown as { write: typeof orig }).write = orig;
         }
         expect(collected).toContain('hook after_step raised HookError: xyz\n');
-    });
-});
-
-describePy('work_engine.hooks.runner — behavioural parity (python3 vs TS)', () => {
-    it('HookError swallowed → continue + return None + warn emitted', () => {
-        const r = runPyHooks(
-            { foundation: ['exceptions', 'context', 'events', 'registry', 'runner'] },
-            [
-                'import warnings',
-                'reg = registry.HookRegistry()',
-                'seen = []',
-                'def bad(c): raise exceptions.HookError("boom")',
-                'reg.register(events.HookEvent.AFTER_STEP, bad)',
-                'reg.register(events.HookEvent.AFTER_STEP, lambda c: seen.append(2))',
-                'run = runner.HookRunner(reg)',
-                'with warnings.catch_warnings(record=True) as w:',
-                '    warnings.simplefilter("always")',
-                '    ret = run.emit(events.HookEvent.AFTER_STEP, context.HookContext())',
-                'print(json.dumps({"ret_is_none": ret is None, "seen": seen, "nwarn": len(w), "msg": str(w[0].message) if w else None}))',
-            ].join('\n'),
-        );
-        expect(r.status).toBe(0);
-        const py = JSON.parse(r.stdout.trim()) as Record<string, unknown>;
-        expect(py['ret_is_none']).toBe(true);
-        expect(py['seen']).toEqual([2]);
-        expect(py['nwarn']).toBe(1);
-        expect(py['msg']).toBe('hook after_step raised HookError: boom');
-
-        // TS analog (same observable behaviour + same warning message text).
-        const reg = new HookRegistry();
-        const seen: number[] = [];
-        reg.register(HookEvent.AFTER_STEP, () => {
-            throw new HookError('boom');
-        });
-        reg.register(HookEvent.AFTER_STEP, () => seen.push(2));
-        const { runner, warnings } = quietRunner(reg);
-        const ret = runner.emit(HookEvent.AFTER_STEP, new HookContext());
-        expect(ret).toBeNull();
-        expect(seen).toEqual([2]);
-        expect(warnings).toEqual(['hook after_step raised HookError: boom']);
-    });
-
-    it('HookHalt returned + skips rest; non-signal error propagates', () => {
-        const r = runPyHooks(
-            { foundation: ['exceptions', 'context', 'events', 'registry', 'runner'] },
-            [
-                'reg = registry.HookRegistry()',
-                'seen = []',
-                'def halt(c): raise exceptions.HookHalt("foreign", ["1) a"])',
-                'reg.register(events.HookEvent.ON_HALT, halt)',
-                'reg.register(events.HookEvent.ON_HALT, lambda c: seen.append(2))',
-                'run = runner.HookRunner(reg)',
-                'ret = run.emit(events.HookEvent.ON_HALT, context.HookContext())',
-                'reg2 = registry.HookRegistry()',
-                'def bug(c): raise TypeError("bug")',
-                'reg2.register(events.HookEvent.AFTER_STEP, bug)',
-                'run2 = runner.HookRunner(reg2)',
-                'propagated = False',
-                'try:',
-                '    run2.emit(events.HookEvent.AFTER_STEP, context.HookContext())',
-                'except TypeError:',
-                '    propagated = True',
-                'print(json.dumps({"reason": ret.reason, "surface": ret.surface, "seen": seen, "propagated": propagated}))',
-            ].join('\n'),
-        );
-        expect(r.status).toBe(0);
-        const py = JSON.parse(r.stdout.trim()) as Record<string, unknown>;
-        expect(py['reason']).toBe('foreign');
-        expect(py['surface']).toEqual(['1) a']);
-        expect(py['seen']).toEqual([]);
-        expect(py['propagated']).toBe(true);
     });
 });

@@ -1,8 +1,9 @@
-// Golden-parity + unit tests for the py2ts decision_trace hook twin (ADR-094).
-// The hook writes a decision-trace JSON file per phase. The envelope must be
-// byte-identical (json.dumps(indent=2, sort_keys=False) + "\n") on both
-// engines; the two timestamp fields are non-deterministic so they are
-// normalised to a fixed token before the byte comparison (documented in-line).
+// Intent tests for the py2ts decision_trace hook twin (ADR-094). The hook
+// writes a decision-trace JSON file per phase; this asserts the tsx envelope
+// shape directly via an inline snapshot. The two timestamp fields are
+// non-deterministic, so they are normalised to a fixed token before the
+// snapshot (documented in-line). Was a python3-vs-tsx byte-parity rig; the
+// `.py` original is gone.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,9 +16,6 @@ import {
 import { HookContext } from '../../../src/agent-src/templates/scripts/work_engine/hooks/context.js';
 import { HookEvent } from '../../../src/agent-src/templates/scripts/work_engine/hooks/events.js';
 import { HookRegistry } from '../../../src/agent-src/templates/scripts/work_engine/hooks/registry.js';
-import { hasPython3, runPyHooks } from './_hooks_pyloader.js';
-
-const describePy = hasPython3() ? describe : describe.skip;
 
 let tmp: string;
 beforeEach(() => {
@@ -104,38 +102,10 @@ describe('DecisionTraceHook — TS unit checks', () => {
     });
 });
 
-describePy('DecisionTraceHook — envelope parity (python3 vs TS)', () => {
-    function pyTrace(stateFile: string, phase: string, deliveryExpr: string): string {
-        const r = runPyHooks(
-            {
-                we: ['scoring.decision_trace'],
-                foundation: ['exceptions', 'context', 'events', 'registry'],
-                builtin: ['decision_trace'],
-            },
-            [
-                'import pathlib',
-                'hook = decision_trace.DecisionTraceHook()',
-                `sf = pathlib.Path(${JSON.stringify(stateFile)})`,
-                'hook.register(registry.HookRegistry()) if False else None',
-                'hook._capture_state_file(context.HookContext(state_file=sf))',
-                `delivery = ${deliveryExpr}`,
-                `hook._mark_step_start(context.HookContext(step_name=${JSON.stringify(phase)}, delivery=delivery))`,
-                `hook._emit_trace(context.HookContext(step_name=${JSON.stringify(phase)}, delivery=delivery))`,
-                `target = hook._target_path(${JSON.stringify(phase)})`,
-                'print(target.read_text(encoding="utf-8"), end="")',
-            ].join('\n'),
-        );
-        if (r.status !== 0) throw new Error(`py trace failed: ${r.stderr || r.stdout}`);
-        return r.stdout;
-    }
-
-    it('envelope is byte-identical under work/<id>/ (timestamps normalised)', () => {
-        // Two separate temp dirs so each engine writes its own copy.
+describe('DecisionTraceHook — envelope contract', () => {
+    it('full envelope under work/<id>/ (timestamps normalised)', () => {
         const tsDir = path.join(tmp, 'ts', 'work', 'id99');
-        const pyDir = path.join(tmp, 'py', 'work', 'id99');
         fs.mkdirSync(tsDir, { recursive: true });
-        fs.mkdirSync(pyDir, { recursive: true });
-
         const tsText = runTsTrace(path.join(tsDir, 'state.json'), 'memory', {
             memory: [
                 { id: 'r1', hit: true },
@@ -145,23 +115,59 @@ describePy('DecisionTraceHook — envelope parity (python3 vs TS)', () => {
             changes: [{ file: 'a.ts' }],
             questions: [],
         });
-        const pyText = pyTrace(
-            path.join(pyDir, 'state.json'),
-            'memory',
-            "type('D',(),{'memory':[{'id':'r1','hit':True},{'id':'r2','hit':True,'asks':2}],'verify':{'claims':2,'first_try_passes':2},'changes':[{'file':'a.ts'}],'questions':[]})()",
-        );
-        expect(normaliseTrace(tsText)).toBe(normaliseTrace(pyText));
+        expect(normaliseTrace(tsText)).toMatchInlineSnapshot(`
+          "{
+            "schema_version": 1,
+            "work_id": "id99",
+            "phase": "memory",
+            "started_at": "<TS>",
+            "ended_at": "<TS>",
+            "confidence_band": "high",
+            "risk_class": "medium",
+            "rules": [],
+            "memory": {
+              "asks": 3,
+              "hits": 2,
+              "ids": [
+                "r1",
+                "r2"
+              ]
+            },
+            "verify": {
+              "claims": 2,
+              "first_try_passes": 2
+            }
+          }
+          "
+        `);
     });
 
-    it('empty-delivery envelope matches (low band, low risk, empty memory)', () => {
+    it('empty-delivery envelope (low band, low risk, empty memory)', () => {
         const tsDir = path.join(tmp, 'ts2');
-        const pyDir = path.join(tmp, 'py2');
         fs.mkdirSync(tsDir, { recursive: true });
-        fs.mkdirSync(pyDir, { recursive: true });
-
         const tsText = runTsTrace(path.join(tsDir, 's.json'), 'refine', {});
-        const pyText = pyTrace(path.join(pyDir, 's.json'), 'refine', "type('D',(),{})()");
-        expect(normaliseTrace(tsText)).toBe(normaliseTrace(pyText));
+        expect(normaliseTrace(tsText)).toMatchInlineSnapshot(`
+          "{
+            "schema_version": 1,
+            "work_id": "s",
+            "phase": "refine",
+            "started_at": "<TS>",
+            "ended_at": "<TS>",
+            "confidence_band": "low",
+            "risk_class": "low",
+            "rules": [],
+            "memory": {
+              "asks": 0,
+              "hits": 0,
+              "ids": []
+            },
+            "verify": {
+              "claims": 0,
+              "first_try_passes": 0
+            }
+          }
+          "
+        `);
     });
 
     it('timestamp format is the contract ISO-8601 UTC second-precision form', () => {

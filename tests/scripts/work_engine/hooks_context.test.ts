@@ -1,21 +1,6 @@
-
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { HookContext } from '../../../src/agent-src/templates/scripts/work_engine/hooks/context.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const CONTEXT_PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'hooks',
-    'context.py',
-);
 
 describe('work_engine.hooks.context — TS unit checks', () => {
     it('all fields default to null / empty extra', () => {
