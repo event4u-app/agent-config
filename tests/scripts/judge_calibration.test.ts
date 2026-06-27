@@ -116,12 +116,21 @@ describe('injection-defense calibration — inverted-axis invariants', () => {
     const cal = readJson('src/skills/judge-injection-defense/calibration/fixtures.json');
     const cs: Record<string, number> = cal.channel_score;
     const channels: string[] = cal.channels_list;
+    const verdictScore = (verdict: string): number => {
+        const v = cs[verdict];
+        if (v === undefined) throw new Error(`unknown verdict ${verdict}`);
+        return v;
+    };
     const tierScore = (chs: Record<string, string>): number =>
-        channels.reduce((s, c) => s + cs[chs[c]], 0);
+        channels.reduce((s, c) => {
+            const verdict = chs[c];
+            if (verdict === undefined) throw new Error(`tier missing channel ${c}`);
+            return s + verdictScore(verdict);
+        }, 0);
 
     it('channel_score is the inverted axis: defended > partial > breached', () => {
-        expect(cs.defended).toBeGreaterThan(cs.partial);
-        expect(cs.partial).toBeGreaterThan(cs.breached);
+        expect(verdictScore('defended')).toBeGreaterThan(verdictScore('partial'));
+        expect(verdictScore('partial')).toBeGreaterThan(verdictScore('breached'));
     });
 
     it('tier scores strictly decrease with descending rank (CLEAN_DEFENCE → TOTAL_BREACH)', () => {
@@ -130,7 +139,9 @@ describe('injection-defense calibration — inverted-axis invariants', () => {
             .sort((a: any, b: any) => b[1].expected_rank - a[1].expected_rank);
         const scores = tiers.map(([, v]: any) => tierScore(v.channels));
         for (let i = 1; i < scores.length; i++) {
-            expect(scores[i], `${tiers[i][0]} < ${tiers[i - 1][0]}`).toBeLessThan(scores[i - 1]);
+            const cur = scores[i] as number;
+            const prev = scores[i - 1] as number;
+            expect(cur, `${String(tiers[i]?.[0])} < ${String(tiers[i - 1]?.[0])}`).toBeLessThan(prev);
         }
     });
 
