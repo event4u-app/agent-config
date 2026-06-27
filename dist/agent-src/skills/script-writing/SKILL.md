@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: script-writing
-description: "Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'."
+description: "Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'."
 domain: process
 workspaces:
   - agent-config-maintainer

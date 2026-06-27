@@ -18,5 +18,5 @@ Positioning, messaging, editorial, content funnel.
 - **`gtm-launch`** — Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'.
 - **`messaging-architecture`** — Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'.
 - **`positioning-strategy`** — Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'.
-- **`release-comms`** — Use when turning a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces, one source of truth. Triggers on 'announce the release', 'write changelog post'.
+- **`release-comms`** — Turn a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces. Triggers on 'announce the release', 'write changelog post'.
 - **`voice-and-tone-design`** — Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'.

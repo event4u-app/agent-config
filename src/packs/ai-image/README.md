@@ -16,5 +16,5 @@ AI image generation — multi-provider, governed (image as a sibling of video).
 - **`image-editing`** — Edit an existing image — inpaint, background swap, variation — via providers that support it. Use when editing/modifying/inpainting an image or making variations.
 - **`image-generation`** — Generate an image from a brief — provider-agnostic blueprint then provider-specific translation, with ref-image/seed reuse for consistency. Use when generating/creating an image.
 - **`image-provider-routing`** — Select the right image-generation provider from job shape — text-in-image to Ideogram, photoreal to Flux, vector/logo to Recraft, general to Gemini/GPT.
-- **`logo-generation`** — Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path via a vector-native provider or LLM-authored SVG for simple marks. Use for logo or brand mark generation.
+- **`logo-generation`** — Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation.
 - **`prompt-engineering-image`** — Translate an image brief into provider-specific prompt grammar per model. Use when writing or refining an image-generation prompt for Ideogram, Flux, Gemini, GPT Image 2, or Recraft.

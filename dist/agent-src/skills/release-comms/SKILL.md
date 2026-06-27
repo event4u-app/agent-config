@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: release-comms
-description: "Use when turning a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces, one source of truth. Triggers on 'announce the release', 'write changelog post'."
+description: "Turn a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces. Triggers on 'announce the release', 'write changelog post'."
 status: active
 tier: senior
 domain: product

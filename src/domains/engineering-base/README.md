@@ -40,7 +40,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 ## Skills (75)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
-- **`adversarial-review`** — ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review.
+- **`adversarial-review`** — ONLY on a request for adversarial review, devil's advocate, stress-test, or honest critique ('poke holes', 'be brutal', 'was hältst du davon') — NOT routine code/design review.
 - **`agent-security-review`** — Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
 - **`api-design`** — Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design.
 - **`api-endpoint`** — Use when creating an API endpoint or HTTP route handler — detects the project stack and routes to the matching carve-out (laravel-api-endpoint, nextjs-patterns, symfony-workflow).
@@ -97,16 +97,16 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`security-audit`** — ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work.
 - **`sentry-integration`** — Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 - **`source-discovery`** — Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields.
-- **`sql-writing`** — Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL.
+- **`sql-writing`** — Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
 - **`standards-from-config`** — Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim.
-- **`systematic-debugging`** — Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'.
+- **`systematic-debugging`** — Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'.
 - **`tailwind-engineer`** — Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'.
 - **`tech-debt-tracker`** — Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying cost, repayment plan — even if the user just says 'this codebase is a mess'.
 - **`terraform`** — Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform.
 - **`terragrunt`** — Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt.
 - **`test-driven-development`** — Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'.
 - **`test-performance`** — Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives.
-- **`testing-anti-patterns`** — Use BEFORE writing or changing tests, adding mocks, or putting test-only methods on production classes — five Iron Laws and gates against mocking-the-mock, production pollution, silent partial mocks.
+- **`testing-anti-patterns`** — Use BEFORE writing/changing tests, adding mocks, or test-only methods on production classes — Iron Laws against mocking-the-mock, production pollution, silent partial mocks.
 - **`threat-modeling`** — Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation.
 - **`traefik`** — Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
 - **`ui-component-architect`** — Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'.

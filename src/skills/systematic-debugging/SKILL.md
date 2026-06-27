@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: systematic-debugging
-description: "Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'."
+description: "Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'."
 domain: discovery
 council_depth: deep
 workspaces:

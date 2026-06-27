@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: typography-system
-description: "Derive a type system from a style constraint — query curated font pairings, set scale/line-height/weights, emit DTCG tokens via design-tokens. Use when choosing fonts or building a typographic scale."
+description: "Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale."
 domain: product
 personas: []
 workspaces:

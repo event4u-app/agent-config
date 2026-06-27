@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: "refine-ticket"
-description: "Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt."
+description: "Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?'; rewritten ticket, risks, persona voices, close-prompt."
 personas:
   - developer
   - senior-engineer
