@@ -89,6 +89,7 @@
       "id": "SHORT_COMPLETE",
       "label": "Anti-length: short artifact, all dimensions covered",
       "word_count_approx": 80,
+      "dimensions_present": ["acceptance_criteria_fit", "phase_decomposition", "risk", "tests_per_step", "migration_effort", "maintainability_owner", "do_not_build_clarity"],
       "artifact": {
         "goal": "Ship a typed config parser.",
         "acceptance_criteria": "task test green; ≥90% coverage.",
@@ -103,6 +104,7 @@
       "id": "LONG_INCOMPLETE",
       "label": "Anti-length: verbose artifact, missing risk + tests + migration",
       "word_count_approx": 400,
+      "dimensions_present": ["phase_decomposition"],
       "artifact": {
         "goal": "We need to significantly overhaul our configuration parsing layer to support the new typed AST format that the team has been discussing over the last several sprints. This will involve extensive rework of the tokenisation logic as well as the construction of a proper recursive-descent parser that can handle all the edge cases we have identified in our current configuration files.",
         "phases": [
