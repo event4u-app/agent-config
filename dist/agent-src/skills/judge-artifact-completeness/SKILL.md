@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: judge-artifact-completeness
-description: "Use when scoring a roadmap, PR review, ADR, or ticket for completeness — acceptance criteria, risk, tests, migration effort, maintainability — dispatched by /refine-ticket, /adr-create, /review-changes, or directly. Never auto-gates; surfaces gaps and verdict to the human."
+description: "Use when scoring a roadmap, PR review, ADR, or ticket for completeness — risk, tests, migration, maintainability. Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-gates."
 domain: quality
 workspaces:
   - agent-config-maintainer
