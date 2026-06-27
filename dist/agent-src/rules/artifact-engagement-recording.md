@@ -30,6 +30,15 @@ disabled. Recording contract + privacy floor:
 The schema, CLI, and storage layer are owned by `scripts/telemetry/` and
 the `./agent-config telemetry:record` / `telemetry:status` commands.
 
+## PII-exclusion-by-construction
+
+The `telemetry:record` event carries **only** artifact ids (consulted /
+applied) + structural counters — its type has **no field capable of holding
+free-form content, prompt text, file bodies, or identifiers**. Privacy is a
+property of the schema shape, not a scrubbing pass that could fail. Never widen
+the event with a `payload` / `notes` / `extra: any` field. Same principle
+`domain-safety-pii` § Surface 2 applies to logs.
+
 ## Activation gate — read settings ONCE per task
 
 Before the first phase-step runs, read

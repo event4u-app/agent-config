@@ -27,10 +27,11 @@ tasks:
   lint-agent-security:
     silent: true
     desc: |
-      Agent-security self-audit (road-to-security-pillar.md P1). Runs the four
-      corpus linters — hidden-unicode, instruction-smuggling, mcp-config-security,
-      dangerous-frontmatter — over src/ under the false-positive containment
-      convention (docs/guidelines/agent-infra/security-lint-containment.md).
+      Agent-security self-audit (road-to-security-pillar.md P1). Runs the five
+      corpus linters — hidden-unicode, mixed-script-confusable,
+      instruction-smuggling, mcp-config-security, dangerous-frontmatter — over
+      src/ under the false-positive containment convention
+      (docs/guidelines/agent-infra/security-lint-containment.md).
       Supply-chain integrity gate for the suite's own shipped artifacts.
     cmd: ./scripts-run src/scripts/lint_agent_security {{.QUIET_FLAG}}
 

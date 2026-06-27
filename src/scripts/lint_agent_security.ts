@@ -43,6 +43,7 @@ type Finding = Record<string, unknown>;
 
 const LINTERS: ReadonlyArray<[string, string]> = [
   ["hidden-unicode", "lint_hidden_unicode.ts"],
+  ["mixed-script-confusable", "lint_confusables.ts"],
   ["instruction-smuggling", "lint_instruction_smuggling.ts"],
   ["mcp-config-security", "lint_mcp_config_security.ts"],
   ["dangerous-frontmatter", "lint_skill_frontmatter_safety.ts"],
