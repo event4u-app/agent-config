@@ -1,0 +1,147 @@
+{
+  "description": "Calibration fixtures for judge-artifact-completeness. Used to verify (a) monotonicity — removing a dimension lowers the score by exactly its weight; (b) strict tier ordering — EXCELLENT > GOOD > FAIR > POOR > TERRIBLE; (c) anti-length — SHORT_COMPLETE scores higher than LONG_INCOMPLETE.",
+  "rubric": "roadmap-score",
+  "gold_tiers": {
+    "scale": "0–1 mapped to earned/possible ratio",
+    "EXCELLENT": { "expected_ratio_min": 0.90, "expected_verdict": "complete" },
+    "GOOD":      { "expected_ratio_min": 0.70, "expected_verdict": "partial" },
+    "FAIR":      { "expected_ratio_min": 0.50, "expected_verdict": "partial" },
+    "POOR":      { "expected_ratio_min": 0.20, "expected_verdict": "incomplete" },
+    "TERRIBLE":  { "expected_ratio_min": 0.0,  "expected_verdict": "incomplete" }
+  },
+  "anti_length_assertion": {
+    "description": "SHORT_COMPLETE must score strictly above LONG_INCOMPLETE regardless of word count.",
+    "rule": "score(SHORT_COMPLETE) > score(LONG_INCOMPLETE)"
+  },
+  "fixtures": [
+    {
+      "id": "EXCELLENT",
+      "label": "All dimensions fully present, terse",
+      "artifact": {
+        "goal": "Ship a typed parser for the config format by 2026-Q3.",
+        "acceptance_criteria": "task test exits 0 on the full corpus; zero regressions in existing consumers; coverage ≥ 90% per codecov.",
+        "phases": [
+          {
+            "name": "Phase 1 — Lexer",
+            "deliverable": "A tokeniser with 100% token-type coverage.",
+            "verification": "Pest suite: 40 fixtures, all green."
+          },
+          {
+            "name": "Phase 2 — Parser",
+            "deliverable": "A recursive-descent parser emitting a typed AST.",
+            "verification": "Integration test: parse all fixtures; compare AST to golden JSON."
+          }
+        ],
+        "risk": "Ambiguous grammar rule for nested keys — spike required in Phase 1 before committing to the AST shape.",
+        "migration": "Existing consumers use the old string-based API. A shim is provided in Phase 2; shim deprecated in Phase 3.",
+        "owner": "matze4u; quarterly review each January.",
+        "do_not_build": "No serialiser (inverse direction). No streaming parser. No error recovery beyond fail-fast."
+      }
+    },
+    {
+      "id": "GOOD",
+      "label": "Acceptance criteria and most dimensions present; migration vague",
+      "artifact": {
+        "goal": "Ship a typed parser for the config format.",
+        "acceptance_criteria": "All existing tests pass after migration.",
+        "phases": [
+          { "name": "Phase 1 — Lexer", "deliverable": "Tokeniser." },
+          { "name": "Phase 2 — Parser", "deliverable": "AST." }
+        ],
+        "risk": "Grammar ambiguity may require a rework.",
+        "migration": "Migration needed for consumers.",
+        "owner": "matze4u",
+        "do_not_build": "No serialiser."
+      }
+    },
+    {
+      "id": "FAIR",
+      "label": "Acceptance criteria and do-not-build missing; phases underdefined",
+      "artifact": {
+        "goal": "Build a config parser.",
+        "phases": [
+          { "name": "Phase 1", "deliverable": "Lexer." },
+          { "name": "Phase 2", "deliverable": "Parser." }
+        ],
+        "risk": "Grammar issues may arise.",
+        "owner": "matze4u"
+      }
+    },
+    {
+      "id": "POOR",
+      "label": "Only a goal and phase list; no cross-cutting dimensions",
+      "artifact": {
+        "goal": "Build a config parser.",
+        "phases": [
+          { "name": "Phase 1", "deliverable": "Lexer." },
+          { "name": "Phase 2", "deliverable": "Parser." }
+        ]
+      }
+    },
+    {
+      "id": "TERRIBLE",
+      "label": "Barely any content",
+      "artifact": {
+        "goal": "Improve parsing."
+      }
+    },
+    {
+      "id": "SHORT_COMPLETE",
+      "label": "Anti-length: short artifact, all dimensions covered",
+      "word_count_approx": 80,
+      "artifact": {
+        "goal": "Ship a typed config parser.",
+        "acceptance_criteria": "task test green; ≥90% coverage.",
+        "phases": [{ "name": "Phase 1", "deliverable": "Lexer + parser.", "verification": "Pest suite, 40 fixtures green." }],
+        "risk": "Grammar ambiguity — spike in Phase 1.",
+        "migration": "Shim provided; old API deprecated in Phase 2.",
+        "owner": "matze4u",
+        "do_not_build": "No serialiser."
+      }
+    },
+    {
+      "id": "LONG_INCOMPLETE",
+      "label": "Anti-length: verbose artifact, missing risk + tests + migration",
+      "word_count_approx": 400,
+      "artifact": {
+        "goal": "We need to significantly overhaul our configuration parsing layer to support the new typed AST format that the team has been discussing over the last several sprints. This will involve extensive rework of the tokenisation logic as well as the construction of a proper recursive-descent parser that can handle all the edge cases we have identified in our current configuration files.",
+        "phases": [
+          {
+            "name": "Phase 1 — Lexer Overhaul",
+            "deliverable": "A comprehensive rewrite of the tokeniser component to support the full range of token types that we expect to encounter in our configuration files. The tokeniser will be responsible for converting raw input text into a structured stream of tokens that can be consumed by the parser in Phase 2."
+          },
+          {
+            "name": "Phase 2 — Parser Implementation",
+            "deliverable": "A recursive-descent parser that consumes the token stream produced by the Phase 1 tokeniser and constructs a fully typed abstract syntax tree. The parser will handle nested structures, arrays, inline tables, and all other grammar constructs."
+          },
+          {
+            "name": "Phase 3 — Consumer Migration",
+            "deliverable": "Update all downstream consumers to use the new typed API. This will require changes across multiple modules and may involve coordination with other teams."
+          }
+        ],
+        "owner": "The team."
+      }
+    }
+  ],
+  "dimension_ablation": {
+    "description": "Monotonicity test: take EXCELLENT, remove one dimension at a time, verify score drops by exactly that dimension's weight.",
+    "base_fixture": "EXCELLENT",
+    "ablations": [
+      { "remove_dimension": "acceptance_criteria_fit", "expected_score_drop": 3 },
+      { "remove_dimension": "phase_decomposition",     "expected_score_drop": 2 },
+      { "remove_dimension": "risk",                    "expected_score_drop": 2 },
+      { "remove_dimension": "tests_per_step",          "expected_score_drop": 2 },
+      { "remove_dimension": "migration_effort",        "expected_score_drop": 2 },
+      { "remove_dimension": "maintainability_owner",   "expected_score_drop": 2 },
+      { "remove_dimension": "do_not_build_clarity",    "expected_score_drop": 1 }
+    ],
+    "dominance_check": {
+      "description": "No single dimension should exceed 25% of total possible score.",
+      "max_weight": 3,
+      "total_possible": 14,
+      "max_allowed_share": 0.25,
+      "actual_max_share": 0.214,
+      "pass": true
+    }
+  }
+}

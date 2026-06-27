@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **594 artefacts** in this package.
+Maintainer-facing index of all **600 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (257)
+## Skills (259)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -78,6 +78,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`description-assist`](../src/skills/description-assist/SKILL.md) |  | Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'. |
 | skill | [`design-intelligence`](../src/skills/design-intelligence/SKILL.md) |  | Grounded design brief from the adopted corpus — style, WCAG-checked color tokens, typography, layout pattern, anti-patterns. Use on ui-design-brief or any which-style/palette/font/chart decision. |
 | skill | [`design-review`](../src/skills/design-review/SKILL.md) |  | Use when the user says \"review the design\", \"check the UI\", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
+| skill | [`design-system-capture`](../src/skills/design-system-capture/SKILL.md) |  | Write and maintain DESIGN.md + PRODUCT.md — captures visual decisions and interaction patterns so design tasks stay consistent across sessions without re-scanning past work. |
 | skill | [`design-tokens`](../src/skills/design-tokens/SKILL.md) |  | Author a 3-layer DTCG token system (primitive → semantic → component) with light/dark theming; generate CSS vars + Tailwind colors and lint hardcoded values. Use on design tokens / CSS variables. |
 | skill | [`devcontainer`](../src/skills/devcontainer/SKILL.md) |  | Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`). |
 | skill | [`developer-like-execution`](../src/skills/developer-like-execution/SKILL.md) |  | Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it. |
@@ -117,6 +118,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`incident-commander`](../src/skills/incident-commander/SKILL.md) |  | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../src/skills/jira-integration/SKILL.md) |  | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../src/skills/jobs-events/SKILL.md) |  | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
+| skill | [`judge-artifact-completeness`](../src/skills/judge-artifact-completeness/SKILL.md) |  | Use when scoring a roadmap, PR review, ADR, or ticket for completeness — acceptance criteria, risk, tests, migration effort, maintainability — dispatched by /refine-ticket, /adr-create, /review-chang… |
 | skill | [`judge-bug-hunter`](../src/skills/judge-bug-hunter/SKILL.md) |  | Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'. |
 | skill | [`judge-code-quality`](../src/skills/judge-code-quality/SKILL.md) |  | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-security-auditor`](../src/skills/judge-security-auditor/SKILL.md) |  | Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge. |
@@ -269,7 +271,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (91)
+## Rules (93)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -331,6 +333,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`non-destructive-by-default`](../src/rules/non-destructive-by-default.md) | always | Hard Floor: agent asks before prod-trunk commits/merges, deploys, pushes, prod data/infra, bulk deletions/infra commits; verify branch before each commit; no autonomy or roadmap bypass |
 | rule | [`notes-first-reasoning`](../src/rules/notes-first-reasoning.md) | auto | Reasoning-heavy work (debugging, multi-hypothesis, weighing alternatives) — keep hypotheses/predictions/decisions in session notes, response carries conclusions + evidence only |
 | rule | [`onboarding-gate`](../src/rules/onboarding-gate.md) | auto | First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request |
+| rule | [`output-discipline`](../src/rules/output-discipline.md) | auto | Prohibits placeholder-prose output in generated code and UI — no truncation shorthands; on budget overflow emit a clean PAUSED breakpoint instead |
 | rule | [`package-ci-checks`](../src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../src/rules/persona-governance.md) | auto | Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path |
 | rule | [`php-coding`](../src/rules/php-coding.md) | auto | Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions |
@@ -355,6 +358,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`symfony-routing`](../src/rules/symfony-routing.md) | auto | Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow |
 | rule | [`telegraph-speak`](../src/rules/telegraph-speak.md) | auto | When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers |
 | rule | [`think-before-action`](../src/rules/think-before-action.md) | auto | Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error |
+| rule | [`token-budget-discipline`](../src/rules/token-budget-discipline.md) | auto | Governs token_budget_class: rich skills — exempt them from telegraph-speak + thin-projector trimming; enforce the 15% cap + justification requirement |
 | rule | [`token-efficiency`](../src/rules/token-efficiency.md) | auto | Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |
 | rule | [`token-optimizer-maintenance`](../src/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit |
 | rule | [`tool-safety`](../src/rules/tool-safety.md) | auto | Skill uses external tools — enforce allowlist, deny-by-default, no hidden credential patterns |
@@ -432,7 +436,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`fix-ci`](../src/domains/engineering-base/fix/ci/command.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../src/domains/engineering-base/fix/comments/command.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
 | command | [`fix-portability`](../src/domains/engineering-base/fix/portability/command.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
-| command | [`fix-pr-comments`](../src/domains/engineering-base/fix/pr-comments/command.md) | cluster: fix | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix-pr-comments`](../src/domains/engineering-base/fix/pr-comments/command.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
 | command | [`fix-refs`](../src/domains/engineering-base/fix/refs/command.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix-seeder`](../src/domains/engineering-base/fix/seeder/command.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`ghostwriter`](../src/domains/gtm-marketing/ghostwriter/command.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
@@ -532,7 +536,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`video-storyboard`](../src/domains/ai-video/video/storyboard/command.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../src/domains/engineering-base/work/command.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (84)
+## Guidelines (86)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -585,6 +589,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`augment-portability-patterns`](../docs/guidelines/augment-portability-patterns.md) | (root) |  |
 | guideline | [`code-clarity`](../docs/guidelines/code-clarity.md) | (root) |  |
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
+| guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
+| guideline | [`design-modes`](../docs/guidelines/design-modes.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`gtm-handoff`](../docs/guidelines/gtm-handoff.md) | (root) |  |

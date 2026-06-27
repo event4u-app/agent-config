@@ -158,6 +158,10 @@ the area's contract from the README in
 - Per-area: `./scripts-run src/scripts/audit_adr_coverage --check` exits 0.
 - Project's CI / quality pipeline passes locally.
 
+## Rubric pass (optional, surfacing-only)
+
+After drafting ADR, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `architecture-score` to confirm alternatives, consequences, reversibility, risk present. Invoke when user asks for completeness check — not on every ADR.
+
 ## Output format
 
 1. Path of the new ADR file.

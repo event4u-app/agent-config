@@ -162,6 +162,10 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
   -f body="Fixed in latest commit."
 ```
 
+## Rubric pass (optional, surfacing-only)
+
+After completing review, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `pr-review-score` to verify evidence-fit, risk/blast-radius, migration/rollback completeness. Invoke for high-risk or when user asks — not by default.
+
 ## Output format
 
 1. Structure every finding by severity (Blocker / Suggestion / Nit) using the block below; never mix severities in one block.

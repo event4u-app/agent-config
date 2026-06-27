@@ -1,17 +1,17 @@
 {
+  "skill": "image-editing",
   "last_eval": "2026-06-16",
-  "true": [
-    "edit the background of this product shot to a white studio setting",
-    "inpaint the logo out of the upper-right corner of this image",
-    "make a variation of this hero image in a warmer colour palette",
-    "remove the person standing on the left side of the photo",
-    "modify this existing render — I want the sky replaced with a sunset"
-  ],
-  "false": [
-    "generate a new product shot from scratch — I have no existing image",
-    "which image provider should I use for this job?",
-    "create a logo for my company",
-    "how do I write a good prompt for Ideogram?",
-    "do I need a rights check before using a celebrity's likeness in my image?"
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers inpainting, background replacement, colour variation, object removal, and targeted render modification. Should-not covers near-miss neighbours: greenfield image generation (image-creator/image-generation), provider selection (image-provider-routing), prompt writing (image-creator), rights/licence check (media governance).",
+  "queries": [
+    { "q": "edit the background of this product shot to a white studio setting", "trigger": true },
+    { "q": "inpaint the logo out of the upper-right corner of this image", "trigger": true },
+    { "q": "make a variation of this hero image in a warmer colour palette", "trigger": true },
+    { "q": "remove the person standing on the left side of the photo", "trigger": true },
+    { "q": "modify this existing render — I want the sky replaced with a sunset", "trigger": true },
+    { "q": "generate a new product shot from scratch — I have no existing image", "trigger": false, "note": "greenfield generation → image-creator / image-generation" },
+    { "q": "which image provider should I use for this job?", "trigger": false, "note": "provider routing → image-provider-routing" },
+    { "q": "create a logo for my company", "trigger": false, "note": "logo creation → logo-generation" },
+    { "q": "how do I write a good prompt for Ideogram?", "trigger": false, "note": "prompt engineering → image-creator" },
+    { "q": "do I need a rights check before using a celebrity's likeness in my image?", "trigger": false, "note": "likeness / rights → media governance rules" }
   ]
 }

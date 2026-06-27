@@ -317,6 +317,14 @@ Per user interaction rules, accept number or free text. `editmeta`
 is cheap and cacheable; cache the result per Jira project key for
 the session, re-probe on project change.
 
+## Rubric pass (optional, surfacing-only)
+
+After refinement, run
+[`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md)
+with rubric `ticket-quality-score` to verify DoR readiness — acceptance
+criteria, test plan, risk, and estimate. Invoke when the user asks for a
+DoR check — not automatically on every refinement.
+
 ## Output format
 
 1. **Refined ticket** section with rewritten title + description, wrapped in a copyable markdown block.

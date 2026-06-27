@@ -1,0 +1,17 @@
+{
+  "skill": "judge-artifact-completeness",
+  "last_eval": "2026-06-27",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers scoring roadmaps, PR reviews, ADRs, and tickets for completeness (risk, tests, migration, AC, DoR). Should-not covers near-miss neighbours: code-quality review (judge-code-quality), bug hunting (judge-bug-hunter), test-file coverage (judge-test-coverage), security audit (judge-security-auditor), and creating an ADR from scratch (adr-create).",
+  "queries": [
+    { "q": "score this roadmap for completeness — does it cover risk, tests, and migration?", "trigger": true },
+    { "q": "does this PR review have enough evidence? is each finding traceable to a diff line?", "trigger": true },
+    { "q": "check if this ticket meets DoR — are the acceptance criteria verifiable?", "trigger": true },
+    { "q": "is this ADR complete? does it name alternatives and state consequences?", "trigger": true },
+    { "q": "what dimensions are missing from this roadmap — risk, maintainability, migration?", "trigger": true },
+    { "q": "review the naming and DRY violations in this diff", "trigger": false, "note": "code quality → judge-code-quality" },
+    { "q": "find the bugs introduced by this change", "trigger": false, "note": "bug hunting → judge-bug-hunter" },
+    { "q": "does this PR add enough test coverage for the new behaviour?", "trigger": false, "note": "test-file coverage → judge-test-coverage" },
+    { "q": "are there security issues in this authentication middleware?", "trigger": false, "note": "security → judge-security-auditor" },
+    { "q": "create an ADR for switching from REST to GraphQL", "trigger": false, "note": "ADR creation → adr-create, not scoring" }
+  ]
+}
