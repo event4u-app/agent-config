@@ -1,0 +1,65 @@
+{
+  "rubric": "pr-review-score",
+  "version": "1.0",
+  "artifact_type": "pr-review",
+  "description": "Scores a PR review for completeness: evidence quality, actionability, and the four cross-cutting dimensions (risk, tests, migration, maintainability).",
+  "anchors": ["code-review", "requesting-code-review", "receiving-code-review"],
+  "scoring": {
+    "scale": "0 = absent, 1 = partial (mentioned but vague), weight = fully present and concrete",
+    "verdict_thresholds": {
+      "complete": 0.80,
+      "partial": 0.50,
+      "incomplete": 0.0
+    }
+  },
+  "dimensions": [
+    {
+      "id": "evidence_fit",
+      "name": "Evidence fit",
+      "cross_cutting": false,
+      "weight": 3,
+      "criterion": "Every finding cites a specific file:line or diff hunk. Claims rest on observable evidence in the diff, not on assumptions about the author's intent. 'This looks wrong' without a reference fails.",
+      "gap_signal": "Findings reference vague areas ('the API layer', 'this part') rather than specific locations; or claims are asserted without citing a diff line."
+    },
+    {
+      "id": "concrete_fixes",
+      "name": "Concrete fixes",
+      "cross_cutting": false,
+      "weight": 2,
+      "criterion": "Each finding proposes a concrete action — a renamed variable, a specific refactor, a test case that would catch the bug. 'Make it cleaner' or 'consider improving this' are not actionable.",
+      "gap_signal": "Findings are observations without prescribed remedies; or remedies are directional ('improve X') rather than concrete ('rename X to Y')."
+    },
+    {
+      "id": "risk_blast_radius",
+      "name": "Risk and blast radius",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "The review calls out high-risk hunks: areas touching auth, tenancy, billing, public API contracts, or data migrations. Blast radius is named if a change could affect more callers than the diff shows.",
+      "gap_signal": "Security or tenancy paths in the diff are not flagged; a breaking API change is reviewed as if no callers exist outside the diff."
+    },
+    {
+      "id": "test_coverage",
+      "name": "Test coverage of the change",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "The review notes whether the diff adds tests for new behavior or regression coverage for a fix. Missing tests for testable paths are flagged as findings, not left implicit.",
+      "gap_signal": "New or changed behavior has no test; the review does not flag this."
+    },
+    {
+      "id": "migration_rollback",
+      "name": "Migration and rollback",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "If the diff includes a schema migration, config change, or breaking API change, the review confirms a rollback or migration path exists. If none is needed, this is N/A (full credit).",
+      "gap_signal": "An irreversible schema migration or breaking API change ships without a rollback note or migration guide."
+    },
+    {
+      "id": "maintainability",
+      "name": "Maintainability signal",
+      "cross_cutting": true,
+      "weight": 1,
+      "criterion": "The review flags clarity and naming issues that will burden future readers — confusing abstractions, missing context, or patterns inconsistent with the module's conventions.",
+      "gap_signal": "Reviewable naming or abstraction issues are present in the diff but not mentioned."
+    }
+  ]
+}

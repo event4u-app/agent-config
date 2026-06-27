@@ -1,0 +1,73 @@
+{
+  "rubric": "roadmap-score",
+  "version": "1.0",
+  "artifact_type": "roadmap",
+  "description": "Scores a roadmap for completeness: acceptance criteria, phase decomposition, and the four cross-cutting dimensions (risk, tests, migration, maintainability).",
+  "anchors": ["roadmap-management", "roadmap-writing"],
+  "scoring": {
+    "scale": "0 = absent, 1 = partial (mentioned but vague), weight = fully present and concrete",
+    "verdict_thresholds": {
+      "complete": 0.80,
+      "partial": 0.50,
+      "incomplete": 0.0
+    }
+  },
+  "dimensions": [
+    {
+      "id": "acceptance_criteria_fit",
+      "name": "Acceptance criteria fit",
+      "cross_cutting": false,
+      "weight": 3,
+      "criterion": "Every phase or the roadmap as a whole has measurable acceptance criteria traceable to the goal statement. Criteria must be verifiable — a pass/fail test or observable outcome, not 'implement X'.",
+      "gap_signal": "No acceptance criteria section, or criteria are vague task descriptions rather than measurable outcomes."
+    },
+    {
+      "id": "phase_decomposition",
+      "name": "Phase decomposition",
+      "cross_cutting": false,
+      "weight": 2,
+      "criterion": "Work is decomposed into phases with clear scope boundaries. Each phase has a defined deliverable. The ordering is justified (dependency order or logical progression).",
+      "gap_signal": "A flat list of steps with no phase grouping, or phases whose ordering is arbitrary with no stated rationale."
+    },
+    {
+      "id": "risk",
+      "name": "Risk coverage",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "Risks, blockers, and open dependencies are explicitly named — not buried in step prose. At least one 'what could go wrong' or 'blocking on' note per phase is expected.",
+      "gap_signal": "No risks mentioned, or only implicit risks (e.g., 'verify the linter works' without stating what the failure mode is)."
+    },
+    {
+      "id": "tests_per_step",
+      "name": "Verification per step",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "Each non-trivial step states how its completion is verified — a concrete command, observable output, or pass/fail criterion. 'verify by inspection' is partial credit.",
+      "gap_signal": "Steps have no verification clause, or verification is implied rather than stated."
+    },
+    {
+      "id": "migration_effort",
+      "name": "Migration / breaking-change coverage",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "If the roadmap changes a public interface, contract, or schema, migration steps for consumers are addressed. If there is no migration surface, this dimension is marked N/A (full credit).",
+      "gap_signal": "A breaking change is introduced but no migration path, deprecation window, or consumer-impact note exists."
+    },
+    {
+      "id": "maintainability_owner",
+      "name": "Maintainability and ownership",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "The roadmap names who owns each phase or the whole deliverable. Long-lived artifacts (skills, rules, linters) state a refresh or review cadence. One-shot scripts that are deleted on completion are exempt.",
+      "gap_signal": "No owner named; no refresh cadence for long-lived output; no mention of how the result is kept current."
+    },
+    {
+      "id": "do_not_build_clarity",
+      "name": "Do-not-build clarity",
+      "cross_cutting": false,
+      "weight": 1,
+      "criterion": "Explicitly out-of-scope items are named so implementers do not over-build. A dedicated 'Do-not-build' or 'Out of scope' section earns full credit; absence is only acceptable when the roadmap is trivially narrow.",
+      "gap_signal": "No out-of-scope signal; a reader could reasonably extend the scope in several directions without guidance."
+    }
+  ]
+}

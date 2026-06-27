@@ -305,6 +305,7 @@
         "./dist/agent-src/skills/incident-commander",
         "./dist/agent-src/skills/jira-integration",
         "./dist/agent-src/skills/jobs-events",
+        "./dist/agent-src/skills/judge-artifact-completeness",
         "./dist/agent-src/skills/judge-bug-hunter",
         "./dist/agent-src/skills/judge-code-quality",
         "./dist/agent-src/skills/judge-security-auditor",

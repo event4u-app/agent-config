@@ -1,0 +1,73 @@
+{
+  "rubric": "ticket-quality-score",
+  "version": "1.0",
+  "artifact_type": "ticket",
+  "description": "Scores a Jira/Linear ticket for completeness against Definition of Ready: acceptance criteria, estimate, and the four cross-cutting dimensions.",
+  "anchors": ["refine-ticket", "estimate-ticket", "emit-tickets"],
+  "scoring": {
+    "scale": "0 = absent, 1 = partial (mentioned but vague), weight = fully present and concrete",
+    "verdict_thresholds": {
+      "complete": 0.80,
+      "partial": 0.50,
+      "incomplete": 0.0
+    }
+  },
+  "dimensions": [
+    {
+      "id": "acceptance_criteria",
+      "name": "Acceptance criteria",
+      "cross_cutting": false,
+      "weight": 3,
+      "criterion": "Acceptance criteria are written as verifiable Given-When-Then or numbered checklist items, not as task descriptions. Each criterion is independently testable. An implementer can write a test before touching code.",
+      "gap_signal": "AC section missing; or AC items are task descriptions ('implement the API') rather than verifiable outcomes ('returns 200 with a body matching the schema')."
+    },
+    {
+      "id": "dor_readiness",
+      "name": "Definition of Ready",
+      "cross_cutting": false,
+      "weight": 2,
+      "criterion": "The ticket passes Definition of Ready: scope is bounded, context sufficient to start without a separate discovery session, and no external blockers are unresolved.",
+      "gap_signal": "Scope is unbounded ('improve the search'); key context is missing ('see Confluence') without a direct link; blockers are noted but unresolved."
+    },
+    {
+      "id": "estimate_sizing",
+      "name": "Estimate and sizing",
+      "cross_cutting": false,
+      "weight": 1,
+      "criterion": "A story-point or T-shirt-size estimate is present. The estimate is consistent with the scope: a 1-pointer has trivially bounded scope; an 8-pointer has a split plan.",
+      "gap_signal": "No estimate; or estimate is wildly inconsistent with the visible scope."
+    },
+    {
+      "id": "risk",
+      "name": "Risk coverage",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "Top risks are listed (e.g., auth surface, data migration, external dependency). At least one mitigation or 'watch out for' note is present. Low-risk tickets may state 'no identified risks' with full credit.",
+      "gap_signal": "Ticket touches auth, tenancy, or data migration but no risks are listed."
+    },
+    {
+      "id": "test_plan",
+      "name": "Test plan",
+      "cross_cutting": true,
+      "weight": 2,
+      "criterion": "The ticket states what kind of tests will cover it — unit, integration, E2E, or 'covered by AC'. Edge cases and failure paths are named. 'TBD' fails this dimension.",
+      "gap_signal": "No test plan; or test plan is 'write tests' without specifying scope or edge cases."
+    },
+    {
+      "id": "dependencies",
+      "name": "Dependencies",
+      "cross_cutting": false,
+      "weight": 1,
+      "criterion": "Upstream and downstream dependencies are named (tickets, services, teams). Blocked-by links exist in the tracker. 'No dependencies' is acceptable with full credit when true.",
+      "gap_signal": "References to other work exist in the description text but are not linked in the tracker; or known blockers are undeclared."
+    },
+    {
+      "id": "maintainability",
+      "name": "Maintainability considerations",
+      "cross_cutting": true,
+      "weight": 1,
+      "criterion": "If the ticket introduces long-lived output (a new module, a schema change, a new public endpoint), ownership and refresh cadence are named. Short-lived or purely additive work is exempt (full credit).",
+      "gap_signal": "A new long-lived module or schema is introduced with no named owner or documentation note."
+    }
+  ]
+}

@@ -455,6 +455,10 @@ No global tooling required.
 
 The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
 
+## Rubric pass (optional, surfacing-only)
+
+After producing roadmap, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `roadmap-score` to surface missing dimensions (risk, tests, migration, maintainability). Score is a recommendation; never blocks shipping. Invoke only when user wants completeness check — not by default.
+
 ## Output format
 
 1. Roadmap file in agents/roadmaps/ with ordered phases and tasks
