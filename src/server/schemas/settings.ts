@@ -367,6 +367,11 @@ export const settingsSchema = z.object({
                 'PreToolUse RTK-wrap nudge (token-saving Phase 3). Default off. When on AND rtk is on PATH (a live probe — not a self-reported flag), warns (never blocks) "re-run wrapped with rtk" before a single verbose CLI command (git/npm/cargo/docker/…) for 60–90% token saving. Skips completeness-critical / piped / compound commands and git diff. No-op when rtk is absent.',
             ),
         }).default({}),
+        design_slop: z.object({
+            enabled: z.boolean().default(false).describe(
+                'PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default off. When on, runs the lint_design_slop registry against about-to-be-written UI content and WARNS (never blocks) on P0/P1 aesthetic tells (side-stripe, gradient-text, magic z-index, …). Flags are rebuttable via DESIGN.md / design-slop-disable. Anti-loop: a file::rule signature surfaced 3x goes silent. Host-limited convenience layer; the universal gate is the lint_design_slop linter/CI.',
+            ),
+        }).default({}),
     }),
     decision_engine: z.object({
         surface_traces: z.boolean().default(false).describe(

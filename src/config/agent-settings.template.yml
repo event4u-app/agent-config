@@ -731,6 +731,18 @@ hooks:
   rtk_wrap:
     enabled: false
 
+  # PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default-OFF.
+  # When enabled, runs the lint_design_slop registry against about-to-be-written
+  # UI content (html/css/jsx/…) and WARNS (exit 2, never blocks) on P0/P1
+  # aesthetic tells — the side-stripe signature, gradient-text, magic z-index,
+  # etc. Flags are rebuttable: declare intent in DESIGN.md, design-slop-disable,
+  # or proceed. Anti-loop: a file::rule signature surfaced 3x goes silent so it
+  # never traps the agent. The universal gate is the lint_design_slop linter/CI;
+  # this hook is a host-limited convenience layer (pre_tool_use fires on ~2-3
+  # hosts). Opt in once you trust the signal-to-noise on your UI.
+  design_slop:
+    enabled: false
+
 # --- Decision engine ---
 #
 # Controllable gates layered over the observability surface. Absent

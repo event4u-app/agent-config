@@ -26,6 +26,7 @@ hierarchy, reduced-motion, focus indicator) is in `lint_design_quality`
 |---|---|---|
 | **Guidance** | Subjective taste — Visual / Typography / Color / Layout / Copy patterns, override judgment, the originality self-test | this catalog |
 | **Enforcement** | Objective floors — Q1–Q6 (WCAG contrast, font-size, line-length, reduced-motion, heading hierarchy, focus indicator) as exit-code-2 CI | `lint_design_quality` |
+| **Detection** | Deterministic *aesthetic-tell* flags (P0–P3, rebuttable via DESIGN.md) — the pattern-detectable subset of the entries below | `lint_design_slop` |
 | **Audit method** | HOW to test WCAG (keyboard nav, ARIA, screen-reader procedures) | `accessibility-auditor` |
 | **Stack manifestation** | Concrete Tailwind class / hex bans, shadcn defaults | `tailwind-engineer`, `react-shadcn-ui` (per `framework-neutrality-in-generic-skills`) |
 | **Register** | Brand mode vs product mode — which patterns apply | `docs/guidelines/design-modes.md` |
@@ -33,6 +34,17 @@ hierarchy, reduced-motion, focus indicator) is in `lint_design_quality`
 This catalog is the canonical *index*; it states the pattern stack-agnostically.
 The stack-specific bans live in the apply skills and link back here by entry ID.
 The objective floors are cited from the linter, never re-eyeballed by an agent.
+
+**Deterministic detector backing** (`lint_design_slop`, dependency-free, zero
+runtime token cost): a pattern-detectable subset of these entries now has a
+deterministic rule that `design-review` cites instead of re-deriving — `V1`,
+`V3`, `V6`, `C2`, `C5`, `T4`, `T6`, `T7`, `L4`, `L8`, `M2`, `M4`, `CP1`, `CP2`
+(rule ids `slop-<id>-*`, registry in `src/scripts/design_slop_rules.ts`). These
+are **flags / rebuttable presumptions**, never hard blocks — a consumer
+`DESIGN.md` that declares the pattern as intentional suppresses the flag. The
+entries needing structural or aesthetic judgment (e.g. `T3` icon-tile stack,
+`L2` three-identical-card grid, `V2` glassmorphism intent) stay
+agent-judgment-only and are deliberately **not** in the detector.
 
 ---
 
