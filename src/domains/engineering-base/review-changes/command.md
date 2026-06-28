@@ -7,7 +7,7 @@ routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-co
 replaces: []
 tier: 1
 visibility: advanced
-skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, git-workflow]
+skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-synthesis, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 suggestion:
   eligible: true
@@ -130,13 +130,19 @@ If picked **2** → continue with internal judges only.
 
 ### 5. Consolidate
 
-Produce one combined report:
+Consolidate via [`judge-synthesis`](../skills/judge-synthesis/SKILL.md) — the
+canonical cross-judge aggregation format. It consumes the verdict blocks from
+step 4 (plus any external council blocks from 4b) and produces one report:
 
-- List each judge's verdict side by side
-- Merge issues into a single severity-sorted table (🔴 → 🟡 → 🟢),
-  tagged with the judge that raised each one
-- Highlight any finding that multiple judges flagged — those are the
-  highest-confidence items
+- A side-by-side verdict table (one row per judge, its own verdict word)
+- **Consensus** findings flagged by ≥2 judges — the highest-confidence items
+- **Conflicts** where judges disagree on the same target — surfaced, not
+  silently resolved
+- A **must-fix / should-fix / advisory** split, each entry tagged with the
+  judge(s) that raised it
+
+`judge-synthesis` emits no single quality score and never auto-gates — it
+structures the verdicts so the next step's decision is informed.
 
 ### 6. Decide next steps
 
@@ -206,6 +212,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 ## See also
 
 - [`/prepare-for-review`](prepare-for-review.md) — updates `main` and merges the full base-branch chain into the target branch (used by step 1)
+- [`judge-synthesis`](../skills/judge-synthesis/SKILL.md) — the cross-judge consolidation format used in step 5 (consensus / conflicts / must-fix, no opaque score)
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — dispatch and model-pairing rules
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
 - [`verify-repair-loop`](../skills/verify-repair-loop/SKILL.md) — opt-in test-verdict-gated iterate-to-green loop (step 6 hand-off); judge confirms after the numeric gate
