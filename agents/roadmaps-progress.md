@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**85 / 159 steps done · 53%**
+**85 / 148 steps done · 57%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+███████████████████████░░░░░░░░░░░░░░░░░   57%
 ```
 
 ## Open roadmaps
@@ -20,9 +20,8 @@
 | 2 | [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md) | 4 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 4 | [road-to-shadcn-registry-awareness.md](roadmaps/road-to-shadcn-registry-awareness.md) | 5 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-taste-dials-and-locks.md](roadmaps/road-to-taste-dials-and-locks.md) | 5 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
-| 7 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
+| 6 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -72,18 +71,6 @@
 | 1 | `shadcn info --json` handshake (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | Token-aware scaffolding | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Optional shadcn MCP path | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Verify | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-### [road-to-taste-dials-and-locks.md](roadmaps/road-to-taste-dials-and-locks.md)
-
-**Road to Taste Dials & Consistency Locks** — 0 / 11 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Dials in DESIGN.md | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Dials drive generation | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Consistency Locks (within-project) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Layout-repetition caps (deterministic flags) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | Verify | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
