@@ -22,7 +22,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { SLOP_RULES, type DesignContext } from "../design_slop_rules.ts";
+import { type DesignContext } from "../design_slop_rules.ts";
 import { loadDesignContext, scanFile } from "../lint_design_slop.ts";
 
 const SETTINGS_FILE = ".agent-settings.yml";
