@@ -48,7 +48,13 @@
     "agency-agents",
     "msitarzewski",
     "610ClaudeSubagents",
-    "ChrisRoyse"
+    "ChrisRoyse",
+    "pbakaus",
+    "leonxlnx",
+    "gztchan",
+    "amaancoderx",
+    "npxskillui",
+    "\\bskillui\\b"
   ],
   "skip_paths": [
     "src/scripts/check_no_external_sources.py",
