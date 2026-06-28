@@ -42,7 +42,7 @@ import {
   type DesignContext,
   type Engine,
   type Severity,
-} from "./design_slop_rules.ts";
+} from "./design_slop_rules.js";
 
 interface Finding {
   rule: string;

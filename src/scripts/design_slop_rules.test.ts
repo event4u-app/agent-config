@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SLOP_RULES, type DesignContext } from "./design_slop_rules.ts";
-import { scanFile } from "./lint_design_slop.ts";
+import { SLOP_RULES, type DesignContext } from "./design_slop_rules.js";
+import { scanFile } from "./lint_design_slop.js";
 
 // Context with no DESIGN.md → all gates OFF, every rule active.
 const NO_CTX: DesignContext = { raw: "", has: () => false };

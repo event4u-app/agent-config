@@ -22,8 +22,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { type DesignContext } from "../design_slop_rules.ts";
-import { loadDesignContext, scanFile } from "../lint_design_slop.ts";
+import { type DesignContext } from "../design_slop_rules.js";
+import { loadDesignContext, scanFile } from "../lint_design_slop.js";
 
 const SETTINGS_FILE = ".agent-settings.yml";
 const EXIT_ALLOW = 0;
