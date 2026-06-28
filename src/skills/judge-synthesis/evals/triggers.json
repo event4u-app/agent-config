@@ -1,0 +1,17 @@
+{
+  "skill": "judge-synthesis",
+  "last_eval": "2026-06-28",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers consolidating multiple already-run judge verdicts into one report (consensus, conflicts, must-fix). Should-not covers near-misses: producing a single judge verdict (the individual judges), dispatching judges (review-changes), code-only review, asking for a quality number, and running one judge.",
+  "queries": [
+    { "q": "consolidate these judge verdicts into one report — where do they agree and disagree?", "trigger": true },
+    { "q": "I ran the bug, security and artifact-completeness judges — synthesize the findings", "trigger": true },
+    { "q": "which findings did multiple judges flag, and what are the conflicts?", "trigger": true },
+    { "q": "merge the judge outputs into a must-fix / should-fix / advisory split with provenance", "trigger": true },
+    { "q": "give me one decision-ready report across all the judges that ran on this PR", "trigger": true },
+    { "q": "judge this diff for bugs", "trigger": false, "note": "single verdict → judge-bug-hunter" },
+    { "q": "self-review my changes before the PR", "trigger": false, "note": "dispatches the code judges → /review-changes" },
+    { "q": "score this roadmap for completeness", "trigger": false, "note": "single artifact verdict → judge-artifact-completeness" },
+    { "q": "give me one overall quality score for this PR", "trigger": false, "note": "opaque single number — explicitly forbidden by this skill" },
+    { "q": "run the security auditor on this code", "trigger": false, "note": "runs one judge → judge-security-auditor" }
+  ]
+}

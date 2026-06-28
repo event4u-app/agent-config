@@ -310,6 +310,7 @@
         "./dist/agent-src/skills/judge-code-quality",
         "./dist/agent-src/skills/judge-injection-defense",
         "./dist/agent-src/skills/judge-security-auditor",
+        "./dist/agent-src/skills/judge-synthesis",
         "./dist/agent-src/skills/judge-test-coverage",
         "./dist/agent-src/skills/laravel",
         "./dist/agent-src/skills/laravel-api-endpoint",

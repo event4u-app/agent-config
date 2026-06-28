@@ -84,7 +84,7 @@ _Ship it. Commit in logical chunks, open the PR, answer review comments, and pre
 - `fix` — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments
 - `fix-portability` — Find and fix project-specific references in shared .augment/ package files
 - `fix/pr-bot-comments`
-- `fix-pr-comments` — Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
+- `fix-pr-comments` — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 - `fix/pr-developer-comments`
 - `fix-refs` — Find and fix broken cross-references in .augment/ and agents/ files
 - `fix-seeder` — Scan seeder data files for broken foreign key references — find constants used without getReference() and f…

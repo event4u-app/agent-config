@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **601 artefacts** in this package.
+Maintainer-facing index of all **602 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (260)
+## Skills (261)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -123,6 +123,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`judge-code-quality`](../src/skills/judge-code-quality/SKILL.md) |  | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-injection-defense`](../src/skills/judge-injection-defense/SKILL.md) |  | Use when scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates. |
 | skill | [`judge-security-auditor`](../src/skills/judge-security-auditor/SKILL.md) |  | Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge. |
+| skill | [`judge-synthesis`](../src/skills/judge-synthesis/SKILL.md) |  | Use to consolidate multiple already-run judge verdicts into one report — consensus, conflicts, must-fix/should-fix with per-judge provenance. Consume-only, no opaque score, never auto-gates. |
 | skill | [`judge-test-coverage`](../src/skills/judge-test-coverage/SKILL.md) |  | Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'. |
 | skill | [`laravel`](../src/skills/laravel/SKILL.md) |  | Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`. |
 | skill | [`laravel-api-endpoint`](../src/skills/laravel-api-endpoint/SKILL.md) |  | Use when creating a new Laravel API endpoint — Controller, FormRequest, Resource, route, Policy, OpenAPI annotations — versioned route layout, single-action `__invoke` controllers. |

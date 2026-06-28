@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **600 public artefacts** shipped by
+Consumer-facing catalog of all **601 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (260)
+## Skills (261)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -123,6 +123,7 @@ are excluded.
 | skill | [`judge-code-quality`](../dist/agent-src/skills/judge-code-quality/SKILL.md) |  | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-injection-defense`](../dist/agent-src/skills/judge-injection-defense/SKILL.md) |  | Use when scoring whether an agent response defended against an injection — treated untrusted content as data, refused role-takeover, ignored fake boundaries. Inverted axis; never auto-gates. |
 | skill | [`judge-security-auditor`](../dist/agent-src/skills/judge-security-auditor/SKILL.md) |  | Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge. |
+| skill | [`judge-synthesis`](../dist/agent-src/skills/judge-synthesis/SKILL.md) |  | Use to consolidate multiple already-run judge verdicts into one report — consensus, conflicts, must-fix/should-fix with per-judge provenance. Consume-only, no opaque score, never auto-gates. |
 | skill | [`judge-test-coverage`](../dist/agent-src/skills/judge-test-coverage/SKILL.md) |  | Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'. |
 | skill | [`laravel`](../dist/agent-src/skills/laravel/SKILL.md) |  | Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`. |
 | skill | [`laravel-api-endpoint`](../dist/agent-src/skills/laravel-api-endpoint/SKILL.md) |  | Use when creating a new Laravel API endpoint — Controller, FormRequest, Resource, route, Policy, OpenAPI annotations — versioned route layout, single-action `__invoke` controllers. |
