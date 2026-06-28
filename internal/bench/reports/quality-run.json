@@ -1,0 +1,38 @@
+{
+  "generated_by": "bench_quality_run",
+  "judge_model": "claude-sonnet-4-5",
+  "dry_run": false,
+  "threshold": 0.48,
+  "results": [
+    {
+      "id": "tq-scope-01",
+      "winner": "eager",
+      "length_delta": -786,
+      "winner_is_longer": true
+    },
+    {
+      "id": "tq-scope-02",
+      "winner": "thin",
+      "length_delta": -1771,
+      "winner_is_longer": false
+    },
+    {
+      "id": "tq-direct-01",
+      "winner": "tie",
+      "length_delta": -327,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-direct-02",
+      "winner": "tie",
+      "length_delta": 0,
+      "winner_is_longer": null
+    },
+    {
+      "id": "tq-evidence-01",
+      "winner": "eager",
+      "length_delta": 2139,
+      "winner_is_longer": false
+    }
+  ]
+}
