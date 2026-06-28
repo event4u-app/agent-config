@@ -76,6 +76,17 @@ concerns:
     script: src/scripts/hooks/rtk_wrap_hook.ts
     args: []
     fail_closed: false
+  # road-to-anti-slop-detector Phase 3 — OPTIONAL PreToolUse anti-slop nudge.
+  # Runs the lint_design_slop registry against about-to-be-written UI content
+  # and WARNS (exit 2) on P0/P1 aesthetic tells. Never blocks (flags, not
+  # blocks). Default-OFF (hooks.design_slop.enabled). Anti-loop degradation: a
+  # file::rule signature surfaced >=3x goes silent so it never traps the agent.
+  # The universal source of truth is the lint_design_slop linter/CI; this hook
+  # is a host-limited convenience layer. fail_closed: false.
+  design-slop:
+    script: src/scripts/hooks/design_slop_hook.ts
+    args: []
+    fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -108,7 +119,7 @@ platforms:
     session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
-    pre_tool_use:     [block-no-verify, rtk-wrap]
+    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   claude:
@@ -116,7 +127,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap]
+    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -138,7 +149,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, rtk-wrap]
+    pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
