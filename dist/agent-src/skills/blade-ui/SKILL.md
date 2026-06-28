@@ -127,6 +127,10 @@ current state on the next polish round.
 - Always use Tailwind utility classes — not inline styles.
 - Don't put business logic in templates — use view composers or Livewire.
 
+## Taste Dials
+
+`DESIGN.md` `## Taste Dials` → honour: Variance → layout-family spread + asymmetry; Motion → animation budget + reduced-motion posture; Density → spacing scale + info-per-viewport. Absent → follow brief's inferred dials.
+
 ## Do NOT
 
 - Do NOT use `{!! !!}` with user input — XSS risk.

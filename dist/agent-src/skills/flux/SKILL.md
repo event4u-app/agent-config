@@ -112,6 +112,10 @@ current state on the next polish round.
 - Flux has built-in validation display — don't add manual error rendering alongside it.
 - Don't mix Flux with raw HTML form elements in the same form.
 
+## Taste Dials
+
+`DESIGN.md` `## Taste Dials` → honour: Variance → layout-family spread + asymmetry; Motion → animation budget + reduced-motion posture; Density → spacing scale + info-per-viewport. Absent → follow brief's inferred dials.
+
 ## Do NOT
 
 - Do NOT use raw `<input>`, `<select>`, `<button>` when Flux equivalents exist.

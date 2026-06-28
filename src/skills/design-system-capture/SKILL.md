@@ -98,6 +98,20 @@ Example: "Information-dense dashboard; optimize for power users, not casual expl
 - Destructive: [token name]
 - Surface hierarchy: [primary bg → secondary bg → elevated bg]
 
+## Taste Dials
+Three 1–10 dials that tune generation. Absent = unset (design-intelligence
+infers from the brief via its Dial Inference Table). One-line rationale each.
+- Variance: [1–10] — [why; 1 = perfectly symmetric, 10 = expressive/asymmetric]
+- Motion: [1–10] — [why; 1 = static, 10 = cinematic]
+- Density: [1–10] — [why; 1 = airy, 10 = packed/data-dense]
+
+## Consistency Locks
+Within-project invariants (derived from the confirmed system). A value outside
+a declared Lock is off-system; the anti-slop detector flags it (rebuttable).
+- Theme Lock: [single | light+dark via prefers-color-scheme] — no mid-surface inversion
+- Colour Lock: [one accent family] — [the accent hue]
+- Shape Lock: [one corner-radius scale] — [the radius set, e.g. 6/12/16px]
+
 ## Stack and conventions
 - CSS approach: [Tailwind / CSS modules / styled-components / etc.]
 - Component primitives: [shadcn / Radix / Headless UI / custom]
