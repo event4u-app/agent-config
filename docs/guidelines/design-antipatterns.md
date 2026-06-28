@@ -38,13 +38,27 @@ The objective floors are cited from the linter, never re-eyeballed by an agent.
 **Deterministic detector backing** (`lint_design_slop`, dependency-free, zero
 runtime token cost): a pattern-detectable subset of these entries now has a
 deterministic rule that `design-review` cites instead of re-deriving — `V1`,
-`V3`, `V6`, `C2`, `C5`, `T4`, `T6`, `T7`, `L4`, `L8`, `M2`, `M4`, `CP1`, `CP2`
+`V3`, `V6`, `C2`, `C5`, `T4`, `T6`, `T7`, `L4`, `L8`, `M2`, `M4`, `CP1`, `CP2`,
+plus the **Consistency Locks & layout caps** `V8`, `C6`, `L9`, `L10`
 (rule ids `slop-<id>-*`, registry in `src/scripts/design_slop_rules.ts`). These
 are **flags / rebuttable presumptions**, never hard blocks — a consumer
 `DESIGN.md` that declares the pattern as intentional suppresses the flag. The
 entries needing structural or aesthetic judgment (e.g. `T3` icon-tile stack,
-`L2` three-identical-card grid, `V2` glassmorphism intent) stay
-agent-judgment-only and are deliberately **not** in the detector.
+`L2` three-identical-card grid, `V2` glassmorphism intent, `C7` theme-inversion)
+stay agent-judgment-only and are deliberately **not** in the detector.
+
+### Consistency Locks & layout caps (taste-dials roadmap)
+
+Within-project invariants + repetition caps. Override = declare the value in
+`DESIGN.md` (`## Consistency Locks` / a brutalist or uniform-grid style note).
+
+| # | Pattern | Why it reads as AI-generated | Override condition |
+|---|---|---|---|
+| V8 | Shape Lock — ≥ 4 distinct corner-radius scales in one surface | A fragmented radius system reads as no shape decision | Declare the radius scale in `DESIGN.md`; a genuine multi-tier scale documents each tier |
+| C6 | Colour Lock — ≥ 3 distinct saturated accent hue families | No single accent identity; reads as default-palette sprawl | Brand genuinely uses a multi-accent system, declared in `DESIGN.md` / `brand-to-tokens` |
+| C7 | Theme inversion — a light island mid-dark surface (or vice versa) not driven by the theme system | Mid-surface inversion breaks the theme rhythm | Intentional inverted callout with a documented reason — **judgment-only**, design-review calls it (deterministic detection is unreliable) |
+| L9 | Section monotony — ≥ 8 sections, < 4 distinct layout families | Uniform section rhythm collapses scannability | Deliberately uniform grid (e.g. a gallery), declared as such |
+| L10 | Zigzag — > 2 consecutive image-left/text-right two-column sections | The alternating-zigzag landing-page tell | A genuinely sequenced walkthrough where alternation aids comprehension |
 
 ---
 

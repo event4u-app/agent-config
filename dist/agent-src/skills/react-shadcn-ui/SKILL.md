@@ -234,6 +234,10 @@ synthesise the updated `state.ui_review.findings` (including any
 remaining `a11y_violation` entries) so the engine's gate sees the
 current state on the next polish round.
 
+## Taste Dials
+
+`DESIGN.md` `## Taste Dials` → honour: Variance → layout-family spread + asymmetry; Motion → animation budget + reduced-motion posture; Density → spacing scale + info-per-viewport. Absent → follow brief's inferred dials.
+
 ## Do NOT
 
 - Do NOT install `shadcn-ui` from npm — primitives are scaffolded.

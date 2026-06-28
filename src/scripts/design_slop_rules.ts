@@ -93,6 +93,60 @@ export function visibleText(content: string, ext: string): string {
   return t;
 }
 
+/** Coarse HSL hue bucket (0–11, 30° each) from a #rgb/#rrggbb hex; null if grayscale/near-black/near-white (not an accent). */
+export function hueBucket(hex: string): number | null {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  let h = m[1] ?? "";
+  if (h.length === 3) {
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  const l = (max + min) / 2;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (s < 0.25 || l < 0.12 || l > 0.95) return null; // grayscale / near-black / near-white
+  let hue = 0;
+  if (max === r) hue = ((g - b) / d) % 6;
+  else if (max === g) hue = (b - r) / d + 2;
+  else hue = (r - g) / d + 4;
+  hue *= 60;
+  if (hue < 0) hue += 360;
+  return Math.floor(hue / 30) % 12;
+}
+
+/** Approximate `<section>` bodies for layout-cap rules (no recursion; coarse, deterministic). */
+export function sectionBodies(content: string): string[] {
+  const starts: number[] = [];
+  const re = /<section\b|<Section\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(content)) !== null) starts.push(m.index);
+  if (starts.length === 0) return [];
+  const bodies: string[] = [];
+  for (let i = 0; i < starts.length; i++) {
+    const end = i + 1 < starts.length ? starts[i + 1]! : content.length;
+    bodies.push(content.slice(starts[i]!, end));
+  }
+  return bodies;
+}
+
+/** Coarse structural signature of a section body (for monotony / zigzag caps). */
+function sectionSignature(body: string): { sig: string; mediaText: boolean } {
+  const img = /<img\b|<picture\b|<Image\b|background-image/i.test(body);
+  const grid = /\b(flex|grid|grid-cols|col-span|md:flex|lg:grid)\b/i.test(body);
+  const heading = /<h[1-6]\b/i.test(body);
+  const text = heading || /<(p|li)\b/i.test(body);
+  const blocks = Math.min((body.match(/<div\b/gi) ?? []).length, 5);
+  return { sig: `${img ? "I" : ""}${grid ? "G" : ""}${heading ? "H" : ""}${blocks}`, mediaText: img && text && grid };
+}
+
 const DEFAULT_FONTS = [
   "inter",
   "roboto",
@@ -351,6 +405,97 @@ export const SLOP_RULES: SlopRule[] = [
       if (hits.length > 0) {
         return [{ line: 1, snippet: `buzzwords: ${hits.join(", ")}` }];
       }
+      return [];
+    },
+  },
+  {
+    id: "slop-lock-shape",
+    catalogId: "V8",
+    severity: "P2",
+    engines: ["css"],
+    description: "Shape Lock — too many distinct corner-radius scales",
+    message: "Mixed corner-radius scales fragment the shape system; lock one scale (V8 / Shape Lock).",
+    gated: (ctx) => ctx.has("shape lock"),
+    detect: ({ content }) => {
+      const vals = new Set<number>();
+      for (const m of content.matchAll(/border-radius\s*:\s*([^;}]+)/gi)) {
+        for (const pm of (m[1] ?? "").matchAll(/(\d+(?:\.\d+)?)px/gi)) {
+          const v = parseFloat(pm[1] ?? "0");
+          if (v > 0 && v < 9990) vals.add(v);
+        }
+      }
+      if (vals.size >= 4) {
+        const idx = content.search(/border-radius/i);
+        return [
+          {
+            line: lineOf(content, Math.max(0, idx)),
+            snippet: `${vals.size} distinct radius values: ${[...vals].sort((a, b) => a - b).join("/")}px`,
+          },
+        ];
+      }
+      return [];
+    },
+  },
+  {
+    id: "slop-lock-colour",
+    catalogId: "C6",
+    severity: "P3",
+    engines: ["css"],
+    description: "Colour Lock — multiple saturated accent hue families",
+    message: "Several accent hue families read as no single accent identity; lock one (C6 / Colour Lock).",
+    gated: (ctx) => ctx.has("colour lock", "color lock"),
+    detect: ({ content }) => {
+      const buckets = new Set<number>();
+      for (const pm of content.matchAll(/#([0-9a-f]{3}|[0-9a-f]{6})\b/gi)) {
+        const b = hueBucket("#" + (pm[1] ?? ""));
+        if (b !== null) buckets.add(b);
+      }
+      if (buckets.size >= 3) {
+        const idx = content.search(/#[0-9a-f]{3,6}\b/i);
+        return [{ line: lineOf(content, Math.max(0, idx)), snippet: `${buckets.size} distinct accent hue families` }];
+      }
+      return [];
+    },
+  },
+  {
+    id: "slop-l9-section-monotony",
+    catalogId: "L9",
+    severity: "P3",
+    engines: ["html", "jsx"],
+    description: "Section-layout monotony — too few distinct layout families across many sections",
+    message: "Many sections but few distinct layouts → monotonous rhythm; vary the composition (L9).",
+    gated: (ctx) => ctx.has("brutalist", "uniform grid", "repetitive grid"),
+    detect: ({ content }) => {
+      const bodies = sectionBodies(content);
+      if (bodies.length < 8) return [];
+      const sigs = new Set(bodies.map((b) => sectionSignature(b).sig));
+      if (sigs.size < 4) {
+        return [{ line: 1, snippet: `${bodies.length} sections, only ${sigs.size} distinct layout families` }];
+      }
+      return [];
+    },
+  },
+  {
+    id: "slop-l10-zigzag",
+    catalogId: "L10",
+    severity: "P3",
+    engines: ["html", "jsx"],
+    description: "Zigzag alternation — more than two consecutive media+text two-column sections",
+    message: "More than two consecutive image+text two-column sections is the alternating-zigzag tell (L10).",
+    gated: (ctx) => ctx.has("brutalist", "uniform grid", "repetitive grid"),
+    detect: ({ content }) => {
+      const bodies = sectionBodies(content);
+      let run = 0;
+      let maxRun = 0;
+      for (const b of bodies) {
+        if (sectionSignature(b).mediaText) {
+          run += 1;
+          maxRun = Math.max(maxRun, run);
+        } else {
+          run = 0;
+        }
+      }
+      if (maxRun > 2) return [{ line: 1, snippet: `${maxRun} consecutive media+text sections` }];
       return [];
     },
   },

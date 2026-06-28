@@ -97,6 +97,36 @@ Examples:
 
 **If context is incomplete:** state so and proceed exploratory — *"Design context incomplete: no audience defined; proposing exploratory direction, expect revision after audience is clarified."* Do NOT block on missing context; do NOT prompt the user with a gate; state the gap and continue.
 
+### Taste Dials — quantify, infer, emit
+
+If `DESIGN.md` declares `## Taste Dials`, use those values. Otherwise infer
+three 1–10 dials from the brief and append them to the Design Read line
+(`… · dials V/M/D = 6/3/4`) so the user can correct them; on confirmation,
+suggest persisting to `DESIGN.md` (via `design-system-capture`). Dials are a
+config, not a vibe — never re-infer when `DESIGN.md` already sets them
+(no drift across sessions).
+
+**Dial Inference Table** (brief signal → Variance / Motion / Density, 1–10):
+
+| Brief signal | V | M | D |
+|---|---|---|---|
+| minimal / calm / editorial / clean | 3–5 | 2–4 | 2–4 |
+| trust / regulated / public-sector / fintech | 3–4 | 2–3 | 4–6 |
+| default / unstated | 5–6 | 3–4 | 4–5 |
+| data-dense / dashboard / admin / cockpit | 4–6 | 2–3 | 7–9 |
+| bold / playful / expressive / awards / Dribbble | 8–10 | 7–10 | 3–5 |
+
+**Dial → downstream levers** (how a dial value changes generation):
+
+| Dial | Low (1–3) | High (8–10) |
+|---|---|---|
+| Variance | symmetric grids, one layout family | asymmetry, varied layout families, off-grid accents |
+| Motion | static / `prefers-reduced-motion`-first, opacity-only | choreographed scroll/stagger (still GPU-only, still reduced-motion alt) |
+| Density | generous whitespace, large spacing scale, few items/viewport | tight spacing scale, more information per viewport |
+
+Dials persist in `DESIGN.md`; the stack executors (`tailwind-engineer`,
+`react-shadcn-ui`, `blade-ui`, `flux`) read `DESIGN.md` and honour them.
+
 **Anti-Default Discipline — first-impulse check:** Before committing to any design direction, verify you are NOT defaulting to:
 - Purple/violet + cyan-on-dark gradient palette (AI color cliché)
 - Centered hero over a dark gradient mesh with a single CTA

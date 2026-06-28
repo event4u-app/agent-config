@@ -152,6 +152,10 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
   flow) when the brief allows; cite the design brief's `aesthetic:`
   line if `fe-design`'s aesthetic-direction section produced one.
 
+## Taste Dials
+
+`DESIGN.md` `## Taste Dials` → honour: Variance → layout-family spread + asymmetry; Motion → animation budget + reduced-motion posture; Density → spacing scale + info-per-viewport. Absent → follow brief's inferred dials.
+
 ## Do NOT
 
 - Do NOT add `!important` to win a specificity fight; restructure

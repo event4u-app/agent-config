@@ -93,6 +93,35 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     positive: "We streamline and empower your robust, world-class workflow.",
     negative: "We cut page load by 40% and remove three steps from checkout.",
   },
+  "slop-lock-shape": {
+    ext: "css",
+    positive: ".a{border-radius:4px}.b{border-radius:8px}.c{border-radius:12px}.d{border-radius:20px}",
+    negative: ".a{border-radius:8px}.b{border-radius:12px}",
+  },
+  "slop-lock-colour": {
+    ext: "css",
+    positive: ".a{color:#e11d48}.b{background:#2563eb}.c{border-color:#16a34a}",
+    negative: ".a{color:#111827}.b{background:#6b7280}.c{border-color:#2563eb}",
+  },
+  "slop-l9-section-monotony": {
+    ext: "html",
+    // 8 identical media+text sections → 1 distinct layout family (< 4)
+    positive: '<section><div class="grid"><img src="x"><h2>A</h2><p>t</p></div></section>'.repeat(8),
+    // 8 sections, 4 distinct signatures → not monotonous
+    negative: (
+      '<section><div class="grid"><img src="x"><h2>A</h2></div></section>' +
+      "<section><h2>B</h2><p>t</p></section>" +
+      '<section><div class="flex"><p>c</p></div></section>' +
+      '<section><img src="y"></section>'
+    ).repeat(2),
+  },
+  "slop-l10-zigzag": {
+    ext: "html",
+    // 3 consecutive media+text two-column sections → run > 2
+    positive: '<section><div class="grid"><img src="x"><h2>A</h2><p>t</p></div></section>'.repeat(3),
+    // only 2 consecutive → within cap
+    negative: '<section><div class="grid"><img src="x"><h2>A</h2><p>t</p></div></section>'.repeat(2),
+  },
 };
 
 function findingsFor(ruleId: string, content: string, ext: string, ctx = NO_CTX) {
