@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**85 / 148 steps done · 57%**
+**85 / 138 steps done · 62%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   57%
+█████████████████████████░░░░░░░░░░░░░░░   62%
 ```
 
 ## Open roadmaps
@@ -19,9 +19,8 @@
 | 1 | [road-to-design-canon-grounding.md](roadmaps/road-to-design-canon-grounding.md) | 4 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md) | 4 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 4 | [road-to-shadcn-registry-awareness.md](roadmaps/road-to-shadcn-registry-awareness.md) | 5 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
-| 6 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
+| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -60,18 +59,6 @@
 | 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
 | 2b | AI-council live-call layer (py2ts gap — transport now wired) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consumer + merge readiness | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-
-### [road-to-shadcn-registry-awareness.md](roadmaps/road-to-shadcn-registry-awareness.md)
-
-**Road to shadcn Registry & MCP Awareness** — 0 / 10 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Registry model + JSON schema literacy | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 1 | `shadcn info --json` handshake (opt-in) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Token-aware scaffolding | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Optional shadcn MCP path | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | Verify | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
