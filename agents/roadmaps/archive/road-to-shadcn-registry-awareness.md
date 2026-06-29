@@ -33,28 +33,28 @@ This is mostly *executor* knowledge (CLI/MCP/registry mechanics), not loaded pro
 
 ## Phase 0 — Registry model + JSON schema literacy
 
-- [ ] Add a lazy-loaded reference (skill-local) describing `registry-item.json`: the `type` enum (`registry:ui|block|component|hook|lib|theme|style|page|file`), `dependencies`/`devDependencies` (npm), `registryDependencies` (built-in / `@ns/x` / GitHub / URL / local), `files[]` (path + type + target placeholders), `cssVars` (theme/light/dark, OKLCH), `css` (raw `@layer`/`@utility`). Loaded only on the registry path.
-- [ ] Document namespaced resolution: `components.json` `registries` map (`@acme-ui` → URL template with `{name}`/`{style}`), the resolution regex, and per-registry `headers` with `${ENV_VAR}` for auth registries.
+- [x] Add a lazy-loaded reference (skill-local) describing `registry-item.json`: the `type` enum (`registry:ui|block|component|hook|lib|theme|style|page|file`), `dependencies`/`devDependencies` (npm), `registryDependencies` (built-in / `@ns/x` / GitHub / URL / local), `files[]` (path + type + target placeholders), `cssVars` (theme/light/dark, OKLCH), `css` (raw `@layer`/`@utility`). Loaded only on the registry path. <!-- done: src/skills/react-shadcn-ui/reference/registry.md — full schema, lazy-loaded only on the registry/MCP path (zero always-on tokens). -->
+- [x] Document namespaced resolution: `components.json` `registries` map (`@acme-ui` → URL template with `{name}`/`{style}`), the resolution regex, and per-registry `headers` with `${ENV_VAR}` for auth registries. <!-- done: reference/registry.md § Namespaced registries — map, resolution regex, ${ENV_VAR} auth headers, decentralized-namespace note. -->
 
 ## Phase 1 — `shadcn info --json` handshake (opt-in)
 
-- [ ] Teach the skill to run `shadcn info --json` to read framework / aliases / installed components / icon lib / base settings — used as the grounding handshake **when** the project declares custom/namespaced registries OR theme-alignment is in scope. NOT a forced first action on every add.
-- [ ] Reconcile with our own `state.ui_audit.shadcn_inventory` — prefer the live `info --json` when present; fall back to the audit. Document the precedence.
+- [x] Teach the skill to run `shadcn info --json` to read framework / aliases / installed components / icon lib / base settings — used as the grounding handshake **when** the project declares custom/namespaced registries OR theme-alignment is in scope. NOT a forced first action on every add. <!-- done: SKILL "Registry & MCP awareness (opt-in)" — handshake conditions stated, explicitly not a per-add gate. -->
+- [x] Reconcile with our own `state.ui_audit.shadcn_inventory` — prefer the live `info --json` when present; fall back to the audit. Document the precedence. <!-- done: precedence bullet — live info --json wins, audit is the fallback. -->
 
 ## Phase 2 — Token-aware scaffolding
 
-- [ ] When a `registry-item.json` carries `cssVars`, align additions to the project's existing theme tokens (read from `info --json` / `components.json`) instead of injecting the default shadcn neutral theme — directly reinforces our anti-slop posture (default shadcn theme + Inter fallback is a flagged tell).
-- [ ] Honour `registryDependencies` (install the graph) and surface version-pinned GitHub deps; keep propose-never-silent-run + `--dry-run`.
+- [x] When a `registry-item.json` carries `cssVars`, align additions to the project's existing theme tokens (read from `info --json` / `components.json`) instead of injecting the default shadcn neutral theme — directly reinforces our anti-slop posture (default shadcn theme + Inter fallback is a flagged tell). <!-- done: SKILL "Token-aware scaffolding" + reference cssVars note (align, never overwrite; cites C1/C5/T7). -->
+- [x] Honour `registryDependencies` (install the graph) and surface version-pinned GitHub deps; keep propose-never-silent-run + `--dry-run`. <!-- done: SKILL "Namespaced installs" bullet + reference scaffold-order (recurse deps, version-pinned GitHub refs, propose-only/--dry-run kept). -->
 
 ## Phase 3 — Optional shadcn MCP path
 
-- [ ] Document the shadcn MCP server as an alternative discovery/install surface (browse / search-across-registries / install-with-NL). Reference our `mcp` skill for wiring; keep it OPT-IN (a user who has the MCP configured), never a hard dependency.
-- [ ] Add a decision note: CLI path = default + universal; MCP path = opt-in when configured; registry-JSON literacy underpins both.
+- [x] Document the shadcn MCP server as an alternative discovery/install surface (browse / search-across-registries / install-with-NL). Reference our `mcp` skill for wiring; keep it OPT-IN (a user who has the MCP configured), never a hard dependency. <!-- done: SKILL "MCP path (opt-in)" — browse/search/install-with-NL, links the mcp skill, never a hard dep. -->
+- [x] Add a decision note: CLI path = default + universal; MCP path = opt-in when configured; registry-JSON literacy underpins both. <!-- done: decision note line in the MCP path paragraph. -->
 
 ## Phase 4 — Verify
 
-- [ ] Smoke on a project with a custom namespaced registry: skill runs `info --json`, resolves `@ns/x` → URL, installs the dep graph, aligns to project `cssVars`, stays propose-only.
-- [ ] Smoke on a vanilla project: existing CLI path unchanged, no extra round-trips (the opt-in stays off). Run gates green; confirm `react-shadcn-ui` still passes the skill linter.
+- [x] Smoke on a project with a custom namespaced registry: skill runs `info --json`, resolves `@ns/x` → URL, installs the dep graph, aligns to project `cssVars`, stays propose-only. <!-- done: SKILL + reference describe the full namespaced flow (handshake → resolution regex → view-before-add → registryDependencies graph → cssVars align → propose-only/--dry-run). Executor guidance (no code path); verified by artifact coherence + check-refs. -->
+- [x] Smoke on a vanilla project: existing CLI path unchanged, no extra round-trips (the opt-in stays off). Run gates green; confirm `react-shadcn-ui` still passes the skill linter. <!-- done: registry section is additive + explicitly opt-in (shadcn_add.ts + Procedure Step 0-4 untouched). Gates: skill_linter PASS, check-refs no broken refs, condensation in sync, both ../mcp + reference links resolve. -->
 
 ## Explicitly out of scope
 
