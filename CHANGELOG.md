@@ -948,6 +948,54 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 7.1.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [7.5.0](https://github.com/event4u-app/agent-config/compare/7.4.0...7.5.0) (2026-06-29)
+
+### Features
+
+* **design-system-capture:** design-system.json import contract ([23fc06f](https://github.com/event4u-app/agent-config/commit/23fc06f44b77ab938929bcf47f92cf008c4dec26))
+* **design-intelligence:** named design-canon grounding index ([1e0805e](https://github.com/event4u-app/agent-config/commit/1e0805eec2df4a46ec897d1593538811fc54cf8c))
+* **react-shadcn-ui:** opt-in shadcn registry + MCP awareness ([26d1475](https://github.com/event4u-app/agent-config/commit/26d147516b20f7e5a26fa83fb39bce0f236dd57c))
+* **design-intelligence:** taste dials, consistency locks + 4 detector rules ([42883dd](https://github.com/event4u-app/agent-config/commit/42883dd69575bbdb4e0a8fd7ffa915df15a58587))
+* **design-review:** deterministic anti-slop detector + optional pre-edit hook ([5c77948](https://github.com/event4u-app/agent-config/commit/5c77948368d6a79e7848938c3ab8fe1f11ba9c25))
+* **judges:** add judge-synthesis cross-judge aggregator; drop rubric:score (council) ([a0c3d12](https://github.com/event4u-app/agent-config/commit/a0c3d126a3b600bb32065543bddd13096d2b35a1))
+* **token-saving:** mechanical slices — trim 15 at-cap skill descriptions + confirm/disposition steps ([06cb77d](https://github.com/event4u-app/agent-config/commit/06cb77dca0759c885b01b8d440482e49401daaa2))
+* **security:** injection-defense pressure-corpus — confusables linter + defensive judge ([80abc16](https://github.com/event4u-app/agent-config/commit/80abc16ea78f4e4cbab52712a63831901e7b6851))
+* **quality:** add judge-artifact-completeness skill with four rubric schemas ([ef0276a](https://github.com/event4u-app/agent-config/commit/ef0276ac0d8a72b60f4a1d85450bf0f42bfb5aa9))
+
+### Bug Fixes
+
+* **condense:** refresh stale commands/brand/tokens.md hash (pre-existing drift; sync-check-hashes) ([328a9a4](https://github.com/event4u-app/agent-config/commit/328a9a4b6af84280d8ea93b88a459aad22943ebe))
+* **design-slop:** use .js import specifiers (tsc TS5097, Bundler resolution) ([8498f23](https://github.com/event4u-app/agent-config/commit/8498f2391b33d4d3171d6030984cef0d88eb382c))
+* **design-slop-hook:** drop unused SLOP_RULES import (eslint no-unused-vars) ([6ef7465](https://github.com/event4u-app/agent-config/commit/6ef74652682b925138e8c585b9cffe7423baa457))
+* **test:** satisfy noUncheckedIndexedAccess in judge_calibration guard ([1519880](https://github.com/event4u-app/agent-config/commit/15198806c5c4db33d21e337cd43bd7da8cd305ae))
+* **judge-artifact-completeness:** shorten description to ≤200 chars (skill linter cap) ([053d07f](https://github.com/event4u-app/agent-config/commit/053d07f2024e4c5bc8d6b6fc031e0f1a47013112))
+* **image-editing:** migrate triggers.json to queries[] format ([2ba21e0](https://github.com/event4u-app/agent-config/commit/2ba21e0ce492de29d6c1079863412095a85c5c2e))
+* update agent_config_version pin in template to 7.4.0 ([9dc5b20](https://github.com/event4u-app/agent-config/commit/9dc5b2043c587a5e0288a93e3785d15e942bee67))
+* **legal:** correct LEGAL_NOTICE.md relative path in legal-safety-floor rule ([2a03cef](https://github.com/event4u-app/agent-config/commit/2a03cef0af21ab4102d0a04962775cb6983b97a7))
+
+### Documentation
+
+* **roadmaps:** archive completed road-to-design-system-extraction-contract ([9698804](https://github.com/event4u-app/agent-config/commit/96988047bf92cb83d78618b941dbead5baecb595))
+* bump guideline count 86→87 for design-canon.md (task sync) ([92cf710](https://github.com/event4u-app/agent-config/commit/92cf7109b231164a540eb2c38d4486c59a0ed597))
+* **roadmaps:** archive completed road-to-design-canon-grounding ([0a5c010](https://github.com/event4u-app/agent-config/commit/0a5c010d972ecd239bfb586191263157f169aecc))
+* **roadmaps:** archive completed road-to-shadcn-registry-awareness ([215e535](https://github.com/event4u-app/agent-config/commit/215e535f37e144caf63222b16f55ebdd68cb34ad))
+* **roadmaps:** archive completed road-to-taste-dials-and-locks ([848dd4b](https://github.com/event4u-app/agent-config/commit/848dd4bbc66edce0c58491152a171c907dd0907d))
+* **roadmaps:** design/taste harvest roadmaps + anti-slop-detector archive ([a7be86f](https://github.com/event4u-app/agent-config/commit/a7be86f578607173db41a4df1c8e684934d11907))
+
+### Tests
+
+* **judges:** deterministic calibration guard for the two evaluative judges ([41031c9](https://github.com/event4u-app/agent-config/commit/41031c9fe827e3e197f18879339e9b7d0f9d0768))
+* **work_engine:** convert hooks_* parity rigs to python-free; drop _hooks_pyloader ([013b104](https://github.com/event4u-app/agent-config/commit/013b104c79fa65a4bb7f0d3cd7df15536fd63c98))
+* **work_engine:** convert 4 directives parity rigs to python-free intent tests ([ad33470](https://github.com/event4u-app/agent-config/commit/ad334706c41ee164722f1c2ef46286bffc69dac6))
+
+### Chores
+
+* include pre-existing uncommitted files (bench report + frontmatter test) ([871b342](https://github.com/event4u-app/agent-config/commit/871b3424172626ac3c48bee1489637ffb049f767))
+* re-anchor stale condensation hashes for 3 command files ([f6e24c6](https://github.com/event4u-app/agent-config/commit/f6e24c6f569ab9b058fa75806e18f759cffbea31))
+* sync meta README with shortened judge-injection-defense description ([cb1de3d](https://github.com/event4u-app/agent-config/commit/cb1de3ddd2b127cea830d01f84c0d45ea5869494))
+* sync src/domains/meta/README.md with updated skill description ([39be4e0](https://github.com/event4u-app/agent-config/commit/39be4e0daf6171bd7309d0e3c430e827c8278af6))
+* regenerate agents/index.md and docs/catalog.md for new skill ([249518f](https://github.com/event4u-app/agent-config/commit/249518f3d5f3ac24567a9d81988f344aaa1d004f))
+
 ## [7.4.0](https://github.com/event4u-app/agent-config/compare/7.3.0...7.4.0) (2026-06-26)
 
 ### Features

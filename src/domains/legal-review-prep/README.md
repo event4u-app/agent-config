@@ -5,7 +5,7 @@
 NOT LEGAL ADVICE — a research/drafting aid to PREPARE for attorney review, not a substitute for a lawyer. EU/DE-scoped contract/NDA/DPA review and triage, procedure-only (no default legal positions); general information + templates only, never individual-case examination; every output a draft for attorney review. Opt-in + council-gated. See LEGAL_NOTICE.md.
 
 - **id**: `legal-review-prep`
-- **version**: `7.4.0`
+- **version**: `7.5.0`
 - **owner**: legal-review-prep
 - **requires**: —
 - **artefacts**: 6
