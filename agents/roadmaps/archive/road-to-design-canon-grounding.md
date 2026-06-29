@@ -34,25 +34,25 @@ The whole point is frugality: `design-canon.md` is a thin index (names + one-lin
 
 ## Phase 0 — The canon index
 
-- [ ] Author `docs/guidelines/design-canon.md`: a compact table of named design systems (Material 3, Apple HIG, Fluent, Carbon, Ant, Atlassian) — each a one-line summary (token model, motion stance, signature traits) + a "pull this when" trigger (brief keyword or `components.json` dependency).
-- [ ] Add a typography-craft sub-section: foundry/theory references as a one-line index (point `typography-system` at it; do not inline the content).
-- [ ] Add a colour sub-section: tool classes incl. accessibility-contrast and culturally-specific palettes — names + when-to-use, not the palettes themselves.
+- [x] Author `docs/guidelines/design-canon.md`: a compact table of named design systems (Material 3, Apple HIG, Fluent, Carbon, Ant, Atlassian) — each a one-line summary (token model, motion stance, signature traits) + a "pull this when" trigger (brief keyword or `components.json` dependency). <!-- done: 6-system table + precedence note + thin-index/lazy framing. -->
+- [x] Add a typography-craft sub-section: foundry/theory references as a one-line index (point `typography-system` at it; do not inline the content). <!-- done: ## Typography craft (theory/calibration/foundries) one-line index. -->
+- [x] Add a colour sub-section: tool classes incl. accessibility-contrast and culturally-specific palettes — names + when-to-use, not the palettes themselves. <!-- done: ## Colour references (a11y/contrast + Nippon/Chinese culturally-specific + systematic). Also added ## Icon systems for the iconography cross-link. -->
 
 ## Phase 1 — Wire into design-intelligence (lazy)
 
-- [ ] Add a "canon grounding" step to `design-intelligence`: if the brief names a system OR `components.json`/deps signal one (`@mui/material`, `antd`, `@fluentui/*`, `@carbon/*`), surface the matching canon one-liner and offer to pull the full spec (lazy fetch / pointer), rather than improvising.
-- [ ] Make the precedence explicit and consistent with `brand-source-of-truth`: consumer brand tokens > confirmed session decisions > named canon > generated corpus. Canon is a gap-filler, never an override of a registered brand value.
+- [x] Add a "canon grounding" step to `design-intelligence`: if the brief names a system OR `components.json`/deps signal one (`@mui/material`, `antd`, `@fluentui/*`, `@carbon/*`), surface the matching canon one-liner and offer to pull the full spec (lazy fetch / pointer), rather than improvising. <!-- done: step 0 "Canon grounding first" in the Honesty/real-system-grounding section; thin+lazy, skipped for generic briefs. -->
+- [x] Make the precedence explicit and consistent with `brand-source-of-truth`: consumer brand tokens > confirmed session decisions > named canon > generated corpus. Canon is a gap-filler, never an override of a registered brand value. <!-- done: "Grounding precedence" paragraph added to the same section. -->
 
 ## Phase 2 — Cross-link the craft skills
 
-- [ ] `typography-system` references the typography-craft sub-section for foundry/theory grounding.
-- [ ] `iconography` / `icon-consistency` reference the icon-system canon entries.
-- [ ] Note the colour-canon entries from `design-tokens` / `brand-to-tokens` where culturally-aware or a11y-contrast grounding helps.
+- [x] `typography-system` references the typography-craft sub-section for foundry/theory grounding. <!-- done: see-also pointer added. -->
+- [x] `iconography` / `icon-consistency` reference the icon-system canon entries. <!-- done: see-also pointers in both the iconography skill and the icon-consistency rule (→ § Icon systems). -->
+- [x] Note the colour-canon entries from `design-tokens` / `brand-to-tokens` where culturally-aware or a11y-contrast grounding helps. <!-- done: see-also pointers in both (→ § Colour references). -->
 
 ## Phase 3 — Verify
 
-- [ ] Smoke: a "Material-inspired dashboard" brief surfaces the Material canon one-liner + offers the lazy pull; a generic brief does NOT load any canon spec (frugality check).
-- [ ] Confirm `design-canon.md` is lazy-loaded (not always-on) and stays a thin index. Run gates green.
+- [x] Smoke: a "Material-inspired dashboard" brief surfaces the Material canon one-liner + offers the lazy pull; a generic brief does NOT load any canon spec (frugality check). <!-- done: design-canon.md has the Material 3 entry + components.json trigger; design-intelligence step 0 surfaces the matching one-liner + offers live-spec fetch, gated "do not load for a generic, unnamed brief". Agent-behavior (no code path); verified by artifact coherence. -->
+- [x] Confirm `design-canon.md` is lazy-loaded (not always-on) and stays a thin index. Run gates green. <!-- done: design-canon.md is a docs/guidelines doc (no frontmatter, never always-loaded — like design-antipatterns.md), referenced via lazy pointers. Gates: 6/6 skill_linter PASS, check-refs no-broken-refs (all new links resolve), condensation in sync. -->
 
 ## Explicitly out of scope
 

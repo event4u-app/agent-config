@@ -2,40 +2,28 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**85 / 138 steps done · 62%**
+**85 / 128 steps done · 66%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   62%
+██████████████████████████░░░░░░░░░░░░░░   66%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-design-canon-grounding.md](roadmaps/road-to-design-canon-grounding.md) | 4 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md) | 4 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
-| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 1 | [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md) | 4 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
+| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
 ## Per-roadmap phase breakdown
-
-### [road-to-design-canon-grounding.md](roadmaps/road-to-design-canon-grounding.md)
-
-**Road to Design-Canon Grounding** — 0 / 10 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | The canon index | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Wire into design-intelligence (lazy) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Cross-link the craft skills | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Verify | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md)
 
