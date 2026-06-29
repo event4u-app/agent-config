@@ -129,6 +129,7 @@ four-operation split assigns to *rules/linters*, not the corpus).
 
 ## See also
 
+- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Colour references — a11y-contrast + culturally-specific palettes + named-system token models.
 - [`design-intelligence`](../design-intelligence/SKILL.md) — grounded value selection.
 - [`tailwind-engineer`](../tailwind-engineer/SKILL.md) — utility-discipline consumer.
 - [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — shadcn token conventions.

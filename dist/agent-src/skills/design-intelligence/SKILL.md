@@ -140,6 +140,12 @@ If any of these was the first impulse, name a different direction or explicitly 
 When the brief maps to an official design system (Material Design, Fluent,
 Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
 
+0. **Canon grounding first.** Brief names a system OR `components.json`/deps
+   signal one (`@mui/material`, `antd`, `@fluentui/*`, `@carbon/*`,
+   `@atlaskit/*`) → pull
+   [`docs/guidelines/design-canon.md`](../../../docs/guidelines/design-canon.md),
+   surface the matching one-liner, **offer to fetch the live spec** before
+   committing to the system's conventions. Thin + lazy: skip for a generic brief.
 1. **Install the real package** — do not hand-recreate its CSS or components.
    Surface the install command for the project's package manager (the
    system's official package, e.g. the shadcn CLI or the `@mui/material`
@@ -151,6 +157,11 @@ Carbon, Polaris, GOV.UK, shadcn, Tailwind UI, Radix, etc.):
 3. **If no official system is relevant:** pick a deliberate creative direction
    (see Design Read above); never fall back to an unnamed generic aesthetic
    (per `source-discovery-gate`: real source before guessing).
+
+**Grounding precedence** (per `brand-source-of-truth`): consumer brand tokens >
+confirmed session decisions > named canon
+([`design-canon.md`](../../../docs/guidelines/design-canon.md)) > generated
+corpus. Canon is a gap-filler, never an override of a registered brand value.
 
 ## Procedure: Produce a grounded design brief (`ui-design-brief` rebound)
 

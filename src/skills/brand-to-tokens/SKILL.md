@@ -95,6 +95,7 @@ execution:
 
 ## See also
 
+- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Colour references — culturally-situated palettes + a11y-contrast grounding when deriving brand colour tokens.
 - [`brand-identity`](../brand-identity/SKILL.md) — supplies the constraint set this skill derives tokens from.
 - [`design-tokens`](../design-tokens/SKILL.md) — the DTCG toolchain that emits CSS/Tailwind from `.tokens.json`.
 - [`typography-system`](../typography-system/SKILL.md) — brand-aware stage-2 supplies the type tokens.

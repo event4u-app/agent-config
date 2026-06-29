@@ -82,6 +82,7 @@ execution:
 
 ## See also
 
+- [`design-canon.md`](../../../docs/guidelines/design-canon.md) § Icon systems — prefer a named system's icon set (Material Symbols / SF Symbols / Fluent / Carbon) when that system is in play.
 - [`design-tokens`](../design-tokens/SKILL.md) — token system the icon color/size variables should reference.
 - [`typography-system`](../typography-system/SKILL.md) — sibling visual-consistency skill.
 - [`fe-design`](../fe-design/SKILL.md) — broader frontend design discipline.
