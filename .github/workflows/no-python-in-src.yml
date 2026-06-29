@@ -5,12 +5,13 @@ name: No Python in src
 # TypeScript teardown removed every `src/**/*.py`; this guard makes the
 # regression impossible: it fails the build if a Python file ever reappears
 # under the package source tree. Unlike the migration-scaffolding workflows
-# (py2ts-base-guard / py2ts-drift / py2ts-main-sync), this one is NOT
-# time-limited — it survives the python2ts → main merge and stays on main.
+# (py2ts-base-guard / py2ts-drift / py2ts-main-sync, removed once the
+# python2ts → main merge landed), this one is NOT time-limited — it stays
+# on main permanently.
 #
 # Scope note: only `src/**/*.py` is gated. Intentional fixtures elsewhere
-# (tests/hooks/fixtures/concern_*.py, internal/**) are allowed — they are
-# data, not package source.
+# (internal/** eval/bench corpora, internal/glama/smoke.py) are allowed —
+# they are data, not package source.
 
 on:
   pull_request:

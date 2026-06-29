@@ -226,8 +226,8 @@ execution:
   type: manual | assisted | automated
   handler: shell | php | node | internal | none
   command:                       # required for shell/php/node runtime paths
-    - python3
-    - scripts/skill_linter.py
+    - node
+    - src/scripts/skill_linter.ts
     - "--all"
   timeout_seconds: 120
   allowed_tools: []

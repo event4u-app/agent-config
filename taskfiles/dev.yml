@@ -11,8 +11,8 @@ tasks:
       Refresh the user-scope install (~/.claude/, ~/.cursor/, ~/.augment/, …)
       from this working tree. Routes through the v4 TypeScript install
       engine (`agent-config install`) so the local install path matches
-      what consumers see. v3 used `python3 src/scripts/install.py`; the
-      legacy script was renamed to `bin/install.legacy.py.bak` in v4
+      what consumers see. v3 used the legacy Python installer; that
+      script was renamed to `bin/install.legacy.py.bak` in v4
       (road-to-unified-setup § D1) and is no longer invoked.
       Usage:
       task dev:install-global

@@ -91,32 +91,19 @@ under "Required status checks" honours this when "Require branches to be
 up to date before merging" is enabled and the check's most recent run
 on the head SHA is green.
 
-## Addendum — `python2ts` integration branch (py2ts migration)
+## Addendum — `python2ts` integration branch (py2ts migration) — RETIRED
 
 > Added 2026-06-11 for the Python → TypeScript migration (roadmap
-> `road-to-typescript-only-scripts.md`, Phase 1). Lives until the
-> migration completes; applied by the maintainer in the same Rules UI.
-
-The `python2ts` branch is the working trunk of the migration and carries
-its own protection rules:
-
-- **PRs only, no force-push, no deletion** — direct commits are blocked;
-  the scheduled `py2ts-main-sync.yml` workflow is the single sanctioned
-  direct-push writer (clean `main → python2ts` merges only; conflicts go
-  through the `sync/main-into-python2ts` PR instead).
-- **Required checks** — the full feature-PR floor (matrix above) plus
-  `py2ts Base Guard / py2ts-base-guard`.
-- **Migration PRs never target `main`** — a head branch matching
-  `^(feat|fix|chore)/py2ts-` or `^py2ts` must base on `python2ts`; the
-  base guard fails the PR otherwise. The inverse direction (non-py2ts
-  head targeting `python2ts`) only warns — sync PRs and hotfixes are
-  legitimate.
-- **Drift surfacing** — `py2ts-drift.yml` comments nightly on open
-  migration PRs whose touched `.py` files changed on `python2ts` since
-  the merge-base; such PRs rebase before merge.
-- **Final `python2ts → main` merge is user-owned** — Hard Floor
-  (production-trunk merge, explicit per-turn confirmation); never a
-  workflow, bot, or roadmap step.
+> `road-to-typescript-only-scripts.md`, Phase 1); **retired** once the
+> migration completed and `python2ts` merged into `main`. The
+> migration-scaffolding workflows it depended on
+> (`py2ts-base-guard.yml`, `py2ts-drift.yml`, `py2ts-main-sync.yml`)
+> were removed in the Phase 12 teardown; only the permanent
+> `no-python-in-src.yml` guard remains. The maintainer may drop the
+> `python2ts`-branch protection rules from the GitHub Rules UI — they no
+> longer gate any open work. `main`'s required-check floor (matrix above)
+> never included the py2ts checks, so no `main` protection changes are
+> needed.
 
 ## See also
 
