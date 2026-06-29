@@ -92,6 +92,17 @@ const BASELINE: Readonly<Record<Category, number>> = {
 /**
  * Path prefixes excluded from the count (gitignore-style; `dist/` is
  * tracked but generated, so it is excluded explicitly).
+ *
+ * Documented carve-outs — intentional non-source Python fixtures that
+ * are *data, not package source* (Phase 12 teardown). They stay Python
+ * on purpose and are exempt from the zero-Python target:
+ *   - `internal/bench/`  — A/B eval input corpus (deliberately crufty
+ *      sample code the evaluator analyses).
+ *   - `internal/evals/`  — structure-grounding ground-truth fixtures
+ *      (the real schema a model-under-test is graded against).
+ *   - `internal/glama/`  — live glama.ai MCP parity smoke (mirrors
+ *      glama's `bash run` boot; porting deferred — see the carve-out
+ *      note in `agents/evidence/migration-final-report.md`).
  */
 const EXCLUDED_PREFIXES: readonly string[] = [
     'node_modules/',
@@ -100,6 +111,8 @@ const EXCLUDED_PREFIXES: readonly string[] = [
     '.claude/',
     '.augment/',
     'internal/bench/',
+    'internal/evals/',
+    'internal/glama/',
     'tmp/',
     '.tmp/',
 ];
