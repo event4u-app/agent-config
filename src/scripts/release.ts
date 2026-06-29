@@ -151,6 +151,18 @@ class CalledProcessError extends Error {
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const PACKAGE_JSON = path.join(REPO_ROOT, 'package.json');
 const MARKETPLACE_JSON = path.join(REPO_ROOT, '.claude-plugin', 'marketplace.json');
+// Source-of-truth project-settings template. Carries an `agent_config_version`
+// pin that check_template_pin_drift requires to equal package.json.version. We
+// bump the src twin here; `task release-prepare` (run right after the bump)
+// regenerates the dist/agent-src/ twin from it.
+const PROJECT_TEMPLATE = path.join(
+    REPO_ROOT,
+    'src',
+    'agent-src',
+    'templates',
+    'agents',
+    'agent-project-settings.example.yml',
+);
 const CHANGELOG = path.join(REPO_ROOT, 'CHANGELOG.md');
 const MAIN_BRANCH = 'main';
 const REMOTE = 'origin';
@@ -879,6 +891,29 @@ function set_marketplace_version(p: string, version: string): void {
     fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
 }
 
+function set_template_pin(p: string, version: string): void {
+    // Rewrite the single `agent_config_version:` line in place, preserving the
+    // rest of the YAML byte-for-byte. Quoted value to match the existing pin
+    // style and check_template_pin_drift's tolerant parse.
+    const text = fs.readFileSync(p, 'utf-8');
+    const lines = text.split('\n');
+    let found = false;
+    for (let i = 0; i < lines.length; i += 1) {
+        if (/^\s*agent_config_version\s*:/.test(lines[i]!)) {
+            lines[i] = lines[i]!.replace(
+                /^(\s*agent_config_version\s*:\s*).*/,
+                `$1"${version}"`,
+            );
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        die(`set_template_pin: no \`agent_config_version:\` line in ${p}`);
+    }
+    fs.writeFileSync(p, lines.join('\n'), 'utf-8');
+}
+
 // ─── preflight ────────────────────────────────────────────────────────────────
 
 /**
@@ -982,6 +1017,7 @@ function print_preview(plan: Plan): void {
     process.stdout.write('Files to change:\n');
     process.stdout.write(`  · ${path.relative(REPO_ROOT, PACKAGE_JSON)}\n`);
     process.stdout.write(`  · ${path.relative(REPO_ROOT, MARKETPLACE_JSON)}\n`);
+    process.stdout.write(`  · ${path.relative(REPO_ROOT, PROJECT_TEMPLATE)}\n`);
     process.stdout.write(`  · ${path.relative(REPO_ROOT, CHANGELOG)}\n`);
     process.stdout.write('  · regenerated derived files via `task release-prepare`\n');
     process.stdout.write(
@@ -1204,9 +1240,10 @@ function execute(
         if (resume && current_pkg === plan.target) {
             _step(2, total, `Files already at ${plan.target} — skip bump`);
         } else {
-            _step(2, total, 'Bump package.json + marketplace.json, prepend CHANGELOG');
+            _step(2, total, 'Bump package.json + marketplace.json + template pin, prepend CHANGELOG');
             set_package_version(PACKAGE_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
+            set_template_pin(PROJECT_TEMPLATE, plan.target);
             prepend_changelog(CHANGELOG, plan.changelog_entry);
         }
 
@@ -1727,6 +1764,7 @@ export {
     prepend_changelog,
     set_package_version,
     set_marketplace_version,
+    set_template_pin,
     resolve_bump,
     _detect_in_flight_target,
     print_preview,
