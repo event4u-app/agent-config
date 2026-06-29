@@ -232,10 +232,10 @@ Internal but interconnected; ports late so earlier phases can keep using it for 
 
 - [x] Zero tracked `.py` files in source (`src/`, `tests/`, `agents/`, `internal/glama`); no `pyproject.toml`, no `.venv*` bootstrap, no `python3` in taskfiles/workflows/package.json/docs. <!-- met for src/tests/agents; internal/glama keeps the documented glama-smoke carve-out (live MCP parity smoke) — see agents/evidence/migration-final-report.md § carve-outs. -->
 - [x] Every ported script met the per-script gate: vitest suite ported 1:1 and green, coverage ≥ Python baseline (line + branch), golden replay green or divergence documented + approved, error parity for consumer-facing scripts, Python original deleted in the same PR. <!-- gate applied per-script across Phases 1–11 as work landed; Phase 12 retired the last pytest test whose assertions are 1:1 in validate_frontmatter.test.ts. -->
-- [ ] Condensation/projection outputs hash-identical through the TS pipeline (or ADR-documented divergence).
-- [ ] Consumer fixture e2e: fresh install + upgrade-from-Python-era + full template-surface smoke green on the supported Node floor.
-- [ ] Linter finding counts on the repo identical to the pre-migration baseline (or improvements documented as divergences).
-- [ ] All quality gates pass (`task ci` full pipeline, container e2e).
+- [x] Condensation/projection outputs hash-identical through the TS pipeline (or ADR-documented divergence). <!-- green on the teardown PR: "Sync + Generate Tools Consistency" + "Smoke — schema/kernel/router". -->
+- [x] Consumer fixture e2e: fresh install + upgrade-from-Python-era + full template-surface smoke green on the supported Node floor. <!-- green on the teardown PR: "Install Script Tests" (8 shards) + "Install Aux Tests" (ubuntu + macos). -->
+- [x] Linter finding counts on the repo identical to the pre-migration baseline (or improvements documented as divergences). <!-- green on the teardown PR: skill-lint + per-pack lint + no-python-in-src; no new findings introduced. -->
+- [ ] All quality gates pass (`task ci` full pipeline, container e2e). <!-- archival-gate: CI is green on the teardown PR (PR #697, all checks CLEAN). Held open deliberately so the roadmap is NOT archived inside this PR — 13 inbound refs (incl. src/scripts/parity/phase_gate.ts + phase-manifest.json) still point at this path; archival + ref-migration is a clean separate step once the migration parity infra retires. Flip + archive then. -->
 
 ## Notes
 

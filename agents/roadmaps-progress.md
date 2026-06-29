@@ -6,10 +6,10 @@
 
 ## Overall
 
-**84 / 99 steps done · 85%**
+**87 / 99 steps done · 88%**
 
 ```text
-██████████████████████████████████░░░░░░   85%
+███████████████████████████████████░░░░░   88%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
-| 2 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 4 | 63 | 0 | 0 | █████████░ 94% |
+| 2 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 1 | 66 | 0 | 0 | ██████████ 99% |
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md)
 
-**TypeScript-only scripts — full Python → TypeScript migration** — 63 / 67 done (94%)
+**TypeScript-only scripts — full Python → TypeScript migration** — 66 / 67 done (99%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -54,7 +54,7 @@
 | 9 | Consumer-shipped templates (work_engine 78 / memory 7 / telemetry 9 / misc ~6 files, ~17.4k LOC) | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 10 | AI council (55 files, ~17k LOC) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 11 | Installer finalization | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 12 | Teardown & final audit | 🟡 in progress | 4 | 7 | 0 | 0 | 64% |
+| 12 | Teardown & final audit | 🟡 in progress | 1 | 10 | 0 | 0 | 91% |
 
 ---
 
