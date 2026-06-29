@@ -74,6 +74,62 @@ export function legalPromotionViolations(packsYml: string, legalNotice: string):
     return [];
 }
 
+// D7 — reference-resolution gate for the floor rule itself. The
+// `legal-safety-floor` rule is authored in `src/rules/` but SHIPS/PROJECTS to
+// `dist/agent-src/rules/`; its relative links must resolve from that SHIPPED
+// projection root (7.5.0 shipped a `LEGAL_NOTICE.md` path that only resolved
+// from the projection — correct by design, but nothing asserted it, so a wrong
+// depth could silently regress). `check_references` does not catch this: it
+// only scans `dist/agent-src/` + `agents/` (never `src/`), and its PATH_PATTERN
+// matches only directory-rooted paths (`skills/…`, `docs/…`), so a bare
+// `../../../LEGAL_NOTICE.md` filename link is invisible to it. This gate is the
+// complementary backstop — every markdown link target in the floor rule must
+// resolve from the projected `dist/agent-src/rules/` location.
+const PROJECTED_FLOOR_DIR = path.join(REPO, 'dist', 'agent-src', 'rules');
+// Markdown inline link: [text](target). Captures the target.
+const MD_LINK_RE = /\[[^\]]*\]\(([^)]+)\)/g;
+
+/**
+ * Pure reference-resolution check for the floor rule. `ruleText` is the floor
+ * rule body (read from `src/rules/legal-safety-floor.md`); every relative
+ * markdown link target it contains MUST resolve from `projectedDir` (the
+ * shipped `dist/agent-src/rules/` location). External (http/anchor/mailto) and
+ * absolute targets are skipped. Returns a Violation per unresolvable link.
+ */
+export function legalFloorReferenceViolations(
+    ruleText: string,
+    projectedDir: string,
+    floorRel: string,
+): Violation[] {
+    const out: Violation[] = [];
+    const seen = new Set<string>();
+    MD_LINK_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = MD_LINK_RE.exec(ruleText)) !== null) {
+        let target = (m[1] ?? '').trim();
+        // Strip a fragment/anchor and any title (`path "Title"`).
+        const titleSplit = target.match(/^(\S+)\s+["'(]/);
+        if (titleSplit) target = titleSplit[1] ?? target;
+        const hashIdx = target.indexOf('#');
+        if (hashIdx >= 0) target = target.slice(0, hashIdx);
+        if (!target) continue;
+        // Skip non-path targets: external URLs, mailto, in-page anchors,
+        // absolute paths (resolution root is the projection, not the FS root).
+        if (/^([a-z][a-z0-9+.-]*:|#|\/)/i.test(target)) continue;
+        if (seen.has(target)) continue;
+        seen.add(target);
+        const resolved = path.resolve(projectedDir, target);
+        if (!fs.existsSync(resolved)) {
+            out.push({
+                file: floorRel,
+                rule: 'floor-reference',
+                msg: `link target "${target}" does not resolve from the shipped projection (dist/agent-src/rules/) — fix the relative depth so it resolves from the projected rule location`,
+            });
+        }
+    }
+    return out;
+}
+
 // D4 — definitive-legal-language blocklist (the floor bans these; this is the
 // deterministic backstop over skill bodies). Narrow on purpose; the floor's
 // prompt layer is the primary enforcement.
@@ -174,6 +230,17 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
         // D6 — promotion gate (real-run only).
         if (fs.existsSync(PACKS_YML) && fs.existsSync(PACK_NOTICE)) {
             violations.push(...legalPromotionViolations(_readText(PACKS_YML), _readText(PACK_NOTICE)));
+        }
+        // D7 — floor-rule reference gate: every link in the floor rule must
+        // resolve from its SHIPPED projection (dist/agent-src/rules/).
+        if (fs.existsSync(PROJECTED_FLOOR_DIR)) {
+            violations.push(
+                ...legalFloorReferenceViolations(
+                    _readText(FLOOR_RULE),
+                    PROJECTED_FLOOR_DIR,
+                    path.relative(REPO, FLOOR_RULE),
+                ),
+            );
         }
     }
     return violations;

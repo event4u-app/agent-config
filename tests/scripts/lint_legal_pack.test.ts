@@ -7,7 +7,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { lintLegalPack, legalPromotionViolations } from '../../src/scripts/lint_legal_pack.js';
+import {
+    lintLegalPack,
+    legalPromotionViolations,
+    legalFloorReferenceViolations,
+} from '../../src/scripts/lint_legal_pack.js';
 
 const LAB_PACK = '- id: legal-review-prep\n  surface_tier: lab\n  trust_level_default: experimental\n  default_install: false\n';
 const PROMOTED_PACK = '- id: legal-review-prep\n  surface_tier: core\n  trust_level_default: professional\n  default_install: true\n';
@@ -24,6 +28,59 @@ describe('lint_legal_pack — promotion gate', () => {
     });
     it('promoted pack WITH a recorded framing review passes', () => {
         expect(legalPromotionViolations(PROMOTED_PACK, REVIEWED)).toEqual([]);
+    });
+});
+
+describe('lint_legal_pack — floor reference gate (D7)', () => {
+    // Build a tiny shipped-projection tree: <root>/dist/agent-src/rules is the
+    // resolution base; LEGAL_NOTICE.md sits at <root> (../../../ from rules),
+    // and a sibling skill at <root>/dist/agent-src/skills/.
+    function makeProjection(): { root: string; projectedDir: string } {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-ref-'));
+        tmpDirs.push(root);
+        const projectedDir = path.join(root, 'dist', 'agent-src', 'rules');
+        fs.mkdirSync(projectedDir, { recursive: true });
+        fs.writeFileSync(path.join(root, 'LEGAL_NOTICE.md'), 'notice', 'utf-8');
+        const skillDir = path.join(root, 'dist', 'agent-src', 'skills', 'contracts-cognition');
+        fs.mkdirSync(skillDir, { recursive: true });
+        fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '# skill', 'utf-8');
+        return { root, projectedDir };
+    }
+
+    it('passes when every link resolves from the shipped projection', () => {
+        const { projectedDir } = makeProjection();
+        const text =
+            'See [`LEGAL_NOTICE.md`](../../../LEGAL_NOTICE.md) and ' +
+            '[`contracts-cognition`](../skills/contracts-cognition/SKILL.md).';
+        expect(legalFloorReferenceViolations(text, projectedDir, 'rules/floor.md')).toEqual([]);
+    });
+
+    it('flags a link with the wrong relative depth (the 7.5.0 bug shape)', () => {
+        const { projectedDir } = makeProjection();
+        // `../../LEGAL_NOTICE.md` would NOT resolve from the projection (only
+        // `../../../` does) — exactly the broken-path class this gate guards.
+        const text = 'See [`LEGAL_NOTICE.md`](../../LEGAL_NOTICE.md).';
+        const v = legalFloorReferenceViolations(text, projectedDir, 'rules/floor.md');
+        expect(v.some((x) => x.rule === 'floor-reference')).toBe(true);
+    });
+
+    it('flags an entirely missing target', () => {
+        const { projectedDir } = makeProjection();
+        const text = '[gone](../skills/does-not-exist/SKILL.md)';
+        const v = legalFloorReferenceViolations(text, projectedDir, 'rules/floor.md');
+        expect(v.some((x) => x.rule === 'floor-reference')).toBe(true);
+    });
+
+    it('skips external URLs and in-page anchors', () => {
+        const { projectedDir } = makeProjection();
+        const text = '[web](https://example.com) and [anchor](#section) and [mail](mailto:a@b.c)';
+        expect(legalFloorReferenceViolations(text, projectedDir, 'rules/floor.md')).toEqual([]);
+    });
+
+    it('ignores a fragment suffix on an otherwise-valid path', () => {
+        const { projectedDir } = makeProjection();
+        const text = '[s](../skills/contracts-cognition/SKILL.md#anchor)';
+        expect(legalFloorReferenceViolations(text, projectedDir, 'rules/floor.md')).toEqual([]);
     });
 });
 
