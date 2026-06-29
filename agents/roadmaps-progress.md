@@ -2,39 +2,27 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 3 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**85 / 128 steps done · 66%**
+**85 / 120 steps done · 71%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+████████████████████████████░░░░░░░░░░░░   71%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md) | 4 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
-| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 34 | 11 | 21 | 0 | 2 | ███████░░░ 66% |
+| 3 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
 ## Per-roadmap phase breakdown
-
-### [road-to-design-system-extraction-contract.md](roadmaps/road-to-design-system-extraction-contract.md)
-
-**Road to a Design-System Extraction Contract** — 0 / 8 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Define the import contract | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 1 | Import into design-system-capture | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Bridge to existing-ui-audit | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Verify | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 

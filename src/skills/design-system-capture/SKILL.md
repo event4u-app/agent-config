@@ -192,6 +192,40 @@ Example: "Dashboard = control panel for power users, not an exploration space."
 4. Update the "Last updated" date.
 5. Output a diff summary: what changed and why.
 
+## Importing an extracted design system
+
+A consumer can reverse-engineer an existing site/repo's look-and-feel with any
+external static-extraction tool and hand the result to this skill as a
+`design-system.json` artifact. We own the **import contract**, not the crawler:
+the package never ships the Playwright runtime, a font-bundler, or a `.skill`
+auto-installer (out of scope). Full schema is lazy-loaded from
+[`reference/design-system-json.md`](reference/design-system-json.md) — read it
+only when an import is requested.
+
+**Import procedure:**
+
+1. Read `design-system.json`; reject it if `source` (kind + ref + captured_at)
+   is missing — no provenance, no import.
+2. Diff every field against the current `DESIGN.md`.
+3. Surface a **per-field confirm/merge proposal** — the artifact is *observed,
+   not authoritative* (mirrors `source-discovery`). Never write silently.
+4. **Conflict with a registered brand value** (a confirmed `.tokens.json` /
+   brand token) → **flag, never auto-apply** (`brand-source-of-truth`:
+   consumer brand wins). Precedence: brand tokens > confirmed `DESIGN.md` >
+   imported observation.
+5. On the human's accept, persist the chosen fields into `DESIGN.md`. Where the
+   consumer wants a token source of truth, hand the mapped DTCG fields to
+   [`brand-to-tokens`](../brand-to-tokens/SKILL.md) / `design-tokens` to
+   materialise `.tokens.json` — do not invent a parallel token format.
+
+**Two sources, one shape:**
+
+- **External target** (a site/repo you don't own) → an external tool emits the
+  artifact; import it here.
+- **Current repo** → prefer [`existing-ui-audit`](../existing-ui-audit/SKILL.md);
+  it already inventories the codebase and can emit the same `design-system.json`
+  shape, so the import path is identical either way.
+
 ## How the design skills consume these documents
 
 When `DESIGN.md` or `PRODUCT.md` is present in the project root:

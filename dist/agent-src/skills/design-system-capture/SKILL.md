@@ -192,6 +192,33 @@ Example: "Dashboard = control panel for power users, not an exploration space."
 4. Update the "Last updated" date.
 5. Output a diff summary: what changed and why.
 
+## Importing an extracted design system
+
+A consumer reverse-engineers an existing site/repo with any external static tool
+and hands the result here as a `design-system.json`. We own the **import
+contract**, not the crawler — the package never ships the Playwright runtime, a
+font-bundler, or a `.skill` auto-installer (out of scope). Full schema lazy from
+[`reference/design-system-json.md`](reference/design-system-json.md); read only
+on import.
+
+Import procedure:
+
+1. Read `design-system.json`; reject if `source` (kind + ref + captured_at) is
+   missing — no provenance, no import.
+2. Diff every field vs the current `DESIGN.md`.
+3. **Per-field confirm/merge proposal** — observed, not authoritative (mirrors
+   `source-discovery`); never write silently.
+4. Conflict with a registered brand value (confirmed `.tokens.json` / brand
+   token) → **flag, never auto-apply** (`brand-source-of-truth`). Precedence:
+   brand tokens > confirmed `DESIGN.md` > imported observation.
+5. On accept, persist chosen fields; hand mapped DTCG fields to
+   [`brand-to-tokens`](../brand-to-tokens/SKILL.md) / `design-tokens` for
+   `.tokens.json` — no parallel token format.
+
+Two sources, one shape: external target → external tool emits the artifact;
+current repo → prefer [`existing-ui-audit`](../existing-ui-audit/SKILL.md), which
+emits the same shape.
+
 ## How the design skills consume these documents
 
 When `DESIGN.md` or `PRODUCT.md` is present in the project root:

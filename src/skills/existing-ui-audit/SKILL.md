@@ -199,6 +199,13 @@ violations will surface as new findings on every run.
 7. **`state.ui_audit.greenfield`** — boolean; when true, `greenfield_decision` MUST also be set before the dispatcher advances
 8. **`state.ui_audit.a11y_baseline`** *(optional)* — array of `{rule, selector, severity?}` entries documenting pre-existing a11y violations the review gate should treat as informational. Omit the key entirely when no baseline applies; do not write `[]` for "I checked and there are none" — that disables the gate's filter for every future run.
 
+**Design-system export (current-repo source):** when the goal is to seed
+`DESIGN.md` from *this* repo, emit the inventory as a `design-system.json`
+artifact (the import contract in
+[`design-system-capture`](../design-system-capture/reference/design-system-json.md))
+and hand it to `design-system-capture` — the same shape an external extraction
+tool produces, so the import path is uniform.
+
 ## Gotcha
 
 - The model tends to skip the audit and start designing straight from the request — the dispatcher gate at `directives/ui/audit.py` enforces "no design without audit findings". Never treat this skill as optional for non-trivial UI.
