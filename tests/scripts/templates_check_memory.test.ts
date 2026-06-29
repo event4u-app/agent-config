@@ -1,18 +1,21 @@
-// Golden-parity tests for src/agent-src/templates/scripts/check_memory.ts.
+// Intent tests for src/agent-src/templates/scripts/check_memory.ts.
 //
-// CONSUMER-shipped template twin. The template `.py` is the leaner consumer
-// surface — NO `--shadow-report`, NO priority / date-discipline / critical-stale
-// / tier-0-inflation checks (those are dev-side-only). Tests differential python3
-// vs tsx on the template files. The scanned root is taken from `--path`, and
-// `str(Path)` of relative roots is CWD-relative, so both processes run with `cwd`
-// set to a tmp fixture tree and a relative `--path agents/memory`. ADR-094 parity
-// contract: byte-identical stdout/stderr/exit. argparse prog token
-// (check_memory.py vs check_memory) is filename-derived, not parity.
+// Was a python3-vs-tsx byte-parity rig; the template `.py` is gone, so this now
+// asserts the tsx template-script's own contract directly. This is the
+// CONSUMER-shipped template twin — the leaner consumer surface (NO
+// `--shadow-report`, NO priority / date-discipline / critical-stale /
+// tier-0-inflation checks; those are dev-side-only). The scanned root is taken
+// from `--path`, and `str(Path)` of relative roots is CWD-relative, so the
+// process runs with `cwd` set to a tmp fixture tree and a relative
+// `--path agents/memory`. To stay deterministic regardless of the runner's
+// installed CLIs, the tsx launcher is spawned with a **node-only PATH** (a temp
+// dir holding just a `node` symlink) and COLUMNS=200. Output is fully stable
+// (no clock / tmp-path leakage in the cases below) so it is inline-snapshotted.
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN =
@@ -21,12 +24,13 @@ const TSX_BIN =
         : join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DIR = join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
 const TS_SCRIPT = join(DIR, 'check_memory.ts');
-const PY_SCRIPT = join(DIR, 'check_memory.py');
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
+// node-only PATH → deterministic env (nothing but `node` resolves).
+const NODE_ONLY_DIR = mkdtempSync(join(tmpdir(), 'tpl-cm-nodeonly-'));
+symlinkSync(process.execPath, join(NODE_ONLY_DIR, 'node'));
+afterAll(() => {
+    rmSync(NODE_ONLY_DIR, { recursive: true, force: true });
+});
 
 interface Run {
     stdout: string;
@@ -34,23 +38,19 @@ interface Run {
     status: number;
 }
 function runTs(args: readonly string[], cwd: string): Run {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd });
+    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
+        encoding: 'utf8',
+        cwd,
+        env: { ...process.env, PATH: NODE_ONLY_DIR, COLUMNS: '200' },
+    });
     return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? -1 };
 }
-function runPy(args: readonly string[], cwd: string): Run {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? -1 };
-}
-function normProg(s: string): string {
-    return s.replace(/check_memory\.py/g, 'check_memory').trimEnd();
-}
-// Python argparse prefixes a `usage:` block whose line-wrapping is
-// terminal-width-dependent — NOT a stable parity contract. The byte-identical
+// Python argparse used a terminal-width-dependent `usage:` block; the stable
 // contract is the trailing `<prog>: error: <msg>` line.
 function errorLine(stderr: string): string {
-    const lines = normProg(stderr).split('\n');
+    const lines = stderr.trimEnd().split('\n');
     const found = lines.find((l) => /^check_memory: error:/.test(l));
-    return found ?? normProg(stderr);
+    return found ?? stderr.trimEnd();
 }
 
 const REQUIRED = [
@@ -64,7 +64,7 @@ const REQUIRED = [
     'review_after_days: 180',
 ];
 
-describe.skipIf(!HAVE_PYTHON)('templates/check_memory — golden parity', () => {
+describe('templates/check_memory — intent', () => {
     let tmp: string;
     beforeEach(() => {
         tmp = mkdtempSync(join(tmpdir(), 'tpl-cm-'));
@@ -80,59 +80,132 @@ describe.skipIf(!HAVE_PYTHON)('templates/check_memory — golden parity', () => 
         writeFileSync(full, body);
     }
 
-    function bothEqual(args: readonly string[]): void {
-        const ts = runTs(args, tmp);
-        const py = runPy(args, tmp);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    }
-
-    it('missing path parity (info, exit 0)', () => {
-        bothEqual(['--path', 'agents/memory/nope']);
+    it('missing path (info, exit 0)', () => {
+        expect(runTs(['--path', 'agents/memory/nope'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "ℹ️  agents/memory/nope not found — nothing to validate
+          ",
+          }
+        `);
     });
 
-    it('missing path JSON parity', () => {
-        bothEqual(['--path', 'agents/memory/nope', '--format', 'json']);
+    it('missing path JSON', () => {
+        expect(runTs(['--path', 'agents/memory/nope', '--format', 'json'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{"findings": [], "note": "agents/memory/nope not found"}
+          ",
+          }
+        `);
     });
 
-    it('valid entries parity (clean)', () => {
+    it('valid entries (clean)', () => {
         writeYml('domain-invariants/d.yml', `entries:\n  - ${REQUIRED.join('\n    ')}\n`);
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "
+          Summary: 0 error(s), 0 warning(s), 0 info
+          ",
+          }
+        `);
     });
 
-    it('missing required fields parity (errors, sorted)', () => {
+    it('missing required fields (errors, sorted)', () => {
         writeYml('domain-invariants/bad.yml', 'entries:\n  - id: x\n    status: active\n');
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "",
+            "stdout": "  ❌  agents/memory/domain-invariants/bad.yml [x]  missing required field: confidence
+            ❌  agents/memory/domain-invariants/bad.yml [x]  missing required field: last_validated
+            ❌  agents/memory/domain-invariants/bad.yml [x]  missing required field: owner
+            ❌  agents/memory/domain-invariants/bad.yml [x]  missing required field: review_after_days
+            ❌  agents/memory/domain-invariants/bad.yml [x]  missing required field: source
+            ❌  agents/memory/domain-invariants/bad.yml [x]  source must be a list with ≥1 entry
+
+          Summary: 6 error(s), 0 warning(s), 0 info
+          ",
+          }
+        `);
     });
 
-    it('redaction leak parity (inline credential + internal ip)', () => {
+    it('redaction leak (inline credential + internal ip)', () => {
         writeYml(
             'incident-learnings/leak.yml',
             ['entries:', '  - id: y', '    note: "api_key=ABCDEFGH12345678"', '    host: 10.0.0.5'].join('\n') + '\n',
         );
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "",
+            "stdout": "  ❌  agents/memory/incident-learnings/leak.yml:3  possible leak: inline credential
+            ❌  agents/memory/incident-learnings/leak.yml:4  possible leak: internal ipv4 range
+            ❌  agents/memory/incident-learnings/leak.yml [y]  missing required field: confidence
+            ❌  agents/memory/incident-learnings/leak.yml [y]  missing required field: last_validated
+            ❌  agents/memory/incident-learnings/leak.yml [y]  missing required field: owner
+            ❌  agents/memory/incident-learnings/leak.yml [y]  missing required field: review_after_days
+            ❌  agents/memory/incident-learnings/leak.yml [y]  missing required field: source
+            ❌  agents/memory/incident-learnings/leak.yml [y]  missing required field: status
+            ❌  agents/memory/incident-learnings/leak.yml [y]  source must be a list with ≥1 entry
+
+          Summary: 9 error(s), 0 warning(s), 0 info
+          ",
+          }
+        `);
     });
 
-    it('unknown memory type parity (warning)', () => {
+    it('unknown memory type (warning)', () => {
         writeYml('weird-type/w.yml', 'entries: []\n');
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "  ⚠️  agents/memory/weird-type/w.yml  unknown memory type 'weird-type'
+
+          Summary: 0 error(s), 1 warning(s), 0 info
+          ",
+          }
+        `);
     });
 
-    it('duplicate id parity (error)', () => {
+    it('duplicate id (error)', () => {
         writeYml(
             'product-rules/dup.yml',
             `entries:\n  - ${REQUIRED.join('\n    ')}\n  - ${REQUIRED.join('\n    ')}\n`,
         );
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "",
+            "stdout": "  ❌  agents/memory/product-rules/dup.yml [own-1]  duplicate id 'own-1'
+
+          Summary: 1 error(s), 0 warning(s), 0 info
+          ",
+          }
+        `);
     });
 
-    it('missing top-level entries parity (error)', () => {
+    it('missing top-level entries (error)', () => {
         writeYml('architecture-decisions/noentries.yml', 'id: z\nfoo: bar\n');
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "",
+            "stdout": "  ⚠️  agents/memory/architecture-decisions/noentries.yml  unknown memory type 'architecture-decisions'
+            ❌  agents/memory/architecture-decisions/noentries.yml  missing top-level 'entries' key
+
+          Summary: 1 error(s), 1 warning(s), 0 info
+          ",
+          }
+        `);
     });
 
-    it('stale entry parity (info)', () => {
+    it('stale entry (info)', () => {
         writeYml(
             'domain-invariants/stale.yml',
             [
@@ -147,27 +220,91 @@ describe.skipIf(!HAVE_PYTHON)('templates/check_memory — golden parity', () => 
                 '    review_after_days: 1',
             ].join('\n') + '\n',
         );
-        bothEqual(['--path', 'agents/memory']);
+        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "  ℹ️  agents/memory/domain-invariants/stale.yml [old-1]  stale: last_validated 9676 days ago (limit 1)
+
+          Summary: 0 error(s), 0 warning(s), 1 info
+          ",
+          }
+        `);
     });
 
-    it('JSON format parity over mixed findings', () => {
+    it('JSON format over mixed findings', () => {
         writeYml('domain-invariants/bad.yml', 'entries:\n  - id: x\n    status: nope\n');
-        bothEqual(['--path', 'agents/memory', '--format', 'json']);
+        expect(runTs(['--path', 'agents/memory', '--format', 'json'], tmp)).toMatchInlineSnapshot(`
+          {
+            "status": 1,
+            "stderr": "",
+            "stdout": "{
+            "findings": [
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "missing required field: confidence",
+                "entry_id": "x"
+              },
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "missing required field: last_validated",
+                "entry_id": "x"
+              },
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "missing required field: owner",
+                "entry_id": "x"
+              },
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "missing required field: review_after_days",
+                "entry_id": "x"
+              },
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "missing required field: source",
+                "entry_id": "x"
+              },
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "invalid status 'nope'",
+                "entry_id": "x"
+              },
+              {
+                "file": "agents/memory/domain-invariants/bad.yml",
+                "line": 0,
+                "severity": "error",
+                "message": "source must be a list with \\u22651 entry",
+                "entry_id": "x"
+              }
+            ]
+          }
+          ",
+          }
+        `);
     });
 
-    it('unrecognized arg parity (exit 2)', () => {
+    it('unrecognized arg (exit 2)', () => {
         const ts = runTs(['--bogus'], tmp);
-        const py = runPy(['--bogus'], tmp);
-        expect(ts.status).toBe(py.status);
         expect(ts.status).toBe(2);
-        expect(errorLine(ts.stderr)).toBe(errorLine(py.stderr));
+        expect(errorLine(ts.stderr)).toMatchInlineSnapshot(`"check_memory: error: unrecognized arguments: --bogus"`);
     });
 
-    it('invalid --format choice parity (exit 2)', () => {
+    it('invalid --format choice (exit 2)', () => {
         const ts = runTs(['--format', 'xml'], tmp);
-        const py = runPy(['--format', 'xml'], tmp);
-        expect(ts.status).toBe(py.status);
         expect(ts.status).toBe(2);
-        expect(errorLine(ts.stderr)).toBe(errorLine(py.stderr));
+        expect(errorLine(ts.stderr)).toMatchInlineSnapshot(`"check_memory: error: argument --format: invalid choice: 'xml' (choose from 'text', 'json')"`);
     });
 });

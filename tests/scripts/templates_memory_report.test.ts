@@ -1,17 +1,26 @@
-// Tests for src/agent-src/templates/scripts/memory_report.ts — observability report.
+// Intent tests for src/agent-src/templates/scripts/memory_report.ts —
+// observability report (ADR-200, consumer-template memory).
 //
-// Golden-parity harness (ADR-094): runs python3 + tsx on the consumer-template
-// twin against tmp `agents/memory` fixtures and asserts byte-identical
-// stdout/stderr/exit for the text + `--format json` paths and the error paths.
-// The backend probe is neutralised with an isolated PATH (node + python3 only,
-// no `memory`-family CLI) so the `backend` block is the deterministic `absent`
-// shape on both sides. Skipped without python3.
+// Was a python3-vs-tsx byte-parity rig; the `.py` twin is gone, so this asserts
+// the tsx CLI's own contract directly against tmp `agents/memory` fixtures, for
+// the text and `--format json` paths plus the argparse error paths.
+//
+// Determinism: the backend is a hard-coded `file` constant; the fixture dates
+// (2000-01-01 = always overdue, 2999-01-01 = never overdue) keep the overdue
+// COUNT, staleness-rate and quarter buckets date-independent. The only value
+// that drifts with wall-clock is the overdue DAY count (`+Nd` in text,
+// `overdue_days` in json) — masked via `norm()` before snapshotting. The
+// role-mode scan dirs (`agents/sessions`, …) don't exist in the tmp tree, so
+// `files_scanned` is a stable 0. Every case spawns with a node-only PATH (a
+// temp dir holding just a `node` symlink) so the tsx launcher resolves but no
+// `memory`-family CLI does, and COLUMNS=200 forces single-line usage so
+// arg-error stderr does not re-wrap to terminal width.
 
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const _TSX_ENV = process.env['TSX_BIN'];
@@ -20,110 +29,235 @@ const TSX_BIN = _TSX_ENV
     : join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const SCRIPTS_DIR = join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts');
 const TS_SCRIPT = join(SCRIPTS_DIR, 'memory_report.ts');
-const PY_SCRIPT = join(SCRIPTS_DIR, 'memory_report.py');
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
+// node-only PATH → deterministic absent backend (nothing but `node` resolves).
+const NODE_ONLY_DIR = mkdtempSync(join(tmpdir(), 'tpl-memrep-nodeonly-'));
+symlinkSync(process.execPath, join(NODE_ONLY_DIR, 'node'));
+afterAll(() => {
+    // temp dir is left for the OS to reap; nothing sensitive.
+});
+
+interface RunResult {
+    status: number | null;
+    stdout: string;
+    stderr: string;
 }
-const HAVE_PYTHON = pythonAvailable();
 
-describe.skipIf(!HAVE_PYTHON)('templates/memory_report — golden parity', () => {
-    let goldenTmp: string;
-    let emptyPathDir: string;
+let goldenTmp: string;
+beforeEach(() => {
+    goldenTmp = mkdtempSync(join(tmpdir(), 'tpl-memrep-gold-'));
+});
+afterEach(() => {
+    rmSync(goldenTmp, { recursive: true, force: true });
+});
 
-    beforeEach(() => {
-        goldenTmp = mkdtempSync(join(tmpdir(), 'tpl-memrep-gold-'));
-        emptyPathDir = mkdtempSync(join(tmpdir(), 'tpl-memrep-path-'));
-        const nodeBin = process.execPath;
-        const py = spawnSync('which', ['python3'], { encoding: 'utf8' }).stdout.trim();
-        spawnSync('ln', ['-s', nodeBin, join(emptyPathDir, 'node')]);
-        if (py) {
-            spawnSync('ln', ['-s', py, join(emptyPathDir, 'python3')]);
-        }
+function runTs(args: string[]): RunResult {
+    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
+        cwd: goldenTmp,
+        encoding: 'utf8',
+        env: { HOME: process.env['HOME'] ?? '', PATH: NODE_ONLY_DIR, COLUMNS: '200', AGENT_MEMORY_STATUS: '' },
     });
-    afterEach(() => {
-        rmSync(goldenTmp, { recursive: true, force: true });
-        rmSync(emptyPathDir, { recursive: true, force: true });
-    });
+    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+}
 
-    function envParity(args: readonly string[]): { ts: ReturnType<typeof spawnSync>; py: ReturnType<typeof spawnSync> } {
-        // Empty PATH (no `memory` CLI) + cleared cache → deterministic absent backend.
-        const env = { HOME: process.env['HOME'] ?? '', PATH: emptyPathDir, AGENT_MEMORY_STATUS: '' };
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: goldenTmp, encoding: 'utf8', env });
-        const py = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: goldenTmp, encoding: 'utf8', env });
-        return { ts, py };
-    }
+// The overdue DAY count drifts with wall clock; mask it (the COUNT, rate and
+// buckets are date-independent and stay asserted).
+function normOverdue(s: string): string {
+    return s.replace(/\+\d+d/g, '+Nd').replace(/"overdue_days": \d+/g, '"overdue_days": N');
+}
 
-    function seedMemoryTree(): void {
-        const memRoot = join(goldenTmp, 'agents', 'memory');
-        const intake = join(memRoot, 'intake');
-        mkdirSync(intake, { recursive: true });
-        // Intake JSONL: 2 active (one ownership, one historical), 1 supersede.
-        const lines = [
-            JSON.stringify({ entry_type: 'ownership', path: 'app/A.php', body: 'team-a' }),
-            JSON.stringify({ entry_type: 'historical-patterns', path: 'app/B.php', body: 'flake' }),
-            JSON.stringify({ type: 'supersede', id: 'old-1' }),
-            '', // blank line — must be skipped
-            'not-json', // malformed — must be skipped
-        ];
-        writeFileSync(join(intake, 'signals-2026-05.jsonl'), `${lines.join('\n')}\n`, 'utf-8');
+function seedMemoryTree(): void {
+    const memRoot = join(goldenTmp, 'agents', 'memory');
+    const intake = join(memRoot, 'intake');
+    mkdirSync(intake, { recursive: true });
+    // Intake JSONL: 2 active (one ownership, one historical), 1 supersede,
+    // a blank line + a malformed line (both must be skipped).
+    const lines = [
+        JSON.stringify({ entry_type: 'ownership', path: 'app/A.php', body: 'team-a' }),
+        JSON.stringify({ entry_type: 'historical-patterns', path: 'app/B.php', body: 'flake' }),
+        JSON.stringify({ type: 'supersede', id: 'old-1' }),
+        '',
+        'not-json',
+    ];
+    writeFileSync(join(intake, 'signals-2026-05.jsonl'), `${lines.join('\n')}\n`, 'utf-8');
 
-        // Curated single-file layout with an overdue + a current entry.
-        const ownership = [
-            'entries:',
-            '  - id: own-overdue',
-            '    last_validated: 2000-01-01',
-            '    review_after_days: 30',
-            '  - id: own-current',
-            '    last_validated: 2999-01-01',
-            '    review_after_days: 30',
-            '  - id: own-no-review',
-            '    last_validated: 2000-01-01',
-        ].join('\n');
-        writeFileSync(join(memRoot, 'ownership.yml'), `${ownership}\n`, 'utf-8');
-    }
+    // Curated single-file layout: an overdue + a current + a no-review entry.
+    const ownership = [
+        'entries:',
+        '  - id: own-overdue',
+        '    last_validated: 2000-01-01',
+        '    review_after_days: 30',
+        '  - id: own-current',
+        '    last_validated: 2999-01-01',
+        '    review_after_days: 30',
+        '  - id: own-no-review',
+        '    last_validated: 2000-01-01',
+    ].join('\n');
+    writeFileSync(join(memRoot, 'ownership.yml'), `${ownership}\n`, 'utf-8');
+}
 
-    it('text output parity (populated tree)', () => {
+describe('templates/memory_report — populated tree', () => {
+    it('text output (overdue-days masked)', () => {
         seedMemoryTree();
-        const { ts, py } = envParity([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+        const r = runTs([]);
+        expect({ status: r.status, stderr: r.stderr, stdout: normOverdue(r.stdout) }).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "Backend:   file (backend=file)
+                     reason: file-backed memory (no external backend)
+          Intake:    2 active, 1 superseded
+            - historical-patterns: 1
+            - ownership: 1
+          Staleness: 1 entrie(s) overdue
+            - own-overdue (ownership)  +Nd  agents/memory/ownership.yml
+          Quarterly: staleness-rate=33.3% (1/3)
+            accepted: 2000Q1:2, 2999Q1:1
+          ",
+          }
+        `);
     });
 
-    it('json output parity (populated tree)', () => {
+    it('json output (overdue-days masked)', () => {
         seedMemoryTree();
-        const { ts, py } = envParity(['--format', 'json']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+        const r = runTs(['--format', 'json']);
+        expect({ status: r.status, stderr: r.stderr, stdout: normOverdue(r.stdout) }).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{
+            "backend": {
+              "status": "file",
+              "backend": "file",
+              "reason": "file-backed memory (no external backend)"
+            },
+            "intake": {
+              "total_active": 2,
+              "superseded": 1,
+              "by_type": {
+                "ownership": 1,
+                "historical-patterns": 1
+              },
+              "by_month": {
+                "2026-05": 2
+              }
+            },
+            "staleness": [
+              {
+                "file": "agents/memory/ownership.yml",
+                "type": "ownership",
+                "id": "own-overdue",
+                "overdue_days": N
+              }
+            ],
+            "quarterly": {
+              "accepted_by_quarter": {
+                "2000Q1": 2,
+                "2999Q1": 1
+              },
+              "retired_by_quarter": {},
+              "staleness_rate": 0.333,
+              "curated_total": 3,
+              "curated_overdue": 1
+            },
+            "role_modes": {
+              "total_markers": 0,
+              "files_scanned": 0,
+              "by_mode": {},
+              "unknown_modes": []
+            }
+          }
+          ",
+          }
+        `);
+    });
+});
+
+describe('templates/memory_report — empty tree', () => {
+    it('text output (fully deterministic)', () => {
+        expect(runTs([])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "Backend:   file (backend=file)
+                     reason: file-backed memory (no external backend)
+          Intake:    0 active, 0 superseded
+          Staleness: no curated entries past review_after_days
+          Quarterly: staleness-rate=0.0% (0/0)
+          ",
+          }
+        `);
     });
 
-    it('text output parity (empty tree)', () => {
-        const { ts, py } = envParity([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+    it('json output (fully deterministic)', () => {
+        expect(runTs(['--format', 'json'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "{
+            "backend": {
+              "status": "file",
+              "backend": "file",
+              "reason": "file-backed memory (no external backend)"
+            },
+            "intake": {
+              "total_active": 0,
+              "superseded": 0,
+              "by_type": {},
+              "by_month": {}
+            },
+            "staleness": [],
+            "quarterly": {
+              "accepted_by_quarter": {},
+              "retired_by_quarter": {},
+              "staleness_rate": 0.0,
+              "curated_total": 0,
+              "curated_overdue": 0
+            },
+            "role_modes": {
+              "total_markers": 0,
+              "files_scanned": 0,
+              "by_mode": {},
+              "unknown_modes": []
+            }
+          }
+          ",
+          }
+        `);
     });
+});
 
-    it('json output parity (empty tree)', () => {
-        const { ts, py } = envParity(['--format', 'json']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+describe('templates/memory_report — argparse errors', () => {
+    it('bad --format choice → exit 2', () => {
+        expect(runTs(['--format', 'xml'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: memory_report.py [-h] [--format {text,json}]
+          memory_report.py: error: argument --format: invalid choice: 'xml' (choose from 'text', 'json')
+          ",
+            "stdout": "",
+          }
+        `);
     });
-
-    it('bad --format choice (exit 2) parity', () => {
-        const { ts, py } = envParity(['--format', 'xml']);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
+    it('unrecognized argument → exit 2', () => {
+        expect(runTs(['--bogus'])).toMatchInlineSnapshot(`
+          {
+            "status": 2,
+            "stderr": "usage: memory_report.py [-h] [--format {text,json}]
+          memory_report.py: error: unrecognized arguments: --bogus
+          ",
+            "stdout": "",
+          }
+        `);
     });
-
-    it('unrecognized argument (exit 2) parity', () => {
-        const { ts, py } = envParity(['--bogus']);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(2);
+    it('-h → usage + exit 0', () => {
+        expect(runTs(['-h'])).toMatchInlineSnapshot(`
+          {
+            "status": 0,
+            "stderr": "",
+            "stdout": "usage: memory_report.py [-h] [--format {text,json}]
+          ",
+          }
+        `);
     });
 });
