@@ -125,6 +125,44 @@ declared version:
 - Streaming / partial-prerender boundaries — use the project's framework
   patterns (Next.js / Remix), not shadcn/ui.
 
+## Registry & MCP awareness (opt-in)
+
+The default path is the bundled `scripts/shadcn_add.ts` CLI wrapper + reading
+`components.json` — it works on most shadcn projects and stays the default.
+The modern registry model is an **opt-in enhancement**; do not add round-trips
+to every component op. Full JSON-schema + namespace detail is lazy-loaded from
+[`reference/registry.md`](reference/registry.md) — read it only on this path,
+not on the vanilla `add`.
+
+**`shadcn info --json` handshake** — run it as the grounding step **when** the
+project declares custom/namespaced `registries` in `components.json`, OR when
+theme-alignment is in scope. It returns framework, aliases, installed
+components, icon lib, and base settings. Do NOT make it a forced first action
+on every `add` (over-gating; low ROI on vanilla projects).
+
+- **Precedence vs our own audit:** prefer a live `shadcn info --json` when
+  available; fall back to `state.ui_audit.shadcn_inventory` (from
+  `existing-ui-audit`) when the CLI/MCP is not reachable. They answer the same
+  question (project context) — the live read wins.
+
+**Namespaced installs** — `@ns/item` resolves via the `registries` map to a
+`registry-item.json` URL (see the reference). Run `view @ns/item` to inspect
+the JSON before `add`. Honour `registryDependencies` (install the graph,
+including version-pinned GitHub refs like `acme/ui/button#v1.2.0`); keep
+propose-never-silent-run + `--dry-run`.
+
+**Token-aware scaffolding** — when a `registry-item.json` carries `cssVars`
+(OKLCH, light/dark/theme), align additions to the project's existing tokens
+(from `info --json` / `components.json` / `state.ui_audit.design_tokens`) —
+**never inject the default shadcn neutral theme** (it is a flagged anti-slop
+tell: default theme + Inter fallback + neutral grays).
+
+**MCP path (opt-in)** — the shadcn MCP server exposes browse / search-across-
+registries / install-with-natural-language over MCP; configure per the
+[`mcp`](../mcp/SKILL.md) skill. It is an alternative to the CLI, never a hard
+dependency. Decision note: **CLI path = default + universal; MCP path = opt-in
+when the user has it configured; registry-JSON literacy underpins both.**
+
 ## Procedure: render a shadcn/ui component for the design brief
 
 ### Step 0: Inspect

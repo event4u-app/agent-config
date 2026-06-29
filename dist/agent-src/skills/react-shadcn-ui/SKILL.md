@@ -125,6 +125,20 @@ declared version:
 - Streaming / partial-prerender boundaries — use the project's framework
   patterns (Next.js / Remix), not shadcn/ui.
 
+## Registry & MCP awareness (opt-in)
+
+Default path = bundled `scripts/shadcn_add.ts` + `components.json`; works on most projects, stays default. Modern registry model is OPT-IN — no round-trips on every op. JSON-schema + namespace detail lazy-loaded from [`reference/registry.md`](reference/registry.md); read only on this path.
+
+**`shadcn info --json` handshake** — run as grounding step WHEN `components.json` declares custom/namespaced `registries`, OR theme-alignment in scope. Returns framework / aliases / installed components / icon lib / base settings. NOT a forced first action on every `add` (over-gating, low ROI vanilla).
+
+- **Precedence:** prefer live `shadcn info --json`; fall back to `state.ui_audit.shadcn_inventory` (existing-ui-audit) when CLI/MCP unreachable. Live read wins.
+
+**Namespaced installs** — `@ns/item` resolves via the `registries` map to a `registry-item.json` URL (see reference). `view @ns/item` before `add`. Honour `registryDependencies` (install the graph, incl. version-pinned GitHub refs `acme/ui/button#v1.2.0`); keep propose-never-silent-run + `--dry-run`.
+
+**Token-aware scaffolding** — `registry-item.json` `cssVars` (OKLCH light/dark/theme) → align to project tokens (`info --json` / `components.json` / `state.ui_audit.design_tokens`); never inject the default shadcn neutral theme (flagged anti-slop tell: default theme + Inter + neutral grays).
+
+**MCP path (opt-in)** — shadcn MCP server: browse / search-across-registries / install-with-NL over MCP; wire per [`mcp`](../mcp/SKILL.md). Alternative to CLI, never a hard dep. Decision: CLI = default + universal; MCP = opt-in when configured; registry-JSON literacy underpins both.
+
 ## Procedure: render a shadcn/ui component for the design brief
 
 ### Step 0: Inspect
