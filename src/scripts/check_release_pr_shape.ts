@@ -31,6 +31,10 @@ const ALLOWLIST_GLOBS = [
     'src/domains/*/pack.yaml',
     'src/domains/*/README.md',
     'docs/archive/CHANGELOG-pre-*.md',
+    // Project-settings template pin — bumped by release.ts set_template_pin and
+    // its regenerated dist twin (kept in lockstep with package.json.version).
+    'src/agent-src/templates/agents/agent-project-settings.example.yml',
+    'dist/agent-src/templates/agents/agent-project-settings.example.yml',
 ] as const;
 
 /**

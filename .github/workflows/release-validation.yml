@@ -178,3 +178,12 @@ jobs:
             exit 1
           fi
           echo "✅  Every version reference agrees on $pkg"
+
+      - name: Check project-template pin matches package.json.version
+        run: |
+          set -euo pipefail
+          # The project-settings example template (src + dist twin) carries an
+          # `agent_config_version` pin that must equal package.json.version, or a
+          # fresh `init` bootstraps onto a stale pin. release.ts set_template_pin
+          # keeps it in lockstep; this gate is the backstop on the release PR.
+          ./scripts-run src/scripts/check_template_pin_drift
