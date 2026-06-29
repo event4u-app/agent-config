@@ -16,4 +16,4 @@ slug_prefix: git
 suggests: []
 surface_tier: core
 trust_level_default: core
-version: 7.4.0
+version: 7.5.0
