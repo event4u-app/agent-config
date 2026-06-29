@@ -1,10 +1,32 @@
 ---
-status: ready
+status: superseded
 slug: py2ts-teardown-completion
 title: "py2ts teardown — completion: purge remaining live-python, retire the shim, merge-ready"
 parent_roadmap: py2ts-teardown
+superseded_by: typescript-only-scripts
 ---
 <!-- check-refs: skip -->
+
+> **SUPERSEDED (2026-06-29) — resolved by `road-to-typescript-only-scripts`
+> Phase 12 (Teardown & final audit).** AI-council verdict
+> (claude-sonnet-4-5 + gpt-4o, converged): the parent migration roadmap's
+> Phase 12 is the single, more-complete teardown surface; this child overlapped
+> it and is closed rather than run in parallel. Disposition of its open steps:
+>
+> - **Test-layer purge + CI/scaffolding cleanup (Phases 1, 2) — done or
+>   redundant.** The structural deletions already landed on `main` via the
+>   merged `python2ts`; Phase 12 of the parent retired the last pytest test +
+>   dead fixtures and removed the 3 migration-scaffolding workflows. The
+>   parity-rig / live-parity-block / shim-retirement items describe a
+>   test-layer state that the merge already resolved.
+> - **AI-council live-call layer (Phase 2b) — out of autonomous scope.** Gated
+>   live paid-API smoke calls; not run by an autonomous agent.
+> - **Consumer + merge readiness (Phase 3) — obsolete / user-owned.** The
+>   `python2ts → main` merge (#613) is a completed user-owned Hard-Floor step;
+>   `origin/python2ts` is fully contained in `origin/main`.
+>
+> All open steps below are marked `[-]` cancelled with this disposition. See
+> `agents/evidence/migration-final-report.md`.
 
 # Road to py2ts Teardown Completion
 
@@ -190,17 +212,17 @@ stay open below — not force-marked done.
   dependency check) → **load-bearing** (leave gated). Ambiguous (captures S1,
   reads S2) → flag for manual triage. Verify each converted file
   python-shadowed green before committing the batch.
-- [ ] **19 raw `main()`-only parity rigs** — each is a pure parity rig anchored
+- [-] **19 raw `main()`-only parity rigs** — each is a pure parity rig anchored
   to the real repo tree. Per twin: if covered elsewhere → delete the dead rig;
   if `main()` is cleanly hermetic (target-path arg) → fresh intent test;
   otherwise parametrize the module's `ROOT` (minimal src change) for a hermetic
   intent test. **Confirm "pure rig" before deleting** (council N2 — some may be
   intentional CLI smoke tests, not redundant parity). Do **not** resurrect
   env-brittle byte-parity snapshots.
-- [ ] **`config_packs` / `config_session_profiles` live-parity blocks** —
+- [-] **`config_packs` / `config_session_profiles` live-parity blocks** —
   resolve the env-brittle (manifest/generated-state-dependent) blocks per the
   parent roadmap's Phase-5 detection gate.
-- [ ] **Retire `tests/_lib/python-free-env.ts`** — once no test file needs the
+- [-] **Retire `tests/_lib/python-free-env.ts`** — once no test file needs the
   python3-shadow, remove the shim from `vitest.config.ts` `setupFiles` + the
   file. Confirm the suite is green python-free *by construction*.
 
@@ -209,14 +231,14 @@ stay open below — not force-marked done.
 > "Requires Phase 1 complete" = shim removed, `vitest run` green python-free by
 > construction, no test spawns live `python3` (council Phase-1/2 coupling).
 
-- [ ] **Precise python-invocation audit** (council G3 — `grep python3` misses
+- [-] **Precise python-invocation audit** (council G3 — `grep python3` misses
   `python`, `spawn.*python`, `sys.executable`, shebangs; bare `python\b`
   over-matches). Restrict to code files:
   `git ls-files '*.ts' '*.js' '*.json' '*.sh' | xargs grep -nE 'python3|spawn.*python|sys\.executable'`
   + `git ls-files | xargs grep -l '^#!/usr/bin/env python'`; manual-review the
   hits; exclude the documented `tests/hooks/fixtures/concern_*.py` fixtures.
   Target: zero live-invocation sites.
-- [ ] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
+- [-] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`).
 - [x] **Add a permanent replacement guard** (council G2 convergence over the
   time-limited-buffer divergence — see review): `no-python-in-src.yml` fails the
@@ -229,12 +251,12 @@ stay open below — not force-marked done.
   intent tests (47 passed) — they assert the tsx twins' own contract directly
   instead of byte-comparing the deleted python CLI. `compile_corpus` edge cases
   likewise converted, not deleted. **0 `runIf(py3)` / `runIf(PY)` repo-wide.**
-- [ ] **Retire the shim + the live-python3 harness sites** — coupled tail:
+- [-] **Retire the shim + the live-python3 harness sites** — coupled tail:
   `tests/scripts/lint_regression.test.ts` still drives the python-spawning
   `lint_regression.ts` baseline harness; resolve that + `parity/replay.ts` FIRST,
   then remove `tests/_lib/python-free-env.ts`, proven green-by-construction with a
   full python-free `vitest run` (see Phase 1 "Retire" item below + Phase 2).
-- [ ] Confirm remote CI green on `python2ts` with the new guard in place.
+- [-] Confirm remote CI green on `python2ts` with the new guard in place.
 
 ## Phase 2b — AI-council live-call layer (py2ts gap — transport now wired)
 
@@ -246,27 +268,27 @@ stay open below — not force-marked done.
 > the council (actual $0.1057). `gemini`/`xai`/`perplexity` stay `enabled: false`
 > and remain throwing twins.
 
-- [ ] Add a gated live smoke (one low-token real call per enabled member) so the
+- [-] Add a gated live smoke (one low-token real call per enabled member) so the
   throwing-twin regression cannot recur silently.
-- [ ] If `gemini`/`xai`/`perplexity` are ever re-enabled, wire their transport
+- [-] If `gemini`/`xai`/`perplexity` are ever re-enabled, wire their transport
   too (gemini needs its own API shape; xai/perplexity reuse the openai-compatible
   client).
 
 ## Phase 3 — Consumer + merge readiness
 
-- [ ] **Consumer smoke (baseline A) — define pass/fail BEFORE running** (council
+- [-] **Consumer smoke (baseline A) — define pass/fail BEFORE running** (council
   B3). Per shipped skill-script: `corpus-grounding/bm25_search` → exit 0 +
   expected `results.json` shape; `design-tokens/tokens` → exit 0 + emits tokens,
   no stderr; `roadmap-progress` → exit 0 + report with `Phase` lines. Install
   into a sandbox consumer, run via the installed package's `tsx`, log actual vs
   expected.
-- [ ] **A-vs-D empirical gate:** if the smoke shows `tsx` unreachable (script
+- [-] **A-vs-D empirical gate:** if the smoke shows `tsx` unreachable (script
   "command not found"), switch shipped skill-scripts to fallback D (pre-bundled
   `.js`, node-only) and re-smoke — note whether this blocks the merge or is a
   hotfix. Otherwise stay on A.
-- [ ] Decide whether `python2ts` is synced with latest `main` one final time
+- [-] Decide whether `python2ts` is synced with latest `main` one final time
   before the merge (avoid a late big-bang conflict) — surface the decision.
-- [ ] Hand back to the user: `python2ts → main` final merge (#613) is the
+- [-] Hand back to the user: `python2ts → main` final merge (#613) is the
   user's Hard-Floor decision (out of scope for the agent).
 
 ## Non-goals / out of scope
