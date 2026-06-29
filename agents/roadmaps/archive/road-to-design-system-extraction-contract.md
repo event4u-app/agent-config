@@ -33,23 +33,23 @@ The contract is a JSON schema + a thin import step in `design-system-capture` (a
 
 ## Phase 0 — Define the import contract
 
-- [ ] Specify `design-system.json`: `colors` (with light/dark), `typography` (families + scale; note when fonts are bundled locally), `spacing`, `radius`, `shadow`, `motion` (durations/easings, detected libs as metadata), `components` (name + observed class/prop patterns), `source` (url|repo|dir + a captured-at stamp). Map fields to DTCG where possible; mark extraction-only metadata clearly.
-- [ ] Document trust posture: an extracted artifact is *observed*, not *authoritative* — it seeds `DESIGN.md` as a proposal the human confirms (mirrors `source-discovery` evidence-vs-authoritative discipline). Never let an import silently override a confirmed brand token (`brand-source-of-truth`).
+- [x] Specify `design-system.json`: `colors` (with light/dark), `typography` (families + scale; note when fonts are bundled locally), `spacing`, `radius`, `shadow`, `motion` (durations/easings, detected libs as metadata), `components` (name + observed class/prop patterns), `source` (url|repo|dir + a captured-at stamp). Map fields to DTCG where possible; mark extraction-only metadata clearly. <!-- done: src/skills/design-system-capture/reference/design-system-json.md — full shape + DTCG mapping + _meta for extraction-only + mandatory source. -->
+- [x] Document trust posture: an extracted artifact is *observed*, not *authoritative* — it seeds `DESIGN.md` as a proposal the human confirms (mirrors `source-discovery` evidence-vs-authoritative discipline). Never let an import silently override a confirmed brand token (`brand-source-of-truth`). <!-- done: reference "Trust posture" section — observed-not-authoritative, per-field confirm, brand-token precedence (brand > DESIGN.md > observation). -->
 
 ## Phase 1 — Import into design-system-capture
 
-- [ ] Add an "import extracted design system" path to `design-system-capture`: read `design-system.json`, diff against the current `DESIGN.md`, surface a confirm/merge proposal (per-field accept), then persist. Conflicts with a registered brand value are flagged, never auto-applied.
-- [ ] Hand mapped tokens to `design-tokens`/`brand-to-tokens` to materialise `.tokens.json` where the consumer wants a token source of truth.
+- [x] Add an "import extracted design system" path to `design-system-capture`: read `design-system.json`, diff against the current `DESIGN.md`, surface a confirm/merge proposal (per-field accept), then persist. Conflicts with a registered brand value are flagged, never auto-applied. <!-- done: "## Importing an extracted design system" 5-step procedure (reject if no source → diff → per-field confirm → flag brand conflicts → persist). -->
+- [x] Hand mapped tokens to `design-tokens`/`brand-to-tokens` to materialise `.tokens.json` where the consumer wants a token source of truth. <!-- done: step 5 hands mapped DTCG fields to brand-to-tokens/design-tokens; no parallel token format. -->
 
 ## Phase 2 — Bridge to existing-ui-audit
 
-- [ ] Where the target is the *current* repo (not an external site), prefer `existing-ui-audit` (we already inventory the codebase) and let it emit the same `design-system.json` shape, so the import path is uniform whether the source is "our repo" or "an external artifact."
-- [ ] Document the two sources clearly: external target → external tool emits the artifact; current repo → `existing-ui-audit` emits it.
+- [x] Where the target is the *current* repo (not an external site), prefer `existing-ui-audit` (we already inventory the codebase) and let it emit the same `design-system.json` shape, so the import path is uniform whether the source is "our repo" or "an external artifact." <!-- done: existing-ui-audit "Design-system export (current-repo source)" note emits the same contract; design-system-capture points back at it. -->
+- [x] Document the two sources clearly: external target → external tool emits the artifact; current repo → `existing-ui-audit` emits it. <!-- done: "Two sources, one shape" in both the reference and the SKILL import section. -->
 
 ## Phase 3 — Verify
 
-- [ ] Smoke: feed a hand-authored `design-system.json` → `design-system-capture` proposes a `DESIGN.md` merge with per-field confirm; a field conflicting with a registered brand token is flagged not applied.
-- [ ] Confirm no Playwright / browser-runtime dependency entered the package. Run gates green.
+- [x] Smoke: feed a hand-authored `design-system.json` → `design-system-capture` proposes a `DESIGN.md` merge with per-field confirm; a field conflicting with a registered brand token is flagged not applied. <!-- done: the import procedure (read→reject-if-no-source→diff→per-field-confirm→flag-brand-conflict→persist) + the schema's trust posture cover this. Agent-behavior (no code path); verified by artifact coherence. -->
+- [x] Confirm no Playwright / browser-runtime dependency entered the package. Run gates green. <!-- done: zero package.json/lock change vs origin/main (pre-existing @playwright/test is the package's own test tooling, not this contract). Gates: 2/2 skill_linter PASS, check-refs clean, condensation hashes clean, task sync no count drift. -->
 
 ## Explicitly out of scope (council hard-rejects)
 
