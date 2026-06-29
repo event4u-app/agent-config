@@ -49,5 +49,6 @@ Any of the trigger keywords appear in a UI-building context: new component, new 
 
 ## See also
 
+- [`design-canon.md`](../docs/guidelines/design-canon.md) § Icon systems — when a named design system is in play, prefer its icon set over a fresh Iconify pick.
 - [`iconography`](../skills/iconography/SKILL.md) — full icon-system selection, audit, and migration workflow.
 - [`ui-audit-gate`](ui-audit-gate.md) — broader UI consistency gate; runs before any new component lands.

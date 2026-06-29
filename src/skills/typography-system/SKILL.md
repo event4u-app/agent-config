@@ -127,6 +127,7 @@ brand already registers fonts, use them and skip the filter.
 
 ## See also
 
+- [`design-canon.md`](../../../docs/guidelines/design-canon.md) — named-systems + typography-craft (foundry/theory) grounding index; pull to escape the AI-default fonts.
 - [`design-tokens`](../design-tokens/SKILL.md) — toolchain that generates CSS
   vars and the Tailwind snippet from `tokens.json`.
 - [`design-intelligence`](../design-intelligence/SKILL.md) — idiom corpus that
