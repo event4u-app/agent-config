@@ -74,6 +74,57 @@ live-`python3` harness sites (`src/scripts/lint_regression.ts:122`,
 `src/scripts/parity/replay.ts:212`) resolved, and the consumer smoke run. These
 stay open below — not force-marked done.
 
+## Finish strategy (2026-06-29) — council-ruled
+
+Re-scope note: this roadmap was framed pre-merge around the `python2ts` branch
+and #613. **`python2ts → main` is long merged; `main` is release 7.5.0, `src`
+has 0 `.py`.** The remaining work is purely **post-merge test-layer cleanup on
+`main`**: 103 test files still spawn live `python3` via vestigial parity blocks
+the global shim (`tests/_lib/python-free-env.ts`) force-skips. Clusters
+`cli/python/workspace_*` (12) and `work_engine/*` (21) are already converted
+(+470 real tests, PRs #644/#646/#647). Remaining: `_cli/cmd_*` (~17),
+`ai_council` (3), `cli_python` (2), `tests/_lib` helpers (2), ~40 `templates_*`
+/ `validate_*` / `measure_*` / `bench_*` singletons, plus the 2 non-vestigial
+live-python harness sites.
+
+AI council (claude-sonnet-4-5 + gpt-4o, deep, `user_explicit`, 2026-06-29)
+ruled the finish strategy. Convergent verdict:
+
+- **D1 — delete-vs-convert.** Prefer **CONVERT** by default. DELETE only via a
+  **Phase-0 audit script** producing a 3-tier matrix: **DELETE** = the command
+  is invoked in `tests/cli/cli-e2e.test.ts` **AND** the parity-rig test body
+  passes when run against the TS command (runtime equivalence proof);
+  **CONVERT** = invoked but body fails / asserts unique properties;
+  **NEEDS-REVIEW** = not invoked / unclear → batch decision. Auto-execute
+  tiers 1–2; surface tier 3.
+- **Coverage-degradation guard (strongest blind spot).** The teardown is
+  functionally a test-suite **refactor**, not just cleanup. The DELETE gate
+  proves only the *current* (already-converted) test logic, not that the
+  *original* python-side assertions are preserved (byte-exact stdout →
+  structural; deterministic → masked snapshot all silently weaken coverage).
+  Before any deletion wave, **sample-audit 5 deleted rigs**: diff the original
+  python-side assertions (git history) vs the post-conversion TS assertions; if
+  they assert strictly weaker properties, flag; if a degradation pattern
+  emerges, **abort the delete path → convert everything**.
+- **D2 — the 2 live-`python3` harness sites** (`lint_regression.ts:122`,
+  `parity/replay.ts`). They are load-bearing regression/replay oracles, not
+  vestigial gates. **Short-term:** give each a **local** python-skip guard so
+  shim-retire is decoupled from porting them. **Medium-term (own spike):**
+  freeze the baseline/oracle to a TS golden and drop the live-python path
+  (the true python-free end state).
+- **D3 — shim + workflow retire.** In the shim-retire PR, the shim-disable
+  commit is **NOT reverted** — land main shim-free, let it **soak ≥24h / ≥1 CI
+  cycle**, then a separate PR deletes `python-free-env.ts` + the 3 scaffolding
+  workflows (`py2ts-base-guard` / `py2ts-drift` / `py2ts-main-sync`). Surfacing
+  a hidden shim dependency in the disable-PR (easy rollback) beats discovering
+  it after the shim is gone.
+- **D4 — PR strategy.** Ship the tail as **small tests-only PRs** that never
+  touch `agents/roadmaps-progress.md` (a dashboard conflict suppresses the
+  PR's merge-ref and silently blocks the required check — the #646 failure
+  mode). Add a **macOS + Linux CI matrix** for snapshot-generating tests
+  (platform-independent snapshots — the `/private` lesson is a class of bug).
+  Roadmap/dashboard updates ride **separate doc PRs**, post-wave.
+
 ## Phase 0 — Pre-flight gates (block Phase 1) — council-mandated
 
 - [x] **Oracle-integrity validation** (council N1 — highest-impact risk). The
