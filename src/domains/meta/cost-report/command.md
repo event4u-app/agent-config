@@ -100,6 +100,32 @@ BUDGET_PERIOD=week node scripts/cost/budget.mjs check
 
 Allowed values: `today`, `week`, `month`, `all` (default).
 
+### 6. Orchestration telemetry summary (when telemetry exists)
+
+Read the current-month JSONL from `agents/runtime/state/audit/YYYY-MM.jsonl`
+(where `YYYY-MM` is the current UTC month). If the file exists and contains
+lines with `input_kind: "orchestration"`, surface an orchestration summary
+using `readOrchestrationMetrics` from
+`src/scripts/_lib/subagent_steering.ts`:
+
+```
+Orchestration telemetry (YYYY-MM, N dispatches):
+  avg token_delta:     ±NNN  (positive = cost more; negative = saved)
+  spawn_failure_rate:  N.N%  (threshold: 10%)
+  verify_skip_rate:    N.N%  (threshold: 1%)
+  guardrail breaches:  [token_blowup | spawn_failure | verify_skip | none]
+```
+
+If no orchestration lines exist yet (telemetry capture not yet running or
+no delegated dispatches this month), surface:
+
+> No orchestration telemetry yet — subagent dispatches begin writing to
+> `agents/runtime/state/audit/YYYY-MM.jsonl` once `subagents.enabled: true`
+> and a dispatch runs.
+
+Skip this step entirely if the user did not ask about orchestration telemetry
+and there is no `agents/runtime/state/audit/` directory.
+
 ## Rules
 
 - **Local-only.** Never persist cost data to remote stores. The
