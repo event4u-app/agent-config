@@ -4,6 +4,7 @@ name: ai-council
 description: "Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'."
 domain: process
 meta_skill: true
+parallelizable: independent
 workspaces:
   - agent-config-maintainer
 packs:
