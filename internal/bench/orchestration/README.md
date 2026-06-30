@@ -1,0 +1,58 @@
+# Orchestration Telemetry Corpus
+
+> Controlled delegable-task set for generating and comparing real orchestration
+> telemetry. NOT a headless benchmark — tasks run in an actual Claude Code
+> session; Phase-2 telemetry captures the results.
+
+## What this corpus measures
+
+Real orchestration telemetry (`token_delta`, `spawn_count`, `verify_mode`) from
+the actual Claude Code `Task` tool, read from
+`agents/runtime/state/audit/YYYY-MM.jsonl`. This is the primary evidence for
+the `gateVerdict()` flip-gate.
+
+## What this corpus does NOT measure
+
+- It is not a headless automation (the bench harness cannot execute real `Task`
+  tool calls). The `bench_ab_v2_run.ts` harness is a scripted re-call loop — it
+  does not spawn subagents. These corpus tasks require an interactive or
+  `claude --dangerously-skip-permissions` session with real tool execution.
+- It does not establish a controlled single-agent baseline independently — the
+  single-agent baseline is inferred from the `task_size_estimate` field in the
+  telemetry (approximation, marked `token_delta_provenance: "estimated"` when
+  host usage is unavailable).
+
+## How to run
+
+1. Ensure `subagents.enabled: true` and `subagents.auto: on` in
+   `.agent-settings.yml`.
+2. Open a Claude Code session on the `internal/bench/ab/fixture/` project.
+3. Paste each corpus task from `corpus/` as a user message.
+4. After the task completes, check `agents/runtime/state/audit/YYYY-MM.jsonl`
+   for the `orchestration` sub-object. Run `/cost:report` to see the summary.
+
+For a baseline (single-agent, no orchestration):
+1. Set `subagents.auto: off`.
+2. Run the same corpus tasks.
+3. The `spawn_count` will be 0 — the audit line will show `token_delta: 0`.
+4. Compute the ratio manually or wait for `gateVerdict()` in Phase 5.
+
+## Corpus entries
+
+| ID | Signal | Expected mode |
+|---|---|---|
+| `orch-01-multifile-analysis` | N independent files — `parallelizable: files` | `do-in-parallel` |
+| `orch-02-ordered-refactor` | Ordered 3-step plan | `do-in-steps` |
+| `orch-03-competitive-impl` | Two design approaches, judge picks | `do-competitively` |
+
+## Honest limitations (per roadmap step 3)
+
+- `user_override_rate` cannot be measured from these task runs — it requires
+  tracking settings changes across a real user population. Stays 0 in all
+  telemetry.
+- Each run is a single session sample. A meaningful gate requires ≥ 20
+  orchestrated dispatches per corpus entry (across multiple sessions/runs) to
+  reduce variance.
+- The fixture project is static — task difficulty is controlled but artificial.
+  Real `ask`-mode telemetry from diverse real tasks is always the stronger
+  signal.

@@ -1,0 +1,9 @@
+# Bench arm: baseline (single-agent, no orchestration)
+# Copy to .agent-settings.yml in the fixture project to run the baseline arm.
+# Telemetry lines will have spawn_count: 0 — use task_size_estimate as the
+# single-agent size proxy when computing token_ratio.
+subagents:
+  enabled: true
+  auto: "off"
+  downshift: false
+  max_parallel: 3
