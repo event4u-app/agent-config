@@ -6,12 +6,7 @@
   "$comment": "Source: agents/reference/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "name",
-    "description",
-    "source",
-    "domain"
-  ],
+  "required": ["name", "description", "source", "domain"],
   "properties": {
     "name": {
       "type": "string",
@@ -22,35 +17,21 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 220,
-      "description": "Trigger phrase; \u2264 200 chars recommended, 220 is the ceiling (lean-initial-context: descriptions load eagerly via progressive disclosure). Over-cap is a soft warning, not a hard fail \u2014 a warning window so authors adapt."
+      "description": "Trigger phrase; ≤ 200 chars recommended, 220 is the ceiling (lean-initial-context: descriptions load eagerly via progressive disclosure). Over-cap is a soft warning, not a hard fail — a warning window so authors adapt."
     },
     "source": {
       "type": "string",
-      "enum": [
-        "package",
-        "project"
-      ],
+      "enum": ["package", "project"],
       "default": "package"
     },
     "domain": {
       "type": "string",
-      "enum": [
-        "engineering",
-        "product",
-        "quality",
-        "devops",
-        "process",
-        "discovery"
-      ],
-      "description": "Skill classification axis; see docs/contracts/skill-domains.md. Required for every skill \u2014 exactly one of: engineering, product, quality, devops, process, discovery."
+      "enum": ["engineering", "product", "quality", "devops", "process", "discovery"],
+      "description": "Skill classification axis; see docs/contracts/skill-domains.md. Required for every skill — exactly one of: engineering, product, quality, devops, process, discovery."
     },
     "status": {
       "type": "string",
-      "enum": [
-        "active",
-        "deprecated",
-        "superseded"
-      ]
+      "enum": ["active", "deprecated", "superseded"]
     },
     "replaced_by": {
       "type": "string",
@@ -70,14 +51,12 @@
     },
     "tier": {
       "type": "string",
-      "enum": [
-        "senior"
-      ],
+      "enum": ["senior"],
       "description": "Optional tier marker. `senior` opts the skill into the Senior-Tier Required Structure check (Context-First lead, Related Skills, Proactive Triggers, Output Artifacts) per .agent-src.uncondensed/rules/skill-quality.md."
     },
     "meta_skill": {
       "type": "boolean",
-      "description": "Opt-out of the linter's `skill_too_large` warn for skills whose purpose IS breadth (skill-writing, agent-docs-writing, skill-reviewer). Meta-skills inherently bundle multiple procedures and inline examples. Use sparingly \u2014 every meta_skill: true is a load-on-context trade-off."
+      "description": "Opt-out of the linter's `skill_too_large` warn for skills whose purpose IS breadth (skill-writing, agent-docs-writing, skill-reviewer). Meta-skills inherently bundle multiple procedures and inline examples. Use sparingly — every meta_skill: true is a load-on-context trade-off."
     },
     "external_source": {
       "type": "string",
@@ -96,79 +75,46 @@
     },
     "model_tier": {
       "type": "string",
-      "enum": [
-        "lite",
-        "medium",
-        "high",
-        "inherit"
-      ],
-      "description": "Vendor-neutral capability band the skill needs (ADR-035). high/medium/lite project to a native Claude `model:` (high\u2192opus, medium\u2192sonnet, lite\u2192haiku) when model.auto_switch=auto; the generator owns that mapping exclusively. inherit keeps the session model. Non-Claude agents are suggestion-only \u2014 the model-recommendation rule names the tier and the agent resolves its own model. No vendor model names here."
+      "enum": ["lite", "medium", "high", "inherit"],
+      "description": "Vendor-neutral capability band the skill needs (ADR-035). high/medium/lite project to a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) when model.auto_switch=auto; the generator owns that mapping exclusively. inherit keeps the session model. Non-Claude agents are suggestion-only — the model-recommendation rule names the tier and the agent resolves its own model. No vendor model names here."
     },
     "context": {
       "type": "string",
-      "enum": [
-        "large"
-      ],
-      "description": "Optional orthogonal modifier (ADR-035): the skill needs a large-context model regardless of reasoning tier (e.g. summarising a 500-page log). Sparse \u2014 most skills omit it. Metadata only; does not change the native Claude `model:` (the tier owns the model choice)."
+      "enum": ["large"],
+      "description": "Optional orthogonal modifier (ADR-035): the skill needs a large-context model regardless of reasoning tier (e.g. summarising a 500-page log). Sparse — most skills omit it. Metadata only; does not change the native Claude `model:` (the tier owns the model choice)."
     },
     "council_depth": {
       "type": "string",
-      "enum": [
-        "deep"
-      ],
-      "description": "Optional reasoning-depth marker for AI Council invocations triggered by this skill. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected \u2014 every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis skills. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
+      "enum": ["deep"],
+      "description": "Optional reasoning-depth marker for AI Council invocations triggered by this skill. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis skills. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
     },
     "context_spine": {
       "type": "array",
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": [
-          "product",
-          "team",
-          "repo",
-          "channel-stage",
-          "funnel-stage",
-          "customer-segment",
-          "fiscal-period",
-          "org-stage",
-          "regulatory-regime"
-        ]
+        "enum": ["product", "team", "repo", "channel-stage", "funnel-stage", "customer-segment", "fiscal-period", "org-stage", "regulatory-regime"]
       },
-      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots follow the per-wing ADR track in docs/contracts/context-spine.md \u00a7 5. Wing-3 (channel-stage, funnel-stage, customer-segment) authorized by docs/contracts/adr-gtm-context-spine.md; Wing-4 (fiscal-period, org-stage, regulatory-regime) authorized by docs/contracts/adr-wing4-context-spine.md."
+      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 (channel-stage, funnel-stage, customer-segment) authorized by docs/contracts/adr-gtm-context-spine.md; Wing-4 (fiscal-period, org-stage, regulatory-regime) authorized by docs/contracts/adr-wing4-context-spine.md."
     },
     "recommended_for_user_types": {
       "type": "array",
       "uniqueItems": true,
-      "items": {
-        "type": "string"
-      },
-      "description": "Forward-compatible user-type recommendation tags (step-12-universal-os-reframe Phase 5). Skill loads for every user-type whose slug appears in this list. Absence of the key marks the skill as universal \u2014 see docs/contracts/universal-skills.md for the always-loaded floor and docs/contracts/router-blending.md for per-user-type mix ratios. Wired by step-9-user-types-axis once it lands; treated as metadata until then. Free-form tags (e.g. 'creator', 'founder', 'consultant', 'gtm', 'finance', 'ops', 'developer') \u2014 no enum until the user-types axis closes."
+      "items": {"type": "string"},
+      "description": "Forward-compatible user-type recommendation tags (step-12-universal-os-reframe Phase 5). Skill loads for every user-type whose slug appears in this list. Absence of the key marks the skill as universal — see docs/contracts/universal-skills.md for the always-loaded floor and docs/contracts/router-blending.md for per-user-type mix ratios. Wired by step-9-user-types-axis once it lands; treated as metadata until then. Free-form tags (e.g. 'creator', 'founder', 'consultant', 'gtm', 'finance', 'ops', 'developer') — no enum until the user-types axis closes."
     },
     "execution": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "properties": {
         "type": {
           "type": "string",
-          "enum": [
-            "manual",
-            "assisted",
-            "automated"
-          ]
+          "enum": ["manual", "assisted", "automated"]
         },
         "handler": {
           "type": "string",
-          "enum": [
-            "none",
-            "shell",
-            "php",
-            "node",
-            "internal"
-          ]
+          "enum": ["none", "shell", "php", "node", "internal"]
         },
         "timeout_seconds": {
           "type": "integer",
@@ -176,22 +122,16 @@
         },
         "safety_mode": {
           "type": "string",
-          "enum": [
-            "strict"
-          ]
+          "enum": ["strict"]
         },
         "allowed_tools": {
           "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "items": { "type": "string" }
         },
         "command": {
           "type": "array",
           "minItems": 1,
-          "items": {
-            "type": "string"
-          }
+          "items": { "type": "string" }
         }
       }
     },
@@ -199,30 +139,19 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
-      },
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
       "description": "ADR-013 workspace ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/workspaces.yml."
     },
     "packs": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
-      },
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
       "description": "ADR-013 pack ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/packs.yml."
     },
     "lifecycle": {
       "type": "string",
-      "enum": [
-        "active",
-        "deprecated",
-        "experimental",
-        "archived"
-      ],
+      "enum": ["active", "deprecated", "experimental", "archived"],
       "default": "active",
       "description": "ADR-013 lifecycle state."
     },
@@ -230,84 +159,39 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
-      },
-      "description": "Skill-composition graph (roadmap 3.4): names of sub-skills this skill's body invokes/assumes. Distinct from ADR-015 `requires` (artefact\u2192pack edges). scripts/check_skill_requires.py enforces (a) each target exists and (b) the required skill is co-available wherever this skill ships (same pack, a requires_hint-reachable pack, or always-on)."
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "Skill-composition graph (roadmap 3.4): names of sub-skills this skill's body invokes/assumes. Distinct from ADR-015 `requires` (artefact→pack edges). scripts/check_skill_requires.py enforces (a) each target exists and (b) the required skill is co-available wherever this skill ships (same pack, a requires_hint-reachable pack, or always-on)."
     },
     "trust": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "level",
-        "confidence",
-        "human_review_required"
-      ],
+      "required": ["level", "confidence", "human_review_required"],
       "properties": {
-        "level": {
-          "type": "string",
-          "enum": [
-            "core",
-            "professional",
-            "experimental",
-            "advisory",
-            "restricted"
-          ],
-          "default": "core"
-        },
-        "confidence": {
-          "type": "string",
-          "enum": [
-            "high",
-            "medium",
-            "low"
-          ],
-          "default": "high"
-        },
-        "human_review_required": {
-          "type": "boolean",
-          "default": false
-        }
+        "level": {"type": "string", "enum": ["core", "professional", "experimental", "advisory", "restricted"], "default": "core"},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"], "default": "high"},
+        "human_review_required": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 trust block. Vocabulary mirrored by scripts/lint_artefact_frontmatter.py."
     },
     "install": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "default",
-        "removable"
-      ],
+      "required": ["default", "removable"],
       "properties": {
-        "default": {
-          "type": "boolean",
-          "default": true
-        },
-        "removable": {
-          "type": "boolean",
-          "default": false
-        }
+        "default": {"type": "boolean", "default": true},
+        "removable": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
     },
     "token_budget_class": {
       "type": "string",
-      "enum": [
-        "lean",
-        "standard",
-        "rich"
-      ],
-      "description": "Token-cost class for this skill. `lean` (default): subject to telegraph-speak condensation and thin-projector trimming; optimize for <500 tokens. `standard`: balanced guidance, normal condensation. `rich`: exempt from telegraph-speak and thin-projector trimming; detailed examples preserved; eager-load eligible; \u226415% of skills in a suite may be `rich` (CI-enforced). A `rich` skill MUST carry a '## Why this skill is rich' section explaining the irreducible complexity that makes condensation harmful. Governed by `token-budget-discipline` rule + `tokens.rich_skills` consumer setting. See docs/guidelines/token-budget-governance.md."
+      "enum": ["lean", "standard", "rich"],
+      "description": "Token-cost class for this skill. `lean` (default): subject to telegraph-speak condensation and thin-projector trimming; optimize for <500 tokens. `standard`: balanced guidance, normal condensation. `rich`: exempt from telegraph-speak and thin-projector trimming; detailed examples preserved; eager-load eligible; ≤15% of skills in a suite may be `rich` (CI-enforced). A `rich` skill MUST carry a '## Why this skill is rich' section explaining the irreducible complexity that makes condensation harmful. Governed by `token-budget-discipline` rule + `tokens.rich_skills` consumer setting. See docs/guidelines/token-budget-governance.md."
     },
     "parallelizable": {
       "type": "string",
-      "enum": [
-        "steps",
-        "files",
-        "independent"
-      ],
-      "description": "Classifier signal for auto-dispatch. 'steps' = ordered multi-step plan \u2192 do-in-steps. 'files' = N independent files of the same shape \u2192 do-in-parallel. 'independent' = N independent same-shape targets (not files) \u2192 do-in-parallel. Omit for skills that are always single-pass. Read by auto-dispatch-classification.md classifier signal 1."
+      "enum": ["steps", "files", "independent"],
+      "description": "Classifier signal for auto-dispatch. 'steps' = ordered multi-step plan → do-in-steps. 'files' = N independent files of the same shape → do-in-parallel. 'independent' = N independent same-shape targets (not files) → do-in-parallel. Omit for skills that are always single-pass. Read by auto-dispatch-classification.md classifier signal 1."
     }
   }
 }
