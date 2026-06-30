@@ -307,21 +307,40 @@ prefer the cheaper one (`do-and-judge` < `do-and-judge-two-stage` <
 
 ### 4. Dispatch
 
-Hand off to the matching command:
+Use the matching dispatch prompt and orchestrate inline via this skill.
+Describe each dispatch step explicitly in chat so the user can follow it.
 
-* `do-and-judge` → [`/do-and-judge`](../../commands/do-and-judge.md)
-* `do-in-steps` → [`/do-in-steps`](../../commands/do-in-steps.md)
-* `judge` (standalone) → [`/judge`](../../commands/judge.md)
-
-Modes without a dedicated command (`do-in-parallel`,
-`do-competitively`, `judge-with-debate`) are orchestrated inline via
-the skill — describe the dispatch explicitly in chat so the user can
-follow it.
+* `do-and-judge` → [`prompts/do-and-judge.md`](prompts/do-and-judge.md)
+* `do-and-judge-two-stage` → [`prompts/do-and-judge-two-stage.md`](prompts/do-and-judge-two-stage.md)
+* `do-in-steps` → [`prompts/do-in-steps.md`](prompts/do-in-steps.md)
+* `do-in-parallel` → [`prompts/do-in-parallel.md`](prompts/do-in-parallel.md)
+* `do-competitively` → [`prompts/do-competitively.md`](prompts/do-competitively.md)
+* `judge-with-debate` → [`prompts/judge-with-debate.md`](prompts/judge-with-debate.md)
+* `do-in-worktrees` → [`prompts/do-in-worktrees.md`](prompts/do-in-worktrees.md)
+* Standalone judge → judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md)
 
 ### 5. Report
 
 Follow the output format below. Never merge a diff without reporting
 the judge verdict.
+
+### 6. Emit telemetry
+
+After every auto-dispatched run, write one telemetry line to
+`agents/runtime/state/audit/YYYY-MM.jsonl` (current UTC month — use
+`new Date().toISOString().slice(0, 7)` to compute the filename).
+The line is a standard audit-log-v1 object with `input_kind:
+"orchestration"` and an `orchestration` sub-object per
+[`orchestration-telemetry.md`](../../agent-src/contexts/execution/orchestration-telemetry.md).
+
+Minimal emit (fill what is observable; `token_delta_provenance: "estimated"` if
+host usage metadata is unavailable):
+
+```json
+{"schema_version":1,"id":"<ulid>","ts":"<iso>","work_id":"<work_id>","phase":"implement","outcome":"success","confidence_band":"high","risk_class":"low","input_kind":"orchestration","type":"phase","orchestration":{"task_size_estimate":<int>,"spawn_count":<int>,"tiers":[...],"token_delta":<int>,"token_delta_provenance":"estimated","wall_clock_ms":<int>,"outcome":"DONE","verify_mode":"deterministic"}}
+```
+
+Skip emit when `subagents.enabled: false` or `spawn_count == 0` (in-session run).
 
 ## Gotcha
 
@@ -358,10 +377,10 @@ the judge verdict.
 
 | Task                                 | Skill / command                      |
 |--------------------------------------|--------------------------------------|
-| Configuration reference              | [`subagent-configuration`](../../contexts/subagent-configuration.md) |
-| Do-and-judge loop                    | [`/do-and-judge`](../../commands/do-and-judge.md) |
-| Stepwise plan with judge gates       | [`/do-in-steps`](../../commands/do-in-steps.md) |
-| Standalone judge on an existing diff | [`/judge`](../../commands/judge.md)  |
+| Configuration reference              | [`subagent-configuration`](../../agent-src/contexts/execution/subagent-configuration.md) |
+| Do-and-judge loop                    | Inline — see [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
+| Stepwise plan with judge gates       | Inline — see [`prompts/do-in-steps.md`](prompts/do-in-steps.md) |
+| Standalone judge on an existing diff | Inline — see judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
 | External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |
 | What a subagent owns vs never owns   | [`subagent-boundary`](../../../docs/contracts/subagent-boundary.md) |

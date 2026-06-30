@@ -29,6 +29,19 @@ dispatch → monitor → status → escalate / kill
 - `subagents.max_parallel` caps concurrent dispatch. No speculative fan-out:
   a subagent is spawned only for a classified-delegable target, never on spec.
 
+## Transient-failure retry — tier downshift
+
+On a transient subagent failure (HTTP 429, 5xx, or timeout), retry **once** at
+the next-lower model tier (haiku → if already haiku, escalate to the `spawn_failure`
+counter) before counting a failed attempt. Maximum one downshift per subagent
+call. If the downshifted retry also fails, increment the `spawn_failure_rate`
+counter normally. Never downshift twice on the same slot — deterministic cap
+prevents silent drift to the cheapest model on every failure.
+
+This is the only automatic response to a transient failure; structural or
+semantic errors (e.g. `BLOCKED` status envelope) do not trigger a tier
+downshift — they escalate to the orchestrator immediately.
+
 ## Rollback guardrails — surfaced, not auto-disabled
 
 ```
