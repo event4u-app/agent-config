@@ -190,6 +190,7 @@ tasks:
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
       - task: generate-capabilities-index-check
+      - task: build-proof-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions
@@ -341,6 +342,7 @@ tasks:
       - task: generate-command-flows-check
       - task: generate-capability-matrix-check
       - task: generate-capabilities-index-check
+      - task: build-proof-check
       - task: generate-cookbook-check
       - task: generate-role-experiences-catalog-check
       - task: lint-namespace-collisions

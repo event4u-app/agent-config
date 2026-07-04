@@ -300,6 +300,16 @@ tasks:
     desc: "road-to-competitive-borrow P1.3 — fail if the capability matrix is stale vs the generate_tools() projection logic"
     cmd: ./scripts-run src/scripts/generate_capability_matrix --check
 
+  build-proof:
+    silent: true
+    desc: "market-readiness B4 — (re)generate docs/proof.md (claim→evidence bindings from docs/CLAIMS.md + honest-null pointer + verify-it-yourself block)"
+    cmd: ./scripts-run src/scripts/build_proof {{.CLI_ARGS}}
+
+  build-proof-check:
+    silent: true
+    desc: "market-readiness B4 — fail if docs/proof.md is stale vs docs/CLAIMS.md (the proof page must never drift from its sources)"
+    cmd: ./scripts-run src/scripts/build_proof --check
+
   generate-capabilities-index:
     silent: true
     desc: "road-to-capability-discoverability P2 — (re)generate CAPABILITIES.yaml (capability area → coverage → backing skills/commands → gaps) from packs.yml + skill/command frontmatter"
