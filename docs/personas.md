@@ -5,14 +5,14 @@ skill — not sub-agents, not execution modes. Each persona shapes
 *what* the agent looks for in a diff, plan, or artifact; the host
 identity, tools, and workflow stay the same.
 
-This page catalogs the **24 active personas** shipped with
-`event4u/agent-config` (6 core + 18 specialists), plus the 5
+This page catalogs the **29 active personas** shipped with
+`event4u/agent-config` (5 core + 24 specialists), plus the 5
 **advisor** personas in `personas/advisors/`. It also explains how
 `personas:` (lens axis) interacts with `/mode` (role-mode axis).
 Removed personas are deleted in-commit (no soak window) — see
 [`persona-governance § Deprecation path`](../dist/agent-src/rules/persona-governance.md).
 
-## Catalog — Core (always-loaded, 6)
+## Catalog — Core (always-loaded, 5)
 
 | ID | Role | Wing | Owner | Lens summary |
 |---|---|---|---|---|
@@ -24,13 +24,16 @@ Removed personas are deleted in-commit (no soak window) — see
 
 Note: `product-owner` was reclassified to **specialist** at v2.0 — see below.
 
-## Catalog — Specialists (opt-in, 20 active)
+## Catalog — Specialists (opt-in, 24 active)
 
 | ID | Role | Wing | Owner | Lens summary |
 |---|---|---|---|---|
 | `qa` | QA | — | package | Test coverage and regression gates. |
 | `backend-architect` | Backend Architect | — | package | Service-layer boundaries, transaction scope, contract changes. |
 | `eloquent-tamer` | Eloquent Tamer | — | package | N+1, query shape, ORM idioms that melt the database. |
+| `performance-engineer` | Performance Engineer (`performance`) | — | package | Latency, allocations, hot-path cost, complexity class at 100× load. |
+| `data-integrity` | Data Integrity Reviewer (`data`) | — | package | Migration reversibility, lock behavior under live traffic, data-loss on backfill. |
+| `production-validator` | Production Validator | — | package | Last gate before done — no mock/stub remains; validated against real systems (ADR-098). |
 | `security-engineer` | Security Engineer | — | package | OWASP-shaped failure modes, secret leakage, trust boundaries. |
 | `frontend-engineer` | Frontend Engineer | — | package | Component lifecycle, reactive state, hydration boundaries. |
 | `product-owner` | Product Owner | — | package | Outcomes named, AC unfalsifiable, scope on record. |
@@ -59,8 +62,16 @@ Note: `product-owner` was reclassified to **specialist** at v2.0 — see below.
 | GTM (Wing 3) | `cmo`, `growth-pm`, `customer-success-lead`, `revops` | ✅ (wing, not domain) |
 | Ops / Money (Wing 4) | `engineering-manager`, `people-strategist`, `finance-partner`, `strategist` | ✅ (wing, not domain) |
 | Backend | `backend-architect`, `eloquent-tamer` | ✅ 2/2 |
+| `performance` | `performance-engineer` | ✅ 1/2 |
+| `data` | `data-integrity` | ✅ 1/2 |
 
-Per-domain count is enforced by `scripts/lint_persona_governance.py` (wired into `task ci`).
+Cross-cutting quality lenses (`qa`, `tech-writer`, `revops-maintainer`,
+`discovery-lead`, `production-validator`) are uncapped — they are not bound to a
+single content domain.
+
+Per-domain count is enforced by `src/scripts/lint_persona_governance.ts`
+(wired into `task ci`), which scans `src/agent-src/personas/` (the source of
+truth) and `src/skills/` + `src/rules/` for `personas:` citations.
 
 ## Advisors (`personas/advisors/`, 5)
 
