@@ -1,12 +1,14 @@
 <p align="center"><a href="https://event4u.app"><img alt="event4u Agent Config" src=".github/assets/banner.png"></a></p>
 
-# Agent Config — Governed skills, rules & work journeys for AI coding agents
+# Agent Config — every claim machine-checked, including "zero runtime"
 
 [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config)
 
 [![Skills](https://img.shields.io/badge/Skills-261-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-93-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-162-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-87-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/)
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
+
+**Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
 **258 skills, 162 commands, 93 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
@@ -20,6 +22,12 @@ It is both deep **and** disciplined — and honest about what it deliberately is
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
 
 **What it deliberately is *not*** — a content + governance layer, not a runtime: **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
+
+> **Where this comes from (honest provenance).** The skills, rules, and personas
+> are distilled from real production work on TypeScript and PHP codebases. The
+> governance mechanics are stack-agnostic, but the domain heuristics are richest
+> where they were forged — treat coverage on other stacks as promising, not
+> proven, and tell us where it falls short.
 
 See exactly [what works on which host](docs/capability-matrix.md), or jump to [things you can do in a minute](docs/cookbook.md).
 

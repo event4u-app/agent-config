@@ -41,8 +41,9 @@ seconds), then reveal the discipline behind it.
 
 ## Placeholders to resolve before publishing
 
-- `{{HEADLINE}}` — final H1 from the B0 positioning decision (do not publish with
-  a provisional headline).
+- **H1 (decided, B0 · 2026-07-04):** *"Agent Config — every claim machine-checked,
+  including 'zero runtime'."* — adopted from the council's verifiability-as-frame
+  option. Use this headline for the post; do not substitute a provisional one.
 - Confirm the raw `curl` URL resolves on `main` at publish time.
 - Link the live proof page once a docs site (Starlight) hosts it, if built.
 
@@ -51,3 +52,7 @@ seconds), then reveal the discipline behind it.
 - No performance claim or third-party comparison in the post.
 - The "benchmark runs where the tool changed nothing" line points at real
   published nulls (`docs/benchmark.md`) — keep it truthful, do not dramatize.
+- Include the honest-provenance note: the skills/rules/personas are distilled
+  from real TypeScript/PHP production work; the governance is stack-agnostic but
+  domain heuristics are richest where forged — coverage elsewhere is promising,
+  not proven. (Roadmap B5.)
