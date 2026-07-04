@@ -250,6 +250,8 @@ interface ModuleState {
     PERSONAS_SOURCE: string;
     USER_TYPES_SOURCE: string;
     CLAUDE_SKILLS_DIR: string;
+    CLAUDE_AGENTS_DIR: string;
+    SUBAGENTS_SOURCE: string;
     PLUGIN_SKILLS_DIR: string;
     // Injectable multi-root helpers (monkeypatch seam).
     iter_all_sources: () => Iterable<[string, string]>;
@@ -271,6 +273,12 @@ function _deriveState(root: string): ModuleState {
         PERSONAS_SOURCE: path.join(root, 'dist/agent-src', 'personas'),
         USER_TYPES_SOURCE: path.join(root, 'dist/agent-src', 'user-types'),
         CLAUDE_SKILLS_DIR: path.join(root, '.claude', 'skills'),
+        // ADR-109: subagents project from src/ directly (NOT dist/) — a subagent
+        // is an executable system prompt Claude Code runs verbatim; telegraph
+        // condensation would alter its behaviour, and it is not routed through the
+        // pack/discovery condensation flow.
+        CLAUDE_AGENTS_DIR: path.join(root, '.claude', 'agents'),
+        SUBAGENTS_SOURCE: path.join(root, 'src', 'subagents'),
         PLUGIN_SKILLS_DIR: path.join(root, '.claude-plugin', 'skills'),
         iter_all_sources: _agent_src_iter_all_sources,
         resolve_logical: _agent_src_resolve_logical,
@@ -1475,6 +1483,89 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     return count;
 }
 
+/**
+ * Project `src/subagents/*.md` (subagent-v1, ADR-109) → `.claude/agents/*.md`
+ * in Claude Code's native subagent format.
+ *
+ * The source frontmatter carries governance metadata (schema_version, trust,
+ * lifecycle, discovery, source) that Claude Code does not understand; the native
+ * `.claude/agents/` format wants only `{name, description, tools, model}` + the
+ * system-prompt body. This is a **frontmatter transform**, not a symlink:
+ *
+ *  - `model_tier` → native `model:` via `_TIER_TO_CLAUDE_MODEL` (ADR-034/035);
+ *    the `inherit` sentinel passes through to `model: inherit`.
+ *  - `tools` (a YAML list) → the comma-joined form Claude Code accepts.
+ *  - the body (everything after the closing `---`) is copied verbatim.
+ *
+ * Static projection only — Claude Code (or the user via `@<name>`) decides
+ * dispatch; nothing here runs an agent. Reads from `src/` directly (subagent
+ * prompts are not telegraph-condensed). Reaps stale generated `.claude/agents/`
+ * files whose source no longer exists.
+ */
+export function generate_claude_subagents(): number {
+    if (!_isDir(MODULE_STATE.SUBAGENTS_SOURCE)) {
+        return 0;
+    }
+    _mkdirp(MODULE_STATE.CLAUDE_AGENTS_DIR);
+
+    const sources = _rglobSorted(MODULE_STATE.SUBAGENTS_SOURCE, '*.md').filter((p) => _isFile(p));
+    const current = new Set<string>();
+    let count = 0;
+
+    for (const src of sources) {
+        const stem = path.basename(src, '.md');
+        const text = _readText(src);
+        if (!text.startsWith('---\n')) {
+            continue;
+        }
+        const end = text.indexOf('\n---\n', 4);
+        if (end === -1) {
+            continue;
+        }
+        const fmBlock = text.slice(4, end);
+        const body = text.slice(end + 5);
+        const fm = _yamlParse(fmBlock) as Record<string, unknown> | null;
+        if (fm === null) {
+            continue;
+        }
+        const name = typeof fm['name'] === 'string' ? (fm['name'] as string) : stem;
+        const description = typeof fm['description'] === 'string' ? (fm['description'] as string) : '';
+        const toolsRaw = fm['tools'];
+        const tools = Array.isArray(toolsRaw) ? toolsRaw.map((t) => String(t)).join(', ') : String(toolsRaw ?? '');
+        const tier = typeof fm['model_tier'] === 'string' ? (fm['model_tier'] as string) : 'inherit';
+        const model = tier === 'inherit' ? 'inherit' : (_TIER_TO_CLAUDE_MODEL[tier] ?? 'inherit');
+
+        const out =
+            '---\n' +
+            `name: ${name}\n` +
+            `description: ${description}\n` +
+            `tools: ${tools}\n` +
+            `model: ${model}\n` +
+            '---\n' +
+            body;
+
+        const target = path.join(MODULE_STATE.CLAUDE_AGENTS_DIR, `${name}.md`);
+        _writeText(target, out);
+        current.add(`${name}.md`);
+        count += 1;
+    }
+
+    // Reap stale generated agent files (source removed). Only touch plain .md
+    // files we would have generated; never follow into unrelated content.
+    for (const item of _iterdirSorted(MODULE_STATE.CLAUDE_AGENTS_DIR)) {
+        const base = path.basename(item);
+        if (base === 'README.md' || current.has(base)) {
+            continue;
+        }
+        if (_isFile(item) && base.endsWith('.md') && !_isSymlink(item)) {
+            fs.unlinkSync(item);
+        }
+    }
+
+    info(`  ✅  Created ${count} subagent entries in .claude/agents/`);
+    return count;
+}
+
 export function generate_plugin_command_skills(): number {
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         return 0;
@@ -1713,6 +1804,7 @@ function _generate_tools_inner(
     }
     const skills = _tool_active('claude-code') ? generate_claude_skills(skill_names) : 0;
     const commands = _tool_active('claude-code') ? generate_claude_commands(cmd_slugs) : 0;
+    const subagents = _tool_active('claude-code') ? generate_claude_subagents() : 0;
     const plugin_cmd_skills = _tool_active('claude-code') ? generate_plugin_command_skills() : 0;
     const plugin_hooks = _tool_active('claude-code') ? generate_plugin_hooks() : 0;
     const personas = generate_persona_symlinks();
@@ -1723,7 +1815,7 @@ function _generate_tools_inner(
     const windsurf_wf = _tool_active('windsurf') ? generate_windsurf_workflows(cmd_slugs) : 0;
     const summary =
         `✅  generate-tools — rules=${rules} skills=${skills} ` +
-        `commands=${commands} plugin_cmd_skills=${plugin_cmd_skills} ` +
+        `commands=${commands} subagents=${subagents} plugin_cmd_skills=${plugin_cmd_skills} ` +
         `plugin_hooks=${plugin_hooks} ` +
         `personas=${personas} user_types=${user_types} ` +
         `cursor_mdc=${cursor_mdc} windsurf_rules=${windsurf_modern} ` +
