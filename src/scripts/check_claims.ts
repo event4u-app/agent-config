@@ -105,14 +105,14 @@ function load_ledger(): Map<string, LedgerEntry> {
         const head = line.match(/^###\s+claim:\s*([A-Za-z0-9._-]+)\s*$/);
         if (head) {
             flush();
-            cur = { id: head[1] };
+            cur = { id: head[1]! };
             continue;
         }
         if (!cur.id) continue;
         const field = line.match(/^-\s+(claim|kind|evidence|status|last_verified):\s*(.*)$/);
         if (field) {
             const key = field[1] as keyof LedgerEntry;
-            (cur as Record<string, string>)[key] = field[2].trim();
+            (cur as Record<string, string>)[key] = (field[2] ?? '').trim();
         }
     }
     flush();
@@ -156,7 +156,7 @@ function scan_markers(): { id: string; file: string }[] {
                 const before = line.slice(0, m.index ?? 0);
                 const backticks = (before.match(/`/g) ?? []).length;
                 if (backticks % 2 === 1) continue; // inside an inline-code span
-                found.push({ id: m[1], file: rel });
+                found.push({ id: m[1]!, file: rel });
             }
         }
     }
