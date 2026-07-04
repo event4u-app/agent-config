@@ -105,6 +105,13 @@ lists the end-to-end workflows (`/implement-ticket`, `/work`,
 
 ## Prove it
 
+Don't take the claims on trust — **verify them.** [`docs/proof.md`](docs/proof.md)
+is generated from source: a claim→evidence table (every public claim binds to a
+resolvable pointer, or CI fails), honest-null benchmarks *including the runs where
+the package changed nothing*, and a "verify it yourself" block you run on a fresh
+checkout. The proof page fails CI if it drifts from its sources — reproducibility
+is the proof.
+
 Audit-disciplined by construction — every memory consult, decision
 key, and hook concern lands in `agents/runtime/state/` so you can replay it.
 [Core principles](#core-principles) names the four invariants;
@@ -124,6 +131,21 @@ opt-in measurement loop. Source-of-truth tree is
 ---
 
 ## Quickstart
+
+**Try one thing in 30 seconds** — before the full suite, drop in a single
+self-contained subagent and see the discipline on your own repo:
+
+```bash
+mkdir -p .claude/agents
+curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/main/docs/wedge/production-validator/production-validator.md \
+  -o .claude/agents/production-validator.md
+# then in Claude Code:  @production-validator check this branch is actually done
+```
+
+`production-validator` is read-only and installs nothing else — it gates "done"
+by hunting mocks/stubs on the shipped path and demanding real-system evidence
+([what it does](docs/wedge/production-validator/README.md)). Like it? Install the
+full suite:
 
 **Three steps. Five minutes. Browser wizard, no YAML by hand.**
 
