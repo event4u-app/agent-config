@@ -816,6 +816,7 @@ export function _iter_artefacts(root: string): Array<[string, string]> {
         ['skill', _rglobSorted(path.join(root, 'skills'), 'SKILL.md')],
         ['rule', _rglobSorted(path.join(root, 'rules'), '*.md')],
         ['command', _rglobSorted(path.join(root, 'commands'), '*.md')],
+        ['subagent', _rglobSorted(path.join(root, 'subagents'), '*.md')],
         [
             'persona',
             _globSorted(path.join(root, 'personas'), '*.md').filter(
