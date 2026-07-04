@@ -26,8 +26,8 @@ const QUIET = process.argv.includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
-// Source of truth is `src/` (ADR-051); `.agent-src.uncondensed/` is dead legacy
-// (empty post-py2ts), so the old path silently scanned zero personas and the
+// Source of truth is `src/` (ADR-051); the old condensed-legacy source tree is
+// empty post-py2ts, so the previous path silently scanned zero personas and the
 // governance gate was inert. Scan the real source tree.
 const PERSONA_DIR = path.join(REPO, 'src', 'agent-src', 'personas');
 const SKILL_ROOTS: readonly string[] = [
