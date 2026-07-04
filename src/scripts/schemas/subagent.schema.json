@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/subagent.schema.json",
+  "title": "Subagent frontmatter (subagent-v1)",
+  "$comment": "Source: ADR-109. A subagent is an addressable, tool-scoped execution context projected to a host's native subagent format (Claude Code `.claude/agents/`) or, on non-subagent hosts, to a loadable context file. Static projection only — dispatch stays with the host/user, never runtime-enforced. Governance fields (trust, lifecycle, discovery.visible) are REQUIRED, mirroring the skill trust block so subagents share one governance model. model_tier reuses model_tier.ts (ADR-034/035).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "description",
+    "model_tier",
+    "tools",
+    "trust",
+    "lifecycle",
+    "discovery",
+    "source"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "subagent-v1"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Addressable handle. Must match the subagent filename stem and be globally unique within the subagent category (projection-path collision guard)."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "description": "User-facing summary. On Claude Code this drives `@`-menu discoverability; keep it action-oriented."
+    },
+    "model_tier": {
+      "type": "string",
+      "enum": ["lite", "medium", "high", "inherit"],
+      "description": "Vendor-neutral capability band (ADR-034/035). high/medium/lite project to a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) via model_tier.ts; `inherit` is a documented passthrough sentinel (→ CC `model: inherit`), not a new mapping."
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebFetch", "WebSearch", "NotebookEdit"]
+      },
+      "description": "Enum-validated at build time against the Claude Code tool set, so a bad value fails CI rather than producing broken `.claude/agents/` YAML in the user's IDE."
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "confidence", "human_review_required"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["core", "professional", "experimental", "advisory", "restricted"],
+          "default": "core"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "default": "high"
+        },
+        "human_review_required": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "description": "ADR-013 trust block, mirrored from the skill schema so subagents share one governance model."
+    },
+    "lifecycle": {
+      "type": "string",
+      "enum": ["active", "deprecated", "experimental", "archived"],
+      "default": "active",
+      "description": "ADR-013 lifecycle state."
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visible", "requires_capability"],
+      "properties": {
+        "visible": {
+          "const": false,
+          "description": "Subagents are default-off. The value MUST be false; a pack/profile opts in explicitly via include: [\"subagent:<name>\"]."
+        },
+        "requires_capability": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Host-capability gate (e.g. claude_subagents). Hosts without the capability receive the loadable-context-file degradation, not native dispatch."
+        },
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true,
+          "description": "Optional pack-include tags (include: [\"subagent:category:<tag>\"])."
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": ["package", "project"],
+      "default": "package"
+    }
+  }
+}
