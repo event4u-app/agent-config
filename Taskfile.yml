@@ -82,6 +82,7 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-claims
       - task: check-structural-breaking
       - task: check-trigger-evals
       - task: lint-eval-freshness
@@ -232,6 +233,7 @@ tasks:
       - task: check-template-pin-drift
       - task: check-refs
       - task: check-no-conflict-markers
+      - task: check-claims
       - task: check-structural-breaking
       - task: check-trigger-evals
       - task: lint-eval-freshness

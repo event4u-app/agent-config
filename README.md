@@ -8,7 +8,7 @@
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
-**258 skills, 162 commands, 93 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+**258 skills, 162 commands, 93 governed rules** — plus a capability router that loads the right skill on intent, and multi-agent orchestration with consensus review. The whole layer is compiled into 7+ host agents (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini) with **zero runtime daemon**.<!-- claim:no-runtime-daemon --> Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ### What's different
 
@@ -16,7 +16,7 @@ It is both deep **and** disciplined — and honest about what it deliberately is
 
 - **Depth that routes itself** — 258 skills + 162 commands, with a capability router that loads the right one on intent, not a 500-artefact context dump.
 - **Governance on every host** — rules compiled into each tool's native format at projection time; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
-- **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
+- **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
 
 **What it deliberately is *not*** — a content + governance layer, not a runtime: **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.

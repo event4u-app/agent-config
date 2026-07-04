@@ -347,6 +347,11 @@ tasks:
     desc: "Fail on leftover merge/stash conflict state — unmerged index entries or <<<<<<< / >>>>>>> markers in tracked files (conflict-marker-guard hardening, 2026-06-15)"
     cmd: ./scripts-run src/scripts/check_no_conflict_markers {{.QUIET_FLAG}}
 
+  check-claims:
+    silent: true
+    desc: "Claims-Ledger gate — every <!-- claim:ID --> marker in README/docs binds to a backed, resolvable entry in docs/CLAIMS.md (road-to-final-state-and-market-readiness B1)"
+    cmd: ./scripts-run src/scripts/check_claims {{.QUIET_FLAG}}
+
   check-structural-breaking:
     silent: true
     desc: "Fail when a structural break (artifact deleted/renamed, or a contract schema changed without an x-schemaVersion bump) lacks a breaking annotation — road-to-contract-integrity F3"
