@@ -21,19 +21,20 @@ import {
     load_schema,
     parse_frontmatter,
     validate,
+    type YamlValue,
 } from '../../src/scripts/validate_frontmatter.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const _REPO = path.resolve(_HERE, '..', '..');
 const _UNIT = path.join(_REPO, 'src', 'subagents', 'production-validator.md');
 
-function _frontmatterOf(file: string): Record<string, unknown> {
+function _frontmatterOf(file: string): Record<string, YamlValue> {
     const text = fs.readFileSync(file, 'utf-8');
     const [data] = parse_frontmatter(text);
-    if (data === null || typeof data !== 'object') {
+    if (data === null || typeof data !== 'object' || Array.isArray(data)) {
         throw new Error(`no frontmatter parsed from ${file}`);
     }
-    return data as Record<string, unknown>;
+    return data as Record<string, YamlValue>;
 }
 
 describe('subagent-v1 contract', () => {
