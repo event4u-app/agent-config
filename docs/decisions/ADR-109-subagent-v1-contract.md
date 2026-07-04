@@ -145,9 +145,43 @@ capability matrix instead). Revisit only in a `subagent-v2` if evidence demands.
   CC-locked artifact is Claude Code config that wandered into the repo.
 - **Faked dispatch on non-CC hosts** — rejected: runtime cosplay we cannot honor.
 
+## Amendment 1 (2026-07-04) — discovery-manifest integration = Option B
+
+The original decision left *how* subagents join the discovery manifest open. A
+follow-up council (claude-sonnet-4-5 + gpt-4o, 2 rounds) surfaced the concrete
+gap: the manifest's `_classify` requires `workspaces` / `packs` / `install`,
+which this contract's minimal schema deliberately omits. Both members converged
+on **Option B**:
+
+- Add `subagent` to `_CATEGORY_VALUES` + `_CATEGORY_SCHEMA` + the `_iter_artefacts`
+  glob (`src/subagents/*.md`), and give `_classify` a **subagent branch** that
+  derives the manifest payload from the subagent-v1 fields:
+  `install: {default: false, removable: true}` (default-off), `packs: []`,
+  `workspaces: []`, plus `lifecycle` + `trust`.
+- **`packs: []` is legitimate** — "recommended for no pack; included only via
+  `include: ["subagent:<name>"]`". The "every artefact belongs to ≥1 pack"
+  invariant becomes "every artefact **except subagents**". Verified safe: every
+  manifest consumer of `.packs` already guards against empty
+  (`check_condensation`, `install`, `condense`, `lint_trust_coherence`), and
+  `lint_artefact_frontmatter` does not scan `src/subagents/`.
+- The `discovery-manifest.schema.json` `category` enum + `by_category` gain
+  `subagent`; the `workspaces`/`packs` `minItems: 1` is relaxed to a documented
+  note (non-emptiness for real categories stays enforced by `_classify`).
+
+**Rejected:** Option A (extend the schema with workspaces/packs/install →
+duplicate visibility source, de-facto ADR reversal) and Option C (keep subagents
+out of the manifest + a parallel name-resolver → duplicate load/parse/validate
+pipeline; LSP/tooling would need two discovery paths). "5th discovery category"
+is manifest terminology, so Option B satisfies A1 literally.
+
+The manifest (`dist/discovery/discovery-manifest.json`) is a **gitignored** build
+artifact — CI rebuilds it fresh, so this is a generator + schema change, not a
+committed-data change.
+
 ## References
 
 - Council debate 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds).
+- Amendment-1 council 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds) — manifest integration = Option B.
 - ADR-034 / ADR-035 — `model_tier` → native model mapping (reused, not replaced).
 - `docs/contracts/subagent-boundary.md` — what a subagent owns vs. never owns.
 - `src/skills/subagent-orchestration/SKILL.md` — the in-session orchestration modes.

@@ -152,7 +152,7 @@ const _TRUST_REQ = ['level', 'confidence', 'human_review_required'] as const;
 const _INSTALL_REQ = ['default', 'removable'] as const;
 const _LIFECYCLE_VALUES = ['active', 'experimental', 'deprecated', 'archived'] as const;
 const _TRUST_VALUES = ['core', 'professional', 'experimental', 'advisory', 'restricted'] as const;
-const _CATEGORY_VALUES = ['skill', 'rule', 'command', 'template'] as const;
+const _CATEGORY_VALUES = ['skill', 'rule', 'command', 'template', 'subagent'] as const;
 
 // build_discovery_manifest._FRONTMATTER_RE (imported from validate_frontmatter
 // in Python; the literal pattern is `^---\n(.*?)\n---\n` with re.DOTALL).
@@ -164,6 +164,7 @@ const _CATEGORY_SCHEMA: Record<string, string> = {
     skill: 'skill',
     rule: 'rule',
     command: 'command',
+    subagent: 'subagent',
 };
 
 // --- Filesystem helpers reproducing pathlib semantics ------------------------
@@ -414,6 +415,14 @@ function* _iter_artefacts(): Generator<[string, string]> {
         }
         yield [p, 'template'];
     }
+    // ADR-109: subagents are the 5th discovery category. Appended last so the
+    // existing skills→rules→commands→templates ordering is undisturbed. They
+    // carry the minimal subagent-v1 schema (no workspaces/packs/install); the
+    // `_classify` subagent branch derives the manifest payload (default-off,
+    // packs:[]) — static projection only, never runtime-dispatched.
+    for (const p of _collect('subagents', '*.md')) {
+        yield [p, 'subagent'];
+    }
 }
 
 function _trusted(p: string): boolean {
@@ -450,9 +459,40 @@ function _classify(
     fm: JsonObject | null,
     wsIds: Set<string>,
     packIds: Set<string>,
+    category?: string,
 ): [JsonObject | null, string | null] {
     if (fm === null) {
         return [null, 'missing or unparseable frontmatter'];
+    }
+    // ADR-109 (Option B): subagents do NOT carry workspaces/packs/install — their
+    // schema is deliberately minimal and they are default-off, opt-in-by-name
+    // (never pack-scoped). Derive the manifest payload from the subagent-v1
+    // fields instead of the pack/workspace contract. `packs: []` is legitimate
+    // ("recommended for no one"); manifest consumers guard against empty packs.
+    if (category === 'subagent') {
+        const lc = fm['lifecycle'];
+        if (!(_LIFECYCLE_VALUES as readonly Json[]).includes(lc)) {
+            return [null, `lifecycle: invalid value '${String(lc)}'`];
+        }
+        const trust = fm['trust'];
+        if (!_isObject(trust) || _TRUST_REQ.some((k) => !(k in trust))) {
+            return [null, `trust: missing required key(s) ${_pyTupleRepr(_TRUST_REQ)}`];
+        }
+        if (!(_TRUST_VALUES as readonly Json[]).includes(trust['level'])) {
+            return [null, `trust.level: invalid '${String(trust['level'])}'`];
+        }
+        const payload: JsonObject = {
+            workspaces: [],
+            packs: [],
+            lifecycle: lc,
+            trust: {
+                level: trust['level'],
+                confidence: trust['confidence'],
+                human_review_required: trust['human_review_required'],
+            },
+            install: { default: false, removable: true },
+        };
+        return [payload, null];
     }
     const missing = _FM_KEYS.filter((k) => !(k in fm));
     if (missing.length > 0) {
@@ -596,7 +636,7 @@ function _build(strict: boolean): [JsonObject, JsonObject[]] {
             continue;
         }
         const fm = _parse(p, category);
-        const [payload, reason] = _classify(fm, wsIds, packIds);
+        const [payload, reason] = _classify(fm, wsIds, packIds, category);
         if (reason !== null) {
             unassigned.push({ path: rel, category, reason });
             continue;
