@@ -151,7 +151,7 @@
       "additionalProperties": false,
       "properties": {
         "path": { "type": "string", "minLength": 1, "description": "POSIX path relative to repo root." },
-        "category": { "type": "string", "enum": ["skill", "rule", "command", "template"] },
+        "category": { "type": "string", "enum": ["skill", "rule", "command", "template", "subagent"] },
         "name": { "type": "string" },
         "pack": { "$ref": "#/$defs/pack_id", "description": "capability-packs.md — canonical OWNER pack (ownership/budget unit). Orthogonal to `packs` (discovery tags); the owner need not appear in `packs`." },
         "tier": { "type": "integer", "enum": [0, 1, 2], "description": "6.0.0-C — command-surface tier surfaced on `category: command` artefacts so the CLI discovery surface reads the manifest, not a parallel catalog. DEPRECATED back-compat alias of `visibility` since ADR-090; still dual-emitted (non-breaking) but announced for removal in the top-level `deprecations` block (road-to-tier-removal Phase 1 / ADR-092). Read `visibility`." },
@@ -160,8 +160,8 @@
         "routes_to": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (skill/cluster-sub/command slugs the intent routes to)." },
         "replaces": { "type": "array", "items": { "type": "string" }, "description": "6.0.0-C — command routing metadata (prior names/aliases this command absorbs; may be empty)." },
         "slug": { "type": "string", "description": "6.0.0-D — canonical path-derived invocation slug (ADR-044; pack-stripped subpath + opt-in slug_prefix). Distinct from `name` (display, may still be colon for renames deferred to 6.1). The identity `commands ls --profile` matches on." },
-        "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
-        "packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" }, "minItems": 1 },
+        "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "description": "Non-empty for skill/rule/command/template (enforced by build_discovery_manifest._classify). ADR-109 subagents legitimately carry [] — default-off, opt-in-by-name, never pack/workspace-scoped." },
+        "packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" }, "description": "Non-empty for skill/rule/command/template (enforced by build_discovery_manifest._classify). ADR-109 subagents legitimately carry [] — recommended for no pack; included only via include: [\"subagent:<name>\"]." },
         "requires": {
           "type": "array",
           "items": { "$ref": "#/$defs/pack_id" },
@@ -218,7 +218,8 @@
             "skill":    { "type": "integer", "minimum": 0 },
             "rule":     { "type": "integer", "minimum": 0 },
             "command":  { "type": "integer", "minimum": 0 },
-            "template": { "type": "integer", "minimum": 0 }
+            "template": { "type": "integer", "minimum": 0 },
+            "subagent": { "type": "integer", "minimum": 0 }
           },
           "required": ["skill", "rule", "command", "template"]
         },
