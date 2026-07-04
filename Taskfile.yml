@@ -171,6 +171,7 @@ tasks:
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
       - task: lint-persona-governance
+      - task: lint-subagent-determinism
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-marketplace-install
@@ -323,6 +324,7 @@ tasks:
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
       - task: lint-persona-governance
+      - task: lint-subagent-determinism
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-marketplace-install

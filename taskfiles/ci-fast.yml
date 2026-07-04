@@ -215,6 +215,11 @@ tasks:
     desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncondensed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"
     cmd: ./scripts-run src/scripts/lint_persona_governance {{.QUIET_FLAG}}
 
+  lint-subagent-determinism:
+    silent: true
+    desc: "Enforce the ADR-109 subagent-v1 guarantees the schema mini-validator cannot express (schema_version / discovery.visible const, tools uniqueItems, name↔stem match + global uniqueness) over src/subagents/*.md"
+    cmd: ./scripts-run src/scripts/lint_subagent_determinism {{.QUIET_FLAG}}
+
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1
