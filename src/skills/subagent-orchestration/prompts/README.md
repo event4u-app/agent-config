@@ -22,6 +22,17 @@ Every prompt cites the status taxonomy in
 ends with the **return-envelope** instruction so the subagent's reply
 validates against `tests/test_subagent_status_schema.py`.
 
+## Prompt-cache discipline
+
+When dispatching sibling subagents (e.g. `do-in-parallel` with N independent
+slices), **reuse a stable system-prompt prefix** across all siblings. Keep
+task-invariant text (role declaration, constraints, status enum, return-envelope
+instruction) in the prefix; put only the slice-specific `TASK:` and
+`CONTEXT FILES:` in the variable section. This maximises host-side prompt-cache
+hits (Anthropic `cache_control: ephemeral`) across the cohort — the prefix is
+cached after the first sibling and served from cache for the rest, cutting
+input-token cost proportionally to cohort size.
+
 ## Loading
 
 `tests/test_subagent_prompt_loading.py` asserts that every mode named

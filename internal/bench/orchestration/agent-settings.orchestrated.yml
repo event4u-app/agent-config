@@ -1,0 +1,8 @@
+# Bench arm: orchestrated run
+# Copy to .agent-settings.yml in the fixture project to enable the orchestrated arm.
+# Records Phase-2 telemetry to agents/runtime/state/audit/YYYY-MM.jsonl.
+subagents:
+  enabled: true
+  auto: "on"
+  downshift: true
+  max_parallel: 3

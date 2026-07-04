@@ -3,6 +3,7 @@ model_tier: high
 name: judge-code-quality
 description: "Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge."
 domain: quality
+parallelizable: files
 workspaces:
   - agent-config-maintainer
 packs:

@@ -187,6 +187,11 @@
       "type": "string",
       "enum": ["lean", "standard", "rich"],
       "description": "Token-cost class for this skill. `lean` (default): subject to telegraph-speak condensation and thin-projector trimming; optimize for <500 tokens. `standard`: balanced guidance, normal condensation. `rich`: exempt from telegraph-speak and thin-projector trimming; detailed examples preserved; eager-load eligible; ≤15% of skills in a suite may be `rich` (CI-enforced). A `rich` skill MUST carry a '## Why this skill is rich' section explaining the irreducible complexity that makes condensation harmful. Governed by `token-budget-discipline` rule + `tokens.rich_skills` consumer setting. See docs/guidelines/token-budget-governance.md."
+    },
+    "parallelizable": {
+      "type": "string",
+      "enum": ["steps", "files", "independent"],
+      "description": "Classifier signal for auto-dispatch. 'steps' = ordered multi-step plan → do-in-steps. 'files' = N independent files of the same shape → do-in-parallel. 'independent' = N independent same-shape targets (not files) → do-in-parallel. Omit for skills that are always single-pass. Read by auto-dispatch-classification.md classifier signal 1."
     }
   }
 }

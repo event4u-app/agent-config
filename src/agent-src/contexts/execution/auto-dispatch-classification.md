@@ -22,9 +22,19 @@ A task is classified **delegable** when **any** of these holds:
    - `steps` → ordered plan → `do-in-steps`.
    - `files` / `independent` → independent slices → `do-in-parallel`.
 2. **Ordered-plan structure** — the task is an explicit ordered plan (numbered
-   steps / a roadmap phase / a checklist) → `do-in-steps`.
-3. **Independent-slices structure** — N independent targets of the same shape
-   (e.g. "review these 5 files", "convert each adapter") → `do-in-parallel`.
+   steps / a roadmap phase / a checklist) → `do-in-steps`. Deterministic markers:
+   - User message contains `1. … 2. … 3.` numbered list.
+   - User message references a roadmap phase or checklist.
+   - User message uses "first … then … finally" with distinct deliverables.
+   - User message says "in N steps" or "phase by phase".
+3. **Independent-slices structure** — N ≥ 3 independent targets of the same shape
+   → `do-in-parallel`. Deterministic markers (N ≥ 3 of the same form):
+   - N file paths listed where each is a separate analysis/edit target.
+   - N named modules/components to perform the same action on.
+   - N named test files, adapters, endpoints, or services to convert/review/audit.
+   - "for each X in [list]" where list has ≥ 3 items and no cross-item dependency.
+   Do **not** fire on lists where items are interdependent (e.g. "add these 3
+   sequential migrations") — those are ordered plans (signal 2).
 
 AND the **task-size floor** is cleared: the task's estimated size exceeds a
 minimum (trivial one-line edits never delegate — the dispatch overhead
