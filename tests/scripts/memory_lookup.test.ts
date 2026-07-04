@@ -18,6 +18,11 @@ import * as ml from '../../src/scripts/memory_lookup.js';
 
 type Hit = InstanceType<typeof ml.Hit>;
 
+// Freshness fixtures must be relative to the real clock — a hardcoded date
+// silently expires past `review_after_days` and flips retrieve() to 0 hits
+// (memory-test clock-drift, 2026-07-04). Use today so the entry is always fresh.
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+
 // dedent helper mirroring textwrap.dedent.
 function dedent(s: string): string {
     const lines = s.replace(/^\n/, '').split('\n');
@@ -76,7 +81,7 @@ describe('memory_lookup.ts — retrieve()', () => {
             confidence: high
             source: ["docs/teams.md"]
             owner: team-payments
-            last_validated: 2026-01-01
+            last_validated: ${TODAY_ISO}
             review_after_days: 180
             path: "app/Http/Controllers/Billing/**"
     `,
@@ -98,7 +103,7 @@ describe('memory_lookup.ts — retrieve()', () => {
         confidence: high
         source: ["docs/domain.md"]
         owner: team-x
-        last_validated: 2026-01-01
+        last_validated: ${TODAY_ISO}
         review_after_days: 180
         rule: "invoice total equals sum of line items"
         feature: "billing"
