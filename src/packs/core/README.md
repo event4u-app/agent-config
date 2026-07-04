@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `7.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 44
+- **artefacts**: 47
 
 ## Contexts (4)
 
@@ -21,7 +21,7 @@ Core framework-neutral artefacts.
 
 - **`fictional-fixture-v1`** — _(no description)_
 
-## Personas (32)
+## Personas (35)
 
 - **`ai-agent`** — The voice of the coding agent that will execute this plan — automation-readiness, missing context, and steps that fail on a fresh clone.
 - **`ai-video-technical-director`** — Provider-tuning specialist — maps a scene blueprint to Veo / Kling / OpenAI / Higgsfield / Sora grammar with token caps, aspect ranges, audio flags.
@@ -31,6 +31,7 @@ Core framework-neutral artefacts.
 - **`contrarian`** — The voice that argues the strongest possible case AGAINST the proposal — to surface hidden assumptions and avoid groupthink.
 - **`critical-challenger`** — The voice that refuses easy answers and drags hidden complexity back into the open.
 - **`customer-success-lead`** — The senior voice that owns the post-signature value — time-to-first-value falsifiable, churn cause split four ways, expansion pulled, NRR dilution named.
+- **`data-integrity`** — The voice that audits migrations and data operations for reversibility, lock behavior under live traffic, and data loss when a backfill aborts halfway.
 - **`design-director`** — Art-direction and brand-aligned visual judgment — composition, hierarchy, colour and type that serve the brief and the brand, not whether the pixels rendered.
 - **`developer`** — The voice of the person who will actually implement this — grounded in edge cases, null values, and the failure modes prose hides.
 - **`discovery-lead`** — The senior voice that owns the who and the problem — switch events named, hypotheses falsifiable, themes ranked by distinct people.
@@ -45,8 +46,10 @@ Core framework-neutral artefacts.
 - **`hollywood-director`** — Award-winning live-action director — names lens, lighting, blocking, and the negative constraints that separate cinema from stock footage.
 - **`outsider`** — The voice from a completely different field — biology, logistics, urban planning, music — that asks how that field has already solved a problem isomorphic to this one.
 - **`people-strategist`** — The senior voice that owns the org and the ladder — team shape diagnosed, comp bands defensible, ramp definitions concrete, feedback craft load-bearing.
+- **`performance-engineer`** — The voice that reads a change for latency, allocations, hot-path cost, and complexity class — what melts at 100× load, not what looks clean at rest.
 - **`persona`** — One sentence — the voice this specialist brings; ≤ 160 chars.
 - **`product-owner`** — The senior voice that owns the why and the what — outcomes named, AC unfalsifiable, scope decisions on record, trade-offs surfaced before they harden into code.
+- **`production-validator`** — The last gate before 'done' — audits that no mock, stub, or fake implementation remains and that the change was validated against real systems.
 - **`qa`** — The voice of the tester — failure scenarios, missing assertions, and the gap between 'the code runs' and 'the feature works'.
 - **`revops`** — The senior voice that owns the pipeline and the forecast — stage exit criteria evidence-bound, MEDDIC slots filled, forecast falsifiable, leaks named.
 - **`revops-maintainer`** — The senior voice that owns contributor lifecycle and package adoption funnel — triage routing, release readiness, positioning anchored in evidence.

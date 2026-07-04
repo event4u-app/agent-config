@@ -5,6 +5,7 @@ description: "Use when shaping a non-trivial migration — rollout phases, dual-
 personas:
   - backend-architect
   - senior-engineer
+  - data-integrity
 domain: process
 workspaces:
   - engineering

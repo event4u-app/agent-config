@@ -2,6 +2,8 @@
 model_tier: medium
 name: verify-completion-evidence
 description: "Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs."
+personas:
+  - production-validator
 domain: quality
 workspaces:
   - engineering

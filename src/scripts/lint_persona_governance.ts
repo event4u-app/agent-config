@@ -26,10 +26,13 @@ const QUIET = process.argv.includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
-const PERSONA_DIR = path.join(REPO, '.agent-src.uncondensed', 'personas');
+// Source of truth is `src/` (ADR-051); the old condensed-legacy source tree is
+// empty post-py2ts, so the previous path silently scanned zero personas and the
+// governance gate was inert. Scan the real source tree.
+const PERSONA_DIR = path.join(REPO, 'src', 'agent-src', 'personas');
 const SKILL_ROOTS: readonly string[] = [
-    path.join(REPO, '.agent-src.uncondensed', 'skills'),
-    path.join(REPO, '.claude', 'skills'),
+    path.join(REPO, 'src', 'skills'),
+    path.join(REPO, 'src', 'rules'),
 ];
 
 // Per-domain cap — mirrors persona-governance.md § Per-domain cap.
@@ -38,6 +41,8 @@ const DOMAIN_MAP: Record<string, string> = {
     'ai-video-technical-director': 'ai-video',
     'backend-architect': 'backend',
     'eloquent-tamer': 'backend',
+    'performance-engineer': 'performance',
+    'data-integrity': 'data',
     cmo: 'gtm',
     revops: 'gtm',
     'growth-pm': 'growth',
