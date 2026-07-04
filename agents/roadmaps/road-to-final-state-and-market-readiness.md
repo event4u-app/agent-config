@@ -80,8 +80,8 @@ The two tracks run concurrently. Track B delivers the first external value; Trac
 
 ## Phase 2: Conditional-launch gate (council gap — explicit decision point)
 
-- [ ] **C1 — Distribution drafts.** Marketplace listing + awesome-claude-code submission text + launch-story draft, all **ledger-consistent**, describing the wedge + proof page (not the OS, not subagents). Drafts only — submission is a human act.
-- [ ] **C2 — README rewrite (last).** Leads with the chosen position, shows-instead-of-claims (links the proof page + a ledger-bound number), wedge-first path at the top, `check_claims` green.
+- [x] **C1 — Distribution drafts.** Marketplace listing + awesome-claude-code submission text + launch-story draft, all **ledger-consistent**, describing the wedge + proof page (not the OS, not subagents). Drafts only — submission is a human act. <!-- done: docs/distribution/awesome-list-submission.md + launch-story-draft.md (draft-only, ledger-consistent, no unbacked/third-party claims). Marketplace-description sharpening to the final positioning line is folded into C2/B0. -->
+- [ ] **C2 — README rewrite (last).** Leads with the chosen position, shows-instead-of-claims (links the proof page + a ledger-bound number), wedge-first path at the top, `check_claims` green. <!-- partial: wedge-first block + proof-page link ADDED to README (shows-not-claims, check_claims green). Remaining: lead with the chosen H1 — gated on B0 (positioning), now in AI-council. -->
 - **Gate C (the decision point):** Did the wedge acquire **≥ 1 external adopter**? **Yes** → proceed to distribution + promote. **No** → pause distribution, diagnose (positioning / docs / feature insufficiency), iterate Track B. Do not scale machinery into a vacuum.
 
 ## Phase 3: External-telemetry-gated (the monoculture honesty gate)
