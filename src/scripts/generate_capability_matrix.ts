@@ -65,7 +65,7 @@ const HOSTS = [
     'windsurf', 'cline', 'gemini', 'copilot', 'claude-desktop',
 ];
 
-const ARTIFACTS = ['rules', 'skills', 'commands', 'personas', 'user-types', 'hooks'];
+const ARTIFACTS = ['rules', 'skills', 'commands', 'subagents', 'personas', 'user-types', 'hooks'];
 
 interface FnSpec {
     artifact: string;
@@ -108,6 +108,10 @@ const _FN_SPEC: Record<string, FnSpec> = {
     generate_claude_commands: {
         artifact: 'commands',
         cells: { 'claude-code': 'native', augment: 'native' },
+    },
+    generate_claude_subagents: {
+        artifact: 'subagents',
+        cells: { 'claude-code': 'native' },
     },
     generate_plugin_command_skills: {
         artifact: 'skills', cells: { 'claude-plugin': 'native' },
