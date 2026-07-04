@@ -53,6 +53,11 @@ function errorLine(stderr: string): string {
     return found ?? stderr.trimEnd();
 }
 
+// Freshness must be relative to the real clock — a hardcoded date silently
+// crosses review_after_days and adds an unexpected "stale" info line, breaking
+// the clean/duplicate snapshots (memory-test clock-drift, 2026-07-04).
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+
 const REQUIRED = [
     'id: own-1',
     'status: active',
@@ -60,7 +65,7 @@ const REQUIRED = [
     'source:',
     '  - ADR-1',
     'owner: team',
-    'last_validated: 2026-01-01',
+    `last_validated: ${TODAY_ISO}`,
     'review_after_days: 180',
 ];
 
@@ -220,16 +225,16 @@ describe('templates/check_memory — intent', () => {
                 '    review_after_days: 1',
             ].join('\n') + '\n',
         );
-        expect(runTs(['--path', 'agents/memory'], tmp)).toMatchInlineSnapshot(`
-          {
-            "status": 0,
-            "stderr": "",
-            "stdout": "  ℹ️  agents/memory/domain-invariants/stale.yml [old-1]  stale: last_validated 9676 days ago (limit 1)
-
-          Summary: 0 error(s), 0 warning(s), 1 info
-          ",
-          }
-        `);
+        // The "days ago" count drifts with the real clock, so assert the shape
+        // (stale detected + info summary) rather than a hardcoded day number —
+        // an inline snapshot of the exact count is a time-bomb.
+        const r = runTs(['--path', 'agents/memory'], tmp);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe('');
+        expect(r.stdout).toMatch(
+            /ℹ️ {2}agents\/memory\/domain-invariants\/stale\.yml \[old-1] {2}stale: last_validated \d+ days ago \(limit 1\)/,
+        );
+        expect(r.stdout).toContain('Summary: 0 error(s), 0 warning(s), 1 info');
     });
 
     it('JSON format over mixed findings', () => {
