@@ -1,10 +1,13 @@
-// Tests for src/scripts/linked_projects_list.ts (py2ts Phase 8 / Wave 8e).
+// Contract tests for src/scripts/linked_projects_list.ts (py2ts Phase 8).
 //
-// No pytest suite existed — focused differential over a crafted fixture root
-// (a VS Code .code-workspace pointing at a sibling git repo) exercising the
-// three opt-in states (yes / no / undecided) in both text and json formats,
-// plus the bad-`--format` argparse error path. All compared python3 vs tsx
-// byte-for-byte; skipped without python3. Read-only, no git drift.
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). Two layers:
+//   1. real-repo smoke — the CLI runs cleanly over the actual repo (exit 0,
+//      valid JSON) and rejects a bad `--format` (exit 2). Structural only, so
+//      it never drifts with the repo's real linked_projects state.
+//   2. crafted fixture (a .code-workspace pointing at a sibling git repo) —
+//      the three opt-in states (yes / no / undecided) in text + json, pinned
+//      via inline snapshots with the tmp paths masked (fully deterministic).
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -14,7 +17,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'linked_projects_list.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'linked_projects_list.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -22,40 +24,24 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
+const runTs = (args: string[]): { stdout: string; stderr: string; status: number | null } => {
+    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
+    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
+};
 
-const py = hasPython3();
-const runPy = (args: string[]) =>
-    spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-const runTs = (args: string[]) =>
-    spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
+describe('linked_projects_list — real repo (smoke)', () => {
+    it('text + json run cleanly (exit 0, valid JSON)', () => {
+        expect(runTs([]).status).toBe(0);
+        expect(runTs(['--format', 'json']).status).toBe(0);
+        const json = runTs(['--all', '--format', 'json']);
+        expect(json.status).toBe(0);
+        expect(() => JSON.parse(json.stdout)).not.toThrow();
+    });
 
-function assertSame(args: string[]): void {
-    const p = runPy(args);
-    const t = runTs(args);
-    expect(t.status).toBe(p.status);
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
-}
-
-describe('linked_projects_list — real repo', () => {
-    it.skipIf(!py)('text (opted-in only) matches', () => {
-        assertSame([]);
-    });
-    it.skipIf(!py)('--all --format json matches', () => {
-        assertSame(['--all', '--format', 'json']);
-    });
-    it.skipIf(!py)('--format json matches', () => {
-        assertSame(['--format', 'json']);
-    });
-    it.skipIf(!py)('bad --format exits 2 identically', () => {
-        const p = runPy(['--format', 'xml']);
+    it('bad --format exits 2', () => {
         const t = runTs(['--format', 'xml']);
-        expect(p.status).toBe(2);
         expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
+        expect(t.stderr).toContain('xml');
     });
 });
 
@@ -70,7 +56,7 @@ describe('linked_projects_list — fixture with a sibling', () => {
         const sibling = path.join(tmp, 'sibling');
         fs.mkdirSync(proj, { recursive: true });
         fs.mkdirSync(path.join(sibling, '.git'), { recursive: true });
-        // realpath so the opt-in path matches Python Path.resolve() output.
+        // realpath so the opt-in path matches Path.resolve() output.
         siblingResolved = fs.realpathSync(sibling);
         fs.writeFileSync(
             path.join(proj, 'ws.code-workspace'),
@@ -92,23 +78,99 @@ describe('linked_projects_list — fixture with a sibling', () => {
         );
     }
 
-    it.skipIf(!py)('opted-in: json + text match', () => {
+    /** Run tsx over the fixture, assert exit 0, and mask the tmp paths so the
+     *  snapshot is host-independent. */
+    function out(args: string[]): string {
+        const r = runTs(args);
+        expect(r.status, r.stderr).toBe(0);
+        return r.stdout
+            .split(siblingResolved).join('<SIBLING>')
+            .split(fs.realpathSync(tmp)).join('<TMP>')
+            .split(tmp).join('<TMP>');
+    }
+
+    it('opted-in: json + text + --all (pinned)', () => {
         writeOptIn(true);
-        assertSame(['--root', proj, '--format', 'json']);
-        assertSame(['--root', proj]);
-        assertSame(['--root', proj, '--all']);
+        expect(out(['--root', proj, '--format', 'json'])).toMatchInlineSnapshot(`
+          "{
+            "root": "<TMP>/proj",
+            "siblings": [
+              {
+                "path": "<SIBLING>",
+                "detected_via": "vscode_workspace",
+                "large": false,
+                "include": true
+              }
+            ]
+          }
+          "
+        `);
+        expect(out(['--root', proj])).toMatchInlineSnapshot(`
+          "| path | detected via | large | opted in |
+          |---|---|---|---|
+          | <SIBLING> | vscode_workspace | no | yes |
+          "
+        `);
+        expect(out(['--root', proj, '--all'])).toMatchInlineSnapshot(`
+          "| path | detected via | large | opted in |
+          |---|---|---|---|
+          | <SIBLING> | vscode_workspace | no | yes |
+          "
+        `);
     });
 
-    it.skipIf(!py)('declined: --all surfaces include=no identically', () => {
+    it('declined: --all surfaces include=no (pinned)', () => {
         writeOptIn(false);
-        assertSame(['--root', proj, '--all', '--format', 'json']);
-        assertSame(['--root', proj, '--all']);
+        expect(out(['--root', proj, '--all', '--format', 'json'])).toMatchInlineSnapshot(`
+          "{
+            "root": "<TMP>/proj",
+            "siblings": [
+              {
+                "path": "<SIBLING>",
+                "detected_via": "vscode_workspace",
+                "large": false,
+                "include": false
+              }
+            ]
+          }
+          "
+        `);
+        expect(out(['--root', proj, '--all'])).toMatchInlineSnapshot(`
+          "| path | detected via | large | opted in |
+          |---|---|---|---|
+          | <SIBLING> | vscode_workspace | no | no |
+          "
+        `);
         // opted-in-only view is empty
-        assertSame(['--root', proj, '--format', 'json']);
+        expect(out(['--root', proj, '--format', 'json'])).toMatchInlineSnapshot(`
+          "{
+            "root": "<TMP>/proj",
+            "siblings": []
+          }
+          "
+        `);
     });
 
-    it.skipIf(!py)('undecided (no opt-in file): --all surfaces undecided', () => {
-        assertSame(['--root', proj, '--all', '--format', 'json']);
-        assertSame(['--root', proj, '--all']);
+    it('undecided (no opt-in file): --all surfaces undecided (pinned)', () => {
+        expect(out(['--root', proj, '--all', '--format', 'json'])).toMatchInlineSnapshot(`
+          "{
+            "root": "<TMP>/proj",
+            "siblings": [
+              {
+                "path": "<SIBLING>",
+                "detected_via": "vscode_workspace",
+                "large": false,
+                "include": null
+              }
+            ]
+          }
+          "
+        `);
+        expect(out(['--root', proj, '--all'])).toMatchInlineSnapshot(`
+          "| path | detected via | large | opted in |
+          |---|---|---|---|
+          | <SIBLING> | vscode_workspace | no | undecided |
+          "
+        `);
     });
 });
