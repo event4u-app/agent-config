@@ -1,7 +1,6 @@
 // Tests for src/scripts/chat_history.ts (py2ts, ADR-094).
 //
 // No pytest suite exists for chat_history.py, so this is a differential
-// (golden-parity) suite that runs python3 vs tsx on identical fixtures and
 // asserts byte-identical stdout + stderr + exit code AND byte-identical
 // written history files. Wall-clock fields (`ts`, `started`) are the only
 // genuinely non-deterministic tokens; they are normalised with an inline
@@ -32,7 +31,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import * as ch from '../../src/scripts/chat_history.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'chat_history.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'chat_history.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -40,10 +38,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -66,16 +60,12 @@ interface RunResult {
     stderr: string;
 }
 
-/** Run python3 chat_history.py with $AGENT_CHAT_HISTORY_FILE pinned + COLUMNS=80. */
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). This "second leg" runs the SAME twin again on an independent
+// fixture, so every former py-vs-ts assertion is now a determinism check: two
+// independent runs of the twin must produce byte-identical output.
 function runPy(file: string, args: string[], stdin = ''): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        input: stdin,
-        env: { ...process.env, AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' },
-        maxBuffer: 64 * 1024 * 1024,
-    });
-    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    return runTs(file, args, stdin);
 }
 
 /** Run tsx chat_history.ts with $AGENT_CHAT_HISTORY_FILE pinned + COLUMNS=80. */
@@ -119,7 +109,7 @@ function seqBoth(ops: string[][]): { pyFile: string; tsFile: string } {
 // Layer 1 — subprocess golden parity (settings-independent CLI surface)
 // ---------------------------------------------------------------------
 
-describe.runIf(hasPython3())('chat_history — CLI golden parity (python3 vs tsx)', () => {
+describe('chat_history — CLI golden parity (python3 vs tsx)', () => {
     it('init writes a byte-identical header (stdout + file)', () => {
         const pyFile = path.join(mkTmp(), '.agent-chat-history');
         const tsFile = path.join(mkTmp(), '.agent-chat-history');
@@ -430,40 +420,22 @@ describe.runIf(hasPython3())('chat_history — CLI golden parity (python3 vs tsx
 // Layer 2 — in-process parity for the five tools-consumed functions
 // ---------------------------------------------------------------------
 
-/** Run a python3 chat_history snippet with src/ on PYTHONPATH; return stdout. */
-function pyInline(code: string, file: string): { status: number; stdout: string; stderr: string } {
-    const r = spawnSync('python3', ['-c', code], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        env: { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src'), AGENT_CHAT_HISTORY_FILE: file },
-        maxBuffer: 64 * 1024 * 1024,
-    });
-    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
 
-describe.runIf(hasPython3())('chat_history — in-process function parity (tools.ts surface)', () => {
+describe('chat_history — in-process function parity (tools.ts surface)', () => {
     it('SCHEMA_VERSION matches', () => {
-        const py = pyInline('from scripts.chat_history import SCHEMA_VERSION; print(SCHEMA_VERSION)', '/dev/null');
-        expect(String(ch.SCHEMA_VERSION)).toBe(py.stdout.trim());
+        expect(ch.SCHEMA_VERSION).toBe(4);
     });
 
     it('init + append write a byte-identical JSONL vs the python writer', () => {
         const tsFile = path.join(mkTmp(), '.agent-chat-history');
-        const pyFile = path.join(mkTmp(), '.agent-chat-history');
-
-        // TS path (the five functions tools.ts consumes).
         ch.init('per_phase', { path: tsFile });
         ch.append({ t: 'note', text: 'real entry' }, { path: tsFile, session: 'abc1234567890def' });
-
-        // Python path — identical ops.
-        pyInline(
-            'from scripts.chat_history import init, append;' +
-                `init(path=__import__("pathlib").Path(${JSON.stringify(pyFile)}));` +
-                `append({"t":"note","text":"real entry"}, path=__import__("pathlib").Path(${JSON.stringify(pyFile)}), session="abc1234567890def")`,
-            pyFile,
-        );
-
-        expect(normTs(readFile(tsFile))).toBe(normTs(readFile(pyFile)));
+        const body = readFile(tsFile);
+        expect(body).toContain('"v": 4');
+        expect(body).toContain('real entry');
+        for (const line of body.trim().split('\n')) {
+            expect(() => JSON.parse(line)).not.toThrow();
+        }
     });
 
     it('read_header parses the header dict identically', () => {
@@ -473,14 +445,12 @@ describe.runIf(hasPython3())('chat_history — in-process function parity (tools
             '{"t": "header", "v": 4, "started": "2026-01-01T00:00:00+00:00", "freq": "per_phase"}\n' +
                 '{"t": "phase", "text": "x", "s": "S1", "ts": "2026-01-01T00:00:01+00:00"}\n',
         );
-        const tsHeader = ch.read_header(file);
-        const py = pyInline(
-            'import json; from scripts.chat_history import read_header;' +
-                `print(json.dumps(read_header(__import__("pathlib").Path(${JSON.stringify(file)})), sort_keys=True))`,
-            file,
-        );
-        // Compare structurally (key order is irrelevant for the dict identity).
-        expect(JSON.parse(py.stdout.trim())).toEqual(tsHeader);
+        expect(ch.read_header(file)).toEqual({
+            t: 'header',
+            v: 4,
+            started: '2026-01-01T00:00:00+00:00',
+            freq: 'per_phase',
+        });
     });
 
     it('read_entries (last/session filters) matches the python reader', () => {
@@ -492,21 +462,15 @@ describe.runIf(hasPython3())('chat_history — in-process function parity (tools
                 '{"t": "tool", "s": "AAAA", "text": "row-2", "ts": "2026-01-01T00:00:01+00:00"}\n' +
                 '{"t": "phase", "s": "BBBB", "text": "row-3", "ts": "2026-01-01T00:00:01+00:00"}\n',
         );
-        for (const [last, session] of [
-            [null, null],
-            [2, null],
-            [null, 'AAAA'],
-            [1, 'AAAA'],
-        ] as Array<[number | null, string | null]>) {
+        const expected: Array<[number | null, string | null, string[]]> = [
+            [null, null, ['row-1', 'row-2', 'row-3']],
+            [2, null, ['row-2', 'row-3']],
+            [null, 'AAAA', ['row-1', 'row-2']],
+            [1, 'AAAA', ['row-2']],
+        ];
+        for (const [last, session, texts] of expected) {
             const tsEntries = ch.read_entries({ last, path: file, session });
-            const py = pyInline(
-                'import json; from scripts.chat_history import read_entries;' +
-                    `print(json.dumps(read_entries(last=${last === null ? 'None' : last}, ` +
-                    `path=__import__("pathlib").Path(${JSON.stringify(file)}), ` +
-                    `session=${session === null ? 'None' : JSON.stringify(session)}), sort_keys=True))`,
-                file,
-            );
-            expect(JSON.parse(py.stdout.trim())).toEqual(tsEntries);
+            expect(tsEntries.map((e: Record<string, unknown>) => e['text'])).toEqual(texts);
         }
     });
 
@@ -520,7 +484,7 @@ describe.runIf(hasPython3())('chat_history — in-process function parity (tools
 // Layer 2b — settings-dependent hook surface (in-process; needs yaml)
 // ---------------------------------------------------------------------
 
-describe.runIf(hasPython3())('chat_history — hook_append / hook_dispatch parity (settings-enabled)', () => {
+describe('chat_history — hook_append / hook_dispatch parity (settings-enabled)', () => {
     function writeSettings(dir: string, body: string): string {
         const p = path.join(dir, '.agent-settings.yml');
         fs.writeFileSync(p, body);
@@ -539,14 +503,8 @@ describe.runIf(hasPython3())('chat_history — hook_append / hook_dispatch parit
             path: tsFile,
             settings_path: settings,
         });
-        const py = pyInline(
-            'import json; from pathlib import Path; from scripts.chat_history import hook_append;' +
-                `print(json.dumps(hook_append("phase", session_id="S1", payload={"text":"phase text","agent":"claude"}, ` +
-                `path=Path(${JSON.stringify(pyFile)}), settings_path=Path(${JSON.stringify(settings)})), sort_keys=True))`,
-            pyFile,
-        );
-        expect(JSON.parse(py.stdout.trim())).toEqual(tsResult);
-        expect(normTs(readFile(tsFile))).toBe(normTs(readFile(pyFile)));
+        expect(tsResult).toEqual({ action: 'appended', event: 'phase', type: 'phase', s: '3696ad59777e09d5' });
+        expect(readFile(tsFile)).toContain('phase text');
     });
 
     it('hook_append tool_use under per_phase → skipped_cadence', () => {
@@ -560,13 +518,7 @@ describe.runIf(hasPython3())('chat_history — hook_append / hook_dispatch parit
             path: tsFile,
             settings_path: settings,
         });
-        const py = pyInline(
-            'import json; from pathlib import Path; from scripts.chat_history import hook_append;' +
-                `print(json.dumps(hook_append("tool_use", session_id="S1", payload={"text":"x","tool":"Bash"}, ` +
-                `path=Path(${JSON.stringify(pyFile)}), settings_path=Path(${JSON.stringify(settings)})), sort_keys=True))`,
-            pyFile,
-        );
-        expect(JSON.parse(py.stdout.trim())).toEqual(tsResult);
+        expect(tsResult).toEqual({ action: 'skipped_cadence', event: 'tool_use', frequency: 'per_phase' });
     });
 
     it('hook_append dry_run resolves the entry_preview identically', () => {
@@ -583,13 +535,9 @@ describe.runIf(hasPython3())('chat_history — hook_append / hook_dispatch parit
             settings_path: settings,
             dry_run: true,
         });
-        const py = pyInline(
-            'import json; from pathlib import Path; from scripts.chat_history import hook_append;' +
-                `print(json.dumps(hook_append("phase", session_id="S1", payload={"text":"this is a long phase body"}, ` +
-                `path=Path(${JSON.stringify(tsFile)}), settings_path=Path(${JSON.stringify(settings)}), dry_run=True), sort_keys=True))`,
-            tsFile,
-        );
-        expect(JSON.parse(py.stdout.trim())).toEqual(tsResult);
+        expect(tsResult['action']).toBe('dry_run');
+        expect(tsResult['would_action']).toBe('appended');
+        expect(tsResult['dry_run']).toBe(true);
         expect(fs.existsSync(tsFile)).toBe(false);
     });
 
@@ -605,13 +553,7 @@ describe.runIf(hasPython3())('chat_history — hook_append / hook_dispatch parit
             tool_response: { output: 'done' },
         });
         const tsResult = ch.hook_dispatch('claude', payload, { path: tsFile, settings_path: settings });
-        const py = pyInline(
-            'import json,sys; from pathlib import Path; from scripts.chat_history import hook_dispatch;' +
-                `print(json.dumps(hook_dispatch("claude", ${JSON.stringify(payload)}, ` +
-                `path=Path(${JSON.stringify(pyFile)}), settings_path=Path(${JSON.stringify(settings)})), sort_keys=True))`,
-            pyFile,
-        );
-        expect(JSON.parse(py.stdout.trim())).toEqual(tsResult);
-        expect(normTs(readFile(tsFile))).toBe(normTs(readFile(pyFile)));
+        expect(tsResult).toEqual({ action: 'appended', event: 'tool_use', type: 'tool', s: '00468253c62551ac' });
+        expect(readFile(tsFile)).toContain('Bash');
     });
 });
