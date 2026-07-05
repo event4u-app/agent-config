@@ -1,0 +1,42 @@
+---
+title: agent-config
+description: A governed skill/rule/command suite for AI coding tools — every claim machine-checked, including zero runtime.
+template: splash
+hero:
+  tagline: A governed skill/rule/command suite for AI coding tools. Every public claim is machine-checked against the code — including "zero runtime".
+  actions:
+    - text: Verify it yourself
+      link: /agent-config/proof/
+      icon: right-arrow
+    - text: The benchmark (both hosts)
+      link: /agent-config/benchmark/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why this is different
+
+We sell honesty, so the selling is machine-checked. Every capability or number
+in our public docs binds to resolvable evidence — a test, a benchmark artefact,
+or a `file:line` — and CI fails if an unbacked claim sneaks in.
+
+<CardGrid>
+  <Card title="Claims are bound to code" icon="approve-check">
+    The Claims-Ledger (`docs/CLAIMS.md` + `check_claims` in CI) rejects any
+    public claim that does not resolve to evidence. The anti-example is the
+    unbacked headline number we refuse to ship.
+  </Card>
+  <Card title="We publish the nulls" icon="information">
+    The discipline benchmark shows a measured lift on a weak host **and** a
+    published null on a strong host — the bound, not just the win.
+  </Card>
+  <Card title="Zero runtime" icon="setting">
+    Static artifact projection into host agents. No daemon, no vector DB, no
+    auto-write memory — a claim you can check in the source.
+  </Card>
+  <Card title="Try one thing in 30 seconds" icon="rocket">
+    Install the `production-validator` wedge alone — read-only, single-purpose,
+    carries the anti-hallucination identity.
+  </Card>
+</CardGrid>
