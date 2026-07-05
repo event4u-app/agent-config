@@ -113,6 +113,10 @@ const _FN_SPEC: Record<string, FnSpec> = {
         artifact: 'subagents',
         cells: { 'claude-code': 'native' },
     },
+    generate_subagent_host_contexts: {
+        artifact: 'subagents',
+        cells: { cursor: 'adapter', windsurf: 'adapter', cline: 'adapter' },
+    },
     generate_plugin_command_skills: {
         artifact: 'skills', cells: { 'claude-plugin': 'native' },
     },
