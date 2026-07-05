@@ -4,11 +4,11 @@ name: team-knowledge
 disable-model-invocation: true
 pack: meta
 intent: "Manage the repo-tracked team-knowledge layer — consolidate typed observation events into agents/knowledge/ pages, bootstrap a project baseline"
-routes_to: [team-knowledge-consolidate]
+routes_to: [team-knowledge-consolidate, team-knowledge-bootstrap]
 replaces: []
 tier: 2
 visibility: internal
-description: Team-knowledge orchestrator — routes to consolidate (and, once shipped, bootstrap)
+description: Team-knowledge orchestrator — routes to consolidate and bootstrap
 cluster: team-knowledge
 type: orchestrator
 suggestion:
@@ -39,6 +39,7 @@ lifecycle-typed team-knowledge layer under `agents/knowledge/`.
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/team-knowledge consolidate` | `commands/team-knowledge/consolidate.md` | Read pending intake events, propose tracked-page creates/updates as a reviewable batch, write only on approval |
+| `/team-knowledge bootstrap` | `commands/team-knowledge/bootstrap.md` | One-shot deterministic seed of a fresh project's knowledge pages from real config/directory detection — staged, never auto-committed |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
@@ -52,6 +53,7 @@ Sub-command names match the locked contract in
 4. If the sub-command is unknown or missing, print the table above and ask:
 
    > 1. consolidate — review pending knowledge events and file them as pages
+   > 2. bootstrap — seed a fresh project's knowledge pages from detection
 
 ## Rules
 

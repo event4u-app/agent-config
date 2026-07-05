@@ -137,9 +137,9 @@ Append to the knowledge intake instead of leaving it in the one-off
 analysis output (applies to every `project-analysis-*` specialist this
 skill hands off to, not just this one):
 
-```typescript
-// src/scripts/_lib/knowledge_events.ts
-appendEvent({ type: 'convention_detected', ts: new Date().toISOString(), pattern, evidence: ['file:line', ...], sampleSize, scope: 'project' });
+```bash
+./scripts-run src/scripts/emit_knowledge_event --type convention_detected \
+    --pattern "<pattern>" --evidence "file:line" --sample-size <N> --scope project
 ```
 
 `/team-knowledge consolidate` turns accumulated events into

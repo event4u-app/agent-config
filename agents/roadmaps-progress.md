@@ -6,17 +6,17 @@
 
 ## Overall
 
-**108 / 164 steps done · 66%**
+**113 / 164 steps done · 69%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+████████████████████████████░░░░░░░░░░░░   69%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-knowledge-system.md](roadmaps/road-to-knowledge-system.md) | 6 | 34 | 11 | 23 | 0 | 0 | ███████░░░ 68% |
+| 1 | [road-to-knowledge-system.md](roadmaps/road-to-knowledge-system.md) | 6 | 34 | 6 | 28 | 0 | 0 | ████████░░ 82% |
 | 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
@@ -28,7 +28,7 @@
 
 ### [road-to-knowledge-system.md](roadmaps/road-to-knowledge-system.md)
 
-**Road to Knowledge System** — 23 / 34 done (68%)
+**Road to Knowledge System** — 28 / 34 done (82%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -37,7 +37,7 @@
 | 3 | Team-sharing gate | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Self-learning wiring: promotion + pointer degradation | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Living-context capture + error-driven repair | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 6 | Project familiarization bootstrap | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 6 | Project familiarization bootstrap | 🟡 in progress | 6 | 5 | 0 | 0 | 45% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 

@@ -58,6 +58,12 @@
 # See road-to-knowledge-system Phase 5.
 /agents/knowledge/intake/
 
+# Agent config — project-bootstrap staging (deterministic template pages from
+# /team-knowledge bootstrap). Review-then-commit: pages move into
+# agents/knowledge/ only after human review; nothing here is ever the
+# committed artifact. See road-to-knowledge-system Phase 6.
+/agents/.bootstrap-staging/
+
 # Agent config — Evidence v2 ephemeral project-intelligence tier. Auto-captured
 # trial-and-error / transient / task-local observations, retained N days, NEVER
 # promoted to committed context (distinct from intake, which holds promotion

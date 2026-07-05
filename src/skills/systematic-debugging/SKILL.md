@@ -266,16 +266,18 @@ API shape page was stale, a procedure was incomplete), append a
 `mistake_made` event to the knowledge intake — never rewrite the page
 mid-task (see [`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)):
 
-```typescript
-appendEvent({
-    type: 'mistake_made',
-    ts: new Date().toISOString(),
-    errorCategory: '<one or two words>',
-    contextSource: '<agents/knowledge/... path, or null if no page was followed>',
-    correction: '<what the fix actually was>',
-    recurrenceKey: '<stable slug for this class of mistake>',
-}); // src/scripts/_lib/knowledge_events.ts
+```bash
+./scripts-run src/scripts/emit_knowledge_event \
+    --type mistake_made \
+    --error-category "<one or two words>" \
+    --context-source "<agents/knowledge/... path, or 'null' if no page was followed>" \
+    --correction "<what the fix actually was>" \
+    --recurrence-key "<stable slug for this class of mistake>"
 ```
+
+Verify the append landed: check the command's exit code (0 = appended),
+then `grep <recurrenceKey> agents/knowledge/intake/events-*.jsonl`
+finds the new line.
 
 **Live contradiction exception.** If the followed page is DEMONSTRABLY
 wrong right now (observed reality ≠ documented claim, not a one-off),

@@ -120,11 +120,23 @@ Rollback: triggers are prose + intake-only; disable by removing the `/team-knowl
 
 ## Phase 6 — Project familiarization bootstrap
 
-- [ ] `/team-knowledge bootstrap` command: run the EXISTING deterministic analyzers (`project-analysis-*` structure detection, `standards-from-config`, `module-detect-on-the-fly`) and render their outputs into typed knowledge-page TEMPLATES (`concepts/structure.md`, `concepts/standards.md`, `concepts/modules.md`, `procedures/api-conventions.md`, empty `sessions/common-mistakes` seed) in a gitignored staging dir
-- [ ] Template discipline: detected facts carry evidence pointers; anything inferential carries a `[HUMAN: verify]` marker; no LLM-invented claims — deterministic static analysis only
-- [ ] Capture allowlist + exclusion scan: allowlisted fact classes only (layout, entry points, naming conventions, export/API maps); hard-exclude secrets (existing secret patterns), personal data, transient state (build artifacts, paths under ignored dirs, timestamps beyond `observed_at`)
-- [ ] Review-then-commit flow: bootstrap ends with a review instruction; pages move from staging into `agents/knowledge/` only after human review (reuses the Phase-3 share gate + INDEX regen)
-- [ ] Run bootstrap once against a fixture project in tests (deterministic output snapshot)
+**Course correction (discovered mid-run):** `project-analysis-*` /
+`standards-from-config` / `module-detect-on-the-fly` are prose-driven,
+agent-executed skills (LLM reasoning over real code), not callable
+deterministic functions with structured output — there is nothing to
+"run" from a script. Bootstrap instead does its OWN deterministic
+detection (package-manifest existence, top-level directory names,
+known config filenames — filenames and directory names ONLY, never
+file content) and points the reviewer at those richer skills for
+anything requiring real code reading (`modules.md`'s `[HUMAN: verify]`
+note names `module-detect-on-the-fly` explicitly). This keeps the
+"no LLM-invented claims" guarantee structural rather than aspirational.
+
+- [x] `/team-knowledge bootstrap` command (`bootstrap_knowledge.ts`): deterministic filesystem/config detection (package manifest, top-level directories minus noise dirs, known lint/format/test config filenames) rendered into typed knowledge-page TEMPLATES (`concepts/structure.md`, `concepts/standards.md`, `concepts/modules.md`, `procedures/api-conventions.md`, `sessions/common-mistakes.md`) in a gitignored staging dir
+- [x] Template discipline: detected facts carry evidence pointers (the manifest/config/directory name); every inferential line carries `[HUMAN: verify]`; no LLM-invented claims — deterministic static analysis only
+- [x] Capture allowlist + exclusion scan: allowlisted fact classes only (manifest existence, top-level layout, known config filenames); secrets/PII/business-logic exclusion is BY CONSTRUCTION — the detector never reads file CONTENTS beyond checking a known filename exists, so there is no redaction pass that could fail; noise dirs (`node_modules`, `vendor`, `.git`, `dist`, build caches) and all dot-directories excluded from the structure page
+- [x] Review-then-commit flow: bootstrap ends with a numbered review prompt; pages move from staging into `agents/knowledge/` only after human review (reuses the Phase-3 share gate + Phase-1 INDEX regen)
+- [x] Run bootstrap once against a fixture project in tests (deterministic output snapshot — re-running on the same fixture produces byte-identical pages)
 
 Exit criteria: bootstrap on the fixture yields staged templates that pass the exclusion scan and the knowledge lint; nothing lands tracked without the review step.
 Rollback: delete staging output; command is additive.

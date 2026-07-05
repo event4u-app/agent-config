@@ -172,10 +172,12 @@ A confirmed API/GraphQL shape (§B) or an observed coding convention with
 from the per-session Evidence Report above. Append to the knowledge
 intake — never write a tracked page mid-task:
 
-```typescript
-// src/scripts/_lib/knowledge_events.ts
-appendEvent({ type: 'api_shape_learned', ts: new Date().toISOString(), endpoint, method, requestSchema, responseSchema });
-appendEvent({ type: 'convention_detected', ts: new Date().toISOString(), pattern, evidence: ['file:line', ...], sampleSize, scope: 'project' });
+```bash
+./scripts-run src/scripts/emit_knowledge_event --type api_shape_learned \
+    --endpoint "<path>" --method "<verb>" --request-schema '<json>' --response-schema '<json>'
+
+./scripts-run src/scripts/emit_knowledge_event --type convention_detected \
+    --pattern "<pattern>" --evidence "file:line" --sample-size <N> --scope project
 ```
 
 `/team-knowledge consolidate` turns accumulated events into

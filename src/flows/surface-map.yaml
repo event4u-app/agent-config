@@ -173,6 +173,7 @@ commands:
     - sync-gitignore
     - sync-gitignore/fix
     - team-knowledge
+    - team-knowledge/bootstrap
     - team-knowledge/consolidate
     - upstream-contribute
 
