@@ -30,6 +30,13 @@ consumer repo, so the whole team benefits via git. Promotion to global
 requires cross-project evidence via the existing manual promotion path —
 never automatic.
 
+**Enforced at commit time.** A pre-commit gate
+(`src/scripts/check_knowledge_sharing.ts`) refuses a commit staging a
+`visibility: private` page under `agents/knowledge/` (belongs in the
+global store) or a gitignored `agents/memory/intake/` file staged by
+accident. Warns — never blocks — on 5+ new knowledge files in one
+commit, for a second look.
+
 ## Entry micro-schema — `date + what + why`
 
 Every entry (especially in `sessions/`) states, at minimum:

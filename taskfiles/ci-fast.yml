@@ -751,6 +751,11 @@ tasks:
     desc: "Warn-only lint for the lifecycle-typed knowledge pages (sessions/concepts/procedures/decisions) — road-to-knowledge-system Phase 2; never fails the build"
     cmd: ./scripts-run src/scripts/check_knowledge_pages
 
+  check-knowledge-sharing:
+    silent: true
+    desc: "Team-sharing gate over the STAGED git index — blocks staged agents/memory/intake/ files and visibility: private knowledge pages, warns on 5+ new pages in one commit (road-to-knowledge-system Phase 3). Wired as a pre-commit hook via install-hooks.sh; not part of the full CI chain since it depends on staged state, not repo state."
+    cmd: ./scripts-run src/scripts/check_knowledge_sharing
+
   knowledge-global:
     silent: true
     desc: "Global knowledge-card store surface (ADR-100). Usage: task knowledge-global -- <list|show|trace|forget|promote|validate> [args]. Default: list."

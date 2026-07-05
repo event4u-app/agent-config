@@ -124,6 +124,23 @@ if git diff --cached --name-only | grep -qE '^(packages/|src/config/discovery/pa
         exit 1
     fi
 fi
+
+# Knowledge team-sharing gate (road-to-knowledge-system Phase 3) — refuses a
+# gitignored agents/memory/intake/ file staged by accident, and refuses a
+# agents/knowledge/ page marked visibility: private (belongs in the
+# user-global store, never the team-shared repo). Only fires when staged
+# changes touch agents/knowledge/ or agents/memory/intake/, so unrelated
+# commits stay fast.
+if git diff --cached --name-only | grep -qE '^(agents/knowledge/|agents/memory/intake/)'; then
+    if ! ./scripts-run src/scripts/check_knowledge_sharing; then
+        echo ""
+        echo "❌  Commit blocked — knowledge team-sharing gate failed."
+        echo "   Unstage the intake/private file, or drop the private page from"
+        echo "   this commit (it belongs in the user-global knowledge store)."
+        echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
+        exit 1
+    fi
+fi
 EOF
 
 chmod +x "$HOOKS_DIR/pre-commit"

@@ -76,9 +76,9 @@ Rollback: revert the propose/consolidation extensions; lint rules are warn-only 
 
 ## Phase 3 — Team-sharing gate
 
-- [ ] `src/scripts/check_knowledge_sharing.ts` (pre-commit): block staged files from gitignored intake paths and from personal/global-store paths; warn on ≥5 new files under `agents/knowledge/` in one commit (creation budget)
-- [ ] Register in the hook manifest + document the storage-location-is-policy contract (personal → ADR-100 global store; team → `agents/`) in the knowledge templates
-- [ ] Negative tests: staged intake file blocks; 6 new knowledge files warn; normal card edit passes
+- [x] `src/scripts/check_knowledge_sharing.ts` (pre-commit): block staged files from gitignored intake paths and from personal/global-store paths; warn on ≥5 new files under `agents/knowledge/` in one commit (creation budget)
+- [x] Register in the hook manifest + document the storage-location-is-policy contract (personal → ADR-100 global store; team → `agents/`) in the knowledge templates
+- [x] Negative tests: staged intake file blocks; 6 new knowledge files warn; normal card edit passes
 
 Exit criteria: gate runs in pre-commit on this repo, all three test cases green once locally. <!-- carve-out: new-gate-verification -->
 Rollback: unregister the hook; no data affected.
