@@ -15,6 +15,9 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
+gaps:
+  - description: "Only validates references to known-root paths (docs/, skills/, rules/, commands/, contexts/, personas/, …). A relative-path link such as `./sibling.md` or `../foo.md` is not matched, so a broken relative link is never reported."
+    witness: tests/scripts/witness/check_refs_relative_gap.test.ts
 ---
 
 # check-refs

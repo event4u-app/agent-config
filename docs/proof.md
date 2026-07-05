@@ -34,13 +34,24 @@ Benchmark results — **including the runs where the package changed nothing** �
 live in [`docs/benchmark.md`](benchmark.md). We do not delete a measured null to
 make a number look better; the null is the evidence of honesty.
 
-## 3. Verify it yourself
+## 3. Known limits (published, witness-tested)
+
+Each limitation below is stated by the skill itself and carries a witness
+test that reproduces it. If the limitation is ever fixed, its witness goes
+red — so a "Known limit" can never quietly become false.
+
+| skill | known limit | witness |
+|---|---|---|
+| `check-refs` | Only validates references to known-root paths (docs/, skills/, rules/, commands/, contexts/, personas/, …). A relative-path link such as `./sibling.md` or `../foo.md` is not matched, so a broken relative link is never reported. | [`tests/scripts/witness/check_refs_relative_gap.test.ts`](../tests/scripts/witness/check_refs_relative_gap.test.ts) |
+
+## 4. Verify it yourself
 
 On a fresh checkout, reproduce the claims above:
 
 ```bash
 task check-claims   # every markered public claim binds to resolvable evidence
 task check-refs     # no broken internal references
+task check-skill-gaps    # every logged known-limit cites a real witness test
 task build-proof-check   # this page is in sync with its sources
 ```
 

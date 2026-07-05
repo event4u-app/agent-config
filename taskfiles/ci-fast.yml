@@ -357,6 +357,11 @@ tasks:
     desc: "Claims-Ledger gate — every <!-- claim:ID --> marker in README/docs binds to a backed, resolvable entry in docs/CLAIMS.md (road-to-final-state-and-market-readiness B1)"
     cmd: ./scripts-run src/scripts/check_claims {{.QUIET_FLAG}}
 
+  check-skill-gaps:
+    silent: true
+    desc: "Skill honest-null gaps lock (B6) — every src/skills/*/SKILL.md gaps[].witness points at a test file that exists; keeps the proof-page 'Known Limits' from citing a phantom witness"
+    cmd: ./scripts-run src/scripts/check_skill_gaps {{.QUIET_FLAG}}
+
   check-structural-breaking:
     silent: true
     desc: "Fail when a structural break (artifact deleted/renamed, or a contract schema changed without an x-schemaVersion bump) lacks a breaking annotation — road-to-contract-integrity F3"

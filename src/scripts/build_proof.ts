@@ -24,6 +24,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { REPO, LEDGER_REL, load_ledger, pointer_unresolved } from './check_claims.js';
+import { collectSkillGaps } from './check_skill_gaps.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const OUT_REL = 'docs/proof.md';
@@ -90,13 +91,36 @@ function render(): string {
         L.push('Benchmark results are published under `docs/` including measured nulls.');
     }
     L.push('');
-    L.push('## 3. Verify it yourself');
+    L.push('## 3. Known limits (published, witness-tested)');
+    L.push('');
+    const skillGaps = collectSkillGaps();
+    if (skillGaps.length === 0) {
+        L.push('No skill has logged a known-limit `gaps:` entry yet. When one does, it');
+        L.push('appears here with a witness test that reproduces the limitation — the');
+        L.push('transparency surface a headline-benchmark structurally cannot ship.');
+    } else {
+        L.push('Each limitation below is stated by the skill itself and carries a witness');
+        L.push('test that reproduces it. If the limitation is ever fixed, its witness goes');
+        L.push('red — so a "Known limit" can never quietly become false.');
+        L.push('');
+        L.push('| skill | known limit | witness |');
+        L.push('|---|---|---|');
+        for (const sg of skillGaps) {
+            for (const g of sg.gaps) {
+                const desc = g.description.replace(/\|/g, '\\|');
+                L.push(`| \`${sg.skill}\` | ${desc} | [\`${g.witness}\`](../${g.witness}) |`);
+            }
+        }
+    }
+    L.push('');
+    L.push('## 4. Verify it yourself');
     L.push('');
     L.push('On a fresh checkout, reproduce the claims above:');
     L.push('');
     L.push('```bash');
     L.push('task check-claims   # every markered public claim binds to resolvable evidence');
     L.push('task check-refs     # no broken internal references');
+    L.push('task check-skill-gaps    # every logged known-limit cites a real witness test');
     L.push('task build-proof-check   # this page is in sync with its sources');
     L.push('```');
     L.push('');

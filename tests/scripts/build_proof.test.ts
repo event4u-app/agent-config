@@ -24,9 +24,11 @@ describe('build_proof — render()', () => {
         expect(out).toContain('# Proof — verify our claims yourself');
         expect(out).toContain('## 1. Every public claim binds to evidence');
         expect(out).toContain('## 2. We publish honest nulls');
-        expect(out).toContain('## 3. Verify it yourself');
+        expect(out).toContain('## 3. Known limits (published, witness-tested)');
+        expect(out).toContain('## 4. Verify it yourself');
         expect(out).toContain('| Claim | Kind | Evidence | Resolves |');
         expect(out).toContain('task check-claims');
+        expect(out).toContain('task check-skill-gaps');
     });
 
     it('carries the do-not-hand-edit generated marker', () => {
