@@ -13,7 +13,6 @@ import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'print_required_checks.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'print_required_checks.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -21,32 +20,112 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py = hasPython3();
-const runPy = (args: string[]) =>
-    spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
 const runTs = (args: string[]) =>
     spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
 
-describe.skipIf(!py)('print_required_checks — golden parity (python3 vs tsx)', () => {
-    const cases: string[][] = [
-        ['--branch', 'feat/x', '--base', 'HEAD'],
-        ['--branch', 'release/1.2.3', '--base', 'HEAD'],
-        ['--branch', 'docs/x', '--base', 'HEAD'],
-        ['--base', 'HEAD'],
-        ['--branch=feat/y', '--base=HEAD'],
-        ['--bogus'],
-        ['--branch'],
-    ];
-    for (const args of cases) {
-        it(`[${args.join(' ')}] matches`, () => {
-            const p = runPy(args);
-            const t = runTs(args);
-            expect(t.status).toBe(p.status);
-            expect(t.stdout).toBe(p.stdout);
-            expect(t.stderr).toBe(p.stderr);
-        });
-    }
+// `--base HEAD` makes the diff empty (HEAD..HEAD) in any checkout, so the
+// required-check set is the shape-based default — deterministic. The tsx twin
+// is the source of truth (the python original was deleted in the teardown);
+// output is pinned via an inline snapshot (updates only on an intentional
+// required-checks matrix change).
+describe('print_required_checks — CLI contract', () => {
+    it('required checks per PR shape (pinned)', () => {
+        const shapes: Record<string, string[]> = {
+            feature: ['--branch', 'feat/x', '--base', 'HEAD'],
+            release: ['--branch', 'release/1.2.3', '--base', 'HEAD'],
+            'docs-only': ['--branch', 'docs/x', '--base', 'HEAD'],
+            'no-branch': ['--base', 'HEAD'],
+            'eq-joined': ['--branch=feat/y', '--base=HEAD'],
+        };
+        const out = Object.fromEntries(
+            Object.entries(shapes).map(([label, args]) => {
+                const t = runTs(args);
+                expect(t.status, `${label}: ${t.stderr}`).toBe(0);
+                return [label, t.stdout];
+            }),
+        );
+        expect(out).toMatchInlineSnapshot(`
+          {
+            "docs-only": "Branch: docs/x
+          Base:   HEAD
+          PR shape: feature  (0 file(s) in diff)
+          Required checks (8):
+            - Consistency
+            - Smoke Contracts
+            - Skill Lint
+            - Tests / install-tests
+            - Tests / install-aux-tests
+            - Tests / python-tests
+            - Tests / node-tests
+            - Public Install Smoke / smoke
+
+          Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+          ",
+            "eq-joined": "Branch: feat/y
+          Base:   HEAD
+          PR shape: feature  (0 file(s) in diff)
+          Required checks (8):
+            - Consistency
+            - Smoke Contracts
+            - Skill Lint
+            - Tests / install-tests
+            - Tests / install-aux-tests
+            - Tests / python-tests
+            - Tests / node-tests
+            - Public Install Smoke / smoke
+
+          Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+          ",
+            "feature": "Branch: feat/x
+          Base:   HEAD
+          PR shape: feature  (0 file(s) in diff)
+          Required checks (8):
+            - Consistency
+            - Smoke Contracts
+            - Skill Lint
+            - Tests / install-tests
+            - Tests / install-aux-tests
+            - Tests / python-tests
+            - Tests / node-tests
+            - Public Install Smoke / smoke
+
+          Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+          ",
+            "no-branch": "Branch: main
+          Base:   HEAD
+          PR shape: feature  (0 file(s) in diff)
+          Required checks (8):
+            - Consistency
+            - Smoke Contracts
+            - Skill Lint
+            - Tests / install-tests
+            - Tests / install-aux-tests
+            - Tests / python-tests
+            - Tests / node-tests
+            - Public Install Smoke / smoke
+
+          Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+          ",
+            "release": "Branch: release/1.2.3
+          Base:   HEAD
+          PR shape: release  (0 file(s) in diff)
+          Required checks (7):
+            - Consistency
+            - Smoke Contracts
+            - Migration Dry-Run
+            - Release Validation / release-shape
+            - Release Validation / changelog-entry
+            - Release Validation / version-consistency
+            - Release Guard (post-tag)
+
+          Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+          ",
+          }
+        `);
+    });
+
+    it('argparse errors exit 2', () => {
+        expect(runTs(['--bogus']).status).toBe(2);
+        expect(runTs(['--branch']).status).toBe(2);
+    });
 });
