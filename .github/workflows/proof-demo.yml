@@ -48,6 +48,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+      # The demo mirrors the proof page, which runs `task check-…`; the runner
+      # needs the go-task binary (same composite action the other workflows use).
+      - uses: ./.github/actions/setup-task
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies (tsx for the trust commands)
         run: npm ci
       - name: The recorded demo's commands still pass
