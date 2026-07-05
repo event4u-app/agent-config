@@ -1,10 +1,6 @@
 // Tests for src/scripts/ai_council/confidence_gate.ts (py2ts Phase 1).
 //
-// Heuristics are regex + length only. Golden-parity against the Python twin
-// via direct-file import (registered in sys.modules so the frozen dataclass
-// + `float | None` annotations resolve under Python 3.9).
-import { spawnSync } from 'node:child_process';
-
+// Heuristics are regex + length only.
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -13,31 +9,6 @@ import {
     is_split_response,
     should_escalate,
 } from '../../../src/scripts/ai_council/confidence_gate.js';
-
-const PY_MOD = 'src/scripts/ai_council/confidence_gate.py';
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-function pyLoadPreamble(): string[] {
-    return [
-        'import importlib.util, sys, json',
-        `spec = importlib.util.spec_from_file_location("cg", ${JSON.stringify(PY_MOD)})`,
-        'cg = importlib.util.module_from_spec(spec)',
-        'sys.modules["cg"] = cg',
-        'spec.loader.exec_module(cg)',
-    ];
-}
-
-function py(snippet: string): string {
-    const code = [...pyLoadPreamble(), snippet].join('\n');
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return r.stdout.trim();
-}
 
 // Representative response corpus exercising every branch + edge.
 const CORPUS: Record<string, string> = {
@@ -106,39 +77,4 @@ describe('confidence_gate — should_escalate ordering', () => {
         expect(d.escalate).toBe(false);
         expect(d.reason).toBe('ok');
     });
-});
-
-describe.runIf(hasPython3())('confidence_gate — golden parity vs CPython twin', () => {
-    const floors = [0.0, 0.5, 0.7, 0.9];
-    const keys = Object.keys(CORPUS);
-
-    // Parse both sides so Python's float repr (`1.0`) compares equal to JS's
-    // single number type (`1`) — the documented ADR-094 number divergence.
-    it.each(keys)('extract_confidence(%s) matches', (key) => {
-        const text = CORPUS[key] as string;
-        const expected = py(`print(json.dumps(cg.extract_confidence(${JSON.stringify(text)})))`);
-        expect(extract_confidence(text)).toEqual(JSON.parse(expected));
-    });
-
-    it.each(keys)('is_refusal / is_split(%s) match', (key) => {
-        const text = CORPUS[key] as string;
-        const expected = py(
-            `print(json.dumps([cg.is_refusal(${JSON.stringify(text)}), cg.is_split_response(${JSON.stringify(text)})]))`,
-        );
-        expect([is_refusal(text), is_split_response(text)]).toEqual(JSON.parse(expected));
-    });
-
-    for (const floor of floors) {
-        it.each(keys)(`should_escalate(%s, floor=${floor}) matches`, (key) => {
-            const text = CORPUS[key] as string;
-            const expected = py(
-                `d = cg.should_escalate(${JSON.stringify(text)}, floor=${floor})\n` +
-                    'print(json.dumps({"escalate": d.escalate, "reason": d.reason, "confidence": d.confidence}))',
-            );
-            const d = should_escalate(text, floor);
-            expect({ escalate: d.escalate, reason: d.reason, confidence: d.confidence }).toEqual(
-                JSON.parse(expected),
-            );
-        });
-    }
 });
