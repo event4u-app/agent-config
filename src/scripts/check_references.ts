@@ -167,6 +167,7 @@ const EXAMPLE_PATH_PATTERNS: RegExp[] = [
     /agents\/ownership-map\.yml/, // consumer-project routing data
     /agents\/historical-bug-patterns\.yml/, // consumer-project routing data
     /agents\/memory\//, // consumer-project memory data
+    /agents\/knowledge\//, // consumer-project knowledge cards + typed pages (road-to-knowledge-system)
     /agents\/learnings\//, // consumer-project learning notes
     /agents\/proposals\//, // consumer-project self-improvement proposals
     /agents\/drafts\//, // consumer-project artefact drafts

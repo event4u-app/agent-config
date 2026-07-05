@@ -75,7 +75,21 @@ Ask once, numbered. If the user picks `skip`, proceed without them:
   primary tag picks the intake JSONL file, the promoter resolves the
   curated target via tag intersection.
 
-### 4. Emit via the shared helper
+### 4. Check for a near-duplicate (advisory)
+
+```bash
+./scripts-run src/scripts/check_memory_similarity --type <type> --body "<body>"
+```
+
+Token-Jaccard similarity against existing intake signals of the same
+type — advisory, additive, never touches the exact-match dedup in
+Step 5. Exit 1 (≥ 80% similar) → surface the matched signal id and ask
+whether to reuse/update it instead of creating a new one; proceed to
+Step 5 only if the user confirms this is a genuinely distinct finding.
+Exit 0 with a "nearest match" note (40–79% similar) → mention it, then
+proceed. Exit 0 with no match → proceed silently.
+
+### 5. Emit via the shared helper
 
 ```bash
 ./agent-config memory:signal \
@@ -95,7 +109,7 @@ automatically — re-running the command on the same finding will
 silently skip the write. Add `--force` only when deliberate duplication
 is intended (rarely).
 
-### 5. Confirm and close
+### 6. Confirm and close
 
 ```
 > ✅ Signal queued as id=<sig-xxxxxx> in <file>.

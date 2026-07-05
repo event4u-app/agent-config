@@ -101,9 +101,35 @@ miner is too loose; tighten patterns and re-run before promoting.
    curated YAML (next phase) become team-shared (committed).
 3. Default to `--preview` mode: render the JSONL block to stdout and
    stop. Only `--commit-intake` writes the file.
+4. **Triage each fact NOT already promoted to curated YAML** against
+   `agents/knowledge/{concepts,procedures}/` before treating it as
+   brand new:
+
+   | Triage | Condition | Action |
+   |---|---|---|
+   | `NEW` | No existing knowledge page covers this topic | Candidate for a new page (via `/team-knowledge consolidate`, not this skill) |
+   | `EXTEND` | An existing page covers the topic but is missing this detail | Note the target page in the report; do not edit mid-cycle |
+   | `CONFIRM` | An existing page already states this exactly | Discard — no duplicate entry |
+   | `CONFLICT` | An existing page states the opposite or a stale variant | Record **both** positions verbatim in the report with a `contested: true` recommendation for that page — never silently overwrite; resolution is always human |
+
+5. **Track cross-cycle recurrence toward skill-candidacy.** For each
+   `NEW` fact, run:
+
+   ```bash
+   ./scripts-run src/scripts/update_skill_candidates --topic "<stable-slug>" --session "<session-id>" --date "<YYYY-MM-DD>"
+   ```
+
+   This increments a durable per-topic counter in
+   `agents/knowledge/procedures/skill-candidates.md` — a fact that
+   recurs unpromoted across ≥ 3 consolidation cycles becomes a live
+   candidate the exit report surfaces for
+   [`learning-to-rule-or-skill`](../learning-to-rule-or-skill/SKILL.md)
+   to pick up. This script only counts; it never proposes or writes
+   the skill/rule itself. Regenerate `agents/knowledge/INDEX.md`
+   (`generate_knowledge_index.ts`) after any candidate update.
 
 **Exit gate:** every fact carries ≥ 1 tag and a JSONL-shape that
-validates against the contract.
+validates against the contract; every fact has a triage verdict.
 
 ### Phase 4 — PRUNE & INDEX
 

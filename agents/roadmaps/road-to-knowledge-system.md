@@ -65,11 +65,11 @@ Rollback: delete the generator + template additions; empty dirs are inert.
 
 ## Phase 2 — Capture hygiene: dedup, recurrence, optional frontmatter
 
-- [ ] Extend the memory propose path with a similarity check (token/Jaccard-based, TS, no embeddings): ≥0.80 → refuse-and-suggest-merge target; ≥0.40 → warn with nearest match; below → proceed
-- [ ] Extend `memory-consolidation` with a recurrence counter across session intake: ≥3 mentions of an unpromoted topic → append a candidate entry to `agents/knowledge/procedures/skill-candidates.md` (date, count, pointer to sessions)
-- [ ] Fold the NEW/EXTEND/CONFIRM/CONFLICT triage taxonomy into `memory-consolidation` skill prose (CONFLICT → write both positions + `contested: true`, human resolves)
-- [ ] Extend the knowledge lint (warn-only): optional frontmatter fields (`type`, `scope`, `visibility`, `review_after`, `contested`), 200-line page budget, stale `review_after` dates
-- [ ] Unit tests: similarity thresholds, recurrence counting, lint warn cases
+- [x] Extend the memory propose path with a similarity check (token/Jaccard-based, TS, no embeddings): ≥0.80 → refuse-and-suggest-merge target; ≥0.40 → warn with nearest match; below → proceed
+- [x] Extend `memory-consolidation` with a recurrence counter across session intake: ≥3 mentions of an unpromoted topic → append a candidate entry to `agents/knowledge/procedures/skill-candidates.md` (date, count, pointer to sessions)
+- [x] Fold the NEW/EXTEND/CONFIRM/CONFLICT triage taxonomy into `memory-consolidation` skill prose (CONFLICT → write both positions + `contested: true`, human resolves)
+- [x] Extend the knowledge lint (warn-only): optional frontmatter fields (`type`, `scope`, `visibility`, `review_after`, `contested`), 200-line page budget, stale `review_after` dates
+- [x] Unit tests: similarity thresholds, recurrence counting, lint warn cases
 
 Exit criteria: propose path demonstrably refuses a near-duplicate in a test fixture; consolidation run on a synthetic intake produces a skill-candidate entry; lint warns (never blocks) on the new fields.
 Rollback: revert the propose/consolidation extensions; lint rules are warn-only and can be dropped independently.
