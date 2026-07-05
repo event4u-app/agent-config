@@ -18,7 +18,8 @@ v1 forward-compat rule on unknown fields).
   "token_delta_provenance": "estimated",
   "wall_clock_ms": 0,
   "outcome": "DONE",
-  "verify_mode": "deterministic"
+  "verify_mode": "deterministic",
+  "verdict_changed_outcome": null
 }
 ```
 
@@ -34,6 +35,7 @@ v1 forward-compat rule on unknown fields).
 | `wall_clock_ms` | int | Dispatch wall-clock duration, milliseconds. |
 | `outcome` | enum | One of `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` · `BLOCKED` · `killed`. |
 | `verify_mode` | enum | How output was verified: `deterministic` · `judge` · `none`. |
+| `verdict_changed_outcome` | bool \| null | **A3 extension (ADR-109 Track A).** For a review/verdict subagent (e.g. `production-validator`): did the verdict change the outcome vs the in-session baseline? `true` = caught a real issue the baseline missed / flipped a false `READY`→`NOT READY`; `false` = no lift; `null` = not a verdict dispatch / not measured. **Negative-control (clean single-file) tasks MUST record `false`** — a `true` on a control = spurious findings, fails Gate A. Additive field on THIS object, not a second schema. Boolean/counts only, no bodies. |
 
 ## Privacy floor
 
