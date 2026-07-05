@@ -17,10 +17,11 @@ evidence pointer, or `task check-claims` fails the build.
 
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
+| On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**2 backed claim(s)** — all evidence pointers resolve in CI.
+**3 backed claim(s)** — all evidence pointers resolve in CI.
 
 We also publish our **debt**: 4 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
