@@ -1,34 +1,34 @@
 {
   "description_catalog": {
     "commands_core_source": {
-      "chars": 23412,
+      "chars": 23436,
       "entries": 162,
-      "tokens_claude": 6503,
+      "tokens_claude": 6510,
       "tokens_claude_exact": false,
-      "tokens_gpt": 4998,
+      "tokens_gpt": 5005,
       "tokens_gpt_exact": true
     },
     "skills_core_source": {
-      "chars": 50762,
-      "entries": 258,
-      "tokens_claude": 14101,
+      "chars": 50932,
+      "entries": 261,
+      "tokens_claude": 14148,
       "tokens_claude_exact": false,
-      "tokens_gpt": 10999,
+      "tokens_gpt": 11053,
       "tokens_gpt_exact": true
     },
     "skills_projected": {
-      "chars": 72852,
-      "entries": 412,
-      "tokens_claude": 20237,
+      "chars": 73243,
+      "entries": 416,
+      "tokens_claude": 20345,
       "tokens_claude_exact": false,
-      "tokens_gpt": 15733,
+      "tokens_gpt": 15828,
       "tokens_gpt_exact": true
     }
   },
-  "generated": "2026-06-26T09:20:20+00:00",
+  "generated": "2026-07-05T17:11:18+00:00",
   "longest_rules": [
     {
-      "chars": 12077,
+      "chars": 12083,
       "id": "legal-safety-floor",
       "tokens_gpt": 2920
     },
@@ -43,14 +43,14 @@
       "tokens_gpt": 2133
     },
     {
+      "chars": 7912,
+      "id": "domain-safety-pii",
+      "tokens_gpt": 2055
+    },
+    {
       "chars": 8430,
       "id": "autonomous-execution",
       "tokens_gpt": 2004
-    },
-    {
-      "chars": 7567,
-      "id": "domain-safety-pii",
-      "tokens_gpt": 1972
     },
     {
       "chars": 7368,
@@ -193,32 +193,48 @@
   },
   "rule_footprint": {
     ".augment": {
-      "chars": 299529,
+      "chars": 301087,
       "files": 93,
-      "tokens_claude": 83202,
+      "tokens_claude": 83635,
       "tokens_claude_exact": false,
-      "tokens_gpt": 74317,
+      "tokens_gpt": 74753,
       "tokens_gpt_exact": true
     },
     ".claude": {
-      "chars": 291714,
-      "files": 91,
-      "tokens_claude": 81032,
+      "chars": 302525,
+      "files": 93,
+      "tokens_claude": 84035,
       "tokens_claude_exact": false,
-      "tokens_gpt": 72409,
+      "tokens_gpt": 75076,
+      "tokens_gpt_exact": true
+    },
+    ".cursor": {
+      "chars": 302525,
+      "files": 93,
+      "tokens_claude": 84035,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 75076,
+      "tokens_gpt_exact": true
+    },
+    ".windsurfrules": {
+      "chars": 254664,
+      "files": 1,
+      "tokens_claude": 70740,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 61858,
       "tokens_gpt_exact": true
     }
   },
   "thin_projection": {
-    "eager_chars": 299529,
-    "eager_gpt": 74317,
+    "eager_chars": 302525,
+    "eager_gpt": 75076,
     "kernel_full": 10,
     "non_kernel_thinned": 83,
     "rules_total": 93,
-    "saved_gpt": 60170,
-    "saved_pct": 81,
-    "thin_chars": 59569,
-    "thin_gpt": 14147,
+    "saved_gpt": 60927,
+    "saved_pct": 81.2,
+    "thin_chars": 59574,
+    "thin_gpt": 14149,
     "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)"
   },
   "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)"
