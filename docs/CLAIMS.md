@@ -56,6 +56,13 @@
 - status: backed
 - last_verified: 2026-07-04
 
+### claim: discipline-lift-weak-host
+- claim: On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence.
+- kind: quant
+- evidence: docs/benchmark.md#weak-host-specific
+- status: backed
+- last_verified: 2026-07-05
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)
