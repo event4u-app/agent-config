@@ -1,0 +1,35 @@
+# B7 — comparison-honesty rows for the proof page.
+#
+# The point is the `checkable` column, not a takedown. For each dimension we
+# cite OUR evidence as a resolvable pointer (file / file#substring / ledger id),
+# and state what is PUBLICLY OBSERVABLE about the wider category — never a named
+# competitor (source-confidentiality), never a counter-claim to their headline
+# number. A category headline figure (e.g. an "84.8%" score) is cited ONLY as
+# uncheckable: no reproducible methodology is published, so it cannot be verified
+# either way — that is the whole point.
+#
+# check_comparison.ts enforces: every `our_evidence` resolves (reuses the
+# check_claims pointer resolver); every `checkable: true` row's `our_evidence`
+# resolves. build_proof renders these rows. check_no_external_sources guarantees
+# no named source leaks in.
+
+rows:
+  - claim: "No runtime — no background daemon, no state database, no auto-write memory."
+    our_evidence: "docs/contracts/no-runtime-boundary.md#file-first"
+    their_evidence: "Swarm-runtime tools in this category ship a background process and/or a state store by design; that is an architectural fact of the runtime approach, not a defect."
+    checkable: true
+
+  - claim: "Capability/benchmark results are published — including the runs where the package changed nothing."
+    our_evidence: "docs/benchmark.md"
+    their_evidence: "A category headline figure (e.g. an '84.8%' score) appears across marketing surfaces with no reproducible methodology published — so it cannot be verified either way."
+    checkable: true
+
+  - claim: "Every public claim binds to machine-checked evidence."
+    our_evidence: "docs/CLAIMS.md"
+    their_evidence: "Marketing claims in this category are not bound to a machine-checked ledger a reader can reproduce."
+    checkable: true
+
+  - claim: "Skills publish their own known limits, each with a witness test."
+    our_evidence: "tests/scripts/witness/check_refs_relative_gap.test.ts"
+    their_evidence: "Published known-limitation surfaces backed by reproducing tests are not a standard artifact in this category."
+    checkable: true

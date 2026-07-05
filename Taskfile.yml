@@ -84,6 +84,7 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-claims
       - task: check-skill-gaps
+      - task: check-comparison
       - task: check-structural-breaking
       - task: check-trigger-evals
       - task: lint-eval-freshness
@@ -238,6 +239,7 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-claims
       - task: check-skill-gaps
+      - task: check-comparison
       - task: check-structural-breaking
       - task: check-trigger-evals
       - task: lint-eval-freshness

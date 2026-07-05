@@ -44,7 +44,23 @@ red — so a "Known limit" can never quietly become false.
 |---|---|---|
 | `check-refs` | Only validates references to known-root paths (docs/, skills/, rules/, commands/, contexts/, personas/, …). A relative-path link such as `./sibling.md` or `../foo.md` is not matched, so a broken relative link is never reported. | [`tests/scripts/witness/check_refs_relative_gap.test.ts`](../tests/scripts/witness/check_refs_relative_gap.test.ts) |
 
-## 4. Verify it yourself
+## 4. What is checkable — us vs. the category
+
+This is not a takedown — the point is the last column. For each claim,
+our evidence is a pointer you can resolve on a fresh checkout; the wider
+category is described only by what is publicly observable, never a named
+competitor and never a counter-claim to anyone's headline number. A claim
+is "checkable" only when its `our evidence` pointer resolves — CI enforces
+that (`task check-comparison`), so this column can never lie.
+
+| Claim | Our evidence | The category | Checkable? |
+|---|---|---|---|
+| No runtime — no background daemon, no state database, no auto-write memory. | [`docs/contracts/no-runtime-boundary.md#file-first`](../docs/contracts/no-runtime-boundary.md) | Swarm-runtime tools in this category ship a background process and/or a state store by design; that is an architectural fact of the runtime approach, not a defect. | ✅ |
+| Capability/benchmark results are published — including the runs where the package changed nothing. | [`docs/benchmark.md`](../docs/benchmark.md) | A category headline figure (e.g. an '84.8%' score) appears across marketing surfaces with no reproducible methodology published — so it cannot be verified either way. | ✅ |
+| Every public claim binds to machine-checked evidence. | [`docs/CLAIMS.md`](../docs/CLAIMS.md) | Marketing claims in this category are not bound to a machine-checked ledger a reader can reproduce. | ✅ |
+| Skills publish their own known limits, each with a witness test. | [`tests/scripts/witness/check_refs_relative_gap.test.ts`](../tests/scripts/witness/check_refs_relative_gap.test.ts) | Published known-limitation surfaces backed by reproducing tests are not a standard artifact in this category. | ✅ |
+
+## 5. Verify it yourself
 
 On a fresh checkout, reproduce the claims above:
 
@@ -52,6 +68,7 @@ On a fresh checkout, reproduce the claims above:
 task check-claims   # every markered public claim binds to resolvable evidence
 task check-refs     # no broken internal references
 task check-skill-gaps    # every logged known-limit cites a real witness test
+task check-comparison    # every comparison-table "our evidence" pointer resolves
 task build-proof-check   # this page is in sync with its sources
 ```
 
