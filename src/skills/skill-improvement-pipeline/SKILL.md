@@ -120,6 +120,10 @@ After creation:
 2. Copy to `.augment/`
 3. Mark hash: `./scripts-run src/scripts/condense --mark-done "{relative_path}"`
 4. Regenerate tools: `./scripts-run src/scripts/condense --generate-tools`
+5. **If the learning came from a knowledge page** (`agents/knowledge/procedures/skill-candidates.md`
+   or any `agents/knowledge/` page) — degrade the source to a pointer;
+   promotion is not complete otherwise (double-maintenance risk):
+   `./scripts-run src/scripts/degrade_to_pointer --source "<knowledge-path>[#<anchor>]" --artifact "{relative_path}" --date "<YYYY-MM-DD>"`
 
 ### Step 5: Decide scope
 

@@ -233,6 +233,26 @@ before handing to `upstream-contribute`. The
 gate is hard: non-zero exit = the proposal does not move
 to stage `gated`.
 
+### 9. Degrade the source to a pointer (when promoted from a knowledge page)
+
+If the learning came from an `agents/knowledge/procedures/skill-candidates.md`
+entry or any other `agents/knowledge/` page (see § "Knowledge-candidate
+learnings" below), promotion is **not complete** until the source is
+degraded to a pointer — this is what prevents double-maintenance between
+the knowledge page and the new artifact:
+
+```bash
+./scripts-run src/scripts/degrade_to_pointer \
+    --source "agents/knowledge/procedures/skill-candidates.md#<topic>" \
+    --artifact "<promoted-artifact-path>" \
+    --date "<YYYY-MM-DD>"
+```
+
+This rewrites the source entry to `Promoted to <artifact> on <date>; see
+<path>.` and regenerates `agents/knowledge/INDEX.md`. Skip this step
+only when the learning's source was NOT a knowledge page (e.g. a direct
+user request, an audit-log pattern, or a one-off observation).
+
 ## Output format
 
 For the **decision step** (what this skill prints to the user):
@@ -331,6 +351,32 @@ mining `agents/runtime/state/audit/<YYYY-MM>.jsonl`
    `source_learning: agents/runtime/state/audit/<YYYY-MM>.jsonl#<line_ids>`
    and link the mining-script run id, so the human reviewer can
    reproduce the pattern from the raw audit log.
+
+## Knowledge-candidate learnings (optional source)
+
+When the input is an entry from `agents/knowledge/procedures/skill-candidates.md`
+that reached candidate status (≥ 3 mentions across distinct sessions —
+see `update_skill_candidates.ts` and the
+[`memory-consolidation`](../memory-consolidation/SKILL.md) recurrence
+step):
+
+1. Treat the candidate's topic as the **State the learning** step
+   input (§1). The repetition gate (§0) is already satisfied by the
+   ≥ 3-mention threshold — skip straight to §3 (decide the target).
+   Overlap check (§4) and proposal draft (§8) remain mandatory.
+2. **Ground the draft in the original session logs, never the
+   consolidated summary alone.** The candidate entry's `Sessions:`
+   list names the chat-history session ids the topic recurred in —
+   pull those via [`/chat-history import`](../../../commands/chat-history/import.md)
+   (select by id) or the host's native transcript view before
+   drafting. A skill written purely from the recurrence-counter
+   summary tends to be plausible but wrong; the original transcripts
+   carry the detail the summary dropped.
+3. Set `source_learning` to the knowledge-candidate entry
+   (`agents/knowledge/procedures/skill-candidates.md#<topic>`).
+4. **§9 (degrade the source) is mandatory for this source type** —
+   the whole point of the candidate counter is that it stops counting
+   once promoted.
 
 ## Environment notes
 

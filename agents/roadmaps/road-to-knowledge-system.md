@@ -85,10 +85,10 @@ Rollback: unregister the hook; no data affected.
 
 ## Phase 4 — Self-learning wiring: promotion + pointer degradation
 
-- [ ] `src/scripts/degrade_to_pointer.ts` — given a promoted artifact (skill/rule/guideline) and its source knowledge/memory entry, rewrite the source to a pointer stub (`Promoted to <artifact> on <date>; see <path>`) and regenerate INDEX.md
-- [ ] Wire the step into `learning-to-rule-or-skill` + `skill-improvement-pipeline` checklists (promotion is not complete until the source is a pointer)
-- [ ] Add draft-grounding guidance to `learning-to-rule-or-skill`: candidate drafts cite the original session log (chat-history), not the consolidated summary
-- [ ] Unit test: degradation rewrites the entry, preserves frontmatter provenance, INDEX stays consistent
+- [x] `src/scripts/degrade_to_pointer.ts` — given a promoted artifact (skill/rule/guideline) and its source knowledge/memory entry, rewrite the source to a pointer stub (`Promoted to <artifact> on <date>; see <path>`) and regenerate INDEX.md
+- [x] Wire the step into `learning-to-rule-or-skill` + `skill-improvement-pipeline` checklists (promotion is not complete until the source is a pointer)
+- [x] Add draft-grounding guidance to `learning-to-rule-or-skill`: candidate drafts cite the original session log (chat-history), not the consolidated summary
+- [x] Unit test: degradation rewrites the entry, preserves frontmatter provenance, INDEX stays consistent
 
 Exit criteria: one real skill-candidate walked end-to-end (candidate → promotion → pointer) on this repo; both promotion skills reference the step.
 Rollback: pointer stubs retain provenance; restoring an entry is a git revert of that file.
