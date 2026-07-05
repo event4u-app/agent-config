@@ -269,5 +269,6 @@ agents/runtime/council/sessions/
 /site/src/content/docs/proof.md
 /site/src/content/docs/benchmark.md
 /site/src/content/docs/claims.md
+/site/src/content/docs/catalog.md
 # Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
 /site/public/media/
