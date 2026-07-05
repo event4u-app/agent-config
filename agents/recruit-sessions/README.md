@@ -54,10 +54,24 @@ Recruits handle real customer data, real client briefs, real personal device sta
 - **Not a beta-test signup funnel.** Recruits are not converted into ongoing testers in the same session. If they want to keep using the package after, that's a separate conversation.
 - **Not a marketing artefact.** The reports are internal product input. Verbatim quotes may be re-used externally only with the recruit's explicit re-publication consent, captured in writing after the report has been written.
 
+## Second study — install-friction (B9)
+
+A distinct, later study lives alongside the employee-product sessions above:
+the **install-friction study** (roadmap B9, feeds Gate C). Different recruits
+(external Laravel/TS developers), a different task (an unaided, timed **wedge
+install** — the `production-validator` `curl` one-liner + first verdict), and
+quantitative metrics (median time-to-first-value, abandonment rate). It reuses
+the consent + redaction policy above unchanged.
+
+- Protocol: [`_install-friction-runbook.md`](_install-friction-runbook.md).
+- Output: [`docs/install-friction-report.md`](../../docs/install-friction-report.md) — median · abandonment · top-3 friction · Gate-C verdict.
+- Gate-C lock: median TTFV > 60 s **or** abandonment > 20 % → the wedge failed; iterate before finalizing C2.
+
 ## Files in this directory
 
 - `README.md` — this file (what / who / consent).
 - `_template.md` — pre-session checklist, interview script, post-session report skeleton. **Copy this** for every session; never edit in place.
+- `_install-friction-runbook.md` — the B9 install-friction study protocol (external-dev recruits, timed wedge install, Gate-C lock).
 - `01-galabau-owner.md` — session 1 report (filed after Phase 1 Step 3 runs).
 - `02-content-creator.md` — session 2 report (filed after Phase 1 Step 4 runs).
 - `03-consultant.md` — session 3 report (filed after Phase 1 Step 5 runs).
