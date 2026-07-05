@@ -64,6 +64,11 @@ Fill this table per task (one row per arm), from the telemetry line's
 | task | arm | verdict | verdict_changed_outcome | token_delta | tokens acceptable? |
 |---|---|---|---|---|---|
 
+> **First run recorded (2026-07-05): HONEST NULL** — see
+> [`pv-a3-results.md`](pv-a3-results.md). No baseline was fooled on `pv-01`
+> (all arms caught the hollow path), so `production-validator` shows no verdict
+> lift and stays default-off per ADR-109 Gate A. The `pv-02` control passed.
+
 **Gate A (ships the unit only if):** on `pv-01`, `production-validator` records
 `verdict_changed_outcome: true` (flips a false baseline `READY`→`NOT READY`) at
 acceptable `token_delta`, **and** on `pv-02` (negative control) **every** arm —
