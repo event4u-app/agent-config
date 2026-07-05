@@ -15,6 +15,7 @@ transform — `.mdc`, workflow, or an aggregated single file) · **— none**
 | `rules` | ✅ native | — none | ✅ native | 🔁 adapter | 🔁 adapter | ✅ native | 🔁 adapter | 🔁 adapter † | — none |
 | `skills` | ✅ native | ✅ native | ✅ native | — none | — none | — none | — none | — none | — none |
 | `commands` | ✅ native | — none | ✅ native | 🔁 adapter | 🔁 adapter | — none | — none | — none | — none |
+| `subagents` | ✅ native | — none | — none | — none | — none | — none | — none | — none | — none |
 | `personas` | ✅ native | — none | ✅ native | ✅ native | — none | — none | — none | — none | — none |
 | `user-types` | ✅ native | — none | ✅ native | ✅ native | — none | — none | — none | — none | — none |
 | `hooks` | — none | ✅ native | — none | — none | — none | — none | — none | — none | — none |
