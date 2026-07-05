@@ -11,11 +11,12 @@ import {
     _module,
     _package_roots,
     _relativize,
+    _resolve_regenerator,
+    _target_root,
     run,
 } from '../../../src/scripts/roadmap_progress_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'roadmap_progress_hook.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -239,6 +240,68 @@ describe.skipIf(!tsx)('roadmap_progress — run()', () => {
         expect(run(stdin, { consumer_root: root })).toBe(0);
         expect(fs.existsSync(marker)).toBe(true);
     });
+
+    it("regenerates the edited roadmap's OWN repo, not --project-dir (worktree/sibling)", () => {
+        // The bug this fixes: an agent edits a roadmap in a sibling worktree
+        // while the session's --project-dir is a different checkout. Keying off
+        // --project-dir alone silently skipped the edit → the worktree's
+        // dashboard drifted. The edited file's own repo must regenerate instead.
+        const proj = consumerRoot(); // the session's --project-dir
+        const sib = consumerRoot(); // a sibling worktree, its own regenerator
+        const absInSibling = path.join(sib.root, 'agents', 'roadmaps', 'feature.md');
+        const stdin = JSON.stringify({
+            hook_event_name: 'PostToolUse',
+            tool_name: 'Edit',
+            tool_input: { file_path: absInSibling },
+        });
+        expect(run(stdin, { consumer_root: proj.root })).toBe(0);
+        expect(fs.existsSync(sib.marker)).toBe(true); // sibling regenerated
+        expect(fs.existsSync(proj.marker)).toBe(false); // project-dir untouched
+    });
+});
+
+// ── _target_root (worktree/sibling awareness) ────────────────────────
+
+describe('roadmap_progress — _target_root', () => {
+    it('absolute roadmap path → its own repo root, wherever it is', () => {
+        expect(_target_root('/a/b/repo/agents/roadmaps/x.md', '/other')).toBe('/a/b/repo');
+    });
+    it('absolute path in a sibling worktree → that worktree, not consumer_root', () => {
+        expect(_target_root('/tmp/wt/agents/roadmaps/x.md', '/tmp/proj')).toBe('/tmp/wt');
+    });
+    it('relative roadmap path → consumer_root (Augment repo-relative case)', () => {
+        expect(_target_root('agents/roadmaps/x.md', '/proj')).toBe('/proj');
+        expect(_target_root('./agents/roadmaps/x.md', '/proj')).toBe('/proj');
+    });
+    it('archive / dashboard / non-roadmap → null', () => {
+        expect(_target_root('/r/agents/roadmaps/archive/old.md', '/p')).toBeNull();
+        expect(_target_root('/r/agents/roadmaps-progress.md', '/p')).toBeNull();
+        expect(_target_root('/r/src/foo.php', '/p')).toBeNull();
+        expect(_target_root('agents/roadmaps/notes.txt', '/p')).toBeNull();
+    });
+});
+
+// ── _resolve_regenerator fallback (env-less standalone) ──────────────
+
+describe('roadmap_progress — regenerator resolution fallback', () => {
+    it('finds the shipped regenerator with no AGENT_CONFIG_PACKAGE_ROOT set', () => {
+        // Regression guard for the off-by-one package-root walk: with the env
+        // var unset, the fallback must still reach the package root that ships
+        // src/agent-src/scripts/update_roadmap_progress.ts (previously it stopped
+        // one dir short at <pkg>/src → null → silent no-op → dashboard drift).
+        const prev = process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+        delete process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+        try {
+            const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'rp-bare-'));
+            cleanup.push(bare);
+            const found = _resolve_regenerator(bare);
+            expect(found).not.toBeNull();
+            expect(found).toMatch(/update_roadmap_progress\.ts$/);
+        } finally {
+            if (prev === undefined) delete process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+            else process.env['AGENT_CONFIG_PACKAGE_ROOT'] = prev;
+        }
+    });
 });
 
 // ── _relativize ──────────────────────────────────────────────────────
@@ -265,27 +328,3 @@ describe('roadmap_progress — _relativize', () => {
     });
 });
 
-// ── Golden parity vs python3 ─────────────────────────────────────────
-
-interface RunResult {
-    status: number | null;
-    stdout: string;
-    stderr: string;
-    markerExists: boolean;
-}
-
-// Build a consumer dir with a sentinel .py regenerator whose marker lives
-// INSIDE the consumer dir (so the two parity dirs stay isolated).
-function makeParityDir(prefix: string): { dir: string; marker: string } {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-    const scriptsDir = path.join(dir, '.augment', 'scripts');
-    fs.mkdirSync(scriptsDir, { recursive: true });
-    const marker = path.join(dir, 'regen.marker');
-    fs.writeFileSync(
-        path.join(scriptsDir, 'update_roadmap_progress.py'),
-        'import pathlib, sys\n' +
-            `pathlib.Path('regen.marker').write_text('ok')\n` +
-            'sys.exit(0)\n',
-    );
-    return { dir, marker };
-}
