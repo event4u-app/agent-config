@@ -43,7 +43,7 @@ function expectParity(stdin: string): { stdout: string; status: number | null } 
     return { stdout: ts.stdout as string, status: ts.status };
 }
 
-describe('injection_scan_hook — golden parity (python3 vs tsx)', () => {
+describe('injection_scan_hook — golden parity', () => {
     let tmp: string;
 
     beforeEach(() => {

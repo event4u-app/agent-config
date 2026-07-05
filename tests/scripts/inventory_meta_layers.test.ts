@@ -43,7 +43,7 @@ function runTs(args: string[]) {
     return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
 }
 
-describe('inventory_meta_layers — golden parity (python3 vs tsx)', () => {
+describe('inventory_meta_layers — golden parity', () => {
     let snap: Record<string, string | null> = {};
     let release: (() => void) | null = null;
     beforeEach(() => {

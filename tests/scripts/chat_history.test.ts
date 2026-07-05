@@ -109,7 +109,7 @@ function seqBoth(ops: string[][]): { pyFile: string; tsFile: string } {
 // Layer 1 — subprocess golden parity (settings-independent CLI surface)
 // ---------------------------------------------------------------------
 
-describe('chat_history — CLI golden parity (python3 vs tsx)', () => {
+describe('chat_history — CLI golden parity', () => {
     it('init writes a byte-identical header (stdout + file)', () => {
         const pyFile = path.join(mkTmp(), '.agent-chat-history');
         const tsFile = path.join(mkTmp(), '.agent-chat-history');

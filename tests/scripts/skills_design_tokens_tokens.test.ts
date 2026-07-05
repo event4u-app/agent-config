@@ -67,7 +67,7 @@ afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-describe.runIf(runnable)('tokens — generate (python3 vs tsx)', () => {
+describe.runIf(runnable)('tokens — generate', () => {
     it('CSS from the shipped starter token JSON is byte-identical', () => {
         expectParity(['generate', '--config', STARTER]);
     });
@@ -153,7 +153,7 @@ describe.runIf(runnable)('tokens — generate (python3 vs tsx)', () => {
     });
 });
 
-describe.runIf(runnable)('tokens — validate (python3 vs tsx)', () => {
+describe.runIf(runnable)('tokens — validate', () => {
     // A tree exercising every scanner branch: hex (+ exception), RGB(A),
     // px (2+ digits only), rem, comment lines, var(--) skip, allowed-host
     // skip, ignored dir, skip-file pattern (.min.css), nested dir ordering.
@@ -241,7 +241,7 @@ describe.runIf(runnable)('tokens — validate (python3 vs tsx)', () => {
     });
 });
 
-describe.runIf(runnable)('tokens — embed (python3 vs tsx)', () => {
+describe.runIf(runnable)('tokens — embed', () => {
     function buildCss(): string {
         const out = path.join(tmp, 'tokens.css');
         const r = runTs(['generate', '--config', STARTER, '-o', out]);

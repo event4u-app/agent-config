@@ -34,7 +34,7 @@ function runTs(cwd: string, args: string[] = []) {
     return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd, encoding: 'utf8' });
 }
 
-describe('lint_empty_roadmaps — golden parity (python3 vs tsx)', () => {
+describe('lint_empty_roadmaps — golden parity', () => {
     it('clean real repo: byte-identical stdout + exit 0', () => {
         const ts = runTs(REPO_ROOT);
         expect(ts.stderr).toBe('');

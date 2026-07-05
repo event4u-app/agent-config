@@ -1,6 +1,6 @@
 // Tests for src/scripts/check_council_config_location.ts (ADR-200).
 //
-// Golden parity (python3 vs tsx) on tmp fixtures: the script reads cwd-relative
+// Golden parity on tmp fixtures: the script reads cwd-relative
 // SCAN_GLOBS, so each case builds a tmp repo, runs both binaries with cwd set
 // there, and asserts byte-identical stdout/stderr/exit. Covers the clean pass,
 // each violation branch (un-negated `.agent-settings.yml`, `ai_council:` block),

@@ -4,7 +4,7 @@
 // scoped matches, large-flagged sibling rejects an unscoped query, opt-out
 // sibling is never read, secrets are redacted, the no-siblings path is inert.
 // `monkeypatch.setattr(crr, "collect_siblings", ...)` maps to the module's
-// `_setCollectSiblings` test hook. Plus a golden-parity block (python3 vs tsx)
+// `_setCollectSiblings` test hook. Plus a golden-parity block
 // over the same fixtures for `search_sibling`. Fixtures live under
 // tests/fixtures/cross-repo/. No live network, no real cross-repo writes.
 import { spawnSync } from 'node:child_process';
