@@ -6,7 +6,7 @@
 
 ## Overall
 
-**99 / 163 steps done · 61%**
+**100 / 163 steps done · 61%**
 
 ```text
 ████████████████████████░░░░░░░░░░░░░░░░   61%
@@ -16,7 +16,7 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md) | 4 | 33 | 19 | 14 | 0 | 0 | ████░░░░░░ 42% |
+| 1 | [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md) | 4 | 33 | 18 | 15 | 0 | 0 | ████░░░░░░ 45% |
 | 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
@@ -28,11 +28,11 @@
 
 ### [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md)
 
-**Final state + market readiness** — 14 / 33 done (42%)
+**Final state + market readiness** — 15 / 33 done (45%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Parallel tracks (Track A gated, Track B table-stakes) | 🟡 in progress | 7 | 12 | 0 | 0 | 63% |
+| 1 | Parallel tracks (Track A gated, Track B table-stakes) | 🟡 in progress | 6 | 13 | 0 | 0 | 68% |
 | 2 | Conditional-launch gate (council gap — explicit decision point) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | External-telemetry-gated (the monoculture honesty gate) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Scale (3+ external adopters) | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
