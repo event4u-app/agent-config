@@ -24,6 +24,7 @@ export default defineConfig({
         {
           label: 'Reference',
           items: [
+            { label: 'Catalog', link: '/catalog/' },
             { label: 'Discipline-axis benchmark', link: '/benchmark/' },
             { label: 'Claims ledger', link: '/claims/' },
           ],

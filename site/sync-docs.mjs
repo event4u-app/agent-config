@@ -23,8 +23,13 @@ const PAGES = [
   { src: 'proof.md', slug: 'proof', title: 'Verify it yourself' },
   { src: 'benchmark.md', slug: 'benchmark', title: 'Discipline-axis benchmark' },
   { src: 'CLAIMS.md', slug: 'claims', title: 'Claims ledger' },
+  { src: 'catalog.md', slug: 'catalog', title: 'Catalog' },
 ];
 const BASE = '/agent-config';
+// The catalog links to source files (../dist/…, ../docs/…, ../README.md) that
+// the static site does not serve; rewrite those to the canonical GitHub source
+// so they resolve (and the internal-link checker skips them as external).
+const GH_BLOB = 'https://github.com/event4u-app/agent-config/blob/main';
 const linkMap = new Map(PAGES.map((p) => [p.src, `${BASE}/${p.slug}/`]));
 
 /** Strip a leading `---\n…\n---` frontmatter block if present. */
@@ -51,6 +56,11 @@ function rewriteMedia(text) {
   return text.replace(/\]\(\.?\/?media\//g, `](${BASE}/media/`);
 }
 
+/** Rewrite residual repo-relative `](../<path>)` links to the GitHub source. */
+function rewriteSourceLinks(text) {
+  return text.replace(/\]\(\.\.\/([^)]+)\)/g, (_m, rel) => `](${GH_BLOB}/${rel})`);
+}
+
 /** Copy docs/media/* → site/public/media/* so embedded assets are served. */
 function syncMedia() {
   if (!fs.existsSync(MEDIA_SRC)) return 0;
@@ -74,7 +84,9 @@ for (const { src, slug, title } of PAGES) {
     console.error(`sync-docs: SKIP ${src} (missing)`);
     continue;
   }
-  const body = rewriteMedia(rewriteLinks(stripFrontmatter(fs.readFileSync(srcPath, 'utf8')).trimEnd()));
+  const body = rewriteSourceLinks(
+    rewriteMedia(rewriteLinks(stripFrontmatter(fs.readFileSync(srcPath, 'utf8')).trimEnd())),
+  );
   const page =
     `---\n` +
     `title: ${JSON.stringify(title)}\n` +
