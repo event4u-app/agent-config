@@ -192,6 +192,28 @@
       "type": "string",
       "enum": ["steps", "files", "independent"],
       "description": "Classifier signal for auto-dispatch. 'steps' = ordered multi-step plan → do-in-steps. 'files' = N independent files of the same shape → do-in-parallel. 'independent' = N independent same-shape targets (not files) → do-in-parallel. Omit for skills that are always single-pass. Read by auto-dispatch-classification.md classifier signal 1."
+    },
+    "gaps": {
+      "type": "array",
+      "description": "B6 — honest-null known limitations. Human-curated (NOT auto-discovered), not all skills. Each entry documents a real limitation and cites a witness test that reproduces it. Rendered on the proof page's 'Known Limits'; check_skill_gaps enforces every witness path exists. The offensive-transparency surface a headline-benchmark cannot ship.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description", "witness"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280,
+            "description": "The limitation, stated honestly (what the skill does NOT do / where it fails)."
+          },
+          "witness": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Repo-relative path to a test that reproduces/demonstrates this limitation (passes while the gap is real; a failing witness = stale gap to remove)."
+          }
+        }
+      }
     }
   }
 }
