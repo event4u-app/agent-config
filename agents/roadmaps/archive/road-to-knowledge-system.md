@@ -14,8 +14,8 @@ A consumer project gains a git-tracked, team-shared knowledge layer under `agent
 
 ## Prerequisites
 
-- [ ] Verdict context exists: `agents/settings/contexts/knowledge-system-verdict.md` (this roadmap encodes it; do not reopen B-vs-C)
-- [ ] Existing surfaces confirmed at HEAD: `check_knowledge_cards.ts`, `knowledge_global*.ts` (ADR-100), `memory:*` commands + gitignored intake, `memory-consolidation` skill, `learning-to-rule-or-skill`, `skill-improvement-pipeline`, chat-history JSONL import
+- [x] Verdict context exists: `agents/settings/contexts/knowledge-system-verdict.md` (this roadmap encodes it; do not reopen B-vs-C)
+- [x] Existing surfaces confirmed at HEAD: `check_knowledge_cards.ts`, `knowledge_global*.ts` (ADR-100), `memory:*` commands + gitignored intake, `memory-consolidation` skill, `learning-to-rule-or-skill`, `skill-improvement-pipeline`, chat-history JSONL import
 
 ## Context
 
@@ -143,12 +143,12 @@ Rollback: delete staging output; command is additive.
 
 ## Acceptance criteria
 
-- [ ] All new scripts are TypeScript, deterministic, runtime-free; tests green once locally on introduction
-- [ ] Zero changes to existing knowledge-card paths, `check_knowledge_cards.ts` behavior, or ADR-100 global-store scripts
-- [ ] Anti-dump litmus: every new artifact fills a verified gap from the gap-table; no new artifact duplicates an existing skill/command/lint; new prose folds into existing skills (`memory-consolidation`, `learning-to-rule-or-skill`) instead of spawning parallel ones
-- [ ] Governance preflight: no new domain opened (`domain-adoption-policy` — within existing memory/knowledge surfaces); no new personas; framework-neutral; all files within size budgets
-- [ ] REJECT list from the verdict context remains intact (no wiki layer, no search infra, no mandatory schema, no auto-resolution) — plus the living-context additions: no mid-task tracked writes without this-turn approval, no auto-committed bootstrap output, no LLM-invented claims in bootstrap templates, session-boundary is not the SOLE gate (immediate-approval path exists)
-- [ ] Context faults are never silently repaired: every repair carries provenance (what failed, evidence, session) either in the contested annotation or the isolated fix commit
+- [x] All new scripts are TypeScript, deterministic, runtime-free; tests green once locally on introduction
+- [x] Zero changes to existing knowledge-card paths, `check_knowledge_cards.ts` behavior, or ADR-100 global-store scripts
+- [x] Anti-dump litmus: every new artifact fills a verified gap from the gap-table; no new artifact duplicates an existing skill/command/lint; new prose folds into existing skills (`memory-consolidation`, `learning-to-rule-or-skill`) instead of spawning parallel ones
+- [x] Governance preflight: no new domain opened (`domain-adoption-policy` — within existing memory/knowledge surfaces); no new personas; framework-neutral; all files within size budgets
+- [x] REJECT list from the verdict context remains intact (no wiki layer, no search infra, no mandatory schema, no auto-resolution) — plus the living-context additions: no mid-task tracked writes without this-turn approval, no auto-committed bootstrap output, no LLM-invented claims in bootstrap templates, session-boundary is not the SOLE gate (immediate-approval path exists)
+- [x] Context faults are never silently repaired: every repair carries provenance (what failed, evidence, session) either in the contested annotation or the isolated fix commit
 
 ## Provenance
 
