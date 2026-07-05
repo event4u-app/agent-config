@@ -22,6 +22,8 @@ describe('build_proof — render()', () => {
     it('emits the required proof structure', () => {
         const out = render();
         expect(out).toContain('# Proof — verify our claims yourself');
+        expect(out).toContain('## See it run (< 60s, real output)');
+        expect(out).toContain('](media/proof-demo.gif)');
         expect(out).toContain('## 1. Every public claim binds to evidence');
         expect(out).toContain('## 2. We publish honest nulls');
         expect(out).toContain('## 3. Known limits (published, witness-tested)');

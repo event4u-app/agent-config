@@ -57,6 +57,15 @@ function render(): string {
     L.push('every check below on a fresh checkout. This page is itself generated');
     L.push('from those sources and fails CI if it drifts.');
     L.push('');
+    L.push('## See it run (< 60s, real output)');
+    L.push('');
+    L.push('![The trust surface running green — every "verify it yourself" command below, recorded from a real run](media/proof-demo.gif)');
+    L.push('');
+    L.push('The recording is of the exact commands in § 5, nothing staged. Its');
+    L.push('commands are re-executed in CI (`.github/workflows/proof-demo.yml`), so a');
+    L.push('demo that showed something broken would turn CI red — the recording');
+    L.push('cannot drift from current behavior.');
+    L.push('');
     L.push('## 1. Every public claim binds to evidence');
     L.push('');
     L.push(`Rendered from [\`${LEDGER_REL}\`](CLAIMS.md). A \`<!-- claim:ID -->\` marker in`);

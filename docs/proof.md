@@ -9,6 +9,15 @@ public claim binds to resolvable evidence; a skeptic can reproduce
 every check below on a fresh checkout. This page is itself generated
 from those sources and fails CI if it drifts.
 
+## See it run (< 60s, real output)
+
+![The trust surface running green — every "verify it yourself" command below, recorded from a real run](media/proof-demo.gif)
+
+The recording is of the exact commands in § 5, nothing staged. Its
+commands are re-executed in CI (`.github/workflows/proof-demo.yml`), so a
+demo that showed something broken would turn CI red — the recording
+cannot drift from current behavior.
+
 ## 1. Every public claim binds to evidence
 
 Rendered from [`docs/CLAIMS.md`](CLAIMS.md). A `<!-- claim:ID -->` marker in
