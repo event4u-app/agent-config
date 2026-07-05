@@ -1,11 +1,10 @@
-// Tests for src/scripts/print_required_checks.ts (py2ts Phase 8 / Wave 8g).
+// Contract tests for src/scripts/print_required_checks.ts (py2ts Phase 8).
 //
-// No pytest suite existed — focused differential (python3 vs tsx, byte-exact)
-// over deterministic `--branch`/`--base` invocations covering the three PR
-// shapes (feature / release / docs-only), the release-out-of-shape fallback,
-// `=`-joined flags, and the argparse error paths. `--base HEAD` keeps the diff
-// deterministic in any checkout. Read-only, no git drift. Skipped without
-// python3.
+// Covers the PR shapes (feature / release / docs-only), `=`-joined flags, and
+// the argparse error paths over deterministic `--branch`/`--base HEAD`
+// invocations (`--base HEAD` → empty diff in any checkout). Read-only, no git
+// drift. The tsx twin is the source of truth (the python original was deleted
+// in the teardown).
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,11 +29,13 @@ const runTs = (args: string[]) =>
 // required-checks matrix change).
 describe('print_required_checks — CLI contract', () => {
     it('required checks per PR shape (pinned)', () => {
+        // Every case passes an explicit --branch: the no-flag path auto-detects
+        // the current git branch (env-dependent — differs local vs CI), so it is
+        // intentionally excluded from the pinned snapshot.
         const shapes: Record<string, string[]> = {
             feature: ['--branch', 'feat/x', '--base', 'HEAD'],
             release: ['--branch', 'release/1.2.3', '--base', 'HEAD'],
             'docs-only': ['--branch', 'docs/x', '--base', 'HEAD'],
-            'no-branch': ['--base', 'HEAD'],
             'eq-joined': ['--branch=feat/y', '--base=HEAD'],
         };
         const out = Object.fromEntries(
@@ -77,21 +78,6 @@ describe('print_required_checks — CLI contract', () => {
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "feature": "Branch: feat/x
-          Base:   HEAD
-          PR shape: feature  (0 file(s) in diff)
-          Required checks (8):
-            - Consistency
-            - Smoke Contracts
-            - Skill Lint
-            - Tests / install-tests
-            - Tests / install-aux-tests
-            - Tests / python-tests
-            - Tests / node-tests
-            - Public Install Smoke / smoke
-
-          Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
-          ",
-            "no-branch": "Branch: main
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
           Required checks (8):
