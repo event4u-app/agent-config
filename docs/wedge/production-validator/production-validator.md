@@ -1,6 +1,6 @@
 ---
 name: production-validator
-description: Use proactively before declaring a feature done, a PR ready, or a task complete. Audits that no mock, stub, fake, TODO, or placeholder remains on the shipped (non-test) path and that the change was actually exercised against real systems — not just green tests over hollow code. The last gate before "done".
+description: Use before declaring a feature done or a PR ready. Audits that no mock, stub, fake, TODO, or placeholder remains on the shipped (non-test) path and that the change ran against real systems — not just green tests over hollow code.
 tools: Read, Grep, Glob, Bash
 model: inherit
 ---

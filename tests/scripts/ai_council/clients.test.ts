@@ -280,6 +280,41 @@ describe('clients — AnthropicClient (mock transport)', () => {
         expect(Number.isInteger(r.latency_ms)).toBe(true);
     });
 
+    it('joins text blocks and skips a leading thinking block (extended-thinking models)', () => {
+        // Regression: extended-thinking models (e.g. claude-fable-5) return a
+        // `thinking` block FIRST. The legacy `content[0].text` extraction dropped
+        // the real answer (observed live: 3191 output_tokens, text len 0).
+        const mock = {
+            messages: {
+                create: () => ({
+                    content: [
+                        { type: 'thinking', thinking: 'internal reasoning…' },
+                        { type: 'text', text: 'the real answer' },
+                    ],
+                    usage: { input_tokens: 5, output_tokens: 9 },
+                }),
+            },
+        };
+        const r = new AnthropicClient({ client: mock }).ask('s', 'u');
+        expect(r.text).toBe('the real answer');
+        expect(r.output_tokens).toBe(9);
+    });
+
+    it('concatenates multiple text blocks in order', () => {
+        const mock = {
+            messages: {
+                create: () => ({
+                    content: [
+                        { type: 'text', text: 'part one ' },
+                        { type: 'text', text: 'part two' },
+                    ],
+                    usage: { input_tokens: 1, output_tokens: 2 },
+                }),
+            },
+        };
+        expect(new AnthropicClient({ client: mock }).ask('s', 'u').text).toBe('part one part two');
+    });
+
     it('normalises SDK exceptions into error= without raising', () => {
         const mock = {
             messages: {

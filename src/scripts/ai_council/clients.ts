@@ -384,9 +384,25 @@ export class AnthropicClient extends ExternalAIClient {
         const latency_ms = _elapsedMs(t0);
         let text = '';
         const content = _getattr(response, 'content', null);
-        if (_pyTruthy(content)) {
-            const first = (content as unknown[])[0];
-            text = (_getattr(first, 'text', '') as string) || '';
+        if (_pyTruthy(content) && Array.isArray(content)) {
+            // Join every text-type block. Extended-thinking models (e.g.
+            // claude-fable-5) return a `thinking`/`reasoning` block FIRST, so the
+            // legacy `content[0].text` extraction yielded '' despite real output
+            // (observed: 3191 output_tokens, text len 0). Collect text from all
+            // `type === 'text'` (or untyped) blocks; skip thinking / tool_use.
+            const parts: string[] = [];
+            for (const block of content as unknown[]) {
+                const btype = _getattr(block, 'type', null);
+                const btext = _getattr(block, 'text', '') as string;
+                if ((btype === null || btype === 'text') && typeof btext === 'string' && btext) {
+                    parts.push(btext);
+                }
+            }
+            text = parts.join('');
+            if (!text) {
+                const first = (content as unknown[])[0];
+                text = (_getattr(first, 'text', '') as string) || '';
+            }
         }
         const usage = _getattr(response, 'usage', null);
         return new CouncilResponse({
