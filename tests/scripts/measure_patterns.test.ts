@@ -18,60 +18,37 @@ import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_patterns.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_patterns.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-const SKILLS_DIR = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function skillsDirPresent(): boolean {
-    return spawnSync('test', ['-d', SKILLS_DIR]).status === 0;
-}
-function runPy(args: string[]) {
-    return spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-}
 function runTs(args: string[]) {
     return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
 }
 
-describe.runIf(hasPython3())('measure_patterns — golden parity (python3 vs tsx)', () => {
-    // Every reporting shape reaches the same code path in this repo (skills dir
-    // present → real scan; absent → exit-3 guard). Either way byte-identical.
-    for (const args of [[], ['--json'], ['--tier', '1'], ['--tier', '3']]) {
-        it(`byte-identical for: ${args.join(' ') || '(default)'}`, () => {
-            const py = runPy(args);
-            const ts = runTs(args);
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
-
-    it.skipIf(skillsDirPresent())('missing skills dir → exit 3 + identical stderr', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(py.status).toBe(3);
-        expect(ts.status).toBe(3);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.stdout).toBe('');
-        expect(py.stdout).toBe('');
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). It scans src/skills (always present in-repo) → output is
+// corpus-derived, asserted structurally (exit 0, non-empty, valid JSON,
+// deterministic) rather than snapshotted.
+describe('measure_patterns — CLI contract', () => {
+    it('every reporting shape runs deterministically over src/skills (exit 0)', () => {
+        for (const args of [[], ['--json'], ['--tier', '1'], ['--tier', '3']]) {
+            const a = runTs(args);
+            expect(a.status, `${args.join(' ')}: ${a.stderr}`).toBe(0);
+            expect(a.stdout.length).toBeGreaterThan(0);
+            expect(runTs(args).stdout, `${args.join(' ')} deterministic`).toBe(a.stdout);
+        }
+        expect(() => JSON.parse(runTs(['--json']).stdout)).not.toThrow();
     });
 
-    it('bad flag → exit code parity (argparse banner prose not compared)', () => {
-        const py = runPy(['--bogus']);
-        const ts = runTs(['--bogus']);
-        expect(ts.status).toBe(py.status);
+    it('bad flag → exit 2', () => {
+        expect(runTs(['--bogus']).status).toBe(2);
     });
 
-    it('invalid --tier choice → exit code parity', () => {
-        const py = runPy(['--tier', '9']);
-        const ts = runTs(['--tier', '9']);
-        expect(ts.status).toBe(py.status);
+    it('invalid --tier choice → exit 2', () => {
+        expect(runTs(['--tier', '9']).status).toBe(2);
     });
 });

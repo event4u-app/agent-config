@@ -20,11 +20,11 @@
  *     measure_skill_reduction
  *     measure_skill_reduction --json
  *
- * NOTE: the .py references the legacy `.agent-src.uncondensed/skills`
- * literal; this faithful twin replicates it byte-for-byte. When the
- * directory is absent the .py raises an uncaught FileNotFoundError
- * (iterdir on a missing dir) → exit 1, empty stdout; this twin mirrors
- * that by throwing, so the dispatcher / Node surfaces a non-zero exit.
+ * NOTE: scans `src/skills` — the canonical source-of-truth skill library.
+ * (The pre-py2ts .py read the now-removed `.agent-src.uncondensed/skills`
+ * legacy path; repointed here so the scanner runs on the live tree.) When
+ * the directory is absent the scanner throws (iterdir on a missing dir) →
+ * non-zero exit, empty stdout.
  */
 
 import * as fs from 'node:fs';
@@ -35,7 +35,7 @@ import { parse as parseYaml } from 'yaml';
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/measure_skill_reduction.ts → parents[2] is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const SKILLS_DIR = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');
+const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
 const TARGET_REDUCTION = 0.4;
 const PHASE_3_USER_TYPES = ['consultant', 'creator'] as const;
 

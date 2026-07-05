@@ -21,8 +21,9 @@
  *   7. Runtime boundary disclaimer
  *   8. Anti-sycophancy rules in "Do NOT"
  *
- * NOTE: the .py reads from the legacy `.agent-src.uncondensed/skills`
- * literal; this faithful twin replicates it byte-for-byte.
+ * NOTE: scans `src/skills` — the canonical source-of-truth skill library.
+ * (The pre-py2ts .py read the now-removed `.agent-src.uncondensed/skills`
+ * legacy path; repointed here so the scanner runs on the live tree.)
  */
 
 import * as fs from 'node:fs';
@@ -32,7 +33,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/measure_patterns.ts → parents[2] is the repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const SKILLS_DIR = path.join(ROOT, '.agent-src.uncondensed', 'skills');
+const SKILLS_DIR = path.join(ROOT, 'src', 'skills');
 
 type Tier = number | string;
 
