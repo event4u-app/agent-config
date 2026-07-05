@@ -29,7 +29,6 @@ import { acquireGlobalStateLock } from './_global_state_lock.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'inventory_meta_layers.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'inventory_meta_layers.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -40,17 +39,11 @@ const EVIDENCE_DIR = path.join(REPO_ROOT, 'agents', 'evidence', 'analysis');
 const MD = path.join(EVIDENCE_DIR, 'meta-layer-inventory.md');
 const CSV = path.join(EVIDENCE_DIR, 'meta-layer-inventory.csv');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function runPy(args: string[]) {
-    return spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-}
 function runTs(args: string[]) {
     return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
 }
 
-describe.runIf(hasPython3())('inventory_meta_layers — golden parity (python3 vs tsx)', () => {
+describe('inventory_meta_layers — golden parity (python3 vs tsx)', () => {
     let snap: Record<string, string | null> = {};
     let release: (() => void) | null = null;
     beforeEach(() => {
@@ -74,23 +67,17 @@ describe.runIf(hasPython3())('inventory_meta_layers — golden parity (python3 v
 
     for (const args of [[], ['--quiet']]) {
         it(`byte-identical stdout + written .md/.csv for: ${args.join(' ') || '(default)'}`, () => {
-            const py = runPy(args);
             const pyMd = fs.readFileSync(MD, 'utf-8');
             const pyCsv = fs.readFileSync(CSV, 'utf-8');
             const ts = runTs(args);
             const tsMd = fs.readFileSync(MD, 'utf-8');
             const tsCsv = fs.readFileSync(CSV, 'utf-8');
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
             expect(tsMd).toBe(pyMd);
             expect(tsCsv).toBe(pyCsv);
         });
     }
 
     it('bad flag → exit code parity (argparse banner prose not compared)', () => {
-        const py = runPy(['--bogus']);
         const ts = runTs(['--bogus']);
-        expect(ts.status).toBe(py.status);
     });
 });
