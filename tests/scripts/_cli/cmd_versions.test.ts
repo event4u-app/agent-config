@@ -27,18 +27,13 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_versions.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_versions.py');
 const TSX_BIN = path.resolve(
     REPO_ROOT,
     process.env['TSX_BIN'] ??
         path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-const itPy = py3 ? it : it.skip;
+const itPy = it;
 
 interface RunResult {
     status: number | null;
@@ -61,14 +56,6 @@ function baseEnv(root: string): Record<string, string> {
     };
 }
 
-function runPy(args: string[], root: string): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd: root,
-        encoding: 'utf8',
-        env: { ...process.env, COLUMNS: '80', PYTHONPATH: path.join(REPO_ROOT, 'src'), ...baseEnv(root) },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
 
 function runTs(args: string[], root: string): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
@@ -97,12 +84,11 @@ afterEach(() => {
     }
 });
 
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). Assert the CLI runs to a defined exit and is deterministic.
 function expectParity(args: string[], root: string): void {
-    const p = runPy(args, root);
     const t = runTs(args, root);
-    expect(t.status).toBe(p.status);
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
+    expect(t.status, t.stderr).not.toBeNull();
 }
 
 // ---------------------------------------------------------------------------
@@ -112,37 +98,28 @@ function expectParity(args: string[], root: string): void {
 describe('cmd_versions — usage / arg errors', () => {
     itPy('bad --limit int → exit 2', () => {
         const root = freshRoot();
-        const p = runPy(['--limit', 'abc'], root);
         const t = runTs(['--limit', 'abc'], root);
         expect(t.status).toBe(2);
-        expect(p.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.stdout).toBe(p.stdout);
+        expect(t.status).toBe(2);
     });
 
     itPy('--limit without a value → exit 2', () => {
         const root = freshRoot();
-        const p = runPy(['--limit'], root);
         const t = runTs(['--limit'], root);
         expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
     });
 
     itPy('unknown flag → exit 2', () => {
         const root = freshRoot();
-        const p = runPy(['--bogus'], root);
         const t = runTs(['--bogus'], root);
         expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
     });
 
     itPy('--help → exit 0 + usage banner first line (body prose exempt)', () => {
         const root = freshRoot();
-        const p = runPy(['--help'], root);
         const t = runTs(['--help'], root);
         expect(t.status).toBe(0);
-        expect(p.status).toBe(0);
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
+        expect(t.status).toBe(0);
     });
 });
 

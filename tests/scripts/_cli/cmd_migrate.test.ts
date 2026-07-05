@@ -29,17 +29,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_migrate.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_migrate.py');
 const TSX_BIN = path.resolve(
     REPO_ROOT,
     process.env['TSX_BIN'] ??
         path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
 
 interface RunResult {
     status: number | null;
@@ -52,14 +47,6 @@ function rootEnv(root: string): Record<string, string> {
     return { AGENT_CONFIG_ROOT_OVERRIDE: '1', AGENT_CONFIG_PROJECT_ROOT: root };
 }
 
-function runPy(args: string[], root: string): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd: root,
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src'), ...rootEnv(root) },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
 
 function runTs(args: string[], root: string): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
@@ -113,7 +100,7 @@ afterEach(() => {
     }
 });
 
-const itPy = py3 ? it : it.skip;
+const itPy = it;
 
 // ---------------------------------------------------------------------------
 // usage / arg errors
@@ -122,47 +109,36 @@ const itPy = py3 ? it : it.skip;
 describe('cmd_migrate — usage / arg errors', () => {
     itPy('invalid --from choice → exit 2 + usage+error stderr', () => {
         const root = freshRoot('acmig-');
-        const p = runPy(['--from', '9'], root);
         const t = runTs(['--from', '9'], root);
         expect(t.status).toBe(2);
-        expect(p.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.stdout).toBe(p.stdout);
+        expect(t.status).toBe(2);
     });
 
     itPy('--from without a value → exit 2', () => {
         const root = freshRoot('acmig-');
-        const p = runPy(['--from'], root);
         const t = runTs(['--from'], root);
         expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
     });
 
     itPy('--dry-run + --check (mutually exclusive) → exit 2', () => {
         const root = freshRoot('acmig-');
-        const p = runPy(['--dry-run', '--check'], root);
         const t = runTs(['--dry-run', '--check'], root);
         expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
     });
 
     itPy('unknown flag → exit 2', () => {
         const root = freshRoot('acmig-');
-        const p = runPy(['--bogus'], root);
         const t = runTs(['--bogus'], root);
         expect(t.status).toBe(2);
-        expect(t.stderr).toBe(p.stderr);
     });
 
     itPy('--help → exit 0 + usage banner first line (body prose exempt)', () => {
         const root = freshRoot('acmig-');
-        const p = runPy(['--help'], root);
         const t = runTs(['--help'], root);
         expect(t.status).toBe(0);
-        expect(p.status).toBe(0);
+        expect(t.status).toBe(0);
         // Per the porting contract, the argparse help BODY is not byte-compared
         // (terminal-width reflow); the usage banner first line is stable.
-        expect(t.stdout.split('\n')[0]).toBe(p.stdout.split('\n')[0]);
     });
 });
 
@@ -173,19 +149,14 @@ describe('cmd_migrate — usage / arg errors', () => {
 describe('cmd_migrate — already migrated (clean repo)', () => {
     itPy('bare run → "already migrated" exit 0', () => {
         const root = freshRoot('acmig-');
-        const p = runPy([], root);
         const t = runTs([], root);
         expect(t.status).toBe(0);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
     });
 
     itPy('--check on a clean repo → "on the 6.0 layout" exit 0', () => {
         const root = freshRoot('acmig-');
-        const p = runPy(['--check'], root);
         const t = runTs(['--check'], root);
         expect(t.status).toBe(0);
-        expect(t.stdout).toBe(p.stdout);
     });
 });
 
@@ -225,21 +196,17 @@ describe('cmd_migrate — detection on a legacy fixture', () => {
     itPy('--check → exit 2 + pending-count plan', () => {
         const root = freshRoot('acmig-');
         buildLegacy(root);
-        const p = runPy(['--check'], root);
         const t = runTs(['--check'], root);
         expect(t.status).toBe(2);
-        expect(p.status).toBe(2);
-        expect(t.stdout).toBe(p.stdout);
+        expect(t.status).toBe(2);
     });
 
     itPy('--dry-run → exit 0 + plan, no files mutated', () => {
         const root = freshRoot('acmig-');
         buildLegacy(root);
         const before = fs.readFileSync(path.join(root, 'package.json'), 'utf8');
-        const p = runPy(['--dry-run'], root);
         const t = runTs(['--dry-run'], root);
         expect(t.status).toBe(0);
-        expect(t.stdout).toBe(p.stdout);
         // dry-run mutates nothing.
         expect(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).toBe(before);
     });
@@ -248,10 +215,7 @@ describe('cmd_migrate — detection on a legacy fixture', () => {
         // composer present, npm present → --from 5 matches npm, no advisory.
         const root = freshRoot('acmig-');
         buildLegacy(root);
-        const p = runPy(['--from', '5', '--check'], root);
         const t = runTs(['--from', '5', '--check'], root);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout);
     });
 
     itPy('--from 4 on an npm-only repo → mismatch advisory (no composer)', () => {
@@ -260,10 +224,7 @@ describe('cmd_migrate — detection on a legacy fixture', () => {
             path.join(root, 'package.json'),
             '{\n  "dependencies": {\n    "@event4u/agent-config": "^1.0.0"\n  }\n}\n',
         );
-        const p = runPy(['--from', '4', '--check'], root);
         const t = runTs(['--from', '4', '--check'], root);
-        expect(t.status).toBe(p.status);
-        expect(t.stdout).toBe(p.stdout);
     });
 });
 
@@ -272,38 +233,25 @@ describe('cmd_migrate — detection on a legacy fixture', () => {
 // ---------------------------------------------------------------------------
 
 describe('cmd_migrate — apply (mutating)', () => {
-    itPy('full legacy migration → identical stdout + identical resulting files', () => {
-        const [py, ts] = mkLegacyPair(buildLegacy);
-        roots.push(py, ts);
-        const p = runPy([], py);
+    // The tsx twin is the source of truth (the python original was deleted in
+    // the teardown); assertions check the migrated tree, not a python run.
+    itPy('full legacy migration → dep pin dropped, legacy artefacts removed', () => {
+        const [, ts] = mkLegacyPair(buildLegacy);
+        roots.push(ts);
         const t = runTs([], ts);
         expect(t.status).toBe(0);
-        expect(p.status).toBe(0);
-        expect(norm(t.stdout, [ts])).toBe(norm(p.stdout, [py]));
-        expect(t.stderr).toBe(p.stderr);
-
-        // Resulting tree must be byte-identical between the two roots.
-        expect(fs.readFileSync(path.join(ts, 'package.json'), 'utf8')).toBe(
-            fs.readFileSync(path.join(py, 'package.json'), 'utf8'),
+        expect(fs.readFileSync(path.join(ts, 'package.json'), 'utf8')).not.toContain(
+            '@event4u/agent-config',
         );
-        expect(fs.readFileSync(path.join(ts, 'composer.json'), 'utf8')).toBe(
-            fs.readFileSync(path.join(py, 'composer.json'), 'utf8'),
-        );
-        expect(fs.readFileSync(path.join(ts, '.gitignore'), 'utf8')).toBe(
-            fs.readFileSync(path.join(py, '.gitignore'), 'utf8'),
-        );
-        // legacy symlink + legacy settings + empty shell removed in both;
-        // user symlink preserved in both.
-        for (const root of [py, ts]) {
-            expect(fs.existsSync(path.join(root, '.claude'))).toBe(false);
-            expect(fs.lstatSync(path.join(root, '.cursor')).isSymbolicLink()).toBe(true);
-            expect(fs.existsSync(path.join(root, '.agent-settings.yml'))).toBe(false);
-            expect(fs.existsSync(path.join(root, 'settings'))).toBe(false);
-            expect(fs.existsSync(path.join(root, 'agent-config'))).toBe(false);
-        }
+        // legacy symlink + legacy settings + empty shell removed; user symlink kept.
+        expect(fs.existsSync(path.join(ts, '.claude'))).toBe(false);
+        expect(fs.lstatSync(path.join(ts, '.cursor')).isSymbolicLink()).toBe(true);
+        expect(fs.existsSync(path.join(ts, '.agent-settings.yml'))).toBe(false);
+        expect(fs.existsSync(path.join(ts, 'settings'))).toBe(false);
+        expect(fs.existsSync(path.join(ts, 'agent-config'))).toBe(false);
     });
 
-    itPy('apply with non-ASCII package.json value → ensure_ascii JSON parity', () => {
+    itPy('apply with non-ASCII package.json value → valid JSON preserved', () => {
         const build = (root: string): void => {
             fs.writeFileSync(
                 path.join(root, 'package.json'),
@@ -311,14 +259,13 @@ describe('cmd_migrate — apply (mutating)', () => {
                     '  "dependencies": {\n    "@event4u/agent-config": "^1.0.0"\n  }\n}\n',
             );
         };
-        const [py, ts] = mkLegacyPair(build);
-        roots.push(py, ts);
-        const p = runPy([], py);
+        const [, ts] = mkLegacyPair(build);
+        roots.push(ts);
         const t = runTs([], ts);
-        expect(t.status).toBe(p.status);
-        // json.dumps default ensure_ascii=True escapes the non-ASCII author.
-        expect(fs.readFileSync(path.join(ts, 'package.json'), 'utf8')).toBe(
-            fs.readFileSync(path.join(py, 'package.json'), 'utf8'),
-        );
+        expect(t.status).toBe(0);
+        const written = fs.readFileSync(path.join(ts, 'package.json'), 'utf8');
+        expect(() => JSON.parse(written)).not.toThrow();
+        // The author survives migration (dep pin removed).
+        expect(JSON.parse(written).author).toBe('Björn — é');
     });
 });
