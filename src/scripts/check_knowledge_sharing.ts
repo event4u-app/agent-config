@@ -65,12 +65,16 @@ export function checkSharing(staged: StagedFile[], readContent: (path: string) =
     const blocked: string[] = [];
     const warnings: string[] = [];
 
-    const intakeFiles = staged.filter((f) => f.path.startsWith('agents/memory/intake/'));
+    const intakeFiles = staged.filter(
+        (f) => f.path.startsWith('agents/memory/intake/') || f.path.startsWith('agents/knowledge/intake/'),
+    );
     for (const f of intakeFiles) {
         blocked.push(`${f.path}: gitignored intake staged — intake is local scratch, never committed`);
     }
 
-    const knowledgeFiles = staged.filter((f) => f.path.startsWith('agents/knowledge/') && f.path.endsWith('.md'));
+    const knowledgeFiles = staged.filter(
+        (f) => f.path.startsWith('agents/knowledge/') && !f.path.startsWith('agents/knowledge/intake/') && f.path.endsWith('.md'),
+    );
     for (const f of knowledgeFiles) {
         const content = readContent(f.path);
         if (content === null) continue;
@@ -87,7 +91,9 @@ export function checkSharing(staged: StagedFile[], readContent: (path: string) =
         }
     }
 
-    const newKnowledgeFiles = staged.filter((f) => f.status === 'A' && f.path.startsWith('agents/knowledge/'));
+    const newKnowledgeFiles = staged.filter(
+        (f) => f.status === 'A' && f.path.startsWith('agents/knowledge/') && !f.path.startsWith('agents/knowledge/intake/'),
+    );
     if (newKnowledgeFiles.length >= CREATION_BUDGET_WARN) {
         warnings.push(
             `${newKnowledgeFiles.length} new files under agents/knowledge/ in this commit — review the batch (creation budget: ${CREATION_BUDGET_WARN})`,

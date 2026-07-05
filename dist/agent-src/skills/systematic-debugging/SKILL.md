@@ -258,6 +258,33 @@ When reporting debug findings to the user:
 5. **Fix** — the minimal change
 6. **Regression test** — the test that catches this bug returning
 
+## Knowledge capture (`mistake_made` event)
+
+Root cause traces to a `agents/knowledge/` page followed while
+implementing (documented convention wrong, API-shape page stale,
+procedure incomplete) → append a `mistake_made` event to the
+knowledge intake — never rewrite the page mid-task (see
+[`knowledge-pages`](../../templates/contexts/knowledge-pages.md)):
+
+```typescript
+appendEvent({
+    type: 'mistake_made',
+    ts: new Date().toISOString(),
+    errorCategory: '<one or two words>',
+    contextSource: '<agents/knowledge/... path, or null if no page was followed>',
+    correction: '<what the fix actually was>',
+    recurrenceKey: '<stable slug for this class of mistake>',
+}); // src/scripts/_lib/knowledge_events.ts
+```
+
+**Live contradiction exception.** Followed page DEMONSTRABLY wrong
+right now (observed ≠ documented, not a one-off) → hybrid immediate-fix
+case instead — surface the correction, ask before continuing (see
+[`knowledge-pages`](../../templates/contexts/knowledge-pages.md) §
+Contested entries). Approved → isolated fix commit. Declined →
+`./scripts-run src/scripts/append_contested` on that page, then still
+emit the `context_stale` event above for the consolidation pass.
+
 ## Gotchas
 
 * Reading half a stack trace and jumping to a fix — the actual cause is

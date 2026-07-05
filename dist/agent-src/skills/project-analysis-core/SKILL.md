@@ -129,6 +129,22 @@ Check:
 6. Known uncertainties
 7. Recommended next specialist skill
 
+## Knowledge capture (`convention_detected` events)
+
+An architecture-map or stack finding that recurs (naming convention,
+module boundary, layering rule) is worth persisting for the team.
+Append to the knowledge intake instead of leaving it in the one-off
+analysis output — applies to every `project-analysis-*` specialist
+this skill hands off to:
+
+```typescript
+// src/scripts/_lib/knowledge_events.ts
+appendEvent({ type: 'convention_detected', ts: new Date().toISOString(), pattern, evidence: ['file:line', ...], sampleSize, scope: 'project' });
+```
+
+`/team-knowledge consolidate` turns accumulated events into
+`agents/knowledge/concepts/` pages as a reviewed batch.
+
 ## Gotcha
 
 * If versions are guessed, the whole analysis becomes unreliable.

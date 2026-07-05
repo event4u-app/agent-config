@@ -172,6 +172,8 @@ commands:
     - sync-agent-settings
     - sync-gitignore
     - sync-gitignore/fix
+    - team-knowledge
+    - team-knowledge/consolidate
     - upstream-contribute
 
   session:

@@ -34,6 +34,22 @@ describe('checkSharing — gitignored intake staged (BLOCK)', () => {
         expect(report.blocked[0]).toContain('intake');
         expect(report.warnings).toEqual([]);
     });
+
+    it('blocks a staged file under agents/knowledge/intake/ (Phase 5 event stream)', () => {
+        const staged: StagedFile[] = [{ path: 'agents/knowledge/intake/events-2026-07.jsonl', status: 'A' }];
+        const report = checkSharing(staged, () => null);
+        expect(report.blocked).toHaveLength(1);
+        expect(report.blocked[0]).toContain('intake');
+    });
+
+    it('agents/knowledge/intake/ files never count toward the creation budget', () => {
+        const staged: StagedFile[] = Array.from({ length: 6 }, (_, i) => ({
+            path: `agents/knowledge/intake/events-${i}.jsonl`,
+            status: 'A' as const,
+        }));
+        const report = checkSharing(staged, () => null);
+        expect(report.warnings).toEqual([]);
+    });
 });
 
 describe('checkSharing — visibility: private staged (BLOCK)', () => {

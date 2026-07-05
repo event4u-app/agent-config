@@ -77,7 +77,7 @@ trigger learning):
    — `convention_detected`, `mistake_made`, `api_shape_learned`,
    `context_stale` — fired by deterministic trigger conditions in the owning
    skills, never by vibes. Tracked pages are written only at an explicit
-   gate (`knowledge:consolidate` / session-end memory flow) as a reviewable
+   gate (`team-knowledge:consolidate` / session-end memory flow) as a reviewable
    batch. This keeps `minimal-safe-diff` intact (task diffs stay
    task-scoped) and honors the Evidence-v2 kill (no auto-accumulating
    tracked store).
@@ -95,7 +95,7 @@ trigger learning):
    user-global store (ADR-100) is touched only with cross-project evidence
    via the existing manual promotion path. Every repair carries provenance.
 
-10. **Bootstrap.** `knowledge:bootstrap` wires the EXISTING deterministic
+10. **Bootstrap.** `team-knowledge:bootstrap` wires the EXISTING deterministic
     analyzers (project-analysis structure detection, standards-from-config,
     module detection) into typed knowledge-page TEMPLATES in gitignored
     staging — detected facts with evidence pointers, inferences marked
@@ -106,6 +106,13 @@ REJECT additions from this round: mid-task tracked context writes without
 this-turn approval; auto-committed bootstrap output; LLM interpretation in
 bootstrap templates; treating the session boundary as the SOLE gate (the
 immediate-approval path must exist); auto-resolving contested entries.
+
+**Execution-time naming correction (2026-07-05, road-to-knowledge-system
+Phase 5):** the command names above were revised from `knowledge:*` to
+`team-knowledge:*` after discovering the pre-existing `/knowledge` cluster
+(local file ingestion into `agents/memory/knowledge/` — an unrelated
+concern). This is an implementation-naming detail, not a reopening of
+this verdict.
 
 ## REJECT list (do not relitigate)
 

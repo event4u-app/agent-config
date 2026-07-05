@@ -165,6 +165,23 @@ signal, never silently commit); trust and commit are always human-gated. Full mo
 the three classes + memory tiers:
 [`project-intelligence`](../../agent-src/contexts/execution/project-intelligence.md).
 
+## Knowledge capture (`api_shape_learned` / `convention_detected` events)
+
+A confirmed API/GraphQL shape (§B) or an observed coding convention with
+≥ 2 supporting locations is worth persisting for the team, distinct
+from the per-session Evidence Report above. Append to the knowledge
+intake — never write a tracked page mid-task:
+
+```typescript
+// src/scripts/_lib/knowledge_events.ts
+appendEvent({ type: 'api_shape_learned', ts: new Date().toISOString(), endpoint, method, requestSchema, responseSchema });
+appendEvent({ type: 'convention_detected', ts: new Date().toISOString(), pattern, evidence: ['file:line', ...], sampleSize, scope: 'project' });
+```
+
+`/team-knowledge consolidate` turns accumulated events into
+`agents/knowledge/concepts/` pages as a reviewed batch — see
+[`knowledge-pages`](../../templates/contexts/knowledge-pages.md).
+
 ## Gotchas
 
 - A card's positive structure is **never** "Verified" on the card alone — it is

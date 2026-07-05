@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**154 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**156 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -184,6 +184,8 @@ _The system/admin surface (NOT a flow): memory · analytics · governance · con
 - `sync-agent-settings` — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user…
 - `sync-gitignore` — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserve…
 - `sync-gitignore-fix` — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) a…
+- `team-knowledge` — Team-knowledge orchestrator — routes to consolidate (and, once shipped, bootstrap)
+- `team-knowledge-consolidate` — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-rev…
 - `upstream-contribute` — Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
 
 ### Domain flow — media

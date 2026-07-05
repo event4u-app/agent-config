@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `7.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 250
+- **artefacts**: 252
 
-## Commands (120)
+## Commands (122)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -119,6 +119,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 - **`sync-gitignore-fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
+- **`team-knowledge`** — Team-knowledge orchestrator — routes to consolidate (and, once shipped, bootstrap)
+- **`team-knowledge-consolidate`** — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval.
 - **`tests`** — Tests orchestrator — routes to create, execute
 - **`tests-create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`tests-execute`** — Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)

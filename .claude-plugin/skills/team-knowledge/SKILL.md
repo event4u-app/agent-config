@@ -1,0 +1,1 @@
+../../../src/domains/meta/team-knowledge/command.md

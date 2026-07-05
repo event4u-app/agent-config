@@ -44,10 +44,10 @@ Third debate (living-context capture, same members, 2 rounds) converged: **intak
 | Draft-from-original-session-log guidance | FOLD | into `learning-to-rule-or-skill` (Phase 4) |
 | 200-line page budget | FOLD | into the knowledge lint (Phase 2) |
 | Typed in-flight observation events (deterministic trigger taxonomy) | KEEP | Phase 5 |
-| `knowledge:consolidate` gate (intake → tracked pages, human-reviewed) | KEEP | Phase 5 |
+| `team-knowledge:consolidate` gate (intake → tracked pages, human-reviewed) | KEEP | Phase 5 |
 | Hybrid immediate context-fix flow (this-turn approval, own commit chunk) | KEEP | Phase 5 |
 | Append-only `contested` annotation with provenance on context faults | KEEP | Phase 5 |
-| `knowledge:bootstrap` template generator (existing analyzers → staged pages) | KEEP | Phase 6 |
+| `team-knowledge:bootstrap` template generator (existing analyzers → staged pages) | KEEP | Phase 6 |
 | Separate `agents/wiki/` layer | CUT | routing ambiguity, dual-run anti-pattern |
 | SCHEMA-as-contract (mandatory fields, schema-driven linter) | CUT | deferred until team usage data exists |
 | Vector / semantic search; transcript-RAG | CUT | Layer-2 sunset stands |
@@ -95,20 +95,32 @@ Rollback: pointer stubs retain provenance; restoring an entry is a git revert of
 
 ## Phase 5 — Living-context capture + error-driven repair
 
-- [ ] Define the typed observation-event schema (JSONL in the existing gitignored intake): `convention_detected` (pattern, evidence file:line refs, sample size), `mistake_made` (error category, followed context source, correction, recurrence key), `api_shape_learned` (endpoint, method, request/response shape, observed_at), `context_stale` (page path, expected vs actual, failing evidence)
-- [ ] Fold the capture triggers into the owning skill surfaces as prose obligations (`memory-consolidation`, `source-discovery`, `systematic-debugging`, `project-analysis-*`): when a trigger condition is observed during normal work, append the typed event to intake — never write tracked pages mid-task by default
-- [ ] `knowledge:consolidate` step/command: read typed intake events, aggregate by recurrence key, run the Phase-2 dedup check, propose tracked-page creates/updates as a reviewable batch (NEW/EXTEND/CONFIRM/CONFLICT), write only on approval, regenerate INDEX.md
-- [ ] Hybrid immediate-fix flow (prose contract in the knowledge templates + `memory-consolidation`): on a live contradiction (`observed_value ≠ documented_value`, boolean — no confidence guessing), surface the proposed context fix with provenance; user approves this turn → fix lands as its OWN commit chunk (never mixed into the task diff); user declines → append `contested:` annotation (timestamp, trigger, evidence, session) to the page and emit a `context_stale` intake event
-- [ ] `contested` annotation writer + lint: append-only array in frontmatter; lint warns when a page carries ≥2 unresolved contested entries (forces consolidation attention); resolution is always human
-- [ ] Project-local vs global routing rule documented: repairs default to the project store; global-store (ADR-100) promotion only with cross-project evidence and via the existing manual promotion path
-- [ ] Unit tests: event schema validation, consolidate aggregation, contested-append idempotence
+**Course correction (discovered mid-run):** the roadmap's original
+`knowledge:consolidate` naming collides with a PRE-EXISTING `/knowledge`
+command cluster (`ingest`/`list`/`forget`/`cross-repo` — local file
+ingestion into `agents/memory/knowledge/`, an unrelated concern this
+roadmap's own Phase-0 provenance research didn't surface because it
+only scanned external references, not this repo's own command
+surface). The consolidation command ships under a new, non-colliding
+cluster instead: **`/team-knowledge consolidate`**. Registered in
+`docs/contracts/command-clusters.md`; see the cluster head's own
+"Not to be confused with" note. This is an implementation-naming
+decision, not a re-litigation of the council's product verdict.
+
+- [x] Define the typed observation-event schema (JSONL in a NEW gitignored `agents/knowledge/intake/` stream, sibling to `agents/memory/intake/`): `convention_detected` (pattern, evidence file:line refs, sample size), `mistake_made` (error category, followed context source, correction, recurrence key), `api_shape_learned` (endpoint, method, request/response shape), `context_stale` (page path, field, expected vs actual, evidence)
+- [x] Fold the capture triggers into the owning skill surfaces as prose obligations (`memory-consolidation`, `source-discovery`, `systematic-debugging`, `project-analysis-core` representing the `project-analysis-*` family): when a trigger condition is observed during normal work, append the typed event to intake — never write tracked pages mid-task by default
+- [x] `/team-knowledge consolidate` command: read typed intake events, aggregate by topic, find the nearest existing page per aggregate (mechanical similarity only), propose tracked-page creates/updates as a reviewable batch (NEW/EXTEND/CONFIRM/CONFLICT — triage is always human, the script never decides it), write only on approval, regenerate INDEX.md, clear consumed intake
+- [x] Hybrid immediate-fix flow (prose contract in the knowledge templates + `systematic-debugging`): on a live contradiction (`observed_value ≠ documented_value`, boolean — no confidence guessing), surface the proposed context fix with provenance; user approves this turn → fix lands as its OWN commit chunk (never mixed into the task diff); user declines → append `contested:` annotation (timestamp, trigger, evidence, session) to the page and emit a `context_stale` intake event
+- [x] `contested` annotation writer (`append_contested.ts`) + lint (already shipped in Phase 2's `check_knowledge_pages.ts`): append-only array in frontmatter; lint warns when a page carries ≥2 unresolved contested entries (forces consolidation attention); resolution is always human
+- [x] Project-local vs global routing rule documented: repairs default to the project store; global-store (ADR-100) promotion only with cross-project evidence and via the existing manual promotion path (Phase 1 template + Phase 3 gate + Phase 4 promotion note)
+- [x] Unit tests: event schema validation, consolidate aggregation, contested-append idempotence
 
 Exit criteria: a synthetic session producing all four event types consolidates into correct page proposals; the contradiction flow demonstrably produces (a) an isolated commit chunk on approval and (b) a contested annotation on decline.
-Rollback: triggers are prose + intake-only; disable by removing the consolidate command — tracked pages untouched.
+Rollback: triggers are prose + intake-only; disable by removing the `/team-knowledge consolidate` command — tracked pages untouched.
 
 ## Phase 6 — Project familiarization bootstrap
 
-- [ ] `knowledge:bootstrap` command: run the EXISTING deterministic analyzers (`project-analysis-*` structure detection, `standards-from-config`, `module-detect-on-the-fly`) and render their outputs into typed knowledge-page TEMPLATES (`concepts/structure.md`, `concepts/standards.md`, `concepts/modules.md`, `procedures/api-conventions.md`, empty `sessions/common-mistakes` seed) in a gitignored staging dir
+- [ ] `/team-knowledge bootstrap` command: run the EXISTING deterministic analyzers (`project-analysis-*` structure detection, `standards-from-config`, `module-detect-on-the-fly`) and render their outputs into typed knowledge-page TEMPLATES (`concepts/structure.md`, `concepts/standards.md`, `concepts/modules.md`, `procedures/api-conventions.md`, empty `sessions/common-mistakes` seed) in a gitignored staging dir
 - [ ] Template discipline: detected facts carry evidence pointers; anything inferential carries a `[HUMAN: verify]` marker; no LLM-invented claims — deterministic static analysis only
 - [ ] Capture allowlist + exclusion scan: allowlisted fact classes only (layout, entry points, naming conventions, export/API maps); hard-exclude secrets (existing secret patterns), personal data, transient state (build artifacts, paths under ignored dirs, timestamps beyond `observed_at`)
 - [ ] Review-then-commit flow: bootstrap ends with a review instruction; pages move from staging into `agents/knowledge/` only after human review (reuses the Phase-3 share gate + INDEX regen)

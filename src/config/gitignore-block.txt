@@ -51,6 +51,13 @@
 # repo free of unbounded raw signals. See road-to-memory-pipeline-consolidation.
 /agents/memory/intake/
 
+# Agent config — typed knowledge-observation events (append-only JSONL,
+# convention_detected / mistake_made / api_shape_learned / context_stale).
+# Local scratch only, consolidated via /team-knowledge consolidate into the
+# committed pages under agents/knowledge/{sessions,concepts,procedures,decisions}/.
+# See road-to-knowledge-system Phase 5.
+/agents/knowledge/intake/
+
 # Agent config — Evidence v2 ephemeral project-intelligence tier. Auto-captured
 # trial-and-error / transient / task-local observations, retained N days, NEVER
 # promoted to committed context (distinct from intake, which holds promotion

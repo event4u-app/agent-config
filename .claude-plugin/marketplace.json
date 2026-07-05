@@ -184,6 +184,8 @@
         "./.claude-plugin/skills/sync-agent-settings",
         "./.claude-plugin/skills/sync-gitignore",
         "./.claude-plugin/skills/sync-gitignore-fix",
+        "./.claude-plugin/skills/team-knowledge",
+        "./.claude-plugin/skills/team-knowledge-consolidate",
         "./.claude-plugin/skills/tests",
         "./.claude-plugin/skills/tests-create",
         "./.claude-plugin/skills/tests-execute",
