@@ -178,7 +178,47 @@ The manifest (`dist/discovery/discovery-manifest.json`) is a **gitignored** buil
 artifact — CI rebuilds it fresh, so this is a generator + schema change, not a
 committed-data change.
 
+## Amendment 2 (2026-07-05) — consumer distribution = wedge-only (A2)
+
+How subagents reach **consumers** (as opposed to the in-repo `.claude/agents/`
+projection): a fresh council (**claude-fable-5 + gpt-4o**, 2 rounds) converged on
+**wedge-only distribution**, reversing an earlier "synthesis" lean once the
+implementation blast-radius evidence was in hand.
+
+- **Decision:** subagents reach consumers ONLY via the wedge
+  (`docs/wedge/<name>/<name>.md`, shipped in npm `files[]` via `docs/`, installed
+  by a 30-second `curl` into `.claude/agents/`). They are **not** condensed to
+  `dist/`, **not** in the install bundle, and **not** in the shared source
+  enumeration (`_root_specs()` / `iter_all_sources` / `resolve_logical`).
+- **Why not ship in dist (the rejected synthesis):** `condense.cleanup_stale()`
+  deletes any `dist/agent-src/` file that does not round-trip through
+  `resolve_logical()`, so shipping subagents in dist requires teaching the shared
+  `_root_specs()` about them — a cross-cutting change to ~10 consumers
+  (`build_discovery_manifest`, three frontmatter/pack linters, namespace checks,
+  …). Exclusion-based containment would produce a **shipped-but-ungoverned**
+  executable-prompt class — for a *governed* config layer, worse than the blast
+  radius it hides. Marginal consumer value at n=1 unit ≈ one fewer curl for an
+  opt-in, high-trust artifact — not worth it. Revisit only at n≥3 units **and** a
+  documented curl-distribution failure signal.
+- **The wedge doc is now a projection of `src/subagents/`** (superseding the
+  hand-written copy), regenerated from `generate_claude_subagents()` so the two
+  channels cannot drift.
+
+**A2 install-completeness gate** (`tests/scripts/subagent_distribution.test.ts`):
+wedge↔src projection fidelity (no drift); coverage (every unit has a wedge doc);
+and negative-wiring locks — `resolve_logical('subagents/…')` is null, no
+`subagents/` path in `iter_all_sources`, the installer references no
+`dist/agent-src/subagents`, and `dist/agent-src/subagents/` does not exist. No
+byte-budget check (an arbitrary threshold on a system prompt is cargo-cult).
+
+*(Council side-fix: `AnthropicClient` extracted only `content[0].text`, dropping
+extended-thinking models' output — claude-fable-5 returned 3191 output tokens as
+empty text. Fixed to join all text-type blocks.)*
+
 ## References
+
+- Council debate 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds).
+- Amendment-2 council 2026-07-05 (claude-fable-5 + gpt-4o, 2 rounds) — consumer distribution = wedge-only.
 
 - Council debate 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds).
 - Amendment-1 council 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds) — manifest integration = Option B.
