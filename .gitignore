@@ -262,3 +262,10 @@ agents/sessions/
 agents/runtime/council/responses/
 agents/runtime/council/sessions/
 # <<< event4u/agent-config (managed) <<<
+
+# B4 docs site (Starlight) build artifacts
+/site/dist
+/site/.astro
+/site/src/content/docs/proof.md
+/site/src/content/docs/benchmark.md
+/site/src/content/docs/claims.md

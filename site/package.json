@@ -1,0 +1,19 @@
+{
+  "name": "@event4u/agent-config-site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Docs + proof site for agent-config (Starlight). Isolated workspace — its deps never touch the package.",
+  "scripts": {
+    "sync": "node sync-docs.mjs",
+    "prebuild": "node sync-docs.mjs",
+    "predev": "node sync-docs.mjs",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "7.0.6",
+    "@astrojs/starlight": "0.41.3"
+  }
+}
