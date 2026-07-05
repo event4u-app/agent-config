@@ -181,21 +181,86 @@ If the user picks **1**:
 
 If the user picks **2** → continue.
 
-### 9. Offer execution
+### 9. Ask the execution mode — ONE question, then write frontmatter
 
-After saving (and any council review), ask the user (in their language) whether to start executing the roadmap immediately.
+Ask (in the user's language) exactly one numbered-options question:
 
-If yes → switch to [`/roadmap:process-phase`](process-phase.md) with
-the newly created file (the default execution scope of the `/roadmap`
-cluster). Offer [`process-step`](process-step.md) and
-[`process-full`](process-full.md) as alternatives. The legacy
-`/roadmap execute` command was removed — autonomous execution is the
-only path now.
+> How should this roadmap be executed later?
+>
+> 1. Fully autonomous — one run-start contract confirmation, then no
+>    interruptions except the safety floors
+> 2. Checkpoint at phase boundaries — compact status + continue prompt
+>    per phase
+> 3. Interactive — every gate fires as today
+>
+> **Recommendation:** 1
+
+Write the pick to frontmatter as `execution.mode:`
+(`autonomous` | `phase-checkpoints` | `interactive`). Rules:
+
+- Pick 3 → omit the field entirely (`interactive` is the absent-field
+  default; don't write noise).
+- Follow-up roadmaps (`parent_roadmap` set): pre-select the parent's
+  mode as the recommended option, but still ask — mode never inherits
+  silently (per template rule 18).
+- This question is about a **future** run's interaction pattern. It is
+  a declaration of intent, never a permission grant, and it does NOT
+  soften the step-10 hard stop: asking it must not morph into offering
+  execution now.
+- Semantics + contract mechanics:
+  [`templates/roadmaps.md` rule 18](../../templates/roadmaps.md) and
+  [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).
+- **Authoring check for pick 1 (`autonomous`):** scan the drafted steps
+  for vague phrasings (`improve/optimize` without a target, `make it
+  better/cleaner`, `clean up` without scope, `fix this` without a
+  symptom, `use best practices`, `handle errors properly`) and for
+  pre-existing `[~]` items. Surface each finding to the user for a
+  quick rephrase **before saving** — vagueness is cheap to resolve now
+  and expensive as a mid-run ambiguity halt; pre-existing `[~]` items
+  guarantee the archival gate interrupts the run.
+  `lint_roadmap_complexity` warns on the same patterns as a backstop.
+
+### 10. Hand back — HARD STOP, never auto-offer execution
+
+```
+ROADMAP SAVED → STOP. NEVER ASK "READY TO START?" / "BEGIN PHASE 1?"
+/ "SOFORT AUSFÜHREN?". CREATE = ARTIFACT ONLY. EXECUTION NEEDS A
+FRESH, EXPLICIT EXECUTION VERB FROM THE USER.
+```
+
+Emit a single hand-back line citing the saved path and (if regenerated)
+the new dashboard count. Then **stop the turn**.
+
+- Do **not** present numbered options for "start execution / pick
+  process-phase / pick process-step / pick process-full". The user
+  picks the next move when they're ready — silence on execution.
+- Do **not** soft-route ("*the roadmap is ready, kicking off E1.1…*").
+  That is a hand-off to execution disguised as a status line.
+- Do **not** include "Recommended next step: `/roadmap:process-phase`"
+  in the hand-back. Mentioning the command back-channels the same
+  ask.
+- The user resumes with an explicit execution verb (`implement`,
+  `build`, `start Phase A`, `arbeite die Roadmap ab`, `mach weiter
+  mit Phase 1`) on a **later turn**. That verb — not this command —
+  authorizes execution. See [`scope-mechanics § Post-artifact hard
+  stop`](../../contexts/authority/scope-mechanics.md).
+
+Failure modes covered by this hard stop:
+
+- Asking *"Soll ich jetzt mit Phase A anfangen?"* after the save line.
+- Offering *"1. Start now / 2. Review first / 3. Cancel"* — the user
+  did not ask for an execution menu, the create verb covered authoring
+  only.
+- Treating a thumbs-up / *"sieht gut aus"* / *"passt"* as authorization
+  to start. None of those are execution verbs.
 
 ### Rules
 
 - **Do NOT auto-generate content** — always ask the user for input.
 - **Do NOT commit or push.**
+- **Do NOT offer execution after save** — Step 10 is a hard stop.
+  Execution starts on a later turn with an explicit execution verb
+  ([`scope-control § Authoring vs. implementation`](../rules/scope-control.md#authoring-vs-implementation)).
 - **Do NOT include commit steps in the roadmap** unless the user explicitly
   requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
   Roadmaps plan **work**; commits are a separate delivery decision.

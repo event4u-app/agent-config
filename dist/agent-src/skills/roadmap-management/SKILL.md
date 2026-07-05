@@ -212,6 +212,16 @@ unfamiliar codebases.
 
 ### Executing a roadmap
 
+0. Read `execution.mode` from the roadmap frontmatter
+   (`autonomous` | `phase-checkpoints` | `interactive`; absent =
+   `interactive`). Under `/roadmap:process-*` the mode selects the
+   interaction pattern via the run-start execution contract — see
+   [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).
+   The manual flow below describes `interactive`; under `autonomous`
+   / `phase-checkpoints` step 4's per-step ask is replaced by the
+   accepted contract. **Mode never changes archival semantics** —
+   glyph counting, the closure decision table, and the Iron Law 3
+   deferred-resolution gate below apply identically in every mode.
 1. Read the full roadmap.
 2. Find the next unchecked step (`- [ ]`).
 3. Summarize what needs to be done.
