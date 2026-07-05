@@ -1,0 +1,61 @@
+name: Deploy site
+
+# B4 — publish the Starlight docs site to GitHub Pages
+# (https://event4u-app.github.io/agent-config). Operator-authorised 2026-07-05.
+# The site is a no-drift projection of the canonical docs (site/sync-docs.mjs
+# runs at prebuild), so every deploy reflects the source of truth. Astro 7 needs
+# Node >=22.12.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "docs/proof.md"
+      - "docs/benchmark.md"
+      - "docs/CLAIMS.md"
+      - "docs/catalog.md"
+      - "docs/media/**"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One live deploy at a time; never cancel an in-flight publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      # Enables Pages on first run (build_type: workflow) — the "Pages an" step.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Build the Starlight site
+        run: |
+          cd site
+          npm ci
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
