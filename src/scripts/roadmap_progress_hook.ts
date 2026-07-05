@@ -67,11 +67,14 @@ export const DASHBOARD_PATH = "agents/roadmaps-progress.md";
 export const REGEN_NAME = "update_roadmap_progress.ts";
 // Distributed-content script subtrees that may ship the regenerator,
 // in priority order. Project-scoped installs land it under .augment/ or
-// dist/agent-src/; the package itself carries the same projection.
+// dist/agent-src/; the package itself carries the same projection, and the
+// source checkout carries it under src/agent-src/scripts (so a standalone,
+// env-less invocation from the source tree still resolves it).
 export const DIST_SCRIPT_SUBDIRS = [
   path.join(".augment", "scripts"),
   path.join("dist/agent-src", "scripts"),
   path.join(".agent-src.uncondensed", "scripts"),
+  path.join("src/agent-src", "scripts"),
 ];
 // Set by the dispatcher (scripts/hooks/dispatch_hook) to its own resolved
 // package root, so a globally-installed binary (ADR-020 global-only) can
@@ -178,14 +181,53 @@ export function _is_roadmap_touch(p: string): boolean {
 }
 
 /**
+ * The repo root whose dashboard an edited roadmap path belongs to, or null
+ * when the path is not a roadmap touch.
+ *
+ * The dashboard the hook must regenerate is the one in the SAME repo as the
+ * edited roadmap — which is not necessarily `--project-dir`. An autonomous
+ * agent (or a monorepo dev) routinely edits `…/<worktree>/agents/roadmaps/x.md`
+ * while the session's project dir is a sibling checkout; keying off
+ * `--project-dir` alone silently skipped those edits and let the worktree's
+ * dashboard drift. So:
+ *   - an ABSOLUTE path containing `/agents/roadmaps/` resolves to the prefix
+ *     before that segment (the edited file's own repo root), wherever it is;
+ *   - a RELATIVE roadmap path resolves to `consumer_root` (the Augment
+ *     repo-relative case, where the file genuinely sits under `--project-dir`).
+ */
+export function _target_root(p: string, consumer_root: string): string | null {
+  const norm = p.replace(/\\/g, "/");
+  if (path.isAbsolute(norm)) {
+    const marker = "/" + ROADMAP_PREFIX; // "/agents/roadmaps/"
+    const idx = norm.indexOf(marker);
+    if (idx < 0) {
+      return null;
+    }
+    const rel = norm.slice(idx + 1); // "agents/roadmaps/…"
+    if (!_is_roadmap_touch(rel)) {
+      return null;
+    }
+    return norm.slice(0, idx) || "/";
+  }
+  return _is_roadmap_touch(norm) ? consumer_root : null;
+}
+
+/**
  * Package roots to search for the shipped regenerator, in priority order,
  * when the consumer carries no project-local copy.
  *
  * 1. ``AGENT_CONFIG_PACKAGE_ROOT`` — the dispatcher passes its own
  *    resolved package root.
- * 2. This hook's own location (``<pkg>/src/scripts/roadmap_progress_hook.ts``
- *    → ``<pkg>/src``) — last-resort fallback for standalone invocation.
- *    Mirrors the Python `Path(__file__).resolve().parent.parent` walk.
+ * 2. This hook's own location — last-resort fallback for a standalone
+ *    invocation the dispatcher never wrapped. The hook ships at
+ *    ``<pkg>/src/scripts/roadmap_progress_hook.ts``, so BOTH ``<pkg>/src``
+ *    (one dir up from ``scripts/``) AND ``<pkg>`` are searched: the shipped
+ *    regenerator lives under ``<pkg>/dist/agent-src/scripts`` (built /
+ *    installed) or ``<pkg>/src/agent-src/scripts`` (source), i.e. under
+ *    ``<pkg>`` — NOT under ``<pkg>/src``. The previous single
+ *    ``parent.parent`` walk stopped at ``<pkg>/src`` and therefore never
+ *    found the regenerator when the env var was unset (silent no-op → the
+ *    dashboard drifted with no signal).
  */
 export function _package_roots(): string[] {
   const roots: string[] = [];
@@ -193,7 +235,9 @@ export function _package_roots(): string[] {
   if (env_root) {
     roots.push(_expanduser(env_root));
   }
-  roots.push(path.dirname(path.dirname(path.resolve(__filename))));
+  const scriptsDir = path.dirname(path.resolve(__filename)); // <pkg>/src/scripts
+  roots.push(path.dirname(scriptsDir)); // <pkg>/src
+  roots.push(path.dirname(path.dirname(scriptsDir))); // <pkg>
   return roots;
 }
 
@@ -300,33 +344,17 @@ export function run(
     return 0;
   }
 
-  const paths = _candidate_paths(payload).map((p) => _relativize(p, consumer_root));
-  if (!paths.some((p) => _is_roadmap_touch(p))) {
-    return 0;
+  // Each touched roadmap regenerates the dashboard of ITS OWN repo (which may
+  // be a worktree/sibling of `consumer_root`, not consumer_root itself). Dedupe
+  // so N edits in one repo regenerate once.
+  const targetRoots = new Set<string>();
+  for (const p of _candidate_paths(payload)) {
+    const root = _target_root(p, consumer_root);
+    if (root !== null) {
+      targetRoots.add(root);
+    }
   }
-
-  const script = _resolve_regenerator(consumer_root);
-  if (script === null) {
-    // Phase 1 of road-to-hooks-actually-fire-in-consumers: log dispatch
-    // issue directly (this hook runs as a subprocess from the universal
-    // dispatcher; routing through the dispatcher would add latency for
-    // no benefit).
-    try {
-      log_dispatch_issue(
-        consumer_root,
-        "roadmap-progress",
-        "prerequisite_missing",
-        "update_roadmap_progress.ts not found at any of: " +
-          ".augment/scripts/, dist/agent-src/scripts/, " +
-          "src/agent-src/scripts/",
-        "./agent-config hooks:install --regen " + "(or ./agent-config init)",
-      );
-    } catch {
-      // observability never breaks the hook
-    }
-    if (verbose) {
-      process.stderr.write("roadmap-progress-hook: regenerator not found, skipping\n");
-    }
+  if (targetRoots.size === 0) {
     return 0;
   }
 
@@ -339,18 +367,48 @@ export function run(
     return 0;
   }
 
-  try {
-    // The regenerator is a `.ts` script; run it through tsx (resolved from
-    // a node_modules/.bin found by walking up from the regenerator's dir,
-    // falling back to `npx tsx`), mirroring the dispatcher's `.ts` concerns.
-    const inv = _resolve_tsx_invocation(script);
-    spawnSync(inv.command, inv.args, {
-      cwd: consumer_root,
-      stdio: ["ignore", "ignore", "ignore"],
-      timeout: 30000,
-    });
-  } catch {
-    // never propagate regenerator failures into the agent loop
+  for (const root of targetRoots) {
+    const script = _resolve_regenerator(root);
+    if (script === null) {
+      // Phase 1 of road-to-hooks-actually-fire-in-consumers: log dispatch
+      // issue directly (this hook runs as a subprocess from the universal
+      // dispatcher; routing through the dispatcher would add latency for
+      // no benefit).
+      try {
+        log_dispatch_issue(
+          root,
+          "roadmap-progress",
+          "prerequisite_missing",
+          "update_roadmap_progress.ts not found at any of: " +
+            ".augment/scripts/, dist/agent-src/scripts/, " +
+            ".agent-src.uncondensed/scripts/, src/agent-src/scripts/",
+          "./agent-config hooks:install --regen " + "(or ./agent-config init)",
+        );
+      } catch {
+        // observability never breaks the hook
+      }
+      if (verbose) {
+        process.stderr.write(
+          `roadmap-progress-hook: regenerator not found for ${root}, skipping\n`,
+        );
+      }
+      continue;
+    }
+
+    try {
+      // The regenerator is a `.ts` script; run it through tsx (resolved from
+      // a node_modules/.bin found by walking up from the regenerator's dir,
+      // falling back to `npx tsx`), mirroring the dispatcher's `.ts` concerns.
+      // `--repo-root` + cwd pin the regeneration to the edited file's own repo.
+      const inv = _resolve_tsx_invocation(script);
+      spawnSync(inv.command, [...inv.args, "--repo-root", root], {
+        cwd: root,
+        stdio: ["ignore", "ignore", "ignore"],
+        timeout: 30000,
+      });
+    } catch {
+      // never propagate regenerator failures into the agent loop
+    }
   }
 
   if (verbose) {
