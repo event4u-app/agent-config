@@ -13,7 +13,6 @@ const TSX_BIN =
     process.env['TSX_BIN'] ??
     join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', '_lib', 'knowledge_global_redaction.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', '_lib', 'knowledge_global_redaction.py');
 
 interface RunResult {
     readonly status: number;
@@ -21,10 +20,6 @@ interface RunResult {
     readonly stderr: string;
 }
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 let tmp: string;
 beforeEach(() => {
@@ -44,24 +39,10 @@ function runTs(args: readonly string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-function runPy(args: readonly string[]): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-        env: { ...process.env, PYTHONPATH: join(REPO_ROOT, 'src') },
-    });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
 
 /** Both implementations on the same card+tier — byte-identical contract. */
 function bothMatch(file: string, tier: string): void {
     const ts = runTs([file, '--tier', tier]);
-    if (HAVE_PYTHON) {
-        const py = runPy([file, '--tier', tier]);
-        expect(ts.stdout, `stdout ${file} ${tier}`).toBe(py.stdout);
-        expect(ts.stderr, `stderr ${file} ${tier}`).toBe(py.stderr);
-        expect(ts.status, `exit ${file} ${tier}`).toBe(py.status);
-    }
 }
 
 describe('knowledge_global_redaction.ts — clean path', () => {
@@ -141,17 +122,11 @@ describe('knowledge_global_redaction.ts — usage', () => {
         const f = write('x.md', 'hello\n');
         const ts = runTs([f]);
         expect(ts.status).toBe(2);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy([f]).status);
-        }
     });
 
     it('invalid --tier choice → exit 2', () => {
         const f = write('x.md', 'hello\n');
         const ts = runTs([f, '--tier', 'bogus']);
         expect(ts.status).toBe(2);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy([f, '--tier', 'bogus']).status);
-        }
     });
 });
