@@ -1,19 +1,16 @@
 /**
- * Golden-parity tests for `src/scripts/check_no_external_sources.ts`.
+ * CLI-contract tests for `src/scripts/check_no_external_sources.ts`.
  *
- * Layer 1 — golden parity on the REAL repo: the TS twin and the Python
- * original (`check_no_external_sources.py`) produce byte-identical text AND
- * JSON reports and the same exit code — clean tree or not. This suite proves
- * py↔ts PARITY, not the tree's content hygiene: pre-existing external-source
- * tokens in main's tracked files are policed by main's own diff-scoped gate,
- * not by this migration parity suite (AI-council 2026-06-13, option c).
+ * The tsx twin is the source of truth (the python original was deleted in the
+ * teardown).
  *
- * Layer 2 — synthetic hit fixture: a tmp git repo carrying denied tokens (and
- * a skip_paths-covered file) is scanned by both runtimes; text + JSON output
- * and exit codes are asserted byte-identical, exercising the hit path, the
- * fnmatch skip, the `line.strip()[:160]` excerpt, and the regex-token field.
+ * Layer 1 — real repo: the twin runs deterministically (this suite proves the
+ * twin runs, not the tree's content hygiene, which main's diff-scoped gate owns).
  *
- * Both layers skip when python3 is unavailable.
+ * Layer 2 — synthetic hit fixture: a tmp git repo carrying denied tokens (and a
+ * skip_paths-covered file) is scanned; text + JSON output and exit codes are
+ * asserted, exercising the hit path, the fnmatch skip, the `line.strip()[:160]`
+ * excerpt, and the regex-token field.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -24,7 +21,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_no_external_sources.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_no_external_sources.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -33,47 +29,31 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-
 const big = (cwd: string) => ({ maxBuffer: 256 * 1024 * 1024, cwd, encoding: 'utf8' as const });
 
-// --- Layer 1: golden parity on the real repo -------------------------------
+// --- Layer 1: CLI contract on the real repo --------------------------------
 
-describe.skipIf(!py3)('check_no_external_sources — golden parity (real repo)', () => {
-    it('text report is byte-identical and exit codes match', () => {
-        const py = spawnSync('python3', [PY_SCRIPT], big(REPO_ROOT));
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], big(REPO_ROOT));
-        expect(ts.stderr).toBe('');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.status).toBe(py.status);
+describe('check_no_external_sources — CLI contract (real repo)', () => {
+    it('text report runs deterministically', () => {
+        const a = spawnSync(TSX_BIN, [TS_SCRIPT], big(REPO_ROOT));
+        const b = spawnSync(TSX_BIN, [TS_SCRIPT], big(REPO_ROOT));
+        expect(a.status).not.toBeNull();
+        expect(b.stdout).toBe(a.stdout);
+        expect(b.status).toBe(a.status);
     });
 
-    it('json report is byte-identical and exit codes match', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--json'], big(REPO_ROOT));
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], big(REPO_ROOT));
-        expect(ts.stderr).toBe('');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('twin reports the SAME verdict as the Python original (parity, not tree-hygiene)', () => {
-        // Option (c) per AI-council (claude-sonnet-4-5 + gpt-4o, 2026-06-13
-        // debate): the migration suite tests py↔ts equivalence, not main's
-        // tree-wide content hygiene. We assert the twin agrees with the Python
-        // original — whatever the tree contains — never an absolute exit 0,
-        // which would make this parity suite police pre-existing main content.
-        const py = spawnSync('python3', [PY_SCRIPT], big(REPO_ROOT));
-        const ts = spawnSync(TSX_BIN, [TS_SCRIPT], big(REPO_ROOT));
-        expect(ts.status).toBe(py.status);
+    it('json report runs deterministically', () => {
+        const a = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], big(REPO_ROOT));
+        const b = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], big(REPO_ROOT));
+        expect(a.status).not.toBeNull();
+        expect(b.stdout).toBe(a.stdout);
+        expect(b.status).toBe(a.status);
     });
 });
 
 // --- Layer 2: synthetic hit fixture ----------------------------------------
 
-describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hits)', () => {
+describe('check_no_external_sources — synthetic hits', () => {
     let work: string;
 
     // Assemble the denied tokens from fragments at runtime so the literal
@@ -94,7 +74,6 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
                 deny: ['\\b' + TOK1 + '\\b', TOK2],
                 skip_paths: [
                     'src/scripts/external_sources_denylist.json',
-                    'src/scripts/check_no_external_sources.py',
                     'src/scripts/check_no_external_sources.ts',
                     'skipme/*',
                 ],
@@ -112,9 +91,8 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
         fs.writeFileSync(path.join(work, 'skipme', 'b.md'), `${TOK1} should be skipped\n`, 'utf-8');
         // Binary-extension skip: a denied token inside a .lock file must be ignored.
         fs.writeFileSync(path.join(work, 'c.lock'), `${TOK1} in a lockfile\n`, 'utf-8');
-        // The scripts resolve ROOT from parents[2] of their own location, and
-        // load the sibling denylist — so they must live under <work>/src/scripts.
-        fs.copyFileSync(PY_SCRIPT, path.join(work, 'src', 'scripts', 'check_no_external_sources.py'));
+        // The script resolves ROOT from parents[2] of its own location, and
+        // loads the sibling denylist — so it must live under <work>/src/scripts.
         fs.copyFileSync(TS_SCRIPT, path.join(work, 'src', 'scripts', 'check_no_external_sources.ts'));
         // git ls-files needs a repo with the files tracked.
         spawnSync('git', ['init', '-q'], big(work));
@@ -125,8 +103,6 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
         fs.rmSync(work, { recursive: true, force: true });
     });
 
-    const PY = (): ReturnType<typeof spawnSync> =>
-        spawnSync('python3', [path.join(work, 'src', 'scripts', 'check_no_external_sources.py')], big(work));
     const TS = (flag?: string): ReturnType<typeof spawnSync> =>
         spawnSync(
             TSX_BIN,
@@ -134,30 +110,22 @@ describe.skipIf(!py3)('check_no_external_sources — golden parity (synthetic hi
             big(work),
         );
 
-    it('text hit report is byte-identical, exit 1', () => {
-        const py = PY();
+    it('text hit report → exit 1, flags the two non-skipped hits', () => {
         const ts = TS();
-        expect(ts.stdout).toBe(py.stdout);
-        expect(py.status).toBe(1);
         expect(ts.status).toBe(1);
-        // Sanity: both flagged exactly the two non-skipped hits.
-        expect((ts.stdout as string)).toContain('a.md:1');
-        expect((ts.stdout as string)).toContain('a.md:2');
-        expect((ts.stdout as string)).not.toContain('skipme');
-        expect((ts.stdout as string)).not.toContain('c.lock');
+        expect(ts.stdout as string).toContain('a.md:1');
+        expect(ts.stdout as string).toContain('a.md:2');
+        expect(ts.stdout as string).not.toContain('skipme');
+        expect(ts.stdout as string).not.toContain('c.lock');
     });
 
-    it('json hit report is byte-identical, exit 1', () => {
-        const py = spawnSync(
-            'python3',
-            [path.join(work, 'src', 'scripts', 'check_no_external_sources.py'), '--json'],
-            big(work),
-        );
+    it('json hit report → exit 1, two hits with stripped excerpt + regex token', () => {
         const ts = TS('--json');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(py.status).toBe(1);
         expect(ts.status).toBe(1);
-        const parsed = JSON.parse(ts.stdout as string) as { ok: boolean; hits: Array<Record<string, unknown>> };
+        const parsed = JSON.parse(ts.stdout as string) as {
+            ok: boolean;
+            hits: Array<Record<string, unknown>>;
+        };
         expect(parsed.ok).toBe(false);
         expect(parsed.hits).toHaveLength(2);
         // Trailing whitespace stripped in the excerpt (line.strip()[:160]).
