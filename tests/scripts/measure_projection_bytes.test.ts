@@ -1,13 +1,11 @@
 // Tests for src/scripts/measure_projection_bytes.ts (py2ts Phase 8 / Wave 8c).
 //
-// No pytest suite exists → focused differential suite. The script is a
-// read-only reporter (without --regenerate); it walks per-tool projection
-// surfaces and prints a table (default) or JSON (--json). Golden parity:
-// python3 vs tsx on the REAL repo across the default + --json shapes —
-// byte-exact stdout/stderr/exit. The --regenerate path is NOT exercised
-// (it shells out to `task clean-tools && task generate-tools`, mutating the
-// whole tool tree — out of scope for a read-only parity suite). Skipped
-// without python3.
+// The script is a read-only reporter (without --regenerate); it walks per-tool
+// projection surfaces and prints a table (default) or JSON (--json). The tsx
+// twin is the source of truth (the python original was deleted in the
+// teardown); output is corpus-derived → asserted structurally (exit 0, valid,
+// deterministic), not snapshotted. The --regenerate path is out of scope
+// (mutates the whole tool tree).
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +13,6 @@ import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_projection_bytes.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_projection_bytes.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -23,30 +20,22 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function runPy(args: string[]) {
-    return spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-}
 function runTs(args: string[]) {
     return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
 }
 
-describe.runIf(hasPython3())('measure_projection_bytes — golden parity (python3 vs tsx)', () => {
-    for (const args of [[], ['--json']]) {
-        it(`byte-identical for: ${args.join(' ') || '(default)'}`, () => {
-            const py = runPy(args);
-            const ts = runTs(args);
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
+describe('measure_projection_bytes — CLI contract', () => {
+    it('default + --json run deterministically over the repo (exit 0)', () => {
+        for (const args of [[], ['--json']]) {
+            const a = runTs(args);
+            expect(a.status, `${args.join(' ')}: ${a.stderr}`).toBe(0);
+            expect(a.stdout.length).toBeGreaterThan(0);
+            expect(runTs(args).stdout, `${args.join(' ')} deterministic`).toBe(a.stdout);
+        }
+        expect(() => JSON.parse(runTs(['--json']).stdout)).not.toThrow();
+    });
 
-    it('bad flag → exit code parity (argparse banner prose not compared)', () => {
-        const py = runPy(['--nope']);
-        const ts = runTs(['--nope']);
-        expect(ts.status).toBe(py.status);
+    it('bad flag → exit 2', () => {
+        expect(runTs(['--nope']).status).toBe(2);
     });
 });

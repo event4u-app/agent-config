@@ -1,11 +1,12 @@
-// Tests for src/scripts/measure_density.ts (py2ts Phase 8 / Wave 8c).
+// Contract tests for src/scripts/measure_density.ts (py2ts Phase 8 / Wave 8c).
 //
-// No pytest suite exists. The script reads the whole artifact corpus and
-// prints a report (default) or deterministic JSON (--json); --snapshot writes
-// JSONL to the gitignored agents/runtime/density/snapshot.jsonl (no tracked
-// drift). Golden parity: python3 vs tsx on the REAL repo across the default,
-// --json, and --snapshot shapes — byte-exact stdout/stderr/exit + snapshot
-// bytes. Skipped without python3.
+// The script reads the whole artifact corpus and prints a report (default) or
+// deterministic JSON (--json); --snapshot writes JSONL to the gitignored
+// agents/runtime/density/snapshot.jsonl. The tsx twin is the source of truth
+// (the python original was deleted in the teardown). Its output is
+// corpus-derived (would drift in a fixed snapshot), so this asserts the
+// contract structurally: exit 0, non-empty output, valid JSON(L), and
+// DETERMINISM (a second run is byte-identical).
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -14,7 +15,6 @@ import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_density.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_density.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -23,33 +23,31 @@ const TSX_BIN = path.join(
 );
 const SNAPSHOT = path.join(REPO_ROOT, 'agents', 'runtime', 'density', 'snapshot.jsonl');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
+const runTs = (args: string[]) =>
+    spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
 
-describe.runIf(hasPython3())('measure_density — golden parity (python3 vs tsx)', () => {
-    for (const args of [[], ['--json']]) {
-        it(`byte-identical for: ${args.join(' ') || '(default)'}`, () => {
-            const py = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-        });
-    }
+describe('measure_density — CLI contract', () => {
+    it('default + --json run deterministically over the repo (exit 0)', () => {
+        for (const args of [[], ['--json']]) {
+            const a = runTs(args);
+            expect(a.status, `${args.join(' ')}: ${a.stderr}`).toBe(0);
+            expect(a.stdout.length).toBeGreaterThan(0);
+            const b = runTs(args);
+            expect(b.stdout, `${args.join(' ')} deterministic`).toBe(a.stdout);
+        }
+        expect(() => JSON.parse(runTs(['--json']).stdout)).not.toThrow();
+    });
 
-    it('--snapshot writes byte-identical JSONL (gitignored path; restored)', () => {
-        const existedBefore = fs.existsSync(SNAPSHOT);
-        const before = existedBefore ? fs.readFileSync(SNAPSHOT) : null;
+    it('--snapshot writes valid JSONL (gitignored path; restored)', () => {
+        const before = fs.existsSync(SNAPSHOT) ? fs.readFileSync(SNAPSHOT) : null;
         try {
-            const py = spawnSync('python3', [PY_SCRIPT, '--snapshot'], { encoding: 'utf8', cwd: REPO_ROOT });
-            const pyBytes = fs.readFileSync(SNAPSHOT, 'utf-8');
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--snapshot'], { encoding: 'utf8', cwd: REPO_ROOT });
-            const tsBytes = fs.readFileSync(SNAPSHOT, 'utf-8');
-            expect(ts.status).toBe(py.status);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.stderr).toBe(py.stderr);
-            expect(tsBytes).toBe(pyBytes);
+            const ts = runTs(['--snapshot']);
+            expect(ts.status, ts.stderr).toBe(0);
+            const bytes = fs.readFileSync(SNAPSHOT, 'utf-8');
+            expect(bytes.length).toBeGreaterThan(0);
+            for (const line of bytes.trim().split('\n')) {
+                expect(() => JSON.parse(line)).not.toThrow();
+            }
         } finally {
             if (before !== null) {
                 fs.writeFileSync(SNAPSHOT, before);
