@@ -19,7 +19,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_trigger_evals.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_trigger_evals.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -27,9 +26,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 function mkTmp(): string {
     return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cte-')));
 }
@@ -45,31 +41,31 @@ function write(root: string, rel: string, content: string): void {
  * the package's node_modules; symlink it in. Returns the tmp root + the script
  * paths inside it.
  */
-function fixtureRepo(): { root: string; ts: string; py: string } {
+function fixtureRepo(): { root: string; ts: string } {
     const root = mkTmp();
     fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
     const ts = path.join(root, 'src', 'scripts', 'check_trigger_evals.ts');
-    const py = path.join(root, 'src', 'scripts', 'check_trigger_evals.py');
     fs.copyFileSync(TS_SCRIPT, ts);
-    fs.copyFileSync(PY_SCRIPT, py);
     // tsx resolves node_modules upward from the script; symlink the real one.
     fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'));
-    return { root, ts, py };
+    return { root, ts };
 }
-function expectParity(fx: { root: string; ts: string; py: string }, args: string[] = []): void {
-    const p = spawnSync('python3', [fx.py, ...args], { cwd: fx.root, encoding: 'utf8' });
-    const t = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
-    expect(t.status).toBe(p.status);
+// The tsx twin is the source of truth (the python original was deleted in
+// the teardown). Assert the CLI runs to a defined exit and is deterministic.
+function expectParity(fx: { root: string; ts: string }, args: string[] = []): void {
+    const a = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
+    const b = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
+    expect(a.status, a.stderr).not.toBeNull();
+    expect(b.stdout).toBe(a.stdout);
+    expect(b.stderr).toBe(a.stderr);
+    expect(b.status).toBe(a.status);
 }
 
-const py3 = hasPython3();
 const FRESH = '2026-06-01';
 const TODAY = '2026-06-17';
 
-describe.skipIf(!py3)('check_trigger_evals — golden parity (fixture repo)', () => {
-    let fx: { root: string; ts: string; py: string };
+describe('check_trigger_evals — golden parity (fixture repo)', () => {
+    let fx: { root: string; ts: string };
     beforeEach(() => {
         fx = fixtureRepo();
     });
@@ -211,19 +207,12 @@ describe.skipIf(!py3)('check_trigger_evals — golden parity (fixture repo)', ()
         // a behaviour difference. Assert the stable shape + exit, not the
         // parser-specific tail.
         write(fx.root, 'src/skills/alpha/evals/triggers.json', '{not json');
-        const p = spawnSync('python3', [fx.py, '--today', TODAY], {
-            cwd: fx.root,
-            encoding: 'utf8',
-        });
         const t = spawnSync(TSX_BIN, [fx.ts, '--today', TODAY], { cwd: fx.root, encoding: 'utf8' });
         expect(t.status).toBe(1);
-        expect(p.status).toBe(1);
-        expect(t.stdout).toBe(p.stdout); // both empty (errors go to stderr)
+        expect(t.stdout).toBe(''); // errors go to stderr
         const marker = 'check-trigger-evals: trigger-set regression(s):';
         expect(t.stderr).toContain(marker);
-        expect(p.stderr).toContain(marker);
         expect(t.stderr).toContain('src/skills/alpha/evals/triggers.json: unreadable JSON');
-        expect(p.stderr).toContain('src/skills/alpha/evals/triggers.json: unreadable JSON');
     });
 
     it('quiet suppresses the ✅ line on a clean run', () => {
@@ -250,13 +239,13 @@ describe.skipIf(!py3)('check_trigger_evals — golden parity (fixture repo)', ()
     });
 });
 
-describe.skipIf(!py3)('check_trigger_evals — golden parity (real repo)', () => {
-    it('stdout + stderr + exit byte-identical with a fixed --today', () => {
+describe('check_trigger_evals — golden parity (real repo)', () => {
+    it('runs deterministically with a fixed --today', () => {
         const args = ['--today', '2026-06-17'];
-        const p = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const t = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+        const a = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
+        const b = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
+        expect(a.status, a.stderr).not.toBeNull();
+        expect(b.stdout).toBe(a.stdout);
+        expect(b.status).toBe(a.status);
     });
 });

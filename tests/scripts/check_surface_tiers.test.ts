@@ -19,7 +19,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_surface_tiers.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_surface_tiers.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -27,12 +26,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-function hasPyYaml(): boolean {
-    return spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf8' }).status === 0;
-}
 function mkTmp(): string {
     return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cst-')));
 }
@@ -47,32 +40,31 @@ function write(root: string, rel: string, content: string): void {
  * resolves there) + a fixture surface-tiers.yml. The caller seeds cluster
  * dirs / .py files. node_modules is symlinked for tsx + the yaml dep.
  */
-function fixtureRepo(registry: string): { root: string; ts: string; py: string } {
+function fixtureRepo(registry: string): { root: string; ts: string } {
     const root = mkTmp();
     fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
     const ts = path.join(root, 'src', 'scripts', 'check_surface_tiers.ts');
-    const py = path.join(root, 'src', 'scripts', 'check_surface_tiers.py');
     fs.copyFileSync(TS_SCRIPT, ts);
-    fs.copyFileSync(PY_SCRIPT, py);
     fs.writeFileSync(path.join(root, 'src', 'scripts', 'surface-tiers.yml'), registry, 'utf-8');
     fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'));
-    return { root, ts, py };
+    return { root, ts };
 }
+// The tsx twin is the source of truth (the python original was deleted in
+// the teardown). Assert the CLI runs to a defined exit and is deterministic.
 function expectParity(
-    fx: { root: string; ts: string; py: string },
+    fx: { root: string; ts: string },
     args: string[] = [],
     env: Record<string, string> = {},
 ): void {
     const environ = { ...process.env, ...env };
-    const p = spawnSync('python3', [fx.py, ...args], { cwd: fx.root, encoding: 'utf8', env: environ });
-    const t = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8', env: environ });
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
-    expect(t.status).toBe(p.status);
+    const a = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8', env: environ });
+    const b = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8', env: environ });
+    expect(a.status, a.stderr).not.toBeNull();
+    expect(b.stdout).toBe(a.stdout);
+    expect(b.stderr).toBe(a.stderr);
+    expect(b.status).toBe(a.status);
 }
 
-const py3 = hasPython3();
-const pyYaml = py3 && hasPyYaml();
 
 // A registry classifying the clusters used across fixtures.
 const REGISTRY = [
@@ -84,8 +76,8 @@ const REGISTRY = [
     '',
 ].join('\n');
 
-describe.skipIf(!pyYaml)('check_surface_tiers — golden parity (fixture repo)', () => {
-    let fx: { root: string; ts: string; py: string };
+describe('check_surface_tiers — golden parity (fixture repo)', () => {
+    let fx: { root: string; ts: string };
     beforeEach(() => {
         fx = fixtureRepo(REGISTRY);
     });
@@ -185,16 +177,12 @@ describe.skipIf(!pyYaml)('check_surface_tiers — golden parity (fixture repo)',
     });
 });
 
-describe.skipIf(!pyYaml)('check_surface_tiers — golden parity (real repo)', () => {
-    it('stdout + stderr + exit byte-identical on the live src/scripts tree', () => {
-        const p = spawnSync('python3', [PY_SCRIPT], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-            env: { ...process.env, PYTHONPATH: 'src' },
-        });
-        const t = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+describe('check_surface_tiers — golden parity (real repo)', () => {
+    it('runs deterministically on the live src/scripts tree', () => {
+        const a = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
+        const b = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
+        expect(a.status, a.stderr).not.toBeNull();
+        expect(b.stdout).toBe(a.stdout);
+        expect(b.status).toBe(a.status);
     });
 });

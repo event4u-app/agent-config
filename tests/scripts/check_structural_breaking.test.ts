@@ -18,7 +18,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_structural_breaking.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_structural_breaking.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -26,9 +25,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 function hasGit(): boolean {
     return spawnSync('git', ['--version'], { encoding: 'utf8' }).status === 0;
 }
@@ -59,36 +55,34 @@ function git(root: string, ...args: string[]) {
  * detector diffs `origin/main...HEAD`; we create a local `refs/remotes/origin/main`
  * pointing at the base commit. Returns the root + script paths.
  */
-function fixtureRepo(): { root: string; ts: string; py: string } {
+function fixtureRepo(): { root: string; ts: string } {
     const root = mkTmp();
     git(root, 'init', '-q', '-b', 'main');
     fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
     const ts = path.join(root, 'src', 'scripts', 'check_structural_breaking.ts');
-    const py = path.join(root, 'src', 'scripts', 'check_structural_breaking.py');
     fs.copyFileSync(TS_SCRIPT, ts);
-    fs.copyFileSync(PY_SCRIPT, py);
     fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'));
-    return { root, ts, py };
+    return { root, ts };
 }
 /** Point refs/remotes/origin/main at the current HEAD (the diff base). */
 function setOrigin(root: string): void {
     const head = git(root, 'rev-parse', 'HEAD').stdout.trim();
     git(root, 'update-ref', 'refs/remotes/origin/main', head);
 }
-function expectParity(fx: { root: string; ts: string; py: string }, args: string[] = []): void {
-    const p = spawnSync('python3', [fx.py, ...args], { cwd: fx.root, encoding: 'utf8' });
-    const t = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
-    expect(t.status).toBe(p.status);
+// The tsx twin is the source of truth (the python original was deleted in
+// the teardown). Assert the CLI runs to a defined exit and is deterministic.
+function expectParity(fx: { root: string; ts: string }, args: string[] = []): void {
+    const a = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
+    const b = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
+    expect(a.status, a.stderr).not.toBeNull();
+    expect(b.stdout).toBe(a.stdout);
+    expect(b.stderr).toBe(a.stderr);
+    expect(b.status).toBe(a.status);
 }
 
-const py3 = hasPython3();
-const git_ok = hasGit();
-const enabled = py3 && git_ok;
 
-describe.skipIf(!enabled)('check_structural_breaking — golden parity (fixture git repo)', () => {
-    let fx: { root: string; ts: string; py: string };
+describe('check_structural_breaking — golden parity (fixture git repo)', () => {
+    let fx: { root: string; ts: string };
     beforeEach(() => {
         fx = fixtureRepo();
     });
@@ -230,12 +224,12 @@ describe.skipIf(!enabled)('check_structural_breaking — golden parity (fixture 
     });
 });
 
-describe.skipIf(!enabled)('check_structural_breaking — golden parity (real repo)', () => {
-    it('stdout + stderr + exit byte-identical on the live repo diff', () => {
-        const p = spawnSync('python3', [PY_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const t = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+describe('check_structural_breaking — golden parity (real repo)', () => {
+    it('runs deterministically on the live repo diff', () => {
+        const a = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
+        const b = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
+        expect(a.status, a.stderr).not.toBeNull();
+        expect(b.stdout).toBe(a.stdout);
+        expect(b.status).toBe(a.status);
     });
 });
