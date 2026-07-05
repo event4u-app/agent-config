@@ -2,40 +2,28 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**105 / 163 steps done · 64%**
+**85 / 130 steps done · 65%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md) | 4 | 33 | 13 | 20 | 0 | 0 | ██████░░░░ 61% |
-| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
-| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
+| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
 ## Per-roadmap phase breakdown
-
-### [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md)
-
-**Final state + market readiness** — 20 / 33 done (61%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Parallel tracks (Track A gated, Track B table-stakes) | 🟡 in progress | 1 | 18 | 0 | 0 | 95% |
-| 2 | Conditional-launch gate (council gap — explicit decision point) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | External-telemetry-gated (the monoculture honesty gate) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Scale (3+ external adopters) | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
