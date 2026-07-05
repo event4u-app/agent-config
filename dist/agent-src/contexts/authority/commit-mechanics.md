@@ -71,6 +71,14 @@ The pre-scan ask is the **only** permitted commit-related question
 in autonomous mode. Once answered, the decision is cached for the
 rest of the roadmap execution.
 
+When the roadmap declares `execution.mode: autonomous |
+phase-checkpoints`, this pre-scan ask is subsumed by the run-start
+**execution contract** — one acceptance covers commits, the run's
+feature branch, push to that branch only, and PR-open; see
+[`roadmap-execution-contract`](../execution/roadmap-execution-contract.md)
+and [`scope-mechanics § Roadmap execution contract`](scope-mechanics.md).
+The Hard-Floor per-commit diff gate above is unaffected.
+
 ## Speech-act check on commit phrases
 
 The same speech-act check from

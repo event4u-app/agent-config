@@ -84,6 +84,26 @@ and council-pass notes capture the *why*; checkboxes capture the
 [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
 Iron Law #2.
 
+### 4b. Declare the execution mode (frontmatter)
+
+Every new roadmap declares how a later `/roadmap:process-*` run should
+interact, via `execution.mode:` in frontmatter — `autonomous` (one
+run-start execution-contract confirmation, then uninterrupted except
+safety floors), `phase-checkpoints` (halt + compact status per phase
+boundary), or `interactive` (absent-field default; omit the field).
+Semantics: [`templates/roadmaps.md` rule 18](../../templates/roadmaps.md);
+run mechanics:
+[`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).
+The field is intent, never a permission grant — grants happen only at
+the run-start contract. `/roadmap:create` asks this as one question;
+when authoring a roadmap directly, ask it too (follow-ups pre-select
+the parent's mode but always re-ask). **Authoring duty for
+`autonomous`:** steps must be precise enough to clear the
+`ask-when-uncertain` vague-trigger patterns — vagueness is resolved at
+authoring time, not mid-run; pre-existing `[~]` items in an
+`autonomous` roadmap draw a lint warning (they guarantee the archival
+gate fires later).
+
 ### 5. Exit & rollback per phase
 
 Each phase declares **exit criteria** (decidable signals that the
@@ -171,7 +191,7 @@ external input or adopts capabilities into the suite:
 
 For an ordinary internally-originated roadmap, **skip this section** —
 §§ 0–7 are the whole job. Do not bolt a Provenance block or a
-gap-table onto a plan that needs neither (template rule 18).
+gap-table onto a plan that needs neither (template rule 19).
 
 When it fires, add these four moves to the §§ 0–7 procedure:
 
@@ -288,7 +308,7 @@ to every roadmap you author.
   that is a skill dump, not integration.
 * Add a `## Provenance` block (or gap-table) to an **internally
   originated** roadmap — § 8 is conditional; an empty Provenance section
-  is noise (template rule 18).
+  is noise (template rule 19).
 * Name the raw competitor / tool in a tracked roadmap, or paste a raw
   source link — anonymize + `ENC1:`-encrypt
   ([`source-confidentiality`](../../rules/source-confidentiality.md)).

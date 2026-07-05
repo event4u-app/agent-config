@@ -1,32 +1,34 @@
 # Initial-context token audit
 
-- generated: `2026-06-26T09:20:20+00:00`
+- generated: `2026-07-05T17:11:18+00:00`
 - token method: tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)
 
 ## 0B.2 — always-on rule footprint per tool
 
 | tool | files | chars | GPT tok | Claude tok |
 |---|--:|--:|--:|--:|
-| `.claude` | 91 | 291,714 | 72,409 | 81,032 |
-| `.augment` | 93 | 299,529 | 74,317 | 83,202 |
+| `.claude` | 93 | 302,525 | 75,076 | 84,035 |
+| `.augment` | 93 | 301,087 | 74,753 | 83,635 |
+| `.cursor` | 93 | 302,525 | 75,076 | 84,035 |
+| `.windsurfrules` | 1 | 254,664 | 61,858 | 70,740 |
 
 ## 0B.4 — description-catalog cost (eager)
 
 | catalog | entries | chars | GPT tok | Claude tok |
 |---|--:|--:|--:|--:|
-| skills_projected | 412 | 72,852 | 15,733 | 20,237 |
-| skills_core_source | 258 | 50,762 | 10,999 | 14,101 |
-| commands_core_source | 162 | 23,412 | 4,998 | 6,503 |
+| skills_projected | 416 | 73,243 | 15,828 | 20,345 |
+| skills_core_source | 261 | 50,932 | 11,053 | 14,148 |
+| commands_core_source | 162 | 23,436 | 5,005 | 6,510 |
 
 ## 1.3 — top-10 longest rules (token trim candidates)
 
 | rule | GPT tok | chars |
 |---|--:|--:|
-| `legal-safety-floor` | 2,920 | 12,077 |
+| `legal-safety-floor` | 2,920 | 12,083 |
 | `roadmap-progress-sync` | 2,597 | 9,983 |
 | `git-history-discipline` | 2,133 | 8,423 |
+| `domain-safety-pii` | 2,055 | 7,912 |
 | `autonomous-execution` | 2,004 | 8,430 |
-| `domain-safety-pii` | 1,972 | 7,567 |
 | `domain-safety-disclaimer` | 1,770 | 7,368 |
 | `domain-adoption-policy` | 1,727 | 7,188 |
 | `roadmap-ci-steps-policy` | 1,656 | 6,364 |

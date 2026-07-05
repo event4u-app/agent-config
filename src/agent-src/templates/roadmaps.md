@@ -80,7 +80,32 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     roadmap, readers honor the body convention. Authoring contract:
     [`roadmap-writing § 7`](../skills/roadmap-writing/SKILL.md);
     spawn procedure: [`roadmap-management § Spawn follow-up`](../skills/roadmap-management/SKILL.md).
-18. **Source-derived roadmaps carry a gap-table + provenance; internally
+18. **Declare the execution mode.** Every roadmap MAY declare how it
+    should be executed by `/roadmap:process-*` via frontmatter:
+    ```yaml
+    execution:
+      mode: autonomous        # autonomous | phase-checkpoints | interactive
+    ```
+    - `interactive` (default when the field is absent) — today's behavior:
+      every gate fires as authored by its owning rule.
+    - `phase-checkpoints` — the run halts at each phase boundary with a
+      compact status + continue prompt; inside a phase it behaves like
+      `autonomous`.
+    - `autonomous` — at run start the loop derives an **execution
+      contract** (see
+      [`roadmap-execution-contract`](../contexts/execution/roadmap-execution-contract.md))
+      and ONE confirmation activates all run grants; the run then
+      proceeds without interruptions except the safety floors.
+
+    The field is a **declaration of intent, not a permission grant** —
+    permissions are granted only by the user's this-turn acceptance of
+    the run-start execution contract. Frontmatter never lifts a Hard
+    Floor, never authorizes a merge, and never substitutes for the
+    contract confirmation. Unknown values are rejected by the roadmap
+    lint. Follow-up roadmaps (rule 17) inherit the parent's mode as the
+    *suggested* option during creation but the question is always asked
+    again.
+19. **Source-derived roadmaps carry a gap-table + provenance; internally
     originated roadmaps carry neither.** This rule fires **only** when a
     roadmap originates from an external input (a suggestion, a competitive
     or capability harvest, an external LLM ideation thread) or adopts
@@ -191,7 +216,7 @@ complexity: lightweight
 {Optional: edge cases, decisions, links to related docs.}
 
 <!-- ## Provenance — INCLUDE ONLY for source-derived / harvest / capability-adoption
-     roadmaps (rule 18). OMIT entirely for internally-originated roadmaps —
+     roadmaps (rule 19). OMIT entirely for internally-originated roadmaps —
      do NOT ship an empty Provenance section.
 - Source: <neutral descriptor> (anonymized per source-confidentiality);
   link via `src/scripts/_lib/link_crypto.ts decrypt`: ENC1:<token>

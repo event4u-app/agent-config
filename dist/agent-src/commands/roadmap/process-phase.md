@@ -30,12 +30,20 @@ Sibling of [`/roadmap:process-step`](process-step.md) and
 Run the canonical loop in
 [`contexts/execution/roadmap-process-loop`](../../contexts/execution/roadmap-process-loop.md)
 with the **scope delta below**. The loop file owns roadmap discovery,
-pre-run summary, cadence resolution, commit-step pre-scan, the step
-loop with AI-council branching, halt conditions, and the archival
-check.
+pre-run summary, cadence resolution, the § 3 pre-scan (execution
+contract when frontmatter declares `execution.mode: autonomous |
+phase-checkpoints` — see
+[`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md) —
+otherwise the legacy commit-step ask), the step loop with AI-council
+branching, halt conditions, and the archival check.
 
 ## Scope delta
 
+- **Execution mode:** read `execution.mode` from frontmatter; under
+  `autonomous` / `phase-checkpoints` the run-start contract governs
+  the run's grants. `phase-checkpoints` behaves like `autonomous`
+  inside this single phase (its checkpoint prompt fires at the
+  boundary, where this wrapper stops anyway).
 - **Working set:** all open steps in the **first phase with
   `count_open > 0`**. If every phase is closed → report "Roadmap
   already complete." and run the archival check from
@@ -52,11 +60,15 @@ check.
 - **Autonomous within the phase, never beyond.** The user picks
   `process-step` for one step or `process-full` for the whole roadmap.
 - **No commit, push, branch, PR, tag, or bulk-destructive op** without
-  explicit permission this turn — see
-  [`commit-policy`](../../rules/commit-policy.md) and
+  explicit permission this turn **or an accepted run-start execution
+  contract** (whose grants cover exactly: the run's feature branch,
+  chunked commits on it, push to that branch only, PR-open — never
+  merge; see
+  [`roadmap-execution-contract § 3`](../../contexts/execution/roadmap-execution-contract.md)) —
+  see [`commit-policy`](../../rules/commit-policy.md) and
   [`scope-control § git-ops`](../../rules/scope-control.md#git-operations--permission-gated).
   Roadmap-listed commit steps follow the single-upfront-ask flow in
-  [`roadmap-process-loop § 3`](../../contexts/execution/roadmap-process-loop.md#3-commit-step-pre-scan--one-upfront-ask).
+  [`roadmap-process-loop § 3`](../../contexts/execution/roadmap-process-loop.md#3-pre-scan--execution-contract-or-commit-step-ask).
 - **Every checkbox edit syncs the dashboard in the same response** per
   [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
 - **AI-council consultations run silently when council is on.** No

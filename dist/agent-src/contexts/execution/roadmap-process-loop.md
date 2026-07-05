@@ -56,6 +56,7 @@ options + wait):
 > Phase 2: `<name>` — 0/4
 > Next open step: `<description>`
 > Scope: **step | phase | full**
+> Execution mode: **autonomous | phase-checkpoints | interactive** (frontmatter `execution.mode`; absent = interactive)
 > AI council: **on | off** (`<member list or "no members configured">`)
 > Quality cadence: **end_of_roadmap | per_phase | per_step**
 > Commit steps in roadmap: **N** (see § 3)
@@ -68,15 +69,39 @@ when scope, roadmap, and council are all unambiguous in the invocation
 (e.g. `/roadmap:process-phase road-to-X.md with council`), the gate
 does not fire.
 
-## 3. Commit-step pre-scan — one upfront ask
+## 3. Pre-scan — execution contract or commit-step ask
 
-Before step 4, scan the roadmap for explicit commit steps (lines
-matching `commit:` / `git commit` / `Commit phase` patterns).
+Read `execution.mode` from roadmap's frontmatter
+(`autonomous` | `phase-checkpoints` | `interactive`; absent =
+`interactive`).
+
+**`mode: autonomous` or `phase-checkpoints`** → load
+[`roadmap-execution-contract`](roadmap-execution-contract.md) and run
+its four-class pre-scan over every open step:
+
+1. commit-shaped steps (patterns below),
+2. git-shape needs (branch / push / PR / delivery),
+3. artifact-authoring steps (new or materially rewritten skill / rule /
+   command / guideline — feeds batched drafting-protocol research
+   pass, run at contract time against current artifact state),
+4. open questions / ambiguity markers (incl. `ask-when-uncertain`
+   vague-trigger patterns).
+
+Surface contract summary; user's single **Accept** activates all run
+grants (branch, chunked commits, push to run's own feature branch
+only, PR-open, batched artifact drafting, council auto-enable) —
+cached for run, never re-asked. Contract never lifts a Hard Floor or
+any safety floor; boundaries + per-mode gate table live in contract
+context.
+
+**`mode: interactive` (or field absent)** → legacy commit-step scan
+only: lines matching `commit:` / `git commit` / `Commit phase`.
 
 - **No commit steps** → nothing to ask. Never commit, never re-ask
   per [`commit-policy`](../../rules/commit-policy.md).
-- **Commit steps present, autonomous mode** (`personal.autonomy: on`,
-  or `auto` after opt-in) → ask **once** upfront:
+- **Commit steps present, autonomous conversation mode**
+  (`personal.autonomy: on`, or `auto` after opt-in) → ask **once**
+  upfront:
   > "Roadmap contains N commit steps. Authorize all of them for this
   > run? (yes / no / list them)"
   Cache the answer for the whole run; do **not** re-ask per step.
@@ -152,9 +177,17 @@ For each open step in the working set (scope-bound — see wrapper):
 2. Analyze the codebase for what the step requires.
 3. Decide and act — implement. **No "should I implement this?" prompt.**
 4. **Open question handling:**
-   - **Council on** → invoke per [`ai-council`](../../skills/ai-council/SKILL.md),
-     integrate convergence, proceed. Token spend was opted in.
-   - **Council off** → halt, surface once, wait. Resume on next turn.
+   - **Council on** (toggled manually, or auto-enabled for run by
+     accepted execution contract — § 3) → invoke per
+     [`ai-council`](../../skills/ai-council/SKILL.md), integrate
+     convergence, proceed. Token spend was opted in (contract summary
+     named members). `high_impact` / `user_required` classifications
+     still escalate to user per
+     [`ask-when-uncertain`](../../rules/ask-when-uncertain.md).
+   - **Council off / not configured** → halt, surface once, wait.
+     Resume on next turn. Execution contract cannot enable a council
+     with no configured members — contract summary says so upfront,
+     and in-run ambiguity halts (never silent guessing).
 5. **Atomic flip — same reply, every step.**
    Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
    `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
@@ -168,8 +201,12 @@ For each open step in the working set (scope-bound — see wrapper):
    Before advancing to step 6, run:
 
    ```bash
-   git diff --name-only -- agents/roadmaps/<file>.md
+   git status --porcelain -- agents/roadmaps/<file>.md
    ```
+
+   (`git status --porcelain`, not `git diff` — roadmap file still
+   **untracked** (e.g. fresh worktree) is invisible to `git diff`,
+   would false-halt; `--porcelain` reports both `M` and `??`.)
 
    Empty output → Iron Law 2 was violated this iteration: the step
    landed work but no checkbox flipped. **Halt loudly**, surface
@@ -202,7 +239,18 @@ For each open step in the working set (scope-bound — see wrapper):
 - Security-sensitive path ([`security-sensitive-stop`](../../rules/security-sensitive-stop.md))
 - Step reveals work outside the roadmap's scope
 - Test failure or quality red on `per_step`
-- Council off + true ambiguity
+- Council off + true ambiguity — under an **accepted execution
+  contract** ([§ 3](#3-pre-scan--execution-contract-or-commit-step-ask))
+  this halt exists only when no council is configured: contract
+  auto-enables council for run, so in-run open questions resolve
+  silently (`high_impact` / `user_required` classifications still
+  escalate per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md));
+  with no council configured, true ambiguity halts — never silent
+  guessing.
+
+An accepted execution contract **never lifts a Hard Floor** or any
+other halt above — it removes redundant *asks* (git shape, artifact
+drafting, council enablement), not safety.
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
@@ -231,6 +279,14 @@ execution either way.
 - Summary: scope-bound (steps/phases done in this run), council
   consultations count (if on), steps remaining, halts.
 - Final dashboard regen.
+- **End state under an accepted execution contract** (per-mode table:
+  [`roadmap-execution-contract § 4`](roadmap-execution-contract.md)):
+  all steps `[x]` · quality green per cadence · work committed in
+  chunks on run's feature branch · pushed to that branch · ONE PR
+  open (description-only flow) · archival sweep run. **Merge is out
+  of scope in every mode — always conversational.** Without a
+  contract (interactive mode), the run ends after the archival check
+  with no git delivery beyond explicitly authorized commit steps.
 - **If the entire roadmap reached `count_open == 0`** → run the full
   project quality pipeline. On red → stop, surface failures, do **not**
   archive. On green → run **deferred-resolution gate** below before
@@ -270,11 +326,11 @@ untracked, leaves a completed roadmap rotting).
 
 ## Scope deltas — what each wrapper binds
 
-| Wrapper | Working set | Stop after |
-|---|---|---|
-| `process-step` | Single first open step | One iteration of § 5 |
-| `process-phase` | All open steps in first phase with `count_open > 0` | Phase boundary; per-phase quality if cadence ≠ `end_of_roadmap` |
-| `process-full` | Every open step across every phase, in order | Roadmap fully closed (or halt) |
+| Wrapper | Working set | Stop after | Execution contract (§ 3) |
+|---|---|---|---|
+| `process-step` | Single first open step | One iteration of § 5 | Never — mode ignored |
+| `process-phase` | All open steps in first phase with `count_open > 0` | Phase boundary; per-phase quality if cadence ≠ `end_of_roadmap` | When `execution.mode: autonomous \| phase-checkpoints` |
+| `process-full` | Every open step across every phase, in order | Roadmap fully closed (or halt) | When `execution.mode: autonomous \| phase-checkpoints` |
 
 `process-full` runs the per-phase quality pipeline at every phase
 boundary when cadence is `per_phase` or `per_step`; on red it halts

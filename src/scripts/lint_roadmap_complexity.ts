@@ -42,6 +42,9 @@ const COUNCIL_PAT = /^## Council Round \d+\b/m;
 const VERDICT_PAT = /^### Verdict\b/m;
 // re.compile(r"^complexity:\s*(lightweight|structural)\s*$", re.MULTILINE)
 const COMPLEXITY_PAT = /^complexity:\s*(lightweight|structural)\s*$/m;
+// execution.mode (templates/roadmaps.md rule 18): nested under `execution:`.
+const EXEC_MODE_PAT = /^execution:[^\S\n]*\n(?:[ \t]+(?!mode:).*\n)*[ \t]+mode:[ \t]*([^\s#]+)/m;
+const EXEC_MODE_VALUES = new Set(['autonomous', 'phase-checkpoints', 'interactive']);
 
 // Plate / horizon detection — template rule 16 forbids time-boxed plates.
 const PLATE_PATS: ReadonlyArray<readonly [RegExp, string]> = [
@@ -161,7 +164,11 @@ function _check_no_plate(text: string, problems: string[]): void {
     }
 }
 
-function lint_roadmap(p: string, horizon_weeks: number): string[] {
+function lint_roadmap(
+    p: string,
+    horizon_weeks: number,
+    warnings?: string[],
+): string[] {
     const text = fs.readFileSync(p, 'utf-8');
     const line_count = _countChar(text, '\n') + (text && !text.endsWith('\n') ? 1 : 0);
     const problems: string[] = [];
@@ -180,7 +187,75 @@ function lint_roadmap(p: string, horizon_weeks: number): string[] {
     if (horizon_weeks <= 0) {
         _check_no_plate(text, problems);
     }
+    _check_execution_mode(fm, problems);
+    if (warnings) {
+        _check_autonomous_authoring(text, fm, warnings);
+    }
     return problems;
+}
+
+// Vague-step patterns (ask-when-uncertain trigger subset) — under
+// execution.mode: autonomous these guarantee mid-run ambiguity halts,
+// so they warn at authoring time instead. Warnings never fail the lint.
+const VAGUE_STEP_PATS: Array<[RegExp, string]> = [
+    [/\b(improve|optimi[sz]e)\b(?!.*\bby\b)/i, "'improve / optimize' without a measurable target"],
+    [/\bmake (it|this|.{0,30}) (better|cleaner|nicer)\b/i, "'make it better/cleaner'"],
+    [/\bclean ?up\b(?!.*\(<)/i, "'clean up' without named scope"],
+    [/\bfix (this|it)\b/i, "'fix this' without a symptom"],
+    [/\buse best practices\b/i, "'use best practices'"],
+    [/\bhandle errors properly\b/i, "'handle errors properly'"],
+];
+
+function _check_autonomous_authoring(text: string, fm: string, warnings: string[]): void {
+    const m = EXEC_MODE_PAT.exec(fm);
+    if (m === null || m[1]!.replace(/^['"]|['"]$/g, '') !== 'autonomous') {
+        return;
+    }
+    const deferred = _countMatches(/^\s*-\s*\[~\]/m, text);
+    if (deferred > 0) {
+        warnings.push(
+            `execution.mode: autonomous with ${deferred} pre-existing [~] deferred item(s) — ` +
+                'the deferred-resolution archival gate (roadmap-progress-sync Iron Law 3) ' +
+                'WILL interrupt the run at the end; resolve or re-author them now',
+        );
+    }
+    for (const rawLine of text.split('\n')) {
+        if (!/^\s*-\s*\[ \]/.test(rawLine)) {
+            continue;
+        }
+        for (const [re, label] of VAGUE_STEP_PATS) {
+            if (re.test(rawLine)) {
+                warnings.push(
+                    `vague step under execution.mode: autonomous (${label}): ` +
+                        `"${rawLine.trim().slice(0, 80)}" — vagueness resolves cheaply at ` +
+                        'authoring time, expensively as a mid-run ambiguity halt',
+                );
+                break;
+            }
+        }
+    }
+}
+
+function _check_execution_mode(fm: string, problems: string[]): void {
+    if (!fm || !/^execution:/m.test(fm)) {
+        return; // absent field = interactive default — valid
+    }
+    const m = EXEC_MODE_PAT.exec(fm);
+    if (m === null) {
+        problems.push(
+            "'execution:' frontmatter block present but no 'mode:' key found " +
+                "(expected execution.mode: autonomous | phase-checkpoints | interactive " +
+                'per templates/roadmaps.md rule 18)',
+        );
+        return;
+    }
+    const value = m[1]!.replace(/^['"]|['"]$/g, '');
+    if (!EXEC_MODE_VALUES.has(value)) {
+        problems.push(
+            `unknown execution.mode '${value}' — allowed: autonomous | ` +
+                'phase-checkpoints | interactive (templates/roadmaps.md rule 18)',
+        );
+    }
 }
 
 function main(): number {
@@ -196,7 +271,11 @@ function main(): number {
     const summary: Array<[string, string]> = [];
     for (const roadmap of roadmaps) {
         const rel = _relPosix(roadmap, REPO_ROOT);
-        const problems = lint_roadmap(roadmap, horizon_weeks);
+        const warnings: string[] = [];
+        const problems = lint_roadmap(roadmap, horizon_weeks, warnings);
+        for (const w of warnings) {
+            process.stderr.write(`⚠️  ${rel}\n    - ${w}\n`);
+        }
         const text = fs.readFileSync(roadmap, 'utf-8');
         const complexity = _read_complexity(_frontmatter(text)) ?? 'untagged';
         summary.push([rel, complexity]);

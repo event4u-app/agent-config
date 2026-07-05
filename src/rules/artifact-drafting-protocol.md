@@ -81,10 +81,35 @@ Enforce size live: *"Body is at 420/500 lines. Split?"* (budgets per
 `size-enforcement`). New skills also get an `evals/triggers.json` stub
 (5 should-trigger + 5 should-not-trigger). See `skill-writing` § 1c.
 
+## Roadmap-run batch mode — the ONE structured bypass
+
+When a `/roadmap:process-*` run starts under an **accepted execution
+contract** ([`roadmap-execution-contract`](../contexts/execution/roadmap-execution-contract.md))
+whose pre-scan detected artifact-authoring steps, the protocol runs in
+batch mode for exactly those artifacts:
+
+- **Phase B (Research) runs ONCE at contract time, against the CURRENT
+  artifact state** — one overlap scan covering every artifact the
+  roadmap plans; results (nearest matches, extend-vs-create verdicts)
+  are surfaced inside the contract summary the user accepts. This is
+  why authoring-time-only checking is not enough: a sibling roadmap may
+  have landed overlapping artifacts between authoring and execution.
+- **Phases A (Understand) and C (Draft) run non-interactively during
+  the run** — the roadmap step text is the Understand input; the
+  contract acceptance is the approval that the per-phase prompts exist
+  to obtain.
+- **Scope is the batch, nothing more.** An artifact NOT declared in the
+  roadmap (discovered mid-run) triggers the full interactive protocol —
+  or, under the contract, the scope-out-of-roadmap halt.
+- Batch mode never skips the Research pass itself — it relocates and
+  batches it. `artifact_protocol: skip` does not exist.
+
 ## Golden rules
 
 - Every phase ends with a numbered-options prompt. No silent progression.
-- Zero autopilot — agent proposes, human decides.
+- Zero autopilot — agent proposes, human decides. (In roadmap-run batch
+  mode the human decision is the contract acceptance; the per-phase
+  prompts are pre-satisfied for the declared batch.)
 - At most two propose → reject cycles; then stop.
 - Commit only on approval.
 - Bypass is legitimate — *"just write it"* drops the protocol immediately.

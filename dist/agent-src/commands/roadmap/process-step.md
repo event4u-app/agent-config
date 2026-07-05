@@ -32,6 +32,10 @@ with the **scope delta below**.
 
 ## Scope delta
 
+- **Execution mode:** `execution.mode` frontmatter is **ignored by this
+  wrapper** — a single-step run derives no execution contract
+  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md)
+  stays unloaded); existing per-step behavior applies unchanged.
 - **Working set:** the **first checkbox `[ ]` in document order**
   inside the first phase with `count_open > 0`. If every step is
   closed → report "Roadmap already complete." and run the archival

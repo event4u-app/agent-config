@@ -181,7 +181,46 @@ If the user picks **1**:
 
 If the user picks **2** → continue.
 
-### 9. Hand back — HARD STOP, never auto-offer execution
+### 9. Ask the execution mode — ONE question, then write frontmatter
+
+Ask (in the user's language) exactly one numbered-options question:
+
+> How should this roadmap be executed later?
+>
+> 1. Fully autonomous — one run-start contract confirmation, then no
+>    interruptions except the safety floors
+> 2. Checkpoint at phase boundaries — compact status + continue prompt
+>    per phase
+> 3. Interactive — every gate fires as today
+>
+> **Recommendation:** 1
+
+Write the pick to frontmatter as `execution.mode:`
+(`autonomous` | `phase-checkpoints` | `interactive`). Rules:
+
+- Pick 3 → omit the field entirely (`interactive` is the absent-field
+  default; don't write noise).
+- Follow-up roadmaps (`parent_roadmap` set): pre-select the parent's
+  mode as the recommended option, but still ask — mode never inherits
+  silently (per template rule 18).
+- This question is about a **future** run's interaction pattern. It is
+  a declaration of intent, never a permission grant, and it does NOT
+  soften the step-10 hard stop: asking it must not morph into offering
+  execution now.
+- Semantics + contract mechanics:
+  [`templates/roadmaps.md` rule 18](../../templates/roadmaps.md) and
+  [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).
+- **Authoring check for pick 1 (`autonomous`):** scan the drafted steps
+  for vague phrasings (`improve/optimize` without a target, `make it
+  better/cleaner`, `clean up` without scope, `fix this` without a
+  symptom, `use best practices`, `handle errors properly`) and for
+  pre-existing `[~]` items. Surface each finding to the user for a
+  quick rephrase **before saving** — vagueness is cheap to resolve now
+  and expensive as a mid-run ambiguity halt; pre-existing `[~]` items
+  guarantee the archival gate interrupts the run.
+  `lint_roadmap_complexity` warns on the same patterns as a backstop.
+
+### 10. Hand back — HARD STOP, never auto-offer execution
 
 ```
 ROADMAP SAVED → STOP. NEVER ASK "READY TO START?" / "BEGIN PHASE 1?"
@@ -219,7 +258,7 @@ Failure modes covered by this hard stop:
 
 - **Do NOT auto-generate content** — always ask the user for input.
 - **Do NOT commit or push.**
-- **Do NOT offer execution after save** — Step 9 is a hard stop.
+- **Do NOT offer execution after save** — Step 10 is a hard stop.
   Execution starts on a later turn with an explicit execution verb
   ([`scope-control § Authoring vs. implementation`](../rules/scope-control.md#authoring-vs-implementation)).
 - **Do NOT include commit steps in the roadmap** unless the user explicitly
