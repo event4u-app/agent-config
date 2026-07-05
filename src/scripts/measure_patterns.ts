@@ -22,8 +22,8 @@
  *   8. Anti-sycophancy rules in "Do NOT"
  *
  * NOTE: scans `src/skills` — the canonical source-of-truth skill library.
- * (The pre-py2ts .py read the now-removed `.agent-src.uncondensed/skills`
- * legacy path; repointed here so the scanner runs on the live tree.)
+ * (The pre-py2ts .py read the now-removed legacy condensed-source skills
+ * corpus; repointed here so the scanner runs on the live tree.)
  */
 
 import * as fs from 'node:fs';

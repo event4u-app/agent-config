@@ -21,8 +21,8 @@
  *     measure_skill_reduction --json
  *
  * NOTE: scans `src/skills` — the canonical source-of-truth skill library.
- * (The pre-py2ts .py read the now-removed `.agent-src.uncondensed/skills`
- * legacy path; repointed here so the scanner runs on the live tree.) When
+ * (The pre-py2ts .py read the now-removed legacy condensed-source skills
+ * corpus; repointed here so the scanner runs on the live tree.) When
  * the directory is absent the scanner throws (iterdir on a missing dir) →
  * non-zero exit, empty stdout.
  */
