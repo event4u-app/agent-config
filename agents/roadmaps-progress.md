@@ -6,17 +6,17 @@
 
 ## Overall
 
-**105 / 163 steps done · 64%**
+**110 / 163 steps done · 67%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md) | 4 | 33 | 13 | 20 | 0 | 0 | ██████░░░░ 61% |
+| 1 | [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md) | 4 | 33 | 8 | 25 | 0 | 0 | ████████░░ 76% |
 | 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
@@ -28,13 +28,13 @@
 
 ### [road-to-final-state-and-market-readiness.md](roadmaps/road-to-final-state-and-market-readiness.md)
 
-**Final state + market readiness** — 20 / 33 done (61%)
+**Final state + market readiness** — 25 / 33 done (76%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Parallel tracks (Track A gated, Track B table-stakes) | 🟡 in progress | 1 | 18 | 0 | 0 | 95% |
+| 1 | Parallel tracks (Track A gated, Track B table-stakes) | ✅ done | 0 | 19 | 0 | 0 | 100% |
 | 2 | Conditional-launch gate (council gap — explicit decision point) | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | External-telemetry-gated (the monoculture honesty gate) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | External-telemetry-gated (the monoculture honesty gate) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Scale (3+ external adopters) | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
