@@ -430,10 +430,28 @@ one-off roadmaps.
       <!-- Already shipped: the always-loaded token-efficiency rule's Iron Law IS
       redirect → summary → targeted-detail; RTK is the tool that applies it. No
       separate lever. -->
+- [ ] **Tier-conditional discipline-rule loading (measured-null subset only).**
+      On strong-host tiers, omit from the always-loaded projection ONLY the
+      discipline rules whose lift is a **measured null on that tier**
+      (`docs/benchmark.md` § strong host, A6 of
+      `road-to-final-state-and-market-readiness.md`): candidates
+      `minimal-safe-diff`, `downstream-changes` (borderline:
+      `verify-before-complete`). **Eligibility fence (hard):** never a safety
+      floor (`non-destructive-by-default` — efficacy ≠ risk, both arms scored
+      0.929 not 1.0), never preference/authorization encoding (`commit-policy`,
+      `scope-control`, the one-question format of `ask-when-uncertain`), never
+      an UNmeasured rule (~35 always-on rules have no null evidence — omitting
+      them is overreach). Mechanics: reuse the `model_tier` vocabulary
+      (ADR-035) as a per-rule `min_host_tier`-style key consumed by the
+      projection/router — compile-time, no runtime. **Measure-first:** the
+      candidate subset is only ~2–4k of the ~24k+ always-on load (the A6 5× is
+      the whole footprint, not these rules) — measure the actual delta on the
+      Phase 0 rig at held quality before shipping; default-off until then.
 - [x] Triage: any further lever — capture here, promote to a phase when committed.
       <!-- Standing umbrella — intentionally open: new levers get captured here and
-      promoted to a committed phase when ready. Triage of the current candidates is
-      complete (no stale candidates). -->
+      promoted to a committed phase when ready. Current candidates triaged; the
+      tier-conditional rule-loading candidate above was added 2026-07-05 from the
+      A6 strong-host honest-null. -->
 
 **Exit:** each candidate is promoted to a phase or marked `[-]` with a reason; no
 stale candidates.
