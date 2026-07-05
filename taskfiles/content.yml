@@ -85,6 +85,15 @@ tasks:
     desc: Remove all generated tool directories and files
     cmd: ./scripts-run src/scripts/condense --clean-tools
 
+  record-proof-demo:
+    silent: true
+    desc: "Re-record the proof-page demo GIF (B8): asciinema records the deterministic trust commands → agg → docs/media/proof-demo.gif. Needs asciinema + agg (task check-media-deps). Rebuild the site to propagate."
+    cmds:
+      - task: check-media-deps
+      - asciinema rec -c "bash internal/demo/proof-demo-commands.sh" --overwrite docs/media/proof-demo.cast
+      - agg --speed 1.4 docs/media/proof-demo.cast docs/media/proof-demo.gif
+      - cmd: echo "→ docs/media/proof-demo.gif regenerated. Embedded on docs/proof.md; the site copies it via site/sync-docs.mjs on build."
+
   check-media-deps:
     silent: true
     desc: "Detect the optional media tooling (asciinema + agg) for B8 recorded demos. Never installs — prints the platform install command on demand (missing-tool-handling). Exit 1 if any is missing."

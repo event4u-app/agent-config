@@ -13,6 +13,10 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DOCS = path.resolve(HERE, '..', 'docs');
 const OUT = path.join(HERE, 'src', 'content', 'docs');
+// Embedded media (e.g. the B8 proof demo GIF) lives at docs/media/; copy it into
+// the site's static root so `public/media/x` → `${BASE}/media/x` at build time.
+const MEDIA_SRC = path.join(DOCS, 'media');
+const MEDIA_OUT = path.join(HERE, 'public', 'media');
 
 // src doc → { slug, title } . Cross-links to any src in this map are rewritten.
 const PAGES = [
@@ -42,6 +46,26 @@ function rewriteLinks(text) {
   return out;
 }
 
+/** Rewrite relative `](media/…)` embeds to the base-prefixed static path. */
+function rewriteMedia(text) {
+  return text.replace(/\]\(\.?\/?media\//g, `](${BASE}/media/`);
+}
+
+/** Copy docs/media/* → site/public/media/* so embedded assets are served. */
+function syncMedia() {
+  if (!fs.existsSync(MEDIA_SRC)) return 0;
+  fs.mkdirSync(MEDIA_OUT, { recursive: true });
+  let m = 0;
+  for (const name of fs.readdirSync(MEDIA_SRC).sort()) {
+    const from = path.join(MEDIA_SRC, name);
+    if (fs.statSync(from).isFile()) {
+      fs.copyFileSync(from, path.join(MEDIA_OUT, name));
+      m += 1;
+    }
+  }
+  return m;
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 let n = 0;
 for (const { src, slug, title } of PAGES) {
@@ -50,7 +74,7 @@ for (const { src, slug, title } of PAGES) {
     console.error(`sync-docs: SKIP ${src} (missing)`);
     continue;
   }
-  const body = rewriteLinks(stripFrontmatter(fs.readFileSync(srcPath, 'utf8')).trimEnd());
+  const body = rewriteMedia(rewriteLinks(stripFrontmatter(fs.readFileSync(srcPath, 'utf8')).trimEnd()));
   const page =
     `---\n` +
     `title: ${JSON.stringify(title)}\n` +
@@ -62,4 +86,5 @@ for (const { src, slug, title } of PAGES) {
   fs.writeFileSync(path.join(OUT, `${slug}.md`), page);
   n += 1;
 }
-console.log(`sync-docs: wrote ${n} page(s) to src/content/docs/`);
+const media = syncMedia();
+console.log(`sync-docs: wrote ${n} page(s) to src/content/docs/, ${media} media asset(s) to public/media/`);
