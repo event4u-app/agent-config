@@ -58,6 +58,31 @@ pinning inside it. If the user names a version in a planning
 request, ask whether the artifact tracks the work or the release;
 default to work.
 
+## Roadmap execution contract — run-scoped standing permission
+
+An **accepted run-start execution contract**
+([`roadmap-execution-contract`](../execution/roadmap-execution-contract.md),
+derived by `roadmap-process-loop § 3` when the roadmap declares
+`execution.mode: autonomous | phase-checkpoints`) IS "explicit
+permission … in a standing instruction not yet revoked" for
+`scope-control § git-ops` — **for that run, and for exactly four
+operations**:
+
+1. Create the run's feature branch (`feat/<roadmap-slug>`, or reuse
+   the current worktree branch).
+2. Chunked commits on that branch (Hard-Floor per-commit diff gate
+   stays; split per `commit-policy`).
+3. Push to **that branch only** — any other ref stays Hard Floor.
+4. Open ONE PR (description-only flow) — never merge / close /
+   retarget.
+
+Boundaries that survive every contract: the frontmatter field alone
+grants **nothing** (declaration of intent — no accepted contract, no
+grants); grants expire when the run ends or halts; prod-trunk
+operations, deploys, bulk deletions, infra commits, and merges are
+outside contract scope always; kernel-rule edits keep their own-PR +
+24h-soak guarantee.
+
 ## Brief-before-asking — separate branch / PR / worktree
 
 If a task seems to need a separate branch or PR (spike, hotfix,
