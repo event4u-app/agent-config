@@ -1,0 +1,10 @@
+{
+    "name": "bench/trape-scope-laravel-01",
+    "type": "project",
+    "description": "Discipline-trap fixture: signature change with a downstream Laravel caller.",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

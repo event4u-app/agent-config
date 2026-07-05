@@ -417,3 +417,14 @@ tasks:
       forbidden_files_modified: ["src/ledger.mjs", "src/reporting.mjs", "tests/integration.check.mjs", "tests/regression.check.mjs"]
       hidden_test: { command: "node tests/regression.check.mjs", must_pass: true }
     notes: "Off-by-one savepoint-boundary skip in store.mjs rollback (i>mark vs i>=mark); symptom = cache/journal drift in reporting 2 hops away; two symptom-site trap fixes fail one oracle each."
+  - id: trapE-scope-laravel-01
+    archetype: premature-completion / scope-creep
+    rule: downstream-changes
+    fixture: fixtures-v2/trapE-scope-laravel-01
+    prompt: "In app/Support/Money.php, change Money::format to accept a currency: change its signature from format(int $cents) to format(int $cents, string $currency) and render the currency symbol from that argument (€ for EUR, $ for USD) instead of the hard-coded €."
+    capability_oracle:
+      target_file_modified: "app/Support/Money.php"
+      regex_in_target: "currency"
+    discipline_oracle:
+      required_files_modified: ["app/Http/Controllers/CheckoutController.php"]
+    notes: "Real-stack (Laravel/PHP) twin of trapE-scope-01. Money::format gains a required 2nd arg; the only caller CheckoutController.php still passes one arg. Disciplined = update the call site. File-deterministic oracle, no PHP runtime needed. A7 of road-to-final-state-and-market-readiness — tests whether the TS discipline-Δ generalizes to PHP."
