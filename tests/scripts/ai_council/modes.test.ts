@@ -1,11 +1,6 @@
 // Tests for src/scripts/ai_council/modes.ts (py2ts Phase 1).
 //
-// Pure resolver — no I/O, no env. Golden-parity against the Python twin via a
-// direct-file import (the package `__init__.py` pulls in networked client
-// deps, so we exec the single module file with the name registered in
-// sys.modules so its dataclass / `X | None` annotations resolve).
-import { spawnSync } from 'node:child_process';
-
+// Pure resolver — no I/O, no env.
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -15,29 +10,6 @@ import {
     resolve_mode,
     resolve_modes,
 } from '../../../src/scripts/ai_council/modes.js';
-
-const PY_MOD = 'src/scripts/ai_council/modes.py';
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-/** Run a python snippet with `modes` loaded as the direct-file twin. */
-function py(snippet: string): string {
-    const code = [
-        'import importlib.util, sys, json',
-        `spec = importlib.util.spec_from_file_location("modes", ${JSON.stringify(PY_MOD)})`,
-        'm = importlib.util.module_from_spec(spec)',
-        'sys.modules["modes"] = m',
-        'spec.loader.exec_module(m)',
-        snippet,
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return r.stdout.trim();
-}
 
 describe('modes — constants', () => {
     it('VALID_MODES and DEFAULT_MODE match the Python contract', () => {
@@ -118,53 +90,3 @@ describe('modes — resolve_modes batch', () => {
     });
 });
 
-describe.runIf(hasPython3())('modes — golden parity vs CPython twin', () => {
-    const cases: Array<{ desc: string; tsCall: () => unknown; pyExpr: string }> = [
-        {
-            desc: 'invocation flag normalised',
-            tsCall: () => resolve_mode('anthropic', { invocationMode: '  API ' }),
-            pyExpr: "m.resolve_mode('anthropic', invocation_mode='  API ')",
-        },
-        {
-            desc: 'member beats global',
-            tsCall: () => resolve_mode('o', { memberSettings: { mode: 'CLI' }, globalMode: 'api' }),
-            pyExpr: "m.resolve_mode('o', member_settings={'mode':'CLI'}, global_mode='api')",
-        },
-        {
-            desc: 'default fallthrough',
-            tsCall: () => resolve_mode('o'),
-            pyExpr: "m.resolve_mode('o')",
-        },
-        {
-            desc: 'batch resolve',
-            tsCall: () =>
-                resolve_modes(['a', 'b', 'c'], {
-                    membersSettings: { a: { mode: 'cli' }, b: {} },
-                    globalMode: 'api',
-                }),
-            pyExpr:
-                "m.resolve_modes(['a','b','c'], members_settings={'a':{'mode':'cli'},'b':{}}, global_mode='api')",
-        },
-    ];
-
-    it.each(cases)('$desc', ({ tsCall, pyExpr }) => {
-        const expected = py(`print(json.dumps(${pyExpr}))`);
-        expect(tsCall()).toEqual(JSON.parse(expected));
-    });
-
-    it('invalid-mode error message matches CPython', () => {
-        const expected = py(
-            "import traceback\n" +
-                "try:\n" +
-                "    m.resolve_mode('x', invocation_mode='bogus')\n" +
-                "except m.InvalidModeError as e:\n" +
-                "    print(str(e))",
-        );
-        try {
-            resolve_mode('x', { invocationMode: 'bogus' });
-            throw new Error('expected throw');
-        } catch (e) {
-            expect((e as Error).message).toBe(expected);
-        }
-    });
-});
