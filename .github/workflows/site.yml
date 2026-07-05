@@ -1,0 +1,51 @@
+name: Site
+
+# B4 — build the Starlight docs site and gate it on the internal-link checker.
+# Astro `build` completes even with dangling internal links, so the build alone
+# is not a link gate; check_site_links.ts scans the built dist for broken links.
+# Path-filtered to the site workspace + the checker (the site is not public yet;
+# widen the filter to the synced docs when a deploy target lands).
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "site/**"
+      - "src/scripts/check_site_links.ts"
+      - "tests/scripts/check_site_links.test.ts"
+      - ".github/workflows/site.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - "site/**"
+      - "src/scripts/check_site_links.ts"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-linkcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Root deps provide node_modules/.bin/tsx for ./scripts-run.
+      - name: Install root dependencies (tsx for scripts-run)
+        run: npm ci
+
+      # Isolated site workspace (own package.json/lockfile) — astro + starlight.
+      - name: Build the Starlight site
+        run: |
+          cd site
+          npm ci
+          npm run build
+
+      - name: Internal-link check (no dangling links in the built site)
+        run: ./scripts-run src/scripts/check_site_links
