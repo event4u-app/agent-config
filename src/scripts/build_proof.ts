@@ -25,6 +25,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { REPO, LEDGER_REL, load_ledger, pointer_unresolved } from './check_claims.js';
 import { collectSkillGaps } from './check_skill_gaps.js';
+import { loadRows as loadComparisonRows } from './check_comparison.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const OUT_REL = 'docs/proof.md';
@@ -113,7 +114,33 @@ function render(): string {
         }
     }
     L.push('');
-    L.push('## 4. Verify it yourself');
+    L.push('## 4. What is checkable — us vs. the category');
+    L.push('');
+    const cmpRows = loadComparisonRows();
+    if (cmpRows.length === 0) {
+        L.push('No comparison rows recorded yet.');
+    } else {
+        L.push('This is not a takedown — the point is the last column. For each claim,');
+        L.push('our evidence is a pointer you can resolve on a fresh checkout; the wider');
+        L.push('category is described only by what is publicly observable, never a named');
+        L.push('competitor and never a counter-claim to anyone\'s headline number. A claim');
+        L.push('is "checkable" only when its `our evidence` pointer resolves — CI enforces');
+        L.push('that (`task check-comparison`), so this column can never lie.');
+        L.push('');
+        L.push('| Claim | Our evidence | The category | Checkable? |');
+        L.push('|---|---|---|---|');
+        for (const r of cmpRows) {
+            const claim = r.claim.replace(/\|/g, '\\|');
+            const theirs = r.their_evidence.replace(/\|/g, '\\|');
+            const filePart = (r.our_evidence.split('#')[0] ?? r.our_evidence).split(':')[0] ?? r.our_evidence;
+            const ours = pointer_unresolved(r.our_evidence) === null
+                ? `[\`${r.our_evidence}\`](../${filePart})`
+                : `\`${r.our_evidence}\``;
+            L.push(`| ${claim} | ${ours} | ${theirs} | ${r.checkable ? '✅' : '—'} |`);
+        }
+    }
+    L.push('');
+    L.push('## 5. Verify it yourself');
     L.push('');
     L.push('On a fresh checkout, reproduce the claims above:');
     L.push('');
@@ -121,6 +148,7 @@ function render(): string {
     L.push('task check-claims   # every markered public claim binds to resolvable evidence');
     L.push('task check-refs     # no broken internal references');
     L.push('task check-skill-gaps    # every logged known-limit cites a real witness test');
+    L.push('task check-comparison    # every comparison-table "our evidence" pointer resolves');
     L.push('task build-proof-check   # this page is in sync with its sources');
     L.push('```');
     L.push('');

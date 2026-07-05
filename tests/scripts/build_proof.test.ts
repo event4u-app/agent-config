@@ -25,10 +25,13 @@ describe('build_proof — render()', () => {
         expect(out).toContain('## 1. Every public claim binds to evidence');
         expect(out).toContain('## 2. We publish honest nulls');
         expect(out).toContain('## 3. Known limits (published, witness-tested)');
-        expect(out).toContain('## 4. Verify it yourself');
+        expect(out).toContain('## 4. What is checkable — us vs. the category');
+        expect(out).toContain('## 5. Verify it yourself');
         expect(out).toContain('| Claim | Kind | Evidence | Resolves |');
+        expect(out).toContain('| Claim | Our evidence | The category | Checkable? |');
         expect(out).toContain('task check-claims');
         expect(out).toContain('task check-skill-gaps');
+        expect(out).toContain('task check-comparison');
     });
 
     it('carries the do-not-hand-edit generated marker', () => {
