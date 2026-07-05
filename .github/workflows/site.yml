@@ -33,7 +33,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Astro 7 / Starlight require Node >=22.12 (the site workspace);
+          # the root project + tsx run fine on 22 too.
+          node-version: '22'
           cache: 'npm'
 
       # Root deps provide node_modules/.bin/tsx for ./scripts-run.
