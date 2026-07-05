@@ -8,10 +8,10 @@ complexity: structural
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `docs/contracts/package-self-orientation.md`
-- [ ] Read the #699 anchors (foundation this builds on): `src/agent-src/contexts/execution/orchestration-telemetry.md`, `agents/settings/contexts/orchestration-default-flip-verdict.md`, `internal/bench/orchestration/README.md`
-- [ ] Read `docs/contracts/subagent-boundary.md` and `src/skills/subagent-orchestration/SKILL.md`
-- [ ] Confirm the no-runtime identity floor (`source-of-truth`, no daemon / vector-DB / auto-write-memory)
+- [x] Read `AGENTS.md`, `docs/contracts/package-self-orientation.md`
+- [x] Read the #699 anchors (foundation this builds on): `src/agent-src/contexts/execution/orchestration-telemetry.md`, `agents/settings/contexts/orchestration-default-flip-verdict.md`, `internal/bench/orchestration/README.md`
+- [x] Read `docs/contracts/subagent-boundary.md` and `src/skills/subagent-orchestration/SKILL.md`
+- [x] Confirm the no-runtime identity floor (`source-of-truth`, no daemon / vector-DB / auto-write-memory)
 
 ## Context
 
@@ -129,9 +129,11 @@ Triggered only when a first external adopter's telemetry appears in the audit lo
 
 ## Phase 4: Scale (3+ external adopters)
 
-- [ ] **E1 — Topology decision-matrix (ruflo-borrowings #1).** Deterministic task→form rule *before* mode choice, rebuilt against the multi-user corpus. Reject self-organizing / RL switching. A/B default-off.
-- [ ] **E2 — Auto-retrieve knowledge-cards (ruflo-borrowings #2).** Confidence scalar + queryable index, auto-surfaced at task start (read-only, reversible); *writing* stays human-gated. Bench: card-injection vs none.
-- [ ] **E3 — Second wedge.** A non-dev or stack-specific wedge driven by *external request patterns*, not maintainer guess.
+- [x] **E1 — Topology decision-matrix (ruflo-borrowings #1).** Deterministic task→form rule *before* mode choice, rebuilt against the multi-user corpus. Reject self-organizing / RL switching. A/B default-off. <!-- CLOSED BY MAINTAINER DECISION 2026-07-05: accepted as fulfilled WITHOUT the multi-user corpus (not built, not validated). NOT evidence-verified — scope decision to close the E-track. See [[roadmap-gated-items-closed-by-decision]]. -->
+- [x] **E2 — Auto-retrieve knowledge-cards (ruflo-borrowings #2).** Confidence scalar + queryable index, auto-surfaced at task start (read-only, reversible); *writing* stays human-gated. Bench: card-injection vs none. <!-- CLOSED BY MAINTAINER DECISION 2026-07-05: accepted as fulfilled WITHOUT the card-injection bench (not built, not validated). NOT evidence-verified — scope decision. -->
+- [x] **E3 — Second wedge.** A non-dev or stack-specific wedge driven by *external request patterns*, not maintainer guess. <!-- CLOSED BY MAINTAINER DECISION 2026-07-05: accepted as fulfilled WITHOUT external request patterns — no second wedge was created (creating one from a maintainer guess is exactly what the item forbids). NOT evidence-verified — scope decision. -->
+    - <!-- E1–E3 closed by maintainer decision 2026-07-05 alongside B9/D1–D4: E-track accepted as sufficient to close the roadmap. No artifact built or shipped on this basis; no fabricated corpus or requests. -->
+
 - **Gate E:** Each item default-off until its own A/B shows a net win at held quality on the multi-user corpus.
 
 ## Deferred candidates (2026-07-04 gap-hunt — gated, not built now)
@@ -164,11 +166,13 @@ Telemetry object, capture hook, `/cost:report`, flip-verdict, defaults, `interna
 
 ## Acceptance criteria
 
-- [ ] **(B)** `check_claims` enforced in CI; the wedge installs and runs on a foreign repo in < 5 min; proof page generated from real sources + "verify it yourself" passes on a clean checkout; no public text carries an unbacked or invented third-party claim.
-- [ ] **(A)** The subagent layer + 5th discovery category exist, default-off; every shipped unit cleared dual-baseline evals on `internal/bench/orchestration/`; ablation-mining + near-miss clustering surface human-review candidates from the real audit log.
-- [ ] **Gate discipline:** deep learning-loop analysis (D1/D2) and scale items (E*) did **not** run before their external-telemetry / adopter gate cleared.
-- [ ] **Anti-dump:** no new artefact duplicates an existing one; each new command reuses ≥ 2 skills; governance preflight recorded (below).
-- [ ] All quality gates pass (`task lint-skills`, `check-refs`, `check_claims`).
+- [x] **(B)** `check_claims` enforced in CI; the wedge installs and runs on a foreign repo in < 5 min; proof page generated from real sources + "verify it yourself" passes on a clean checkout; no public text carries an unbacked or invented third-party claim. <!-- Evidence-true EXCEPT the wedge <5min-on-foreign-repo clause, which was B9's measurement — closed by decision (not measured). The rest is real: check_claims is a CI gate, docs/proof.md is generated + drift-gated + live, comparison-honesty carries no unbacked claim. -->
+- [x] **(A)** The subagent layer + 5th discovery category exist, default-off; every shipped unit cleared dual-baseline evals on `internal/bench/orchestration/`; ablation-mining + near-miss clustering surface human-review candidates from the real audit log. <!-- Evidence-true: A1 shipped the layer + 5th category (default-off); A3 ran the dual-baseline eval → honest-null, so NO unit was promoted (nothing shipped that failed a gate — the unit stays default-off); A4/A5 shipped the mining/clustering. -->
+- [x] **Gate discipline:** deep learning-loop analysis (D1/D2) and scale items (E*) did **not** run before their external-telemetry / adopter gate cleared. <!-- Held: D1/D2/E* were NOT run on premature/fabricated data — they were closed administratively by maintainer decision (see [[roadmap-gated-items-closed-by-decision]]), which is the discipline holding, not breaking. -->
+- [x] **Anti-dump:** no new artefact duplicates an existing one; each new command reuses ≥ 2 skills; governance preflight recorded (below). <!-- True for delivered work: B4 catalog reused the existing generate_index (no new builder); checkers reused check_claims' resolver; no artefact duplicated. -->
+- [x] All quality gates pass (`task lint-skills`, `check-refs`, `check_claims`). <!-- Fresh local run 2026-07-05: lint-skills, check-refs, check_claims all exit 0; CI green on every merged PR (#721/#722/#723/#725/#726/#728/#729). -->
+
+> **Roadmap closure note (2026-07-05).** Track A (capability) + Track B (adoption) delivered; the trust surface is live at https://event4u-app.github.io/agent-config/. The externally-gated items (B9, D1–D4, E1–E3) were **closed by maintainer decision**, not by external evidence — recorded honestly per item and in [[roadmap-gated-items-closed-by-decision]]. Nothing claims evidence it lacks: the subagent layer stays default-off, `subagents.auto` stays `ask`, no rule/card retired, no fabricated data. Real Gate reads remain available by re-opening the relevant item once an external adopter exists.
 
 ## Governance preflight (per `roadmap-writing` § 8.D)
 
