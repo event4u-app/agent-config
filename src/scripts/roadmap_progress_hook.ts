@@ -381,7 +381,7 @@ export function run(
           "prerequisite_missing",
           "update_roadmap_progress.ts not found at any of: " +
             ".augment/scripts/, dist/agent-src/scripts/, " +
-            ".agent-src.uncondensed/scripts/, src/agent-src/scripts/",
+            "src/agent-src/scripts/",
           "./agent-config hooks:install --regen " + "(or ./agent-config init)",
         );
       } catch {
