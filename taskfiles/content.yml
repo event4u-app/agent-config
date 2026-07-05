@@ -85,6 +85,11 @@ tasks:
     desc: Remove all generated tool directories and files
     cmd: ./scripts-run src/scripts/condense --clean-tools
 
+  check-media-deps:
+    silent: true
+    desc: "Detect the optional media tooling (asciinema + agg) for B8 recorded demos. Never installs — prints the platform install command on demand (missing-tool-handling). Exit 1 if any is missing."
+    cmd: ./scripts-run src/scripts/check_media_deps {{.CLI_ARGS}}
+
   check-site-links:
     silent: true
     desc: "Verify the built Starlight site (site/dist) has no broken internal links (B4). Run `cd site && npm run build` first; exits 2 if not built."
