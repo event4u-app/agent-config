@@ -18,7 +18,6 @@ import * as cr from '../../src/scripts/compile_router.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'compile_router.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'compile_router.py');
 const ROUTER = path.join(REPO_ROOT, 'dist', 'router.json');
 const ROUTER_PRETTY = path.join(REPO_ROOT, 'dist', 'router.pretty.json');
 const TSX_BIN = path.join(
@@ -76,13 +75,9 @@ describe('compile_router.build — shape', () => {
 
 // --- Layer 2: golden parity on the REAL REPO -------------------------------
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-const runnable = py3 && fs.existsSync(ROUTER);
+const routerExists = fs.existsSync(ROUTER);
 
-describe.skipIf(!runnable)('compile_router — golden parity (python3 vs tsx)', () => {
+describe.skipIf(!routerExists)('compile_router — writer reproduces the committed artifact', () => {
     let routerBak: string;
     let prettyBak: string | null;
     afterEach(() => {
@@ -98,43 +93,26 @@ describe.skipIf(!runnable)('compile_router — golden parity (python3 vs tsx)', 
         prettyBak = fs.existsSync(ROUTER_PRETTY) ? fs.readFileSync(ROUTER_PRETTY, 'utf-8') : null;
     }
 
-    it('router.json (minified) is byte-identical py vs tsx AND zero-drift vs committed', () => {
+    it('regenerating router.json reproduces the committed file byte-for-byte + exit 0', () => {
         snapshot();
         const committed = routerBak;
-        const py = spawnSync('python3', [PY_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(py.status).toBe(0);
-        const pyOut = fs.readFileSync(ROUTER, 'utf-8');
-        fs.writeFileSync(ROUTER, committed, 'utf-8');
         const ts = spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(0);
-        const tsOut = fs.readFileSync(ROUTER, 'utf-8');
-        expect(tsOut).toBe(pyOut);
-        // Zero drift: the writer reproduces the committed file byte-for-byte.
-        expect(tsOut).toBe(committed);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        expect(ts.status, ts.stderr).toBe(0);
+        // Zero drift: the writer reproduces the committed file byte-for-byte
+        // (the committed router.json is kept current — see the --check test).
+        expect(fs.readFileSync(ROUTER, 'utf-8')).toBe(committed);
     });
 
-    it('router.pretty.json is byte-identical py vs tsx (--pretty)', () => {
+    it('--pretty writes JSON that parses to the same object as router.json', () => {
         snapshot();
-        const py = spawnSync('python3', [PY_SCRIPT, '--pretty'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(py.status).toBe(0);
-        const pyOut = fs.readFileSync(ROUTER_PRETTY, 'utf-8');
         const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--pretty'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(0);
-        const tsOut = fs.readFileSync(ROUTER_PRETTY, 'utf-8');
-        expect(tsOut).toBe(pyOut);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        expect(ts.status, ts.stderr).toBe(0);
+        const pretty = JSON.parse(fs.readFileSync(ROUTER_PRETTY, 'utf-8'));
+        expect(pretty).toEqual(JSON.parse(routerBak));
     });
 
-    it('--check is byte-identical py vs tsx (up-to-date)', () => {
-        const py = spawnSync('python3', [PY_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
+    it('--check passes: the committed router.json is current + reproducible (exit 0)', () => {
         const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--check'], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        // The committed router.json is current → exit 0.
-        expect(ts.status).toBe(0);
+        expect(ts.status, ts.stderr).toBe(0);
     });
 });
