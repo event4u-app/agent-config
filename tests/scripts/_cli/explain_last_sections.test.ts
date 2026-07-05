@@ -1,26 +1,11 @@
-// Golden-parity tests for the 9 explain_last SECTION renderers + the
-// state_loader failure paths (py2ts Phase 1, ADR-200).
-//
-// The section renderers are pure `render(trace) -> str` functions (no I/O,
-// no scrubbing — masking happens in the builders), so they are driven here
-// over hand-built trace dicts and compared byte-for-byte against the REAL
-// python3 renderers. The Python side uses a DIRECT-FILE importlib loader
-// that registers a stub `explast` package in `sys.modules` so each section
-// (and any `from ..` sibling it touches) loads WITHOUT triggering the real
-// package `__init__` (which would pull config/_lib siblings). state_loader
-// is loaded the same way to pin the version-skew / not-found messages +
-// exit codes.
-//
-// Coverage: every section's populated AND empty/placeholder branch, the
-// hit_score `:.2f` formatting (incl. banker's rounding + non-numeric n/a),
-// the double-space before the assumptions em-dash, the 2-space halt-surface
-// indent, the provider/pack empty-string skip, and the council citations
-// sub-block.
-import { spawnSync } from 'node:child_process';
+// Contract tests for the 9 explain_last SECTION renderers + the
+// state_loader failure paths (py2ts Phase 1, ADR-200). The tsx twins are the
+// source of truth (the python originals were deleted in the teardown); the
+// pure render(trace)->str output + the state_loader failure messages are
+// pinned via inline snapshots.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -31,52 +16,6 @@ import {
     StateLoadError,
     load_state,
 } from '../../../src/scripts/_cli/explain_last/state_loader.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const BASE = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'explain_last');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = hasPython3();
-
-// Python preamble: register a stub `explast` package so direct-file loads of
-// `explast.sections.<name>` resolve their relative imports without the real
-// package __init__.
-const PY_PREAMBLE = [
-    'import importlib.util, sys, types, json',
-    `BASE = ${JSON.stringify(BASE)}`,
-    "pkg = types.ModuleType('explast'); pkg.__path__ = [BASE]; pkg.__package__ = 'explast'",
-    "sys.modules['explast'] = pkg",
-    "spkg = types.ModuleType('explast.sections'); spkg.__path__ = [BASE + '/sections']; spkg.__package__ = 'explast.sections'",
-    "sys.modules['explast.sections'] = spkg",
-    'def _load(name, rel):',
-    '    spec = importlib.util.spec_from_file_location(name, BASE + "/" + rel)',
-    '    m = importlib.util.module_from_spec(spec); sys.modules[name] = m; spec.loader.exec_module(m); return m',
-    "_load('explast.scrubber', 'scrubber.py')",
-].join('\n');
-
-/**
- * Render `section` over each trace in `traces` with the python3 twin and
- * return the per-trace output strings.
- */
-function pyRenderSection(section: string, traces: unknown[]): string[] {
-    const code = [
-        PY_PREAMBLE,
-        `mod = _load('explast.sections.${section}', 'sections/${section}.py')`,
-        'data = json.loads(sys.stdin.read())',
-        'out = [mod.render(t) for t in data]',
-        'sys.stdout.write(json.dumps(out, ensure_ascii=False))',
-    ].join('\n');
-    const res = spawnSync('python3', ['-c', code], {
-        encoding: 'utf8',
-        input: JSON.stringify(traces),
-    });
-    if (res.status !== 0) {
-        throw new Error(`python section ${section} failed: ${res.stderr}`);
-    }
-    return JSON.parse(res.stdout) as string[];
-}
 
 type Renderer = (trace: Record<string, unknown>) => string;
 
@@ -172,7 +111,7 @@ const SECTION_CASES: Record<string, Array<Record<string, unknown>>> = {
     ],
 };
 
-describe('explain_last sections — golden parity', () => {
+describe('explain_last sections — render contract', () => {
     const renderers: Record<string, Renderer> = {
         header: sections.header.render,
         route: sections.route.render,
@@ -185,66 +124,185 @@ describe('explain_last sections — golden parity', () => {
         pack: sections.pack.render,
     };
 
-    for (const [name, cases] of Object.entries(SECTION_CASES)) {
-        it.runIf(HAVE_PYTHON)(`${name}.render matches python3 across all branches`, () => {
-            // Python receives plain numbers for hit_score; its `float()` was
-            // already applied by the builder in production, but the section
-            // only does `:.2f`/isinstance, so a plain JSON number is faithful.
-            const pyTraces = cases.map((t) => stripPyFloatMarker(t));
-            const expected = pyRenderSection(name, pyTraces);
-            const actual = tsRender(renderers[name] as Renderer, cases);
-            expect(actual).toEqual(expected);
-        });
-    }
+    it('every section renders each branch (pinned output)', () => {
+        const rendered = Object.fromEntries(
+            Object.entries(SECTION_CASES).map(([name, cases]) => [
+                name,
+                tsRender(renderers[name] as Renderer, cases),
+            ]),
+        );
+        expect(rendered).toMatchInlineSnapshot(`
+          {
+            "assumptions": [
+              "## Assumptions
+
+          - [x] a1  — recorded in step \`refine\`
+          - [ ] a2  — recorded in step \`halt\`
+          - [x] (unknown)  — recorded in step \`unspecified\`
+          ",
+              "## Assumptions
+
+          - (none captured)
+          ",
+              "## Assumptions
+
+          - (none captured)
+          ",
+            ],
+            "council": [
+              "## Council
+
+          ### a/b
+
+          > looks fine
+
+          Citations:
+          - c1
+          - c2
+
+          ### solo
+
+          > ok
+
+          ### (unknown)
+
+          > (no verdict)
+          ",
+              "## Council
+
+          (none recorded for this run)
+          ",
+              "## Council
+
+          (none recorded for this run)
+          ",
+            ],
+            "halt": [
+              "## Why halted?
+
+          - **Reason:** \`blocked\`
+          - **Hook event:** \`plan\`
+
+          Surface emitted to the user:
+
+            x
+            y
+          ",
+              "## Why halted?
+
+          - **Reason:** \`blocked\`
+          - **Hook event:** \`(unspecified)\`
+          ",
+              "## Why halted?
+
+          (clean run — no halt recorded)
+          ",
+            ],
+            "header": [
+              "# explain last — run TICK-1
+
+          **Subject:** /implement-ticket · **Started:** 2026-06-17T12:00:00+00:00
+          ",
+              "# explain last — run (unknown)
+
+          **Subject:** (unknown) · **Started:** 
+          ",
+              "# explain last — run R
+
+          **Subject:** mystery · **Started:** 
+          ",
+            ],
+            "inputs": [
+              "## Why this profile / preset?
+
+          | knob | value | source |
+          |---|---|---|
+          | profile.id | developer | user |
+          | preset.id | balanced | profile |
+          | rule_loading_tier | strict | user |
+          ",
+              "## Why this profile / preset?
+
+          | knob | value | source |
+          |---|---|---|
+          | profile.id | (none) | default |
+          | preset.id | balanced | default |
+          | rule_loading_tier | x | default |
+          ",
+              "## Why this profile / preset?
+
+          - (none) — settings could not be resolved
+          ",
+            ],
+            "memory": [
+              "## Memory hits influencing this run
+
+          - m1 (score 1.25) — used in plan
+          - m2 (score 2.00) — used in refine
+          - m3 (score 0.01) — used in x
+          - m4 (score 0.01) — used in y
+          ",
+              "## Memory hits influencing this run
+
+          - mx (score n/a) — used in z
+          ",
+              "## Memory hits influencing this run
+
+          - (none)
+          ",
+              "## Memory hits influencing this run
+
+          - (none)
+          ",
+            ],
+            "pack": [
+              "## Active pack
+
+          - finance — declared
+          ",
+              "## Active pack
+
+          - core
+          ",
+              "",
+            ],
+            "provider": [
+              "## Why this provider?
+
+          - **Provider:** \`sora\`
+          - **Selection reason:** cheap
+          ",
+              "## Why this provider?
+
+          - **Provider:** \`(unknown)\`
+          - **Selection reason:** (no reason recorded)
+          ",
+              "",
+            ],
+            "route": [
+              "## Why this route?
+
+          - Active rules: a, b
+          - Kernel rules: 3
+          - Persona: dev
+          ",
+              "## Why this route?
+
+          - Active rules: (none)
+          - Kernel rules: 0
+          - Persona: (none)
+          ",
+              "## Why this route?
+
+          - (none) — router.json missing or unreadable
+          ",
+            ],
+          }
+        `);
+    });
 });
 
-/** Convert `__pyfloat__: n` markers to a plain `hit_score: n` for the py side. */
-function stripPyFloatMarker(trace: Record<string, unknown>): unknown {
-    if (!Array.isArray(trace.memory)) {
-        return trace;
-    }
-    const memory = (trace.memory as Array<Record<string, unknown>>).map((e) => {
-        if (e && typeof e === 'object' && '__pyfloat__' in e) {
-            const { __pyfloat__, ...rest } = e;
-            return { ...rest, hit_score: __pyfloat__ };
-        }
-        return e;
-    });
-    return { ...trace, memory };
-}
-
-describe('explain_last state_loader — golden parity (importlib direct-file)', () => {
-    function pyLoad(stateJson: string | null): {
-        ok: boolean; msg?: string; exit?: number;
-    } {
-        const code = [
-            'import importlib.util, sys, types, json, tempfile, os',
-            `BASE = ${JSON.stringify(BASE)}`,
-            'spec = importlib.util.spec_from_file_location("sl", BASE + "/state_loader.py")',
-            'sl = importlib.util.module_from_spec(spec); spec.loader.exec_module(sl)',
-            'from pathlib import Path',
-            'arg = sys.stdin.read()',
-            'd = tempfile.mkdtemp(); p = Path(d) / "s.json"',
-            'present = arg != "__MISSING__"',
-            'if present: p.write_text(arg, encoding="utf-8")',
-            'try:',
-            '    sl.load_state(p)',
-            '    sys.stdout.write(json.dumps({"ok": True}))',
-            'except sl.StateLoadError as e:',
-            // normalize the tmp path out of the message so it is deterministic.
-            '    msg = str(e).replace(str(p), "<state>")',
-            '    sys.stdout.write(json.dumps({"ok": False, "msg": msg, "exit": e.exit_code}))',
-        ].join('\n');
-        const res = spawnSync('python3', ['-c', code], {
-            encoding: 'utf8',
-            input: stateJson === null ? '__MISSING__' : stateJson,
-        });
-        if (res.status !== 0) {
-            throw new Error(`python state_loader failed: ${res.stderr}`);
-        }
-        return JSON.parse(res.stdout) as { ok: boolean; msg?: string; exit?: number };
-    }
-
+describe('explain_last state_loader — failure paths', () => {
     function tsLoad(stateJson: string | null): { ok: boolean; msg?: string; exit?: number } {
         const d = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-'));
         const p = path.join(d, 's.json');
@@ -264,38 +322,61 @@ describe('explain_last state_loader — golden parity (importlib direct-file)', 
         }
     }
 
-    it.runIf(HAVE_PYTHON)('version skew (v0) → exit 0 + byte-identical message', () => {
-        const py = pyLoad(JSON.stringify({ version: 0 }));
+    it('version skew (v0) → exit 0 + pinned message', () => {
         const ts = tsLoad(JSON.stringify({ version: 0 }));
-        expect(ts).toEqual(py);
         expect(ts.exit).toBe(0);
+        expect(ts).toMatchInlineSnapshot(`
+          {
+            "exit": 0,
+            "msg": "trace format upgraded; rerun the upstream command on this branch to regenerate (found version=0, expected 1)",
+            "ok": false,
+          }
+        `);
     });
 
-    it.runIf(HAVE_PYTHON)('missing version (legacy) → same skew message (version=None)', () => {
-        const py = pyLoad(JSON.stringify({ foo: 1 }));
+    it('missing version (legacy) → version=None skew message', () => {
         const ts = tsLoad(JSON.stringify({ foo: 1 }));
-        expect(ts).toEqual(py);
         expect(ts.msg).toContain('version=None');
+        expect(ts).toMatchInlineSnapshot(`
+          {
+            "exit": 0,
+            "msg": "trace format upgraded; rerun the upstream command on this branch to regenerate (found version=None, expected 1)",
+            "ok": false,
+          }
+        `);
     });
 
-    it.runIf(HAVE_PYTHON)('not found → exit 1', () => {
-        const py = pyLoad(null);
+    it('not found → exit 1', () => {
         const ts = tsLoad(null);
-        expect(ts.exit).toBe(py.exit);
         expect(ts.exit).toBe(1);
+        expect(ts).toMatchInlineSnapshot(`
+          {
+            "exit": 1,
+            "msg": "state file not found: <state>",
+            "ok": false,
+          }
+        `);
     });
 
-    it.runIf(HAVE_PYTHON)('non-object JSON → must-contain-object message', () => {
-        const py = pyLoad(JSON.stringify([1, 2, 3]));
+    it('non-object JSON → must-contain-object message', () => {
         const ts = tsLoad(JSON.stringify([1, 2, 3]));
-        expect(ts).toEqual(py);
+        expect(ts).toMatchInlineSnapshot(`
+          {
+            "exit": 2,
+            "msg": "state file <state> must contain a JSON object",
+            "ok": false,
+          }
+        `);
     });
 
-    it.runIf(HAVE_PYTHON)('valid v1 → ok', () => {
-        const py = pyLoad(JSON.stringify({ version: 1, x: 1 }));
+    it('valid v1 → ok', () => {
         const ts = tsLoad(JSON.stringify({ version: 1, x: 1 }));
-        expect(ts).toEqual(py);
         expect(ts.ok).toBe(true);
+        expect(ts).toMatchInlineSnapshot(`
+          {
+            "ok": true,
+          }
+        `);
     });
 
     it('EXPECTED_VERSION is pinned to 1', () => {

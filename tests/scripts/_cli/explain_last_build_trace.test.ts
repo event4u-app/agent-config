@@ -1,28 +1,13 @@
-// Golden-parity tests for the explain_last trace builder + Markdown renderer
+// Contract tests for the explain_last trace builder + Markdown renderer
 // (py2ts Phase 1, ADR-200): index.ts (build_trace), render.ts, state_loader.ts,
-// and the core slot builders (route / inputs / memory / council / assumptions /
-// halt / provider) exercised end-to-end on synthetic `.work-state.json`
-// fixtures.
-//
-// Strategy: build an isolated tmp project root (router.json + state +
-// council-responses + memory sidecar), then run the REAL python3
-// `build_trace` + `render` and the tsx twins on the SAME root with an
-// injected `now`, and assert byte-identical:
-//   - the rendered Markdown (footer + quiet), and
-//   - the trace JSON serialized with a PyFloat-aware
-//     `json.dumps(indent=2, sort_keys=True, ensure_ascii=False)` twin (so the
-//     `float()` hit_score renders `N.0` identically on both sides).
-//
-// The Python side imports the package (`scripts._cli.explain_last`) with
-// PYTHONPATH=["src", repo] — the package `__init__` pulls every sibling, so a
-// per-file importlib loader is not used here; the scrubber test covers the
-// leaf-module direct-file path. mtimes are pinned so the council ±1h window
-// and the mtime-fallback run_id are deterministic; `now` is injected.
-import { spawnSync } from 'node:child_process';
+// and the core slot builders exercised end-to-end on synthetic
+// `.work-state.json` fixtures. The tsx twins are the source of truth (the
+// python originals were deleted in the teardown); the serialized trace JSON +
+// both renders are pinned via inline snapshots. mtimes are pinned and `now`
+// is injected so every fixture is deterministic.
 import { mkdtempSync, mkdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -30,16 +15,9 @@ import { build_trace } from '../../../src/scripts/_cli/explain_last/index.js';
 import { PyFloat } from '../../../src/scripts/_cli/explain_last/memory.js';
 import { render } from '../../../src/scripts/_cli/explain_last/render.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = hasPython3();
 
 // Fixed instant injected as `now` on both sides (ms-aligned so the Python
 // `datetime` and the JS `Date` agree to the microsecond).
-const NOW_ISO = '2026-06-17T12:00:00+00:00';
 const NOW_DATE = new Date(Date.UTC(2026, 5, 17, 12, 0, 0));
 // Pinned mtimes (epoch seconds): state anchor + a council file inside the window.
 const STATE_MTIME = 1718000000.0;
@@ -92,45 +70,6 @@ function dumpSorted(v: unknown, depth: number): string {
     return `{\n${keys
         .map((k) => `${pad}${pyJsonStr(k)}: ${dumpSorted(o[k], depth + 1)}`)
         .join(',\n')}\n${close}}`;
-}
-
-interface PyOut {
-    status: number;
-    json: string;
-    footer: string;
-    quiet: string;
-    stderr: string;
-}
-
-/** Run the python3 build_trace + render on `projectRoot` with the pinned now. */
-function runPy(projectRoot: string, stateRel = '.work-state.json'): PyOut {
-    const code = [
-        'import json, sys, datetime, pathlib',
-        'from scripts._cli.explain_last import build_trace',
-        'from scripts._cli.explain_last.render import render',
-        `root = pathlib.Path(${JSON.stringify(projectRoot)})`,
-        'now = datetime.datetime(2026,6,17,12,0,0, tzinfo=datetime.timezone.utc)',
-        `trace = build_trace(root, root / ${JSON.stringify(stateRel)}, now=now)`,
-        'parts = {',
-        '  "json": json.dumps(trace, indent=2, sort_keys=True, ensure_ascii=False),',
-        '  "footer": render(trace, with_footer=True),',
-        '  "quiet": render(trace, with_footer=False),',
-        '}',
-        'sys.stdout.write(json.dumps(parts, ensure_ascii=False))',
-    ].join('\n');
-    const res = spawnSync('python3', ['-c', code], {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-        env: {
-            ...process.env,
-            PYTHONPATH: [path.join(REPO_ROOT, 'src'), REPO_ROOT].join(path.delimiter),
-        },
-    });
-    if (res.status !== 0) {
-        return { status: res.status ?? -1, json: '', footer: '', quiet: '', stderr: res.stderr };
-    }
-    const parsed = JSON.parse(res.stdout) as { json: string; footer: string; quiet: string };
-    return { status: 0, ...parsed, stderr: res.stderr };
 }
 
 function writeJson(p: string, obj: unknown): void {
@@ -194,37 +133,285 @@ function buildRichFixture(): void {
     utimesSync(councilFile, COUNCIL_MTIME, COUNCIL_MTIME);
 }
 
-describe('explain_last build_trace + render — golden parity', () => {
-    it.runIf(HAVE_PYTHON)('rich fixture: trace JSON + both renders are byte-identical', () => {
+describe('explain_last build_trace + render — contract', () => {
+    it('rich fixture: trace JSON + both renders (pinned)', () => {
         buildRichFixture();
-        const py = runPy(root);
-        expect(py.status, py.stderr).toBe(0);
         const stateFile = path.join(root, '.work-state.json');
         const trace = build_trace(root, stateFile, { now: NOW_DATE });
-        expect(dumpSorted(trace, 0)).toBe(py.json);
-        expect(render(trace, { with_footer: true })).toBe(py.footer);
-        expect(render(trace, { with_footer: false })).toBe(py.quiet);
+        const json = dumpSorted(trace, 0);
+        expect(json).toMatchInlineSnapshot(`
+          "{
+            "assumptions": [
+              {
+                "accepted": true,
+                "id": "first assumption",
+                "source": "refine"
+              },
+              {
+                "accepted": false,
+                "id": "a2",
+                "source": "halt"
+              }
+            ],
+            "council": [
+              {
+                "citations": [
+                  "c1",
+                  "note about <host>"
+                ],
+                "member_id": "anthropic/sonnet",
+                "verdict": "Verdict line one"
+              },
+              {
+                "citations": [],
+                "member_id": "solo",
+                "verdict": "only model"
+              }
+            ],
+            "generated_at": "2026-06-17T12:00:00+00:00",
+            "halt": {
+              "reason": "needs review",
+              "step": "refine",
+              "surface": [
+                "line A",
+                "line B"
+              ]
+            },
+            "inputs": {
+              "preset": "balanced",
+              "profile": "developer",
+              "rule_loading_tier": "balanced",
+              "source_per_knob": {
+                "preset": "profile",
+                "profile": "default",
+                "rule_loading_tier": "default"
+              }
+            },
+            "memory": [
+              {
+                "entry_id": "s-mem",
+                "hit_score": 1.25,
+                "used_in": "plan"
+              },
+              {
+                "entry_id": "m1",
+                "hit_score": 2.0,
+                "used_in": "refine"
+              },
+              {
+                "entry_id": "m2",
+                "hit_score": 0.5,
+                "used_in": "unspecified"
+              }
+            ],
+            "pack": null,
+            "provider": null,
+            "route": {
+              "kernel_rules": [
+                "k-one",
+                "k-two"
+              ],
+              "matched_rules": [
+                "t-a",
+                "t-b"
+              ],
+              "persona": "developer"
+            },
+            "run_id": "TICK-1",
+            "subject": "implement-ticket",
+            "version": 1
+          }"
+        `);
+        expect(render(trace, { with_footer: true })).toMatchInlineSnapshot(`
+          "# explain last — run TICK-1
+
+          **Subject:** /implement-ticket · **Started:** 2026-06-17T12:00:00+00:00
+
+          ## Why this route?
+
+          - Active rules: t-a, t-b
+          - Kernel rules: 2
+          - Persona: developer
+
+          ## Why this profile / preset?
+
+          | knob | value | source |
+          |---|---|---|
+          | profile.id | developer | default |
+          | preset.id | balanced | profile |
+          | rule_loading_tier | balanced | default |
+
+          ## Memory hits influencing this run
+
+          - s-mem (score 1.25) — used in plan
+          - m1 (score 2.00) — used in refine
+          - m2 (score 0.50) — used in unspecified
+
+          ## Council
+
+          ### anthropic/sonnet
+
+          > Verdict line one
+
+          Citations:
+          - c1
+          - note about <host>
+
+          ### solo
+
+          > only model
+
+          ## Why halted?
+
+          - **Reason:** \`needs review\`
+          - **Hook event:** \`refine\`
+
+          Surface emitted to the user:
+
+            line A
+            line B
+
+          ## Assumptions
+
+          - [x] first assumption  — recorded in step \`refine\`
+          - [ ] a2  — recorded in step \`halt\`
+
+          _tip: pass \`--json\` to emit machine-readable trace; \`--quiet\` to drop this footer._
+          "
+        `);
+        expect(render(trace, { with_footer: false })).toMatchInlineSnapshot(`
+          "# explain last — run TICK-1
+
+          **Subject:** /implement-ticket · **Started:** 2026-06-17T12:00:00+00:00
+
+          ## Why this route?
+
+          - Active rules: t-a, t-b
+          - Kernel rules: 2
+          - Persona: developer
+
+          ## Why this profile / preset?
+
+          | knob | value | source |
+          |---|---|---|
+          | profile.id | developer | default |
+          | preset.id | balanced | profile |
+          | rule_loading_tier | balanced | default |
+
+          ## Memory hits influencing this run
+
+          - s-mem (score 1.25) — used in plan
+          - m1 (score 2.00) — used in refine
+          - m2 (score 0.50) — used in unspecified
+
+          ## Council
+
+          ### anthropic/sonnet
+
+          > Verdict line one
+
+          Citations:
+          - c1
+          - note about <host>
+
+          ### solo
+
+          > only model
+
+          ## Why halted?
+
+          - **Reason:** \`needs review\`
+          - **Hook event:** \`refine\`
+
+          Surface emitted to the user:
+
+            line A
+            line B
+
+          ## Assumptions
+
+          - [x] first assumption  — recorded in step \`refine\`
+          - [ ] a2  — recorded in step \`halt\`
+          "
+        `);
         // spot-checks: PyFloat carries the int-valued float; scrubber fired.
         const mem = trace.memory as Array<Record<string, unknown>>;
         expect(mem[1]?.hit_score).toBeInstanceOf(PyFloat);
-        expect(py.json).toContain('"hit_score": 2.0');
-        expect(py.json).toContain('<host>'); // srv.local citation scrubbed
+        expect(json).toContain('"hit_score": 2.0');
+        expect(json).toContain('<host>'); // srv.local citation scrubbed
     });
 
-    it.runIf(HAVE_PYTHON)('empty/minimal state: every slot degrades to null/placeholder', () => {
+    it('empty/minimal state: every slot degrades to null/placeholder', () => {
         const state = { version: 1, input: { kind: 'prompt', data: {} } };
         const stateFile = path.join(root, '.work-state.json');
         writeJson(stateFile, state);
         utimesSync(stateFile, STATE_MTIME, STATE_MTIME);
-        const py = runPy(root);
-        expect(py.status, py.stderr).toBe(0);
         const trace = build_trace(root, stateFile, { now: NOW_DATE });
-        expect(dumpSorted(trace, 0)).toBe(py.json);
-        expect(render(trace, { with_footer: true })).toBe(py.footer);
+        expect(dumpSorted(trace, 0)).toMatchInlineSnapshot(`
+          "{
+            "assumptions": [],
+            "council": null,
+            "generated_at": "2026-06-17T12:00:00+00:00",
+            "halt": null,
+            "inputs": {
+              "preset": "balanced",
+              "profile": "developer",
+              "rule_loading_tier": "balanced",
+              "source_per_knob": {
+                "preset": "profile",
+                "profile": "default",
+                "rule_loading_tier": "default"
+              }
+            },
+            "memory": null,
+            "pack": null,
+            "provider": null,
+            "route": null,
+            "run_id": "2024-06-10T06:13:20+00:00",
+            "subject": "work",
+            "version": 1
+          }"
+        `);
+        expect(render(trace, { with_footer: true })).toMatchInlineSnapshot(`
+          "# explain last — run 2024-06-10T06:13:20+00:00
+
+          **Subject:** /work · **Started:** 2026-06-17T12:00:00+00:00
+
+          ## Why this route?
+
+          - (none) — router.json missing or unreadable
+
+          ## Why this profile / preset?
+
+          | knob | value | source |
+          |---|---|---|
+          | profile.id | developer | default |
+          | preset.id | balanced | profile |
+          | rule_loading_tier | balanced | default |
+
+          ## Memory hits influencing this run
+
+          - (none)
+
+          ## Council
+
+          (none recorded for this run)
+
+          ## Why halted?
+
+          (clean run — no halt recorded)
+
+          ## Assumptions
+
+          - (none captured)
+
+          _tip: pass \`--json\` to emit machine-readable trace; \`--quiet\` to drop this footer._
+          "
+        `);
         expect(trace.run_id).toBe('2024-06-10T06:13:20+00:00'); // mtime fallback, no µs
     });
 
-    it.runIf(HAVE_PYTHON)('video subject: provider slot + section populate and scrub', () => {
+    it('video subject: provider slot + section populate and scrub', () => {
         const state = {
             version: 1,
             directive_set: 'video',
@@ -234,18 +421,81 @@ describe('explain_last build_trace + render — golden parity', () => {
         const stateFile = path.join(root, '.work-state.json');
         writeJson(stateFile, state);
         utimesSync(stateFile, 1718000000.5, 1718000000.5); // fractional → µs in run_id
-        const py = runPy(root);
-        expect(py.status, py.stderr).toBe(0);
         const trace = build_trace(root, stateFile, { now: NOW_DATE });
-        expect(dumpSorted(trace, 0)).toBe(py.json);
-        expect(render(trace, { with_footer: false })).toBe(py.quiet);
+        expect(dumpSorted(trace, 0)).toMatchInlineSnapshot(`
+          "{
+            "assumptions": [],
+            "council": null,
+            "generated_at": "2026-06-17T12:00:00+00:00",
+            "halt": null,
+            "inputs": {
+              "preset": "balanced",
+              "profile": "developer",
+              "rule_loading_tier": "balanced",
+              "source_per_knob": {
+                "preset": "profile",
+                "profile": "default",
+                "rule_loading_tier": "default"
+              }
+            },
+            "memory": null,
+            "pack": null,
+            "provider": {
+              "id": "sora",
+              "selection_reason": "budget on <host> <money>/m"
+            },
+            "route": null,
+            "run_id": "2024-06-10T06:13:20.500000+00:00",
+            "subject": "video",
+            "version": 1
+          }"
+        `);
+        expect(render(trace, { with_footer: false })).toMatchInlineSnapshot(`
+          "# explain last — run 2024-06-10T06:13:20.500000+00:00
+
+          **Subject:** /video · **Started:** 2026-06-17T12:00:00+00:00
+
+          ## Why this route?
+
+          - (none) — router.json missing or unreadable
+
+          ## Why this profile / preset?
+
+          | knob | value | source |
+          |---|---|---|
+          | profile.id | developer | default |
+          | preset.id | balanced | profile |
+          | rule_loading_tier | balanced | default |
+
+          ## Memory hits influencing this run
+
+          - (none)
+
+          ## Council
+
+          (none recorded for this run)
+
+          ## Why halted?
+
+          (clean run — no halt recorded)
+
+          ## Why this provider?
+
+          - **Provider:** \`sora\`
+          - **Selection reason:** budget on <host> <money>/m
+
+          ## Assumptions
+
+          - (none captured)
+          "
+        `);
         expect(trace.run_id).toBe('2024-06-10T06:13:20.500000+00:00');
         expect((trace.provider as Record<string, unknown>).selection_reason).toBe(
             'budget on <host> <money>/m',
         );
     });
 
-    it.runIf(HAVE_PYTHON)('council out of ±1h window → null', () => {
+    it('council out of ±1h window → null', () => {
         mkdirSync(path.join(root, 'agents', 'runtime', 'council', 'sessions', 's9'), {
             recursive: true,
         });
@@ -258,15 +508,37 @@ describe('explain_last build_trace + render — golden parity', () => {
         writeJson(stateFile, state);
         utimesSync(stateFile, STATE_MTIME, STATE_MTIME);
         utimesSync(cf, STATE_MTIME + 99999, STATE_MTIME + 99999); // outside window
-        const py = runPy(root);
-        expect(py.status, py.stderr).toBe(0);
         const trace = build_trace(root, stateFile, { now: NOW_DATE });
-        expect(dumpSorted(trace, 0)).toBe(py.json);
+        expect(dumpSorted(trace, 0)).toMatchInlineSnapshot(`
+          "{
+            "assumptions": [],
+            "council": null,
+            "generated_at": "2026-06-17T12:00:00+00:00",
+            "halt": null,
+            "inputs": {
+              "preset": "balanced",
+              "profile": "developer",
+              "rule_loading_tier": "balanced",
+              "source_per_knob": {
+                "preset": "profile",
+                "profile": "default",
+                "rule_loading_tier": "default"
+              }
+            },
+            "memory": null,
+            "pack": null,
+            "provider": null,
+            "route": null,
+            "run_id": "spaced",
+            "subject": "work",
+            "version": 1
+          }"
+        `);
         expect(trace.council).toBe(null);
         expect(trace.run_id).toBe('spaced'); // raw_id.strip() then scrub
     });
 
-    it.runIf(HAVE_PYTHON)('subject derivation: council/video override, kind map, unknown', () => {
+    it('subject derivation: council/video override, kind map, unknown', () => {
         const cases: Array<[Record<string, unknown>, string]> = [
             [{ directive_set: 'council', input: { kind: 'ticket', data: {} } }, 'council'],
             [{ directive_set: 'video', input: { kind: 'ticket', data: {} } }, 'video'],
@@ -280,14 +552,9 @@ describe('explain_last build_trace + render — golden parity', () => {
             const stateFile = path.join(root, '.work-state.json');
             writeJson(stateFile, { version: 1, ...extra });
             utimesSync(stateFile, STATE_MTIME, STATE_MTIME);
-            const py = runPy(root);
-            expect(py.status, py.stderr).toBe(0);
             const trace = build_trace(root, stateFile, { now: NOW_DATE });
             expect(trace.subject).toBe(expectedSubject);
-            expect(dumpSorted(trace, 0)).toBe(py.json);
         }
     });
 });
 
-// keep NOW_ISO referenced (documents the injected instant for readers)
-void NOW_ISO;
