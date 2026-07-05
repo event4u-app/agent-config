@@ -1,18 +1,14 @@
 // Tests for src/scripts/migrate_frontmatter_defaults.ts (py2ts Phase 8 / Wave 8e).
 //
-// No pytest suite existed. This is a focused differential suite that NEVER
-// touches the live repo — artefact_roots is redirected onto a temp fixture
-// for both the Python driver (patching m.artefact_roots) and the TS twin
-// (agent_src._setRootsForTest):
-//   1. APPLY-mode writer parity: every rewritten artefact (top-level default
-//      drop, full-block drop, partial-block drop, bool default, untouched
-//      advisor persona) is byte-identical; stdout summary + exit code match.
-//   2. DRY-RUN delta-report parity: the written `--deltas` markdown is
-//      byte-identical. (The stdout `delta report → <relpath>` line is excluded:
-//      `Path.relative_to(ROOT)` is an absolute-path artifact, and pointing the
-//      deltas file outside ROOT makes the Python twin raise — replicated in TS
-//      but not byte-comparable across temp paths.)
-// Skipped without python3.
+// No pytest suite existed. The tsx twin is the source of truth (the python
+// original was deleted in the teardown). This suite NEVER touches the live repo
+// — artefact_roots is redirected onto a temp fixture via
+// agent_src._setRootsForTest:
+//   1. APPLY-mode writer contract: the rewritten artefacts (top-level default
+//      drop, full-block drop, partial-block drop, untouched advisor persona)
+//      are asserted directly; stdout summary + exit 0.
+//   2. DRY-RUN: the written `--deltas` markdown exists and the source fixtures
+//      are not mutated.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -30,10 +26,6 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const FILES: Record<string, string> = {
     // top-level default (source) + full trust block (all defaults) → drop both
@@ -58,23 +50,8 @@ function buildFixture(root: string): void {
     }
 }
 
-function runPy(root: string, args: 'apply' | 'dry', deltas?: string): { stdout: string; stderr: string; status: number | null } {
-    const applyExpr = args === 'apply' ? 'True' : 'False';
-    const deltaArg = deltas ? JSON.stringify(deltas) : '"/dev/null"';
-    const driver = `import sys, importlib
-sys.path.insert(0, ${JSON.stringify(SCRIPTS_DIR)})
-from pathlib import Path
-m = importlib.import_module("migrate_frontmatter_defaults")
-root = Path(sys.argv[1])
-m.artefact_roots = lambda: [root]
-raise SystemExit(m.run(apply=${applyExpr}, deltas_path=Path(${deltaArg})))
-`;
-    const r = spawnSync('python3', ['-c', driver, root], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
-
-function runTs(root: string, args: 'apply' | 'dry', deltas?: string): { stdout: string; stderr: string; status: number | null } {
-    const applyArg = args === 'apply' ? 'true' : 'false';
+function runTs(root: string, mode: 'apply' | 'dry', deltas?: string): { stdout: string; stderr: string; status: number | null } {
+    const applyArg = mode === 'apply' ? 'true' : 'false';
     const deltaArg = deltas ? JSON.stringify(deltas) : JSON.stringify('/dev/null');
     const driver = `import * as as_ from ${JSON.stringify(AGENT_SRC_TS)};
 import { run } from ${JSON.stringify(TS_SCRIPT)};
@@ -86,9 +63,7 @@ process.exit(run(${applyArg}, ${deltaArg}));
     return { stdout: r.stdout, stderr: r.stderr, status: r.status };
 }
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('migrate_frontmatter_defaults — writer golden parity (temp fixtures)', () => {
+describe('migrate_frontmatter_defaults — writer contract (temp fixtures)', () => {
     let tmp: string;
     beforeEach(() => {
         tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mfd-'));
@@ -97,22 +72,12 @@ describe.skipIf(!py3)('migrate_frontmatter_defaults — writer golden parity (te
         fs.rmSync(tmp, { recursive: true, force: true });
     });
 
-    it('APPLY rewrites + stdout + exit byte-identical', () => {
-        const pyRoot = path.join(tmp, 'py');
+    it('APPLY rewrites the artefacts + exit 0', () => {
         const tsRoot = path.join(tmp, 'ts');
-        buildFixture(pyRoot);
         buildFixture(tsRoot);
-        const p = runPy(pyRoot, 'apply');
         const t = runTs(tsRoot, 'apply');
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.status).toBe(p.status);
-        expect(t.status).toBe(0);
-        for (const rel of Object.keys(FILES)) {
-            expect(fs.readFileSync(path.join(tsRoot, rel), 'utf-8'), rel).toBe(
-                fs.readFileSync(path.join(pyRoot, rel), 'utf-8'),
-            );
-        }
-        // sanity: alpha lost `source` and the whole `trust` block
+        expect(t.status, t.stderr).toBe(0);
+        // alpha lost `source` and the whole `trust` block
         const alpha = fs.readFileSync(path.join(tsRoot, 'skills/alpha/SKILL.md'), 'utf-8');
         expect(alpha).not.toContain('source: package');
         expect(alpha).not.toContain('trust:');
@@ -128,23 +93,12 @@ describe.skipIf(!py3)('migrate_frontmatter_defaults — writer golden parity (te
         expect(beta).not.toContain('install:');
     });
 
-    it('DRY-RUN delta report byte-identical', () => {
-        const pyRoot = path.join(tmp, 'py');
+    it('DRY-RUN writes a delta report + does not mutate the source', () => {
         const tsRoot = path.join(tmp, 'ts');
-        buildFixture(pyRoot);
         buildFixture(tsRoot);
-        // Place the deltas file OUTSIDE ROOT (the temp dir) → both impls write the
-        // report, then both hit the relative_to/relativeTo path. Python raises
-        // (uncaught ValueError → exit 1) after writing; TS replicates the raise.
-        // We compare the WRITTEN report file, which is produced before the
-        // relpath print on both sides.
-        const pyDelta = path.join(tmp, 'py_deltas.md');
         const tsDelta = path.join(tmp, 'ts_deltas.md');
-        runPy(pyRoot, 'dry', pyDelta);
         runTs(tsRoot, 'dry', tsDelta);
-        expect(fs.existsSync(pyDelta)).toBe(true);
         expect(fs.existsSync(tsDelta)).toBe(true);
-        expect(fs.readFileSync(tsDelta, 'utf-8')).toBe(fs.readFileSync(pyDelta, 'utf-8'));
         // dry-run must NOT mutate the source fixtures
         for (const rel of Object.keys(FILES)) {
             expect(fs.readFileSync(path.join(tsRoot, rel), 'utf-8'), rel).toBe(FILES[rel]);

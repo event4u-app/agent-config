@@ -1,14 +1,10 @@
 // Tests for src/scripts/lint_showcase_sessions.ts (py2ts Phase 4 / Wave 4b — VERIFY).
 //
-// The Python pytest suite (tests/test_lint_showcase_sessions.py) patches the
-// module constants ROOT / SHOWCASE_MD / SESSIONS_DIR to point at a tmp tree.
-// The TS twin hard-codes those from `import.meta.url`, so they cannot be
-// monkeypatched. We port the 8 scenarios faithfully as DIFFERENTIAL golden
-// tests instead: each scenario is staged in a realpath-resolved tmp root with
-// the script copied into `<root>/src/scripts/`, so both `python3` and `tsx`
-// compute `ROOT == <root>` from their own location and run head-to-head. This
-// is strictly stronger than the original (it asserts py == ts byte-for-byte
-// AND the expected exit code). A real-repo golden-parity layer rounds it out.
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). The 8 pytest scenarios are staged in a realpath-resolved tmp root
+// with the .ts copied into `<root>/src/scripts/` so `ROOT == <root>` resolves
+// from the script's own location; each asserts the expected exit code. A
+// real-repo CLI-contract layer rounds it out.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -18,17 +14,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'lint_showcase_sessions.ts');
-const PY_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'lint_showcase_sessions.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 const VALID_FRONTMATTER = `---
 slug: "demo"
@@ -47,9 +38,7 @@ metrics:
 body
 `;
 
-const py3 = hasPython3();
-
-describe.skipIf(!py3)('lint_showcase_sessions — ported pytest scenarios (differential)', () => {
+describe('lint_showcase_sessions — ported pytest scenarios (differential)', () => {
     let root: string;
     beforeEach(() => {
         // Realpath-resolve so the copied-script CLI-entry guard fires for both
@@ -57,7 +46,6 @@ describe.skipIf(!py3)('lint_showcase_sessions — ported pytest scenarios (diffe
         root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'lss-')));
         fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
         fs.copyFileSync(TS_SRC, path.join(root, 'src', 'scripts', 'lint_showcase_sessions.ts'));
-        fs.copyFileSync(PY_SRC, path.join(root, 'src', 'scripts', 'lint_showcase_sessions.py'));
     });
     afterEach(() => {
         fs.rmSync(root, { recursive: true, force: true });
@@ -75,14 +63,9 @@ describe.skipIf(!py3)('lint_showcase_sessions — ported pytest scenarios (diffe
     }
 
     function runBoth(): { rc: number } {
-        const pyScript = path.join(root, 'src', 'scripts', 'lint_showcase_sessions.py');
         const tsScript = path.join(root, 'src', 'scripts', 'lint_showcase_sessions.ts');
-        const py = spawnSync('python3', [pyScript], { cwd: root, encoding: 'utf8' });
         const ts = spawnSync(TSX_BIN, [tsScript], { cwd: root, encoding: 'utf8' });
-        // Byte-for-byte parity across both implementations.
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+        expect(ts.status, ts.stderr).not.toBeNull();
         return { rc: ts.status ?? -1 };
     }
 
@@ -136,14 +119,14 @@ body
     });
 });
 
-// --- Golden parity on the REAL REPO -----------------------------------------
+// --- CLI contract on the REAL REPO ------------------------------------------
 
-describe.skipIf(!py3)('lint_showcase_sessions — golden parity (python3 vs tsx)', () => {
-    it('matches the default (no-flag) run byte-for-byte (real CI invocation)', () => {
-        const py = spawnSync('python3', [PY_SRC], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const ts = spawnSync(TSX_BIN, [TS_SRC], { cwd: REPO_ROOT, encoding: 'utf8' });
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+describe('lint_showcase_sessions — CLI contract (real repo)', () => {
+    it('runs the default (no-flag) invocation deterministically', () => {
+        const a = spawnSync(TSX_BIN, [TS_SRC], { cwd: REPO_ROOT, encoding: 'utf8' });
+        const b = spawnSync(TSX_BIN, [TS_SRC], { cwd: REPO_ROOT, encoding: 'utf8' });
+        expect(a.status, a.stderr).not.toBeNull();
+        expect(b.stdout).toBe(a.stdout);
+        expect(b.status).toBe(a.status);
     });
 });
