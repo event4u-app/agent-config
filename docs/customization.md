@@ -345,6 +345,38 @@ level.
 
 ---
 
+## Autonomous roadmap execution
+
+Roadmaps can declare how `/roadmap:process-full` / `process-phase`
+should interact, via frontmatter (`/roadmap:create` asks this as one
+question at creation time):
+
+```yaml
+execution:
+  mode: autonomous   # autonomous | phase-checkpoints | interactive
+```
+
+- `interactive` (absent-field default) — every gate fires as today.
+- `phase-checkpoints` — one compact status + continue prompt per phase
+  boundary.
+- `autonomous` — at run start the loop derives an **execution
+  contract** (feature branch, chunked commits, push to that branch
+  only, PR-open — never merge, batched artifact drafting, council
+  auto-enable). ONE acceptance activates all grants for the run; after
+  that the run is uninterrupted except the safety floors (Hard Floor,
+  security-sensitive-stop, N=3 validation budget, context-hygiene
+  aborts, deferred-`[~]` archival gate).
+
+The frontmatter field is a declaration of intent, never a permission
+grant — authorization happens only at the run-start contract, derived
+fresh from the roadmap's current content on every invocation. Details:
+`contexts/execution/roadmap-execution-contract.md`, template rule 18 in
+`templates/roadmaps.md`. Global `roadmap.*` keys in
+`.agent-settings.yml` (quality/dashboard cadence, pre-run gate) keep
+their meaning in every mode.
+
+---
+
 ## Project documentation
 
 Consumer projects can maintain their own agent documentation:

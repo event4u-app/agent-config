@@ -320,6 +320,16 @@ reasoning:
 # in the same response — that cadence is governed by `roadmap-progress-sync`
 # and is non-negotiable. This setting only governs *quality tool runs*.
 roadmap:
+  # PER-ROADMAP OVERRIDE NOTE — `execution.mode` frontmatter
+  # (autonomous | phase-checkpoints | interactive, per
+  # templates/roadmaps.md rule 18) changes ONLY the run's interaction
+  # pattern: which asks are batched into the run-start execution
+  # contract and where checkpoint prompts fire. It overrides NONE of
+  # the keys below — `skip_pre_run_gate`, `quality_cadence`, and
+  # `dashboard_regen_cadence` keep their global meaning in every mode,
+  # and no mode lifts a safety floor. See
+  # contexts/execution/roadmap-execution-contract.md.
+
   # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
   #   true  = default. The command name names the scope; a discoverable
   #           single active roadmap (or a named one) starts the loop
