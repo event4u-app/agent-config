@@ -99,6 +99,23 @@ parity, not feature parity**: trust / lifecycle / model-tier apply uniformly; th
 automation does not. We do not fake dispatch (that would need a runtime we refuse
 to add).
 
+**Implementation (`generate_subagent_host_contexts`, condense.ts).** The non-CC
+projection emits a passive-reference context file carrying the honest no-dispatch
+banner + a governance block (trust level / lifecycle / model tier / tools) + the
+body verbatim, reaper-safe per host:
+
+- Cursor → `.cursor/subagents/<name>.md`; Windsurf → `.windsurf/subagents/<name>.md`
+  (dedicated subdir with its own reaper — no collision with the aggressive
+  `_clean_modern_dir` rule reapers).
+- Cline → `.clinerules/<name>.subagent.md` (a real file; that dir's reaper only
+  unlinks symlinks, so it survives).
+- Copilot / Gemini → skipped (no per-file context surface).
+
+Council (claude-sonnet-4-5 + gpt-4o, 2026-07-05) converged on *project the file*
+over honest-null: the body is ~95% reusable review discipline and ~5% dispatch
+syntax, so an advanced user loads it on intent and applies the discipline
+manually. No ADR amendment was needed — this realises the §4 table as written.
+
 ### 5. Default-off + non-dispatch (mechanical)
 
 - **Default-off** = `discovery.visible: false` (required; linter enforces the

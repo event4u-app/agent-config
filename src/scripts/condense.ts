@@ -1566,6 +1566,138 @@ export function generate_claude_subagents(): number {
     return count;
 }
 
+/**
+ * Cross-host degradation for subagent-v1 (ADR-109 §4).
+ *
+ * Only Claude Code has native subagents (`generate_claude_subagents`). On the
+ * other rules-surface hosts a subagent projects to a **loadable context file** —
+ * a *passive reference*, honestly labelled: there is NO host-native `@`-dispatch
+ * (faking it would need a runtime the package refuses to add). Council
+ * (claude-sonnet-4-5 + gpt-4o, 2026-07-05) converged here over honest-null: the
+ * body is 95% reusable review discipline, 5% dispatch syntax, so an advanced user
+ * on Cursor / Windsurf / Cline loads it on intent and applies the discipline
+ * manually. This is **governance parity, not feature parity** — trust / lifecycle
+ * / model_tier stay legible; automation does not.
+ *
+ * Placement is reaper-safe by construction:
+ *  - Cursor / Windsurf → a dedicated `subagents/` subdir with its own reaper,
+ *    so it never collides with the aggressive `_clean_modern_dir` rule reapers.
+ *  - Cline → a flat real `<name>.subagent.md` in `.clinerules/` (whose reaper
+ *    only unlinks *symlinks*, so a real file survives).
+ *
+ * Copilot / Gemini are skipped (no per-file context surface), per ADR-109 §4.
+ * Reads from `src/` directly (subagent prompts are not telegraph-condensed).
+ */
+export function generate_subagent_host_contexts(): number {
+    if (!_isDir(MODULE_STATE.SUBAGENTS_SOURCE)) {
+        return 0;
+    }
+    const sources = _rglobSorted(MODULE_STATE.SUBAGENTS_SOURCE, '*.md').filter((p) => _isFile(p));
+
+    // Build the passive-reference body once per subagent, keyed by projected name.
+    const rendered: Array<{ name: string; text: string }> = [];
+    for (const src of sources) {
+        const stem = path.basename(src, '.md');
+        const text = _readText(src);
+        if (!text.startsWith('---\n')) {
+            continue;
+        }
+        const end = text.indexOf('\n---\n', 4);
+        if (end === -1) {
+            continue;
+        }
+        const fm = _yamlParse(text.slice(4, end)) as Record<string, unknown> | null;
+        if (fm === null) {
+            continue;
+        }
+        const body = text.slice(end + 5);
+        const name = typeof fm['name'] === 'string' ? (fm['name'] as string) : stem;
+        const description = typeof fm['description'] === 'string' ? (fm['description'] as string) : '';
+        // `trust` is either a flat string or the subagent-v1 nested object
+        // {level, confidence, human_review_required}; surface the level either way.
+        const trustRaw = fm['trust'];
+        const trust =
+            typeof trustRaw === 'string'
+                ? trustRaw
+                : typeof trustRaw === 'object' && trustRaw !== null && typeof (trustRaw as Record<string, unknown>)['level'] === 'string'
+                  ? ((trustRaw as Record<string, unknown>)['level'] as string)
+                  : 'unknown';
+        const lifecycle = typeof fm['lifecycle'] === 'string' ? (fm['lifecycle'] as string) : 'unknown';
+        const tier = typeof fm['model_tier'] === 'string' ? (fm['model_tier'] as string) : 'inherit';
+        const toolsRaw = fm['tools'];
+        const tools = Array.isArray(toolsRaw)
+            ? toolsRaw.map((t) => String(t)).join(', ')
+            : String(toolsRaw ?? '');
+        const out =
+            '---\n' +
+            `description: ${description}\n` +
+            '---\n\n' +
+            `# Subagent (passive reference): ${name}\n\n` +
+            '> Passive subagent reference. This host has **no native subagent dispatch** —\n' +
+            `> there is no \`@${name}\` here. Load this discipline manually and apply it.\n` +
+            '> Governance parity (trust / lifecycle / model tier) is preserved below;\n' +
+            '> feature parity is not (ADR-109 §4).\n\n' +
+            `- trust: ${trust}\n` +
+            `- lifecycle: ${lifecycle}\n` +
+            `- model tier: ${tier}\n` +
+            (tools ? `- tools: ${tools}\n` : '') +
+            '\n' +
+            _pyRstrip(body) +
+            '\n';
+        rendered.push({ name, text: out });
+    }
+
+    // Host targets: [dir, filename(name)->basename, reaper-predicate].
+    const targets: Array<{ active: boolean; dir: string; file: (n: string) => string; owns: (b: string) => boolean }> = [
+        {
+            active: _tool_active('cursor'),
+            dir: path.join(MODULE_STATE.PROJECT_ROOT, '.cursor', 'subagents'),
+            file: (n) => `${n}.md`,
+            owns: (b) => b.endsWith('.md'),
+        },
+        {
+            active: _tool_active('windsurf'),
+            dir: path.join(MODULE_STATE.PROJECT_ROOT, '.windsurf', 'subagents'),
+            file: (n) => `${n}.md`,
+            owns: (b) => b.endsWith('.md'),
+        },
+        {
+            active: _tool_active('cline'),
+            dir: path.join(MODULE_STATE.PROJECT_ROOT, '.clinerules'),
+            file: (n) => `${n}.subagent.md`,
+            owns: (b) => b.endsWith('.subagent.md'),
+        },
+    ];
+
+    let count = 0;
+    for (const t of targets) {
+        if (!t.active) {
+            continue;
+        }
+        const current = new Set(rendered.map((r) => t.file(r.name)));
+        _mkdirp(t.dir);
+        for (const r of rendered) {
+            _writeText(path.join(t.dir, t.file(r.name)), r.text);
+            count += 1;
+        }
+        // Reap stale generated files we own whose source is gone. Never touch
+        // symlinks (cline's rule symlinks) or a README.
+        if (_exists(t.dir)) {
+            for (const item of _iterdirSorted(t.dir)) {
+                const base = path.basename(item);
+                if (base === 'README.md' || current.has(base)) {
+                    continue;
+                }
+                if (_isFile(item) && !_isSymlink(item) && t.owns(base)) {
+                    fs.unlinkSync(item);
+                }
+            }
+        }
+    }
+    info(`  ✅  Projected ${count} passive subagent context file(s) to non-Claude-Code hosts`);
+    return count;
+}
+
 export function generate_plugin_command_skills(): number {
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         return 0;
@@ -1805,6 +1937,7 @@ function _generate_tools_inner(
     const skills = _tool_active('claude-code') ? generate_claude_skills(skill_names) : 0;
     const commands = _tool_active('claude-code') ? generate_claude_commands(cmd_slugs) : 0;
     const subagents = _tool_active('claude-code') ? generate_claude_subagents() : 0;
+    const subagent_contexts = generate_subagent_host_contexts();
     const plugin_cmd_skills = _tool_active('claude-code') ? generate_plugin_command_skills() : 0;
     const plugin_hooks = _tool_active('claude-code') ? generate_plugin_hooks() : 0;
     const personas = generate_persona_symlinks();
@@ -1815,7 +1948,7 @@ function _generate_tools_inner(
     const windsurf_wf = _tool_active('windsurf') ? generate_windsurf_workflows(cmd_slugs) : 0;
     const summary =
         `✅  generate-tools — rules=${rules} skills=${skills} ` +
-        `commands=${commands} subagents=${subagents} plugin_cmd_skills=${plugin_cmd_skills} ` +
+        `commands=${commands} subagents=${subagents} subagent_contexts=${subagent_contexts} plugin_cmd_skills=${plugin_cmd_skills} ` +
         `plugin_hooks=${plugin_hooks} ` +
         `personas=${personas} user_types=${user_types} ` +
         `cursor_mdc=${cursor_mdc} windsurf_rules=${windsurf_modern} ` +
