@@ -1,0 +1,54 @@
+name: Proof demo
+
+# B8 falsifiability lock. The proof page embeds a recorded GIF of the
+# deterministic "verify it yourself" trust commands. A GIF's timing is not
+# byte-reproducible, so the lock is NOT a pixel diff — it re-runs the exact
+# commands the recording shows (internal/demo/proof-demo-commands.sh). If any
+# stops passing, the demo is stale and this job goes red, so the recording can
+# never drift from current behavior.
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "internal/demo/**"
+      - "src/scripts/check_claims.ts"
+      - "src/scripts/check_references.ts"
+      - "src/scripts/check_skill_gaps.ts"
+      - "src/scripts/check_comparison.ts"
+      - "src/scripts/build_proof.ts"
+      - "docs/CLAIMS.md"
+      - "docs/comparison.yaml"
+      - "docs/proof.md"
+      - ".github/workflows/proof-demo.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - "internal/demo/**"
+      - "src/scripts/check_claims.ts"
+      - "src/scripts/check_references.ts"
+      - "src/scripts/check_skill_gaps.ts"
+      - "src/scripts/check_comparison.ts"
+      - "src/scripts/build_proof.ts"
+      - "docs/CLAIMS.md"
+      - "docs/comparison.yaml"
+      - "docs/proof.md"
+      - ".github/workflows/proof-demo.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo-commands-still-pass:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies (tsx for the trust commands)
+        run: npm ci
+      - name: The recorded demo's commands still pass
+        run: bash internal/demo/proof-demo-commands.sh
