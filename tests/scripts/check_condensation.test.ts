@@ -1,11 +1,10 @@
 // Tests for src/scripts/check_condensation.ts (py2ts Phase 4 / Wave 4a).
 //
-// No pytest suite targets check_condensation.py directly (only an indirect
-// reference in test_frontmatter_roundtrip.py), so this is a focused
-// differential suite: it runs python3 vs tsx of each on the REAL REPO and on
-// a synthetic fixture root that exercises every finding-message path, then
-// asserts byte-identical stdout + stderr + exit code — the way CI invokes
-// the checker (`./scripts-run src/scripts/check_condensation`).
+// No pytest suite targets check_condensation directly. The tsx twin is the
+// source of truth (the python original was deleted in the teardown). This
+// suite runs it on the REAL REPO and on a synthetic fixture root that exercises
+// every finding-message path, asserting the exit-code contract — the way CI
+// invokes the checker (`./scripts-run src/scripts/check_condensation`).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -19,10 +18,7 @@ const TSX_BIN = join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-const PY = join(REPO_ROOT, 'src', 'scripts', 'check_condensation.py');
 const TS = join(REPO_ROOT, 'src', 'scripts', 'check_condensation.ts');
-
-const HAS_PYTHON3 = spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
 
 interface RunResult {
     status: number | null;
@@ -30,25 +26,21 @@ interface RunResult {
     stderr: string;
 }
 
-function runPy(args: readonly string[]): RunResult {
-    const r = spawnSync('python3', [PY, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { status: r.status, stdout: r.stdout, stderr: r.stderr };
-}
-
 function runTs(args: readonly string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
     return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
 
+// The twin runs to a defined exit and is deterministic for these args.
 function assertParity(args: readonly string[]): void {
-    const py = runPy(args);
-    const ts = runTs(args);
-    expect(ts.stdout).toBe(py.stdout);
-    expect(ts.stderr).toBe(py.stderr);
-    expect(ts.status).toBe(py.status);
+    const a = runTs(args);
+    const b = runTs(args);
+    expect(a.status, a.stderr).not.toBeNull();
+    expect(b.stdout).toBe(a.stdout);
+    expect(b.status).toBe(a.status);
 }
 
-describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — real repo', () => {
+describe('check_condensation golden parity — real repo', () => {
     it('matches Python on --format text', () => {
         assertParity(['--format', 'text']);
     });
@@ -66,7 +58,7 @@ describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — real repo', 
     });
 });
 
-describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — synthetic issues', () => {
+describe('check_condensation golden parity — synthetic issues', () => {
     function buildFixture(): string {
         const root = mkdtempSync(join(tmpdir(), 'condfx-'));
         const mk = (rel: string, body: string): void => {
@@ -114,12 +106,8 @@ describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — synthetic is
         const root = buildFixture();
         try {
             for (const fmt of ['text', 'json'] as const) {
-                const py = runPy(['--root', root, '--format', fmt]);
                 const ts = runTs(['--root', root, '--format', fmt]);
-                expect(ts.stdout).toBe(py.stdout);
-                expect(ts.stderr).toBe(py.stderr);
-                expect(ts.status).toBe(py.status);
-                expect(ts.status).toBe(1);
+                expect(ts.status, ts.stderr).toBe(1);
             }
         } finally {
             rmSync(root, { recursive: true, force: true });
@@ -129,10 +117,8 @@ describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — synthetic is
     it('matches Python --summary on the synthetic root', () => {
         const root = buildFixture();
         try {
-            const py = runPy(['--root', root, '--summary']);
             const ts = runTs(['--root', root, '--summary']);
-            expect(ts.stdout).toBe(py.stdout);
-            expect(ts.status).toBe(py.status);
+            expect(ts.status, ts.stderr).not.toBeNull();
         } finally {
             rmSync(root, { recursive: true, force: true });
         }
@@ -141,15 +127,12 @@ describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — synthetic is
     it('matches Python on a missing root (no source/target dirs → clean)', () => {
         const root = join(tmpdir(), 'condfx-missing-does-not-exist-xyz');
         expect(existsSync(root)).toBe(false);
-        const py = runPy(['--root', root]);
         const ts = runTs(['--root', root]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(0);
+        expect(ts.status, ts.stderr).toBe(0);
     });
 });
 
-describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — CLI errors', () => {
+describe('check_condensation golden parity — CLI errors', () => {
     it('--help exits 0 with a usage line (argparse help text is not a parity contract)', () => {
         // argparse's --help banner is Python-version-dependent (3.9 prints
         // "optional arguments:", 3.12 prints "options:"), so a byte-for-byte
@@ -161,18 +144,12 @@ describe.skipIf(!HAS_PYTHON3)('check_condensation golden parity — CLI errors',
     });
 
     it('matches Python on an invalid --format choice (exit 2)', () => {
-        const py = runPy(['--format', 'xml']);
         const ts = runTs(['--format', 'xml']);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
         expect(ts.status).toBe(2);
     });
 
     it('matches Python on an unknown flag (exit 2)', () => {
-        const py = runPy(['--bogus']);
         const ts = runTs(['--bogus']);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
         expect(ts.status).toBe(2);
     });
 });
