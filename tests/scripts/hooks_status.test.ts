@@ -6,7 +6,6 @@
 // and assert the matrix shape, per-platform bridge detection, the Copilot
 // degraded marker, the Cowork n/a row, --strict exit codes, the table
 // rendering, and JSON parseability.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -212,11 +211,8 @@ describe('hooks_status — main rendering', () => {
 // hooks_status is pure (fs + manifest read only), so a stubbed python3
 // changes nothing — but assert the import surface is intact regardless.
 describe('hooks_status — no python dependency', () => {
-    it('collect works without a python3 binary on PATH', () => {
-        const hasPython = spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-        // Whether or not python3 exists, collect() must not invoke it.
+    it('collect is pure (fs + manifest read only) — never invokes python3', () => {
         const matrix = collect(tmp, manifest());
         expect(matrix.platforms.length).toBe(Object.keys(PLATFORM_BRIDGES).length);
-        void hasPython;
     });
 });
