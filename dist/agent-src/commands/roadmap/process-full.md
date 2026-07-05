@@ -34,16 +34,29 @@ with the **scope delta below**.
 
 ## Scope delta
 
+- **Execution mode:** read `execution.mode` from frontmatter. Under
+  `autonomous` / `phase-checkpoints` the loop's § 3 pre-scan derives
+  the run-start **execution contract**
+  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md));
+  ONE acceptance activates all run grants (feature branch, chunked
+  commits, push to that branch only, PR-open, batched artifact
+  drafting, council auto-enable) — no further asks until a safety
+  floor. `mode: autonomous` is the flagship pairing for this wrapper:
+  full working set + contract = uninterrupted run to the defined end
+  state.
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.
 - **Stop after:** the entire roadmap reaches `count_open == 0`, or a
-  halt condition fires (Hard-Floor, council-off + ambiguity,
+  halt condition fires (Hard-Floor, council-off + ambiguity — the
+  latter only outside an accepted contract with council available,
   security-sensitive, scope-out-of-roadmap, test/quality red).
 - **Phase boundary handling:** at every phase boundary, run the
   per-phase quality pipeline when `quality_cadence: per_phase` (or
   `per_step`). On red → stop, surface, do **not** silently roll into
-  the next phase.
+  the next phase. Under `mode: phase-checkpoints`, additionally emit
+  the compact status + continue prompt at every boundary; under
+  `autonomous`, boundaries are silent (quality pipeline aside).
 - **Final archival:** when the roadmap is fully closed, run the
   archival check from
   [`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival).
