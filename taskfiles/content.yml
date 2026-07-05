@@ -85,6 +85,18 @@ tasks:
     desc: Remove all generated tool directories and files
     cmd: ./scripts-run src/scripts/condense --clean-tools
 
+  check-site-links:
+    silent: true
+    desc: "Verify the built Starlight site (site/dist) has no broken internal links (B4). Run `cd site && npm run build` first; exits 2 if not built."
+    cmd: ./scripts-run src/scripts/check_site_links {{.CLI_ARGS}}
+
+  site-build-check:
+    silent: true
+    desc: "Build the Starlight site and gate it on the internal-link checker (B4). Self-contained: installs site deps, builds, checks."
+    cmds:
+      - cmd: cd site && npm ci && npm run build
+      - task: check-site-links
+
   generate-catalog:
     silent: true
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
