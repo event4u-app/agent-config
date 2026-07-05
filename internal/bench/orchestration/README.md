@@ -44,6 +44,37 @@ For a baseline (single-agent, no orchestration):
 | `orch-01-multifile-analysis` | N independent files — `parallelizable: files` | `do-in-parallel` |
 | `orch-02-ordered-refactor` | Ordered 3-step plan | `do-in-steps` |
 | `orch-03-competitive-impl` | Two design approaches, judge picks | `do-competitively` |
+| `pv-01-hollow-detection` | "is it ready?" over a stub-covered shipped path | `production-validator` verdict (A3) |
+| `pv-02-negative-control` | clean one-file "is it ready?" — MUST NOT flip | negative control (A3) |
+
+## A3 — subagent Gate-A eval (`production-validator`)
+
+Reuses this corpus + the #699 orchestration telemetry object (no parallel bench).
+The `pv-*` tasks measure whether the `production-validator` **subagent** earns its
+place versus **two baselines**, per the roadmap's dual-baseline rule:
+
+1. **inline host** — the host answers directly (`subagents.auto: off`).
+2. **generic inline dispatch** — a generic reviewer subagent, no
+   `production-validator` identity.
+3. **production-validator** — the shipped wedge subagent.
+
+Fill this table per task (one row per arm), from the telemetry line's
+`orchestration` object (`token_delta`, `verdict_changed_outcome`, `verify_mode`):
+
+| task | arm | verdict | verdict_changed_outcome | token_delta | tokens acceptable? |
+|---|---|---|---|---|---|
+
+**Gate A (ships the unit only if):** on `pv-01`, `production-validator` records
+`verdict_changed_outcome: true` (flips a false baseline `READY`→`NOT READY`) at
+acceptable `token_delta`, **and** on `pv-02` (negative control) **every** arm —
+including `production-validator` — records `verdict_changed_outcome: false`. A
+`true` on the control is a spurious finding and **fails the gate** regardless of
+`pv-01`. If no baseline is fooled on `pv-01`, there is no lift — record the honest
+null and the unit stays default-off in `src/` per ADR-109 Gate A.
+
+**Billable + operator-gated.** These are real-session runs (the harness cannot
+spawn subagents headlessly — see limitations below). Do NOT fire the billable run
+autonomously; the maintainer runs the three arms and records the table.
 
 ## Honest limitations (per roadmap step 3)
 
