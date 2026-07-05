@@ -16,10 +16,8 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
-import { hasPyYaml, hasPython3, REPO_ROOT, runPy, runTs, SCRIPTS } from './_bench_wave8d.js';
+import { runTs } from './_bench_wave8d.js';
 import * as abr from '../../src/scripts/bench_ab_run.js';
-
-const ok = hasPython3() && hasPyYaml();
 
 describe('bench_ab_run — in-process pure helpers (no python required)', () => {
     it('utc_stamp matches the %Y-%m-%dT%H-%M-%SZ shape', () => {
@@ -56,42 +54,12 @@ describe('bench_ab_run — in-process pure helpers (no python required)', () => 
     });
 });
 
-describe.skipIf(!ok)('bench_ab_run — render_markdown byte-parity (python3 vs tsx)', () => {
-    it('identical Markdown for a fixed report dict', () => {
-        const report = {
-            schema: 'ab-bench/0.1',
-            stamp: '2099-01-01T00-00-00Z',
-            variant: 'without',
-            corpus: 'ab-trackb',
-            cache_key: { corpus_hash: 'aa', claude_cli_version: 'v1', target_shape_hash: 'hh' },
-            duration_seconds: 1.5,
-            results: { track: 'ab-trackb', status: 'stub', variant: 'without' },
-        };
-        const driver = [
-            'import importlib.util, json, sys',
-            `spec = importlib.util.spec_from_file_location("m", ${JSON.stringify(
-                `${SCRIPTS}/bench_ab_run.py`,
-            )})`,
-            'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
-            `report = json.loads(${JSON.stringify(JSON.stringify(report))})`,
-            'sys.stdout.write(m.render_markdown(report))',
-        ].join('\n');
-        const py = spawnSync('python3', ['-c', driver], { encoding: 'utf8', cwd: REPO_ROOT });
-        expect(py.status).toBe(0);
-        expect(abr.render_markdown(report)).toBe(py.stdout);
-    });
-});
-
-describe.skipIf(!ok)('bench_ab_run — CLI surface (non-writing branches)', () => {
+describe('bench_ab_run — CLI surface (non-writing branches)', () => {
     it('missing --variant → exit 2 on both', () => {
-        const args = ['--corpus', 'ab-tracka'];
-        expect(runPy('bench_ab_run.py', args).status).toBe(2);
-        expect(runTs('bench_ab_run.ts', args).status).toBe(2);
+        expect(runTs('bench_ab_run.ts', ['--corpus', 'ab-tracka']).status).toBe(2);
     });
 
     it('invalid --corpus → exit 2 on both', () => {
-        const args = ['--variant', 'with', '--corpus', 'nope'];
-        expect(runPy('bench_ab_run.py', args).status).toBe(2);
-        expect(runTs('bench_ab_run.ts', args).status).toBe(2);
+        expect(runTs('bench_ab_run.ts', ['--variant', 'with', '--corpus', 'nope']).status).toBe(2);
     });
 });
