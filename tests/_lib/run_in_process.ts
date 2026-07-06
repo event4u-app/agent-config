@@ -90,6 +90,9 @@ export async function runInProcAsync(
             status = (e as any).code ?? _extractExitCode(e.message);
         } else if (process.exitCode !== undefined && process.exitCode !== null) {
             status = process.exitCode as number;
+        } else if (e instanceof Error) {
+            stderrBuf.push(e.message + '\n');
+            status = 1;
         } else {
             throw e;
         }
@@ -216,6 +219,11 @@ export function runInProc(mainFn: MainFn, argv: string[] = [], opts: RunOpts = {
             // Script set process.exitCode then threw a non-ProcessExit error
             // (e.g. the `process.exitCode = 2; throw new ArgExit()` pattern).
             status = process.exitCode as number;
+        } else if (e instanceof Error) {
+            // Uncaught error from main() (e.g. FileNotFoundError replica).
+            // Mirror what the CLI entry guard does: set exit 1 and emit to stderr.
+            stderrBuf.push(e.message + '\n');
+            status = 1;
         } else {
             throw e;
         }

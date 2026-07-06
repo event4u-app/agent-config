@@ -12,6 +12,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { main } from '../../src/scripts/probe_projection_fidelity.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'probe_projection_fidelity.ts');
@@ -41,8 +43,8 @@ afterEach(() => {
 });
 
 function runTs(reportRel?: string) {
-    const args = reportRel ? [TS_SCRIPT, '--report', reportRel] : [TS_SCRIPT];
-    return spawnSync(TSX_BIN, args, { encoding: 'utf8', cwd: REPO_ROOT });
+    const args = reportRel ? ['--report', reportRel] : [];
+    return runInProc(main, args);
 }
 
 describe.runIf(fs.existsSync(FIXTURE))('probe_projection_fidelity — CLI contract', () => {

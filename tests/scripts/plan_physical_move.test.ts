@@ -6,21 +6,15 @@
 // teardown); only the default DRY-RUN (writes the plan JSON, no FS moves) is
 // asserted. The plan file is written to an in-tree temp path and removed
 // afterwards, so the test leaves zero git drift.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { main } from '../../src/scripts/plan_physical_move.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'plan_physical_move.ts');
 const TMP_DIR = path.join(REPO_ROOT, 'dist', 'migration');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 // The tsx twin is the source of truth (the python original was deleted in the
 // teardown). --apply mutates the tree via `git mv` → NEVER exercised; only the
@@ -38,8 +32,7 @@ describe('plan_physical_move — dry-run contract', () => {
 
     it('dry-run writes a valid plan JSON, deterministically', () => {
         fs.mkdirSync(TMP_DIR, { recursive: true });
-        const runTs = () =>
-            spawnSync(TSX_BIN, [TS_SCRIPT, '--out', tsOut], { encoding: 'utf8', cwd: REPO_ROOT });
+        const runTs = () => runInProc(main, ['--out', tsOut]);
         const a = runTs();
         // 0 = clean, 1 = conflicts — both are valid dry-run verdicts (repo state).
         expect([0, 1]).toContain(a.status);

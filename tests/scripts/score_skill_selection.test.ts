@@ -29,6 +29,8 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { acquireGlobalStateLock } from './_global_state_lock.js';
+import { main } from '../../src/scripts/score_skill_selection.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'score_skill_selection.ts');
@@ -45,7 +47,7 @@ function clustersPresent(): boolean {
     return fs.existsSync(CLUSTERS);
 }
 function runTs(args: string[]) {
-    return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+    return runInProc(main, args);
 }
 
 describe('score_skill_selection — CLI contract', () => {

@@ -25,9 +25,9 @@ Fix: run twins **in-process** (`main(argv)` import, stdout/exit capture).
 
 ## Phase 3 — check_* / lint_* / audit_* / measure_* cluster
 
-- [ ] Migrate `check_condensation`, `check_no_conflict_markers`, `check_no_external_sources`, `check_structural_breaking`, `check_surface_tiers`, `check_trigger_evals`, `check_council_config_location`.
-- [ ] Migrate remaining measure/audit/lint rigs: `audit_likelihood`, `audit_overlap`, `measure_markitdown_lift`, `measure_projection_bytes`, `measure_patterns`, `measure_skill_reduction`, `probe_projection_fidelity`, `lint_empty_roadmaps`, `lint_marketplace`, `lint_showcase_sessions`, `lint_skill_originality`, `lint_pack_dependencies`.
-- [ ] Migrate remaining one-off rigs: `apply_modules_config`, `cross_repo_retrieve`, `validate_discovery_manifest`, `validate_pack_yaml`, `inventory_frontmatter`, `check_discovery_determinism`, `plan_physical_move`, `migrate_frontmatter_defaults`, `skills_design_tokens_tokens`, `score_skill_selection`.
+- [~] Migrate `check_condensation`, `check_no_conflict_markers`, `check_no_external_sources`, `check_structural_breaking`, `check_surface_tiers`, `check_trigger_evals`, `check_council_config_location`.
+- [x] Migrate remaining measure/audit/lint rigs: `audit_likelihood`, `audit_overlap`, `measure_markitdown_lift`, `measure_projection_bytes`, `measure_patterns`, `measure_skill_reduction`, `probe_projection_fidelity`, `lint_empty_roadmaps`, `lint_marketplace`, `lint_showcase_sessions`, `lint_skill_originality`, `lint_pack_dependencies`.
+- [x] Migrate remaining one-off rigs: `apply_modules_config`, `cross_repo_retrieve`, `validate_discovery_manifest`, `validate_pack_yaml`, `inventory_frontmatter`, `check_discovery_determinism`, `plan_physical_move`, `migrate_frontmatter_defaults`, `skills_design_tokens_tokens`, `score_skill_selection`.
 
 ## Phase 4 — Heavy multi-case suites
 
