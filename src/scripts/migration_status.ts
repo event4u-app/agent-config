@@ -2,7 +2,7 @@
 /**
  * migration_status.ts — Python→TypeScript migration dashboard.
  *
- * Phase 1 Step 13 of `agents/roadmaps/road-to-typescript-only-scripts.md`.
+ * Phase 1 Step 13 of `agents/roadmaps/archive/road-to-typescript-only-scripts.md`.
  *
  * Counts the remaining tracked `.py` files (via `git ls-files '*.py'`),
  * buckets them into the roadmap's migration categories, compares each
@@ -100,6 +100,10 @@ const EXCLUDED_PREFIXES: readonly string[] = [
     '.claude/',
     '.augment/',
     'internal/bench/',
+    // Eval fixtures simulate CONSUMER project files (a python DB model the
+    // structure-grounding eval reads as foreign source) — carve-out, not
+    // package source. Same class as the internal/bench/ trap fixtures.
+    'internal/evals/',
     'tmp/',
     '.tmp/',
 ];
@@ -225,7 +229,7 @@ function renderDashboard(
     lines.push('');
     lines.push(
         'Tracks remaining tracked `.py` files per roadmap phase of ' +
-            '`agents/roadmaps/road-to-typescript-only-scripts.md`. ' +
+            '`agents/roadmaps/archive/road-to-typescript-only-scripts.md`. ' +
             'Baseline = Phase 1 snapshot (hardcoded in the script).',
     );
     lines.push('');

@@ -223,19 +223,19 @@ Internal but interconnected; ports late so earlier phases can keep using it for 
 - [x] **Step 2:** Remove the dispatcher's Python fallback branch (keep the dispatcher itself — it is now a plain TS runner) or inline it away; sweep taskfiles/workflows/docs for any residual `python3` mention.
 - [x] **Step 3:** Delete `.venv` / `.venv-mcp` bootstrap logic, Python references in `.github/workflows` setup steps, and the Python sections of contributor docs; update `CLAUDE.md`/`AGENTS.md` emergency triage and `docs/architecture.md`.
 - [x] **Step 4:** Final audit: repo-wide `find` proves zero tracked `.py` files outside explicitly documented carve-outs (none expected); migration dashboard reports 100%; archive the dashboard snapshot into `agents/evidence/`.
-- [ ] **Step 5:** Close the loop on quality: regenerate the baseline comparison (linter finding counts, CI runtime, coverage) vs the pre-migration snapshot and record the final report (including a CI-runtime before/after) in `agents/evidence/migration-final-report.md`.
+- [x] **Step 5:** Close the loop on quality: regenerate the baseline comparison (linter finding counts, CI runtime, coverage) vs the pre-migration snapshot and record the final report (including a CI-runtime before/after) in `agents/evidence/migration-final-report.md`.
 
 **Exit criteria:** zero Python in source and CI; quality report shows finding-count and coverage parity-or-better; docs consistent.
 **Rollback:** Step 1's deletion PR is the only hard-to-partially-revert step — it lands last and standalone for clean revertability.
 
 ## Acceptance Criteria
 
-- [ ] Zero tracked `.py` files in source (`src/`, `tests/`, `agents/`, `internal/glama`); no `pyproject.toml`, no `.venv*` bootstrap, no `python3` in taskfiles/workflows/package.json/docs.
-- [ ] Every ported script met the per-script gate: vitest suite ported 1:1 and green, coverage ≥ Python baseline (line + branch), golden replay green or divergence documented + approved, error parity for consumer-facing scripts, Python original deleted in the same PR.
-- [ ] Condensation/projection outputs hash-identical through the TS pipeline (or ADR-documented divergence).
-- [ ] Consumer fixture e2e: fresh install + upgrade-from-Python-era + full template-surface smoke green on the supported Node floor.
-- [ ] Linter finding counts on the repo identical to the pre-migration baseline (or improvements documented as divergences).
-- [ ] All quality gates pass (`task ci` full pipeline, container e2e).
+- [x] Zero tracked `.py` files in source (`src/`, `tests/`, `agents/`, `internal/glama`); no `pyproject.toml`, no `.venv*` bootstrap, no `python3` in taskfiles/workflows/package.json/docs. <!-- verified fresh 2026-07-07: 0 in-scope .py, 0 pyproject, 0 python3 hits in taskfiles/workflows/package.json; 2 documented consumer-fixture carve-outs outside scope (internal/bench, internal/evals) -->
+- [x] Every ported script met the per-script gate: vitest suite ported 1:1 and green, coverage ≥ Python baseline (line + branch), golden replay green or divergence documented + approved, error parity for consumer-facing scripts, Python original deleted in the same PR. <!-- enforced per phase by the migration-gates workflow on python2ts (Phase 1 Step 10); phase exit gates were green at each merge; final state: migration dashboard 100%, 10-entry divergence ledger -->
+- [x] Condensation/projection outputs hash-identical through the TS pipeline (or ADR-documented divergence). <!-- verified fresh 2026-07-07: sync-check green, check-hashes clean -->
+- [x] Consumer fixture e2e: fresh install + upgrade-from-Python-era + full template-surface smoke green on the supported Node floor. <!-- Phase 11 Step 3 ran the container matrix; ongoing: Install Script Tests (4 shards x 2 OS) + Install Aux Tests + Public Install Smoke all green on main c93c0a883 -->
+- [x] Linter finding counts on the repo identical to the pre-migration baseline (or improvements documented as divergences). <!-- final report §3: 0 FAIL held on both sides; warn 108→0 is documented hygiene improvement; per-rule linter changes covered by the divergence ledger -->
+- [x] All quality gates pass (`task ci` full pipeline, container e2e). <!-- remote CI is the authoritative gate (quality.local_auto_run=false): Tests, Consistency, Skill Lint, Smoke Contracts, Public Install Smoke, No Python in src all green on main c93c0a883; sync-visibility "failures" are the documented phantom-run anomaly (workflow_dispatch-only, 0 jobs) -->
 
 ## Notes
 

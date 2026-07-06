@@ -52,7 +52,7 @@ to Python's exact-Fraction path.
 A full byte-identical fix requires replicating Python's `statistics._ss`
 exact-`Fraction` summation in TS (BigInt-rational arithmetic) across the
 shared bench-stats helpers. That is tracked as a follow-up
-(`agents/roadmaps/road-to-typescript-only-scripts.md`, bench-stats
+(`agents/roadmaps/archive/road-to-typescript-only-scripts.md`, bench-stats
 exact-fraction parity); it is non-trivial and out of scope for the sync that
 surfaced it.
 

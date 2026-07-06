@@ -1,6 +1,6 @@
 # YAML Round-Trip Spike — Verdict
 
-> Phase 1 Step 7 of `agents/roadmaps/road-to-typescript-only-scripts.md`.
+> Phase 1 Step 7 of `agents/roadmaps/archive/road-to-typescript-only-scripts.md`.
 > Originally framed as a "ruamel.yaml → npm `yaml`" risk. The survey below
 > shows that framing was wrong: there is **no ruamel usage anywhere** — the
 > comment-preserving round-trip layer is `src/scripts/sync_yaml_rt.py`, a
