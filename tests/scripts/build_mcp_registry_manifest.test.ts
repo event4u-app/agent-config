@@ -20,7 +20,6 @@ import * as mcp from '../../src/scripts/build_mcp_registry_manifest.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_mcp_registry_manifest.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_mcp_registry_manifest.py');
 const MCP_DIR = path.join(REPO_ROOT, 'dist', 'mcp');
 const DISCOVERY = path.join(REPO_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
 const TSX_BIN = path.join(
@@ -59,13 +58,9 @@ describe('build_mcp_registry_manifest.pyJsonDumps — Python json.dumps parity',
 
 // --- Layer 2: golden parity on the REAL REPO -------------------------------
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py3 = hasPython3();
-// Requires the HARD discovery prereq + the two on-disk inputs.
-const runnable =
-    py3 &&
+// Requires the discovery prereq + the two on-disk inputs (dist/discovery is
+// gitignored/generated — the layer skips when they are absent).
+const buildable =
     fs.existsSync(DISCOVERY) &&
     fs.existsSync(path.join(REPO_ROOT, 'internal', 'workers', 'mcp', 'content.json')) &&
     fs.existsSync(path.join(REPO_ROOT, '.github', 'topics.yml'));
@@ -73,7 +68,12 @@ const runnable =
 const big = { maxBuffer: 64 * 1024 * 1024, cwd: REPO_ROOT, encoding: 'utf8' as const };
 const FILES = ['registry-manifest.json', 'awesome-mcp-servers.row.md', 'mcp-cloudflare-catalogue.json'];
 
-describe.skipIf(!runnable)('build_mcp_registry_manifest — golden parity (python3 vs tsx)', () => {
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). The manifest content is repo-derived (would drift in a snapshot),
+// so this asserts the writer contract structurally: exit 0, ensure_ascii
+// escaping, valid JSON outputs, and DETERMINISM (a second --write reproduces
+// byte-identical files).
+describe.skipIf(!buildable)('build_mcp_registry_manifest — writer contract', () => {
     let mcpDirExisted: boolean;
     let snapshot: Record<string, string>;
     afterEach(() => {
@@ -97,36 +97,35 @@ describe.skipIf(!runnable)('build_mcp_registry_manifest — golden parity (pytho
         }
     }
 
-    it('stdout (no --write) is byte-identical, with \\u2014 escaping', () => {
+    it('no --write emits the manifest with ensure_ascii escaping (exit 0)', () => {
         snap();
-        const py = spawnSync('python3', [PY_SCRIPT], big);
         const ts = spawnSync(TSX_BIN, [TS_SCRIPT], big);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.stdout).toContain('\\u2014');
+        expect(ts.status, ts.stderr).toBe(0);
+        expect(ts.stdout).toContain('\\u2014'); // em-dash escaped, not raw —
+        expect(ts.stdout).not.toContain('—');
+        expect(ts.stdout.length).toBeGreaterThan(100);
     });
 
-    it('--write produces byte-identical files py vs tsx', () => {
+    it('--write emits the three files, valid + deterministic', () => {
         snap();
-        const work = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-gp-'));
-        try {
-            // python3 --write, capture the three files.
-            const py = spawnSync('python3', [PY_SCRIPT, '--write'], big);
-            expect(py.status).toBe(0);
-            const pyCopies: Record<string, string> = {};
-            for (const f of FILES) pyCopies[f] = fs.readFileSync(path.join(MCP_DIR, f), 'utf-8');
-            // Clear dist/mcp, then tsx --write, capture again.
-            fs.rmSync(MCP_DIR, { recursive: true, force: true });
-            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--write'], big);
-            expect(ts.status).toBe(0);
-            for (const f of FILES) {
-                const tsBody = fs.readFileSync(path.join(MCP_DIR, f), 'utf-8');
-                expect(tsBody).toBe(pyCopies[f]);
-            }
-        } finally {
-            fs.rmSync(work, { recursive: true, force: true });
+        const run1 = spawnSync(TSX_BIN, [TS_SCRIPT, '--write'], big);
+        expect(run1.status, run1.stderr).toBe(0);
+        const first: Record<string, string> = {};
+        for (const f of FILES) {
+            const p = path.join(MCP_DIR, f);
+            expect(fs.existsSync(p), f).toBe(true);
+            first[f] = fs.readFileSync(p, 'utf-8');
+        }
+        expect(() => JSON.parse(first['registry-manifest.json'] as string)).not.toThrow();
+        expect(() => JSON.parse(first['mcp-cloudflare-catalogue.json'] as string)).not.toThrow();
+        expect((first['awesome-mcp-servers.row.md'] as string).length).toBeGreaterThan(0);
+
+        // Deterministic: a second --write reproduces byte-identical files.
+        fs.rmSync(MCP_DIR, { recursive: true, force: true });
+        const run2 = spawnSync(TSX_BIN, [TS_SCRIPT, '--write'], big);
+        expect(run2.status).toBe(0);
+        for (const f of FILES) {
+            expect(fs.readFileSync(path.join(MCP_DIR, f), 'utf-8'), f).toBe(first[f]);
         }
     });
 });

@@ -1,10 +1,9 @@
-// Tests for src/scripts/propose_modules_config.ts (py2ts Phase 8 / Wave 8g).
+// Contract tests for src/scripts/propose_modules_config.ts (py2ts Phase 8).
 //
-// No pytest suite existed — focused differential (python3 vs tsx, byte-exact)
-// over the JSON envelope and the interactive TTY block, on a no-modules root,
-// a crafted root with a real `app/Modules/<Module>` dir (exercises the
-// candidate-detection path + suggested-block render), and the argparse error
-// paths. Pure read-only scan; never writes. Skipped without python3.
+// Covers the JSON envelope + interactive TTY block on a no-modules root, a
+// crafted root with a real `app/Modules/<Module>` dir (candidate-detection +
+// suggested-block render), and the argparse error paths. Pure read-only scan;
+// never writes.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -14,7 +13,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'propose_modules_config.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'propose_modules_config.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -22,12 +20,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py = hasPython3();
-const runPy = (args: string[]) =>
-    spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
 const runTs = (args: string[]) =>
     spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
 
@@ -48,44 +40,115 @@ afterEach(() => {
     }
 });
 
-function assertSame(args: string[]): void {
-    const p = runPy(args);
-    const t = runTs(args);
-    expect(t.status).toBe(p.status);
-    expect(t.stdout).toBe(p.stdout);
-    expect(t.stderr).toBe(p.stderr);
+/** Mask a temp root so a fixture snapshot is host-independent. Masks the
+ *  realpath form FIRST (longest match — macOS resolves /var → /private/var),
+ *  then the raw form, then collapses any residual macOS `/private` prefix so
+ *  the snapshot is identical on macOS and Linux. */
+function mask(s: string, d: string): string {
+    let real = d;
+    try {
+        real = fs.realpathSync(d);
+    } catch {
+        // dir already gone — nothing to resolve
+    }
+    return s
+        .split(real).join('<TMP>')
+        .split(d).join('<TMP>')
+        .split('/private<TMP>').join('<TMP>');
 }
 
-describe.skipIf(!py)('propose_modules_config — golden parity (python3 vs tsx)', () => {
-    it('json on the package root matches', () => {
-        assertSame(['--project', REPO_ROOT, '--json']);
-    });
-    it('interactive on the package root matches', () => {
-        assertSame(['--project', REPO_ROOT]);
-    });
-    it('json on a no-modules temp root matches', () => {
-        assertSame(['--project', mkTmp(), '--json']);
-    });
-    it('interactive on a no-modules temp root matches', () => {
-        assertSame(['--project', mkTmp()]);
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). Package-root runs scan the real repo → structural only (drift-free);
+// temp-root runs are fully controlled → pinned via masked inline snapshots.
+describe('propose_modules_config — CLI contract', () => {
+    it('package root: --json is valid, interactive runs (exit 0)', () => {
+        const j = runTs(['--project', REPO_ROOT, '--json']);
+        expect(j.status, j.stderr).toBe(0);
+        expect(() => JSON.parse(j.stdout)).not.toThrow();
+        expect(runTs(['--project', REPO_ROOT]).status).toBe(0);
     });
 
-    it('json on a root with a laravel module dir matches', () => {
+    it('no-modules temp root (pinned)', () => {
         const d = mkTmp();
-        fs.mkdirSync(path.join(d, 'app', 'Modules', 'Billing'), { recursive: true });
-        assertSame(['--project', d, '--json']);
-    });
-    it('interactive on a root with a laravel module dir matches', () => {
-        const d = mkTmp();
-        fs.mkdirSync(path.join(d, 'app', 'Modules', 'Billing'), { recursive: true });
-        assertSame(['--project', d]);
+        const j = runTs(['--project', d, '--json']);
+        expect(j.status, j.stderr).toBe(0);
+        expect(mask(j.stdout, d)).toMatchInlineSnapshot(`
+          "{
+            "project_root": "<TMP>",
+            "candidates": [],
+            "proposed_block": {
+              "enabled": false,
+              "root_paths": [],
+              "namespace_template": "",
+              "agent_folder": "agents",
+              "skip_dirs": [
+                ".module-template",
+                ".example"
+              ]
+            }
+          }
+          "
+        `);
+        expect(mask(runTs(['--project', d]).stdout, d)).toMatchInlineSnapshot(`
+          "⚠️  No module roots detected.
+
+          Skipping \`modules:\` config. Re-run after adding a module directory (app/Modules/, src/Module/, packages/, internal/, ...).
+          "
+        `);
     });
 
-    it('bad flag exits 2 identically', () => {
-        assertSame(['--bogus']);
+    it('root with a laravel module dir (pinned)', () => {
+        const d = mkTmp();
+        fs.mkdirSync(path.join(d, 'app', 'Modules', 'Billing'), { recursive: true });
+        const j = runTs(['--project', d, '--json']);
+        expect(j.status, j.stderr).toBe(0);
+        expect(mask(j.stdout, d)).toMatchInlineSnapshot(`
+          "{
+            "project_root": "<TMP>",
+            "candidates": [
+              {
+                "path": "app/Modules",
+                "stack": "laravel-hmvc",
+                "namespace_template_guess": "App\\\\Modules\\\\{ModuleName}",
+                "confidence": "high"
+              }
+            ],
+            "proposed_block": {
+              "enabled": true,
+              "root_paths": [
+                "app/Modules"
+              ],
+              "namespace_template": "App\\\\Modules\\\\{ModuleName}",
+              "agent_folder": "agents",
+              "skip_dirs": [
+                ".module-template",
+                ".example"
+              ]
+            }
+          }
+          "
+        `);
+        expect(mask(runTs(['--project', d]).stdout, d)).toMatchInlineSnapshot(`
+          "📦 Detected module-root candidates:
+
+            #  Path              Stack            Confidence  Namespace template
+            ─  ────────────────  ───────────────  ──────────  ────────────────────
+            1  app/Modules       laravel-hmvc     high        App\\Modules\\{ModuleName}
+
+          Suggested \`modules:\` block (paste into .agent-project-settings.yml):
+
+          modules:
+            enabled: true
+            root_paths: [app/Modules]
+            namespace_template: 'App\\Modules\\{ModuleName}'
+            agent_folder: agents
+            skip_dirs: [.module-template, .example]
+          "
+        `);
     });
-    it('unreachable project root exits 2 identically', () => {
-        const missing = path.join(mkTmp(), 'does-not-exist');
-        assertSame(['--project', missing]);
+
+    it('bad flag + unreachable project root exit 2', () => {
+        expect(runTs(['--bogus']).status).toBe(2);
+        expect(runTs(['--project', path.join(mkTmp(), 'does-not-exist')]).status).toBe(2);
     });
 });
