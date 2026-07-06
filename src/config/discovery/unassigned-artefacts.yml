@@ -36,6 +36,8 @@
   reason: scaffold for project deployment-order context
 - path: src/agent-src/templates/contexts/knowledge-card.md
   reason: fill-in skeleton for committed knowledge cards (evidence-first structure discovery / ADR-098); frontmatter is the example shape a filled card carries, not a runtime artefact
+- path: src/agent-src/templates/contexts/knowledge-pages.md
+  reason: convention doc for the typed agents/knowledge/ page directories (road-to-knowledge-system); documents the optional page frontmatter shape, carries none itself
 - path: src/agent-src/templates/contexts/lesson-card.md
   reason: fill-in skeleton for Class-C learned lessons (Evidence v2 project-intelligence); frontmatter is the example shape a filled lesson carries, not a runtime artefact
 - path: .agent-src.uncondensed/templates/contexts/observability.md
