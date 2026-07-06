@@ -67,9 +67,9 @@ source_refs:                   # files the build reads/changes, SHA-pinned (drif
   - { path: src/scripts/build_linear_digest.py, sha: <git-blob-sha> }
 assets: [T-001.assets/wireframe.png]   # relative to the bundle dir
 acceptance:                    # runnable AND isolation-testable; no prose-only
-  - "python3 src/scripts/lint_ticket_buildable.py exits 0"
+  - "./scripts-run src/scripts/lint_ticket_buildable exits 0"
 boundaries:                    # ENFORCED by the work_engine boundary guard
-  must_touch:    [src/scripts/lint_ticket_buildable.py]
+  must_touch:    [src/scripts/lint_ticket_buildable]
   may_touch:     [Taskfile.yml]
   must_not_touch: [src/scripts/work_engine/**, ".github/**"]
 ---
@@ -96,7 +96,7 @@ context spine or `source_refs`, the ticket is incomplete.
 
 ## 5. Self-containedness floor (per `model_tier`)
 
-Enforced by `lint_ticket_buildable.py`. A ticket FAILS the gate if its tier's
+Enforced by `lint_ticket_buildable`. A ticket FAILS the gate if its tier's
 row is not satisfied:
 
 | tier | acceptance | ≥1 concrete path | non-empty boundaries | resolvable assets | size floor |
@@ -182,7 +182,7 @@ Git LFS is **not** configured in this repo today, and wiring it (install +
 remote LFS store) is heavier than v1 needs. v1 decision: assets are git-tracked
 binaries under a **size cap** — ≤ 500 KB per asset — and authors prefer vector /
 text context (Mermaid, ASCII, SVG, example-I/O Markdown) over raster where it
-carries the same information. `lint_ticket_buildable.py` warns on any asset over
+carries the same information. `lint_ticket_buildable` warns on any asset over
 the cap. LFS is revisited only if `agents/tickets/**` binary weight is proven a
 real problem (same "defer until observed" discipline as the mutable-tickets
 mode). Non-binary design context lives as plain Markdown in the `.assets/` folder.

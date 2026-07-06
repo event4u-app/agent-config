@@ -139,3 +139,9 @@ Phase 4 must resolve these clusters:
 ## Lock
 
 Table locked at end of Phase 1. Subsequent eligibility or trigger changes go through a roadmap follow-up, not an in-place edit.
+
+**Scope + revisit-if** (per `decision-revisit-gate`): settled-by-decision,
+scoped to the 75 commands enumerated at lock time. Revisit-if: a new command
+is added without a classification, an existing command's eligibility default
+proves wrong in practice (surfaced too often / too rarely), or a tie-break
+cluster above needs a new member.

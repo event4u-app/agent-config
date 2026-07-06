@@ -92,7 +92,7 @@ trunk (that rot is exactly what the PR-gate replaces; see
 Run the deterministic sweep:
 
 ```bash
-python3 .augment/scripts/archive_completed_roadmaps.py   # --changed-only (default)
+./agent-config roadmap:archive   # --changed-only (default)
 ```
 
 It `git mv`s each completed roadmap (that this branch touched, per
@@ -178,7 +178,7 @@ github-api
 
 **Hard prohibitions** (each one cost 3+ extra tool calls in past runs):
 
-- ❌ `python3 -c "import urllib..."` / `python3 - <<PY ... PY` heredocs
+- ❌ `node -e "..."` / shell heredoc hacks
   to serialize the body or POST it.
 - ❌ `save-file PR_BODY.md` → read back → `curl -d @PR_BODY.md`.
 - ❌ `gh pr create --body-file …` shelling out when `github-api` is
@@ -252,24 +252,53 @@ Per `verbosity.post_action_reports` (default `minimal`):
   \`gh pr ready N\` to flip` when silent-draft (rule 4); omit on ready.
 - `full` → multi-line: PR number, URL, draft state, base/head, ready-reminder.
 
-#### 4c. Jira transition (only when transitioned)
+#### 4c. Status claims — verified facts only (MANDATORY)
+
+```
+NEVER STATE CI, CHECK, MERGEABILITY, OR DRAFT STATUS FROM ASSUMPTION.
+EVERY STATUS CLAIM IN THE REPLY CITES A COMMAND RUN THIS TURN.
+"BLOCKED" IS NEVER PARAPHRASED AS "CI IS STILL RUNNING".
+```
+
+Any statement about the PR's state — in the creation reply, after a
+conflict-resolution push, after ANY push to the PR branch — must be
+backed by fresh command output from the same reply:
+
+| Claim | Required evidence |
+|---|---|
+| Draft / ready | `gh pr view <n> --json isDraft` — quote the value |
+| CI green / red / running | `gh pr checks <n>` — report the actual fail list; a single `fail` row means FAIL, not "running" |
+| Mergeable / conflicts | `gh pr view <n> --json mergeable,mergeStateStatus` |
+
+`mergeStateStatus: BLOCKED` has several distinct causes (failing
+checks, draft state, missing reviews, branch protection). Resolving
+WHICH one requires `gh pr checks` — never guess the cause. If checks
+are still pending, say "pending" and name the pending jobs; never
+declare an outcome the output does not show.
+
+This is the [`direct-answers` Iron Law 2](../rules/direct-answers.md)
+live-state clause applied to the PR surface: git/PR/CI state decays
+silently and is NEVER reported from memory or inference.
+
+#### 4d. Jira transition (only when transitioned)
 
 Linked ticket + `routine_confirmations: true` → ask `1. Yes / 2. No`.
 Default (`false`) → skip silently. **Only emit a transition line when
 an actual Jira API call succeeded** — never announce "skipped".
 
-#### 4d. Settings short-circuit — single read per run
+#### 4e. Settings short-circuit — single read per run
 
 `verbosity.routine_confirmations`, `verbosity.post_action_reports`, and
 `commands.create_pr.preview_description` are read **once** at the top
 of the run and cached for the whole `/create-pr` invocation. Do **not**
-re-read `.agent-settings.yml` in 4b / 4c — both branches resolve from
+re-read `.agent-settings.yml` in 4b / 4d — both branches resolve from
 the cached values from step 1.
 
 When all three resolve to their silent defaults (`false` / `minimal` /
-`false`), steps 4b–4c collapse to the single `→ #N opened: <url>` line
-from 4b and a silent 4c. No extra file reads, no "checking settings…"
-narration, no confirmation prompts.
+`false`), steps 4b + 4d collapse to the single `→ #N opened: <url>` line
+from 4b and a silent 4d. No extra file reads, no "checking settings…"
+narration, no confirmation prompts. Step 4c is never collapsed — status
+claims always carry evidence.
 
 ### Rules
 

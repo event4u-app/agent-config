@@ -171,7 +171,7 @@ corpus. Canon is a gap-filler, never an override of a registered brand value.
    product → style → color → landing → typography with decision rules):
 
    ```bash
-   python3 <skills-root>/corpus-grounding/scripts/ground.py ground \
+   ./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
      --manifest <skills-root>/design-intelligence/data/manifest.json \
      "<product type + mood + platform>" --json
    ```
@@ -237,7 +237,7 @@ finding classes instead of ad-hoc judgment:
 Per-framework Do/Don't corpora (16 stacks) ride the same manifest:
 
 ```bash
-python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/design-intelligence/data/manifest.json \
   --stack react "list rerender memo" [--filter "Severity=HIGH"]
 ```

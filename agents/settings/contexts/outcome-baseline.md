@@ -35,7 +35,7 @@ launched from within the same ticket.
 **Measurement command.** Runs against a captured session log:
 
 ```bash
-python3 scripts/capture_showcase_session.py metrics \
+./scripts-run src/scripts/capture_showcase_session metrics \
   --session docs/showcase/sessions/<slug>.log \
   --metric tool-call-count
 ```
@@ -61,7 +61,7 @@ goal is short replies; long replies are a failure mode per
 **Measurement command.**
 
 ```bash
-python3 scripts/capture_showcase_session.py metrics \
+./scripts-run src/scripts/capture_showcase_session metrics \
   --session docs/showcase/sessions/<slug>.log \
   --metric reply-chars --bucket task-class
 ```
@@ -85,7 +85,7 @@ the session.
 (Phase 4.1 deliverable):
 
 ```bash
-python3 scripts/capture_showcase_session.py metrics \
+./scripts-run src/scripts/capture_showcase_session metrics \
   --session docs/showcase/sessions/<slug>.log \
   --metric memory-hit-ratio
 ```
@@ -112,7 +112,7 @@ rate is `first-try-passes / total-claims`.
 **Measurement command.**
 
 ```bash
-python3 scripts/capture_showcase_session.py metrics \
+./scripts-run src/scripts/capture_showcase_session metrics \
   --session docs/showcase/sessions/<slug>.log \
   --metric verify-pass-rate
 ```

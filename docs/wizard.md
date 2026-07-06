@@ -118,7 +118,7 @@ is unaffected.
 
 Suppress the auto-launch with `--no-ui`, `AGENT_CONFIG_NO_UI=1`, or
 by running in CI (`CI=1`). Preview the gate verdict without
-installing anything via `python3 scripts/install.py --dry-run`,
+installing anything via `npx @event4u/agent-config install --dry-run`,
 which prints a plan summary and exits 0 with zero filesystem
 writes.
 
@@ -147,7 +147,7 @@ With the GUI suppressed, pass profile + pack on the command line —
 `npx -y @event4u/agent-config init --no-ui --profile=developer
 --pack=engineering-base` — or hand-edit `.agent-settings.yml`
 directly. Preview the gate verdict and the planned writes with
-`python3 scripts/install.py --dry-run` (zero filesystem writes,
+`npx @event4u/agent-config install --dry-run` (zero filesystem writes,
 exits 0). Settings can still be hand-edited at any time; the GUI
 is opt-in, not required.
 

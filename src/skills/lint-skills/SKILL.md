@@ -40,7 +40,7 @@ Do NOT use when:
 ### 1. Inspect the environment
 
 Confirm `./scripts-run` is executable and the working directory is the agent-config
-repository root — the linter expects to find `.agent-src.uncondensed/skills/`
+repository root — the linter expects to find `src/skills/`
 and related directories relative to `cwd`.
 
 ### 2. Dispatch via the runtime layer

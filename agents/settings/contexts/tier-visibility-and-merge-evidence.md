@@ -73,6 +73,17 @@ into one flag yields fewer file entities and a clearer mental model — **not**
 load savings, and not "fewer subclasses loaded". Any future "consolidate to go
 leaner" argument must be made on maintainability grounds, not token-load.
 
+## Scope + revisit-if
+
+Per `decision-revisit-gate`: settled-by-evidence (sections 1–3 above are
+load-bearing measurements, not opinion). **Scope:** the metadata fields as
+they exist today (`tier`, `visibility`, `model_tier`) and the current
+lazy-load architecture. **Revisit-if:** the lazy-load mechanism changes (a
+future host eagerly materializes sub-commands), a new consumer starts reading
+file count as a cost signal, or the command/skill tree structure itself is
+redesigned — any of these would invalidate the "file count ≠ runtime load"
+argument this note locks in.
+
 ## See also
 
 - `docs/decisions/ADR-090-visibility-command-frontmatter-field.md` — the

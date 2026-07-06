@@ -32,7 +32,7 @@ not-installed pack, expands the `requires_hint` closure, and writes the
 overlay **atomically**):
 
 ```bash
-python3 -m scripts.config.session_profiles activate <name…> --json
+./scripts-run src/scripts/config/session_profiles activate <name…> --json
 ```
 
 - **Exit 0** → parse the JSON: `active_packs`, `closure_added`, `notes`.
@@ -49,7 +49,7 @@ Announce, using the helper's output:
 > surfaced: {N} commands, {M} skills ({H} hidden behind inactive packs)
 ```
 
-Get the counts from `python3 -m scripts.config.session_profiles show --json`.
+Get the counts from `./scripts-run src/scripts/config/session_profiles show --json`.
 
 ### 3. Re-bias the surface for the rest of the session
 
@@ -58,7 +58,7 @@ From now until `/profile deactivate` (or a new session), when the user asks
 set. Compute it with:
 
 ```bash
-python3 -m scripts.config.session_profiles surface --json
+./scripts-run src/scripts/config/session_profiles surface --json
 ```
 
 `shown` = surface these; `hidden` = do not list them proactively. Core /

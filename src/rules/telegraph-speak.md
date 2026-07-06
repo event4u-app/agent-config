@@ -82,5 +82,6 @@ Example: *"I will now check the file and see if it exists"* →
 
 - Input-side memory condensation (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of `speak_scope` — see [`condense-memory`](../skills/condense-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
 - Skills marked `token_budget_class: rich` are **exempt** from telegraph condensation + thin-projector trimming (gated by `tokens.rich_skills`, default `on`) — full model in [`token-budget-discipline`](token-budget-discipline.md).
+- Any telegraph/trim decision that would drop a net-positive change purely on budget grounds routes to [`token-budget-discipline § Value-over-budget escalation`](token-budget-discipline.md#value-over-budget-escalation) — surface the trade-off, don't auto-reject.
 
 Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).

@@ -112,7 +112,7 @@ any of:
 ## Re-running the harness
 
 ```bash
-python3 scripts/measure_frugality_savings.py
+./scripts-run src/scripts/measure_frugality_savings
 # appends one record to agents/.frugality-baseline.jsonl
 # diff against this ADR's locked numbers per PR
 ```

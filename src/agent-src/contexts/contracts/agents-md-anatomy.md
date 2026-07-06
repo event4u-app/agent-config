@@ -104,7 +104,7 @@ package edit touches the same hot file.
    `agents/settings/contexts/`, `docs/contracts/`, an existing rule body, or
    an existing skill body. Replace in-file with a substantive
    pointer. Never invent a new top-level dir.
-5. **Verify.** Run `python3 scripts/lint_agents_md.py` until green;
+5. **Verify.** Run `./scripts-run src/scripts/lint_agents_md` until green;
    `wc -c AGENTS.md` ≤ target cap; emergency-triage block intact.
 
 ## Common gotchas

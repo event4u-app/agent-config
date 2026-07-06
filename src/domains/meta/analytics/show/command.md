@@ -45,7 +45,7 @@ POSTs. Defaults to a 30-day window and markdown output.
 ### 2. Run the implementation
 
 ```bash
-python3 packages/core/installer/python/workspace_analytics.py \
+./agent-config analytics \
     show [--window=...] [--event=...] [--role=...] [--format=...]
 ```
 

@@ -27,7 +27,7 @@ A BUNDLED SCRIPT RESOLVES EVERY SIBLING ASSET VIA ITS OWN FILE LOCATION
 ```
 
 - The agent invokes bundled scripts with an **absolute or skills-root-
-  relative path**: `python3 <skills-root>/<name>/scripts/<tool>.py …`.
+  relative path**: `node_modules/.bin/tsx <skills-root>/<name>/scripts/<tool>.ts …`.
   `<skills-root>` = `~/.claude/skills` (Claude Code consumer install),
   the tool-specific projection dir for other agents, or `src/skills`
   inside this repo.

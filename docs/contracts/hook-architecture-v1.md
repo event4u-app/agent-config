@@ -25,12 +25,12 @@ Last refreshed: 2026-05-04.
 | **Concern** | A single agent-config behaviour wired to one or more lifecycle events — e.g. `chat-history`, `roadmap-progress`, `verify-before-complete`. Lives as a Python script under `scripts/hooks/concerns/<name>.py`. |
 | **Event** | The agent-config-internal event vocabulary the dispatcher exposes — `session_start`, `session_end`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`, `stop`, `pre_compact`, `agent_error`. Per-platform native names map to these. `agent_error` is synthetic — fired by the agent (or wrapper) when the host crashes outside a concern, so chat-history can checkpoint partial sessions on abnormal exit. (Added in Round 2 — 2026-05-04.) |
 | **Trampoline** | A 5–10 line per-platform shell script that reads the platform's native payload, calls the dispatcher with `--platform <name>`, and forwards the platform's exit-code semantics. |
-| **Dispatcher** | `scripts/hooks/dispatch_hook.py` — single Python entrypoint that reads the manifest, resolves which concerns fire on `(platform, event)`, runs each one with the contract envelope below, and reduces their exit codes. |
+| **Dispatcher** | `src/scripts/hooks/dispatch_hook.ts` — single Python entrypoint that reads the manifest, resolves which concerns fire on `(platform, event)`, runs each one with the contract envelope below, and reduces their exit codes. |
 
 ## Dispatcher invocation
 
 ```
-python3 scripts/hooks/dispatch_hook.py \
+./scripts-run src/scripts/hooks/dispatch_hook \
     --platform <name> \
     --event <agent-config-event> \
     [--native-event <platform-event>] \

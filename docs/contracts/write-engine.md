@@ -132,6 +132,9 @@ effects on disk.
   blending voices is deferred.
 - **No file writes.** The engine prints; the user copies. Saving the
   output to `agents/` or anywhere else is a future feature.
+- **Quote floor applies.** Any draft citing an external source follows
+  [`content-quoting-floor`](../../src/rules/content-quoting-floor.md) —
+  ≤15 words per quote, one quote per source, paraphrase by default.
 
 ## See also
 

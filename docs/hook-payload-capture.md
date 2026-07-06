@@ -26,7 +26,7 @@ cd /path/to/agent-config
 # Confirm the dispatcher is wired in this project (idempotent — safe to rerun).
 # Replace <platform> with cursor / cline / windsurf / gemini as appropriate
 # when you reach that platform's section.
-python3 scripts/install.py --<platform>
+npx @event4u/agent-config install --<platform>
 
 # Confirm the trampoline + project-scope hooks file landed.
 ./agent-config hooks:status | grep -E "^[ ✓✅⚠️❌·] (cursor|cline|windsurf|gemini)"
@@ -71,7 +71,7 @@ archive conversations.
 
 ### Cursor (~5 min)
 
-- **Install:** `python3 scripts/install.py --cursor` (project) or
+- **Install:** `npx @event4u/agent-config install --cursor` (project) or
   `--cursor-user-hooks` (covers every project you open).
 - **Restart:** quit Cursor (Cmd+Q on macOS), then relaunch from the
   shell where you exported `AGENT_HOOK_CAPTURE_DIR` so the env var
@@ -89,7 +89,7 @@ archive conversations.
 
 ### Cline (~5 min)
 
-- **Install:** `python3 scripts/install.py --cline` (project) or
+- **Install:** `npx @event4u/agent-config install --cline` (project) or
   `--cline-user-hooks` (user-scope, covers every workspace).
 - **Restart:** in VS Code or JetBrains, run "Developer: Reload
   Window" (Cmd+Shift+P) from a terminal where the env is exported.
@@ -108,7 +108,7 @@ archive conversations.
 
 ### Windsurf (~5 min)
 
-- **Install:** `python3 scripts/install.py --windsurf` (project) or
+- **Install:** `npx @event4u/agent-config install --windsurf` (project) or
   `--windsurf-user-hooks` (user-scope at `~/.codeium/windsurf/hooks.json`).
 - **Restart:** quit Cascade fully, then relaunch from the shell with
   the env exported. The `pre_user_prompt` event fires on every turn —
@@ -126,7 +126,7 @@ archive conversations.
 
 ### Gemini CLI (~5 min)
 
-- **Install:** `python3 scripts/install.py --gemini` (project) or
+- **Install:** `npx @event4u/agent-config install --gemini` (project) or
   `--gemini-user-hooks` (user-scope at `~/.gemini/settings.json`).
 - **Restart:** Gemini CLI is invoked per command — no daemon to
   restart. Just open a new shell with `AGENT_HOOK_CAPTURE_DIR`
@@ -179,7 +179,7 @@ After pasting and flipping the checkbox:
 ./scripts-run src/scripts/check_portability
 
 # Tests still green.
-python3 -m pytest tests/hooks/ -q
+node node_modules/.bin/vitest run tests/scripts/hooks/ -q
 
 # Optional: regenerate the dashboard if the archived roadmap's
 # checkbox change should bubble up. Iron Law from

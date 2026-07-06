@@ -39,7 +39,7 @@ tasks:
       - |
         command -v docker >/dev/null 2>&1 || { echo "❌  docker not found — install Docker to run the glama-parity test"; exit 1; }
       - docker build -f internal/glama/Dockerfile -t agent-config-mcp-glama-test .
-      - docker run --rm agent-config-mcp-glama-test /opt/venv/bin/python /app/internal/glama/smoke.py
+      - docker run --rm agent-config-mcp-glama-test node /app/node_modules/.bin/tsx /app/internal/glama/smoke.ts
 
   # ---------------------------------------------------------------------------
   # Cloudflare hosted MCP — one-time operator setup.
