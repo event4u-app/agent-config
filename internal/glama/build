@@ -13,12 +13,8 @@
 #
 # The MCP server is a TypeScript module (`src/scripts/mcp_server/`) run via
 # tsx (Node) — its serving transport is the npm `@modelcontextprotocol/sdk`.
-# The glama-parity smoke (`smoke.py`) acts as an MCP *client* and still uses
-# the Python `mcp` SDK, so this build provisions both runtimes:
-#   1. Node deps (tsx + the MCP SDK) via `npm ci`.
-#   2. A Python venv with just the `mcp` client SDK for the smoke.
+# The smoke client (`smoke.ts`) also uses the npm MCP SDK, so only Node deps
+# are needed.
 set -euo pipefail
 
 npm ci
-uv venv /opt/venv
-uv pip install --python /opt/venv/bin/python mcp

@@ -1,7 +1,7 @@
 # Ticket Template
 
 Authoring template for ticket files stored in `agents/tickets/{roadmap-slug}/T-NNN-{slug}.md`.
-One ticket = one Markdown build contract, consumed by `emit-tickets`, `lint_ticket_buildable.py`,
+One ticket = one Markdown build contract, consumed by `emit-tickets`, `lint_ticket_buildable`,
 and `/implement-ticket`. Schema locked by ADR-101; full doctrine in
 [`docs/contracts/ticket-bundle-format.md`](../docs/contracts/ticket-bundle-format.md).
 
@@ -15,7 +15,7 @@ and `/implement-ticket`. Schema locked by ADR-101; full doctrine in
 3. **`model_tier`** declares who may build (`lite | medium | high` per ADR-035). Choose
    conservatively — a failing `lite` auto-escalates to `medium`.
 4. **`acceptance` must be runnable AND isolation-testable** — no prose-only criteria.
-   Hard gate for `lite` tickets (enforced by `lint_ticket_buildable.py`).
+   Hard gate for `lite` tickets (enforced by `lint_ticket_buildable`).
 5. **`boundaries` must be non-empty for `lite`.** At least one `must_touch` or `must_not_touch`.
 6. **SHA-pin both ref lists.** `adr_refs` drift = HARD block; `source_refs` drift = WARN only.
    Pin with `git rev-parse HEAD:path/to/file`.
@@ -49,12 +49,12 @@ blocked_by: []                 # dependency edges, must be acyclic
 adr_refs:
   - { path: docs/decisions/ADR-101-ticket-bundle-emission.md, sha: <git-blob-sha> }
 source_refs:
-  - { path: lint_ticket_buildable.py, sha: <git-blob-sha> }
+  - { path: lint_ticket_buildable, sha: <git-blob-sha> }
 assets: none                   # or: [T-001.assets/wireframe.png]
 acceptance:
-  - "python3 lint_ticket_buildable.py agents/tickets/x/ exits 0"
+  - "./scripts-run src/scripts/lint_ticket_buildable agents/tickets/x/ exits 0"
 boundaries:
-  must_touch:     [lint_ticket_buildable.py]
+  must_touch:     [lint_ticket_buildable]
   may_touch:      [Taskfile.yml]
   must_not_touch: ["src/scripts/work_engine/**", ".github/**"]
 ---
@@ -67,7 +67,7 @@ boundaries:
 
 {Exact paths the builder needs — no searching required. Include:}
 
-- `lint_ticket_buildable.py:42` — the export entry point; extend `run()` here
+- `lint_ticket_buildable:42` — the export entry point; extend `run()` here
 - `agents/tickets/{slug}/manifest.yml` — the manifest this ticket reads
 - `src/scripts/schemas/ticket-manifest.schema.json` — the schema to validate against
 
@@ -90,13 +90,13 @@ boundaries:
 All criteria are in the frontmatter `acceptance` list. Reproduce them here for
 inline reference:
 
-- `python3 lint_ticket_buildable.py agents/tickets/x/ exits 0`
+- `./scripts-run src/scripts/lint_ticket_buildable agents/tickets/x/ exits 0`
 - {additional runnable check}
 
 ## Quality gates
 
 ```bash
-python3 src/scripts/lint_ticket_buildable.py agents/tickets/road-to-xyz/
+./scripts-run src/scripts/lint_ticket_buildable agents/tickets/road-to-xyz/
 # Check project Taskfile.yml / Makefile for additional narrow checks
 ```
 

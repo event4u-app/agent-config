@@ -63,17 +63,17 @@ under `dark.semantic.*` overriding the same semantic names (emitted as a
 
 ```bash
 # tokens.json → CSS variables (primitives + semantic + components + .dark)
-python3 <skills-root>/design-tokens/scripts/tokens.py generate \
+./scripts-run <skills-root>/design-tokens/scripts/tokens generate \
   --config tokens.json -o assets/design-tokens.css
 
 # tokens.json → Tailwind theme.extend.colors snippet
-python3 …/tokens.py generate --config tokens.json --format tailwind
+./scripts-run …/tokens generate --config tokens.json --format tailwind
 
 # token-discipline lint: hardcoded hex/rgb/px/rem outside token files
-python3 …/tokens.py validate --dir src/ [--json]
+./scripts-run …/tokens validate --dir src/ [--json]
 
 # embeddable inline CSS for standalone HTML artifacts
-python3 …/tokens.py embed --tokens assets/design-tokens.css --minimal --style
+./scripts-run …/tokens embed --tokens assets/design-tokens.css --minimal --style
 ```
 
 `validate --json` emits findings with `"kind": "token_violation"` — the

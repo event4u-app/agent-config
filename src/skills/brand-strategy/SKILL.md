@@ -35,7 +35,7 @@ Grounding skill. Consults the brand corpus to surface archetype, positioning, vo
 2. **Ground via the corpus.** Run the corpus engine for each required domain. Start with archetype, then voice, then messaging:
 
 ```bash
-python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<sector + audience + intent>" --domain archetype --json
 ```

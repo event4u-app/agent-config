@@ -66,15 +66,16 @@ If the lookup helper does not yet support `--priority`, fall back to a
 file-only sweep:
 
 ```bash
-python3 - <<'PY'
-import pathlib, yaml
-for f in sorted(pathlib.Path("agents/memory").rglob("*.yml")):
-    data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-    for e in data.get("entries", []) or []:
-        if e.get("priority") == "critical" and e.get("status") == "active":
-            print(f"--- {f.parent.name}/{e.get('id')}")
-            print(yaml.safe_dump(e, sort_keys=False), end="")
-PY
+node -e '
+const fs = require("fs"), path = require("path"), yaml = require("js-yaml");
+const glob = (dir) => fs.readdirSync(dir, {recursive: true}).filter(f => f.endsWith(".yml")).map(f => path.join(dir, f));
+for (const f of glob("agents/memory").sort()) {
+    const data = yaml.load(fs.readFileSync(f, "utf8")) || {};
+    for (const e of data.entries || [])
+        if (e.priority === "critical" && e.status === "active")
+            console.log("---", path.basename(path.dirname(f)) + "/" + e.id, "\n" + yaml.dump(e, {sortKeys: false}));
+}
+'
 ```
 
 The Tier-0 slice is surfaced once per `/memory:load` invocation, even
@@ -88,7 +89,7 @@ Before loading, count the entries:
 
 ```bash
 ./agent-config memory:lookup --types <type> --format json | \
-  python3 -c "import sys, json; print(len(json.load(sys.stdin)))"
+  node -e "const d = []; process.stdin.on('data', c => d.push(c)); process.stdin.on('end', () => console.log(JSON.parse(d.join('')).length))"
 ```
 
 If the count exceeds 25, warn:
@@ -131,7 +132,7 @@ After step 4, count unreviewed intake entries for the same type:
 
 ```bash
 ./agent-config memory:lookup --types <type> --intake-only --format json | \
-  python3 -c "import sys, json; print(len(json.load(sys.stdin)))"
+  node -e "const d = []; process.stdin.on('data', c => d.push(c)); process.stdin.on('end', () => console.log(JSON.parse(d.join('')).length))"
 ```
 
 Read `memory.review_threshold` from `.agent-settings.yml` (default 10).

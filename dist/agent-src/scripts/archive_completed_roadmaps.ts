@@ -28,9 +28,9 @@
  * annotation is required — completion is detected from the checkbox counts.
  *
  * Usage:
- *     python3 scripts/archive_completed_roadmaps.py            # --changed-only (default)
- *     python3 scripts/archive_completed_roadmaps.py --all
- *     python3 scripts/archive_completed_roadmaps.py --base origin/main --dry-run
+ *     ./scripts-run src/scripts/archive_completed_roadmaps            # --changed-only (default)
+ *     ./scripts-run src/scripts/archive_completed_roadmaps --all
+ *     ./scripts-run src/scripts/archive_completed_roadmaps --base origin/main --dry-run
  *
  * --- Parity notes (ADR-200) ---
  *

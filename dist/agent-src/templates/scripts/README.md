@@ -127,13 +127,13 @@ gh label delete risk:low risk:medium risk:high
 ## Verifying locally
 
 ```bash
-python3 scripts/pr_risk_review.py \
+./scripts-run src/agent-src/templates/scripts/pr_risk_review \
   --base origin/main --head HEAD \
   --config .github/pr-risk-config.yml \
   --output /tmp/risk-report.md \
   --level-file /tmp/risk-level.txt
 
-python3 scripts/pr_review_routing.py \
+./scripts-run src/agent-src/templates/scripts/pr_review_routing \
   --base origin/main --head HEAD \
   --ownership-map .github/ownership-map.yml \
   --patterns .github/historical-bug-patterns.yml \
@@ -185,7 +185,7 @@ whatever is under `agents/memory/`. Trigger manually with
 ## Verifying locally
 
 ```bash
-python3 scripts/check_memory.py --path agents/memory
+./scripts-run src/scripts/check_memory --path agents/memory
 ```
 
 Exit `0` = clean, `1` = violations (missing required fields, duplicate

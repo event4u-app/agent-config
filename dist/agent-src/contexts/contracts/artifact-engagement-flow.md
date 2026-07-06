@@ -213,7 +213,7 @@ rule listed above:
 
 ```bash
 # Validate every line against the schema + redaction floor
-python3 -c '
+node -e '
 import pathlib, sys
 sys.path.insert(0, ".agent-src.uncondensed/templates/scripts")
 from telemetry.engagement import EngagementSchemaError, parse_event
@@ -232,7 +232,7 @@ print(f"{ok} valid, {bad} rejected")
 '
 
 # A bad-line spot-check that does not depend on the validator
-python3 -c '
+node -e '
 import json, pathlib, re
 forbidden = re.compile(r"[/\\\\]|\.[a-z0-9]{1,10}$", re.IGNORECASE)
 for line in pathlib.Path(".agent-engagement.jsonl").read_text().splitlines():

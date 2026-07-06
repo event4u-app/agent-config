@@ -681,7 +681,7 @@ Options:
 ```
 
 The underlying stages keep their own CLI surfaces:
-`bash scripts/install.sh --help` and `python3 scripts/install.py --help`.
+`bash scripts/install.sh --help` and `npx @event4u/agent-config install --help`.
 
 ---
 

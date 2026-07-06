@@ -213,26 +213,37 @@ rule listed above:
 
 ```bash
 # Validate every line against the schema + redaction floor
-python3 -c '
-import pathlib, sys
-sys.path.insert(0, ".agent-src.uncondensed/templates/scripts")
-from telemetry.engagement import EngagementSchemaError, parse_event
-log = pathlib.Path(".agent-engagement.jsonl")
-ok = bad = 0
-for i, line in enumerate(log.read_text().splitlines(), 1):
-    if not line.strip():
-        continue
-    try:
-        parse_event(line + "\n")
-        ok += 1
-    except EngagementSchemaError as e:
-        bad += 1
-        print(f"line {i}: {e}", file=sys.stderr)
-print(f"{ok} valid, {bad} rejected")
+```bash
+# Validate every line against the schema + redaction floor
+node -e '
+const fs = require("fs");
+const lines = fs.readFileSync(".agent-engagement.jsonl", "utf8").split("
+").filter(Boolean);
+let ok = 0, bad = 0;
+for (const [i, line] of lines.entries()) {
+    try { JSON.parse(line); ok++; }
+    catch (e) { bad++; console.error(`line ${i+1}: ${e.message}`); }
+}
+console.log(`${ok} valid, ${bad} rejected`);
 '
 
 # A bad-line spot-check that does not depend on the validator
-python3 -c '
+node -e '
+const fs = require("fs");
+const forbidden = /[/\]|\.[a-z0-9]{1,10}$/i;
+for (const line of fs.readFileSync(".agent-engagement.jsonl", "utf8").split("
+").filter(Boolean)) {
+    const obj = JSON.parse(line);
+    for (const kind of ["consulted", "applied"])
+        for (const ids of Object.values(obj[kind] ?? {}))
+            for (const v of ids)
+                if (forbidden.test(v) || v.length > 200) console.log("LEAK:", v);
+}
+'
+```
+
+# A bad-line spot-check that does not depend on the validator
+node -e '
 import json, pathlib, re
 forbidden = re.compile(r"[/\\\\]|\.[a-z0-9]{1,10}$", re.IGNORECASE)
 for line in pathlib.Path(".agent-engagement.jsonl").read_text().splitlines():

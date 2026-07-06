@@ -19,7 +19,7 @@ up `roles.active_role` from `.agent-settings.yml`.
 Under the hood the command runs:
 
 ```bash
-python3 scripts/skill_discovery.py --role sales
+./scripts-run src/scripts/skill_discovery --role sales
 ```
 
 ## 2. Read the `why` column

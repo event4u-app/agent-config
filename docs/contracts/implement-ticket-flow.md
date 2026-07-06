@@ -101,7 +101,7 @@ A v0 file (no `version` key, ticket under flat `ticket`) is
 upgraded by `work_engine.migration.v0_to_v1`:
 
 ```bash
-python3 -m work_engine.migration.v0_to_v1 .implement-ticket-state.json
+node agent-config-templates/scripts/work_engine/migration/v0_to_v1.js .implement-ticket-state.json
 ```
 
 The migration:

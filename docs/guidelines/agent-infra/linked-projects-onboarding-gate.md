@@ -28,8 +28,8 @@ recorded decision (opted-in or declined).
 Run the detector against the project root:
 
 ```bash
-python3 -c "from scripts._lib.linked_projects import detect_linked_projects; \
-import json,sys; print(json.dumps(detect_linked_projects('.')))"
+./scripts-run src/scripts/_lib/linked_projects detect .
+
 ```
 
 It returns config-attached siblings only (PhpStorm `.idea/modules.xml` +

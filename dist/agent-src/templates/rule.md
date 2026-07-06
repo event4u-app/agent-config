@@ -9,7 +9,7 @@
 1. Pick a kebab-case `{rule-name}` matching the file stem.
 2. Copy the template below into `.agent-src.uncondensed/rules/{rule-name}.md`.
 3. Replace placeholders, drop sections that don't apply.
-4. Run `task lint-skills` and `python3 scripts/lint_load_context.py`.
+4. Run `task lint-skills` and `./scripts-run src/scripts/lint_load_context`.
 5. Condense: `bash scripts/condense.sh --changed` then follow the agent flow.
 
 ## Path conventions — load-bearing

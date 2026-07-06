@@ -36,7 +36,7 @@
 ## How to use
 
 1. Select the style through the grounding engine first:
-   `python3 <skills-root>/corpus-grounding/scripts/ground.py search
+   `./scripts-run <skills-root>/corpus-grounding/scripts/ground search
    --manifest <skills-root>/design-intelligence/data/manifest.json
    --domain style "<product + mood>"`.
 2. Open the matching spec file and lift its token system (colors,

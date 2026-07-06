@@ -41,7 +41,7 @@ The path a new contributor walks on day one. Visible in
 2. **Stable surface.** The command name + flag set has not changed
    in the last two minor releases (or is brand-new with a
    commitment to two-release stability).
-3. **No prerequisite tooling beyond `bash` + `python3`.** Docker,
+3. **No prerequisite tooling beyond `bash` + `node`.** Docker,
    GPG, jq, gh CLI, npm globals are all Tier-1+ territory.
 4. **Cited in the `init → sync → validate → work` outcome path.**
    Setup helpers (`first-run`, `keys:install-*`) and AI-Council entry

@@ -28,9 +28,9 @@ recall/precision must be re-measured.
 2. **Run the live trigger-eval** (token spend — interactive, gated):
 
    ```bash
-   task setup-evals            # once: bootstrap .venv with the pinned anthropic SDK
+   
    task install-anthropic-key  # once: install ~/.event4u/agent-config/anthropic.key
-   .venv/bin/python3 src/scripts/skill_trigger_eval.py \
+   ./scripts-run src/scripts/skill_trigger_eval \
      --skill <skill> --output /tmp/<skill>-eval.json
    ```
 

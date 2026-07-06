@@ -154,7 +154,7 @@ manually so the dashboard or another tool can read the latest
 counters, run:
 
 ```bash
-python3 scripts/context_hygiene_hook.py < /dev/null
+./scripts-run src/scripts/context_hygiene_hook < /dev/null
 ```
 
 The script reads from stdin if a JSON envelope is provided and

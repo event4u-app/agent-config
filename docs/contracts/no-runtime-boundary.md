@@ -57,5 +57,5 @@ and violating the no-runtime principle).
 ## Decision authority
 
 A mission step that is unclear against this contract goes to the AI Council
-(`python3 src/scripts/council_cli.py`) before any build work starts.
+(`./scripts-run src/scripts/council_cli`) before any build work starts.
 The council verdict becomes an ADR if it changes this table.

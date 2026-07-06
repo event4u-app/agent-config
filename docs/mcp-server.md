@@ -44,7 +44,7 @@ task mcp:setup            # maintainer / dev repo
 ./agent-config mcp:setup  # consumer projects (uses the package CLI wrapper)
 ```
 
-Either form creates `.venv-mcp/` (Python 3.11+), installs the `mcp` SDK, and
+Either form verifies that `tsx` + the server module are present and
 prints the client config snippet. Run once per checkout.
 
 If you do not have `task` or the CLI wrapper available:
@@ -60,8 +60,8 @@ task mcp:run            # maintainer / dev repo
 ./agent-config mcp:run  # consumer projects
 ```
 
-Both forms launch `python -m scripts.mcp_server` over stdio against the
-local `.venv-mcp/`. Use these for ad-hoc smoke tests; long-running clients
+Both forms launch the TypeScript MCP server over stdio via `tsx`. Use these for
+
 (Claude Desktop, Cursor, Zed, Continue) launch the server themselves via
 the config snippets below.
 
@@ -76,8 +76,8 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 {
   "mcpServers": {
     "agent-config": {
-      "command": "/absolute/path/to/agent-config/.venv-mcp/bin/python",
-      "args": ["-m", "scripts.mcp_server"],
+      "command": "/absolute/path/to/agent-config/node_modules/.bin/tsx",
+      "args": ["/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts"],
       "cwd": "/absolute/path/to/agent-config"
     }
   }
@@ -95,8 +95,8 @@ appear under the connector dropdown.
 {
   "mcpServers": {
     "agent-config": {
-      "command": "/absolute/path/to/agent-config/.venv-mcp/bin/python",
-      "args": ["-m", "scripts.mcp_server"],
+      "command": "/absolute/path/to/agent-config/node_modules/.bin/tsx",
+      "args": ["/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts"],
       "cwd": "/absolute/path/to/agent-config"
     }
   }
@@ -112,8 +112,8 @@ appear under the connector dropdown.
   "context_servers": {
     "agent-config": {
       "command": {
-        "path": "/absolute/path/to/agent-config/.venv-mcp/bin/python",
-        "args": ["-m", "scripts.mcp_server"]
+        "path": "/absolute/path/to/agent-config/node_modules/.bin/tsx",
+        "args": ["/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts"]
       },
       "settings": {}
     }
@@ -128,8 +128,8 @@ appear under the connector dropdown.
 ```yaml
 mcpServers:
   - name: agent-config
-    command: /absolute/path/to/agent-config/.venv-mcp/bin/python
-    args: ["-m", "scripts.mcp_server"]
+    command: /absolute/path/to/agent-config/node_modules/.bin/tsx
+    args: [/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts]
     cwd: /absolute/path/to/agent-config
 ```
 
@@ -149,7 +149,6 @@ boots cleanly:
 | Symptom | Fix |
 |---|---|
 | Client shows no prompts | Confirm the `cwd` points at the repo root (where `dist/agent-src/` lives), not at `scripts/`. |
-| `ModuleNotFoundError: mcp` | Re-run `task mcp:setup`. The MCP runtime is isolated in `.venv-mcp/` — the project's base Python 3.9 deliberately does not see it. |
 | Stale prompts after editing | Hot-reload triggers on mtime; touch the file or reissue `resources/list`. |
 | Client refuses to start the server | Check the client's log for the full command. Most clients require **absolute** paths in `command` and `cwd`. |
 

@@ -17,7 +17,7 @@ plain-language "this skill will…" summary. It surfaces:
 - its **execution type** (`manual` / `assisted` / `automated`, default `manual`) and **handler**
   (`none` / `shell` / `php` / `node` / `internal`);
 - its declared **`allowed_tools`**;
-- any **file or command targets** named in the body (backtick paths, `python3 scripts/…` invocations).
+- any **file or command targets** named in the body (backtick paths, `./scripts-run src/scripts/…` invocations).
 
 ## Explicit non-goals
 
