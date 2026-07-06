@@ -39,8 +39,8 @@ Do NOT use when:
 
 ### 1. Inspect the environment
 
-Confirm the working directory is the agent-config
-repository root — the linter expects to find `.agent-src.uncondensed/skills/`
+Confirm `./scripts-run` is executable and the working directory is the agent-config
+repository root — the linter expects to find `src/skills/`
 and related directories relative to `cwd`.
 
 ### 2. Dispatch via the runtime layer
@@ -64,7 +64,7 @@ Check the returned `ExecutionResult`:
 - `exit_code: 1` → warnings only — review `stdout` for the listed warnings
 - `exit_code: 2` → errors present — fix the flagged files before continuing
 - `status: timeout` → the linter exceeded `timeout_seconds` — investigate
-- `status: error` → the interpreter could not launch — check that `node`
+- `status: error` → the runner could not launch — check that `./scripts-run`
   is on `PATH` and the repository root is the current working directory
 
 ## Output format

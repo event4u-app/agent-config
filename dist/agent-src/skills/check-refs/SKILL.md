@@ -66,7 +66,7 @@ Check the returned `ExecutionResult`:
 - `exit_code: 1` → at least one broken reference — read `stdout` for file,
   line, and the offending ref, then fix the source or update the target
 - `status: timeout` → the checker exceeded `timeout_seconds` — investigate
-- `status: error` → interpreter or script missing — confirm `node` and
+- `status: error` → runner or script missing — confirm `./scripts-run` and
   `src/scripts/check_references.ts` are available at the repository root
 
 ## Output format

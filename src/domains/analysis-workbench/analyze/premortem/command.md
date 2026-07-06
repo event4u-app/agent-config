@@ -82,11 +82,11 @@ If the analysis surfaces a pattern worth preserving for future plans:
 
 3. Surface the candidate to the user and ask:
 
-> 1. Propose this candidate to `/memory propose` (recommended)
+> 1. Propose this candidate to `/memory propose`
 > 2. Refine before proposing — suggest changes
 > 3. Skip memory candidate for now
 
-**Empfehlung:** 1
+**Recommendation:** 1
 
 ### Rules
 

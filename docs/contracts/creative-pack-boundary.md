@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Creative Pack boundary — video is an optional pack, not core identity
 
 The `ai-video` (Creative) pack is a **bounded, optional** capability: a first-class

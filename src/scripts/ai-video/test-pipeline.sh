@@ -26,7 +26,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 PROJECT="$ROOT/agents/reference/ai-video/examples/banana-arc"
 
 PASS=0

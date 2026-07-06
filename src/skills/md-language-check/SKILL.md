@@ -114,7 +114,7 @@ proceeds on exit `0`.
 ## Do NOT
 
 - Do NOT silence the checker by deleting trigger words from
-  `scripts/check_md_language.py`; extend the allow-list (anchor
+  `src/scripts/check_md_language.ts`; extend the allow-list (anchor
   blocks, ignore marker) instead
 - Do NOT add the ignore marker to body prose just to push a save
   through; the marker is for meta-documentation that quotes tokens,

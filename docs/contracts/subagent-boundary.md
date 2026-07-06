@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Subagent Boundary Contract
 
 What a subagent **owns** and what it must **never** own. As delegation spreads

@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # No-Runtime Boundary Contract
 
 > **Audience:** Every Mission-Mode decision, skill author, and recipe reviewer.

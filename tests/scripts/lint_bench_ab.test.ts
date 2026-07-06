@@ -17,7 +17,7 @@ describe('lint_bench_ab — exported contract', () => {
         // docs/benchmark.md is the v2 discipline-axis report; the v1
         // Headline/Track-A/Track-B/History structure was retired.
         expect(ba.REQUIRED_SECTIONS).toContain('## Honesty labels');
-        expect(ba.REQUIRED_SECTIONS).toContain('## Gate verdict');
+        expect(ba.REQUIRED_SECTIONS).toContain('Gate verdict:');
         expect(ba.REQUIRED_SECTIONS.length).toBe(3);
     });
     it('resolves the bench corpus paths under internal/bench', () => {

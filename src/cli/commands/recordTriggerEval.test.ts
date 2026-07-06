@@ -18,7 +18,7 @@ let evalPath: string;
 
 const MANIFEST = {
     upstream: {
-        repo: 'https://github.com/nextlevelbuilder/ui-ux-pro-max-skill',
+        repo: 'https://github.com/example-org/example-upstream-skill',
         sha: 'b7e3af80f6e331f6fb456667b82b12cade7c9d35',
         last_checked: '2026-06-07',
     },

@@ -1,18 +1,15 @@
 ---
 name: premortem
 description: "Use before committing to a heavy or irreversible plan — imagine it's 6 months later and this failed; enumerate why, score each mode, derive early-warning signals and preventive guardrails."
-source: package
 domain: quality
 model_tier: high
 workspaces:
   - engineering
 packs:
   - analysis-workbench
-lifecycle: active
 trust:
   level: professional
   confidence: medium
-  human_review_required: false
 install:
   default: false
   removable: true

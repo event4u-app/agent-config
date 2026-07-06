@@ -48,16 +48,16 @@ Do NOT use when:
 
 ## Preconditions
 
-- ADR directory exists. Two layouts coexist (see
+- An ADR directory exists. Two layouts coexist (see
   [`docs/contracts/adr-layout.md`](../../../docs/contracts/adr-layout.md)):
   - **Flat** — `docs/decisions/` (or `docs/adr/` alias): cross-cutting
     governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
   - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
-    numbering (`NNNN-<slug>.md`); `<area>` must match canonical
+    numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
     inventory in [`scripts/audit_adr_coverage.py`](../../../scripts/audit_adr_coverage.py).
-- Decision **already made** — ADRs record outcomes, not run the
-  decision process. For unresolved trade-offs, run council or
-  consult `adversarial-review` first.
+- The decision is **already made** — ADRs record outcomes, they do
+  not run the decision process. For unresolved trade-offs, run the
+  council or consult `adversarial-review` first.
 
 ## Procedure
 
@@ -65,31 +65,31 @@ Do NOT use when:
 
 Ask one question only if both are plausible:
 
-1. **Flat surface** — decision constrains package's contract with
-   consumers (kernel composition, rule taxonomy, package-wide
-   architecture). Directory: `docs/decisions/` (fallback
-   `docs/adr/`). Filename: `ADR-NNN-<slug>.md`.
-2. **Per-area surface** — decision constrains code inside one area
-   folder (one runtime module, one contract group, one CLI surface).
-   Directory: `docs/adrs/<area>/`. Filename: `NNNN-<slug>.md`
-   (4-digit, no `ADR-` prefix).
-3. **Unknown area** — `<area>` not in inventory: refuse with hint
-   to add area to `AREAS` in `scripts/audit_adr_coverage.py` in
-   same PR. Do not invent.
+1. **Flat surface** — chosen when the decision constrains the
+   package's contract with consumers (kernel composition, rule
+   taxonomy, package-wide architecture). Directory: `docs/decisions/`
+   (fallback `docs/adr/`). Filename: `ADR-NNN-<slug>.md`.
+2. **Per-area surface** — chosen when the decision constrains code
+   inside one area folder (one runtime module, one contract group,
+   one CLI surface). Directory: `docs/adrs/<area>/`. Filename:
+   `NNNN-<slug>.md` (4-digit, no `ADR-` prefix).
+3. **Unknown area** — `<area>` not in the inventory: refuse with a
+   hint to add the area to `AREAS` in
+   `scripts/audit_adr_coverage.py` in the same PR. Do not invent.
 4. **In doubt** → per-area (cheaper to surface, easier to relocate).
 
 ### 2. Pick the next ADR number
 
 - **Flat surface** — scan `docs/decisions/` (or `docs/adr/`) for
-  `ADR-*.md`, parse leading 3-digit number, take `max + 1`
-  (zero-padded to 3). Empty directory → start at `001`.
+  `ADR-*.md`, parse the leading 3-digit number, take `max + 1`
+  (zero-padded to 3). For an empty directory, start at `001`.
 - **Per-area surface** — scan `docs/adrs/<area>/` for
-  `[0-9][0-9][0-9][0-9]-*.md`, parse leading 4-digit number, take
-  `max + 1` (zero-padded to 4). Empty area → start at `0001`.
-  `README.md` is **not** an ADR — skip it.
+  `[0-9][0-9][0-9][0-9]-*.md`, parse the leading 4-digit number,
+  take `max + 1` (zero-padded to 4). For an empty area, start at
+  `0001`. `README.md` is **not** an ADR — skip it.
 
-Reject re-use of existing number — index regeneration treats
-duplicates as hard failure on both surfaces.
+Reject re-use of an existing number — index regeneration treats
+duplicates as a hard failure on both surfaces.
 
 ### 3. Pick a slug
 
@@ -100,9 +100,9 @@ directory. Examples: `kernel-swap-deferred`, `flat-cluster-subs`,
 
 ### 4. Author the ADR
 
-Use surface-specific template. All sections required; "—" acceptable
-for genuinely empty Alternatives or References blocks but never for
-Status, Context, Decision, or Consequences.
+Use the surface-specific template. All sections are required; "—"
+is acceptable for genuinely empty Alternatives or References blocks
+but never for Status, Context, Decision, or Consequences.
 
 **Flat-surface template** (`docs/decisions/ADR-NNN-<slug>.md`):
 
@@ -138,7 +138,7 @@ phase: <roadmap> · <phase-id>
 ## Context / Decision / Considered alternatives / Consequences / References
 ```
 
-Per-area ADRs use quote-style header (no YAML frontmatter) so
+Per-area ADRs use a quote-style header (no YAML frontmatter) so
 `audit_adr_coverage.py`'s permissive parser can index them. Cite
 the area's contract from the README in
 [`docs/adrs/<area>/README.md`](../../../docs/adrs/).
@@ -156,11 +156,15 @@ the area's contract from the README in
 
 - Flat: `./scripts-run src/scripts/adr/regenerate_index --check` exits 0.
 - Per-area: `./scripts-run src/scripts/audit_adr_coverage --check` exits 0.
-- Project's CI / quality pipeline passes locally.
+- The project's CI / quality pipeline passes locally.
 
 ## Rubric pass (optional, surfacing-only)
 
-After drafting ADR, run [`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md) with rubric `architecture-score` to confirm alternatives, consequences, reversibility, risk present. Invoke when user asks for completeness check — not on every ADR.
+After drafting an ADR, run
+[`judge-artifact-completeness`](../judge-artifact-completeness/SKILL.md)
+with rubric `architecture-score` to confirm alternatives, consequences,
+reversibility, and risk are present. Invoke when the user asks for a
+completeness check — not on every ADR by default.
 
 ## Output format
 
@@ -172,17 +176,19 @@ After drafting ADR, run [`judge-artifact-completeness`](../judge-artifact-comple
 ## Gotchas
 
 - **Flat default path** is `docs/decisions/` in this package; some
-  projects use `docs/adr/`. Pass `--dir` when running outside default.
-- **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); flat surface
-  stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
-- **Area inventory closed** — `<area>` must already exist in `AREAS`
-  in `scripts/audit_adr_coverage.py`. Adding new area is separate
-  PR with explicit reviewer sign-off.
-- Frontmatter `adr:` (flat) is canonical number; filename prefix
-  must match. Flat regenerator fails on mismatch.
-- ADRs are append-only history. To revise, write new ADR with
-  `supersedes: ADR-MMM` (flat) or `Supersedes:` line in header
-  quote-block (per-area) and flip old one's status to `superseded`.
+  projects use `docs/adr/`. Pass `--dir` when running outside the
+  default.
+- **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); the flat
+  surface stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
+- **Area inventory is closed** — `<area>` must already exist in
+  `AREAS` in `scripts/audit_adr_coverage.py`. Adding a new area is
+  a separate PR with explicit reviewer sign-off.
+- Frontmatter `adr:` (flat) is the canonical number; the filename
+  prefix must match. The flat regenerator fails on mismatch.
+- ADRs are append-only history. To revise a decision, write a new
+  ADR with `supersedes: ADR-MMM` (flat) or a `Supersedes:` line in
+  the header quote-block (per-area) and flip the old one's status
+  to `superseded`.
 - Never delete an ADR file — supersede it. Deletion breaks
   historical links and round-trips through git history checks.
 

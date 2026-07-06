@@ -34,7 +34,13 @@ platform_surfaces: [product, agent-admin, session, media, marketing, fun]
 
 commands:
   discovery:
+    - analyze
     - analyze-reference-repo
+    - analyze/decision
+    - analyze/incident
+    - analyze/near-miss
+    - analyze/postmortem
+    - analyze/premortem
     - bug-investigate
     - estimate-ticket
     - feature
@@ -53,6 +59,7 @@ commands:
     - feature/dev
     - implement-ticket
     - jira-ticket
+    - mission/upgrade
     - module/create
     - tests
     - tests/create
@@ -68,14 +75,14 @@ commands:
     - judge/steps
     - quality-fix
     - review-changes
+    - security-audit-config
     - threat-model
 
   delivery:
     - fix
+    - fix/comments
     - fix/portability
-    - fix/pr-bot-comments
     - fix/pr-comments
-    - fix/pr-developer-comments
     - fix/refs
     - fix/seeder
     - commit
@@ -104,6 +111,7 @@ commands:
     - roadmap
     - roadmap/ai-council
     - roadmap/create
+    - roadmap/materialize
     - roadmap/process-full
     - roadmap/process-phase
     - roadmap/process-step

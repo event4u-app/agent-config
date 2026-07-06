@@ -90,11 +90,11 @@ draft an `incident-learnings` candidate via `/memory propose`:
 
 ### 5. Surface the candidate to the user
 
-> 1. Propose this candidate to `/memory propose` (recommended)
+> 1. Propose this candidate to `/memory propose`
 > 2. Refine before proposing — suggest changes
 > 3. Skip memory candidate for now
 
-**Empfehlung:** 1
+**Recommendation:** 1
 
 ### Rules
 
