@@ -276,7 +276,7 @@ export function render_markdown(rules: RuleEntry[]): string {
         '## Totals',
         '',
         `- auto-rules: **${rules.length}**`,
-        `- registry-stub cost (counts against 49,512 cap): **${_comma(total_stub)}** chars`,
+        `- registry-stub cost (counts against the budgets.yml cap): **${_comma(total_stub)}** chars`,
         `- description chars (subset of stub cost): **${_comma(total_desc)}** chars`,
         `- body chars (informational, NOT in budget): **${_comma(total_body)}** chars`,
         '',

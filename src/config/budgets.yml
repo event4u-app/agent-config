@@ -1,0 +1,16 @@
+# Consumer-tool load-budget caps for this package's projections.
+#
+# Single source of truth for the budget gates — scripts read these values
+# instead of hard-coding them (measure_augment_budget, and any future
+# per-tool budget meter).
+
+augment_workspace_guidelines:
+  # Verified platform maximum: 99,024 chars (re-measured 2026-07; the old
+  # 49,512 ceiling from the 2026-05-08 baseline is obsolete). We deliberately
+  # gate against a LOWER internal cap to keep headroom for consumer-side
+  # additions and future rules — raise total_cap_chars only as needed, and
+  # NEVER above platform_max_chars.
+  platform_max_chars: 99024
+  total_cap_chars: 64000
+  warn_threshold: 0.85
+  fail_threshold: 0.95
