@@ -79,7 +79,7 @@ no silent best-guess.
 
 ### 2. Resolve the per-event analysis (state ground-truth)
 
-Look for `agents/tmp/prediction-pool/<slug>.md`.
+Look for `agents/runtime/tmp/prediction-pool/<slug>.md`.
 
 - **None →** start a new analysis (created at Step 9, never before).
 - **Exists →** read it. Then:
@@ -178,7 +178,7 @@ pool / site. If yes, loop Steps 3–7 for that pool.
 
 ### 9. Persist / extend the analysis (only now)
 
-Append a run-stamped section to `agents/tmp/prediction-pool/<slug>.md`: pool
+Append a run-stamped section to `agents/runtime/tmp/prediction-pool/<slug>.md`: pool
 URL(s), parsed rules, the entered tips with state `entered, not submitted`
 (or `submitted` if Step 7 submitted), council verdicts if any, and
 standing notes. Append-only — earlier runs stay as history. This is the

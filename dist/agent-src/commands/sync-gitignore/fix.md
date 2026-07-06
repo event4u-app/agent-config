@@ -139,12 +139,48 @@ from this command. One line of guidance is enough:
 - **Do NOT push, commit, or modify other files** — this command writes
   to `.gitignore` only.
 
+### 5. Ignored-but-tracked detection pass
+
+After the legacy-cleanup sync, run the tracked-but-ignored check:
+
+```bash
+npx tsx node_modules/@event4u/agent-config/src/scripts/check_tracked_but_ignored.ts
+```
+
+Files reported →
+
+```
+> ⚠️  Tracked but now ignored — will appear in every `git status` until untracked.
+> Fix (files stay on disk):
+>
+>   git rm --cached \
+>     <file1> \
+>     <file2>
+>
+> Then commit. One-time cleanup.
+```
+
+NEVER run `git rm --cached` automatically — git-ops are user-owned.
+
+### 6. Agent artefacts not covered
+
+Manifest-vs-block coverage check (`agents-paths.yml` is the reference):
+
+```bash
+npx tsx node_modules/@event4u/agent-config/src/scripts/check_gitignore_freshness.ts
+```
+
+Fails → offer block re-sync (option 1 sync / 2 skip).
+
 ## See also
 
 - [`/sync-gitignore`](../sync-gitignore.md) — append-only sync of the
   managed block (no legacy cleanup)
-- [`scripts/sync_gitignore.py`](../../../scripts/sync_gitignore.py) —
+- [`scripts/sync_gitignore.ts`](../../../src/scripts/sync_gitignore.ts) —
   the helper (`--cleanup-legacy` flag)
-- [`scripts/install.sh`](../../../scripts/install.sh) —
-  `migrate_legacy_root_infra` (moves the **files**, complement to this
-  command which fixes the **ignore rules**)
+- [`scripts/check_tracked_but_ignored.ts`](../../../src/scripts/check_tracked_but_ignored.ts) —
+  ignored-but-tracked detection
+- [`scripts/check_gitignore_freshness.ts`](../../../src/scripts/check_gitignore_freshness.ts) —
+  manifest vs block coverage
+- [`docs/contracts/agents-layout.md`](../../../docs/contracts/agents-layout.md) —
+  classification contract for `agents/` entries

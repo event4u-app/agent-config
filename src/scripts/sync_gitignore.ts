@@ -55,6 +55,10 @@ export const DEFAULT_TEMPLATE = path.join(
 // managed block or outside (older installers / hand-edits). Current canonical
 // equivalents (e.g. /agents/runtime/.agent-prices.md) come from the template
 // and are NOT affected. Leading-slash variants are matched defensively.
+//
+// Authoritative source: src/config/agents-paths.yml entries with `legacy: true`.
+// Manual sync until the generation step from the manifest is implemented
+// (road-to-agents-dir-and-gitignore-hygiene Phase 3.2 follow-on).
 export const LEGACY_PATTERNS: readonly string[] = [
     '.agent-chat-history',
     '.agent-chat-history.bak',
