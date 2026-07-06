@@ -2,9 +2,10 @@
 # scripts/smoke/kernel.sh — kernel-tier smoke (step-11 Phase 3 Step 2).
 #
 # Asserts:
-#   1. router.json lists exactly 10 kernel rules.
+#   1. router.json lists exactly 9 kernel rules.
 #   2. Every kernel rule file exists at dist/agent-src/rules/<id>.md.
-#   3. 9 of 10 carry at least one Iron-Law fenced block.
+#   3. 8 of 9 carry at least one Iron-Law fenced block (agent-authority
+#      is the fence-less priority index).
 #      agent-authority is the dispatch index, exempt from the fence
 #      requirement (docs/contracts/smoke-contracts.md § 3.1).
 #   4. Kernel-bucket char budget breaches ≤ EXPECTED_BREACHES.
@@ -16,8 +17,8 @@
 
 set -euo pipefail
 
-EXPECTED_KERNEL_COUNT=10
-EXPECTED_FENCE_CARRIERS=9
+EXPECTED_KERNEL_COUNT=9
+EXPECTED_FENCE_CARRIERS=8
 # Bumped 2 → 3 in v4.0.0: the `fix(authority): block execution offers
 # after roadmap/vision artifact save` commit (d30d441e) pushed
 # scope-control and commit-policy past their per-rule caps; kernel-bucket
