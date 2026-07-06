@@ -203,21 +203,13 @@ jobs:
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       # ── Root TS CLI + UI ───────────────────────────────────────────
-      # Whole-tree gates — nothing to shard; run once (shard 1) to avoid 4×
-      # redundant work.
-      - name: ESLint (src/**/*.ts)
-        if: ${{ matrix.shard == 1 }}
-        run: npm run lint:ts --silent
-
-      - name: Typecheck (tsc --noEmit)
-        if: ${{ matrix.shard == 1 }}
-        run: npm run typecheck --silent
-
+      # ESLint / typecheck / prepack are whole-tree gates with nothing to
+      # shard — they live in the dedicated `static-checks` job (runs once,
+      # not per OS × shard) so no vitest shard carries their ~40s and every
+      # shard is build + vitest only.
       - name: Build (dist/cli + UI bundle)
-        # `build` = `build:cli && build:ui`; the `build:cli` step also
-        # exercises the `chmod +x` hook that prepack-check.mjs asserts
-        # on `npm pack`. Every shard needs dist/ — the golden-replay suites
-        # spawn `./agent-config` → dist/cli/agent-config.js.
+        # `build` = `build:cli && build:ui`. Every shard needs dist/ — the
+        # subprocess suites spawn `./agent-config` → dist/cli/agent-config.js.
         run: npm run build --silent
 
       - name: Vitest (shard ${{ matrix.shard }}/4, golden excluded)
@@ -226,8 +218,36 @@ jobs:
         # golden suite to the dedicated `golden-tests` job below.
         run: npm run test:ts --silent -- --shard=${{ matrix.shard }}/4 --exclude 'tests/golden/**'
 
+  static-checks:
+    # Whole-tree gates that have nothing to shard: ESLint, tsc --noEmit, and
+    # the prepack compiled-bin shape check. Run once (ubuntu only — all three
+    # are OS-independent) instead of on every node-tests shard, so no vitest
+    # shard's wall clock carries their ~40s and the check dedups across OSes.
+    name: Static Checks (ESLint · typecheck · prepack)
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
+
+      - name: ESLint (src/**/*.ts)
+        run: npm run lint:ts --silent
+
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck --silent
+
+      - name: Build (dist/cli + UI bundle)
+        # prepack-check asserts the chmod +x hook applied by build:cli.
+        run: npm run build --silent
+
       - name: prepack-check (compiled bin shape gate)
-        if: ${{ matrix.shard == 1 }}
         run: node src/scripts/prepack-check.mjs
 
   golden-tests:
