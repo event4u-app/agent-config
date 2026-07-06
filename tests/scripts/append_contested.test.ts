@@ -8,7 +8,7 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
-import { appendContestedEntry, main } from '../../src/scripts/append_contested.ts';
+import { appendContestedEntry, main } from '../../src/scripts/append_contested.js';
 
 const ENTRY = { timestamp: '2026-07-15T14:23:11Z', trigger: 'context_stale', evidence: 'test.ts:45', session: 'sess-1' };
 
@@ -16,7 +16,7 @@ describe('appendContestedEntry', () => {
     it('creates frontmatter + contested array on a page with none', () => {
         const result = appendContestedEntry('# X\n\nbody\n', ENTRY);
         expect(result).toMatch(/^---\n/);
-        const fm = YAML.parse(/^---\n([\s\S]*?)\n---\n/.exec(result)![1]);
+        const fm = YAML.parse(/^---\n([\s\S]*?)\n---\n/.exec(result)![1]!);
         expect(fm.contested).toEqual([ENTRY]);
         expect(result).toContain('# X\n\nbody\n');
     });
@@ -24,7 +24,7 @@ describe('appendContestedEntry', () => {
     it('appends to an existing contested array without dropping prior entries', () => {
         const content = '---\ntype: concept\ncontested:\n  - timestamp: "2026-01-01T00:00:00Z"\n    trigger: old\n    evidence: e\n    session: s0\n---\n\n# X\n';
         const result = appendContestedEntry(content, ENTRY);
-        const fm = YAML.parse(/^---\n([\s\S]*?)\n---\n/.exec(result)![1]);
+        const fm = YAML.parse(/^---\n([\s\S]*?)\n---\n/.exec(result)![1]!);
         expect(fm.contested).toHaveLength(2);
         expect(fm.contested[0].session).toBe('s0');
         expect(fm.contested[1]).toEqual(ENTRY);
@@ -39,7 +39,7 @@ describe('appendContestedEntry', () => {
 
     it('a page with no frontmatter at all still ends up parseable after appending', () => {
         const result = appendContestedEntry('just prose, no frontmatter\n', ENTRY);
-        const fm = YAML.parse(/^---\n([\s\S]*?)\n---\n/.exec(result)![1]);
+        const fm = YAML.parse(/^---\n([\s\S]*?)\n---\n/.exec(result)![1]!);
         expect(fm.contested).toEqual([ENTRY]);
     });
 });

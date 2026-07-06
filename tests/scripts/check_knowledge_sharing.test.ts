@@ -4,7 +4,7 @@
 // real git index or filesystem.
 import { describe, expect, it } from 'vitest';
 
-import { checkSharing, parseNameStatus, type StagedFile } from '../../src/scripts/check_knowledge_sharing.ts';
+import { checkSharing, parseNameStatus, type StagedFile } from '../../src/scripts/check_knowledge_sharing.js';
 
 describe('parseNameStatus', () => {
     it('parses added/modified/deleted lines', () => {

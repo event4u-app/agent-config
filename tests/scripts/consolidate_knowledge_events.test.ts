@@ -7,8 +7,8 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { aggregationKey, buildReport, main } from '../../src/scripts/consolidate_knowledge_events.ts';
-import { appendEvent, intakeFiles, type MistakeMadeEvent } from '../../src/scripts/_lib/knowledge_events.ts';
+import { aggregationKey, buildReport, main } from '../../src/scripts/consolidate_knowledge_events.js';
+import { appendEvent, intakeFiles, type MistakeMadeEvent } from '../../src/scripts/_lib/knowledge_events.js';
 
 const MISTAKE: MistakeMadeEvent = {
     type: 'mistake_made',
@@ -50,7 +50,7 @@ describe('buildReport', () => {
 
     it('finds no nearest page when candidates are empty', () => {
         const report = buildReport([MISTAKE], []);
-        expect(report[0].nearestPage).toBeNull();
+        expect(report[0]!.nearestPage).toBeNull();
     });
 
     it('finds a nearest page above the warn/merge threshold, none below it', () => {
@@ -58,13 +58,13 @@ describe('buildReport', () => {
             [{ ...MISTAKE, correction: 'guard it', errorCategory: 'null-deref' }],
             [{ id: 'concepts/x.md', text: 'null-deref guard it exactly' }],
         );
-        expect(closeMatch[0].nearestPage).not.toBeNull();
+        expect(closeMatch[0]!.nearestPage).not.toBeNull();
 
         const farMatch = buildReport(
             [MISTAKE],
             [{ id: 'concepts/unrelated.md', text: 'totally unrelated content about something else entirely' }],
         );
-        expect(farMatch[0].nearestPage).toBeNull();
+        expect(farMatch[0]!.nearestPage).toBeNull();
     });
 
     it('empty event list produces an empty report', () => {

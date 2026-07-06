@@ -53,7 +53,7 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 
 function readFrontmatter(body: string): Record<string, unknown> {
     const m = FRONTMATTER_RE.exec(body);
-    if (!m) return {};
+    if (m?.[1] === undefined) return {};
     try {
         const parsed = YAML.parse(m[1]);
         return isPlainObject(parsed) ? parsed : {};

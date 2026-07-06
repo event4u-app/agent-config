@@ -9,7 +9,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { detect, main, stagePages } from '../../src/scripts/bootstrap_knowledge.ts';
+import { detect, main, stagePages } from '../../src/scripts/bootstrap_knowledge.js';
 
 function mkFixture(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'bootstrap-fixture-'));

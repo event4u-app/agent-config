@@ -9,7 +9,7 @@ import {
     MERGE_THRESHOLD,
     tokenize,
     WARN_THRESHOLD,
-} from '../../src/scripts/_lib/text_similarity.ts';
+} from '../../src/scripts/_lib/text_similarity.js';
 
 describe('tokenize', () => {
     it('lowercases and splits on non-alphanumeric runs', () => {

@@ -8,8 +8,8 @@ import * as path from 'node:path';
 
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 
-import { main } from '../../src/scripts/emit_knowledge_event.ts';
-import { readAllEvents } from '../../src/scripts/_lib/knowledge_events.ts';
+import { main } from '../../src/scripts/emit_knowledge_event.js';
+import { readAllEvents } from '../../src/scripts/_lib/knowledge_events.js';
 
 describe('emit_knowledge_event CLI', () => {
     let cwd: string;

@@ -104,7 +104,9 @@ export function buildReport(events: KnowledgeEvent[], pageCandidates: Candidate[
 
     const out: AggregateGroup[] = [];
     for (const [key, groupEvents] of groups) {
-        const representative = aggregateText(groupEvents[0]);
+        const first = groupEvents[0];
+        if (first === undefined) continue;
+        const representative = aggregateText(first);
         const match = findMostSimilar(representative, pageCandidates);
         out.push({
             key,

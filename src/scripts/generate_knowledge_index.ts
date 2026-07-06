@@ -52,7 +52,7 @@ interface Entry {
 
 function readFrontmatter(body: string): Record<string, unknown> {
     const m = FRONTMATTER_RE.exec(body);
-    if (!m) return {};
+    if (m?.[1] === undefined) return {};
     try {
         const parsed = YAML.parse(m[1]);
         return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};

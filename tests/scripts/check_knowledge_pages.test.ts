@@ -6,7 +6,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { lintAll, lintPage, main } from '../../src/scripts/check_knowledge_pages.ts';
+import { lintAll, lintPage, main } from '../../src/scripts/check_knowledge_pages.js';
 
 const TODAY = new Date('2026-07-05T00:00:00Z');
 
@@ -28,7 +28,7 @@ describe('lintPage — frontmatter shape', () => {
     it('unknown type warns', () => {
         const warnings = lintPage('concepts/x.md', '---\ntype: bogus\n---\n\n# X\n', TODAY);
         expect(warnings).toHaveLength(1);
-        expect(warnings[0].rule).toBe('type');
+        expect(warnings[0]!.rule).toBe('type');
     });
 
     it('valid type produces no warning', () => {
@@ -55,7 +55,7 @@ describe('lintPage — review_after', () => {
     it('past date warns (due for review)', () => {
         const warnings = lintPage('concepts/x.md', '---\nreview_after: "2026-01-01"\n---\n\n# X\n', TODAY);
         expect(warnings.map((w) => w.rule)).toEqual(['review_after']);
-        expect(warnings[0].message).toContain('due for review');
+        expect(warnings[0]!.message).toContain('due for review');
     });
 
     it('future date does not warn', () => {

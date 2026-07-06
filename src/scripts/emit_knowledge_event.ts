@@ -40,7 +40,7 @@ function parseFlags(argv: string[]): Map<string, string[]> {
     const flags = new Map<string, string[]>();
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
-        if (!arg.startsWith('--')) continue;
+        if (arg === undefined || !arg.startsWith('--')) continue;
         const key = arg.slice(2);
         const value = argv[++i] ?? '';
         const existing = flags.get(key) ?? [];

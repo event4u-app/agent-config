@@ -7,7 +7,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { main } from '../../src/scripts/generate_knowledge_index.ts';
+import { main } from '../../src/scripts/generate_knowledge_index.js';
 
 function mkTmpRepo(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'knowledge-index-'));

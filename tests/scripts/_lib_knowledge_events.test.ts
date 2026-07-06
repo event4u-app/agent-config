@@ -15,7 +15,7 @@ import {
     type ContextStaleEvent,
     type ConventionDetectedEvent,
     type MistakeMadeEvent,
-} from '../../src/scripts/_lib/knowledge_events.ts';
+} from '../../src/scripts/_lib/knowledge_events.js';
 
 const TS = '2026-07-05T12:00:00Z';
 

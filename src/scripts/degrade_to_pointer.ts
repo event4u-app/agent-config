@@ -38,11 +38,11 @@ export function pointerLine(artifact: string, date: string): string {
 /** Replace a whole page's body (below frontmatter, if any) with a pointer line. Preserves frontmatter and the first H1 heading, if present, so the page stays a resolvable link target. */
 export function degradeWholeFile(content: string, artifact: string, date: string): string {
     const fmMatch = FRONTMATTER_RE.exec(content);
-    const frontmatter = fmMatch ? fmMatch[1] : '';
-    const rest = fmMatch ? content.slice(fmMatch[1].length) : content;
+    const frontmatter = fmMatch?.[1] ?? '';
+    const rest = fmMatch ? content.slice(frontmatter.length) : content;
 
     const headingMatch = /^(#\s+.+)$/m.exec(rest);
-    const heading = headingMatch ? `${headingMatch[1]}\n\n` : '';
+    const heading = headingMatch?.[1] !== undefined ? `${headingMatch[1]}\n\n` : '';
 
     return `${frontmatter}${heading}${pointerLine(artifact, date)}\n`;
 }
@@ -57,7 +57,7 @@ export function degradeSection(content: string, anchor: string, artifact: string
     }
     let endIdx = lines.length;
     for (let i = startIdx + 1; i < lines.length; i++) {
-        if (/^##\s/.test(lines[i])) {
+        if (/^##\s/.test(lines[i] ?? '')) {
             endIdx = i;
             break;
         }
@@ -101,7 +101,7 @@ export function main(argv: string[]): number {
         return 1;
     }
 
-    const [filePath, anchor] = source.split('#');
+    const [filePath = '', anchor] = source.split('#');
 
     let content: string;
     try {

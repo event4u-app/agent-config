@@ -6,7 +6,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { degradeSection, degradeWholeFile, main, pointerLine } from '../../src/scripts/degrade_to_pointer.ts';
+import { degradeSection, degradeWholeFile, main, pointerLine } from '../../src/scripts/degrade_to_pointer.js';
 
 describe('pointerLine', () => {
     it('renders the fixed pointer format', () => {

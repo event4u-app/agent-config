@@ -12,7 +12,7 @@ import {
     parseCandidates,
     renderCandidates,
     upsertCandidate,
-} from '../../src/scripts/update_skill_candidates.ts';
+} from '../../src/scripts/update_skill_candidates.js';
 
 describe('upsertCandidate', () => {
     it('creates a new record on first mention, does not cross threshold', () => {

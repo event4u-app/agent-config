@@ -49,8 +49,9 @@ export function parseNameStatus(raw: string): StagedFile[] {
         if (!line.trim()) continue;
         const [status, ...rest] = line.split('\t');
         const path = rest[rest.length - 1]; // renames carry old\tnew — keep the new path
-        if (!status || !path) continue;
-        out.push({ path, status: status[0] });
+        const statusChar = status?.[0];
+        if (!statusChar || !path) continue;
+        out.push({ path, status: statusChar });
     }
     return out;
 }
@@ -79,7 +80,7 @@ export function checkSharing(staged: StagedFile[], readContent: (path: string) =
         const content = readContent(f.path);
         if (content === null) continue;
         const match = FRONTMATTER_RE.exec(content);
-        if (!match) continue;
+        if (match?.[1] === undefined) continue;
         let fm: unknown;
         try {
             fm = YAML.parse(match[1]);

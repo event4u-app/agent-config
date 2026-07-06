@@ -7,7 +7,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { loadCandidates, main } from '../../src/scripts/check_memory_similarity.ts';
+import { loadCandidates, main } from '../../src/scripts/check_memory_similarity.js';
 
 function mkIntake(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'memory-intake-'));

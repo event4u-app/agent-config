@@ -43,7 +43,7 @@ export function parseCandidates(body: string): Map<string, CandidateRecord> {
 
     for (const rawLine of body.split(/\r?\n/)) {
         const headingMatch = HEADING_RE.exec(rawLine);
-        if (headingMatch) {
+        if (headingMatch?.[1] !== undefined) {
             current = { topic: headingMatch[1].trim(), mentions: 0, first: '', lastSeen: '', sessions: [] };
             out.set(current.topic, current);
             continue;
@@ -52,6 +52,7 @@ export function parseCandidates(body: string): Map<string, CandidateRecord> {
         const fieldMatch = FIELD_RE.exec(rawLine);
         if (!fieldMatch) continue;
         const [, key, value] = fieldMatch;
+        if (key === undefined || value === undefined) continue;
         if (key === 'Mentions') current.mentions = Number.parseInt(value, 10) || 0;
         else if (key === 'First seen') current.first = value.trim();
         else if (key === 'Last seen') current.lastSeen = value.trim();

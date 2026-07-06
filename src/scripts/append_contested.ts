@@ -40,7 +40,7 @@ export function appendContestedEntry(content: string, entry: ContestedEntry): st
     const body = match ? content.slice(match[0].length) : content;
 
     let fm: Record<string, unknown> = {};
-    if (match) {
+    if (match?.[1] !== undefined) {
         const parsed = YAML.parse(match[1]);
         if (isPlainObject(parsed)) fm = parsed;
     }

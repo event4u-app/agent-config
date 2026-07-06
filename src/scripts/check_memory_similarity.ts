@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { classifySimilarity, findMostSimilar, type Candidate } from './_lib/text_similarity.js';
+import { findMostSimilar, type Candidate } from './_lib/text_similarity.js';
 
 const PROG = 'check_memory_similarity.ts';
 
