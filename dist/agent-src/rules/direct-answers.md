@@ -34,7 +34,7 @@ WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 
 Severity tiers (High = load-bearing · Medium = project-shape · Low = idioms), per-tier verification actions, and "just guess" override: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
 
-**Live-state facts — never from memory.** Git/PR **merge, branch, sync, and existence** state is High-severity and decays silently: a branch may already be merged, a PR already closed, `main` already ahead, a worktree already updated. NEVER assert "merged / not merged / pending / still open / already in `main` / out of scope" — or any branch/sync/existence claim — from memory, a roadmap note, an earlier turn, or a recalled memory. Run the live check FIRST (`git log --first-parent origin/main`, `git branch -r --contains <ref>`, `gh pr view <n> --json state,mergedAt,baseRefName`); a state question is self-answering (per [`git-workflow`](../skills/git-workflow/SKILL.md)). Same for any external system whose state can change behind you (CI run, deploy, remote queue).
+**Live-state facts — never from memory.** Git/PR merge/branch/sync/existence state is High-severity and decays silently (branch already merged, PR already closed, `main` already ahead). NEVER assert "merged / not merged / pending / still open / already in `main` / out of scope" — or any branch/sync/existence claim — from memory, a roadmap note, an earlier turn, or a recalled memory. Run the live check FIRST (`git log --first-parent origin/main`, `git branch -r --contains <ref>`, `gh pr view <n> --json state,mergedAt,baseRefName`); a state question is self-answering (per [`git-workflow`](../skills/git-workflow/SKILL.md)). Same for any external system that changes behind you (CI run, deploy, remote queue).
 
 ## Iron Law 3 — Brevity by Default
 
@@ -46,7 +46,7 @@ LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 - Skip restating the question; skip "Let me…" intent announcements.
 - Skip explaining tool use — the call result speaks.
 - Skip post-hoc summary unless rechecking a decision.
-- Multi-step → bullets. One-true-answer → one sentence.
+- Multi-step → bullets; one-true-answer → one sentence.
 
 Never overrides `user-interaction` (numbered options stay) or command-mandated steps.
 
@@ -59,8 +59,6 @@ Never overrides `user-interaction` (numbered options stay) or command-mandated s
 
 ## Failure modes & examples
 
-Trigger phrases + correction pattern: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md).
-Pattern Memory (wrong / right / why): [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md).
-Outcome baseline: [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
+Triggers + corrections: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md). Wrong/right/why: [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md). Baseline: [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
 
 Cross-rule index: [`frugality-charter`](../contexts/contracts/frugality-charter.md).

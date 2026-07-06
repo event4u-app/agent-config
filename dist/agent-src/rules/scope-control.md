@@ -33,30 +33,31 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 - NEVER push a tag or create a release without permission.
 - NEVER pin versions, release targets, deprecation dates, or git tags in roadmaps / plans / tickets — they plan **work**, not releases. Detail: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
 - Task seems to need a separate branch / PR → STOP and **brief before asking** ([`scope-mechanics`](../contexts/authority/scope-mechanics.md)).
-- BEFORE the first commit on related work, **inventory** existing branches and open PRs. Plausible base beyond the current branch → STOP and ask with numbered options — never improvise. Commands + 4-option template + diverging-stack failure mode: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+- BEFORE the first commit on related work, **inventory** existing branches + open PRs; plausible other base → STOP, ask with numbered options. Commands + 4-option template: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
 
-"Explicit permission" = said **this turn or in a standing instruction not yet revoked**. Permission for a different operation does not carry over.
+"Explicit permission" = said **this turn or in an unrevoked standing instruction**. Permission for one operation never carries to another.
 
 ## Authoring vs. implementation
 
 ```
 "CREATE / DRAFT" AUTHORIZES THE ARTIFACT, NOT ITS EXECUTION.
 NEW TASK NEVER INHERITS PRIOR AUTONOMY.
+ARTIFACT SAVED → HARD STOP. NEVER AUTO-OFFER EXECUTION.
 ```
 
-`create / draft / write / erstelle …` → artifact only. Execution verbs flip scope; mixed → ask. Detail: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+`create / draft / write / erstelle …` → artifact only. Execution verbs flip scope; mixed → ask. The moment the artifact lands (roadmap, ADR, plan, pitch, ticket), the turn ends — never auto-offer execution; execution needs an explicit execution verb (`implement`, `build`, `start`, `arbeite ab`) on a later turn. Detail + anti-patterns: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
-A subset is **never** autonomous, regardless of standing autonomy. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Triggers (prod-branch merges, deploys, prod data / infra, bulk-destructive) + this-turn-only clarification: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+A subset is **never** autonomous. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md); triggers + this-turn-only clarification: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
 
 ## Kernel-rule edits — slow-rollout guarantee
 
-Own PR, ≥ 24 h between merges. Autonomous mandate does not lift — soak guarantee. CI / labels / scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
+Own PR, ≥ 24 h between merges; autonomous mandate does not lift (soak guarantee). CI/labels/scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
 
 ## Decline = silence — no re-asking on the same task
 
-After the user **declines** a proposal (branch switch, PR creation, tag/release, separate worktree, version pinning), do **not** raise it again on the same task. Decline stands until reopened. Timing: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+After the user **declines** a proposal (branch switch, PR, tag/release, worktree, version pinning), do **not** raise it again on the same task — decline stands until reopened. Timing: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
 
 ## Fenced step — user-set review gates
 
@@ -65,4 +66,4 @@ USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
 NO "READY TO IMPLEMENT?" / "PHASE 1?" RE-ASK.
 ```
 
-Fence (*"plan only"*, *"review first"*, German equivalents) stands until reopened — like `Decline = silence`. Follow-ups cover the deliverable, not its execution. Failure modes + bypass: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+Fence (*"plan only"*, *"review first"*, DE equivalents) stands until reopened. Follow-ups cover the deliverable, not its execution. Failure modes + bypass: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).

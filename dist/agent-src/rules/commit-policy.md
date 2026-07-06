@@ -20,22 +20,22 @@ NEVER COMMIT. NEVER ASK ABOUT COMMITTING.
 EXCEPTIONS ARE EXPLICIT, NOT INFERRED.
 ```
 
-Applies regardless of `personal.autonomy`, conversation momentum, or "clean stopping point". Default: **no commit, no question**.
+Holds regardless of `personal.autonomy`, momentum, or "clean stopping point". Default: **no commit, no question**.
 
 ## Exceptions — when committing IS allowed
 
 Exactly four:
 
-1. **User says so this turn** — "commit this now", "go ahead and commit". This commit only, not standing.
-2. **Standing instruction not yet revoked** — "commit after every phase" earlier in the conversation; cache and honor.
-3. **Commit command invoked** — `/commit` (with confirmation) or `/commit:in-chunks` (auto-split, no confirmation).
-4. **Roadmap authorization** — roadmap file lists explicit commit steps and the user invoked roadmap execution.
+1. **User says so this turn** — "commit this now". This commit only, not standing.
+2. **Standing instruction not yet revoked** — "commit after every phase"; cache and honor.
+3. **Commit command invoked** — `/commit` (confirmed) or `/commit:in-chunks` (auto-split).
+4. **Roadmap authorization** — roadmap lists explicit commit steps and the user invoked roadmap execution.
 
 Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fires on top of any exception — see [`commit-mechanics`](../contexts/authority/commit-mechanics.md) for diff triggers and roadmap-authorized commit flow.
 
 ## NEVER ask about committing
 
-"Should I commit this?" / "do we want to commit?" — **forbidden**. The user invokes a command or says so explicitly. Don't surface a commit option in numbered-options blocks unless the rest of the message would be incomplete without it.
+"Should I commit this?" / "do we want to commit?" — **forbidden**. The user invokes a command or says so. No commit option in numbered-options blocks unless the message is incomplete without it.
 
 Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet) are **not** permission — see [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
