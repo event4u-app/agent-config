@@ -360,14 +360,40 @@ function _stripFencedCode(text: string): string {
     return text.replace(FENCED_CODE_RE, (m) => '\n'.repeat(_splitlines(m).length));
 }
 
-/** `- **Label:** value <!-- comment -->` → trimmed `value`, comment stripped. */
+const BLOCKER_FIELD_RE = /^-[ \t]*\*\*(Status|Owner|Blocks|Resolved when|What to do):\*\*/i;
+
+/** Strip an inline `<!-- comment -->` and trim. */
+function _stripComment(s: string): string {
+    return _strip(s.replace(/<!--[\s\S]*?-->/g, ''));
+}
+
+/**
+ * `- **Label:** value` → trimmed `value`, joined with any wrapped
+ * continuation lines (non-bulleted text under the same field, e.g. a long
+ * "Blocks" sentence spanning two lines) up to the next `- **Field:**`
+ * marker, blank line, or heading.
+ */
 function _blockerField(slice: string, label: string): string | null {
-    const re = new RegExp(`^-[ \\t]*\\*\\*${label}:\\*\\*[ \\t]*(.+)$`, 'im');
-    const m = re.exec(slice);
-    if (!m) {
+    const lines = _splitlines(slice);
+    const re = new RegExp(`^-[ \\t]*\\*\\*${label}:\\*\\*[ \\t]*(.*)$`, 'i');
+    const startIdx = lines.findIndex((l) => re.test(_strip(l)));
+    if (startIdx === -1) {
         return null;
     }
-    return _strip((m[1] as string).replace(/<!--[\s\S]*?-->/g, ''));
+    const m = re.exec(_strip(lines[startIdx] as string));
+    const parts: string[] = [];
+    const first = _stripComment((m?.[1] as string) ?? '');
+    if (first) {
+        parts.push(first);
+    }
+    for (let i = startIdx + 1; i < lines.length; i++) {
+        const trimmed = _strip(lines[i] as string);
+        if (trimmed === '' || BLOCKER_FIELD_RE.test(trimmed) || trimmed.startsWith('#')) {
+            break;
+        }
+        parts.push(_stripComment(trimmed));
+    }
+    return parts.length ? parts.join(' ') : null;
 }
 
 /** Lines under `- **What to do:**` up to the next `- **Field:**` marker. */
@@ -380,7 +406,7 @@ function _blockerTodo(slice: string): string[] {
     const out: string[] = [];
     for (let i = startIdx + 1; i < lines.length; i++) {
         const trimmed = _strip(lines[i] as string);
-        if (/^-[ \t]*\*\*(Status|Owner|Blocks|Resolved when|What to do):\*\*/i.test(trimmed)) {
+        if (BLOCKER_FIELD_RE.test(trimmed) || trimmed.startsWith('#')) {
             break;
         }
         if (trimmed !== '') {

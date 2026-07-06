@@ -7,8 +7,6 @@ parent_roadmap: subagent-value-realization
 
 > Seed real orchestration telemetry from production use, then re-gate the `subagents.auto` default flip on that evidence via `gateVerdict()`.
 
-> Blocked until: ≥ 20 real orchestrated dispatches are recorded in `agents/runtime/state/audit/YYYY-MM.jsonl` (run with `subagents.enabled: true` and `subagents.auto: ask` or `on`). Execution starts when the audit log carries enough orchestration lines to be a meaningful sample. The build work (parent roadmap) is complete; this roadmap is pure measurement and is gated on accumulated telemetry that cannot be synthesised.
-
 ## Context
 
 This roadmap collects items deferred from
@@ -46,3 +44,20 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
 - [ ] A real orchestrated dispatch emits a captured, reportable telemetry line with a sourced `token_delta`; `breachedGuardrails` reads live telemetry.
 - [ ] `parallelizable:` classifier recall measured on the corpus.
 - [ ] The `auto: on` flip is re-evaluated through `gateVerdict()` on real telemetry, with the outcome recorded — flip only if evidenced.
+
+## Blockers
+
+### blocker: telemetry-sample-size
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 1 — Seed real telemetry
+- **What to do:**
+  1. Use the agent with `subagents.enabled: true` and `subagents.auto: ask`
+     (or `on`) during real work, long enough to accumulate real orchestrated
+     dispatches — the build work is done; only real usage produces this.
+  2. Check the current-month audit log line count:
+     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`.
+  3. Once the count reaches ≥ 20, resume this roadmap
+     (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
+- **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries
+  ≥ 20 orchestration lines for the current month.

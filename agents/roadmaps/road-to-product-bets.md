@@ -49,3 +49,26 @@ parent_roadmap: road-to-product-clarity
 - Each phase promotes to `ready` only with its evidence/decision recorded.
 - No runtime layer; profile/contract paths only.
 - Connectors pass `domain-adoption-policy`; pilot N=1 before generalizing.
+
+## Blockers
+
+### blocker: simple-expert-mode-demand-evidence
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 1 — Simple / Expert mode
+- **What to do:**
+  1. Collect at least one credible user signal that the *rule/surface count*
+     itself — not an unclear value proposition or install friction — is what
+     stops adoption. A support ticket, a user quote, or a churn-interview
+     note naming rule count specifically all count; a hunch does not.
+  2. Record the signal inline in Phase 1 (quote + source + date).
+  3. Only then flip `1.1` to done and start `1.2` (reduced-profile vs UX
+     layer decision).
+- **Resolved when:** Phase 1 step `1.1` carries a cited, credible signal
+  naming rule/surface count as the adoption blocker.
+
+**Note:** this roadmap is `status: draft` and stays hidden from the
+dashboard until promoted to `ready` — see `road-to-blocker-visibility.md`
+Phase 3 sweep. Phases 2–4 carry their own softer "Council: DEFER /
+DECIDE-THEN-BUILD" scoping gates in prose; only Phase 1's gate is crisp
+enough (a single named evidence signal) to warrant the structured form.

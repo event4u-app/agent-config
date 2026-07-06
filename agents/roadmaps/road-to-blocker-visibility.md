@@ -117,21 +117,36 @@ the old shape is restored deterministically.
 Annotate the known gates so the feature ships with real content, not an
 empty column.
 
-- [ ] `road-to-py2ts-teardown-completion.md` — add `## Blockers` with
+- [x] `road-to-py2ts-teardown-completion.md` — add `## Blockers` with
   the kernel augment-budget gate (owner: maintainer; instructions: own
-  kernel PR + ≥ 24 h soak per `scope-control § kernel-rule-edits`; the
-  −4,450-char reduction target) and any other Phase-3 merge gates.
-- [ ] `road-to-subagent-value-realization-followup.md` — convert the
+  kernel PR + ≥ 24 h soak per `scope-control § kernel-rule-edits` when
+  the always-rules bucket is touched). Verified live via
+  `./scripts-run src/scripts/measure_augment_budget --check` (2026-07-06:
+  over cap by 1,974 chars, not the stale "-4,450" figure from memory —
+  memory is a point-in-time snapshot, re-verified against the real gate).
+- [x] `road-to-subagent-value-realization-followup.md` — converted the
   `> Blocked until` telemetry note into a structured blocker (owner:
-  user; instructions: run with `subagents.enabled: true`, how to check
-  `agents/runtime/state/audit/YYYY-MM.jsonl` line count ≥ 20).
-- [ ] `road-to-product-bets.md` — structured blocker for the N=2
-  demand-evidence gate (owner: user; what counts as a credible signal).
-- [ ] Sweep the remaining active roadmaps (`road-to-token-saving.md`,
-  `road-to-typescript-only-scripts.md`,
-  `road-to-prompt-pattern-adoption.md`) for measurement/decision gates
-  and annotate or explicitly note "no blockers".
-- [ ] Regenerate the dashboard and eyeball-verify each blocker renders
+  user; instructions: run with `subagents.enabled: true`, check
+  `agents/runtime/state/audit/YYYY-MM.jsonl` line count ≥ 20). Removed
+  the old body-level note so it isn't double-counted by the legacy
+  fallback.
+- [x] `road-to-product-bets.md` — structured blocker for the Phase 1
+  N=2 demand-evidence gate (owner: user; what counts as a credible
+  signal). Phases 2–4 keep their existing "Council: DEFER /
+  DECIDE-THEN-BUILD" prose gates as-is — softer scoping decisions, not
+  a crisp single blocker. Note: this roadmap is `status: draft` and
+  stays hidden from the dashboard until promoted.
+- [x] Swept the remaining active roadmaps: `road-to-token-saving.md`
+  (52 steps across 7 phases; gates are phase-internal `[~]` deferred /
+  operator-cost-gated live-validation items already tracked by Iron
+  Law 3 — no single clean roadmap-level blocker to extract) and
+  `road-to-typescript-only-scripts.md` (Phase 1's "blocking" gate is
+  fully `[x]` cleared; the 7 remaining open items are ordinary
+  engineering work, not an external gate) — both explicitly reviewed,
+  no blocker added. `road-to-prompt-pattern-adoption.md` is untracked
+  on the main checkout and does not exist in this isolated worktree —
+  out of scope for this run; left for a follow-up pass.
+- [x] Regenerate the dashboard and eyeball-verify each blocker renders
   with complete instructions and working links.
 
 **Exit criteria:** every known gate in the active set appears in the

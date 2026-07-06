@@ -340,6 +340,27 @@ ruled the finish strategy. Convergent verdict:
 - Consumer smoke confirms the installed runtime resolves; A-vs-D call recorded.
 - Remaining decision surfaced to the user: the `python2ts → main` merge.
 
+## Blockers
+
+### blocker: kernel-augment-budget
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Acceptance criterion — "remote CI green on `python2ts`" (the
+  `check-augment-budget-strict` gate runs under both `task ci` and
+  `task ci-strict`, so it fails on every branch, not just `python2ts`).
+- **What to do:**
+  1. Run `./scripts-run src/scripts/measure_augment_budget --check` to see
+     the live number (verified 2026-07-06: cap 49,512 chars, current total
+     51,486 — over by 1,974).
+  2. Trim ≥ 1,974 chars from either bucket: **auto-rule stubs** (79 rules,
+     19,085 chars — non-kernel, no soak required) or **always-rules** (10
+     rules, 29,449 chars — kernel-tier; a reduction there ships in its own
+     PR with ≥ 24 h between merges, per
+     [`scope-control § kernel-rule-edits`](../../src/rules/scope-control.md)).
+  3. Re-run the check above until it exits green, then re-run the full
+     `task ci-strict` to confirm no other gate regressed.
+- **Resolved when:** `./scripts-run src/scripts/measure_augment_budget --check` exits 0.
+
 ## Council review (2026-06-21)
 
 AI council (claude-sonnet-4-5 + gpt-4o, deep / 3 rounds, `--input-mode roadmap`;

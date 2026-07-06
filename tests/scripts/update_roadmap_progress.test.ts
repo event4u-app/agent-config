@@ -253,6 +253,35 @@ describe('update_roadmap_progress — intent', () => {
         expect(dashboard).not.toContain('old-decision');
     });
 
+    it('regen: a wrapped multi-line field value is not truncated at the first line', () => {
+        mkRoadmap(
+            'road-to-wrapped-field.md',
+            [
+                '# Roadmap: Wrapped Field',
+                '',
+                '## Phase 1 — Ship',
+                '- [ ] step',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: long-sentence',
+                '- **Status:** open',
+                '- **Owner:** maintainer',
+                '- **Blocks:** Acceptance criterion — a sentence that wraps onto a',
+                '  second line because it is long enough to need one.',
+                '- **What to do:**',
+                '  1. Do the thing.',
+                '- **Resolved when:** it is done.',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        expect(dashboard).toContain(
+            'blocks Acceptance criterion — a sentence that wraps onto a second line because it is long enough to need one.',
+        );
+    });
+
     it('regen: legacy "> Blocked until" note surfaces as an implicit blocker', () => {
         mkRoadmap(
             'road-to-legacy-blocked.md',
