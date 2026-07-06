@@ -76,7 +76,7 @@ function parseManifestPaths(text: string): Set<string> {
     const paths = new Set<string>();
     for (const line of text.split('\n')) {
         const m = line.match(/^- path:\s*(.+)/);
-        if (m) paths.add(m[1].trim().replace(/^"|"$/g, ''));
+        if (m?.[1] !== undefined) paths.add(m[1].trim().replace(/^"|"$/g, ''));
     }
     return paths;
 }

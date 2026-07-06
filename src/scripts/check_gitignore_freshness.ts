@@ -50,13 +50,13 @@ function parseManifest(text: string): Array<{ path: string; scope: string; polic
             }
             cur = {};
             const m = line.match(/^- path:\s*(.+)/);
-            if (m) cur['path'] = m[1].trim().replace(/^"|"$/g, '');
+            if (m?.[1] !== undefined) cur['path'] = m[1].trim().replace(/^"|"$/g, '');
         } else if (cur && /^\s+scope:/.test(line)) {
             const m = line.match(/scope:\s*(.+)/);
-            if (m) cur['scope'] = m[1].trim();
+            if (m?.[1] !== undefined) cur['scope'] = m[1].trim();
         } else if (cur && /^\s+policy:/.test(line)) {
             const m = line.match(/policy:\s*(.+)/);
-            if (m) cur['policy'] = m[1].trim();
+            if (m?.[1] !== undefined) cur['policy'] = m[1].trim();
         }
     }
     if (cur && cur['path'] && cur['scope'] && cur['policy']) {

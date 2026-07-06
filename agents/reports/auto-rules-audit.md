@@ -97,3 +97,16 @@ any rule add/merge/deprecate to refresh the baseline.
 | 79 | `markdown-safe-codeblocks` | 2b | 61 | 175 | 678 | 0p / 1k / 1i | — |
 
 Trigger key: `Np` = path-prefix, `Nk` = keyword, `Ni` = intent.
+
+## Phase 5.2 — Trigger overlap (Jaccard + keyword)
+
+Pairs flagged: **6** (thresholds: path-Jaccard ≥ 0.5, keyword-overlap ≥ 0.4).
+
+| # | Rule A | Rule B | Path-J | Keyword-O | Shared keywords |
+|---|--------|--------|--------|-----------|-----------------|
+| 1 | `domain-adoption-policy` | `skill-quality` | 1.00 | 0.00 | — |
+| 2 | `cli-output-handling` | `docker-commands` | 0.00 | 0.64 | `artisan`, `cli`, `composer`, `docker`, `phpstan`, `phpunit` |
+| 3 | `commit-conventions` | `git-history-discipline` | 0.00 | 0.50 | `branch`, `commit`, `commits`, `git`, `pushing` |
+| 4 | `no-attribution-footers` | `no-decorative-emojis-in-git-surfaces` | 0.00 | 0.50 | `bodies`, `body`, `comment`, `commit`, `forbids`, `generating` |
+| 5 | `roadmap-ci-steps-policy` | `roadmap-progress-sync` | 0.50 | 0.00 | — |
+| 6 | `artifact-drafting-protocol` | `upstream-proposal` | 0.00 | 0.42 | `command`, `creating`, `guideline`, `rule`, `skill` |
