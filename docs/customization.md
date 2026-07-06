@@ -383,12 +383,41 @@ Consumer projects can maintain their own agent documentation:
 
 ```
 agents/
-├── docs/                    ← Feature docs, architecture decisions
-├── contexts/                ← Shared knowledge documents
-├── features/                ← Feature plans
-├── roadmaps/                ← Active roadmaps
-└── overrides/               ← Skill/rule/command overrides
+├── overrides/               ← Skill/rule/command overrides (required after migrate)
+├── .event4u-bridge.yml      ← Global-only bridge marker (ADR-020)
+├── knowledge/               ← Optional: curated project-specific knowledge pages
+├── memory/                  ← Optional: memory promotion pipeline
+├── roadmaps/                ← Optional: project-local roadmaps
+├── tmp/                     ← Optional: user inbox (gitignored)
+└── tmp.old/                 ← Optional: processed inbox archive (gitignored)
 ```
+
+Full classification (git policy, retention, owner) for every allowed entry:
+[`docs/contracts/agents-layout.md`](contracts/agents-layout.md).
+
+#### User inbox workflow (`agents/tmp/` → `agents/tmp.old/`)
+
+Drop a note or draft into `agents/tmp/` and point a command at it
+(e.g. "create a roadmap from `agents/tmp/my-idea.md`"). The agent reads
+the file, processes it, and moves it to `agents/tmp.old/` in the same
+reply. The archive decays via a 30-day janitor TTL.
+
+- Both dirs are **gitignored** — they never enter the commit graph.
+- The agent's own scratch goes to `agents/runtime/tmp/` — never into `agents/tmp/`.
+- Run `task janitor` for a dry-run report; `task janitor-apply` to sweep.
+
+#### Keeping your consumer `agents/` clean
+
+Run the sync-gitignore fix command after an install or migration:
+
+```bash
+agent-config sync-gitignore --cleanup-legacy
+# Or via the chat command: /sync-gitignore:fix
+```
+
+This scrubs legacy patterns, syncs the managed block, and reports any
+files that are tracked but now ignored (the `git rm --cached` commands
+to fix them are printed — never run automatically).
 
 Module-level documentation goes into `app/Modules/*/agents/`.
 

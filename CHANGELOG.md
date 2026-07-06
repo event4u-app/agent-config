@@ -94,6 +94,29 @@ One question — answer in [Discussions](https://github.com/event4u-app/agent-co
 This gates the read-only MCP discovery helper (`agent-config mcp:search`) and the
 deferred auto-install question (`ADR-086`).
 
+### Added — `agents/` directory contract + gitignore hygiene (`road-to-agents-dir-and-gitignore-hygiene`)
+
+- **`docs/contracts/agents-layout.md`** — authoritative contract for every top-level entry in `agents/` (purpose, git policy, retention, consumer-scope); includes the User Inbox Workflow (`agents/tmp/` → `agents/tmp.old/`).
+- **`src/config/agents-paths.yml`** — machine-readable classification manifest for all agent-managed paths; feeds the new CI freshness gate.
+- **`agents/tmp/` + `agents/tmp.old/` now covered in consumer `gitignore-block.txt`** — both dirs were previously unignored for consumers.
+- **New CI gates** (all wired into `task ci`):
+  - `check-gitignore-freshness` — verifies every manifest entry is in the consumer block.
+  - `check-generator-output-coverage` — every `generate_*` output root in `condense.ts` must be classified.
+  - `check-tracked-but-ignored` — fails if any git-tracked file is now covered by an ignore pattern (makes the bench-run class of drift impossible to reintroduce).
+  - `check-generated-artefact-headers` — validates freshness markers on regenerable analysis artefacts.
+- **`lint_agents_layout.ts` extended** — in source-repo mode, unknown **directories** at the `agents/` root are now CI errors (previously only flat files were checked); `CONSUMER_EXPECTED_ENTRIES` extended with the full consumer-scope allowlist.
+- **Janitor** (`task janitor` / `task janitor-apply`) — TTL sweep for `agents/tmp.old/` (30 days) and `agents/runtime/tmp/` (7 days); reports user inbox state and `.harvest-local/` size; never auto-sweeps the user inbox.
+- **`/sync-gitignore:fix` extended** (Steps 5–6) — now also reports ignored-but-tracked files with the exact `git rm --cached` commands, and runs the manifest coverage check.
+- **`/roadmap:create`** — moves consumed `agents/tmp/` files to `agents/tmp.old/` in the same reply (inbox workflow).
+- **`agent-docs-writing` skill** — documents the user inbox contract; redirected `prediction-pool` agent scratch from `agents/tmp/` to `agents/runtime/tmp/`.
+
+#### Migration
+
+If you have a consumer project:
+
+1. Run `agent-config sync-gitignore --cleanup-legacy` to add `/agents/tmp/` and `/agents/tmp.old/` to your `.gitignore`.
+2. Run `git ls-files -ci --exclude-standard` — if any files appear, run the printed `git rm --cached` commands and commit.
+
 ### Added — pack-scoped projection (opt-in, `road-to-6.0.0-b`)
 
 The projector can now write only the **active profile + packs'** artefacts into
