@@ -170,12 +170,14 @@ Regardless of goal, close with three fixed blocks:
 ## Do NOT
 
 - Do NOT force-apply all frameworks at the user's chosen depth — drop ones that add no insight.
-- Do NOT copy text verbatim from the source — always reword for the user's understanding.
+- Do NOT copy text verbatim from the source — always reword for the user's understanding; any exact quote follows `content-quoting-floor` (≤15 words, one quote per source).
 - Do NOT use academic jargon without one-line definitions in the "key concepts" block.
 - Do NOT skip Step 5 — the takeaways + quick win are the load-bearing output, not optional decoration.
 - Do NOT route code reviews, diff stress-tests, or incident debugging through this skill.
 
 ## Reference modules
+
+All 8 framework modules are project-local guidelines under `docs/guidelines/agent-infra/` (full text adopted under the Reference-Guideline Sunset Policy). Each carries an `## ADOPT citation` footer pinning its MIT upstream origin.
 
 - [`scqa-framework`](../../../docs/guidelines/agent-infra/scqa-framework.md) — situation / complication / question / answer decomposition.
 - [`5w2h-analysis`](../../../docs/guidelines/agent-infra/5w2h-analysis.md) — completeness check (7 questions).
@@ -186,3 +188,5 @@ Regardless of goal, close with three fixed blocks:
 - [`systems-thinking`](../../../docs/guidelines/agent-infra/systems-thinking.md) — feedback loops + leverage points.
 - [`six-hats`](../../../docs/guidelines/agent-infra/six-hats.md) — White / Red / Black / Yellow / Green / Blue protocol.
 - [`comparison-matrix`](../../../docs/guidelines/agent-infra/comparison-matrix.md) — cross-source synthesis (L4 only).
+
+> **Deprecated — on-demand upstream loading.** Earlier revisions of this skill described loading some modules "on demand from a SHA-pinned URL", backed by an `external_source` frontmatter pin. That capability was **never wired** (no fetcher ever consumed the pin; it was schema-only metadata), so the pin and its `refresh_trigger` / `sunset_criterion` bundle have been **removed** — every module is local, no runtime fetch is needed. If a future revision genuinely needs live upstream content, build an explicit fetch step; do not reintroduce a non-functional metadata pin.

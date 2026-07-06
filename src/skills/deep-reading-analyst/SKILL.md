@@ -170,7 +170,7 @@ Regardless of goal, close with three fixed blocks:
 ## Do NOT
 
 - Do NOT force-apply all frameworks at the user's chosen depth — drop ones that add no insight.
-- Do NOT copy text verbatim from the source — always reword for the user's understanding.
+- Do NOT copy text verbatim from the source — always reword for the user's understanding; any exact quote follows `content-quoting-floor` (≤15 words, one quote per source).
 - Do NOT use academic jargon without one-line definitions in the "key concepts" block.
 - Do NOT skip Step 5 — the takeaways + quick win are the load-bearing output, not optional decoration.
 - Do NOT route code reviews, diff stress-tests, or incident debugging through this skill.

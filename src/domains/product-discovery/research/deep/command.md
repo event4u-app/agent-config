@@ -87,6 +87,8 @@ Read {fields_path} to get all field definitions.
    field names whose value contains `[uncertain]` or could not be
    sourced.
 4. All field values in English.
+5. Cite claims from fetched sources by paraphrase; verbatim quoting
+   follows `content-quoting-floor` (≤15 words, one quote per source).
 
 ## Output path
 {output_path}

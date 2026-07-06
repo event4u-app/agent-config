@@ -120,6 +120,7 @@ Cut surfaces aggressively. A weekly release does not need a blog post.
 - Do NOT promote a coming-soon item alongside shipped items — the user cannot tell which is which and stops trusting the next note.
 - Do NOT let a long-tail change steal the headline — the dominant change earns the headline, the long tail goes in the changelog.
 - Do NOT ship surfaces without the truth-check pass; an unsourced claim survives in social longer than the release does.
+- Do NOT paste more than a short excerpt from a linked source (commit message, PR body, issue thread) — `content-quoting-floor` caps verbatim quotes at 15 words, one per source; paraphrase the rest.
 
 ## Runnable example
 
