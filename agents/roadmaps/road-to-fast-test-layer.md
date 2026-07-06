@@ -12,16 +12,16 @@ Fix: run twins **in-process** (`main(argv)` import, stdout/exit capture).
 
 ## Phase 1 — Harness + pilot
 
-- [ ] Write `tests/_lib/run_in_process.ts`: `runInProc(mainFn, argv, opts)` — intercept `process.stdout/stderr.write`, overlay `process.env`, save/restore `process.exitCode` + `cwd`, catch `ProcessExit` for `process.exit()` scripts.
-- [ ] Pilot: migrate `tests/scripts/measure_density.test.ts` to in-process and confirm the wall-time drops (run twice, check ~1 ms vs ~350 ms).
-- [ ] Pilot: migrate `tests/scripts/lint_agent_security.test.ts` to in-process.
-- [ ] Pilot: migrate `tests/scripts/inventory_meta_layers.test.ts` to in-process.
+- [x] Write `tests/_lib/run_in_process.ts`: `runInProc(mainFn, argv, opts)` — intercept `process.stdout/stderr.write`, overlay `process.env`, save/restore `process.exitCode` + `cwd`, catch `ProcessExit` for `process.exit()` scripts.
+- [x] Pilot: migrate `tests/scripts/measure_density.test.ts` to in-process and confirm the wall-time drops (run twice, check ~1 ms vs ~350 ms).
+- [x] Pilot: migrate `tests/scripts/lint_agent_security.test.ts` to in-process.
+- [x] Pilot: migrate `tests/scripts/inventory_meta_layers.test.ts` to in-process.
 
 ## Phase 2 — cmd_* cluster (highest spawn count)
 
-- [ ] Migrate `cmd_doctor` — 56 `runTs` calls via `expectStable`, each now in-process.
-- [ ] Migrate `cmd_export`, `cmd_migrate`, `cmd_sync`, `cmd_update`, `cmd_uninstall`.
-- [ ] Migrate `cmd_explain`, `cmd_prune`, `cmd_refresh`, `cmd_settings_check`, `cmd_settings_migrate`, `cmd_validate`, `cmd_versions`, `cmd_upgrade`.
+- [x] Migrate `cmd_doctor` — 56 `runTs` calls via `expectStable`, each now in-process.
+- [x] Migrate `cmd_export`, `cmd_migrate`, `cmd_sync`, `cmd_update`, `cmd_uninstall`.
+- [x] Migrate `cmd_explain`, `cmd_prune`, `cmd_refresh`, `cmd_settings_check`, `cmd_settings_migrate`, `cmd_validate`, `cmd_versions`, `cmd_upgrade`.
 
 ## Phase 3 — check_* / lint_* / audit_* / measure_* cluster
 

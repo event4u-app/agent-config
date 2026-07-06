@@ -5,25 +5,20 @@
 // --quiet) on the REAL src/ tree: defined exit + determinism + the written
 // SARIF file. The umbrella runner shells out to the child linters, so it
 // observes the real repo. The SARIF file is written under a tmp dir so the
-// test leaves zero git drift.
-import { spawnSync } from 'node:child_process';
+// test leaves zero git drift. Runs in-process (no tsx cold-start).
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { main } from '../../src/scripts/lint_agent_security.js';
+import { runInProc } from '../_lib/run_in_process.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_agent_security.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 function runTs(args: string[]) {
-    return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+    return runInProc(main, args);
 }
 
 describe('lint_agent_security — CLI contract', () => {

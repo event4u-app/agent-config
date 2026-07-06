@@ -19,28 +19,22 @@
 // in a deterministic (sorted) order and matches the Python output byte-for-byte.
 //
 // Skipped without python3.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { main } from '../../src/scripts/inventory_meta_layers.js';
 import { acquireGlobalStateLock } from './_global_state_lock.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'inventory_meta_layers.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 const EVIDENCE_DIR = path.join(REPO_ROOT, 'agents', 'evidence', 'analysis');
 const MD = path.join(EVIDENCE_DIR, 'meta-layer-inventory.md');
 const CSV = path.join(EVIDENCE_DIR, 'meta-layer-inventory.csv');
 
 function runTs(args: string[]) {
-    return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+    return runInProc(main, args);
 }
 
 describe('inventory_meta_layers — CLI contract', () => {

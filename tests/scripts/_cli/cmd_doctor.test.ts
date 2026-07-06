@@ -44,6 +44,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { main } from '../../../src/scripts/_cli/cmd_doctor.js';
+import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_doctor.ts');
@@ -63,12 +65,7 @@ interface RunResult {
 }
 
 function runTs(args: string[], cwd: string, extraEnv: Record<string, string> = {}): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-        cwd,
-        encoding: 'utf8',
-        env: { ...process.env, ...extraEnv },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    return runInProc(main, args, { cwd, env: extraEnv });
 }
 
 /**
