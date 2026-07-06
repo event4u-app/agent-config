@@ -276,6 +276,9 @@ guidance + docs URLs from here instead of memory.
 | Orchestration gates + locks | `directives/ui/{design,review,polish}.py` — never import the engine |
 | WCAG audit method | [`accessibility-auditor`](../accessibility-auditor/SKILL.md) |
 | Token authoring | [`design-tokens`](../design-tokens/SKILL.md) |
+| Lo-fi structure exploration (pre-selection) | [`wireframe`](../wireframe/SKILL.md) — disposable greyscale variants |
+| Multiple hi-fi options (post-selection) | [`design-variations`](../design-variations/SKILL.md) — grounds each variation via this skill |
+| Fixed-canvas slide decks | [`html-deck`](../html-deck/SKILL.md) — own medium, still corpus-grounded |
 
 ## Gotchas
 

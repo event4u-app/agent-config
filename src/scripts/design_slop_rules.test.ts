@@ -93,6 +93,13 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     positive: "We streamline and empower your robust, world-class workflow.",
     negative: "We cut page load by 40% and remove three steps from checkout.",
   },
+  "slop-cp5-emoji-ui": {
+    ext: "html",
+    positive: '<h1>🚀 Get Started</h1><button>✅ Track progress</button>',
+    // Functional placements stay clean: mid-sentence emoji, status-cell emoji.
+    negative:
+      '<h1>Get Started</h1><p>Deploys are marked ✅ when healthy.</p><td>✅</td><button>Track progress</button>',
+  },
   "slop-lock-shape": {
     ext: "css",
     positive: ".a{border-radius:4px}.b{border-radius:8px}.c{border-radius:12px}.d{border-radius:20px}",
@@ -168,6 +175,14 @@ describe("context gates suppress when DESIGN.md declares intent", () => {
     expect(findingsFor("slop-t7-default-fonts", fx.positive, "css", NO_CTX).length).toBeGreaterThan(0);
     expect(
       findingsFor("slop-t7-default-fonts", fx.positive, "css", ctxWith("Body font: Inter (chosen for variable metrics in a data-dense dashboard)")).length,
+    ).toBe(0);
+  });
+
+  it("cp5 emoji-ui is suppressed when DESIGN.md declares an emoji strategy", () => {
+    const fx = FIXTURES["slop-cp5-emoji-ui"]!;
+    expect(findingsFor("slop-cp5-emoji-ui", fx.positive, "html", NO_CTX).length).toBeGreaterThan(0);
+    expect(
+      findingsFor("slop-cp5-emoji-ui", fx.positive, "html", ctxWith("Voice: playful; emoji are part of the brand voice in headings and CTAs")).length,
     ).toBe(0);
   });
 

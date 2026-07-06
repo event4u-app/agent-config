@@ -1,0 +1,17 @@
+{
+  "skill": "html-deck",
+  "last_eval": "2026-07-06",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers deck/slides/presentation/pitch builds in HTML. Should-not-trigger covers near-miss neighbors: canvas-design (posters/static art), fe-design (responsive UI), design-variations (options), PowerPoint-file requests, and content-only outline asks.",
+  "queries": [
+    {"q": "make a 10-slide deck for the investor pitch", "trigger": true},
+    {"q": "build a presentation from this PRD for the engineering all-hands", "trigger": true},
+    {"q": "turn these notes into HTML slides I can present tomorrow", "trigger": true},
+    {"q": "create a pitch deck with our brand colors, 16:9", "trigger": true},
+    {"q": "I need a slide presentation that also prints to PDF", "trigger": true},
+    {"q": "design a poster for the conference booth", "trigger": false, "note": "static one-frame art → canvas-design"},
+    {"q": "build the landing page hero section", "trigger": false, "note": "responsive UI → fe-design / stack executor"},
+    {"q": "show me 3 design options for this dashboard", "trigger": false, "note": "options → design-variations"},
+    {"q": "write an outline for my talk", "trigger": false, "note": "content-only ask, no HTML deliverable"},
+    {"q": "export our Google Slides to PowerPoint", "trigger": false, "note": "file conversion, not an HTML deck build"}
+  ]
+}

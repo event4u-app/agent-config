@@ -92,6 +92,12 @@ four-operation split assigns to *rules/linters*, not the corpus).
    actually uses.
 2. **Ground the values** — `design-intelligence` query gives the
    WCAG-checked semantic color set + typography pairing for the product.
+   No brand and no corpus match (a genuinely from-scratch palette) →
+   derive the accent set in `oklch()` with shared lightness and chroma,
+   varied hue (`oklch(50% 0.15 250)` / `… 200` / `… 280`) — equal L/C
+   keeps the hues perceptually balanced where random hex codes drift in
+   saturation; cross-check the result against C1/C5 avoidance before
+   locking it in.
 3. **Author `tokens.json`** from the starter: fill primitives, point
    semantics at them, add `dark.semantic` overrides.
 4. **Generate** CSS vars (and the Tailwind snippet when the stack is
