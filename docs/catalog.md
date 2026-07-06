@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **608 public artefacts** shipped by
+Consumer-facing catalog of all **610 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -276,7 +276,7 @@ are excluded.
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 
-## Rules (92)
+## Rules (94)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -294,8 +294,10 @@ are excluded.
 | rule | [`command-suggestion-policy`](../dist/agent-src/rules/command-suggestion-policy.md) | auto | Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute |
 | rule | [`commit-conventions`](../dist/agent-src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
 | rule | [`commit-policy`](../dist/agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
+| rule | [`content-quoting-floor`](../dist/agent-src/rules/content-quoting-floor.md) | auto | Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default |
 | rule | [`context-hygiene`](../dist/agent-src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../dist/agent-src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config |
+| rule | [`decision-revisit-gate`](../dist/agent-src/rules/decision-revisit-gate.md) | auto | A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped |
 | rule | [`delegation-policy`](../dist/agent-src/rules/delegation-policy.md) | auto | Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session |
 | rule | [`design-fidelity`](../dist/agent-src/rules/design-fidelity.md) | auto | A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed |
 | rule | [`devcontainer-routing`](../dist/agent-src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill |

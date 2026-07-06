@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **609 artefacts** in this package.
+Maintainer-facing index of all **611 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -276,7 +276,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 
-## Rules (93)
+## Rules (95)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -294,8 +294,10 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`command-suggestion-policy`](../src/rules/command-suggestion-policy.md) | auto | Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute |
 | rule | [`commit-conventions`](../src/rules/commit-conventions.md) | auto | Git commit format, branch naming, conventional commits, committing, pushing, creating PRs |
 | rule | [`commit-policy`](../src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
+| rule | [`content-quoting-floor`](../src/rules/content-quoting-floor.md) | auto | Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default |
 | rule | [`context-hygiene`](../src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config |
+| rule | [`decision-revisit-gate`](../src/rules/decision-revisit-gate.md) | auto | A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped |
 | rule | [`delegation-policy`](../src/rules/delegation-policy.md) | auto | Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session |
 | rule | [`design-fidelity`](../src/rules/design-fidelity.md) | auto | A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed |
 | rule | [`devcontainer-routing`](../src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill |
