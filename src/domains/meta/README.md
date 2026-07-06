@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `7.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 253
+- **artefacts**: 254
 
 ## Commands (123)
 
@@ -136,7 +136,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (63)
+## Rules (64)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -148,6 +148,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`autonomous-execution`** — Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default
 - **`cli-output-handling`** — Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
+- **`content-quoting-floor`** — Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
 - **`copilot-routing`** — Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config
 - **`devcontainer-routing`** — Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill
