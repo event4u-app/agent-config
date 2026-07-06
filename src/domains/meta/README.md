@@ -8,7 +8,7 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `7.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 253
+- **artefacts**: 254
 
 ## Commands (123)
 
@@ -136,7 +136,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (63)
+## Rules (64)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -150,6 +150,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
 - **`copilot-routing`** — Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config
+- **`decision-revisit-gate`** — A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped
 - **`devcontainer-routing`** — Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill
 - **`direct-answers`** — Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default.
 - **`domain-adoption-policy`** — Adopting a new domain track (mobile, ML, blockchain, IoT) — gates import on demand, ownership, CI fit, Sunset compat BEFORE harvest

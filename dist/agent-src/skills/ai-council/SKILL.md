@@ -427,7 +427,19 @@ Every council reply MUST contain, in this order:
 2. **One section per member**, titled `### <provider> · <model>`,
    containing the member's verbatim output.
 3. **Convergence / Divergence summary** — bullet list, every claim
-   attributed by provider name.
+   attributed by provider name. **When the convergence settles a
+   question as "don't relitigate" / locked / a durable disposition**,
+   the summary MUST record two additional lines, per
+   [`decision-revisit-gate`](../../rules/decision-revisit-gate.md):
+   `scope:` (exactly which mechanism or question is settled — narrow
+   enough that a superficially similar but different proposal is not
+   silently covered) and `revisit-if:` (at least one concrete condition
+   that reopens it — new evidence class, model-generation or tooling
+   change, an N-th blocked encounter, or an age threshold). A lock
+   recorded without both lines is an authoring error. Also state
+   whether the disposition is **settled-by-evidence** (an eval ran) or
+   **settled-by-decision** (a maintainer call) — the latter is cheaper
+   to reopen and should say so.
 4. **Host verdict per finding** — one row per finding with `accept`
    / `accept-with-modification` / `reject` / `needs-input` plus a
    one-line reason citing host evidence (file:line, ADR, contract).

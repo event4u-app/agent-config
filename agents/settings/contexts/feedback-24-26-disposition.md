@@ -96,3 +96,12 @@ duplicate `road-to-employee-product-and-external-proof` scope (employee
 workflows, unified profile dashboard) or the `road-to-6.0.0-*` rebuild
 (experience-first simplicity). Those remain the homes for the larger
 product asks.
+
+## Scope + revisit-if
+
+Per `decision-revisit-gate`: settled-by-decision (a 2026-06-02 re-audit,
+not an eval), scoped to feedback rounds 24–26 specifically as triaged
+against the repo state on that date. Revisit-if: a later feedback round
+resurfaces one of these items as still-missing (the re-audit was wrong or
+the item regressed), or the repo state this disposition was checked against
+has since diverged materially.

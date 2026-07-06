@@ -37,6 +37,11 @@ install:
   have contributed to problems.
 - Preparation for a supersession: confirm the old decision actually
   needs replacing before writing a new ADR.
+- Routed here by [`decision-revisit-gate`](../../rules/decision-revisit-gate.md)
+  when a beneficial change is blocked by a recorded lock (honest-null
+  verdict, "don't relitigate" memory, budget canon, or ADR) — this skill
+  supplies the backward-audit procedure that rule's re-evaluation offer
+  points to.
 
 Do NOT use when:
 

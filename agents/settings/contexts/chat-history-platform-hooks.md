@@ -506,3 +506,13 @@ agents and counts rows per agent across the entire file:
 `<unknown>` appears as its own key when the file contains
 unattributed rows. Use the count to validate hook coverage —
 zero `<unknown>` after a backfill means every row is attributable.
+
+## Scope + revisit-if
+
+Per `decision-revisit-gate`: settled-by-evidence (each platform's hook
+classification is cited), scoped to the six platforms as they behaved at
+last refresh (2026-05-05). Revisit-if: a platform ships a new lifecycle-hook
+API, a classification proves wrong in production, or a new platform is
+added to the supported list. This note is already explicitly staleness-aware
+("stale assumptions are the failure mode this phase exists to prevent") — the
+revisit-if formalizes what that already implies.
