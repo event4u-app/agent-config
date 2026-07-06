@@ -31,6 +31,7 @@
 
 # Agent config — personal settings (written by the installer)
 .agent-settings.yml
+.agent-settings.local.yml
 .agent-settings
 .agent-settings.backup.key-value
 
@@ -107,6 +108,17 @@
 # minimal-safe-diff, onboarding-gate), and the GUI wizard resume snapshot.
 # Local-only per the Volatile Runtime policy.
 /agents/state/
+
+# Agent config — user inbox (free-form notes/todos for the agent to consume).
+# User-owned; never auto-swept by the janitor.
+# Agent scratch → agents/runtime/tmp/ (NOT this dir).
+# See docs/contracts/agents-layout.md § User Inbox Workflow.
+/agents/tmp/
+
+# Agent config — processed inbox archive. The agent moves consumed tmp/ files
+# here after processing (roadmap created, note promoted, etc.).
+# Janitor TTL: 30 days. See docs/contracts/agents-layout.md § User Inbox Workflow.
+/agents/tmp.old/
 
 # Agent config — unified-setup wizard partial state (Roadmap R2 Phase 1).
 # Written by POST /api/v1/wizard/state between step transitions, deleted

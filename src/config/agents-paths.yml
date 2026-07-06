@@ -1,0 +1,254 @@
+# Ignore/track classification manifest for agent-config managed paths.
+#
+# Consumed by:
+#   - scripts/generate_gitignore_block.ts  → src/config/gitignore-block.txt
+#   - scripts/check_gitignore_freshness.ts → CI drift gate (Phase 3.4)
+#   - scripts/lint_agents_layout.ts        → cross-checks policy labels
+#
+# Fields:
+#   path     - the ignore pattern (gitignore syntax)
+#   scope    - package (source repo only) | consumer | both
+#   policy   - tracked | tracked-generated | ignored | carve-out | legacy
+#   writer   - the script / skill / human that creates this path (for audit)
+#   rationale - one-line justification
+#   legacy   - true: add to LEGACY_PATTERNS in sync_gitignore.ts for cleanup
+#   comment  - optional comment block to emit above the pattern in the gitignore
+
+# ---------------------------------------------------------------------------
+# Settings files
+# ---------------------------------------------------------------------------
+
+- path: .agent-settings.yml
+  scope: both
+  policy: ignored
+  writer: installer (scripts/install.py)
+  rationale: Per-user active settings; contains local-path secrets
+
+- path: .agent-settings
+  scope: both
+  policy: ignored
+  writer: installer (legacy flat format, pre-YAML migration)
+  rationale: Legacy flat key=value settings; migrated on first wizard run
+  legacy: true
+
+- path: .agent-settings.backup.key-value
+  scope: both
+  policy: ignored
+  writer: installer (migration backup)
+  rationale: One-shot backup during settings migration; safe to delete after
+  legacy: true
+
+- path: .agent-settings.local.yml
+  scope: both
+  policy: ignored
+  writer: developer (manual)
+  rationale: Machine-local overrides that must never be shared
+
+# ---------------------------------------------------------------------------
+# User persona + observation buffer
+# ---------------------------------------------------------------------------
+
+- path: .agent-user.md
+  scope: both
+  policy: ignored
+  writer: /agents:user:init skill
+  rationale: Personal user identity; local-only by default (shared opt-in deferred)
+  comment: |
+    # Agent config — user-persona file (.agent-user.md, written by /agents user init)
+    # Contains who the user is and how they want to be addressed. Local-only by
+    # default; commit explicitly only via the deferred --shared opt-in.
+    # See docs/contracts/agent-user-schema.md.
+
+- path: .agent-user.md.bak
+  scope: both
+  policy: ignored
+  writer: installer (backup)
+  rationale: Safety backup during persona migration
+
+- path: .agent-user.observations.jsonl
+  scope: both
+  policy: ignored
+  writer: /agents:user:review skill
+  rationale: Append-only raw observation buffer; never shared
+  comment: |
+    # Agent config — user-persona observation buffer (append-only JSONL,
+    # never shared). Feeds /agents user review / accept only.
+
+# ---------------------------------------------------------------------------
+# Memory intake (gitignored; curated YAML subsets are committed)
+# ---------------------------------------------------------------------------
+
+- path: /agents/memory/intake/
+  scope: both
+  policy: ignored
+  writer: /memory:mine-session skill
+  rationale: Raw low-confidence intake; promotion to committed YAML is human-gated
+  comment: |
+    # Agent config — raw memory intake (append-only, low-confidence, agent-written
+    # by /memory mine-session). Local scratch only — commit ONLY the curated YAML
+    # promoted out of it (agents/memory/<type>/*.yml stays tracked).
+
+- path: /agents/memory/ephemeral/
+  scope: both
+  policy: ignored
+  writer: Evidence v2 project-intelligence pipeline (contexts/execution/project-intelligence.md)
+  rationale: Per-session trial-and-error observations; TTL managed; never promoted
+
+# ---------------------------------------------------------------------------
+# Knowledge intake (gitignored; committed pages live in agents/knowledge/)
+# ---------------------------------------------------------------------------
+
+- path: /agents/knowledge/intake/
+  scope: both
+  policy: ignored
+  writer: /team-knowledge:consolidate skill
+  rationale: Append-only JSONL events; consolidated into committed pages on human review
+  comment: |
+    # Agent config — typed knowledge-observation events (append-only JSONL).
+    # Consolidated via /team-knowledge consolidate into committed pages under
+    # agents/knowledge/{sessions,concepts,procedures,decisions}/.
+
+- path: /agents/.bootstrap-staging/
+  scope: both
+  policy: ignored
+  writer: /team-knowledge:bootstrap skill
+  rationale: Deterministic template pages; review-then-commit flow (nothing here is the artifact)
+
+# ---------------------------------------------------------------------------
+# Ghostwriter profiles
+# ---------------------------------------------------------------------------
+
+- path: /agents/ghostwriter/*.md
+  scope: both
+  policy: ignored
+  writer: /ghostwriter:fetch skill
+  rationale: Real-person voice profiles; local-only by default; shared opt-in deferred
+  comment: |
+    # Agent config — ghostwriter profiles (real-person public-figure voices).
+    # Local-only by default; commit explicitly only via the deferred --shared opt-in.
+    # See docs/contracts/ghostwriter-schema.md.
+
+- path: "!/agents/ghostwriter/README.md"
+  scope: both
+  policy: carve-out
+  writer: maintainer
+  rationale: README is tracked and ships with the package
+
+- path: /agents/ghostwriter/*.md.bak
+  scope: both
+  policy: ignored
+  writer: /ghostwriter:fetch skill (backup)
+  rationale: Safety backup during profile updates
+
+# ---------------------------------------------------------------------------
+# Chat history (legacy path; current installs use agents/runtime/)
+# ---------------------------------------------------------------------------
+
+- path: /agents/.agent-chat-history
+  scope: both
+  policy: ignored
+  writer: scripts/chat_history.py (legacy flat path)
+  rationale: Legacy location; current installs write to agents/runtime/.agent-chat-history
+  legacy: true
+
+- path: /agents/.agent-chat-history.bak
+  scope: both
+  policy: ignored
+  writer: scripts/chat_history.py
+  rationale: Crash-recovery backup; local-only
+  legacy: true
+
+- path: /agents/.agent-chat-history.*.bak
+  scope: both
+  policy: ignored
+  writer: scripts/chat_history.py
+  rationale: Timestamped backup variants; local-only
+  legacy: true
+
+# ---------------------------------------------------------------------------
+# Telemetry
+# ---------------------------------------------------------------------------
+
+- path: .agent-engagement.jsonl
+  scope: both
+  policy: ignored
+  writer: ./agent-config telemetry:record
+  rationale: Artefact engagement telemetry; default-off; maintainer-only
+  comment: |
+    # Agent config — artefact engagement telemetry (default-off, maintainer-only, never commit)
+
+- path: .agent-engagement.jsonl.bak
+  scope: both
+  policy: ignored
+  writer: ./agent-config telemetry:record (backup)
+  rationale: Telemetry log backup
+
+# ---------------------------------------------------------------------------
+# Volatile runtime (entire tree)
+# ---------------------------------------------------------------------------
+
+- path: /agents/runtime/
+  scope: both
+  policy: ignored
+  writer: multiple scripts (council, chat-history, metrics, hooks, mcp-telemetry, etc.)
+  rationale: All volatile session/TTL artefacts; single catch-all per the Volatile Runtime policy
+  comment: |
+    # Agent config — volatile runtime artefacts (machine-generated,
+    # regenerated on demand, never committed). Single catch-all per the
+    # Volatile Runtime policy: everything under agents/runtime/ is
+    # local-only — price cache, council questions/responses/sessions,
+    # council events log, Tier 1 hook runtime state, chat-history, budget
+    # history, density / frugality / logs / mcp-telemetry / tmp scratch.
+    # Durable evidence cited from docs / ADRs lives in agents/evidence/;
+    # decision records in agents/decisions/.
+
+# ---------------------------------------------------------------------------
+# Hook + wizard runtime state
+# ---------------------------------------------------------------------------
+
+- path: /agents/state/
+  scope: both
+  policy: ignored
+  writer: hooks (context_hygiene_hook.py, etc.) + GUI wizard
+  rationale: Per-rule hook state and wizard resume snapshot; local-only per Volatile Runtime policy
+  comment: |
+    # Agent config — Tier 1 hook + wizard runtime state (machine-generated,
+    # regenerated on demand, never committed). Holds the dispatcher lock,
+    # per-rule hook state, and the GUI wizard resume snapshot.
+
+# ---------------------------------------------------------------------------
+# User inbox (agents/tmp) and processed archive (agents/tmp.old)
+# ---------------------------------------------------------------------------
+
+- path: /agents/tmp/
+  scope: both
+  policy: ignored
+  writer: user (human)
+  rationale: |
+    User inbox — user drops notes/todos; agent reads + moves to tmp.old/ on
+    consumption. Agent scratch never goes here. See docs/contracts/agents-layout.md § User Inbox Workflow.
+  comment: |
+    # Agent config — user inbox (free-form notes/todos for the agent to consume).
+    # User-owned; never auto-swept by the janitor.
+    # Agent scratch → agents/runtime/tmp/ (NOT this dir).
+    # See docs/contracts/agents-layout.md § User Inbox Workflow.
+
+- path: /agents/tmp.old/
+  scope: both
+  policy: ignored
+  writer: agent (moves consumed tmp/ files here)
+  rationale: Processed inbox archive; TTL 30 days (janitor sweeps); never contains agent scratch
+  comment: |
+    # Agent config — processed inbox archive. The agent moves consumed tmp/ files
+    # here after processing (roadmap created, note promoted, etc.).
+    # Janitor TTL: 30 days. See docs/contracts/agents-layout.md § User Inbox Workflow.
+
+# ---------------------------------------------------------------------------
+# Wizard partial state
+# ---------------------------------------------------------------------------
+
+- path: /.agent-config/wizard-state.json
+  scope: both
+  policy: ignored
+  writer: Fastify wizard server (POST /api/v1/wizard/state)
+  rationale: Step-transition crash-recovery; deleted on wizard finish; local-only
