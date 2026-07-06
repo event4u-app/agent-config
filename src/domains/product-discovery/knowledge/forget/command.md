@@ -46,7 +46,7 @@ If the prefix is missing → print the usage line above and stop. Do
 ### 2. Run the implementation
 
 ```bash
-python3 packages/core/installer/python/knowledge_ingest.py \
+./agent-config knowledge \
     forget <ingest-id-prefix>
 ```
 

@@ -39,7 +39,7 @@ User: ist der Fix fertig?
 
 Agent: Frisch gerade ausgeführt:
 
-$ python3 -m pytest tests/test_load_context.py -v
+$ node node_modules/.bin/vitest run tests/scripts/load_context.test.ts
 ============================== 7 passed in 0.07s ===============================
 
 Exit code 0, 7/7 grün. Damit ist der Fix verifiziert.
@@ -74,7 +74,7 @@ User: also fertig zum committen?
 
 Agent: Ich verifiziere kurz — Tests laufen jetzt:
 
-$ python3 -m pytest tests/ -q
+$ node node_modules/.bin/vitest run -q
 ... 47 passed in 2.31s
 
 Grün. Plus ein quality-tools-Lauf:

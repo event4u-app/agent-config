@@ -30,7 +30,7 @@ Agentic Applications. Consumer-facing counterpart to the suite's own
 ### 1. Run the static audit
 
 ```bash
-python3 src/scripts/security_audit_config.py --root <repo> --json
+./scripts-run src/scripts/security_audit_config --root <repo> --json
 ```
 
 (omit `--root` to audit the current repo). Reuses the Phase-1 detection library

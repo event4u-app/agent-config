@@ -28,7 +28,7 @@ from its cause.
 ### 1. Read the state
 
 ```bash
-python3 -m scripts.config.session_profiles show --json
+./scripts-run src/scripts/config/session_profiles show --json
 ```
 
 Fields: `active_packs`, `commands_shown`, `skills_shown`, `hidden_total`.
@@ -37,7 +37,7 @@ For a **non-technical employee**, render the plain-language status instead — a
 deterministic template (no LLM), the right content for an employee-facing surface:
 
 ```bash
-python3 -m scripts.config.session_profiles show --plain
+./scripts-run src/scripts/config/session_profiles show --plain
 ```
 
 Shape + constraints: [`session-profile-overlay` § Plain status surface](../../../../docs/contracts/session-profile-overlay.md#plain-status-surface).
@@ -64,7 +64,7 @@ Shape + constraints: [`session-profile-overlay` § Plain status surface](../../.
 If the user asks *which* artefacts are hidden, run:
 
 ```bash
-python3 -m scripts.config.session_profiles surface --json
+./scripts-run src/scripts/config/session_profiles surface --json
 ```
 
 and list `hidden[]` (name + packs). Keep it scannable; group by pack if long.

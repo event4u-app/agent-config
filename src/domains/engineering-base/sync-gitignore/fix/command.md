@@ -74,7 +74,7 @@ stop — there is nothing to fix:
 Run:
 
 ```bash
-python3 <script> --cleanup-legacy --dry-run
+./scripts-run <script> --cleanup-legacy --dry-run
 ```
 
 Capture stdout (unified diff) and stderr (summary line listing the
@@ -102,7 +102,7 @@ legacy entries that would be removed). Three outcomes:
 
 - `1` (Apply) → re-run **without** `--dry-run`:
   ```bash
-  python3 <script> --cleanup-legacy
+  ./scripts-run <script> --cleanup-legacy
   ```
   Confirm with the script's own summary lines (removed-legacy count and
   added-entries count both surface there).

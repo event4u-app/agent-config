@@ -48,7 +48,7 @@ This skill will walk these steps:
 - Write the standard template
 - Regenerate the index
 
-Declared command: `python3 scripts/adr/regenerate_index.py`
+Declared command: `./scripts-run src/scripts/adr/regenerate_index`
 ```
 
 Add `--technical` for the raw frontmatter + numbered step list.

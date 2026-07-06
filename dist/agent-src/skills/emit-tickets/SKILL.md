@@ -40,7 +40,7 @@ Steps at a glance:
 5. Write `manifest.yml` with acyclic `dependency_graph` and empty `linear_state`.
 6. Append `<!-- ticket: T-NNN -->` markers back into the roadmap.
 7. (Re)generate `agents/tickets/_registry.yml`.
-8. Run `lint_ticket_buildable.py` until exit 0 (max 3 attempts).
+8. Run `lint_ticket_buildable` until exit 0 (max 3 attempts).
 9. Tell the user the bundle is ready: paste a ticket into Linear/Jira, or have the agent create it via a tracker MCP server (ADR-102 — no API export).
 
 ### §0 — Locate the roadmap
@@ -97,7 +97,7 @@ Apply this floor **before** marking any ticket `lite`:
 - Any miss → split the ticket further, or escalate to `medium`
 - Architectural / multi-module → `high` (use `adr-create` first)
 
-**Gate:** run `python3 src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/`
+**Gate:** run `./scripts-run src/scripts/lint_ticket_buildable agents/tickets/{slug}/`
 and fix all errors before declaring any ticket `lite`. This is the only
 authoritative check — do not skip it.
 
@@ -154,7 +154,7 @@ If the file does not exist, create it with the `bundles:` root.
 ### §8 — Run the buildability gate
 
 ```bash
-python3 src/scripts/lint_ticket_buildable.ts agents/tickets/{slug}/
+./scripts-run src/scripts/lint_ticket_buildable agents/tickets/{slug}/
 ```
 
 Fix every reported error. Re-run until exit code 0. Max 3 attempts; if still
@@ -181,7 +181,7 @@ Do NOT auto-create tracker issues — paste/MCP is the user's call.
 
 - Implement or invent ticket content not traceable to a roadmap step.
 - Touch `src/scripts/**` — orchestrate; do not reimplement.
-- Mark a ticket `lite` before `lint_ticket_buildable.py` passes.
+- Mark a ticket `lite` before `lint_ticket_buildable` passes.
 - Create a circular `dependency_graph` — verify acyclicity before writing.
 - Auto-create tracker issues — paste/MCP is the user's call (ADR-102, no API export).
 - Reuse T-NNN numbers from another bundle in the same registry.

@@ -35,7 +35,7 @@ Grounding + Method skill. Turns a confirmed brand strategy into an identity cons
 2. **Ground the colour story** via the brand corpus:
 
 ```bash
-python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<archetype + sector>" --domain color --json
 ```
@@ -45,7 +45,7 @@ python3 <skills-root>/corpus-grounding/scripts/ground.py search \
 3. **Ground the type story** via:
 
 ```bash
-python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<archetype + sector>" --domain typography --json
 ```
@@ -55,7 +55,7 @@ python3 <skills-root>/corpus-grounding/scripts/ground.py search \
 4. **Ground the logo direction** via:
 
 ```bash
-python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<archetype + sector>" --domain logo --json
 ```

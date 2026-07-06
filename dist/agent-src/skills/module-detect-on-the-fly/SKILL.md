@@ -67,8 +67,8 @@ Confirm both flags via `get_modules_config()` before running detection.
 
    - **Option 1** — build the payload (matches `propose_modules_config.py
      --json` shape, includes `detection_acknowledged: true`), pipe into
-     `python3 scripts/apply_modules_config.py --project <root>`.
-   - **Option 2** — run `python3 scripts/apply_modules_config.py
+     `./scripts-run src/scripts/apply_modules_config --project <root>`.
+   - **Option 2** — run `./scripts-run src/scripts/apply_modules_config
      --project <root> --acknowledge-only`. Flips only the ack flag;
      every other `modules.*` key stays untouched.
    - **Option 3** — list candidates, then loop back to step 3.

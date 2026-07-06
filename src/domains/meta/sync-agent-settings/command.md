@@ -49,7 +49,7 @@ Use when:
 - To create `.agent-project-settings.yml` (team file) → that is a
   separate concern; this command only touches the developer file.
 - To migrate a legacy flat `.agent-settings` → run
-  `python3 scripts/install.py` first; the installer owns migrations.
+  `npx @event4u/agent-config install` first; the installer owns migrations.
 
 ## Steps
 
