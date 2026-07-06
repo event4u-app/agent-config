@@ -9,8 +9,8 @@ execution:
   timeout_seconds: 60
   allowed_tools: []
   command:
-    - python3
-    - src/scripts/check_references.ts
+    - ./scripts-run
+    - src/scripts/check_references
 workspaces:
   - agent-config-maintainer
 packs:
@@ -55,7 +55,7 @@ this skill's frontmatter governs the call:
 ```
 
 The dispatcher resolves the request, the shell handler runs
-`python3 src/scripts/check_references.ts`, captures stdout/stderr, and returns a
+`./scripts-run src/scripts/check_references`, captures stdout/stderr, and returns a
 typed `ExecutionResult`.
 
 ### 3. Verify the result
@@ -66,7 +66,7 @@ Check the returned `ExecutionResult`:
 - `exit_code: 1` → at least one broken reference — read `stdout` for file,
   line, and the offending ref, then fix the source or update the target
 - `status: timeout` → the checker exceeded `timeout_seconds` — investigate
-- `status: error` → interpreter or script missing — confirm `python3` and
+- `status: error` → interpreter or script missing — confirm `node` and
   `src/scripts/check_references.ts` are available at the repository root
 
 ## Output format

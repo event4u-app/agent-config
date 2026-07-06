@@ -6,8 +6,8 @@ and include the output of:
 
 ```bash
 composer show event4u/agent-config            # or: npm ls @event4u/agent-config
-php --version
-python3 --version
+node --version
+
 bash scripts/install --verbose --dry-run
 ```
 
@@ -111,17 +111,17 @@ we cannot validate changes without access to a Windows setup.
 
 ---
 
-## `Python 3 is required but was not found`
+## `Node.js is required but was not found`
 
-The bridge installer is Python-based and needs Python 3.8+ on PATH.
+The installer is Node.js-based and needs Node 20.11+ on PATH.
 
-- **macOS 12.3+**: Python 3 is pre-installed as `python3`.
-- **Linux**: `apt install python3` / `dnf install python3` / equivalent.
-- **Windows**: install from [python.org](https://www.python.org/downloads/)
+\- **macOS**: install via [nodejs.org](https://nodejs.org/) or `brew install node`.
+\- **Linux**: `apt install nodejs` / `dnf install nodejs` / equivalent (ensure Node 20+).
+\- **Windows**: install from [nodejs.org](https://nodejs.org/); ensure "Add to PATH" is checked.
   or from the Microsoft Store; ensure "Add python.exe to PATH" is
   checked.
 
-The portability check, condensation pipeline, and test suite also depend
+
 on Python 3 — it is required for contributors, not just consumers.
 
 ---

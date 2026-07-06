@@ -9,8 +9,8 @@ execution:
   timeout_seconds: 120
   allowed_tools: []
   command:
-    - python3
-    - src/scripts/skill_linter.ts
+    - ./scripts-run
+    - src/scripts/skill_linter
     - "--all"
 workspaces:
   - agent-config-maintainer
@@ -39,7 +39,7 @@ Do NOT use when:
 
 ### 1. Inspect the environment
 
-Confirm `python3` is available and the working directory is the agent-config
+Confirm the working directory is the agent-config
 repository root — the linter expects to find `.agent-src.uncondensed/skills/`
 and related directories relative to `cwd`.
 
@@ -53,7 +53,7 @@ this skill's frontmatter governs the call:
 ```
 
 The dispatcher resolves the request, the shell handler runs
-`python3 src/scripts/skill_linter.ts --all`, captures stdout/stderr, and returns
+`./scripts-run src/scripts/skill_linter --all`, captures stdout/stderr, and returns
 a typed `ExecutionResult`.
 
 ### 3. Verify the result
@@ -64,7 +64,7 @@ Check the returned `ExecutionResult`:
 - `exit_code: 1` → warnings only — review `stdout` for the listed warnings
 - `exit_code: 2` → errors present — fix the flagged files before continuing
 - `status: timeout` → the linter exceeded `timeout_seconds` — investigate
-- `status: error` → the interpreter could not launch — check that `python3`
+- `status: error` → the interpreter could not launch — check that `node`
   is on `PATH` and the repository root is the current working directory
 
 ## Output format

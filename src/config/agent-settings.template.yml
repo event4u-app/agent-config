@@ -863,6 +863,6 @@ legal_review_prep:
 # key. Keep the key in your user-global settings so encrypted provenance stays
 # recoverable across fresh clones.
 #
-# Generate one:  python3 src/scripts/_lib/link_crypto.py keygen
+# Generate one:  ./scripts-run src/scripts/_lib/link_crypto keygen
 # secrets:
 #   link_encryption_key: "<paste generated key here>"

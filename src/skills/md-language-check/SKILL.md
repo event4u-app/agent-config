@@ -9,8 +9,8 @@ execution:
   timeout_seconds: 30
   allowed_tools: []
   command:
-    - python3
-    - scripts/check_md_language.py
+    - ./scripts-run
+    - src/scripts/check_md_language
 workspaces:
   - agent-config-maintainer
 packs:

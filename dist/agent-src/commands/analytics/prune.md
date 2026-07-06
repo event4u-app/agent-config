@@ -35,7 +35,7 @@ from racing.
 ### 1. Run the implementation
 
 ```bash
-python3 packages/core/installer/python/workspace_analytics.py prune
+./agent-config analytics prune
 ```
 
 No flags. The 90-day window is fixed by contract.

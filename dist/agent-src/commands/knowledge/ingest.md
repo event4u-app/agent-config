@@ -55,7 +55,7 @@ Run before any file is touched:
 ### 3. Run the implementation
 
 ```bash
-python3 packages/core/installer/python/knowledge_ingest.py \
+./agent-config knowledge \
     ingest <path> [--no-redact] [--markitdown=<bin>]
 ```
 

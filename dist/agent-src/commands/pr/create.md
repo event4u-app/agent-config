@@ -92,7 +92,7 @@ trunk (that rot is exactly what the PR-gate replaces; see
 Run the deterministic sweep:
 
 ```bash
-python3 .augment/scripts/archive_completed_roadmaps.py   # --changed-only (default)
+./agent-config roadmap:archive   # --changed-only (default)
 ```
 
 It `git mv`s each completed roadmap (that this branch touched, per
@@ -178,7 +178,7 @@ github-api
 
 **Hard prohibitions** (each one cost 3+ extra tool calls in past runs):
 
-- ❌ `python3 -c "import urllib..."` / `python3 - <<PY ... PY` heredocs
+- ❌ `node -e "..."` / shell heredoc hacks
   to serialize the body or POST it.
 - ❌ `save-file PR_BODY.md` → read back → `curl -d @PR_BODY.md`.
 - ❌ `gh pr create --body-file …` shelling out when `github-api` is

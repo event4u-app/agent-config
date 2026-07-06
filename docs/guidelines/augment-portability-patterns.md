@@ -48,7 +48,7 @@ Use direct script invocations instead.
 A subset of package scripts is exposed through a project-local CLI
 wrapper `./agent-config` (written into the project root by the
 installer, gitignored). Artefacts MUST prefer the CLI over raw
-`python3 scripts/…` paths for every command the CLI already covers.
+`./scripts-run src/scripts/…` paths for every command the CLI already covers.
 
 ## Translation tables — see mechanics
 

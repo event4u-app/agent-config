@@ -64,7 +64,7 @@ Finish drives the **whole** install through `POST /api/v1/wizard/apply` →
 without `DISPLAY`), or a CLI-mode flag (`--no-ui` / `--tools` / `--ai` /
 `--yes` / `--quiet` / `--dry-run` / `--minimal` / `--settings-only` /
 `--list-tools`). `install.py`'s own tail-launch (`_wizard_spawn`, matching the
-`WIZARD_READY <url>` handshake) remains for direct `python3 install.py` runs.
+`WIZARD_READY <url>` handshake) remains for direct CLI install runs.
 
 ### `WIZARD_READY` stdout contract
 

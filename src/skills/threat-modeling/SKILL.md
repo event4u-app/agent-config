@@ -17,7 +17,7 @@ packs:
 
 > **Grounded corpus (Tier-1 consultation):** before enumerating from
 > memory, ground surface → threats → controls in the adopted corpus —
-> `python3 <skills-root>/corpus-grounding/scripts/ground.py ground
+> `./scripts-run <skills-root>/corpus-grounding/scripts/ground ground
 > --manifest <skills-root>/threat-modeling/data/manifest.json
 > "<surface description>"` returns the surface class, ATT&CK/CWE-cited
 > threats, required controls, and negative tests, with confidence +

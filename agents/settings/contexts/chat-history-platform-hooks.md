@@ -265,7 +265,7 @@ to `transcript_path` parsing using the Claude walker.
 - **Execution model:** subprocess; synchronous for `PreToolUse`/`PostToolUse`/`Stop`. `Stop` can return `decision: "block"` to prevent termination.
 - **Failure semantics:** `PreToolUse` can deny tool calls; `PostToolUse` cannot block; `Stop` can block agent finish.
 - **Workspace routing:** hooks fire at user scope (one install per developer, shared across all projects). The trampoline reads `workspace_roots[0]` from the event payload and dispatches into the active project's `./agent-config chat-history:hook --platform augment`. Silent no-op when the workspace has no `agent-config` wrapper.
-- **Deployment:** opt-in via `python3 scripts/install.py --augment-user-hooks`. Writes `~/.augment/hooks/augment-chat-history.sh` and merges hook entries into `~/.augment/settings.json`.
+- **Deployment:** opt-in via `npx @event4u/agent-config install --augment-user-hooks`. Writes `~/.augment/hooks/augment-chat-history.sh` and merges hook entries into `~/.augment/settings.json`.
 - **Decision: HOOK.** Map `SessionStart` → init (lazy), `Stop` → append at end-of-turn, `PostToolUse` → per-tool cadence, `SessionEnd` → consolidation.
 - **Sources:**
   - <https://docs.augmentcode.com/cli/hooks>

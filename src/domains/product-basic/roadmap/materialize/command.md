@@ -47,7 +47,7 @@ roadmap, writes one ticket per materialisable step into
 Run the build-readiness lint before handing back:
 
 ```bash
-python3 src/scripts/lint_ticket_buildable.py
+./scripts-run src/scripts/lint_ticket_buildable
 ```
 
 A `lite` ticket that fails the self-containedness floor is rejected or escalated

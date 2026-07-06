@@ -30,14 +30,14 @@ no silent session reset.
 - `/profile deactivate` (no args) → clear the whole overlay:
 
   ```bash
-  python3 -m scripts.config.session_profiles deactivate --json
+  ./scripts-run src/scripts/config/session_profiles deactivate --json
   ```
 
 - `/profile deactivate <name…>` → remove only the **named packs** from the
   active set (never their closure), so a shared dependency survives:
 
   ```bash
-  python3 -m scripts.config.session_profiles deactivate <name…> --json
+  ./scripts-run src/scripts/config/session_profiles deactivate <name…> --json
   ```
 
 Parse `active_packs` from the JSON.

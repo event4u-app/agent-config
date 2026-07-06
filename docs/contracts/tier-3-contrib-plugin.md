@@ -58,10 +58,10 @@ When the first user request lands, the responder MUST:
    schema below.
 2. Add the tool ID to `_VALID_TOOLS`, `USER_SCOPE_PATHS`,
    `SCOPE_SUPPORT`, and the bash `VALID_TOOLS` set.
-3. Implement `ensure_<tool>_bridge` in `scripts/install.py` (≤60 LOC
+3. Implement `ensure_<tool>_bridge` in `src/install/` (≤60 LOC
    — if larger, escalate via ADR per Phase 2.5 gate).
 4. Append a row to the `README.md` "Supported Tools" table.
-5. Re-run `task lint-skills` + `python3 -m pytest tests/test_install_py.py`.
+5. Re-run `task lint-skills` + `task test`.
 
 ```yaml
 # agents/manifests/contrib/<tool-id>.yml

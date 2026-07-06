@@ -8,7 +8,7 @@
 2. Copy the template below
 3. Replace all `{placeholders}` with actual content
 4. Remove all `<!-- comments -->` when done
-5. Run: `python3 scripts/skill_linter.py .agent-src.uncondensed/commands/{command-name}.md`
+5. Run: `./scripts-run src/scripts/skill_linter .agent-src.uncondensed/commands/{command-name}.md`
 6. Sync: `task sync` (regenerates `dist/agent-src/` and `.augment/`)
 7. Generate Claude symlink: `task generate-tools` (or manually create symlink)
 
@@ -99,7 +99,7 @@ Before considering a command complete:
 - [ ] **Steps**: numbered sub-headings (`### 1.`, `### 2.`, ...)
 - [ ] **Source of truth**: works on `.agent-src.uncondensed/`, not `dist/agent-src/` or `.augment/`
 - [ ] **No auto-apply**: presents findings, asks before destructive changes
-- [ ] **Linter passes**: `python3 scripts/skill_linter.py` reports 0 FAIL
+- [ ] **Linter passes**: `./scripts-run src/scripts/skill_linter` reports 0 FAIL
 - [ ] **English only**: all content in English
 - [ ] **Synced**: `dist/agent-src/commands/` has the same file
 - [ ] **Claude symlink**: `.claude/skills/{name}/SKILL.md` → `../../../dist/agent-src/commands/{name}.md`

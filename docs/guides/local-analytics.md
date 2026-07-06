@@ -47,14 +47,14 @@ response bodies).
 
 ```bash
 # Render the last 30 days as markdown
-python3 packages/core/installer/python/workspace_analytics.py show
+./agent-config analytics show
 
 # Last 24 h, JSON
-python3 packages/core/installer/python/workspace_analytics.py show \
+./agent-config analytics show \
     --window 24h --format json
 
 # Filter to one role
-python3 packages/core/installer/python/workspace_analytics.py show \
+./agent-config analytics show \
     --role tradesperson --format csv
 ```
 
@@ -108,7 +108,7 @@ rm -rf ~/.event4u/agent-config/workspace/analytics/
 Or prune the rolling window manually:
 
 ```bash
-python3 packages/core/installer/python/workspace_analytics.py prune
+./agent-config analytics prune
 # → pruned 47 event(s)
 ```
 

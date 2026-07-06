@@ -63,16 +63,16 @@ Scripts resolve all paths **skill-relative** (per
 — they work from any cwd:
 
 ```bash
-python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
   --manifest <skills-root>/<domain-skill>/data/manifest.json \
   "fintech dashboard" [--domain style] [--stack react] \
   [--filter "Severity=HIGH"] [--max-results 3] [--json]
 
-python3 <skills-root>/corpus-grounding/scripts/ground.py ground \
+./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
   --manifest <skills-root>/<domain-skill>/data/manifest.json \
   "luxury e-commerce" [--context '{"data_heavy": true}'] [--persist DIR]
 
-python3 <skills-root>/corpus-grounding/scripts/ground.py validate --manifest …
+./scripts-run <skills-root>/corpus-grounding/scripts/ground validate --manifest …
 ```
 
 `<skills-root>` is wherever skills are deployed (`~/.claude/skills/` for

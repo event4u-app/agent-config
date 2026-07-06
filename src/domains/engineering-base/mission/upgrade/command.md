@@ -45,7 +45,7 @@ Before starting, confirm:
 If any of these fail, surface the conflict and stop. Run:
 
 ```bash
-python3 src/scripts/lint_missions.py --check-precondition upgrade .
+./scripts-run src/scripts/lint_missions --check-precondition upgrade .
 ```
 
 (Currently a documented stub — full live-repo check lands in Phase 1 PoC.)

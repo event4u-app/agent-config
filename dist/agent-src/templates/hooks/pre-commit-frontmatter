@@ -9,7 +9,7 @@
 #
 # To run manually:
 #   ./agent-config hooks:install-frontmatter
-#   python3 scripts/lint_artefact_frontmatter.py
+#   ./scripts-run src/scripts/lint_artefact_frontmatter
 #
 # To uninstall:
 #   rm .git/hooks/pre-commit
