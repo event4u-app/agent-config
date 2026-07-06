@@ -607,6 +607,12 @@
       ],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/rules/content-quoting-floor.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/rules/context-hygiene.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -614,6 +620,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/rules/copilot-routing.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/rules/decision-revisit-gate.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -3106,6 +3118,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
+      "target": ".agent-src.uncondensed/rules/token-budget-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
       "target": ".agent-src.uncondensed/rules/token-efficiency.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4841,6 +4860,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
+      "target": ".agent-src.uncondensed/rules/content-quoting-floor.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
+      "target": ".agent-src.uncondensed/rules/domain-safety-disclaimer.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
+      "target": ".agent-src.uncondensed/rules/source-confidentiality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/rules/context-hygiene.md",
       "target": ".agent-src.uncondensed/rules/context-hygiene.md",
       "type": "WRITE",
@@ -4860,6 +4907,69 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/rules/no-cheap-questions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/rules/token-budget-discipline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "target": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/delegation-policy.md",
@@ -6403,6 +6513,13 @@
     },
     {
       "source": ".agent-src.uncondensed/rules/token-budget-discipline.md",
+      "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/token-budget-discipline.md",
       "target": ".agent-src.uncondensed/rules/token-budget-discipline.md",
       "type": "WRITE",
       "via": "self",
@@ -6803,6 +6920,13 @@
     {
       "source": ".agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md",
       "target": ".agent-src.uncondensed/skills/copilot-agents-optimization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8244,6 +8368,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
       "target": ".agent-src.uncondensed/skills/adr-create/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -8266,6 +8397,13 @@
     {
       "source": ".agent-src.uncondensed/skills/decision-record/SKILL.md",
       "target": ".agent-src.uncondensed/skills/stakeholder-tradeoff/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/decision-review/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -10439,6 +10577,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/decision-revisit-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/memory-consolidation/SKILL.md",
