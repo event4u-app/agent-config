@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Ticket-bundle format
 
 > The contract every downstream artifact reads from: the `emit-tickets` skill,

@@ -100,7 +100,7 @@ lean_projection:
 #
 # Configurable in the browser setup wizard (Setup → Skills → Token budget).
 tokens:
-  rich_skills: on
+  rich_skills: "on"
 
 # --- Cost tracking + budget enforcement ---
 #

@@ -81,11 +81,11 @@ key-space (decision area, affected paths) per
 
 Surface the candidate and ask:
 
-> 1. Propose this candidate to `/memory propose` (recommended)
+> 1. Propose this candidate to `/memory propose`
 > 2. Refine before proposing — suggest changes
 > 3. Skip memory candidate for now
 
-**Empfehlung:** 1
+**Recommendation:** 1
 
 If the candidate fails the admission gate (< 2 distinct evidence paths
 AND < 3 future decisions in `decision_surface`), surface the gap and

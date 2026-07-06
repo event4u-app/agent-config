@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Capability Boundary Matrix
 
 The per-pack safety posture at a glance: is a pack on by default, does it need

@@ -5,7 +5,8 @@ layer is built by **extending `agents/knowledge/` in place** (council Option C).
 There is **no separate `agents/wiki/`**, no search infrastructure, and no
 runtime component. All writes stay human-gated; deterministic TypeScript
 scripts (dedup, index generation, pre-commit lint) are the enforcement
-backstops. Executable plan: `agents/roadmaps/archive/road-to-knowledge-system.md`.
+backstops. The executable plan shipped via the (archived) road-to-knowledge-system
+roadmap; this context is the durable record of the verdict.
 
 Council: claude-sonnet-4-5 + openai/gpt-4o, 2026-07-05, two debates × two
 rounds (~$0.29). Debate 1 split on architecture (C vs B); the focused

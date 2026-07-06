@@ -80,7 +80,8 @@ id: meta
 label: Meta
 owner:
 - agent-config-maintainer
-requires: []
+requires:
+- engineering-base
 size_class: core
 suggests: []
 surface_tier: core

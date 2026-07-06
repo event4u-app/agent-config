@@ -87,6 +87,18 @@ concerns:
     script: src/scripts/hooks/design_slop_hook.ts
     args: []
     fail_closed: false
+  # road-to-prompt-pattern-adoption.md Phase 5 — reminder-injection eval
+  # apparatus, built per the council's build-to-measure verdict
+  # (agents/settings/contexts/reminder-injection-verdict.md). NOT a
+  # production feature: exists solely to run the pre-registered 3-arm
+  # A/B (kernel-only / targeted / random-control). Default-OFF
+  # (hooks.reminder_injection.enabled). fail_closed: false — never break
+  # a tool call for an eval instrument. Arm assignment is per-session,
+  # persisted in agents/runtime/state/reminder-injection-hook.json.
+  reminder-injection:
+    script: src/scripts/hooks/reminder_injection_hook.ts
+    args: []
+    fail_closed: false
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -120,7 +132,7 @@ platforms:
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, reminder-injection]
 
   claude:
     session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
@@ -128,7 +140,7 @@ platforms:
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, reminder-injection]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -150,7 +162,7 @@ platforms:
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, reminder-injection]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -164,7 +176,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, reminder-injection]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -179,7 +191,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, reminder-injection]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -213,7 +225,7 @@ platforms:
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, reminder-injection]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.

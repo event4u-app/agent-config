@@ -1,0 +1,30 @@
+{
+  "command": "mission-upgrade",
+  "intent": "Upgrade a Laravel application one major version (10→11, 11→12) via the gated /work engine with a structured breaking-change catalog",
+  "cases": [
+    {
+      "prompt": "upgrade our Laravel app from 10 to 11",
+      "expected": "mission-upgrade"
+    },
+    {
+      "prompt": "bump laravel/framework to the next major version",
+      "expected": "mission-upgrade"
+    },
+    {
+      "prompt": "run the Laravel 11 to 12 upgrade with the breaking-change catalog",
+      "expected": "mission-upgrade"
+    },
+    {
+      "prompt": "plan and execute the framework major-version upgrade for this Laravel project",
+      "expected": "mission-upgrade"
+    },
+    {
+      "prompt": "migrate this app to the new Laravel major release",
+      "expected": "mission-upgrade"
+    },
+    {
+      "prompt": "our composer.json pins laravel 10 — take it to 11 safely",
+      "expected": "mission-upgrade"
+    }
+  ]
+}

@@ -598,6 +598,29 @@
         29
       ],
       "reason": "Cross-stack UI-stack enumeration (React, Blade, Tailwind)"
+    },
+    {
+      "file": "src/skills/code-review/SKILL.md",
+      "lines": [
+        79,
+        88,
+        90
+      ],
+      "reason": "Cross-stack security-review checklist rows naming Laravel/Symfony/NestJS/DTO peers side-by-side (allowed multi-ecosystem documentation, not a mandate)"
+    },
+    {
+      "file": "src/skills/context-document/SKILL.md",
+      "lines": [
+        83
+      ],
+      "reason": "Module-path resolution table citing the Laravel shape as one named example next to the generic modules.root_paths mechanism"
+    },
+    {
+      "file": "src/skills/verify-completion-evidence/SKILL.md",
+      "lines": [
+        183
+      ],
+      "reason": "Carve-out pointer to the quality-tools skill (the sanctioned one-line handoff shape from framework-neutrality-in-generic-skills)"
     }
   ]
 }

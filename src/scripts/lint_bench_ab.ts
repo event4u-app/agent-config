@@ -32,7 +32,10 @@ const REQUIRED_SECTIONS = [
     // bench_ab_v2_stats.py --markdown). The v1 Headline/Track-A/Track-B/History
     // structure was retired with the v1 binary-capability frame.
     '## Honesty labels',
-    '## Gate verdict',
+    // Since the 2026-07 per-host split the verdict lives inside per-host h2
+    // headings ("## Weak host (…) — Gate verdict: **PASS**"), so match the
+    // verdict label rather than a standalone "## Gate verdict" section.
+    'Gate verdict:',
     '## Methodology',
 ] as const;
 
