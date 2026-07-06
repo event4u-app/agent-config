@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **461**
-- Edges (incl. self-WRITE): **1560**
+- Edges (incl. self-WRITE): **1561**
 
 ## READ_ONLY edges
 
@@ -158,6 +158,7 @@
 | `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/user-interrupt-priority.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/architecture.md` | `.agent-src.uncondensed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/architecture.md` | `.agent-src.uncondensed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/architecture.md` | `.agent-src.uncondensed/skills/laravel/SKILL.md` | `body_link` | 1 |

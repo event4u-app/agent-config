@@ -1096,7 +1096,7 @@
     },
     ".agent-src.uncondensed/rules/user-interrupt-priority.md": {
       "kind": "rule",
-      "rule_type": "always",
+      "rule_type": "auto",
       "load_context": [
         "contexts/execution/interrupt-examples.md"
       ],
@@ -4430,6 +4430,13 @@
     {
       "source": ".agent-src.uncondensed/rules/agent-authority.md",
       "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/agent-authority.md",
+      "target": ".agent-src.uncondensed/rules/user-interrupt-priority.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
