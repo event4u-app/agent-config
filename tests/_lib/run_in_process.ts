@@ -28,7 +28,7 @@ export interface RunOpts {
     /** Override process.cwd() for the duration of the call. */
     cwd?: string;
     /** Overlay process.env keys for the duration of the call. */
-    env?: Record<string, string>;
+    env?: Record<string, string | undefined>;
     /**
      * Data to make available when the script reads from stdin (fd 0).
      * Implemented by temporarily writing to a temp file and swapping fd 0.
