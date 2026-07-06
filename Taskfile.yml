@@ -143,6 +143,7 @@ tasks:
       - task: check-context-paths
       - task: check-no-roadmap-refs
       - task: check-knowledge-cards
+      - task: check-knowledge-pages
       - task: check-no-local-settings
       - task: check-council-references
       - task: lint-one-off-age
@@ -298,6 +299,7 @@ tasks:
       - task: check-context-paths
       - task: check-no-roadmap-refs
       - task: check-knowledge-cards
+      - task: check-knowledge-pages
       - task: check-no-local-settings
       - task: check-council-references
       - task: lint-one-off-age

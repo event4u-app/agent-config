@@ -258,6 +258,36 @@ When reporting debug findings to the user:
 5. **Fix** — the minimal change
 6. **Regression test** — the test that catches this bug returning
 
+## Knowledge capture (`mistake_made` event)
+
+If the root cause traces to a `agents/knowledge/` page that was
+followed while implementing (a documented convention was wrong, an
+API shape page was stale, a procedure was incomplete), append a
+`mistake_made` event to the knowledge intake — never rewrite the page
+mid-task (see [`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)):
+
+```bash
+./scripts-run src/scripts/emit_knowledge_event \
+    --type mistake_made \
+    --error-category "<one or two words>" \
+    --context-source "<agents/knowledge/... path, or 'null' if no page was followed>" \
+    --correction "<what the fix actually was>" \
+    --recurrence-key "<stable slug for this class of mistake>"
+```
+
+Verify the append landed: check the command's exit code (0 = appended),
+then `grep <recurrenceKey> agents/knowledge/intake/events-*.jsonl`
+finds the new line.
+
+**Live contradiction exception.** If the followed page is DEMONSTRABLY
+wrong right now (observed reality ≠ documented claim, not a one-off),
+this is the hybrid immediate-fix case instead — surface the proposed
+correction and ask before continuing (see
+[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
+§ Contested entries). Approved → isolated fix commit. Declined →
+`./scripts-run src/scripts/append_contested` on that page, then still
+emit the `context_stale` event above it for the consolidation pass.
+
 ## Gotchas
 
 * Reading half a stack trace and jumping to a fix — the actual cause is
