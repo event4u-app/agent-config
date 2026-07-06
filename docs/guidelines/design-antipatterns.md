@@ -39,7 +39,7 @@ The objective floors are cited from the linter, never re-eyeballed by an agent.
 runtime token cost): a pattern-detectable subset of these entries now has a
 deterministic rule that `design-review` cites instead of re-deriving — `V1`,
 `V3`, `V6`, `C2`, `C5`, `T4`, `T6`, `T7`, `L4`, `L8`, `M2`, `M4`, `CP1`, `CP2`,
-plus the **Consistency Locks & layout caps** `V8`, `C6`, `L9`, `L10`
+`CP5`, plus the **Consistency Locks & layout caps** `V8`, `C6`, `L9`, `L10`
 (rule ids `slop-<id>-*`, registry in `src/scripts/design_slop_rules.ts`). These
 are **flags / rebuttable presumptions**, never hard blocks — a consumer
 `DESIGN.md` that declares the pattern as intentional suppresses the flag. The
@@ -140,6 +140,7 @@ Within-project invariants + repetition caps. Override = declare the value in
 | CP2 | Marketing buzzwords: streamline, empower, supercharge, world-class, enterprise-grade, seamlessly, robust, leverage | These words carry no information; an AI-slop test: replace each with nothing — the sentence still communicates the same thing | No override; if a word can be deleted without loss, delete it |
 | CP3 | Aphoristic manufactured contrast ("We don't do X. We do Y." / "Not just A, but B.") | A generated sentence rhythm that sounds like brand writing but carries no specificity | Aphoristic copy is legitimate when the contrast reveals a genuine product distinction; test by asking whether the Y side says something concrete |
 | CP4 | "Theater" framing — copy that announces what the product does without saying how or why | "The platform for modern teams." communicates nothing; it is content-shaped noise | Every tagline must pass the "so what" test: can a skeptic follow it with "but how?" and get a concrete answer? |
+| CP5 | Emoji-decoration in UI markup — 🚀/✅/🎉 prepending headings, buttons, list items, or CTAs (`🚀 Get Started`) | Performative-enthusiasm coating; the default-startup-template tell. No emoji is better than decorative emoji | Brand/`DESIGN.md` declares a systematic emoji strategy, or the emoji is functional (status indicator, category marker tied to real meaning) |
 
 ---
 
@@ -163,6 +164,14 @@ these. The rest are agent self-checks.
 | Q10 | Body background: avoid OKLCH L 0.84–0.97, C < 0.06 (cream/sand) unless brand-defined | Color space calculation | Agent self-check |
 | Q11 | Padding floors: ≥ 8px (inline elements), ≥ 16px (card/panel bodies) | Computed padding | Agent self-check |
 | Q12 | Justified text only with CSS hyphenation (`hyphens: auto`) | Presence of `text-align: justify` without `hyphens` | Agent self-check |
+| Q13 | Outward-artifact hygiene: no system internals — absolute workspace paths, skill/tool names, generator traces, config keys — in comments, metadata, or EXIF of deliverables that leave the workspace (HTML decks, prototypes, exports), unless the user asks for build provenance | Comment/metadata scan of the emitted artifact | Agent self-check |
+
+Q13 is **output hygiene only** — it never restricts chat-side transparency to
+the operator (what skills/tools ran stays fully answerable in conversation).
+Converged via council (claude-sonnet-4-5 + gpt-4o, 2026-07-06): shared floor
+here, referenced by artifact-producing skills, deliberately not a PII-rule
+extension. Deterministic detection in `lint_design_slop` (path/trace grep) is
+possible but deferred until a real incident.
 
 ---
 
