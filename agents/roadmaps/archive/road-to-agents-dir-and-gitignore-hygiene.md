@@ -223,7 +223,7 @@ strays. Extend rather than replace.
 - [x] **5.4 — Wire both passes into `agent-config doctor`** as read-only checks
   (report + hint to run the fix command), and into the
   `/sync-gitignore:fix` command doc so the chat flow and CLI stay one surface.
-- [ ] **5.5 — Tests**: fixture repos (consumer with committed runtime file;
+- [x] **5.5 — Tests**: fixture repos (consumer with committed runtime file;
   consumer with pre-Phase-5 legacy entries; clean consumer) asserting report
   output and idempotency (second run = no changes). Run the new suite once
   locally. <!-- carve-out: new-gate-verification -->
