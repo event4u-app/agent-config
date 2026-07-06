@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **2** open blockers
+> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **1** open blocker
 
 ## Overall
 
@@ -16,7 +16,7 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 11 | 10 | 0 | 0 | [1](#blockers-road-to-py2ts-teardown-completion) | █████░░░░░ 48% |
+| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 11 | 10 | 0 | 0 | 0 | █████░░░░░ 48% |
 | 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | 0 | ██████░░░░ 64% |
 | 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 7 | 60 | 0 | 0 | 0 | █████████░ 90% |
@@ -36,23 +36,6 @@
 | 2 | CI + scaffolding cleanup (requires Phase 1 complete) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
 | 2b | AI-council live-call layer (py2ts gap — transport now wired) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | Consumer + merge readiness | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-py2ts-teardown-completion"></a>
-**Blockers**
-
-- **kernel-augment-budget** (owner: maintainer) — blocks Acceptance criterion — "remote CI green on `python2ts`" (the `check-augment-budget-strict` gate runs under both `task ci` and `task ci-strict`, so it fails on every branch, not just `python2ts`).
-  - **What to do:**
-    1. Run `./scripts-run src/scripts/measure_augment_budget --check` to see
-    the live number (verified 2026-07-06: cap 49,512 chars, current total
-    51,486 — over by 1,974).
-    2. Trim ≥ 1,974 chars from either bucket: **auto-rule stubs** (79 rules,
-    19,085 chars — non-kernel, no soak required) or **always-rules** (10
-    rules, 29,449 chars — kernel-tier; a reduction there ships in its own
-    PR with ≥ 24 h between merges, per
-    [`scope-control § kernel-rule-edits`](../../src/rules/scope-control.md)).
-    3. Re-run the check above until it exits green, then re-run the full
-    `task ci-strict` to confirm no other gate regressed.
-  - **Resolved when:** `./scripts-run src/scripts/measure_augment_budget --check` exits 0.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 

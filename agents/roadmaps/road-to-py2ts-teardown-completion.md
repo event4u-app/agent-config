@@ -343,7 +343,7 @@ ruled the finish strategy. Convergent verdict:
 ## Blockers
 
 ### blocker: kernel-augment-budget
-- **Status:** open
+- **Status:** resolved            <!-- resolved 2026-07-06 by PR #750 (kernel-budget-trim): cap moved to 64,000 + kernel trimmed to 9 rules; measure_augment_budget --check exits 0 (73.8%) -->
 - **Owner:** maintainer
 - **Blocks:** Acceptance criterion — "remote CI green on `python2ts`" (the
   `check-augment-budget-strict` gate runs under both `task ci` and
