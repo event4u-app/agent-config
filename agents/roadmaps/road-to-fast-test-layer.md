@@ -31,9 +31,9 @@ Fix: run twins **in-process** (`main(argv)` import, stdout/exit capture).
 
 ## Phase 4 — Heavy multi-case suites
 
-- [ ] Migrate `chat_history` (28 spawn sites) — replace `runTs` helper with `runInProc(main, args, { env: { AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' } })`.
-- [ ] Migrate `cli_python/knowledge_ingest` (23) and `cli_python/workspace_drive` (24).
-- [ ] Migrate `knowledge_global_cli`, `_lib_knowledge_global_promote`, `_lib_knowledge_global`, `_lib_knowledge_global_redaction`, `injection_scan_hook`, `pack_mcp_content`, `validate_frontmatter`.
+- [x] Migrate `chat_history` (28 spawn sites) — replace `runTs` helper with `runInProc(main, args, { env: { AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' } })` (stdin-only fallback kept).`.
+- [x] Migrate `cli_python/knowledge_ingest` (23) and `cli_python/workspace_drive` (24).
+- [x] Migrate `knowledge_global_cli`, `_lib_knowledge_global_promote`, `_lib_knowledge_global`, `_lib_knowledge_global_redaction`, `injection_scan_hook`, `pack_mcp_content`, `validate_frontmatter`.
 
 ## Phase 5 — Measure + document
 

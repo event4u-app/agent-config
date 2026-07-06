@@ -29,6 +29,12 @@ export interface RunOpts {
     cwd?: string;
     /** Overlay process.env keys for the duration of the call. */
     env?: Record<string, string>;
+    /**
+     * Data to make available when the script reads from stdin (fd 0).
+     * Implemented by temporarily writing to a temp file and swapping fd 0.
+     * Only supports UTF-8 string input.
+     */
+    stdin?: string;
 }
 
 /** Thrown by the mocked process.exit() to unwind the call stack. */

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**94 / 145 steps done · 65%**
+**97 / 145 steps done · 67%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-fast-test-layer.md](roadmaps/road-to-fast-test-layer.md) | 5 | 16 | 6 | 9 | 1 | 0 | ██████░░░░ 60% |
+| 1 | [road-to-fast-test-layer.md](roadmaps/road-to-fast-test-layer.md) | 5 | 16 | 3 | 12 | 1 | 0 | ████████░░ 80% |
 | 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
@@ -28,14 +28,14 @@
 
 ### [road-to-fast-test-layer.md](roadmaps/road-to-fast-test-layer.md)
 
-**Road to a Fast Test Layer** — 9 / 15 done (60%)
+**Road to a Fast Test Layer** — 12 / 15 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Harness + pilot | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | cmd_* cluster (highest spawn count) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | check_* / lint_* / audit_* / measure_* cluster | ✅ done | 0 | 2 | 1 | 0 | 100% |
-| 4 | Heavy multi-case suites | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Heavy multi-case suites | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 5 | Measure + document | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)

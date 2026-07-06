@@ -7,6 +7,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { main as mainKgr } from '../../src/scripts/_lib/knowledge_global_redaction.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN =
@@ -36,8 +38,7 @@ function write(name: string, body: string): string {
 }
 
 function runTs(args: readonly string[]): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
+    return runInProc(mainKgr, args);
 }
 
 /** Both implementations on the same card+tier — byte-identical contract. */
