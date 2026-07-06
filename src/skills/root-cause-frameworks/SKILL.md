@@ -1,18 +1,15 @@
 ---
 name: root-cause-frameworks
 description: "Use when tracing the root cause of a resolved incident or recurring bug — 5-whys chain, fishbone categorisation, contributing-factors split — even if the user says 'why does this keep breaking?'."
-source: package
 domain: quality
 model_tier: high
 workspaces:
   - engineering
 packs:
   - analysis-workbench
-lifecycle: active
 trust:
   level: professional
   confidence: medium
-  human_review_required: false
 install:
   default: false
   removable: true

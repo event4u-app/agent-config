@@ -14,7 +14,7 @@ prompts:
     language: en
     prompt: "Edit this rule file to add a new trigger keyword `'webhook'`."
     expected_skills: []
-    intended_triggers: [augment-source-of-truth]
+    intended_triggers: [source-of-truth]
     open_files: [dist/agent-src/rules/some-rule.md]
 
   - id: agent-docs-edits-02
@@ -45,7 +45,7 @@ prompts:
     language: de
     prompt: "Editiere diese Rule und füge einen neuen Trigger hinzu."
     expected_skills: []
-    intended_triggers: [augment-source-of-truth]
+    intended_triggers: [source-of-truth]
     open_files: [dist/agent-src/rules/foo.md]
 
   - id: agent-docs-edits-06

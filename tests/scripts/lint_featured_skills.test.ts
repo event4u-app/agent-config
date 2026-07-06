@@ -19,8 +19,8 @@ describe('lint_featured_skills — behavioural spec (helpers)', () => {
         expect(mod.slug_from_path('skills', 'demo-skill/SKILL')).toBe('demo-skill');
     });
 
-    it('slug_from_path maps a nested command to a colon name', () => {
-        expect(mod.slug_from_path('commands', 'council/default')).toBe('council:default');
+    it('slug_from_path maps a nested command to its dash-joined manifest name', () => {
+        expect(mod.slug_from_path('commands', 'council/default')).toBe('council-default');
     });
 
     it('slug_from_path maps a flat command to its leaf', () => {

@@ -19,7 +19,14 @@ teardown() {
 }
 
 run_install() {
-    bash "$INSTALL_SH" --target "$TMPDIR" --quiet "$@" 2>&1
+    # Sandbox HOME (same pattern as test_install_orchestrator.sh) so the
+    # scope-guard never sees the developer's real user-scope install —
+    # otherwise a version-drifted ~/.event4u install aborts every fixture
+    # install on a dev machine (CI=true skips the guard on runners).
+    mkdir -p "$TMPDIR/home"
+    HOME="$TMPDIR/home" \
+    EVENT4U_CONFIG_HOME="$TMPDIR/home/.event4u/agent-config" \
+        bash "$INSTALL_SH" --target "$TMPDIR" --quiet "$@" 2>&1
 }
 
 assert_true() {

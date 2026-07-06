@@ -1,0 +1,30 @@
+{
+  "command": "analyze",
+  "intent": "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick",
+  "cases": [
+    {
+      "prompt": "analyze what went wrong in yesterday's deploy",
+      "expected": "analyze"
+    },
+    {
+      "prompt": "run a post-mortem on the checkout outage",
+      "expected": "analyze"
+    },
+    {
+      "prompt": "we're about to launch — do a pre-mortem on the migration plan",
+      "expected": "analyze"
+    },
+    {
+      "prompt": "review the decision we made about the queue architecture last quarter",
+      "expected": "analyze"
+    },
+    {
+      "prompt": "that was almost a data-loss incident — analyze the near miss",
+      "expected": "analyze"
+    },
+    {
+      "prompt": "walk me through a structured incident analysis for the API downtime",
+      "expected": "analyze"
+    }
+  ]
+}

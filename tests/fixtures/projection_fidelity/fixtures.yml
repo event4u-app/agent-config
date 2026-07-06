@@ -66,10 +66,12 @@ entries:
     checks:
       augment:
         present: true
-        frontmatter_keys: [name, description, source, domain]
+        # 'source' dropped from the expected keys: lint-frontmatter-boilerplate
+        # forbids fields equal to the schema default (the loader injects it).
+        frontmatter_keys: [name, description, domain]
       claude:
         present: true
-        frontmatter_keys: [name, description, source, domain]
+        frontmatter_keys: [name, description, domain]
       cursor_mdc: { present: false, rationale: "Cursor projects rules only, not skills" }
       cline: { present: false, rationale: "Cline projects rules only, not skills" }
       windsurf: { present: false, rationale: "Windsurf single-file is rule concatenation" }

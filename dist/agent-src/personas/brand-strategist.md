@@ -5,7 +5,6 @@ description: "Positioning, archetype, voice and messaging lens — challenges we
 tier: specialist
 mode: planner
 version: 1.0.0
-source: package
 ---
 
 # Brand Strategist

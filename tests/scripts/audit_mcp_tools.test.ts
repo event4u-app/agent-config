@@ -17,7 +17,7 @@ import * as amt from '../../src/scripts/audit_mcp_tools.js';
 describe('audit_mcp_tools — module shape', () => {
     it('resolves the canonical catalog / tools / output paths under ROOT', () => {
         expect(amt.CATALOG.endsWith('src/scripts/mcp_server/consumer_tool_catalog.json')).toBe(true);
-        expect(amt.TOOLS_PY.endsWith('src/scripts/mcp_server/tools.py')).toBe(true);
+        expect(amt.TOOLS_TS.endsWith('src/scripts/mcp_server/tools.ts')).toBe(true);
         expect(amt.OUT.endsWith('docs/contracts/mcp-tool-inventory.md')).toBe(true);
     });
 });

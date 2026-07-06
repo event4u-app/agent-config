@@ -249,6 +249,9 @@ internal/bench/reports/ab/.sysprompt-*.txt
 # committed visible result (per the line-130 "per-run outputs are not tracked" intent)
 internal/bench/reports/ab/*-ab-trackb-*.json
 internal/bench/reports/ab/*-ab-trackb-*.md
+# thin-vs-eager judge run — local operator artifact; the quality-regression gate
+# is designed INERT until an operator generates it (taskfiles/engine.yml)
+internal/bench/reports/quality-run.json
 # bench:ab v2 scratch
 internal/bench/ab/fixtures-v2/*/node_modules/
 internal/bench/ab/v2-clones/

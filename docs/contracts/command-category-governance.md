@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Command-category governance
 
 > **Status (2026-06-09):** Phase-2b resolved as **Option 1 (light)** — an
