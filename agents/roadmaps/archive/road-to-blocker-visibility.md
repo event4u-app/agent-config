@@ -156,19 +156,24 @@ regenerate.
 
 ## Phase 4 — Guardrails
 
-- [ ] Add a check (extend `check_roadmap_trackable.ts` or the generator's
-  `--check` mode) that every `<!-- blocked-by: id -->` reference resolves
-  to a `### blocker: id` entry in the same roadmap, and that required
-  blocker fields are present — fail with file/line on violation. Verify
-  once against a deliberately broken fixture.
+- [x] Add a check (`src/scripts/lint_roadmap_blockers.ts`, a new
+  maintainer-side linter alongside `lint_roadmap_ci_steps.ts`) that
+  every `<!-- blocked-by: id -->` reference on a real checkbox line
+  resolves to a `### blocker: id` entry in the same roadmap, and that
+  required blocker fields are present — fails with file/line on
+  violation. Verified against a deliberately broken fixture (7 vitest
+  cases, incl. inline-code-quoted-documentation and fenced-example
+  false-positive guards found while testing against this very roadmap).
   <!-- carve-out: new-gate-verification -->
-- [ ] Wire the check into the existing roadmap-lint task cadence
-  (alongside `lint-roadmap-ci-steps` / `lint-roadmap-complexity` in
-  `Taskfile.yml`).
-- [ ] Note the blocker contract in
-  `src/rules/roadmap-progress-sync.md` (one line: resolving a blocker =
-  flip `Status: resolved` + regen, same reply — same Iron-Law-1 cadence
-  as checkbox flips), then re-condense via `/condense`.
+- [x] Wired the check into the existing roadmap-lint task cadence —
+  `lint-roadmap-blockers` task added to `taskfiles/ci-fast.yml`,
+  dependency added to both `ci` and `ci-strict` in `Taskfile.yml`
+  alongside `lint-roadmap-ci-steps` / `lint-roadmap-complexity`.
+- [x] Noted the blocker contract in
+  `src/rules/roadmap-progress-sync.md` (resolving a blocker = flip
+  `Status: resolved` + regen, same reply — same Iron-Law-1 cadence as
+  checkbox flips); condensed into
+  `dist/agent-src/rules/roadmap-progress-sync.md`.
 
 **Exit criteria:** broken blocker references fail the lint with a
 file/line message; rule mentions the resolve-flip cadence.
@@ -176,10 +181,10 @@ file/line message; rule mentions the resolve-flip cadence.
 
 ## Acceptance criteria
 
-- [ ] Overview table has the `Blocker` column; counts link to the
+- [x] Overview table has the `Blocker` column; counts link to the
   per-roadmap breakdown section.
-- [ ] Breakdown sections list each open blocker with owner, blocked
+- [x] Breakdown sections list each open blocker with owner, blocked
   scope, verbatim instructions, and resolved-when signal.
-- [ ] Legacy `> Blocked until` notes surface without retrofit.
-- [ ] Generator + hook + archive tests green; dangling `blocked-by`
+- [x] Legacy `> Blocked until` notes surface without retrofit.
+- [x] Generator + hook + archive tests green; dangling `blocked-by`
   references are lint failures.

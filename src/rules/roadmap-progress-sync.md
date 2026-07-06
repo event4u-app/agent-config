@@ -54,6 +54,8 @@ The `command:` triggers in this rule's frontmatter ensure it loads the moment on
 
 **Dashboard regen cadence — opt-in batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` in `.agent-settings.yml` (`per_step` default · `every_5_steps` · `phase_boundary`). Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen regardless of cadence.
 
+**Blockers follow the same cadence as checkboxes.** Clearing a `## Blockers` entry (per [`templates/roadmaps.md` rule 20](../agent-src/templates/roadmaps.md)) flips its `Status: resolved` and regenerates the dashboard in the same reply — Iron Law 1's "same response" obligation applies to blocker resolution exactly as it applies to a checkbox flip.
+
 ## Iron Law 3 — no silent archive with unresolved deferred items
 
 ```
