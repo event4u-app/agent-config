@@ -100,6 +100,19 @@ demote largest projected, re-sum; abort after 3 rounds.
 under median projection. Headroom = 1929 chars (= ~one median rule)
 absorbs pilot variance for the 6 untested rules.
 
+**2026-07-06 demotion (council: claude-sonnet-4-5 + gpt-4o, 2-round
+debate).** `user-interrupt-priority` had been added as an 11th-hour
+`type: always` rule without a membership amendment, pushing the live
+always set to 10 and the Augment workspace-guidelines budget past its
+empirical cap. Demoted back to `type: auto` (trigger-loaded); its
+one-line interrupt essence lives in `agent-authority § Rules` so the
+always-loaded surface keeps the STOP → run → ASK contract visible.
+The locked kernel remains the 9 rules below. In the same pass the 9
+rules' post-P2.2 prose growth was telegraph-trimmed back under the
+26k bucket (Iron-Law fences byte-stable; load-bearing additions —
+direct-answers' live-state clause, verify-before-complete's mechanics
+pointer — retained per council verdict).
+
 ## § 4 — Locked kernel set
 
 | id | current | projected (× 0.712) | inclusion criterion |
