@@ -146,7 +146,7 @@ function _extractExitCode(message: string): number {
  * a mocked process.exit(). Returns a RunResult compatible with the
  * shape returned by spawnSync.
  */
-export function runInProc(mainFn: MainFn, argv: string[] = [], opts: RunOpts = {}): RunResult {
+export function runInProc(mainFn: MainFn, argv: string[] | readonly string[] = [], opts: RunOpts = {}): RunResult {
     // --- capture stdout / stderr ---
     let stdout = '';
     let stderr = '';
