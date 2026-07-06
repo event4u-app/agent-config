@@ -75,31 +75,31 @@ changed yet.
 
 ## Phase 2 — Generator: parse, count, render
 
-- [ ] Extend `parse_roadmap()` / `RoadmapStats` in
+- [x] Extend `parse_roadmap()` / `RoadmapStats` in
   `src/agent-src/scripts/update_roadmap_progress.ts` to collect blockers:
   `{id, status, owner, blocks, todo (verbatim lines), resolvedWhen}`
   from `## Blockers` entries plus the legacy `> Blocked until` fallback.
-- [ ] Overview table: add a `Blocker` column (between `Cancelled` and
+- [x] Overview table: add a `Blocker` column (between `Cancelled` and
   `Progress`) showing the count of **open** blockers; when > 0, render
   the cell as a link to that roadmap's breakdown section via an explicit
   anchor (`<a id="blockers-<slug>"></a>` emitted in the breakdown) so
   the link works on GitHub and in IDE previews; `0` stays plain text.
-- [ ] Per-roadmap breakdown: after the phase table, render a
+- [x] Per-roadmap breakdown: after the phase table, render a
   `**Blockers**` block listing each open blocker with title, owner,
   what it blocks, the full "What to do" instructions verbatim, the
   resolved-when signal, and a link back to the blocker's heading in the
   roadmap file. Resolved blockers are omitted (or rendered collapsed as
   a single "n resolved" line — implementer's choice, documented in the
   test).
-- [ ] Aggregate line: extend the dashboard header ("N open roadmaps")
+- [x] Aggregate line: extend the dashboard header ("N open roadmaps")
   with "· M open blockers" when M > 0.
-- [ ] Extend `tests/scripts/update_roadmap_progress.test.ts`: fixture
+- [x] Extend `tests/scripts/update_roadmap_progress.test.ts`: fixture
   roadmap with two blockers (one open, one resolved) + one legacy
   `> Blocked until` roadmap; assert column count, anchor link, breakdown
   rendering, and zero-blocker roadmaps unchanged. Verify:
   `npx vitest run tests/scripts/update_roadmap_progress.test.ts` green.
   <!-- carve-out: new-gate-verification -->
-- [ ] Check whether `roadmap_progress_hook.ts` or
+- [x] Check whether `roadmap_progress_hook.ts` or
   `archive_completed_roadmaps.py`-successor consume the table shape
   (column-index assumptions) and adjust their tests if so
   (`tests/scripts/roadmap_progress_hook.test.ts`,

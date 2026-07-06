@@ -161,12 +161,28 @@ class RoadmapStats {
     rel: string;
     title: string;
     phases: PhaseStats[];
+    blockers: Blocker[];
 
-    constructor(p: string, rel: string, title: string, phases: PhaseStats[] = []) {
+    constructor(
+        p: string,
+        rel: string,
+        title: string,
+        phases: PhaseStats[] = [],
+        blockers: Blocker[] = [],
+    ) {
         this.path = p;
         this.rel = rel;
         this.title = title;
         this.phases = phases;
+        this.blockers = blockers;
+    }
+
+    get open_blockers(): Blocker[] {
+        return this.blockers.filter((b) => b.status !== 'resolved');
+    }
+
+    get resolved_blockers(): Blocker[] {
+        return this.blockers.filter((b) => b.status === 'resolved');
     }
 
     get done(): number {
@@ -322,6 +338,110 @@ function count_checkboxes(text: string): CheckboxCounts {
     return [done, open_, deferred, cancelled, merge_gated, prs];
 }
 
+interface Blocker {
+    id: string;
+    status: string;
+    owner: string;
+    blocks: string;
+    todo: string[];
+    resolvedWhen: string;
+}
+
+// Strip fenced code blocks before blocker detection — a roadmap that shows the
+// `## Blockers` shape as a documentation example (fenced, indented or not)
+// must not be mistaken for a live blocker on that roadmap.
+const FENCED_CODE_RE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm;
+const BLOCKERS_SECTION_RE = /^##[ \t]+Blockers[ \t]*$/im;
+const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*(.+?)[ \t]*$/gim;
+const NEXT_H2_RE = /^##[ \t]+\S/m;
+const LEGACY_BLOCKED_UNTIL_RE = /^>[ \t]*Blocked until:?[ \t]*(.+)$/im;
+
+function _stripFencedCode(text: string): string {
+    return text.replace(FENCED_CODE_RE, (m) => '\n'.repeat(_splitlines(m).length));
+}
+
+/** `- **Label:** value <!-- comment -->` → trimmed `value`, comment stripped. */
+function _blockerField(slice: string, label: string): string | null {
+    const re = new RegExp(`^-[ \\t]*\\*\\*${label}:\\*\\*[ \\t]*(.+)$`, 'im');
+    const m = re.exec(slice);
+    if (!m) {
+        return null;
+    }
+    return _strip((m[1] as string).replace(/<!--[\s\S]*?-->/g, ''));
+}
+
+/** Lines under `- **What to do:**` up to the next `- **Field:**` marker. */
+function _blockerTodo(slice: string): string[] {
+    const lines = _splitlines(slice);
+    const startIdx = lines.findIndex((l) => /^-[ \t]*\*\*What to do:\*\*/i.test(_strip(l)));
+    if (startIdx === -1) {
+        return [];
+    }
+    const out: string[] = [];
+    for (let i = startIdx + 1; i < lines.length; i++) {
+        const trimmed = _strip(lines[i] as string);
+        if (/^-[ \t]*\*\*(Status|Owner|Blocks|Resolved when|What to do):\*\*/i.test(trimmed)) {
+            break;
+        }
+        if (trimmed !== '') {
+            out.push(trimmed);
+        }
+    }
+    return out;
+}
+
+function parse_blockers(raw_text: string): Blocker[] {
+    const text = _stripFencedCode(raw_text);
+    const blockers: Blocker[] = [];
+    const sectionMatch = BLOCKERS_SECTION_RE.exec(text);
+    if (sectionMatch) {
+        const sectionStart = sectionMatch.index + sectionMatch[0].length;
+        const rest = text.slice(sectionStart);
+        const h2 = NEXT_H2_RE.exec(rest);
+        const sectionEnd = h2 ? sectionStart + h2.index : text.length;
+        const section = text.slice(sectionStart, sectionEnd);
+        BLOCKER_HEADING_RE.lastIndex = 0;
+        const heads: Array<{ start: number; end: number; id: string }> = [];
+        let hm: RegExpExecArray | null;
+        while ((hm = BLOCKER_HEADING_RE.exec(section)) !== null) {
+            heads.push({
+                start: hm.index,
+                end: hm.index + hm[0].length,
+                id: _strip(hm[1] as string),
+            });
+            if (hm.index === BLOCKER_HEADING_RE.lastIndex) {
+                BLOCKER_HEADING_RE.lastIndex++;
+            }
+        }
+        for (let i = 0; i < heads.length; i++) {
+            const cur = heads[i] as { start: number; end: number; id: string };
+            const bodyEnd =
+                i + 1 < heads.length ? (heads[i + 1] as { start: number }).start : section.length;
+            const body = section.slice(cur.end, bodyEnd);
+            blockers.push({
+                id: cur.id,
+                status: (_blockerField(body, 'Status') ?? 'open').toLowerCase(),
+                owner: _blockerField(body, 'Owner') ?? 'user',
+                blocks: _blockerField(body, 'Blocks') ?? '(unspecified)',
+                todo: _blockerTodo(body),
+                resolvedWhen: _blockerField(body, 'Resolved when') ?? '(unspecified)',
+            });
+        }
+    }
+    const legacyMatch = LEGACY_BLOCKED_UNTIL_RE.exec(text);
+    if (legacyMatch) {
+        blockers.push({
+            id: 'legacy',
+            status: 'open',
+            owner: 'user',
+            blocks: 'entire roadmap',
+            todo: [_strip(legacyMatch[1] as string)],
+            resolvedWhen: 'condition described above clears',
+        });
+    }
+    return blockers;
+}
+
 function parse_roadmap(p: string, roadmap_root: string): RoadmapStats | null {
     const text = fs.readFileSync(p, { encoding: 'utf-8' });
     const phase_matches: Array<{ start: number; end: number; g2: string; g3: string | undefined }> =
@@ -345,7 +465,7 @@ function parse_roadmap(p: string, roadmap_root: string): RoadmapStats | null {
     const title_match = TITLE_RE.exec(text);
     const title = title_match ? _strip(title_match[1] as string) : _stem(p);
     const rel = _relPosix(roadmap_root, p);
-    const stats = new RoadmapStats(p, rel, title);
+    const stats = new RoadmapStats(p, rel, title, [], parse_blockers(text));
     for (let i = 0; i < phase_matches.length; i++) {
         const cur = phase_matches[i] as { start: number; end: number; g2: string; g3: string | undefined };
         const start = cur.end;
@@ -368,6 +488,19 @@ function _stem(p: string): string {
 /** str(path.relative_to(root)) — POSIX-separated relative path. */
 function _relPosix(root: string, p: string): string {
     return path.relative(root, p).split(path.sep).join('/');
+}
+
+/** Deterministic anchor slug for a roadmap's blocker section — explicit
+ * anchors (rather than GitHub's auto heading-slug) survive `.md` / brackets. */
+function _blockerAnchor(rel: string): string {
+    const stem = rel.endsWith('.md') ? rel.slice(0, -3) : rel;
+    return (
+        'blockers-' +
+        stem
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+    );
 }
 
 function bar(pct: number, width = 10): string {
@@ -512,13 +645,18 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
     const overall_pct = total_active ? _pyRound((total_done * 100) / total_active) : 0;
     const pending = pending_iron_law_3(roadmaps);
     const gated = merge_gated_pending(roadmaps);
+    const total_open_blockers = roadmaps.reduce((s, r) => s + r.open_blockers.length, 0);
     const lines: string[] = [];
     lines.push('# Roadmap Progress\n');
     const header_meta =
         `> ${roadmaps.length} open roadmap` +
         `${roadmaps.length !== 1 ? 's' : ''}` +
         ' · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · ' +
-        '[skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)\n';
+        '[skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)' +
+        (total_open_blockers > 0
+            ? ` · **${total_open_blockers}** open blocker${total_open_blockers !== 1 ? 's' : ''}`
+            : '') +
+        '\n';
     lines.push(
         // Honest provenance (road-to-roadmap-archival-robustness, gap C): name a
         // regen path that exists in EVERY install, not a hardcoded
@@ -600,13 +738,18 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
         return lines.join('\n') + '\n';
     }
     lines.push('## Open roadmaps\n');
-    lines.push('| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |');
-    lines.push('|---|---|---:|---:|---:|---:|---:|---:|---|');
+    lines.push(
+        '| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |',
+    );
+    lines.push('|---|---|---:|---:|---:|---:|---:|---:|---:|---|');
     roadmaps.forEach((r, idx) => {
         const i = idx + 1;
+        const openBlockers = r.open_blockers.length;
+        const blockerCell =
+            openBlockers > 0 ? `[${openBlockers}](#${_blockerAnchor(r.rel)})` : '0';
         lines.push(
             `| ${i} | [${r.rel}](roadmaps/${r.rel}) | ${r.phases.length} | ${r.total_all} | ` +
-                `${r.open_} | ${r.done} | ${r.deferred} | ${r.cancelled} | ` +
+                `${r.open_} | ${r.done} | ${r.deferred} | ${r.cancelled} | ${blockerCell} | ` +
                 `${bar(r.percent)} ${r.percent}% |`,
         );
     });
@@ -625,6 +768,26 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
             );
         }
         lines.push('');
+        const openBlockers = r.open_blockers;
+        if (openBlockers.length) {
+            lines.push(`<a id="${_blockerAnchor(r.rel)}"></a>`);
+            lines.push('**Blockers**\n');
+            for (const b of openBlockers) {
+                lines.push(`- **${b.id}** (owner: ${b.owner}) — blocks ${b.blocks}`);
+                lines.push('  - **What to do:**');
+                for (const step of b.todo) {
+                    lines.push(`    ${step}`);
+                }
+                lines.push(`  - **Resolved when:** ${b.resolvedWhen}`);
+            }
+            const resolvedCount = r.resolved_blockers.length;
+            if (resolvedCount > 0) {
+                lines.push(
+                    `\n_${resolvedCount} blocker${resolvedCount !== 1 ? 's' : ''} resolved._`,
+                );
+            }
+            lines.push('');
+        }
     }
     if (bundles && bundles.length) {
         lines.push('---\n');
@@ -855,6 +1018,7 @@ export {
     is_draft,
     is_roadmap_candidate,
     count_checkboxes,
+    parse_blockers,
     parse_roadmap,
     bar,
     collect,
@@ -866,4 +1030,4 @@ export {
     main,
     _pyRound,
 };
-export type { Bundle };
+export type { Bundle, Blocker };
