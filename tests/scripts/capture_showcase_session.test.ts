@@ -2,9 +2,9 @@
 //
 // 1:1 port of tests/test_capture_showcase_session.py — the four metric
 // functions, the frontmatter emitter, _split_body, and the capture/metrics
-// CLI subcommands. Plus golden parity (python3 vs tsx) on the metrics
-// subcommand with a fixed body. `commit_sha`/timestamps are excluded from
-// parity (capture supplies fixed --started/--ended; metrics emits neither).
+// CLI subcommands. Plus intent tests on the `metrics` CLI subcommand with a
+// fixed body — deterministic (metrics emits neither `commit_sha` nor
+// timestamps), so outputs are asserted directly.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -22,9 +22,7 @@ import {
     FloatTag,
     main,
 } from '../../src/scripts/capture_showcase_session.js';
-import { hasPython3, runPy, runTs } from './_wave8g.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8g.js';
 
 const SAMPLE_BODY = `## User
 Implement feature X.
@@ -143,7 +141,7 @@ describe('capture_showcase_session — capture subcommand (1:1 port)', () => {
     });
 });
 
-describe.skipIf(!py3)('capture_showcase_session — golden parity (python3 vs tsx)', () => {
+describe('capture_showcase_session — metrics CLI (tsx)', () => {
     function sessionFile(): string {
         const d = mkTmp();
         const s = path.join(d, 'x.log');
@@ -151,37 +149,47 @@ describe.skipIf(!py3)('capture_showcase_session — golden parity (python3 vs ts
         return s;
     }
 
-    it('metrics --format json byte-identical', () => {
+    it('metrics --format json emits the four metrics with python-style float repr', () => {
         const s = sessionFile();
-        const py = runPy('capture_showcase_session', ['metrics', '--session', s, '--format', 'json']);
-        const ts = runTs('capture_showcase_session', ['metrics', '--session', s, '--format', 'json']);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        const r = runTs('capture_showcase_session', ['metrics', '--session', s, '--format', 'json']);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe('');
+        expect(JSON.parse(r.stdout)).toEqual({
+            tool_call_count: 2,
+            reply_chars_mean: 120.0,
+            memory_hit_ratio: 0.75,
+            verify_pass_rate: 0.5,
+        });
+        // Floats keep the python-compat ".0" repr on the wire.
+        expect(r.stdout).toContain('"reply_chars_mean": 120.0');
     });
 
-    it('metrics text table byte-identical', () => {
+    it('metrics text table lists all four metrics', () => {
         const s = sessionFile();
-        const py = runPy('capture_showcase_session', ['metrics', '--session', s]);
-        const ts = runTs('capture_showcase_session', ['metrics', '--session', s]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
+        const r = runTs('capture_showcase_session', ['metrics', '--session', s]);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe('');
+        expect(r.stdout).toMatch(/^ {2}tool-call-count\s+2$/m);
+        expect(r.stdout).toMatch(/^ {2}reply-chars\s+120\.0$/m);
+        expect(r.stdout).toMatch(/^ {2}memory-hit-ratio\s+0\.75$/m);
+        expect(r.stdout).toMatch(/^ {2}verify-pass-rate\s+0\.5$/m);
+        expect(r.stdout.trimEnd().split('\n')).toHaveLength(4);
     });
 
-    it('metrics single float metric (reply-chars) byte-identical', () => {
+    it('metrics single float metric (reply-chars) in text and json', () => {
         const s = sessionFile();
-        for (const fmt of [['--format', 'text'], ['--format', 'json']]) {
-            const args = ['metrics', '--session', s, '--metric', 'reply-chars', ...fmt];
-            const py = runPy('capture_showcase_session', args);
-            const ts = runTs('capture_showcase_session', args);
-            expect(ts.stdout, fmt.join(' ')).toBe(py.stdout);
-        }
+        const text = runTs('capture_showcase_session', ['metrics', '--session', s, '--metric', 'reply-chars', '--format', 'text']);
+        expect(text.status).toBe(0);
+        expect(text.stdout).toMatch(/^ {2}reply-chars\s+120\.0\n$/);
+        const json = runTs('capture_showcase_session', ['metrics', '--session', s, '--metric', 'reply-chars', '--format', 'json']);
+        expect(json.status).toBe(0);
+        expect(JSON.parse(json.stdout)).toEqual({ 'reply-chars': 120.0 });
+        expect(json.stdout).toContain('"reply-chars": 120.0');
     });
 
     // NOTE: `capture` writes to the fixed live path docs/showcase/sessions/.
-    // Golden-parity of capture would mutate the tracked tree, so the capture
-    // write path is covered by the unit test above (via _setSessionsDir into
-    // os.tmpdir()); only the deterministic `metrics` surface is golden-diffed.
+    // Exercising capture via the CLI would mutate the tracked tree, so the
+    // capture write path is covered by the unit test above (via
+    // _setSessionsDir into os.tmpdir()); only the deterministic `metrics`
+    // surface is exercised through the spawned CLI.
 });

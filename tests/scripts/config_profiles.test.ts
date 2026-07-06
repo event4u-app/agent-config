@@ -2,8 +2,9 @@
 //
 // 1:1 port of tests/test_config_profiles.py — resolution chain, no-settings
 // default, settings-without-profile-block warning, unknown-id error, seed
-// shapes. Plus a golden-parity block diffing python3 vs tsx resolved-profile
-// JSON on the same fixtures.
+// shapes. Plus a golden-structure block (python-free conversion of the
+// retired python3 parity suite) asserting the resolved-profile envelope is
+// deterministic, JSON-clean, and well-typed for every seed profile.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -21,7 +22,7 @@ import {
     SOURCE_USER,
     resolve_profile,
 } from '../../src/scripts/config/profiles.js';
-import { REPO_ROOT, hasPython3, runPy } from './_config_parity.js';
+import { REPO_ROOT } from './_config_parity.js';
 
 const SEED_ROOT = REPO_ROOT;
 
@@ -149,25 +150,14 @@ describe('config/profiles — resolution chain', () => {
     });
 });
 
-// ---- Golden parity (python3 vs tsx) ----
-const py = hasPython3();
-describe.skipIf(!py)('config/profiles — golden parity (python3 vs tsx)', () => {
-    function pyResolved(profileId: string): unknown {
-        const driver =
-            'import json,sys; sys.path.insert(0,"src"); from pathlib import Path;' +
-            'from scripts.config.profiles import resolve_profile;' +
-            `r=resolve_profile(project_root=Path(${JSON.stringify(REPO_ROOT)}), runtime_id=${JSON.stringify(profileId)});` +
-            'print(json.dumps({"id":r.id,"audience":r.audience,"preset_id":r.preset_id,' +
-            '"packs":list(r.packs),"personas":list(r.personas),"skills_hint":list(r.skills_hint),' +
-            '"commands_hint":list(r.commands_hint),"docs_first_pointer":r.docs_first_pointer,' +
-            '"source":r.source}))';
-        const res = runPy(['-c', driver]);
-        expect(res.status).toBe(0);
-        return JSON.parse(res.stdout.trim());
-    }
-    it.each([...SEED_PROFILE_IDS])('resolved profile matches for %s', (profile_id) => {
+// ---- Golden structure (python-free conversion of the retired parity block) ----
+// The resolved envelope comes from the live seed YAMLs, so exact values are
+// repo state — asserted structurally (deterministic, JSON-clean, well-typed)
+// rather than pinned byte-for-byte.
+describe('config/profiles — golden structure (tsx resolved envelope)', () => {
+    function envelope(profile_id: string): Record<string, unknown> {
         const r = resolve_profile({ project_root: REPO_ROOT, runtime_id: profile_id });
-        const ts = {
+        return {
             id: r.id,
             audience: r.audience,
             preset_id: r.preset_id,
@@ -178,6 +168,27 @@ describe.skipIf(!py)('config/profiles — golden parity (python3 vs tsx)', () =>
             docs_first_pointer: r.docs_first_pointer,
             source: r.source,
         };
-        expect(ts).toEqual(pyResolved(profile_id));
+    }
+
+    it.each([...SEED_PROFILE_IDS])('resolved envelope well-typed for %s', (profile_id) => {
+        const ts = envelope(profile_id);
+        expect(ts.id).toBe(profile_id);
+        expect(ts.source).toBe(SOURCE_RUNTIME);
+        expect(['fast', 'balanced', 'strict']).toContain(ts.preset_id);
+        // The list-shaped fields hold only non-empty strings.
+        for (const key of ['packs', 'personas', 'skills_hint', 'commands_hint'] as const) {
+            const list = ts[key] as unknown[];
+            expect(Array.isArray(list)).toBe(true);
+            for (const entry of list) {
+                expect(typeof entry).toBe('string');
+                expect((entry as string).trim()).toBeTruthy();
+            }
+        }
+        const audience = ts.audience as Record<string, unknown>;
+        expect(typeof audience['label']).toBe('string');
+        // JSON round-trip is lossless — the envelope is plain data.
+        expect(JSON.parse(JSON.stringify(ts))).toEqual(ts);
+        // Repeat resolution is deterministic.
+        expect(envelope(profile_id)).toEqual(ts);
     });
 });

@@ -1,15 +1,12 @@
 // Tests for src/scripts/annotate_discovery.ts (py2ts Phase 8 / Wave 8g).
 //
-// No Python test suite exists for this module → focused differential.
-//
 // annotate_discovery is a WRITER with NO injectable SRC/DST/HASH seam (all
-// three are derived from the script location). To golden-diff without leaving
-// tracked-file drift, the parity block:
+// three are derived from the script location). To exercise the CLI without
+// leaving tracked-file drift, the CLI block:
 //   1. snapshots internal/.condensation-hashes.json,
-//   2. creates a throwaway source file under .agent-src.uncondensed/rules/,
-//   3. runs python3, captures the written source + hash-file bytes, restores,
-//   4. runs tsx, captures, restores,
-//   5. asserts byte-identical written bytes + stdout/stderr + exit code.
+//   2. creates a throwaway source file under .agent-src.uncondensed/,
+//   3. runs the tsx CLI, asserts the written bytes + stdout/stderr + exit
+//      code, then restores every touched path.
 // Every mutation is snapshot+restored; the live tree is left untouched.
 //
 // Unit coverage of the pure pieces (render block, idempotency, arg parsing)
@@ -26,9 +23,7 @@ import {
     _renderBlock,
     annotate,
 } from '../../src/scripts/annotate_discovery.js';
-import { hasPython3, runPy, runTs } from './_wave8g.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8g.js';
 
 describe('annotate_discovery — pure pieces', () => {
     it('_renderBlock(meta) matches the locked template', () => {
@@ -79,7 +74,7 @@ describe('annotate_discovery — pure pieces', () => {
     });
 });
 
-// --- golden parity (writer; snapshot+restore the live targets) ------------
+// --- CLI intent tests (writer; snapshot+restore the live targets) ---------
 
 const restores: Array<() => void> = [];
 afterEach(() => {
@@ -103,8 +98,8 @@ function guard(p: string): void {
     });
 }
 
-describe.skipIf(!py3)('annotate_discovery — golden parity (python3 vs tsx)', () => {
-    it('written source + hash-file bytes byte-identical', () => {
+describe('annotate_discovery — CLI (tsx)', () => {
+    it('annotates a probe file, updates the hash file, and reports the count', () => {
         // Place the probe under a NON-scanned subdir (`_probe8g/`, not
         // rules/skills/commands/contexts) so the parallel
         // prototype_lint_contradictions scan never observes it — the annotate
@@ -127,35 +122,32 @@ describe.skipIf(!py3)('annotate_discovery — golden parity (python3 vs tsx)', (
         guard(HASH_FILE);
         guard(srcFile);
 
-        const run = (runner: typeof runPy): { stdout: string; stderr: string; status: number | null; src: string; hash: string } => {
-            fs.writeFileSync(srcFile, original, 'utf-8');
-            const r = runner('annotate_discovery', ['--pack', 'engineering-base', relArg]);
-            const written = fs.readFileSync(srcFile, 'utf-8');
-            const hash = fs.readFileSync(HASH_FILE, 'utf-8');
-            return { stdout: r.stdout, stderr: r.stderr, status: r.status, src: written, hash };
-        };
+        fs.writeFileSync(srcFile, original, 'utf-8');
+        const r = runTs('annotate_discovery', ['--pack', 'engineering-base', relArg]);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe('annotated 1 files with pack=engineering-base\n');
+        expect(r.stderr).toBe('');
 
-        const py = run(runPy);
-        const ts = run(runTs);
+        const written = fs.readFileSync(srcFile, 'utf-8');
+        // Discovery block injected into the frontmatter; body preserved.
+        expect(written).toContain('workspaces:\n  - engineering');
+        expect(written).toContain('packs:\n  - engineering-base');
+        expect(written).toContain('lifecycle: active');
+        expect(written.endsWith('---\nbody line\n')).toBe(true);
+        expect(written.startsWith('---\nname: probe\ndescription: parity probe\n')).toBe(true);
 
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.src).toBe(py.src);
-        expect(ts.hash).toBe(py.hash);
+        // Hash file rewritten and still valid JSON.
+        expect(() => JSON.parse(fs.readFileSync(HASH_FILE, 'utf-8'))).not.toThrow();
     });
 
-    it('skip (missing) path byte-identical, hash file still rewritten identically', () => {
+    it('skip (missing) path warns on stderr, annotates nothing, exits 0', () => {
         guard(HASH_FILE);
         const relArg = path.join('.agent-src.uncondensed', 'rules', '_wave8g_does_not_exist.md');
-        const py = runPy('annotate_discovery', ['--pack', 'meta', relArg]);
-        const pyHash = fs.readFileSync(HASH_FILE, 'utf-8');
-        const ts = runTs('annotate_discovery', ['--pack', 'meta', relArg]);
-        const tsHash = fs.readFileSync(HASH_FILE, 'utf-8');
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-        expect(tsHash).toBe(pyHash);
+        const r = runTs('annotate_discovery', ['--pack', 'meta', relArg]);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe(`  skip (missing): ${relArg}\n`);
+        expect(r.stdout).toBe('annotated 0 files with pack=meta\n');
+        // Hash file still rewritten to a valid JSON document.
+        expect(() => JSON.parse(fs.readFileSync(HASH_FILE, 'utf-8'))).not.toThrow();
     });
 });

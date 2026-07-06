@@ -2,16 +2,16 @@
 //
 // 1:1 port of tests/test_profile_explain.py — the pure `profile-overlay`
 // envelope + renderer. Pins plain + technical renders and proves the renderer
-// never throws on a partial/missing-field envelope. Plus a golden-parity block
-// diffing python3 vs tsx render output byte-for-byte (the renderer is a pure
-// template — fully deterministic).
+// never throws on a partial/missing-field envelope. Plus a golden-render
+// block (python-free conversion of the retired python3 parity suite) pinning
+// the full render output byte-for-byte via inline snapshots — the renderer
+// is a pure template, fully deterministic and independent of repo state.
 import { describe, expect, it } from 'vitest';
 
 import {
     build_profile_envelope,
     render_profile_overlay,
 } from '../../src/scripts/config/profile_explain.js';
-import { REPO_ROOT, hasPython3, runPy } from './_config_parity.js';
 
 describe('config/profile_explain — envelope + renderer', () => {
     it('envelope shape', () => {
@@ -72,29 +72,48 @@ describe('config/profile_explain — envelope + renderer', () => {
     });
 });
 
-// ---- Golden parity (python3 vs tsx) — byte-for-byte (pure template) ----
-const py = hasPython3();
-describe.skipIf(!py)('config/profile_explain — golden parity (python3 vs tsx)', () => {
-    function pyRender(active: string[], c: number, s: number, h: number, mode: string): string {
-        const driver =
-            'import sys; sys.path.insert(0,"src");' +
-            'from scripts.config import profile_explain as pe;' +
-            `env=pe.build_profile_envelope(${JSON.stringify(active)}, ${c}, ${s}, ${h});` +
-            `sys.stdout.write(pe.render_profile_overlay(env, mode=${JSON.stringify(mode)}))`;
-        const res = runPy(['-c', driver]);
-        expect(res.status).toBe(0);
-        return res.stdout;
+// ---- Golden renders (python-free conversion of the retired parity block) ----
+// Pure template → the full output is pinned byte-for-byte per case.
+describe('config/profile_explain — golden renders (pinned)', () => {
+    function render(active: string[], c: number, s: number, h: number, mode: string): string {
+        return render_profile_overlay(build_profile_envelope(active, c, s, h), mode);
     }
-    const cases: Array<[string[], number, number, number, string]> = [
-        [[], 150, 227, 0, 'plain'],
-        [[], 150, 227, 0, 'technical'],
-        [['engineering-base'], 40, 60, 167, 'plain'],
-        [['ops-people'], 30, 50, 100, 'technical'],
-        [['finance-basic', 'finance-advanced'], 12, 20, 300, 'plain'],
-    ];
-    it.each(cases)('render(%j, %i, %i, %i, %s) matches', (active, c, s, h, mode) => {
-        const ts = render_profile_overlay(build_profile_envelope(active, c, s, h), mode);
-        expect(ts).toBe(pyRender(active, c, s, h, mode));
+
+    it('no overlay, plain', () => {
+        expect(render([], 150, 227, 0, 'plain')).toMatchInlineSnapshot(`"Nothing is filtered — no profile is active, so you see every command and skill. The agent isn't hiding anything."`);
     });
-    void REPO_ROOT;
+
+    it('no overlay, technical', () => {
+        expect(render([], 150, 227, 0, 'technical')).toMatchInlineSnapshot(`"profile-overlay: none active — full surface (no filtering)."`);
+    });
+
+    it('single overlay, plain', () => {
+        expect(render(['engineering-base'], 40, 60, 167, 'plain')).toMatchInlineSnapshot(`
+          "Why the surface looks different: a profile is active (engineering-base).
+          It shows you 40 commands and 60 skills, and hides 167 behind packs you haven't turned on — that's why some commands aren't visible.
+          Nothing is broken; the overlay just narrows the surface to this profile.
+          It stays this way across sessions until you run \`/profile deactivate\`."
+        `);
+    });
+
+    it('single overlay, technical', () => {
+        expect(render(['ops-people'], 30, 50, 100, 'technical')).toMatchInlineSnapshot(`
+          "profile-overlay: active=[ops-people]
+            surfaced: commands=30 skills=50
+            hidden:   100 (behind inactive packs)
+            delta:    surface = full ∖ (artefacts whose packs ∉ active)
+            staleness: persists across sessions (overlay has no timestamp)"
+        `);
+    });
+
+    it('multi overlay, plain', () => {
+        expect(
+            render(['finance-basic', 'finance-advanced'], 12, 20, 300, 'plain'),
+        ).toMatchInlineSnapshot(`
+          "Why the surface looks different: a profile is active (finance-basic, finance-advanced).
+          It shows you 12 commands and 20 skills, and hides 300 behind packs you haven't turned on — that's why some commands aren't visible.
+          Nothing is broken; the overlay just narrows the surface to this profile.
+          It stays this way across sessions until you run \`/profile deactivate\`."
+        `);
+    });
 });

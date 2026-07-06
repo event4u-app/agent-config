@@ -5,15 +5,18 @@
 //      exercises conversation bucketing, per-model sub-buckets in first-seen
 //      order, the empty-rows path, and the float (`$x.xxxx`) / thousands /
 //      signed-delta formatting.
-//   2. A golden-parity layer (python3 vs tsx) on the real sessions.jsonl:
-//      stdout, stderr, exit code byte-identical for text + json. Read-only — no
-//      snapshot/restore needed. Skipped without python3. Aggregated costs come
-//      from real data but the script reports no timing/duration fields, so the
-//      byte comparison is sound.
-import { describe, expect, it } from 'vitest';
+//   2. A CLI layer (tsx subprocess) on a deterministic temp-fixture JSONL —
+//      exercises --input / --format arg parsing, the missing-input path, and
+//      exit codes end-to-end. Converted from the retired python3-vs-tsx
+//      golden parity block (the Python original was deleted); fixtures replace
+//      the real sessions.jsonl so output is fully deterministic.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { group, render_text } from '../../src/scripts/cost_by_conversation.js';
-import { hasPython3, runPy, runTs } from './_wave8e.js';
+import { runTs } from './_wave8e.js';
 
 describe('cost_by_conversation — in-process units', () => {
     it('groups by conversation_id with per-model sub-buckets', () => {
@@ -63,19 +66,58 @@ describe('cost_by_conversation — in-process units', () => {
     });
 });
 
-const py3 = hasPython3();
+describe('cost_by_conversation — CLI on a fixture (tsx)', () => {
+    let tmpDir: string;
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cost-by-conv-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
 
-describe.skipIf(!py3)('cost_by_conversation — golden parity (python3 vs tsx)', () => {
-    const cases: Array<{ name: string; args: string[] }> = [
-        { name: 'text', args: [] },
-        { name: 'json', args: ['--format', 'json'] },
-    ];
-    it.each(cases)('byte-identical on the real repo ($name)', ({ args }) => {
-        const p = runPy('cost_by_conversation', args);
-        const t = runTs('cost_by_conversation', args);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+    function writeFixture(): string {
+        const p = path.join(tmpDir, 'sessions.jsonl');
+        const rows = [
+            { sessionId: 's1', conversation_id: 'c1', telegraph_delta_tokens: 42, total_cost_usd: 0.5, input_tokens: 100, output_tokens: 20, model: 'sonnet' },
+            { session_id: 's2', conversation_id: 'c1', total_cost_usd: 1, model: 'opus' },
+        ];
+        fs.writeFileSync(p, rows.map((r) => JSON.stringify(r)).join('\n') + '\n', 'utf-8');
+        return p;
+    }
+
+    it('text format renders the grouped lens deterministically', () => {
+        const t = runTs('cost_by_conversation', ['--input', writeFixture()]);
         expect(t.status).toBe(0);
+        expect(t.stderr).toBe('');
+        expect(t.stdout).toContain('cost-by-conversation lens · grouped by conversation_id');
+        expect(t.stdout).toContain('c1: 2 sessions · $1.5000 · in 100 · out 20 · telegraph_delta +42');
+        // per-model sub-buckets render sorted (opus before sonnet)
+        expect(t.stdout).toContain('opus: 1 sessions · $1.0000');
+        expect(t.stdout).toContain('sonnet: 1 sessions · $0.5000');
+        expect(t.stdout.indexOf('opus:')).toBeLessThan(t.stdout.indexOf('sonnet:'));
+    });
+
+    it('json format emits the schema-versioned structure', () => {
+        const t = runTs('cost_by_conversation', ['--input', writeFixture(), '--format', 'json']);
+        expect(t.status).toBe(0);
+        expect(t.stderr).toBe('');
+        const doc = JSON.parse(t.stdout) as {
+            schema_version: string;
+            by_conversation: Record<string, Record<string, unknown>>;
+        };
+        expect(doc.schema_version).toBe('cost-by-conversation/v1');
+        expect(Object.keys(doc.by_conversation)).toEqual(['c1']);
+        const c1 = doc.by_conversation['c1']!;
+        expect(c1['sessions']).toBe(2);
+        expect(c1['total_cost_usd']).toBe(1.5);
+        expect(c1['telegraph_delta_tokens']).toBe(42);
+        expect(Object.keys(c1['by_model'] as object)).toEqual(['sonnet', 'opus']);
+    });
+
+    it('missing input file → exit 0 + no-rows banner', () => {
+        const t = runTs('cost_by_conversation', ['--input', path.join(tmpDir, 'nope.jsonl')]);
+        expect(t.status).toBe(0);
+        // render_text yields the banner + '\n'; the CLI print adds one more.
+        expect(t.stdout).toBe('cost-by-conversation: no rows.\n\n');
     });
 });

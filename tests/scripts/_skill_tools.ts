@@ -1,11 +1,10 @@
-// Shared fixtures + golden-parity helpers for the Block D skill_tools twins
-// (py2ts Phase 8 / Wave 8h). Committed helper imported by:
+// Shared fixtures for the Block D skill_tools test suites (tsx-only).
+// Committed helper imported by:
 //   - score_skill_relevance.test.ts
 //   - audit_persona_coverage.test.ts
 //   - audit_user_type_coverage.test.ts
 //   - suggest_skill_for_task.test.ts
 //   - run_block_d_eval.test.ts
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -19,18 +18,6 @@ export const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-
-// `from skill_tools.X import …` resolves only with `src/scripts` on PYTHONPATH
-// (the test suites manually `sys.path.insert(0, .../src/scripts)`); reproduce
-// that for the golden CLI spawns.
-export const PY_ENV = {
-    ...process.env,
-    PYTHONPATH: `${path.join(REPO_ROOT, 'src', 'scripts')}${path.delimiter}${process.env.PYTHONPATH ?? ''}`,
-};
-
-export function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 /** Fresh temp dir, auto-unique. Caller cleans up via rmTmp. */
 export function mkTmp(): string {
@@ -99,25 +86,3 @@ export function writeDoc(searchRoot: string, name: string, body: string): void {
     fs.writeFileSync(f, body, 'utf-8');
 }
 
-export interface RunResult {
-    py: SpawnSyncReturns<string>;
-    ts: SpawnSyncReturns<string>;
-}
-
-/**
- * Run a skill_tools module via python3 AND tsx with the same args, returning
- * both results for byte-identical comparison. The Python package import needs
- * `src/scripts` on PYTHONPATH.
- */
-export function runBoth(module: string, args: string[]): RunResult {
-    const py = spawnSync('python3', [path.join(TOOLS_DIR, `${module}.py`), ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        env: PY_ENV,
-    });
-    const ts = spawnSync(TSX_BIN, [path.join(TOOLS_DIR, `${module}.ts`), ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-    });
-    return { py, ts };
-}

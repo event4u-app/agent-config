@@ -1,12 +1,13 @@
 // Tests for src/scripts/profile_use.ts (py2ts Phase 8 / Wave 8e).
 //
-// No Python pytest suite exists, so this is a focused differential plus a
-// golden-parity layer. profile_use is a WRITER: every run mutates
+// No Python pytest suite exists, so this is a focused in-process suite plus
+// a CLI subprocess layer. profile_use is a WRITER: every run mutates
 // <root>/agents/settings/.agent-settings.yml. All mutation happens in
 // throwaway temp dirs — the live repo settings file is never touched. The
-// golden-parity layer runs python3 and tsx in SEPARATE temp roots, then
-// asserts the written file is byte-identical and the stdout matches once the
-// (root-dependent) absolute path is normalized.
+// CLI layer (converted from the retired python3-vs-tsx golden parity block;
+// the Python original was deleted) runs the real tsx entry point in a temp
+// root and asserts stdout / stderr / exit code / written file directly, with
+// the (root-dependent) absolute path normalized to <ROOT>.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -17,9 +18,7 @@ import {
     VALID_PROFILES,
     main,
 } from '../../src/scripts/profile_use.js';
-import { hasPython3, runPy, runTs } from './_wave8e.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8e.js';
 
 let tmpDir: string;
 let prevCwd: string;
@@ -130,9 +129,20 @@ describe('profile_use — in-process differential', () => {
     });
 });
 
-describe.skipIf(!py3)('profile_use — golden parity (python3 vs tsx, separate temp roots)', () => {
-    function freshRoot(label: string, seed?: string): string {
-        const root = fs.mkdtempSync(path.join(os.tmpdir(), `profile-use-${label}-`));
+describe('profile_use — CLI subprocess (tsx, temp root)', () => {
+    interface CliRun {
+        status: number | null;
+        stdout: string;
+        stderr: string;
+        root: string;
+        file: string;
+        written: string | null;
+    }
+
+    function freshRoot(seed?: string): string {
+        // realpath so the (macOS /var → /private/var) path the CLI prints
+        // matches the root token we normalize away.
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'profile-use-cli-')));
         if (seed !== undefined) {
             fs.mkdirSync(path.join(root, 'agents', 'settings'), { recursive: true });
             fs.writeFileSync(path.join(root, SETTINGS_REL), seed, 'utf-8');
@@ -140,65 +150,94 @@ describe.skipIf(!py3)('profile_use — golden parity (python3 vs tsx, separate t
         return root;
     }
 
-    // Normalize the absolute root path so stdout from two temp roots compares.
+    // Normalize the absolute root path so assertions are machine-independent.
     function norm(s: string, root: string): string {
         return s.split(root).join('<ROOT>');
     }
 
-    function parityFresh(args: string[], seed?: string): void {
-        const pyRoot = freshRoot('py', seed);
-        const tsRoot = freshRoot('ts', seed);
+    function runCli(args: string[], seed?: string): CliRun {
+        const root = freshRoot(seed);
         try {
-            const p = runPy('profile_use', args, { cwd: pyRoot });
-            const t = runTs('profile_use', args, { cwd: tsRoot });
-            expect(t.status).toBe(p.status);
-            expect(norm(t.stdout, tsRoot)).toBe(norm(p.stdout, pyRoot));
-            expect(norm(t.stderr, tsRoot)).toBe(norm(p.stderr, pyRoot));
-            const pyFile = path.join(pyRoot, SETTINGS_REL);
-            const tsFile = path.join(tsRoot, SETTINGS_REL);
-            expect(fs.existsSync(tsFile)).toBe(fs.existsSync(pyFile));
-            if (fs.existsSync(pyFile)) {
-                expect(fs.readFileSync(tsFile, 'utf-8')).toBe(fs.readFileSync(pyFile, 'utf-8'));
-            }
+            const t = runTs('profile_use', args, { cwd: root });
+            const file = path.join(root, SETTINGS_REL);
+            return {
+                status: t.status,
+                stdout: norm(t.stdout, root),
+                stderr: norm(t.stderr, root),
+                root,
+                file,
+                written: fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null,
+            };
         } finally {
-            fs.rmSync(pyRoot, { recursive: true, force: true });
-            fs.rmSync(tsRoot, { recursive: true, force: true });
+            fs.rmSync(root, { recursive: true, force: true });
         }
     }
 
-    it('fresh dir + --profile founder → identical write + stdout', () => {
-        parityFresh(['--profile', 'founder']);
-    });
-
-    it('--profile=content_creator (equals form) → identical', () => {
-        parityFresh(['--profile=content_creator']);
-    });
-
-    it('legacy-all on a seeded file → identical surgical edit', () => {
-        parityFresh(['--profile', 'legacy-all'], 'profile:\n  id: founder\nprojection:\n  mode: scoped\n');
-    });
-
-    it('legacy-all already-set → identical no-change message', () => {
-        parityFresh(['--profile', 'legacy-all'], 'projection:\n  mode: legacy-all\n');
-    });
-
-    it('switch existing profile → identical arrow + edit', () => {
-        parityFresh(['--profile', 'ops'], 'profile:\n  id: developer\nprojection:\n  mode: scoped\n');
-    });
-
-    it('missing --profile → identical exit 2 + stderr', () => {
-        parityFresh([]);
-    });
-
-    it('unknown profile → identical exit 2 + stderr', () => {
-        parityFresh(['--profile', 'wizard']);
-    });
-
-    it('settings file with comments preserved byte-for-byte', () => {
-        parityFresh(
-            ['--profile', 'finance'],
-            '# top comment\nname: demo\n\n# --- Profile (experience) ---\nprofile:\n  # which experience\n  id: developer\n',
+    it('fresh dir + --profile founder → writes both blocks + success stdout', () => {
+        const r = runCli(['--profile', 'founder']);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe('');
+        expect(r.stdout).toContain(
+            'Experience set to `founder`; projection mode `scoped` in <ROOT>/agents/settings/.agent-settings.yml',
         );
+        expect(r.written).toContain('profile:\n  id: founder');
+        expect(r.written).toContain('projection:\n  mode: scoped');
+    });
+
+    it('--profile=content_creator (equals form) parses and writes', () => {
+        const r = runCli(['--profile=content_creator']);
+        expect(r.status).toBe(0);
+        expect(r.written).toContain('id: content_creator');
+    });
+
+    it('legacy-all on a seeded file → surgical projection-only edit', () => {
+        const r = runCli(['--profile', 'legacy-all'], 'profile:\n  id: founder\nprojection:\n  mode: scoped\n');
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('Projection set to `legacy-all`');
+        expect(r.written).toContain('id: founder'); // profile.id untouched
+        expect(r.written).toContain('mode: legacy-all');
+        expect(r.written).not.toContain('mode: scoped');
+    });
+
+    it('legacy-all already-set → no-change message', () => {
+        const r = runCli(['--profile', 'legacy-all'], 'projection:\n  mode: legacy-all\n');
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('Already in `legacy-all` projection');
+        expect(r.written).toBe('projection:\n  mode: legacy-all\n');
+    });
+
+    it('switch existing profile → arrow transition + edit', () => {
+        const r = runCli(['--profile', 'ops'], 'profile:\n  id: developer\nprojection:\n  mode: scoped\n');
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('Experience set to `developer` → `ops`');
+        expect(r.written).toContain('id: ops');
+        expect(r.written).not.toContain('id: developer');
+    });
+
+    it('missing --profile → exit 2 + stderr, nothing written', () => {
+        const r = runCli([]);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('`use` requires --profile=<id>');
+        expect(r.written).toBeNull();
+    });
+
+    it('unknown profile → exit 2 + stderr, nothing written', () => {
+        const r = runCli(['--profile', 'wizard']);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('unknown profile `wizard`');
+        expect(r.written).toBeNull();
+    });
+
+    it('settings file comments survive the surgical edit', () => {
+        const seed =
+            '# top comment\nname: demo\n\n# --- Profile (experience) ---\nprofile:\n  # which experience\n  id: developer\n';
+        const r = runCli(['--profile', 'finance'], seed);
+        expect(r.status).toBe(0);
+        expect(r.written).toContain('# top comment');
+        expect(r.written).toContain('name: demo');
+        expect(r.written).toContain('# which experience');
+        expect(r.written).toContain('id: finance');
+        expect(r.written).not.toContain('id: developer');
     });
 });
 

@@ -1,22 +1,31 @@
 // Tests for src/scripts/skill_tools/run_block_d_eval.ts (py2ts Phase 8 /
-// Wave 8h). No pytest suite exists, so this is a focused differential suite
-// over the pure aggregator (run_all) plus a golden parity layer (python3 vs
-// tsx) over temp skill/persona/corpus fixtures. The runner invokes no model —
-// D2/D3/D4 are pure scoring — so the whole surface is deterministic given a
-// fixed corpus.
+// Wave 8h). Focused suite over the pure aggregator (run_all) plus a CLI
+// intent layer (tsx only — the Python original is deleted) over temp
+// skill/persona/corpus fixtures. The runner invokes no model — D2/D3/D4 are
+// pure scoring — so the whole surface is deterministic given a fixed corpus.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { run_all } from '../../src/scripts/skill_tools/run_block_d_eval.js';
 import {
-    hasPython3,
+    REPO_ROOT,
+    TOOLS_DIR,
+    TSX_BIN,
     mkTmp,
     rmTmp,
-    runBoth,
     writePersona,
     writeSkillFull,
 } from './_skill_tools.js';
+
+function runTsx(module: string, args: string[]): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX_BIN, [path.join(TOOLS_DIR, `${module}.ts`), ...args], {
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+}
 
 let tmp: string;
 beforeEach(() => {
@@ -100,10 +109,10 @@ describe('run_block_d_eval — run_all aggregator', () => {
     });
 });
 
-describe.runIf(hasPython3())('run_block_d_eval — golden parity (python3 vs tsx)', () => {
-    it('human summary is byte-identical (pilot PASS)', () => {
+describe('run_block_d_eval — CLI (tsx)', () => {
+    it('human summary reports per-tool verdicts and PASS + exit 0', () => {
         const { skills, personas, corpus } = buildFixture();
-        const { py, ts } = runBoth('run_block_d_eval', [
+        const r = runTsx('run_block_d_eval', [
             '--skills-dir',
             skills,
             '--personas-dir',
@@ -111,14 +120,15 @@ describe.runIf(hasPython3())('run_block_d_eval — golden parity (python3 vs tsx
             '--corpus-dir',
             corpus,
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toContain('D2: 2/2 (100%)');
+        expect(r.stdout).toContain('D4: 3/5 top-1 hits');
+        expect(r.stdout).toContain('pilot: 3/3 tools passed → PASS');
     });
 
-    it('--json is byte-identical incl. pct=1.0 float (pilot PASS)', () => {
+    it('--json reports the full aggregate incl. pct=1.0 float repr (pilot PASS)', () => {
         const { skills, personas, corpus } = buildFixture();
-        const { py, ts } = runBoth('run_block_d_eval', [
+        const r = runTsx('run_block_d_eval', [
             '--skills-dir',
             skills,
             '--personas-dir',
@@ -127,18 +137,23 @@ describe.runIf(hasPython3())('run_block_d_eval — golden parity (python3 vs tsx
             corpus,
             '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        // pct must serialize WITH the trailing `.0` (Python float repr).
-        expect(ts.stdout).toContain('"pct": 1.0');
+        expect(r.status, r.stderr).toBe(0);
+        // pct must serialize WITH the trailing `.0` (Python float repr contract).
+        expect(r.stdout).toContain('"pct": 1.0');
+        const report = JSON.parse(r.stdout) as Record<string, unknown>;
+        expect(report['D2']).toMatchObject({ hits: 2, total: 2, passed: true });
+        expect(report['D3']).toMatchObject({ count: 3, passed: true });
+        expect(report['D4']).toMatchObject({ hits: 3, total: 5, passed: true });
+        expect(report['tools_passed']).toBe(3);
+        expect(report['pilot_passed']).toBe(true);
     });
 
-    it('pilot FAIL exits 1 with byte-identical --json (pct=0.0)', () => {
+    it('pilot FAIL exits 1 with pct=0.0 in --json', () => {
         const corpus = path.join(tmp, 'c2');
         fs.mkdirSync(corpus, { recursive: true });
         fs.writeFileSync(path.join(corpus, 'd2-tasks.json'), JSON.stringify({ tasks: [] }), 'utf-8');
         fs.writeFileSync(path.join(corpus, 'd4-tasks.json'), JSON.stringify({ tasks: [] }), 'utf-8');
-        const { py, ts } = runBoth('run_block_d_eval', [
+        const r = runTsx('run_block_d_eval', [
             '--skills-dir',
             path.join(tmp, 'empty-s'),
             '--personas-dir',
@@ -147,9 +162,10 @@ describe.runIf(hasPython3())('run_block_d_eval — golden parity (python3 vs tsx
             corpus,
             '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.status).toBe(1);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stdout).toContain('"pct": 0.0');
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('"pct": 0.0');
+        const report = JSON.parse(r.stdout) as Record<string, unknown>;
+        expect(report['tools_passed']).toBe(0);
+        expect(report['pilot_passed']).toBe(false);
     });
 });

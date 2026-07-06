@@ -1,17 +1,15 @@
 // Tests for src/scripts/bench_ab_clone.ts (Phase 1 Step 2 A/B clone builder).
 //
-// The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-094 parity contract). The script hardcodes the
-// gitignored clones path `internal/bench/ab/clones/`; the golden-parity
-// blocks build there under python3 vs tsx and assert:
-//   - `--print-shape-hash` is byte-identical (validates json.dumps of the
-//     surface tuple + the pathlib-sorted fixture hashing);
-//   - the `without` clone tree is byte-identical (fixture copy fidelity +
-//     manifest);
-//   - the `with` clone manifest is byte-identical (surface-layer hash).
+// The Python original is deleted, so this is a python-free intent suite over
+// the tsx CLI. The script hardcodes the gitignored clones path
+// `internal/bench/ab/clones/`; the CLI blocks build there and assert:
+//   - `--print-shape-hash` matches the in-process pure function;
+//   - the `without` clone build is deterministic (tree + manifest identical
+//     across two independent rebuilds — fixture copy fidelity);
+//   - the `with` clone manifest carries the surface-layer shape hash;
+//   - re-running without --refresh is idempotent ("already present" notice).
 // Every block removes the clones dir afterwards so the working tree is left
 // exactly as found (the dir is gitignored, so this is zero git drift).
-// Skipped without python3.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -24,7 +22,6 @@ import {
     TSX_BIN,
     acquireClonesLock,
     hashTree,
-    pythonAvailable,
     releaseClonesLock,
     removeClones,
     runScript,
@@ -32,8 +29,6 @@ import {
 import { target_shape_hash } from '../../src/scripts/bench_ab_clone.js';
 
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.py');
-const HAVE_PYTHON = pythonAvailable();
 const HAVE_FIXTURE = existsSync(FIXTURE);
 
 describe('bench_ab_clone.ts — pure layer', () => {
@@ -48,60 +43,58 @@ describe('bench_ab_clone.ts — pure layer', () => {
     });
 });
 
-describe.skipIf(!HAVE_PYTHON || !HAVE_FIXTURE)('bench_ab_clone — golden parity', () => {
+describe.skipIf(!HAVE_FIXTURE)('bench_ab_clone — CLI (tsx)', () => {
     beforeAll(() => acquireClonesLock());
     afterAll(() => releaseClonesLock());
     beforeEach(() => removeClones());
     afterEach(() => removeClones());
 
-    it('--print-shape-hash is byte-identical (py vs tsx)', () => {
-        const py = runScript('python3', PY_SCRIPT, ['--print-shape-hash']);
+    it('--print-shape-hash matches the in-process pure function', () => {
         const ts = runScript(TSX_BIN, TS_SCRIPT, ['--print-shape-hash']);
-        expect(py.status, py.stderr).toBe(0);
         expect(ts.status, ts.stderr).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        // and matches the in-process pure function.
         expect(ts.stdout.trim()).toBe(target_shape_hash());
     });
 
-    it('without clone: tree + manifest byte-identical', () => {
-        const py = runScript('python3', PY_SCRIPT, ['--variant', 'without']);
-        expect(py.status, py.stderr).toBe(0);
-        const pyManifest = readFileSync(join(CLONES, 'without', '.bench-ab-manifest.json'), 'utf-8');
-        const pyTree = hashTree(join(CLONES, 'without'));
+    it('without clone: build is deterministic (tree + manifest identical across rebuilds)', () => {
+        const first = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
+        expect(first.status, first.stderr).toBe(0);
+        expect(first.stdout).toContain('built without clone');
+        const firstManifest = readFileSync(join(CLONES, 'without', '.bench-ab-manifest.json'), 'utf-8');
+        const firstTree = hashTree(join(CLONES, 'without'));
         removeClones();
 
-        const ts = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
-        expect(ts.status, ts.stderr).toBe(0);
-        const tsManifest = readFileSync(join(CLONES, 'without', '.bench-ab-manifest.json'), 'utf-8');
-        const tsTree = hashTree(join(CLONES, 'without'));
+        const second = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
+        expect(second.status, second.stderr).toBe(0);
+        const secondManifest = readFileSync(join(CLONES, 'without', '.bench-ab-manifest.json'), 'utf-8');
+        const secondTree = hashTree(join(CLONES, 'without'));
 
-        expect(tsManifest).toBe(pyManifest);
-        expect(tsTree).toEqual(pyTree);
-        // stdout: absolute clone path is identical between runtimes.
-        expect(ts.stdout).toBe(py.stdout);
+        expect(secondManifest).toBe(firstManifest);
+        expect(secondTree).toEqual(firstTree);
+        expect(second.stdout).toBe(first.stdout);
+
+        const manifest = JSON.parse(firstManifest) as Record<string, unknown>;
+        expect(manifest['variant']).toBe('without');
+        expect(manifest['reasoning_enabled']).toBe(false);
+        expect(manifest['target_shape_hash']).toBe(target_shape_hash());
+        expect(manifest['with_surfaces']).toEqual([]);
     });
 
-    it('with clone: manifest byte-identical (surface-layer hash)', () => {
-        const py = runScript('python3', PY_SCRIPT, ['--variant', 'with']);
-        expect(py.status, py.stderr).toBe(0);
-        const pyManifest = readFileSync(join(CLONES, 'with', '.bench-ab-manifest.json'), 'utf-8');
-        removeClones();
-
+    it('with clone: manifest carries the surface-layer shape hash', () => {
         const ts = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'with']);
         expect(ts.status, ts.stderr).toBe(0);
-        const tsManifest = readFileSync(join(CLONES, 'with', '.bench-ab-manifest.json'), 'utf-8');
-
-        expect(tsManifest).toBe(pyManifest);
-        expect(ts.stdout).toBe(py.stdout);
+        const manifest = JSON.parse(
+            readFileSync(join(CLONES, 'with', '.bench-ab-manifest.json'), 'utf-8'),
+        ) as Record<string, unknown>;
+        expect(manifest['variant']).toBe('with');
+        expect(manifest['target_shape_hash']).toBe(target_shape_hash());
     });
 
-    it('idempotent: re-running without --refresh leaves the clone (identical notice)', () => {
-        runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
-        const py = runScript('python3', PY_SCRIPT, ['--variant', 'without']);
-        const ts = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
-        // Both report "already present" with the same absolute path.
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stdout).toContain('already present');
+    it('idempotent: re-running without --refresh leaves the clone (notice printed)', () => {
+        const build = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
+        expect(build.status, build.stderr).toBe(0);
+        const rerun = runScript(TSX_BIN, TS_SCRIPT, ['--variant', 'without']);
+        expect(rerun.status, rerun.stderr).toBe(0);
+        expect(rerun.stdout).toContain('already present');
+        expect(rerun.stdout).toContain('--refresh');
     });
 });

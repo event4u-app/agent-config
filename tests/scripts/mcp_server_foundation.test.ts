@@ -5,23 +5,15 @@
 // layers of tests/test_mcp_server.py. The server layer (mcp SDK, build_server)
 // belongs to server.ts and is out of scope here.
 //
-// Plus a golden-parity block: python3 loader output vs the TS twin on the
-// REAL repo, compared on canonicalized structure. OS-order-sensitive fields
-// are NOT excluded here because both sides apply the same pathlib
-// component-wise sort + wire-name / uri sort, so the merged order is
-// deterministic and comparable.
+// Plus a golden-structure block (converted from the retired python-parity
+// suite): the loaders apply a pathlib component-wise sort + wire-name / uri
+// sort, so their output on the REAL repo is deterministic — asserted via
+// canonical round-trips and repeat-load determinism instead of a python diff.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import {
-    REPO_ROOT,
-    bumpMtime,
-    hasPython3,
-    makeTmpDir,
-    runPyInline,
-    writeFile,
-} from './_mcp_server.js';
+import { REPO_ROOT, bumpMtime, makeTmpDir, writeFile } from './_mcp_server.js';
 
 import {
     NOT_IMPLEMENTED_CODE,
@@ -664,64 +656,59 @@ describe('catalog', () => {
 });
 
 // ----------------------------------------------------------------------
-// Golden parity — python3 loaders vs TS twin on the REAL repo.
-// Both sides apply the same pathlib component-wise sort + wire-name / uri
-// sort, so the merged order is deterministic and directly comparable.
+// Golden structure — the TS loaders on the REAL repo (python-free intent
+// conversion of the retired python3 parity block). The loaders apply a
+// pathlib component-wise sort + wire-name / uri sort, so the output is
+// deterministic across loads and canonically JSON-serializable.
 // ----------------------------------------------------------------------
 
-describe.runIf(hasPython3())('golden parity vs python3', () => {
-    it('load_all_prompts: structure byte-identical', () => {
-        const py = runPyInline(
-            'import json,sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.prompts import load_all_prompts, to_mcp_prompt_meta; ' +
-                'p,e=load_all_prompts(); ' +
-                'print(json.dumps({"errors":e,"metas":[to_mcp_prompt_meta(x) for x in p]}, sort_keys=True))',
-            { cwd: REPO_ROOT },
-        );
-        expect(py.status).toBe(0);
-        const pyObj = JSON.parse(py.stdout);
+describe('golden structure on the real repo', () => {
+    it('load_all_prompts: deterministic, canonical, well-formed metas', () => {
         const [prompts, errors] = load_all_prompts(REPO_ROOT);
-        const tsObj = { errors, metas: prompts.map((p) => to_mcp_prompt_meta(p)) };
-        // Canonicalize via JSON round-trip with sorted keys on both sides.
-        expect(canonical(tsObj)).toEqual(canonical(pyObj));
+        expect(errors).toEqual([]);
+        const metas = prompts.map((p) => to_mcp_prompt_meta(p));
+        // Every meta carries the full wire envelope with valid enum values.
+        for (const meta of metas) {
+            expect(meta.name).toMatch(/^(skill|command)\./);
+            expect((meta.description as string).trim()).toBeTruthy();
+            expect(meta.arguments).toEqual([]);
+            const inner = meta._meta as Record<string, unknown>;
+            expect(['package', 'project']).toContain(inner.source);
+            expect(['skill', 'command']).toContain(inner.kind);
+        }
+        // Canonical JSON round-trip is lossless (no undefined / functions /
+        // non-JSON values leak into the wire envelope).
+        expect(canonical(metas)).toEqual(JSON.parse(JSON.stringify(metas)));
+        // Repeat load is deterministic — same order, same content.
+        const [again] = load_all_prompts(REPO_ROOT);
+        expect(canonical(again.map((p) => to_mcp_prompt_meta(p)))).toEqual(canonical(metas));
     });
 
-    it('load_all_resources: structure byte-identical', () => {
-        const py = runPyInline(
-            'import json,sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.resources import load_all_resources, to_mcp_resource_meta; ' +
-                'r,e=load_all_resources(); ' +
-                'print(json.dumps({"errors":e,"metas":[to_mcp_resource_meta(x) for x in r]}, sort_keys=True))',
-            { cwd: REPO_ROOT },
-        );
-        expect(py.status).toBe(0);
-        const pyObj = JSON.parse(py.stdout);
+    it('load_all_resources: deterministic, canonical, well-formed metas', () => {
         const [resources, errors] = load_all_resources(REPO_ROOT);
-        const tsObj = { errors, metas: resources.map((r) => to_mcp_resource_meta(r)) };
-        expect(canonical(tsObj)).toEqual(canonical(pyObj));
+        expect(errors).toEqual([]);
+        const metas = resources.map((r) => to_mcp_resource_meta(r));
+        for (const meta of metas) {
+            expect(meta.uri).toMatch(/^(rule|guideline|context):\/\//);
+            expect(meta.mimeType).toBe(MIME_MARKDOWN);
+        }
+        expect(canonical(metas)).toEqual(JSON.parse(JSON.stringify(metas)));
+        const [again] = load_all_resources(REPO_ROOT);
+        expect(canonical(again.map((r) => to_mcp_resource_meta(r)))).toEqual(canonical(metas));
     });
 
-    it('catalog: load_catalog names + side_effects + implemented_on match', () => {
-        const py = runPyInline(
-            'import json,sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.catalog import load_catalog; ' +
-                'print(json.dumps([[c.name,c.side_effect,list(c.implemented_on)] for c in load_catalog()]))',
-            { cwd: REPO_ROOT },
-        );
-        expect(py.status).toBe(0);
-        const pyArr = JSON.parse(py.stdout);
-        const tsArr = load_catalog().map((c) => [c.name, c.side_effect, [...c.implemented_on]]);
-        expect(tsArr).toEqual(pyArr);
+    it('catalog: names unique, load order deterministic', () => {
+        const first = load_catalog().map((c) => [c.name, c.side_effect, [...c.implemented_on]]);
+        const names = first.map((e) => e[0]);
+        expect(new Set(names).size).toBe(names.length);
+        const second = load_catalog().map((c) => [c.name, c.side_effect, [...c.implemented_on]]);
+        expect(second).toEqual(first);
     });
 
-    it('compute_skill_set_signature: identical hash on identical input', () => {
-        const py = runPyInline(
-            'import sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.metadata import compute_skill_set_signature; ' +
-                'print(compute_skill_set_signature(((\"a.md\",1.0),(\"b.md\",2.5)),((\"c.md\",3.0),)))',
-            { cwd: REPO_ROOT },
-        );
-        expect(py.status).toBe(0);
+    it('compute_skill_set_signature: pinned regression hash', () => {
+        // Regression pin — this exact value was python-parity-verified before
+        // the python twin was retired. A change here means the signature
+        // algorithm changed, which invalidates cached skill-set identities.
         const ts = compute_skill_set_signature(
             [
                 ['a.md', 1.0],
@@ -729,7 +716,7 @@ describe.runIf(hasPython3())('golden parity vs python3', () => {
             ],
             [['c.md', 3.0]],
         );
-        expect(ts).toBe(py.stdout.trim());
+        expect(ts).toBe('dcbdf3d5a1ef');
     });
 });
 

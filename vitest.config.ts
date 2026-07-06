@@ -24,9 +24,11 @@ export default defineConfig({
             ['src/ui/**', 'happy-dom'],
         ],
         environment: 'node',
-        // Enforce the post-migration python-free runtime so obsolete live
-        // python↔tsx parity blocks self-skip (see tests/_lib/python-free-env.ts).
-        setupFiles: ['./tests/_lib/python-free-env.ts'],
+        // The python-free-env shim (tests/_lib/python-free-env.ts) is DISABLED:
+        // the py2ts test-layer purge converted every live python↔tsx parity
+        // block to tsx-only intent tests, so no test needs the python3 shadow.
+        // Per the teardown council D3 protocol the file itself is deleted in a
+        // follow-up PR after this disable has soaked ≥1 CI cycle on main.
         testTimeout: 10_000,
         hookTimeout: 10_000,
         reporters: process.env.CI ? ['default'] : ['default'],

@@ -1,17 +1,11 @@
 // Tests for src/scripts/update_prices.ts (py2ts Phase 8 / Wave 8g).
 //
-// No Python test suite exists for this module → focused differential.
-//
 // `refresh()` fetches the LiteLLM feed over the network (non-deterministic)
 // and stamps the file with today's UTC date (non-deterministic) — neither is
-// golden-diffable. The deterministic, no-network surface is `--check --path`,
-// which only reads a supplied prices file; that is the golden-parity target.
-//
-// DIVERGENCE NOTE (write path): a live `refresh` run is excluded from
-// byte-parity — it depends on network reachability AND `datetime.now(utc)`.
-// The fallback shipped-default render IS asserted byte-identical via the
-// pricing `_render_markdown` twin (see unit tests below), so the only
-// runtime-specific piece left is the date stamp + the live feed contents.
+// assertable. The deterministic, no-network surface is `--check --path`,
+// which only reads a supplied prices file; that is the CLI intent-test
+// target: exact stdout messages + exit codes for the fresh / stale /
+// missing / malformed cases.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -20,9 +14,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { _render_markdown } from '../../src/scripts/ai_council/pricing.js';
 import { as_rows } from '../../src/scripts/ai_council/_default_prices.js';
 import { _toRowsFromLitellm } from '../../src/scripts/update_prices.js';
-import { hasPython3, runPy, runTs } from './_wave8g.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8g.js';
 
 const tmp: string[] = [];
 function mkTmp(): string {
@@ -88,41 +80,37 @@ describe('update_prices — _toRowsFromLitellm (allow-list + per-1M conversion)'
     });
 });
 
-describe.skipIf(!py3)('update_prices — --check golden parity (python3 vs tsx, no network)', () => {
-    it('fresh file → exit 0, message byte-identical', () => {
+describe('update_prices — --check CLI (tsx, no network)', () => {
+    it('fresh file → exit 0 + fresh message', () => {
         const p = freshFile('2099-01-01');
-        const py = runPy('update_prices', ['--check', '--path', p]);
-        const ts = runTs('update_prices', ['--check', '--path', p]);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        const r = runTs('update_prices', ['--check', '--path', p]);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe(`[update_prices] ${p} fresh (last_updated=2099-01-01)\n`);
+        expect(r.stderr).toBe('');
     });
 
-    it('stale file → exit 1, message byte-identical', () => {
+    it('stale file → exit 1 + stale message', () => {
         const p = freshFile('2000-01-01');
-        const py = runPy('update_prices', ['--check', '--path', p]);
-        const ts = runTs('update_prices', ['--check', '--path', p]);
-        expect(py.status).toBe(1);
-        expect(ts.status).toBe(1);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        const r = runTs('update_prices', ['--check', '--path', p]);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toBe(`[update_prices] ${p} stale (last_updated=2000-01-01)\n`);
+        expect(r.stderr).toBe('');
     });
 
-    it('missing file → exit 1, "missing — run ..." byte-identical', () => {
+    it('missing file → exit 1 + "missing — run ..." message', () => {
         const p = path.join(mkTmp(), 'absent.md');
-        const py = runPy('update_prices', ['--check', '--path', p]);
-        const ts = runTs('update_prices', ['--check', '--path', p]);
-        expect(py.status).toBe(1);
-        expect(ts.status).toBe(1);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        const r = runTs('update_prices', ['--check', '--path', p]);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toBe(
+            `[update_prices] ${p} missing — run \`./scripts-run src/scripts/update_prices\`\n`,
+        );
+        expect(r.stderr).toBe('');
     });
 
-    it('malformed last_updated → treated stale (exit 1) identically', () => {
+    it('malformed last_updated → treated stale (exit 1)', () => {
         const d = mkTmp();
         const p = path.join(d, 'p.md');
-        // last_updated not ISO → date.fromisoformat raises → is_stale True.
+        // last_updated not ISO → date parse fails → is_stale true.
         fs.writeFileSync(
             p,
             ['---', 'last_updated: not-a-date', 'currency: USD', 'unit: per_1M_tokens', 'source: x', '---', ''].join(
@@ -130,9 +118,8 @@ describe.skipIf(!py3)('update_prices — --check golden parity (python3 vs tsx, 
             ),
             'utf-8',
         );
-        const py = runPy('update_prices', ['--check', '--path', p]);
-        const ts = runTs('update_prices', ['--check', '--path', p]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        const r = runTs('update_prices', ['--check', '--path', p]);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toBe(`[update_prices] ${p} stale (last_updated=not-a-date)\n`);
     });
 });

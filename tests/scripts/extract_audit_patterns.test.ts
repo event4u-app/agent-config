@@ -2,19 +2,17 @@
 //
 // 1:1 port of tests/test_extract_audit_patterns.py — grouping, the work_id
 // independence floor, supersede chains, forward-compat unknown schema, and
-// the CLI surface (min-count gate, --json). Plus a golden-parity block
-// asserting python3 and tsx emit byte-identical stdout/stderr on a synthetic
-// audit dir. All synthetic fixtures live in os.tmpdir(); the live repo is
-// never mutated.
+// the CLI surface (min-count gate, --json). Plus CLI intent tests asserting
+// the tsx stdout/stderr/exit codes directly on a synthetic audit dir (fixed
+// `ts` values → fully deterministic). All synthetic fixtures live in
+// os.tmpdir(); the live repo is never mutated.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { mine } from '../../src/scripts/extract_audit_patterns.js';
-import { hasPython3, runPy, runTs } from './_wave8g.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8g.js';
 
 interface Line {
     id: string;
@@ -133,7 +131,7 @@ describe('extract_audit_patterns.mine — 1:1 port', () => {
     });
 });
 
-describe.skipIf(!py3)('extract_audit_patterns — golden parity (python3 vs tsx)', () => {
+describe('extract_audit_patterns — CLI (tsx)', () => {
     function fixtureDir(): string {
         return writeAudit([
             line({ id: 'A', work_id: 'w1', ts: '2026-05-01T00:00:00Z', rules: ['r1', 'r2'] }),
@@ -143,42 +141,65 @@ describe.skipIf(!py3)('extract_audit_patterns — golden parity (python3 vs tsx)
         ]);
     }
 
-    it('--json byte-identical', () => {
+    it('--json emits the mined patterns sorted (-count, summary)', () => {
         const d = fixtureDir();
-        const py = runPy('extract_audit_patterns', ['--audit-dir', d, '--json']);
-        const ts = runTs('extract_audit_patterns', ['--audit-dir', d, '--json']);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        const r = runTs('extract_audit_patterns', ['--audit-dir', d, '--json']);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe('');
+        expect(JSON.parse(r.stdout)).toEqual([
+            {
+                count: 2,
+                first_seen: '2026-05-03T00:00:00Z',
+                last_seen: '2026-05-04T00:00:00Z',
+                line_ids: ['C', 'D'],
+                outcome: 'success',
+                phase: 'apply',
+                rules_applied: ['r1'],
+                summary: 'apply:success:r1',
+                work_ids: ['w3', 'w4'],
+            },
+            {
+                count: 2,
+                first_seen: '2026-05-01T00:00:00Z',
+                last_seen: '2026-05-02T00:00:00Z',
+                line_ids: ['A', 'B'],
+                outcome: 'success',
+                phase: 'verify',
+                rules_applied: ['r1', 'r2'],
+                summary: 'verify:success:r1+r2',
+                work_ids: ['w1', 'w2'],
+            },
+        ]);
     });
 
-    it('text table byte-identical', () => {
+    it('text table renders header + one row per pattern', () => {
         const d = fixtureDir();
-        const py = runPy('extract_audit_patterns', ['--audit-dir', d]);
-        const ts = runTs('extract_audit_patterns', ['--audit-dir', d]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.status).toBe(py.status);
+        const r = runTs('extract_audit_patterns', ['--audit-dir', d]);
+        expect(r.status).toBe(0);
+        const lines = r.stdout.trimEnd().split('\n');
+        expect(lines[0]).toMatch(/^count\s+phase\s+outcome\s+rules\s+summary$/);
+        expect(lines).toHaveLength(4); // header + separator + 2 patterns
+        expect(lines[2]).toMatch(/^\s+2\s+apply\s+success\s+r1\s+apply:success:r1$/);
+        expect(lines[3]).toMatch(/^\s+2\s+verify\s+success\s+r1,r2\s+verify:success:r1\+r2$/);
     });
 
-    it('empty result text table byte-identical', () => {
+    it('empty result prints the no-patterns placeholder, exit 0', () => {
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'eap8g-'));
         tmpDirs.push(base);
         const empty = path.join(base, 'nope');
-        const py = runPy('extract_audit_patterns', ['--audit-dir', empty]);
-        const ts = runTs('extract_audit_patterns', ['--audit-dir', empty]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.status).toBe(py.status);
+        const r = runTs('extract_audit_patterns', ['--audit-dir', empty]);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe('(no patterns at or above the min-count threshold)\n');
     });
 
-    it('--min-count below floor: exit 2 + stderr byte-identical', () => {
+    it('--min-count below the independence floor: exit 2 + stderr message', () => {
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'eap8g-'));
         tmpDirs.push(base);
-        const py = runPy('extract_audit_patterns', ['--audit-dir', base, '--min-count', '1']);
-        const ts = runTs('extract_audit_patterns', ['--audit-dir', base, '--min-count', '1']);
-        expect(py.status).toBe(2);
-        expect(ts.status).toBe(2);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.stdout).toBe(py.stdout);
+        const r = runTs('extract_audit_patterns', ['--audit-dir', base, '--min-count', '1']);
+        expect(r.status).toBe(2);
+        expect(r.stdout).toBe('');
+        expect(r.stderr).toBe(
+            '❌  --min-count must be >= 2 (independence floor per audit-log-v1 § Privacy floor).\n',
+        );
     });
 });

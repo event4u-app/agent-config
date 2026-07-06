@@ -1,6 +1,7 @@
 // Tests for src/scripts/skill_tools/audit_user_type_coverage.ts (py2ts Phase 8
-// / Wave 8h). 1:1 port of tests/test_audit_user_type_coverage.py plus a golden
-// parity layer (python3 vs tsx) over temp fixtures.
+// / Wave 8h). 1:1 port of the retired pytest suite plus a CLI intent layer
+// (tsx only — the Python original is deleted) over temp fixtures.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,13 +11,22 @@ import {
     type UserTypeRow,
 } from '../../src/scripts/skill_tools/audit_user_type_coverage.js';
 import {
-    hasPython3,
+    REPO_ROOT,
+    TOOLS_DIR,
+    TSX_BIN,
     mkTmp,
     rmTmp,
-    runBoth,
     writeDoc,
     writeUserType,
 } from './_skill_tools.js';
+
+function runTsx(module: string, args: string[]): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX_BIN, [path.join(TOOLS_DIR, `${module}.ts`), ...args], {
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+}
 
 let tmp: string;
 beforeEach(() => {
@@ -117,7 +127,7 @@ describe('audit_user_type_coverage — audit() (1:1 pytest port)', () => {
     });
 });
 
-describe.runIf(hasPython3())('audit_user_type_coverage — golden parity (python3 vs tsx)', () => {
+describe('audit_user_type_coverage — CLI (tsx)', () => {
     function fixture(): { ut: string; src: string } {
         const ut = path.join(tmp, 'ut');
         const src = path.join(tmp, 'src');
@@ -128,42 +138,61 @@ describe.runIf(hasPython3())('audit_user_type_coverage — golden parity (python
         return { ut, src };
     }
 
-    it('human table is byte-identical', () => {
+    it('human table lists refs + statuses and a flagged summary', () => {
         const { ut, src } = fixture();
-        const { py, ts } = runBoth('audit_user_type_coverage', [
+        const r = runTsx('audit_user_type_coverage', [
             '--user-types-dir',
             ut,
             '--search-root',
             src,
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toContain('user-type');
+        expect(r.stdout).toContain('field-crew');
+        expect(r.stdout).toContain('never-referenced');
+        expect(r.stdout).toContain('orphan');
+        expect(r.stdout).toContain('user-type(s) flagged (never-referenced or orphan).');
     });
 
-    it('--json is byte-identical', () => {
+    it('--json emits the full row set with reference counts', () => {
         const { ut, src } = fixture();
-        const { py, ts } = runBoth('audit_user_type_coverage', [
+        const r = runTsx('audit_user_type_coverage', [
             '--user-types-dir',
             ut,
             '--search-root',
             src,
             '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const rows = (JSON.parse(r.stdout) as { rows: UserTypeRow[] }).rows;
+        const by = new Map(rows.map((row) => [row.user_type, row]));
+        expect(by.get('field-crew')).toEqual({
+            user_type: 'field-crew',
+            references: 2,
+            threshold: 1,
+            status: 'ok',
+        });
+        expect(by.get('lonely')!.references).toBe(0);
+        expect(by.get('lonely')!.status).toBe('never-referenced');
+        expect(by.get('typo-x')!.references).toBe(1);
+        expect(by.get('typo-x')!.status).toBe('orphan');
     });
 
-    it('search root == user-types dir excludes own refs (byte-identical)', () => {
+    it('search root == user-types dir excludes own refs', () => {
         const ut = path.join(tmp, 'ut');
         writeUserType(ut, 'field-crew');
         writeDoc(ut, 'README.md', 'Example: `--user-type=field-crew`\n');
-        const { py, ts } = runBoth('audit_user_type_coverage', [
+        const r = runTsx('audit_user_type_coverage', [
             '--user-types-dir',
             ut,
             '--search-root',
             ut,
+            '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const rows = (JSON.parse(r.stdout) as { rows: UserTypeRow[] }).rows;
+        const fc = rows.find((row) => row.user_type === 'field-crew');
+        expect(fc!.references).toBe(0);
+        expect(fc!.status).toBe('never-referenced');
     });
 });

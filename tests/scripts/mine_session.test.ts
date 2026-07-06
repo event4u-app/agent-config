@@ -3,18 +3,17 @@
 // 1:1 port of tests/test_mine_session.py — opt-in gate, unsupported-host
 // exit, --preview writes nothing, redaction of user names, ≤5-fact cap, the
 // commit-intake JSONL shape, and the three signal classes from the direct
-// mine() call. Plus golden parity (python3 vs tsx) on the committed
-// mine-session fixture. Intake writes target os.tmpdir(); the committed
-// fixture is read-only.
+// mine() call. Plus determinism intent tests on the committed mine-session
+// fixture (fixed turn timestamps → preview + intake output is stable).
+// Intake writes target os.tmpdir(); the committed fixture is read-only.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { mine, _iterClaudeCodeJsonl } from '../../src/scripts/mine_session.js';
-import { REPO_ROOT, hasPython3, runPy, runTs } from './_wave8g.js';
+import { REPO_ROOT, runTs } from './_wave8g.js';
 
-const py3 = hasPython3();
 const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'mine-session', 'session.jsonl');
 
 const tmp: string[] = [];
@@ -155,8 +154,14 @@ describe('mine_session.mine — direct call (1:1 port)', () => {
     });
 });
 
-describe.skipIf(!py3)('mine_session — golden parity (python3 vs tsx)', () => {
-    it('preview byte-identical on the committed fixture', () => {
+// NOTE (converted from the retired python-parity block): the former
+// "opt-in gate + unsupported host messages byte-identical" test is fully
+// redundant with the python-free CLI tests above — 'opt-in required' covers
+// the no-confirm arg combo (exit 0 + the --confirm-transcript-access hint)
+// and 'cross-host mines via the override source' covers the --host cursor
+// combo (exit 0 + preview emitted) — so it was deleted, not converted.
+describe('mine_session — CLI determinism on the committed fixture (tsx)', () => {
+    it('preview with --project is deterministic and carries the header + schema summary', () => {
         const args = [
             '--confirm-transcript-access',
             '--transcript',
@@ -168,29 +173,21 @@ describe.skipIf(!py3)('mine_session — golden parity (python3 vs tsx)', () => {
             '--project',
             'fixture',
         ];
-        const py = runPy('mine_session', args);
-        const ts = runTs('mine_session', args);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+        const first = runTs('mine_session', args);
+        expect(first.status).toBe(0);
+        expect(first.stderr).toBe('');
+        expect(first.stdout).toContain(
+            '## Mining preview — fixture · since 2026-05-01 · host=claude-code',
+        );
+        expect(first.stdout).toMatch(/^Schemas touched: [a-z, ]+$/m);
+        // Fixed turn timestamps in the fixture → repeated runs are stable.
+        const second = runTs('mine_session', args);
+        expect(second.stdout).toBe(first.stdout);
     });
 
-    it('opt-in gate + unsupported host messages byte-identical', () => {
-        for (const args of [
-            ['--transcript', FIXTURE, '--intake-root', path.join(mkTmp(), 'intake')],
-            ['--confirm-transcript-access', '--host', 'cursor', '--transcript', FIXTURE],
-        ]) {
-            const py = runPy('mine_session', args);
-            const ts = runTs('mine_session', args);
-            expect(ts.stdout, args.join(' ')).toBe(py.stdout);
-            expect(ts.status).toBe(py.status);
-        }
-    });
-
-    it('commit-intake JSONL files byte-identical', () => {
-        const pyRoot = path.join(mkTmp(), 'py');
-        const tsRoot = path.join(mkTmp(), 'ts');
+    it('commit-intake JSONL files are deterministic across runs', () => {
+        const rootA = path.join(mkTmp(), 'a');
+        const rootB = path.join(mkTmp(), 'b');
         const base = [
             '--confirm-transcript-access',
             '--commit-intake',
@@ -201,11 +198,11 @@ describe.skipIf(!py3)('mine_session — golden parity (python3 vs tsx)', () => {
             '--project',
             'fixture',
         ];
-        const py = runPy('mine_session', [...base, '--intake-root', pyRoot]);
-        const ts = runTs('mine_session', [...base, '--intake-root', tsRoot]);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
+        const a = runTs('mine_session', [...base, '--intake-root', rootA]);
+        const b = runTs('mine_session', [...base, '--intake-root', rootB]);
+        expect(a.status).toBe(0);
+        expect(b.status).toBe(0);
+        expect(b.stdout).toBe(a.stdout);
         const readAll = (root: string): Record<string, string> => {
             const map: Record<string, string> = {};
             if (!fs.existsSync(root)) {
@@ -216,6 +213,9 @@ describe.skipIf(!py3)('mine_session — golden parity (python3 vs tsx)', () => {
             }
             return map;
         };
-        expect(readAll(tsRoot)).toEqual(readAll(pyRoot));
+        const filesA = readAll(rootA);
+        expect(Object.keys(filesA).length).toBeGreaterThan(0);
+        // One <type>.jsonl per mined schema class, identical across runs.
+        expect(readAll(rootB)).toEqual(filesA);
     });
 });

@@ -114,6 +114,21 @@ function run_linter_json(ref: string | null, repo_root: string): LinterJson {
                 return { results: [], summary: {} };
             }
             const baselineArgs = ['--all', '--format', 'json', '--repo-root', tmpdir];
+            // Local python-skip guard (teardown D2): a historical `.py` baseline
+            // genuinely needs python3; when the runtime is absent, degrade to an
+            // empty baseline (same contract as a missing linter) instead of a
+            // spawn error — decouples the python-free-env shim retirement from
+            // porting pre-migration baselines to a frozen TS golden.
+            if (
+                baseline_linter.endsWith('.py') &&
+                spawnSync('python3', ['--version'], { encoding: 'utf8' }).status !== 0
+            ) {
+                process.stderr.write(
+                    `Warning: baseline '${ref}' is pre-migration (.py) and python3 is ` +
+                        `unavailable — baseline treated as empty.\n`,
+                );
+                return { results: [], summary: {} };
+            }
             const result = baseline_linter.endsWith('.ts')
                 ? (() => {
                       const inv = _resolve_tsx_invocation(baseline_linter, baselineArgs);

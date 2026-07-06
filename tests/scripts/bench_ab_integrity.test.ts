@@ -1,15 +1,14 @@
 // Tests for src/scripts/bench_ab_integrity.ts (Phase 1 Step 3 A/B clone check).
 //
-// The Python original has no dedicated test suite, so this is a focused
-// differential suite (ADR-094 parity contract). The script hardcodes the
-// gitignored clones path `internal/bench/ab/clones/`. We:
+// The Python original is deleted, so this is a python-free intent suite. The
+// script hardcodes the gitignored clones path `internal/bench/ab/clones/`. We:
 //   - exercise the pure `is_under_allowed_path` predicate directly;
-//   - golden-test the missing-clone error path (no clones present) for
-//     identical exit + stderr;
-//   - golden-test the clean PASS path over real clones (built once via the
-//     ts clone twin) for identical exit + stdout, both plain and --verbose.
+//   - exercise the missing-clone error path (no clones present) for
+//     exit 1 + actionable stderr;
+//   - exercise the clean PASS path over real clones (built via the tsx clone
+//     twin) for exit 0 + verdict line, both plain and --verbose.
 // Every block removes the clones dir afterwards (gitignored → zero git
-// drift). Skipped without python3 or the fixture.
+// drift). Skipped without the fixture.
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -21,7 +20,6 @@ import {
     REPO_ROOT,
     TSX_BIN,
     acquireClonesLock,
-    pythonAvailable,
     releaseClonesLock,
     removeClones,
     runScript,
@@ -29,9 +27,7 @@ import {
 import { is_under_allowed_path } from '../../src/scripts/bench_ab_integrity.js';
 
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_integrity.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_integrity.py');
 const CLONE_TS = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
-const HAVE_PYTHON = pythonAvailable();
 const HAVE_FIXTURE = existsSync(FIXTURE);
 
 describe('bench_ab_integrity.ts — is_under_allowed_path', () => {
@@ -50,37 +46,34 @@ describe('bench_ab_integrity.ts — is_under_allowed_path', () => {
     });
 });
 
-describe.skipIf(!HAVE_PYTHON || !HAVE_FIXTURE)('bench_ab_integrity — golden parity', () => {
+describe.skipIf(!HAVE_FIXTURE)('bench_ab_integrity — CLI (tsx)', () => {
     beforeAll(() => acquireClonesLock());
     afterAll(() => releaseClonesLock());
     beforeEach(() => removeClones());
     afterEach(() => removeClones());
 
-    it('missing clones: identical exit + stderr', () => {
+    it('missing clones: exit 1 + actionable stderr', () => {
         // No clones present.
-        const py = runScript('python3', PY_SCRIPT, []);
         const ts = runScript(TSX_BIN, TS_SCRIPT, []);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(py.status).toBe(1);
+        expect(ts.status).toBe(1);
+        expect(ts.stderr).toContain('clone missing');
+        expect(ts.stderr).toContain('bench_ab_clone');
     });
 
-    it('clean clones: identical exit + stdout (plain and --verbose)', () => {
-        // Build both clones once (ts twin is byte-identical to the python one).
+    it('clean clones: exit 0 + surface-only verdict (plain and --verbose)', () => {
+        // Build both clones once via the clone twin.
         const build = runScript(TSX_BIN, CLONE_TS, ['--variant', 'both']);
         expect(build.status, build.stderr).toBe(0);
         expect(existsSync(join(CLONES, 'with'))).toBe(true);
         expect(existsSync(join(CLONES, 'without'))).toBe(true);
 
-        const py = runScript('python3', PY_SCRIPT, []);
         const ts = runScript(TSX_BIN, TS_SCRIPT, []);
         expect(ts.status, ts.stderr).toBe(0);
-        expect(py.status, py.stderr).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(ts.stdout).toContain('clones differ only at the allowed surface');
 
-        const pyV = runScript('python3', PY_SCRIPT, ['--verbose']);
         const tsV = runScript(TSX_BIN, TS_SCRIPT, ['--verbose']);
         expect(tsV.status, tsV.stderr).toBe(0);
-        expect(tsV.stdout).toBe(pyV.stdout);
+        expect(tsV.stdout).toMatch(/with=\d+ files, without=\d+ files, shared=\d+/);
+        expect(tsV.stdout).toContain('clones differ only at the allowed surface');
     });
 });

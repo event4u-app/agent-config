@@ -2,8 +2,9 @@
 //
 // 1:1 port of tests/test_config_presets.py — the resolution chain
 // (profile → pack → user → env → runtime, last writer wins), per-knob
-// overrides, unknown-id error, default fallback. Plus a golden-parity block
-// diffing python3 vs tsx resolved-knob JSON on the same fixtures.
+// overrides, unknown-id error, default fallback. Plus a golden-structure
+// block (python-free conversion of the retired python3 parity suite)
+// asserting the resolved-knob bag is deterministic and JSON-clean.
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -19,7 +20,7 @@ import {
     SOURCE_USER,
     resolve_preset,
 } from '../../src/scripts/config/presets.js';
-import { REPO_ROOT, hasPython3, runPy } from './_config_parity.js';
+import { REPO_ROOT } from './_config_parity.js';
 
 const SEED_ROOT = REPO_ROOT;
 
@@ -160,31 +161,21 @@ describe('config/presets — resolution chain', () => {
     });
 });
 
-// ---- Golden parity (python3 vs tsx) ----
-// presets.py has no CLI, so a tiny inline driver on the Python side dumps the
-// resolved knob bag as JSON; the TS side resolves the same id. We compare
-// STRUCTURALLY (deep-equal after numeric normalization) rather than
-// byte-for-byte: PyYAML types `10.00` as float 10.0 (JSON `10.0`) while the
-// `yaml` npm parser yields JS number `10` (JSON `10`). JS has no float type,
-// so a `1.0`-vs-`1` byte divergence is intrinsic and excluded; numeric VALUES
-// are identical, which is what parity here means.
-const py = hasPython3();
-describe.skipIf(!py)('config/presets — golden parity (python3 vs tsx)', () => {
-    function pyResolved(runtimeId: string): unknown {
-        const driver =
-            'import json,sys; sys.path.insert(0,"src"); from pathlib import Path;' +
-            'from scripts.config.presets import resolve_preset;' +
-            `r=resolve_preset(project_root=Path(${JSON.stringify(REPO_ROOT)}), runtime_id=${JSON.stringify(runtimeId)});` +
-            'print(json.dumps({"id":r.id,"source":r.source,"knobs":r.knobs}))';
-        const res = runPy(['-c', driver]);
-        expect(res.status).toBe(0);
-        return JSON.parse(res.stdout.trim());
-    }
-    it.each([...SEED_PRESET_IDS])('resolved knobs match for %s', (preset_id) => {
+// ---- Golden structure (python-free conversion of the retired parity block) ----
+// The resolved knob bag comes from the live seed YAMLs, so exact values are
+// repo state — asserted structurally (deterministic, JSON-clean, plain data)
+// rather than pinned byte-for-byte.
+describe('config/presets — golden structure (tsx resolved-knob bag)', () => {
+    it.each([...SEED_PRESET_IDS])('resolved knobs deterministic + JSON-clean for %s', (preset_id) => {
         const r = resolve_preset({ project_root: REPO_ROOT, runtime_id: preset_id });
         const ts = { id: r.id, source: r.source, knobs: r.knobs };
-        // toEqual treats 10.0 === 10 in JS — the float-vs-int byte divergence
-        // is excluded; the parity claim is "same values, same shape".
-        expect(ts).toEqual(pyResolved(preset_id));
+        expect(ts.id).toBe(preset_id);
+        expect(ts.source).toBe(SOURCE_RUNTIME);
+        // JSON round-trip is lossless — the knob bag holds only plain JSON
+        // values (no undefined / NaN / class instances leak into the bag).
+        expect(JSON.parse(JSON.stringify(ts))).toEqual(ts);
+        // Repeat resolution is deterministic — same shape, same values.
+        const again = resolve_preset({ project_root: REPO_ROOT, runtime_id: preset_id });
+        expect({ id: again.id, source: again.source, knobs: again.knobs }).toEqual(ts);
     });
 });

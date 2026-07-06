@@ -3,9 +3,11 @@
 // No Python pytest suite exists. Three layers:
 //   1. A pure unit test of _grade_assertions (the only branch that does not
 //      need the SKILLS_ROOT seam).
-//   2. Golden parity (python3 vs tsx) on the deterministic error paths
-//      (skill-not-found, missing evals.json, missing --run) — no timestamps.
-//   3. A self-contained happy-path differential. SKILLS_ROOT is a module
+//   2. CLI error paths (tsx subprocess): skill-not-found, missing --run,
+//      missing subcommand — converted from the retired python3-vs-tsx golden
+//      parity block (the Python original was deleted); asserts exit code +
+//      stderr directly.
+//   3. A self-contained happy-path test. SKILLS_ROOT is a module
 //      constant derived from the repo root, so the fixture skill is created
 //      under that real legacy root and FULLY removed afterwards (the entire
 //      `.agent-src.uncondensed/` subtree is reaped when this suite created
@@ -24,9 +26,7 @@ import {
     _grade_assertions,
     cmd_report,
 } from '../../src/scripts/run_skill_evals.js';
-import { hasPython3, runPy, runTs } from './_wave8e.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8e.js';
 
 describe('run_skill_evals — _grade_assertions (pure)', () => {
     it('contains hit / miss', () => {
@@ -101,43 +101,42 @@ describe('run_skill_evals — _grade_assertions (pure)', () => {
     });
 });
 
-describe.skipIf(!py3)('run_skill_evals — golden parity, error paths', () => {
-    function bothEqual(args: string[]): void {
-        const p = runPy('run_skill_evals', args);
+describe('run_skill_evals — CLI error paths (tsx)', () => {
+    function expectNotFound(args: string[]): void {
         const t = runTs('run_skill_evals', args);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+        expect(t.status).toBe(1);
+        expect(t.stdout).toBe('');
+        // The message embeds the machine-dependent SKILLS_ROOT path — assert
+        // the stable prefix + the path tail only.
+        expect(t.stderr).toContain("error: skill '__no_such_skill_wave8e__' not found at ");
+        expect(t.stderr).toContain(
+            path.join('.agent-src.uncondensed', 'skills', '__no_such_skill_wave8e__'),
+        );
     }
 
-    it('scaffold <missing skill> → identical not-found error', () => {
-        bothEqual(['scaffold', '__no_such_skill_wave8e__']);
+    it('scaffold <missing skill> → not-found error, exit 1', () => {
+        expectNotFound(['scaffold', '__no_such_skill_wave8e__']);
     });
 
-    it('aggregate <missing skill> --run x → identical not-found error', () => {
-        bothEqual(['aggregate', '__no_such_skill_wave8e__', '--run', 'x']);
+    it('aggregate <missing skill> --run x → not-found error, exit 1', () => {
+        expectNotFound(['aggregate', '__no_such_skill_wave8e__', '--run', 'x']);
     });
 
-    it('report <missing skill> --run x → identical not-found error', () => {
-        bothEqual(['report', '__no_such_skill_wave8e__', '--run', 'x']);
+    it('report <missing skill> --run x → not-found error, exit 1', () => {
+        expectNotFound(['report', '__no_such_skill_wave8e__', '--run', 'x']);
     });
 
-    it('aggregate without --run → identical argparse error (exit 2)', () => {
-        const p = runPy('run_skill_evals', ['aggregate', 'x']);
+    it('aggregate without --run → argparse error on stderr, exit 2', () => {
         const t = runTs('run_skill_evals', ['aggregate', 'x']);
-        expect(t.status).toBe(p.status);
         expect(t.status).toBe(2);
-        // argparse prose differs across CPython versions — assert channel +
-        // exit only (migration contract for --help / error prose).
-        expect(t.stderr.length).toBeGreaterThan(0);
-        expect(p.stderr.length).toBeGreaterThan(0);
+        expect(t.stderr).toContain('usage: run_skill_evals');
+        expect(t.stderr).toContain('--run');
     });
 
-    it('no subcommand → exit 2 on both', () => {
-        const p = runPy('run_skill_evals', []);
+    it('no subcommand → usage error, exit 2', () => {
         const t = runTs('run_skill_evals', []);
         expect(t.status).toBe(2);
-        expect(p.status).toBe(2);
+        expect(t.stderr).toContain('usage: run_skill_evals');
     });
 });
 
@@ -203,11 +202,10 @@ describe('run_skill_evals — report happy path (self-contained fixture)', () =>
         expect(stdout).toContain('# Skill eval report — ' + skill + ' @ RUNID');
         expect(stdout).toContain('**Totals:** baseline 0/1 · with-skill 1/1');
 
-        if (py3) {
-            const p = runPy('run_skill_evals', ['report', skill, '--run', 'RUNID']);
-            expect(p.status).toBe(0);
-            expect(p.stdout).toBe(stdout);
-        }
+        // CLI entry point renders the same report (subprocess vs in-process).
+        const cli = runTs('run_skill_evals', ['report', skill, '--run', 'RUNID']);
+        expect(cli.status).toBe(0);
+        expect(cli.stdout).toBe(stdout);
     });
 });
 

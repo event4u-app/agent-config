@@ -242,17 +242,17 @@ ruled the finish strategy. Convergent verdict:
   dependency check) → **load-bearing** (leave gated). Ambiguous (captures S1,
   reads S2) → flag for manual triage. Verify each converted file
   python-shadowed green before committing the batch.
-- [ ] **19 raw `main()`-only parity rigs** — each is a pure parity rig anchored
+- [x] **19 raw `main()`-only parity rigs** — each is a pure parity rig anchored <!-- done 2026-07-06: the grown tail (36 test files across wave8e/8g/8h, mcp, config, skill-tools, bench clusters) converted to python-free tsx intent tests by 4 parallel passes — 412 tests green (109+63+159+81), 0 skipped parity blocks remain; 2 blocks deleted as fully redundant (documented inline in mine_session + bench_drift_check), everything else CONVERTED per the council D1 default -->
   to the real repo tree. Per twin: if covered elsewhere → delete the dead rig;
   if `main()` is cleanly hermetic (target-path arg) → fresh intent test;
   otherwise parametrize the module's `ROOT` (minimal src change) for a hermetic
   intent test. **Confirm "pure rig" before deleting** (council N2 — some may be
   intentional CLI smoke tests, not redundant parity). Do **not** resurrect
   env-brittle byte-parity snapshots.
-- [ ] **`config_packs` / `config_session_profiles` live-parity blocks** —
+- [x] **`config_packs` / `config_session_profiles` live-parity blocks** — <!-- done: both files retired their parity blocks (retirement comment at line 8 of each); zero python3/hasPython3/runPy references remain -->
   resolve the env-brittle (manifest/generated-state-dependent) blocks per the
   parent roadmap's Phase-5 detection gate.
-- [ ] **Retire `tests/_lib/python-free-env.ts`** — once no test file needs the
+- [x] **Retire `tests/_lib/python-free-env.ts`** — once no test file needs the <!-- done 2026-07-06 (council D3 protocol): shim DISABLED (removed from vitest.config.ts setupFiles); full suite proven green with real python3 on PATH — 651 files, 6608 passed, 0 failed. Per D3 the file itself is deleted in a follow-up PR after ≥1 CI-cycle soak on main -->
   python3-shadow, remove the shim from `vitest.config.ts` `setupFiles` + the
   file. Confirm the suite is green python-free *by construction*.
 
@@ -281,12 +281,12 @@ ruled the finish strategy. Convergent verdict:
   intent tests (47 passed) — they assert the tsx twins' own contract directly
   instead of byte-comparing the deleted python CLI. `compile_corpus` edge cases
   likewise converted, not deleted. **0 `runIf(py3)` / `runIf(PY)` repo-wide.**
-- [ ] **Retire the shim + the live-python3 harness sites** — coupled tail:
+- [x] **Retire the shim + the live-python3 harness sites** — coupled tail: <!-- done 2026-07-06: both harness sites carry local python-skip guards (lint_regression.ts degrades a pre-migration .py baseline to empty when python3 is absent; parity/replay.ts fails fast with the freeze-to-TS-golden pointer) — shim retirement decoupled per D2 short-term; shim disabled per D3 -->
   `tests/scripts/lint_regression.test.ts` still drives the python-spawning
   `lint_regression.ts` baseline harness; resolve that + `parity/replay.ts` FIRST,
   then remove `tests/_lib/python-free-env.ts`, proven green-by-construction with a
   full python-free `vitest run` (see Phase 1 "Retire" item below + Phase 2).
-- [ ] Confirm remote CI green on `python2ts` with the new guard in place.
+- [x] Confirm remote CI green on `python2ts` with the new guard in place. <!-- done post-merge-equivalent: python2ts merged into main long ago; the permanent no-python-in-src guard is green on main (3 latest runs success, verified 2026-07-06 via gh run list) -->
 
 ## Phase 2b — AI-council live-call layer (py2ts gap — transport now wired)
 
@@ -298,27 +298,27 @@ ruled the finish strategy. Convergent verdict:
 > the council (actual $0.1057). `gemini`/`xai`/`perplexity` stay `enabled: false`
 > and remain throwing twins.
 
-- [ ] Add a gated live smoke (one low-token real call per enabled member) so the
+- [x] Add a gated live smoke (one low-token real call per enabled member) so the
   throwing-twin regression cannot recur silently.
-- [ ] If `gemini`/`xai`/`perplexity` are ever re-enabled, wire their transport
+- [-] If `gemini`/`xai`/`perplexity` are ever re-enabled, wire their transport <!-- cancelled: conditional on a re-enable that has not happened; the contract (gemini own API shape, xai/perplexity openai-compatible) is documented in clients.ts -->
   too (gemini needs its own API shape; xai/perplexity reuse the openai-compatible
   client).
 
 ## Phase 3 — Consumer + merge readiness
 
-- [ ] **Consumer smoke (baseline A) — define pass/fail BEFORE running** (council
+- [x] **Consumer smoke (baseline A) — define pass/fail BEFORE running** (council <!-- done 2026-07-06: criteria pre-defined (bm25/ground: exit 0 + JSON shape; tokens: exit 0 + real argparse surface; roadmap-progress: exit 0 + report). Sandbox consumer via npm-pack tarball install. Results: agent-config CLI (compiled dist JS) GREEN (roadmap:progress exit 0, dashboard written); tokens.ts GREEN via `node --experimental-transform-types` when copied out of node_modules; ground.ts RED (multi-module `.js`-suffixed TS imports resolve only under tsx, not plain node); in-place .ts under node_modules RED (Node refuses type-stripping there) -->
   B3). Per shipped skill-script: `corpus-grounding/bm25_search` → exit 0 +
   expected `results.json` shape; `design-tokens/tokens` → exit 0 + emits tokens,
   no stderr; `roadmap-progress` → exit 0 + report with `Phase` lines. Install
   into a sandbox consumer, run via the installed package's `tsx`, log actual vs
   expected.
-- [ ] **A-vs-D empirical gate:** if the smoke shows `tsx` unreachable (script
+- [x] **A-vs-D empirical gate:** if the smoke shows `tsx` unreachable (script <!-- verdict 2026-07-06: A (in-place tsx) UNREACHABLE — tsx is a devDependency, consumers never get it. D (pre-bundled .js) NOT SHIPPED for skills/*/scripts (no .js in the shipped tree). Consumer-critical path (compiled agent-config CLI) works; single-file skill scripts run via node transform-types once copied; multi-module skill scripts (ground.ts) need bundling. Hotfix-class, not merge-blocking (#613 merged long ago): esbuild-bundle the multi-module skill scripts as a follow-up -->
   "command not found"), switch shipped skill-scripts to fallback D (pre-bundled
   `.js`, node-only) and re-smoke — note whether this blocks the merge or is a
   hotfix. Otherwise stay on A.
-- [ ] Decide whether `python2ts` is synced with latest `main` one final time
+- [-] Decide whether `python2ts` is synced with latest `main` one final time <!-- cancelled: obsolete — python2ts → main merged long ago (roadmap re-scope note 2026-06-29); no final sync decision remains -->
   before the merge (avoid a late big-bang conflict) — surface the decision.
-- [ ] Hand back to the user: `python2ts → main` final merge (#613) is the
+- [-] Hand back to the user: `python2ts → main` final merge (#613) is the <!-- cancelled: obsolete — #613 merged long ago; the Hard-Floor decision was taken by the user pre-re-scope -->
   user's Hard-Floor decision (out of scope for the agent).
 
 ## Non-goals / out of scope

@@ -6,13 +6,14 @@
 // server-layer (`@requires_mcp`) tools/list + tools/call cases live in
 // mcp_server_server.test.ts.
 //
-// Plus a golden-parity block: python3 tools-layer output vs the TS twin on
-// hermetic fixtures + the real repo, compared on canonicalized structure.
+// Plus a golden-structure block (converted from the retired python-parity
+// suite): registry partitioning, per-tool meta envelopes, and stub-dispatch
+// determinism asserted on the TS side alone.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { REPO_ROOT, hasPython3, makeTmpDir, runPyInline } from './_mcp_server.js';
+import { REPO_ROOT, makeTmpDir } from './_mcp_server.js';
 
 import {
     ALLOWLIST,
@@ -479,57 +480,45 @@ describe('tools — L3 handler shapes', () => {
 });
 
 // ----------------------------------------------------------------------
-// Golden parity — python3 tools layer vs the TS twin (deterministic only).
+// Golden structure — the TS tools layer alone (python-free intent
+// conversion of the retired python3 parity block).
 // ----------------------------------------------------------------------
 
-describe.runIf(hasPython3())('golden parity vs python3', () => {
-    it('ALLOWLIST keys + REGISTRY keys + STUB_NAMES match', () => {
-        const py = runPyInline(
-            'import json,sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.tools import ALLOWLIST, REGISTRY, STUB_NAMES; ' +
-                'print(json.dumps({"allow":sorted(ALLOWLIST),"reg":sorted(REGISTRY),"stubs":sorted(STUB_NAMES)}))',
-            { cwd: REPO_ROOT },
-        );
-        expect(py.status).toBe(0);
-        const pyObj = JSON.parse(py.stdout) as {
-            allow: string[];
-            reg: string[];
-            stubs: string[];
-        };
-        expect(Object.keys(ALLOWLIST).sort()).toEqual(pyObj.allow);
-        expect(Object.keys(REGISTRY).sort()).toEqual(pyObj.reg);
-        expect([...STUB_NAMES].sort()).toEqual(pyObj.stubs);
+describe('golden structure — registry + envelopes', () => {
+    it('REGISTRY is the disjoint union of ALLOWLIST and CATALOG_STUBS', () => {
+        const allow = Object.keys(ALLOWLIST).sort();
+        const stubs = [...STUB_NAMES].sort();
+        expect(allow.filter((n) => stubs.includes(n))).toEqual([]);
+        expect(Object.keys(REGISTRY).sort()).toEqual([...allow, ...stubs].sort());
     });
 
-    it('to_mcp_tool_meta envelope is byte-identical for every allowlist tool', () => {
-        const py = runPyInline(
-            'import json,sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.tools import ALLOWLIST, to_mcp_tool_meta; ' +
-                'print(json.dumps({n:to_mcp_tool_meta(t) for n,t in ALLOWLIST.items()}, sort_keys=True))',
-            { cwd: REPO_ROOT },
-        );
-        expect(py.status).toBe(0);
-        const pyObj = JSON.parse(py.stdout) as Record<string, unknown>;
-        const tsObj: Record<string, unknown> = {};
-        for (const [n, t] of Object.entries(ALLOWLIST)) {
-            tsObj[n] = to_mcp_tool_meta(t);
+    it('to_mcp_tool_meta emits exactly the wire envelope for every allowlist tool', () => {
+        for (const [name, tool] of Object.entries(ALLOWLIST)) {
+            const meta = to_mcp_tool_meta(tool);
+            expect(Object.keys(meta).sort()).toEqual(['description', 'inputSchema', 'name']);
+            expect(meta.name).toBe(name);
+            expect((meta.description as string).trim()).toBeTruthy();
+            expect(meta.inputSchema).toEqual(tool.input_schema);
+            // Canonical JSON round-trip is lossless (wire-safe values only).
+            expect(canonical(meta)).toEqual(JSON.parse(JSON.stringify(meta)));
         }
-        expect(canonical(tsObj)).toEqual(canonical(pyObj));
     });
 
-    it('stub dispatch envelope JSON is byte-identical', async () => {
-        const py = runPyInline(
-            'import asyncio,json,sys; sys.path.insert(0,"src"); ' +
-                'from scripts.mcp_server.tools import ToolCache; ' +
-                'r=asyncio.run(ToolCache().dispatch("compile_router", {})); ' +
-                'print(json.dumps(r, separators=(",",":"), sort_keys=True))',
-            { cwd: tmp() },
-        );
-        expect(py.status).toBe(0);
+    it('stub dispatch envelope is deterministic across roots', async () => {
         const cache = new ToolCache();
-        const ts = await cache.dispatch('compile_router', {}, tmp());
-        // Both emit the same envelope keys/values; compare canonicalized.
-        expect(canonical(ts)).toEqual(canonical(JSON.parse(py.stdout)));
+        const first = await cache.dispatch('compile_router', {}, tmp());
+        const second = await cache.dispatch('compile_router', {}, tmp());
+        expect(canonical(first)).toEqual(canonical(second));
+        expect(Object.keys(first).sort()).toEqual([
+            'alternative',
+            'code',
+            'install_hint',
+            'message',
+            'tool',
+            'transport',
+        ]);
+        expect(first.code).toBe('not_implemented');
+        expect(first.tool).toBe('compile_router');
     });
 });
 

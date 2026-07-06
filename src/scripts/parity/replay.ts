@@ -196,6 +196,27 @@ export function runReplay(options: ReplayOptions): ReplayReport {
     const tsScript = `${scriptBase}.ts`;
     const tsxCommand = resolveTsxCommand(cwd);
 
+    // Local python-skip guard (teardown D2): the replay harness is migration
+    // tooling — it byte-compares a live `python3 <script>.py` run against the
+    // tsx twin, which requires BOTH the runtime and the original `.py` to
+    // exist. Post-teardown neither holds; fail fast with a clear message
+    // instead of a spawn error, so the python-free-env shim retirement does
+    // not depend on porting this harness to a frozen-golden design.
+    if (spawnSync("python3", ["--version"], { encoding: "utf8" }).status !== 0) {
+        return {
+            script: options.script,
+            status: "fail",
+            cases: options.caseDirs.map((caseDir) => ({
+                caseDir,
+                diffs: [],
+                error:
+                    "python3 unavailable — the golden-replay harness needs the pre-teardown " +
+                    "python runtime plus the original .py; freeze the baseline to a TS golden " +
+                    "instead (teardown D2 medium-term).",
+            })),
+        };
+    }
+
     const cases: CaseResult[] = [];
     for (const caseDirRaw of options.caseDirs) {
         const caseDir = path.resolve(cwd, caseDirRaw);
