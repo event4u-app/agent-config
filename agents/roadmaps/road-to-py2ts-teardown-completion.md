@@ -260,14 +260,14 @@ ruled the finish strategy. Convergent verdict:
 > "Requires Phase 1 complete" = shim removed, `vitest run` green python-free by
 > construction, no test spawns live `python3` (council Phase-1/2 coupling).
 
-- [ ] **Precise python-invocation audit** (council G3 — `grep python3` misses
+- [x] **Precise python-invocation audit** (council G3 — `grep python3` misses
   `python`, `spawn.*python`, `sys.executable`, shebangs; bare `python\b`
   over-matches). Restrict to code files:
   `git ls-files '*.ts' '*.js' '*.json' '*.sh' | xargs grep -nE 'python3|spawn.*python|sys\.executable'`
   + `git ls-files | xargs grep -l '^#!/usr/bin/env python'`; manual-review the
   hits; exclude the documented `tests/hooks/fixtures/concern_*.py` fixtures.
   Target: zero live-invocation sites.
-- [ ] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
+- [x] Remove the migration-scaffolding workflows (`py2ts-base-guard.yml`,
   `py2ts-drift.yml`, `py2ts-main-sync.yml`).
 - [x] **Add a permanent replacement guard** (council G2 convergence over the
   time-limited-buffer divergence — see review): `no-python-in-src.yml` fails the
