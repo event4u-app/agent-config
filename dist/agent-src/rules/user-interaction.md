@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators"
+description: "Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule"
 alwaysApply: false
 load_context:
   - ../contexts/communication/rules-auto/user-interaction-mechanics.md

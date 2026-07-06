@@ -18,6 +18,7 @@ Cite the source rule in writer artifacts; do **not** restate it here.
 | Numbered-options trade-off rule (real consequence, not sequencing) | [`user-interaction § Iron Law 1 — Single-Source Recommendation`](../../rules/user-interaction.md#iron-law-1--single-source-recommendation) |
 | Cheap-question pre-send check (skip the ask if context already answers) | [`no-cheap-questions § Pre-Send Self-Check`](../../rules/no-cheap-questions.md#pre-send-self-check--mandatory-before-every-question) |
 | Tool-call discipline, act-skip-narration, fresh output over memory | [`token-efficiency § The Iron Laws`](../../rules/token-efficiency.md#the-iron-laws) and its mechanics file |
+| Budget is an input to the decision, never the decision — surface the trade-off before auto-rejecting a net-positive change on cost grounds | [`token-budget-discipline § Value-over-budget escalation`](../../rules/token-budget-discipline.md#value-over-budget-escalation) |
 
 ## Confirmation taxonomy
 

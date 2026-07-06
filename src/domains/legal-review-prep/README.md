@@ -12,7 +12,7 @@ NOT LEGAL ADVICE — a research/drafting aid to PREPARE for attorney review, not
 
 ## Rules (1)
 
-- **`legal-safety-floor`** — Legal-pack output (contract/NDA/DPA review, triage) — never a final legal call; role-conditional header + attorney-review line; EU/DE-only hard refusal; machine-checkable Jurisdiction tag
+- **`legal-safety-floor`** — Legal-pack output (contract/NDA/DPA review, triage) — never a final legal call; attorney-review line; EU/DE-only
 
 ## Skills (5)
 

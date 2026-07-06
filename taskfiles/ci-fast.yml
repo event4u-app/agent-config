@@ -813,7 +813,7 @@ tasks:
 
   check-augment-budget:
     silent: true
-    desc: Augment workspace-guidelines budget meter (cap 49,512; informational, never fails CI yet) — see road-to-augment-limit-fit P1.4
+    desc: Augment workspace-guidelines budget meter (cap from src/config/budgets.yml; informational, never fails CI yet) — see road-to-augment-limit-fit P1.4
     cmd: ./scripts-run src/scripts/measure_augment_budget
 
   check-augment-budget-strict:

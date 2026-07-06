@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Legal-pack output (contract/NDA/DPA review, triage) — never a final legal call; role-conditional header + attorney-review line; EU/DE-only hard refusal; machine-checkable Jurisdiction tag"
+description: "Legal-pack output (contract/NDA/DPA review, triage) — never a final legal call; attorney-review line; EU/DE-only"
 triggers:
   - keyword: "NDA"
   - keyword: "DPA"

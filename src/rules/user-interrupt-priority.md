@@ -1,8 +1,19 @@
 ---
-type: "always"
-tier: "1"
-description: "User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work"
-alwaysApply: true
+type: "auto"
+tier: "2a"
+description: "New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming"
+alwaysApply: false
+triggers:
+  - intent: "new instruction while a task is running"
+  - keyword: "weiter"
+  - keyword: "resume"
+  - keyword: "continue"
+  - phrase: "stop that"
+  - phrase: "mach stattdessen"
+  - command: "work"
+  - command: "roadmap:process-full"
+  - command: "roadmap:process-phase"
+  - command: "implement-ticket"
 load_context:
   - contexts/execution/interrupt-examples.md
 workspaces:

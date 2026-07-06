@@ -16,8 +16,10 @@
  * 2. `always`-type rules under `.augment/rules/` — full body injected.
  * 3. `auto`-type rules — only a registry stub is injected per rule.
  *
- * The 49,512-char ceiling is the empirical limit observed against the
- * Augment Code workspace prompt (2026-05-08 baseline).
+ * The cap comes from `src/config/budgets.yml`
+ * (augment_workspace_guidelines) — the single source of truth for the
+ * budget gates. The internal cap is deliberately below the verified
+ * platform maximum recorded there.
  *
  * Exit codes: 0 = under fail threshold, 1 = at/above fail threshold,
  * 3 = internal error.
@@ -39,10 +41,48 @@ export const TREND_FILE = path.join(
     '.augment-budget-history.jsonl',
 );
 
-// Augment workspace-guidelines ceiling — empirical 2026-05-08.
-export const TOTAL_CAP = 49_512;
-export const WARN_THRESHOLD = 0.85;
-export const FAIL_THRESHOLD = 0.95;
+// Budget caps — loaded from src/config/budgets.yml (single source of truth).
+export const BUDGETS_FILE = path.join(REPO_ROOT, 'src', 'config', 'budgets.yml');
+
+interface BudgetConfig {
+    platform_max_chars: number;
+    total_cap_chars: number;
+    warn_threshold: number;
+    fail_threshold: number;
+}
+
+function _load_budget_config(): BudgetConfig {
+    // Tiny purpose-built reader (keys are flat scalars) — avoids a hard yaml
+    // dependency in a script that must run before `npm ci` in some flows.
+    const text = fs.readFileSync(BUDGETS_FILE, 'utf-8');
+    const section = text.split(/^augment_workspace_guidelines:\s*$/m)[1] ?? '';
+    const num = (key: string): number => {
+        const m = new RegExp(`^\\s+${key}:\\s*([0-9.]+)\\s*$`, 'm').exec(section);
+        if (!m) {
+            throw new Error(`budgets.yml: missing augment_workspace_guidelines.${key}`);
+        }
+        return Number(m[1]);
+    };
+    const cfg: BudgetConfig = {
+        platform_max_chars: num('platform_max_chars'),
+        total_cap_chars: num('total_cap_chars'),
+        warn_threshold: num('warn_threshold'),
+        fail_threshold: num('fail_threshold'),
+    };
+    if (cfg.total_cap_chars > cfg.platform_max_chars) {
+        throw new Error(
+            `budgets.yml: total_cap_chars (${cfg.total_cap_chars}) must never exceed ` +
+                `platform_max_chars (${cfg.platform_max_chars})`,
+        );
+    }
+    return cfg;
+}
+
+const _BUDGET = _load_budget_config();
+export const PLATFORM_MAX = _BUDGET.platform_max_chars;
+export const TOTAL_CAP = _BUDGET.total_cap_chars;
+export const WARN_THRESHOLD = _BUDGET.warn_threshold;
+export const FAIL_THRESHOLD = _BUDGET.fail_threshold;
 
 // Stub template Augment injects for `type: auto` rules.
 function STUB(desc: string, p: string): string {

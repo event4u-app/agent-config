@@ -169,6 +169,15 @@ skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`)
   reusable facts, not transcripts or one-off chatter.
 - **One durable fact per entry.** No narrative blobs — each entry is a single
   PATTERN / CONVENTION / INVARIANT / GOTCHA the next agent can act on.
+- **"Don't relitigate" memories carry scope + `revisit-if`.** A memory that
+  locks a question as settled — an honest-null verdict, a council convergence,
+  a maintainer call — is not a permanent law; it is a decision under the
+  conditions that held when it was written. Record what exactly is settled
+  (narrow enough that a different-but-similar proposal is not silently
+  covered) and at least one concrete condition that reopens it. Tag whether
+  it is **settled-by-evidence** (an eval ran) or **settled-by-decision** (a
+  maintainer call) — the latter is cheaper to reopen. See
+  [`decision-revisit-gate`](../../rules/decision-revisit-gate.md).
 
 This is **meta-memory**: the skill of *how to remember* (what to extract,
 keep, forget) — distinct from the remembered content. The store stays simple
@@ -176,6 +185,36 @@ and file-backed; the discipline lives here. Do **not** add
 INSERT/UPDATE/DELETE/NOOP operation machinery (append-only JSONL + curated
 YAML need no such ops) and do **not** import any retrieval / decay / trust
 engine.
+
+## Applying recalled memories
+
+How memories are *written* is covered above; this section covers how
+recalled content is *used* once retrieved.
+
+- **Apply selectively and contextually.** A recalled fact surfaces only
+  when it's relevant to the current turn — not as a demonstration that
+  memory exists.
+- **Never narrate the retrieval mechanism.** Forbidden phrases: "I
+  remember", "based on your memories", "according to your profile/data",
+  "I can see from memory". Recalled facts surface as normal working
+  knowledge, indistinguishable in tone from anything else the agent knows.
+- **Sensitivity floor.** Recalled content about sensitive topics
+  (personal difficulties, conflicts, health) is never surfaced
+  unprompted — only when the user raises the topic first, this session.
+  Bringing up a sensitive memory unprompted is not just unhelpful, it is
+  actively harmful.
+- **Staleness still applies.** A recalled memory reflects what was true
+  when it was written — verify referenced files/flags/state still hold
+  before treating it as current (see the memory-and-other-persistence
+  guidance this skill's callers already carry).
+
+### Retrieval-trigger linguistics
+
+Before answering from scratch, treat these as signals to consult memory
+first: possessives ("my/our X"), definite references to unnamed prior
+work ("that bug", "the migration"), and past-time cues ("last week",
+"back then"). These phrasings imply the user expects continuity with
+something already known, not a first-time explanation.
 
 ## TranscriptAdapter contract
 

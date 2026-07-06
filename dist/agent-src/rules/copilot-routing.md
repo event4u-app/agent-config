@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config"
+description: "Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config"
 triggers:
   - keyword: "copilot"
   - phrase: "copilot-instructions"

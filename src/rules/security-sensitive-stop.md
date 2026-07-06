@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Security-sensitive paths — auth, billing, tenants, secrets, uploads, webhooks, public endpoints — threat-model BEFORE editing"
+description: "Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing"
 triggers:
   - keyword: "auth"
   - keyword: "billing"

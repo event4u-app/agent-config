@@ -12,7 +12,7 @@ Vision, fundraising narrative, competitive moat.
 
 ## Rules (1)
 
-- **`strategy-safety-floor`** — Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision
+- **`strategy-safety-floor`** — Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision
 
 ## Skills (7)
 

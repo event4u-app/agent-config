@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers"
+description: "Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead"
 triggers:
   - path_prefix: ".agent-src.uncondensed/skills/"
   - path_prefix: ".agent-src.uncondensed/rules/"

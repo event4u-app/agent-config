@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Starting a task, switching type, or invoking a skill/command that declares a model_tier — switch (Claude) or suggest (any agent) the right capability tier"
+description: "Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier"
 triggers:
   - phrase: "switch task"
   - phrase: "new task"

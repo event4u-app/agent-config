@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request"
+description: "First turn with onboarding.onboarded false — instruct dev to run `agent-config setup` first"
 triggers:
   - phrase: "first turn"
   - keyword: "onboarding"

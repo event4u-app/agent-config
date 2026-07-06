@@ -105,6 +105,12 @@ Write:
 - **Consequences:** what becomes true, what becomes harder, what
   becomes impossible. At least one of each, or admit that nothing
   becomes harder (rare; verify).
+- **Revisit-if:** the condition that would reopen this decision — new
+  evidence class, a changed constraint the decision assumed, or an
+  age threshold. A lock recorded without this line reads as permanent
+  law instead of a decision under current conditions; see
+  [`decision-revisit-gate`](../../rules/decision-revisit-gate.md) for
+  what happens when a later change is blocked by it without one.
 
 ### 5. Wire the supersession chain (if any)
 

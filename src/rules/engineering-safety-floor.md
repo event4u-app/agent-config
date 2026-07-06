@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers"
+description: "Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous"
 triggers:
   - keyword: "production"
   - keyword: "deploy"

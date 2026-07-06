@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     FAIL_THRESHOLD,
+    PLATFORM_MAX,
     TOTAL_CAP,
     WARN_THRESHOLD,
     measure,
@@ -36,8 +37,10 @@ describe('parse_frontmatter', () => {
 });
 
 describe('constants + measure shape', () => {
-    it('exposes the empirical cap + thresholds', () => {
-        expect(TOTAL_CAP).toBe(49512);
+    it('loads cap + thresholds from src/config/budgets.yml and stays under the platform max', () => {
+        expect(TOTAL_CAP).toBe(64000);
+        expect(TOTAL_CAP).toBeLessThanOrEqual(PLATFORM_MAX);
+        expect(PLATFORM_MAX).toBe(99024);
         expect(WARN_THRESHOLD).toBe(0.85);
         expect(FAIL_THRESHOLD).toBe(0.95);
     });

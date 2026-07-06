@@ -103,6 +103,15 @@ The three deferred items become the seed for the next roadmap;
 Phase 5's contract is "the mechanism is decided", not "the mechanism is
 shipped".
 
+## Scope + revisit-if
+
+Per `decision-revisit-gate`: settled-by-decision, scoped to the mechanism
+design only (nudge shape, marker payload, threshold). **Revisit-if:** any of
+the three ⏸ deferred items land — as of 2026-07-06 this has happened: the
+`reminder-injection-verdict.md` council re-evaluation converged on
+build-to-measure for a related contextual-nudge mechanism, so this design
+lock is the natural prior-art check for that build, not a blocker to it.
+
 ## See also
 
 - [`hardening-pattern.md`](hardening-pattern.md) — Tier 1 four-artefact

@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Before coding/DB/API/vendor-package work — prove each structural fact against a real source (file:line · SDL · migration · probe) before planning"
+description: "Before coding/DB/API/vendor work — prove structural facts against a real source (file:line, SDL, probe)"
 load_context:
   - contexts/execution/evidence-discipline.md
   - contexts/execution/project-intelligence.md
