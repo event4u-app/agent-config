@@ -474,6 +474,17 @@ No global tooling required.
 
 The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
 
+### Blockers on the dashboard
+
+The overview table's `Blocker` column counts each roadmap's open
+`## Blockers` entries (or the legacy `> Blocked until` note) and links
+to the per-roadmap breakdown, which lists every open blocker with
+owner, blocked scope, and full instructions. Authoring shape:
+[`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md);
+authoring guidance: [`roadmap-writing § 5b`](../roadmap-writing/SKILL.md).
+Clearing a blocker flips its `Status: resolved` and regenerates the
+dashboard in the same reply, same cadence as a checkbox flip.
+
 ## Rubric pass (optional, surfacing-only)
 
 After producing a roadmap, run

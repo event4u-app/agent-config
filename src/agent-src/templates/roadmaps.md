@@ -125,6 +125,39 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
       session filepath ([`no-roadmap-references`](../rules/no-roadmap-references.md)).
     Authoring contract:
     [`roadmap-writing § 8`](../skills/roadmap-writing/SKILL.md).
+20. **Blockers are structured, not free prose.** When a roadmap has a
+    gate that only the user (or a maintainer) can clear — a decision,
+    an external dependency, an evidence threshold, a kernel-budget soak
+    window — record it as a `## Blockers` entry, not a stray sentence.
+    Shape (one entry per blocker):
+    ```markdown
+    ## Blockers
+
+    ### blocker: <kebab-id>
+    - **Status:** open            <!-- open | resolved -->
+    - **Owner:** user             <!-- user | maintainer | external -->
+    - **Blocks:** Phase N — {phase name}
+    - **What to do:**
+      1. {Concrete, copy-pasteable step the owner must execute.}
+      2. {Include commands, file paths, and expected outcomes.}
+    - **Resolved when:** {decidable signal, e.g. "task X exits 0"}
+    ```
+    `### blocker: <id>` is the parse anchor the dashboard generator
+    reads; ids are unique within the roadmap. All five fields are
+    required. A cleared blocker flips `Status: resolved` (kept for
+    history) instead of being deleted — the resolve-flip runs in the
+    same reply as the checkbox flip that cleared it, per
+    [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md). A
+    step gated by a specific blocker may cross-reference it inline:
+    `- [ ] … <!-- blocked-by: <blocker-id> -->`.
+
+    **Legacy fallback.** A body-level `> Blocked until <condition>`
+    note (the follow-up-roadmap convention from rule 17) is parsed by
+    the dashboard generator as one implicit roadmap-level blocker
+    (`Owner: user`, instructions = the note text) — existing roadmaps
+    surface in the dashboard's `Blocker` column without retrofit.
+    New roadmaps should prefer the structured form above; it renders
+    richer instructions in the per-roadmap breakdown.
 
 ---
 
@@ -210,6 +243,18 @@ complexity: lightweight
 
 - [ ] {Observable, testable criterion}
 - [ ] All quality gates pass (PHPStan, Rector, tests)
+
+<!-- ## Blockers — INCLUDE ONLY when a gate exists that only the user /
+     a maintainer can clear (decision, external dependency, evidence
+     threshold, soak window). OMIT entirely when there are none — see
+     rule 20 for the full shape.
+### blocker: <kebab-id>
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase N — {phase name}
+- **What to do:**
+  1. {step}
+- **Resolved when:** {decidable signal} -->
 
 ## Notes
 

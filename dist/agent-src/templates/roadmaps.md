@@ -123,6 +123,38 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
       session filepath ([`no-roadmap-references`](../rules/no-roadmap-references.md)).
     Authoring contract:
     [`roadmap-writing § 8`](../skills/roadmap-writing/SKILL.md).
+20. **Blockers are structured, not free prose.** A gate only user (or a
+    maintainer) can clear — decision, external dependency, evidence
+    threshold, kernel-budget soak window — records as a `## Blockers`
+    entry, not a stray sentence. Shape (one entry per blocker):
+    ```markdown
+    ## Blockers
+
+    ### blocker: <kebab-id>
+    - **Status:** open            <!-- open | resolved -->
+    - **Owner:** user             <!-- user | maintainer | external -->
+    - **Blocks:** Phase N — {phase name}
+    - **What to do:**
+      1. {Concrete, copy-pasteable step owner must execute.}
+      2. {Include commands, file paths, expected outcomes.}
+    - **Resolved when:** {decidable signal, e.g. "task X exits 0"}
+    ```
+    `### blocker: <id>` is the parse anchor dashboard generator reads;
+    ids unique within roadmap. All five fields required. A cleared
+    blocker flips `Status: resolved` (kept for history) instead of
+    deleted — resolve-flip runs in same reply as checkbox flip that
+    cleared it, per
+    [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md). Step
+    gated by a specific blocker may cross-reference inline:
+    `- [ ] … <!-- blocked-by: <blocker-id> -->`.
+
+    **Legacy fallback.** Body-level `> Blocked until <condition>` note
+    (follow-up-roadmap convention from rule 17) is parsed by dashboard
+    generator as one implicit roadmap-level blocker (`Owner: user`,
+    instructions = note text) — existing roadmaps surface in
+    dashboard's `Blocker` column without retrofit. New roadmaps prefer
+    structured form above; renders richer instructions in per-roadmap
+    breakdown.
 
 ---
 
@@ -208,6 +240,18 @@ complexity: lightweight
 
 - [ ] {Observable, testable criterion}
 - [ ] All quality gates pass (PHPStan, Rector, tests)
+
+<!-- ## Blockers — INCLUDE ONLY when a gate exists that only user /
+     a maintainer can clear (decision, external dependency, evidence
+     threshold, soak window). OMIT entirely when none — see rule 20
+     for full shape.
+### blocker: <kebab-id>
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase N — {phase name}
+- **What to do:**
+  1. {step}
+- **Resolved when:** {decidable signal} -->
 
 ## Notes
 
