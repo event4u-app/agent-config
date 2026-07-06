@@ -2,28 +2,41 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **1** open blocker
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **2** open blockers
 
 ## Overall
 
-**91 / 130 steps done · 70%**
+**96 / 151 steps done · 64%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 11 | 10 | 0 | 0 | 0 | █████░░░░░ 48% |
-| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | 0 | ██████░░░░ 64% |
-| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 7 | 60 | 0 | 0 | 0 | █████████░ 90% |
+| 1 | [road-to-prompt-pattern-adoption.md](roadmaps/road-to-prompt-pattern-adoption.md) | 5 | 21 | 16 | 5 | 0 | 0 | 0 | ██░░░░░░░░ 24% |
+| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 11 | 10 | 0 | 0 | 0 | █████░░░░░ 48% |
+| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 64% |
+| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 7 | 60 | 0 | 0 | 0 | █████████░ 90% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-prompt-pattern-adoption.md](roadmaps/road-to-prompt-pattern-adoption.md)
+
+**Road to prompt pattern adoption** — 5 / 21 done (24%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Content-quoting floor | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Memory-application etiquette | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Volatile-fact freshness table | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Micro-sharpenings (folds only, no new files) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Contextual reminder injection (build-to-measure, per council verdict) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
@@ -73,6 +86,17 @@
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 7 | 5 | 0 | 0 | 42% |
+
+<a id="blockers-road-to-token-saving"></a>
+**Blockers**
+
+- **phase-0-golden-set** (owner: maintainer) — blocks Phase 0 Steps 1 + 2 (golden set + host-compliance probe), Phase 1 Step 1 (RTK golden-set run), Phase 8 Step 2 (quality-elbow threshold), and Phase 10 Step 1 (tier-conditional loading)
+  - **What to do:**
+    1. Build the held-out golden set of ~30 tasks spanning all 88 rules (see Phase 0 Step 1 comment — run the LIVE paired judge with `ANTHROPIC_API_KEY` set, estimated cost US$3–5).
+    2. Run: `task bench:ab:value:quick` (or the full bench target) to produce `internal/bench/reports/quality-run.json`.
+    3. Verify the paired judge output has the expected shape (model A vs model B, per-task scores, aggregate win rate).
+    4. The output file is the unlock — once it exists, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
+  - **Resolved when:** `ls internal/bench/reports/quality-run.json` exists and `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0.
 
 ### [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md)
 

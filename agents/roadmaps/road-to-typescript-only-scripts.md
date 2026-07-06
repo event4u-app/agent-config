@@ -244,3 +244,7 @@ Internal but interconnected; ports late so earlier phases can keep using it for 
 - **Branch discipline:** every branch in this migration is cut from and PRs back into `python2ts`; `main` is touched only by the scheduled `main → python2ts` sync (read direction) and by the final user-owned integration merge (write direction, outside this roadmap, Hard Floor).
 - **Boundaries:** do not refactor business logic while porting (minimal-safe-diff applies per script — port first, improve via documented divergence or follow-up); do not touch generated trees by hand; `src/` stays the single source of truth.
 - **Bench corpus** (`internal/bench/` clones with ~2.9k fixture `.py` files) is test fixture data, not source — out of scope for porting; retire or keep as fixtures per Phase 8 triage.
+
+<!-- ## Blockers — no gates; Step 5 (quality close-loop report) is pending
+maintainer action but not externally blocked. Draft the report once the full
+CI-runtime comparison baseline is available from any green CI run. -->

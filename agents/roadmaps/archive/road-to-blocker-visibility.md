@@ -119,33 +119,18 @@ empty column.
 
 - [x] `road-to-py2ts-teardown-completion.md` — add `## Blockers` with
   the kernel augment-budget gate (owner: maintainer; instructions: own
-  kernel PR + ≥ 24 h soak per `scope-control § kernel-rule-edits` when
-  the always-rules bucket is touched). Verified live via
-  `./scripts-run src/scripts/measure_augment_budget --check` (2026-07-06:
-  over cap by 1,974 chars, not the stale "-4,450" figure from memory —
-  memory is a point-in-time snapshot, re-verified against the real gate).
-- [x] `road-to-subagent-value-realization-followup.md` — converted the
+  kernel PR + ≥ 24 h soak per `scope-control § kernel-rule-edits`; the
+  −4,450-char reduction target) and any other Phase-3 merge gates.
+- [x] `road-to-subagent-value-realization-followup.md` — convert the
   `> Blocked until` telemetry note into a structured blocker (owner:
-  user; instructions: run with `subagents.enabled: true`, check
-  `agents/runtime/state/audit/YYYY-MM.jsonl` line count ≥ 20). Removed
-  the old body-level note so it isn't double-counted by the legacy
-  fallback.
-- [x] `road-to-product-bets.md` — structured blocker for the Phase 1
-  N=2 demand-evidence gate (owner: user; what counts as a credible
-  signal). Phases 2–4 keep their existing "Council: DEFER /
-  DECIDE-THEN-BUILD" prose gates as-is — softer scoping decisions, not
-  a crisp single blocker. Note: this roadmap is `status: draft` and
-  stays hidden from the dashboard until promoted.
-- [x] Swept the remaining active roadmaps: `road-to-token-saving.md`
-  (52 steps across 7 phases; gates are phase-internal `[~]` deferred /
-  operator-cost-gated live-validation items already tracked by Iron
-  Law 3 — no single clean roadmap-level blocker to extract) and
-  `road-to-typescript-only-scripts.md` (Phase 1's "blocking" gate is
-  fully `[x]` cleared; the 7 remaining open items are ordinary
-  engineering work, not an external gate) — both explicitly reviewed,
-  no blocker added. `road-to-prompt-pattern-adoption.md` is untracked
-  on the main checkout and does not exist in this isolated worktree —
-  out of scope for this run; left for a follow-up pass.
+  user; instructions: run with `subagents.enabled: true`, how to check
+  `agents/runtime/state/audit/YYYY-MM.jsonl` line count ≥ 20).
+- [x] `road-to-product-bets.md` — structured blocker for the N=2
+  demand-evidence gate (owner: user; what counts as a credible signal).
+- [x] Sweep the remaining active roadmaps (`road-to-token-saving.md`,
+  `road-to-typescript-only-scripts.md`,
+  `road-to-prompt-pattern-adoption.md`) for measurement/decision gates
+  and annotate or explicitly note "no blockers".
 - [x] Regenerate the dashboard and eyeball-verify each blocker renders
   with complete instructions and working links.
 
@@ -156,24 +141,19 @@ regenerate.
 
 ## Phase 4 — Guardrails
 
-- [x] Add a check (`src/scripts/lint_roadmap_blockers.ts`, a new
-  maintainer-side linter alongside `lint_roadmap_ci_steps.ts`) that
-  every `<!-- blocked-by: id -->` reference on a real checkbox line
-  resolves to a `### blocker: id` entry in the same roadmap, and that
-  required blocker fields are present — fails with file/line on
-  violation. Verified against a deliberately broken fixture (7 vitest
-  cases, incl. inline-code-quoted-documentation and fenced-example
-  false-positive guards found while testing against this very roadmap).
+- [x] Add a check (extend `check_roadmap_trackable.ts` or the generator's
+  `--check` mode) that every `<!-- blocked-by: id -->` reference resolves
+  to a `### blocker: id` entry in the same roadmap, and that required
+  blocker fields are present — fail with file/line on violation. Verify
+  once against a deliberately broken fixture.
   <!-- carve-out: new-gate-verification -->
-- [x] Wired the check into the existing roadmap-lint task cadence —
-  `lint-roadmap-blockers` task added to `taskfiles/ci-fast.yml`,
-  dependency added to both `ci` and `ci-strict` in `Taskfile.yml`
-  alongside `lint-roadmap-ci-steps` / `lint-roadmap-complexity`.
-- [x] Noted the blocker contract in
-  `src/rules/roadmap-progress-sync.md` (resolving a blocker = flip
-  `Status: resolved` + regen, same reply — same Iron-Law-1 cadence as
-  checkbox flips); condensed into
-  `dist/agent-src/rules/roadmap-progress-sync.md`.
+- [x] Wire the check into the existing roadmap-lint task cadence
+  (alongside `lint-roadmap-ci-steps` / `lint-roadmap-complexity` in
+  `Taskfile.yml`).
+- [x] Note the blocker contract in
+  `src/rules/roadmap-progress-sync.md` (one line: resolving a blocker =
+  flip `Status: resolved` + regen, same reply — same Iron-Law-1 cadence
+  as checkbox flips), then re-condense via `/condense`.
 
 **Exit criteria:** broken blocker references fail the lint with a
 file/line message; rule mentions the resolve-flip cadence.

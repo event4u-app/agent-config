@@ -469,3 +469,16 @@ stale candidates.
 - [ ] The Phase 10 backlog is triaged (no stale candidates).
 - [ ] Every shipped lever carries a measured before/after at held-constant
       quality — no lever shipped on an unmeasured claim.
+
+## Blockers
+
+### blocker: phase-0-golden-set
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 0 Steps 1 + 2 (golden set + host-compliance probe), Phase 1 Step 1 (RTK golden-set run), Phase 8 Step 2 (quality-elbow threshold), and Phase 10 Step 1 (tier-conditional loading)
+- **What to do:**
+  1. Build the held-out golden set of ~30 tasks spanning all 88 rules (see Phase 0 Step 1 comment — run the LIVE paired judge with `ANTHROPIC_API_KEY` set, estimated cost US$3–5).
+  2. Run: `task bench:ab:value:quick` (or the full bench target) to produce `internal/bench/reports/quality-run.json`.
+  3. Verify the paired judge output has the expected shape (model A vs model B, per-task scores, aggregate win rate).
+  4. The output file is the unlock — once it exists, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
+- **Resolved when:** `ls internal/bench/reports/quality-run.json` exists and `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0.
