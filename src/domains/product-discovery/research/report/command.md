@@ -81,6 +81,7 @@ script, no Python runtime.**
 | **Plain list** | Short → comma-joined; long (> 5 items) → bullet list. |
 | **Nested dict** | Recurse; render with `;` between sibling keys or hard-break on long values. |
 | **Long text** | Strings > 100 chars → wrap in a blockquote or insert `<br>`. Verbatim source excerpts follow `content-quoting-floor` (≤15 words, one quote per source) — paraphrase the rest. |
+| **Freshness** | Fresh-lookup-class fields (status, version, price, date) render as reported by `/research:deep`, never re-derived from model memory at report time — see `asking-and-brevity-examples § Volatile-fact freshness`. |
 | **Extra fields** | JSON keys not declared in `fields.yaml` → group under `### Other info`. Filter `_source_file`, `uncertain`, and category-container keys. |
 | **`uncertain` array** | Render each entry on its own line under `### Uncertain fields`; never condense to a one-liner. |
 | **Skip conditions** | Field value contains `[uncertain]` · field name in `uncertain` · value is `null` / empty string. |

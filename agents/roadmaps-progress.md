@@ -6,17 +6,17 @@
 
 ## Overall
 
-**95 / 151 steps done · 63%**
+**98 / 151 steps done · 65%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-prompt-pattern-adoption.md](roadmaps/road-to-prompt-pattern-adoption.md) | 5 | 21 | 11 | 10 | 0 | 0 | █████░░░░░ 48% |
+| 1 | [road-to-prompt-pattern-adoption.md](roadmaps/road-to-prompt-pattern-adoption.md) | 5 | 21 | 8 | 13 | 0 | 0 | ██████░░░░ 62% |
 | 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
@@ -28,13 +28,13 @@
 
 ### [road-to-prompt-pattern-adoption.md](roadmaps/road-to-prompt-pattern-adoption.md)
 
-**Road to prompt pattern adoption** — 10 / 21 done (48%)
+**Road to prompt pattern adoption** — 13 / 21 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Content-quoting floor | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Memory-application etiquette | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Volatile-fact freshness table | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Volatile-fact freshness table | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Micro-sharpenings (folds only, no new files) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 5 | Contextual reminder injection (build-to-measure, per council verdict) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
 

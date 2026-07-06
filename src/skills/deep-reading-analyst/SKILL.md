@@ -171,6 +171,7 @@ Regardless of goal, close with three fixed blocks:
 
 - Do NOT force-apply all frameworks at the user's chosen depth — drop ones that add no insight.
 - Do NOT copy text verbatim from the source — always reword for the user's understanding; any exact quote follows `content-quoting-floor` (≤15 words, one quote per source).
+- Do NOT restate a fresh-lookup-class claim (current status, version, price, date) from model memory — verify against a live source or flag it as unverified, per `asking-and-brevity-examples § Volatile-fact freshness`.
 - Do NOT use academic jargon without one-line definitions in the "key concepts" block.
 - Do NOT skip Step 5 — the takeaways + quick win are the load-bearing output, not optional decoration.
 - Do NOT route code reviews, diff stress-tests, or incident debugging through this skill.

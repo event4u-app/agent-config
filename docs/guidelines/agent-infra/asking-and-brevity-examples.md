@@ -91,6 +91,21 @@ Hedge-language patterns:
 - ❌ "probably" alone — name what's unverified
 - ❌ "vermutlich" without hedge target  <!-- md-language-check: ignore -->
 
+### Volatile-fact freshness — which claims need a live source
+
+Generalizes `direct-answers` Iron Law 2's git/PR live-state clause to any
+research or knowledge claim, not just repo state.
+
+| Class | Examples | Rule |
+|---|---|---|
+| **Fresh-lookup** | current role/status of a person or org, prices/versions/quotas, laws & regulatory policy, an unrecognized entity (tool, package, product), a binary event (release, deprecation, incident) | Never answer from model memory — search or cite a live source, every time. These change silently and staleness is invisible until wrong. |
+| **Stable** | math/CS fundamentals, settled historical facts, language/framework basics pinned by the project's own lockfiles | Model knowledge is acceptable; no live lookup required. |
+
+The line is whether the fact **could have changed since training** in a way
+that matters for the claim. When in doubt, treat it as fresh-lookup — the
+cost of one extra search is far lower than a stale claim stated with
+confidence.
+
 ## Direct-answers — failure modes the user will call out
 
 Companion to `direct-answers` § Failure modes. The rule lists the
