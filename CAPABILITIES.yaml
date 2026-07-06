@@ -11,7 +11,7 @@
 meta:
   generated_by: src/scripts/generate_capabilities_index.py
   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
-  skills_total: 261
+  skills_total: 264
   commands_total: 165
   capability_areas: 28
   gaps: 0
@@ -50,10 +50,10 @@ capability_areas:
       label: "Frontend Design"
       description: "Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge."
       size_class: "medium"
-      coverage: moderate
-      skill_count: 5
+      coverage: strong
+      skill_count: 8
       command_count: 0
-      skills: ["design-intelligence", "design-system-capture", "design-tokens", "iconography", "typography-system"]
+      skills: ["design-intelligence", "design-system-capture", "design-tokens", "design-variations", "html-deck", "iconography", "typography-system", "wireframe"]
       commands: []
     - id: git
       label: "Git"
