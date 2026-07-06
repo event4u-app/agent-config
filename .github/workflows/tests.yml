@@ -165,7 +165,7 @@ jobs:
     # directory. `build` script = `build:cli && build:ui`, so the
     # previous explicit build:cli + build:ui + build pair was a no-op
     # duplicate; collapsed to a single build invocation.
-    name: Node Tests (${{ matrix.os }})
+    name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md — release
     # PRs don't touch src/** or tests/**; ESLint, tsc, vitest,
@@ -174,7 +174,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Vitest is core-saturated on a single runner (golden-replay + the
+        # subprocess suites spawn ./agent-config / tsx heavily), so the wall
+        # clock is total-CPU-work ÷ cores. `--shard=N/4` fans the file set
+        # across 4 parallel runners per OS → ~4× the cores → the slowest
+        # shard lands well under 2 min. ESLint / typecheck / prepack are
+        # whole-tree gates with nothing to shard → shard 1 only.
         os: [ubuntu-latest, macos-latest]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
 
@@ -194,22 +201,30 @@ jobs:
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       # ── Root TS CLI + UI ───────────────────────────────────────────
+      # Whole-tree gates — nothing to shard; run once (shard 1) to avoid 4×
+      # redundant work.
       - name: ESLint (src/**/*.ts)
+        if: ${{ matrix.shard == 1 }}
         run: npm run lint:ts --silent
 
       - name: Typecheck (tsc --noEmit)
+        if: ${{ matrix.shard == 1 }}
         run: npm run typecheck --silent
 
       - name: Build (dist/cli + UI bundle)
         # `build` = `build:cli && build:ui`; the `build:cli` step also
         # exercises the `chmod +x` hook that prepack-check.mjs asserts
-        # on `npm pack`.
+        # on `npm pack`. Every shard needs dist/ — the golden-replay suites
+        # spawn `./agent-config` → dist/cli/agent-config.js.
         run: npm run build --silent
 
-      - name: Vitest (tests/{cli,server,ui}/**/*.ts)
-        run: npm run test:ts --silent
+      - name: Vitest (shard ${{ matrix.shard }}/4)
+        # `--` forwards the shard flag to vitest; each runner executes a
+        # deterministic quarter of the file set.
+        run: npm run test:ts --silent -- --shard=${{ matrix.shard }}/4
 
       - name: prepack-check (compiled bin shape gate)
+        if: ${{ matrix.shard == 1 }}
         run: node src/scripts/prepack-check.mjs
 
   # NOTE: windows-lockfile-export moved to
