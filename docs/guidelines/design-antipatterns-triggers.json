@@ -5,7 +5,8 @@
     "Review this UI mockup for AI-slop patterns",
     "Create a feature card section with icons and descriptions",
     "Generate a hero section with a big metric and supporting stats",
-    "The design looks generic — how do I make it more distinctive?"
+    "The design looks generic — how do I make it more distinctive?",
+    "Remove the rocket emojis from the hero buttons — it looks AI-generated"
   ],
   "should_not_pull": [
     "Fix the authentication bug in the login controller",

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deck</title>
+<style>
+  /* Deck shell — fixed-canvas slides (default 1920×1080) letterboxed to any
+     viewport. Slides are direct children <section> of <main class="deck">. */
+  :root { --deck-w: 1920; --deck-h: 1080; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: #111; overflow: hidden; }
+  .deck { position: absolute; top: 50%; left: 50%; width: calc(var(--deck-w) * 1px); height: calc(var(--deck-h) * 1px); transform-origin: center center; }
+  .deck > section { position: absolute; inset: 0; display: none; overflow: hidden; background: #fafafa; color: #1a1a1a; }
+  .deck > section.active { display: block; }
+  .deck-counter { position: fixed; right: 16px; bottom: 12px; font: 14px/1 monospace; color: #888; z-index: 10; }
+  @media print {
+    html, body { height: auto; overflow: visible; background: none; }
+    .deck { position: static; transform: none !important; width: auto; height: auto; }
+    .deck > section { position: relative; display: block; width: calc(var(--deck-w) * 1px); height: calc(var(--deck-h) * 1px); page-break-after: always; }
+    .deck-counter { display: none; }
+  }
+</style>
+</head>
+<body>
+<main class="deck">
+  <!-- Each slide: <section data-screen-label="01 Title">…</section> (1-indexed
+       labels match the counter the viewer sees). Replace the samples. -->
+  <section data-screen-label="01 Title">
+    <h1 style="font-size:96px;padding:120px">Deck title</h1>
+  </section>
+  <section data-screen-label="02 Content">
+    <h2 style="font-size:64px;padding:120px 120px 40px">Section</h2>
+    <p style="font-size:32px;padding:0 120px">Body text on a 1080p canvas stays at 24px minimum; 32px preferred.</p>
+  </section>
+</main>
+<div class="deck-counter" aria-hidden="true"></div>
+<script>
+(() => {
+  const deck = document.querySelector(".deck");
+  const slides = Array.from(deck.querySelectorAll(":scope > section"));
+  const counter = document.querySelector(".deck-counter");
+  const KEY = "deck-slide:" + location.pathname;
+  let i = Math.min(parseInt(localStorage.getItem(KEY) || "0", 10) || 0, slides.length - 1);
+
+  function show(n) {
+    i = Math.max(0, Math.min(n, slides.length - 1));
+    slides.forEach((s, k) => s.classList.toggle("active", k === i));
+    counter.textContent = (i + 1) + " / " + slides.length;
+    localStorage.setItem(KEY, String(i));
+  }
+
+  function fit() {
+    const w = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--deck-w"));
+    const h = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--deck-h"));
+    const scale = Math.min(innerWidth / w, innerHeight / h);
+    deck.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+  }
+
+  addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") show(i + 1);
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") show(i - 1);
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+  });
+  // Tap/click navigation: right two-thirds advances, left third goes back.
+  addEventListener("click", (e) => {
+    if (e.target.closest("a, button, input, textarea, select, [contenteditable]")) return;
+    show(e.clientX < innerWidth / 3 ? i - 1 : i + 1);
+  });
+  addEventListener("resize", fit);
+  fit();
+  show(i);
+})();
+</script>
+</body>
+</html>

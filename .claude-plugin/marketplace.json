@@ -262,6 +262,7 @@
         "./dist/agent-src/skills/design-review",
         "./dist/agent-src/skills/design-tokens",
         "./dist/agent-src/skills/design-system-capture",
+        "./dist/agent-src/skills/design-variations",
         "./dist/agent-src/skills/devcontainer",
         "./dist/agent-src/skills/developer-like-execution",
         "./dist/agent-src/skills/discovery-interview",
@@ -291,6 +292,7 @@
         "./dist/agent-src/skills/gtm-launch",
         "./dist/agent-src/skills/guideline-writing",
         "./dist/agent-src/skills/hiring-loop-design",
+        "./dist/agent-src/skills/html-deck",
         "./dist/agent-src/skills/image-analyser",
         "./dist/agent-src/skills/image-creator",
         "./dist/agent-src/skills/brand",
@@ -457,6 +459,7 @@
         "./dist/agent-src/skills/verify-completion-evidence",
         "./dist/agent-src/skills/verify-repair-loop",
         "./dist/agent-src/skills/video-director",
+        "./dist/agent-src/skills/wireframe",
         "./dist/agent-src/skills/vision-articulation",
         "./dist/agent-src/skills/voc-extract",
         "./dist/agent-src/skills/voice-and-tone-design"

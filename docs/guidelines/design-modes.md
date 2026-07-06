@@ -89,6 +89,12 @@ not minimal white, not brutalist → everyone picks terminal dark").
 
 **Both modes:** `design-antipatterns` (always pull), `design-review` (with anti-slop check)
 
+**Exploration front-ends (either mode, before committing):**
+`wireframe` (lo-fi structure exploration, disposable greyscale) →
+`design-variations` (3+ substantive hi-fi options, basic→bold, single file
+with tweak controls). Decks are their own medium → `html-deck`
+(fixed-canvas slides), not the responsive-UI routing above.
+
 ## See also
 
 - `docs/guidelines/design-antipatterns.md` — the slop-tell catalog; brand mode especially needs this

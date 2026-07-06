@@ -233,6 +233,26 @@ Animate `transform` and `opacity` only. Why: these run on the GPU compositor thr
 5. **Loading states** — Skeleton screens preferred over spinners. **Why:** skeletons reduce perceived wait time by showing structure immediately.
 6. **Error recovery** — Clear error messages with suggested actions. **Why:** "something went wrong" gives the user nothing to do; a specific message with a next step reduces support burden.
 
+## Craft details — typography & imagery
+
+- **`text-wrap: pretty` on body copy** — avoids widows/orphans without manual
+  breaks; cheap, no layout risk. (Display headlines: `text-wrap: balance`.)
+- **Honest placeholders over weak assets** — when the real image/illustration
+  is missing, use a striped placeholder with a monospace size label
+  (`repeating-linear-gradient(45deg, #E5E5E5 0 10px, #F5F5F5 10px 20px)` +
+  `product shot (1200×800)`) instead of a hand-drawn SVG or stock-ish filler.
+  A placeholder signals "asset needed"; a weak illustration signals nobody
+  had the asset. Never Lorem-ipsum copy in review-bound output
+  (per `output-discipline`) — use short label-style skeleton copy.
+
+## Presenting variants
+
+This skill produces ONE refined solution. When the user wants multiple options
+to compare (or a live tweak panel over one design), hand off to
+[`design-variations`](../design-variations/SKILL.md) — it owns the
+basic→bold variation method and the single-file tweak-panel mechanics
+(CSS custom properties + floating "Tweaks" panel + `localStorage`).
+
 ## Cross-task design memory — read DESIGN.md / PRODUCT.md first
 
 Before applying any heuristics from this reference, check the project root

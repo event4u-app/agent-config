@@ -1,0 +1,17 @@
+{
+  "skill": "wireframe",
+  "last_eval": "2026-07-06",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers lo-fi structure/flow exploration. Should-not-trigger covers near-miss neighbors: design-variations (hi-fi options), fe-design (single implementation), design-review (review existing), design-intelligence (direction selection).",
+  "queries": [
+    {"q": "sketch a few rough directions for the onboarding flow", "trigger": true},
+    {"q": "wireframe the sign-up: single page vs multi-step wizard", "trigger": true},
+    {"q": "explore some layout ideas for the dashboard before we style it", "trigger": true},
+    {"q": "I'm not sure about the information hierarchy — sketch some low-fi options", "trigger": true},
+    {"q": "storyboard three ways the checkout flow could work", "trigger": true},
+    {"q": "show me 3 styled design options for the hero section", "trigger": false, "note": "hi-fi options → design-variations"},
+    {"q": "build the settings page component", "trigger": false, "note": "single implementation → fe-design / stack executor"},
+    {"q": "review this mockup for problems", "trigger": false, "note": "review of existing design → design-review"},
+    {"q": "pick a visual direction and font pairing for the app", "trigger": false, "note": "direction selection → design-intelligence / typography-system"},
+    {"q": "generate a moodboard image of the landing page", "trigger": false, "note": "image generation → image-provider-routing"}
+  ]
+}

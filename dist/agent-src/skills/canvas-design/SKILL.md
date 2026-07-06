@@ -145,3 +145,9 @@ Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md).
 * Skip the philosophy file — the artifact without it is just an image
 * Skip the refinement pass
 * Write binary artifacts to the repo root or to source-of-truth dirs
+
+## See also
+
+- [`html-deck`](../html-deck/SKILL.md) — multi-slide HTML presentations
+  (fixed-canvas deck with navigation); this skill owns single-frame static
+  art, not decks.

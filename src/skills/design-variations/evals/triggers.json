@@ -1,0 +1,17 @@
+{
+  "skill": "design-variations",
+  "last_eval": "2026-07-06",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers hi-fi options/alternatives requests. Should-not-trigger covers near-miss neighbors: wireframe (lo-fi structure exploration), design-intelligence (single grounded direction), design-review (review existing), image generation, and single-implementation feature work.",
+  "queries": [
+    {"q": "show me 3 different takes on this pricing page", "trigger": true},
+    {"q": "give me a few design options for the dashboard header", "trigger": true},
+    {"q": "I can't decide on the hero layout — build some alternatives I can compare", "trigger": true},
+    {"q": "make this settings screen in a safe version and a bold version", "trigger": true},
+    {"q": "let me play with color and density options on this card grid", "trigger": true},
+    {"q": "sketch a few rough layout directions for the signup flow before we style anything", "trigger": false, "note": "lo-fi structure exploration → wireframe"},
+    {"q": "pick a visual direction and palette for our new SaaS app", "trigger": false, "note": "single grounded direction → design-intelligence"},
+    {"q": "review this landing page design for issues", "trigger": false, "note": "review of existing design → design-review"},
+    {"q": "generate 3 logo images in Midjourney", "trigger": false, "note": "AI image generation → image-provider-routing / logo-generation"},
+    {"q": "build the checkout form component", "trigger": false, "note": "single implementation, no options ask → fe-design / stack executor"}
+  ]
+}

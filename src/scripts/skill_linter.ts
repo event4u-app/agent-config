@@ -1428,6 +1428,7 @@ export function lint_skill(p: string, text: string): LintResult {
             'terragrunt',
             'traefik',
             'websocket',
+            'wireframe',
         ]);
         if (!ALLOWED_BARE_NOUNS.has(skillName.toLowerCase())) {
             issues.push(

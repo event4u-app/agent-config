@@ -409,6 +409,34 @@ export const SLOP_RULES: SlopRule[] = [
     },
   },
   {
+    id: "slop-cp5-emoji-ui",
+    catalogId: "CP5",
+    severity: "P2",
+    engines: ["html", "jsx"],
+    description: "Emoji-decoration prepending headings, buttons, list items, or CTAs",
+    message:
+      "Emoji-prepended UI text (🚀 Get Started) is the default-startup-template tell — no emoji beats decorative emoji (CP5). Functional status/category emojis and brand-declared emoji strategies are exempt.",
+    gated: (ctx) => ctx.has("emoji"),
+    detect: ({ content }) => {
+      // Emoji as the FIRST visible character inside a heading, button, list
+      // item, or link — decoration position. Emojis elsewhere (mid-sentence,
+      // table cells, status chips) are not matched: those are the functional
+      // placements CP5 explicitly exempts.
+      const re =
+        /<(h[1-6]|button|li|a)\b[^>]*>\s*(?:<(?!\/)[^>]*>\s*)*(\p{Extended_Pictographic})/giu;
+      const hits: RawHit[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(content)) !== null) {
+        const before = content.slice(0, m.index);
+        hits.push({
+          line: (before.match(/\n/g) ?? []).length + 1,
+          snippet: content.slice(m.index, m.index + 60).replace(/\n/g, " "),
+        });
+      }
+      return hits;
+    },
+  },
+  {
     id: "slop-lock-shape",
     catalogId: "V8",
     severity: "P2",

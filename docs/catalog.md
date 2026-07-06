@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **601 public artefacts** shipped by
+Consumer-facing catalog of all **608 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (261)
+## Skills (264)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -80,6 +80,7 @@ are excluded.
 | skill | [`design-review`](../dist/agent-src/skills/design-review/SKILL.md) |  | Use when the user says \"review the design\", \"check the UI\", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
 | skill | [`design-system-capture`](../dist/agent-src/skills/design-system-capture/SKILL.md) |  | Write and maintain DESIGN.md + PRODUCT.md — captures visual decisions and interaction patterns so design tasks stay consistent across sessions without re-scanning past work. |
 | skill | [`design-tokens`](../dist/agent-src/skills/design-tokens/SKILL.md) |  | Author a 3-layer DTCG token system (primitive → semantic → component) with light/dark theming; generate CSS vars + Tailwind colors and lint hardcoded values. Use on design tokens / CSS variables. |
+| skill | [`design-variations`](../dist/agent-src/skills/design-variations/SKILL.md) |  | Produce 3+ substantively distinct hi-fi design variations — basic to bold, one file with tweak controls — when the user asks for options, alternatives, or \"show me a few takes\". |
 | skill | [`devcontainer`](../dist/agent-src/skills/devcontainer/SKILL.md) |  | Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`). |
 | skill | [`developer-like-execution`](../dist/agent-src/skills/developer-like-execution/SKILL.md) |  | Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it. |
 | skill | [`discovery-interview`](../dist/agent-src/skills/discovery-interview/SKILL.md) |  | Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'. |
@@ -109,6 +110,7 @@ are excluded.
 | skill | [`gtm-launch`](../dist/agent-src/skills/gtm-launch/SKILL.md) |  | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | skill | [`guideline-writing`](../dist/agent-src/skills/guideline-writing/SKILL.md) |  | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../dist/agent-src/skills/hiring-loop-design/SKILL.md) |  | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
+| skill | [`html-deck`](../dist/agent-src/skills/html-deck/SKILL.md) |  | Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
 | skill | [`iconography`](../dist/agent-src/skills/iconography/SKILL.md) |  | Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
 | skill | [`image-analyser`](../dist/agent-src/skills/image-analyser/SKILL.md) |  | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
 | skill | [`image-creator`](../dist/agent-src/skills/image-creator/SKILL.md) |  | Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'. |
@@ -272,6 +274,7 @@ are excluded.
 | skill | [`vision-articulation`](../dist/agent-src/skills/vision-articulation/SKILL.md) |  | Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'. |
 | skill | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
+| skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) |  | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 
 ## Rules (92)
 
@@ -370,7 +373,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (162)
+## Commands (165)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -523,6 +526,9 @@ are excluded.
 | command | [`sync-agent-settings`](../dist/agent-src/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
 | command | [`sync-gitignore`](../dist/agent-src/commands/sync-gitignore.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
 | command | [`sync-gitignore-fix`](../dist/agent-src/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
+| command | [`team-knowledge`](../dist/agent-src/commands/team-knowledge.md) | cluster: team-knowledge | Team-knowledge orchestrator — routes to consolidate and bootstrap |
+| command | [`team-knowledge-bootstrap`](../dist/agent-src/commands/team-knowledge/bootstrap.md) | cluster: team-knowledge | One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit. |
+| command | [`team-knowledge-consolidate`](../dist/agent-src/commands/team-knowledge/consolidate.md) | cluster: team-knowledge | Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval. |
 | command | [`tests`](../dist/agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
 | command | [`tests-create`](../dist/agent-src/commands/tests/create.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`tests-execute`](../dist/agent-src/commands/tests/execute.md) | cluster: tests | Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
@@ -537,7 +543,7 @@ are excluded.
 | command | [`video-storyboard`](../dist/agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
 | command | [`work`](../dist/agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (86)
+## Guidelines (87)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -591,6 +597,7 @@ are excluded.
 | guideline | [`code-clarity`](../docs/guidelines/code-clarity.md) | (root) |  |
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
 | guideline | [`design-antipatterns`](../docs/guidelines/design-antipatterns.md) | (root) |  |
+| guideline | [`design-canon`](../docs/guidelines/design-canon.md) | (root) |  |
 | guideline | [`design-modes`](../docs/guidelines/design-modes.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
