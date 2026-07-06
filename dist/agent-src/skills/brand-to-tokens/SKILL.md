@@ -49,13 +49,13 @@ execution:
 3. **Generate** CSS vars + Tailwind through the toolchain:
 
    ```bash
-   python3 <skills-root>/design-tokens/scripts/tokens.py generate \
+   ./scripts-run <skills-root>/design-tokens/scripts/tokens generate \
      --config .tokens.json -o assets/design-tokens.css
-   python3 <skills-root>/design-tokens/scripts/tokens.py generate \
+   ./scripts-run <skills-root>/design-tokens/scripts/tokens generate \
      --config .tokens.json --format tailwind
    ```
 
-4. **Validate** — `python3 <skills-root>/design-tokens/scripts/tokens.py
+4. **Validate** — `./scripts-run <skills-root>/design-tokens/scripts/tokens
    validate --dir src/` until clean (exit 0 is the evidence); convert
    hardcoded values to `var(--token)`.
 5. **Export the deck templates** — emit the locked-variable brand deck

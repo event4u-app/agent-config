@@ -17,9 +17,9 @@
 #   last_verified:  <YYYY-MM-DD>                  (plaintext)
 #
 # Decrypt a value:
-#   python3 src/scripts/_lib/link_crypto.py decrypt --value "ENC1:..."
+#   ./scripts-run src/scripts/_lib/link_crypto decrypt --value "ENC1:..."
 # Encrypt a new value when adding an entry:
-#   python3 src/scripts/_lib/link_crypto.py encrypt --value "https://..."
+#   ./scripts-run src/scripts/_lib/link_crypto encrypt --value "https://..."
 #
 # Key (NEVER committed): secrets.link_encryption_key in .agent-settings.yml.
 # Resolution: project .agent-settings.yml first, then user-global

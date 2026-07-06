@@ -49,7 +49,7 @@ src/skills/<domain-skill>/data/
   options, the human confirms. Directive integration is the exception,
   not the goal ("directive engines everywhere" = orchestration envy).
 - Validate before merge:
-  `python3 src/skills/corpus-grounding/scripts/ground.py validate --manifest …`
+  `./scripts-run src/skills/corpus-grounding/scripts/ground validate --manifest …`
   plus a smoke query, plus an eval-fixture test under `tests/`.
 
 ## 3. Governance per shipped corpus (Step 9.8)

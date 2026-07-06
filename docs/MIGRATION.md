@@ -35,7 +35,7 @@ recognised on a clear error path.
 `.implement-ticket-state.json` file:
 
 ```bash
-python3 -m work_engine.migration.v0_to_v1 .implement-ticket-state.json
+node agent-config-templates/scripts/work_engine/migration/v0_to_v1.js .implement-ticket-state.json
 ```
 
 This:
@@ -58,7 +58,7 @@ finds only the legacy file, it stops with:
 ```
 error: Found legacy state file .implement-ticket-state.json but no
 .work-state.json. The default state file was renamed in 1.15.0. Run
-`python3 -m work_engine.migration.v0_to_v1 .implement-ticket-state.json`
+`node agent-config-templates/scripts/work_engine/migration/v0_to_v1.js .implement-ticket-state.json`
 to migrate, or pass `--state-file .implement-ticket-state.json` to
 keep using the old name. See docs/MIGRATION.md.
 ```
@@ -112,7 +112,7 @@ If your project commits state files (uncommon but supported):
 - Stability level: `work_engine` is **beta** — see
   [`docs/contracts/STABILITY.md`](contracts/STABILITY.md).
 - Source of truth for the migrator:
-  [`templates/scripts/work_engine/migration/v0_to_v1.py`](../src/agent-src/templates/scripts/work_engine/migration/v0_to_v1.py).
+  [`templates/scripts/work_engine/migration/v0_to_v1.ts`](../src/agent-src/templates/scripts/work_engine/migration/v0_to_v1.ts).
 
 ## Older versions
 

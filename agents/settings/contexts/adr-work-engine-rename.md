@@ -93,7 +93,7 @@ Implemented at `<scripts>/work_engine/migration/v0_to_v1.py`. Behavior:
 - Rejects payloads with a higher version, missing tickets, or invalid
   JSON — all with structured `SchemaError`.
 
-Importable and runnable: `python3 -m work_engine.migration.v0_to_v1
+Importable and runnable: `node agent-config-templates/scripts/work_engine/migration/v0_to_v1.js
 .implement-ticket-state.json`.
 
 ## Golden-Transcript contract

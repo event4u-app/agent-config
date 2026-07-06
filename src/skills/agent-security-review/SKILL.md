@@ -44,7 +44,7 @@ scripts, permission/auto-approve settings, persistent memory. Run the static
 pass first:
 
 ```bash
-python3 src/scripts/security_audit_config.py --root <repo> --json
+./scripts-run src/scripts/security_audit_config --root <repo> --json
 ```
 
 ### 2. Red team (attacker lens)

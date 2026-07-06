@@ -27,7 +27,7 @@ siblings you have not decided on yet. A sibling only becomes reachable once you 
 Under the hood:
 
 ```bash
-python3 scripts/cross_repo_retrieve.py "OrderApiContract" [--path-scope 'src/*.ts'] [--max-chunks 8]
+./scripts-run src/scripts/cross_repo_retrieve "OrderApiContract" [--path-scope 'src/*.ts'] [--max-chunks 8]
 ```
 
 You get a bounded table — `source_repo · path · freshness · why` — drawn only from opted-in

@@ -16,8 +16,8 @@ packs:
 
 
 > **Grounded corpus (Tier-1 consultation):** ground surface → threats →
-> controls before enumerating from memory — `python3
-> <skills-root>/corpus-grounding/scripts/ground.py ground --manifest
+> controls before enumerating from memory — `./scripts-run
+> <skills-root>/corpus-grounding/scripts/ground ground --manifest
 > <skills-root>/threat-modeling/data/manifest.json "<surface description>"`
 > returns surface class, ATT&CK/CWE-cited threats, required controls, and
 > negative tests, with confidence + evidence-gap. Propose grounded

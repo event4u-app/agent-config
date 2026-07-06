@@ -219,10 +219,10 @@ Internal but interconnected; ports late so earlier phases can keep using it for 
 
 ## Phase 12: Teardown & final audit
 
-- [ ] **Step 1:** Port or retire the remaining pytest infrastructure: every remaining `tests/**/*.py` either has a vitest equivalent (ported in its cluster's phase) or a documented retirement note; delete the pytest suite, `conftest.py`, `pyproject.toml`, and pytest/xdist from CI workflows. The diff removes >5 files by design — surface the full deletion list for explicit confirmation per `non-destructive-by-default` before the deletion lands.
-- [ ] **Step 2:** Remove the dispatcher's Python fallback branch (keep the dispatcher itself — it is now a plain TS runner) or inline it away; sweep taskfiles/workflows/docs for any residual `python3` mention.
-- [ ] **Step 3:** Delete `.venv` / `.venv-mcp` bootstrap logic, Python references in `.github/workflows` setup steps, and the Python sections of contributor docs; update `CLAUDE.md`/`AGENTS.md` emergency triage and `docs/architecture.md`.
-- [ ] **Step 4:** Final audit: repo-wide `find` proves zero tracked `.py` files outside explicitly documented carve-outs (none expected); migration dashboard reports 100%; archive the dashboard snapshot into `agents/evidence/`.
+- [x] **Step 1:** Port or retire the remaining pytest infrastructure: every remaining `tests/**/*.py` either has a vitest equivalent (ported in its cluster's phase) or a documented retirement note; delete the pytest suite, `conftest.py`, `pyproject.toml`, and pytest/xdist from CI workflows. The diff removes >5 files by design — surface the full deletion list for explicit confirmation per `non-destructive-by-default` before the deletion lands.
+- [x] **Step 2:** Remove the dispatcher's Python fallback branch (keep the dispatcher itself — it is now a plain TS runner) or inline it away; sweep taskfiles/workflows/docs for any residual `python3` mention.
+- [x] **Step 3:** Delete `.venv` / `.venv-mcp` bootstrap logic, Python references in `.github/workflows` setup steps, and the Python sections of contributor docs; update `CLAUDE.md`/`AGENTS.md` emergency triage and `docs/architecture.md`.
+- [x] **Step 4:** Final audit: repo-wide `find` proves zero tracked `.py` files outside explicitly documented carve-outs (none expected); migration dashboard reports 100%; archive the dashboard snapshot into `agents/evidence/`.
 - [ ] **Step 5:** Close the loop on quality: regenerate the baseline comparison (linter finding counts, CI runtime, coverage) vs the pre-migration snapshot and record the final report (including a CI-runtime before/after) in `agents/evidence/migration-final-report.md`.
 
 **Exit criteria:** zero Python in source and CI; quality report shows finding-count and coverage parity-or-better; docs consistent.

@@ -3,7 +3,7 @@
 All **251 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
-> **Regenerate:** `python3 scripts/generate_catalog.py`
+> **Regenerate:** `./scripts-run src/scripts/generate_catalog`
 > This file is auto-generated from `SKILL.md` frontmatter — do not edit manually.
 
 | Skill | What your agent learns |

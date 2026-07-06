@@ -145,9 +145,9 @@ Don't hand-pick a scoreline. Run the executed grid optimiser — builds the full
 Poisson score grid, returns the EV-max tip under the step-1 point tiers:
 
 ```bash
-python3 scripts/prediction-pool/score_ev.py --lh <home-xg> --la <away-xg> \
+./scripts-run src/scripts/prediction-pool/score_ev --lh <home-xg> --la <away-xg> \
     --tendency <t> --diff <d> --exact <e>          # one match
-python3 scripts/prediction-pool/score_ev.py matches.json \
+./scripts-run src/scripts/prediction-pool/score_ev matches.json \
     --tendency <t> --diff <d> --exact <e>          # batch, prints a ranked table
 ```
 
@@ -176,7 +176,7 @@ of the field)**; pure EV-max converges with the crowd, can't open a gap.
 Measure it with the executed field simulator, not a "rough Kelly" hand-wave:
 
 ```bash
-python3 scripts/prediction-pool/pool_winsim.py pool.json --runs 4000 --max-flips 4
+./scripts-run src/scripts/prediction-pool/pool_winsim pool.json --runs 4000 --max-flips 4
 ```
 
 Models the field as softmax-EV tippers, reports `P(win)` for EV-max-everywhere,
@@ -204,7 +204,7 @@ question type — full taxonomy + per-type method in
   winner") aggregated per step 2, **or** the executed Poisson simulator:
 
   ```bash
-  python3 scripts/prediction-pool/poisson_sim.py <teams-xg.json> --runs 20000
+  ./scripts-run src/scripts/prediction-pool/poisson_sim <teams-xg.json> --runs 20000
   ```
 
   It plays the bracket from per-team expected goals and prints empirical

@@ -42,11 +42,11 @@ before working around it or installing it.
 
 ```
 > `yq` is not installed. It's the cleanest way to parse the ticket YAML
-> in the Bash prototype — the alternative is shelling out to python3,
-> which adds ~50ms to every run.
+> in the Bash prototype — the alternative is a JSON conversion step,
+> which adds ~20ms to every run.
 >
 > 1. Install via `brew install yq` (recommended — one-time, stays on PATH)
-> 2. Use the python3 fallback — slower but no install needed
+> 2. Use JSON conversion fallback — slower but no install needed
 > 3. Drop YAML — convert fixtures to JSON, use `jq` only
 > 4. Skip this path — I propose a different approach
 ```

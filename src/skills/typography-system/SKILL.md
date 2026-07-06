@@ -54,7 +54,7 @@ degrades gracefully: with no brand layer, only stage 1 runs.
    `fontSize`, `fontWeight`, `lineHeight`.
 5. **Verify** — confirm both chosen fonts exist on Google Fonts (check the
    `Google Fonts URL` column in the CSV); run
-   `python3 <skills-root>/design-tokens/scripts/tokens.py validate --dir src/`
+   `./scripts-run <skills-root>/design-tokens/scripts/tokens validate --dir src/`
    to confirm no hardcoded font-size or font-family values remain outside the
    token file; exit code 0 is the evidence.
 
@@ -72,7 +72,7 @@ style, not the other way around.
    evidence gap):
 
    ```bash
-   python3 <skills-root>/corpus-grounding/scripts/ground.py search \
+   ./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
      --manifest <skills-root>/brand/data/manifest.json \
      "<archetype + sector>" --domain typography --json
    ```

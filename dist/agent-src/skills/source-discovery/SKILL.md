@@ -38,9 +38,9 @@ discover the real source  →  Evidence Report (Verified / Assumed / Gaps)  → 
 Scaffold the report cheaply so it never gets skipped:
 
 ```bash
-python3 src/scripts/evidence_report.py git-state            # fail-fast: abort if a rebase/merge/cherry-pick is in progress
-python3 src/scripts/evidence_report.py init --task "<task>" # writes the gitignored session report
-python3 src/scripts/evidence_report.py add --bucket verified --claim "users.email is unique" --source "db/schema/users.sql:23"
+./scripts-run src/scripts/evidence_report git-state            # fail-fast: abort if a rebase/merge/cherry-pick is in progress
+./scripts-run src/scripts/evidence_report init --task "<task>" # writes the gitignored session report
+./scripts-run src/scripts/evidence_report add --bucket verified --claim "users.email is unique" --source "db/schema/users.sql:23"
 ```
 
 **Provenance on every item** (`observed_at` / `source` / `version`). Within a
