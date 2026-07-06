@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-source: "package"
 description: "Delegable multi-part work + auto-orchestration enabled — decompose, tier-size each slice, dispatch to subagents instead of doing it all in-session"
 triggers:
   - keyword: "delegate"

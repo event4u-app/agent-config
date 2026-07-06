@@ -2,7 +2,6 @@
 model_tier: high
 name: blameless-post-mortem
 description: "Use after an incident or outage is resolved — blame-free facilitation, root cause, corrective actions, memory write-back — even for a near-miss. Consumes the incident-commander skeleton."
-source: package
 domain: quality
 personas:
   - senior-engineer
@@ -11,11 +10,9 @@ workspaces:
   - engineering
 packs:
   - analysis-workbench
-lifecycle: active
 trust:
   level: professional
   confidence: medium
-  human_review_required: false
 install:
   default: false
   removable: true
