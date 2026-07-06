@@ -29,6 +29,8 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as ch from '../../src/scripts/chat_history.js';
+import { main } from '../../src/scripts/chat_history.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'chat_history.ts');
@@ -70,14 +72,18 @@ function runPy(file: string, args: string[], stdin = ''): RunResult {
 
 /** Run tsx chat_history.ts with $AGENT_CHAT_HISTORY_FILE pinned + COLUMNS=80. */
 function runTs(file: string, args: string[], stdin = ''): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        input: stdin,
-        env: { ...process.env, AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' },
-        maxBuffer: 64 * 1024 * 1024,
-    });
-    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    if (stdin) {
+        // stdin redirect requires subprocess — rare path (only reset --entries-stdin)
+        const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
+            encoding: 'utf8',
+            cwd: REPO_ROOT,
+            input: stdin,
+            env: { ...process.env, AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' },
+            maxBuffer: 64 * 1024 * 1024,
+        });
+        return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    }
+    return runInProc(main, args, { env: { AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' } });
 }
 
 /** Normalise the two wall-clock fields so file/stdout comparisons stay deterministic. */

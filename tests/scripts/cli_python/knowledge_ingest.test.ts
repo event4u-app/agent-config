@@ -17,6 +17,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { _cli as mainKi } from '../../../src/cli/python/knowledge_ingest.js';
+import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'knowledge_ingest.ts');
@@ -35,12 +37,7 @@ interface RunResult {
 
 
 function runTs(args: string[], cwd: string): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-        cwd,
-        encoding: 'utf8',
-        env: { ...process.env },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    return runInProc(mainKi, args, { cwd });
 }
 
 const roots: string[] = [];

@@ -5,18 +5,17 @@
 // bare-event-name resolution, invalid-payload exit 2, --dry-run plan). The
 // python3-vs-tsx golden-parity layer was retired with the Python→TS final
 // deletion (the Python replay driver no longer exists).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { main as replayMain } from '../../../src/scripts/hooks/replay_hook.js';
+import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_REPLAY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'replay_hook.ts');
 const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'hooks');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
-const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
 const EVENTS = [
     'session_start',
@@ -46,7 +45,6 @@ function runTsReplay(
 ): { stdout: string; stderr: string; status: number } {
     fs.mkdirSync(workspace, { recursive: true });
     const cmd = [
-        TS_REPLAY,
         '--platform',
         platform,
         '--event',
@@ -57,8 +55,7 @@ function runTsReplay(
         MANIFEST,
         ...extra,
     ];
-    const r = spawnSync(TSX_BIN, cmd, { cwd: workspace, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status ?? 0 };
+    return runInProc(replayMain, cmd, { cwd: workspace });
 }
 
 function snapshotState(workspace: string): Set<string> {
@@ -115,7 +112,6 @@ describe('replay_hook — summary + resolution', () => {
 
     it('resolves a bare event name', () => {
         const cmd = [
-            TS_REPLAY,
             '--platform',
             'augment',
             '--event',
@@ -126,7 +122,7 @@ describe('replay_hook — summary + resolution', () => {
             MANIFEST,
             '--json',
         ];
-        const r = spawnSync(TSX_BIN, cmd, { cwd: tmp, encoding: 'utf8' });
+        const r = runInProc(replayMain, cmd, { cwd: tmp });
         expect(r.status, r.stderr).toBe(0);
         const summary = JSON.parse(r.stdout);
         expect(String(summary['payload']).endsWith('post_tool_use.json')).toBe(true);
@@ -134,7 +130,6 @@ describe('replay_hook — summary + resolution', () => {
 
     it('rejects an invalid payload path with exit 2', () => {
         const cmd = [
-            TS_REPLAY,
             '--platform',
             'augment',
             '--event',
@@ -144,7 +139,7 @@ describe('replay_hook — summary + resolution', () => {
             '--manifest',
             MANIFEST,
         ];
-        const r = spawnSync(TSX_BIN, cmd, { cwd: tmp, encoding: 'utf8' });
+        const r = runInProc(replayMain, cmd, { cwd: tmp });
         expect(r.status).toBe(2);
         expect(r.stderr.toLowerCase()).toContain('not found');
     });

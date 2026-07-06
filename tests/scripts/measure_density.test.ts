@@ -3,28 +3,20 @@
 // The script reads the whole artifact corpus and prints a report (default) or
 // deterministic JSON (--json); --snapshot writes JSONL to the gitignored
 // agents/runtime/density/snapshot.jsonl. The tsx twin is the source of truth
-// (the python original was deleted in the teardown). Its output is
-// corpus-derived (would drift in a fixed snapshot), so this asserts the
-// contract structurally: exit 0, non-empty output, valid JSON(L), and
-// DETERMINISM (a second run is byte-identical).
-import { spawnSync } from 'node:child_process';
+// (the python original was deleted in the teardown). Runs in-process via
+// runInProc (no tsx cold-start per call) for speed.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import { main } from '../../src/scripts/measure_density.js';
+import { runInProc } from '../_lib/run_in_process.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_density.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 const SNAPSHOT = path.join(REPO_ROOT, 'agents', 'runtime', 'density', 'snapshot.jsonl');
 
-const runTs = (args: string[]) =>
-    spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+const runTs = (args: string[]) => runInProc(main, args);
 
 describe('measure_density — CLI contract', () => {
     it('default + --json run deterministically over the repo (exit 0)', () => {

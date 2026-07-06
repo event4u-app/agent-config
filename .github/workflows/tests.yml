@@ -165,7 +165,7 @@ jobs:
     # directory. `build` script = `build:cli && build:ui`, so the
     # previous explicit build:cli + build:ui + build pair was a no-op
     # duplicate; collapsed to a single build invocation.
-    name: Node Tests (${{ matrix.os }})
+    name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md — release
     # PRs don't touch src/** or tests/**; ESLint, tsc, vitest,
@@ -174,7 +174,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Vitest is core-saturated on a single runner (the subprocess suites
+        # spawn ./agent-config / tsx heavily), so the wall clock is
+        # total-CPU-work ÷ cores. `--shard=N/4` fans the file set across 4
+        # parallel runners per OS. The golden-replay suite — the single
+        # heaviest cluster — is pulled into its OWN job (`golden-tests`) and
+        # EXCLUDED here, because vitest shards by file COUNT not duration and
+        # would otherwise clump the golden files into one > 2 min bucket.
+        # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
         os: [ubuntu-latest, macos-latest]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
 
@@ -194,6 +203,47 @@ jobs:
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       # ── Root TS CLI + UI ───────────────────────────────────────────
+      # ESLint / typecheck / prepack are whole-tree gates with nothing to
+      # shard — they live in the dedicated `static-checks` job (runs once,
+      # not per OS × shard) so no vitest shard carries their ~40s and every
+      # shard is build + vitest only.
+      - name: Build (dist/cli + UI bundle)
+        # `build` = `build:cli && build:ui`. Every shard needs dist/ — the
+        # subprocess suites spawn `./agent-config` → dist/cli/agent-config.js.
+        run: npm run build --silent
+
+      - name: Vitest (shard ${{ matrix.shard }}/4, heavy suites excluded)
+        # `--` forwards flags to vitest; each runner executes a deterministic
+        # quarter of the file set. The subprocess-heavy clusters (golden +
+        # workspace) hash-clump into one over-budget shard regardless of shard
+        # count, so they are excluded here and run in the dedicated
+        # `heavy-tests` job → each node-tests shard stays light and balanced.
+        run: >-
+          npm run test:ts --silent --
+          --shard=${{ matrix.shard }}/4
+          --exclude 'tests/golden/**'
+          --exclude 'tests/server/workspace.test.ts'
+          --exclude 'tests/scripts/cli/python/**'
+
+  static-checks:
+    # Whole-tree gates that have nothing to shard: ESLint, tsc --noEmit, and
+    # the prepack compiled-bin shape check. Run once (ubuntu only — all three
+    # are OS-independent) instead of on every node-tests shard, so no vitest
+    # shard's wall clock carries their ~40s and the check dedups across OSes.
+    name: Static Checks (ESLint · typecheck · prepack)
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
+
       - name: ESLint (src/**/*.ts)
         run: npm run lint:ts --silent
 
@@ -201,16 +251,86 @@ jobs:
         run: npm run typecheck --silent
 
       - name: Build (dist/cli + UI bundle)
-        # `build` = `build:cli && build:ui`; the `build:cli` step also
-        # exercises the `chmod +x` hook that prepack-check.mjs asserts
-        # on `npm pack`.
+        # prepack-check asserts the chmod +x hook applied by build:cli.
         run: npm run build --silent
-
-      - name: Vitest (tests/{cli,server,ui}/**/*.ts)
-        run: npm run test:ts --silent
 
       - name: prepack-check (compiled bin shape gate)
         run: node src/scripts/prepack-check.mjs
+
+  golden-tests:
+    # Golden-transcript replay — 29 scenarios × `./agent-config` (dist/cli)
+    # spawn per cycle, split across 6 files (tests/golden/golden_replay*.test.ts)
+    # so vitest's fork pool runs them concurrently on a DEDICATED runner
+    # (~25 s local). Kept out of the sharded `node-tests` matrix because vitest
+    # shards by file COUNT not duration and would clump the golden files into
+    # one over-budget bucket (the observed 167 s shard-2 failure mode).
+    # Separate from `workspace-tests` on purpose: running both subprocess-heavy
+    # clusters in one job oversubscribed the fork pool and produced flaky
+    # spawn-timeout failures — each cluster gets its own runner.
+    name: Golden Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
+
+      - name: Build discovery manifest (gitignored; cli-e2e reads it)
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        # The golden suite spawns `./agent-config` → dist/cli/agent-config.js.
+        run: npm run build --silent
+
+      - name: Vitest (tests/golden — fork-parallel)
+        run: npm run test:ts --silent -- tests/golden
+
+  workspace-tests:
+    # The workspace cluster: tests/server/workspace.test.ts + the cli/python
+    # workspace suite (each spawns `tsx src/cli/python/*.ts` per assertion).
+    # These `workspace*`-named files hash-clump into one node-tests shard
+    # regardless of shard count, so they run on their own DEDICATED runner
+    # (~12 s local, ~40 s CI). Separate from `golden-tests` to avoid
+    # over-subscribing the fork pool (see the flaky-spawn note there).
+    name: Workspace Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
+
+      - name: Build discovery manifest (gitignored; cli-e2e reads it)
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
+
+      - name: Vitest (workspace suite — fork-parallel)
+        run: >-
+          npm run test:ts --silent --
+          tests/server/workspace.test.ts
+          tests/scripts/cli/python
 
   # NOTE: windows-lockfile-export moved to
   # .github/workflows/windows-lockfile-export.yml in

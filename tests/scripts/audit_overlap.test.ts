@@ -11,6 +11,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { main } from '../../src/scripts/audit_overlap.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_overlap.ts');
@@ -51,7 +53,7 @@ function readMaybe(p: string): Buffer | null {
     return fs.existsSync(p) ? fs.readFileSync(p) : null;
 }
 function runTs() {
-    return spawnSync(TSX_BIN, [TS_SCRIPT], { encoding: 'utf8', cwd: REPO_ROOT });
+    return runInProc(main, []);
 }
 
 describe.runIf(inputPresent())('audit_overlap — CLI contract', () => {

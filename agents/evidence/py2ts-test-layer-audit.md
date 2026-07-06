@@ -61,3 +61,37 @@ python-skip guards), then D3 (retire the shim + the 3 scaffolding workflows,
 soak ≥24h). Ship as small tests-only PRs per D4 (never touch
 `agents/roadmaps-progress.md`; macOS + Linux matrix for snapshot-generating
 tests).
+
+## Test-layer speed — final timing note (2026-07-06, `road-to-fast-test-layer`)
+
+The py2ts teardown replaced ~133 python-parity spawns with `tsx`-subprocess
+rigs (one `spawnSync(tsx, [script])` per assertion, ~350 ms cold-start each),
+pushing the CI Vitest step to **474 s (7m54s)** on ubuntu. Two levers fixed it:
+
+1. **In-process runner** (`tests/_lib/run_in_process.ts`) — `runInProc(main, argv)`
+   calls the script's exported `main()` directly (captures stdout/stderr,
+   mocks `process.exit`, handles the `ArgparseExit` shapes). Migrated the
+   `cmd_*` cluster, the measure/audit/lint/probe rigs, `chat_history`
+   (28→1 spawn), `cli_python/{knowledge_ingest,workspace_drive}`, the
+   `knowledge_global*` cluster, and `replay_hook`. Skipped: scripts with a
+   module-level `os.homedir()` constant (`cmd_update`, `cmd_settings_migrate`,
+   `workspace_crypto`) and fixture-copy `check_*` rigs (REPO_ROOT baked from
+   `import.meta.url`) — these stay on subprocess.
+2. **CI job topology** — CI runners are core-saturated, so single-runner wall
+   clock is total-CPU-work ÷ cores; file-level sharding inside one runner
+   barely moved it (474→447 s). Split instead:
+   - `node-tests`: `--shard=N/4` × 2 OS, **excluding** the two subprocess-heavy
+     clusters (they hash-clump into one over-budget shard regardless of shard
+     count — a 4-shard run left one bucket at 167 s).
+   - `golden-tests`: dedicated job, 6 fork-parallel `golden_replay*` files.
+   - `workspace-tests`: dedicated job (`server/workspace` + `cli/python/**`).
+     Kept **separate** from golden — combining both oversubscribed the fork
+     pool and produced flaky spawn-timeouts.
+   - `static-checks`: ESLint + tsc + prepack once (ubuntu-only, OS-independent),
+     off the per-shard critical path.
+
+**Result** (run 28769860524, all green): slowest **Vitest step 95 s (1.6 min)**
+— every test run back under 2 min (from 7m54s). Slowest **total job 137 s**
+(macos node-tests shard 1) is npm-ci + build overhead, not test code; sharding
+multiplies that fixed per-job cost, so it is the practical floor. Only required
+check `Sync + Generate Tools Consistency` is unaffected by the renamed jobs.

@@ -26,6 +26,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { main } from '../../../src/scripts/_cli/cmd_migrate.js';
+import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_migrate.ts');
@@ -49,12 +51,7 @@ function rootEnv(root: string): Record<string, string> {
 
 
 function runTs(args: string[], root: string): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], {
-        cwd: root,
-        encoding: 'utf8',
-        env: { ...process.env, ...rootEnv(root) },
-    });
-    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    return runInProc(main, args, { cwd: root });
 }
 
 /** Strip both the raw and realpath forms of every dynamic root. */

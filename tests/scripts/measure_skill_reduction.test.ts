@@ -17,6 +17,8 @@ import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { main } from '../../src/scripts/measure_skill_reduction.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'measure_skill_reduction.ts');
@@ -28,7 +30,7 @@ const TSX_BIN = path.join(
 );
 
 function runTs(args: string[]) {
-    return spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+    return runInProc(main, args);
 }
 
 // The tsx twin is the source of truth (the python original was deleted in the

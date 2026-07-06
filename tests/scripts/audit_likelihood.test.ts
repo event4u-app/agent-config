@@ -22,6 +22,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { tokens } from '../../src/scripts/audit_likelihood.js';
 import { acquireGlobalStateLock } from './_global_state_lock.js';
+import { main as mainLikelihood } from '../../src/scripts/audit_likelihood.js';
+import { main as mainAudit } from '../../src/scripts/audit_auto_rules.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_LIKELIHOOD = path.join(REPO_ROOT, 'src', 'scripts', 'audit_likelihood.ts');
@@ -38,8 +41,8 @@ const AUDIT_MD = path.join(REPORT_DIR, 'auto-rules-audit.md');
 const LIKELIHOOD_JSON = path.join(REPORT_DIR, 'auto-rules-likelihood.json');
 
 function ts(script: string, args: string[]): { stdout: string; stderr: string; status: number | null } {
-    const r = spawnSync(TSX_BIN, [script, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
+    const mainFn = script.includes('audit_likelihood') ? mainLikelihood : mainAudit;
+    return runInProc(mainFn, args);
 }
 
 describe('audit_likelihood — unit helpers', () => {

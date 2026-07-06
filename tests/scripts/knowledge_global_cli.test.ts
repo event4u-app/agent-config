@@ -11,6 +11,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { main as mainKgc } from '../../src/scripts/knowledge_global_cli.js';
+import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN =
@@ -43,8 +45,7 @@ function env(): NodeJS.ProcessEnv {
 }
 
 function runTs(args: readonly string[]): RunResult {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: repo, encoding: 'utf8', env: env() });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
+    return runInProc(mainKgc, args, { cwd: repo, env: env() });
 }
 
 /** Normalize ISO dates + the resolved store path for deterministic compares. */
