@@ -62,9 +62,9 @@ The suite defines how memories are written (memory-consolidation, knowledge pipe
 
 - [x] Add an "Applying recalled memories" section to `src/skills/memory-consolidation/SKILL.md`: apply selectively and contextually; never narrate the mechanism (forbidden phrases: "I remember", "based on your memories", "according to your profile/data", "I can see from memory"); recalled facts surface as normal working knowledge.
 - [x] Add the sensitivity floor to the same section: recalled content about sensitive topics (personal difficulties, conflicts, health) is never surfaced unprompted — only when the user raises the topic first this session.
-- [x] Add retrieval-trigger linguistics to `memory:load` / `knowledge` retrieval guidance: possessives ("my/our X"), definite references to unnamed prior work ("that bug", "the migration"), and past-time cues ("last week", "back then") are consult-memory signals before answering from scratch. <!-- done: added to memory-consolidation § Applying recalled memories instead — /memory:load is explicitly "never auto-triggered" by its own contract (contradicts linguistic auto-trigger) and /knowledge is a local-ingestion orchestrator, not retrieval; neither is the right home -->
-- [x] Cross-link the existing staleness caveat (recalled memories reflect what was true when written; verify files/flags still exist) so etiquette and staleness live in one place. <!-- done: staleness bullet co-located in the same new section -->
-- [x] Verify: `./scripts-run src/scripts/skill_linter` on the touched skill. <!-- done: 1 pass, 0 fail -->
+- [x] Add retrieval-trigger linguistics to `memory:load` / `knowledge` retrieval guidance: possessives ("my/our X"), definite references to unnamed prior work ("that bug", "the migration"), and past-time cues ("last week", "back then") are consult-memory signals before answering from scratch.
+- [x] Cross-link the existing staleness caveat (recalled memories reflect what was true when written; verify files/flags still exist) so etiquette and staleness live in one place.
+- [x] Verify: `./scripts-run src/scripts/skill_linter` on the touched skill.
 
 ## Phase 3 — Volatile-fact freshness table
 
@@ -72,27 +72,33 @@ The suite defines how memories are written (memory-consolidation, knowledge pipe
 
 - [x] Extend the `direct-answers` mechanics doc (`asking-and-brevity-examples` or the severity-tier section) with a freshness table: **fresh-lookup classes** — current roles/status of people/orgs, prices/versions/quotas, laws & policies, unrecognized entities (tools, packages, products), binary events (releases, deprecations, incidents); **stable classes** — math/CS fundamentals, historical facts, language/framework basics pinned by the project's lockfiles.
 - [x] Wire the table into `research:deep` / `research:report` pre-flight and `deep-reading-analyst` (one pointer line each): claims in fresh-lookup classes require a cited live source, never model memory.
-- [x] Verify: `./scripts-run src/scripts/check_refs` on touched files. <!-- done: no broken references -->
+- [x] Verify: `./scripts-run src/scripts/check_refs` on touched files.
 
 ## Phase 4 — Micro-sharpenings (folds only, no new files)
 
-- [x] `user-interaction-mechanics` + `direct-answers` examples: add the bullet floor (each bullet a complete 1–2-sentence statement, never fragments-as-lists) and "never bullet-point a refusal/decline — declines are short prose". <!-- done: added to asking-and-brevity-examples.md (the direct-answers mechanics doc) rather than user-interaction-mechanics — bullet formatting is a direct-answers Iron Law 3 concern, not a numbered-options concern -->
+- [x] `user-interaction-mechanics` + `direct-answers` examples: add the bullet floor (each bullet a complete 1–2-sentence statement, never fragments-as-lists) and "never bullet-point a refusal/decline — declines are short prose".
 - [x] `destructive-mechanics` context: add the inspect-before-destroy clause — before deleting or overwriting, look at the target; if its contents contradict how it was described, or the agent didn't create it, surface instead of proceeding.
-- [x] Coding guidelines (PHP + TS pattern docs): add the comment discipline clause — a comment states a constraint the code cannot show; never provenance, never next-line narration, never change-justification aimed at the reviewer. <!-- done: added to docs/guidelines/code-clarity.md instead — a language-neutral guideline (PHP/TS/Python/Go/Rust already cited there), the correct home per framework-neutrality-in-generic-skills rather than the PHP-specific php-coding-patterns.md -->
+- [x] Coding guidelines (PHP + TS pattern docs): add the comment discipline clause — a comment states a constraint the code cannot show; never provenance, never next-line narration, never change-justification aimed at the reviewer.
 - [x] `autonomous-execution` mechanics context: add the end-of-turn checkpoint — if the reply's last paragraph is a plan, an open question the context already answers, or a promise of unexecuted work ("I'll…"), execute it before ending the turn (bounded by the N=3 budget and Hard Floor as-is).
-- [x] Run `/condense`-path verification on every touched rule (preservation-guard: Iron Law sections byte-stable) — `./scripts-run src/scripts/check_condensation` targeted. <!-- done: passed -->
+- [x] Run `/condense`-path verification on every touched rule (preservation-guard: Iron Law sections byte-stable) — `./scripts-run src/scripts/check_condensation` targeted.
 
 ## Phase 5 — Contextual reminder injection (build-to-measure, per council verdict)
 
 Source C's mechanism — small, contextual, discretionary pre-message reminders instead of always-loaded prose — is architecturally aligned with kernel/router. Council re-evaluation (2026-07-06, tie-break after a round-2 split) converged on **build-to-measure**: the 2026-06-25 honest-null tested blocking projections (a ceiling, not a floor) and does not transfer to the salience regime. Pre-registered experiment design + scope + revisit-if: `agents/settings/contexts/reminder-injection-verdict.md`.
 
 - [x] Re-evaluate the 2026-06-25 lock in the AI council; record the convergence with scope + revisit-if. <!-- done 2026-07-06: verdict (b') build-to-measure, promoted to agents/settings/contexts/reminder-injection-verdict.md; design-note step superseded by the verdict file -->
-- [x] Build the minimal injection apparatus: a default-off, flag-gated hook path (PreToolUse/PostToolUse) that injects a one-line tier-2 reminder for the three initial trigger classes (token-distance > ~3K behind the decision, weak-host long session, high-stakes turn) plus the random-reminder negative-control arm. Eval instrument only — no production default. <!-- done: src/scripts/hooks/reminder_injection_hook.ts, wired into hook_manifest.yaml post_tool_use for all 6 platforms, settings toggle in agent-settings.template.yml (default off), per-session arm assignment (kernel-only/targeted/random) persisted in agents/runtime/state/; smoke-tested all 3 arms manually -->
-- [x] Author the pressure corpus (long-session + weak-host arms, n≈50 per arm) and wire the three-arm A/B (kernel-only · kernel+targeted · kernel+random) against the pre-registered thresholds (≥8 pp → expand, still flag-gated · <5 pp → teardown, pre-committed · 5–8 pp → one extension run). <!-- done 2026-07-06 (budget released by maintainer): pilot-scale corpus authored (2 scenarios × 3 arms × 2 hosts, 12 live sessions) — deliberately below the full n≈50/arm after the first run measured ~279k tokens/session; scale honestly recorded in the readout -->
-- [x] Run the A/B on the CURRENT kernel schema (no concurrent kernel-salience rewrites or brevity changes — they contaminate the independent variable), record the readout in `reminder-injection-verdict.md`, and execute the pre-committed consequence (expand flag-gated, or tear down). <!-- done 2026-07-06: Δ=0 pp on BOTH hosts (strong 6/6, haiku 6/6 comply in every arm — baseline at ceiling); pre-committed <5pp consequence executed — hook apparatus torn down in this same branch; scope + revisit-if updated in reminder-injection-verdict.md -->
+- [x] Build the minimal injection apparatus: a default-off, flag-gated hook path (PreToolUse/PostToolUse) that injects a one-line tier-2 reminder for the three initial trigger classes (token-distance > ~3K behind the decision, weak-host long session, high-stakes turn) plus the random-reminder negative-control arm. Eval instrument only — no production default.
+- [x] Author the pressure corpus (long-session + weak-host arms, n≈50 per arm) and wire the three-arm A/B (kernel-only · kernel+targeted · kernel+random) against the pre-registered thresholds (≥8 pp → expand, still flag-gated · <5 pp → teardown, pre-committed · 5–8 pp → one extension run).
+- [x] Run the A/B on the CURRENT kernel schema (no concurrent kernel-salience rewrites or brevity changes — they contaminate the independent variable), record the readout in `reminder-injection-verdict.md`, and execute the pre-committed consequence (expand flag-gated, or tear down).
 
 ## Acceptance criteria
 
 - One new rule (`content-quoting-floor`), zero other new files outside the Phase 5 apparatus (flag-gated hook path + pressure corpus) and its verdict/readout context note; everything else folded into existing artifacts.
 - All touched artifacts pass the targeted linters cited per phase; remote CI on the PR is the authoritative full gate.
 - No tracked artifact names the external sources; links remain ENC1-only.
+
+<!-- ## Blockers — no gates; Phases 2–4 are agent-executable. Phase 5
+(contextual reminder injection) is flag-gated per the 2026-07-06 council
+verdict and proceeds autonomously once the apparatus is built (no external
+approval gate required — the pre-committed A/B thresholds are the decision
+criteria). -->

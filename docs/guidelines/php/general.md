@@ -77,7 +77,15 @@ $data = ['id' => 1, 'name' => 'John'];
 createUser(...$data);
 ```
 
-## DocBlocks
+## Comments and DocBlocks
+
+A code comment earns its place only by stating a constraint the code
+cannot show — a non-obvious invariant, a workaround for a known bug, a
+hidden dependency. Never write comments that narrate ("added for X",
+"this calls Y"), repeat the next line, or justify the change to the
+reviewer. Full clause: [`code-clarity.md § Comment discipline`](../code-clarity.md#comment-discipline--state-a-constraint-not-a-narration).
+
+DocBlocks:
 
 - **Only** use DocBlocks to explain complex logic or when type hints are insufficient
 - **Must** add DocBlock for iterable types: `@param array<int, MyObject> $items`
