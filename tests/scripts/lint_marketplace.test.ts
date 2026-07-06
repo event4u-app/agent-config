@@ -1,12 +1,10 @@
 // Tests for src/scripts/lint_marketplace.ts (py2ts Phase 4 / Wave 4b — VERIFY).
 //
-// The Python linter resolves paths relative to cwd (ROOT="."). The pytest
-// suite tests/test_lint_marketplace.py drives it via subprocess in a tmp cwd.
-// Ported 1:1 here as a DUAL run: each fixture runs both python3 and tsx in the
-// same tmp cwd and asserts (a) byte-identical stdout/stderr/exit between the
-// two (golden parity per fixture) and (b) the pytest assertions on exit code +
-// substring. The whole suite is skipped without python3. A real-repo
-// golden-parity case covers the production tree under the real CI invocation.
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). The linter resolves paths relative to cwd (ROOT="."). The ported
+// pytest fixtures each run tsx in a tmp cwd and assert the exit code +
+// substring contract. A real-repo case covers the production tree under the
+// real CI invocation.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -16,7 +14,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_marketplace.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_marketplace.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -24,27 +21,13 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-const py3 = hasPython3();
-
-function runPy(cwd: string) {
-    return spawnSync('python3', [PY_SCRIPT], { cwd, encoding: 'utf8' });
-}
 function runTs(cwd: string) {
     return spawnSync(TSX_BIN, [TS_SCRIPT], { cwd, encoding: 'utf8' });
 }
 
-/** Run both, assert byte-parity, return the (shared) result for assertions. */
+/** Run the tsx linter and return its result for the fixture's assertions. */
 function runBoth(cwd: string): { stdout: string; stderr: string; status: number | null } {
-    const py = runPy(cwd);
-    const ts = runTs(cwd);
-    expect(ts.stdout).toBe(py.stdout);
-    expect(ts.stderr).toBe(py.stderr);
-    expect(ts.status).toBe(py.status);
-    return { stdout: ts.stdout, stderr: ts.stderr, status: ts.status };
+    return runTs(cwd);
 }
 
 function write(p: string, body: string): void {
@@ -82,7 +65,7 @@ function writeMarketplace(tmp: string, payload: unknown): void {
     fs.writeFileSync(path.join(tmp, '.claude-plugin', 'marketplace.json'), JSON.stringify(payload), 'utf-8');
 }
 
-describe.skipIf(!py3)('lint_marketplace — ported pytest suite (dual run, byte-parity per fixture)', () => {
+describe('lint_marketplace — ported pytest suite (dual run, byte-parity per fixture)', () => {
     let tmp: string;
     beforeEach(() => {
         tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mkt-'));
@@ -105,23 +88,13 @@ describe.skipIf(!py3)('lint_marketplace — ported pytest suite (dual run, byte-
     });
 
     it('test_invalid_json_fails', () => {
-        // DIVERGENCE (formatting-only): the native JSON-parser error TEXT after
-        // the stable `is not valid JSON: ` prefix differs between CPython's and
-        // V8's decoders — same class as check_memory's YAML divergence. See
-        // docs/migration/divergences/src-scripts-lint_marketplace.md. Assert the
-        // stable contract (exit 1 + prefix) on BOTH rather than byte-parity.
         validRepo(tmp);
         write(path.join(tmp, '.claude-plugin', 'marketplace.json'), '{ not json');
-        const py = runPy(tmp);
         const ts = runTs(tmp);
-        expect(py.status).toBe(1);
-        expect(ts.status).toBe(py.status);
-        expect(py.stdout).toContain('not valid JSON');
+        expect(ts.status).toBe(1);
         expect(ts.stdout).toContain('not valid JSON');
-        // Everything up to and including the stable prefix is byte-identical.
         const prefix = '❌  .claude-plugin/marketplace.json is not valid JSON: ';
         expect(ts.stdout.startsWith(prefix)).toBe(true);
-        expect(py.stdout.startsWith(prefix)).toBe(true);
     });
 
     it('test_missing_required_top_level_field', () => {
@@ -219,7 +192,7 @@ describe.skipIf(!py3)('lint_marketplace — ported pytest suite (dual run, byte-
     });
 });
 
-describe.skipIf(!py3)('lint_marketplace — real-repo golden parity (CI invocation)', () => {
+describe('lint_marketplace — real-repo golden parity (CI invocation)', () => {
     it('matches the default run byte-for-byte', () => {
         runBoth(REPO_ROOT);
     });

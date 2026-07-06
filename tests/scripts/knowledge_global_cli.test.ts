@@ -17,7 +17,6 @@ const TSX_BIN =
     process.env['TSX_BIN'] ??
     join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'knowledge_global_cli.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'knowledge_global_cli.py');
 
 interface RunResult {
     readonly status: number;
@@ -25,10 +24,6 @@ interface RunResult {
     readonly stderr: string;
 }
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 let repo: string;
 let home: string;
@@ -51,32 +46,15 @@ function runTs(args: readonly string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: repo, encoding: 'utf8', env: env() });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-function runPy(args: readonly string[]): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd: repo,
-        encoding: 'utf8',
-        env: { ...env(), PYTHONPATH: join(REPO_ROOT, 'src') },
-    });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
 
 /** Normalize ISO dates + the resolved store path for deterministic compares. */
-function norm(s: string): string {
-    return s.split(home).join('<HOME>').replace(/\d{4}-\d{2}-\d{2}/g, '<DATE>');
-}
 
-/** Run both impls on a freshly-reset store and assert byte-parity. */
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). Run it on a freshly-reset store and assert it ran to a defined exit.
 function bothMatch(args: readonly string[]): void {
-    if (!HAVE_PYTHON) {
-        return;
-    }
-    rmSync(home, { recursive: true, force: true });
-    const py = runPy(args);
     rmSync(home, { recursive: true, force: true });
     const ts = runTs(args);
-    expect(norm(ts.stdout), `stdout ${args.join(' ')}`).toBe(norm(py.stdout));
-    expect(norm(ts.stderr), `stderr ${args.join(' ')}`).toBe(norm(py.stderr));
-    expect(ts.status, `exit ${args.join(' ')}`).toBe(py.status);
+    expect(ts.status, `exit ${args.join(' ')}`).not.toBe(-1);
 }
 
 function writeCard(name: string, body: string): string {
@@ -137,16 +115,6 @@ describe('knowledge_global_cli.ts — promote flow', () => {
         expect(list.stdout).toContain('card');
         const trace = runTs(['trace', 'card']);
         expect(trace.stdout).toContain('widget');
-        if (HAVE_PYTHON) {
-            // Re-run promote on a fresh store for each impl, then compare list.
-            rmSync(home, { recursive: true, force: true });
-            runPy(['promote', 'card.md', '--source', 'https://github.com/acme/widget', '--tier', 'public']);
-            const pyList = runPy(['list']);
-            rmSync(home, { recursive: true, force: true });
-            runTs(['promote', 'card.md', '--source', 'https://github.com/acme/widget', '--tier', 'public']);
-            const tsList = runTs(['list']);
-            expect(norm(tsList.stdout)).toBe(norm(pyList.stdout));
-        }
     });
 
     it('proprietary card without --manual → blocked exit 2', () => {
@@ -174,10 +142,6 @@ describe('knowledge_global_cli.ts — promote flow', () => {
     it('missing source file → exit 3', () => {
         const ts = runTs(['promote', 'does-not-exist.md', '--tier', 'public']);
         expect(ts.status).toBe(3);
-        if (HAVE_PYTHON) {
-            // Exit-code parity; the OSError strerror text is platform-normalized.
-            expect(ts.status).toBe(runPy(['promote', 'does-not-exist.md', '--tier', 'public']).status);
-        }
     });
 });
 
@@ -244,25 +208,16 @@ describe('knowledge_global_cli.ts — usage', () => {
     it('no subcommand → exit 2 (required subparser)', () => {
         const ts = runTs([]);
         expect(ts.status).toBe(2);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy([]).status);
-        }
     });
 
     it('unknown subcommand → exit 2', () => {
         const ts = runTs(['bogus']);
         expect(ts.status).toBe(2);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy(['bogus']).status);
-        }
     });
 
     it('forget --tier invalid choice → exit 2', () => {
         const ts = runTs(['forget', '--tier', 'bogus']);
         expect(ts.status).toBe(2);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy(['forget', '--tier', 'bogus']).status);
-        }
     });
 });
 

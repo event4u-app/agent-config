@@ -14,7 +14,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'apply_modules_config.ts');
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'apply_modules_config.py');
 // 6.0.x (ADR-051): the uncondensed source container moved to src/agent-src/.
 const TEMPLATE = path.join(
     REPO_ROOT,
@@ -55,10 +54,6 @@ interface RunResult {
 }
 function runTs(args: string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { encoding: 'utf8' });
-    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-function runPy(args: string[]): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { encoding: 'utf8' });
     return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
 
@@ -254,70 +249,5 @@ describe('apply_modules_config — --acknowledge-only', () => {
             input: '',
         });
         expect(r.status).toBe(0);
-    });
-});
-
-// ---- Golden parity (python3 vs tsx) ----
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py = hasPython3();
-
-describe.skipIf(!py)('apply_modules_config — golden parity (python3 vs tsx)', () => {
-    function bothPatch(payload: Record<string, unknown> | null, extra: string[]): void {
-        const dpy = mkTmp();
-        const dts = mkTmp();
-        seedTeamFile(dpy);
-        seedTeamFile(dts);
-        let pjPy: string | null = null;
-        let pjTs: string | null = null;
-        if (payload !== null) {
-            pjPy = path.join(dpy, 'p.json');
-            pjTs = path.join(dts, 'p.json');
-            fs.writeFileSync(pjPy, JSON.stringify(payload), 'utf-8');
-            fs.writeFileSync(pjTs, JSON.stringify(payload), 'utf-8');
-        }
-        const pyArgs = ['--project', dpy, ...extra, ...(pjPy ? ['--input-file', pjPy] : [])];
-        const tsArgs = ['--project', dts, ...extra, ...(pjTs ? ['--input-file', pjTs] : [])];
-        const p = runPy(pyArgs);
-        const t = runTs(tsArgs);
-        expect(t.status).toBe(p.status);
-        expect(read(path.join(dts, '.agent-project-settings.yml'))).toBe(
-            read(path.join(dpy, '.agent-project-settings.yml')),
-        );
-    }
-
-    it('full payload written file matches', () => {
-        bothPatch(
-            {
-                enabled: true,
-                root_paths: ['app/Modules'],
-                namespace_template: 'App\\Modules\\{ModuleName}\\App',
-                agent_folder: 'agents',
-                skip_dirs: ['.module-template', '.example'],
-            },
-            [],
-        );
-    });
-
-    it('empty root_paths written file matches', () => {
-        bothPatch({ enabled: false, root_paths: [] }, []);
-    });
-
-    it('acknowledge-only written file matches', () => {
-        bothPatch(null, ['--acknowledge-only']);
-    });
-
-    it('bad payload exits 2 identically', () => {
-        const dpy = mkTmp();
-        const dts = mkTmp();
-        seedTeamFile(dpy);
-        seedTeamFile(dts);
-        const pj = path.join(dpy, 'p.json');
-        fs.writeFileSync(pj, JSON.stringify({ enabled: true, root_paths: 'x' }), 'utf-8');
-        const p = runPy(['--project', dpy, '--input-file', pj]);
-        const t = runTs(['--project', dts, '--input-file', pj]);
-        expect(p.status).toBe(2);
-        expect(t.status).toBe(2);
     });
 });

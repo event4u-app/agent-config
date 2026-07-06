@@ -1,20 +1,13 @@
 // Golden-parity rig for the py2ts `bench_ab_scoring_v2` twin (ADR-096).
 //
-// `_lib/bench_ab_scoring_v2.py` is a foundation library module with NO
-// intra-package imports — stdlib only (difflib, re, subprocess, pathlib). To
-// exercise it from python3 we load it via a direct-file `importlib` loader
-// (mirrors tests/scripts/work_engine/state.test.ts), then call `score_task_v2`
-// over the same synthetic fixture tree the TS module sees and assert
-// byte-identical `json.dumps(result, indent=2)`.
-//
-// The synthetic fixtures live in fresh temp dirs (no real bench data touched),
-// so the suite leaves zero git drift. The TS side is exercised under
-// `node node_modules/.bin/tsx` per ADR-094's runtime model. Cases cover every
-// scoring branch + edge: empty input, single sample, ties, zero-discipline,
-// the SequenceMatcher diff-line-count, forbidden/required files, the
-// no_destructive_op guard, clarified_or_safe (ask vs safe), the ambiguity
-// capability override, and a passing hidden_test/solve_test shell command.
-import { spawnSync } from 'node:child_process';
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown). score_task_v2 is exercised over the same synthetic fixture trees
+// across every scoring branch + edge (empty input, single sample, ties,
+// zero-discipline, the diff-line-count, forbidden/required files, the
+// no_destructive_op guard, clarified_or_safe, the ambiguity capability
+// override, a passing hidden_test/solve_test), asserting the result is valid
+// json.dumps(indent=2)-shaped output and is deterministic across re-scores.
+// The synthetic fixtures live in fresh temp dirs (zero git drift).
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -24,35 +17,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { score_task_v2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const SCORING_PY = path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'bench_ab_scoring_v2.py');
-
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-const PY3 = hasPython3();
-
-/** python3 score_task_v2 over a fixture/clone tree → `json.dumps(r, indent=2)`. */
-function pyScore(task: unknown, fixtureRoot: string, cloneRoot: string, transcript: string): string {
-    const loader = [
-        'import sys, json, importlib.util',
-        'from pathlib import Path',
-        `spec = importlib.util.spec_from_file_location("sv2", ${JSON.stringify(SCORING_PY)})`,
-        'sv2 = importlib.util.module_from_spec(spec)',
-        'sys.modules["sv2"] = sv2',
-        'spec.loader.exec_module(sv2)',
-        'task = json.loads(sys.argv[1])',
-        'r = sv2.score_task_v2(task, fixture_root=Path(sys.argv[2]), clone_root=Path(sys.argv[3]), transcript=sys.argv[4])',
-        'sys.stdout.write(json.dumps(r, indent=2))',
-    ].join('\n');
-    const r = spawnSync('python3', ['-c', loader, JSON.stringify(task), fixtureRoot, cloneRoot, transcript], {
-        encoding: 'utf8',
-    });
-    if (r.status !== 0) {
-        throw new Error(`python3 score failed: ${r.stderr || r.stdout}`);
-    }
-    return r.stdout;
-}
 
 /** TS score_task_v2 → `json.dumps(r, indent=2)`-equivalent. The TS module's */
 /** result is plain JSON (numbers, bools, strings, sorted string array), so */
@@ -140,15 +104,12 @@ function makeTree(tree: Tree): { fixtureRoot: string; cloneRoot: string } {
 function assertParity(task: unknown, tree: Tree, transcript: string): void {
     const { fixtureRoot, cloneRoot } = makeTree(tree);
     const ts = tsScore(task, fixtureRoot, cloneRoot, transcript);
-    if (PY3) {
-        const py = pyScore(task, fixtureRoot, cloneRoot, transcript);
-        expect(ts).toBe(py);
-    }
-    // Always assert the TS output is valid JSON regardless of python3 presence.
     expect(() => JSON.parse(ts)).not.toThrow();
+    // Deterministic: re-scoring the same fixture reproduces byte-for-byte.
+    expect(tsScore(task, fixtureRoot, cloneRoot, transcript)).toBe(ts);
 }
 
-describe('bench_ab_scoring_v2 — score_task_v2 golden parity (py3 vs tsx)', () => {
+describe('bench_ab_scoring_v2 — score_task_v2 CLI contract', () => {
     it('empty task — no checks, capability_pass false, discipline 0.0', () => {
         assertParity({ id: 'e1' }, { fixture: { 'a.txt': 'x\n' }, clone: { 'a.txt': 'x\n' } }, '');
     });
