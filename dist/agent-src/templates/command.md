@@ -8,7 +8,7 @@
 2. Copy the template below
 3. Replace all `{placeholders}` with actual content
 4. Remove all `<!-- comments -->` when done
-5. Run: `./scripts-run src/scripts/skill_linter .agent-src.uncondensed/commands/{command-name}.md`
+5. Run: `./scripts-run src/scripts/skill_linter src/agent-src/commands/{command-name}.md`
 6. Sync: `task sync` (regenerates `dist/agent-src/` and `.augment/`)
 7. Generate Claude symlink: `task generate-tools` (or manually create symlink)
 

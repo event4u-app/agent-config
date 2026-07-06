@@ -630,7 +630,7 @@
   "templates/agent-settings.md": "68d93fe2687ea046582ac4de49d0f42d0d3b7797307540b4684edf42e3f10674",
   "templates/agents/agent-project-settings.example.yml": "423f8bff8a275d7ffeb5e00cafa63eb8ca0bebe4e367abafe02111b3326d8397",
   "templates/agents/proposal.example.md": "d60e7149a70583a505f2f85cfecf93ca929cb374849ee884e1e51a2325b32e76",
-  "templates/command.md": "b60a893195233a6506943f5021dd5f57f60e91ccbc942822cb3707fd09a49c1b",
+  "templates/command.md": "dd25e6b221c61e620a109ef5bead1ccb7f0ad30c985f9368ea75dc1f0d2f5938",
   "templates/contexts.md": "3d8177f72fa7aea3b2167918530337062860fb918acd1e5025e47c8f7d5a5387",
   "templates/contexts/auth-model.md": "b410406112398af4a9d846c573649aae96a9efad56605bae2349a4b11983ce0a",
   "templates/contexts/data-sensitivity.md": "b2930487246e740d43003860241d8a59162f37667e2ed6e22a4109f2d1097a92",
