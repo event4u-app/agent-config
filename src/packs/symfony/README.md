@@ -12,7 +12,7 @@ Symfony framework patterns; depends on PHP at the artefact level.
 
 ## Rules (1)
 
-- **`symfony-routing`** — Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow
+- **`symfony-routing`** — Symfony work (DI, bundles, Doctrine, Messenger, voters, console) — route to symfony-workflow
 
 ## Skills (2)
 
