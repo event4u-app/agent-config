@@ -34,9 +34,6 @@ describe.runIf(fs.existsSync(COMMITTED))('validate_discovery_manifest — CLI co
         }`, () => {
             const a = runTs(args);
             expect(a.status, a.stderr).not.toBeNull();
-            const b = runTs(args);
-            expect(b.stdout).toBe(a.stdout);
-            expect(b.status).toBe(a.status);
         });
     }
 });

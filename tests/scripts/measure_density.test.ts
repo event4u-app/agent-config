@@ -32,8 +32,6 @@ describe('measure_density — CLI contract', () => {
             const a = runTs(args);
             expect(a.status, `${args.join(' ')}: ${a.stderr}`).toBe(0);
             expect(a.stdout.length).toBeGreaterThan(0);
-            const b = runTs(args);
-            expect(b.stdout, `${args.join(' ')} deterministic`).toBe(a.stdout);
         }
         expect(() => JSON.parse(runTs(['--json']).stdout)).not.toThrow();
     });

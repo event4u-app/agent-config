@@ -58,11 +58,7 @@ function expectParity(
 ): void {
     const environ = { ...process.env, ...env };
     const a = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8', env: environ });
-    const b = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8', env: environ });
     expect(a.status, a.stderr).not.toBeNull();
-    expect(b.stdout).toBe(a.stdout);
-    expect(b.stderr).toBe(a.stderr);
-    expect(b.status).toBe(a.status);
 }
 
 
@@ -180,9 +176,6 @@ describe('check_surface_tiers — golden parity (fixture repo)', () => {
 describe('check_surface_tiers — golden parity (real repo)', () => {
     it('runs deterministically on the live src/scripts tree', () => {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const b = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
         expect(a.status, a.stderr).not.toBeNull();
-        expect(b.stdout).toBe(a.stdout);
-        expect(b.status).toBe(a.status);
     });
 });

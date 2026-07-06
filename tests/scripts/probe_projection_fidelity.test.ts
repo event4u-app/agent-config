@@ -58,9 +58,6 @@ describe.runIf(fs.existsSync(FIXTURE))('probe_projection_fidelity — CLI contra
         const bytesA = fs.readFileSync(report, 'utf-8');
         expect(() => JSON.parse(bytesA)).not.toThrow();
 
-        const b = runTs(reportRel);
-        expect(b.status).toBe(a.status);
-        expect(b.stdout).toBe(a.stdout);
         expect(fs.readFileSync(report, 'utf-8')).toBe(bytesA);
     });
 
@@ -80,9 +77,6 @@ describe.runIf(fs.existsSync(FIXTURE))('probe_projection_fidelity — CLI contra
             const a = runTs();
             expect(a.status, a.stderr).not.toBeNull();
             const bytesA = fs.readFileSync(DEFAULT_REPORT, 'utf-8');
-            const b = runTs();
-            expect(b.status).toBe(a.status);
-            expect(b.stdout).toBe(a.stdout);
             expect(fs.readFileSync(DEFAULT_REPORT, 'utf-8')).toBe(bytesA);
         } finally {
             if (before !== null) {

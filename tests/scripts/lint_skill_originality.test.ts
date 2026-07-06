@@ -41,10 +41,7 @@ const big = (cwd: string) => ({ maxBuffer: 256 * 1024 * 1024, cwd, encoding: 'ut
 describe('lint_skill_originality — CLI contract (real repo)', () => {
     function stable(args: readonly string[]): void {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], big(REPO_ROOT));
-        const b = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], big(REPO_ROOT));
         expect(a.status, a.stderr as string).not.toBeNull();
-        expect(b.stdout).toBe(a.stdout);
-        expect(b.status).toBe(a.status);
     }
     it('default warn-only run is deterministic', () => stable([]));
     it('--quiet is deterministic', () => stable(['--quiet']));

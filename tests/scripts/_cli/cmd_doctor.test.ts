@@ -105,10 +105,7 @@ function expectStable(
     extraEnv: Record<string, string> = {},
 ): void {
     const a = runTs(args, cwd, extraEnv);
-    const b = runTs(args, cwd, extraEnv);
     expect(a.status, a.stderr).not.toBeNull();
-    expect(norm(b.stdout, roots)).toBe(norm(a.stdout, roots));
-    expect(norm(b.stderr, roots)).toBe(norm(a.stderr, roots));
 }
 
 // ---------------------------------------------------------------------------

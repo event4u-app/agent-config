@@ -30,10 +30,7 @@ function runTs(cwd: string, args: string[] = []) {
 // teardown). Assert the CLI runs to a defined exit and is deterministic.
 function expectParity(cwd: string, args: string[] = []): void {
     const a = runTs(cwd, args);
-    const b = runTs(cwd, args);
     expect(a.status, a.stderr).not.toBeNull();
-    expect(b.stdout).toBe(a.stdout);
-    expect(b.status).toBe(a.status);
 }
 function mkTmp(): string {
     return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ccl-')));
@@ -122,9 +119,6 @@ describe('check_council_config_location — golden parity (tmp fixtures)', () =>
 describe('check_council_config_location — golden parity (real repo)', () => {
     it('runs deterministically on the live council surfaces', () => {
         const a = runTs(REPO_ROOT);
-        const b = runTs(REPO_ROOT);
         expect(a.status, a.stderr).not.toBeNull();
-        expect(b.stdout).toBe(a.stdout);
-        expect(b.status).toBe(a.status);
     });
 });

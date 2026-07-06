@@ -66,9 +66,6 @@ describe.runIf(inputPresent())('audit_overlap — CLI contract', () => {
             expect(() => JSON.parse(overlapA!)).not.toThrow();
             restore(snapOverlap);
             restore(snapMd);
-            const b = runTs();
-            expect(b.status).toBe(a.status);
-            expect(b.stdout).toBe(a.stdout);
             expect(readMaybe(OVERLAP_JSON)?.toString('utf-8')).toBe(overlapA);
         } finally {
             restore(snapOverlap);

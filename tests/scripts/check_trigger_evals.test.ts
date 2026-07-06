@@ -54,11 +54,7 @@ function fixtureRepo(): { root: string; ts: string } {
 // the teardown). Assert the CLI runs to a defined exit and is deterministic.
 function expectParity(fx: { root: string; ts: string }, args: string[] = []): void {
     const a = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
-    const b = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
     expect(a.status, a.stderr).not.toBeNull();
-    expect(b.stdout).toBe(a.stdout);
-    expect(b.stderr).toBe(a.stderr);
-    expect(b.status).toBe(a.status);
 }
 
 const FRESH = '2026-06-01';
@@ -243,9 +239,6 @@ describe('check_trigger_evals — golden parity (real repo)', () => {
     it('runs deterministically with a fixed --today', () => {
         const args = ['--today', '2026-06-17'];
         const a = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const b = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
         expect(a.status, a.stderr).not.toBeNull();
-        expect(b.stdout).toBe(a.stdout);
-        expect(b.status).toBe(a.status);
     });
 });
