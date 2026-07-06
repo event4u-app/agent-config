@@ -4,16 +4,19 @@
 //   1. In-process unit checks of the pure functions (aggregate, render_text)
 //      with crafted rows — exercises the suspended-multiplier guard (delta=0),
 //      multi-session / multi-conversation bucketing, and the SUSPENDED note.
-//   2. A golden-parity layer (python3 vs tsx) on the real sessions.jsonl:
-//      stdout, stderr, exit code byte-identical for text + json. Read-only — the
-//      script never writes, so no snapshot/restore is needed. Skipped without
-//      python3. Measured/aggregated counts come from real data, but the script
-//      excludes timing entirely (delta is a deterministic 0 while suspended),
-//      so byte-comparison is sound here.
-import { describe, expect, it } from 'vitest';
+//   2. A CLI layer (tsx subprocess) on a deterministic temp-fixture JSONL —
+//      exercises --input / --format arg parsing and exit codes end-to-end.
+//      Converted from the retired python3-vs-tsx golden parity block (the
+//      Python original was deleted); fixtures replace the real sessions.jsonl
+//      so output is fully deterministic (delta is a hard 0 while the
+//      multiplier is suspended).
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { aggregate, render_text } from '../../src/scripts/telegraph_stats.js';
-import { hasPython3, runPy, runTs } from './_wave8e.js';
+import { runTs } from './_wave8e.js';
 
 describe('telegraph_stats — in-process units', () => {
     it('aggregate buckets by session + conversation; delta=0 while suspended', () => {
@@ -57,19 +60,62 @@ describe('telegraph_stats — in-process units', () => {
     });
 });
 
-const py3 = hasPython3();
+describe('telegraph_stats — CLI on a fixture (tsx)', () => {
+    let tmpDir: string;
+    beforeEach(() => {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'telegraph-stats-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
 
-describe.skipIf(!py3)('telegraph_stats — golden parity (python3 vs tsx)', () => {
-    const cases: Array<{ name: string; args: string[] }> = [
-        { name: 'text', args: [] },
-        { name: 'json', args: ['--format', 'json'] },
-    ];
-    it.each(cases)('byte-identical on the real repo ($name)', ({ args }) => {
-        const p = runPy('telegraph_stats', args);
-        const t = runTs('telegraph_stats', args);
-        expect(t.stdout).toBe(p.stdout);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+    function writeFixture(): string {
+        const p = path.join(tmpDir, 'sessions.jsonl');
+        const rows = [
+            { sessionId: 's1', conversation_id: 'c1', telegraph_condensed_tokens: 100, telegraph_delta_tokens: 42 },
+            { session_id: 's2', conversation_id: 'c1', telegraph_condensed_tokens: 10 },
+        ];
+        fs.writeFileSync(p, rows.map((r) => JSON.stringify(r)).join('\n') + '\n', 'utf-8');
+        return p;
+    }
+
+    it('text format renders the suspended-multiplier report deterministically', () => {
+        const t = runTs('telegraph_stats', ['--input', writeFixture()]);
         expect(t.status).toBe(0);
+        expect(t.stderr).toBe('');
+        expect(t.stdout).toContain(
+            'telegraph-stats telegraph-stats/v1 · multiplier v1 (SUSPENDED) · value 0.9155',
+        );
+        // delta is forced to 0 while suspended — even with an explicit field.
+        expect(t.stdout).toContain('lifetime: 2 sessions · delta_tokens = +0 · condensed_tokens = 110');
+        expect(t.stdout).toContain('c1: 2 sessions · delta = +0 · condensed = 110');
+        expect(t.stdout).toContain('multiplier suspended');
+    });
+
+    it('json format emits the schema-versioned structure', () => {
+        const t = runTs('telegraph_stats', ['--input', writeFixture(), '--format', 'json']);
+        expect(t.status).toBe(0);
+        expect(t.stderr).toBe('');
+        const doc = JSON.parse(t.stdout) as Record<string, unknown>;
+        expect(doc['schema_version']).toBe('telegraph-stats/v1');
+        expect(doc['multiplier_version']).toBe('v1');
+        expect(doc['multiplier_active']).toBe(false);
+        expect(doc['lifetime']).toEqual({ sessions: 2, delta_tokens: 0, condensed_tokens: 110 });
+        expect(doc['by_session']).toEqual({
+            s1: { sessions: 1, delta_tokens: 0, condensed_tokens: 100 },
+            s2: { sessions: 1, delta_tokens: 0, condensed_tokens: 10 },
+        });
+        expect(doc['by_conversation']).toEqual({
+            c1: { sessions: 2, delta_tokens: 0, condensed_tokens: 110 },
+        });
+    });
+
+    it('missing input file → exit 0 + empty report', () => {
+        const t = runTs('telegraph_stats', ['--input', path.join(tmpDir, 'nope.jsonl'), '--format', 'json']);
+        expect(t.status).toBe(0);
+        const doc = JSON.parse(t.stdout) as Record<string, unknown>;
+        expect(doc['lifetime']).toEqual({ sessions: 0, delta_tokens: 0, condensed_tokens: 0 });
+        expect(doc['by_session']).toEqual({});
+        expect(doc['by_conversation']).toEqual({});
     });
 });

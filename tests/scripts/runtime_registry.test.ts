@@ -1,7 +1,8 @@
 // Tests for the runtime registry — 1:1 port of tests/test_runtime_registry.py
-// (py2ts Phase 8 / Wave 8h), plus a golden-parity block diffing the
-// `--format json` registry output python3 vs tsx on the real repo
-// (deterministic — discover_skills sorts; fields are order-independent).
+// (py2ts Phase 8 / Wave 8h), plus CLI intent tests exercising the tsx CLI on
+// the real repo. The CLI output is cross-checked against the in-process
+// `build_registry()` (deterministic — discover_skills sorts), so the tests
+// stay green as the repo's skill inventory evolves.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,7 +16,7 @@ import {
     parse_skill_runtime,
     validate_registry,
 } from '../../src/scripts/runtime_registry.js';
-import { REPO_ROOT, hasPython3, runPy, runTs } from './_wave8h.js';
+import { REPO_ROOT, runTs } from './_wave8h.js';
 
 let tmp: string;
 
@@ -172,30 +173,47 @@ describe('runtime_registry — 1:1 port of test_runtime_registry.py', () => {
     });
 });
 
-describe('runtime_registry — golden parity (real repo)', () => {
-    it.skipIf(!hasPython3())('--format json byte-identical python3 vs tsx', () => {
-        const py = runPy('runtime_registry', ['--root', REPO_ROOT, '--format', 'json']);
-        const ts = runTs('runtime_registry', ['--root', REPO_ROOT, '--format', 'json']);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        // discover_skills() sorts the paths and every emitted field is
-        // order-independent, so the JSON is fully deterministic.
-        expect(ts.stdout).toBe(py.stdout);
+describe('runtime_registry — CLI (real repo, tsx)', () => {
+    it('--format json matches the in-process build_registry()', () => {
+        const r = runTs('runtime_registry', ['--root', REPO_ROOT, '--format', 'json']);
+        expect(r.status).toBe(0);
+        const emitted = JSON.parse(r.stdout) as Array<Record<string, unknown>>;
+        const registry = build_registry(REPO_ROOT);
+        expect(emitted.length).toBe(registry.length);
+        expect(emitted.length).toBeGreaterThan(0);
+        // discover_skills() sorts the paths → deterministic order.
+        expect(emitted.map((e) => e.name)).toEqual(registry.map((s) => s.name));
+        for (const entry of emitted) {
+            for (const key of [
+                'name',
+                'path',
+                'description',
+                'execution_type',
+                'handler',
+                'timeout_seconds',
+                'safety_mode',
+                'allowed_tools',
+            ]) {
+                expect(Object.keys(entry), String(entry.name)).toContain(key);
+            }
+        }
     });
 
-    it.skipIf(!hasPython3())('--format text byte-identical python3 vs tsx', () => {
-        const py = runPy('runtime_registry', ['--root', REPO_ROOT]);
-        const ts = runTs('runtime_registry', ['--root', REPO_ROOT]);
-        expect(py.status).toBe(0);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toBe(py.stdout);
+    it('--format text lists the registry count + every skill name', () => {
+        const r = runTs('runtime_registry', ['--root', REPO_ROOT]);
+        expect(r.status).toBe(0);
+        const registry = build_registry(REPO_ROOT);
+        expect(r.stdout.startsWith(`Runtime-capable skills: ${registry.length}\n`)).toBe(true);
+        for (const s of registry) {
+            expect(r.stdout).toContain(`\n  ${s.name}\n`);
+        }
     });
 
-    it.skipIf(!hasPython3())('--validate byte-identical python3 vs tsx', () => {
-        const py = runPy('runtime_registry', ['--root', REPO_ROOT, '--validate']);
-        const ts = runTs('runtime_registry', ['--root', REPO_ROOT, '--validate']);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
+    it('--validate reports a valid registry with the correct count', () => {
+        const r = runTs('runtime_registry', ['--root', REPO_ROOT, '--validate']);
+        expect(r.status).toBe(0);
+        expect(r.stderr).toBe('');
+        const registry = build_registry(REPO_ROOT);
+        expect(r.stdout).toBe(`Registry valid: ${registry.length} runtime-capable skills\n`);
     });
 });

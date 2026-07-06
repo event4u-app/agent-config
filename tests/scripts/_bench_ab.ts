@@ -1,9 +1,8 @@
-// Shared test helpers for the bench_ab_clone / bench_ab_integrity twins
-// (ADR-094 py2ts Phase 8 / Wave 8d). Committed as `_bench_ab.ts` so CI
-// (clean checkout) always sees it.
+// Shared tsx-only test helpers for the bench_ab_clone / bench_ab_integrity
+// suites. Committed as `_bench_ab.ts` so CI (clean checkout) always sees it.
 //
 // Both scripts hardcode the clones path `internal/bench/ab/clones/`, so the
-// golden-parity blocks must build into that tracked-but-gitignored location.
+// test blocks must build into that tracked-but-gitignored location.
 // These helpers snapshot whether the clones dir pre-existed and remove it
 // after each run, so the working tree is left exactly as found.
 
@@ -21,10 +20,6 @@ export const FIXTURE = join(REPO_ROOT, 'internal', 'bench', 'ab', 'fixture');
 // two test files must not manipulate it concurrently. Vitest runs files in
 // parallel by default; this directory-based lock serializes them.
 const LOCK_DIR = join(REPO_ROOT, 'internal', 'bench', 'ab', '.p2ts-clones.lock');
-
-export function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 
 function _sleep(ms: number): void {
     const end = Date.now() + ms;

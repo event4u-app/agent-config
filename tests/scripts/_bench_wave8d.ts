@@ -1,4 +1,4 @@
-// Shared helpers for the Phase 8 / Wave 8d bench differential suites
+// Shared tsx-only helpers for the Wave 8d bench test suites
 // (bench_run, bench_ab_run, bench_ab_tracka_run, bench_drift_check).
 //
 // Committed (not an untracked local helper) so a clean CI checkout sees it.
@@ -17,27 +17,10 @@ export const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-export function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
-export function hasPyYaml(): boolean {
-    return spawnSync('python3', ['-c', 'import yaml'], { encoding: 'utf8' }).status === 0;
-}
-
 export interface RunOut {
     stdout: string;
     stderr: string;
     status: number | null;
-}
-
-export function runPy(script: string, args: string[]): RunOut {
-    const r = spawnSync('python3', [path.join(SCRIPTS, script), ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        maxBuffer: 16 * 1024 * 1024,
-    });
-    return { stdout: r.stdout ?? '', stderr: r.stderr ?? '', status: r.status };
 }
 
 export function runTs(script: string, args: string[]): RunOut {

@@ -1,6 +1,7 @@
 // Tests for src/scripts/skill_tools/audit_persona_coverage.ts (py2ts Phase 8 /
-// Wave 8h). 1:1 port of tests/test_audit_persona_coverage.py plus a golden
-// parity layer (python3 vs tsx) over temp fixtures.
+// Wave 8h). 1:1 port of the retired pytest suite plus a CLI intent layer
+// (tsx only — the Python original is deleted) over temp fixtures.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -12,13 +13,22 @@ import {
     type PersonaRow,
 } from '../../src/scripts/skill_tools/audit_persona_coverage.js';
 import {
-    hasPython3,
+    REPO_ROOT,
+    TOOLS_DIR,
+    TSX_BIN,
     mkTmp,
     rmTmp,
-    runBoth,
     writePersona,
     writeSkillWithPersonas,
 } from './_skill_tools.js';
+
+function runTsx(module: string, args: string[]): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX_BIN, [path.join(TOOLS_DIR, `${module}.ts`), ...args], {
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+}
 
 let tmp: string;
 beforeEach(() => {
@@ -138,7 +148,7 @@ describe('audit_persona_coverage — pure helpers (1:1 pytest port)', () => {
     });
 });
 
-describe.runIf(hasPython3())('audit_persona_coverage — golden parity (python3 vs tsx)', () => {
+describe('audit_persona_coverage — CLI (tsx)', () => {
     function fixture(): { skills: string; personas: string } {
         const skills = path.join(tmp, 's');
         const personas = path.join(tmp, 'p');
@@ -151,39 +161,62 @@ describe.runIf(hasPython3())('audit_persona_coverage — golden parity (python3 
         return { skills, personas };
     }
 
-    it('human table is byte-identical', () => {
+    it('human table lists every persona with tier + status and a flagged summary', () => {
         const { skills, personas } = fixture();
-        const { py, ts } = runBoth('audit_persona_coverage', [
+        const r = runTsx('audit_persona_coverage', [
             '--skills-dir',
             skills,
             '--personas-dir',
             personas,
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toContain('persona');
+        expect(r.stdout).toContain('developer');
+        expect(r.stdout).toContain('under-cited');
+        expect(r.stdout).toContain('orphan');
+        expect(r.stdout).toContain('persona(s) flagged (under-cited or orphan).');
     });
 
-    it('--json is byte-identical', () => {
+    it('--json emits the full row set with tiers, thresholds, and statuses', () => {
         const { skills, personas } = fixture();
-        const { py, ts } = runBoth('audit_persona_coverage', [
+        const r = runTsx('audit_persona_coverage', [
             '--skills-dir',
             skills,
             '--personas-dir',
             personas,
             '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const rows = (JSON.parse(r.stdout) as { rows: PersonaRow[] }).rows;
+        const by = new Map(rows.map((row) => [row.persona, row]));
+        expect(by.get('developer')).toEqual({
+            persona: 'developer',
+            tier: 'core',
+            citations: 2,
+            threshold: 5,
+            status: 'under-cited',
+        });
+        expect(by.get('qa')).toEqual({
+            persona: 'qa',
+            tier: 'specialist',
+            citations: 2,
+            threshold: 3,
+            status: 'under-cited',
+        });
+        expect(by.get('lonely')!.citations).toBe(0);
+        expect(by.get('lonely')!.status).toBe('under-cited');
+        expect(by.get('typo-x')!.tier).toBe('unknown');
+        expect(by.get('typo-x')!.status).toBe('orphan');
     });
 
-    it('empty dirs are byte-identical', () => {
-        const { py, ts } = runBoth('audit_persona_coverage', [
+    it('empty dirs print the no-personas notice and exit 0', () => {
+        const r = runTsx('audit_persona_coverage', [
             '--skills-dir',
             path.join(tmp, 'nope-s'),
             '--personas-dir',
             path.join(tmp, 'nope-p'),
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout.trim()).toBe('(no personas found)');
     });
 });

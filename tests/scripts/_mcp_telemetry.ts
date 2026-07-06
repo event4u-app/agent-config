@@ -1,17 +1,15 @@
-// Shared golden-parity harness for the mcp_telemetry_* twins (py2ts).
+// Shared tsx-only test helpers for the mcp_telemetry_* suites.
 //
 // Committed helper (never an untracked import). The three telemetry CLIs
 // (store / query / health) all take `--consumer-root <dir>` and emit that
-// resolved root inside their output, so a py run and a tsx run cannot share
-// a root (the store would clobber the other's DB). Each runner gets its own
-// temp root; `normalizeRoot` rewrites the realpath'd root to a stable token
-// so the two outputs are byte-comparable.
+// resolved root inside their output. Each run gets its own temp root;
+// `normalizeRoot` rewrites the realpath'd root to a stable token so
+// outputs stay byte-comparable across runs.
 //
 // node:sqlite gating: store + query need Node's built-in SQLite module
 // (`node:sqlite`, stable from Node 22.5). `@types/node@20` ships no typings
-// and Node 20 has no module, so the sqlite-touching golden suites are
-// `skipIf(!hasNodeSqlite())` — mirroring the `hasPython3` skipIf precedent.
-// health needs no sqlite and always runs.
+// and Node 20 has no module, so the sqlite-touching suites are
+// `skipIf(!hasNodeSqlite())`. health needs no sqlite and always runs.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -33,11 +31,6 @@ export interface RunResult {
     stderr: string;
 }
 
-/** python3 with the mcp_server package importable on PYTHONPATH=src/. */
-export function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
 /** Whether Node's built-in `node:sqlite` module loads in this runtime. */
 export function hasNodeSqlite(): boolean {
     const probe = spawnSync(
@@ -48,19 +41,7 @@ export function hasNodeSqlite(): boolean {
     return probe.status === 0;
 }
 
-/** Run the Python original with `src/` on PYTHONPATH (for mcp_server.*). */
-export function runPy(script: string, args: string[]): RunResult {
-    const env = { ...process.env, PYTHONPATH: path.join(REPO_ROOT, 'src') };
-    const r = spawnSync('python3', [script, ...args], {
-        encoding: 'utf8',
-        cwd: REPO_ROOT,
-        env,
-        maxBuffer: 64 * 1024 * 1024,
-    });
-    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
-}
-
-/** Run the TS twin via tsx. */
+/** Run the TS script via tsx. */
 export function runTs(script: string, args: string[]): RunResult {
     const r = spawnSync(TSX_BIN, [script, ...args], {
         encoding: 'utf8',
@@ -83,8 +64,8 @@ export function writeSink(root: string, lines: string[]): void {
 }
 
 /**
- * Rewrite a runner's realpath'd consumer root to a stable token so a py
- * run (under one root) and a tsx run (under another) compare byte-for-byte.
+ * Rewrite a runner's realpath'd consumer root to a stable token so runs
+ * under different temp roots compare byte-for-byte.
  * Both `root` and its realpath are normalized (macOS `/var` → `/private/var`).
  */
 export function normalizeRoot(text: string, root: string): string {

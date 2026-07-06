@@ -1,19 +1,19 @@
 // Tests for src/scripts/cost_summary.ts (py2ts Phase 8 / Wave 8e).
 //
 // No Python pytest suite exists for cost_summary, so this is a focused
-// differential: a direct test of aggregate() shape + float rendering, plus
-// a golden-parity layer (python3 vs tsx) over temp-fixture JSONL inputs.
-// `generated_at` is a wall-clock timestamp (non-deterministic) — it is
-// stripped before byte-comparison.
+// suite: a direct test of aggregate() shape + float rendering, plus a CLI
+// layer (tsx subprocess) over temp-fixture JSONL inputs — converted from the
+// retired python3-vs-tsx golden parity block (the Python original was
+// deleted). `generated_at` is a wall-clock timestamp (non-deterministic) —
+// CLI assertions parse the JSON and check fields structurally instead of
+// byte-comparing it.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { aggregate } from '../../src/scripts/cost_summary.js';
-import { hasPython3, runPy, runTs } from './_wave8e.js';
-
-const py3 = hasPython3();
+import { runTs } from './_wave8e.js';
 
 let tmpDir: string;
 beforeEach(() => {
@@ -98,32 +98,46 @@ describe('cost_summary — aggregate() differential', () => {
     });
 });
 
-describe.skipIf(!py3)('cost_summary — golden parity (python3 vs tsx)', () => {
-    // generated_at is wall-clock — strip the line before comparison.
-    function stripGeneratedAt(s: string): string {
-        return s
-            .split('\n')
-            .filter((line) => !line.trimStart().startsWith('"generated_at"'))
-            .join('\n');
+describe('cost_summary — CLI on fixtures (tsx)', () => {
+    interface Summary {
+        schema_version: string;
+        generated_at: string;
+        totals: Record<string, unknown>;
+        by_session: Array<Record<string, unknown>>;
+        by_conversation: Array<Record<string, unknown>>;
+        by_model: Array<Record<string, unknown>>;
     }
 
-    function bothEqual(input: string): void {
-        const p = runPy('cost_summary', ['--input', input]);
+    function runSummary(input: string): { doc: Summary; stdout: string } {
         const t = runTs('cost_summary', ['--input', input]);
-        expect(stripGeneratedAt(t.stdout)).toBe(stripGeneratedAt(p.stdout));
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.status).toBe(p.status);
+        expect(t.status).toBe(0);
+        expect(t.stderr).toBe('');
+        return { doc: JSON.parse(t.stdout) as Summary, stdout: t.stdout };
     }
 
-    it('populated JSONL → identical (generated_at excluded)', () => {
-        bothEqual(writeJsonl(SAMPLE_ROWS));
+    it('populated JSONL → schema, totals, and grouping through the CLI', () => {
+        const { doc } = runSummary(writeJsonl(SAMPLE_ROWS));
+        expect(doc.schema_version).toBe('cost-summary/v1');
+        // generated_at is wall-clock — assert shape only, never the value.
+        expect(doc.generated_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+        expect(doc.totals['sessions']).toBe(3);
+        expect(doc.totals['total_cost_usd']).toBe(4.0);
+        expect(doc.totals['input_tokens']).toBe(150);
+        expect(doc.totals['output_tokens']).toBe(65);
+        expect(doc.by_session.map((s) => s['key'])).toEqual(['s1', 's2']);
+        expect(doc.by_conversation.map((c) => c['key'])).toEqual(['c1', 'c2', 'unknown']);
+        expect(doc.by_model.map((m) => m['model'])).toEqual(['opus', 'sonnet']);
     });
 
-    it('missing input file → identical empty summary', () => {
-        bothEqual(path.join(tmpDir, 'does-not-exist.jsonl'));
+    it('missing input file → empty summary, exit 0', () => {
+        const { doc } = runSummary(path.join(tmpDir, 'does-not-exist.jsonl'));
+        expect(doc.totals['sessions']).toBe(0);
+        expect(doc.by_session).toEqual([]);
+        expect(doc.by_conversation).toEqual([]);
+        expect(doc.by_model).toEqual([]);
     });
 
-    it('JSONL with blank lines, comments, and a bad line → identical', () => {
+    it('JSONL with blank lines, comments, and a bad line → bad rows skipped', () => {
         const p = path.join(tmpDir, 'messy.jsonl');
         fs.writeFileSync(
             p,
@@ -137,16 +151,19 @@ describe.skipIf(!py3)('cost_summary — golden parity (python3 vs tsx)', () => {
             ].join('\n') + '\n',
             'utf-8',
         );
-        bothEqual(p);
+        const { doc } = runSummary(p);
+        // only the two valid rows count
+        expect(doc.totals['sessions']).toBe(2);
+        expect(doc.by_session.map((s) => s['key'])).toEqual(['x', 'y']);
+        expect(doc.totals['input_tokens']).toBe(1);
+        expect(doc.totals['output_tokens']).toBe(2);
     });
 
-    it('integer-valued cost renders with trailing .0 (PyFloat parity)', () => {
+    it('integer-valued cost renders with trailing .0 (PyFloat rendering)', () => {
         const p = writeJsonl([
             { sessionId: 's', model: 'm', total_cost_usd: 3, input_tokens: 0, output_tokens: 0 },
         ]);
-        const py = runPy('cost_summary', ['--input', p]);
-        const ts = runTs('cost_summary', ['--input', p]);
-        expect(ts.stdout).toContain('"total_cost_usd": 3.0');
-        expect(stripGeneratedAt(ts.stdout)).toBe(stripGeneratedAt(py.stdout));
+        const { stdout } = runSummary(p);
+        expect(stdout).toContain('"total_cost_usd": 3.0');
     });
 });

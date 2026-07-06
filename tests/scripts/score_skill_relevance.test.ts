@@ -1,6 +1,7 @@
 // Tests for src/scripts/skill_tools/score_skill_relevance.ts (py2ts Phase 8 /
-// Wave 8h). 1:1 port of tests/test_score_skill_relevance.py plus a golden
-// parity layer (python3 vs tsx) over temp fixtures.
+// Wave 8h). 1:1 port of the retired pytest suite plus a CLI intent layer
+// (tsx only — the Python original is deleted) over temp fixtures.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,7 +11,15 @@ import {
     _tokenize,
     rank,
 } from '../../src/scripts/skill_tools/score_skill_relevance.js';
-import { hasPython3, mkTmp, rmTmp, runBoth, writeSkill } from './_skill_tools.js';
+import { REPO_ROOT, TOOLS_DIR, TSX_BIN, mkTmp, rmTmp, writeSkill } from './_skill_tools.js';
+
+function runTsx(module: string, args: string[]): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX_BIN, [path.join(TOOLS_DIR, `${module}.ts`), ...args], {
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+}
 
 let tmp: string;
 beforeEach(() => {
@@ -119,7 +128,7 @@ describe('score_skill_relevance — pure helpers (1:1 pytest port)', () => {
     });
 });
 
-describe.runIf(hasPython3())('score_skill_relevance — golden parity (python3 vs tsx)', () => {
+describe('score_skill_relevance — CLI (tsx)', () => {
     function fixture(dir: string): void {
         writeSkill(
             dir,
@@ -136,43 +145,60 @@ describe.runIf(hasPython3())('score_skill_relevance — golden parity (python3 v
         );
     }
 
-    it('human table is byte-identical', () => {
+    interface RankedJson {
+        task: string;
+        ranked: Array<{ name: string; score: number; personas: string[] }>;
+    }
+
+    it('human table ranks matching skills, best first, zero-score dropped', () => {
         const sk = path.join(tmp, 'skills');
         fixture(sk);
-        const { py, ts } = runBoth('score_skill_relevance', [
+        const r = runTsx('score_skill_relevance', [
             '--task',
             'build a livewire component reactive state form',
             '--skills-dir',
             sk,
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const lines = r.stdout.trimEnd().split('\n');
+        expect(lines.length).toBe(2);
+        expect(lines[0]).toContain('livewire-architect');
+        expect(lines[0]).toContain('frontend-engineer');
+        expect(lines[1]).toContain('form-handler');
+        expect(r.stdout).not.toContain('terraform');
     });
 
-    it('--json is byte-identical', () => {
+    it('--json emits the ranked rows with scores + personas', () => {
         const sk = path.join(tmp, 'skills');
         fixture(sk);
-        const { py, ts } = runBoth('score_skill_relevance', [
+        const r = runTsx('score_skill_relevance', [
             '--task',
             'build a livewire component reactive state form',
             '--skills-dir',
             sk,
             '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const out = JSON.parse(r.stdout) as RankedJson;
+        expect(out.task).toBe('build a livewire component reactive state form');
+        expect(out.ranked.map((row) => row.name)).toEqual(['livewire-architect', 'form-handler']);
+        expect(out.ranked[0]!.score).toBeGreaterThan(out.ranked[1]!.score);
+        expect(out.ranked[0]!.personas).toEqual(['frontend-engineer']);
     });
 
-    it('--sample --json is byte-identical', () => {
-        const { py, ts } = runBoth('score_skill_relevance', ['--sample', '--json']);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+    it('--sample --json runs the built-in sample task and emits valid JSON', () => {
+        const r = runTsx('score_skill_relevance', ['--sample', '--json']);
+        expect(r.status, r.stderr).toBe(0);
+        const out = JSON.parse(r.stdout) as RankedJson;
+        expect(typeof out.task).toBe('string');
+        expect(out.task.length).toBeGreaterThan(0);
+        expect(Array.isArray(out.ranked)).toBe(true);
     });
 
-    it('--top truncation is byte-identical', () => {
+    it('--top truncates the table to n rows', () => {
         const sk = path.join(tmp, 'skills');
         fixture(sk);
-        const { py, ts } = runBoth('score_skill_relevance', [
+        const r = runTsx('score_skill_relevance', [
             '--task',
             'livewire component form terraform',
             '--skills-dir',
@@ -180,23 +206,25 @@ describe.runIf(hasPython3())('score_skill_relevance — golden parity (python3 v
             '--top',
             '1',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const lines = r.stdout.trimEnd().split('\n');
+        expect(lines.length).toBe(1);
+        expect(lines[0]).toContain('livewire-architect');
     });
 
-    it('missing --task exits 2 with the same error line', () => {
-        const { py, ts } = runBoth('score_skill_relevance', []);
-        expect(ts.status).toBe(2);
-        expect(py.status).toBe(2);
-        // argparse prints a usage preamble before the error line; compare only
-        // the stable trailing `PROG: error: …` line (contract: prose excluded).
-        expect(ts.stderr.trimEnd().split('\n').pop()).toBe(py.stderr.trimEnd().split('\n').pop());
+    it('missing --task exits 2 with the argparse-style error line', () => {
+        const r = runTsx('score_skill_relevance', []);
+        expect(r.status).toBe(2);
+        expect(r.stderr.trimEnd().split('\n').pop()).toBe(
+            'score_skill_relevance.py: error: --task is required (or pass --sample)',
+        );
     });
 
-    it('invalid --top exits 2 with the same error line', () => {
-        const { py, ts } = runBoth('score_skill_relevance', ['--task', 'x', '--top', 'zz']);
-        expect(ts.status).toBe(2);
-        expect(py.status).toBe(2);
-        expect(ts.stderr.trimEnd().split('\n').pop()).toBe(py.stderr.trimEnd().split('\n').pop());
+    it('invalid --top exits 2 with the argparse-style error line', () => {
+        const r = runTsx('score_skill_relevance', ['--task', 'x', '--top', 'zz']);
+        expect(r.status).toBe(2);
+        expect(r.stderr.trimEnd().split('\n').pop()).toBe(
+            "score_skill_relevance.py: error: argument --top: invalid int value: 'zz'",
+        );
     });
 });

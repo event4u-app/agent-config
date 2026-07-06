@@ -1,6 +1,7 @@
 // Tests for src/scripts/skill_tools/suggest_skill_for_task.ts (py2ts Phase 8 /
-// Wave 8h). 1:1 port of tests/test_suggest_skill_for_task.py plus a golden
-// parity layer (python3 vs tsx) over temp fixtures.
+// Wave 8h). 1:1 port of the retired pytest suite plus a CLI intent layer
+// (tsx only — the Python original is deleted) over temp fixtures.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,13 +11,22 @@ import {
     suggest,
 } from '../../src/scripts/skill_tools/suggest_skill_for_task.js';
 import {
-    hasPython3,
+    REPO_ROOT,
+    TOOLS_DIR,
+    TSX_BIN,
     mkTmp,
     rmTmp,
-    runBoth,
     writePersona,
     writeSkillFull,
 } from './_skill_tools.js';
+
+function runTsx(module: string, args: string[]): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX_BIN, [path.join(TOOLS_DIR, `${module}.ts`), ...args], {
+        encoding: 'utf8',
+        cwd: REPO_ROOT,
+    });
+    return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+}
 
 let tmp: string;
 beforeEach(() => {
@@ -114,7 +124,7 @@ describe('suggest_skill_for_task — pure helpers (1:1 pytest port)', () => {
     });
 });
 
-describe.runIf(hasPython3())('suggest_skill_for_task — golden parity (python3 vs tsx)', () => {
+describe('suggest_skill_for_task — CLI (tsx)', () => {
     function fixture(): { skills: string; personas: string } {
         const skills = path.join(tmp, 's');
         const personas = path.join(tmp, 'p');
@@ -126,9 +136,14 @@ describe.runIf(hasPython3())('suggest_skill_for_task — golden parity (python3 
         return { skills, personas };
     }
 
-    it('human output is byte-identical', () => {
+    interface SuggestJson {
+        task: string;
+        suggestions: Array<{ skill: string; score: number; personas: string[]; why: string }>;
+    }
+
+    it('human output ranks suggestions with score + persona justification', () => {
         const { skills, personas } = fixture();
-        const { py, ts } = runBoth('suggest_skill_for_task', [
+        const r = runTsx('suggest_skill_for_task', [
             '--task',
             'shape a livewire component reactive state',
             '--skills-dir',
@@ -136,13 +151,16 @@ describe.runIf(hasPython3())('suggest_skill_for_task — golden parity (python3 
             '--personas-dir',
             personas,
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toContain('1. livewire-architect');
+        expect(r.stdout).toContain('/100)');
+        expect(r.stdout).toContain('personas: frontend-engineer');
+        expect(r.stdout).toContain('why:');
     });
 
-    it('--json is byte-identical', () => {
+    it('--json emits ranked suggestions with score/personas/why', () => {
         const { skills, personas } = fixture();
-        const { py, ts } = runBoth('suggest_skill_for_task', [
+        const r = runTsx('suggest_skill_for_task', [
             '--task',
             'shape a livewire component reactive state',
             '--skills-dir',
@@ -151,13 +169,19 @@ describe.runIf(hasPython3())('suggest_skill_for_task — golden parity (python3 
             personas,
             '--json',
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        const out = JSON.parse(r.stdout) as SuggestJson;
+        expect(out.task).toBe('shape a livewire component reactive state');
+        expect(out.suggestions.length).toBeGreaterThan(0);
+        expect(out.suggestions[0]!.skill).toBe('livewire-architect');
+        expect(out.suggestions[0]!.score).toBeGreaterThan(0);
+        expect(out.suggestions[0]!.personas).toEqual(['frontend-engineer']);
+        expect(out.suggestions[0]!.why).toContain('frontend-engineer (under-cited)');
     });
 
-    it('no-match human output is byte-identical', () => {
+    it('no-match prints the empty notice and exits 0', () => {
         const { skills, personas } = fixture();
-        const { py, ts } = runBoth('suggest_skill_for_task', [
+        const r = runTsx('suggest_skill_for_task', [
             '--task',
             'zzz totally unrelated nonsense',
             '--skills-dir',
@@ -165,20 +189,24 @@ describe.runIf(hasPython3())('suggest_skill_for_task — golden parity (python3 
             '--personas-dir',
             personas,
         ]);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout.trim()).toBe('(no skill suggestions for this task)');
     });
 
-    it('--sample --json is byte-identical', () => {
-        const { py, ts } = runBoth('suggest_skill_for_task', ['--sample', '--json']);
-        expect(ts.status).toBe(py.status);
-        expect(ts.stdout).toBe(py.stdout);
+    it('--sample --json runs the built-in sample task and emits valid JSON', () => {
+        const r = runTsx('suggest_skill_for_task', ['--sample', '--json']);
+        expect(r.status, r.stderr).toBe(0);
+        const out = JSON.parse(r.stdout) as SuggestJson;
+        expect(typeof out.task).toBe('string');
+        expect(out.task.length).toBeGreaterThan(0);
+        expect(Array.isArray(out.suggestions)).toBe(true);
     });
 
-    it('missing --task exits 2 with the same error line', () => {
-        const { py, ts } = runBoth('suggest_skill_for_task', []);
-        expect(ts.status).toBe(2);
-        expect(py.status).toBe(2);
-        expect(ts.stderr.trimEnd().split('\n').pop()).toBe(py.stderr.trimEnd().split('\n').pop());
+    it('missing --task exits 2 with the argparse-style error line', () => {
+        const r = runTsx('suggest_skill_for_task', []);
+        expect(r.status).toBe(2);
+        expect(r.stderr.trimEnd().split('\n').pop()).toBe(
+            'suggest_skill_for_task.py: error: --task is required (or pass --sample)',
+        );
     });
 });

@@ -1,16 +1,15 @@
 // Tests for src/scripts/lint_bench_ab.ts (py2ts Phase 4 / Wave 4b).
 //
-// No tests/test_lint_bench_ab.py exists (the bench_ab *_lib* modules have
-// their own suites at tests/lib/bench_ab_*.test.ts). This is a focused
-// differential suite over the linter's exported constants + parse_args plus a
-// golden-parity layer running python3 vs tsx on the REAL REPO bench corpora
-// (the linter's real CI invocation), skipped without python3.
+// No tests/test_lint_bench_ab.py existed (the bench_ab *_lib* modules have
+// their own suites at tests/lib/bench_ab_*.test.ts). This is a focused suite
+// over the linter's exported constants + parse_args plus a python-free CLI
+// layer running the tsx twin on the REAL REPO bench corpora — the linter's
+// real CI invocation.
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import * as ba from '../../src/scripts/lint_bench_ab.js';
-
-
+import { runTs } from './_bench_wave8d.js';
 
 describe('lint_bench_ab — exported contract', () => {
     it('carries the required doc sections', () => {
@@ -30,5 +29,16 @@ describe('lint_bench_ab — exported contract', () => {
     });
 });
 
-// --- Golden parity on the REAL REPO ----------------------------------------
+describe('lint_bench_ab — CLI on the real repo (tsx)', () => {
+    it('lints the committed bench corpora green (the real CI invocation)', () => {
+        const t = runTs('lint_bench_ab.ts', []);
+        expect(t.status, t.stderr).toBe(0);
+        expect(t.stdout.trim()).toBe('lint_bench_ab: OK');
+    });
 
+    it('--quiet suppresses the OK line', () => {
+        const t = runTs('lint_bench_ab.ts', ['--quiet']);
+        expect(t.status, t.stderr).toBe(0);
+        expect(t.stdout.trim()).toBe('');
+    });
+});
