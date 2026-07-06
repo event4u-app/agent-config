@@ -71,3 +71,14 @@ regardless of `personal.autonomy`:
 Push, merge, rebase, branch creation, PR operations, and tags
 remain permission-gated by
 [`scope-control § git-operations`](../../rules/scope-control.md#git-operations--permission-gated).
+
+## End-of-turn checkpoint
+
+Before ending a turn, check the last paragraph of the reply. If it is a
+plan, an open question the context already answers, or a promise of
+unexecuted work ("I'll…", "next I will…"), do that work now with tool
+calls instead of ending the turn — this is what "the turn isn't done
+until it's done" means in practice. This checkpoint operates inside the
+existing bounds: the N=3 validation-loop budget and the Hard Floor
+still apply unchanged; the checkpoint closes out work already in scope,
+it never licenses continuing past either limit.

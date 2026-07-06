@@ -84,6 +84,25 @@ used once — inline it.
   inference makes this redundant in PHP 8+, TS, Python 3.10+, Go,
   Rust, etc. Annotate the parameter or return type instead.
 
+## Comment discipline — state a constraint, not a narration
+
+A code comment earns its place only by stating a constraint the code
+itself can't show — a non-obvious invariant, a workaround for a specific
+bug, a hidden dependency. It never narrates:
+
+- **Provenance** — "added for the X feature", "per ticket #123". That
+  belongs in the commit message or PR description, not the code; it rots
+  the moment the feature or ticket is forgotten.
+- **What the next line does** — well-named identifiers already say it.
+  A comment repeating the code is noise the reader skips past.
+- **Why the change is correct** — that's a message to the reviewer, not
+  to the next person reading the file after it's merged.
+
+Test: would removing the comment leave a future reader confused about a
+non-obvious constraint? If yes, keep it — tightened to the constraint
+alone. If the comment only restates what identifiers already convey, or
+explains the change's history rather than the code's behavior, cut it.
+
 ## See also
 
 - Language-specific anchors that link to this guideline:

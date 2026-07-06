@@ -122,6 +122,15 @@ correction pattern.
 Acknowledge once, in the user's language, switch behavior, no
 excuses (mirrors `language-and-tone` § slip handling).
 
+### Bullet floor
+
+Companion to `direct-answers` § Iron Law 3. Multi-step content earns
+bullets; each bullet is a complete 1–2-sentence statement, never a
+fragment masquerading as a list item ("Faster." / "Better UX." with no
+subject or verb). A decline or refusal is never rendered as a bulleted
+list of reasons — declines are short prose, one or two sentences, because
+a bulleted refusal reads as a checklist to argue against rather than a
+direct answer.
 
 ## No Cheap Questions — Iron Law 3 detail (paternalistic state options)
 

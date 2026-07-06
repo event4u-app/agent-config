@@ -55,6 +55,17 @@ A roadmap or task authorizes the *edit*; only the user-this-turn
 authorizes the *commit* (row 6 of the rule's trigger table). Surface
 the diff (paths + counts), get confirmation, then commit.
 
+## Inspect before delete or overwrite
+
+Before running any delete or overwrite — even one already cleared by
+the checks above — look at the target first. If its actual contents
+contradict how it was described (a "generated" file that turns out to
+carry hand-edits, a "stale" branch with commits you don't recognize, an
+"empty" directory that isn't), surface the discrepancy and stop instead
+of proceeding on the original description. The same holds for anything
+you did not create yourself this session: verify before assuming it is
+safe to remove or replace.
+
 ## Failure modes
 
 - Treating a standing autonomy directive as cover for a Hard-Floor
