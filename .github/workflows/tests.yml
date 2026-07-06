@@ -212,11 +212,18 @@ jobs:
         # subprocess suites spawn `./agent-config` → dist/cli/agent-config.js.
         run: npm run build --silent
 
-      - name: Vitest (shard ${{ matrix.shard }}/4, golden excluded)
+      - name: Vitest (shard ${{ matrix.shard }}/4, heavy suites excluded)
         # `--` forwards flags to vitest; each runner executes a deterministic
-        # quarter of the file set. `--exclude tests/golden/**` hands the heavy
-        # golden suite to the dedicated `golden-tests` job below.
-        run: npm run test:ts --silent -- --shard=${{ matrix.shard }}/4 --exclude 'tests/golden/**'
+        # quarter of the file set. The subprocess-heavy clusters (golden +
+        # workspace) hash-clump into one over-budget shard regardless of shard
+        # count, so they are excluded here and run in the dedicated
+        # `heavy-tests` job → each node-tests shard stays light and balanced.
+        run: >-
+          npm run test:ts --silent --
+          --shard=${{ matrix.shard }}/4
+          --exclude 'tests/golden/**'
+          --exclude 'tests/server/workspace.test.ts'
+          --exclude 'tests/scripts/cli/python/**'
 
   static-checks:
     # Whole-tree gates that have nothing to shard: ESLint, tsc --noEmit, and
@@ -251,14 +258,15 @@ jobs:
         run: node src/scripts/prepack-check.mjs
 
   golden-tests:
-    # The golden-transcript replay suite is the single heaviest test cluster —
-    # 29 scenarios that each spawn `./agent-config` (dist/cli) per cycle. It is
-    # split across 6 files (tests/golden/golden_replay*.test.ts) so vitest's
-    # fork pool runs them concurrently on a DEDICATED runner (no contention
-    # with the rest of the suite → ~25 s local, well under 2 min on CI). Kept
-    # out of the sharded `node-tests` matrix because vitest shards by file
-    # count, not duration, and would otherwise clump the golden files into one
-    # over-budget bucket (the observed 167 s shard-2 failure mode).
+    # Golden-transcript replay — 29 scenarios × `./agent-config` (dist/cli)
+    # spawn per cycle, split across 6 files (tests/golden/golden_replay*.test.ts)
+    # so vitest's fork pool runs them concurrently on a DEDICATED runner
+    # (~25 s local). Kept out of the sharded `node-tests` matrix because vitest
+    # shards by file COUNT not duration and would clump the golden files into
+    # one over-budget bucket (the observed 167 s shard-2 failure mode).
+    # Separate from `workspace-tests` on purpose: running both subprocess-heavy
+    # clusters in one job oversubscribed the fork pool and produced flaky
+    # spawn-timeout failures — each cluster gets its own runner.
     name: Golden Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     if: ${{ !startsWith(github.head_ref, 'release/') }}
@@ -286,6 +294,43 @@ jobs:
 
       - name: Vitest (tests/golden — fork-parallel)
         run: npm run test:ts --silent -- tests/golden
+
+  workspace-tests:
+    # The workspace cluster: tests/server/workspace.test.ts + the cli/python
+    # workspace suite (each spawns `tsx src/cli/python/*.ts` per assertion).
+    # These `workspace*`-named files hash-clump into one node-tests shard
+    # regardless of shard count, so they run on their own DEDICATED runner
+    # (~12 s local, ~40 s CI). Separate from `golden-tests` to avoid
+    # over-subscribing the fork pool (see the flaky-spawn note there).
+    name: Workspace Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
+
+      - name: Build discovery manifest (gitignored; cli-e2e reads it)
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
+
+      - name: Vitest (workspace suite — fork-parallel)
+        run: >-
+          npm run test:ts --silent --
+          tests/server/workspace.test.ts
+          tests/scripts/cli/python
 
   # NOTE: windows-lockfile-export moved to
   # .github/workflows/windows-lockfile-export.yml in
