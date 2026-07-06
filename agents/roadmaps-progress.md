@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**120 / 191 steps done · 63%**
+**120 / 166 steps done · 72%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+█████████████████████████████░░░░░░░░░░░   72%
 ```
 
 ## Open roadmaps
@@ -17,11 +17,10 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-agents-dir-and-gitignore-hygiene.md](roadmaps/road-to-agents-dir-and-gitignore-hygiene.md) | 9 | 37 | 1 | 35 | 0 | 1 | ██████████ 97% |
-| 2 | [road-to-design-exploration-skills.md](roadmaps/road-to-design-exploration-skills.md) | 6 | 25 | 25 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 4 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
-| 6 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
+| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
@@ -42,19 +41,6 @@
 | 7 | Janitor and retention | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 8 | Session-leftover discipline (evidence/report regen) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 9 | Docs and rollout | ✅ done | 0 | 3 | 0 | 0 | 100% |
-
-### [road-to-design-exploration-skills.md](roadmaps/road-to-design-exploration-skills.md)
-
-**Road to design exploration skills** — 0 / 25 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Corpus nuggets & catalog entry | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Detector rule CP5 (emoji-decoration) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Skill: `design-variations` (absorbs tweakable presentation) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Skill: `wireframe` (lo-fi exploration) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Skill: `html-deck` + deck-shell starter | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Wiring, governance, projection sync | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 
