@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Review-lens routing schema
 
 Defines what a review **lens** is, the metadata it carries, and which review

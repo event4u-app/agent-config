@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Governance Enforcement at Projection Time — design spec
 
 > **Status: Measured → honest-null (2026-06-25). NOT shipped.** The length-controlled
