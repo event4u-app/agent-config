@@ -174,12 +174,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Vitest is core-saturated on a single runner (golden-replay + the
-        # subprocess suites spawn ./agent-config / tsx heavily), so the wall
-        # clock is total-CPU-work ÷ cores. `--shard=N/4` fans the file set
-        # across 4 parallel runners per OS → ~4× the cores → the slowest
-        # shard lands well under 2 min. ESLint / typecheck / prepack are
-        # whole-tree gates with nothing to shard → shard 1 only.
+        # Vitest is core-saturated on a single runner (the subprocess suites
+        # spawn ./agent-config / tsx heavily), so the wall clock is
+        # total-CPU-work ÷ cores. `--shard=N/4` fans the file set across 4
+        # parallel runners per OS. The golden-replay suite — the single
+        # heaviest cluster — is pulled into its OWN job (`golden-tests`) and
+        # EXCLUDED here, because vitest shards by file COUNT not duration and
+        # would otherwise clump the golden files into one > 2 min bucket.
+        # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
         os: [ubuntu-latest, macos-latest]
         shard: [1, 2, 3, 4]
     steps:
@@ -218,14 +220,52 @@ jobs:
         # spawn `./agent-config` → dist/cli/agent-config.js.
         run: npm run build --silent
 
-      - name: Vitest (shard ${{ matrix.shard }}/4)
-        # `--` forwards the shard flag to vitest; each runner executes a
-        # deterministic quarter of the file set.
-        run: npm run test:ts --silent -- --shard=${{ matrix.shard }}/4
+      - name: Vitest (shard ${{ matrix.shard }}/4, golden excluded)
+        # `--` forwards flags to vitest; each runner executes a deterministic
+        # quarter of the file set. `--exclude tests/golden/**` hands the heavy
+        # golden suite to the dedicated `golden-tests` job below.
+        run: npm run test:ts --silent -- --shard=${{ matrix.shard }}/4 --exclude 'tests/golden/**'
 
       - name: prepack-check (compiled bin shape gate)
         if: ${{ matrix.shard == 1 }}
         run: node src/scripts/prepack-check.mjs
+
+  golden-tests:
+    # The golden-transcript replay suite is the single heaviest test cluster —
+    # 29 scenarios that each spawn `./agent-config` (dist/cli) per cycle. It is
+    # split across 6 files (tests/golden/golden_replay*.test.ts) so vitest's
+    # fork pool runs them concurrently on a DEDICATED runner (no contention
+    # with the rest of the suite → ~25 s local, well under 2 min on CI). Kept
+    # out of the sharded `node-tests` matrix because vitest shards by file
+    # count, not duration, and would otherwise clump the golden files into one
+    # over-budget bucket (the observed 167 s shard-2 failure mode).
+    name: Golden Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci
+
+      - name: Build discovery manifest (gitignored; cli-e2e reads it)
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        # The golden suite spawns `./agent-config` → dist/cli/agent-config.js.
+        run: npm run build --silent
+
+      - name: Vitest (tests/golden — fork-parallel)
+        run: npm run test:ts --silent -- tests/golden
 
   # NOTE: windows-lockfile-export moved to
   # .github/workflows/windows-lockfile-export.yml in
