@@ -1,0 +1,67 @@
+#!/usr/bin/env tsx
+/**
+ * Phase 5.2 — Detect files that are tracked by git but now ignored
+ * (the class of drift where an ignore pattern was added AFTER the file
+ * was committed, so the file stays in the index even though git would
+ * no longer add it fresh).
+ *
+ * Reports the exact `git rm --cached <path>` commands to fix the issue.
+ * NEVER executes them automatically — git ops are user-owned per the
+ * git-ops permission gates (scope-control rule).
+ *
+ * Exit codes:
+ *   0 — no tracked-but-ignored files found
+ *   1 — one or more tracked-but-ignored files found
+ *   2 — git command failed or not in a git repo
+ */
+import { execSync } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import * as path from 'node:path';
+
+const _HERE = fileURLToPath(import.meta.url);
+
+function main(argv?: readonly string[]): number {
+    const args = argv ?? process.argv.slice(2);
+    const quiet = args.includes('--quiet');
+
+    let output: string;
+    try {
+        output = execSync('git ls-files -ci --exclude-standard', {
+            encoding: 'utf-8',
+            cwd: process.cwd(),
+        }).trim();
+    } catch {
+        process.stdout.write(`❌  git ls-files failed — not in a git repo or git not available\n`);
+        return 2;
+    }
+
+    if (!output) {
+        if (!quiet) {
+            process.stdout.write(`✅  No tracked-but-ignored files found.\n`);
+        }
+        return 0;
+    }
+
+    const files = output.split('\n').filter(Boolean);
+    process.stdout.write(
+        `❌  ${files.length} file${files.length === 1 ? '' : 's'} are tracked by git but now ignored:\n\n`,
+    );
+    for (const f of files) {
+        process.stdout.write(`  ${f}\n`);
+    }
+    process.stdout.write(
+        `\nTo fix, run:\n\n  git rm --cached \\\n    ` +
+            files.join(' \\\n    ') +
+            `\n\nThen commit the result. The files stay on disk (only removed from the index).\n`,
+    );
+    return 1;
+}
+
+const _isCliEntry =
+    process.argv[1] !== undefined &&
+    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (_isCliEntry || process.argv[1] === _HERE) {
+    process.exit(main());
+}
+
+export { main };

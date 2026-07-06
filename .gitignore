@@ -67,10 +67,6 @@ __pycache__/
 .agent-settings.local.yml
 .agent-settings
 .agent-settings.backup.key-value
-# Exception: the bundled stub for `agent-config init --minimal` is a
-# real package asset, not a user-local settings file (Step 7 Phase 2).
-!templates/minimal/.agent-settings.yml
-
 # Personal user-identity file. Lives at agents/settings/.agent-user.yml
 # post-migration; legacy .agent-user.md at agents/ or CWD is read for
 # auto-migration and deleted on successful wizard finish.
@@ -123,6 +119,7 @@ __pycache__/
 /.claude/personas/
 /.claude/user-types/
 /.claude/skills/
+/.claude/agents/
 
 # Trigger-eval run outputs (produced by `scripts/skill_trigger_eval.py`;
 # triggers.json is tracked, last-run.json is per-run output)
@@ -262,6 +259,10 @@ agents/sessions/
 agents/runtime/council/responses/
 agents/runtime/council/sessions/
 # <<< event4u/agent-config (managed) <<<
+# Exception: the bundled stub for `agent-config init --minimal` is a
+# real package asset, not a user-local settings file. Must appear after
+# ALL .agent-settings.yml ignore patterns (incl. the managed block above).
+!/src/templates/minimal/.agent-settings.yml
 
 # B4 docs site (Starlight) build artifacts
 /site/dist

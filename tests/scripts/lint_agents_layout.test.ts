@@ -89,10 +89,49 @@ describe('lint_agents_layout — ported pytest suite (helpers)', () => {
         expect(mod.ALLOWED_FLAT_FILES.has('.event4u-bridge.yml')).toBe(true);
     });
 
-    it('test_consumer_expected_entries_minimal_set', () => {
+    it('test_consumer_expected_entries_contract_set', () => {
+        // Full consumer-scope allowlist per docs/contracts/agents-layout.md
+        // (road-to-agents-dir-and-gitignore-hygiene Phase 2.4).
         expect(new Set(mod.CONSUMER_EXPECTED_ENTRIES)).toEqual(
-            new Set(['overrides', '.event4u-bridge.yml', '.gitkeep']),
+            new Set([
+                'overrides',
+                '.event4u-bridge.yml',
+                '.gitkeep',
+                'knowledge',
+                'memory',
+                'roadmaps',
+                'tmp',
+                'tmp.old',
+                'index.md',
+                'roadmaps-progress.md',
+                '.agent-tools.yml',
+                '.maintainer-workspace.md',
+            ]),
         );
+    });
+
+    it('test_source_repo_unknown_dir_is_violation', () => {
+        // Phase 2.3 — unknown top-level dirs are errors in source-repo mode.
+        const agents = path.join(tmp, 'agents');
+        fs.mkdirSync(path.join(agents, 'random-new-dir'), { recursive: true });
+        const violations = mod.find_violations(agents, true);
+        expect(violations.length).toBe(1);
+        expect(violations[0]).toContain('random-new-dir');
+        expect(violations[0]).toContain('ALLOWED_SOURCE_DIRS');
+    });
+
+    it('test_source_repo_known_dir_is_clean', () => {
+        const agents = path.join(tmp, 'agents');
+        fs.mkdirSync(path.join(agents, 'evidence'), { recursive: true });
+        fs.mkdirSync(path.join(agents, 'tmp.old'), { recursive: true });
+        expect(mod.find_violations(agents, true)).toEqual([]);
+    });
+
+    it('test_consumer_mode_unknown_dir_not_error', () => {
+        // In consumer mode (sourceRepo=false), unknown dirs stay warnings-only.
+        const agents = path.join(tmp, 'agents');
+        fs.mkdirSync(path.join(agents, 'random-new-dir'), { recursive: true });
+        expect(mod.find_violations(agents, false)).toEqual([]);
     });
 
     it('test_is_source_repo_detects_root_uncondensed', () => {

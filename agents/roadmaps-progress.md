@@ -2,28 +2,45 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
 
 ## Overall
 
-**85 / 130 steps done · 65%**
+**120 / 166 steps done · 72%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+█████████████████████████████░░░░░░░░░░░   72%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
-| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
-| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
+| 1 | [road-to-agents-dir-and-gitignore-hygiene.md](roadmaps/road-to-agents-dir-and-gitignore-hygiene.md) | 9 | 37 | 1 | 35 | 0 | 1 | ██████████ 97% |
+| 2 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
+| 5 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 11 | 56 | 0 | 0 | ████████░░ 84% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-agents-dir-and-gitignore-hygiene.md](roadmaps/road-to-agents-dir-and-gitignore-hygiene.md)
+
+**Road to agents/-dir and gitignore hygiene** — 35 / 36 done (97%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Immediate triage of the current dirty tree | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | agents/ directory contract (the taxonomy) | ✅ done | 0 | 5 | 0 | 1 | 100% |
+| 3 | Single ignore-classification manifest | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Generator-output coverage lint | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | Consumer fix command: `gitignore` repair in one pass | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 6 | User inbox workflow: `agents/tmp/` → `agents/tmp.old/` | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 7 | Janitor and retention | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 8 | Session-leftover discipline (evidence/report regen) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 9 | Docs and rollout | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md)
 

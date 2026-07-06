@@ -1,0 +1,109 @@
+#!/usr/bin/env tsx
+/**
+ * CI gate: every regenerable tracked analysis artefact must carry the
+ * freshness marker `<!-- analyzed: date | commit: sha | files: N -->` in
+ * its first 5 lines.
+ *
+ * Missing marker = warning (the file may not have been regenerated recently).
+ * Missing marker on a file whose generator is known to write it = error.
+ *
+ * Exit codes:
+ *   0 — all artefacts carry the marker
+ *   1 — one or more artefacts are missing the marker
+ */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const _HERE = fileURLToPath(import.meta.url);
+const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
+
+// Artefacts that must carry the <!-- analyzed: … --> freshness marker.
+// Source: scripts that write these files (inventory_meta_layers.ts, audit_auto_rules.ts).
+// Add new entries here when a new generator is wired in.
+const GENERATED_ARTEFACTS: ReadonlyArray<{ path: string; writer: string; severity: 'error' | 'warning' }> = [
+    {
+        path: 'agents/evidence/analysis/meta-layer-inventory.md',
+        writer: 'inventory_meta_layers.ts',
+        severity: 'error',
+    },
+    {
+        path: 'agents/reports/auto-rules-audit.md',
+        writer: 'audit_auto_rules.ts',
+        severity: 'warning', // on-demand regen only; marker present after first re-run
+    },
+    {
+        path: 'agents/evidence/metrics/skill-usage-report.md',
+        writer: 'skill_overlap.ts / audit_skill_overlap.ts',
+        severity: 'warning',
+    },
+];
+
+const MARKER_PATTERN = /<!--\s*analyzed:\s*\d{4}-\d{2}-\d{2}/;
+
+function checkFile(p: string): boolean {
+    try {
+        const text = fs.readFileSync(p, 'utf-8');
+        const first5 = text.split('\n').slice(0, 5).join('\n');
+        return MARKER_PATTERN.test(first5);
+    } catch {
+        return true; // file doesn't exist locally (gitignored context) — skip
+    }
+}
+
+function main(argv?: readonly string[]): number {
+    const args = argv ?? process.argv.slice(2);
+    const quiet = args.includes('--quiet');
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    for (const entry of GENERATED_ARTEFACTS) {
+        const absPath = path.join(REPO_ROOT, entry.path);
+        if (!fs.existsSync(absPath)) continue; // not present locally — skip
+
+        if (!checkFile(absPath)) {
+            const msg = `${entry.path}: missing freshness marker (<!-- analyzed: date | commit: sha | files: N -->). Writer: ${entry.writer}`;
+            if (entry.severity === 'error') {
+                errors.push(msg);
+            } else {
+                warnings.push(msg);
+            }
+        }
+    }
+
+    if (errors.length > 0) {
+        process.stdout.write(`❌  Generated artefact freshness errors:\n\n`);
+        for (const e of errors) {
+            process.stdout.write(`  - ${e}\n`);
+        }
+        process.stdout.write(
+            `\nThe generator script must write <!-- analyzed: … --> as the first line.\n` +
+                `See docs/contracts/agents-layout.md § Session-leftover discipline.\n`,
+        );
+    }
+
+    if (warnings.length > 0 && !quiet) {
+        process.stdout.write(`⚠️  Generated artefact freshness warnings:\n\n`);
+        for (const w of warnings) {
+            process.stdout.write(`  - ${w}\n`);
+        }
+    }
+
+    if (errors.length === 0 && warnings.length === 0 && !quiet) {
+        process.stdout.write(
+            `✅  All ${GENERATED_ARTEFACTS.length} generated artefacts carry the freshness marker.\n`,
+        );
+    }
+
+    return errors.length > 0 ? 1 : 0;
+}
+
+const _isCliEntry =
+    process.argv[1] !== undefined &&
+    import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (_isCliEntry || process.argv[1] === _HERE) {
+    process.exit(main());
+}
+
+export { main, GENERATED_ARTEFACTS };

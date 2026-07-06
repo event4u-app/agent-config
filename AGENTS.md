@@ -25,7 +25,7 @@ task ci                # full pipeline — green before PR
 - **Consumer story** — `npx` + `scripts/install.sh`, sandbox / offline paths: [`README.md`](README.md).
 - **Personas** — 11 review lenses (6 + 5): [`docs/personas.md`](docs/personas.md).
 - **Discovery** — workspaces / packs manifest: [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md) + [`customization`](docs/customization.md#workspaces--packs-discovery).
-- **Root layout** — `src/` = source; root keeps workspace tooling per [`ADR-050`](docs/decisions/ADR-050-workspace-vs-package-root-boundary.md); toggle: `agents/.agent-tools.yml`.
+- **Root & `agents/` layout** — `src/` = source ([`ADR-050`](docs/decisions/ADR-050-workspace-vs-package-root-boundary.md)); `agents/` contract: [`agents-layout`](docs/contracts/agents-layout.md).
 - **Security** — disclosure policy [`SECURITY.md`](SECURITY.md); attack surface [`docs/threat-model.md`](docs/threat-model.md).
 
 ## Emergency triage — when nothing else is reachable

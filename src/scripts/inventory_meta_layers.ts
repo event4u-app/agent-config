@@ -286,7 +286,18 @@ export function main(argv: string[] | null = null): number {
     let ironTotal = 0;
     for (const v of iron.values()) ironTotal += v;
 
+    // Freshness marker — required by check_generated_artefact_headers (Phase 8.2)
+    const commitShort = (() => {
+        try {
+            const r = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf-8' });
+            return r.stdout.trim() || 'unknown';
+        } catch { return 'unknown'; }
+    })();
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileCount = surfaces.length;
+
     const lines: string[] = [
+        `<!-- analyzed: ${dateStr} | commit: ${commitShort} | files: ${fileCount} -->`,
         '# Meta-Layer / Concept-Surface Inventory',
         '',
         '> Read-only discovery output for `agents/roadmaps/road-to-leaner-core-and-discovery.md` Phase 1.',

@@ -253,11 +253,29 @@ to every agent-doc update you author.
    relevant rule?
 4. Is German prose present outside `DE: / EN:` anchor blocks?
 
+## User inbox workflow (agents/tmp/)
+
+Command/skill consumes `agents/tmp/` file as INPUT (roadmap created from it,
+note promoted) → move source to `agents/tmp.old/<original-name>` in the
+**same reply** as the output.
+
+```bash
+mv agents/tmp/<filename> agents/tmp.old/<filename>
+```
+
+- Move only files **explicitly named as input**. Never sweep other `tmp/` files.
+- No confirmation needed — both dirs gitignored, local-only.
+- Never write agent scratch into `agents/tmp/` — use `agents/runtime/tmp/`.
+
+See `docs/contracts/agents-layout.md § User Inbox Workflow`.
+
 ## Do NOT
 
 - Do NOT create docs unless there's a real need (new module, significant change).
 - Do NOT duplicate information already in AGENTS.md or copilot-instructions.md.
 - Do NOT write docs just to document what you did — only document things others need to know.
+- Do NOT write agent scratch into `agents/tmp/` — that is the user's inbox.
+- Regen-only outputs (`agents/evidence/analysis/*`, `agents/reports/*` script-generated): commit only with the work that consumed them; side-effect regens discard via `git checkout --` before session end. See `docs/contracts/agents-layout.md § Session-leftover discipline`.
 
 ## Auto-trigger keywords
 

@@ -139,12 +139,57 @@ from this command. One line of guidance is enough:
 - **Do NOT push, commit, or modify other files** — this command writes
   to `.gitignore` only.
 
+### 5. Ignored-but-tracked detection pass
+
+After the legacy-cleanup sync, run the tracked-but-ignored check
+and surface any files that are now in the ignore list but still committed:
+
+```bash
+npx tsx node_modules/@event4u/agent-config/src/scripts/check_tracked_but_ignored.ts
+```
+
+If files are reported:
+
+```
+> ⚠️  The following files are tracked by git but now covered by an ignore
+> pattern. They will appear in every `git status` until untracked.
+>
+> To remove them from the index (files stay on disk):
+>
+>   git rm --cached \
+>     <file1> \
+>     <file2>
+>
+> Then commit the result. This is a one-time cleanup.
+```
+
+Do NOT run `git rm --cached` automatically — git-ops are user-owned.
+
+### 6. Agent artefacts not covered by the managed block
+
+Scan for known agent-artefact shapes that are neither ignored nor
+legitimately tracked. Use `agents-paths.yml` as the reference:
+
+```bash
+npx tsx node_modules/@event4u/agent-config/src/scripts/check_gitignore_freshness.ts
+```
+
+If the check fails, offer to re-sync the block with the current template:
+
+```
+> ⚠️  gitignore-block.txt has entries not yet in your .gitignore.
+> Run option 1 to sync, or 2 to skip.
+```
+
 ## See also
 
 - [`/sync-gitignore`](../sync-gitignore.md) — append-only sync of the
   managed block (no legacy cleanup)
-- [`scripts/sync_gitignore.py`](../../../scripts/sync_gitignore.py) —
+- [`scripts/sync_gitignore.ts`](../../../src/scripts/sync_gitignore.ts) —
   the helper (`--cleanup-legacy` flag)
-- [`scripts/install.sh`](../../../scripts/install.sh) —
-  `migrate_legacy_root_infra` (moves the **files**, complement to this
-  command which fixes the **ignore rules**)
+- [`scripts/check_tracked_but_ignored.ts`](../../../src/scripts/check_tracked_but_ignored.ts) —
+  ignored-but-tracked detection (Phase 5.2)
+- [`scripts/check_gitignore_freshness.ts`](../../../src/scripts/check_gitignore_freshness.ts) —
+  manifest vs block coverage check (Phase 3.4)
+- [`docs/contracts/agents-layout.md`](../../../docs/contracts/agents-layout.md) —
+  full classification contract for `agents/` entries

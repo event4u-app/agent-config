@@ -1,5 +1,5 @@
 {
-  "pair_count": 7,
+  "pair_count": 6,
   "pairs": [
     {
       "rule_a": "domain-adoption-policy",
@@ -34,24 +34,6 @@
       "rule_b_desc": "Running PHP inside Docker \u2014 artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool"
     },
     {
-      "rule_a": "augment-edit-discipline",
-      "rule_b": "augment-source-of-truth",
-      "path_jaccard": 0.2,
-      "keyword_overlap": 0.417,
-      "shared_paths": [
-        ".augment/"
-      ],
-      "shared_keywords": [
-        "agent-src",
-        "augment",
-        "editing",
-        "files",
-        "uncondensed"
-      ],
-      "rule_a_desc": "Editing .augment/ or .agent-src.uncondensed/ \u2014 keep files project-agnostic; sync counts and cross-refs on add/rename/delete",
-      "rule_b_desc": "Editing files in .agent-src/ or .augment/ \u2014 source of truth is .agent-src.uncondensed/; never edit generated dirs directly"
-    },
-    {
       "rule_a": "commit-conventions",
       "rule_b": "git-history-discipline",
       "path_jaccard": 0.0,
@@ -65,7 +47,7 @@
         "pushing"
       ],
       "rule_a_desc": "Git commit format, branch naming, conventional commits, committing, pushing, creating PRs",
-      "rule_b_desc": "Git history ops \u2014 never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn"
+      "rule_b_desc": "Git history ops \u2014 never rebase/squash/amend without request; never drop/exclude/force-over commits you didn't author (parallel / shared-PR work); once pushed, re-push same turn"
     },
     {
       "rule_a": "no-attribution-footers",
