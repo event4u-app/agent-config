@@ -1,6 +1,5 @@
 ---
 type: "auto"
-source: "package"
 tier: "2a"
 description: "Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default"
 triggers:

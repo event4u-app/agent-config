@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Advisory content (legal, medical, financial, consulting) — require matching 'not X advice' disclaimer; refuse diagnosis/dosage outright"
+description: "Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage"
 triggers:
   - keyword: "legal brief"
   - keyword: "contract redline"

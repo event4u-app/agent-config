@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Editing an AI video/image/audio adapter — declare lifecycle tier (experimental | stable | deprecated | community); never default to non-stable"
+description: "Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable"
 triggers:
   - keyword: "/video:"
   - keyword: "/image:"

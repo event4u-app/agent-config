@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation"
+description: "Before executing a complex plan — ask 'am I solving the right problem?' and pause for confirmation"
 alwaysApply: false
 council_depth: deep
 triggers:

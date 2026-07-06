@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **461**
-- Edges (incl. self-WRITE): **1560**
+- Files indexed: **463**
+- Edges (incl. self-WRITE): **1580**
 
 ## READ_ONLY edges
 
@@ -36,6 +36,7 @@
 | `.agent-src.uncondensed/contexts/contracts/agents-md-anatomy.md` | `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/token-budget-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
@@ -158,6 +159,7 @@
 | `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/agent-authority.md` | `.agent-src.uncondensed/rules/user-interrupt-priority.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/architecture.md` | `.agent-src.uncondensed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/architecture.md` | `.agent-src.uncondensed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/architecture.md` | `.agent-src.uncondensed/skills/laravel/SKILL.md` | `body_link` | 1 |
@@ -202,7 +204,18 @@
 | `.agent-src.uncondensed/rules/commit-policy.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/commit-policy.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/commit-policy.md` | `contexts/authority/commit-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncondensed/rules/content-quoting-floor.md` | `.agent-src.uncondensed/rules/domain-safety-disclaimer.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/content-quoting-floor.md` | `.agent-src.uncondensed/rules/source-confidentiality.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/content-quoting-floor.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/context-hygiene.md` | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/rules/token-budget-discipline.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `.agent-src.uncondensed/skills/decision-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/delegation-policy.md` | `.agent-src.uncondensed/contexts/execution/subagent-routing.md` | `body_link` | 1 |
@@ -356,6 +369,7 @@
 | `.agent-src.uncondensed/rules/think-before-action.md` | `.agent-src.uncondensed/contexts/execution/rdp-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/think-before-action.md` | `.agent-src.uncondensed/rules/source-discovery-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/think-before-action.md` | `contexts/communication/rules-auto/think-before-action-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncondensed/rules/token-budget-discipline.md` | `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/token-efficiency.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/token-efficiency.md` | `contexts/communication/rules-auto/token-efficiency-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncondensed/rules/token-optimizer-maintenance.md` | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `body_link` | 1 |
@@ -397,6 +411,7 @@
 | `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncondensed/rules/size-enforcement.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncondensed/skills/copilot-agents-optimization/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/api-endpoint/SKILL.md` | `.agent-src.uncondensed/skills/api-design/SKILL.md` | `body_link` | 1 |
@@ -549,9 +564,11 @@
 | `.agent-src.uncondensed/skills/deal-qualification-meddic/SKILL.md` | `.agent-src.uncondensed/skills/forecast-accuracy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/deal-qualification-meddic/SKILL.md` | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/deal-qualification-meddic/SKILL.md` | `.agent-src.uncondensed/skills/pipeline-strategy/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `.agent-src.uncondensed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `.agent-src.uncondensed/skills/risk-officer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `.agent-src.uncondensed/skills/stakeholder-tradeoff/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/decision-review/SKILL.md` | `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/decision-review/SKILL.md` | `.agent-src.uncondensed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/decision-review/SKILL.md` | `.agent-src.uncondensed/skills/blameless-post-mortem/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/decision-review/SKILL.md` | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `body_link` | 1 |
@@ -772,6 +789,7 @@
 | `.agent-src.uncondensed/skills/mcp-builder/SKILL.md` | `.agent-src.uncondensed/skills/mcp/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/mcp-builder/SKILL.md` | `.agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/md-language-check/SKILL.md` | `.agent-src.uncondensed/rules/language-and-tone.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/memory-consolidation/SKILL.md` | `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/memory-consolidation/SKILL.md` | `.agent-src.uncondensed/rules/notes-first-reasoning.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/memory-consolidation/SKILL.md` | `.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncondensed/skills/competitive-positioning/SKILL.md` | `body_link` | 1 |
@@ -1118,6 +1136,6 @@
 |---|---:|
 | `context` | 49 |
 | `persona` | 36 |
-| `rule` | 93 |
+| `rule` | 95 |
 | `skill` | 283 |
 

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback"
+description: "Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback"
 triggers:
   - keyword: "git"
   - keyword: "phpstan"

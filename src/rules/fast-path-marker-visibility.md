@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase"
+description: "Low-impact council fast-path — surface the transparency marker verbatim as the reply opener"
 triggers:
   - keyword: "low-impact council"
   - keyword: "fast-path"

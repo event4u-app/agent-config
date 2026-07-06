@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Governs token_budget_class: rich skills — exempt them from telegraph-speak + thin-projector trimming; enforce the 15% cap + justification requirement"
+description: "rich-class skills are exempt from telegraph + thin-projector trims; enforce the 15% cap + justification"
 triggers:
   - keyword: "token_budget_class"
   - keyword: "rich skill"

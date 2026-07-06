@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)"
+description: "Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure)"
 triggers:
   - keyword: "/video:"
   - keyword: "/image:"

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Drafts, logs, exports touching real customer/candidate data — redact direct IDs, use placeholders, flag re-identification on quasi-IDs"
+description: "Drafts/logs/exports with real customer/candidate data — redact direct IDs, placeholders, flag quasi-ID re-identification"
 triggers:
   - keyword: "support macro"
   - keyword: "ticket response"

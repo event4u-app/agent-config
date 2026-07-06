@@ -51,28 +51,20 @@ Skip any step = the claim is unverified.
 
 ## Verification commands
 
-For specific commands → see the `quality-tools` skill.
-
-For the detailed evidence-gate playbook (claim→command mapping, output
-inspection, end-of-work sequence) → see the `verify-completion-evidence`
-skill.
+Specific commands → `quality-tools` skill. Evidence-gate playbook
+(claim→command mapping, output inspection, end-of-work sequence) →
+`verify-completion-evidence` skill.
 
 ## Mechanics — when to run what, per-task evidence, confidence, break-glass
 
-The decision logic for **when** to run quality tools vs. tests, the
-per-task-type minimum-evidence table, confidence gating (High /
-Medium / Low), and the break-glass reduction during live incidents
-all live in
-[`verification-mechanics`](../contexts/execution/verification-mechanics.md).
-The Iron Law and the Gate above are the obligation surface; the
-mechanics context is the lookup material the agent pulls when the
-gate fires.
+When to run quality tools vs. tests, the per-task minimum-evidence table,
+confidence gating (High/Medium/Low), and the break-glass reduction live in
+[`verification-mechanics`](../contexts/execution/verification-mechanics.md) —
+pull it when the Gate fires.
 
 ## Examples
 
-Pattern Memory — wrong / right / why demos for the Iron Law and the
-red-flags list:
-[`verify-before-complete-demos`](../../docs/guidelines/agent-infra/verify-before-complete-demos.md)
-(hedged claims, trusting earlier runs, partial-verification creep).
-Outcome baseline locked at
+Wrong/right/why demos (hedged claims, trusting earlier runs,
+partial-verification creep): [`verify-before-complete-demos`](../../docs/guidelines/agent-infra/verify-before-complete-demos.md).
+Outcome baseline:
 [`tests/golden/outcomes/verify_before_complete.json`](../../tests/golden/outcomes/verify_before_complete.json).

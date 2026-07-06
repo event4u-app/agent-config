@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision"
+description: "Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision"
 triggers:
   - keyword: "vision"
   - keyword: "positioning"

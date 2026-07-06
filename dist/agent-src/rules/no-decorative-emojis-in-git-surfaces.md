@@ -2,7 +2,7 @@
 type: "auto"
 tier: "3"
 alwaysApply: false
-description: "Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend"
+description: "PR/issue/commit titles and comments — no decorative emojis; bodies only with an in-artifact legend"
 triggers:
   - intent: "PR title"
   - intent: "PR body"

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "User names external repo/file/URL/artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata"
+description: "User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README"
 alwaysApply: false
 triggers:
   - intent: "look at how X does it"

@@ -24,4 +24,5 @@ Four rules answer **"may the agent do this autonomously?"** Higher band wins.
 
 - Hard Floor wins, always — autonomy / roadmap / standing instruction never lift.
 - Higher band wins on conflict — commit exception ≠ Hard Floor override; scope permission ≠ commit override.
+- New user instruction mid-flight = interrupt, never a continuation: STOP → run the new task in full → ASK before resuming ([`user-interrupt-priority`](user-interrupt-priority.md)).
 - Unsure → [`ask-when-uncertain`](ask-when-uncertain.md).

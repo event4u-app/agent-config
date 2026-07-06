@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "A provided prototype / mockup / design system is the run's spec — build it 1:1; never swap fonts, controls, components, or layout without confirmation. Strictness: design.fidelity_mode."
+description: "A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed"
 triggers:
   - keyword: "prototype"
   - keyword: "mockup"

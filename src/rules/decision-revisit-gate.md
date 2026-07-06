@@ -1,6 +1,5 @@
 ---
 type: "auto"
-source: "package"
 tier: "2b"
 description: "A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped"
 alwaysApply: false

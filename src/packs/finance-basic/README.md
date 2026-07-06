@@ -12,7 +12,7 @@ Cashflow, runway, basic forecasting.
 
 ## Rules (1)
 
-- **`finance-safety-floor`** — Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required
+- **`finance-safety-floor`** — Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer
 
 ## Skills (3)
 

@@ -141,49 +141,49 @@ Artefacts that maintain this package (agent-config itself).
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
 - **`architecture`** — Architecture rules for new files, classes, controllers, modules, or structural decisions about project organization
-- **`artifact-drafting-protocol`** — Creating a new skill/rule/command/guideline or significantly rewriting one — runs mandatory Understand → Research → Draft first
+- **`artifact-drafting-protocol`** — New or significantly rewritten skill/rule/command/guideline — mandatory Understand → Research → Draft first
 - **`artifact-engagement-recording`** — After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call
 - **`ask-when-uncertain`** — Ask when uncertain — don't guess, assume, or improvise
 - **`augment-edit-discipline`** — Editing .augment/ or src/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
-- **`autonomous-execution`** — Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default
-- **`cli-output-handling`** — Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback
-- **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
+- **`autonomous-execution`** — Ask-or-act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor stays
+- **`cli-output-handling`** — Verbose CLI output (git, tests, linters, docker, npm, composer) — wrap with rtk; tail/grep fallback
+- **`command-suggestion-policy`** — Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute
 - **`content-quoting-floor`** — Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
-- **`copilot-routing`** — Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config
+- **`copilot-routing`** — Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config
 - **`decision-revisit-gate`** — A beneficial change blocked by a past lock (honest-null, don't-relitigate memory, budget canon, ADR) must be surfaced with a council re-evaluation offer, never silently dropped
-- **`devcontainer-routing`** — Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill
+- **`devcontainer-routing`** — Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill
 - **`direct-answers`** — Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default.
-- **`domain-adoption-policy`** — Adopting a new domain track (mobile, ML, blockchain, IoT) — gates import on demand, ownership, CI fit, Sunset compat BEFORE harvest
-- **`domain-safety-disclaimer`** — Advisory content (legal, medical, financial, consulting) — require matching 'not X advice' disclaimer; refuse diagnosis/dosage outright
-- **`domain-safety-pii`** — Drafts, logs, exports touching real customer/candidate data — redact direct IDs, use placeholders, flag re-identification on quasi-IDs
-- **`domain-safety-retention`** — Data retention (finance, support/CRM) — name jurisdiction gap, default to longest floor, honor DSR/audit holds, never delete under inquiry
-- **`external-reference-deep-dive`** — User names external repo/file/URL/artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata
-- **`fast-path-marker-visibility`** — Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase
-- **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers
+- **`domain-adoption-policy`** — Adopting a new domain track (mobile, ML, IoT…) — demand/owner/CI gates BEFORE harvest
+- **`domain-safety-disclaimer`** — Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage
+- **`domain-safety-pii`** — Drafts/logs/exports with real customer/candidate data — redact direct IDs, placeholders, flag quasi-ID re-identification
+- **`domain-safety-retention`** — Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry
+- **`external-reference-deep-dive`** — User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README
+- **`fast-path-marker-visibility`** — Low-impact council fast-path — surface the transparency marker verbatim as the reply opener
+- **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead
 - **`guidelines`** — Writing or reviewing code — check relevant guideline before writing or reviewing code
-- **`image-likeness-and-rights`** — Rights gate for AI image generation — real-person likenesses, trademarked brand marks, and named living artists' styles require explicit rights/consent check before generation.
-- **`invite-challenge`** — Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation
+- **`image-likeness-and-rights`** — AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent
+- **`invite-challenge`** — Before executing a complex plan — ask 'am I solving the right problem?' and pause for confirmation
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
-- **`low-impact-corpus-privacy-floor`** — Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus
+- **`low-impact-corpus-privacy-floor`** — Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor
 - **`markdown-safe-codeblocks`** — Generating markdown with code blocks — prevent broken nesting
-- **`media-governance-routing`** — Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)
-- **`media-sync-ground-truth`** — Audio-synced video (lip-sync, beat-cuts, music video) — derive timing + singer from the transcribed real audio, never a planning doc; sign off the vocal map before any paid render
+- **`media-governance-routing`** — Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure)
+- **`media-sync-ground-truth`** — Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
-- **`model-recommendation`** — Starting a task, switching type, or invoking a skill/command that declares a model_tier — switch (Claude) or suggest (any agent) the right capability tier
-- **`no-attribution-footers`** — Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers
+- **`model-recommendation`** — Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier
+- **`no-attribution-footers`** — PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers
 - **`no-cheap-questions`** — No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)
-- **`no-decorative-emojis-in-git-surfaces`** — Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend
-- **`no-pr-progress-comments`** — Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true
-- **`no-roadmap-references`** — Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings
-- **`notes-first-reasoning`** — Reasoning-heavy work (debugging, multi-hypothesis, weighing alternatives) — keep hypotheses/predictions/decisions in session notes, response carries conclusions + evidence only
-- **`onboarding-gate`** — First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request
+- **`no-decorative-emojis-in-git-surfaces`** — PR/issue/commit titles and comments — no decorative emojis; bodies only with an in-artifact legend
+- **`no-pr-progress-comments`** — PR comments — no unsolicited progress/status/CI narration unless personal.pr_progress_comments is true
+- **`no-roadmap-references`** — Linking transient files (agents/roadmaps/, agents/runtime/council/) from stable artifacts — both expire; promote findings
+- **`notes-first-reasoning`** — Reasoning-heavy work — hypotheses/predictions/decisions go to session notes; the response carries conclusions + evidence
+- **`onboarding-gate`** — First turn with onboarding.onboarded false — instruct dev to run `agent-config setup` first
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
-- **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier (experimental | stable | deprecated | community); never default to non-stable
-- **`reviewer-awareness`** — Suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary
-- **`roadmap-ci-steps-policy`** — Authoring or executing roadmaps — forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline
+- **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable
+- **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
+- **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open
 - **`role-mode-adherence`** — When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker
 - **`rule-type-governance`** — Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto
@@ -192,17 +192,17 @@ Artefacts that maintain this package (agent-config itself).
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained
 - **`slash-command-routing-policy`** — User types a slash command like /create-pr, /commit, or pastes command file content
-- **`source-confidentiality`** — Naming an external repo as something this package copied, harvested, compared against, or was inspired by — keep the tracked tree source-anonymous
-- **`source-of-truth`** — Editing files in dist/agent-src/, .augment/, .claude/, or .cursor/ — source of truth is src/; never edit a generated projection directly
-- **`telegraph-speak`** — When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers
-- **`token-budget-discipline`** — Governs token_budget_class: rich skills — exempt them from telegraph-speak + thin-projector trimming; enforce the 15% cap + justification requirement
-- **`token-efficiency`** — Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise
-- **`token-optimizer-maintenance`** — Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit
+- **`source-confidentiality`** — Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous
+- **`source-of-truth`** — Editing dist/agent-src/, .augment/, .claude/, .cursor/ — source of truth is src/; never edit a generated projection
+- **`telegraph-speak`** — telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable
+- **`token-budget-discipline`** — rich-class skills are exempt from telegraph + thin-projector trims; enforce the 15% cap + justification
+- **`token-efficiency`** — CLI runs, log fetches, replies — redirect verbose output, minimize tool calls, stay concise
+- **`token-optimizer-maintenance`** — Editing a token-optimizer-cited asset — sync the catalog row in the same commit
 - **`tool-safety`** — Skill uses external tools — enforce allowlist, deny-by-default, no hidden credential patterns
 - **`ui-audit-gate`** — Writing/editing UI — components, screens, layouts, design tokens — require existing-ui-audit findings first
-- **`upstream-proposal`** — After creating or improving a skill/rule/guideline/command — ask if it should be contributed upstream to the shared package
-- **`user-interaction`** — Asking a question, presenting options, summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators
-- **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
+- **`upstream-proposal`** — After creating/improving a skill/rule/guideline/command — ask about upstreaming it
+- **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
+- **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming
 
 ## Skills (66)
 

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow"
+description: "Symfony work (DI, bundles, Doctrine, Messenger, voters, console) — route to symfony-workflow"
 triggers:
   - keyword: "symfony"
   - keyword: "doctrine"

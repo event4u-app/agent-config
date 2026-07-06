@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Git history ops — never rebase/squash/amend without request; never drop/exclude/force-over commits you didn't author (parallel / shared-PR work); once pushed, re-push same turn"
+description: "Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn"
 triggers:
   - intent: "rebase the branch"
   - intent: "squash commits"

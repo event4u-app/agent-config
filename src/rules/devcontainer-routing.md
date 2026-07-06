@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill"
+description: "Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill"
 triggers:
   - keyword: "devcontainer"
   - keyword: "codespaces"

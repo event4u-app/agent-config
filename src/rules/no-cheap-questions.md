@@ -11,7 +11,7 @@ packs:
 
 # No Cheap Questions
 
-Cheap = context answers it, option breaches an Iron Law, choices differ only in sequencing / format, or one option dominates. Mode-independent; autonomy never lifts the floor.
+Cheap = context answers it, an option breaches an Iron Law, choices differ only in sequencing/format, or one option dominates. Mode-independent; autonomy never lifts the floor.
 
 ## The Iron Laws
 
@@ -71,6 +71,4 @@ Silent, before any numbered-options block. Any "yes" → don't ask:
 13. Commit authorized + asking "one commit or multiple?", "how should I split?", "which chunk first?"? Forbidden — `commit-policy § Always split into logical chunks`. Pick the split, state inline, execute.
 14. Artifact just landed (roadmap / ADR / plan / pitch / ticket / design doc) + offering "ready to start Phase 1?", "begin execution?", "sofort ausführen?", or a `/roadmap:process-*` menu? Forbidden — `scope-control § Authoring vs. implementation` + `scope-mechanics § Post-artifact hard stop`. Authoring verbs never inherit execution authorization. Emit the hand-back line, stop the turn.
 
-Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
-
-In doubt → ask. This rule narrows asking, never widens silence. When asking IS allowed: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).
+Pick the dominant path, state the assumption inline, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md). In doubt → ask: this rule narrows asking, never widens silence. When asking IS allowed: [`cheap-question-mechanics`](../contexts/execution/cheap-question-mechanics.md).

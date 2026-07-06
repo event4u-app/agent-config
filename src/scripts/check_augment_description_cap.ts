@@ -14,7 +14,7 @@
  *
  * Why: Augment injects each auto-rule's description into the
  * workspace-guidelines registry stub. Empirical 2026-05-08 budget
- * analysis showed this channel consuming 25 % of the 49,512-char
+ * analysis showed this channel consuming 25 % of the workspace-guidelines
  * ceiling. Capping descriptions guards future drift.
  *
  * Source of truth: `.agent-src.uncondensed/rules/`. The condensed
@@ -114,7 +114,7 @@ export function main(): number {
         process.stderr.write(
             `\n  Guard rationale: each char in an auto-rule description ` +
                 `costs one char in the\n  Augment workspace-guidelines budget ` +
-                `(cap 49,512). Trim to ≤ ${DESC_CAP}.\n`,
+                `(cap: src/config/budgets.yml). Trim to ≤ ${DESC_CAP}.\n`,
         );
         return 1;
     }

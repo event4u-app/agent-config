@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Generated UI, copy, and assets are checked against the active brand tokens and voice profile — a value not traceable to a brand token or voice rule is flagged off-brand."
+description: "Generated UI/copy/assets check against active brand tokens + voice profile — untraceable values are flagged off-brand"
 triggers:
   - keyword: "brand"
   - keyword: "on-brand"

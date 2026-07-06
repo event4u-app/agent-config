@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "One icon system per project unless the brand defines otherwise — flag mixed icon sets in a UI (the 'every AI UI is default Lucide' anti-pattern)."
+description: "One icon system per project unless the brand says otherwise — flag mixed icon sets (default-Lucide anti-pattern)"
 triggers:
   - keyword: "icon"
   - keyword: "iconography"

@@ -2,7 +2,7 @@
 type: "auto"
 tier: "3"
 alwaysApply: false
-description: "Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers"
+description: "PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers"
 triggers:
   - intent: "PR body"
   - intent: "commit message"
