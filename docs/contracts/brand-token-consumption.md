@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # Brand-Token Consumption Contract (greenfield interface stub)
 
 > **Status:** interface stub. This contract is the **only** greenfield surface

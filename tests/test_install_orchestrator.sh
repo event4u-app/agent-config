@@ -19,6 +19,14 @@ FAIL=0
 setup() {
     TEST_TARGET="$(mktemp -d)"
     touch "$TEST_TARGET/.gitignore"
+    # Sandbox HOME for every invocation (same pattern as the source-repo-guard
+    # test below): the scope-guard probes $HOME/.claude, $HOME/.cursor, ... and a
+    # version-drifted real user-scope install would abort every fixture install
+    # on a dev machine (CI=true skips the guard on runners).
+    mkdir -p "$TEST_TARGET/home"
+    export HOME="$TEST_TARGET/home"
+    export USERPROFILE="$TEST_TARGET/home"
+    export EVENT4U_CONFIG_HOME="$TEST_TARGET/home/.event4u/agent-config"
 }
 
 teardown() {

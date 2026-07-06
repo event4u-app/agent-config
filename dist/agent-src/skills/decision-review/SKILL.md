@@ -2,17 +2,14 @@
 model_tier: high
 name: decision-review
 description: "Use to audit a past architectural decision — did the chosen option hold up, what assumptions drifted, should the ADR be superseded? Backward review only; does not lock new choices."
-source: package
 domain: process
 workspaces:
   - engineering
 packs:
   - analysis-workbench
-lifecycle: active
 trust:
   level: professional
   confidence: medium
-  human_review_required: false
 install:
   default: false
   removable: true

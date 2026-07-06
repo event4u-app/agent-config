@@ -5,7 +5,6 @@ description: "Art-direction and brand-aligned visual judgment — composition, h
 tier: specialist
 mode: reviewer
 version: 1.0.0
-source: package
 ---
 
 # Design Director

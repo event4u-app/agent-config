@@ -1,5 +1,6 @@
 ---
 status: ready
+complexity: lightweight
 slug: py2ts-teardown-completion
 title: "py2ts teardown — completion: purge remaining live-python, retire the shim, merge-ready"
 parent_roadmap: py2ts-teardown

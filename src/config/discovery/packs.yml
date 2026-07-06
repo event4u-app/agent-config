@@ -304,6 +304,7 @@
   label: Meta
   description: Artefacts that maintain this package (agent-config itself).
   workspaces: [agent-config-maintainer]
+  requires: [engineering-base]  # reasoning-orchestrator (meta) invokes adversarial-review (engineering-base)
   trust_level_default: core
   domain: meta
   size_class: core

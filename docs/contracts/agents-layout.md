@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-17
+---
+
 # `agents/` Directory Layout Contract
 
 > **Do not bypass this contract.** Every entry at the `agents/` root — file or

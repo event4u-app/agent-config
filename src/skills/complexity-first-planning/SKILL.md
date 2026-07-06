@@ -1,7 +1,6 @@
 ---
 name: complexity-first-planning
 description: "Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first."
-source: package
 domain: engineering
 status: active
 model_tier: medium
@@ -43,10 +42,12 @@ unknown to resolve), or when the user has already fixed the sequence.
 
 ## Procedure
 
-1. **Inspect and name the unknowns.** Read the affected components first, then
-   list which carry real uncertainty (technical feasibility, an unverified
-   integration, an ambiguous requirement) — analyze the existing system before
-   planning any change.
+1. **Inspect and name the unknowns.** Read the affected components first
+   (start from the **repo** slot of the
+   [context-spine](../../../docs/contracts/context-spine.md) when present),
+   then list which carry real uncertainty (technical feasibility, an
+   unverified integration, an ambiguous requirement) — analyze the existing
+   system before planning any change.
 2. **Assess and rank by load-bearing risk.** The load-bearing unknown is the one
    whose failure invalidates the most dependent work — not the one that is merely hard.
 3. **Resolve it first.** Spike / probe / prototype the load-bearing unknown

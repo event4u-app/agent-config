@@ -43,7 +43,7 @@ experimental`, flipping `default_install` to anything but `false`, or any
 commercial / hosted surface, is **blocked** until a licensed German attorney has
 reviewed the *framing* (the `legal-safety-floor` rule, `LEGAL_NOTICE.md`, and the
 RDG individual-case wording — **not** skill correctness) and the review is recorded
-in `LEGAL_NOTICE.md` as `Framing reviewed by <name>, Rechtsanwalt/Rechtsanwältin,
+in `LEGAL_NOTICE.md` as `Framing reviewed by <name>, Rechtsanwalt/Rechtsanwältin,  <!-- md-language-check: ignore -->
 <date>`. The deep AI-council (2026-06-24) scoped this as a bounded (~€300–800,
 1–2h) one-time gate, **not** a blocker for the current lab release (lab is
 explicitly unvetted; users opt in knowingly via the consent gate). Enforced by

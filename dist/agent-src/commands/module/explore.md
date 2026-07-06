@@ -41,11 +41,15 @@ unset):
 - **Node / TS monorepo**: Check `packages/`, `apps/`, or `modules/`.
 - **Python**: Check top-level package dirs under `src/<package>/` or flat `<package>/`.
 - **Go**: Check `internal/<domain>/` or `cmd/<service>/`.
-- If none of the above exists:
-  ```
-  ⚠️  No module system found (no Modules/, src/<Domain>/, packages/, internal/, or equivalent directory).
-  ```
-  Stop.
+
+If both the `modules:` block and the fallback table yield nothing:
+
+```
+⚠️  No module system found (no Modules/, src/<Domain>/, packages/, internal/, or equivalent directory).
+   Run `./scripts-run src/scripts/propose_modules_config` to surface candidates.
+```
+
+Stop.
 
 ### 2. List available modules
 
@@ -82,8 +86,8 @@ Let `{module_dir}` be the selected module's `module_path` from
 
 **Structure:**
 - List all directories and files (2 levels deep)
-- Count PHP files per directory (Controllers, Services, Models, Jobs, Commands, etc.)
-- List route files and their contents
+- Count source files per directory (Controllers, Services, Models, Jobs, Commands, etc. — adapt to the configured stack)
+- List route / entry-point files and their contents
 
 **Code:**
 - Use `codebase-retrieval` to understand the module's purpose and key classes
