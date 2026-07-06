@@ -247,6 +247,26 @@ tasks:
     desc: Promote agents/ layout legacy warnings to errors (release-tag gate)
     cmd: ./scripts-run src/scripts/lint_agents_layout --strict {{.QUIET_FLAG}}
 
+  check-gitignore-freshness:
+    silent: true
+    desc: Fail if any consumer-scoped ignored path in agents-paths.yml is missing from gitignore-block.txt
+    cmd: ./scripts-run src/scripts/check_gitignore_freshness {{.QUIET_FLAG}}
+
+  check-generator-output-coverage:
+    silent: true
+    desc: Fail if any generator output root in condense.ts is not classified in agents-paths.yml or .gitignore
+    cmd: ./scripts-run src/scripts/check_generator_output_coverage {{.QUIET_FLAG}}
+
+  check-tracked-but-ignored:
+    silent: true
+    desc: Fail if any git-tracked file is now covered by an ignore pattern (tracked-but-ignored drift)
+    cmd: ./scripts-run src/scripts/check_tracked_but_ignored {{.QUIET_FLAG}}
+
+  check-generated-artefact-headers:
+    silent: true
+    desc: Warn/fail when regenerable tracked analysis artefacts are missing the freshness marker
+    cmd: ./scripts-run src/scripts/check_generated_artefact_headers {{.QUIET_FLAG}}
+
   check-role-doc-links:
     silent: true
     desc: "Fail if any skill link in docs/getting-started-by-role.md or getting-started-laravel.md does not resolve (step-12 Phase 2 CI gate)"
@@ -255,6 +275,14 @@ tasks:
   council-prune:
     desc: Prune council artefacts older than ai_council.session_retention_days (default 7) across questions, responses, and sessions dirs
     cmd: ./scripts-run src/scripts/council_prune
+
+  janitor:
+    desc: "Report expired files in TTL-managed dirs (agents/tmp.old/, agents/runtime/tmp/). Add --apply to delete."
+    cmd: ./scripts-run src/scripts/janitor {{.CLI_ARGS}}
+
+  janitor-apply:
+    desc: Delete expired files in TTL-managed dirs (agents/tmp.old/ TTL=30d, agents/runtime/tmp/ TTL=7d). Never touches agents/tmp/ (user inbox).
+    cmd: ./scripts-run src/scripts/janitor --apply
 
   migration-plan:
     silent: true

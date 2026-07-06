@@ -214,6 +214,10 @@ tasks:
       - task: check-council-layout
       - task: check-council-config-location
       - task: lint-agents-layout
+      - task: check-gitignore-freshness
+      - task: check-generator-output-coverage
+      - task: check-tracked-but-ignored
+      - task: check-generated-artefact-headers
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme
