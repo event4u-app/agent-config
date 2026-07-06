@@ -1,74 +1,42 @@
 ---
-status: draft
+status: ready
 title: Road to a Fast Test Layer (in-process CLI rigs)
 owner: matze4u
 ---
 
 # Road to a Fast Test Layer
 
-> **Draft** — hidden from the dashboard until flipped to `ready`.
-
-## Problem
-
-The py2ts migration replaced the deleted Python originals with TypeScript
-twins and, in doing so, added ~90 CLI-contract test rigs that exercise each
-twin by **spawning `tsx <script>` as a subprocess**. `tsx` cold-start is
-~300–500 ms per invocation; across thousands of invocations the `Node Tests`
-job now runs **~8–11 min** (ubuntu ~10:54), where the pre-migration suite ran
-in **1–2 min**.
-
-Two aggravating factors were already addressed on `test/depythonize-remaining-parity-rigs`:
-
-- The rigs used to be `describe.runIf(hasPython3())` / `skipIf(!py3)` — **skipped**
-  in the python-free CI (0 s). Depythonizing them un-gated them, so they now run.
-- Determinism checks re-ran the twin a second time (2× spawns). **Done:**
-  collapsed to a single spawn per case (biggest lever: the `cmd_doctor`
-  `expectStable` helper, ~26 call sites).
-
-The remaining cost is the **one** `tsx` cold-start per assertion, across the
-whole migrated rig layer — the structural fix below.
-
-## Goal
-
-Restore the `Node Tests` job to ~1–2 min by running the twins **in-process**
-(import the exported `main(argv)` / functions, capture stdout/stderr/exit)
-instead of spawning `tsx` per assertion.
-
-## Why in-process is safe here
-
-- Most twins export `export function main(argv): number` and set
-  `process.exitCode` (never `process.exit()`) — directly callable.
-- Vitest runs each **file** in its own fork (`pool: forks`) and tests **within**
-  a file sequentially, so a `chdir` + restore (or an injected `cwd`) and
-  `process.env` swap in `beforeEach`/`afterEach` do **not** race.
-- A shared harness centralises the stdout/stderr capture + exit handling.
+PR #741 (py2ts depythonize) added 133 `spawnSync(TSX_BIN, …)` spawn sites.
+`tsx` cold-start ~350 ms each → Node Tests ~10–11 min (was 1–2 min).
+Fix: run twins **in-process** (`main(argv)` import, stdout/exit capture).
 
 ## Phase 1 — Harness + pilot
 
-- [ ] Build `tests/_lib/run_in_process.ts`: `runInProc(main, argv, { cwd, env }) → { status, stdout, stderr }` — capture `process.stdout/stderr.write`, snapshot+restore `process.exitCode`, `chdir`+restore, `process.env` overlay+restore.
-- [ ] Handle the argparse-error path (some `main`s throw a usage error → map to exit 2) without leaking to the runner.
-- [ ] Pilot on one small rig (e.g. `lint_agent_security` or `measure_density`); confirm identical assertions pass and the file's wall-time drops sharply.
-- [ ] Decide the fallback for `process.exit()`-using scripts (e.g. `check_condensation`): either refactor the script to return a code from `main`, or keep those few on subprocess.
+- [ ] Write `tests/_lib/run_in_process.ts`: `runInProc(mainFn, argv, opts)` — intercept `process.stdout/stderr.write`, overlay `process.env`, save/restore `process.exitCode` + `cwd`, catch `ProcessExit` for `process.exit()` scripts.
+- [ ] Pilot: migrate `tests/scripts/measure_density.test.ts` to in-process and confirm the wall-time drops (run twice, check ~1 ms vs ~350 ms).
+- [ ] Pilot: migrate `tests/scripts/lint_agent_security.test.ts` to in-process.
+- [ ] Pilot: migrate `tests/scripts/inventory_meta_layers.test.ts` to in-process.
 
-## Phase 2 — Migrate the cmd_* + check_* + lint_* clusters
+## Phase 2 — cmd_* cluster (highest spawn count)
 
-- [ ] Replace `spawnSync(tsx, [script, ...args])` with `runInProc(main, args, …)` across the `cmd_*` CLI cluster (biggest count).
-- [ ] Migrate the `check_*` / `lint_*` / `audit_*` / `measure_*` rigs.
-- [ ] Keep the fixture setup (temp trees, git-init, snapshot/restore) untouched; only the invocation changes.
+- [ ] Migrate `cmd_doctor` — 56 `runTs` calls via `expectStable`, each now in-process.
+- [ ] Migrate `cmd_export`, `cmd_migrate`, `cmd_sync`, `cmd_update`, `cmd_uninstall`.
+- [ ] Migrate `cmd_explain`, `cmd_prune`, `cmd_refresh`, `cmd_settings_check`, `cmd_settings_migrate`, `cmd_validate`, `cmd_versions`, `cmd_upgrade`.
 
-## Phase 3 — Migrate the heavy multi-case suites
+## Phase 3 — check_* / lint_* / audit_* / measure_* cluster
 
-- [ ] `chat_history` (28 spawn sites), `cli_python/*` (23–24), `knowledge_global*` (8–25) — the highest per-file spawn counts.
-- [ ] These already import the module for their in-process "Layer 2" blocks; converge the CLI blocks onto the same in-process path.
+- [ ] Migrate `check_condensation`, `check_no_conflict_markers`, `check_no_external_sources`, `check_structural_breaking`, `check_surface_tiers`, `check_trigger_evals`, `check_council_config_location`.
+- [ ] Migrate remaining measure/audit/lint rigs: `audit_likelihood`, `audit_overlap`, `measure_markitdown_lift`, `measure_projection_bytes`, `measure_patterns`, `measure_skill_reduction`, `probe_projection_fidelity`, `lint_empty_roadmaps`, `lint_marketplace`, `lint_showcase_sessions`, `lint_skill_originality`, `lint_pack_dependencies`.
+- [ ] Migrate remaining one-off rigs: `apply_modules_config`, `cross_repo_retrieve`, `validate_discovery_manifest`, `validate_pack_yaml`, `inventory_frontmatter`, `check_discovery_determinism`, `plan_physical_move`, `migrate_frontmatter_defaults`, `skills_design_tokens_tokens`, `score_skill_selection`.
 
-## Phase 4 — Measure + guard
+## Phase 4 — Heavy multi-case suites
 
-- [ ] Confirm `Node Tests` wall-time is back to ~1–2 min on both OSes.
-- [ ] Add a lightweight guard/budget (e.g. fail if the job exceeds N min) so the regression cannot silently return.
-- [ ] Decide whether the `hasPython3`-gated helper tier (`_bench_wave8d`, `_mcp_server`, `parity_oracle` capture-mode) needs the same treatment or stays as-is (already dormant under the shim).
+- [ ] Migrate `chat_history` (28 spawn sites) — replace `runTs` helper with `runInProc(main, args, { env: { AGENT_CHAT_HISTORY_FILE: file, COLUMNS: '80' } })`.
+- [ ] Migrate `cli_python/knowledge_ingest` (23) and `cli_python/workspace_drive` (24).
+- [ ] Migrate `knowledge_global_cli`, `_lib_knowledge_global_promote`, `_lib_knowledge_global`, `_lib_knowledge_global_redaction`, `injection_scan_hook`, `pack_mcp_content`, `validate_frontmatter`.
 
-## Non-goals
+## Phase 5 — Measure + document
 
-- Re-introducing Python. The twin is the source of truth.
-- Changing what the rigs assert (exit codes, written artefacts, JSON shape) —
-  only *how* the twin is invoked.
+- [ ] Confirm Node Tests ≤ 2 min on both OSes (local `time npx vitest run` over the changed files).
+- [ ] Update `agents/evidence/py2ts-test-layer-audit.md` with final timing note.
+- [ ] Open PR + merge.
