@@ -2235,10 +2235,6 @@ describe('skill_linter — structural malice', () => {
 
 // --- Golden parity on the REAL repo (strongest fixture) ---
 
-function python3Available(): boolean {
-    const r = spawnSync('python3', ['--version'], { encoding: 'utf-8' });
-    return r.status === 0;
-}
 
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -2246,59 +2242,5 @@ const TSX_BIN = path.join(
     '.bin',
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
-const PY_LINTER = path.join(REPO_ROOT, 'src', 'scripts', 'skill_linter.py');
-const TS_LINTER = path.join(REPO_ROOT, 'src', 'scripts', 'skill_linter.ts');
 
-function runPy(args: string[]): { status: number | null; stdout: string; stderr: string } {
-    const r = spawnSync('python3', [PY_LINTER, ...args], { cwd: REPO_ROOT, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
-    return { status: r.status, stdout: r.stdout, stderr: r.stderr };
-}
-function runTs(args: string[]): { status: number | null; stdout: string; stderr: string } {
-    const r = spawnSync(TSX_BIN, [TS_LINTER, ...args], { cwd: REPO_ROOT, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
-    return { status: r.status, stdout: r.stdout, stderr: r.stderr };
-}
 
-describe('skill_linter — golden parity on the real repo', () => {
-    const skip = !python3Available() || !fs.existsSync(PY_LINTER);
-
-    it.skipIf(skip)('--all: identical stdout + stderr + exit code', () => {
-        const py = runPy(['--all']);
-        const ts = runTs(['--all']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it.skipIf(skip)('--pairs --duplicates: identical', () => {
-        const py = runPy(['--pairs', '--duplicates']);
-        const ts = runTs(['--pairs', '--duplicates']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it.skipIf(skip)('--report: identical', () => {
-        const py = runPy(['--report']);
-        const ts = runTs(['--report']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it.skipIf(skip)('--all --format json: identical', () => {
-        const py = runPy(['--all', '--format', 'json']);
-        const ts = runTs(['--all', '--format', 'json']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it.skipIf(skip)('single skill file: identical', () => {
-        const args = ['src/skills/laravel/SKILL.md'];
-        const py = runPy(args);
-        const ts = runTs(args);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});

@@ -1,64 +1,34 @@
 // Tests for src/scripts/_lib/py_random.ts (py2ts Phase 1).
 //
 // PyRandom is a bit-exact reproduction of CPython's `random.Random` (MT19937).
-// There is NO py_random.py source — the Python side is the stdlib `random`
-// module, so the oracle is real CPython spawned via `python3 -c …`. Every
-// assertion compares the TS lib against the live CPython stream for the two
-// surfaces the prediction-pool simulators consume: `random()` sequences and
-// `shuffle()`. getrandbits (the k>32 general case) is also cross-checked even
-// though the sims only ever hit k<=32 via small-list shuffles.
-import { spawnSync } from 'node:child_process';
-
+// The oracle used to be live CPython; it has been frozen into the GOLD fixtures
+// below — captured once from CPython `random` — so the bit-exact contract
+// survives python-free. If PyRandom ever drifts from CPython these vectors fail.
 import { describe, expect, it } from 'vitest';
 
 import { PyRandom } from '../../../src/scripts/_lib/py_random.js';
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
+const GOLD_RANDOM: Record<string, string[]> = {"0":["0.8444218515250481","0.7579544029403025","0.420571580830845","0.25891675029296335","0.5112747213686085","0.4049341374504143","0.7837985890347726","0.30331272607892745","0.4765969541523558","0.5833820394550312","0.9081128851953352","0.5046868558173903","0.28183784439970383","0.7558042041572239","0.6183689966753316","0.25050634136244054","0.9097462559682401","0.9827854760376531","0.8102172359965896","0.9021659504395827"],"1":["0.13436424411240122","0.8474337369372327","0.763774618976614","0.2550690257394217","0.49543508709194095","0.4494910647887381","0.651592972722763","0.7887233511355132","0.0938595867742349","0.02834747652200631","0.8357651039198697","0.43276706790505337","0.762280082457942","0.0021060533511106927","0.4453871940548014","0.7215400323407826","0.22876222127045265","0.9452706955539223","0.9014274576114836","0.030589983033553536"],"7":["0.32383276483316237","0.15084917392450192","0.6509344730398537","0.07243628666754276","0.5358820043066892","0.36568891691258554","0.057998924774706806","0.5074357331894203","0.03749565844198488","0.4336456836623859","0.06985542357461894","0.09071301334386506","0.42451918914251396","0.8268521246720381","0.12380196114964559","0.22323896460701453","0.6274332224055893","0.9477089424570057","0.5771029486174987","0.39668047465078016"],"42":["0.6394267984578837","0.025010755222666936","0.27502931836911926","0.22321073814882275","0.7364712141640124","0.6766994874229113","0.8921795677048454","0.08693883262941615","0.4219218196852704","0.029797219438070344","0.21863797480360336","0.5053552881033624","0.026535969683863625","0.1988376506866485","0.6498844377795232","0.5449414806032167","0.2204406220406967","0.5892656838759087","0.8094304566778266","0.006498759678061017"],"123456789":["0.6414006161858726","0.5421892680969495","0.9931750662832721","0.8432521366869166","0.8117339283379406","0.3971737100780004","0.9370951079120425","0.6891026531658162","0.39711048852598374","0.35102519242304475","0.399603131718545","0.5455817482443385","0.207714227402927","0.6001575513874905","0.02368026428915737","0.6114014400894083","0.026211036291071466","0.6201559092323717","0.7396730770176362","0.31412119286874374"],"2147483647":["0.3177580158172969","0.8173550078299876","0.1963472909507713","0.8838810303661516","0.33226577943173774","0.7891207973534652","0.1933454063069283","0.21807425109759804","0.43974498166328024","0.6302646449492927","0.6142548070142781","0.8281283873870086","0.3690106239878359","0.9796029318216287","0.02853001299497704","0.7435545410524342","0.06106205163925338","0.4901732482451606","0.6740761280439722","0.016746496389675847"]};
+const GOLD_SHUFFLE: Record<string, number[]> = {"1_5":[2,3,4,0,1],"1_10":[6,8,9,7,5,3,0,4,1,2],"1_25":[10,20,24,21,23,5,22,13,16,9,11,17,0,7,1,6,12,19,14,15,3,8,2,18,4],"7_10":[8,3,1,4,7,0,9,6,2,5],"42_8":[3,4,6,7,2,5,0,1],"42_25":[16,12,9,19,18,6,5,10,15,21,11,17,1,14,22,13,2,23,4,24,7,8,0,3,20],"99_50":[7,9,17,1,45,35,29,22,3,39,32,42,49,0,30,20,43,19,40,2,10,18,36,28,44,4,6,21,27,37,46,23,13,26,47,31,41,34,33,48,16,5,8,15,14,11,38,12,24,25],"12345_16":[10,8,7,9,15,2,1,6,14,3,5,4,12,0,11,13]};
+const GOLD_BITS: Record<string, string> = {"1_8":"34","1_32":"577090037","1_40":"623347347957","1_64":"10499958131665514997","7_53":"8537610396283960","42_100":"873491343714207852616756591005"};
+const GOLD_BIG = ["0.1156806889333527","0.5150881555989952","0.5947264601582959","0.5471408115518239","0.8144039292122114"];
 
-function py(code: string): string {
-    const r = spawnSync('python3', ['-c', code], { encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`python3 failed: ${r.stderr}`);
-    }
-    return r.stdout.trim();
-}
-
-describe.runIf(hasPython3())('PyRandom — CPython MT19937 parity', () => {
-    const seeds = [0, 1, 7, 42, 123456789, 2147483647];
-
-    it.each(seeds)('random() sequence matches CPython for seed=%s', (seed) => {
-        const oracle = py(
-            `import random,json;r=random.Random(${seed});print(json.dumps([repr(r.random()) for _ in range(20)]))`,
-        );
-        const expected = JSON.parse(oracle) as string[];
-        const r = new PyRandom(seed);
-        const got: string[] = [];
-        for (let i = 0; i < 20; i += 1) {
-            // repr(float) is the shortest round-trippable decimal; JS String()
-            // on a double produces the same shortest form for these values.
-            got.push(String(r.random()));
-        }
-        expect(got).toEqual(expected);
-    });
+describe('PyRandom — CPython MT19937 parity (frozen vectors)', () => {
+    it.each(Object.keys(GOLD_RANDOM).map(Number))(
+        'random() sequence matches CPython for seed=%s',
+        (seed) => {
+            const expected = GOLD_RANDOM[String(seed)];
+            const r = new PyRandom(seed);
+            const got = Array.from({ length: 20 }, () => String(r.random()));
+            expect(got).toEqual(expected);
+        },
+    );
 
     const shuffleCases: Array<[number, number]> = [
-        [1, 5],
-        [1, 10],
-        [1, 25],
-        [7, 10],
-        [42, 8],
-        [42, 25],
-        [99, 50],
-        [12345, 16],
+        [1, 5], [1, 10], [1, 25], [7, 10], [42, 8], [42, 25], [99, 50], [12345, 16],
     ];
-
     it.each(shuffleCases)('shuffle() matches CPython for seed=%s size=%s', (seed, size) => {
-        const oracle = py(
-            `import random,json;r=random.Random(${seed});l=list(range(${size}));r.shuffle(l);print(json.dumps(l))`,
-        );
-        const expected = JSON.parse(oracle) as number[];
+        const expected = GOLD_SHUFFLE[`${seed}_${size}`];
         const r = new PyRandom(seed);
         const list = Array.from({ length: size }, (_, i) => i);
         r.shuffle(list);
@@ -66,29 +36,16 @@ describe.runIf(hasPython3())('PyRandom — CPython MT19937 parity', () => {
     });
 
     const bitsCases: Array<[number, number]> = [
-        [1, 8],
-        [1, 32],
-        [1, 40],
-        [1, 64],
-        [7, 53],
-        [42, 100],
+        [1, 8], [1, 32], [1, 40], [1, 64], [7, 53], [42, 100],
     ];
-
     it.each(bitsCases)('getrandbits(%s bits) matches CPython for seed=%s', (seed, k) => {
-        const expected = py(`import random;r=random.Random(${seed});print(r.getrandbits(${k}))`);
         const r = new PyRandom(seed);
-        const got = r.getrandbits(k);
-        expect(String(got)).toBe(expected);
+        expect(String(r.getrandbits(k))).toBe(GOLD_BITS[`${seed}_${k}`]);
     });
 
     it('large (negative-equivalent abs) seed matches CPython random()', () => {
-        const seed = 9007199254740881; // a large safe integer
-        const oracle = py(
-            `import random,json;r=random.Random(${seed});print(json.dumps([repr(r.random()) for _ in range(5)]))`,
-        );
-        const expected = JSON.parse(oracle) as string[];
-        const r = new PyRandom(seed);
+        const r = new PyRandom(9007199254740881);
         const got = Array.from({ length: 5 }, () => String(r.random()));
-        expect(got).toEqual(expected);
+        expect(got).toEqual(GOLD_BIG);
     });
 });

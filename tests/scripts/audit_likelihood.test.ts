@@ -3,7 +3,8 @@
 // No pytest suite existed for audit_likelihood.py, so this is a focused
 // differential suite:
 //   1. Unit checks of the pure helpers (tokens) in-process.
-//   2. A golden-parity layer (python3 vs tsx) on the real repo. The likelihood
+//   2. A CLI-contract layer on the real repo (the tsx twin is the source of
+//      truth). The likelihood
 //      JSON's `hits` field is GENUINELY non-deterministic in Python itself:
 //      its top-8 truncation `dict(sorted(...)[:8])` depends on the hash-seed
 //      ordering of a Python `set`, so two python runs under different
@@ -13,7 +14,6 @@
 //      low_likelihood, corpus_size), and assert the appended Markdown section
 //      — which never uses the `hits` dict — is byte-identical. The report
 //      files are snapshotted and restored so the run leaves zero git drift.
-//      Skipped without python3.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -25,9 +25,7 @@ import { acquireGlobalStateLock } from './_global_state_lock.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_LIKELIHOOD = path.join(REPO_ROOT, 'src', 'scripts', 'audit_likelihood.ts');
-const PY_LIKELIHOOD = path.join(REPO_ROOT, 'src', 'scripts', 'audit_likelihood.py');
 const TS_AUDIT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_auto_rules.ts');
-const PY_AUDIT = path.join(REPO_ROOT, 'src', 'scripts', 'audit_auto_rules.py');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -39,15 +37,8 @@ const AUDIT_JSON = path.join(REPORT_DIR, 'auto-rules-audit.json');
 const AUDIT_MD = path.join(REPORT_DIR, 'auto-rules-audit.md');
 const LIKELIHOOD_JSON = path.join(REPORT_DIR, 'auto-rules-likelihood.json');
 
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 function ts(script: string, args: string[]): { stdout: string; stderr: string; status: number | null } {
     const r = spawnSync(TSX_BIN, [script, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
-function py(script: string, args: string[]): { stdout: string; stderr: string; status: number | null } {
-    const r = spawnSync('python3', [script, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
     return { stdout: r.stdout, stderr: r.stderr, status: r.status };
 }
 
@@ -68,7 +59,6 @@ describe('audit_likelihood — unit helpers', () => {
     });
 });
 
-const py3 = hasPython3();
 
 interface LikeScore {
     name: string;
@@ -98,7 +88,7 @@ function canon(d: LikeDump): unknown {
     };
 }
 
-describe.skipIf(!py3)('audit_likelihood — golden parity (python3 vs tsx)', () => {
+describe('audit_likelihood — CLI contract', () => {
     let snap: Record<string, string | null> = {};
     let release: (() => void) | null = null;
     beforeEach(() => {
@@ -124,26 +114,19 @@ describe.skipIf(!py3)('audit_likelihood — golden parity (python3 vs tsx)', () 
     });
 
     it('likelihood deterministic fields + appended MD byte-identical', () => {
-        // Python pass: regenerate the audit JSON + MD, then score likelihood.
-        expect(py(PY_AUDIT, []).status).toBe(0);
-        const pl = py(PY_LIKELIHOOD, []);
-        const pyLike = JSON.parse(fs.readFileSync(LIKELIHOOD_JSON, 'utf-8')) as LikeDump;
-        const pyMd = fs.readFileSync(AUDIT_MD, 'utf-8');
-
-        // TS pass: same sequence with the twins.
+        // Regenerate the audit JSON + MD, then score likelihood — twice, and
+        // assert the deterministic fields (everything but the non-deterministic
+        // `hits` top-8) reproduce.
         expect(ts(TS_AUDIT, []).status).toBe(0);
         const tl = ts(TS_LIKELIHOOD, []);
-        const tsLike = JSON.parse(fs.readFileSync(LIKELIHOOD_JSON, 'utf-8')) as LikeDump;
-        const tsMd = fs.readFileSync(AUDIT_MD, 'utf-8');
-
-        expect(tl.stdout).toBe(pl.stdout);
-        expect(tl.stderr).toBe(pl.stderr);
-        expect(tl.status).toBe(pl.status);
-        expect(tl.status).toBe(0);
-        // The appended Markdown section never references the `hits` dict.
-        expect(tsMd).toBe(pyMd);
-        // Everything except the non-deterministic `hits` top-8 matches.
-        expect(canon(tsLike)).toEqual(canon(pyLike));
+        expect(tl.status, tl.stderr).toBe(0);
+        const like1 = JSON.parse(fs.readFileSync(LIKELIHOOD_JSON, 'utf-8')) as LikeDump;
+        const md1 = fs.readFileSync(AUDIT_MD, 'utf-8');
+        expect(ts(TS_AUDIT, []).status).toBe(0);
+        expect(ts(TS_LIKELIHOOD, []).status).toBe(0);
+        const like2 = JSON.parse(fs.readFileSync(LIKELIHOOD_JSON, 'utf-8')) as LikeDump;
+        expect(canon(like2)).toEqual(canon(like1));
+        expect(fs.readFileSync(AUDIT_MD, 'utf-8')).toBe(md1);
     });
 
     it('missing audit JSON → exit 1, byte-identical stderr', () => {
@@ -151,14 +134,7 @@ describe.skipIf(!py3)('audit_likelihood — golden parity (python3 vs tsx)', () 
         if (fs.existsSync(AUDIT_JSON)) {
             fs.rmSync(AUDIT_JSON);
         }
-        const p = py(PY_LIKELIHOOD, []);
-        if (fs.existsSync(AUDIT_JSON)) {
-            fs.rmSync(AUDIT_JSON);
-        }
         const t = ts(TS_LIKELIHOOD, []);
         expect(t.status).toBe(1);
-        expect(p.status).toBe(1);
-        expect(t.stderr).toBe(p.stderr);
-        expect(t.stdout).toBe(p.stdout);
     });
 });

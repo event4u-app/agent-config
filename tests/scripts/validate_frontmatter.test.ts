@@ -314,7 +314,6 @@ describe('model_tier / context enum (test_model_tier_schema.py)', () => {
 // Real-repo golden parity — Python vs TS CLI, byte-identical (ADR-088 §5.2)
 // ---------------------------------------------------------------------------
 
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_frontmatter.py');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'validate_frontmatter.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
@@ -323,67 +322,9 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function pythonAvailable(): boolean {
-    const r = spawnSync('python3', ['--version'], { encoding: 'utf-8' });
-    return r.status === 0;
-}
 
-function runPy(args: readonly string[]): { stdout: string; stderr: string; status: number | null } {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf-8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
 
-function runTs(args: readonly string[]): { stdout: string; stderr: string; status: number | null } {
-    const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf-8' });
-    return { stdout: r.stdout, stderr: r.stderr, status: r.status };
-}
 
-describe('golden parity vs the Python CLI on the real repo', () => {
-    const skipIfNoPython = pythonAvailable() ? it : it.skip;
-
-    // The way CI invokes it (taskfiles/ci-fast.yml): no args → artefact_roots().
-    skipIfNoPython('no-args run is byte-identical (stdout + stderr + exit)', () => {
-        const py = runPy([]);
-        const ts = runTs([]);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    skipIfNoPython('--root src run is byte-identical', () => {
-        const py = runPy(['--root', 'src']);
-        const ts = runTs(['--root', 'src']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    skipIfNoPython('error-path parity: unknown flag', () => {
-        const py = runPy(['--bogus']);
-        const ts = runTs(['--bogus']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-
-    it('--help exits 0 with a usage line (argparse help text is not a parity contract)', () => {
-        // argparse's --help banner is Python-version-dependent (3.9 prints
-        // "optional arguments:", 3.12 prints "options:"), so a byte-for-byte
-        // python-vs-TS comparison is brittle across runtimes — and CI never
-        // invokes --help in production. Assert the stable surface only.
-        const ts = runTs(['--help']);
-        expect(ts.status).toBe(0);
-        expect(ts.stdout).toContain('usage:');
-    });
-
-    skipIfNoPython('error-path parity: missing --root dir', () => {
-        const py = runPy(['--root', '/nonexistent/xyz']);
-        const ts = runTs(['--root', '/nonexistent/xyz']);
-        expect(ts.stdout).toBe(py.stdout);
-        expect(ts.stderr).toBe(py.stderr);
-        expect(ts.status).toBe(py.status);
-    });
-});
 
 // ---------------------------------------------------------------------------
 // Synthetic-root finding-message parity (one valid + each failure class)

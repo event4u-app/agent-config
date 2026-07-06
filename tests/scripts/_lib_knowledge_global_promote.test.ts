@@ -16,7 +16,6 @@ const TSX_BIN =
     process.env['TSX_BIN'] ??
     join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', '_lib', 'knowledge_global_promote.ts');
-const PY_SCRIPT = join(REPO_ROOT, 'src', 'scripts', '_lib', 'knowledge_global_promote.py');
 
 interface RunResult {
     readonly status: number;
@@ -24,10 +23,6 @@ interface RunResult {
     readonly stderr: string;
 }
 
-function pythonAvailable(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const HAVE_PYTHON = pythonAvailable();
 
 let repo: string;
 let home: string;
@@ -50,28 +45,12 @@ function runTs(args: readonly string[]): RunResult {
     const r = spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: repo, encoding: 'utf8', env: env() });
     return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
-function runPy(args: readonly string[]): RunResult {
-    const r = spawnSync('python3', [PY_SCRIPT, ...args], {
-        cwd: repo,
-        encoding: 'utf8',
-        env: { ...env(), PYTHONPATH: join(REPO_ROOT, 'src') },
-    });
-    return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
-}
 
+// The tsx twin is the source of truth (the python original was deleted in the
+// teardown); run it and assert a defined exit.
 function bothMatch(args: readonly string[]): RunResult {
     const ts = runTs(args);
-    if (HAVE_PYTHON) {
-        // Fresh store per implementation so each run sees an empty sidecar.
-        rmSync(home, { recursive: true, force: true });
-        const py = runPy(args);
-        rmSync(home, { recursive: true, force: true });
-        const ts2 = runTs(args);
-        expect(ts2.stdout, `stdout ${args.join(' ')}`).toBe(py.stdout);
-        expect(ts2.stderr, `stderr ${args.join(' ')}`).toBe(py.stderr);
-        expect(ts2.status, `exit ${args.join(' ')}`).toBe(py.status);
-        return ts2;
-    }
+    expect(ts.status, `exit ${args.join(' ')}`).not.toBe(-1);
     return ts;
 }
 
@@ -113,16 +92,6 @@ describe('knowledge_global_promote.ts — record-seen', () => {
         // seen_in dedups + sorts: both repos present, repo-a before repo-b in seen_in.
         const seenIn = (JSON.parse(ts.stdout) as { seen_in: string[] }).seen_in;
         expect(seenIn).toEqual(['repo-a', 'repo-b']);
-        if (HAVE_PYTHON) {
-            rmSync(home, { recursive: true, force: true });
-            runPy(['record-seen', 'c', '--slug', 'repo-b', '--tier', 'public', '--date', '2026-01-01']);
-            const py = runPy(['record-seen', 'c', '--slug', 'repo-a', '--tier', 'public', '--date', '2026-01-02']);
-            rmSync(home, { recursive: true, force: true });
-            runTs(['record-seen', 'c', '--slug', 'repo-b', '--tier', 'public', '--date', '2026-01-01']);
-            const ts2 = runTs(['record-seen', 'c', '--slug', 'repo-a', '--tier', 'public', '--date', '2026-01-02']);
-            expect(ts2.stdout).toBe(py.stdout);
-            expect(ts2.status).toBe(py.status);
-        }
     });
 });
 
@@ -141,18 +110,6 @@ describe('knowledge_global_promote.ts — candidates', () => {
         const ts = runTs(['candidates']);
         expect(ts.status).toBe(0);
         expect(ts.stdout).toContain('"card_id": "sug"');
-        if (HAVE_PYTHON) {
-            rmSync(home, { recursive: true, force: true });
-            runPy(['record-seen', 'sug', '--slug', 'repo-a', '--tier', 'public', '--date', '2026-01-01']);
-            runPy(['record-seen', 'sug', '--slug', 'repo-b', '--tier', 'public', '--date', '2026-01-01']);
-            const py = runPy(['candidates']);
-            rmSync(home, { recursive: true, force: true });
-            runTs(['record-seen', 'sug', '--slug', 'repo-a', '--tier', 'public', '--date', '2026-01-01']);
-            runTs(['record-seen', 'sug', '--slug', 'repo-b', '--tier', 'public', '--date', '2026-01-01']);
-            const ts2 = runTs(['candidates']);
-            expect(ts2.stdout).toBe(py.stdout);
-            expect(ts2.status).toBe(py.status);
-        }
     });
 
     it('proprietary card is never suggested', () => {
@@ -167,16 +124,10 @@ describe('knowledge_global_promote.ts — usage', () => {
     it('no subcommand → help, exit 1', () => {
         const ts = runTs([]);
         expect(ts.status).toBe(1);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy([]).status);
-        }
     });
 
     it('record-seen with no card_id → exit 2', () => {
         const ts = runTs(['record-seen']);
         expect(ts.status).toBe(2);
-        if (HAVE_PYTHON) {
-            expect(ts.status).toBe(runPy(['record-seen']).status);
-        }
     });
 });

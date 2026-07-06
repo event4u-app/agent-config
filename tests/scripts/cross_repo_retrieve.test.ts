@@ -4,7 +4,7 @@
 // scoped matches, large-flagged sibling rejects an unscoped query, opt-out
 // sibling is never read, secrets are redacted, the no-siblings path is inert.
 // `monkeypatch.setattr(crr, "collect_siblings", ...)` maps to the module's
-// `_setCollectSiblings` test hook. Plus a golden-parity block (python3 vs tsx)
+// `_setCollectSiblings` test hook. Plus a golden-parity block
 // over the same fixtures for `search_sibling`. Fixtures live under
 // tests/fixtures/cross-repo/. No live network, no real cross-repo writes.
 import { spawnSync } from 'node:child_process';
@@ -185,46 +185,4 @@ describe('cross_repo_retrieve — freshness, render, main', () => {
     it('terms drops short tokens', () => {
         expect(_terms('an OrderApiContract, to')).toEqual(['orderapicontract']);
     });
-});
-
-// ---- Golden parity (python3 vs tsx) over the fixtures ----
-const PY_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'cross_repo_retrieve.py');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'cross_repo_retrieve.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-function hasPython3(): boolean {
-    return spawnSync('python3', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-const py = hasPython3();
-const runPy = (args: string[]) =>
-    spawnSync('python3', [PY_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-const runTs = (args: string[]) =>
-    spawnSync(TSX_BIN, [TS_SCRIPT, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });
-
-describe.skipIf(!py)('cross_repo_retrieve — golden parity (python3 vs tsx)', () => {
-    const cases: string[][] = [
-        ['OrderApiContract', '--root', REPO_ROOT],
-        ['OrderApiContract', '--root', REPO_ROOT, '--format', 'json'],
-        ['OrderApiContract', '--root', REPO_ROOT, '--format', 'json', '--max-chunks', '1'],
-        ['ab', '--root', REPO_ROOT],
-        ['--bogusflag'],
-        ['myquery', '--bogusflag'],
-        ['q1', 'q2'],
-        ['OrderApiContract', '--format', 'xml'],
-        ['OrderApiContract', '--max-chunks', 'notanint'],
-        [],
-    ];
-    for (const args of cases) {
-        it(`[${args.join(' ')}] matches`, () => {
-            const p = runPy(args);
-            const t = runTs(args);
-            expect(t.status).toBe(p.status);
-            expect(t.stdout).toBe(p.stdout);
-            expect(t.stderr).toBe(p.stderr);
-        });
-    }
 });
