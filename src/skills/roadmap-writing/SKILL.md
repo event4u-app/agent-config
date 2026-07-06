@@ -111,6 +111,17 @@ phase is done) and **rollback** (what to revert if the phase fails).
 A phase without exit criteria is open-ended; a phase without
 rollback assumes success.
 
+### 5b. Blockers are structured, not free prose
+
+A gate only the user or a maintainer can clear — a decision, an
+external dependency, an evidence threshold, a kernel-budget soak
+window — is recorded as a `## Blockers` entry (`### blocker: <id>`
+with `Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`),
+never a stray "blocked on X" sentence. The dashboard generator parses
+these into the overview's `Blocker` column and the per-roadmap
+breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
+Omit the section entirely when the roadmap has no such gate.
+
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 
 When authoring (and especially when rewriting a roadmap mid-flight),

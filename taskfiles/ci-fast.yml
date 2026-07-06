@@ -457,6 +457,11 @@ tasks:
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: ./scripts-run src/scripts/lint_empty_roadmaps {{.QUIET_FLAG}}
 
+  lint-roadmap-blockers:
+    silent: true
+    desc: Enforce the roadmap ## Blockers contract — required fields present, blocked-by references resolve (templates/roadmaps.md rule 20)
+    cmd: ./scripts-run src/scripts/lint_roadmap_blockers {{.QUIET_FLAG}}
+
   lint-roadmap-later-disposition:
     silent: true
     desc: Enforce the later/ disposition — status:later roadmaps live under agents/roadmaps/later/, and every later/ roadmap records a resume condition

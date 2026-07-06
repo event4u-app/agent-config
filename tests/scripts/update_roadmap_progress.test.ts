@@ -205,6 +205,147 @@ describe('update_roadmap_progress — intent', () => {
         expect(dashboard).toContain('**1 / 2 steps done · 50%**');
     });
 
+    it('regen: structured blockers — open renders with anchor + instructions, resolved is collapsed', () => {
+        mkRoadmap(
+            'road-to-blockers.md',
+            [
+                '# Roadmap: Blockers',
+                '',
+                '## Phase 1 — Ship',
+                '- [ ] step one',
+                '- [x] step two',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: kernel-budget',
+                '- **Status:** open',
+                '- **Owner:** maintainer',
+                '- **Blocks:** Phase 1 — Ship',
+                '- **What to do:**',
+                '  1. Do the thing.',
+                '  2. Then the other thing.',
+                '- **Resolved when:** CI is green',
+                '',
+                '### blocker: old-decision',
+                '- **Status:** resolved',
+                '- **Owner:** user',
+                '- **Blocks:** Phase 1 — Ship',
+                '- **What to do:**',
+                '  1. Already done.',
+                '- **Resolved when:** n/a',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        // Overview column links to the anchor, counting only the open blocker.
+        expect(dashboard).toContain('[1](#blockers-road-to-blockers)');
+        // Header aggregate.
+        expect(dashboard).toContain('**1** open blocker');
+        // Breakdown renders the open blocker with full instructions.
+        expect(dashboard).toContain('<a id="blockers-road-to-blockers"></a>');
+        expect(dashboard).toContain('**kernel-budget** (owner: maintainer) — blocks Phase 1 — Ship');
+        expect(dashboard).toContain('Do the thing.');
+        expect(dashboard).toContain('Then the other thing.');
+        expect(dashboard).toContain('**Resolved when:** CI is green');
+        // Resolved blocker is collapsed, never printed by id.
+        expect(dashboard).toContain('1 blocker resolved.');
+        expect(dashboard).not.toContain('old-decision');
+    });
+
+    it('regen: a wrapped multi-line field value is not truncated at the first line', () => {
+        mkRoadmap(
+            'road-to-wrapped-field.md',
+            [
+                '# Roadmap: Wrapped Field',
+                '',
+                '## Phase 1 — Ship',
+                '- [ ] step',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: long-sentence',
+                '- **Status:** open',
+                '- **Owner:** maintainer',
+                '- **Blocks:** Acceptance criterion — a sentence that wraps onto a',
+                '  second line because it is long enough to need one.',
+                '- **What to do:**',
+                '  1. Do the thing.',
+                '- **Resolved when:** it is done.',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        expect(dashboard).toContain(
+            'blocks Acceptance criterion — a sentence that wraps onto a second line because it is long enough to need one.',
+        );
+    });
+
+    it('regen: legacy "> Blocked until" note surfaces as an implicit blocker', () => {
+        mkRoadmap(
+            'road-to-legacy-blocked.md',
+            [
+                '# Roadmap: Legacy Blocked',
+                '',
+                '> Blocked until: waiting on external audit.',
+                '',
+                '## Phase 1 — Wait',
+                '- [ ] step',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        expect(dashboard).toContain('[1](#blockers-road-to-legacy-blocked)');
+        expect(dashboard).toContain('<a id="blockers-road-to-legacy-blocked"></a>');
+        expect(dashboard).toContain('**legacy** (owner: user) — blocks entire roadmap');
+        expect(dashboard).toContain('waiting on external audit.');
+        expect(dashboard).toContain('condition described above clears');
+    });
+
+    it('regen: roadmap with no Blockers section renders "0" and no anchor', () => {
+        mkRoadmap(
+            'road-to-clean.md',
+            ['# Roadmap: Clean', '', '## Phase 1 — Go', '- [ ] step', ''].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        expect(dashboard).toContain('road-to-clean.md');
+        expect(dashboard).not.toContain('#blockers-road-to-clean');
+        expect(dashboard).not.toContain('open blocker');
+    });
+
+    it('regen: a fenced code example of the Blockers shape is not mistaken for a live blocker', () => {
+        mkRoadmap(
+            'road-to-documents-the-shape.md',
+            [
+                '# Roadmap: Documents The Shape',
+                '',
+                '## Phase 1 — Ship',
+                '- [ ] step describing the feature:',
+                '',
+                '  ```markdown',
+                '  ## Blockers',
+                '',
+                '  ### blocker: example-only',
+                '  - **Status:** open',
+                '  - **Owner:** user',
+                '  - **Blocks:** Phase 1',
+                '  - **What to do:**',
+                '    1. Not a real blocker.',
+                '  - **Resolved when:** never',
+                '  ```',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        expect(dashboard).toContain('road-to-documents-the-shape.md');
+        expect(dashboard).not.toContain('example-only');
+        expect(dashboard).not.toContain('#blockers-road-to-documents-the-shape');
+    });
+
     it('regen: no open roadmaps (only excluded) → "_No open roadmaps._"', () => {
         mkRoadmap('archive/road-to-old.md', ['# Old', '', '## Phase 1 — X', '- [x] z', ''].join('\n'));
         const { result, dashboard } = regen();

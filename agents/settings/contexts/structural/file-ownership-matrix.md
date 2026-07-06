@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **463**
-- Edges (incl. self-WRITE): **1580**
+- Edges (incl. self-WRITE): **1581**
 
 ## READ_ONLY edges
 
@@ -929,6 +929,7 @@
 | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |

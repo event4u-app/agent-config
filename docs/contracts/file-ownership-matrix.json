@@ -12056,6 +12056,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
       "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
       "type": "READ_ONLY",

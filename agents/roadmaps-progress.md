@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)
+> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **1** open blocker
 
 ## Overall
 
@@ -14,12 +14,12 @@
 
 ## Open roadmaps
 
-| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
-|---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 11 | 10 | 0 | 0 | █████░░░░░ 48% |
-| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | ██████░░░░ 64% |
-| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 7 | 60 | 0 | 0 | █████████░ 90% |
+| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | [road-to-py2ts-teardown-completion.md](roadmaps/road-to-py2ts-teardown-completion.md) | 5 | 21 | 11 | 10 | 0 | 0 | 0 | █████░░░░░ 48% |
+| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | 0 | ██████░░░░ 64% |
+| 4 | [road-to-typescript-only-scripts.md](roadmaps/road-to-typescript-only-scripts.md) | 12 | 67 | 7 | 60 | 0 | 0 | 0 | █████████░ 90% |
 
 ---
 
@@ -45,6 +45,20 @@
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Seed real telemetry | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Re-gate the `auto: on` flip | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-subagent-value-realization-followup"></a>
+**Blockers**
+
+- **telemetry-sample-size** (owner: user) — blocks Phase 1 — Seed real telemetry
+  - **What to do:**
+    1. Use the agent with `subagents.enabled: true` and `subagents.auto: ask`
+    (or `on`) during real work, long enough to accumulate real orchestrated
+    dispatches — the build work is done; only real usage produces this.
+    2. Check the current-month audit log line count:
+    `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`.
+    3. Once the count reaches ≥ 20, resume this roadmap
+    (`/roadmap:process-full road-to-subagent-value-realization-followup.md`).
+  - **Resolved when:** `agents/runtime/state/audit/YYYY-MM.jsonl` carries ≥ 20 orchestration lines for the current month.
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
