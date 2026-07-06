@@ -12,6 +12,12 @@
 > Output of Phase 4.1. One row per `type: always` rule. Pick the **two**
 > highest-leverage paths; safety-floor rules are untouchable;
 > outcome-untested rules are 4d-only per the Phase 4.0 inputs gate.
+>
+> **Scope + revisit-if** (per `decision-revisit-gate`):
+> settled-by-decision, scoped to the always-rule budget as measured at
+> Phase 4.4. The per-decision "Re-open trigger" column below (Q3 model,
+> the 4a/4b/4c table) already IS the revisit-if for each locked choice —
+> this note labels the existing convention rather than duplicating it.
 
 ## Baseline (run 2026-05-04)
 

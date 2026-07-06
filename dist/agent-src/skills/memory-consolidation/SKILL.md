@@ -169,6 +169,15 @@ skills — github.com/ViktorAxelsen/MemSkill, Apache-2.0, commit `9907c35f8cc7`)
   reusable facts, not transcripts or one-off chatter.
 - **One durable fact per entry.** No narrative blobs — each entry is a single
   PATTERN / CONVENTION / INVARIANT / GOTCHA the next agent can act on.
+- **"Don't relitigate" memories carry scope + `revisit-if`.** A memory that
+  locks a question as settled — an honest-null verdict, a council convergence,
+  a maintainer call — is not a permanent law; it is a decision under the
+  conditions that held when it was written. Record what exactly is settled
+  (narrow enough that a different-but-similar proposal is not silently
+  covered) and at least one concrete condition that reopens it. Tag whether
+  it is **settled-by-evidence** (an eval ran) or **settled-by-decision** (a
+  maintainer call) — the latter is cheaper to reopen. See
+  [`decision-revisit-gate`](../../rules/decision-revisit-gate.md).
 
 This is **meta-memory**: the skill of *how to remember* (what to extract,
 keep, forget) — distinct from the remembered content. The store stays simple

@@ -34,3 +34,8 @@ pack ships `experimental` / `lab` tier and is not enabled by default.
 decision in the `legal-safety-floor` rule + the pack description, surfaced via a
 machine-checkable `Jurisdiction:` tag. Expansion is a future owner decision,
 gated on its own currency promise.
+
+**Revisit-if** (per `decision-revisit-gate`): Gate 2 (maintenance owner) is
+confirmed — this is the primary reopen trigger, already tracked above as
+OPEN — or jurisdiction expansion is requested with its own currency promise
+per the scope note. Settled-by-decision on the EU/DE-only cut itself.

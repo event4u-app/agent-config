@@ -70,6 +70,32 @@ This exemption is limited to the skill's guidance content; reply prose from the
 *agent* (not from the skill body) remains subject to telegraph-speak unless the
 user has set `telegraph.speak_scope: off`.
 
+## Value-over-budget escalation
+
+```
+BUDGET RULES EXIST TO CUT WASTE, NEVER TO CUT CAPABILITY.
+A CHANGE BLOCKED PURELY ON A BUDGET LINE, WHILE PLAUSIBLY NET-POSITIVE,
+GETS THE TRADE-OFF SURFACED — NOT AN AUTO-REJECT.
+THE BUDGET LINE IS AN INPUT TO THE DECISION, NEVER THE DECISION ITSELF.
+```
+
+The 15 % rich-skill cap, the lean/standard/rich size targets, and every
+telegraph-speak / thin-projector trim point are cost controls, not
+capability ceilings. When a proposed change is blocked *purely* because
+it would cross one of these lines — a skill needs more than 5000 tokens
+to stay useful, a rule's condensed form loses a worked example the
+frugality canon would otherwise trim — do not silently reject it.
+Surface the trade-off instead: the estimated token delta, and the
+expected benefit (better outcomes, fewer retries, higher activation,
+fewer follow-up questions). Let the human weigh cost against value; a
+budget line is not qualified to make that call alone.
+
+This mirrors [`decision-revisit-gate`](decision-revisit-gate.md)'s
+broader principle for any lock, applied specifically to the frugality
+canon: a near-miss where a net-positive frontend/design change was
+almost dropped purely on token-budget grounds is the canonical failure
+this escalation exists to prevent.
+
 ## Candidate rich skills (justified, not exhaustive)
 
 These skills are approved `rich` by this roadmap's council:

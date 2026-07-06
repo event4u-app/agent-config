@@ -74,3 +74,9 @@ Remaining open (not credential-blocked any more — these are scope/cost calls):
 T-005 gate-tier canary (running paid cross-vendor calls per-PR needs a
 cost-bounded design first), wider coverage than 1/258 skills, and the
 finding_floor calibration (needs the wider run).
+
+**Scope + revisit-if** (per `decision-revisit-gate`): settled-by-evidence for
+the credential/reachability question specifically (all three vendor legs
+confirmed live). The three "remaining open" items above are this decision's
+revisit-if — each reopens its own slice of the eval once its scope/cost
+question is resolved.
