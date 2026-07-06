@@ -8,8 +8,7 @@
     "no-cheap-questions",
     "non-destructive-by-default",
     "scope-control",
-    "user-interrupt-priority",
     "verify-before-complete"
   ],
-  "sha256": "cc06c1366875c6c14527902222afd946bdbde77d4b267b5a999f1dd214b070b0"
+  "sha256": "f735cca4d38234074ceff89c3f288a2f85685f8cd1f9daa8c5fdbb44310a8dc9"
 }

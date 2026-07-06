@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Rights gate for AI image generation — real-person likenesses, trademarked brand marks, and named living artists' styles require explicit rights/consent check before generation."
+description: "AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent"
 triggers:
   - keyword: "/image:"
   - keyword: "image generation"

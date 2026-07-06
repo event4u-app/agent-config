@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "mechanical-already"
-description: "Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings"
+description: "Linking transient files (agents/roadmaps/, agents/runtime/council/) from stable artifacts — both expire; promote findings"
 alwaysApply: false
 triggers:
   - path_prefix: "agents/roadmaps/"

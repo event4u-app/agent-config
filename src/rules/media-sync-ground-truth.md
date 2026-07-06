@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Audio-synced video (lip-sync, beat-cuts, music video) — derive timing + singer from the transcribed real audio, never a planning doc; sign off the vocal map before any paid render"
+description: "Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders"
 triggers:
   - keyword: "lip-sync"
   - keyword: "lip sync"

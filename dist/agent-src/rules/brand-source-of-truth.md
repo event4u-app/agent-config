@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "The consumer's brand tokens and voice profile are the run's source of truth — the curated brand corpus only fills gaps, never overrides a registered brand value."
+description: "Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides"
 triggers:
   - keyword: "brand tokens"
   - keyword: "brand voice"

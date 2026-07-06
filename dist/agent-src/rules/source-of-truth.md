@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Editing files in dist/agent-src/, .augment/, .claude/, or .cursor/ — source of truth is src/; never edit a generated projection directly"
+description: "Editing dist/agent-src/, .augment/, .claude/, .cursor/ — source of truth is src/; never edit a generated projection"
 load_context:
   - ../contexts/communication/rules-auto/source-of-truth-mechanics.md
 triggers:

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus"
+description: "Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor"
 triggers:
   - path_prefix: "agents/decisions/low-impact-decisions"
   - keyword: "low-impact-decisions"

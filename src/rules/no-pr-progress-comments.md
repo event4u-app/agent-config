@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true"
+description: "PR comments — no unsolicited progress/status/CI narration unless personal.pr_progress_comments is true"
 triggers:
   - intent: "post PR comment"
   - intent: "PR status update"

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise"
+description: "CLI runs, log fetches, replies — redirect verbose output, minimize tool calls, stay concise"
 alwaysApply: false
 load_context:
   - ../contexts/communication/rules-auto/token-efficiency-mechanics.md

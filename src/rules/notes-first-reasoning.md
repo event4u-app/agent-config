@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "Reasoning-heavy work (debugging, multi-hypothesis, weighing alternatives) — keep hypotheses/predictions/decisions in session notes, response carries conclusions + evidence only"
+description: "Reasoning-heavy work — hypotheses/predictions/decisions go to session notes; the response carries conclusions + evidence"
 triggers:
   - keyword: "debug"
   - keyword: "investigate"

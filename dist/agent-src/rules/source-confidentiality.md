@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "mechanical-already"
-description: "Naming an external repo as something this package copied, harvested, compared against, or was inspired by — keep the tracked tree source-anonymous"
+description: "Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous"
 alwaysApply: false
 triggers:
   - path_prefix: "src/skills/"

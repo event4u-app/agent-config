@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "After creating or improving a skill/rule/guideline/command — ask if it should be contributed upstream to the shared package"
+description: "After creating/improving a skill/rule/guideline/command — ask about upstreaming it"
 triggers:
   - phrase: "after creating"
   - phrase: "after improving"

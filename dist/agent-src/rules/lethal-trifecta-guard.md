@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Authoring a skill/command/tool that mixes private-data access + untrusted-content ingestion + external comms — break one leg of the lethal trifecta before shipping"
+description: "Skill/command/tool mixing private-data access + untrusted content + external comms — break one leg before shipping"
 triggers:
   - path_prefix: "src/skills/"
   - path_prefix: "src/agent-src/commands/"

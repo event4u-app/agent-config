@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers"
+description: "telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
 triggers:
   - intent: "any reply"
 workspaces:
