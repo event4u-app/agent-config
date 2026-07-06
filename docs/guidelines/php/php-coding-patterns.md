@@ -55,6 +55,13 @@ Default: `getters_setters`. See the `eloquent` skill for the full reference tabl
 - Always write tests in **Pest**, not PHPUnit class syntax — unless the user explicitly asks for PHPUnit.
 - Pest tests in `tests/Unit/` automatically use `UnitTestCase` as the base class (configured in `tests/Pest.php`).
 
+## Code comments
+
+A code comment earns its place only by stating a constraint the code
+cannot show. Never write comments that narrate, repeat the next line,
+or justify the change to the reviewer. Full clause:
+[`code-clarity.md § Comment discipline`](../code-clarity.md#comment-discipline--state-a-constraint-not-a-narration).
+
 ## PHPDoc
 
 - Only add PHPDoc when type hints are insufficient (e.g. generic arrays: `@param array<int, MyObject> $items`).

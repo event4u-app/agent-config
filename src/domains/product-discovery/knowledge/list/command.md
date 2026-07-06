@@ -88,6 +88,15 @@ Print `(no ingests)` and offer the next step:
   ingest, the command rejects with a structured error and asks for a
   longer prefix.
 
+## Retrieval-trigger signals
+
+Possessives ("my/our X"), definite references to unnamed prior work
+("that document", "the spec"), and past-time cues ("you ingested this
+last week") are signals the user expects knowledge to be available. Check
+`/knowledge list` before declaring the agent unaware of material the
+user has already provided. See also
+[`memory-consolidation § Retrieval-trigger linguistics`](../../../../skills/memory-consolidation/SKILL.md#retrieval-trigger-linguistics).
+
 ## See also
 
 - [`/knowledge ingest`](ingest.md) — add a new ingest.
