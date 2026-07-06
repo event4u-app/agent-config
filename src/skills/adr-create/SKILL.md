@@ -9,8 +9,8 @@ execution:
   timeout_seconds: 30
   allowed_tools: []
   command:
-    - python3
-    - scripts/adr/regenerate_index.py
+    - ./scripts-run
+    - src/scripts/adr/regenerate_index
 workspaces:
   - agent-config-maintainer
 packs:
