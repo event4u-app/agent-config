@@ -592,6 +592,21 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // (marker-guarded; foreign hooks are never touched).
     _maybe_refresh_git_hook(project_root, runner, out, err);
 
+    // Doctor runs LAST, every time, non-fatal: its duplicate-surface and
+    // hook-wiring findings ARE the upgrade summary's health section — a
+    // mixed state (stale plugin, missing hooks) is named in the same run
+    // instead of waiting for the user to think of running doctor.
+    const doctor_cmd = [_agent_config_bin(), 'doctor'];
+    _print(out, '→ ' + doctor_cmd.join(' '));
+    const doctor_rc = runner(doctor_cmd);
+    if (doctor_rc !== 0) {
+        _print(
+            err,
+            `⚠️  agent-config doctor reported findings (exit ${doctor_rc}) — ` +
+                'see the check output above for per-item fixes.',
+        );
+    }
+
     if (failed_essential.length > 0) {
         _print(
             err,
@@ -606,8 +621,8 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
 
     _print(
         out,
-        '✅  agent-config upgraded. Run `agent-config doctor` to verify ' +
-            'PATH + hook wiring.',
+        '✅  agent-config upgraded' +
+            (doctor_rc === 0 ? ' — doctor green.' : ' — review the doctor findings above.'),
     );
     return 0;
 }

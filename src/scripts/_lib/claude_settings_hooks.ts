@@ -33,9 +33,21 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import * as YAML from 'yaml';
+import type * as YamlModule from 'yaml';
 
 import { atomicWriteFile } from '../../install/atomic.js';
+
+/**
+ * Lazy yaml load — mirrors install.ts::yamlSafeLoad. A static `import` of the
+ * CJS `yaml` package breaks the esbuild ESM install bundle
+ * (`Dynamic require of "process" is not supported` at module init); the lazy
+ * require inside the call is the proven bundle-safe pattern.
+ */
+function _yaml_parse(text: string): unknown {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const YAML = require('yaml') as typeof YamlModule;
+    return YAML.parse(text);
+}
 
 /** Substring that identifies an entry as agent-config-managed. */
 export const MANAGED_SIGNATURE = 'dispatch:hook --platform claude';
@@ -82,7 +94,7 @@ export type ClaudeHookMatrix = Record<string, string>;
  */
 export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatrix {
     const raw = fs.readFileSync(manifest_path, 'utf8');
-    const manifest = (YAML.parse(raw) ?? {}) as Record<string, unknown>;
+    const manifest = (_yaml_parse(raw) ?? {}) as Record<string, unknown>;
     const hook_spec = (manifest['schema_version'] as unknown) ?? 1;
     const platforms = (manifest['platforms'] ?? {}) as Record<string, unknown>;
     const claude_events = ((platforms['claude'] ?? {}) as Record<string, unknown>) || {};

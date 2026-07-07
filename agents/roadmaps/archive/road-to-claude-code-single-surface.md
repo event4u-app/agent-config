@@ -141,15 +141,15 @@ losing hooks mid-migration.
 Goal: the June→July silent-staleness case becomes structurally impossible to
 reintroduce.
 
-- [ ] CI lint: the hook matrix has ONE source of truth in `src/`; the
+- [x] CI lint: the hook matrix has ONE source of truth in `src/`; the
       settings-template block and (during deprecation) the plugin
       `hooks/hooks.json` are generated from it — drift fails the build
       <!-- carve-out: new-gate-verification -->
-- [ ] Golden smoke: fresh global install → managed hooks present, one skill
+- [x] Golden smoke: fresh global install → managed hooks present, one skill
       surface only (no `agent-config:`-prefixed duplicates), doctor green
-- [ ] `doctor` runs as the last upgrade step and its `duplicate-surface` /
+- [x] `doctor` runs as the last upgrade step and its `duplicate-surface` /
       `hook-wiring` findings are surfaced in the upgrade summary
-- [ ] Findings note + this roadmap's outcome promoted to
+- [x] Findings note + this roadmap's outcome promoted to
       `agents/settings/contexts/` (durable decision record; council
       convergence inlined, no council-file links from stable artifacts)
 
