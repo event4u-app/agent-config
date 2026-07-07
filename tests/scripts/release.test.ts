@@ -29,6 +29,7 @@ import {
     bump_version,
     infer_bump,
     resolve_bump,
+    nothing_to_release_ci,
     render_changelog_entry,
     _cap_body,
     _changelog_line,
@@ -153,6 +154,27 @@ describe('resolve_bump', () => {
     });
     it('no override empty commits is patch', () => {
         expect(resolve_bump(null, [])).toBe('patch');
+    });
+});
+
+// ─── nothing_to_release_ci — the label-flow double-fire guard ─────────────────
+describe('nothing_to_release_ci', () => {
+    const someCommits = [new Commit('a'.repeat(40), 'feat', null, 'add X', false)];
+
+    it('true only under --ci with no override and no commits', () => {
+        expect(nothing_to_release_ci(true, null, null, [])).toBe(true);
+    });
+    it('false when not --ci — the interactive path is never short-circuited', () => {
+        expect(nothing_to_release_ci(false, null, null, [])).toBe(false);
+    });
+    it('false when --ci but commits exist', () => {
+        expect(nothing_to_release_ci(true, null, null, someCommits)).toBe(false);
+    });
+    it('false when --ci with an explicit --version override', () => {
+        expect(nothing_to_release_ci(true, '9.9.9', null, [])).toBe(false);
+    });
+    it('false when --ci with a --as bump override', () => {
+        expect(nothing_to_release_ci(true, null, 'patch', [])).toBe(false);
     });
 });
 
@@ -470,6 +492,30 @@ describe('release --check-confirm — self-test wiring', () => {
         expect(r.stdout).toContain('self-test');
         expect(r.stdout + r.stderr).toContain('--yes'); // actionable guidance
         expect(r.stdout + r.stderr).not.toMatch(/^aborted\.?$/m); // not a bare silent abort
+    });
+});
+
+// ─── --ci flag wiring — release.yml's entry point ─────────────────────────────
+// `--ci` never touches git/gh (see the file-header comment for docs); lock
+// only that the flag parses and that `--dry-run` short-circuits before the
+// CI-specific gh-auth probe or the nothing-to-release check would run.
+describe('release --ci — flag parses, --dry-run short-circuits before any CI-specific probe', () => {
+    it('--ci --dry-run exits 0 without needing GITHUB_TOKEN-shaped gh auth', () => {
+        const r = spawnSync(TSX_BIN, [TS_SCRIPT, '--ci', '--dry-run'], {
+            encoding: 'utf8',
+            cwd: REPO_ROOT,
+            timeout: 15_000,
+        });
+        expect(r.status, r.stderr).toBe(0);
+    });
+    it('--ci=value rejected like every other boolean flag', () => {
+        const r = spawnSync(TSX_BIN, [TS_SCRIPT, '--ci=true'], {
+            encoding: 'utf8',
+            cwd: REPO_ROOT,
+            timeout: 15_000,
+        });
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('--ci');
     });
 });
 
