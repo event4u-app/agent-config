@@ -59,20 +59,20 @@ Goal: prove (or refute) the load-bearing equivalence assumption before any
 retirement work. Output: a short findings note in
 `agents/settings/contexts/claude-code-hook-parity.md`.
 
-- [ ] Inventory the plugin's full hook matrix (`hooks/hooks.json` events,
+- [x] Inventory the plugin's full hook matrix (`hooks/hooks.json` events,
       command shape, timeout fields) from the installed snapshot and from
       `src/` — document every event we must reproduce
-- [ ] Register the same hook matrix in a test `~/.claude/settings.json`
+- [x] Register the same hook matrix in a test `~/.claude/settings.json`
       managed block (same `dispatch:hook` commands) and verify each event
       fires in a fresh Claude Code session (SessionStart/SessionEnd/Stop at
       minimum) with the plugin disabled
-- [ ] Verify coexistence: a pre-existing user hook on the same event keeps
+- [x] Verify coexistence: a pre-existing user hook on the same event keeps
       firing alongside the managed block (no clobber, defined order is
       acceptable)
-- [ ] Verify subagent parity: check whether `~/.claude/agents/` (or the
+- [x] Verify subagent parity: check whether `~/.claude/agents/` (or the
       documented user-scope agents dir) can carry the `agent-config:*` agent
       definitions the plugin ships today; document any gap
-- [ ] Decision checkpoint: parity confirmed → proceed with plugin
+- [x] Decision checkpoint: parity confirmed → proceed with plugin
       retirement (Phases 1–4 as written); parity refuted on hooks →
       switch Phases 3–4 to the thin-plugin fallback (plugin keeps ONLY
       `hooks/` + `agents/`, `.claude-plugin/skills/` is emptied) and record

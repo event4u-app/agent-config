@@ -6,17 +6,17 @@
 
 ## Overall
 
-**86 / 156 steps done · 55%**
+**91 / 156 steps done · 58%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-claude-code-single-surface.md](roadmaps/road-to-claude-code-single-surface.md) | 5 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-claude-code-single-surface.md](roadmaps/road-to-claude-code-single-surface.md) | 5 | 22 | 17 | 5 | 0 | 0 | 0 | ██░░░░░░░░ 23% |
 | 2 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
@@ -31,11 +31,11 @@
 
 ### [road-to-claude-code-single-surface.md](roadmaps/road-to-claude-code-single-surface.md)
 
-**Claude Code single distribution surface — retire the dual npx/marketplace overlap** — 0 / 22 done (0%)
+**Claude Code single distribution surface — retire the dual npx/marketplace overlap** — 5 / 22 done (23%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Evidence gate: settings.json hook + agent parity | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0 | Evidence gate: settings.json hook + agent parity | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Managed settings-merge protocol | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Installer + upgrade chain hardening | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Plugin retirement + user migration | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
