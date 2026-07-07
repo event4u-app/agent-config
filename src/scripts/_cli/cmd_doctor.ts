@@ -81,6 +81,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as YAML from 'yaml';
 
 import * as claude_plugin from '../_lib/claude_plugin.js';
+import * as claude_settings_hooks from '../_lib/claude_settings_hooks.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
@@ -730,6 +731,7 @@ const CHECK_IDS = [
     'scope',
     'global-binary',
     'claude-plugin',
+    'hook-wiring',
     'stale-orphans',
     'manifest-integrity',
     'lockfile-freshness',
@@ -749,6 +751,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'scope',
     'global-binary',
     'claude-plugin',
+    'hook-wiring',
     'stale-orphans',
     'mcp-mode',
     'mcp-beta-readiness',
@@ -1005,12 +1008,14 @@ function lstripV(s: string): string {
 }
 
 /**
- * Claude Code plugin state. The plugin is OPTIONAL — the `~/.claude/` file
- * projection is a full install on its own — so a missing plugin is `ok`,
- * never a warning. What DOES warn is a stale installed plugin: Claude Code
- * pins the plugin to its install-time git SHA, so its command surface
- * silently lags every upgrade until `claude plugin update` runs
- * (`agent-config upgrade` now does that automatically).
+ * Claude Code plugin state under the single-surface model
+ * (road-to-claude-code-single-surface): the `~/.claude/` file projection is
+ * THE distribution surface for Claude Code — content, and hooks via the
+ * managed settings.json block. An installed marketplace plugin next to the
+ * projection is a **duplicate surface**: every skill/command lists twice
+ * and the plugin's SHA snapshot rots silently. That is `fail`, with the
+ * uninstall command as the fix (never uninstalled autonomously — the plugin
+ * is a user-owned surface).
  */
 function _check_claude_plugin(): Dict {
     const claude = shutilWhich('claude');
@@ -1027,9 +1032,25 @@ function _check_claude_plugin(): Dict {
             id: 'claude-plugin',
             status: 'ok',
             message:
-                'plugin not installed (optional — the ~/.claude/ file projection ' +
-                'already carries the full skill/command set)',
+                'plugin not installed (single-surface model — the ~/.claude/ file ' +
+                'projection carries content AND hooks)',
             remedy: '',
+        };
+    }
+    const projection = path.join(os.homedir(), '.claude', 'skills');
+    const projection_present = isDir(projection);
+    if (projection_present) {
+        return {
+            id: 'claude-plugin',
+            status: 'fail',
+            message:
+                'duplicate surface: the marketplace plugin AND the ~/.claude/ file ' +
+                'projection are both installed — every skill/command lists twice and ' +
+                'the plugin snapshot rots silently',
+            remedy:
+                `claude plugin uninstall ${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME} ` +
+                '(hooks stay — they are registered in ~/.claude/settings.json; ' +
+                'verify with the hook-wiring check)',
         };
     }
     const snapshot_v = lstripV(claude_plugin.claude_plugin_snapshot_version() || '');
@@ -1046,9 +1067,86 @@ function _check_claude_plugin(): Dict {
     }
     return {
         id: 'claude-plugin',
-        status: 'ok',
-        message: `plugin installed${snapshot_v ? ` (snapshot ${snapshot_v})` : ''}`,
-        remedy: '',
+        status: 'warn',
+        message:
+            `plugin installed${snapshot_v ? ` (snapshot ${snapshot_v})` : ''} without the ` +
+            'file projection — deprecated surface; the projection is the supported path',
+        remedy: 'agent-config global (then uninstall the plugin per the printed hint)',
+    };
+}
+
+/**
+ * Managed hook wiring (single-surface model): the deterministic hook matrix
+ * must be registered in ~/.claude/settings.json AND the dispatch target
+ * (`agent-config` binary) must resolve on PATH. Both halves are required —
+ * hooks without a binary silently no-op every session.
+ */
+function _check_hook_wiring(): Dict {
+    const claude = shutilWhich('claude');
+    if (claude === null) {
+        return {
+            id: 'hook-wiring',
+            status: 'skipped',
+            message: 'Claude Code CLI not on PATH — hook-wiring check not applicable',
+            remedy: '',
+        };
+    }
+    const settings_path = path.join(os.homedir(), '.claude', 'settings.json');
+    let missing: string[];
+    try {
+        const matrix = claude_settings_hooks.build_claude_hook_matrix(
+            path.join(_package_root(), 'src', 'scripts', 'hook_manifest.yaml'),
+        );
+        const settings = pathExists(settings_path)
+            ? (JSON.parse(fs.readFileSync(settings_path, 'utf8')) as Record<string, unknown>)
+            : {};
+        const hooks = ((settings['hooks'] ?? {}) as Record<string, unknown>) || {};
+        missing = Object.keys(matrix).filter((ev) => {
+            const groups = hooks[ev];
+            if (!Array.isArray(groups)) return true;
+            return !JSON.stringify(groups).includes(claude_settings_hooks.MANAGED_SIGNATURE);
+        });
+    } catch (e) {
+        return {
+            id: 'hook-wiring',
+            status: 'fail',
+            message: `cannot evaluate managed hooks: ${String(e)}`,
+            remedy: 'fix ~/.claude/settings.json (invalid JSON?), then agent-config refresh --global',
+        };
+    }
+    const binary_ok = shutilWhich('agent-config') !== null;
+    if (missing.length === 0 && binary_ok) {
+        return {
+            id: 'hook-wiring',
+            status: 'ok',
+            message: 'managed hooks registered in ~/.claude/settings.json; dispatch binary on PATH',
+            remedy: '',
+        };
+    }
+    if (missing.length > 0 && claude_plugin.claude_plugin_installed()) {
+        return {
+            id: 'hook-wiring',
+            status: 'warn',
+            message:
+                `managed hooks missing for: ${missing.join(', ')} — currently carried by the ` +
+                'installed plugin (deprecated surface)',
+            remedy: 'agent-config refresh --global (writes the managed settings.json block)',
+        };
+    }
+    const parts: string[] = [];
+    if (missing.length > 0) parts.push(`managed hooks missing for: ${missing.join(', ')}`);
+    if (!binary_ok) parts.push('`agent-config` not on PATH (hooks would silently no-op)');
+    if (parts.length === 0) {
+        // hooks complete, binary missing was the only issue → covered above.
+        parts.push('`agent-config` not on PATH');
+    }
+    return {
+        id: 'hook-wiring',
+        status: 'fail',
+        message: parts.join('; '),
+        remedy: binary_ok
+            ? 'agent-config refresh --global'
+            : 'npm install -g @event4u/agent-config, then agent-config refresh --global',
     };
 }
 
@@ -1818,6 +1916,7 @@ function _run_checks(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _check_manifest_integrity(manifest),
         'lockfile-freshness': () => _check_lockfile_freshness(manifest),
@@ -1890,6 +1989,7 @@ function _run_checks_no_manifest(
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
         'claude-plugin': _check_claude_plugin,
+        'hook-wiring': _check_hook_wiring,
         'stale-orphans': _check_stale_orphans,
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
         'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),

@@ -37,16 +37,18 @@ The suite is global-only (ADR-020) — refresh the global install and every
 project sees the new skills, rules, and hooks at once, no per-repo bump:
 
 ```bash
-agent-config upgrade            # fetch + install the latest globally (binary + plugin)
-agent-config refresh --global   # idempotent re-install, same version (root + plugin)
+agent-config upgrade            # fetch + install the latest globally (content + hooks)
+agent-config refresh --global   # idempotent re-install, same version
 agent-config refresh --project  # refresh a project's minimal surface — bridge
                                 # marker, agents/overrides/, .gitignore (no wizard)
-agent-config doctor             # PATH, binary↔plugin version drift, bridge presence
+agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge presence
 ```
 
-The Claude marketplace plugin updates on Claude Code's own cadence,
-independent of npm; `doctor` surfaces binary↔plugin drift so you know when to
-update the plugin from the marketplace.
+Claude Code is single-surface: the file projection carries content AND the
+managed hooks in `~/.claude/settings.json` — there is no marketplace plugin
+to keep in sync anymore. A leftover plugin from an older install is flagged
+by `doctor` as `claude-plugin: duplicate surface` (fix:
+`claude plugin uninstall agent-config@event4u-agent-config`).
 
 ## Project CLI — `./agent-config`
 

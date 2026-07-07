@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "version": "8.2.0",
-    "description": "Universal AI Agent OS — audited skills, governance rules, commands, and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
+    "description": "Universal AI Agent OS \u2014 audited skills, governance rules, commands, and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
     "license": "MIT",
     "private": false,
     "type": "module",
@@ -56,7 +56,7 @@
     },
     "scripts": {
         "build:cli": "tsc -p tsconfig.json && chmod +x dist/cli/agent-config.js",
-        "build:install-bundle": "esbuild src/scripts/install.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/install/install.mjs",
+        "build:install-bundle": "esbuild src/scripts/install.ts --bundle --platform=node --format=esm --target=node20 --define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/install/install.mjs --banner:js=\"import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);\"",
         "build:ui": "vite build",
         "build:discovery": "./scripts-run src/scripts/build_discovery_manifest --write --strict",
         "build:mcp-manifest": "./scripts-run src/scripts/build_mcp_registry_manifest --write --strict",

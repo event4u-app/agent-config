@@ -39,6 +39,7 @@ import {
     resolve_logical as _agent_src_resolve_logical,
     strip_source_prefix,
 } from './_lib/agent_src.js';
+import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { info, success, flush_summary, resolve_level } from './_lib/script_output.js';
 import {
@@ -1963,36 +1964,13 @@ export function generate_plugin_hooks(): number {
         return 0;
     }
 
-    // Python: `manifest = yaml.safe_load(...) or {}`.
-    let manifest = _yamlParse(_readText(manifest_path)) as Record<string, unknown> | null;
-    if (manifest === null || manifest === undefined) {
-        manifest = {};
-    }
-    const hook_spec = (manifest['schema_version'] as unknown) ?? 1;
-    const platforms = (manifest['platforms'] ?? {}) as Record<string, unknown>;
-    const claude_events = ((platforms['claude'] ?? {}) as Record<string, unknown>) || {};
-    const nativeAliasesAll = (manifest['native_event_aliases'] ?? {}) as Record<string, unknown>;
-    const aliases = ((nativeAliasesAll['claude'] ?? {}) as Record<string, unknown>) || {};
-    // Reverse the native→agent-config map.
-    const ac_to_native: Record<string, string> = {};
-    for (const [native, ac] of Object.entries(aliases)) {
-        ac_to_native[String(ac)] = native;
-    }
-
+    // Single source of truth: the SAME matrix derivation the installer uses
+    // for the managed settings.json block (road-to-claude-code-single-surface
+    // Phase 4) — plugin hooks.json and settings hooks cannot drift by
+    // construction. Backstop: tests/install/claude_hook_matrix_parity.test.ts.
+    const matrix = build_claude_hook_matrix(manifest_path);
     const hooks: Record<string, unknown[]> = {};
-    for (const [ac_event, concerns] of Object.entries(claude_events)) {
-        if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) {
-            continue;
-        }
-        const native = ac_to_native[ac_event];
-        if (native === undefined) {
-            continue;
-        }
-        const command =
-            'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
-            `"$BIN" dispatch:hook --platform claude --event ${ac_event} ` +
-            `--native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" ` +
-            `--min-version ${String(hook_spec)}`;
+    for (const [native, command] of Object.entries(matrix)) {
         hooks[native] = [{ hooks: [{ type: 'command', command }] }];
     }
 
