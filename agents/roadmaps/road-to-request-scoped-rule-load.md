@@ -113,24 +113,36 @@ Close the 6.0.0-B exemption: filter rules at projection/install time by the
 installed workspace set, exactly as ADR-040 scopes it (projection-time
 filtering, no runtime resolver).
 
-- [ ] **Misclassification audit first (blocking):** review the 63
+- [x] **Misclassification audit first (blocking):** review the 63
       exclusively-maintainer rules for consumer-relevant misfits (e.g. a
       generic discipline rule tagged maintainer out of habit). Output: a
       reviewed allowlist diff; every reclassification is its own commit with
       reasoning. Do not filter on unaudited tags.
-- [ ] Extend the 6.0.0-B pack loader / projector path to rules: given the
+      <!-- done 2026-07-07: 46 reclassified (4 audited group commits A-D), 16 stay
+      maintainer-only; council-checked; full record in
+      agents/settings/contexts/consumer-scoping-audit-2026-07-07.md. Corrected
+      lever: 16 rules ≈ 13.9k tok eager (external "63 ≈ 50k" was a naive tag read). -->
+- [x] Extend the 6.0.0-B pack loader / projector path to rules: given the
       installed workspace+pack set, project only matching rules into
       `.claude/rules`, `.cursor/rules`, `.clinerules`, `.windsurfrules` and
       the consumer `dist/agent-src/rules` deploy source. Kernel always
       projects. `legacy-all` projects everything (non-breaking default).
-- [ ] Filter the thin-projection pointer catalog by the same set — a
+      <!-- done 2026-07-07 as `projection.rule_workspaces` (opt-in, additive):
+      the 6.0.0-B scoped pack loader is not ported in condense.ts (throws), so
+      the rule filter is a standalone workspace predicate applied in all four
+      rule generators + .windsurfrules; kernel always projects; legacy-all
+      default preserved byte-identically. -->
+- [x] Filter the thin-projection pointer catalog by the same set — a
       consumer without the maintainer workspace gets neither maintainer
       bodies nor maintainer pointer lines (floor shrinks from 86 pointers
       toward ~23 + kernel), so the mechanism is ready whenever the thin flip
       un-defers.
-- [ ] CI guard: a consumer-shaped fixture install must contain zero
+- [x] CI guard: a consumer-shaped fixture install must contain zero
       exclusively-maintainer rules; a maintainer checkout must contain all
       95 (mirrors the portability-guard pattern).
+      <!-- done: tests/scripts/rule_workspace_scoping.test.ts runs against the
+      REAL dist rules + router (consumer scope excludes all 16 maintainer-only,
+      keeps kernel + reclassified; null scope keeps all 95). -->
 - [ ] **Human gate:** flip default from `legacy-all` to scoped for consumer
       installs (maintainer source checkout keeps everything). Record the
       measured before/after (eager and thin arms) in

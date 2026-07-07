@@ -6,10 +6,10 @@
 
 ## Overall
 
-**31 / 112 steps done · 28%**
+**35 / 112 steps done · 31%**
 
 ```text
-███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ░░░░░░░░░░ 0% |
-| 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 20 | 5 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██░░░░░░░░ 20% |
+| 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 16 | 9 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████░░░░░░ 36% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 22 | 4 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ██░░░░░░░░ 15% |
 | 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 12 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 65% |
@@ -52,12 +52,12 @@
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 5 / 25 done (20%)
+**Road to request-scoped rule load — ship only what the request needs** — 9 / 25 done (36%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Workspace/pack fields into the router (schema, additive) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | Consumer-scoped rule projection (the ~50k lever) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Consumer-scoped rule projection (the ~50k lever) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 2 | Host-native activation: populate globs (deterministic) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 8 | 0 | 0 | 0 | 0% |

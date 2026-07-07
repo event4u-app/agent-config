@@ -930,11 +930,60 @@ export function _rewrite_paths(content: string, source_relative_path: string): s
 // Expose the HRR marker for tests (mirrors condense._HRR_BANNER_MARKER access).
 export { _HRR_BANNER_MARKER };
 
-export function generate_rule_symlinks(): number {
-    const rules = _iterdirSorted(MODULE_STATE.RULES_SOURCE)
+// ── Consumer-scoped rule projection (road-to-request-scoped-rule-load P1) ──
+//
+// Opt-in via `projection.rule_workspaces: [<workspace-id>, …]` in
+// `.agent-settings.yml`. Absent / empty = legacy-all (every rule projects —
+// today's behaviour, non-breaking). When set, a non-kernel rule projects
+// only if its `workspaces:` frontmatter intersects the configured set.
+// Kernel rules (`type: always` / `alwaysApply: true`) ALWAYS project —
+// the kernel is unconditional and workspace-independent by definition
+// (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
+// ADR-040: projection-time filtering only, no runtime resolver.
+
+function _read_rule_workspaces(): string[] | null {
+    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
+    const proj = data['projection'];
+    const value =
+        typeof proj === 'object' && proj !== null && !Array.isArray(proj)
+            ? (proj as Record<string, unknown>)['rule_workspaces']
+            : null;
+    if (Array.isArray(value) && value.length > 0) {
+        return value.map((v) => String(v));
+    }
+    return null;
+}
+
+/** Whether a rule source file projects under the given workspace scope. */
+export function rule_in_scope(source_path: string, scope: readonly string[] | null): boolean {
+    if (scope === null) {
+        return true;
+    }
+    const [meta] = _parse_frontmatter(_readText(source_path));
+    if (meta['type'] === 'always' || meta['alwaysApply'] === true) {
+        return true; // kernel always projects
+    }
+    const ws = Array.isArray(meta['workspaces'])
+        ? (meta['workspaces'] as unknown[]).map((w) => String(w))
+        : [];
+    if (ws.length === 0) {
+        return true; // untagged → fail safe: ship it
+    }
+    return ws.some((w) => scope.includes(w));
+}
+
+/** List rule basenames under RULES_SOURCE, workspace-scope applied. */
+function _scoped_rule_basenames(): string[] {
+    const scope = _read_rule_workspaces();
+    return _iterdirSorted(MODULE_STATE.RULES_SOURCE)
         .filter((p) => p.endsWith('.md') && _isFile(p))
+        .filter((p) => rule_in_scope(p, scope))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+export function generate_rule_symlinks(): number {
+    const rules = _scoped_rule_basenames();
     const tool_dirs = _filter_tool_dirs(TOOL_DIRS);
 
     let thin_files: Record<string, string> | null = null;
@@ -988,10 +1037,7 @@ export function generate_rule_symlinks(): number {
 }
 
 export function generate_windsurfrules(): number {
-    const rules = _iterdirSorted(MODULE_STATE.RULES_SOURCE)
-        .filter((p) => p.endsWith('.md') && _isFile(p))
-        .map((p) => path.basename(p))
-        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    const rules = _scoped_rule_basenames();
     const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
     for (const rule of rules) {
         const p = path.join(MODULE_STATE.RULES_SOURCE, rule);
@@ -1137,7 +1183,10 @@ function _clean_modern_dir(target_dir: string, valid_names: ReadonlySet<string>)
 }
 
 export function generate_cursor_mdc_rules(): number {
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md').filter((p) => _isFile(p));
+    const scope = _read_rule_workspaces();
+    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+        .filter((p) => _isFile(p))
+        .filter((p) => rule_in_scope(p, scope));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
         ...stems.map((s) => `${s}.mdc`),
@@ -1152,7 +1201,10 @@ export function generate_cursor_mdc_rules(): number {
 }
 
 export function generate_windsurf_modern_rules(): number {
-    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md').filter((p) => _isFile(p));
+    const scope = _read_rule_workspaces();
+    const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
+        .filter((p) => _isFile(p))
+        .filter((p) => rule_in_scope(p, scope));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
     for (const rule of rules) {

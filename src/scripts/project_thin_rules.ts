@@ -68,6 +68,61 @@ export function kernel_ids(): Set<string> {
     return new Set();
 }
 
+/**
+ * id → workspaces for every non-kernel router entry (router.json schema v2,
+ * road-to-request-scoped-rule-load Phase 1). Rules absent from the map (or
+ * with an empty list) fail safe: they stay in scope.
+ */
+export function rule_workspaces_map(): Map<string, string[]> {
+    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
+    const map = new Map<string, string[]>();
+    for (const tier of ['tier_1', 'tier_2']) {
+        const entries = data[tier];
+        if (!Array.isArray(entries)) continue;
+        for (const e of entries) {
+            const obj = e as Record<string, unknown>;
+            const ws = Array.isArray(obj.workspaces) ? obj.workspaces.map((w) => String(w)) : [];
+            map.set(String(obj.id), ws);
+        }
+    }
+    return map;
+}
+
+/**
+ * Whether a rule id survives a workspace scope. Kernel always survives;
+ * `scope === null` = legacy-all. An out-of-scope non-kernel rule is dropped
+ * entirely — neither body nor pointer line (the pointer floor shrinks with
+ * consumer scoping).
+ */
+export function id_in_scope(
+    rule_id: string,
+    scope: readonly string[] | null,
+    kernel: ReadonlySet<string>,
+    wsMap: ReadonlyMap<string, string[]>,
+    fallback_ws: readonly string[] = [],
+): boolean {
+    if (scope === null || kernel.has(rule_id)) {
+        return true;
+    }
+    // Router map first (schema v2); `type: manual` rules are reference-only
+    // and never emitted to the router — their frontmatter is the fallback.
+    const ws = wsMap.get(rule_id) ?? fallback_ws;
+    if (ws.length === 0) {
+        return true; // untagged / unknown → fail safe
+    }
+    return ws.some((w) => scope.includes(w));
+}
+
+/** `workspaces:` list parsed straight from a rule file's frontmatter. */
+export function fm_workspaces(text: string): string[] {
+    const [fm] = split_frontmatter(text);
+    const m = /^workspaces:\n((?:\s+-\s+.*\n)+)/m.exec(fm);
+    if (!m) {
+        return [];
+    }
+    return [...(m[1] as string).matchAll(/-\s+(\S+)/g)].map((x) => x[1] as string);
+}
+
 /** Return [frontmatter_including_fences, body]. Empty fm if none. */
 export function split_frontmatter(text: string): [string, string] {
     if (text.startsWith('---\n')) {
@@ -123,12 +178,19 @@ export function thin_entry(rule_id: string, text: string): string {
 }
 
 /** Map {filename: thin_or_full_text} for every rule. Kernel stays full. */
-export function build_thin(rules_dir: string = RULES_SOURCE): Map<string, string> {
+export function build_thin(
+    rules_dir: string = RULES_SOURCE,
+    scope: readonly string[] | null = null,
+): Map<string, string> {
     const kernel = kernel_ids();
+    const wsMap = scope !== null ? rule_workspaces_map() : new Map<string, string[]>();
     const out = new Map<string, string>();
     for (const p of _globSortedMd(rules_dir)) {
         const text = fs.readFileSync(p, 'utf-8');
         const stem = path.basename(p).replace(/\.md$/, '');
+        if (!id_in_scope(stem, scope, kernel, wsMap, fm_workspaces(text))) {
+            continue; // out of workspace scope — no body, no pointer line
+        }
         out.set(path.basename(p), kernel.has(stem) ? text : thin_entry(stem, text));
     }
     return out;
@@ -163,12 +225,24 @@ function _python_round1(x: number): number {
     return r / 10;
 }
 
-/** Eager vs thin token footprint for the rule layer. */
-export function measure(rules_dir: string = RULES_SOURCE): ThinMeasure {
+/** Eager vs thin token footprint for the rule layer (scope applies to both arms). */
+export function measure(
+    rules_dir: string = RULES_SOURCE,
+    scope: readonly string[] | null = null,
+): ThinMeasure {
     const kernel = kernel_ids();
-    const mdPaths = _globSortedMd(rules_dir);
+    const wsMap = scope !== null ? rule_workspaces_map() : new Map<string, string[]>();
+    const mdPaths = _globSortedMd(rules_dir).filter((p) =>
+        id_in_scope(
+            path.basename(p).replace(/\.md$/, ''),
+            scope,
+            kernel,
+            wsMap,
+            fm_workspaces(fs.readFileSync(p, 'utf-8')),
+        ),
+    );
     const eager_blob = mdPaths.map((p) => fs.readFileSync(p, 'utf-8')).join('');
-    const thin_blob = [...build_thin(rules_dir).values()].join('');
+    const thin_blob = [...build_thin(rules_dir, scope).values()].join('');
     const eager = token_count.measure(eager_blob);
     const thin = token_count.measure(thin_blob);
     const n = mdPaths.length;
@@ -198,9 +272,13 @@ export function measure(rules_dir: string = RULES_SOURCE): ThinMeasure {
 }
 
 /** Write thin rule files to `out_dir`; return the count written. */
-export function write_thin(out_dir: string, rules_dir: string = RULES_SOURCE): number {
+export function write_thin(
+    out_dir: string,
+    rules_dir: string = RULES_SOURCE,
+    scope: readonly string[] | null = null,
+): number {
     fs.mkdirSync(out_dir, { recursive: true });
-    const files = build_thin(rules_dir);
+    const files = build_thin(rules_dir, scope);
     for (const [name, text] of files) {
         fs.writeFileSync(path.join(out_dir, name), text, 'utf-8');
     }
@@ -293,22 +371,26 @@ interface ParsedArgs {
     measure: boolean;
     out: string | null;
     json: boolean;
+    workspaces: string[] | null;
 }
 
 // argparse `prog` defaults to basename(sys.argv[0]) → `project_thin_rules.py`.
-const _USAGE = 'usage: project_thin_rules.py [-h] [--measure] [--out OUT] [--json]\n';
+const _USAGE =
+    'usage: project_thin_rules.py [-h] [--measure] [--out OUT] [--json] [--workspaces WS]\n';
 
-// Full `-h` help block, byte-identical to argparse's rendering.
+// Full `-h` help block.
 const _HELP =
     _USAGE +
     '\n' +
     'Thin-projection of the rule layer (lean-initial-context build-out, Phase 3.1).\n' +
     '\n' +
     'optional arguments:\n' +
-    '  -h, --help  show this help message and exit\n' +
-    '  --measure   print the eager-vs-thin token delta\n' +
-    '  --out OUT   write thin rule files to this dir\n' +
-    '  --json\n';
+    '  -h, --help       show this help message and exit\n' +
+    '  --measure        print the eager-vs-thin token delta\n' +
+    '  --out OUT        write thin rule files to this dir\n' +
+    '  --json\n' +
+    '  --workspaces WS  comma-separated workspace scope (router.json v2 fields);\n' +
+    '                   kernel always survives, out-of-scope rules drop entirely\n';
 
 function _argError(msg: string): never {
     process.stderr.write(_USAGE);
@@ -317,7 +399,7 @@ function _argError(msg: string): never {
 }
 
 function parse_args(argv: string[]): ParsedArgs {
-    const out: ParsedArgs = { measure: false, out: null, json: false };
+    const out: ParsedArgs = { measure: false, out: null, json: false, workspaces: null };
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
         if (a === '-h' || a === '--help') {
@@ -336,6 +418,19 @@ function parse_args(argv: string[]): ParsedArgs {
             i += 1;
         } else if (a.startsWith('--out=')) {
             out.out = a.slice('--out='.length);
+        } else if (a === '--workspaces') {
+            const next = argv[i + 1];
+            if (next === undefined) {
+                _argError('argument --workspaces: expected one argument');
+            }
+            out.workspaces = next.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+            i += 1;
+        } else if (a.startsWith('--workspaces=')) {
+            out.workspaces = a
+                .slice('--workspaces='.length)
+                .split(',')
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
         } else {
             _argError(`unrecognized arguments: ${a}`);
         }
@@ -357,12 +452,12 @@ export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     if (args.out !== null) {
-        const n = write_thin(args.out);
+        const n = write_thin(args.out, RULES_SOURCE, args.workspaces);
         process.stdout.write(`wrote ${n} thin rule files → ${args.out}\n`);
         return 0;
     }
 
-    const m = measure();
+    const m = measure(RULES_SOURCE, args.workspaces);
     if (args.json) {
         // `saved_pct` is a Python float (round(..., 1)); wrap it so an
         // integer-valued result still renders as `N.0` (json.dumps parity).

@@ -52,6 +52,19 @@ profile:
 # tree (.augment/) always project the full set in 6.0.0.
 projection:
   mode: legacy-all
+  # --- Consumer-scoped RULE projection (road-to-request-scoped-rule-load P1,
+  #     opt-in) ---
+  # Workspace scope for the RULE layer only (independent of `mode` above,
+  # which covers skills/commands). Absent or empty = legacy-all: every rule
+  # projects, exactly as today. Non-empty = only rules whose `workspaces:`
+  # frontmatter intersects this list project into .claude/rules,
+  # .cursor/rules, .windsurf/rules, .clinerules and .windsurfrules. Kernel
+  # rules ALWAYS project (unconditional by definition); untagged rules fail
+  # safe and ship. Example consumer scope:
+  #   rule_workspaces: [engineering]
+  # Default flip to a scoped value is a human release gate — see
+  # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md.
+  # rule_workspaces: []
 
 # --- Cost profile ---
 #
