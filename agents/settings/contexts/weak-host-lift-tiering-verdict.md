@@ -85,3 +85,48 @@
   measurement-gated only.
 - `full` is not a default and not a recommendation anywhere until Phase 3
   passes.
+
+## P2 addendum (2026-07-07, second council round — P2-verdict disposition)
+
+Council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2-round debate, ~$0.10).
+The P2 non-Claude replication (gpt-5-mini via codex, n=90 pairs, full corpus)
+**FAILED with headroom** — not a ceiling null (trapE vanilla 0.733, kernel-dc
+0.667); capability trend negative but n.s. (no harm claimed);
+injection-surface confound documented (codex = prompt-prepend, no system
+surface). Pinned: `docs/benchmark.md § P2 gate`.
+
+Converged disposition (implemented):
+
+1. **`gpt-5-mini` joins the measured NULL-lift disable-list** (unanimous) —
+   failed replication on the shipped surface qualifies regardless of the
+   confound; the entry's provenance line explicitly disclaims validated harm.
+2. **`unknown_defaults` becomes vendor-granular** (sonnet's r2 synthesis,
+   gpt-4o's conservative direction): `anthropic: lift_enabled` (the one
+   family with a measured lift) · `default: lift_disabled`. This encodes
+   WHERE evidence exists, not a strength taxonomy; it changes only by
+   measurement. Missing model id → conservative off.
+3. **`balanced` installer preset fills `discipline_profile: auto`** — the
+   runtime synthesis of both members' r2 positions (gpt-4o: balanced→auto;
+   sonnet: evidence-structure narrowing — implemented at runtime where the
+   session model is actually known, instead of sonnet's install-time
+   key-detection sketch, which is brittle and contradicts the ONE-runtime-knob
+   lock). Net effect: lift only where measured; the failed cluster gets
+   off-with-explicit-opt-in, honouring the standing P2 rule's intent.
+4. **Confound follow-up is non-gating backlog**: a system-surface experiment
+   on a non-Claude host (API-loop harness) may un-confound the reading; it
+   does not block the shipped disposition (consumers get the shipped surface,
+   not counterfactuals).
+5. **Claim wording**: all three hosts reported; failed replication stated
+   without claiming either "rules useless on GPT" or harm (capability trend
+   is n.s.); no cross-vendor lift claimed anywhere.
+
+Dissent narrowed to mechanism only (auto-preset vs install-time detection);
+both members' evidence semantics were identical and are what shipped.
+
+## Do not relitigate (P2 additions)
+
+- gpt-5-mini disable-list entry (measured, n=90).
+- Vendor-granular `unknown_defaults` — revisit only with a new measurement
+  (e.g. the system-surface experiment or a second non-Claude host).
+- No blanket `lift_enabled` for unknowns; no blanket `lift_disabled` that
+  drops the measured Claude-weak lift.

@@ -151,14 +151,27 @@ Blocks any default flip. Operator/cost-gated (live API spend).
       LIVE replication run is operator-gated: the stored codex ChatGPT auth
       is expired and non-interactive codex runs need a session permission —
       see blocker non-claude-host-adapter. -->
-- [ ] Replicate the Phase-3 sweep on that host. Lift replicates → default
+- [x] Replicate the Phase-3 sweep on that host. Lift replicates → default
       `discipline_profile: auto`; fails → default `off` (explicit opt-in to
       `essential`), per the council rule.
-- [ ] Flip the shipped default accordingly (kernel-prefix stability gate:
+      <!-- done 2026-07-07: gpt-5-mini via codex, 180 runs, n=90 pairs, 0
+      errored — REPLICATION FAILED with headroom (corpus Δ=+0.024 p=0.70;
+      trapE 0.733→0.667; capability trend n.s.; injection-surface confound
+      documented). Report 2026-07-07T10-33-53Z, pinned in docs/benchmark.md
+      § P2 gate. -->
+- [x] Flip the shipped default accordingly (kernel-prefix stability gate:
       re-anchor `--update-baseline` in the same PR if the always-loaded
       prefix changes); update `docs/benchmark.md`, `docs/CLAIMS.md`
       (`discipline-lift-weak-host` claim scope), README settings docs, and
       the proof page.
+      <!-- done 2026-07-07 per the P2-verdict council (2-round debate, recorded
+      in weak-host-lift-tiering-verdict.md § P2 addendum): gpt-5-mini added to
+      the measured disable-list; unknown_defaults vendor-granular
+      (anthropic: lift_enabled, default: lift_disabled); balanced preset →
+      discipline_profile=auto (lift only where measured; failed cluster gets
+      off-with-opt-in — the standing rule's intent). Kernel prefix untouched
+      (no always-loaded body changed). benchmark/CLAIMS/proof/customization
+      updated. -->
 
 **Exit:** shipped default is evidence-backed (`auto` or `off`), documented on
 the benchmark + claims pages with per-host results.
@@ -169,15 +182,20 @@ the benchmark + claims pages with per-host results.
 `full` stays EXPERIMENTAL opt-in, labeled "residual lift over essential not
 established (p=0.37, n=24, Haiku 4-5)".
 
-- [ ] Graduation gate (only if an open-source-host adapter from Phase 4
+- [~] Graduation gate (only if an open-source-host adapter from Phase 4
       exists and the maintainer wants the answer): full sweep on ≥2 weak
       hosts incl. one open-source model; requires significant residual over
       `essential` (p<0.05, Δ>0.1) on tasks where essential does not ceiling.
       Until run: `full` keeps the experimental label everywhere it is
       documented.
-- [ ] If the gate FAILS or is not pursued within a cycle: council follow-up
+      <!-- deferred 2026-07-07: not pursued this cycle — the P2 failure on the
+      first non-Claude host makes an open-source-host full-tier lift doubly
+      speculative; the experimental label stands everywhere. -->
+- [~] If the gate FAILS or is not pursued within a cycle: council follow-up
       on whether `full` is dropped from the enum entirely (gpt-4o's round-2
       dissent position).
+      <!-- deferred 2026-07-07: due next cycle — the P2-verdict council did not
+      cover full-tier dropping; full keeps its EXPERIMENTAL label meanwhile. -->
 
 **Exit:** `full` is either graduated (evidence), still-labeled experimental,
 or scheduled for removal — never an unlabeled recommendation.
@@ -206,7 +224,7 @@ or scheduled for removal — never an unlabeled recommendation.
   under `internal/bench/reports/ab-v2/` and is cited in `docs/benchmark.md`.
 
 ### blocker: non-claude-host-adapter
-- **Status:** open
+- **Status:** resolved <!-- 2026-07-07: user authorized codex this turn; adapter smoke + 180-run P2 sweep completed on gpt-5-mini (report 2026-07-07T10-33-53Z) — replication failed; disposition per P2-verdict council implemented -->
 - **Owner:** maintainer
 - **Blocks:** Phase 4 (P2 replication run + default flip), Phase 5
 - **What to do:** the adapter is BUILT (`--host codex`, unit-tested). The live
@@ -218,3 +236,5 @@ or scheduled for removal — never an unlabeled recommendation.
   --arms vanilla,rules-kernel-dc --seeds 3 --model gpt-5-nano --budget 3.5`.
 - **Resolved when:** the harness completes a paired vanilla-vs-essential run
   on a non-Claude host with the deterministic scorer.
+
+<!-- Deferred items migrated to agents/roadmaps/road-to-discipline-profile-tiering-followup.md on 2026-07-07 -->

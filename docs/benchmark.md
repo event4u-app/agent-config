@@ -164,6 +164,46 @@ additionally gated on the P2 non-Claude replication.
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T07-04-39Z-ab-v2-paired.json`.
 
+### P2 gate — non-Claude weak host (`gpt-5-mini` via codex) — **REPLICATION FAILED**
+
+> **The essential lift does NOT replicate on the first non-Claude weak host as
+> shipped.** Full corpus, `vanilla` vs `rules-kernel-dc` × 3 seeds on
+> `gpt-5-mini` driven by the codex CLI (n=90 pairs, 0 errored, frozen
+> checkout). Corpus-wide discipline Δ=+0.024 (p=0.70). Critically, this is NOT
+> a ceiling null: on the scope/downstream family the host has headroom
+> (vanilla 0.533→ 0.733) yet the rules do not fill it — trapE 0.733 → 0.667
+> (Δ=−0.067, 1 discordant pair). Capability trends negative (89% → 82%,
+> McNemar p=0.07) — **not significant, so no harm is claimed**; it is a
+> cautionary trend, not a validated effect. Cost factor 1.18x.
+>
+> **Honest scope / confound:** the codex CLI has no system-prompt injection
+> surface, so the rules were prepended to the user prompt in a marked block —
+> a weaker instruction surface than the claude arms' system prompt. The
+> measurement cannot distinguish "discipline rules do not transplant to
+> GPT-class hosts" from "user-surface injection is too weak". It DOES
+> establish the decision-relevant fact: **as shipped, on this host, there is
+> no measured lift.** A system-surface experiment (API-loop harness) is a
+> non-gating backlog follow-up.
+
+| axis | vanilla | rules-kernel-dc | Δ | test |
+|---|---|---|---|---|
+| capability (pass-rate) | 89% | 82% | −7pp | McNemar p=0.07 (n.s.) |
+| discipline, full corpus (0–1) | 0.819 | 0.843 | +0.024 | Wilcoxon p=0.70, rb=0.09 (n≠0=23) |
+| discipline, scope/downstream family (n=15) | 0.733 | 0.667 | −0.067 | 1 discordant pair (negative) |
+| mean tokens/run | 302,655 | 358,326 | +55,671 (~1.18x) | — |
+
+**P2-verdict disposition** (council claude-sonnet-4-5 + gpt-4o, 2026-07-07,
+2-round debate — recorded in
+`agents/settings/contexts/weak-host-lift-tiering-verdict.md`):
+`gpt-5-mini` joins the measured NULL-lift disable-list; `unknown_defaults`
+becomes vendor-granular (`anthropic: lift_enabled` — the one family with a
+measured lift — `default: lift_disabled`); the `balanced` installer preset
+fills `discipline_profile: auto`, so the lift enables only where measured.
+The three-host evidence ledger: Claude weak = family-scoped lift · Claude
+strong = ceiling null · GPT weak = failed replication (confounded surface).
+
+- Report: `internal/bench/reports/ab-v2/2026-07-07T10-33-53Z-ab-v2-paired.json`.
+
 ## Strong host (`sonnet`, full 30-task corpus) — Gate verdict: **HONEST-NULL**
 
 - capability lift significant: `False`
