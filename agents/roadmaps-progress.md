@@ -6,17 +6,17 @@
 
 ## Overall
 
-**22 / 58 steps done · 38%**
+**27 / 58 steps done · 47%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
+███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 16 | 0 | 0 | 0 | [2](#blockers-road-to-discipline-profile-tiering) | ░░░░░░░░░░ 0% |
+| 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 11 | 5 | 0 | 0 | [2](#blockers-road-to-discipline-profile-tiering) | ███░░░░░░░ 31% |
 | 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 11 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 67% |
 
@@ -26,11 +26,11 @@
 
 ### [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md)
 
-**Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated** — 0 / 16 done (0%)
+**Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated** — 5 / 16 done (31%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Tier mechanism, built inert (no default change) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Tier mechanism, built inert (no default change) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Retire the measured-dead `balanced` cut | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Evidence gate P1: essential on the full corpus (weak host) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Evidence gate P2 + default flip | ⬜ not started | 3 | 0 | 0 | 0 | 0% |

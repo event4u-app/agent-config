@@ -50,30 +50,33 @@ default before the evidence gates pass.
 
 ## Phase 1 — Tier mechanism, built inert (no default change)
 
-- [ ] Add `discipline_profile: auto | off | essential | full` to
+- [x] Add `discipline_profile: auto | off | essential | full` to
       `src/config/agent-settings.template.yml`, documented with the measured
       cost/lift numbers per tier. Shipped default in this phase: the value
       that preserves today's behaviour (`full` / legacy-all) — the flip to
       `auto` is Phase 4, evidence-gated.
-- [ ] Add `src/config/host-capabilities.yml`: `lift_disabled_models` with the
+- [x] Add `src/config/host-capabilities.yml`: `lift_disabled_models` with the
       ONE measured entry (`claude-sonnet-4-6` — 2026-07-05 report, n=84, full
       corpus) + `unknown_default: lift_enabled`. Schema comment: entries
       require a measurement citation (date · report · N) or an explicit
       `extrapolated: true` maintainer flag; speculative vendor taxonomies are
       forbidden (council lock).
-- [ ] Define the `essential` tier in the router/profile layer: kernel +
+- [x] Define the `essential` tier in the router/profile layer: kernel +
       lift-carrying rules (`downstream-changes`; `scope-control` already
       kernel). Compile it into `dist/router.json` profiles alongside
       `minimal`/`full`. Verify with a `compile_router --check` run and a unit
       test asserting the essential rule set.
-- [ ] Design decision (small ADR): WHERE `auto` resolves. Projection is
+- [x] Design decision (small ADR): WHERE `auto` resolves.
+      <!-- done 2026-07-07: ADR-110-discipline-profile-resolution-locus — runtime
+      agent-in-the-loop resolution (resolve_discipline_profile in the work-engine
+      settings lib); projection unchanged until thin un-defers (ADR-040 kept). --> Projection is
       static per project; the host model is a runtime fact. Candidates:
       (a) runtime resolution — a kernel-level instruction/rule that reads
       `host-capabilities.yml` against the session model id;
       (b) per-tool projection variants; (c) hook-based. Record the choice as
       an ADR (adr-create), including how non-Claude hosts expose their model
       id per tool.
-- [ ] Wire the chosen resolution: `auto` → `off` when the session model
+- [x] Wire the chosen resolution: `auto` → `off` when the session model
       matches `lift_disabled_models`, else → `essential`. Unit tests: known
       NULL model → off; unknown model → essential; explicit setting overrides
       auto.

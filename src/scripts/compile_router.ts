@@ -248,6 +248,14 @@ export function build(): JsonObject {
         profiles: {
             minimal: ['__kernel__'],
             balanced: ['__kernel__', '__tier_1__'],
+            // `essential` — the lift-carrying cut (council 2026-07-07,
+            // agents/settings/contexts/weak-host-lift-tiering-verdict.md):
+            // kernel + the measured lift-carrying rules. Entries without the
+            // `__` wrapper are individual rule ids. Cut by measured content,
+            // never by tier size — the size-cut `balanced` profile measured a
+            // NULL lift (docs/benchmark.md § Cost-factor sweep) and is
+            // scheduled for retirement.
+            essential: ['__kernel__', 'downstream-changes'],
             full: ['__kernel__', '__tier_1__', '__tier_2__'],
         },
     };

@@ -43,7 +43,25 @@ made by the user directly or by the agent on request, following the
 # This file is git-ignored. Each developer has their own settings.
 # Run scripts/install to create this file, then /onboard for first-run setup.
 
-# --- Cost profile ---
+# --- Discipline profile (successor knob, opt-in until the evidence gates pass) ---
+#
+# The ONE runtime knob for the discipline-rule tier (ADR-110; council
+# verdicts 2026-07-07). Measured on claude-haiku-4-5, docs/benchmark.md
+# § Cost-factor sweep:
+#
+# off       = kernel only (~1x tokens) — for hosts with a MEASURED null
+#             lift (src/config/host-capabilities.yml).
+# essential = kernel + the lift-carrying rules (~3.3x, keeps the weak-host
+#             discipline lift; the full load's residual is not significant).
+# full      = every rule tier (~11.7x). EXPERIMENTAL opt-in only.
+# auto      = resolve per session against host-capabilities.yml
+#             (measured-null model -> off, otherwise -> essential).
+#
+# When set, this key WINS over the legacy rule_loading_tier below
+# (mapping when absent: minimal->off, balanced->essential, full->full).
+# discipline_profile: auto
+
+# --- Cost profile (legacy knob — superseded by discipline_profile) ---
 #
 # Master switch that controls which rule tiers load each session.
 # See `docs/customization.md` for the authoritative description and
