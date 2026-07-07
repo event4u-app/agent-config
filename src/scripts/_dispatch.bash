@@ -145,6 +145,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (experimental — beta gates: docs/contracts/mcp-beta-criteria.md)
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
+  roadmap:archive            Archive completed roadmaps (branch-touched by default;
+                             --all for every complete one; --dry-run to preview)
   capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
                              (capability area → coverage → backing skills/commands → gaps).
                              Pass --check to fail if stale (for CI). Reads src/ (package repo).
@@ -439,6 +441,14 @@ cmd_roadmap_progress_check() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"
   exec_ts "$script" --check "$@"
+}
+
+# The PR-gate archival sweep (`/create-pr` § 1c and roadmap-progress-sync's
+# PR-gate) instructs `./agent-config roadmap:archive` — this is that command.
+cmd_roadmap_archive() {
+  local script
+  script="$(resolve_script "dist/agent-src/scripts/archive_completed_roadmaps.ts" ".augment/scripts/archive_completed_roadmaps.ts")"
+  exec_ts "$script" "$@"
 }
 
 cmd_capabilities_index() {
@@ -991,6 +1001,7 @@ main() {
     use)                     cmd_use "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
+    roadmap:archive)         cmd_roadmap_archive "$@" ;;
     capabilities:index)      cmd_capabilities_index "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
     keys:install-anthropic)  cmd_keys_install_anthropic "$@" ;;
