@@ -27,6 +27,11 @@ Top-level orchestrator for the `/optimize` family.
 
 > Looking for `AGENTS.md` operations (init, refactor, audit)? Those
 > live under [`/agents`](agents.md) (`init / optimize / audit`).
+>
+> Looking for **project-wide** optimization (roadmaps, ADRs, decisions,
+> structures — challenge-and-roadmap loop)? That is the standalone
+> [`/optimize-project`](optimize-project.md)
+> — this cluster only covers the agent layer.
 
 ## Sub-commands
 

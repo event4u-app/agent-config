@@ -1,0 +1,47 @@
+{
+  "skill": "optimize-project",
+  "last_eval": "2026-07-07",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers project-wide optimization sweeps that question the existing state (roadmaps, ADRs, decisions, structures) and end in new roadmaps. Should-not-trigger covers near-miss neighbors: /optimize (agent-layer tooling), /project-analyze (code/stack analysis), /project-health (read-only counts), /analyze:decision (single-decision audit), plain bug fixes.",
+  "queries": [
+    {
+      "q": "optimize this project",
+      "trigger": true
+    },
+    {
+      "q": "optimiere das Projekt basierend auf dem aktuellen Stand",
+      "trigger": true
+    },
+    {
+      "q": "what should we improve based on the current state of our roadmaps and decisions?",
+      "trigger": true
+    },
+    {
+      "q": "challenge our old decisions — are our ADRs still right?",
+      "trigger": true
+    },
+    {
+      "q": "hinterfrag unsere alten Entscheidungen und mach daraus eine neue Roadmap",
+      "trigger": true
+    },
+    {
+      "q": "optimize my skills and trim the agents directory",
+      "trigger": false
+    },
+    {
+      "q": "analyze the project structure and create the missing context docs",
+      "trigger": false
+    },
+    {
+      "q": "what's the state of my docs and modules?",
+      "trigger": false
+    },
+    {
+      "q": "did ADR-042 hold up? review that one decision",
+      "trigger": false
+    },
+    {
+      "q": "fix this failing test in the billing module",
+      "trigger": false
+    }
+  ]
+}

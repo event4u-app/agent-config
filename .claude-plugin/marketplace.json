@@ -142,6 +142,7 @@
         "./.claude-plugin/skills/optimize",
         "./.claude-plugin/skills/optimize-agents-dir",
         "./.claude-plugin/skills/optimize-augmentignore",
+        "./.claude-plugin/skills/optimize-project",
         "./.claude-plugin/skills/optimize-prompt",
         "./.claude-plugin/skills/optimize-rtk",
         "./.claude-plugin/skills/optimize-skills",
