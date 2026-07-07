@@ -304,7 +304,7 @@
   "rules/missing-tool-handling.md": "e873b9ad1619f0c78de36c5b73e27fec558f57deb0e315f256ed6f897faf81dd",
   "rules/model-recommendation.md": "1bc8950e48622368911ff787f24a31fccbc405df8972f196d81a6a4e997a5ce2",
   "rules/no-attribution-footers.md": "7043fe1668ffbbdbb158435ea7843973219e8528310812bf7b92cd7bd39ffb54",
-  "rules/no-cheap-questions.md": "89566a1484a246691b77ceeb6b13a9781e06e7b9cfe0481cd7c2ff1f4aa188bf",
+  "rules/no-cheap-questions.md": "8d7b340b9614a580e630eaef5e184f7ae9db28a1b387eb034f27ae842f0c9f71",
   "rules/no-decorative-emojis-in-git-surfaces.md": "2b707829a7f927ac70750696f246e58ba7d4238fb58bbf51829f0879b72cc536",
   "rules/no-pr-progress-comments.md": "e072ae4eafa74df1ce8d8a444662f85d58ff242eacfcda79f6d484d27c5cdf3d",
   "rules/no-roadmap-references.md": "29f47684ed0849bf58b623d030140e50c80e1995954e7e125eacf60af474db9d",
