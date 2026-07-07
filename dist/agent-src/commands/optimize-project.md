@@ -9,7 +9,7 @@ description: "Project-wide optimization sweep — inventory roadmaps, ADRs, agen
 suggestion:
   eligible: true
   trigger_description: "optimize this project, optimize the project, what should we improve based on current state, challenge our old decisions, are our roadmaps and ADRs still right, optimiere das Projekt, hinterfrag unsere alten Entscheidungen"
-  trigger_context: "user wants a project-wide review that questions the existing state (roadmaps, ADRs, decisions, structures) and ends in new roadmap(s) — NOT a single bug fix, NOT a single-decision audit (/analyze:decision), NOT agent-layer tooling (/optimize)"
+  trigger_context: "user wants a project-wide review that questions existing state (roadmaps, ADRs, decisions, structures) and ends in new roadmap(s) — NOT a bug fix, NOT a single-decision audit (/analyze:decision), NOT agent-layer tooling (/optimize)"
 workspaces:
   - engineering
   - agent-config-maintainer
