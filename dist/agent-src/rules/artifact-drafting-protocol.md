@@ -4,8 +4,6 @@ tier: "2a"
 alwaysApply: false
 description: "New or significantly rewritten skill/rule/command/guideline — mandatory Understand → Research → Draft first"
 triggers:
-  # Intent-only backstop audit (road-to-request-scoped-rule-load Phase 0):
-  # phrase backstops mirror the rule's own trigger catalog (EN + DE).
   - intent: "create new skill"
   - intent: "create new rule"
   - intent: "create new command"

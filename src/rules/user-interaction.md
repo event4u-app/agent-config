@@ -6,9 +6,6 @@ alwaysApply: false
 load_context:
   - contexts/communication/rules-auto/user-interaction-mechanics.md
 triggers:
-  # Intent-only backstop audit (road-to-request-scoped-rule-load Phase 0):
-  # keyword/phrase backstops added so conditional-load mechanisms have a
-  # mechanical signal; intents alone match nothing in telemetry replay.
   - intent: "ask user a question"
   - intent: "numbered options"
   - intent: "summarizing progress"
