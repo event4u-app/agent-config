@@ -5,7 +5,7 @@
 Positioning, messaging, editorial, content funnel.
 
 - **id**: `gtm-marketing`
-- **version**: `8.1.0`
+- **version**: `8.2.0`
 - **owner**: gtm, founder
 - **requires**: —
 - **artefacts**: 8

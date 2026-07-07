@@ -989,6 +989,52 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 8.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [8.2.0](https://github.com/event4u-app/agent-config/compare/8.1.0...8.2.0) (2026-07-07)
+
+### Features
+
+* **hooks:** session-start self-heal for the installed pre-commit gate ([5c5fc68](https://github.com/event4u-app/agent-config/commit/5c5fc68e7d79717746618cad61ee9acd29669515))
+* **upgrade:** re-stamp our installed pre-commit hook; doctor: mcp-beta gates skip in consumers ([c736ae9](https://github.com/event4u-app/agent-config/commit/c736ae9dfd3837bc96c999f2eccb2bce096d629b))
+* **dispatch:** add roadmap:archive — /create-pr § 1c instructed a command that did not exist ([0ec1af2](https://github.com/event4u-app/agent-config/commit/0ec1af20ed184e25513a0f79f804d2b62eab7b5c))
+* **doctor:** claude-plugin staleness check ([82fc8ef](https://github.com/event4u-app/agent-config/commit/82fc8ef4868d1789ac7d0423b04a3f71a1966e20))
+* **upgrade:** refresh optional Claude Code plugin and skip wizard ([f2c6cc5](https://github.com/event4u-app/agent-config/commit/f2c6cc5a9a11ff95011894aeb4197b0f46721704))
+* **quality:** local_auto_run defaults to false — quality tools run on demand only ([1cecb58](https://github.com/event4u-app/agent-config/commit/1cecb583ed7bdca8d0b5edd49f731dad9b9cb250))
+* **upgrade:** sync existing settings files against the new template after upgrade ([4b36117](https://github.com/event4u-app/agent-config/commit/4b361177c033f0dcac76f2a303f31ef70a22f1a3))
+* **settings:** balanced preset fills discipline_profile=auto (lift only where measured) ([1d3d304](https://github.com/event4u-app/agent-config/commit/1d3d3042d7430505b30ab4a3f78106a136ba8449))
+* **settings:** P2 verdict — vendor-granular unknown_defaults; gpt-5-mini measured null ([16544d5](https://github.com/event4u-app/agent-config/commit/16544d524f227eff35d679094ec91f7b8a09ca6f))
+
+### Bug Fixes
+
+* **ci:** regenerate install bundle; trim work/implement-ticket descriptions under the 200-char cap ([1ca779b](https://github.com/event4u-app/agent-config/commit/1ca779b2521820da0cea0f114ec30b2473ad56f2))
+* **content:** stale Python-era instructions swept off the agent surfaces ([4f7f4a8](https://github.com/event4u-app/agent-config/commit/4f7f4a86c30dc3bdad79e65184cf526a38203434))
+* **scripts:** realpath-aware CLI entry guards — symlinked invocations silently no-op'd ([0fa2f03](https://github.com/event4u-app/agent-config/commit/0fa2f03e7c7faabd2faad3e39b44160a22b5dd76))
+* **hooks:** prefer the package's own tsx over npx in twin-spawn resolution ([b1f8b7e](https://github.com/event4u-app/agent-config/commit/b1f8b7e9bbc71470c16881a195a329039175f640))
+* **pack:** ship tests/fixtures/hooks — hooks:replay named payloads 404'd on installs ([a6db852](https://github.com/event4u-app/agent-config/commit/a6db852dc2873b30cd5613a56436f5269377f7bd))
+* **roadmap:** fall back to the git toplevel when cwd has no agents/roadmaps ([a04505a](https://github.com/event4u-app/agent-config/commit/a04505a7e0b6a7b0e77cd940e1447eb9b6f12a44))
+* **council:** anchor the prices file to the project root, not the installed package ([4ab8cc2](https://github.com/event4u-app/agent-config/commit/4ab8cc2d4bff5a06554b9fc8e260f49e6606a936))
+* **templates:** consumer hooks + CI workflows off python3 — gates were silently dead since py2ts ([6c36d8d](https://github.com/event4u-app/agent-config/commit/6c36d8d83c40fc4065b1308985ad8fd6d0d1d021))
+* **dispatch:** ship tsx as runtime dependency — consumer hooks and TS commands broke via npx fallback ([0119de6](https://github.com/event4u-app/agent-config/commit/0119de6cabafa10fa85b51d92ab6fcafe313745a))
+* **install:** launch setup wizard detached and show version on completion ([f043ad7](https://github.com/event4u-app/agent-config/commit/f043ad752067d6770c3f7d36bb829995c46ff7e7))
+
+### Documentation
+
+* **claude-code:** correct plugin install commands, frame plugin as optional ([1b89b2d](https://github.com/event4u-app/agent-config/commit/1b89b2d261ccc42d3205a705aa2239ded6b0bf79))
+* **quality:** gate quality-pipeline runs behind local_auto_run across skills, rules, and commands ([ce9fefd](https://github.com/event4u-app/agent-config/commit/ce9fefd10a47cd9144e6bf0de29a22a4a974ce62))
+* **benchmark:** pin the failed P2 replication; three-host evidence ledger ([a77c476](https://github.com/event4u-app/agent-config/commit/a77c4765f221005f59165a67e215ac6bdc03c9d8))
+
+### Chores
+
+* **packs:** regenerate meta pack README after description trim ([96beffb](https://github.com/event4u-app/agent-config/commit/96beffb350d29503b8ab12a6de177c6c8137f332))
+* **condense:** propagate the Python-reference sweep into the condensed projections ([b63bc0a](https://github.com/event4u-app/agent-config/commit/b63bc0a31fe2ad42ba37db701d6b4a935a555783))
+* **deps:** regenerate lockfile — tsx now a runtime dependency ([68a383d](https://github.com/event4u-app/agent-config/commit/68a383da386095e6fd740b230ac4042e08a8a152))
+* **condense:** mark 15 hash-stale command projections as done ([585939d](https://github.com/event4u-app/agent-config/commit/585939d956f5d999e97ab788bd509d642767d512))
+* **changelog:** perform the era split the 8.1.0 release missed ([96b43ba](https://github.com/event4u-app/agent-config/commit/96b43baa81488084740d6c4ae479ee0d0d5e563a))
+* **sync:** mirror the P2 resolver changes into the dist work-engine lib ([920158b](https://github.com/event4u-app/agent-config/commit/920158b6d619a43fdb3ba63a374a84e6da011440))
+
+### Other
+
+* **install:** named ChildProcess type import (eslint consistent-type-imports) ([34ec4fc](https://github.com/event4u-app/agent-config/commit/34ec4fc6206e0018b4dc559a19375017d6a8a669))
+
 ## [8.1.0](https://github.com/event4u-app/agent-config/compare/8.0.0...8.1.0) (2026-07-07)
 
 ### Features
