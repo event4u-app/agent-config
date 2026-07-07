@@ -238,9 +238,13 @@ evidence.
 
 ### blocker: phase-0-golden-set (inherited)
 - **Status:** open — owned by `road-to-token-saving` / HUMAN-MEASUREMENT
+- **Owner:** maintainer
 - **Blocks:** the held-quality verification arm of Phase 1's default flip.
   Does **not** block Phases 0, 2, 3 or the opt-in build of Phase 1
   (mechanical, CI-verified).
+- **What to do:** operator batch per `road-to-token-proof-and-story`
+  § Program tracking step 2 — label the golden stubs, run the live judge
+  at `--scope consumer`, tick the live canary on 3 hosts.
 - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a
   real (non-dry-run) report — hardened criterion per
   `road-to-token-proof-and-story` Phase 0.

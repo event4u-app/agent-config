@@ -228,7 +228,10 @@ synthetic mis-tagged fixture.
 ### blocker: paid-judge-run-sequencing (soft)
 - **Status:** open — ordering decision, owned by the program tracking table
 - **Owner:** maintainer
-- **Note:** the live judge run is ~3× cheaper and more representative
-  **after** `road-to-request-scoped-rule-load` Phase 1 shrinks the eager
-  arm to the consumer set (est. US$8–12 today, ~US$3–4 after). Labelling
-  proceeds in parallel; only the paid run waits.
+- **Blocks:** only the PAID judge run (labelling proceeds in parallel).
+- **What to do:** run the live judge at `--scope consumer` AFTER the
+  consumer-scoping default flip shrinks the eager arm (~3× cheaper,
+  est. US$3–4 instead of US$8–12) — batch it into the operator sitting
+  from `road-to-token-proof-and-story` § Program tracking step 2.
+- **Resolved when:** a non-dry-run `quality-run.json` from a consumer-scoped
+  arm exists and `check_quality_regression --as-flip-gate` exits 0.

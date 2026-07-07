@@ -265,13 +265,24 @@ N=1.
 ### blocker: flip-gates-upstream (inherited)
 - **Status:** open — owned by HUMAN-MEASUREMENT, golden-set, and
   discipline-profile-tiering roadmaps
+- **Owner:** maintainer
 - **Blocks:** Phase 2 post-flip arms and Phase 3 (need the flips landed);
   Phases 0, 1 and the Phase 2 corpus/tooling build are unblocked now.
+- **What to do:** execute the flip sequence in § Program tracking step 3
+  (consumer-scoping default → discipline_profile default → thin
+  un-deferral decision), each behind its own hardened gate.
+- **Resolved when:** the consumer-scoping default flip and the
+  discipline_profile default flip have landed (thin optional — arms can
+  run with the "modelled, not shipped" label for the thin arm).
 
 ### blocker: field-corpus-privacy
 - **Status:** open
 - **Owner:** maintainer
 - **Blocks:** Phase 2 replay arms (need the exported, privacy-reviewed
   corpus from Galawork/event4u sessions).
+- **What to do:** run `./scripts-run src/scripts/export_replay_corpus
+  --history <repo>/agents/runtime/.agent-chat-history --limit 200` per
+  repo, then review the `.local.yaml` output under the low-impact-corpus
+  privacy floor (drop/redact anything client- or person-identifying).
 - **Resolved when:** a reviewed corpus file exists and the
   low-impact-corpus privacy floor checklist for it is signed off.

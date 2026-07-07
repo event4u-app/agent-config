@@ -46,9 +46,12 @@
     raw material). Batch with the operator sitting defined in
     `road-to-token-proof-and-story` Phase 1.
   - **Resolved when:** `check_token_quality_golden --require-complete --scope consumer` exits 0.
-- **paid-judge-run-sequencing (soft)** (owner: maintainer - **Note:** the live judge run is ~3× cheaper and more representative **after** `road-to-request-scoped-rule-load` Phase 1 shrinks the eager arm to the consumer set (est. US$8–12 today, ~US$3–4 after). Labelling proceeds in parallel; only the paid run waits.) — blocks (unspecified)
+- **paid-judge-run-sequencing (soft)** (owner: maintainer) — blocks only the PAID judge run (labelling proceeds in parallel).
   - **What to do:**
-  - **Resolved when:** (unspecified)
+    consumer-scoping default flip shrinks the eager arm (~3× cheaper,
+    est. US$3–4 instead of US$8–12) — batch it into the operator sitting
+    from `road-to-token-proof-and-story` § Program tracking step 2.
+  - **Resolved when:** a non-dry-run `quality-run.json` from a consumer-scoped arm exists and `check_quality_regression --as-flip-gate` exits 0.
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
@@ -65,8 +68,10 @@
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**
 
-- **phase-0-golden-set (inherited)** (owner: user) — blocks the held-quality verification arm of Phase 1's default flip. Does **not** block Phases 0, 2, 3 or the opt-in build of Phase 1 (mechanical, CI-verified).
+- **phase-0-golden-set (inherited)** (owner: maintainer) — blocks the held-quality verification arm of Phase 1's default flip. Does **not** block Phases 0, 2, 3 or the opt-in build of Phase 1 (mechanical, CI-verified).
   - **What to do:**
+    § Program tracking step 2 — label the golden stubs, run the live judge
+    at `--scope consumer`, tick the live canary on 3 hosts.
   - **Resolved when:** `check_quality_regression --as-flip-gate` exits 0 on a real (non-dry-run) report — hardened criterion per `road-to-token-proof-and-story` Phase 0.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
@@ -107,11 +112,16 @@
 <a id="blockers-road-to-token-proof-and-story"></a>
 **Blockers**
 
-- **flip-gates-upstream (inherited)** (owner: user) — blocks Phase 2 post-flip arms and Phase 3 (need the flips landed); Phases 0, 1 and the Phase 2 corpus/tooling build are unblocked now.
+- **flip-gates-upstream (inherited)** (owner: maintainer) — blocks Phase 2 post-flip arms and Phase 3 (need the flips landed); Phases 0, 1 and the Phase 2 corpus/tooling build are unblocked now.
   - **What to do:**
-  - **Resolved when:** (unspecified)
+    (consumer-scoping default → discipline_profile default → thin
+    un-deferral decision), each behind its own hardened gate.
+  - **Resolved when:** the consumer-scoping default flip and the discipline_profile default flip have landed (thin optional — arms can run with the "modelled, not shipped" label for the thin arm).
 - **field-corpus-privacy** (owner: maintainer) — blocks Phase 2 replay arms (need the exported, privacy-reviewed corpus from Galawork/event4u sessions).
   - **What to do:**
+    --history <repo>/agents/runtime/.agent-chat-history --limit 200` per
+    repo, then review the `.local.yaml` output under the low-impact-corpus
+    privacy floor (drop/redact anything client- or person-identifying).
   - **Resolved when:** a reviewed corpus file exists and the low-impact-corpus privacy floor checklist for it is signed off.
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
