@@ -1,6 +1,11 @@
 #!/usr/bin/env tsx
 import { createRequire as __acCreateRequire } from 'node:module'; const require = globalThis.require ?? __acCreateRequire(import.meta.url);
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
@@ -10,6 +15,22 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
 var __commonJS = (cb, mod) => function __require2() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
 // node_modules/yaml/dist/nodes/identity.js
 var require_identity = __commonJS({
@@ -7238,7 +7259,7 @@ var require_public_api = __commonJS({
       }
       return doc;
     }
-    function parse(src, reviver, options) {
+    function parse2(src, reviver, options) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -7279,7 +7300,7 @@ var require_public_api = __commonJS({
         return value.toString(options);
       return new Document.Document(value, _replacer, options).toString(options);
     }
-    exports.parse = parse;
+    exports.parse = parse2;
     exports.parseAllDocuments = parseAllDocuments;
     exports.parseDocument = parseDocument;
     exports.stringify = stringify;
@@ -7971,8 +7992,8 @@ function load_lab_pack_ids(repo_root) {
   const vocab = path3.join(repo_root, "src", "config", "discovery", "packs.yml");
   const ids = /* @__PURE__ */ new Set();
   try {
-    const YAML = require_dist();
-    const data = YAML.parse(fs3.readFileSync(vocab, "utf-8"), { version: "1.1" });
+    const YAML2 = require_dist();
+    const data = YAML2.parse(fs3.readFileSync(vocab, "utf-8"), { version: "1.1" });
     for (const entry of data ?? []) {
       if (entry && typeof entry === "object" && !Array.isArray(entry)) {
         const rec = entry;
@@ -9153,6 +9174,7 @@ function build_command_bundles(package_root, dest_dir, force = false, curation =
 }
 
 // src/scripts/_lib/claude_settings_hooks.ts
+var YAML = __toESM(require_dist(), 1);
 import * as fs8 from "node:fs";
 import * as path7 from "node:path";
 
@@ -9202,7 +9224,6 @@ function randSuffix() {
 
 // src/scripts/_lib/claude_settings_hooks.ts
 function _yaml_parse(text) {
-  const YAML = require_dist();
   return YAML.parse(text);
 }
 var MANAGED_SIGNATURE = "dispatch:hook --platform claude";
@@ -9607,16 +9628,16 @@ function _read_yaml(p) {
   if (!_is_file(p)) {
     return null;
   }
-  let YAML;
+  let YAML2;
   try {
-    YAML = _require("yaml");
+    YAML2 = _require("yaml");
   } catch {
     return null;
   }
   let data;
   try {
     const text = fs9.readFileSync(p, "utf-8");
-    data = YAML.parse(text, { version: "1.1" });
+    data = YAML2.parse(text, { version: "1.1" });
     if (data === null || data === void 0) {
       data = {};
     }

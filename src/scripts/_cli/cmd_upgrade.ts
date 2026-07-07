@@ -504,12 +504,11 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     }
 
     const target = `${PACKAGE_NAME}@latest`;
-    const steps: string[][] = [
-        ['npm', 'install', '-g', target],
-        // --no-ui: the setup wizard is an onboarding surface, not an upgrade
-        // step — its foreground server used to block the upgrade until Ctrl-C.
-        [_agent_config_bin(), 'global', '--no-ui'],
-    ];
+    const npm_cmd: string[] = ['npm', 'install', '-g', target];
+    // --no-ui: the setup wizard is an onboarding surface, not an upgrade
+    // step — its foreground server used to block the upgrade until Ctrl-C.
+    const global_cmd: string[] = [_agent_config_bin(), 'global', '--no-ui'];
+    const steps: string[][] = [npm_cmd, global_cmd];
 
     const project_root = options.project_root ?? process.cwd();
     const sync_targets = _settings_sync_targets(project_root);
@@ -531,7 +530,6 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
 
     // Step 1 — the new package version. Nothing after makes sense without
     // it, so this is the only hard-abort step.
-    const npm_cmd = steps[0];
     _print(out, '→ ' + npm_cmd.join(' '));
     const npm_rc = runner(npm_cmd);
     if (npm_rc !== 0) {

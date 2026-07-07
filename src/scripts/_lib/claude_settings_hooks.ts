@@ -33,19 +33,16 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type * as YamlModule from 'yaml';
+import * as YAML from 'yaml';
 
 import { atomicWriteFile } from '../../install/atomic.js';
 
-/**
- * Lazy yaml load — mirrors install.ts::yamlSafeLoad. A static `import` of the
- * CJS `yaml` package breaks the esbuild ESM install bundle
- * (`Dynamic require of "process" is not supported` at module init); the lazy
- * require inside the call is the proven bundle-safe pattern.
- */
+// Bundle note: a static import of the CJS `yaml` package requires the
+// createRequire banner in `build:install-bundle` (package.json) — without it
+// the esbuild ESM bundle throws `Dynamic require of "process" is not
+// supported` at module init. A bare lazy `require('yaml')` is NOT an
+// alternative: it is a ReferenceError under plain tsx/node ESM (CI).
 function _yaml_parse(text: string): unknown {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const YAML = require('yaml') as typeof YamlModule;
     return YAML.parse(text);
 }
 
