@@ -438,3 +438,95 @@ describe('upgrade — post-upgrade settings sync', () => {
         expect(r.calls).toHaveLength(0);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Step decoupling (road-to-claude-code-single-surface Phase 2): a failing
+// `global` step no longer skips the remaining maintenance steps — the 8.2.0
+// failure class where an aborted step silently skipped the plugin refresh
+// and settings sync. Exit stays 1 (the failed step is essential), but every
+// later step must still have run.
+// ---------------------------------------------------------------------------
+
+const TS_DECOUPLE_HARNESS = `
+(async () => {
+    const m = await import(${JSON.stringify(TS_SCRIPT)});
+    const projectRoot = process.argv[2];
+    const args = process.argv.slice(3);
+    let out = '', err = '';
+    const calls = [];
+    const sink = (b) => ({ write: (t) => { if (b === 'o') out += t; else err += t; } });
+    // Fails ONLY the 'global' step; every other command succeeds.
+    const runner = (cmd) => {
+        calls.push(cmd.join(' '));
+        return cmd.includes('global') ? 3 : 0;
+    };
+    const code = await m.main(args, {
+        fetcher: () => '2.0.0',
+        runner,
+        installed: '1.0.0',
+        project_root: projectRoot,
+        out: sink('o'),
+        err: sink('e'),
+    });
+    process.stdout.write(
+        '\\x00OUT\\x00' + out + '\\x00ERR\\x00' + err +
+        '\\x00CALLS\\x00' + calls.join('\\n') + '\\x00EXIT\\x00' + code,
+    );
+})();
+`;
+
+describe('upgrade — step decoupling (global fails, rest still runs)', () => {
+    let decoupleDir: string;
+    let decoupleHarness: string;
+    let configHome: string;
+
+    beforeEach(() => {
+        decoupleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-dc-'));
+        decoupleHarness = path.join(decoupleDir, 'harness.mjs');
+        fs.writeFileSync(decoupleHarness, TS_DECOUPLE_HARNESS);
+        // Hermetic settings home with ONE existing settings file so the
+        // sync step has a target to prove it ran.
+        configHome = path.join(decoupleDir, 'config-home');
+        // EVENT4U_CONFIG_HOME overrides event4u_root() outright — no
+        // `agent-config/` segment underneath.
+        fs.mkdirSync(path.join(configHome, 'settings'), { recursive: true });
+        fs.writeFileSync(
+            path.join(configHome, 'settings', '.agent-settings.yml'),
+            'rule_loading_tier: minimal\n',
+        );
+    });
+    afterEach(() => {
+        fs.rmSync(decoupleDir, { recursive: true, force: true });
+    });
+
+    function runDecoupled(): SyncSeamResult {
+        const r = spawnSync(TSX_BIN, [decoupleHarness, decoupleDir], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                EVENT4U_CONFIG_HOME: configHome,
+                CLAUDE_CONFIG_DIR: path.join(decoupleDir, 'claude-home'),
+            },
+        });
+        return parseSyncSeam(r.stdout ?? '');
+    }
+
+    it('global failure: exit 1, but settings:sync still ran afterwards', () => {
+        const r = runDecoupled();
+        expect(r.exit).toBe('1');
+        const globalIdx = r.calls.findIndex((c) => / global/.test(c));
+        const syncIdx = r.calls.findIndex((c) => c.includes('settings:sync'));
+        expect(globalIdx).toBeGreaterThanOrEqual(0);
+        expect(syncIdx).toBeGreaterThan(globalIdx);
+        expect(r.err).toContain('continuing with the remaining steps');
+        expect(r.err).toContain('failed step(s)');
+    });
+
+    it('global step carries --no-ui (wizard never blocks an upgrade)', () => {
+        const r = runDecoupled();
+        const globalCall = r.calls.find((c) => / global/.test(c));
+        expect(globalCall).toBeDefined();
+        expect(globalCall).toContain('--no-ui');
+    });
+});

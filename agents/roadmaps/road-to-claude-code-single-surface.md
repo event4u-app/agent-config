@@ -100,15 +100,15 @@ Goal: a deterministic, user-safe way to own a block inside
 Goal: one update path (`agent-config upgrade`) that cannot silently skip the
 hook wiring; the sequential-fragility class from 8.2.0 is closed.
 
-- [ ] `agent-config global` (claude-code anchor) registers the hook matrix
+- [x] `agent-config global` (claude-code anchor) registers the hook matrix
       via the Phase 1 protocol as part of the normal deploy
-- [ ] Decouple upgrade steps: a failed/aborted non-essential step (wizard,
+- [x] Decouple upgrade steps: a failed/aborted non-essential step (wizard,
       doctor) no longer skips later essential steps — essential steps run
       first, cosmetic steps last; each step reports pass/fail in the summary
-- [ ] Remove the plugin-refresh steps from `cmd_upgrade.ts` once Phase 3
+- [x] Remove the plugin-refresh steps from `cmd_upgrade.ts` once Phase 3
       lands (or gate them on plugin-still-installed during the deprecation
       window)
-- [ ] Regression tests: upgrade with simulated step failure still wires
+- [x] Regression tests: upgrade with simulated step failure still wires
       hooks; `--no-ui` path covered end-to-end
       <!-- carve-out: new-gate-verification -->
 

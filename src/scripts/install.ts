@@ -78,6 +78,7 @@ import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as installed_tools from './_lib/installed_tools.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
+import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
 import { detect_module_roots } from './_lib/module_detection.js';
 import {
@@ -2914,6 +2915,35 @@ function _deploy_global_content(
         }
         _emit_progress({ type: 'reaped', tool: tool_id, count: reaped.length });
         results[tool_id] = [written_total, skipped_total, 'deployed', written_paths];
+
+        // Single-surface model (road-to-claude-code-single-surface): the
+        // deterministic hook matrix registers directly in the user-scope
+        // settings file — the marketplace plugin is no longer required for
+        // hooks. Failure here must not sink the content deploy (hooks can
+        // be re-wired via `agent-config refresh --global` / doctor).
+        if (tool_id === 'claude-code') {
+            try {
+                const manifest = path.join(package_root, 'src', 'scripts', 'hook_manifest.yaml');
+                const matrix = claude_settings_hooks.build_claude_hook_matrix(manifest);
+                const res = claude_settings_hooks.ensure_managed_hooks(
+                    path.join(anchor, 'settings.json'),
+                    matrix,
+                );
+                if (!state.QUIET) {
+                    if (res.changed) {
+                        success(
+                            `claude-code: managed hooks registered in ~/.claude/settings.json ` +
+                                `(${res.events.length} event(s))`,
+                        );
+                    } else {
+                        skip('claude-code: managed hooks already registered');
+                    }
+                }
+            } catch (e) {
+                warn(`claude-code: managed-hook registration failed — ${String(e)}`);
+                _emit_progress({ type: 'hooks_failed', tool: tool_id, error: String(e) });
+            }
+        }
     }
     return results;
 }

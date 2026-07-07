@@ -529,21 +529,42 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         return 0;
     }
 
-    for (const cmd of steps) {
+    // Step 1 — the new package version. Nothing after makes sense without
+    // it, so this is the only hard-abort step.
+    const npm_cmd = steps[0];
+    _print(out, '→ ' + npm_cmd.join(' '));
+    const npm_rc = runner(npm_cmd);
+    if (npm_rc !== 0) {
+        _print(
+            err,
+            `❌  agent-config upgrade: step failed (exit ${npm_rc}): ` + `${npm_cmd.join(' ')}`,
+        );
+        return 1;
+    }
+
+    // Steps 2..N — independent. A failing step no longer skips the rest:
+    // the 8.2.0 failure class (aborted `global` step silently skipping the
+    // plugin refresh + settings sync) is closed by running every remaining
+    // step and reporting per-step outcomes in the summary. A failed
+    // essential step (global deploy) still exits 1 — after the others ran.
+    const failed_essential: string[] = [];
+    for (const cmd of steps.slice(1)) {
         _print(out, '→ ' + cmd.join(' '));
         const rc = runner(cmd);
         if (rc !== 0) {
+            failed_essential.push(cmd.join(' '));
             _print(
                 err,
-                `❌  agent-config upgrade: step failed (exit ${rc}): ` + `${cmd.join(' ')}`,
+                `❌  agent-config upgrade: step failed (exit ${rc}): ${cmd.join(' ')} — ` +
+                    'continuing with the remaining steps.',
             );
-            return 1;
         }
     }
 
     // Refresh the OPTIONAL Claude Code plugin so its command surface tracks
-    // the upgrade (no-op when the plugin is not installed — the file
-    // projection is a full install on its own).
+    // the upgrade — gated on the plugin actually being installed (empty step
+    // list otherwise). Deprecation window of the single-surface model: once
+    // the plugin is retired this block disappears with it.
     _refresh_claude_plugin(plugin_steps, runner, out, err);
 
     // Bring existing settings files up to the NEW template (additive; the
@@ -556,10 +577,22 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // (marker-guarded; foreign hooks are never touched).
     _maybe_refresh_git_hook(project_root, runner, out, err);
 
+    if (failed_essential.length > 0) {
+        _print(
+            err,
+            `❌  agent-config upgrade finished with ${failed_essential.length} failed ` +
+                `step(s):\n` +
+                failed_essential.map((c) => `    · ${c}`).join('\n') +
+                '\n   Re-run `agent-config upgrade`, or run the failed step directly. ' +
+                '`agent-config doctor` names anything left in a mixed state.',
+        );
+        return 1;
+    }
+
     _print(
         out,
         '✅  agent-config upgraded. Run `agent-config doctor` to verify ' +
-            'PATH + plugin parity.',
+            'PATH + hook wiring.',
     );
     return 0;
 }
