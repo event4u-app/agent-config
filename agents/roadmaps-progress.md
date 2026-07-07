@@ -2,26 +2,51 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 2 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **2** open blockers
+> 3 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **4** open blockers
 
 ## Overall
 
-**21 / 42 steps done · 50%**
+**22 / 58 steps done · 38%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 2 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 12 | 21 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 64% |
+| 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 16 | 0 | 0 | 0 | [2](#blockers-road-to-discipline-profile-tiering) | ░░░░░░░░░░ 0% |
+| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 11 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 67% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md)
+
+**Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated** — 0 / 16 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Tier mechanism, built inert (no default change) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Retire the measured-dead `balanced` cut | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Evidence gate P1: essential on the full corpus (weak host) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Evidence gate P2 + default flip | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Full-tier disposition (open-source hypothesis, gated) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-discipline-profile-tiering"></a>
+**Blockers**
+
+- **p1-full-corpus-sweep** (owner: maintainer) — blocks Phase 3 (and thereby the Phase 4 default flip)
+  - **What to do:**
+    then run the Phase 3 command and stats.
+  - **Resolved when:** a pinned full-corpus `rules-kernel-dc` report exists under `internal/bench/reports/ab-v2/` and is cited in `docs/benchmark.md`.
+- **non-claude-host-adapter** (owner: maintainer) — blocks Phase 4 (P2 replication), Phase 5
+  - **What to do:**
+    and provide vendor API keys/budget for the replication run.
+  - **Resolved when:** the harness completes a paired vanilla-vs-essential run on a non-Claude host with the deterministic scorer.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
@@ -48,7 +73,7 @@
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 21 / 33 done (64%)
+**Road to token saving — measure, then cut, at constant quality** — 22 / 33 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -58,7 +83,7 @@
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 7 | 5 | 0 | 0 | 42% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 6 | 6 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**
