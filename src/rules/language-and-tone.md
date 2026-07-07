@@ -9,6 +9,15 @@ validator_ignore:
     reason: "Rule scopes the .md-English mandate to the authoring tree."
 workspaces:
   - agent-config-maintainer
+  - construction
+  - engineering
+  - finance
+  - founder
+  - gtm
+  - legal-review-prep
+  - ops
+  - product
+  - small-business
 packs:
   - meta
 ---

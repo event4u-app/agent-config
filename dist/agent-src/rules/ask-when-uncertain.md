@@ -5,6 +5,15 @@ description: "Ask when uncertain — don't guess, assume, or improvise"
 alwaysApply: true
 workspaces:
   - agent-config-maintainer
+  - construction
+  - engineering
+  - finance
+  - founder
+  - gtm
+  - legal-review-prep
+  - ops
+  - product
+  - small-business
 packs:
   - meta
 ---

@@ -1044,14 +1044,44 @@ function _yaml_scalar(value: string): string {
     return JSON.stringify(value);
 }
 
-function _emit_cursor_mdc(source: string, target: string): void {
+/**
+ * Derive host-native activation globs from a rule's `triggers:` frontmatter
+ * (road-to-request-scoped-rule-load Phase 2). `file_pattern` triggers map
+ * verbatim; `path_prefix` triggers map to `<prefix>**`. Keyword / phrase /
+ * intent / command triggers produce no glob — those rules stay
+ * description-activated (Cursor Agent-Requested / Windsurf model_decision).
+ */
+export function derive_trigger_globs(meta: Record<string, unknown>): string[] {
+    const triggers = meta['triggers'];
+    if (!Array.isArray(triggers)) {
+        return [];
+    }
+    const globs: string[] = [];
+    for (const t of triggers) {
+        if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
+        const obj = t as Record<string, unknown>;
+        if (typeof obj['file_pattern'] === 'string' && obj['file_pattern']) {
+            globs.push(obj['file_pattern']);
+        } else if (typeof obj['path_prefix'] === 'string' && obj['path_prefix']) {
+            const prefix = obj['path_prefix'] as string;
+            globs.push(prefix.endsWith('/') ? `${prefix}**` : `${prefix}**`);
+        }
+    }
+    // De-dup, keep declaration order (deterministic output).
+    return [...new Set(globs)];
+}
+
+export function _emit_cursor_mdc(source: string, target: string): void {
     const [meta, body] = _parse_frontmatter(_readText(source));
     const description = _strip(String(meta['description'] ?? '').replace(/\n/g, ' '));
     const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
+    // Path-shaped triggers become Cursor auto-attach globs; rules without
+    // them keep `globs: ` empty and stay Agent-Requested via description.
+    const globs = always_apply ? [] : derive_trigger_globs(meta);
     const lines = [
         '---',
         `description: ${_yaml_scalar(description)}`,
-        'globs: ',
+        `globs: ${globs.join(',')}`,
         `alwaysApply: ${always_apply ? 'true' : 'false'}`,
         '---',
         '',
@@ -1061,16 +1091,19 @@ function _emit_cursor_mdc(source: string, target: string): void {
     _writeText(target, lines.join('\n'));
 }
 
-function _emit_windsurf_rule(source: string, target: string): void {
+export function _emit_windsurf_rule(source: string, target: string): void {
     const [meta, body] = _parse_frontmatter(_readText(source));
     const description = _strip(String(meta['description'] ?? '').replace(/\n/g, ' '));
     const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
-    const trigger = always_apply ? 'always_on' : 'model_decision';
+    // Path-shaped triggers activate host-natively via Windsurf's `glob`
+    // trigger; keyword/intent-only rules keep `model_decision`.
+    const globs = always_apply ? [] : derive_trigger_globs(meta);
+    const trigger = always_apply ? 'always_on' : globs.length > 0 ? 'glob' : 'model_decision';
     const lines = [
         '---',
         `trigger: ${trigger}`,
         `description: ${_yaml_scalar(description)}`,
-        'globs: ',
+        `globs: ${globs.join(',')}`,
         '---',
         '',
         _pyRstrip(body) + '\n',
