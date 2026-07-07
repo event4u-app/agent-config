@@ -22,7 +22,15 @@
  *    on PATH (the binary the Claude plugin hook resolves).
  * 2. `agent-config global` (→ `install.py --global`) — refresh the global root
  *    (`~/.event4u/agent-config/`) + regenerate plugin hooks.
- * 3. If run from inside a consumer project that already has a `./agent-config`
+ * 3. `agent-config settings:sync --path <file>` for every EXISTING settings
+ *    file (global `~/.event4u/agent-config/settings/.agent-settings.yml`,
+ *    then the project settings when run inside a consumer project) — additive
+ *    merge that inserts keys the new release added to the template while
+ *    preserving user lines verbatim. Runs as a subprocess of the freshly
+ *    installed binary so the NEW template is the merge source. Non-fatal:
+ *    a sync failure warns and names the manual command, never fails the
+ *    upgrade. Never creates a settings file that did not exist.
+ * 4. If run from inside a consumer project that already has a `./agent-config`
  *    wrapper, re-stamp that wrapper from the canonical template.
  *
  * Flags:
@@ -71,6 +79,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as update_check from '../_lib/update_check.js';
 import * as cli_wrapper from '../_lib/cli_wrapper.js';
+import { event4u_root } from '../_lib/user_global_paths.js';
+import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
 
 const PACKAGE_NAME = '@event4u/agent-config';
@@ -219,6 +229,69 @@ function _maybe_refresh_project_wrapper(project_root: string, out: OutSink, _err
     }
 }
 
+/**
+ * Existing settings files the post-upgrade sync should bring up to the new
+ * template (additive merge — user lines preserved verbatim, only missing
+ * template keys inserted; see `sync_agent_settings.ts`).
+ *
+ * Targets, in order:
+ *  1. Global settings — `~/.event4u/agent-config/settings/.agent-settings.yml`
+ *     (the canonical wizard-written file; `EVENT4U_CONFIG_HOME` honored).
+ *  2. Project settings — the project's read-path settings file when the
+ *     upgrade runs inside a consumer project that already has one.
+ *
+ * Only files that ALREADY EXIST are returned — the sync never creates a
+ * settings file as an upgrade side effect (fresh installs get theirs from
+ * the wizard / installer).
+ */
+function _settings_sync_targets(project_root: string): string[] {
+    const targets: string[] = [];
+    const global_settings = path.join(event4u_root(), 'settings', '.agent-settings.yml');
+    if (_isFile(global_settings)) {
+        targets.push(global_settings);
+    }
+    const project_settings = project_settings_path(project_root);
+    if (project_settings !== global_settings && _isFile(project_settings)) {
+        targets.push(project_settings);
+    }
+    return targets;
+}
+
+/**
+ * Run the additive settings sync for every existing target — as a SUBPROCESS
+ * of the freshly installed binary, never in-process: after `npm install -g`
+ * the running module is still the OLD version, so an in-process merge would
+ * use the OLD template and miss exactly the new keys the upgrade shipped.
+ *
+ * Non-fatal by design: the upgrade itself already succeeded; a sync failure
+ * surfaces a warning + the manual command instead of failing the run.
+ */
+function _sync_settings_files(
+    targets: readonly string[],
+    runner: (cmd: string[]) => number,
+    out: OutSink,
+    err: OutSink,
+): void {
+    for (const target of targets) {
+        const cmd = [_agent_config_bin(), 'settings:sync', '--path', target];
+        _print(out, '→ ' + cmd.join(' '));
+        let rc: number;
+        try {
+            rc = runner(cmd);
+        } catch (exc) {
+            rc = 127;
+            _print(err, `cannot run ${cmd[0]}: ${osErrorStr(exc)}`);
+        }
+        if (rc !== 0) {
+            _print(
+                err,
+                `⚠️  agent-config upgrade: settings sync failed (exit ${rc}) for ` +
+                    `${target} — run \`agent-config settings:sync --path ${target}\` manually.`,
+            );
+        }
+    }
+}
+
 interface Args {
     check: boolean;
     dry_run: boolean;
@@ -324,10 +397,16 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         [_agent_config_bin(), 'global'],
     ];
 
+    const project_root = options.project_root ?? process.cwd();
+    const sync_targets = _settings_sync_targets(project_root);
+
     if (args.dry_run) {
         _print(out, 'agent-config upgrade — dry run, would execute:');
         for (const cmd of steps) {
             _print(out, '  ' + cmd.join(' '));
+        }
+        for (const target of sync_targets) {
+            _print(out, '  ' + [_agent_config_bin(), 'settings:sync', '--path', target].join(' '));
         }
         return 0;
     }
@@ -344,7 +423,11 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         }
     }
 
-    _maybe_refresh_project_wrapper(options.project_root ?? process.cwd(), out, err);
+    // Bring existing settings files up to the NEW template (additive; the
+    // subprocess resolves the freshly installed binary + template).
+    _sync_settings_files(sync_targets, runner, out, err);
+
+    _maybe_refresh_project_wrapper(project_root, out, err);
 
     _print(
         out,

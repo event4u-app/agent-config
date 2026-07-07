@@ -177,3 +177,146 @@ describe('upgrade --dry-run / apply', () => {
         expect(expectSeamStable('1.0.0', '', 0, []).exit).toBe('0');
     });
 });
+
+// ---------------------------------------------------------------------------
+// Post-upgrade settings sync (injected runner + EVENT4U_CONFIG_HOME override).
+//
+// The upgrade must bring every EXISTING settings file (global canonical +
+// project) up to the new template via `agent-config settings:sync --path …`
+// subprocess steps — and must never create a settings file that did not
+// exist. Sync failures warn but never fail the upgrade (non-fatal contract).
+// ---------------------------------------------------------------------------
+
+const TS_SYNC_HARNESS = `
+(async () => {
+    const m = await import(${JSON.stringify(TS_SCRIPT)});
+    const rcMain = parseInt(process.argv[2], 10), rcSync = parseInt(process.argv[3], 10);
+    const projectRoot = process.argv[4];
+    const args = process.argv.slice(5);
+    let out = '', err = '';
+    const calls = [];
+    const sink = (b) => ({ write: (t) => { if (b === 'o') out += t; else err += t; } });
+    const runner = (cmd) => {
+        calls.push(cmd.join(' '));
+        return cmd.includes('settings:sync') ? rcSync : rcMain;
+    };
+    const code = await m.main(args, {
+        fetcher: () => '2.0.0',
+        runner,
+        installed: '1.0.0',
+        project_root: projectRoot,
+        out: sink('o'),
+        err: sink('e'),
+    });
+    process.stdout.write(
+        '\\x00OUT\\x00' + out + '\\x00ERR\\x00' + err +
+        '\\x00CALLS\\x00' + calls.join('\\n') + '\\x00EXIT\\x00' + code,
+    );
+})();
+`;
+
+interface SyncSeamResult {
+    out: string;
+    err: string;
+    calls: string[];
+    exit: string;
+}
+
+function parseSyncSeam(raw: string): SyncSeamResult {
+    const m =
+        /\x00OUT\x00([\s\S]*)\x00ERR\x00([\s\S]*)\x00CALLS\x00([\s\S]*)\x00EXIT\x00([\s\S]*)$/.exec(
+            raw,
+        );
+    if (!m) {
+        throw new Error(`unparseable sync-seam envelope:\n${raw}`);
+    }
+    return {
+        out: m[1] ?? '',
+        err: m[2] ?? '',
+        calls: (m[3] ?? '').split('\n').filter(Boolean),
+        exit: m[4] ?? '',
+    };
+}
+
+describe('upgrade — post-upgrade settings sync', () => {
+    let globalRoot: string;
+    let projectRoot: string;
+    let syncHarnessPath: string;
+
+    function seamSync(rcMain: number, rcSync: number, args: string[]): SyncSeamResult {
+        const r = spawnSync(
+            TSX_BIN,
+            [syncHarnessPath, String(rcMain), String(rcSync), projectRoot, ...args],
+            {
+                cwd: REPO_ROOT,
+                encoding: 'utf8',
+                env: { ...process.env, EVENT4U_CONFIG_HOME: globalRoot },
+            },
+        );
+        return parseSyncSeam(r.stdout ?? '');
+    }
+
+    const globalSettings = () => path.join(globalRoot, 'settings', '.agent-settings.yml');
+    const projectSettings = () =>
+        path.join(projectRoot, 'agents', 'settings', '.agent-settings.yml');
+
+    beforeEach(() => {
+        globalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-global-'));
+        projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-proj-'));
+        syncHarnessPath = path.join(harnessDir, 'sync-harness.mjs');
+        fs.writeFileSync(syncHarnessPath, TS_SYNC_HARNESS);
+    });
+    afterEach(() => {
+        fs.rmSync(globalRoot, { recursive: true, force: true });
+        fs.rmSync(projectRoot, { recursive: true, force: true });
+    });
+
+    it('existing global settings file → settings:sync subprocess step runs', () => {
+        fs.mkdirSync(path.dirname(globalSettings()), { recursive: true });
+        fs.writeFileSync(globalSettings(), 'rule_loading_tier: minimal\n');
+        const r = seamSync(0, 0, []);
+        expect(r.exit).toBe('0');
+        const syncCalls = r.calls.filter((c) => c.includes('settings:sync'));
+        expect(syncCalls).toHaveLength(1);
+        expect(syncCalls[0]).toContain(`--path ${globalSettings()}`);
+    });
+
+    it('global + project settings → both synced, global first', () => {
+        fs.mkdirSync(path.dirname(globalSettings()), { recursive: true });
+        fs.writeFileSync(globalSettings(), 'rule_loading_tier: minimal\n');
+        fs.mkdirSync(path.dirname(projectSettings()), { recursive: true });
+        fs.writeFileSync(projectSettings(), 'rule_loading_tier: balanced\n');
+        const r = seamSync(0, 0, []);
+        expect(r.exit).toBe('0');
+        const syncCalls = r.calls.filter((c) => c.includes('settings:sync'));
+        expect(syncCalls).toHaveLength(2);
+        expect(syncCalls[0]).toContain(`--path ${globalSettings()}`);
+        expect(syncCalls[1]).toContain(`--path ${projectSettings()}`);
+    });
+
+    it('no settings file anywhere → no settings:sync step, nothing created', () => {
+        const r = seamSync(0, 0, []);
+        expect(r.exit).toBe('0');
+        expect(r.calls.filter((c) => c.includes('settings:sync'))).toHaveLength(0);
+        expect(fs.existsSync(globalSettings())).toBe(false);
+        expect(fs.existsSync(projectSettings())).toBe(false);
+    });
+
+    it('sync failure is non-fatal: warns with manual command, exit stays 0', () => {
+        fs.mkdirSync(path.dirname(globalSettings()), { recursive: true });
+        fs.writeFileSync(globalSettings(), 'rule_loading_tier: minimal\n');
+        const r = seamSync(0, 5, []);
+        expect(r.exit).toBe('0');
+        expect(r.err).toContain('settings sync failed (exit 5)');
+        expect(r.err).toContain(`settings:sync --path ${globalSettings()}`);
+    });
+
+    it('--dry-run lists the sync step without executing anything', () => {
+        fs.mkdirSync(path.dirname(globalSettings()), { recursive: true });
+        fs.writeFileSync(globalSettings(), 'rule_loading_tier: minimal\n');
+        const r = seamSync(0, 0, ['--dry-run']);
+        expect(r.exit).toBe('0');
+        expect(r.out).toContain(`settings:sync --path ${globalSettings()}`);
+        expect(r.calls).toHaveLength(0);
+    });
+});
