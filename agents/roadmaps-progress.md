@@ -2,31 +2,44 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 8 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**86 / 134 steps done · 64%**
+**86 / 156 steps done · 55%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
-| 2 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
-| 3 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
-| 4 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
-| 5 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 7 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 1 | [road-to-claude-code-single-surface.md](roadmaps/road-to-claude-code-single-surface.md) | 5 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md) | 1 | 3 | 3 | 0 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering-followup) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
+| 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
+| 5 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
+| 6 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 8 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-claude-code-single-surface.md](roadmaps/road-to-claude-code-single-surface.md)
+
+**Claude Code single distribution surface — retire the dual npx/marketplace overlap** — 0 / 22 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Evidence gate: settings.json hook + agent parity | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Managed settings-merge protocol | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Installer + upgrade chain hardening | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Plugin retirement + user migration | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Permanent guardrails | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-discipline-profile-tiering-followup.md](roadmaps/road-to-discipline-profile-tiering-followup.md)
 
