@@ -90,7 +90,7 @@ none does. Optimize each on expected points under its point weight.
 
 | Question type | Example | Method |
 |---|---|---|
-| **Outright winner** | "Who wins the tournament?" | Outright "to win" market, consensus per A; or `poisson_sim.py` `title_pct`. EV-max under the question's points. |
+| **Outright winner** | "Who wins the tournament?" | Outright "to win" market, consensus per A; or `poisson_sim.ts` `title_pct`. EV-max under the question's points. |
 | **Group / stage** | "Who wins group X?", "Who advances?" | "To win group" / "to qualify" markets; or `advance_pct` from the simulator. |
 | **Finalists / matchup** | "Who reaches the final?" | "To reach final" market per team; simulator pairing is approximate — prefer the market. |
 | **Top scorer (player)** | "Tournament top scorer?" | "Top goalscorer" outright market, consensus per A; pick the EV-max player (favourite unless rarity scoring rewards a longer shot). |

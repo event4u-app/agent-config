@@ -58,9 +58,9 @@ Use when:
 
 Same resolution order as [`/sync-gitignore`](../sync-gitignore.md):
 
-1. `./agent-config/scripts/sync_gitignore.py`
-2. `vendor/event4u/agent-config/scripts/sync_gitignore.py`
-3. `node_modules/@event4u/agent-config/scripts/sync_gitignore.py`
+1. `./agent-config/scripts/sync_gitignore.ts`
+2. `vendor/event4u/agent-config/scripts/sync_gitignore.ts`
+3. `node_modules/@event4u/agent-config/scripts/sync_gitignore.ts`
 
 Target is `<project_root>/.gitignore`. If no `.gitignore` exists,
 stop — there is nothing to fix:

@@ -6,7 +6,7 @@
 #
 # An agent drafting a rule/skill/guideline change in a consumer project
 # produces this doc and hands it to `upstream-contribute`. The gate
-# (`scripts/check_proposal.py`) verifies evidence, scope, and
+# (`scripts/check_proposal.ts`) verifies evidence, scope, and
 # portability before a PR is opened.
 #
 # Copy this file, fill every field, run `task check-proposal`, commit.
@@ -92,10 +92,10 @@ under `agents/drafts/<proposal_id>.md` and link from here.
 List the checks the draft MUST pass before the gate signs off. The
 gate auto-runs every item in this list.
 
-- [ ] Passes `scripts/skill_linter.py` with zero errors
-- [ ] Passes `scripts/check_portability.py` (no project-specific
+- [ ] Passes `scripts/skill_linter.ts` with zero errors
+- [ ] Passes `scripts/check_portability.ts` (no project-specific
       identifiers)
-- [ ] References in the draft all resolve (`check_references.py`)
+- [ ] References in the draft all resolve (`check_references.ts`)
 - [ ] Size within budget for its type (per `size-enforcement` rule)
 - [ ] `preservation-guard` check: if `Replaces existing`, justify
       the replacement below.

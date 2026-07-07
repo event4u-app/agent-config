@@ -1,7 +1,7 @@
 # Memory Hygiene — template shipped by agent-config
 #
 # Copy this file to `.github/workflows/memory-hygiene.yml` in the consumer
-# project. It runs `scripts/check_memory.py` on a weekly schedule and
+# project. It runs `agent-config memory:check` on a weekly schedule and
 # opens (or updates) a single tracking issue when stale entries are
 # found in `agents/memory/`.
 #
@@ -9,9 +9,12 @@
 # is a review signal, not a merge blocker. See
 # `road-to-engineering-memory.md` Phase 4 for the rationale.
 #
+# Runtime: Node/tsx (py2ts migration) — the check runs through the
+# `@event4u/agent-config` package via npx (`memory:check` resolves a
+# local `scripts/check_memory.ts` customization first, then the packaged
+# copy); no Python required.
+#
 # Prerequisites:
-#   - `scripts/check_memory.py` copied from
-#     `.augment/templates/scripts/check_memory.py` into the consumer repo.
 #   - At least one file exists under `agents/memory/` — absence short-
 #     circuits the job with an informational log, no issue opened.
 
@@ -36,13 +39,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-
-      - name: Install PyYAML
-        run: pip install pyyaml
+          node-version: "22"
 
       - name: Short-circuit if no memory files
         id: has_memory
@@ -63,7 +63,7 @@ jobs:
             echo "## Memory hygiene report"
             echo
             echo '```'
-            python3 scripts/check_memory.py --path agents/memory
+            npx --yes @event4u/agent-config memory:check --path agents/memory
             exit_code=$?
             echo '```'
           } > staleness.md

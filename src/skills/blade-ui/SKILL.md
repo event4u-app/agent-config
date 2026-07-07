@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: blade-ui
-description: "Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic."
+description: "Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers views, components, partials, layouts, and view logic."
 domain: engineering
 workspaces:
   - engineering
@@ -17,7 +17,8 @@ install:
 # blade-ui
 
 > **Grounded stack guidance:** pull idiomatic Do/Don't + docs URLs from the
-> adopted stack corpus before improvising — `ground.py search --manifest
+> adopted stack corpus before improvising — `./scripts-run
+> <skills-root>/corpus-grounding/scripts/ground search --manifest
 > <skills-root>/design-intelligence/data/manifest.json --stack laravel "<topic>"`
 > (the `laravel` stack file is Blade/UI-scoped, not general Laravel). See
 > [`design-intelligence`](../design-intelligence/SKILL.md).
@@ -25,23 +26,23 @@ install:
 ## Positioning — dispatched, not standalone
 
 `blade-ui` is the **apply-step executor** for the Blade stack. It is
-invoked by [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py)
-once the design brief is locked, and revisited by `review.py` /
-`polish.py` during the design-review loop. It does **not** own the
+invoked by [`directives/ui/apply.ts`](../../templates/scripts/work_engine/directives/ui/apply.ts)
+once the design brief is locked, and revisited by `review.ts` /
+`polish.ts` during the design-review loop. It does **not** own the
 flow, does **not** drive the audit, and does **not** lock the design.
 
 | Concern | Owner |
 |---|---|
 | Audit + token inventory (mandatory pre-step) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) |
-| Design brief (layout / states / microcopy) | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
+| Design brief (layout / states / microcopy) | [`directives/ui/design.ts`](../../templates/scripts/work_engine/directives/ui/design.ts) |
 | Universal design heuristics | [`fe-design`](../fe-design/SKILL.md) |
-| Review + polish loop | [`directives/ui/review.py`](../../templates/scripts/work_engine/directives/ui/review.py) + [`polish.py`](../../templates/scripts/work_engine/directives/ui/polish.py) |
+| Review + polish loop | [`directives/ui/review.ts`](../../templates/scripts/work_engine/directives/ui/review.ts) + [`polish.ts`](../../templates/scripts/work_engine/directives/ui/polish.ts) |
 
 ## When to use
 
 Cite this skill when:
 
-- `state.stack.frontend == "blade"` (or the project is clearly Blade-only without Livewire / Flux) and `directives/ui/apply.py` dispatches to this skill
+- `state.stack.frontend == "blade"` (or the project is clearly Blade-only without Livewire / Flux) and `directives/ui/apply.ts` dispatches to this skill
 - Editing or creating Blade views, components, partials, layouts, or forms
 
 Do NOT use when:
@@ -92,8 +93,8 @@ Do NOT use when:
 
 ### Review pass — a11y findings + preview envelope
 
-When this skill is dispatched by `directives/ui/review.py` (test slot)
-or `directives/ui/polish.py` (verify slot) — i.e. a review/polish run,
+When this skill is dispatched by `directives/ui/review.ts` (test slot)
+or `directives/ui/polish.ts` (verify slot) — i.e. a review/polish run,
 not the initial apply — it also emits:
 
 - `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...],

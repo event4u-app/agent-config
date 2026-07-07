@@ -19,8 +19,8 @@ packs:
   "will this ever fire", "rewrite the description".
 * Called from within the Draft phase of one of the writing skills
   (`skill-writing`, `rule-writing`, `command-writing`, `guideline-writing`).
-* Auditing a skill flagged by `audit_skill_descriptions.py` as `too-short`,
-  `no-trigger-prefix`, or `description_too_long` in `skill_linter.py`.
+* Auditing a skill flagged by `audit_skill_descriptions.ts` as `too-short`,
+  `no-trigger-prefix`, or `description_too_long` in `skill_linter.ts`.
 
 Do NOT use this skill when:
 
@@ -65,7 +65,7 @@ If the target is a skill, check for a trigger-eval report:
 
 * `.agent-src.uncondensed/skills/{name}/evals/triggers.json` — the expected-trigger corpus
 * `evals/last-run.json` — the most recent runner output (see
-  [`scripts/skill_trigger_eval.py`](../../../scripts/skill_trigger_eval.py))
+  [`scripts/skill_trigger_eval.ts`](../../../scripts/skill_trigger_eval.ts))
 
 If `last-run.json` exists and contains failed queries for this skill,
 extract the failure patterns and **use them to inform step 3 variants**.
@@ -159,14 +159,14 @@ and stop. Do not loop further.
 * Do NOT propose more than 3 variants in one turn
 * Do NOT change the skill name, body, or trigger phrases in the same turn
 * Do NOT silently strip or reword quotes inside the description value
-* Do NOT run `scripts/skill_trigger_eval.py` from inside this skill — eval
+* Do NOT run `scripts/skill_trigger_eval.ts` from inside this skill — eval
   execution spends API tokens and is a separate user action
 
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the package's
-`scripts/audit_skill_descriptions.py`, `scripts/skill_linter.py`,
-and `scripts/skill_trigger_eval.py` are not reachable. The skill
+`scripts/audit_skill_descriptions.ts`, `scripts/skill_linter.ts`,
+and `scripts/skill_trigger_eval.ts` are not reachable. The skill
 still applies — with prose-only inspection:
 
 * Reason from the description text in the conversation. The agent

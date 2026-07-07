@@ -156,7 +156,7 @@ about the project** over time:
 Before deduplicating, run three scans:
 
 1. **Legacy identifier scan** — compare both files against the package's
-   `FORBIDDEN_IDENTIFIERS` blocklist (see `scripts/check_portability.py`)
+   `FORBIDDEN_IDENTIFIERS` blocklist (see `scripts/check_portability.ts`)
    plus any project names from `agents/` module docs that don't match
    the current project.
 2. **Stack coherence scan** — auto-detect the actual stack from

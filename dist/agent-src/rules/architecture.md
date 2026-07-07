@@ -61,7 +61,7 @@ When a structural decision is non-trivial (kernel membership, contract change, l
 deprecation, scope re-cut), record it as an ADR. Use the [`adr-create`](../skills/adr-create/SKILL.md)
 skill — it numbers the file (`ADR-NNN-<slug>.md`), writes the standard template
 (Status / Context / Decision / Consequences / Alternatives / References), and regenerates the
-index via `scripts/adr/regenerate_index.py`. ADRs land in `docs/adr/` by default; legacy
+index via `scripts/adr/regenerate_index.ts`. ADRs land in `docs/adr/` by default; legacy
 projects use `docs/decisions/`. Reversible refactors and minor cleanups do **not** need ADRs.
 
 ## Module-Level Documentation
@@ -69,7 +69,7 @@ projects use `docs/decisions/`. Reversible refactors and minor cleanups do **not
 Some projects use a module system (e.g. `app/Modules/` in Laravel, `apps/`/`packages/` in a Turborepo, `src/modules/` in NestJS, `internal/` in Go).
 Module roots and the per-module agent-docs folder are configured via
 `modules.root_paths` and `modules.agent_folder` in `.agent-settings.yml`
-(resolve at runtime via `scripts/_lib/agent_settings.py::enumerate_modules()`).
+(resolve at runtime via `scripts/_lib/agent_settings.ts::enumerate_modules()`).
 Modules may have their own agent docs under
 `{module_root}/*/{agent_folder}/` (Laravel shape: `app/Modules/*/agents/`) with:
 

@@ -9,12 +9,10 @@
 # A green check here proves the dashboard reflects reality on every PR
 # that touches roadmaps.
 #
-# Prerequisites:
-#   - `.augment/scripts/update_roadmap_progress.py` installed by
-#     `task install` (or `./agent-config install`).
-#   - At least one file exists under `agents/roadmaps/` — absence
-#     short-circuits the check with a passing exit (consumer projects
-#     that haven't adopted roadmaps stay green).
+# Runtime: Node/tsx (py2ts migration) — the check runs through the
+# `@event4u/agent-config` package via npx; no Python, no local install
+# required. Absence of `agents/roadmaps/` short-circuits with a passing
+# exit (consumer projects that haven't adopted roadmaps stay green).
 #
 # This workflow is intentionally narrow: it only runs when relevant
 # files change, so it adds zero overhead to unrelated PRs.
@@ -27,12 +25,12 @@ on:
     paths:
       - "agents/roadmaps/**"
       - "agents/roadmaps-progress.md"
-      - ".augment/scripts/update_roadmap_progress.py"
+      - ".augment/scripts/update_roadmap_progress.ts"
   pull_request:
     paths:
       - "agents/roadmaps/**"
       - "agents/roadmaps-progress.md"
-      - ".augment/scripts/update_roadmap_progress.py"
+      - ".augment/scripts/update_roadmap_progress.ts"
   workflow_dispatch: {}
 
 permissions:
@@ -45,12 +43,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.11"
+          node-version: "22"
 
       - name: Run roadmap progress check
-        run: python3 .augment/scripts/update_roadmap_progress.py --check
+        run: npx --yes @event4u/agent-config roadmap:progress-check
 
       - name: Remediation hint on failure
         if: failure()
@@ -58,6 +56,6 @@ jobs:
           echo "::error::roadmaps-progress.md is stale."
           echo "Regenerate locally with one of:"
           echo "  ./agent-config roadmap:progress"
+          echo "  agent-config roadmap:progress"
           echo "  task roadmap-progress"
-          echo "  python3 .augment/scripts/update_roadmap_progress.py"
           echo "Then commit and push the updated agents/roadmaps-progress.md."

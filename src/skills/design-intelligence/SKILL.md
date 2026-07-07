@@ -26,9 +26,9 @@ execution:
 > consult this corpus FIRST and pre-fill the brief candidates — then the
 > human confirms (`design_confirmed`). Corpus output is a **constraint
 > set**, never final microcopy; the placeholder lock in
-> `directives/ui/design.py` is unaffected.
+> `directives/ui/design.ts` is unaffected.
 >
-> **Boundary (council-locked):** `design.py` stays a pure orchestration
+> **Boundary (council-locked):** `design.ts` stays a pure orchestration
 > gate and never imports the engine — the corpus call lives HERE, in the
 > skill layer, keeping the engine an optional dependency.
 
@@ -223,7 +223,8 @@ consistency; on a fresh session, re-hydrate `state.ui_design` from
 The `review`/`polish` steps gate on `state.ui_review.a11y`. Ground two
 finding classes instead of ad-hoc judgment:
 
-- **Chart-type findings** — `…/ground.py search --manifest … --domain
+- **Chart-type findings** — the grounding CLI (`ground` via
+  ./scripts-run) — `…/ground search --manifest … --domain
   chart "<data shape>"` → `Accessibility Grade`, `A11y Fallback`,
   `Color Guidance` columns justify "wrong chart type / missing colorblind
   fallback" findings with a citable row.
@@ -262,7 +263,7 @@ guidance + docs URLs from here instead of memory.
 
 - Do NOT let the corpus write microcopy — it supplies constraint sets;
   final strings are agent-written (placeholder lock stays in force).
-- Do NOT import the engine into `directives/ui/design.py` — council
+- Do NOT import the engine into `directives/ui/design.ts` — council
   boundary; the corpus call lives in this skill layer.
 - Do NOT propose a new component the `existing-ui-audit` inventory
   already covers — audit findings outrank corpus suggestions.
@@ -275,7 +276,7 @@ guidance + docs URLs from here instead of memory.
 | What already exists (components, tokens) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) — mandatory pre-step; audit findings outrank corpus suggestions |
 | What to build (grounded selection) | **this skill** |
 | Stack-agnostic heuristics + flow | [`fe-design`](../fe-design/SKILL.md) — invokes this skill for grounding |
-| Orchestration gates + locks | `directives/ui/{design,review,polish}.py` — never import the engine |
+| Orchestration gates + locks | `directives/ui/{design,review,polish}.ts` — never import the engine |
 | WCAG audit method | [`accessibility-auditor`](../accessibility-auditor/SKILL.md) |
 | Token authoring | [`design-tokens`](../design-tokens/SKILL.md) |
 | Lo-fi structure exploration (pre-selection) | [`wireframe`](../wireframe/SKILL.md) — disposable greyscale variants |

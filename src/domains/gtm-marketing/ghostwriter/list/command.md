@@ -86,7 +86,7 @@ If Step 1 encountered a `fictional: true` file under
     or delete this file.
 ```
 
-This should not normally happen — `scripts/lint_ghostwriter_source.py`
+This should not normally happen — `scripts/lint_ghostwriter_source.ts`
 guards the package side (run via the package's CI), and consumer-side
 `fetch` always writes `fictional: false`.
 

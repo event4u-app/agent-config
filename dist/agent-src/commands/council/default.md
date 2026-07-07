@@ -68,7 +68,7 @@ Resolution chain (highest priority first):
 
 Optional **mode_override**: `mode_override=pr|design|optimize` swaps
 the system-prompt addendum for one of the specialised lenses
-(see `prompts.py` `_MODE_TABLE`). The bundle mode is unchanged; only
+(see `prompts.ts` `_MODE_TABLE`). The bundle mode is unchanged; only
 the per-mode neutrality addendum is replaced. Routed by the
 `/council pr`, `/council design`, `/council optimize` sub-commands —
 surface to the user as "council on <target> — <lens> lens".
@@ -171,7 +171,7 @@ redaction, and prints the per-member preview without spending:
 
 `--prompt-mode` is the lens-override flag routed by the
 `/council pr|design|optimize|analysis` wrappers. It swaps the
-per-mode neutrality addendum (see `scripts/ai_council/prompts.py`
+per-mode neutrality addendum (see `scripts/ai_council/prompts.ts`
 `_MODE_TABLE`) without changing the bundle shape. Bare
 `/council default` invocations leave it unset.
 
@@ -321,5 +321,5 @@ council can act on the project directly.
 - `/council` — cluster dispatcher.
 - `ai-council` skill — neutrality guidelines, anti-patterns, redaction expectations.
 - `subagent-orchestration` skill — internal multi-agent variant (no network calls).
-- `scripts/council_cli.py` — the CLI entry point this command wraps.
+- `scripts/council_cli.ts` — the CLI entry point this command wraps.
 - `docs/customization.md` § Available settings → `ai_council.*`.

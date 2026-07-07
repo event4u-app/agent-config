@@ -46,4 +46,4 @@ Removing a pack reverts cleanly; no data is lost.
    plain prose.
 4. Add the row to the table above.
 5. Open a PR; reviewer validates against the schema by hand until
-   `scripts/lint_packs.py` lands.
+   `scripts/lint_packs.ts` lands.

@@ -126,7 +126,7 @@ THE HOST AGENT IS THE CONVENER, NEVER A REVIEWER.
 
 If you find yourself wanting to "frame" the artefact for the council,
 stop. Framing is exactly what kills the second-opinion value. Use the
-unbiased system prompts in `scripts/ai_council/prompts.py`; do not
+unbiased system prompts in `scripts/ai_council/prompts.ts`; do not
 roll your own.
 
 The host runs the council and synthesises convergence — it is the
@@ -151,7 +151,7 @@ in front of every member's system prompt, assembled by
 | One paragraph of repo purpose from `README.md` (max 400 chars) | Host-agent framing language ("I think this looks weak", "the user probably wants…") |
 | The user's **original ask** verbatim (the free-form sentence that triggered `/council`) | Anything the host agent generated about the artefact |
 
-`detect_project_context()` in `scripts/ai_council/project_context.py`
+`detect_project_context()` in `scripts/ai_council/project_context.ts`
 reads only the manifest files + root README; missing fields collapse
 to `None` and the preamble silently omits the line. With both
 `project=None` and `original_ask=""`, the preamble degrades to the
@@ -170,7 +170,7 @@ travel changes.
 | `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
 | `cli` | `AnthropicCliClient` / `OpenAICliClient` / `GeminiCliClient` | no (subscription-authed) | local subprocess against the vendor CLI (`claude`, `codex`, `gemini`); auth delegated to the CLI's own session, no API key flows through this process | shipped (anthropic/openai/gemini · Phase 3) |
 
-Resolution lives in `scripts/ai_council/modes.py`:
+Resolution lives in `scripts/ai_council/modes.ts`:
 `resolve_mode(name, invocation_mode, member_settings, global_mode)`
 with precedence **invocation flag > per-member setting > global
 setting > default (`manual`)**. Whitespace-and-case insensitive; empty
@@ -297,15 +297,15 @@ not a default.
 1. **Resolve target.** Identify the artefact mode (`prompt`, `roadmap`,
    `diff`, `files`) and locate the source. Refuse to proceed if the
    target is ambiguous.
-2. **Bundle + redact.** Call `scripts/ai_council/bundler.py` to produce
+2. **Bundle + redact.** Call `scripts/ai_council/bundler.ts` to produce
    a redacted artefact bundle. If `BundleTooLarge` fires, surface the
    size and ask the user to narrow scope — do NOT truncate silently.
 3. **Confirm spend.** Before any network call, surface members + cost
    ceiling and require an explicit user `1` to proceed. Autonomy
    settings do not override this gate.
 4. **Fan out.** Dispatch the bundle to each enabled council member via
-   `scripts/ai_council/orchestrator.py`. Each member receives the
-   neutrality preamble from `prompts.py` plus the artefact — nothing
+   `scripts/ai_council/orchestrator.ts`. Each member receives the
+   neutrality preamble from `prompts.ts` plus the artefact — nothing
    from the host agent's prior reasoning.
 5. **Render results.** Stack each member's response under its own
    provider-attributed heading. Never merge or paraphrase responses
@@ -417,9 +417,9 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
   part of their evidence trail (e.g. `audits/2026-05-14-north-star/`
   bundling its triggering question, raw responses, and synthesis
   alongside the audit's findings). The layout linter
-  (`scripts/check_council_layout.py`) skips this directory.
+  (`scripts/check_council_layout.ts`) skips this directory.
 
-`scripts/check_council_layout.py` is the mechanical check for the
+`scripts/check_council_layout.ts` is the mechanical check for the
 output path convention — wire it into the package's CI pipeline so
 violations break the build.
 
@@ -462,7 +462,7 @@ attributed to the host.
 The **Convergence / Divergence** slot in `council:render` output is
 populated with a lens-specific synthesis prompt. The host agent reads
 this prompt and writes the summary in the shape it dictates. The five
-templates live in `scripts/ai_council/prompts.py::_SYNTHESIS_TABLE`
+templates live in `scripts/ai_council/prompts.ts::_SYNTHESIS_TABLE`
 and are exposed via `synthesis_template(mode)`.
 
 **R4 Q4 split** — decision lenses get a structured Karpathy-style
@@ -550,7 +550,7 @@ Real failure modes seen in the wild:
 | Anti-pattern | Why it's wrong | Correct approach |
 |---|---|---|
 | "Pre-warm" the council with the agent's own analysis. | Bias attack — collapses the reviewer to a yes-man. | Send the artefact text only. |
-| Paste the host-agent identity ("I am Augment / Claude Code…") | Identity primes the reviewer's model. | Neutrality preamble in `prompts.py` already handles this. |
+| Paste the host-agent identity ("I am Augment / Claude Code…") | Identity primes the reviewer's model. | Neutrality preamble in `prompts.ts` already handles this. |
 | Silently truncate a too-large bundle. | Misleads the reviewer into thinking they saw the whole thing. | Bundler raises `BundleTooLarge`; surface and ask for narrower scope. |
 | Reuse the same SDK client across calls without re-loading the key. | Leaks the key in long-lived process state. | Each invocation builds fresh clients from `load_*_key()`. |
 | Auto-spend tokens under `personal.autonomy: on`. | Autonomy ≠ permission to spend money. | Always ask before consultation, even under autonomy. |
@@ -590,7 +590,7 @@ per-invocation caps from `ai_council.cost_budget`:
   `daily_budget_exceeded` instead of `cost_budget_exceeded`.
 
 Prices come from `agents/runtime/.agent-prices.md` (gitignored, refreshed weekly).
-The pricing module bootstraps it from `_default_prices.py` on first
+The pricing module bootstraps it from `_default_prices.ts` on first
 use and flags it stale when older than the most recent Monday 00:00
 UTC.
 
@@ -970,16 +970,16 @@ session had no fast-path entries (a clean session is not an error).
 - `/council` command — the user-facing entry point.
 - `subagent-orchestration` skill — internal multi-agent variant (no
   network, no spend, but no diversity of weights either).
-- `scripts/ai_council/prompts.py` — neutrality preamble + per-mode
+- `scripts/ai_council/prompts.ts` — neutrality preamble + per-mode
   system prompts.
-- `scripts/ai_council/advisors.py` — replace-mode planning + persona
+- `scripts/ai_council/advisors.ts` — replace-mode planning + persona
   resolution.
-- `scripts/ai_council/bundler.py` — redaction pattern set + size
+- `scripts/ai_council/bundler.ts` — redaction pattern set + size
   guard.
 - `docs/customization.md` § `ai_council.*` — settings reference.
 - `docs/contracts/ai-council-config.md` § advisors — schema + precedence
   contract.
 - `docs/contracts/ai-council-config.md` § Decision-replay artefact —
   Phase 9 audit trail contract + redaction modes.
-- `scripts/ai_council/replay.py` — pure projection renderer (no model
+- `scripts/ai_council/replay.ts` — pure projection renderer (no model
   calls).

@@ -95,7 +95,7 @@ INTENT
   cited asset's trigger keywords or scope, update the matching row in
   this skill in the same commit (enforced by
   [`token-optimizer-maintenance`](../../rules/token-optimizer-maintenance.md)
-  rule + `scripts/check_token_optimizer_freshness.py` CI gate).
+  rule + `scripts/check_token_optimizer_freshness.ts` CI gate).
 - Tree must stay scannable (≤ 50 lines incl. labels). Catalog rows
   carry the long form.
 - Authoritative-link assets (`rtk` upstream, `markitdown` upstream,

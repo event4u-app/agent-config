@@ -29,7 +29,7 @@ Use when:
 
 - Condense reply, commit message, PR body, ticket summary, or any deliverable written *for* human reader — those are carve-outs in [`telegraph-speak § Carve-outs`](../../rules/telegraph-speak.md) and stay verbatim.
 - Condense path matching sensitive-file denylist (`.env*`, `.netrc`, `credentials*`, `secrets*`, `id_rsa*`, `*.pem|key|p12|pfx|crt|cer|jks`, `.ssh/*`) — script refuses with `SensitivePathError` and so should you.
-- Condense generated file (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit source in `.agent-src.uncondensed/` and regenerate via package's sync + generate-tools scripts (`scripts/condense.sh --sync` + `scripts/condense.py --generate-tools`).
+- Condense generated file (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit source in `.agent-src.uncondensed/` and regenerate via package's sync + generate-tools scripts (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`).
 - Hand-edit condensed memory file in place — run `--decondense` first; next condense pass refuses on body-hash drift (`CondensationRefused`).
 - Commit condensed file without committing matching `.original.md` backup — round-trip breaks otherwise.
 
@@ -99,7 +99,7 @@ CLI exit codes:
 - **Denylist false positive** — sensitive-looking filename outside denylist surface (project-specific naming) will still pass `assert_safe()`. Denylist necessary but not sufficient; maintainer responsible for never feeding secrets to condenseor.
 - **Frontmatter ordering with existing keys** — if target already has frontmatter, condenseor preserves existing keys, drops any prior `original_sha256:` / `condensed_at:` entries, and appends new pair. Other agents reading file should treat SHA + timestamp pair as canonical condensation marker, not file size.
 - **Negative savings on pointer-heavy files** — `templates/AGENTS.md` already following Thin-Root (≥ 40 % pointers, ≥ 60-char *why*-clauses) has little prose left to drop; condensation may net near-zero or even add bytes via frontmatter. Run [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) first to maximise pointer share, then measure whether this skill still pays.
-- **Generated-tree drift** — condensing `.agent-src.uncondensed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until package's sync + generate-tools scripts run (`scripts/condense.sh --sync` + `scripts/condense.py --generate-tools`). Always regenerate after condensing templated file.
+- **Generated-tree drift** — condensing `.agent-src.uncondensed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until package's sync + generate-tools scripts run (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`). Always regenerate after condensing templated file.
 
 ## Measurement — when to condense
 

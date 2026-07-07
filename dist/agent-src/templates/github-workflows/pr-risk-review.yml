@@ -9,6 +9,10 @@
 # under `.augment/templates/scripts/pr-risk-config.example.yml`). Without a
 # config file the script falls back to sensible cross-stack defaults.
 #
+# Runtime: Node/tsx (py2ts migration) — the classifiers ship inside the
+# `@event4u/agent-config` package and run through the package's own tsx
+# runner; no Python and no consumer-local script copy required.
+#
 # This workflow is purely informational — it does NOT block merges. Gate the
 # PR on a separate required check if you want a hard stop.
 
@@ -34,21 +38,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: "22"
 
-      - name: Install dependencies
-        run: pip install pyyaml
+      - name: Install agent-config
+        run: npm install -g @event4u/agent-config
 
       - name: Classify risk
         id: risk
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # Runs the packaged classifier via the package's own tsx runner; a
+        # consumer-local `scripts/pr_risk_review.ts` customization wins.
         run: |
-          python3 scripts/pr_risk_review.py \
+          PKG="$(npm root -g)/@event4u/agent-config"
+          SCRIPT="$PKG/dist/agent-src/templates/scripts/pr_risk_review.ts"
+          [ -f scripts/pr_risk_review.ts ] && SCRIPT=scripts/pr_risk_review.ts
+          node "$PKG/node_modules/tsx/dist/cli.mjs" "$SCRIPT" \
             --base "$BASE_SHA" \
             --head "$HEAD_SHA" \
             --config .github/pr-risk-config.yml \
@@ -100,7 +109,6 @@ jobs:
 
       - name: Classify review routing
         id: routing
-        if: hashFiles('scripts/pr_review_routing.py') != ''
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -109,7 +117,10 @@ jobs:
         # back to agents/ — matching the reviewer-awareness rule.
         # Missing data files emit a generic fallback, not an error.
         run: |
-          python3 scripts/pr_review_routing.py \
+          PKG="$(npm root -g)/@event4u/agent-config"
+          SCRIPT="$PKG/dist/agent-src/templates/scripts/pr_review_routing.ts"
+          [ -f scripts/pr_review_routing.ts ] && SCRIPT=scripts/pr_review_routing.ts
+          node "$PKG/node_modules/tsx/dist/cli.mjs" "$SCRIPT" \
             --base "$BASE_SHA" \
             --head "$HEAD_SHA" \
             --output routing-report.md \

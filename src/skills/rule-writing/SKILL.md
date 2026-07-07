@@ -101,11 +101,11 @@ fail `./scripts-run src/scripts/lint_load_context`. Canonical reference:
 | `triggers[].path_prefix:` | **Literal match pattern** the host evaluates against the file the agent is editing — not rewritten | `src/skills/` (source-of-truth rules) or `agents/`, `app/`, `.augment/` |
 | Body links to guidelines / contracts | **Verbatim relative form** — `../../docs/...` works in any markdown viewer; rewriter handles depth | `[guideline](../../docs/guidelines/<group>/<name>.md)` |
 
-The condense-time rewriter (`scripts/condense.py::_rewrite_paths`) is
+The condense-time rewriter (`scripts/condense.ts::_rewrite_paths`) is
 idempotent and depth-aware — it resolves logical names and body links
 to the deployment-correct relative path at condense time, leaving
 `path_prefix:` literally as written. The schema regex
-(`scripts/schemas/rule.schema.json`) and `scripts/lint_load_context.py`
+(`scripts/schemas/rule.schema.json`) and `scripts/lint_load_context.ts`
 both reject the `src/` prefix in `load_context:` /
 `load_context_eager:` with an error pointing at the canonical logical
 name.
@@ -146,7 +146,7 @@ invoke [`rule-refactor`](../rule-refactor/SKILL.md). Do NOT:
 
 * Trim the new rule further to "just fit" — if it needs that body to
   do its job, the rule is right and the rule set around it is wrong.
-* Raise `FAIL_THRESHOLD` in `scripts/measure_augment_budget.py` —
+* Raise `FAIL_THRESHOLD` in `scripts/measure_augment_budget.ts` —
   threshold-lift is explicitly forbidden (see the
   [`validation-budget`](../../rules/validation-budget.md) rule and
   the `rule-refactor` Iron Law).
@@ -162,7 +162,7 @@ move-to-context / promote-to-skill so the new rule earns its space.
 ### 6. Governance baseline (when introducing a new linter check)
 
 **Advisory, reviewer-checked — no CI gate.** When the same PR adds a
-new check to `scripts/skill_linter.py` (or strengthens an existing
+new check to `scripts/skill_linter.ts` (or strengthens an existing
 one) such that previously-clean rules now warn, the PR body MUST
 record the pre-existing violations on `main` in a Markdown table:
 
@@ -250,7 +250,7 @@ to every rule you author.
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the package's
-`scripts/skill_linter.py`, `scripts/condense.py`, and `task` runner
+`scripts/skill_linter.ts`, `scripts/condense.ts`, and `task` runner
 are not reachable. The skill still applies — with prose-only
 validation:
 

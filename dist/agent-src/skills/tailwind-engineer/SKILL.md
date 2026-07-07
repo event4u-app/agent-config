@@ -53,10 +53,10 @@ one-line comment naming the design source.
 
 Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
 in [`design-tokens`](../design-tokens/SKILL.md); its
-`tokens.py validate --dir <path>` is the **single token-discipline
+`tokens.ts validate --dir <path>` is the **single token-discipline
 linter** — the mechanical check behind this rule (no hardcoded hex / px /
 rem outside the token files). Greenfield Tailwind config: bundled
-`scripts/tailwind_config_gen.py` (Apache-2.0-derived, pure templating)
+`scripts/tailwind_config_gen.ts` (Apache-2.0-derived, pure templating)
 scaffolds `tailwind.config.{js,ts}` per framework.
 
 ### 2. Compose, don't inline

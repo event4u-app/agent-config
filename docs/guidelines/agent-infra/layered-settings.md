@@ -9,7 +9,7 @@ project-local choices always win.
 Referenced by `road-to-project-memory.md` Phase 0 and
 `road-to-portable-dev-preferences.md`. Consumed by the centralized
 settings loader at
-[`scripts/_lib/agent_settings.py`](../../../src/scripts/_lib/agent_settings.py),
+[`scripts/_lib/agent_settings.ts`](../../../src/scripts/_lib/agent_settings.ts),
 the `/onboard` command, and any agent that edits `.agent-settings.yml`
 on user request.
 
@@ -32,7 +32,7 @@ All three are YAML. Schemas:
 - Developer (project-local): [`agent-settings.md`](../../templates/agent-settings.md).
 - Team: [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml).
 - User-global: six exact dotted paths — whitelist in
-  [`scripts/_lib/agent_settings.py`](../../../src/scripts/_lib/agent_settings.py).
+  [`scripts/_lib/agent_settings.ts`](../../../src/scripts/_lib/agent_settings.ts).
 
 ## Merge order
 
@@ -248,13 +248,13 @@ Any agent that writes `.agent-settings.yml` or
 `.agent-project-settings.yml` on the user's behalf (including
 `/onboard`, `/set-cost-profile`, and ad-hoc "change value X" requests)
 MUST follow these rules. Initial file creation and legacy migration
-are owned by `scripts/install.py`; these rules govern every edit
+are owned by `scripts/install.ts`; these rules govern every edit
 after that.
 
 The contract is **additive merge with user-line preservation** —
 the user's file is the ground truth, the template only contributes
 keys the user is missing. Round-trip parser and merger live in
-[`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.py); the
+[`scripts/sync_yaml_rt.ts`](../../src/scripts/sync_yaml_rt.ts); the
 supported YAML subset (block-mappings, scalars, lists, comments,
 CRLF/LF) is documented in its module docstring. The stdlib-only
 choice (vs. `ruamel.yaml`) and its revisit triggers are recorded in

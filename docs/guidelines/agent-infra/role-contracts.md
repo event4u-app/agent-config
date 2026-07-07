@@ -75,7 +75,7 @@ Referenced by `road-to-role-modes.md` Phase 1. Each contract is a
 
 **Memory-write is the final field, not a nice-to-have.** Before the
 mode exits, the agent MUST either emit an intake signal via
-[`memory-access`](memory-access.md) (`scripts/memory_signal.py`
+[`memory-access`](memory-access.md) (`scripts/memory_signal.ts`
 append — one line, fire-and-forget) or draft a curated entry with
 [`/memory-add incident-learnings`](../../commands/memory-add.md).
 Pattern + consequence + guardrail, redacted. Skipping this field

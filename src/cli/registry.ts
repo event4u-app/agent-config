@@ -58,6 +58,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
     { name: 'roadmap:progress', disposition: 'delegate' },
     { name: 'roadmap:progress-check', disposition: 'delegate' },
+    { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },
     { name: 'capabilities:index', disposition: 'delegate', synopsis: 'Regenerate CAPABILITIES.yaml (the package coverage index); --check for CI.' },
     { name: 'hooks:install', disposition: 'delegate' },
     { name: 'hooks:status', disposition: 'delegate' },

@@ -71,11 +71,11 @@ Invoke the matching `/council default` form:
 - `prompt:` → `/council default prompt:"<artefact text>"` with
   `--prompt-mode analysis`.
 
-`--prompt-mode` is the CLI flag (`scripts/council_cli.py`) that
+`--prompt-mode` is the CLI flag (`scripts/council_cli.ts`) that
 swaps the lens addendum after the bundler has run. The bundle shape
 stays as the resolved `--input-mode` (prompt | roadmap | files).
 
-The `analysis` mode addendum from `scripts/ai_council/prompts.py`
+The `analysis` mode addendum from `scripts/ai_council/prompts.ts`
 focuses council members on:
 
 - Deduplicating findings restated under different headings.

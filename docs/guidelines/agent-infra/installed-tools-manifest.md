@@ -17,7 +17,7 @@ machine-managed, and orthogonal to `.agent-project-settings.yml`
 schema_version: 1
 agent_config_version: "2.x.y"          # last package version that wrote the file
 tools:
-  - name: claude-code                  # must match _VALID_TOOLS in scripts/install.py
+  - name: claude-code                  # must match _VALID_TOOLS in scripts/install.ts
     scope: global                      # one of: global, project
     bridge_marker: ~/.claude/          # validate checks this path exists
     installed_at: "2026-05-12"
@@ -32,7 +32,7 @@ tools:
 | `schema_version` | machine | bumps on breaking schema changes |
 | `agent_config_version` | machine | last writer's package version; `validate` flags drift |
 | `tools[]` | machine | append-on-init order preserved (not alphabetised) |
-| `tools[].name` | machine | one of the 17 valid IDs in `scripts/install.py` |
+| `tools[].name` | machine | one of the 17 valid IDs in `scripts/install.ts` |
 | `tools[].scope` | machine | `global` (user-home) or `project` (workspace bridge) |
 | `tools[].bridge_marker` | machine | absolute / `~`-prefixed for global, repo-relative for project |
 | `tools[].installed_at` | machine | ISO date; informational only |
@@ -51,7 +51,7 @@ npx @event4u/agent-config sync
 ```
 
 `sync` reads `agents/installed-tools.lock`, checks every listed tool's
-bridge marker, and replays `install.py --tools=<id>` for each missing
+bridge marker, and replays `install.ts --tools=<id>` for each missing
 one. Tools whose marker is already present are skipped — `sync` is
 idempotent and safe to re-run.
 

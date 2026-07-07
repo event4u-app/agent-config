@@ -108,7 +108,7 @@ human curates), a card is governed: it is a cache of *expensive* remote evidence
 **negative facts + pointers** (`trust: durable`); its positive structure is a
 per-line, last-verified **hypothesis** that loads as "Assumed (from card)" and
 must be re-confirmed against the live source before use. Cards pass the
-`check_knowledge_cards.py` pointer-CI (size ≤ 150, mandatory authoritative
+`check_knowledge_cards.ts` pointer-CI (size ≤ 150, mandatory authoritative
 pointer, trust tagging, multi-evidence consistency). See
 [`source-discovery`](../source-discovery/SKILL.md) for when a structure is
 card-worthy and [`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md)

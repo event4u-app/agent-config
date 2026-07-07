@@ -1,4 +1,4 @@
-# Ownership map — consumed by scripts/pr_review_routing.py
+# Ownership map — consumed by scripts/pr_review_routing.ts
 #
 # Copy this file to `.github/ownership-map.yml` (preferred) or
 # `agents/ownership-map.yml` and adapt the entries to your stack.

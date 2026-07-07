@@ -7338,7 +7338,7 @@ var require_dist = __commonJS({
 });
 
 // src/scripts/install.ts
-import { spawnSync as spawnSync2 } from "node:child_process";
+import { spawn, spawnSync as spawnSync2 } from "node:child_process";
 import * as crypto2 from "node:crypto";
 import * as fs12 from "node:fs";
 import * as os6 from "node:os";
@@ -10352,8 +10352,23 @@ function main(argv = null, options = {}) {
 }
 var _bundled = true;
 var _HERE = fileURLToPath2(import.meta.url);
-var _isCliEntry = process2.argv[1] !== void 0 && import.meta.url === pathToFileURL(path9.resolve(process2.argv[1])).href;
-if (!_bundled && (_isCliEntry || process2.argv[1] === _HERE)) {
+function _isCliEntry() {
+  if (process2.argv[1] === void 0) {
+    return false;
+  }
+  const argvUrl = pathToFileURL(path9.resolve(process2.argv[1])).href;
+  if (import.meta.url === argvUrl) {
+    return true;
+  }
+  try {
+    const here = fs11.realpathSync(fileURLToPath2(import.meta.url));
+    const argv = fs11.realpathSync(path9.resolve(process2.argv[1]));
+    return here === argv;
+  } catch {
+    return false;
+  }
+}
+if (!_bundled && (_isCliEntry() || process2.argv[1] === _HERE)) {
   try {
     process2.exitCode = main(process2.argv.slice(2));
   } catch (exc) {
@@ -12837,7 +12852,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
   }
   if (!state.QUIET) {
     process3.stdout.write("\n");
-    success("Global install completed.");
+    success(`Global install completed (v${installed_version}).`);
     process3.stdout.write("\n");
   }
   return 0;
@@ -13354,43 +13369,65 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 }
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
-  let res;
+  const log_path = path10.join(
+    os6.tmpdir(),
+    `agent-config-wizard-${process3.pid}-${Date.now()}.log`
+  );
+  let child;
+  let log_fd = null;
   try {
-    res = spawnSync2(cmd[0], cmd.slice(1), {
+    log_fd = fs12.openSync(log_path, "w");
+    child = spawn(cmd[0], cmd.slice(1), {
       env,
-      encoding: "utf-8",
-      timeout: total * 1e3,
-      maxBuffer: 64 * 1024 * 1024
+      detached: true,
+      stdio: ["ignore", log_fd, log_fd]
     });
+    child.on("error", () => {
+    });
+    child.unref();
   } catch (exc) {
     process3.stdout.write(
       `(Wizard failed to start: ${String(exc)}; run 'node ${cli} install --no-open' manually.)
 `
     );
     return 0;
-  }
-  if (res.error && res.error.code === "ENOENT") {
-    process3.stdout.write(
-      `(Wizard failed to start: ${String(res.error)}; run 'node ${cli} install --no-open' manually.)
-`
-    );
-    return 0;
-  }
-  const stdout = res.stdout || "";
-  let matched_url = null;
-  for (const line of stdout.split("\n")) {
-    const m = _WIZARD_READY_RE.exec(line + "\n");
-    if (m) {
-      matched_url = m[1];
-      break;
+  } finally {
+    if (log_fd !== null) {
+      try {
+        fs12.closeSync(log_fd);
+      } catch {
+      }
     }
   }
+  const read_log = () => {
+    try {
+      return readText(log_path);
+    } catch {
+      return "";
+    }
+  };
+  const deadline = Date.now() + total * 1e3;
+  let matched_url = null;
+  for (; ; ) {
+    for (const line of read_log().split("\n")) {
+      const m = _WIZARD_READY_RE.exec(line + "\n");
+      if (m) {
+        matched_url = m[1];
+        break;
+      }
+    }
+    if (matched_url !== null) break;
+    const pid = child.pid;
+    if (pid === void 0 || !pidAlive(pid)) break;
+    if (Date.now() >= deadline) break;
+    sleepMs(200);
+  }
   if (matched_url === null) {
-    const stderrLines = (res.stderr || "").split("\n").filter((l) => l !== "");
-    const tail = stderrLines.length ? stderrLines.slice(-20).join("\n  ") : "(no stderr captured)";
+    const logLines = read_log().split("\n").filter((l) => l !== "");
+    const tail = logLines.length ? logLines.slice(-20).join("\n  ") : "(no output captured)";
     process3.stdout.write(
-      `(Wizard server boot timed out after ${Math.trunc(total)}s; run 'node ${cli} install --no-open' manually.)
-  Last stderr:
+      `(Wizard server did not report ready within ${Math.trunc(total)}s; run 'node ${cli} install --no-open' manually.)
+  Last output:
   ${tail}
 `
     );
@@ -13400,8 +13437,10 @@ function _wizard_run_sync(cmd, env, cli) {
   process3.stdout.write(`Setup wizard ready: ${matched_url}
 `);
   _openBrowser(matched_url);
-  process3.stdout.write("(Wizard runs in the background; close the tab or press Ctrl-C to stop.)\n");
-  return res.status ?? 0;
+  process3.stdout.write(
+    "(Wizard server keeps running in the background \u2014 finish the wizard in the browser tab; the next install run stops any stale server.)\n"
+  );
+  return 0;
 }
 function _openBrowser(url) {
   try {

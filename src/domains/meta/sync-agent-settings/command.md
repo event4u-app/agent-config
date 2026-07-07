@@ -57,9 +57,9 @@ Use when:
 
 The sync script ships in the installed package. Resolve in order:
 
-1. `./agent-config/scripts/sync_agent_settings.py` — CLI wrapper at the project root.
-2. `vendor/event4u/agent-config/scripts/sync_agent_settings.py` — Composer.
-3. `node_modules/@event4u/agent-config/scripts/sync_agent_settings.py` — npm.
+1. `./agent-config/scripts/sync_agent_settings.ts` — CLI wrapper at the project root.
+2. `vendor/event4u/agent-config/scripts/sync_agent_settings.ts` — Composer.
+3. `node_modules/@event4u/agent-config/scripts/sync_agent_settings.ts` — npm.
 
 Target is always the canonical `agents/settings/.agent-settings.yml`; a legacy
 repo-root `.agent-settings.yml` is read as a fallback and migrated into the
@@ -108,7 +108,7 @@ separate decision from reconciling structure.
 
 ## `--check` mode
 
-`sync_agent_settings.py --check` exits **2** if the file is out of
+`sync_agent_settings.ts --check` exits **2** if the file is out of
 sync, **0** otherwise — suitable for CI. Emit no diff prompt in
 check-only workflows; report the drift and let the pipeline decide.
 
@@ -130,15 +130,15 @@ check-only workflows; report the drift and let the pipeline decide.
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
-there is no `.agent-settings.yml` on disk, no `scripts/sync_agent_settings.py`
+there is no `.agent-settings.yml` on disk, no `scripts/sync_agent_settings.ts`
 to call, and no template/profile preset reachable. Settings reconciliation
 is a local-agent concern.
 
 ## See also
 
-- [`scripts/sync_agent_settings.py`](../../../scripts/sync_agent_settings.py) — the helper
+- [`scripts/sync_agent_settings.ts`](../../../scripts/sync_agent_settings.ts) — the helper
 - [`config/agent-settings.template.yml`](../../../config/agent-settings.template.yml) — canonical template
 - [`config/profiles/`](../../../config/profiles/) — profile presets
 - [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — the merge rules this command enforces
-- [`scripts/install.py`](../../../scripts/install.py) — first-install path; this command handles the update path
+- [`scripts/install.ts`](../../../scripts/install.ts) — first-install path; this command handles the update path
 - [`/sync-gitignore`](sync-gitignore.md) — sibling command for the `.gitignore` block

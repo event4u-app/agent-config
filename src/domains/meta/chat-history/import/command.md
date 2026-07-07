@@ -37,7 +37,7 @@ prior session, see [`/memory mine-session --mode=proposals`](../memory/mine-sess
 ## When NOT to use
 
 - Inspect the current session — use the host's native transcript /
-  session view, or `scripts/chat_history.py read`.
+  session view, or `./scripts-run scripts/chat_history read`.
 - Generate a learning proposal from a prior session — use
   [`/memory mine-session --mode=proposals`](../memory/mine-session/command.md),
   which frames the session's signals and runs `learning-to-rule-or-skill`.
@@ -61,7 +61,7 @@ or the section is missing, say so and stop:
 
 ### 2. List sessions
 
-Run `scripts/chat_history.py sessions --json --limit 20 --summary`.
+Run `./scripts-run scripts/chat_history sessions --json --limit 20 --summary`.
 The helper returns an array of
 `{id, count, first_ts, last_ts, preview, summary}` sorted by
 `last_ts` desc. The `summary` field is built **inside the helper**
@@ -103,7 +103,7 @@ for normal sessions, or `(N entries — no user prompts; t-mix: …)`
 for tool-only sessions). Do **not** truncate or rewrite `summary` —
 markdown table wrap handles long values. Always include an explicit
 `abort` row as the last numbered option. Track option-number → `id`
-internally so step 5 can call `scripts/chat_history.py read
+internally so step 5 can call `./scripts-run scripts/chat_history read
 --session <id>` with the right id.
 
 ### 4. Wait for the pick
@@ -116,7 +116,7 @@ If the user picks the abort option, stop without reading.
 
 ### 5. Read the picked session silently
 
-Run `scripts/chat_history.py read --session <id> --last <count>`,
+Run `./scripts-run scripts/chat_history read --session <id> --last <count>`,
 where `<count>` is the picked row's `count` from step 2. The
 `--last` flag is **required** — the helper defaults to 5 entries,
 which would silently truncate any longer session. The helper returns
@@ -167,6 +167,6 @@ instruction.
 
 - [`/memory mine-session --mode=proposals`](../memory/mine-session/command.md) — pick a prior session and turn it into a project-improving proposal via `learning-to-rule-or-skill` (the former `/chat-history learn`)
 - [`chat-history-platform-hooks`](../../../agents/settings/contexts/chat-history-platform-hooks.md) — read contract, isolation default, opt-in cross-session path
-- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — `sessions` and `read --session` CLI surface
+- [`scripts/chat_history.ts`](../../../scripts/chat_history.ts) — `sessions` and `read --session` CLI surface
 - [`user-interaction`](../../rules/user-interaction.md) — numbered-options Iron Law
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law

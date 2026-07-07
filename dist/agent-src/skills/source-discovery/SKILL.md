@@ -113,12 +113,12 @@ never a build input**:
 
 - Load **negative facts + pointers** as leads (`trust: durable`).
 - Load **positive structure** under **"Assumed (from card · GLOBAL,
-  unverified)"** — record via `evidence_report.py add --bucket assumed --origin
+  unverified)"** — record via `evidence_report.ts add --bucket assumed --origin
   global …` and **re-confirm vs the live source this session** before use
   (version skew / schema drift). Never "Verified" on the global card alone.
 - `public`/`vendor` seen in ≥ `auto_promote_threshold` distinct repos → one-tap
   promotion **suggestion** (never silent); `proprietary` is manual-only. Record
-  sightings via `_lib/knowledge_global_promote.py record-seen`.
+  sightings via `_lib/knowledge_global_promote.ts record-seen`.
 
 ## Missing structure → fixed extension workflow
 
@@ -126,7 +126,7 @@ When the field/endpoint/table you need is **not** there:
 
 1. **Search** the relevant sources.
 2. **Not found** — record the **absence-search log** with `searched` *and*
-   `not_searched` (via `evidence_report.py add --bucket gaps --searched … --not-searched …`).
+   `not_searched` (via `evidence_report.ts add --bucket gaps --searched … --not-searched …`).
 3. **Negative-fact card** — only **after the search is exhausted across all
    relevant sources** for that claim: write `type: anti-hallucination`,
    `polarity: negative`, with `actionable` + `next_step` + a `revalidate_if`

@@ -16,10 +16,10 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { realpathSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // ---------------------------------------------------------------------------
 // Categories and phase mapping
@@ -297,9 +297,30 @@ function main(): void {
 
 // Run the CLI only when executed directly (`npx tsx src/scripts/migration_status.ts`),
 // not when imported (e.g. by src/scripts/parity/phase_gate.ts for `categorize`).
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = realpathSync(fileURLToPath(import.meta.url));
+        const argv = realpathSync(resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
 const isCliEntry =
-    process.argv[1] !== undefined &&
-    import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+    _isCliEntry();
 if (isCliEntry) {
     main();
 }

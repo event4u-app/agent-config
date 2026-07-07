@@ -63,7 +63,7 @@ blocks — it does not hand a half-filled doc to the next stage.
 ### Stage 4 — Gate
 
 - **Trigger:** proposal doc committed or staged.
-- **Executor:** `scripts/check_proposal.py`.
+- **Executor:** `scripts/check_proposal.ts`.
 - **Input:** proposal doc from Stage 3.
 - **Output:** verdict recorded in the proposal doc section 9
   (`pass | request changes | block`). Frontmatter `stage: gated`

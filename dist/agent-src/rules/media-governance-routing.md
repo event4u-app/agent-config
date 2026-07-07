@@ -68,7 +68,7 @@ This routing rule is the bridge: sits in always-loaded rule set so trigger keywo
 
 ## CI reachability guarantee
 
-[`scripts/lint_media_policy_linkage.py`](../../scripts/lint_media_policy_linkage.py) fails build if any policy file under `agents/settings/policies/media/` not linked from:
+[`scripts/lint_media_policy_linkage.ts`](../../scripts/lint_media_policy_linkage.ts) fails build if any policy file under `agents/settings/policies/media/` not linked from:
 
 - this routing rule, **or**
 - a skill's `## Policies` see-also block, **or**

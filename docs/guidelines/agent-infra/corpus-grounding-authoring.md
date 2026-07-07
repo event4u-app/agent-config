@@ -59,7 +59,7 @@ src/skills/<domain-skill>/data/
 | Named owner + cadence | `manifest.json` keys — schema-validator-enforced |
 | Staleness visibility | `upstream.last_checked` bumped on every refresh; quarterly default |
 | Link integrity | `Docs URL` / source columns are plain URLs; `check-refs` + the quarterly refresh catch 404s |
-| Eval lock | one `tests/test_<domain>_corpus.py` with representative queries |
+| Eval lock | one `tests/scripts/<domain>_corpus.test.ts` with representative queries |
 | License | source obligations recorded in the owning skill (ATTRIBUTION pattern) |
 
 ## 4. Rejected domains — recorded, do not relitigate (Step 9.7)
@@ -73,7 +73,7 @@ split), the following are **rejected as corpora**:
 | GTM playbooks | Same volatility; context dominates selection | Framework skills + discovery interviews |
 | Founder-strategy verdicts | Verdicts are human decisions (strategy-safety-floor); no auditable selection rule | Framework skills + safety floors |
 | Formula/spec lookup (WACC, WCAG criterion text, API param lists) | Mid-action **reference**, not pre-action grounding | `references/` docs / RAG |
-| Lint-able conventions (no hardcoded hex, commit format) | Post-action **validation** | Rules / linters (`tokens.py validate`, commit lints) |
+| Lint-able conventions (no hardcoded hex, commit format) | Post-action **validation** | Rules / linters (`tokens.ts validate`, commit lints) |
 | Anything ≤5 always-on lines | Grounding theater | A rule |
 
 Conditional (deferred, evidence-gated — NOT rejected): finance *method

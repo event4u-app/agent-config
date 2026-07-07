@@ -14,7 +14,7 @@ packs: [meta]
 
 # Context Hygiene
 
-> **Enforced by:** [`scripts/context_hygiene_hook.py`](../../scripts/context_hygiene_hook.py)
+> **Enforced by:** [`scripts/context_hygiene_hook.ts`](../../scripts/context_hygiene_hook.ts)
 > on Augment + Claude Code (`PostToolUse`). The hook maintains
 > `agents/runtime/state/context-hygiene.json` (turn count, loop signal,
 > freshness milestones at 20/40/60); the prose below is the spec the
@@ -141,7 +141,7 @@ If you need an ignored skill: read its SKILL.md directly, apply guidance, then a
 ## Copilot fallback
 
 GitHub Copilot has no `PostToolUse` hook surface, so
-`scripts/context_hygiene_hook.py` cannot run structurally and
+`scripts/context_hygiene_hook.ts` cannot run structurally and
 `agents/runtime/state/context-hygiene.json` is not maintained automatically
 (turn count, loop signal, freshness milestones at 20/40/60).
 

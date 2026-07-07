@@ -60,13 +60,12 @@ using [`reviewer-awareness`](../../rules/reviewer-awareness.md).
 **Also** pull agent-written signals via the shared abstraction (see
 [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)):
 
-```python
-from scripts.memory_lookup import retrieve
-extra = retrieve(
-    types=["ownership", "historical-patterns", "incident-learnings"],
-    keys=<changed file paths>,
-    limit=5,
-)
+```bash
+agent-config memory:lookup \
+  --types ownership,historical-patterns,incident-learnings \
+  --key <changed file path> \
+  --limit 5
+# Repeat --key per changed path.
 ```
 
 Treat `source: "curated"` as equal-trust to the project YAML.

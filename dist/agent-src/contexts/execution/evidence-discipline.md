@@ -30,7 +30,7 @@ Three buckets:
 - **Gaps** — missing evidence the decision needs (negative facts in the making).
 
 Feeds the plan. Not a forensic log, not hard enforcement. Produce cheaply via
-`evidence_report.py` so it never gets skipped.
+`evidence_report.ts` so it never gets skipped.
 
 ## Provenance and freshness
 
@@ -43,7 +43,7 @@ Feeds the plan. Not a forensic log, not hard enforcement. Produce cheaply via
   (`.git/MERGE_HEAD`, `.git/CHERRY_PICK_HEAD`, or `.git/rebase-merge`/`rebase-apply`
   present), do **not** read an intermediate tree — stop and surface it (R4 P6,
   hole-3). *(`.git/REBASE_HEAD` excluded — lingers as stale ref after completed
-  rebase, not a live-op marker.)* `evidence_report.py git-state` is the
+  rebase, not a live-op marker.)* `evidence_report.ts git-state` is the
   deterministic check.
 - **Across sessions:** always re-read. No file hashing, no content-hash theater.
 

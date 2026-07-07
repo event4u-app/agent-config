@@ -234,7 +234,7 @@ The miner is host-agnostic by design. A `TranscriptAdapter` for host
   `.agent-settings.yml` under `memory.redact_patterns`.
 
 The GATHER implementation lives in the single mining command
-`/memory:mine-session` (`scripts/mine_session.py`). It reads the
+`/memory:mine-session` (`scripts/mine_session.ts`). It reads the
 **cross-host** chat-history JSONL log (`agents/runtime/.agent-chat-history`,
 written by platform hooks on every host), falling back to the per-host
 Claude-Code transcript when the log is absent. `--mode=[signals|proposals|both]`
@@ -299,7 +299,7 @@ in-task notes stay in-task and are discarded with the task.
 - A fact tagged `gotcha + invariant` lands in the `gotcha` JSONL
   (primary tag); the promoter reads tag intersection to decide the
   curated YAML target.
-- Date-discipline: the `check_memory.py` linter rejects
+- Date-discipline: the `check_memory.ts` linter rejects
   `yesterday|today|tomorrow|last/next/this week|month|year` in curated
   YAML without an `YYYY-MM-DD` anchor within ±20 chars. Re-anchor
   before commit.

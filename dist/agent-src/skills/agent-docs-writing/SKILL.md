@@ -111,7 +111,7 @@ agents/
 
 `{module_root}` comes from `modules.root_paths` and `{agent_folder}` from
 `modules.agent_folder` in `.agent-project-settings.yml`. Discover via
-`scripts/_lib/agent_settings.py::enumerate_modules()`. Common shapes:
+`scripts/_lib/agent_settings.ts::enumerate_modules()`. Common shapes:
 Laravel `app/Modules/{Module}/agents/`, Symfony `src/Bundle/{Bundle}/agents/`,
 monorepo `packages/{Pkg}/agents/`.
 

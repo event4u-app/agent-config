@@ -127,7 +127,7 @@ resolve at agent runtime. The patterns below are correct by design:
   `.augment/skills/`, `.augment/commands/` via installer-managed
   symlinks. Missing-file reports here are renderer artifacts.
 - **Body-link forms `../docs/guidelines/...`** (single-up). This is
-  the post-rewrite shape produced by `scripts/condense.py`. The
+  the post-rewrite shape produced by `scripts/condense.ts`. The
   condensed `dist/agent-src/rules/` tree is one level deeper than the
   source `.agent-src.uncondensed/rules/`, so the rewriter collapses
   `../../docs/...` to `../docs/...`. Both forms are expected — one in

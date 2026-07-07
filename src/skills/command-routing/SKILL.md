@@ -45,11 +45,11 @@ Only ask the user if inference fails and the command cannot proceed without the 
 | `.augment/commands/` | Shared commands (work across projects) |
 | `agents/overrides/commands/` | Project-specific overrides (used instead of original) |
 
-## Commands that dispatch to a Python engine
+## Commands that dispatch to the work engine
 
 Most commands are pure markdown procedures — the agent reads the steps
-and executes them. Two commands delegate to the `work_engine` Python
-module via the `./agent-config` dispatcher; both share the same
+and executes them. Two commands delegate to the `work_engine` engine
+(TypeScript, run via tsx) via the `./agent-config` dispatcher; both share the same
 Option-A loop (read state → run engine → handle exit code → repeat),
 they only differ in the input envelope they build:
 

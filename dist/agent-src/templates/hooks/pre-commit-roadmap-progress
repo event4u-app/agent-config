@@ -5,11 +5,14 @@
 # Two opt-in checks run on relevant staged paths and short-circuit
 # otherwise:
 #   1. agents/roadmaps-progress.md sync (against agents/roadmaps/*.md)
-#   2. ADR-013 per-artefact frontmatter contract (.agent-src.uncondensed/*.md)
+#   2. ADR-013 per-artefact frontmatter contract (source repo only)
+#
+# The runtime is Node/tsx (py2ts migration) — both checks run through the
+# `agent-config` CLI / the package tsx runner, never python3.
 #
 # To run manually:
 #   ./agent-config roadmap:progress-check
-#   python3 scripts/lint_artefact_frontmatter.py
+#   ./scripts-run src/scripts/lint_artefact_frontmatter
 #
 # To uninstall:
 #   rm .git/hooks/pre-commit
@@ -20,11 +23,11 @@ staged="$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)"
 roadmap_relevant=false
 frontmatter_relevant=false
 case "$staged" in
-  *agents/roadmaps/*.md*|*agents/roadmaps-progress.md*|*.augment/scripts/update_roadmap_progress.py*)
+  *agents/roadmaps/*.md*|*agents/roadmaps-progress.md*|*.augment/scripts/update_roadmap_progress.ts*)
     roadmap_relevant=true ;;
 esac
 case "$staged" in
-  *.agent-src.uncondensed/*.md*|*config/discovery/*.yml*|*scripts/lint_artefact_frontmatter.py*)
+  *.agent-src.uncondensed/*.md*|*src/agent-src/*.md*|*config/discovery/*.yml*|*scripts/lint_artefact_frontmatter.ts*)
     frontmatter_relevant=true ;;
 esac
 
@@ -32,33 +35,32 @@ if ! $roadmap_relevant && ! $frontmatter_relevant; then
   exit 0
 fi
 
-resolve() {
-  local cand
-  for cand in "$@"; do
-    if [ -f "$cand" ]; then
-      printf '%s\n' "$cand"
-      return 0
-    fi
-  done
+# Resolve the agent-config CLI: project wrapper first (customization wins),
+# then the global binary (ADR-020 global-only consumers).
+agent_config_bin() {
+  if [ -x "./agent-config" ]; then
+    printf '%s\n' "./agent-config"
+    return 0
+  fi
+  if command -v agent-config >/dev/null 2>&1; then
+    printf '%s\n' "agent-config"
+    return 0
+  fi
   return 1
 }
 
 # --- Check 1: roadmap progress dashboard sync --------------------------
 if $roadmap_relevant; then
-  rp_script="$(resolve \
-    ".augment/scripts/update_roadmap_progress.py" \
-    "dist/agent-src/scripts/update_roadmap_progress.py" \
-    ".agent-src.uncondensed/scripts/update_roadmap_progress.py" || true)"
-
-  if [ -z "$rp_script" ]; then
-    echo "⚠️  pre-commit: update_roadmap_progress.py not found — skipping roadmap check." >&2
-  elif ! python3 "$rp_script" --check >/dev/null 2>&1; then
+  ac_bin="$(agent_config_bin || true)"
+  if [ -z "$ac_bin" ]; then
+    echo "⚠️  pre-commit: agent-config CLI not found — skipping roadmap check." >&2
+    echo "    Install it: npm install -g @event4u/agent-config" >&2
+  elif ! "$ac_bin" roadmap:progress-check >/dev/null 2>&1; then
     echo "❌  agents/roadmaps-progress.md is stale relative to your staged changes." >&2
     echo "" >&2
     echo "    Regenerate the dashboard with one of:" >&2
-    echo "      ./agent-config roadmap:progress" >&2
+    echo "      $ac_bin roadmap:progress" >&2
     echo "      task roadmap-progress" >&2
-    echo "      python3 $rp_script" >&2
     echo "" >&2
     echo "    Then \`git add agents/roadmaps-progress.md\` and retry the commit." >&2
     echo "" >&2
@@ -69,19 +71,31 @@ if $roadmap_relevant; then
 fi
 
 # --- Check 2: ADR-013 artefact frontmatter contract --------------------
+# Source-repo concern: the linter and the artefact tree only exist in the
+# agent-config source repo; consumer repos skip silently.
 if $frontmatter_relevant; then
-  fm_script="$(resolve \
-    ".augment/scripts/lint_artefact_frontmatter.py" \
-    "dist/agent-src/scripts/lint_artefact_frontmatter.py" \
-    "scripts/lint_artefact_frontmatter.py" || true)"
+  fm_script=""
+  if [ -f "src/scripts/lint_artefact_frontmatter.ts" ]; then
+    fm_script="src/scripts/lint_artefact_frontmatter.ts"
+  fi
+
+  run_fm() {
+    if [ -x "./scripts-run" ]; then
+      ./scripts-run src/scripts/lint_artefact_frontmatter --quiet
+    elif [ -x "node_modules/.bin/tsx" ]; then
+      node_modules/.bin/tsx "$fm_script" --quiet
+    else
+      npx tsx "$fm_script" --quiet
+    fi
+  }
 
   if [ -z "$fm_script" ]; then
-    echo "⚠️  pre-commit: lint_artefact_frontmatter.py not found — skipping frontmatter check." >&2
-  elif ! python3 "$fm_script" --quiet >/dev/null 2>&1; then
+    : # not the source repo — frontmatter contract does not apply
+  elif ! run_fm >/dev/null 2>&1; then
     echo "❌  Artefact frontmatter lint failed (ADR-013 contract violation)." >&2
     echo "" >&2
     echo "    Re-run for details:" >&2
-    echo "      python3 $fm_script" >&2
+    echo "      ./scripts-run src/scripts/lint_artefact_frontmatter" >&2
     echo "      task lint-artefact-frontmatter" >&2
     echo "" >&2
     echo "    Common fixes:" >&2

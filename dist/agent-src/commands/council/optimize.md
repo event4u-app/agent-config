@@ -73,7 +73,7 @@ The chosen metric becomes the `original_ask` for the handoff preamble:
 
 Invoke the matching `/council default` form (`files:` / `prompt:`) with
 `--prompt-mode optimize`. The `optimize` mode addendum from
-`scripts/ai_council/prompts.py` requires members to:
+`scripts/ai_council/prompts.ts` requires members to:
 
 - Rank suggestions by expected impact on the chosen metric, not by
   effort or cleverness.

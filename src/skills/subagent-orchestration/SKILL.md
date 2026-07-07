@@ -201,7 +201,7 @@ in [`using-git-worktrees`](../using-git-worktrees/SKILL.md) and
 its `## Output` block → control passes to delegated-skill in a fresh
 worktree → delegated-skill consumes the input shape declared in its
 `## Input` (or `## When the agent should load this`) block. The
-handoff is auditable; `lint_handoffs.py` validates the chain.
+handoff is auditable; `lint_handoffs.ts` validates the chain.
 
 **Example chain (W3 launch):** `positioning-strategy` (worktree A) →
 `messaging-architecture` (worktree B, consumes positioning's

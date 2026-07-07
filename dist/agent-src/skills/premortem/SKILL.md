@@ -109,7 +109,7 @@ If the analysis surfaces a pattern worth preserving for future decisions:
   not a prediction; label scenarios as prospective.
 - Do NOT auto-promote memory candidates — `/memory propose` is the intake;
   `/memory promote` requires explicit human action and passes
-  `check_memory_proposal.py`.
+  `check_memory_proposal.ts`.
 
 ## Gotchas
 

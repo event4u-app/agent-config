@@ -51,7 +51,7 @@ plan, does not implement, does not write back anywhere.
 ## Input
 
 Exactly one path: a non-empty raw string carried in
-`state.input.data.raw` (built by [`work_engine.resolvers.prompt`](../../templates/scripts/work_engine/resolvers/prompt.py)).
+`state.input.data.raw` (built by [`work_engine/resolvers/prompt.ts`](../../templates/scripts/work_engine/resolvers/prompt.ts)).
 No branch detection, no URL parsing, no clipboard fallback — the
 calling command (`/work`) owns prompt capture; this skill only refines.
 
@@ -160,20 +160,20 @@ step 3 — never both implicit.
 
 ### 5. Score confidence
 
-Delegate to [`scripts.work_engine.scoring.confidence`](../../templates/scripts/work_engine/scoring/confidence.py):
+Delegate to [`work_engine/scoring/confidence.ts`](../../templates/scripts/work_engine/scoring/confidence.ts):
 
-```python
-from work_engine.scoring.confidence import score
-result = score(raw=prompt_raw, ac=reconstructed_ac, assumptions=assumptions)
-# result.band ∈ {"high", "medium", "low"}
-# result.score ∈ [0.0, 1.0]
-# result.dimensions: dict[str, int]   # 0–2 per dimension
-# result.reasons: list[str]            # human-readable rationale
+```ts
+import { score } from './work_engine/scoring/confidence.js';
+const result = score({ raw: promptRaw, ac: reconstructedAc, assumptions });
+// result.band ∈ {"high", "medium", "low"}
+// result.score ∈ [0.0, 1.0]
+// result.dimensions: Record<string, number>  // 0–2 per dimension
+// result.reasons: string[]                   // human-readable rationale
 ```
 
 The rubric (5 dimensions × 0–2, sum / 10) and band thresholds
 (`high ≥ 0.8`, `medium 0.5–0.79`, `low < 0.5`) are owned by
-`confidence.py`. Do not re-derive them in prose.
+`confidence.ts`. Do not re-derive them in prose.
 
 ### 6. Self-review (3-scan checklist)
 
@@ -187,7 +187,7 @@ Source: adapted from an external reference.
 
 ## Band-action mapping
 
-The `refine` dispatcher step in `directives/backend/refine.py` reads
+The `refine` dispatcher step in `directives/backend/refine.ts` reads
 the score and returns one of three outcomes — the skill does not
 decide the action, only produces the inputs.
 
@@ -267,7 +267,7 @@ For `low`, the question replaces the AC list:
   verbatim for replay; reconstructed output lands in
   `data.reconstructed_ac` and `data.assumptions`.
 - Do NOT re-derive band thresholds in prose. They live in
-  `confidence.py` and only there.
+  `confidence.ts` and only there.
 - Do NOT read source files, `.env*`, secrets, or arbitrary user
   files when stack-detecting in mini / max mode. The allowlist
   above (`package.json`, `composer.json`, `pyproject.toml`,
@@ -284,8 +284,8 @@ For `low`, the question replaces the AC list:
 
 - [`refine-ticket`](../refine-ticket/SKILL.md) — sibling for ticket-shaped input
 - [`prompt-optimizer`](../prompt-optimizer/SKILL.md) — engine-outbound sibling; same `prompt_optimization` setting controls its mode
-- [`work_engine.resolvers.prompt`](../../templates/scripts/work_engine/resolvers/prompt.py) — envelope builder
-- [`work_engine.scoring.confidence`](../../templates/scripts/work_engine/scoring/confidence.py) — rubric + band thresholds
+- [`work_engine/resolvers/prompt.ts`](../../templates/scripts/work_engine/resolvers/prompt.ts) — envelope builder
+- [`work_engine/scoring/confidence.ts`](../../templates/scripts/work_engine/scoring/confidence.ts) — rubric + band thresholds
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — this skill was drafted under it
 - AI Council session: `agents/runtime/council/responses/prompt-master-mini.json` (2026-05-17) — analysis behind the mini/max split and `/raw` bypass <!-- council-ref-allowed: ADR decision trace -->

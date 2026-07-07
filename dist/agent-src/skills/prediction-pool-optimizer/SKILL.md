@@ -62,7 +62,7 @@ more. **Always optimize the pool's points, never the truth of the match.**
   from real markets **or** the executed Poisson helper — never a claimed
   "I ran 10,000 simulations".
 - **Scorelines computed, not guessed.** EV-max tip per match from the executed
-  grid optimiser (`score_ev.py`, step 4a), never the eye. A 3:2 / 4:1 / 1:4 in
+  grid optimiser (`score_ev.ts`, step 4a), never the eye. A 3:2 / 4:1 / 1:4 in
   the output = signature of a skipped computation.
 - **One-sentence justification** per answer. Short.
 
@@ -265,16 +265,16 @@ gate — the skill never enters or submits anything.
   base from a sharp-weighted consensus across several; an outlier is a flag to
   investigate, not a number to copy.
 - **Tipping the modal result, not the EV-maximal one.** The single most likely
-  scoreline rarely maximizes partial points — run `score_ev.py` across the
+  scoreline rarely maximizes partial points — run `score_ev.ts` across the
   result grid, don't eyeball the favourite.
 - **Hand-picking a high scoreline.** 3:2 / 4:1 / 1:4 never EV-max under partial
   points — moderate favourites peak at 1:0 / 2:0 / 2:1. A high tip = grid
-  skipped; run `score_ev.py`.
+  skipped; run `score_ev.ts`.
 - **Under-tipping draws.** A correct draw banks the goal-difference tier on
   every draw scoreline, so a close match can want 1:1 (or 0:0). Let the grid
   decide; the eye tips too few draws.
 - **"Rough Kelly" variance for a large pool.** Don't guess deviation amount —
-  run `pool_winsim.py`; returns the exact flips that raise P(finish 1st) most
+  run `pool_winsim.ts`; returns the exact flips that raise P(finish 1st) most
   per unit EV given up.
 - **Forgetting to de-vig.** Raw bookmaker odds sum to >100%; treating them as
   probabilities inflates the favourite. Remove the margin **per book** before
@@ -282,18 +282,18 @@ gate — the skill never enters or submits anything.
 - **Contrarian under fixed points.** Deviating "to stand out" only helps under
   quote/rarity rules or a win-a-large-pool goal — otherwise it burns EV.
 - **Claimed-but-unrun simulation.** "I ran 10,000 tournaments" without
-  executing `poisson_sim.py` is hallucinated — run the code or use outright odds.
+  executing `poisson_sim.ts` is hallucinated — run the code or use outright odds.
 
 ## Do NOT
 
 - Leave any open pool question (bonus / award / special) unanswered.
 - Build the base from a single bookmaker, or skip de-vigging before aggregating.
 - Tip the most likely result instead of the EV-maximal one.
-- Hand-pick a scoreline instead of running `score_ev.py` — never emit a
+- Hand-pick a scoreline instead of running `score_ev.ts` — never emit a
   3:2 / 4:1 / 1:4 tip, never EV-max under partial points.
 - Go contrarian under standard fixed-point scoring with a "place well" goal.
-- Guess large-pool variance ("rough Kelly") instead of running `pool_winsim.py`.
-- Report Monte-Carlo numbers without running `poisson_sim.py` / `pool_winsim.py`.
+- Guess large-pool variance ("rough Kelly") instead of running `pool_winsim.ts`.
+- Report Monte-Carlo numbers without running `poisson_sim.ts` / `pool_winsim.ts`.
 - Treat raw odds as probabilities without removing the vig.
 - Give betting or financial advice — this optimizes a game; the human submits.
 
@@ -306,9 +306,9 @@ gate — the skill never enters or submits anything.
   question taxonomy with a per-type method.
 - [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
   rules+odds → EV examples.
-- [`scripts/prediction-pool/score_ev.py`](../../../../scripts/prediction-pool/score_ev.py) —
+- [`scripts/prediction-pool/score_ev.ts`](../../../../scripts/prediction-pool/score_ev.ts) —
   executed exact-score EV optimiser (step 4a; λ + rule → EV-max scoreline).
-- [`scripts/prediction-pool/pool_winsim.py`](../../../../scripts/prediction-pool/pool_winsim.py) —
+- [`scripts/prediction-pool/pool_winsim.ts`](../../../../scripts/prediction-pool/pool_winsim.ts) —
   executed field model + P(finish 1st) simulator and flip-finder (step 4b).
-- [`scripts/prediction-pool/poisson_sim.py`](../../../../scripts/prediction-pool/poisson_sim.py) —
+- [`scripts/prediction-pool/poisson_sim.ts`](../../../../scripts/prediction-pool/poisson_sim.ts) —
   the executed tournament simulator (step 5).

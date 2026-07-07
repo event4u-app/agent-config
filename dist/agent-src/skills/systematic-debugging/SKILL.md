@@ -104,13 +104,11 @@ Goal: locate the failure in a single component, layer, or call site.
    recent dependency updates, config edits, infra changes.
 4. **Consult memory for prior matches.** Via
    [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md):
-   ```python
-   from scripts.memory_lookup import retrieve
-   priors = retrieve(
-       types=["incident-learnings", "historical-patterns"],
-       keys=[<error class>, <failing path(s)>],
-       limit=3,
-   )
+   ```bash
+   agent-config memory:lookup \
+     --types incident-learnings,historical-patterns \
+     --key <error class> --key <failing path> \
+     --limit 3
    ```
    A matching `incident-learning` may already name the root cause, the
    fix, and the regression test. A matching `historical-pattern`

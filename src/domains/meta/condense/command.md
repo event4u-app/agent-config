@@ -193,7 +193,7 @@ For every Iron Law section in a source file:
 - **No word-count budget** — condense the prose as hard as telegraph style
   allows. The check is structural (passage count), not quantitative.
 
-`scripts/check_condensation.py` enforces these mechanically — `iron_law_missing`,
+`scripts/check_condensation.ts` enforces these mechanically — `iron_law_missing`,
 `iron_law_passage_dropped`, and `iron_law_heading_downgrade` are `error`-level
 and block CI.
 

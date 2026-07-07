@@ -108,17 +108,14 @@ bullets + body.
 **Auto-fetch parent (Phase F4).** Before detection, check the
 issue type and fold parent context in:
 
-```python
-from scripts.refine_ticket_detect import (
-    issuetype_needs_parent, fold_parent_context,
-)
+```ts
+import { issuetype_needs_parent, fold_parent_context } from 'scripts/refine_ticket_detect.js';
 
-if issuetype_needs_parent(ticket["issuetype"]):
-    parent_key = ticket["parent_key"]          # from `fields.parent.key`
-    parent = fetch_jira_issue(parent_key)      # +1 API call
-    ticket_body = fold_parent_context(
-        ticket_body, parent_body=parent["body"], parent_key=parent_key,
-    )
+if (issuetype_needs_parent(ticket.issuetype)) {
+    const parentKey = ticket.parent_key;        // from `fields.parent.key`
+    const parent = fetch_jira_issue(parentKey); // +1 API call
+    ticketBody = fold_parent_context(ticketBody, parent.body, parentKey);
+}
 ```
 
 Rules:
@@ -149,9 +146,9 @@ logic in prose:
 
 ```bash
 ./agent-config refine-ticket:detect <ticket-body-file>
-# or, inside the skill run:
-from scripts.refine_ticket_detect import detect, load_map
-decision = detect(ticket_body, load_map(), cwd=Path.cwd())
+# or, inside the skill run (scripts/refine_ticket_detect.ts):
+#   import { detect, load_map } from 'scripts/refine_ticket_detect.js';
+#   const decision = detect(ticketBody, load_map(), process.cwd());
 ```
 
 The helper consumes [`detection-map.yml`](detection-map.yml) (co-located
@@ -182,8 +179,8 @@ risks instead of inventing terms.
 
 The match lists and `require_count` thresholds are owned by
 `detection-map.yml` — edit the map, not this skill. Tests:
-[`tests/test_refine_ticket_detect.py`](../../../tests/test_refine_ticket_detect.py)
-(17 cases, DE + EN fixtures, repo-aware + graceful-degrade coverage).
+[`tests/scripts/refine_ticket_detect.test.ts`](../../../tests/scripts/refine_ticket_detect.test.ts)
+(DE + EN fixtures, repo-aware + graceful-degrade coverage).
 
 ### 3. Orchestrate
 
@@ -292,17 +289,19 @@ Source: adapted from an external reference.
 **Probe write access first (Phase F6).** Before rendering, do a
 cheap upfront check:
 
-```python
-from scripts.refine_ticket_detect import render_close_prompt
+```ts
+import { render_close_prompt } from 'scripts/refine_ticket_detect.js';
 
-try:
-    me     = jira_get("/myself")               # existence → auth works
-    meta   = jira_get(f"/issue/{key}/editmeta")# fields → write access
-    write  = bool(meta.get("fields"))
-except Exception:
-    write = None                                # probe itself failed
+let write: boolean | null;
+try {
+    const me = jira_get('/myself');                 // existence → auth works
+    const meta = jira_get(`/issue/${key}/editmeta`); // fields → write access
+    write = Boolean(meta.fields);
+} catch {
+    write = null;                                    // probe itself failed
+}
 
-print(render_close_prompt(write))
+console.log(render_close_prompt(write));
 ```
 
 Behaviour:

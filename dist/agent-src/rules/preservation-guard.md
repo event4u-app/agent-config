@@ -48,7 +48,7 @@ bullet, and code block from the source is present, condense as hard as you
 want. What's forbidden is **deletion**: the rationale paragraph stays, the
 canonical-failure example stays, every "NEVER X" bullet stays.
 
-`scripts/check_condensation.py` enforces these mechanically — any violation is
+`scripts/check_condensation.ts` enforces these mechanically — any violation is
 an `error`, not a warning.
 
 ## Mandatory preservation checklist
@@ -92,4 +92,4 @@ Before completing any transformation, verify:
 - Skill: `skill-management` — condensation/refactoring modes
 - Skill: `skill-reviewer` — condensation safety checks
 - Command: `/condense` — condensation quality checklist
-- Linter: `scripts/skill_linter.py` — `check_condensation_quality()`
+- Linter: `scripts/skill_linter.ts` — `check_condensation_quality()`

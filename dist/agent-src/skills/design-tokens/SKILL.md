@@ -21,14 +21,14 @@ execution:
 
 > Token *authoring* skill: the 3-layer DTCG model
 > (**primitive → semantic → component**) with light/dark theming, a
-> Python toolchain (`scripts/tokens.py` — generate / validate / embed,
-> no Node dependency per ADR-061), and a starter template. Selection of
+> TypeScript toolchain (`scripts/tokens.ts` — generate / validate /
+> embed, run via ./scripts-run), and a starter template. Selection of
 > *which* token values fit the product comes grounded from
 > [`design-intelligence`](../design-intelligence/SKILL.md) (WCAG-adjusted
 > color sets, typography pairings); this skill turns the selection into a
 > maintained token system.
 
-Toolchain provenance: Python port of the upstream `.cjs` trio
+Toolchain provenance: port of the upstream `.cjs` trio
 (`generate-tokens`, `validate-tokens`, `embed-tokens`) from
 `nextlevelbuilder/ui-ux-pro-max-skill` `design-system` sub-skill
 @ `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (MIT, last checked
@@ -59,7 +59,7 @@ under `dark.semantic.*` overriding the same semantic names (emitted as a
 (DTCG). Start from
 [the bundled starter template](templates/design-tokens-starter.json).
 
-## Toolchain (`scripts/tokens.py` — skill-relative, any cwd)
+## Toolchain (`scripts/tokens.ts` — skill-relative, any cwd)
 
 ```bash
 # tokens.json → CSS variables (primitives + semantic + components + .dark)
@@ -140,4 +140,4 @@ four-operation split assigns to *rules/linters*, not the corpus).
 - [`tailwind-engineer`](../tailwind-engineer/SKILL.md) — utility-discipline consumer.
 - [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — shadcn token conventions.
 - [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md) — when authoring the colour layer, avoid the C5 cream/sand default palette (OKLCH L 0.84–0.97, C < 0.06) and C1 purple/violet primaries unless the brand explicitly defines them; the `brand-consistency` rule validates emitted tokens against the active brand profile.
-- Tests: `tests/test_design_tokens_toolchain.py`.
+- Tests: `tests/scripts/skills_design_tokens_tokens.test.ts`.

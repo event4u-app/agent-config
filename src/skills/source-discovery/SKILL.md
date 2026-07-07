@@ -114,13 +114,13 @@ card may exist in the per-user file-first store
 - Load its **negative facts + pointers** as usable leads (`trust: durable`).
 - Load any **positive structure** into the Evidence Report under **"Assumed
   (from card · GLOBAL, unverified)"** — record it with
-  `evidence_report.py add --bucket assumed --origin global …` and **re-confirm it
+  `evidence_report.ts add --bucket assumed --origin global …` and **re-confirm it
   against the live source this session** before use (version skew / schema drift
   across projects). Never "Verified" on the global card alone.
 - A `public`/`vendor` card seen in ≥ `auto_promote_threshold` distinct repos
   triggers a one-tap promotion **suggestion** (never silent). `proprietary` cards
   are manual-only and never auto-shared. Record sightings via
-  `_lib/knowledge_global_promote.py record-seen`.
+  `_lib/knowledge_global_promote.ts record-seen`.
 
 ## Missing structure → fixed extension workflow
 
@@ -128,7 +128,7 @@ When the field/endpoint/table you need is **not** there:
 
 1. **Search** the relevant sources.
 2. **Not found** — record the **absence-search log** with `searched` *and*
-   `not_searched` (via `evidence_report.py add --bucket gaps --searched … --not-searched …`).
+   `not_searched` (via `evidence_report.ts add --bucket gaps --searched … --not-searched …`).
 3. **Negative-fact card** — only **after the search is exhausted across all
    relevant sources** for that claim: write `type: anti-hallucination`,
    `polarity: negative`, with `actionable` + `next_step` + a `revalidate_if`

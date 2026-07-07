@@ -43,7 +43,7 @@ stack-native auto-loading, or duplicating existing modules.
 ## Procedure: Work with modules
 
 1. Read `modules:` block from `.agent-project-settings.yml` via the
-   loader (`get_modules_config()` in `scripts/_lib/agent_settings.py`).
+   loader (`get_modules_config()` in `scripts/_lib/agent_settings.ts`).
 2. For each path in `modules.root_paths`, read the module's `README.md`
    (or `package.json` / `pyproject.toml` description) for purpose.
 3. If module-level agent docs exist under
@@ -58,7 +58,7 @@ When `modules.enabled` is unset / false, the skill consults the
 auto-detection table in
 [`/module explore` Step 1](../../commands/module/explore.md) — same six
 stack shapes, fallback only. The skill never writes the `modules:`
-block automatically; that is `propose_modules_config.py` plus user
+block automatically; that is `propose_modules_config.ts` plus user
 confirmation per
 [`/agents init`](../../commands/agents/init.md) Step 7.
 

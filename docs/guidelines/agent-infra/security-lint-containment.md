@@ -3,7 +3,7 @@
 How the agent-security self-audit linters
 (`lint_hidden_unicode`, `lint_instruction_smuggling`,
 `lint_mcp_config_security`, `lint_skill_frontmatter_safety` — shared lib
-`src/scripts/_lib/security_lint.py`) avoid drowning in false positives **without**
+`src/scripts/_lib/security_lint.ts`) avoid drowning in false positives **without**
 a global allowlist.
 
 ## Why this exists
@@ -76,6 +76,6 @@ inside a `security-example` fence, and not covered by a matching pragma.
 
 ## See also
 
-- `src/scripts/_lib/security_lint.py` — the shared implementation.
+- `src/scripts/_lib/security_lint.ts` — the shared implementation.
 - `road-to-security-pillar` P1.5 (archived roadmap) — the council-locked decision behind this convention.
 - [`autonomous-execution`](../../../src/rules/autonomous-execution.md) — the allowlist-growth antipattern this convention avoids.

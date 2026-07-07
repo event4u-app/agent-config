@@ -61,7 +61,7 @@ the upgrade: [`command-category-governance`](../../../docs/contracts/command-cat
 ## Commands ARE Claude skills (projection reality)
 
 Every command in `src/agent-src/commands/{name}.md` is projected
-into `.claude/skills/{slug}/SKILL.md` by `scripts/condense.py`
+into `.claude/skills/{slug}/SKILL.md` by `scripts/condense.ts`
 (`generate_claude_commands`). Nested commands flatten with `-`
 (`council/default.md` → `council-default`). Skills and commands share the
 **same `.claude/skills/` namespace** — Claude does not distinguish them.
@@ -209,7 +209,7 @@ multi-paragraph explanation, extract it into a skill and call it.
 ### 6. Governance baseline (when introducing a new linter check)
 
 **Advisory, reviewer-checked — no CI gate.** When the same PR adds a
-new check to `scripts/skill_linter.py` (or strengthens an existing
+new check to `scripts/skill_linter.ts` (or strengthens an existing
 one) such that previously-clean commands now warn, the PR body MUST
 record the pre-existing violations on `main` in a Markdown table:
 
@@ -278,7 +278,7 @@ to every command you author.
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the package's
-`scripts/skill_linter.py`, `scripts/condense.py`, and the `task`
+`scripts/skill_linter.ts`, `scripts/condense.ts`, and the `task`
 runner are not available. This skill still applies — but with
 prose-only validation:
 

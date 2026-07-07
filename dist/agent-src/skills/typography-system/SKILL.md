@@ -49,7 +49,7 @@ degrades gracefully: with no brand layer, only stage 1 runs.
    xl / 2xl / 3xl`; set `line-height` (1.5 for body, 1.2 for display);
    assign weights (400 body, 600–700 heading).
 4. **Emit DTCG `$type: "typography"` tokens** through `design-tokens`
-   (`scripts/tokens.py`) — add a `typography` section to `tokens.json` with
+   (`scripts/tokens.ts`) — add a `typography` section to `tokens.json` with
    `$type: "typography"` and `$value` objects carrying `fontFamily`,
    `fontSize`, `fontWeight`, `lineHeight`.
 5. **Verify** — confirm both chosen fonts exist on Google Fonts (check the

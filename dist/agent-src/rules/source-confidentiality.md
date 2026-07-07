@@ -70,7 +70,7 @@ visible. Tracked-safe by **anonymizing**, not hiding in `agents/.harvest-local/`
 
 - Reference sources as **Source A / B / C** (or a neutral descriptor like "an
   external operator-runtime reference") — never the repo / org / author name.
-- Retain real links as `ENC1:` tokens (`link_crypto.py`) in a Provenance block —
+- Retain real links as `ENC1:` tokens (`link_crypto.ts`) in a Provenance block —
   maintainer-recoverable, opaque in the tree.
 - Borrow *items* are this package's own features; never need the source name.
 

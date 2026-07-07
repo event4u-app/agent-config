@@ -62,7 +62,7 @@ audit (route to `/analyze:decision`), a code-only analysis
      and/or installed agent layer. Optimization surface = workflows,
      structures, docs, roadmaps, decisions.
 2. Resolve module roots via
-   `scripts/_lib/agent_settings.py::enumerate_modules()` (Laravel shape:
+   `scripts/_lib/agent_settings.ts::enumerate_modules()` (Laravel shape:
    `app/Modules/*/agents/`); fall back to `modules.root_paths` in
    `.agent-settings.yml`.
 3. Exclusions are hard: never analyze `vendor/`, `node_modules/`,
