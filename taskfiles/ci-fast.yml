@@ -756,6 +756,11 @@ tasks:
     desc: "Warn-only lint for the lifecycle-typed knowledge pages (sessions/concepts/procedures/decisions) — road-to-knowledge-system Phase 2; never fails the build"
     cmd: ./scripts-run src/scripts/check_knowledge_pages
 
+  lint-knowledge-scale:
+    silent: true
+    desc: "Warn-only scale + budget tripwires for the memory/knowledge substrate (intake/sessions/type/corpus/hot-context) — road-to-second-brain Phase 0; never fails the build"
+    cmd: ./scripts-run src/scripts/lint_knowledge_scale {{.QUIET_FLAG}}
+
   check-knowledge-sharing:
     silent: true
     desc: "Team-sharing gate over the STAGED git index — blocks staged agents/memory/intake/ files and visibility: private knowledge pages, warns on 5+ new pages in one commit (road-to-knowledge-system Phase 3). Wired as a pre-commit hook via install-hooks.sh; not part of the full CI chain since it depends on staged state, not repo state."
