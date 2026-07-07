@@ -198,18 +198,23 @@ synthetic mis-tagged fixture.
 
 ## Acceptance criteria
 
-- [ ] Validator is scope-aware; the consumer universe is computed from the
+- [x] Validator is scope-aware; the consumer universe is computed from the
       router, printed in the report (Phase 0).
-- [ ] All uncovered consumer rules gain trigger-anchored stubs; safety
+      <!-- verified: --scope consumer prints 77/77 from the router -->
+- [x] All uncovered consumer rules gain trigger-anchored stubs; safety
       floors have dedicated tasks (Phase 1).
+      <!-- verified: 51 stubs, coverage 77/77, safety floors dedicated -->
 - [ ] Operator labels complete the consumer scope;
       `--require-complete --scope consumer` green (Phase 2).
-- [ ] Coverage is falsifiable: prompt↔trigger check in CI, existing set
+- [x] Coverage is falsifiable: prompt↔trigger check in CI, existing set
       audited under it (Phase 3).
-- [ ] No `expected` anchor in the corpus is LLM-generated — drafting stops
+      <!-- verified: fires-check structural + in task ci; 14 nominal-coverage defects fixed -->
+- [x] No `expected` anchor in the corpus is LLM-generated — drafting stops
       at stubs + notes, verifiably (`label_status` discipline).
-- [ ] The maintainer track exists ONLY as a backlog line in
+      <!-- verified: all 51 stubs have TODO rubrics + empty anchors; labelled count unchanged (30) -->
+- [x] The maintainer track exists ONLY as a backlog line in
       `road-to-token-saving` Phase 10 — no parked phase here.
+      <!-- verified: Phase-10 backlog line present; no parked phase here -->
 
 ## Blockers
 

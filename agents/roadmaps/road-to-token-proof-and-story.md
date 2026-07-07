@@ -248,11 +248,13 @@ N=1.
 
 ## Acceptance criteria
 
-- [ ] A dry-run or inconclusive report cannot green-light any flip;
+- [x] A dry-run or inconclusive report cannot green-light any flip;
       test-proven (Phase 0).
-- [ ] One critical path + tracking table covers all six tracks; activation
+      <!-- verified: 17 flip-gate tests green post-merge -->
+- [x] One critical path + tracking table covers all six tracks; activation
       end-state (one runtime knob, default ON post-gates) and rollback SOP
       are written down once (Phase 1).
+      <!-- verified: § Program tracking + Rollback SOP + contract § Activation end-state live on main -->
 - [ ] Field-token-evidence report exists: replay arms + billed correlation,
       intent-undercount caveat carried (Phase 2).
 - [ ] Benchmark/claims/release story trace every number to that report
@@ -284,5 +286,9 @@ N=1.
   --history <repo>/agents/runtime/.agent-chat-history --limit 200` per
   repo, then review the `.local.yaml` output under the low-impact-corpus
   privacy floor (drop/redact anything client- or person-identifying).
+  Progress 2026-07-07: agent-config's own history exported (30 prompts →
+  `internal/bench/corpora/field-prompts.local.yaml`, gitignored, awaiting
+  review). Still needed: exports from the Galawork consumer repos (their
+  history files are outside this checkout — operator run) to reach N≥100.
 - **Resolved when:** a reviewed corpus file exists and the
   low-impact-corpus privacy floor checklist for it is signed off.

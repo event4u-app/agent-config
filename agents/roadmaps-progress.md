@@ -85,14 +85,14 @@ _1 blocker resolved._
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
-**Road to golden-set coverage — make every flip verdict mean something** — 9 / 18 done (50%)
+**Road to golden-set coverage — make every flip verdict mean something** — 14 / 18 done (78%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Scope-aware coverage accounting | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | Trigger-anchored stub drafting (consumer rules, autonomous) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Operator labelling sprint (the human gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Prompt↔trigger falsifiability linter | 🟡 in progress | 6 | 3 | 0 | 0 | 33% |
+| 3 | Prompt↔trigger falsifiability linter | 🟡 in progress | 1 | 8 | 0 | 0 | 89% |
 
 <a id="blockers-road-to-golden-set-coverage"></a>
 **Blockers**
@@ -112,7 +112,7 @@ _1 blocker resolved._
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
-**Road to request-scoped rule load — ship only what the request needs** — 16 / 25 done (64%)
+**Road to request-scoped rule load — ship only what the request needs** — 20 / 25 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -120,7 +120,7 @@ _1 blocker resolved._
 | 1 | Consumer-scoped rule projection (the ~50k lever) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 2 | Host-native activation: populate globs (deterministic) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Pack hygiene (two confirmed misfits + one sweep) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 4 | PARKED: rules-as-skills falsification probe (Claude Code) | 🟡 in progress | 4 | 4 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-request-scoped-rule-load"></a>
 **Blockers**
@@ -156,7 +156,7 @@ _1 blocker resolved._
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 
-**Road to token proof and story — orchestrate, prove, activate, adopt** — 10 / 26 done (38%)
+**Road to token proof and story — orchestrate, prove, activate, adopt** — 12 / 26 done (46%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -164,7 +164,7 @@ _1 blocker resolved._
 | 1 | One critical path for six tracks (the program table) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Field evidence: replay + session telemetry | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
 | 3 | Public proof refresh (benchmark, claims, release story) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Spend the story: one named external pilot (N=1) | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+| 4 | Spend the story: one named external pilot (N=1) | 🟡 in progress | 7 | 2 | 0 | 0 | 22% |
 
 <a id="blockers-road-to-token-proof-and-story"></a>
 **Blockers**
@@ -179,6 +179,10 @@ _1 blocker resolved._
     --history <repo>/agents/runtime/.agent-chat-history --limit 200` per
     repo, then review the `.local.yaml` output under the low-impact-corpus
     privacy floor (drop/redact anything client- or person-identifying).
+    Progress 2026-07-07: agent-config's own history exported (30 prompts →
+    `internal/bench/corpora/field-prompts.local.yaml`, gitignored, awaiting
+    review). Still needed: exports from the Galawork consumer repos (their
+    history files are outside this checkout — operator run) to reach N≥100.
   - **Resolved when:** a reviewed corpus file exists and the low-impact-corpus privacy floor checklist for it is signed off.
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)

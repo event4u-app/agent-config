@@ -221,14 +221,18 @@ evidence.
 
 ## Acceptance criteria
 
-- [ ] `dist/router.json` v2 carries workspaces/packs; CI byte-stability
+- [x] `dist/router.json` v2 carries workspaces/packs; CI byte-stability
       gates green (Phase 0).
-- [ ] Intent-only rules have written dispositions (Phase 0).
+      <!-- verified 2026-07-07 post-merge: check-router green, schema 2, all non-kernel entries carry ws+packs -->
+- [x] Intent-only rules have written dispositions (Phase 0).
+      <!-- verified: only telegraph-speak stays intent-only (council-decided retirement) -->
 - [ ] Consumer installs ship only workspace-matched rules; measured
       before/after recorded; misclassification audit trail exists (Phase 1).
-- [ ] Path-triggered rules auto-attach natively on Cursor/Windsurf
+- [x] Path-triggered rules auto-attach natively on Cursor/Windsurf
       (Phase 2).
-- [ ] Verified pack misfits are fixed and the sweep is recorded (Phase 3).
+      <!-- verified live: ui-audit-gate.mdc globs=resources/views/**,resources/js/**; windsurf trigger: glob; 9 emitter tests green -->
+- [x] Verified pack misfits are fixed and the sweep is recorded (Phase 3).
+      <!-- verified: frontend-design/ai-image/ai-video tags live; scoping tests green -->
 - [ ] Phase 4 stays parked until its promotion trigger fires — no silent
       execution, no silent deletion.
 - [ ] Every shipped lever carries a measured before/after on the Phase-0
