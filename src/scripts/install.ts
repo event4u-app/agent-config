@@ -62,7 +62,7 @@
  * - `signal.SIGTERM`/`SIGKILL` + `os.kill(pid, 0)` liveness → `process.kill`.
  */
 
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -3869,7 +3869,7 @@ function _wizard_run_sync(cmd: string[], env: NodeJS.ProcessEnv, cli: string): n
         os.tmpdir(),
         `agent-config-wizard-${process.pid}-${Date.now()}.log`,
     );
-    let child: import('node:child_process').ChildProcess;
+    let child: ChildProcess;
     let log_fd: number | null = null;
     try {
         log_fd = fs.openSync(log_path, 'w');
