@@ -116,7 +116,15 @@ export function id_in_scope(
 /** `workspaces:` list parsed straight from a rule file's frontmatter. */
 export function fm_workspaces(text: string): string[] {
     const [fm] = split_frontmatter(text);
-    // Tolerate the list being the LAST frontmatter key (no trailing newline).
+    // Flow style: `workspaces: [a, b, c]`
+    const flow = /^workspaces:[ \t]*\[([^\]]*)\]/m.exec(fm);
+    if (flow) {
+        return (flow[1] as string)
+            .split(',')
+            .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+            .filter((s) => s.length > 0);
+    }
+    // Block style; tolerate the list being the LAST frontmatter key.
     const m = /^workspaces:[ \t]*\n((?:[ \t]+-[ \t]+.*(?:\n|$))+)/m.exec(fm);
     if (!m) {
         return [];
