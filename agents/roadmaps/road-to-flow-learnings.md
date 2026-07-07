@@ -126,9 +126,9 @@ installed *and firing* in this repo?" — built on the existing
 doctor/`cmd_validate`/`plan.ts`/`conflict.ts`/txlog substrate, never
 rebuilding it.
 
-- [ ] Add `--ci` to `cmd_doctor`: machine-readable output (reuse
+- [x] Add `--ci` to `cmd_doctor`: machine-readable output (reuse
       `--json`), documented 0/1/2 exit contract, zero interactive output.
-- [ ] `task conformance` — thin wrapper over `cmd_doctor --ci` plus the
+- [x] `task conformance` — thin wrapper over `cmd_doctor --ci` plus the
       consumer checks: (a) install txlog tail clean (no abandoned
       incomplete run); (b) rules INDEX parses and every router pointer
       resolves; (c) hook dispatcher answers synthetic `session_start` +
@@ -136,19 +136,19 @@ rebuilding it.
       copy; (d) `lean_projection.mode` consistent with projected
       artifacts on disk; (e) host-capability manifest matches the
       detected host. All deterministic, no LLM.
-- [ ] One negative fixture per check: sabotage → that check red, exit
+- [x] One negative fixture per check: sabotage → that check red, exit
       non-zero.
-- [ ] Pre-flight stage in the install plan builder
+- [x] Pre-flight stage in the install plan builder
       (`src/install/plan.ts`): permissions on every target root,
       free-disk floor, conflicting-file detection (reuse `conflict.ts`),
       host-detection sanity — each a typed finding, never a crash.
-- [ ] `--validate-only` on the init path: pre-flight only, non-zero exit
+- [x] `--validate-only` on the init path: pre-flight only, non-zero exit
       on any blocking finding. Explicitly NOT rebuilding `--dry-run` /
       `--minimal` — both ship today; document them as the canonical
       quickstart instead.
-- [ ] Emit a machine-readable conformance report (JSONL line, txlog
+- [x] Emit a machine-readable conformance report (JSONL line, txlog
       shape) so fleet runs (Phase 1) can aggregate it.
-- [ ] Consumer contract doc page: "green `task conformance` = the OS is
+- [x] Consumer contract doc page: "green `task conformance` = the OS is
       installed and firing in this repo". Check (c)'s per-host result
       feeds the token-saving host-compliance evidence file — reuse that
       probe, never duplicate it.

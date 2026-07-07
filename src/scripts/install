@@ -54,6 +54,9 @@
 #                     existing agent-config project (nested-install guard).
 #                     See docs/installation.md → "Minimal init".
 #   --settings-only   Alias for --minimal.
+#   --validate-only   Pre-flight only — permissions, disk floor, conflicts,
+#                     host-detection sanity as typed findings. Writes nothing.
+#                     Exit 0 = clear, 1 = blocking finding, 2 = no runner.
 #   --help, -h        Show this help
 #
 # Examples:
@@ -86,6 +89,7 @@ SCOPE=""
 CUSTOM_PATH=""
 OFFLINE=false
 MINIMAL=false
+VALIDATE_ONLY=false
 USER_TYPE=""
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
@@ -173,6 +177,7 @@ while [[ $# -gt 0 ]]; do
         --offline)       OFFLINE=true; shift ;;
         --minimal|--settings-only)
                          MINIMAL=true; shift ;;
+        --validate-only) VALIDATE_ONLY=true; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
@@ -195,6 +200,26 @@ fi
 if [[ "${SCOPE:-}" == "project" && "${AGENT_CONFIG_DEV_MODE:-}" != "1" ]]; then
     err "--scope=project is reserved for maintainers (ADR-020 — consumer installs are global-only). Set AGENT_CONFIG_DEV_MODE=1 to opt in. See docs/maintainers/dev-mode.md."
     exit 1
+fi
+
+# --validate-only — pre-flight only, nothing written (road-to-flow-learnings
+# Phase 0). Read-only by construction, so it runs BEFORE the source-repo
+# guard and the interactive picker. Exit: 0 = no blocking finding,
+# 1 = blocking finding, 2 = no runner available.
+if $VALIDATE_ONLY; then
+    if [[ -x "$SCRIPT_DIR/../../node_modules/.bin/tsx" ]]; then
+        preflight_runner=("$SCRIPT_DIR/../../node_modules/.bin/tsx")
+    elif command -v npx >/dev/null 2>&1; then
+        preflight_runner=(npx tsx)
+    else
+        err "--validate-only needs a TS runner (install Node.js, or run npm install in the package)"
+        exit 2
+    fi
+    preflight_args=()
+    [[ -n "$TOOLS" ]] && preflight_args+=(--tools "$TOOLS")
+    [[ -n "$TARGET_DIR" ]] && preflight_args+=(--target "$TARGET_DIR")
+    "${preflight_runner[@]}" "$SCRIPT_DIR/_cli/cmd_preflight.ts" "${preflight_args[@]}"
+    exit $?
 fi
 
 # Interactive --tools picker (S9). Fires only when:

@@ -20,8 +20,9 @@ import { isHeadless, type runUiServe } from './commands/uiServe.js';
  *   - stdin/stdout is not a TTY (piped / curl|bash)
  *   - headless host (SSH / Linux without DISPLAY)
  *   - a CLI-mode flag is present (--no-ui / --tools / --ai / --yes / --quiet /
- *     --dry-run / --minimal / --settings-only / --list-tools) — the caller
- *     already knows what to install and doesn't want the picker.
+ *     --dry-run / --minimal / --settings-only / --list-tools /
+ *     --validate-only) — the caller already knows what to install and
+ *     doesn't want the picker.
  *
  * `rest` is argv without the leading `init` token.
  */
@@ -35,6 +36,7 @@ export function shouldInitLaunchGui(rest: readonly string[]): boolean {
     const cliSignals = new Set([
         '--no-ui', '--tools', '--ai', '--yes', '-y', '--quiet', '-q',
         '--dry-run', '--minimal', '--settings-only', '--list-tools',
+        '--validate-only',
     ]);
     for (const arg of rest) {
         const flag = arg.split('=', 1)[0];
