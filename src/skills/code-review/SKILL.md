@@ -105,10 +105,9 @@ The checks below are stack-agnostic. For framework-specific conventions (PSR-12 
 
 ## Before creating a PR
 
-1. Run the project's quality pipeline (see the stack carve-out for the exact commands — PHP: `quality-tools`).
-2. Run tests via the project's runner (`make test`, `npm test`, `pytest`, `go test ./...`, or the project's wrapper script).
-3. Ensure CI passes on the branch.
-4. Self-review the diff: `git diff origin/main..HEAD`.
+1. When `quality.local_auto_run: true`: run the project's quality pipeline (see the stack carve-out for the exact commands — PHP: `quality-tools`) and tests via the project's runner (`make test`, `npm test`, `pytest`, `go test ./...`, or the project's wrapper script). Under the default (`false` / missing): skip both — remote CI on the PR is the gate.
+2. Ensure CI passes on the branch (remote CI is authoritative).
+3. Self-review the diff: `git diff origin/main..HEAD`.
 
 ## Receiving feedback
 

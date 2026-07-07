@@ -56,7 +56,7 @@ context. The judge must return one of:
 
 ### 5. Apply or revise
 
-- `apply` → write the diff, run targeted tests, run quality pipeline
+- `apply` → write the diff, run targeted tests; run the quality pipeline only when `quality.local_auto_run: true` (default `false` → skip, remote CI is the gate)
 - `revise` → hand the issue list back to the implementer, loop to step 4
 - `reject` → stop, report to user, do not loop
 

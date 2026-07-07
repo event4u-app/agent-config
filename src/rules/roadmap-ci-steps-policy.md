@@ -38,10 +38,10 @@ ROADMAPS MUST NOT SCHEDULE FULL-PIPELINE CI STEPS,
 AND EXECUTION MUST SKIP THEM INLINE WITH [-] AND A REASON.
 ```
 
-When the maintainer has disabled autonomous local-CI runs in
-`.agent-settings.yml` (`quality.local_auto_run: false`), every full-
-pipeline gate run during roadmap work is wasted wall-clock and tokens
-— the remote CI on the PR is the authoritative gate. Roadmaps must
+When autonomous local-CI runs are disabled in `.agent-settings.yml`
+(`quality.local_auto_run: false` — the shipped template default), every
+full-pipeline gate run during roadmap work is wasted wall-clock and
+tokens — the remote CI on the PR is the authoritative gate. Roadmaps must
 neither schedule nor execute those gates locally. New CI gates and
 smoke/test files added by the roadmap itself remain exempt — those
 have to run once locally to be considered verified evidence per

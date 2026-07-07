@@ -60,8 +60,13 @@ or [`fix-pr-comments`](../../commands/fix-pr-comments.md) instead.
 
 ### 2. Verify readiness
 
-Run the full end-of-work gate before presenting any options — see
-[`verify-before-complete`](../verify-before-complete/SKILL.md):
+Run the end-of-work gate before presenting any options — see
+[`verify-before-complete`](../verify-before-complete/SKILL.md).
+Steps 1–3 run only when `quality.local_auto_run: true`; under the
+default (`false` / missing) skip them without asking — user runs
+quality tools manually, remote CI on the PR is the authoritative gate,
+readiness report says *"quality gates delegated to remote CI"* instead
+of claiming them green:
 
 1. Targeted tests green
 2. Full test suite green
@@ -69,8 +74,8 @@ Run the full end-of-work gate before presenting any options — see
 4. `git status` clean — nothing unstaged, no stray files
 5. Branch is pushed or explicitly marked local-only
 
-If any step fails → **stop**. Report the failure, do not present ship
-options. Fixing the failure comes first.
+If any executed step fails → **stop**. Report the failure, do not
+present ship options. Fixing the failure comes first.
 
 ### 3. Determine the base branch
 
@@ -236,6 +241,8 @@ After the chosen option completes, report:
 Before reporting "done" after this skill runs:
 
 * [ ] Full gate (tests + quality pipeline) verified green in this turn
+      when `quality.local_auto_run: true` — under the default `false`
+      the report states "quality gates delegated to remote CI" instead
 * [ ] Base branch determined and confirmed with the user when ambiguous
 * [ ] Exactly four numbered options were presented, no narration added
 * [ ] User's choice recorded literally, not reinterpreted

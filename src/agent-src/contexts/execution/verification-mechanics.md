@@ -9,7 +9,19 @@ incidents.
 **Size budget:** ≤ 4,000 chars. Tracked under Phase 6 of
 `road-to-pr-34-followups`.
 
-## When to run what — timing matters
+## Gate zero — `quality.local_auto_run` (default `false`)
+
+`false` or missing → **never run quality tools or full test suites
+proactively — never ask**. User runs them manually; **remote CI is the
+authoritative gate.** Run one ONLY on: (1) explicit ask this turn,
+(2) concrete CI failure — run exactly that failing check, (3) new-gate
+carve-out (a NEW gate/test this change introduces runs once to be
+proven). Completion wording: *"quality gates delegated to remote CI"* —
+never a pass claim for tools that did not run. Narrow probes proving
+the specific change (one `--filter` test, `curl`, syntax check on the
+edited file) stay allowed. Everything below applies when `true`.
+
+## When to run what — timing matters (`local_auto_run: true`)
 
 **Quality tools (PHPStan, Rector, ECS) run ONCE at the very end** — not after every edit.
 Do NOT run quality checks between tasks if you have more work to do.

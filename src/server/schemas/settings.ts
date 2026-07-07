@@ -185,8 +185,8 @@ export const settingsSchema = z.object({
         ),
     }),
     quality: z.object({
-        local_auto_run: z.boolean().default(true).describe(
-            'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Turn off if your toolchain is slow and you prefer to invoke quality runs manually with /quality-fix.',
+        local_auto_run: z.boolean().default(false).describe(
+            'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs.',
         ),
         wait_for_remote_ci: z.boolean().default(false).describe(
             'After pushing a branch, poll the remote CI provider (GitHub Actions, GitLab CI) and surface failures inline. Off by default — useful when local CI does not cover everything the remote pipeline runs.',

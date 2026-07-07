@@ -23,6 +23,30 @@ Use this skill whenever running or configuring code quality tools:
 - **PHP**: PHPStan (static analysis), Rector (automated refactoring), ECS (coding standards)
 - **JS/TS**: Biome (linting + formatting), TypeScript compiler (type checking), Jest/Vitest (tests)
 
+## Execution policy — on demand only, never proactive
+
+```
+NEVER RUN QUALITY TOOLS PROACTIVELY WHEN quality.local_auto_run IS
+false OR MISSING (THE DEFAULT). DO NOT ASK WHETHER TO RUN THEM.
+THE USER RUNS THEM MANUALLY. REMOTE CI IS THE AUTHORITATIVE GATE.
+```
+
+Toolchains differ per language and project and are often unknown to the
+agent — discovering and running them burns time and tokens. Under the
+default, exactly three triggers justify running a quality tool:
+
+1. **Explicit ask this turn** — the user says so or invokes `/quality-fix`.
+2. **Concrete CI failure** — the remote pipeline reports a failing
+   check; run exactly that failing check to reproduce and fix it
+   (`/fix:ci` is the canonical flow).
+3. **New-gate carve-out** — the change itself introduces a NEW CI gate,
+   smoke test, or test file; it must run once locally to be proven.
+
+`quality.local_auto_run: true` restores the legacy autonomous behaviour
+(run the pipeline when work is ready for verification). When runs are
+suppressed, the completion message says *"quality gates delegated to
+remote CI"* — never that the tools passed.
+
 ## Language detection
 
 Detect which tools to run based on **what files were changed**:
@@ -37,9 +61,9 @@ If both PHP and JS/TS files changed → run **both** pipelines.
 
 ## Related rules and guidelines
 
-- `verify-before-complete` rule — timing: run quality tools ONCE at the end, not after each edit
+- `verify-before-complete` rule — no pass claims without fresh output; suppressed runs are surfaced as "delegated to remote CI", never claimed
 - `php-coding` rule → PHPStan section — inline ignores, PHPDoc rules
-- `verify-before-complete` rule — must run quality checks before claiming work is done
+- `contexts/execution/verification-mechanics.md` — Gate zero (`local_auto_run`) + timing when `true` (quality tools ONCE at the end, not after each edit)
 - [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md) and
   [`process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md) —
   test-side rationalizations these tools cannot catch (e.g. "CI is red,

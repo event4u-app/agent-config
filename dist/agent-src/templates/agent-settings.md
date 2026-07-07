@@ -265,20 +265,28 @@ roadmap:
   #   end_of_roadmap = once, before archiving (default — fastest, fewest tokens)
   #   per_phase      = once after every completed phase
   #   per_step       = after every completed step (legacy; highest token cost)
-  # Iron Law `verify-before-complete` still applies — fresh output is
-  # mandatory before any "roadmap complete" claim, regardless of cadence.
+  # `quality.local_auto_run: false` (the default) suppresses local
+  # pipeline runs at EVERY cadence — remote CI is the gate; this knob
+  # only matters when `local_auto_run` is `true`.
   quality_cadence: end_of_roadmap
 
 # --- Quality / CI execution ---
 quality:
   # Run local quality / CI tasks and tests autonomously (true, false)
-  # true  = agent runs the quality pipeline whenever work is ready
-  #         for verification, without asking (default)
-  # false = agent asks before running quality tools / tests locally
+  # false = default. Agent NEVER runs quality tools / full test suites
+  #         proactively — and does not ask. The user runs them manually;
+  #         remote CI is the authoritative gate. The agent runs one ONLY
+  #         on: (1) explicit ask this turn (e.g. /quality-fix), (2) a
+  #         concrete CI failure — run exactly that failing check, or
+  #         (3) the new-gate carve-out below.
+  # true  = opt-in legacy: agent runs the quality pipeline whenever
+  #         work is ready for verification, without asking.
   # Carve-out: NEW CI gates / smoke tests / test files MUST run
   # locally regardless of this flag — without execution the gate is
-  # unverified evidence. Iron Law `verify-before-complete` still applies.
-  local_auto_run: true
+  # unverified evidence. Iron Law `verify-before-complete` still applies:
+  # suppressed runs are surfaced ("quality gates delegated to remote CI"),
+  # never claimed as passing.
+  local_auto_run: false
 
   # Wait for remote CI to finish on the PR / pipeline (true, false)
   # true  = poll GitHub check-runs / pipeline after push and report
@@ -555,8 +563,8 @@ the canonical narrative lives in
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
-| `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |
-| `quality.local_auto_run` | `true`, `false` | `true` | When `true`: agent runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) autonomously when work is ready for verification. When `false`: agent asks before running locally. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs require the agent to surface the gap before claiming completion. |
+| `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |
+| `quality.local_auto_run` | `true`, `false` | `false` | When `false` (default): agent NEVER runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) proactively — and does not ask. The user runs quality tools manually; remote CI is the authoritative gate. The agent runs one only on (1) an explicit ask this turn, (2) a concrete CI failure (run exactly that failing check), or (3) the new-gate carve-out. When `true`: opt-in legacy — agent runs the pipeline autonomously when work is ready for verification. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs are surfaced ("quality gates delegated to remote CI"), never claimed as passing. |
 | `quality.wait_for_remote_ci` | `true`, `false` | `false` | When `true`: after `git push`, the agent polls GitHub check-runs / pipeline status on the PR and reports green / red before handing back. When `false`: agent pushes and hands back immediately; the user inspects CI themselves (default — saves agent runtime and tokens). |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
