@@ -288,20 +288,35 @@ print_version() {
   fi
 }
 
-# Resolve the tsx runner (Python→TypeScript migration). Sets TSX_BIN to the
-# repo-local binary when present, else `npx tsx`. Exits 127 if neither works
-# since the runtime is now Node/tsx and there is no Python fallback.
+# Resolve the tsx runner (Python→TypeScript migration). tsx ships as a
+# RUNTIME dependency of the package, so the package-local install is the
+# canonical source — first via node_modules/.bin, then via the module's CLI
+# entry (covers installs where .bin shims are missing). `npx tsx` is a last
+# resort only: npx runs against the CONSUMER project's cwd, so its npm config
+# and devEngines/engines constraints apply — a consumer pinning e.g.
+# `node <24` hard-fails every hook and TS command with EBADDEVENGINES (the
+# 8.1.0 regression that silently broke hooks + roadmap:progress in consumer
+# projects). Exits 127 when nothing works — the runtime is Node/tsx, there is
+# no Python fallback.
 require_tsx() {
   if [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]]; then
     TSX_BIN="$PACKAGE_ROOT/node_modules/.bin/tsx"
     return 0
   fi
+  if [[ -f "$PACKAGE_ROOT/node_modules/tsx/dist/cli.mjs" ]] && command -v node >/dev/null 2>&1; then
+    TSX_BIN="node $PACKAGE_ROOT/node_modules/tsx/dist/cli.mjs"
+    return 0
+  fi
   if command -v npx >/dev/null 2>&1; then
+    echo "⚠️  agent-config: package-local tsx not found — falling back to \`npx tsx\`" >&2
+    echo "    (subject to this project's npm config; reinstall the package to fix:" >&2
+    echo "     npm install -g @event4u/agent-config)" >&2
     TSX_BIN="npx tsx"
     return 0
   fi
-  echo "❌  agent-config: tsx runner not found on PATH" >&2
-  echo "    Run \`npm install\` in the package to provide node_modules/.bin/tsx." >&2
+  echo "❌  agent-config: tsx runner not found" >&2
+  echo "    Reinstall the package (npm install -g @event4u/agent-config) to provide" >&2
+  echo "    node_modules/tsx, or run \`npm install\` at the package root." >&2
   exit 127
 }
 
