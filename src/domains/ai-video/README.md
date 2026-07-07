@@ -8,7 +8,13 @@ AI video pipeline.
 - **version**: `7.5.0`
 - **owner**: small-business
 - **requires**: —
-- **artefacts**: 10
+- **artefacts**: 13
+
+## Rules (3)
+
+- **`media-governance-routing`** — Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure)
+- **`media-sync-ground-truth`** — Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders
+- **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable
 
 ## Skills (10)
 
