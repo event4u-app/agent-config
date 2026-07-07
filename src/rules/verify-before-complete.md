@@ -5,10 +5,8 @@ description: "Verify before completion — run tests and quality tools before cl
 alwaysApply: true
 load_context:
   - contexts/execution/verification-mechanics.md
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Verify Before Completion

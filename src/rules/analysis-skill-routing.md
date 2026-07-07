@@ -8,10 +8,8 @@ triggers:
   - phrase: "dig into the codebase"
 routes_to:
   - "skill:analysis-skill-router"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Analysis Skill Routing

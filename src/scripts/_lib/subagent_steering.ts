@@ -41,6 +41,53 @@ export function budgetHalt(consecutiveFailures: number): boolean {
     return consecutiveFailures >= MAX_ATTEMPTS_PER_TARGET;
 }
 
+/**
+ * Failure-type stop (road-to-flow-learnings Phase 2) — an APPLICATION of the
+ * N=3 budget at subagent-type granularity, never a new mechanism: two
+ * consecutive verification-failed returns from the same subagent type plus
+ * the escalation step exhaust the three-attempt budget. When this fires the
+ * orchestrator stops dispatching that type for the session, surfaces both
+ * failures to the human, and runs the remaining slices in-session. There is
+ * still NO automatic cohort-disable — the Iron Law above stands unchanged.
+ */
+export const MAX_CONSECUTIVE_TYPE_FAILURES = MAX_ATTEMPTS_PER_TARGET - 1;
+
+/** True when a subagent type has exhausted its in-session dispatch budget. */
+export function typeStop(consecutiveVerificationFailures: number): boolean {
+    return consecutiveVerificationFailures >= MAX_CONSECUTIVE_TYPE_FAILURES;
+}
+
+/** Decision returned by {@link sliceDispatchAllowed}. */
+export interface SliceDispatchDecision {
+    readonly allowed: boolean;
+    readonly reason: string;
+}
+
+/**
+ * Ordered-slice dependency gate (road-to-flow-learnings Phase 2) — makes the
+ * `do-in-steps` contract deterministic: a slice that declares a parent MUST
+ * NOT dispatch before the parent's return has been verified by the
+ * orchestrator. Slices without a declared parent (roots / independent
+ * slices) always pass this gate.
+ */
+export function sliceDispatchAllowed(
+    declaredParent: string | null,
+    verifiedReturns: ReadonlySet<string>,
+): SliceDispatchDecision {
+    if (declaredParent === null || declaredParent.length === 0) {
+        return { allowed: true, reason: 'no declared parent — root or independent slice' };
+    }
+    if (verifiedReturns.has(declaredParent)) {
+        return { allowed: true, reason: `parent '${declaredParent}' has a verified return` };
+    }
+    return {
+        allowed: false,
+        reason:
+            `parent '${declaredParent}' has no verified return in session state — ` +
+            'verify (or revise) the parent before dispatching this slice',
+    };
+}
+
 export interface GuardrailMetrics {
     /** Observed token spend / single-agent baseline (e.g. 2.4 = 2.4x). */
     token_ratio: number;

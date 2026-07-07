@@ -99,7 +99,7 @@ describe('compile_router.build — shape', () => {
         const minified = JSON.stringify(out);
         expect(minified).not.toContain(', ');
         expect(minified).not.toContain(': ');
-        expect(minified.startsWith('{"schema_version":1,')).toBe(true);
+        expect(minified.startsWith('{"schema_version":2,')).toBe(true);
     });
 });
 

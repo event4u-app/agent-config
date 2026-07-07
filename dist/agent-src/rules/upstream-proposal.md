@@ -8,10 +8,8 @@ triggers:
   - keyword: "upstream"
 routes_to:
   - "skill:upstream-contribute"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Upstream Proposal

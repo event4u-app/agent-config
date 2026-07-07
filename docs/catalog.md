@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **610 public artefacts** shipped by
+Consumer-facing catalog of all **611 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -375,7 +375,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (165)
+## Commands (166)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -479,6 +479,7 @@ are excluded.
 | command | [`module`](../dist/agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module-create`](../dist/agent-src/commands/module/create.md) | cluster: module | Create a new module from .module-template with interactive setup |
 | command | [`module-explore`](../dist/agent-src/commands/module/explore.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
+| command | [`optimize-project`](../dist/agent-src/commands/optimize-project.md) |  | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
 | command | [`optimize-prompt`](../dist/agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize`](../dist/agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
 | command | [`optimize-agents-dir`](../dist/agent-src/commands/optimize/agents-dir.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |

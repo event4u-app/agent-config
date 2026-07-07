@@ -150,6 +150,9 @@ tasks:
       Cost-bearing & quota-aware: pins sonnet, caps per-run spend (--budget).
       WARNING the full 15×4×3=180-run pilot is ~60-90M tokens — use --tasks /
       --seeds to bound it. See agents/roadmaps/road-to-discipline-axis-benchmark.md.
+      Crash-safe: every completed run is checkpointed (reports/ab-v2/checkpoints/);
+      a killed sweep restarted with the SAME flags resumes instead of re-spending
+      (--fresh discards the checkpoint, --no-checkpoint disables it).
       Pass flags through, e.g.:
         task bench:ab:v2 -- --tasks trapA-overeng-01,trapB-regress-01 --seeds 1 --budget 3.5
     cmd: ./scripts-run src/scripts/bench_ab_v2_run {{.CLI_ARGS}}
@@ -164,9 +167,22 @@ tasks:
   bench:ab:v2:diff:
     silent: true
     desc: |
-      Re-render docs/benchmark.md from the latest v2 paired report (honest
-      two-table + gate + honesty labels). Cost-free.
-    cmd: ./scripts-run src/scripts/bench_ab_v2_stats --markdown docs/benchmark.md
+      Re-render the PINNED sections of docs/benchmark.md — each from ITS
+      pinned report (docs/benchmark.pinned.yml), never from the single
+      latest report (the curated two-host composite would bury one host's
+      finding). Curated prose outside the markers is preserved. Cost-free.
+      Use `-- --check` as the drift gate.
+    cmd: ./scripts-run src/scripts/render_benchmark_composite {{.CLI_ARGS}}
+
+  bench:matrix:
+    silent: true
+    desc: |
+      Expand (default) or run a bench matrix (task-family × host × arm)
+      declared in one YAML into the existing bench_ab_v2_run invocations.
+      Paired design preserved (all arms inside one invocation per cell).
+      `--expand` is cost-free; `--run` is live API spend (operator-gated).
+        task bench:matrix -- --config internal/bench/matrix.yaml
+    cmd: ./scripts-run src/scripts/bench_matrix {{.CLI_ARGS}}
 
   bench:ab:watch:
     silent: true

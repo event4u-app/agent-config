@@ -4,23 +4,27 @@
 > strong-host result side by side. It is deliberately NOT auto-generated from the
 > single latest `ab-v2` report: a single-report render would bury one host's
 > finding (a strong-host null would erase the weak-host lift, and vice versa).
-> Regenerate each section from its pinned report with
-> `bench_ab_v2_stats.ts --markdown <tmp> <report>`, then update the matching
-> section here. Pinned sources:
+> Regenerate the pinned sections with `task bench:ab:v2:diff` — each
+> `<!-- pinned:<id> -->` region renders from ITS pinned report
+> (`docs/benchmark.pinned.yml`); curated prose outside the markers is
+> never touched (`-- --check` is the drift gate). Pinned sources:
 > weak host = `internal/bench/reports/ab-v2/2026-06-15T03-52-35Z-ab-v2-paired.json`;
 > strong host = `internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json`;
 > cost-factor sweep = `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
 
 ## Honesty labels (read first)
 
+<!-- pinned:honesty -->
 > 1. **Wrapper-lift on a fixed host (`claude-haiku-4-5`), NOT model-vs-model.** Measures what the agent-config package does to ONE host model on a neutral fixture — not a capability ranking.
 > 2. **Discipline axis, not capability.** The headline is the *discipline* delta (did it stay minimal / verify / ask / not destroy / update downstream), not whether the goal was achievable.
 > 3. **PILOT — low statistical power (N=2 tasks × 12 seed(s)).** Directional only.
 > 4. **Paired design**, errored runs excluded; McNemar (capability) + Wilcoxon signed-rank (discipline) + effect sizes.
 > 5. **Not comparable to SWE-bench / GAIA / Fable scores** — a different question entirely.
+<!-- /pinned:honesty -->
 
 ## Weak host (`claude-haiku-4-5`) — Gate verdict: **PASS**
 
+<!-- pinned:weak-stats -->
 - capability lift significant: `False`
 - discipline lift significant: `True`
 - status-bucket better (package vs vanilla): `False`
@@ -82,6 +86,7 @@
 - Arms: vanilla (plugin off) · package (real plugin) · package-rdp (plugin + RDP rules) · placebo (plugin off + equal-length inert prose).
 - Corpus: `internal/bench/corpora/ab-trackb-v2.yaml` (5 trap archetypes). Scoring: `bench_ab_scoring_v2.py` (deterministic, no LLM judge).
 - Roadmap: `agents/roadmaps/road-to-discipline-axis-benchmark.md`.
+<!-- /pinned:weak-stats -->
 
 ## Cost-factor sweep (`claude-haiku-4-5`) — lift per loaded-context cost
 
@@ -93,12 +98,16 @@
 > (`rules_subset_text()` in `bench_ab_v2_run.ts`, tier membership from
 > `dist/router.json`).
 
+<!-- pinned:cost-factor-table -->
 | arm | loaded content | injected chars | mean tokens/run | cost factor | mean discipline | lift vs vanilla |
 |---|---|---|---|---|---|---|
 | `vanilla` | none | 0 | 103,319 | 1.0× | 0.458 | — |
-| `rules-balanced` | kernel + tier 1 (shipped `balanced` profile) | 99,347 | 303,186 | **2.9×** | 0.417 | −0.042 (p=0.81, **NULL**) |
-| `rules-kernel-dc` | kernel (9 rules) + `downstream-changes` | 31,220 | 344,483 | **3.3×** | 0.917 | **+0.458 (p=0.0135, significant)** |
-| `package` | full plugin | 0 (plugin) | 1,210,078 | **11.7×** | 1.000 | +0.542 (p=0.0017, significant) |
+| `rules-balanced` | kernel + tier 1 (shipped `balanced` profile) | 98,825 | 303,186 | **2.9×** | 0.417 | −0.042 (p=0.8127, **NULL**) |
+| `rules-kernel-dc` | kernel (9 rules) + `downstream-changes` | 30,698 | 344,483 | **3.3×** | 0.917 | **+0.458 (p=0.0135, significant)** |
+| `package` | full plugin | 0 | 1,210,078 | **11.7×** | 1.000 | **+0.542 (p=0.0017, significant)** |
+
+(generated from the pinned report — curated labels from `docs/benchmark.pinned.yml`)
+<!-- /pinned:cost-factor-table -->
 
 Residual of the full package over `rules-kernel-dc`: Δ=+0.083, Wilcoxon p=0.37
 (only 2 discordant pairs) — **not significant**.
@@ -223,11 +232,15 @@ strong = ceiling null · GPT weak = failed replication (confounded surface).
 
 ### Table — `package` vs `vanilla` (n=84 pairs, host `sonnet`)
 
+<!-- pinned:strong-table -->
 | axis | vanilla | package | Δ | test |
 |---|---|---|---|---|
 | capability (pass-rate) | 94% | 89% | −5pp | McNemar p=0.125, h=-0.174 |
 | discipline (0–1) | 0.929 | 0.929 | +0.000 | Wilcoxon p=1.0, rb=0.0 (n≠0=5) |
 | mean tokens/run | 185,584 | 929,716 | +744,132 (~5×) | — |
+
+(host `sonnet`, n=84 pairs — generated from the pinned report)
+<!-- /pinned:strong-table -->
 
 - Report: `internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json` (A6 of `road-to-final-state-and-market-readiness.md`).
 - Methodology: identical to the weak-host section (pinned host, deterministic scorer, paired design); the only change is the host model and the full-corpus scope.

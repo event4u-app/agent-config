@@ -42,6 +42,32 @@ Only automatic response to a transient failure; structural/semantic errors (e.g.
 `BLOCKED` envelope) do **not** trigger a downshift — escalate to the orchestrator
 immediately.
 
+## Failure-type stop — the N=3 budget applied per subagent type
+
+Two consecutive **verification-failed** returns from one subagent type in a
+session exhaust that type's dispatch budget: 2 failures + escalation ARE the
+three N=3 attempts — an application of that budget at type granularity,
+**not a new mechanism, not a circuit breaker**. On fire the orchestrator:
+
+1. stops dispatching that type for the rest of the session,
+2. surfaces both failed returns to the human,
+3. runs the remaining slices in-session.
+
+Iron Law below unchanged — no automatic cohort-disable; the stop is
+session-scoped orchestrator state, never a persisted flip. Deterministic
+reference: `typeStop()`.
+
+## Ordered-slice dependency gate (do-in-steps)
+
+An ordered slice **declares its parent**; no slice dispatches before the
+parent's return is verified by the orchestrator. Makes the implicit
+`do-in-steps` contract ("step N output → judge → step N+1 input") explicit
+and checkable: `sliceDispatchAllowed(declaredParent, verifiedReturns)`
+refuses dispatch while the parent lacks a verified return in session state.
+Root / independent slices (no declared parent) always pass. A refused slice
+is not an error — the ordering contract doing its job; verify (or revise)
+the parent first.
+
 ## Rollback guardrails — surfaced, not auto-disabled
 
 ```
@@ -74,7 +100,8 @@ This is the canonical disable — no code change, effective on the next run.
 ## Reference implementation
 
 [`src/scripts/_lib/subagent_steering.ts`](../../../../src/scripts/_lib/subagent_steering.ts)
-(`isLayerDisabled`, `budgetHalt`, `breachedGuardrails`), covered by
+(`isLayerDisabled`, `budgetHalt`, `typeStop`, `sliceDispatchAllowed`,
+`breachedGuardrails`), covered by
 [`tests/scripts/_lib_subagent_steering.test.ts`](../../../../tests/scripts/_lib_subagent_steering.test.ts).
 
 ## Related

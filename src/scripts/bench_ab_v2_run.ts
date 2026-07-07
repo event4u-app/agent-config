@@ -32,8 +32,18 @@
  * Cost controls inherited: --model pin (sonnet), --max-budget-usd cap. Cheap-by-
  * construction: the v2 fixtures are tiny, so per-run tokens are far below the v1
  * big-repo tasks.
+ *
+ * Checkpoint / resume (2026-07): every completed run (task × arm × seed) is
+ * appended to a JSONL checkpoint under reports/ab-v2/checkpoints/, keyed by a
+ * hash of the run configuration. A killed sweep restarted with the SAME flags
+ * resumes from the checkpoint instead of re-spending the completed runs (a
+ * 117/180 kill previously burned the whole sweep — results lived only in
+ * memory until the final report write). The checkpoint is deleted after the
+ * paired report is written, so a finished sweep leaves no residue. Opt out
+ * with --no-checkpoint; force a from-scratch run with --fresh.
  */
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -55,6 +65,7 @@ const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
+const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
 // CRITICAL (2026-06-15): clones MUST live OUTSIDE the agent-config repo. A clone
 // under the repo lets Claude discover the repo's own project surface (CLAUDE.md /
 // AGENTS.md / .claude/rules+skills) walking up from the cwd — so the `vanilla`
@@ -94,7 +105,7 @@ interface ArmSpec {
 // shipped `balanced` router profile (which does NOT include downstream-changes
 // — tier_2 — so this arm also tests whether that profile cut loses the lift).
 // Both are opt-in: NOT in the default arm list; existing runs unchanged.
-const ARMS: Record<string, ArmSpec> = {
+export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
@@ -610,6 +621,192 @@ export function run_one_recursive(
     };
 }
 
+// ── checkpoint / resume ─────────────────────────────────────────────────────
+//
+// A sweep of tasks × arms × seeds can run for hours; without a checkpoint, a
+// kill (manual stop, harness timeout, machine sleep) loses EVERY completed run
+// because results only exist in memory until the single final report write.
+// The checkpoint is a JSONL file (one line per completed run) so each write is
+// a single atomic-enough append and a truncated tail line (killed mid-write)
+// is simply skipped on load. The file is keyed by a hash of the run config —
+// a restart with different flags gets a different checkpoint and never mixes
+// results from an incompatible sweep.
+
+/** Stable id key for one run inside a sweep. */
+export function run_key(task_id: string, arm: string, seed: number): string {
+    return `${task_id}|${arm}|${seed}`;
+}
+
+/**
+ * Hash of the sweep configuration — everything that changes what a run means.
+ * Same flags → same key → resume; any config change → fresh checkpoint file.
+ */
+export function checkpoint_key(cfg: {
+    corpus: string;
+    model: string;
+    seeds: number;
+    arms: string[];
+    budget: number;
+    timeout: number;
+    host: string;
+    task_ids: string[];
+}): string {
+    const stable = JSON.stringify([
+        cfg.corpus,
+        cfg.model,
+        cfg.seeds,
+        cfg.arms,
+        cfg.budget,
+        cfg.timeout,
+        cfg.host,
+        cfg.task_ids,
+    ]);
+    return createHash('sha256').update(stable).digest('hex').slice(0, 16);
+}
+
+/**
+ * JSON round-trip loses the PyFloat wrapper (1.0 parses back as 1), which
+ * would break the byte-parity float rendering of the final report on resume.
+ * freeze/thaw make the checkpoint lossless: PyFloat → {"__pyfloat__": n} on
+ * write, restored to PyFloat on load.
+ */
+export function freeze_result(v: unknown): unknown {
+    if (v instanceof PyFloat) {
+        return { __pyfloat__: v.value };
+    }
+    if (Array.isArray(v)) {
+        return v.map((x) => freeze_result(x));
+    }
+    if (v && typeof v === 'object') {
+        const out: Record<string, unknown> = {};
+        for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+            out[k] = freeze_result(val);
+        }
+        return out;
+    }
+    return v;
+}
+
+export function thaw_result(v: unknown): unknown {
+    if (Array.isArray(v)) {
+        return v.map((x) => thaw_result(x));
+    }
+    if (v && typeof v === 'object') {
+        const o = v as Record<string, unknown>;
+        const keys = Object.keys(o);
+        if (keys.length === 1 && keys[0] === '__pyfloat__' && typeof o['__pyfloat__'] === 'number') {
+            return new PyFloat(o['__pyfloat__']);
+        }
+        const out: Record<string, unknown> = {};
+        for (const [k, val] of Object.entries(o)) {
+            out[k] = thaw_result(val);
+        }
+        return out;
+    }
+    return v;
+}
+
+/**
+ * Load completed runs from a checkpoint file. Tolerant by design: a missing
+ * file → empty map; an unparseable line (truncated tail from a mid-write
+ * kill) → skipped; a duplicate key → last line wins.
+ */
+export function load_checkpoint(file: string): Map<string, Dict> {
+    const map = new Map<string, Dict>();
+    let raw: string;
+    try {
+        raw = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return map;
+    }
+    for (const line of raw.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+            continue;
+        }
+        let entry: unknown;
+        try {
+            entry = JSON.parse(trimmed);
+        } catch {
+            continue; // truncated tail — the run it held simply re-executes
+        }
+        if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+            const e = entry as Record<string, unknown>;
+            if (typeof e['key'] === 'string' && e['result'] && typeof e['result'] === 'object') {
+                map.set(e['key'], thaw_result(e['result']) as Dict);
+            }
+        }
+    }
+    return map;
+}
+
+/** Append one completed run to the checkpoint (single-line atomic append). */
+export function append_checkpoint(file: string, key: string, result: Dict): void {
+    fs.appendFileSync(file, JSON.stringify({ key, result: freeze_result(result) }) + '\n', {
+        encoding: 'utf-8',
+    });
+}
+
+export interface CheckpointIO {
+    /** Checkpoint file to append completed runs to (created on first append). */
+    path: string;
+    /** Runs already completed by a prior (killed) sweep — reused, not re-run. */
+    completed: Map<string, Dict>;
+}
+
+/**
+ * The sweep loop, extracted from main() with an injectable run function so the
+ * resume behaviour is testable without live model calls. Semantics with no
+ * checkpoint are byte-identical to the pre-checkpoint loop (same stderr
+ * progress lines, same record shape).
+ */
+export function collect_records(
+    tasks: Dict[],
+    arms: string[],
+    seeds: number,
+    run_fn: (task: Dict, arm: string, seed: number) => Dict,
+    ckpt: CheckpointIO | null = null,
+    log: (msg: string) => void = (m) => process.stderr.write(m),
+): { records: Dict[]; executed: number; reused: number } {
+    const total = tasks.length * arms.length * seeds;
+    let done = 0;
+    let executed = 0;
+    let reused = 0;
+    const records: Dict[] = [];
+    for (const task of tasks) {
+        const per_arm: Record<string, Dict[]> = {};
+        for (const arm of arms) {
+            const seed_runs: Dict[] = [];
+            for (let seed = 0; seed < seeds; seed += 1) {
+                done += 1;
+                const key = run_key(String(task['id']), arm, seed);
+                const cached = ckpt?.completed.get(key);
+                if (cached) {
+                    reused += 1;
+                    seed_runs.push(cached);
+                    continue;
+                }
+                log(`[${done}/${total}] ${String(task['id'])} · ${arm} · seed ${seed}\n`);
+                const r = run_fn(task, arm, seed);
+                r['seed'] = seed;
+                executed += 1;
+                if (ckpt) {
+                    append_checkpoint(ckpt.path, key, r);
+                }
+                seed_runs.push(r);
+            }
+            per_arm[arm] = seed_runs;
+        }
+        records.push({
+            id: task['id'],
+            archetype: task['archetype'],
+            rule: task['rule'],
+            arms: per_arm,
+        });
+    }
+    return { records, executed, reused };
+}
+
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
@@ -666,35 +863,49 @@ export function main(argv: string[] | null = null): number {
     const placebo_chars = Math.max(rdp_text.length, 2000);
 
     const total = tasks.length * arms.length * args.seeds;
-    let done = 0;
-    const records: Dict[] = [];
-    for (const task of tasks) {
-        const per_arm: Record<string, Dict[]> = {};
-        for (const arm of arms) {
-            const seed_runs: Dict[] = [];
-            for (let seed = 0; seed < args.seeds; seed += 1) {
-                done += 1;
-                process.stderr.write(`[${done}/${total}] ${String(task['id'])} · ${arm} · seed ${seed}\n`);
-                const r = run_one(task, arm, {
-                    model: args.model,
-                    max_budget,
-                    timeout: args.timeout,
-                    placebo_chars,
-                    sp_dir,
-                    host: args.host,
-                });
-                r['seed'] = seed;
-                seed_runs.push(r);
-            }
-            per_arm[arm] = seed_runs;
-        }
-        records.push({
-            id: task['id'],
-            archetype: task['archetype'],
-            rule: task['rule'],
-            arms: per_arm,
+
+    let ckpt: CheckpointIO | null = null;
+    if (args.checkpoint) {
+        const key = checkpoint_key({
+            corpus: 'ab-trackb-v2',
+            model: args.model,
+            seeds: args.seeds,
+            arms,
+            budget: args.budget,
+            timeout: args.timeout,
+            host: args.host,
+            task_ids: tasks.map((t) => String(t['id'])),
         });
+        const ckpt_path = path.join(CHECKPOINTS_DIR, `${key}.jsonl`);
+        fs.mkdirSync(CHECKPOINTS_DIR, { recursive: true });
+        if (args.fresh && fs.existsSync(ckpt_path)) {
+            fs.rmSync(ckpt_path);
+        }
+        const completed = load_checkpoint(ckpt_path);
+        if (completed.size > 0) {
+            process.stderr.write(
+                `bench_ab_v2: resuming — ${completed.size}/${total} runs already complete ` +
+                    `(checkpoint ${_relToRootPosix(ckpt_path)}; use --fresh to discard)\n`,
+            );
+        }
+        ckpt = { path: ckpt_path, completed };
     }
+
+    const { records } = collect_records(
+        tasks,
+        arms,
+        args.seeds,
+        (task, _arm, _seed) =>
+            run_one(task, _arm, {
+                model: args.model,
+                max_budget,
+                timeout: args.timeout,
+                placebo_chars,
+                sp_dir,
+                host: args.host,
+            }),
+        ckpt,
+    );
 
     const stamp = v1.utc_stamp();
     const payload: Dict = {
@@ -711,6 +922,11 @@ export function main(argv: string[] | null = null): number {
     };
     const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired.json`);
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
+    // The paired report now holds everything — retire the checkpoint so a
+    // finished sweep leaves no residue and a later identical sweep starts fresh.
+    if (ckpt && fs.existsSync(ckpt.path)) {
+        fs.rmSync(ckpt.path);
+    }
     process.stdout.write(
         `bench_ab_v2: wrote ${_relToRootPosix(out)} ` + `(${records.length} tasks, ${total} runs)\n`,
     );
@@ -729,6 +945,8 @@ interface ParsedArgs {
     timeout: number;
     mode: string;
     host: string;
+    checkpoint: boolean;
+    fresh: boolean;
 }
 
 class ArgExit extends Error {}
@@ -745,8 +963,10 @@ function parse_args(argv: string[]): ParsedArgs {
         timeout: 180,
         mode: 'live',
         host: 'claude',
+        checkpoint: true,
+        fresh: false,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -809,6 +1029,10 @@ function parse_args(argv: string[]): ParsedArgs {
             out.host = _choice(a.slice('--host='.length), '--host', ['claude', 'codex'], argErr);
         } else if (a.startsWith('--mode=')) {
             out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run'], argErr);
+        } else if (a === '--no-checkpoint') {
+            out.checkpoint = false;
+        } else if (a === '--fresh') {
+            out.fresh = true;
         } else {
             argErr(`unrecognized arguments: ${a}`);
         }
@@ -909,7 +1133,7 @@ function _pyNumStr(x: number): string {
 
 // ── JSON byte-parity (json.dumps(payload, indent=2)) ──────────────────────
 
-class PyFloat {
+export class PyFloat {
     constructor(readonly value: number) {}
 }
 

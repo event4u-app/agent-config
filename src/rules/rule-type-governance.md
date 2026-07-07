@@ -6,10 +6,8 @@ triggers:
   - path_prefix: ".agent-src.uncondensed/rules/"
 routes_to:
   - "guideline:agent-infra/rule-type-governance"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Rule Type Governance

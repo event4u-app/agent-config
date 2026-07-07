@@ -60,3 +60,11 @@ already mitigated, DONE. Otherwise DONE_WITH_CONCERNS.
 A step that returns BLOCKED stops the chain. The orchestrator does not
 "jump ahead" or re-order — it surfaces the BLOCKED envelope to the user
 and waits.
+
+## Dependency gate
+
+Every step after the first declares its parent (the preceding step). A
+step MUST NOT dispatch before its parent's return passed the judge —
+deterministic reference: `sliceDispatchAllowed()` in
+`src/scripts/_lib/subagent_steering.ts`, contract in
+[`subagent-steering § Ordered-slice dependency gate`](../../../contexts/execution/subagent-steering.md).

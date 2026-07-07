@@ -16,6 +16,23 @@
  *   ./scripts-run src/scripts/check_token_quality_golden
  *   ./scripts-run src/scripts/check_token_quality_golden --json
  *   ./scripts-run src/scripts/check_token_quality_golden --require-complete
+ *   ./scripts-run src/scripts/check_token_quality_golden --scope consumer
+ *
+ * Scope-aware coverage (road-to-golden-set-coverage Phase 0): `--scope
+ * consumer|maintainer|all` filters the coverage universe by the router's v2
+ * `workspaces:` fields — consumer = kernel + every rule NOT exclusively
+ * `agent-config-maintainer`; maintainer = the exclusively-maintainer rest;
+ * `all` (default) = today's behaviour. The consumer thin/scoped flips gate on
+ * `--require-complete --scope consumer`; a maintainer-side flip would gate on
+ * `--scope all`.
+ *
+ * Prompt↔trigger falsifiability (Phase 3): every tagged rule must have ≥1
+ * router trigger the task actually exercises — keyword/phrase = substring of
+ * the prompt; intent = every alpha word (>2 chars) present (trigger_coverage
+ * semantics); path_prefix/file_pattern/command are satisfiable via the
+ * optional per-task `context_files:` / `command:` fields. Kernel rules always
+ * fire. "Covered" therefore means FIRES, not mentioned. Structural check —
+ * always on.
  *
  * Exit codes: 0 valid (scaffold or complete) · 1 file error · 2 invalid / incomplete-when-required.
  */
@@ -37,6 +54,8 @@ const LABEL_STATUS = ['stub', 'labelled'];
 
 type Json = Record<string, unknown>;
 
+export type Scope = 'consumer' | 'maintainer' | 'all';
+
 /** Collect every rule id from the router (kernel strings + tier_* objects). */
 export function router_rule_ids(router: Json): Set<string> {
   const ids = new Set<string>();
@@ -53,6 +72,102 @@ export function router_rule_ids(router: Json): Set<string> {
   return ids;
 }
 
+/**
+ * Rule universe for a scope, from the router's v2 `workspaces:` fields.
+ * Kernel is always consumer-facing (it ships unconditionally). A non-kernel
+ * rule is maintainer-scope iff its workspaces are exactly
+ * ['agent-config-maintainer']; missing/empty workspaces count as consumer
+ * (fail-safe, mirrors the projection filter).
+ */
+export function scoped_rule_ids(router: Json, scope: Scope): Set<string> {
+  const all = router_rule_ids(router);
+  if (scope === 'all') return all;
+  const kernel = new Set(Array.isArray(router.kernel) ? (router.kernel as string[]) : []);
+  const out = new Set<string>();
+  for (const key of ['tier_1', 'tier_2']) {
+    const arr = router[key];
+    if (!Array.isArray(arr)) continue;
+    for (const entry of arr) {
+      const obj = entry as Json;
+      const id = obj.id as string;
+      const ws = Array.isArray(obj.workspaces) ? (obj.workspaces as string[]) : [];
+      const maintainerOnly = ws.length === 1 && ws[0] === 'agent-config-maintainer';
+      if (scope === 'consumer' ? !maintainerOnly : maintainerOnly) out.add(id);
+    }
+  }
+  if (scope === 'consumer') for (const k of kernel) out.add(k);
+  return out;
+}
+
+/** Router entries (non-kernel) as id → triggers, for the fires-check. */
+export function router_triggers(router: Json): Map<string, Array<Record<string, string>>> {
+  const map = new Map<string, Array<Record<string, string>>>();
+  for (const key of ['tier_1', 'tier_2']) {
+    const arr = router[key];
+    if (!Array.isArray(arr)) continue;
+    for (const entry of arr) {
+      const obj = entry as Json;
+      map.set(obj.id as string, Array.isArray(obj.triggers) ? (obj.triggers as Array<Record<string, string>>) : []);
+    }
+  }
+  return map;
+}
+
+// trigger_coverage.ts word semantics: lowercase alpha-led tokens, len > 2.
+const _WORD = /[a-z][a-z0-9_]+/g;
+
+function _tokens(text: string): Set<string> {
+  const out = new Set<string>();
+  const low = text.toLowerCase();
+  _WORD.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = _WORD.exec(low)) !== null) {
+    if (m[0].length > 2) out.add(m[0]);
+  }
+  return out;
+}
+
+/**
+ * Whether a task exercises ≥1 trigger of the rule (prompt↔trigger
+ * falsifiability, Phase 3). Kernel rules always fire.
+ */
+export function task_fires_rule(
+  task: { prompt: string; context_files?: string[]; command?: string },
+  ruleId: string,
+  router: Json,
+): boolean {
+  const kernel = new Set(Array.isArray(router.kernel) ? (router.kernel as string[]) : []);
+  if (kernel.has(ruleId)) return true;
+  const triggers = router_triggers(router).get(ruleId) ?? [];
+  const low = task.prompt.toLowerCase();
+  const toks = _tokens(task.prompt);
+  const files = Array.isArray(task.context_files) ? task.context_files : [];
+  const cmd = typeof task.command === 'string' ? task.command : '';
+  for (const trig of triggers) {
+    if ('keyword' in trig || 'phrase' in trig) {
+      const needle = String(trig.keyword ?? trig.phrase).toLowerCase();
+      if (needle && low.includes(needle)) return true;
+    } else if ('intent' in trig) {
+      const words = _tokens(String(trig.intent));
+      if (words.size > 0 && [...words].every((w) => toks.has(w))) return true;
+    } else if ('path_prefix' in trig) {
+      const prefix = String(trig.path_prefix);
+      if (files.some((f) => f.startsWith(prefix))) return true;
+    } else if ('file_pattern' in trig) {
+      const pat = String(trig.file_pattern);
+      // Glob-lite: '*' matches any run; anchor on basename like Cursor does.
+      const re = new RegExp('^' + pat.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$');
+      if (files.some((f) => re.test(f) || re.test(path.basename(f)))) return true;
+    } else if ('command' in trig) {
+      const c = String(trig.command);
+      if (cmd && (cmd === c || cmd === `/${c.replace(/^\//, '')}` || cmd.replace(/^\//, '') === c.replace(/^\//, ''))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export interface GoldenReport {
   ok: boolean;
   errors: string[];
@@ -60,6 +175,7 @@ export interface GoldenReport {
   labelled: number;
   stubs: number;
   covered: number;
+  covered_ids: string[];
   uncovered: string[];
   scenarios: Record<string, number>;
   missing_scenarios: string[];
@@ -73,8 +189,13 @@ function _isTodoRubric(rubric: unknown): boolean {
   );
 }
 
-/** Pure validation + coverage. `ruleIds` is the authoritative rule universe. */
-export function validate(corpus: Json, ruleIds: Set<string>): GoldenReport {
+/**
+ * Pure validation + coverage. `ruleIds` is the authoritative rule universe
+ * (scope-filtered by the caller). When `router` is provided, the
+ * prompt↔trigger falsifiability check runs: a tagged rule whose triggers the
+ * task provably does NOT exercise is a structural error.
+ */
+export function validate(corpus: Json, ruleIds: Set<string>, router: Json | null = null): GoldenReport {
   const errors: string[] = [];
   const tasks = Array.isArray(corpus.tasks) ? (corpus.tasks as Json[]) : null;
   if (corpus.corpus_id !== 'token-quality-golden') {
@@ -89,6 +210,7 @@ export function validate(corpus: Json, ruleIds: Set<string>): GoldenReport {
       labelled: 0,
       stubs: 0,
       covered: 0,
+      covered_ids: [],
       uncovered: [...ruleIds].sort(),
       scenarios: {},
       missing_scenarios: [...REQUIRED_SCENARIOS],
@@ -116,8 +238,33 @@ export function validate(corpus: Json, ruleIds: Set<string>): GoldenReport {
     for (const r of rules) {
       if (typeof r !== 'string' || !ruleIds.has(r)) {
         errors.push(`${where}: unknown rule id ${JSON.stringify(r)}`);
-      } else {
-        covered.add(r);
+        continue;
+      }
+      covered.add(r);
+      // Prompt↔trigger falsifiability — "covered" must mean FIRES.
+      // `no_fire: true` inverts the check for corner-case tasks that
+      // deliberately test NON-activation (the rule must NOT fire).
+      if (router !== null && typeof task.prompt === 'string') {
+        const fires = task_fires_rule(
+          task as { prompt: string; context_files?: string[]; command?: string },
+          r,
+          router,
+        );
+        const noFire = task.no_fire === true;
+        const kernel = new Set(Array.isArray(router.kernel) ? (router.kernel as string[]) : []);
+        if (noFire && kernel.has(r)) {
+          errors.push(`${where}: no_fire is invalid for kernel rule \`${r}\` (kernel always fires)`);
+        } else if (noFire && fires) {
+          errors.push(
+            `${where}: no_fire task, but rule \`${r}\` DOES fire on the prompt — ` +
+              'the non-activation corner-case is broken',
+          );
+        } else if (!noFire && !fires) {
+          errors.push(
+            `${where}: tagged rule \`${r}\` has no router trigger the prompt exercises ` +
+              '(add a matching keyword/phrase to the prompt, or context_files:/command:, or re-tag)',
+          );
+        }
       }
     }
 
@@ -163,6 +310,7 @@ export function validate(corpus: Json, ruleIds: Set<string>): GoldenReport {
     labelled,
     stubs,
     covered: covered.size,
+    covered_ids: [...covered].sort(),
     uncovered,
     scenarios,
     missing_scenarios,
@@ -180,13 +328,26 @@ function _readJson(file: string): Json | null {
 function main(argv: string[]): number {
   const asJson = argv.includes('--json');
   const requireComplete = argv.includes('--require-complete');
-  for (const a of argv) {
+  let scope: Scope = 'all';
+  for (let i = 0; i < argv.length; i += 1) {
+    const a = argv[i] as string;
+    if (a === '--scope') {
+      const v = argv[(i += 1)];
+      if (v !== 'consumer' && v !== 'maintainer' && v !== 'all') {
+        process.stderr.write('error: --scope must be consumer | maintainer | all\n');
+        return 1;
+      }
+      scope = v;
+      continue;
+    }
     if (!['--json', '--require-complete', '-h', '--help'].includes(a)) {
       process.stderr.write(`error: unknown argument: ${a}\n`);
       return 1;
     }
     if (a === '-h' || a === '--help') {
-      process.stdout.write('usage: check_token_quality_golden [--json] [--require-complete]\n');
+      process.stdout.write(
+        'usage: check_token_quality_golden [--json] [--require-complete] [--scope consumer|maintainer|all]\n',
+      );
       return 0;
     }
   }
@@ -204,21 +365,46 @@ function main(argv: string[]): number {
     return 1;
   }
   const ruleIds = router_rule_ids(router);
-  const report = validate(corpus, ruleIds);
+  // Structure (incl. the fires-check) always validates against the FULL
+  // universe — a maintainer-rule tag is not "unknown" under consumer scope.
+  const report = validate(corpus, ruleIds, router);
 
+  // Coverage accounting runs against the SCOPED universe: which flip is
+  // being gated decides what "complete" means.
+  const scopedIds = scoped_rule_ids(router, scope);
+  const coveredScoped = report.covered_ids.filter((r) => scopedIds.has(r));
+  const uncoveredScoped = [...scopedIds].filter((r) => !report.covered_ids.includes(r)).sort();
+  // Stubs only block completion when they tag in-scope rules.
   const incomplete =
-    report.stubs > 0 || report.uncovered.length > 0 || report.missing_scenarios.length > 0;
+    report.stubs > 0 || uncoveredScoped.length > 0 || report.missing_scenarios.length > 0;
 
   if (asJson) {
-    process.stdout.write(JSON.stringify({ ...report, require_complete: requireComplete, incomplete }, null, 2) + '\n');
+    process.stdout.write(
+      JSON.stringify(
+        {
+          ...report,
+          scope,
+          scope_universe: scopedIds.size,
+          scope_covered: coveredScoped.length,
+          scope_uncovered: uncoveredScoped,
+          require_complete: requireComplete,
+          incomplete,
+        },
+        null,
+        2,
+      ) + '\n',
+    );
   } else {
     for (const e of report.errors) process.stdout.write(`❌  ${e}\n`);
     process.stdout.write(
       `golden set: ${report.task_count} task(s) · ${report.labelled} labelled · ${report.stubs} stub · ` +
         `coverage ${report.covered}/${ruleIds.size} rules\n`,
     );
-    if (report.uncovered.length > 0) {
-      process.stdout.write(`⚠️  ${report.uncovered.length} rule(s) uncovered (operator to add tasks)\n`);
+    process.stdout.write(
+      `scope ${scope}: coverage ${coveredScoped.length}/${scopedIds.size} rules\n`,
+    );
+    if (uncoveredScoped.length > 0) {
+      process.stdout.write(`⚠️  ${uncoveredScoped.length} in-scope rule(s) uncovered (operator to add tasks)\n`);
     }
     if (report.missing_scenarios.length > 0) {
       process.stdout.write(`⚠️  missing required scenario(s): ${report.missing_scenarios.join(', ')}\n`);

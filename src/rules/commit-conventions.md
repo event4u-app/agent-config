@@ -8,10 +8,8 @@ triggers:
   - phrase: "conventional commits"
 routes_to:
   - "skill:conventional-commits-writing"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Commit Conventions

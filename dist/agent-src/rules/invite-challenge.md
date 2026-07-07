@@ -13,10 +13,8 @@ triggers:
   - keyword: "design"
   - keyword: "architecture"
   - keyword: "approach"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # invite-challenge

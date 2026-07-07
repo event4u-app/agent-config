@@ -24,10 +24,8 @@ triggers:
 routes_to:
   - "skill:launch-readiness"
   - "skill:threat-modeling"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Engineering Safety Floor

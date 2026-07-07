@@ -10,6 +10,11 @@ status: ready
 > ordering, RTK everywhere, and the dead-weight removals — each gated on real
 > evidence, never on a chars/4 estimate.
 
+
+> **Program sequencing:** the token program's single critical path + tracking
+> table live in `road-to-token-proof-and-story.md` § Program tracking — this
+> roadmap links there, never copies the sequence.
+
 ## Goal
 
 Reduce always-loaded + per-request tokens (today the package is a measured-by-
@@ -459,6 +464,13 @@ one-off roadmaps.
       promoted to a committed phase when ready. Current candidates triaged; the
       tier-conditional rule-loading candidate above was added 2026-07-05 from the
       A6 strong-host honest-null. -->
+- [x] Triage: golden-set coverage for the 54 exclusively-maintainer rules
+      (~15–20 multi-rule-tagged tasks: roadmap mechanics, council flow,
+      artifact governance).
+      <!-- PARKED 2026-07-07: promote ONLY if a maintainer-side thin/tier flip
+      is ever scheduled — until then no consumer of this coverage exists.
+      Replaces the deleted golden-set-coverage maintainer track; verdict in
+      agents/settings/contexts/token-program-integration-verdict.md. -->
 
 **Exit:** each candidate is promoted to a phase or marked `[-]` with a reason; no
 stale candidates.
@@ -487,5 +499,5 @@ stale candidates.
   1. Build the held-out golden set of ~30 tasks spanning all 88 rules (see Phase 0 Step 1 comment — run the LIVE paired judge with `ANTHROPIC_API_KEY` set, estimated cost US$3–5).
   2. Run: `task bench:ab:value:quick` (or the full bench target) to produce `internal/bench/reports/quality-run.json`.
   3. Verify the paired judge output has the expected shape (model A vs model B, per-task scores, aggregate win rate).
-  4. The output file is the unlock — once it exists, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
-- **Resolved when:** `ls internal/bench/reports/quality-run.json` exists and `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0.
+  4. The hardened gate is the unlock — once it exits 0 on the real report, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
+- **Resolved when:** `./scripts-run src/scripts/check_quality_regression --as-flip-gate` exits 0 AND `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0. (Hardened 2026-07-07 per `road-to-token-proof-and-story` Phase 0 — a dry-run mock or an inconclusive report is NOT an unlock; the old "file exists" criterion was fakeable.)

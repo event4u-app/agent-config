@@ -5,12 +5,12 @@
 Artefacts that maintain this package (agent-config itself).
 
 - **id**: `meta`
-- **version**: `7.5.0`
+- **version**: `8.1.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 255
+- **artefacts**: 251
 
-## Commands (123)
+## Commands (124)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -76,6 +76,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 - **`optimize-agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
 - **`optimize-augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
+- **`optimize-project`** — Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'.
 - **`optimize-prompt`** — Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt.
 - **`optimize-rtk`** — Create or optimize project-local rtk filters based on the actual toolchain
 - **`optimize-skills`** — Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
@@ -136,7 +137,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`video-storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 - **`work`** — Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 
-## Rules (65)
+## Rules (60)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -162,13 +163,10 @@ Artefacts that maintain this package (agent-config itself).
 - **`fast-path-marker-visibility`** — Low-impact council fast-path — surface the transparency marker verbatim as the reply opener
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead
 - **`guidelines`** — Writing or reviewing code — check relevant guideline before writing or reviewing code
-- **`image-likeness-and-rights`** — AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent
 - **`invite-challenge`** — Before executing a complex plan — ask 'am I solving the right problem?' and pause for confirmation
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
 - **`low-impact-corpus-privacy-floor`** — Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor
 - **`markdown-safe-codeblocks`** — Generating markdown with code blocks — prevent broken nesting
-- **`media-governance-routing`** — Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure)
-- **`media-sync-ground-truth`** — Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
 - **`model-recommendation`** — Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier
 - **`no-attribution-footers`** — PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers
@@ -181,7 +179,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
-- **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable
 - **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open
@@ -199,7 +196,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`token-efficiency`** — CLI runs, log fetches, replies — redirect verbose output, minimize tool calls, stay concise
 - **`token-optimizer-maintenance`** — Editing a token-optimizer-cited asset — sync the catalog row in the same commit
 - **`tool-safety`** — Skill uses external tools — enforce allowlist, deny-by-default, no hidden credential patterns
-- **`ui-audit-gate`** — Writing/editing UI — components, screens, layouts, design tokens — require existing-ui-audit findings first
 - **`upstream-proposal`** — After creating/improving a skill/rule/guideline/command — ask about upstreaming it
 - **`user-interaction`** — Questions, options, progress summaries — numbered-options Iron Law, single-recommendation rule
 - **`user-interrupt-priority`** — New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming

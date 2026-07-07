@@ -12,10 +12,8 @@ triggers:
   - keyword: "already decided"
   - keyword: "locked decision"
   - keyword: "budget blocks"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Decision Revisit Gate

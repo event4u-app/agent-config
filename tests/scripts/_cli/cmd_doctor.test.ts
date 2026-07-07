@@ -44,7 +44,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { main } from '../../../src/scripts/_cli/cmd_doctor.js';
+import { _parse, main } from '../../../src/scripts/_cli/cmd_doctor.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
@@ -509,5 +509,43 @@ describe('doctor — wizard-state check', () => {
     });
     it('totalSteps is zero → fail', () => {
         parityWithState('{"step":1,"partial":{},"totalSteps":0}');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// --ci contract (road-to-flow-learnings Phase 0).
+// ---------------------------------------------------------------------------
+
+describe('doctor — --ci contract', () => {
+    it('--ci parses and is off by default', () => {
+        expect(_parse(['--ci']).ci).toBe(true);
+        expect(_parse([]).ci).toBe(false);
+    });
+
+    it('usage advertises --ci', () => {
+        const t = runTs(['--help'], tmp);
+        expect(t.status).toBe(0);
+        expect(t.stdout).toContain('[--ci]');
+    });
+
+    it('--ci emits a JSON payload and folds check failures into the exit code (bridge consumer)', () => {
+        const b = bridgeRepo();
+        try {
+            const t = runTs(['--ci'], b, { AGENT_CONFIG_PROJECT_ROOT: b });
+            const payload = JSON.parse(t.stdout) as {
+                checks: Array<{ status: string }>;
+            };
+            const anyFail = payload.checks.some((c) => c.status === 'fail');
+            expect(t.status).toBe(anyFail ? 1 : 0);
+        } finally {
+            fs.rmSync(b, { recursive: true, force: true });
+        }
+    });
+
+    it('--ci keeps exit 2 for an unresolvable consumer (no lockfile, no bridge)', () => {
+        const t = runTs(['--ci'], tmp, { AGENT_CONFIG_PROJECT_ROOT: tmp });
+        expect(t.status).toBe(2);
+        // Machine-readable even on the unhappy path.
+        expect(() => JSON.parse(t.stdout)).not.toThrow();
     });
 });

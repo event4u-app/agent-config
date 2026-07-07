@@ -9,11 +9,8 @@ triggers:
   - intent: "CI fix progress"
   - keyword: "gh pr comment"
   - keyword: "PullRequestComment"
-workspaces:
-  - agent-config-maintainer
-  - engineering
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # No Unsolicited PR Progress Comments

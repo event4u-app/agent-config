@@ -13,10 +13,8 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
-workspaces:
-  - engineering
-packs:
-  - frontend-design
+workspaces: [engineering]
+packs: [frontend-design]
 ---
 
 # Icon Consistency

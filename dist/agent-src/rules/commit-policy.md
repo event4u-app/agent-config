@@ -5,10 +5,8 @@ description: "Commit policy — never commit and never ask about committing unle
 alwaysApply: true
 load_context:
   - ../contexts/authority/commit-mechanics.md
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Commit Policy
@@ -32,6 +30,16 @@ Exactly four:
 4. **Roadmap authorization** — roadmap lists explicit commit steps and the user invoked roadmap execution.
 
 Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fires on top of any exception — see [`commit-mechanics`](../contexts/authority/commit-mechanics.md) for diff triggers and roadmap-authorized commit flow.
+
+## One-shot authorization is not a standing license
+
+```
+A ONE-OFF AUTHORIZATION IS SPENT ON EXACTLY THAT OPERATION, ONCE.
+IT NEVER BECOMES A STANDING LICENSE FOR LATER COMMITS OR PUSHES.
+EACH FURTHER COMMIT / PUSH NEEDS ITS OWN FRESH, EXPLICIT GO-AHEAD.
+```
+
+"Commit this", "push it", "open the PR", "create the PRs" authorize **that operation, once** — not the commits/pushes that follow later in the **same** task. "Create the PR" is spent on the initial branch + commit + push + PR; the next change (a follow-up fix, a review response, a quality pass, a "while I'm here" cleanup) waits for a new instruction. A task instruction that only asks for **code** ("fix X", "use file Y for tests", "there's a linter error") authorizes the code change **only** — never a commit or push. Re-using an earlier authorization for a later operation is exactly the inference (exception 2 misread as "standing") this rule forbids.
 
 ## NEVER ask about committing
 
