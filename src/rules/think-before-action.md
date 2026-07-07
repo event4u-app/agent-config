@@ -16,6 +16,7 @@ triggers:
   - keyword: "debug"
   - keyword: "refactor"
   - keyword: "fix"
+  - keyword: "optimize"
 workspaces:
   - engineering
 packs:

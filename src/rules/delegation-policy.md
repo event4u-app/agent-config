@@ -11,6 +11,8 @@ triggers:
   - phrase: "review these"
   - phrase: "analyze the codebase"
   - phrase: "for each"
+  - keyword: "analyse"
+  - keyword: "analyze"
 load_context:
   - "contexts/execution/auto-orchestration-activation.md"
   - "contexts/execution/auto-dispatch-classification.md"

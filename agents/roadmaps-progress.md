@@ -6,17 +6,17 @@
 
 ## Overall
 
-**42 / 112 steps done · 38%**
+**51 / 112 steps done · 46%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ░░░░░░░░░░ 0% |
+| 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 9 | 9 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | █████░░░░░ 50% |
 | 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 9 | 16 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 64% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
 | 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 22 | 4 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ██░░░░░░░░ 15% |
@@ -28,14 +28,14 @@
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
-**Road to golden-set coverage — make every flip verdict mean something** — 0 / 18 done (0%)
+**Road to golden-set coverage — make every flip verdict mean something** — 9 / 18 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Scope-aware coverage accounting | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | Trigger-anchored stub drafting (consumer rules, autonomous) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | Scope-aware coverage accounting | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1 | Trigger-anchored stub drafting (consumer rules, autonomous) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Operator labelling sprint (the human gate) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Prompt↔trigger falsifiability linter | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+| 3 | Prompt↔trigger falsifiability linter | 🟡 in progress | 6 | 3 | 0 | 0 | 33% |
 
 <a id="blockers-road-to-golden-set-coverage"></a>
 **Blockers**

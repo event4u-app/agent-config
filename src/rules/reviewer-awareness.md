@@ -7,6 +7,7 @@ triggers:
   - phrase: "suggest reviewers"
   - phrase: "risk hotspot"
   - phrase: "ownership map"
+  - phrase: "review this pr"
 routes_to:
   - "skill:review-routing"
 workspaces:

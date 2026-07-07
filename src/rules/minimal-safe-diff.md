@@ -7,6 +7,8 @@ triggers:
   - intent: "writing a diff"
   - intent: "reviewing a diff"
   - keyword: "drive-by"
+  - keyword: "rewrite"
+  - keyword: "fix"
 workspaces:
   - engineering
 packs:

@@ -9,6 +9,7 @@ triggers:
   - keyword: "tenant"
   - keyword: "secret"
   - keyword: "webhook"
+  - keyword: "password"
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"

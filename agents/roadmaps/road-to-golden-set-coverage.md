@@ -88,16 +88,19 @@ consumer/maintainer projection split (`road-to-request-scoped-rule-load`).
 
 ## Phase 0 — Scope-aware coverage accounting
 
-- [ ] Extend `check_token_quality_golden` with
+- [x] Extend `check_token_quality_golden` with
       `--scope consumer|maintainer|all`: coverage universe = router rules
       filtered by `workspaces:` frontmatter (consumer = not exclusively
       `agent-config-maintainer`). Default `all` (non-breaking). Emit the
       exact consumer-universe count in the report (resolves the 32-vs-37
       draft discrepancy authoritatively).
-- [ ] Report block per scope: covered/uncovered counts + ids; wire the
+      <!-- done 2026-07-07: consumer universe = 77 (not 37 — the misclassification
+      audit reclassified 46 rules into consumer scope; see
+      agents/settings/contexts/consumer-scoping-audit-2026-07-07.md). -->
+- [x] Report block per scope: covered/uncovered counts + ids; wire the
       consumer-scope report into the existing CI scaffold output (report
       only, no new failure).
-- [ ] Document in `TOKEN-QUALITY-GOLDEN-SCHEMA.md`: any consumer-facing flip
+- [x] Document in `TOKEN-QUALITY-GOLDEN-SCHEMA.md`: any consumer-facing flip
       requires `--require-complete --scope consumer`; a maintainer-side flip
       would require `--scope all`.
 
@@ -110,7 +113,7 @@ router; existing CI unchanged.
 Draft structurally-valid stubs for the uncovered consumer rules — prompts
 derived from each rule's actual router triggers so activation is checkable.
 
-- [ ] Cluster plan (target ~18–22 new tasks via multi-rule tagging):
+- [x] Cluster plan (target ~18–22 new tasks via multi-rule tagging):
       - **Safety floors: one dedicated task each** (`engineering-`,
         `finance-`, `legal-`, `strategy-safety-floor`,
         `non-destructive-by-default`, `lethal-trifecta-guard`,
@@ -128,10 +131,14 @@ derived from each rule's actual router triggers so activation is checkable.
         `brand-source-of-truth`.
       - Singles for the remainder (`source-discovery-gate`,
         `linked-projects-onboarding-gate`).
-- [ ] Scenario-mix guard: keep all four types present per scope; add ≥2
+      <!-- done 2026-07-07: 51 stubs covering all 64 uncovered consumer rules
+      (universe grew to 77 post-audit); safety floors + the three domain-safety
+      floors got dedicated tasks; clusters as planned plus the reclassified
+      behavior/routing rules. -->
+- [x] Scenario-mix guard: keep all four types present per scope; add ≥2
       multi-turn and ≥2 conflicting-rule tasks among the new stubs (e.g.
       safety floor vs `direct-answers` tension).
-- [ ] Each stub carries `notes:` citing the rule's Iron-Law line + which
+- [x] Each stub carries `notes:` citing the rule's Iron-Law line + which
       trigger the prompt exercises — operator raw material, not labels.
 
 **Exit:** `--scope consumer` reports full coverage (stubs count for
@@ -163,17 +170,27 @@ program tracking table).
 
 "Covered" must mean the prompt would actually fire the rule.
 
-- [ ] New check in `check_token_quality_golden`: for every task, each tagged
+- [x] New check in `check_token_quality_golden`: for every task, each tagged
       rule must have ≥1 router trigger matched by the task prompt, reusing
       `trigger_coverage.ts` matching semantics (keyword substring / intent
       word-set; `path_prefix`/`file_pattern`/`command` triggers satisfiable
       via an optional per-task `context_files:`/`command:` field — additive
       schema change).
-- [ ] Run against the full set including the 30 existing tasks; fix or
+      <!-- done: + `no_fire: true` for corner-cases that test NON-activation
+      (inverted check); kernel rules always fire. -->
+- [x] Run against the full set including the 30 existing tasks; fix or
       re-tag any nominal-only coverage found (honest finding either way —
       if existing tasks fail, that is a real defect in today's 14/91 claim).
-- [ ] Wire into CI (structure-level, always on — it validates tagging, not
+      <!-- done — honest finding CONFIRMED: 14 of 30 existing tasks had
+      nominal-only coverage. Fixed via 8 real router-trigger gaps closed
+      (password, optimize, rewrite, fix, analyse/analyze, review this pr,
+      api changed, implement/migration), 3 multi-turn prompts completed with
+      their prior-turn context, 1 re-tag (tq-summary-01 output-discipline →
+      direct-answers), 1 no_fire corner-case (tq-subagent-02). -->
+- [x] Wire into CI (structure-level, always on — it validates tagging, not
       labels, so it is autonomous-safe).
+      <!-- done: fires-check runs inside check_token_quality_golden which is
+      already wired into task ci (check-token-quality-golden). -->
 
 **Exit:** every covered rule is trigger-verified; the check fails a
 synthetic mis-tagged fixture.

@@ -8,6 +8,8 @@ triggers:
   - intent: "implement feature"
   - intent: "architectural change"
   - keyword: "refactor"
+  - keyword: "implement"
+  - keyword: "migration"
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
