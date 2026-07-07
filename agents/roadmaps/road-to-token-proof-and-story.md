@@ -111,8 +111,8 @@ The single orchestration surface. Other roadmaps link here, never copy.
       <!-- done 2026-07-07: table + sequence live below (§ Program tracking);
       cross-links added to road-to-token-saving + later/HUMAN-MEASUREMENT;
       request-scoped + golden-set link from their "Covered elsewhere" blocks.
-      road-to-discipline-profile-tiering lives on the parallel PR branch
-      (#758 series) — add its link line on merge. -->
+      road-to-discipline-profile-tiering linked after the origin/main merge
+      brought it into this branch (2026-07-07). -->
 - [x] **Activation end-state (doc + settings contract):** ONE runtime knob
       `discipline_profile: auto|off|essential|full`, shipped default `auto`
       (= ON) once its evidence gates pass; thin projection folds under
