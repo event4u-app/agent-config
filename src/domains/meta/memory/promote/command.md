@@ -116,6 +116,36 @@ schema to write to and record the override in the `source:` block.
 
 Show the YAML draft and ask for confirmation before writing.
 
+### 3b. Contradiction check — durable types only
+
+For the behaviorally load-bearing durable types (`incident-learnings`,
+`product-rules`, `domain-invariants`), run the mechanical contradiction
+detector before writing (same primary key + Jaccard body similarity
+< 0.3 → same topic, different claim):
+
+```bash
+./scripts-run src/scripts/check_memory_contradiction \
+    --type <type> --key <curated id or key field> --body "<draft body>"
+```
+
+- Exit `0` → proceed to Step 4.
+- Exit `1` → a potential contradiction pair was surfaced. **Never
+  auto-resolve** (council REJECT list). Ask the human via the contested
+  flow:
+
+  ```
+  > ⚠️ The draft may contradict an existing durable entry (same key, low similarity).
+  >
+  > 1. Approve new + mark the existing entry `contested` (with provenance: what changed, which session)
+  > 2. Revise the new draft — the existing entry stands
+  > 3. Both are valid in different scopes — narrow the new entry's key and re-check
+  ```
+
+This is a warning surface, not a gate — the human's pick resolves it;
+the detector never blocks a promote on its own. Non-durable types
+(`sessions`-style exploratory content, `recurring-patterns`, …) are
+deliberately not checked — they evolve legitimately.
+
 ### 4. Write the curated entry (content-addressed)
 
 Compute the content hash and write a **one-entry file** at
