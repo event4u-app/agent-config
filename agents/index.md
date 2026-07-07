@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **611 artefacts** in this package.
+Maintainer-facing index of all **612 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -376,7 +376,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (165)
+## Commands (166)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -480,6 +480,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`module`](../src/domains/engineering-base/module/command.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module-create`](../src/domains/engineering-base/module/create/command.md) | cluster: module | Create a new module from .module-template with interactive setup |
 | command | [`module-explore`](../src/domains/engineering-base/module/explore/command.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
+| command | [`optimize-project`](../src/domains/engineering-base/optimize-project/command.md) |  | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
 | command | [`optimize-prompt`](../src/domains/meta/optimize-prompt/command.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize`](../src/domains/meta/optimize/command.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
 | command | [`optimize-agents-dir`](../src/domains/meta/optimize/agents-dir/command.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
