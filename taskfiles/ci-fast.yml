@@ -210,6 +210,11 @@ tasks:
     desc: "Enforce structural reachability of media governance policies — every agents/settings/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/settings/policies/media/README.md § Enforcement model)"
     cmd: ./scripts-run src/scripts/lint_media_policy_linkage {{.QUIET_FLAG}}
 
+  lint-glama-drift:
+    silent: true
+    desc: "Fail if internal/glama/README.md no longer documents the literal commands internal/glama/build|run actually run (see internal/glama/README.md)"
+    cmd: ./scripts-run src/scripts/lint_glama_drift {{.QUIET_FLAG}}
+
   lint-persona-governance:
     silent: true
     desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncondensed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"

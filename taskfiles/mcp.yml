@@ -41,6 +41,11 @@ tasks:
       - docker build -f internal/glama/Dockerfile -t agent-config-mcp-glama-test .
       - docker run --rm agent-config-mcp-glama-test node /app/node_modules/.bin/tsx /app/internal/glama/smoke.ts
 
+  mcp:glama-drift-check:
+    desc: "Fast, Docker-free guard: fail if internal/glama/README.md no longer documents the literal commands internal/glama/build|run actually run."
+    cmds:
+      - ./scripts-run src/scripts/lint_glama_drift
+
   # ---------------------------------------------------------------------------
   # Cloudflare hosted MCP — one-time operator setup.
   #
