@@ -567,6 +567,21 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // the plugin is retired this block disappears with it.
     _refresh_claude_plugin(plugin_steps, runner, out, err);
 
+    // Migration prompt (single-surface model): hooks were wired into
+    // ~/.claude/settings.json by the `global` step above, so an installed
+    // plugin is now a duplicate surface. Surface the one-line removal —
+    // NEVER uninstall autonomously (the plugin is a user-owned surface).
+    if (plugin_steps.length > 0) {
+        _print(
+            out,
+            'ℹ️  Claude Code marketplace plugin detected — deprecated surface. Hooks now ' +
+                'live in ~/.claude/settings.json (wired by the global step above), so the ' +
+                'plugin only duplicates skills/commands. Remove it with:\n' +
+                '    claude plugin uninstall ' +
+                `${claude_plugin.CLAUDE_PLUGIN_ID}@${claude_plugin.CLAUDE_MARKETPLACE_NAME}`,
+        );
+    }
+
     // Bring existing settings files up to the NEW template (additive; the
     // subprocess resolves the freshly installed binary + template).
     _sync_settings_files(sync_targets, runner, out, err);

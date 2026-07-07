@@ -364,11 +364,19 @@ Three classes of install/runtime behaviour look like package bugs but are host-h
 
 | Tool | Install |
 |---|---|
-| **Augment CLI** · **Claude Code** · **Copilot CLI** | [Install →](docs/installation.md) — rules + skills + commands, marketplace-updated |
+| **Augment CLI** · **Copilot CLI** | [Install →](docs/installation.md) — rules + skills + commands, marketplace-updated |
+
+> **Claude Code: the marketplace plugin is deprecated** (single-surface
+> model). The npx/npm file projection now carries content **and** the
+> deterministic hooks (registered in a managed `~/.claude/settings.json`
+> block by `agent-config global` / `upgrade`), so the plugin only duplicates
+> skill/command listings while its git-SHA snapshot rots silently. Existing
+> installs: `claude plugin uninstall agent-config@event4u-agent-config` —
+> `agent-config doctor` flags the duplicate surface.
 
 Keep the global install current with `agent-config upgrade` (latest) or
 `agent-config refresh --global` (same-version re-install); `agent-config doctor`
-flags a missing-from-`PATH` binary or binary↔plugin version drift. See
+flags a missing-from-`PATH` binary or broken hook wiring. See
 [getting-started § Keeping current](docs/getting-started.md#keeping-current) ·
 [Troubleshooting](#troubleshooting).
 
@@ -451,40 +459,47 @@ manifest issues, each with a one-line fix hint.
 
 ### A new command / skill is missing in Claude Code after an upgrade
 
-The optional Claude Code plugin is a **git-SHA snapshot** — Claude Code copies
-the plugin content once at install time and pins it to that commit. Upgrading
-the npm binary (`agent-config upgrade`) refreshes the file projections
-(`~/.claude/`, `~/.cursor/`, …) but the plugin snapshot only moves when the
-plugin itself is updated. `agent-config upgrade` runs that refresh for you;
-if it was skipped or failed, update manually:
+Under the single-surface model, `agent-config upgrade` refreshes the
+`~/.claude/` file projection — that IS the content surface, so a fresh
+session picks the new commands up directly. If commands are still missing,
+the usual cause is a leftover **marketplace plugin**: it is a git-SHA
+snapshot that never moves with the npm upgrade, and it shadows nothing —
+it just lists everything twice while lagging behind. Remove it:
 
 ```bash
-claude plugin marketplace update event4u-agent-config
-claude plugin update agent-config@event4u-agent-config
+claude plugin uninstall agent-config@event4u-agent-config
 ```
 
-Then start a **new** Claude Code session — a running session keeps the old
-snapshot. `agent-config doctor` reports the drift as `claude-plugin`.
+Then start a **new** Claude Code session. `agent-config doctor` reports a
+leftover plugin as `claude-plugin: duplicate surface`; hooks are unaffected
+(they live in a managed `~/.claude/settings.json` block — verify with the
+`hook-wiring` check).
+
+### Skills / commands appear twice in Claude Code
+
+Same cause as above: the deprecated marketplace plugin is installed next to
+the `~/.claude/` file projection, so every skill lists plain **and**
+`agent-config:`-prefixed. Uninstall the plugin (command above) and start a
+new session.
 
 ### `agent-config upgrade` fails with `Unknown argument: --no-ui`
 
 Known bug in 8.2.0: `upgrade` passed a `--no-ui` flag that the install
-orchestrator did not accept yet, so the run aborted before the plugin-refresh
-step. Fixed on `main`; until the next release, work around it with:
+orchestrator did not accept yet, so the run aborted early. Fixed on `main`;
+until the next release, work around it with:
 
 ```bash
 AGENT_CONFIG_NO_UI=1 agent-config global   # refresh the global install, no wizard
-claude plugin marketplace update event4u-agent-config
-claude plugin update agent-config@event4u-agent-config
 ```
 
 ### Upgrade was interrupted (Ctrl-C, wizard closed, step failed)
 
-`upgrade` runs its steps sequentially: npm install → global re-deploy →
-plugin refresh → doctor. An abort mid-run (e.g. Ctrl-C when the setup wizard
-launches) skips everything after that point — most visibly the plugin
-refresh. Re-run `agent-config upgrade`, or run the skipped steps manually
-(see the two sections above).
+Only the initial `npm install -g` hard-aborts an upgrade. Every later step
+(global re-deploy with hook registration, settings sync, wrapper + git-hook
+refresh) runs independently — a single failed step is reported in the
+end-of-run summary instead of silently skipping the rest. Re-run
+`agent-config upgrade` to converge, and use `agent-config doctor` to name
+anything left in a mixed state.
 
 ### `agent-config: command not found` / hooks stopped firing
 

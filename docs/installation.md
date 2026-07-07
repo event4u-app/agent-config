@@ -413,25 +413,24 @@ This is additional to project-installed mode, not a replacement.
 auggie plugin install agent-config@event4u-agent-config
 ```
 
-### Claude Code
+### Claude Code — plugin deprecated (single-surface model)
 
-Two equivalent paths — pick whichever surface you're already in:
+**Do not install the marketplace plugin for Claude Code.** The npx/npm
+global install (`npx -y @event4u/agent-config init`) is the single supported
+surface: it deploys skills/commands/rules to `~/.claude/` **and** registers
+the deterministic hooks in a managed `~/.claude/settings.json` block. The
+plugin would only duplicate every skill/command listing while its git-SHA
+snapshot silently lags each release.
+
+Already have the plugin from an earlier install?
 
 ```bash
-# From your shell (CLI)
-claude plugin install agent-config@event4u-agent-config
+claude plugin uninstall agent-config@event4u-agent-config
 ```
 
-```text
-# From inside Claude Code (slash command)
-/plugin marketplace add event4u-app/agent-config
-/plugin install agent-config@event4u-agent-config
-```
-
-The slash-command path is the canonical Claude Code Plugin Marketplace
-flow ([reference](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces)).
-It pulls the repo via git-clone and reads the skills directly from
-`.claude/skills/` — no separate ZIP download.
+Hooks keep firing after removal (they live in `settings.json`, not the
+plugin); `agent-config doctor` verifies via the `hook-wiring` check and
+flags a leftover plugin as `claude-plugin: duplicate surface`.
 
 ### Copilot CLI
 

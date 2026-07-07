@@ -117,20 +117,20 @@ hook wiring; the sequential-fragility class from 8.2.0 is closed.
 Goal: existing dual-installed users converge on the single surface without
 losing hooks mid-migration.
 
-- [ ] `agent-config doctor`: new `duplicate-surface` check — plugin
+- [x] `agent-config doctor`: new `duplicate-surface` check — plugin
       installed AND projection present → fail with the exact uninstall
       command; `hook-wiring` check — managed hooks present in settings.json
       and binary resolvable on PATH
-- [ ] Migration flow in `upgrade`: when the plugin is detected, wire
+- [x] Migration flow in `upgrade`: when the plugin is detected, wire
       settings-hooks FIRST, verify, then surface the one-line
       `claude plugin uninstall agent-config@event4u-agent-config` prompt
       (never uninstall autonomously — user-owned surface)
-- [ ] Marketplace listing: mark deprecated (README of the plugin manifest
+- [x] Marketplace listing: mark deprecated (README of the plugin manifest
       points to the npx path); delist after the deprecation window decision
-- [ ] Docs sweep: README (§ Plugin-installed, § Troubleshooting),
+- [x] Docs sweep: README (§ Plugin-installed, § Troubleshooting),
       docs/installation.md, docs/getting-started.md § Keeping current,
       MIGRATION.md entry for the transition
-- [ ] Fallback branch (only if Phase 0 refuted hook parity): strip
+- [-] Fallback branch (only if Phase 0 refuted hook parity): strip <!-- skipped: Phase 0 CONFIRMED parity — fallback not needed -->
       `.claude-plugin/skills/` content entries from the manifest instead of
       delisting; plugin ships hooks + agents only; doctor `stale-plugin`
       check downgraded to info (hooks.json is stable, staleness stops
