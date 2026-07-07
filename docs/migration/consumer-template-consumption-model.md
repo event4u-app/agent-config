@@ -1,6 +1,6 @@
 # Consumer Template Consumption Model
 
-> Phase 1 Step 11 of `agents/roadmaps/road-to-typescript-only-scripts.md`.
+> Phase 1 Step 11 of `agents/roadmaps/archive/road-to-typescript-only-scripts.md`.
 > Question: how does `dist/agent-src/templates/scripts/` content reach a consumer
 > project — copied, referenced in place, or symlinked — and what does that mean
 > for the Phase 9 TS migration of the consumer-shipped scripts?

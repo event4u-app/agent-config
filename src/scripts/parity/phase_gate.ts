@@ -2,7 +2,7 @@
 /**
  * phase_gate.ts — Python→TypeScript migration phase gate.
  *
- * Phase 1 Step 10 of `agents/roadmaps/road-to-typescript-only-scripts.md`.
+ * Phase 1 Step 10 of `agents/roadmaps/archive/road-to-typescript-only-scripts.md`.
  *
  * Reads `src/scripts/parity/phase-manifest.json` and enforces:
  *

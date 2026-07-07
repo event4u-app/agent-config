@@ -1,6 +1,6 @@
 # Node Floor Audit
 
-> Phase 1 Step 12 of `agents/roadmaps/road-to-typescript-only-scripts.md`.
+> Phase 1 Step 12 of `agents/roadmaps/archive/road-to-typescript-only-scripts.md`.
 > Decision: which Node.js floor the TS-only script suite supports, where it is
 > enforced, and what CI tests.
 
