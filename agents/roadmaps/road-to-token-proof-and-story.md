@@ -71,14 +71,14 @@ evidence-backed value prop tested at N=1, not the assumed adoption blocker.
 
 ## Phase 0 — Harden the flip gate (small, verified, do first)
 
-- [ ] `check_quality_regression`: hard-fail (exit 2, explicit message) when
+- [x] `check_quality_regression`: hard-fail (exit 2, explicit message) when
       the report carries `dry_run: true` — a mock is never an unlock.
-- [ ] Add `--as-flip-gate` mode: inconclusive ("0 decisive pairs") → exit 2;
+- [x] Add `--as-flip-gate` mode: inconclusive ("0 decisive pairs") → exit 2;
       default CI-inert path keeps exit 0.
-- [ ] Tighten the parent blocker's resolution criterion from "file exists"
+- [x] Tighten the parent blocker's resolution criterion from "file exists"
       to "`check_quality_regression --as-flip-gate` exits 0" (doc edit in
       `road-to-token-saving` § Blockers).
-- [ ] Tests: dry-run fixture → exit 2; all-ties fixture → exit 2 under
+- [x] Tests: dry-run fixture → exit 2; all-ties fixture → exit 2 under
       `--as-flip-gate`, exit 0 without; decisive-pass fixture → exit 0 both.
 
 **Exit:** a mock or inconclusive report can no longer satisfy any flip gate;

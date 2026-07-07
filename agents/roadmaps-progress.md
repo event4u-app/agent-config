@@ -6,10 +6,10 @@
 
 ## Overall
 
-**22 / 112 steps done · 20%**
+**26 / 112 steps done · 23%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   20%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 18 | 0 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ░░░░░░░░░░ 0% |
 | 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 25 | 0 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ░░░░░░░░░░ 0% |
 | 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 22 | 4 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ██░░░░░░░░ 15% |
 | 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 12 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 65% |
 
 ---
@@ -94,11 +94,11 @@
 
 ### [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md)
 
-**Road to token proof and story — orchestrate, prove, activate, adopt** — 0 / 26 done (0%)
+**Road to token proof and story — orchestrate, prove, activate, adopt** — 4 / 26 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Harden the flip gate (small, verified, do first) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Harden the flip gate (small, verified, do first) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | One critical path for six tracks (the program table) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Field evidence: replay + session telemetry | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Public proof refresh (benchmark, claims, release story) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
@@ -136,8 +136,8 @@
     1. Build the held-out golden set of ~30 tasks spanning all 88 rules (see Phase 0 Step 1 comment — run the LIVE paired judge with `ANTHROPIC_API_KEY` set, estimated cost US$3–5).
     2. Run: `task bench:ab:value:quick` (or the full bench target) to produce `internal/bench/reports/quality-run.json`.
     3. Verify the paired judge output has the expected shape (model A vs model B, per-task scores, aggregate win rate).
-    4. The output file is the unlock — once it exists, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
-  - **Resolved when:** `ls internal/bench/reports/quality-run.json` exists and `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0.
+    4. The hardened gate is the unlock — once it exits 0 on the real report, Phase 1 Step 1 + Phase 8 Step 2 can proceed.
+  - **Resolved when:** `./scripts-run src/scripts/check_quality_regression --as-flip-gate` exits 0 AND `npx tsx tests/scripts/bench_ab_integrity.test.ts` exits 0. (Hardened 2026-07-07 per `road-to-token-proof-and-story` Phase 0 — a dry-run mock or an inconclusive report is NOT an unlock; the old "file exists" criterion was fakeable.)
 
 ---
 
