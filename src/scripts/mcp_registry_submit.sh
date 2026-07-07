@@ -132,9 +132,16 @@ cd "$WORKDIR"
 gh repo clone "$FORK_REPO" registry-fork
 cd registry-fork
 
-# Add upstream + sync default branch.
+# Add upstream + sync default branch. `gh repo clone` of a fork already
+# wires an `upstream` remote pointing at the parent — make the add
+# idempotent (set-url) instead of dying on "remote upstream already
+# exists" (the exact failure observed on the 2026-07-07 live run).
 DEFAULT_BRANCH=$(gh repo view "$REGISTRY" --json defaultBranchRef --jq .defaultBranchRef.name)
-git remote add upstream "https://github.com/$REGISTRY.git"
+if git remote get-url upstream >/dev/null 2>&1; then
+  git remote set-url upstream "https://github.com/$REGISTRY.git"
+else
+  git remote add upstream "https://github.com/$REGISTRY.git"
+fi
 git fetch upstream "$DEFAULT_BRANCH"
 git checkout -b "$BRANCH" "upstream/$DEFAULT_BRANCH"
 
