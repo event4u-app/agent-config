@@ -45,12 +45,18 @@ LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 
 - Skip restating the question; skip "Let me…" intent announcements.
 - Skip explaining tool use — the call result speaks.
-- Skip post-hoc summary unless rechecking a decision.
+- Skip post-hoc summary on simple answers; work replies close with one summary + PR link (§ Reply close).
 - Multi-step → bullets; one-true-answer → one sentence.
 
 Never overrides `user-interaction` (numbered options stay) or command-mandated steps.
 
 **Narration carve-out:** narration only when both `personal.play_by_play` AND `verbosity.intent_announcements` are `true`.
+
+## Reply close — work summary + PR link
+
+Brevity governs the body; the **close** is the exception. Reply that landed substantial work (multi-step change, roadmap/branch progress, created/updated PR) ends with **ONE** compact status summary — at the very end, never mid-reply: done + remaining. Simple one-answer replies still skip it (Iron Law 3).
+
+**PR link last.** PR created/updated this turn → its raw GitHub URL is the **literal last line**, after the summary, nothing below — user never hunts for it. One PR → one URL line. URL is language-neutral (satisfies `language-and-tone` last-line rule) and reply body, not a PR comment — so `no-pr-progress-comments` / `no-attribution-footers` don't apply.
 
 ## Emoji Scope — functional markers only
 
