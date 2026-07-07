@@ -786,6 +786,13 @@ export function main(argv?: string[]): number {
   const started_at = _now_iso();
   const rcs: number[] = [];
   const feedback_entries: FeedbackEntry[] = [];
+  // session_start context forwarding (road-to-second-brain Phase 1): a
+  // concern may return {"context": "<string>"} in its stdout JSON; on
+  // session_start the dispatcher forwards those blocks to its OWN stdout so
+  // the host adds them to the session context (Claude Code SessionStart
+  // stdout-injection; harmless surfacing elsewhere). All other events keep
+  // the swallow-stdout contract unchanged.
+  const context_blocks: string[] = [];
   for (const concern of concerns) {
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
@@ -804,6 +811,14 @@ export function main(argv?: string[]): number {
     }
     rcs.push(rc);
     const reply = _parse_concern_stdout(stdout_text);
+    if (
+      args.event === "session_start" &&
+      rc === EXIT_ALLOW &&
+      typeof reply["context"] === "string" &&
+      (reply["context"] as string).trim()
+    ) {
+      context_blocks.push((reply["context"] as string).trim());
+    }
     feedback_entries.push({
       concern: String(concern["name"]),
       exit_code: rc,
@@ -819,6 +834,9 @@ export function main(argv?: string[]): number {
   }
   const final_rc = _reduce(rcs);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
+  if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
+    process.stdout.write(context_blocks.join("\n\n") + "\n");
+  }
   return final_rc;
 }
 

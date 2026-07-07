@@ -89,6 +89,26 @@ Keep pages ≤ 200 lines. Split by sub-topic before that limit — a
 too-broad page defeats index-first scanning just as much as too many
 tiny pages do.
 
+## What this substrate is — honest framing
+
+A **governed second-brain substrate**: working-memory continuity across
+compactions and sessions (hot-context cache, dispatcher-wide on all 7
+platforms), deterministic where safe (dedup, recurrence, index regen,
+fold rollups, scale tripwires), human-gated where meaning is at stake
+(consolidate gate, promotion, contested flow). It is **not**
+self-organizing intelligence — the substrate is governed files, and the
+learning loop is human-reviewed by design.
+
+**External viewers — read-only, on purpose.** Any Markdown tool
+(including Obsidian) can VIEW `agents/knowledge/` — but edits made
+outside `/team-knowledge consolidate` silently desync `INDEX.md` and
+the recurrence counters at the next session start, which is exactly the
+failure the gate exists to prevent. No `.obsidian/` config is shipped,
+deliberately (council claude-sonnet-4-5 + gpt-4o, 2026-07-07 —
+converged 2/2 on reject: out-of-gate edits are an unguardable
+dual-write; an editable vault re-creates the knowledge-as-truth model
+the 2026-07-05 verdict rejected).
+
 ## See also
 
 - [`knowledge-card.md`](knowledge-card.md) — the existing anti-hallucination
