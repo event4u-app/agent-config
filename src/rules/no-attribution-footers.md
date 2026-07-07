@@ -10,6 +10,15 @@ triggers:
   - keyword: "co-authored"
 workspaces:
   - agent-config-maintainer
+  - construction
+  - engineering
+  - finance
+  - founder
+  - gtm
+  - legal-review-prep
+  - ops
+  - product
+  - small-business
 packs:
   - meta
 ---
