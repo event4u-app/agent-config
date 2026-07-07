@@ -369,7 +369,8 @@ Three classes of install/runtime behaviour look like package bugs but are host-h
 Keep the global install current with `agent-config upgrade` (latest) or
 `agent-config refresh --global` (same-version re-install); `agent-config doctor`
 flags a missing-from-`PATH` binary or binary↔plugin version drift. See
-[getting-started § Keeping current](docs/getting-started.md#keeping-current).
+[getting-started § Keeping current](docs/getting-started.md#keeping-current) ·
+[Troubleshooting](#troubleshooting).
 
 ### Cloud / Hosted-agent surfaces
 
@@ -439,6 +440,73 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 | [**Showcase**](docs/showcase.md) | More examples & expected behavior |
 
 Browse content: [all 166 commands](dist/agent-src/commands/) · [skills catalog](docs/skills-catalog.md) · [full catalog](docs/catalog.md) · [`llms.txt`](llms.txt).
+
+---
+
+## Troubleshooting
+
+First stop for any install problem: `agent-config doctor` — it flags a
+missing-from-`PATH` binary, binary↔plugin version drift, stale orphans, and
+manifest issues, each with a one-line fix hint.
+
+### A new command / skill is missing in Claude Code after an upgrade
+
+The optional Claude Code plugin is a **git-SHA snapshot** — Claude Code copies
+the plugin content once at install time and pins it to that commit. Upgrading
+the npm binary (`agent-config upgrade`) refreshes the file projections
+(`~/.claude/`, `~/.cursor/`, …) but the plugin snapshot only moves when the
+plugin itself is updated. `agent-config upgrade` runs that refresh for you;
+if it was skipped or failed, update manually:
+
+```bash
+claude plugin marketplace update event4u-agent-config
+claude plugin update agent-config@event4u-agent-config
+```
+
+Then start a **new** Claude Code session — a running session keeps the old
+snapshot. `agent-config doctor` reports the drift as `claude-plugin`.
+
+### `agent-config upgrade` fails with `Unknown argument: --no-ui`
+
+Known bug in 8.2.0: `upgrade` passed a `--no-ui` flag that the install
+orchestrator did not accept yet, so the run aborted before the plugin-refresh
+step. Fixed on `main`; until the next release, work around it with:
+
+```bash
+AGENT_CONFIG_NO_UI=1 agent-config global   # refresh the global install, no wizard
+claude plugin marketplace update event4u-agent-config
+claude plugin update agent-config@event4u-agent-config
+```
+
+### Upgrade was interrupted (Ctrl-C, wizard closed, step failed)
+
+`upgrade` runs its steps sequentially: npm install → global re-deploy →
+plugin refresh → doctor. An abort mid-run (e.g. Ctrl-C when the setup wizard
+launches) skips everything after that point — most visibly the plugin
+refresh. Re-run `agent-config upgrade`, or run the skipped steps manually
+(see the two sections above).
+
+### `agent-config: command not found` / hooks stopped firing
+
+Runtime hooks resolve the **global** binary on `PATH` — a project-local
+install alone is not enough for them. Reinstall the binary:
+
+```bash
+npm install -g @event4u/agent-config
+agent-config doctor   # verifies PATH + plugin wiring
+```
+
+### Project files look stale after a package update
+
+Project-local projections are only rewritten on an explicit refresh:
+
+```bash
+agent-config refresh             # re-apply the installed version to this project
+agent-config refresh --global    # same-version re-install of the global root
+```
+
+More per-version steps: [Migration](docs/MIGRATION.md) ·
+[getting-started § Keeping current](docs/getting-started.md#keeping-current).
 
 ---
 
