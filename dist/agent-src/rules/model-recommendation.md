@@ -31,4 +31,4 @@ packs:
 **Iron Law.** When a skill or command carries a `model_tier` (a vendor-neutral capability band), route the turn to **that agent's best model in that band** — automatically where the surface supports a per-turn override, as a single suggestion where it does not. Never recommend another vendor's model. Never double-ask, never front-load the question.
 
 Body migrated to `guideline:agent-infra/model-recommendation` (per the P4 pattern of `road-to-kernel-and-router.md`); task→tier heuristics stay in `contexts/model-recommendations.md` (loaded via `load_context`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

@@ -8,7 +8,8 @@
 > `bench_ab_v2_stats.ts --markdown <tmp> <report>`, then update the matching
 > section here. Pinned sources:
 > weak host = `internal/bench/reports/ab-v2/2026-06-15T03-52-35Z-ab-v2-paired.json`;
-> strong host = `internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json`.
+> strong host = `internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json`;
+> cost-factor sweep = `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
 
 ## Honesty labels (read first)
 
@@ -81,6 +82,87 @@
 - Arms: vanilla (plugin off) · package (real plugin) · package-rdp (plugin + RDP rules) · placebo (plugin off + equal-length inert prose).
 - Corpus: `internal/bench/corpora/ab-trackb-v2.yaml` (5 trap archetypes). Scoring: `bench_ab_scoring_v2.py` (deterministic, no LLM judge).
 - Roadmap: `agents/roadmaps/road-to-discipline-axis-benchmark.md`.
+
+## Cost-factor sweep (`claude-haiku-4-5`) — lift per loaded-context cost
+
+> **Question:** the full package buys its weak-host lift at ~12× vanilla tokens.
+> How much of the lift survives in trimmed rule-only configurations at a
+> fraction of that cost? Four arms, same paired design (2 tasks × 12 seeds,
+> n=24 pairs/arm), same host, same deterministic scorer. The trimmed arms run
+> plugin-OFF + ONLY the named rule bodies injected via system prompt
+> (`rules_subset_text()` in `bench_ab_v2_run.ts`, tier membership from
+> `dist/router.json`).
+
+| arm | loaded content | injected chars | mean tokens/run | cost factor | mean discipline | lift vs vanilla |
+|---|---|---|---|---|---|---|
+| `vanilla` | none | 0 | 103,319 | 1.0× | 0.458 | — |
+| `rules-balanced` | kernel + tier 1 (shipped `balanced` profile) | 99,347 | 303,186 | **2.9×** | 0.417 | −0.042 (p=0.81, **NULL**) |
+| `rules-kernel-dc` | kernel (9 rules) + `downstream-changes` | 31,220 | 344,483 | **3.3×** | 0.917 | **+0.458 (p=0.0135, significant)** |
+| `package` | full plugin | 0 (plugin) | 1,210,078 | **11.7×** | 1.000 | +0.542 (p=0.0017, significant) |
+
+Residual of the full package over `rules-kernel-dc`: Δ=+0.083, Wilcoxon p=0.37
+(only 2 discordant pairs) — **not significant**.
+
+Three findings:
+
+1. **~95% of the lift survives at ~3× cost.** The kernel + `downstream-changes`
+   configuration keeps a significant discipline lift (0.917 vs the full
+   package's 1.000; the residual is not significant at this N) at ~28% of the
+   full package's tokens. The 12× full load is not required for this trap
+   family's lift.
+2. **Content selection beats size — the shipped `balanced` profile is a null.**
+   `rules-balanced` injects 3× more chars than `rules-kernel-dc` and costs
+   almost the same per run, but delivers ZERO lift: it lacks
+   `downstream-changes` (a tier-2 rule), and `scope-control` alone does not
+   correct the downstream trap. This is the placebo result again, sharpened:
+   not only is length inert, even 33 real rules are inert on a trap their
+   lift-carrying rule doesn't cover. Any low-cost weak-host profile must be
+   cut by lift-carrying content, not by tier size.
+3. **Cost is behaviour, not just context.** `rules-kernel-dc` injects a third
+   of `rules-balanced`'s chars but costs slightly MORE — the discipline
+   behaviour itself (verification turns, downstream edits) spends tokens. The
+   token factor cannot be dialed by context size alone.
+
+**Honest scope:** weak host only; the 2-task scope/downstream family (the family
+with the proven lift), N=24 pairs/arm — the full package covers 4 more trap
+archetypes the trimmed arms were NOT tested on here. Rules-only injection, not a
+full plugin projection (no skills/commands/hooks in the trimmed arms). Before
+shipping any trimmed default, sweep the full corpus (done below).
+
+- Report: `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
+- Arms: `rules-kernel-dc` / `rules-balanced` in `src/scripts/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
+
+### Full-corpus P1 gate (`claude-haiku-4-5`, all 30 tasks) — family-scoped PASS
+
+> **The essential lift is real, replicates, and is family-scoped.** Full corpus
+> (all 5 trap archetypes + agentic-debug + the Laravel downstream trap),
+> `vanilla` vs `rules-kernel-dc` × 3 seeds = 180 runs (n=90 pairs, 0 errored),
+> run from a frozen checkout so mid-run edits could not contaminate the
+> per-run rule reads. Corpus-wide the discipline delta is +0.056 (0.872 →
+> 0.928, Wilcoxon p=0.084, rb=0.53) — NOT significant, because vanilla Haiku
+> is already at/near the discipline ceiling on every family except the
+> scope/downstream one. Inside that family the pilot lift replicates exactly:
+> trapE (now 5 tasks incl. Laravel + meso variants) 0.533 → 1.000, Δ=+0.467,
+> ALL 7 discordant pairs favouring the essential cut (sign test p≈0.016); all
+> other families flat at ceiling (largest counter-noise: trapA −0.083 on 2
+> discordant pairs). **Corpus-wide cost factor: 1.71x** (132,036 → 225,956
+> mean tokens/run) — cheaper than the family-only 3.3x, because the
+> discipline behaviour only spends turns where the trap exists.
+
+| axis | vanilla | rules-kernel-dc | Δ | test |
+|---|---|---|---|---|
+| capability (pass-rate) | 92% | 92% | 0 | McNemar p=1.0, h=0.0 |
+| discipline, full corpus (0–1) | 0.872 | 0.928 | +0.056 | Wilcoxon p=0.084, rb=0.53 (n≠0=14) |
+| discipline, scope/downstream family (n=15) | 0.533 | 1.000 | +0.467 | 7/7 discordant favour essential (sign p≈0.016) |
+| mean tokens/run | 132,036 | 225,956 | +93,920 (~1.7x) | — |
+
+**Verdict for the tiering roadmap's P1 gate:** family-scoped PASS. The
+`essential` tier's claim stays honest-scoped to the scope/downstream family —
+the lift does not extend to families where the host is already at ceiling, and
+it costs ~1.7x on a realistic mixed corpus. The Phase-4 default flip remains
+additionally gated on the P2 non-Claude replication.
+
+- Report: `internal/bench/reports/ab-v2/2026-07-07T07-04-39Z-ab-v2-paired.json`.
 
 ## Strong host (`sonnet`, full 30-task corpus) — Gate verdict: **HONEST-NULL**
 

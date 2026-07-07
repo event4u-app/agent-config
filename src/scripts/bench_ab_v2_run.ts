@@ -33,6 +33,7 @@
  * construction: the v2 fixtures are tiny, so per-run tokens are far below the v1
  * big-repo tasks.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -49,6 +50,8 @@ const _HERE = fileURLToPath(import.meta.url);
 // export it, so resolve the identical value here (parents[2] of the script —
 // src/scripts/bench_ab_v2_run.ts → repo root). Same path, single derivation.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
+const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
@@ -81,6 +84,16 @@ interface ArmSpec {
 // config PLUS the compile-time HARD CONSTRAINT blocks injected via sysprompt;
 // `hardened-placebo` = `package` + inert prose of the SAME length, so the
 // hardened Δ is length-controlled (measures emphasis, not verbosity).
+// `rules-kernel-dc` / `rules-balanced` (cost-factor sweep, 2026-07): plugin OFF
+// + ONLY a rule subset injected via sysprompt, to measure how much of the
+// weak-host discipline lift survives at a fraction of the full package's
+// loaded-context cost. `rules-kernel-dc` = the router kernel (9 Iron-Law rules)
+// + `downstream-changes` (one of the two lift-carrying rules; the other,
+// `scope-control`, is already in the kernel) — the cheapest configuration that
+// contains both. `rules-balanced` = kernel + tier_1 rule bodies, i.e. the
+// shipped `balanced` router profile (which does NOT include downstream-changes
+// — tier_2 — so this arm also tests whether that profile cut loses the lift).
+// Both are opt-in: NOT in the default arm list; existing runs unchanged.
 const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
@@ -89,6 +102,8 @@ const ARMS: Record<string, ArmSpec> = {
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
     hardened: { setting_sources: null, inject: 'hardened' },
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
+    'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },
+    'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
 };
 
 /**
@@ -139,6 +154,30 @@ export function hardened_blocks_text(): string {
     ].join('\n');
 }
 
+/**
+ * Rule-subset injection bodies for the cost-factor sweep arms.
+ *
+ * Reads the tier membership from `dist/router.json` and the rule bodies from
+ * `dist/agent-src/rules/` — deterministic per checkout, so the injected text is
+ * exactly what the shipped profiles would always-load:
+ * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
+ * - 'rules-balanced'   → kernel + tier_1 (the shipped `balanced` profile).
+ */
+export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
+    const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
+        kernel: string[];
+        tier_1: { id: string }[];
+    };
+    const ids = [...router.kernel];
+    if (subset === 'rules-kernel-dc') {
+        ids.push('downstream-changes');
+    } else {
+        ids.push(...router.tier_1.map((t) => t.id));
+    }
+    const bodies = ids.map((id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim());
+    return bodies.join('\n\n---\n\n');
+}
+
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
     if (inject === 'rdp') {
         return v1.system_prompt_for('with-rdp');
@@ -152,6 +191,9 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject === 'hardened-placebo') {
         // Length-matched control: inert prose the SAME length as the hardened blocks.
         return placebo_prose(hardened_blocks_text().length);
+    }
+    if (inject === 'rules-kernel-dc' || inject === 'rules-balanced') {
+        return rules_subset_text(inject);
     }
     return null;
 }
@@ -210,6 +252,202 @@ interface RunOneOpts {
     placebo_chars: number;
     sp_dir: string;
     max_depth?: number | null; // recursion arm only — hard cap on correction rounds (default 1)
+    host?: string; // 'claude' (default) | 'codex' — P2 non-Claude replication (ADR-110 roadmap Phase 4)
+}
+
+// ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
+//
+// Drives the OpenAI `codex` CLI non-interactively with the SAME paired design
+// and deterministic scorer as the claude host. Differences, documented for
+// methodology honesty:
+// - Injection surface: codex exec has no --append-system-prompt-file, so arm
+//   injections are PREPENDED to the task prompt inside a marked block (system
+//   vs user surface caveat — record it wherever results are published).
+// - Auth/home: honours CODEX_BENCH_HOME (exported as CODEX_HOME) so the bench
+//   uses an isolated, API-key-authenticated codex home instead of the
+//   operator's interactive ChatGPT login.
+// - Plugin-dependent arms (package / package-rdp / package-recursive /
+//   hardened variants that ride the real plugin) are refused on this host —
+//   only vanilla + injection arms are meaningful.
+// - Cost: codex has no --max-budget-usd; the timeout + tiny fixtures bound
+//   spend. Tokens are summed from `--json` event usage payloads best-effort.
+
+/** Arms that are valid on the codex host (vanilla + pure-injection arms). */
+export const CODEX_VALID_ARMS: readonly string[] = [
+    'vanilla',
+    'placebo',
+    'rules-kernel-dc',
+    'rules-balanced',
+];
+
+export function codex_executable(): string | null {
+    const envBin = process.env['CODEX_CLI'];
+    if (envBin && fs.existsSync(envBin)) {
+        return envBin;
+    }
+    const pathVar = process.env['PATH'] ?? '';
+    for (const dir of pathVar.split(path.delimiter)) {
+        if (!dir) {
+            continue;
+        }
+        const candidate = path.join(dir, 'codex');
+        try {
+            fs.accessSync(candidate, fs.constants.X_OK);
+            return candidate;
+        } catch {
+            /* keep scanning */
+        }
+    }
+    return null;
+}
+
+/** Wrap an arm's injected rules so they read as standing instructions. */
+export function codex_prompt(inject_text: string | null, task_prompt: string): string {
+    if (!inject_text) {
+        return task_prompt;
+    }
+    return (
+        '<project-instructions>\n' +
+        'The following are the standing project instructions that apply to every task.\n\n' +
+        inject_text +
+        '\n</project-instructions>\n\n' +
+        task_prompt
+    );
+}
+
+type SpawnFn = typeof spawnSync;
+
+/** Sum token usage from codex `--json` JSONL events, best-effort. */
+export function parse_codex_events(stdout: string): {
+    tokens: number;
+    num_turns: number;
+    transcript: string;
+    failed: string | null;
+} {
+    let tokens = 0;
+    let num_turns = 0;
+    let failed: string | null = null;
+    const texts: string[] = [];
+    const addUsage = (u: unknown): void => {
+        if (u === null || typeof u !== 'object' || Array.isArray(u)) {
+            return;
+        }
+        for (const [k, v] of Object.entries(u as Record<string, unknown>)) {
+            if (typeof v === 'number' && Number.isFinite(v) && /tokens?$/.test(k)) {
+                tokens += v;
+            } else if (v && typeof v === 'object') {
+                addUsage(v);
+            }
+        }
+    };
+    for (const line of stdout.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('{')) {
+            continue;
+        }
+        let evt: Record<string, unknown>;
+        try {
+            evt = JSON.parse(trimmed) as Record<string, unknown>;
+        } catch {
+            continue;
+        }
+        if (evt === null || typeof evt !== 'object') {
+            continue;
+        }
+        const type = String(evt['type'] ?? '');
+        if (type === 'turn.completed') {
+            num_turns += 1;
+            addUsage(evt['usage']);
+        } else if (type === 'turn.failed' || type === 'error') {
+            const err = evt['error'];
+            failed =
+                err && typeof err === 'object'
+                    ? String((err as Record<string, unknown>)['message'] ?? 'codex turn failed')
+                    : String(evt['message'] ?? 'codex turn failed');
+        } else if (type === 'item.completed') {
+            const item = evt['item'];
+            if (item && typeof item === 'object') {
+                const it = item as Record<string, unknown>;
+                if (String(it['type'] ?? '') === 'agent_message' && typeof it['text'] === 'string') {
+                    texts.push(it['text']);
+                }
+            }
+        }
+    }
+    return { tokens, num_turns, transcript: texts.join('\n'), failed };
+}
+
+export function run_live_codex(
+    task: Dict,
+    cloneRoot: string,
+    timeoutS: number,
+    opts: { model: string | null; inject_text: string | null; spawn?: SpawnFn },
+): Dict {
+    const spawn = opts.spawn ?? spawnSync;
+    const binary = codex_executable();
+    if (binary === null) {
+        return {
+            mode: 'live-skipped',
+            reason: 'codex CLI not found; set CODEX_CLI or install it',
+            transcript: '',
+            exit_code: null,
+            wall_time_seconds: 0.0,
+            tokens: 0,
+            errored: true,
+        };
+    }
+    const prompt = codex_prompt(opts.inject_text, String(task['prompt'] ?? ''));
+    const args = [
+        'exec',
+        '--skip-git-repo-check',
+        '--sandbox',
+        'workspace-write',
+        '-c',
+        'approval_policy=never',
+        '--json',
+    ];
+    if (opts.model) {
+        args.push('-m', opts.model);
+    }
+    args.push(prompt);
+    const env: NodeJS.ProcessEnv = { ...process.env };
+    if (process.env['CODEX_BENCH_HOME']) {
+        env['CODEX_HOME'] = process.env['CODEX_BENCH_HOME'];
+    }
+    const started = Date.now();
+    const result = spawn(binary, args, {
+        cwd: cloneRoot,
+        encoding: 'utf-8',
+        timeout: timeoutS * 1000,
+        env,
+    });
+    const wall = (Date.now() - started) / 1000;
+    const isTimeout = Boolean(result.error) && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT';
+    if (isTimeout) {
+        return {
+            mode: 'live',
+            reason: `timeout after ${timeoutS}s`,
+            transcript: (result.stdout ?? '') + '\n[TIMEOUT]',
+            exit_code: -1,
+            wall_time_seconds: Math.round(wall * 1000) / 1000,
+            tokens: 0,
+            errored: true,
+        };
+    }
+    const stdout = result.stdout ?? '';
+    const parsed = parse_codex_events(stdout);
+    const exitCode = result.status ?? -1;
+    const errored = exitCode !== 0 || parsed.failed !== null;
+    return {
+        mode: 'live',
+        reason: errored ? (parsed.failed ?? `codex exited ${exitCode}`) : 'ok',
+        transcript: parsed.transcript || stdout,
+        exit_code: exitCode,
+        wall_time_seconds: Math.round(wall * 1000) / 1000,
+        tokens: parsed.tokens,
+        num_turns: parsed.num_turns,
+        errored,
+    };
 }
 
 export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
@@ -217,19 +455,28 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     if (spec.recursive) {
         return run_one_recursive(task, opts);
     }
+    const host = opts.host ?? 'claude';
     const [clone, fixture] = reset_fixture(task);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
-    let sp_file: string | null = null;
-    if (sp_text) {
-        sp_file = path.join(opts.sp_dir, `.sp-${arm}.txt`);
-        fs.writeFileSync(sp_file, sp_text, { encoding: 'utf-8' });
+    let run: Dict;
+    if (host === 'codex') {
+        run = run_live_codex(task, clone, opts.timeout, {
+            model: opts.model,
+            inject_text: sp_text,
+        });
+    } else {
+        let sp_file: string | null = null;
+        if (sp_text) {
+            sp_file = path.join(opts.sp_dir, `.sp-${arm}.txt`);
+            fs.writeFileSync(sp_file, sp_text, { encoding: 'utf-8' });
+        }
+        run = v1.run_live(task, clone, opts.timeout, {
+            sysprompt_file: sp_file,
+            setting_sources: spec.setting_sources,
+            max_budget: opts.max_budget,
+            model: opts.model,
+        }) as unknown as Dict;
     }
-    const run = v1.run_live(task, clone, opts.timeout, {
-        sysprompt_file: sp_file,
-        setting_sources: spec.setting_sources,
-        max_budget: opts.max_budget,
-        model: opts.model,
-    }) as unknown as Dict;
     const score = scoring.score_task_v2(task, {
         fixture_root: fixture,
         clone_root: clone,
@@ -388,6 +635,13 @@ export function main(argv: string[] | null = null): number {
             process.stderr.write(`unknown arm: ${a}\n`);
             return 1;
         }
+        if (args.host === 'codex' && !CODEX_VALID_ARMS.includes(a)) {
+            process.stderr.write(
+                `arm ${a} requires the claude plugin host; valid --host codex arms: ` +
+                    `${CODEX_VALID_ARMS.join(',')}\n`,
+            );
+            return 1;
+        }
     }
 
     if (args.mode === 'dry-run') {
@@ -427,6 +681,7 @@ export function main(argv: string[] | null = null): number {
                     timeout: args.timeout,
                     placebo_chars,
                     sp_dir,
+                    host: args.host,
                 });
                 r['seed'] = seed;
                 seed_runs.push(r);
@@ -451,6 +706,7 @@ export function main(argv: string[] | null = null): number {
         budget_usd_per_run: args.budget,
         placebo_chars,
         corpus: 'ab-trackb-v2',
+        host: args.host,
         records,
     };
     const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired.json`);
@@ -472,6 +728,7 @@ interface ParsedArgs {
     budget: number;
     timeout: number;
     mode: string;
+    host: string;
 }
 
 class ArgExit extends Error {}
@@ -487,8 +744,9 @@ function parse_args(argv: string[]): ParsedArgs {
         budget: 1.0,
         timeout: 180,
         mode: 'live',
+        host: 'claude',
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--timeout TIMEOUT] [--mode {live,dry-run}]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -544,6 +802,11 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a === '--mode') {
             out.mode = _choice(need(i, '--mode'), '--mode', ['live', 'dry-run'], argErr);
             i += 1;
+        } else if (a === '--host') {
+            out.host = _choice(need(i, '--host'), '--host', ['claude', 'codex'], argErr);
+            i += 1;
+        } else if (a.startsWith('--host=')) {
+            out.host = _choice(a.slice('--host='.length), '--host', ['claude', 'codex'], argErr);
         } else if (a.startsWith('--mode=')) {
             out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run'], argErr);
         } else {

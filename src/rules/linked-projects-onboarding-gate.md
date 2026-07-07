@@ -35,4 +35,4 @@ install:
 **Iron Law.** When the IDE has attached a sibling repository to this project and the sibling is not yet recorded in `linked_projects`, prompt the developer **once** to opt it into scope, persist the choice local-only, and thereafter proactively flag cross-repo impact — never bulk-include the sibling's files.
 
 Body migrated to `guideline:agent-infra/linked-projects-onboarding-gate` (per the P4 pattern of `road-to-kernel-and-router.md`) — detection command, opt-in flow, persistence shape, behavioral directive, kill-switch. See also the cross-repo guide (`docs/guides/cross-repo-linked-projects.md`) and ADR-032.
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

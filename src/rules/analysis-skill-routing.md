@@ -20,4 +20,4 @@ packs:
 **Iron Law.** Route analysis tasks to the narrowest matching `project-analysis-*` skill, not the broad fallback.
 
 Body migrated to `skill:analysis-skill-router` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

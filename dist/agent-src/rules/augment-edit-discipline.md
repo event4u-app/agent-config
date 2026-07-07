@@ -28,4 +28,4 @@ packs:
 **Iron Law (sync).** On any add / rename / delete of skill / rule / command / guideline, update counts and cross-references in the same edit.
 
 Portability body migrated to `guideline:augment-portability-patterns`. Sync body migrated to `skill:agent-docs-writing` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates both routes under the `balanced` and `full` profiles.
+Trigger-set above activates both routes on demand, independent of the discipline profile (ADR-110).

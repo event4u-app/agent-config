@@ -2,29 +2,57 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 5 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **7** open blockers
+> 6 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **8** open blockers
 
 ## Overall
 
-**57 / 112 steps done · 51%**
+**70 / 128 steps done · 55%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 9 | 9 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | █████░░░░░ 50% |
-| 2 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 9 | 16 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 64% |
-| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 16 | 10 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ████░░░░░░ 38% |
-| 5 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 12 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ██████░░░░ 65% |
+| 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 4 | 12 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering) | ████████░░ 75% |
+| 2 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 9 | 9 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | █████░░░░░ 50% |
+| 3 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 9 | 16 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ██████░░░░ 64% |
+| 4 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 16 | 10 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | ████░░░░░░ 38% |
+| 6 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md)
+
+**Road to discipline-profile tiering — the ~3x lift as the default shape, host-gated** — 12 / 16 done (75%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Tier mechanism, built inert (no default change) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Retire the measured-dead `balanced` cut | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Evidence gate P1: essential on the full corpus (weak host) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | Evidence gate P2 + default flip | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 5 | Full-tier disposition (open-source hypothesis, gated) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-discipline-profile-tiering"></a>
+**Blockers**
+
+- **non-claude-host-adapter** (owner: maintainer) — blocks Phase 4 (P2 replication run + default flip), Phase 5
+  - **What to do:**
+    run needs one of: (a) a fresh interactive `codex login` (stored ChatGPT
+    token expired), or (b) approving non-interactive codex runs for the agent
+    session (the auto-mode permission classifier blocks `codex exec` variants),
+    using the isolated API-key home (`CODEX_BENCH_HOME`). Then:
+    `CODEX_BENCH_HOME=<home> npx tsx src/scripts/bench_ab_v2_run.ts --host codex
+    --arms vanilla,rules-kernel-dc --seeds 3 --model gpt-5-nano --budget 3.5`.
+  - **Resolved when:** the harness completes a paired vanilla-vs-essential run on a non-Claude host with the deterministic scorer.
+
+_1 blocker resolved._
 
 ### [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md)
 
@@ -126,7 +154,7 @@
 
 ### [road-to-token-saving.md](roadmaps/road-to-token-saving.md)
 
-**Road to token saving — measure, then cut, at constant quality** — 22 / 34 done (65%)
+**Road to token saving — measure, then cut, at constant quality** — 23 / 34 done (68%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -136,7 +164,7 @@
 | 3 | Deterministic RTK wrap hook + install verification | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Cache-aware ordering as a CI invariant (D5) | ✅ done | 0 | 2 | 0 | 1 | 100% |
 | 8 | Always-loaded budget linter (D6) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 7 | 6 | 0 | 0 | 46% |
+| 10 | Token-saving backlog (extensible umbrella) | 🟡 in progress | 6 | 7 | 0 | 0 | 54% |
 
 <a id="blockers-road-to-token-saving"></a>
 **Blockers**

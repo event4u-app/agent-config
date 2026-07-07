@@ -435,7 +435,14 @@ one-off roadmaps.
       <!-- Already shipped: the always-loaded token-efficiency rule's Iron Law IS
       redirect → summary → targeted-detail; RTK is the tool that applies it. No
       separate lever. -->
-- [ ] **Tier-conditional discipline-rule loading (measured-null subset only).**
+- [x] **Tier-conditional discipline-rule loading (measured-null subset only).**
+      <!-- promoted 2026-07-07 into road-to-discipline-profile-tiering.md: the
+      cost-factor sweep (docs/benchmark.md § Cost-factor sweep) + council verdict
+      (agents/settings/contexts/weak-host-lift-tiering-verdict.md) superseded the
+      per-rule min_host_tier sketch with a discipline_profile tier enum
+      (auto|off|essential|full) + measured NULL-lift disable-list. The eligibility
+      fence below (never safety floors / never unmeasured rules) carries over
+      into that roadmap's design. -->
       On strong-host tiers, omit from the always-loaded projection ONLY the
       discipline rules whose lift is a **measured null on that tier**
       (`docs/benchmark.md` § strong host, A6 of

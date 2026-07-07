@@ -63,6 +63,13 @@
 - status: backed
 - last_verified: 2026-07-05
 
+### claim: essential-tier-cost-factor
+- claim: The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY-SCOPED — full-corpus P1 gate (n=90 pairs): scope/downstream family 0.533→1.000 (7/7 discordant favour essential), other families flat at ceiling, corpus-wide 1.71x tokens; the full load's residual over essential is not significant (p=0.37, n=24). Non-claim on the flip side — the balanced router profile (kernel + tier-1 by size) was removed after measuring a NULL lift (p=0.81, n=24, claude-haiku-4-5, 2026-07-07), and no full-tier recommendation exists anywhere until its own evidence gate passes.
+- kind: quant
+- evidence: docs/benchmark.md#Full-corpus P1 gate
+- status: backed
+- last_verified: 2026-07-07
+
 ---
 
 ## Unbacked inventory (documented debt — not yet markered in prose)

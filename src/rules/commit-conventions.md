@@ -19,4 +19,4 @@ packs:
 **Iron Law.** Use Conventional Commits (`feat:`, `fix:`, `chore:` …); branches `<type>/<short-slug>`; never invent your own format. Subjects + branch names stay emoji-free per [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md); body emojis allowed only with an in-artifact legend.
 
 Body migrated to `skill:conventional-commits-writing` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
+Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

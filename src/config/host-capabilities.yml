@@ -1,0 +1,31 @@
+# Host-capability facts for `discipline_profile: auto` resolution.
+#
+# EVIDENCE-GATED NULL-LIFT DISABLE-LIST — not a model taxonomy.
+# Council lock (claude-sonnet-4-5 + gpt-4o, 2026-07-07, recorded in
+# agents/settings/contexts/weak-host-lift-tiering-verdict.md): entries here
+# name ONLY host models with a MEASURED null discipline lift (the package's
+# discipline tier is redundant on them — they sit at the discipline ceiling).
+# Speculative strong/weak classifications of unmeasured models (per vendor,
+# per family, per glob) are FORBIDDEN: they rot at model-release cadence and
+# encode certainty no measurement backs.
+#
+# Entry contract — every entry carries either:
+#   - measured: <report date · pinned report · N pairs>   (CLAIMS-grade), or
+#   - extrapolated: true + rationale                       (explicit maintainer
+#     judgement, labeled as such — e.g. a strictly-stronger sibling of a
+#     measured-null model). Never an unlabeled assumption.
+#
+# Matching: exact model-id prefix match against the session's model id
+# (vendor-neutral — Claude, GPT, Gemini, open-source ids all welcome once
+# measured). Unknown / unmatched models resolve per `unknown_default`.
+#
+# Fail-safe direction: `unknown_default: lift_enabled` means a new or
+# unmeasured model gets the `essential` discipline tier — it costs ~3x tokens
+# on a host that turns out strong, but never silently drops the measured
+# lift on a weak one. The list only ever GROWS by measurement.
+
+lift_disabled_models:
+  - id: claude-sonnet-4-6
+    measured: "2026-07-05 · internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json · n=84 pairs, full 30-task corpus, discipline Δ=+0.000 (p=1.0)"
+
+unknown_default: lift_enabled

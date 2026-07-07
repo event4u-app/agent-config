@@ -71,7 +71,34 @@ projection:
   # deselecting `frontend-design` removes ui-audit-gate + design-fidelity.
   # rule_packs: []
 
-# --- Cost profile ---
+# --- Discipline profile (successor knob, opt-in until the evidence gates pass) ---
+#
+# The ONE runtime knob for the discipline-rule tier (council verdicts
+# 2026-07-07: weak-host-lift-tiering + token-program-integration). Measured
+# on claude-haiku-4-5 (docs/benchmark.md § Cost-factor sweep):
+#
+# off       = kernel only (9 Iron-Law rules, ~1x tokens). For hosts with a
+#             MEASURED null lift (src/config/host-capabilities.yml).
+# essential = kernel + the lift-carrying rules (downstream-changes;
+#             scope-control is already kernel). ~3.3x tokens, keeps a
+#             significant discipline lift (+0.458, p=0.0135) — the full
+#             package's residual over it is not significant (p=0.37).
+# full      = every rule tier (~11.7x tokens). EXPERIMENTAL opt-in only:
+#             residual lift over essential not established.
+# auto      = resolve per session against host-capabilities.yml — model on
+#             the measured NULL-lift list -> off, otherwise -> essential.
+#
+# This key WINS over the legacy `rule_loading_tier` below (mapping when
+# absent: minimal->off, balanced->essential, full->full, custom->custom).
+# The installer fills the placeholder per preset with the value that
+# preserves each preset's prior behaviour (minimal->off,
+# balanced->essential, full->full) — same resolution as the legacy
+# mapping, no behaviour change. The flip of the shipped default to
+# `auto` is evidence-gated (P2 non-Claude replication, see
+# agents/roadmaps/road-to-discipline-profile-tiering.md).
+discipline_profile: __DISCIPLINE_PROFILE__
+
+# --- Cost profile (legacy knob — superseded by discipline_profile above) ---
 #
 # Master switch that controls which rule tiers load each session.
 # See docs/customization.md for the authoritative description and

@@ -203,6 +203,10 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'name',
     'ide',
     'rule_loading_tier',
+    // Successor knob for the discipline-rule tier (council 2026-07-07,
+    // weak-host-lift-tiering + token-program-integration verdicts; ADR
+    // records the whitelist addition). Wins over rule_loading_tier.
+    'discipline_profile',
     'memory.cadence',
     'personal.bot_icon',
     'personal.autonomy',
@@ -1115,4 +1119,109 @@ function _relative_to(child: string, root: string): string {
 /** Join two repo-relative path fragments with forward slashes (posix). */
 function _posix_join(a: string, b: string): string {
     return `${a.split(path.sep).join('/')}/${b}`;
+}
+
+// ── discipline_profile resolution (weak-host-lift tiering) ─────────────────
+//
+// The ONE runtime knob for the discipline-rule tier (council 2026-07-07:
+// weak-host-lift-tiering + token-program-integration verdicts). Values:
+// `auto | off | essential | full`; `auto` resolves per session against the
+// evidence-gated NULL-lift disable-list in `src/config/host-capabilities.yml`.
+// Legacy `rule_loading_tier` maps when the new key is absent.
+
+export type DisciplineProfile = 'off' | 'essential' | 'full' | 'custom';
+
+export interface HostCapabilities {
+    /** Models with a MEASURED null discipline lift (prefix-matched ids). */
+    lift_disabled_models: string[];
+    /** Resolution for unmatched/unknown models. Fail-safe: lift_enabled. */
+    unknown_default: 'lift_enabled' | 'lift_disabled';
+}
+
+const _CAPABILITIES_FALLBACK: HostCapabilities = {
+    lift_disabled_models: [],
+    unknown_default: 'lift_enabled',
+};
+
+/**
+ * Load `host-capabilities.yml` — tolerant like every settings read: a
+ * missing / unreadable / malformed file resolves to the fail-safe fallback
+ * (empty disable-list, `lift_enabled`), never an error. Entries may be
+ * plain strings or `{ id, measured?, extrapolated? }` mappings; only the
+ * id is needed for resolution (the provenance fields are the CLAIMS-grade
+ * audit trail the file contract requires).
+ */
+export function load_host_capabilities(p: string): HostCapabilities {
+    const raw = _read_yaml(p);
+    if (raw === null || !_is_plain_dict(raw)) {
+        return { ..._CAPABILITIES_FALLBACK, lift_disabled_models: [] };
+    }
+    const ids: string[] = [];
+    const entries = raw['lift_disabled_models'];
+    if (Array.isArray(entries)) {
+        for (const entry of entries) {
+            if (typeof entry === 'string' && entry.trim()) {
+                ids.push(entry.trim());
+            } else if (_is_plain_dict(entry) && typeof entry['id'] === 'string' && entry['id'].trim()) {
+                ids.push((entry['id'] as string).trim());
+            }
+        }
+    }
+    const unknown = raw['unknown_default'] === 'lift_disabled' ? 'lift_disabled' : 'lift_enabled';
+    return { lift_disabled_models: ids, unknown_default: unknown };
+}
+
+/** Prefix match a session model id against the measured disable-list. */
+export function is_lift_disabled_model(model_id: string | null, caps: HostCapabilities): boolean {
+    if (!model_id) {
+        return false;
+    }
+    const normalized = model_id.trim().toLowerCase();
+    return caps.lift_disabled_models.some((entry) => normalized.startsWith(entry.trim().toLowerCase()));
+}
+
+/**
+ * Resolve the effective discipline profile for a session.
+ *
+ * Precedence: explicit `discipline_profile` wins; absent → legacy
+ * `rule_loading_tier` mapping (minimal→off, balanced→essential, full→full,
+ * custom→custom); both absent → `essential` (the successor of the
+ * documented `balanced` default). `auto` resolves against the capabilities:
+ * measured NULL-lift model → `off`; anything else — including an unknown or
+ * missing model id — → `essential` under `lift_enabled` (fail-safe: never
+ * silently drop the measured lift on a possibly-weak host) or `off` under
+ * `lift_disabled`.
+ *
+ * Pure function — callers pass the merged settings dict, the session model
+ * id (null when the host does not expose one), and the loaded capabilities.
+ */
+export function resolve_discipline_profile(
+    settings: SettingsDict,
+    model_id: string | null,
+    caps: HostCapabilities,
+): DisciplineProfile {
+    const explicit = settings['discipline_profile'];
+    if (explicit === 'off' || explicit === 'essential' || explicit === 'full') {
+        return explicit;
+    }
+    if (explicit === 'auto') {
+        if (is_lift_disabled_model(model_id, caps)) {
+            return 'off';
+        }
+        return caps.unknown_default === 'lift_disabled' ? 'off' : 'essential';
+    }
+    const legacy = settings['rule_loading_tier'];
+    if (legacy === 'minimal') {
+        return 'off';
+    }
+    if (legacy === 'balanced') {
+        return 'essential';
+    }
+    if (legacy === 'full') {
+        return 'full';
+    }
+    if (legacy === 'custom') {
+        return 'custom';
+    }
+    return 'essential';
 }
