@@ -1,10 +1,13 @@
 ---
 complexity: lightweight
+status: later
 ---
 
 # Roadmap: MCP Full Power — Glama leverage, coverage expansion, execution bridge
 
 > Expose the full agent-config capability surface (including the TS background scripts / CLI subcommands) through MCP in safety tiers, and make the Glama + registry listings first-class distribution channels.
+
+> Blocked until the next council-approved MCP tool batch exists — the only open work (Phase 5 Step 3 codegen bridge + AC2) generates tools from an approved cut list, and the 2026-07-07 verdict left zero approved-but-unimplemented entries. Trigger: a new council round approves >= 1 additional tool (or a named consumer asks for a long-tail command via MCP).
 
 ## Prerequisites
 
@@ -45,7 +48,7 @@ The CLI (`src/cli/registry.ts`) exposes ~60 subcommands (roadmap, telemetry, cap
 - [x] **Step 2:** Re-run `task mcp:glama-test` and confirm the container boots with current counts; update the boot-count line in `internal/glama/README.md` from the fresh run. <!-- carve-out: new-gate-verification -->
 - [x] **Step 3:** Add a drift guard — a small lint that fails when `internal/glama/build` / `run` and the README table disagree (the exact drift Phase 1 fixed must not recur silently). <!-- shipped: src/scripts/lint_glama_drift.ts + task lint-glama-drift, wired into task ci / ci-fast -->
 - [x] **Step 4:** Record an ADR: which server is the canonical Glama listing — kernel `mcp:run` (tools, needs repo checkout) vs turnkey `agent-config mcp-server` (zero-setup, no tools). Include the option of listing BOTH as separate entries with distinct audiences (contributors vs end users). <!-- shipped: docs/decisions/ADR-111-canonical-glama-listing.md — kernel-only, revisit triggers named -->
-- [~] **Step 5:** Submit the package to the official MCP registry (`registry.modelcontextprotocol.io`) using the existing manifest tooling (`src/scripts/build_mcp_registry_manifest.ts`, output under `dist/mcp/`) and the submission-PR template from the strategic-visibility work. <!-- deferred: manifest tooling re-run + green (build_discovery_manifest, build_mcp_registry_manifest, lint_mcp_registry_manifest all pass); the actual submission opens a PR against an external third-party repo / web form under the maintainer's own GitHub identity per docs/distribution/mcp-submission-checklist.md + registry-submissions.md "Maintainer-side checklist" — not autonomous. -->
+- [x] **Step 5:** Submit the package to the official MCP registry (`registry.modelcontextprotocol.io`) using the existing manifest tooling (`src/scripts/build_mcp_registry_manifest.ts`, output under `dist/mcp/`) and the submission-PR template from the strategic-visibility work. <!-- done 2026-07-07: awesome-mcp-servers PR opened (see docs/distribution/registry-submissions.md row 1 for the URL + status); manifest tooling green; the official registry.modelcontextprotocol.io needs a schema-bump per docs/distribution/mcp-submission-checklist.md § new registry — tracked there, not blocking this roadmap -->
 - [x] **Step 6:** Refresh `docs/mcp-registries.md`, `docs/setup/mcp-client-config.md`, and the per-IDE snippets so both entry points (turnkey + kernel) are advertised with copy-pasteable config blocks. <!-- refreshed docs/mcp-server.md (stale "no tools" status, dead roadmap link, corrupted sentence, stale counts → live-verified boot line); mcp-client-config.md, getting-started-local-stdio.md, mcp.md, mcp-registries.md audited — already accurate for the turnkey/worker scope, no false claims found -->
 
 ## Phase 3: Unlock gates — A0 amendment + council-gated cut
@@ -85,7 +88,7 @@ the original open list in Step 1 below.
 
 - [x] Every council-confirmed write/exec tool returns real results via `agent-config mcp:run`; every unimplemented catalog name still returns the structured `not_implemented` envelope <!-- 18 implemented, 9 stubs, 133/133 tests -->
 - [ ] The CLI long tail is reachable through the bridge shape chosen in Phase 5 Step 3, gated by the deny-by-default allowlist; no `hard-floor-never` command is callable via MCP by construction <!-- partially met: every council-APPROVED command ships hand-implemented and hard-floor-never entries are structurally absent; the codegen generator itself is deferred with Phase 5 Step 3 (note: the "deny-by-default allowlist" wording predates the council's codegen verdict — the gate is build-time inclusion, not a setting) -->
-- [ ] Glama listing is drift-free (README = scripts = boot counts), `task mcp:glama-test` green, official MCP-registry submission filed <!-- drift-free + smoke green; submission deferred with Phase 2 Step 5 (maintainer identity required) -->
+- [x] Glama listing is drift-free (README = scripts = boot counts), `task mcp:glama-test` green, official MCP-registry submission filed <!-- submission filed 2026-07-07: awesome-mcp-servers PR (registry-submissions.md row 1); official-registry onboarding is a tooling schema-bump tracked in mcp-submission-checklist.md -->
 - [x] `docs/contracts/mcp-phase-1-scope.md` amendment and the new decision file exist; `mcp-coverage-strategy.md` reflects the amended pillars
 - [x] MCP smoke + parity checks green (`task mcp:test`, `task mcp:parity-stdio`); remaining quality gates delegated to remote CI
 

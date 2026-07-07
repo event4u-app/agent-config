@@ -1,7 +1,7 @@
 # MCP Tool Tier Map
 
 Safety-tier classification of every CLI subcommand in `src/cli/registry.ts`,
-built for [`road-to-mcp-full-power.md`](../../roadmaps/road-to-mcp-full-power.md)
+built for [`road-to-mcp-full-power.md`](../../roadmaps/later/road-to-mcp-full-power.md)
 Phase 1 Step 5. Fed the Phase 3 council debate (write/exec cut list); verdict
 recorded in
 [`agents/decisions/mcp-write-exec-cut-2026-07-07.md`](../../decisions/mcp-write-exec-cut-2026-07-07.md).

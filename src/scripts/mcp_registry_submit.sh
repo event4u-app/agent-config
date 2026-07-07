@@ -162,10 +162,14 @@ _step "Pushing branch $BRANCH to fork"
 git push -u origin "$BRANCH"
 
 _step "Opening PR against $REGISTRY"
+# gh pr create expects --head as OWNER:branch (not OWNER/REPO:branch) —
+# the repo form fails with "Head sha can't be blank" (observed on the
+# 2026-07-07 live run).
+FORK_OWNER="${FORK_REPO%%/*}"
 PR_URL=$(gh pr create \
   --repo "$REGISTRY" \
   --base "$DEFAULT_BRANCH" \
-  --head "$FORK_REPO:$BRANCH" \
+  --head "$FORK_OWNER:$BRANCH" \
   --title "Add event4u/agent-config — universal AI agent OS" \
   --body "$(cat <<'EOF'
 Adds [`event4u/agent-config`](https://github.com/event4u-app/agent-config) to the registry.

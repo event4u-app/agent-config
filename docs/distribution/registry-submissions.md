@@ -34,7 +34,7 @@ the submission shape evolves; this file accumulates history.
 
 | # | Registry | Submission shape | Status | PR / form URL | Date | Maintainer notes |
 |---|---|---|---|---|---|---|
-| 1 | `punkpeye/awesome-mcp-servers` | One-line entry under agent-tooling section; PR via `scripts/mcp_registry_submit.sh` | `pending` | — | — | Scaffold ready. Run `bash scripts/mcp_registry_submit.sh --dry-run` once before live; the live path needs the maintainer's GitHub identity. |
+| 1 | `punkpeye/awesome-mcp-servers` | One-line entry under agent-tooling section; PR via `scripts/mcp_registry_submit.sh` | `submitted` | <https://github.com/punkpeye/awesome-mcp-servers/pull/9607> | 2026-07-07 | PR opened via the submit script (two script bugs fixed on the way: idempotent upstream remote, `--head OWNER:branch` format). Awaiting upstream review. |
 | 2 | `mcp.so` | Directory form submission (web form, no programmatic API) | `pending` | — | — | Form URL: <https://mcp.so/>. Submission shape: same one-line entry, paste into the form's `description` field. |
 | 3 | `mcpservers.org` | Directory form submission (web form, verify URL at submission time) | `pending` | — | — | Form URL: <https://mcpservers.org/>. Submission shape: one-line entry; check the site is live before posting. |
 

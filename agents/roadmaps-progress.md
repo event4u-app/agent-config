@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 10 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**117 / 222 steps done · 53%**
+**86 / 189 steps done · 46%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
 ```
 
 ## Open roadmaps
@@ -21,11 +21,10 @@
 | 3 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 2 | 17 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | █████████░ 89% |
 | 4 | [road-to-golden-set-coverage.md](roadmaps/road-to-golden-set-coverage.md) | 4 | 18 | 4 | 14 | 0 | 0 | [2](#blockers-road-to-golden-set-coverage) | ████████░░ 78% |
 | 5 | [road-to-install-path-convergence.md](roadmaps/road-to-install-path-convergence.md) | 6 | 22 | 22 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-mcp-full-power.md](roadmaps/road-to-mcp-full-power.md) | 6 | 35 | 2 | 31 | 2 | 0 | 0 | █████████░ 94% |
-| 7 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
-| 8 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
-| 10 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
+| 6 | [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md) | 5 | 25 | 5 | 20 | 0 | 0 | [1](#blockers-road-to-request-scoped-rule-load) | ████████░░ 80% |
+| 7 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 8 | [road-to-token-proof-and-story.md](roadmaps/road-to-token-proof-and-story.md) | 5 | 26 | 14 | 12 | 0 | 0 | [2](#blockers-road-to-token-proof-and-story) | █████░░░░░ 46% |
+| 9 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 36 | 11 | 23 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 68% |
 
 ---
 
@@ -128,19 +127,6 @@
 | 3 | Converge action + consent model | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Runtime self-detection | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Augment follow-through + delist checkpoint | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-
-### [road-to-mcp-full-power.md](roadmaps/road-to-mcp-full-power.md)
-
-**MCP Full Power — Glama leverage, coverage expansion, execution bridge** — 31 / 33 done (94%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Grounding & hygiene | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Glama & registry leverage | ✅ done | 0 | 5 | 1 | 0 | 100% |
-| 3 | Unlock gates — A0 amendment + council-gated cut | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Write-tier tools (fs-write in-tree) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Exec-tier tools & the full-power bridge | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 6 | Parity, distribution & guardrails | 🟡 in progress | 2 | 8 | 0 | 0 | 80% |
 
 ### [road-to-request-scoped-rule-load.md](roadmaps/road-to-request-scoped-rule-load.md)
 
