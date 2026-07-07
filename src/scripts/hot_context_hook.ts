@@ -37,6 +37,12 @@ import { fileURLToPath } from 'node:url';
 import { redact_low_impact_entry } from './ai_council/redact_low_impact_entry.js';
 
 export const HOT_CONTEXT_REL = path.join('agents', 'runtime', 'state', 'hot-context.md');
+
+/** Replay-fixture runs must never mutate state (same contract as chat_history). */
+const REPLAY_ENV_VAR = 'AGENT_CONFIG_REPLAY';
+function _is_replay_mode(): boolean {
+    return (process.env[REPLAY_ENV_VAR] ?? '').trim() === '1';
+}
 export const WORD_CAP = 400;
 export const MAX_AGE_HOURS = 48;
 
@@ -115,8 +121,7 @@ function _read_history(root: string): HistoryEntry[] {
 export function _latest_session_entries(entries: HistoryEntry[]): HistoryEntry[] {
     const body = entries.filter((e) => e.t && e.t !== 'header');
     if (body.length === 0) return [];
-    const last = body[body.length - 1];
-    const sid = last.s;
+    const sid = body[body.length - 1]?.s;
     if (!sid) {
         // untagged history — fall back to the trailing 50 entries
         return body.slice(-50);
@@ -177,7 +182,7 @@ export function build_hot_context(root: string, now: Date = new Date()): string 
             .slice(-MAX_OPEN_VERIFICATIONS)
             .map((e) => _snippet(`${e.tool ? `${e.tool}: ` : ''}${String(e.text ?? '')}`, CHANGE_SNIPPET_CHARS)),
     );
-    const lastStop = stops.length > 0 ? String(stops[stops.length - 1].text) : '';
+    const lastStop = String(stops[stops.length - 1]?.text ?? '');
     const keyFacts = _redact_lines(lastStop ? [_snippet(lastStop, KEY_FACTS_CHARS)] : []);
 
     const droppedTotal =
@@ -276,12 +281,12 @@ export function restore_hot_context(
         return discard('host source=clear');
     }
 
-    const stampMatch = text.match(/^Last Updated: (.+)$/m);
-    const branchMatch = text.match(/^Branch: (.+)$/m);
-    if (!stampMatch || !branchMatch) {
+    const stampRaw = text.match(/^Last Updated: (.+)$/m)?.[1];
+    const branchRaw = text.match(/^Branch: (.+)$/m)?.[1];
+    if (!stampRaw || !branchRaw) {
         return discard('unparseable stamp');
     }
-    const stamp = Date.parse(stampMatch[1].trim());
+    const stamp = Date.parse(stampRaw.trim());
     if (Number.isNaN(stamp)) {
         return discard('unparseable timestamp');
     }
@@ -289,7 +294,7 @@ export function restore_hot_context(
     if (ageHours > MAX_AGE_HOURS) {
         return discard(`stale: ${ageHours.toFixed(1)}h > ${MAX_AGE_HOURS}h`);
     }
-    const stampedBranch = branchMatch[1].trim();
+    const stampedBranch = branchRaw.trim();
     const currentBranch = _current_branch(root);
     if (stampedBranch !== 'unknown' && currentBranch !== 'unknown' && stampedBranch !== currentBranch) {
         return discard(`branch changed: ${stampedBranch} -> ${currentBranch}`);
@@ -338,6 +343,9 @@ export function main(): number {
             : {};
 
     try {
+        if (_is_replay_mode()) {
+            return 0; // replay fixtures: read-only, no state mutation
+        }
         if (event === 'stop' || event === 'session_end') {
             _write_hot_context(root);
         } else if (event === 'session_start') {

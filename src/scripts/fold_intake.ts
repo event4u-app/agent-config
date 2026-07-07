@@ -81,7 +81,7 @@ export function readIntakeLines(dir: string): IntakeLine[] {
         }
         const lines = text.split('\n');
         for (let i = 0; i < lines.length; i++) {
-            const raw = lines[i].trim();
+            const raw = (lines[i] ?? '').trim();
             if (!raw) continue;
             out.push({ file, line: i + 1, raw });
         }
