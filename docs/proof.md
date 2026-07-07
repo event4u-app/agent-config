@@ -27,10 +27,11 @@ evidence pointer, or `task check-claims` fails the build.
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
+| The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY-SCOPED — full-corpus P1 gate (n=90 pairs): scope/downstream family 0.533→1.000 (7/7 discordant favour essential), other families flat at ceiling, corpus-wide 1.71x tokens; the full load's residual over essential is not significant (p=0.37, n=24). Non-claim on the flip side — the balanced router profile (kernel + tier-1 by size) was removed after measuring a NULL lift (p=0.81, n=24, claude-haiku-4-5, 2026-07-07), and no full-tier recommendation exists anywhere until its own evidence gate passes. | quant | `docs/benchmark.md#Full-corpus P1 gate` | ✅ |
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 
-**3 backed claim(s)** — all evidence pointers resolve in CI.
+**4 backed claim(s)** — all evidence pointers resolve in CI.
 
 We also publish our **debt**: 4 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not

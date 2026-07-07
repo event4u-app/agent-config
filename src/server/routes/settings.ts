@@ -34,6 +34,10 @@ import { PACKAGE_ROOT } from '../../cli/paths.js';
 // the merged defaults will reject the first save.
 const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
     __RULE_LOADING_TIER__: 'balanced',
+    // Successor knob (ADR-110); `essential` mirrors what the legacy
+    // `balanced` default resolves to — behaviour-preserving until the
+    // evidence-gated flip to `auto` (roadmap Phase 4).
+    __DISCIPLINE_PROFILE__: 'essential',
     __USER_TYPE__: '',
     __CHAT_HISTORY_FREQUENCY__: 'per_turn',
     __CHAT_HISTORY_MAX_SIZE_KB__: '2048',

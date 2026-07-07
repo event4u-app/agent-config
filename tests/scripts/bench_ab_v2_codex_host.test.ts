@@ -1,6 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import * as run from '../../src/scripts/bench_ab_v2_run';
+
+// CI runners have no codex binary; codex_executable() checks the CODEX_CLI
+// env FIRST, so pointing it at the node executable (exists everywhere)
+// makes the stubbed-spawn tests host-independent.
+let savedCodexCli: string | undefined;
+beforeAll(() => {
+    savedCodexCli = process.env['CODEX_CLI'];
+    process.env['CODEX_CLI'] = process.execPath;
+});
+afterAll(() => {
+    if (savedCodexCli === undefined) {
+        delete process.env['CODEX_CLI'];
+    } else {
+        process.env['CODEX_CLI'] = savedCodexCli;
+    }
+});
 
 const EVENTS_OK = [
     '{"type":"turn.started"}',

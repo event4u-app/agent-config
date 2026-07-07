@@ -100,6 +100,10 @@ export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
  */
 export function fixtureSettings(overlay: Record<string, unknown> = {}): Record<string, unknown> {
     const base = settingsSchema.parse({
+        // The template always carries this key (installer placeholder,
+        // ADR-110), so a round-trippable candidate carries it too — else
+        // every diff shows a to-less removal entry for it.
+        discipline_profile: 'essential',
         cost: { budgets: {}, enforcement: 'advisory' },
         personal: {}, project: {}, github: {}, augment: {}, eloquent: {},
         chat_history: { text_limits: {} }, pipelines: {}, roadmap: {},

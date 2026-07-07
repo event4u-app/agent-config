@@ -59,7 +59,10 @@ made by the user directly or by the agent on request, following the
 #
 # When set, this key WINS over the legacy rule_loading_tier below
 # (mapping when absent: minimal->off, balanced->essential, full->full).
-# discipline_profile: auto
+# The installer fills it per preset (minimal->off, balanced->essential,
+# full->full — behaviour-preserving); `auto` is the evidence-gated flip
+# target (roadmap Phase 4).
+discipline_profile: essential
 
 # --- Cost profile (legacy knob — superseded by discipline_profile) ---
 #
