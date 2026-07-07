@@ -108,6 +108,12 @@ jobs:
           retention-days: 30
 
       - name: Attach artefacts to GitHub Release
+        # `overwrite_files` defaults to `true` in v2, so re-running this
+        # workflow for an already-released tag is idempotent (assets are
+        # replaced, not rejected as duplicates) — load-bearing for
+        # release.yml's --ci path, which dispatches this workflow
+        # explicitly and could race with a native tag-push trigger when a
+        # RELEASE_PR_TOKEN PAT is configured.
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.name }}

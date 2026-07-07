@@ -1,0 +1,176 @@
+name: Release
+
+# CI-native release path, alongside (never replacing) the local `task
+# release` pipeline — both run the exact same src/scripts/release.ts.
+#
+# Trigger: merging any PR that carries a `release` / `release:major` /
+# `release:minor` / `release:patch` label. `release` auto-detects the
+# semver bump from Conventional Commits since the last tag (same logic
+# `task release` uses); the `release:*` variants force major/minor/patch.
+# `workflow_dispatch` is the manual/recovery entry for a release not tied
+# to a PR merge, or to re-run a partially failed release.yml run.
+#
+# Token: uses secrets.RELEASE_PR_TOKEN when configured (a fine-grained PAT
+# or GitHub App installation token with contents:write + pull-requests:write
+# on this repo), falling back to the default GITHUB_TOKEN.
+#
+#   - With RELEASE_PR_TOKEN: fully unattended end-to-end.
+#   - Without it (default): GitHub's bot-created-PR safeguard (introduced
+#     2026-06-11) queues the release PR's checks — including the required
+#     "Sync + Generate Tools Consistency" check — in an approval-required
+#     state, because the PR was opened via GITHUB_TOKEN. A maintainer must
+#     click "Approve workflows to run" on the release PR once per release
+#     before this job's `gh pr checks --watch` step can see them go green
+#     and proceed to merge. This is a deliberate, acceptable manual
+#     checkpoint for a production-release action (see
+#     docs/contracts/branch-protection-policy.md) — not a bug. Configure
+#     RELEASE_PR_TOKEN to remove it entirely.
+#
+# See also:
+#   - src/scripts/release.ts — the shared pipeline (--ci mode).
+#   - docs/decisions/ADR-113-ci-native-release-label-trigger.md
+#   - docs/contracts/release-pr-gating.md, branch-protection-policy.md
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Bump level (auto detects from Conventional Commits since the last tag)'
+        required: false
+        default: 'auto'
+        type: choice
+        options: [auto, major, minor, patch]
+      version:
+        description: 'Exact version to release (e.g. 2.0.0) — overrides `bump` when set'
+        required: false
+        type: string
+      dry_run:
+        description: 'Preview only — no git/gh mutations'
+        required: false
+        default: false
+        type: boolean
+      resume:
+        description: 'Resume a partially failed release (probes existing branch/PR/tag/Release, skips completed steps)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    # PR path: only a MERGED pull_request carrying one of the exact release
+    # labels — `contains(array, item)` against the labels array, never a
+    # substring match on the joined names (a label like "prerelease-notes"
+    # must NOT fire this). Dispatch path: always runs.
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || contains(github.event.pull_request.labels.*.name, 'release:major') || contains(github.event.pull_request.labels.*.name, 'release:minor') || contains(github.event.pull_request.labels.*.name, 'release:patch')))
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Resolve release flags from the merged PR's labels
+        id: flags
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            bump="${{ inputs.bump }}"
+            version="${{ inputs.version }}"
+            dry_run="${{ inputs.dry_run }}"
+            resume="${{ inputs.resume }}"
+          else
+            labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+            bump="auto"
+            matched=0
+            for candidate in major minor patch; do
+              case ",$labels," in
+                *",release:$candidate,"*)
+                  bump="$candidate"
+                  matched=$((matched + 1))
+                  ;;
+              esac
+            done
+            if [ "$matched" -gt 1 ]; then
+              echo "::error::multiple release:* labels on this PR — pick exactly one bump override."
+              exit 1
+            fi
+            version=""
+            dry_run="false"
+            resume="false"
+          fi
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
+          echo "resume=$resume" >> "$GITHUB_OUTPUT"
+
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ env.GH_TOKEN }}
+
+      - name: Configure git identity for the release bump commit
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: npm ci
+
+      - name: Run release pipeline (--ci)
+        # --resume from a fresh `main` checkout inherits the same narrow
+        # limitation `task release -- --resume` has when run from main
+        # locally: it recovers a crash AFTER the release PR merged (main's
+        # package.json already shows the bumped version — tag/Release
+        # simply weren't finished) but not a crash BEFORE merge (an open,
+        # unmerged release/X.Y.Z PR) — that case's stale branch/PR needs a
+        # manual close or a local `task release -- --resume` after checking
+        # out that branch. Not a new gap; this is unchanged from today.
+        run: |
+          args=(--ci --yes)
+          if [ -n "${{ steps.flags.outputs.version }}" ]; then
+            args+=(--version "${{ steps.flags.outputs.version }}")
+          elif [ "${{ steps.flags.outputs.bump }}" != "auto" ]; then
+            args+=(--as "${{ steps.flags.outputs.bump }}")
+          fi
+          if [ "${{ steps.flags.outputs.resume }}" = "true" ]; then
+            args+=(--resume)
+          fi
+          if [ "${{ steps.flags.outputs.dry_run }}" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          ./scripts-run src/scripts/release "${args[@]}"
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Release"
+            echo
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "✅  Pipeline finished — see the run log for the released version, or nothing-to-release."
+            else
+              echo "❌  Release pipeline failed — see logs. Re-run this workflow (workflow_dispatch) to resume;"
+              echo "    src/scripts/release.ts's --ci steps are idempotent."
+              echo
+              echo "If the run is stuck waiting on PR checks: the release PR likely needs a maintainer to"
+              echo "click **Approve workflows to run** on it (GitHub's bot-created-PR safeguard) — see the"
+              echo "header comment in this workflow file for the RELEASE_PR_TOKEN alternative."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

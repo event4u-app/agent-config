@@ -5,9 +5,15 @@ name: Publish to npm
 # 1.11.0, 2.0.0-rc.1). Tags follow the repository convention: no `v`
 # prefix, no component prefix.
 #
-# Tags are created by `scripts/release.py` (invoked via
-# `task release`) after the release PR has been merged
-# into main. This workflow is the single publish path.
+# Tags are created by src/scripts/release.ts, invoked either via
+# `task release` (local) or `.github/workflows/release.yml` (the
+# `release`-labeled-PR CI path). A tag pushed under the default
+# GITHUB_TOKEN does not trigger this workflow's `push: tags:` event, so
+# release.yml's --ci path dispatches this workflow explicitly
+# (`workflow_dispatch` with `inputs.tag`) right after tagging. The
+# "Skip if already published" step makes that dispatch idempotent against
+# the native tag-push trigger firing too (e.g. when a RELEASE_PR_TOKEN
+# PAT is configured) — this is the single publish path either way.
 
 on:
   push:
@@ -72,18 +78,41 @@ jobs:
           fi
           echo "✅  $pkg == $tag"
 
+      - name: Skip if already published (idempotency — dispatch-chained from release.yml)
+        # release.yml's --ci path explicitly dispatches this workflow after
+        # creating the GitHub Release (a bot-pushed tag does not trigger the
+        # `push: tags:` event above). If RELEASE_PR_TOKEN is ALSO configured,
+        # that same tag push fires this workflow natively too — the dispatch
+        # and the native trigger would otherwise race to `npm publish` the
+        # same version twice, and the registry hard-rejects the second
+        # attempt. Same protection covers a human re-running this workflow
+        # by hand for an already-published tag.
+        id: check
+        run: |
+          tag="${{ steps.tag.outputs.name }}"
+          if npm view "@event4u/agent-config@${tag}" version >/dev/null 2>&1; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "@event4u/agent-config@${tag} is already on the registry — skipping publish."
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install npm dependencies
+        if: steps.check.outputs.already_published != 'true'
         run: npm ci
 
       - name: Build CLI and UI ahead of pack (prepack chain)
+        if: steps.check.outputs.already_published != 'true'
         run: npm run build
 
       - name: Build discovery manifest
+        if: steps.check.outputs.already_published != 'true'
         run: |
           ./scripts-run src/scripts/build_discovery_manifest --write --strict
           ./scripts-run src/scripts/lint_discovery_manifest --quiet
 
       - name: Assert discovery manifest is in the tarball
+        if: steps.check.outputs.already_published != 'true'
         # --ignore-scripts so the JSON output is not polluted by vite/build
         # logs from a re-invoked prepack; manifest was already written above.
         run: |
@@ -91,6 +120,7 @@ jobs:
             | jq -e '.[0].files | map(.path) | any(. == "dist/discovery/discovery-manifest.json")'
 
       - name: Publish via OIDC Trusted Publishing
+        if: steps.check.outputs.already_published != 'true'
         run: npm publish
 
       - name: Job summary
@@ -100,7 +130,9 @@ jobs:
           {
             echo "## npm publish"
             echo
-            if [ "${{ job.status }}" = "success" ]; then
+            if [ "${{ steps.check.outputs.already_published }}" = "true" ]; then
+              echo "⏭️  \`@event4u/agent-config@${tag}\` was already on the registry — nothing to do."
+            elif [ "${{ job.status }}" = "success" ]; then
               echo "📦  Published \`@event4u/agent-config@${tag}\` to https://registry.npmjs.org"
               echo "- https://www.npmjs.com/package/@event4u/agent-config/v/${tag}"
             else
