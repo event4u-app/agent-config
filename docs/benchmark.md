@@ -8,7 +8,8 @@
 > `bench_ab_v2_stats.ts --markdown <tmp> <report>`, then update the matching
 > section here. Pinned sources:
 > weak host = `internal/bench/reports/ab-v2/2026-06-15T03-52-35Z-ab-v2-paired.json`;
-> strong host = `internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json`.
+> strong host = `internal/bench/reports/ab-v2/2026-07-05T07-00-31Z-ab-v2-paired.json`;
+> cost-factor sweep = `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
 
 ## Honesty labels (read first)
 
@@ -81,6 +82,55 @@
 - Arms: vanilla (plugin off) · package (real plugin) · package-rdp (plugin + RDP rules) · placebo (plugin off + equal-length inert prose).
 - Corpus: `internal/bench/corpora/ab-trackb-v2.yaml` (5 trap archetypes). Scoring: `bench_ab_scoring_v2.py` (deterministic, no LLM judge).
 - Roadmap: `agents/roadmaps/road-to-discipline-axis-benchmark.md`.
+
+## Cost-factor sweep (`claude-haiku-4-5`) — lift per loaded-context cost
+
+> **Question:** the full package buys its weak-host lift at ~12× vanilla tokens.
+> How much of the lift survives in trimmed rule-only configurations at a
+> fraction of that cost? Four arms, same paired design (2 tasks × 12 seeds,
+> n=24 pairs/arm), same host, same deterministic scorer. The trimmed arms run
+> plugin-OFF + ONLY the named rule bodies injected via system prompt
+> (`rules_subset_text()` in `bench_ab_v2_run.ts`, tier membership from
+> `dist/router.json`).
+
+| arm | loaded content | injected chars | mean tokens/run | cost factor | mean discipline | lift vs vanilla |
+|---|---|---|---|---|---|---|
+| `vanilla` | none | 0 | 103,319 | 1.0× | 0.458 | — |
+| `rules-balanced` | kernel + tier 1 (shipped `balanced` profile) | 99,347 | 303,186 | **2.9×** | 0.417 | −0.042 (p=0.81, **NULL**) |
+| `rules-kernel-dc` | kernel (9 rules) + `downstream-changes` | 31,220 | 344,483 | **3.3×** | 0.917 | **+0.458 (p=0.0135, significant)** |
+| `package` | full plugin | 0 (plugin) | 1,210,078 | **11.7×** | 1.000 | +0.542 (p=0.0017, significant) |
+
+Residual of the full package over `rules-kernel-dc`: Δ=+0.083, Wilcoxon p=0.37
+(only 2 discordant pairs) — **not significant**.
+
+Three findings:
+
+1. **~95% of the lift survives at ~3× cost.** The kernel + `downstream-changes`
+   configuration keeps a significant discipline lift (0.917 vs the full
+   package's 1.000; the residual is not significant at this N) at ~28% of the
+   full package's tokens. The 12× full load is not required for this trap
+   family's lift.
+2. **Content selection beats size — the shipped `balanced` profile is a null.**
+   `rules-balanced` injects 3× more chars than `rules-kernel-dc` and costs
+   almost the same per run, but delivers ZERO lift: it lacks
+   `downstream-changes` (a tier-2 rule), and `scope-control` alone does not
+   correct the downstream trap. This is the placebo result again, sharpened:
+   not only is length inert, even 33 real rules are inert on a trap their
+   lift-carrying rule doesn't cover. Any low-cost weak-host profile must be
+   cut by lift-carrying content, not by tier size.
+3. **Cost is behaviour, not just context.** `rules-kernel-dc` injects a third
+   of `rules-balanced`'s chars but costs slightly MORE — the discipline
+   behaviour itself (verification turns, downstream edits) spends tokens. The
+   token factor cannot be dialed by context size alone.
+
+**Honest scope:** weak host only; the 2-task scope/downstream family (the family
+with the proven lift), N=24 pairs/arm — the full package covers 4 more trap
+archetypes the trimmed arms were NOT tested on here. Rules-only injection, not a
+full plugin projection (no skills/commands/hooks in the trimmed arms). Before
+shipping any trimmed default, sweep the full corpus.
+
+- Report: `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
+- Arms: `rules-kernel-dc` / `rules-balanced` in `src/scripts/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
 
 ## Strong host (`sonnet`, full 30-task corpus) — Gate verdict: **HONEST-NULL**
 
