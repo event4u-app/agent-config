@@ -18,6 +18,18 @@ concerns:
     script: src/scripts/chat_history.ts
     args: [hook-dispatch]
     fail_closed: false
+  # Hot-context working-memory cache (road-to-second-brain Phase 1).
+  # stop: deterministic, redacted 400-word overwrite of
+  # agents/runtime/state/hot-context.md from the chat-history JSONL.
+  # session_start: staleness-checked restore; the dispatcher forwards the
+  # returned `context` block to its own stdout (Claude Code SessionStart
+  # injection; on Claude, source=compact re-injects after compaction).
+  # Runs AFTER chat-history in both slots so the stop-write sees the final
+  # session entries. Never blocks.
+  hot-context:
+    script: src/scripts/hot_context_hook.ts
+    args: []
+    fail_closed: false
   roadmap-progress:
     script: src/scripts/roadmap_progress_hook.ts
     args: []
@@ -116,16 +128,16 @@ concerns:
 
 platforms:
   augment:
-    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
+    session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
-    stop:             [chat-history, verify-before-complete]
+    stop:             [chat-history, hot-context, verify-before-complete]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
   claude:
-    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
+    session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
-    stop:             [chat-history, verify-before-complete]
+    stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
@@ -145,9 +157,9 @@ platforms:
   # Decision matrix + upstream blockers tracked in
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
-    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
+    session_start:    [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:      [chat-history]
-    stop:             [chat-history, verify-before-complete]
+    stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     pre_tool_use:     [block-no-verify, rtk-wrap, design-slop]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
@@ -160,9 +172,9 @@ platforms:
   # IDE-only — CLI-only users fall back to /checkpoint per
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
+    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:        [chat-history]
-    stop:               [chat-history, verify-before-complete]
+    stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
@@ -175,9 +187,9 @@ platforms:
   # both map to session_start. TaskCancel maps to stop because the
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
+    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:        [chat-history]
-    stop:               [chat-history, verify-before-complete]
+    stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
@@ -194,8 +206,8 @@ platforms:
   # surface to record verification commands; documented limitation).
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness]
-    stop:               [chat-history, verify-before-complete]
+    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness]
+    stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
@@ -209,9 +221,9 @@ platforms:
   # turn-check semantics. AfterAgent fires when the agent loop ends
   # — this is our `stop` slot.
   gemini:
-    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
+    session_start:      [chat-history, hot-context, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness]
     session_end:        [chat-history]
-    stop:               [chat-history, verify-before-complete]
+    stop:               [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan]
 
