@@ -43,6 +43,7 @@ import {
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
     confirmGate,
+    resolve_split_decision,
 } from '../../src/scripts/release.js';
 import {
     CURRENT_ERA_BODY_CAP,
@@ -50,6 +51,7 @@ import {
     current_era_body_size,
     read_changelog_lines,
 } from '../../src/scripts/_lib/changelog_eras.js';
+import * as eras from '../../src/scripts/_lib/changelog_eras.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'release.ts');
@@ -487,13 +489,12 @@ function normalizeDryRun(s: string): string {
 }
 
 // ─── era-split gate — newest-release exemption (regression) ───────────────────
-// The gate in main() must measure the *accumulated* era body (newest release
-// exempt), the same quantity the drift test enforces — NOT the raw total. A
-// single large catch-up release (e.g. 7.0.0 in its own era, ~414 lines) busts
-// the raw cap, but its body is exempt and forces the split on the *next*
-// minor/major, never on the patch immediately after. Reverting the gate to
-// current_era_body_size re-fires the die() the exemption exists to clear, which
-// is exactly the `task release` failure this guards against (exit 2 on a patch).
+// A PATCH release must never hard-die just because the era's newest section
+// alone busts the cap (the 7.0.0 catch-up failure this exemption was
+// introduced for). Since the 2026-07-07 fix the gate measures the
+// POST-release body (raw total today) so minor/major releases split on time,
+// but the patch path stays non-fatal: it proceeds with a warning instead of
+// exit 2. Full decision-matrix coverage: `resolve_split_decision` below.
 describe('release --dry-run — era gate honours the newest-release exemption', () => {
     it('does not die when the era total busts the cap but the accumulated body is under it', () => {
         const lines = read_changelog_lines();
@@ -508,5 +509,84 @@ describe('release --dry-run — era gate honours the newest-release exemption', 
         const ts = runTs(['--dry-run']);
         expect(ts.status, ts.stderr).toBe(0);
         expect(ts.stderr).not.toContain('split needs a minor/major bump');
+    });
+});
+
+// ─── resolve_split_decision — post-release view (2026-07-07 regression) ──────
+// The 8.0.0 and 8.1.0 releases each skipped the era split because the gate
+// measured the PRE-release accumulated body (~0 right after a big catch-up
+// release) while the drift test measures POST-release — the just-exempt big
+// section starts counting the moment the next section is prepended. Both
+// releases left main red until a manual chore split. The decision matrix:
+describe('resolve_split_decision — era gate measures the post-release state', () => {
+    const SAVED_CHANGELOG = eras.CHANGELOG;
+    const SAVED_ARCHIVE_DIR = eras.ARCHIVE_DIR;
+    let tmp: string;
+
+    function write_changelog(body: string): void {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'release-era-gate-'));
+        tmpDirs.push(tmp);
+        const changelog = path.join(tmp, 'CHANGELOG.md');
+        fs.writeFileSync(changelog, body, 'utf-8');
+        fs.mkdirSync(path.join(tmp, 'docs', 'archive'), { recursive: true });
+        eras._set_changelog_path(changelog);
+        eras._set_archive_dir(path.join(tmp, 'docs', 'archive'));
+    }
+
+    afterEach(() => {
+        eras._set_changelog_path(SAVED_CHANGELOG);
+        eras._set_archive_dir(SAVED_ARCHIVE_DIR);
+    });
+
+    function era_body(newest_extra: number, prior_extra: number): string {
+        const pad = (n: number, tag: string): string =>
+            Array.from({ length: n }, (_, i) => `- ${tag} line ${i}`).join('\n');
+        return (
+            '# Changelog\n\n' +
+            '# Era: 8.0.x — current\n\n' +
+            '> Started at `8.0.0`.\n\n' +
+            '## [8.0.1](https://example/compare/8.0.0...8.0.1) (2026-07-06)\n\n' +
+            '### Bug Fixes\n\n* newest fix\n' +
+            `${pad(newest_extra, 'newest')}\n\n` +
+            '## [8.0.0](https://example/compare/7.5.0...8.0.0) (2026-07-05)\n\n' +
+            '### Features\n\n* prior feature\n' +
+            `${pad(prior_extra, 'prior')}\n\n` +
+            '# Era: pre-8.0.0 — archived\n\n' +
+            '> All entries before `8.0.0` live in\n' +
+            '> [`docs/archive/CHANGELOG-pre-8.0.0.md`](docs/archive/CHANGELOG-pre-8.0.0.md).\n'
+        );
+    }
+
+    it('the 8.1.0 class: big still-exempt newest section + MINOR target → split planned', () => {
+        write_changelog(era_body(300, 0)); // accumulated small, raw total over cap
+        expect(current_era_accumulated_body_size()).toBeLessThanOrEqual(CURRENT_ERA_BODY_CAP);
+        expect(current_era_body_size()).toBeGreaterThan(CURRENT_ERA_BODY_CAP);
+        const d = resolve_split_decision('8.1.0');
+        expect(d.die_message).toBeNull();
+        expect(d.warning).toBeNull();
+        expect(d.split).not.toBeNull();
+        expect(d.split!.boundary).toBe('8.1.0');
+    });
+
+    it('big newest section + PATCH target → proceeds with a warning, never dies (exemption kept)', () => {
+        write_changelog(era_body(300, 0));
+        const d = resolve_split_decision('8.0.2');
+        expect(d.die_message).toBeNull();
+        expect(d.split).toBeNull();
+        expect(d.warning).toContain('drift gate will be RED');
+    });
+
+    it('accumulated body itself over the cap + PATCH target → dies (unchanged behaviour)', () => {
+        write_changelog(era_body(0, 300)); // prior sections over cap even excluding newest
+        expect(current_era_accumulated_body_size()).toBeGreaterThan(CURRENT_ERA_BODY_CAP);
+        const d = resolve_split_decision('8.0.2');
+        expect(d.split).toBeNull();
+        expect(d.die_message).toContain('split needs a minor/major bump');
+    });
+
+    it('era comfortably under the cap → no split, no warning, no die', () => {
+        write_changelog(era_body(0, 0));
+        const d = resolve_split_decision('8.1.0');
+        expect(d).toEqual({ split: null, die_message: null, warning: null });
     });
 });

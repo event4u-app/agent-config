@@ -95,6 +95,7 @@ import type {
 import {
     CURRENT_ERA_BODY_CAP,
     current_era_accumulated_body_size,
+    current_era_body_size,
     current_era_insertion_point,
     perform_split,
     plan_split,
@@ -1613,6 +1614,64 @@ function _detect_in_flight_target(): string | null {
     return version;
 }
 
+/** Outcome of the release-time era-split gate (pure, unit-testable). */
+export interface SplitDecision {
+    split: SplitPlan | null;
+    die_message: string | null;
+    warning: string | null;
+}
+
+/**
+ * Decide whether releasing `target` must split the current era — measured
+ * against the POST-release state the drift test will see (the era's raw
+ * total today, because today's exempt newest section stops being exempt the
+ * moment the new release section is prepended).
+ *
+ * - post-release body over the cap + minor/major target → split.
+ * - post-release body over the cap + patch target:
+ *   - accumulated (prior releases beyond the newest) ALSO over the cap →
+ *     die — waiting cannot fix it; a minor release or manual split must
+ *     come first (pre-fix behaviour, unchanged).
+ *   - only the newest section busts the cap → proceed with a warning; a
+ *     patch cannot cross an era boundary, and blocking it was the failure
+ *     the newest-release exemption was introduced for. The drift gate will
+ *     be red until the next minor/major performs the split.
+ *
+ * Reads the CHANGELOG via the changelog_eras lib — tests point it at a
+ * fixture with `_set_changelog_path` (plan_split reads the same file).
+ */
+export function resolve_split_decision(target: string): SplitDecision {
+    const post_release_body = current_era_body_size();
+    if (post_release_body <= CURRENT_ERA_BODY_CAP) {
+        return { split: null, die_message: null, warning: null };
+    }
+    const candidate = plan_split(target);
+    if (candidate !== null) {
+        return { split: candidate, die_message: null, warning: null };
+    }
+    const accumulated = current_era_accumulated_body_size();
+    if (accumulated > CURRENT_ERA_BODY_CAP) {
+        return {
+            split: null,
+            die_message:
+                `current era body is ${accumulated} lines (cap ` +
+                `${CURRENT_ERA_BODY_CAP}) but release ${target} is a patch ` +
+                `within the same era — split needs a minor/major bump. ` +
+                'Cut a minor release or split CHANGELOG.md manually first.',
+            warning: null,
+        };
+    }
+    return {
+        split: null,
+        die_message: null,
+        warning:
+            `after this release the current era's accumulated body will be ` +
+            `${post_release_body} lines (cap ${CURRENT_ERA_BODY_CAP}); a patch ` +
+            `cannot split the era, so the changelog drift gate will be RED ` +
+            `until the next minor/major release performs the split.`,
+    };
+}
+
 function main(argv: readonly string[] | null = null): number {
     const args = _parse_args(argv === null ? process.argv.slice(2) : argv);
 
@@ -1678,30 +1737,33 @@ function main(argv: readonly string[] | null = null): number {
         test_trend_line,
     });
 
-    // Era-split planning: only crosses the gate when the current era's
-    // *accumulated* body (prior releases, excluding the newest section) has
-    // grown past the drift cap AND the release crosses a minor/major boundary.
-    // The newest release is exempt — a single large catch-up release forces
-    // the split on the *next* minor/major once it has become a prior entry,
-    // not on the patch that immediately follows it. This is the same quantity
-    // the drift test enforces (current_era_accumulated_body_size); measuring
-    // the raw total here would re-fire the gate the exemption exists to clear.
-    // Patch overflow that genuinely accumulates is caught by the drift test
-    // (red CI), not by an auto-split into a nonsensical "pre-X.Y.Z" archive.
-    let split: SplitPlan | null = null;
-    const body_size = current_era_accumulated_body_size();
-    if (body_size > CURRENT_ERA_BODY_CAP) {
-        const candidate = plan_split(target);
-        if (candidate === null) {
-            die(
-                `current era body is ${body_size} lines (cap ` +
-                    `${CURRENT_ERA_BODY_CAP}) but release ${target} is a patch ` +
-                    `within the same era — split needs a minor/major bump. ` +
-                    'Cut a minor release or split CHANGELOG.md manually first.',
-            );
-        }
-        split = candidate;
+    // Era-split planning — gate on the POST-release view (2026-07-07 fix).
+    // The drift test measures the era AFTER this release's section is
+    // prepended: the new section becomes the exempt "newest", so everything
+    // currently in the era — INCLUDING today's still-exempt newest section —
+    // counts as accumulated the moment this release lands. That future
+    // quantity equals today's raw era total (current_era_body_size). The old
+    // gate measured current_era_accumulated_body_size (pre-release snapshot),
+    // which is ~0 right after a big catch-up release — so the 8.0.0 and 8.1.0
+    // releases each skipped the split and left main red on the drift gate
+    // until a manual chore split. Same function as the drift test, wrong
+    // moment in time.
+    //
+    // The newest-release exemption is still honoured where it matters: a
+    // PATCH release cannot cross an era boundary, so when only the newest
+    // section busts the cap (accumulated still under it) the patch proceeds
+    // with a loud warning instead of dying — the split then fires on the
+    // next minor/major. A patch on top of a genuinely over-cap accumulated
+    // body still dies (unchanged), because that state is unfixable by
+    // waiting and needs a minor release or a manual split.
+    const decision = resolve_split_decision(target);
+    if (decision.die_message !== null) {
+        die(decision.die_message);
     }
+    if (decision.warning !== null) {
+        process.stderr.write(`warning: ${decision.warning}\n`);
+    }
+    const split: SplitPlan | null = decision.split;
 
     const plan = new Plan(current, target, bump, commits, prev, body, full, split);
     print_preview(plan);
