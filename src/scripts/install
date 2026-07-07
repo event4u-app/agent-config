@@ -27,6 +27,9 @@
 #                     the comma-separated values are unioned.
 #   --list-tools      Print supported tool IDs with descriptions, then exit
 #   --yes, -y         Non-interactive mode: do not prompt (default for non-TTY)
+#   --no-ui           Unattended install: never launch the browser setup
+#                     wizard and skip the terminal tool picker (tools default
+#                     to all). Used by `agent-config upgrade`.
 #   --force           Overwrite existing bridge files
 #   --dry-run         Show what payload sync would do (does not run bridges)
 #   --verbose         Detailed payload sync output
@@ -95,12 +98,13 @@ MINIMAL=false
 VALIDATE_ONLY=false
 FLEET_CONFIG=""
 USER_TYPE=""
+NO_UI=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
-    sed -n '3,58p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,61p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 list_tools() {
@@ -167,6 +171,7 @@ while [[ $# -gt 0 ]]; do
         --ai=*)          TOOLS="${TOOLS:+$TOOLS,}${1#*=}"; TOOLS_EXPLICIT=true; shift ;;
         --list-tools)    LIST_TOOLS=true; shift ;;
         --yes|-y)        YES=true; shift ;;
+        --no-ui)         NO_UI=true; shift ;;
         --force)         FORCE=true; shift ;;
         --dry-run)       DRY_RUN=true; shift ;;
         --verbose)       VERBOSE=true; shift ;;
@@ -192,6 +197,15 @@ done
 if $LIST_TOOLS; then
     list_tools
     exit 0
+fi
+
+# --no-ui = unattended install (the `agent-config upgrade` path). Export the
+# suppression env so every downstream stage (install.ts honors both the flag
+# and AGENT_CONFIG_NO_UI) skips the browser setup wizard — the wizard is an
+# onboarding surface whose foreground server used to block `upgrade` until
+# Ctrl-C.
+if $NO_UI; then
+    export AGENT_CONFIG_NO_UI=1
 fi
 
 # road-to-global-only-install § Phase 3.3 — consumer-floor gate.
@@ -282,8 +296,8 @@ prompt_tools() {
 # When an interactive global install will hand off to the browser wizard,
 # the wizard is the single tool-selection surface — skip the terminal
 # picker so it does not pre-empt (and, via TOOLS_EXPLICIT, suppress) the
-# GUI. Mirrors install.py::_wizard_should_launch minus the --no-ui flag,
-# which the bash orchestrator never receives (it errors on unknown args).
+# GUI. Mirrors install.py::_wizard_should_launch (the --no-ui flag is
+# handled here too — it suppresses both the wizard and the picker).
 # Headless paths (no TTY / CI / AGENT_CONFIG_NO_UI) still get the picker.
 wizard_will_handle_tools=false
 if $GLOBAL && [[ -t 0 && -t 1 && -z "${CI:-}" ]] \
@@ -291,8 +305,12 @@ if $GLOBAL && [[ -t 0 && -t 1 && -z "${CI:-}" ]] \
     wizard_will_handle_tools=true
 fi
 
+# --no-ui also skips the terminal picker: the flag means "fully unattended"
+# (its only caller today is `agent-config upgrade`, where a mid-upgrade
+# prompt reads as a hang). Tools fall through to the "all" default below —
+# the same effective selection the wizard-handoff path used.
 if ! $MINIMAL && ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS \
-   && [[ -t 0 && -t 1 ]] && ! $wizard_will_handle_tools; then
+   && [[ -t 0 && -t 1 ]] && ! $wizard_will_handle_tools && ! $NO_UI; then
     prompt_tools
     TOOLS_EXPLICIT=true
 fi
@@ -416,6 +434,7 @@ run_bridges() {
     [[ -n "$CUSTOM_PATH" ]] && args+=(--custom-path="$CUSTOM_PATH")
     $OFFLINE && args+=(--offline)
     $MINIMAL && args+=(--minimal)
+    $NO_UI && args+=(--no-ui)
     args+=(--tools="$TOOLS")
     "${runner[@]}" "${args[@]}"
 }
