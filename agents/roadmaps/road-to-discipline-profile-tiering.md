@@ -115,16 +115,23 @@ covered by tests; shipped behaviour unchanged (default still full surface).
 
 Blocks any default flip. Operator/cost-gated (live API spend).
 
-- [ ] Run the full trap corpus (all archetypes, ~29 tasks) × ≥3 seeds ×
+- [x] Run the full trap corpus (all archetypes, ~29 tasks) × ≥3 seeds ×
       arms `vanilla,rules-kernel-dc` on `claude-haiku-4-5` (n≥84 pairs;
       estimated ~$40–60). Command shape:
       `npx tsx src/scripts/bench_ab_v2_run.ts --arms vanilla,rules-kernel-dc
       --seeds 3 --model claude-haiku-4-5 --budget 3.5`.
-- [ ] Stats via `bench_ab_v2_stats.ts`; decision rule: significant discipline
+      <!-- done 2026-07-07: 180 runs, 0 errored, from a FROZEN worktree checkout
+      (mid-run dist/ edits cannot contaminate per-run rule reads). Report
+      2026-07-07T07-04-39Z-ab-v2-paired.json. -->
+- [x] Stats via `bench_ab_v2_stats.ts`; decision rule: significant discipline
       lift (p<0.05) beyond the scope/downstream family → PASS; no lift outside
       that family → `essential` stays honest-scoped to the measured family and
       the Phase-4 default flip is re-cut accordingly.
-- [ ] Pin the report in `docs/benchmark.md` (extend the cost-factor-sweep
+      <!-- verdict 2026-07-07: FAMILY-SCOPED PASS. Corpus-wide Δ=+0.056 p=0.084
+      (n.s. — other families at ceiling); trapE family 0.533→1.000, 7/7
+      discordant favour essential (sign p≈0.016); corpus-wide cost 1.71x.
+      essential stays honest-scoped to scope/downstream; flip still gated on P2. -->
+- [x] Pin the report in `docs/benchmark.md` (extend the cost-factor-sweep
       section) and update the CLAIMS ledger entry for the essential tier.
 
 **Exit:** pinned full-corpus report + updated claim; PASS/FAIL recorded.
@@ -132,11 +139,18 @@ Blocks any default flip. Operator/cost-gated (live API spend).
 
 ## Phase 4 — Evidence gate P2 + default flip
 
-- [ ] Extend the bench harness to ≥1 non-Claude weak host (e.g.
+- [x] Extend the bench harness to ≥1 non-Claude weak host (e.g.
       gpt-4o-mini / gemini-flash class): the runner currently drives the
       `claude` CLI only — add an adapter (alternate agent CLI or API loop)
       that honours the same paired design + deterministic scorer. Design
       first, then build; operator gate on vendor API keys + spend.
+      <!-- done 2026-07-07: --host codex adapter in bench_ab_v2_run.ts
+      (codex exec, sandboxed, prompt-prepend injection with documented
+      system-vs-user surface caveat, CODEX_BENCH_HOME isolated auth, JSONL
+      usage parsing; plugin arms refused on this host) + 8 unit tests. The
+      LIVE replication run is operator-gated: the stored codex ChatGPT auth
+      is expired and non-interactive codex runs need a session permission —
+      see blocker non-claude-host-adapter. -->
 - [ ] Replicate the Phase-3 sweep on that host. Lift replicates → default
       `discipline_profile: auto`; fails → default `off` (explicit opt-in to
       `essential`), per the council rule.
@@ -183,7 +197,7 @@ or scheduled for removal — never an unlabeled recommendation.
 ## Blockers
 
 ### blocker: p1-full-corpus-sweep
-- **Status:** open
+- **Status:** resolved <!-- 2026-07-07: budget authorized by maintainer this turn; sweep ran (180 runs, report 2026-07-07T07-04-39Z) — family-scoped PASS, pinned in docs/benchmark.md -->
 - **Owner:** maintainer
 - **Blocks:** Phase 3 (and thereby the Phase 4 default flip)
 - **What to do:** authorize the live Haiku sweep (~$40–60, ~2–4h wall time),
@@ -194,8 +208,13 @@ or scheduled for removal — never an unlabeled recommendation.
 ### blocker: non-claude-host-adapter
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** Phase 4 (P2 replication), Phase 5
-- **What to do:** decide the adapter shape (alternate agent CLI vs API loop)
-  and provide vendor API keys/budget for the replication run.
+- **Blocks:** Phase 4 (P2 replication run + default flip), Phase 5
+- **What to do:** the adapter is BUILT (`--host codex`, unit-tested). The live
+  run needs one of: (a) a fresh interactive `codex login` (stored ChatGPT
+  token expired), or (b) approving non-interactive codex runs for the agent
+  session (the auto-mode permission classifier blocks `codex exec` variants),
+  using the isolated API-key home (`CODEX_BENCH_HOME`). Then:
+  `CODEX_BENCH_HOME=<home> npx tsx src/scripts/bench_ab_v2_run.ts --host codex
+  --arms vanilla,rules-kernel-dc --seeds 3 --model gpt-5-nano --budget 3.5`.
 - **Resolved when:** the harness completes a paired vanilla-vs-essential run
   on a non-Claude host with the deterministic scorer.

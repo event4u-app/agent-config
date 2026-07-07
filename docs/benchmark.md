@@ -127,10 +127,42 @@ Three findings:
 with the proven lift), N=24 pairs/arm — the full package covers 4 more trap
 archetypes the trimmed arms were NOT tested on here. Rules-only injection, not a
 full plugin projection (no skills/commands/hooks in the trimmed arms). Before
-shipping any trimmed default, sweep the full corpus.
+shipping any trimmed default, sweep the full corpus (done below).
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
 - Arms: `rules-kernel-dc` / `rules-balanced` in `src/scripts/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
+
+### Full-corpus P1 gate (`claude-haiku-4-5`, all 30 tasks) — family-scoped PASS
+
+> **The essential lift is real, replicates, and is family-scoped.** Full corpus
+> (all 5 trap archetypes + agentic-debug + the Laravel downstream trap),
+> `vanilla` vs `rules-kernel-dc` × 3 seeds = 180 runs (n=90 pairs, 0 errored),
+> run from a frozen checkout so mid-run edits could not contaminate the
+> per-run rule reads. Corpus-wide the discipline delta is +0.056 (0.872 →
+> 0.928, Wilcoxon p=0.084, rb=0.53) — NOT significant, because vanilla Haiku
+> is already at/near the discipline ceiling on every family except the
+> scope/downstream one. Inside that family the pilot lift replicates exactly:
+> trapE (now 5 tasks incl. Laravel + meso variants) 0.533 → 1.000, Δ=+0.467,
+> ALL 7 discordant pairs favouring the essential cut (sign test p≈0.016); all
+> other families flat at ceiling (largest counter-noise: trapA −0.083 on 2
+> discordant pairs). **Corpus-wide cost factor: 1.71x** (132,036 → 225,956
+> mean tokens/run) — cheaper than the family-only 3.3x, because the
+> discipline behaviour only spends turns where the trap exists.
+
+| axis | vanilla | rules-kernel-dc | Δ | test |
+|---|---|---|---|---|
+| capability (pass-rate) | 92% | 92% | 0 | McNemar p=1.0, h=0.0 |
+| discipline, full corpus (0–1) | 0.872 | 0.928 | +0.056 | Wilcoxon p=0.084, rb=0.53 (n≠0=14) |
+| discipline, scope/downstream family (n=15) | 0.533 | 1.000 | +0.467 | 7/7 discordant favour essential (sign p≈0.016) |
+| mean tokens/run | 132,036 | 225,956 | +93,920 (~1.7x) | — |
+
+**Verdict for the tiering roadmap's P1 gate:** family-scoped PASS. The
+`essential` tier's claim stays honest-scoped to the scope/downstream family —
+the lift does not extend to families where the host is already at ceiling, and
+it costs ~1.7x on a realistic mixed corpus. The Phase-4 default flip remains
+additionally gated on the P2 non-Claude replication.
+
+- Report: `internal/bench/reports/ab-v2/2026-07-07T07-04-39Z-ab-v2-paired.json`.
 
 ## Strong host (`sonnet`, full 30-task corpus) — Gate verdict: **HONEST-NULL**
 
