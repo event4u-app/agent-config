@@ -8,9 +8,9 @@ Artefacts that maintain this package (agent-config itself).
 - **version**: `7.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 250
+- **artefacts**: 251
 
-## Commands (123)
+## Commands (124)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -76,6 +76,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 - **`optimize-agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
 - **`optimize-augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
+- **`optimize-project`** — Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'.
 - **`optimize-prompt`** — Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt.
 - **`optimize-rtk`** — Create or optimize project-local rtk filters based on the actual toolchain
 - **`optimize-skills`** — Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.

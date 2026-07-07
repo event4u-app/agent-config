@@ -48,6 +48,7 @@ commands:
     - feature/plan
     - feature/refactor
     - feature/roadmap
+    - optimize-project
     - project-analyze
     - project-health
     - refine-ticket
