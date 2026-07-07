@@ -157,16 +157,16 @@ surface delta recorded (est. −50k tok eager / −63 pointers thin);
 
 ## Phase 2 — Host-native activation: populate globs (deterministic)
 
-- [ ] `_emit_cursor_mdc`: map `file_pattern` triggers verbatim and
+- [x] `_emit_cursor_mdc`: map `file_pattern` triggers verbatim and
       `path_prefix` triggers as `<prefix>**` into the `.mdc` `globs:` field;
       rules with ≥1 path-shaped trigger become Cursor auto-attach,
       description-only rules stay Agent-Requested (`alwaysApply: false`).
-- [ ] `_emit_windsurf_rule`: same mapping onto the `glob` trigger type;
+- [x] `_emit_windsurf_rule`: same mapping onto the `glob` trigger type;
       keyword/intent-only rules keep `model_decision`.
-- [ ] Snapshot tests: `ui-audit-gate` fixture emits
+- [x] Snapshot tests: `ui-audit-gate` fixture emits
       `globs: resources/views/**,resources/js/**`; a keyword-only rule
       emits empty globs unchanged.
-- [ ] Verify no double-fire: a glob-attached rule must not also be inlined
+- [x] Verify no double-fire: a glob-attached rule must not also be inlined
       eager on those hosts once thin mode lands (interaction note in the
       rule-router contract).
 

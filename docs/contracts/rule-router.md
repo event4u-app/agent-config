@@ -130,6 +130,22 @@ no runtime resolver.
   in `src/config/discovery/{workspaces,packs}.yml` — unknown ids fail
   lint before they can reach the router.
 
+## Host-native glob activation (Cursor / Windsurf)
+
+Since 2026-07-07 (`road-to-request-scoped-rule-load` Phase 2) the
+Cursor/Windsurf projectors derive `globs:` from the rule's path-shaped
+triggers: `file_pattern` maps verbatim, `path_prefix` maps as
+`<prefix>**`. Rules with ≥1 path-shaped trigger auto-attach host-natively
+(Cursor auto-attach / Windsurf `trigger: glob`) — deterministic, no
+model-compliance dependency. Keyword/phrase/intent-only rules keep
+description-based activation (Agent-Requested / `model_decision`).
+
+**No-double-fire invariant:** when thin projection lands on those hosts, a
+glob-attached rule must NOT also ship an eager inline body there — the
+host-native attach IS its conditional load. The thin projector treats
+glob-capable rules on glob-capable hosts as already-conditional; the
+pointer mechanism is for hosts without a native equivalent (Claude Code).
+
 ## Activation semantics
 
 The host agent reads `dist/router.json` once per session. Per turn:
