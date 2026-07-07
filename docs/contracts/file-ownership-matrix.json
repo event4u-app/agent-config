@@ -39,6 +39,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md": {
       "kind": "context",
       "rule_type": null,
@@ -2956,6 +2962,20 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md",
+      "target": ".agent-src.uncondensed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md",
       "target": ".agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md",
       "type": "WRITE",
@@ -5138,6 +5158,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/direct-answers.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/rules/direct-answers.md",

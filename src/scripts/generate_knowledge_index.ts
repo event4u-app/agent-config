@@ -137,7 +137,10 @@ function renderIndex(knowledgeRoot: string): string {
         const entries = collectSection(knowledgeRoot, section.dir);
         if (entries.length === 0) continue;
         lines.push('');
-        lines.push(`## ${section.heading}`);
+        // Entry count in the heading — cheap human scannability
+        // (road-to-second-brain Phase 4: the council-endorsed browsability
+        // alternative to a vault view).
+        lines.push(`## ${section.heading} (${entries.length})`);
         lines.push('');
         for (const e of entries) {
             const title = e.file.replace(/\.md$/, '');

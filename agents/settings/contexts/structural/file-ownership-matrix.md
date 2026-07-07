@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **463**
-- Edges (incl. self-WRITE): **1581**
+- Files indexed: **464**
+- Edges (incl. self-WRITE): **1584**
 
 ## READ_ONLY edges
 
@@ -25,6 +25,7 @@
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md` | `.agent-src.uncondensed/rules/guidelines.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `.agent-src.uncondensed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md` | `.agent-src.uncondensed/rules/think-before-action.md` | `body_link` | 1 |
@@ -237,6 +238,7 @@
 | `.agent-src.uncondensed/rules/design-fidelity.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/design-fidelity.md` | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/design-fidelity.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/direct-answers.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/direct-answers.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/direct-answers.md` | `.agent-src.uncondensed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/domain-adoption-policy.md` | `.agent-src.uncondensed/rules/augment-edit-discipline.md` | `body_link` | 1 |
@@ -1135,7 +1137,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 49 |
+| `context` | 50 |
 | `persona` | 36 |
 | `rule` | 95 |
 | `skill` | 283 |
