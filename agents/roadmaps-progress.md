@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 3 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **3** open blockers
+> 4 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **5** open blockers
 
 ## Overall
 
-**34 / 58 steps done · 59%**
+**34 / 77 steps done · 44%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -17,8 +17,9 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-discipline-profile-tiering.md](roadmaps/road-to-discipline-profile-tiering.md) | 5 | 16 | 4 | 12 | 0 | 0 | [1](#blockers-road-to-discipline-profile-tiering) | ████████░░ 75% |
-| 2 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
-| 3 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 11 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 67% |
+| 2 | [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md) | 4 | 19 | 19 | 0 | 0 | 0 | [2](#blockers-road-to-flow-learnings) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 9 | 0 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-token-saving.md](roadmaps/road-to-token-saving.md) | 7 | 35 | 11 | 22 | 0 | 2 | [1](#blockers-road-to-token-saving) | ███████░░░ 67% |
 
 ---
 
@@ -50,6 +51,34 @@
   - **Resolved when:** the harness completes a paired vanilla-vs-essential run on a non-Claude host with the deterministic scorer.
 
 _1 blocker resolved._
+
+### [road-to-flow-learnings.md](roadmaps/road-to-flow-learnings.md)
+
+**Road to flow learnings — adopt the real fifth of an external orchestration suite, reject the theater** — 0 / 19 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Install & conformance contract | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Fleet rollout (`init --fleet fleet.yaml`) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Dispatch failure-policy clarification | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Bench matrix expansion + per-section render | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-flow-learnings"></a>
+**Blockers**
+
+- **org-fleet-run** (owner: maintainer) — blocks Phase 1 — Fleet rollout
+  - **What to do:**
+    1. After the fixture test is green, run the fleet init across ≥3 real
+    org repos (`fleet.yaml` listing the app/package repos) with one
+    intentionally mis-permissioned repo as the seeded failure.
+    2. Capture the aggregate JSON report.
+  - **Resolved when:** aggregate JSON is schema-valid; the seeded repo is red with its pre-flight finding; all siblings are green and conformance-passing.
+- **live-matrix-run** (owner: maintainer) — blocks Phase 3 — live matrix run (live API spend)
+  - **What to do:**
+    1. Invoke the matrix runner for ≥2 task families × 2 hosts from the
+    matrix YAML (paired arms per the existing ab-v2 discipline).
+    2. Pin the resulting report alongside the existing pinned reports.
+  - **Resolved when:** one schema-valid matrix report exists and the per-section render consumes it without manual edits.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
