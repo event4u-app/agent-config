@@ -57,6 +57,9 @@
 #   --validate-only   Pre-flight only — permissions, disk floor, conflicts,
 #                     host-detection sanity as typed findings. Writes nothing.
 #                     Exit 0 = clear, 1 = blocking finding, 2 = no runner.
+#   --fleet <yaml>    Multi-repo rollout from a fleet.yaml (repos list +
+#                     max_concurrency). Per-repo isolation; aggregate JSON.
+#                     Exit 0 = all green, 1 = any repo failed, 2 = config.
 #   --help, -h        Show this help
 #
 # Examples:
@@ -90,6 +93,7 @@ CUSTOM_PATH=""
 OFFLINE=false
 MINIMAL=false
 VALIDATE_ONLY=false
+FLEET_CONFIG=""
 USER_TYPE=""
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
@@ -178,6 +182,8 @@ while [[ $# -gt 0 ]]; do
         --minimal|--settings-only)
                          MINIMAL=true; shift ;;
         --validate-only) VALIDATE_ONLY=true; shift ;;
+        --fleet)         FLEET_CONFIG="$2"; shift 2 ;;
+        --fleet=*)       FLEET_CONFIG="${1#*=}"; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
@@ -219,6 +225,22 @@ if $VALIDATE_ONLY; then
     [[ -n "$TOOLS" ]] && preflight_args+=(--tools "$TOOLS")
     [[ -n "$TARGET_DIR" ]] && preflight_args+=(--target "$TARGET_DIR")
     "${preflight_runner[@]}" "$SCRIPT_DIR/_cli/cmd_preflight.ts" "${preflight_args[@]}"
+    exit $?
+fi
+
+# --fleet fleet.yaml — config-driven multi-repo rollout (road-to-flow-learnings
+# Phase 1). Per-repo isolation, concurrency-bounded, aggregate JSON + table.
+# Exit: 0 = all repos green, 1 = at least one repo failed, 2 = config error.
+if [[ -n "$FLEET_CONFIG" ]]; then
+    if [[ -x "$SCRIPT_DIR/../../node_modules/.bin/tsx" ]]; then
+        fleet_runner=("$SCRIPT_DIR/../../node_modules/.bin/tsx")
+    elif command -v npx >/dev/null 2>&1; then
+        fleet_runner=(npx tsx)
+    else
+        err "--fleet needs a TS runner (install Node.js, or run npm install in the package)"
+        exit 2
+    fi
+    "${fleet_runner[@]}" "$SCRIPT_DIR/_cli/cmd_fleet.ts" --config "$FLEET_CONFIG"
     exit $?
 fi
 

@@ -163,17 +163,17 @@ Genuinely new; rebuilt on the existing atomic/txlog substrate. Framing
 per ADR-020/ADR-088: this installs *agent-config itself* across repos —
 it never bridges to or drives another tool's runtime.
 
-- [ ] `fleet.yaml`: list of repo paths (or git URLs + clone dir), each
+- [x] `fleet.yaml`: list of repo paths (or git URLs + clone dir), each
       with profile/pack selection; global `max_concurrency` (default 3)
       — concurrency bound only, no memory-cap theater.
-- [ ] Per-repo isolation: each install runs the full pipeline
+- [x] Per-repo isolation: each install runs the full pipeline
       (pre-flight → apply) with its own txlog scope; one repo failing
       pre-flight or apply never aborts the others.
-- [ ] Aggregate report: one JSON summary (per repo: status, findings,
+- [x] Aggregate report: one JSON summary (per repo: status, findings,
       duration, Phase-0 conformance JSONL result) + human table to
       stdout. Council trim: nothing beyond install + conformance — no
       post-install verification orchestration.
-- [ ] Fixture test: ≥3 fixture repos with one seeded failure — failing
+- [x] Fixture test: ≥3 fixture repos with one seeded failure — failing
       repo red with its finding, siblings green, aggregate JSON
       schema-validated.
 - [ ] Real org fleet run (internal-adoption lever + dogfood corpus).

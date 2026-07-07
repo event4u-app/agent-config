@@ -36,7 +36,7 @@ export function shouldInitLaunchGui(rest: readonly string[]): boolean {
     const cliSignals = new Set([
         '--no-ui', '--tools', '--ai', '--yes', '-y', '--quiet', '-q',
         '--dry-run', '--minimal', '--settings-only', '--list-tools',
-        '--validate-only',
+        '--validate-only', '--fleet',
     ]);
     for (const arg of rest) {
         const flag = arg.split('=', 1)[0];
