@@ -43,20 +43,14 @@ THE SHORTEST REPLY THAT FULLY ANSWERS THE QUESTION IS THE RIGHT REPLY.
 LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 ```
 
-- Skip restating the question; skip "Let me…" intent announcements.
-- Skip explaining tool use — the call result speaks.
-- Skip post-hoc summary on simple answers; work replies close with one summary + PR link (§ Reply close).
+- Skip restating the question; skip "Let me…" announcements.
+- Skip explaining tool use — the result speaks.
+- Simple replies skip summary; **work replies** (multi-step change, roadmap/branch progress, created/updated PR) close with ONE end-summary, and a PR created this turn puts its raw URL as the **literal last line**.
 - Multi-step → bullets; one-true-answer → one sentence.
 
-Never overrides `user-interaction` (numbered options stay) or command-mandated steps.
+Never overrides `user-interaction` (numbered options) or command steps. Reply-close detail → [`reply-close-mechanics`](../contexts/communication/rules-auto/reply-close-mechanics.md).
 
-**Narration carve-out:** narration only when both `personal.play_by_play` AND `verbosity.intent_announcements` are `true`.
-
-## Reply close — work summary + PR link
-
-Brevity governs the body; the **close** is the exception. Reply that landed substantial work (multi-step change, roadmap/branch progress, created/updated PR) ends with **ONE** compact status summary — at the very end, never mid-reply: done + remaining. Simple one-answer replies still skip it (Iron Law 3).
-
-**PR link last.** PR created/updated this turn → its raw GitHub URL is the **literal last line**, after the summary, nothing below — user never hunts for it. One PR → one URL line. URL is language-neutral (satisfies `language-and-tone` last-line rule) and reply body, not a PR comment — so `no-pr-progress-comments` / `no-attribution-footers` don't apply.
+**Narration carve-out:** only when both `personal.play_by_play` AND `verbosity.intent_announcements` are `true`.
 
 ## Emoji Scope — functional markers only
 
