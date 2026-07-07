@@ -3,12 +3,17 @@
  * (`src/scripts/check_quality_regression.ts`). The judge is mocked so the
  * bias-control + aggregation logic is verified deterministically (no live API).
  */
-import { describe, expect, it } from "vitest";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
+import { afterAll, describe, expect, it } from "vitest";
 
 import {
   aggregate,
   evaluatePair,
   gateVerdict,
+  main,
   type JudgeFn,
   type PairResult,
 } from "../../src/scripts/check_quality_regression.js";
@@ -90,5 +95,67 @@ describe("aggregate + gate", () => {
   it("wires Wilcoxon over signed diffs (non-null with decisive pairs)", () => {
     const results = [...Array(8)].map(() => mk("thin")).concat([...Array(2)].map(() => mk("eager")));
     expect(aggregate(results, 0.48).wilcoxon_p).not.toBeNull();
+  });
+});
+
+describe("flip-gate hardening (CLI exit codes via --report fixtures)", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "cqr-fixtures-"));
+  afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  function writeFixture(name: string, report: unknown): string {
+    const p = path.join(tmp, name);
+    fs.writeFileSync(p, JSON.stringify(report, null, 2));
+    return p;
+  }
+
+  const tiePairs = [...Array(5)].map((_, i) => ({
+    id: `t-${i}`,
+    winner: "tie",
+    length_delta: 0,
+    winner_is_longer: null,
+  }));
+  const decisivePassPairs = [...Array(6)]
+    .map((_, i) => ({ id: `w-${i}`, winner: "thin", length_delta: -1, winner_is_longer: false }))
+    .concat([...Array(4)].map((_, i) => ({ id: `l-${i}`, winner: "eager", length_delta: 1, winner_is_longer: false })));
+
+  it("dry-run report → exit 2 in default mode (a mock is never an unlock)", () => {
+    const p = writeFixture("dry-run.json", { dry_run: true, threshold: 0.48, results: tiePairs });
+    expect(main(["--report", p])).toBe(2);
+  });
+
+  it("dry-run report → exit 2 under --as-flip-gate too", () => {
+    const p = writeFixture("dry-run-flip.json", { dry_run: true, threshold: 0.48, results: tiePairs });
+    expect(main(["--report", p, "--as-flip-gate"])).toBe(2);
+  });
+
+  it("all-ties (inconclusive) → exit 0 on the CI-inert path", () => {
+    const p = writeFixture("ties.json", { threshold: 0.48, results: tiePairs });
+    expect(main(["--report", p])).toBe(0);
+  });
+
+  it("all-ties (inconclusive) → exit 2 under --as-flip-gate", () => {
+    const p = writeFixture("ties-flip.json", { threshold: 0.48, results: tiePairs });
+    expect(main(["--report", p, "--as-flip-gate"])).toBe(2);
+  });
+
+  it("missing report → exit 0 default, exit 2 under --as-flip-gate", () => {
+    const p = path.join(tmp, "does-not-exist.json");
+    expect(main(["--report", p])).toBe(0);
+    expect(main(["--report", p, "--as-flip-gate"])).toBe(2);
+  });
+
+  it("decisive pass → exit 0 in both modes", () => {
+    const p = writeFixture("pass.json", { threshold: 0.48, results: decisivePassPairs });
+    expect(main(["--report", p])).toBe(0);
+    expect(main(["--report", p, "--as-flip-gate"])).toBe(0);
+  });
+
+  it("decisive regression → exit 2 in both modes", () => {
+    const failPairs = [...Array(4)]
+      .map((_, i) => ({ id: `w-${i}`, winner: "thin", length_delta: -1, winner_is_longer: false }))
+      .concat([...Array(6)].map((_, i) => ({ id: `l-${i}`, winner: "eager", length_delta: 1, winner_is_longer: false })));
+    const p = writeFixture("fail.json", { threshold: 0.48, results: failPairs });
+    expect(main(["--report", p])).toBe(2);
+    expect(main(["--report", p, "--as-flip-gate"])).toBe(2);
   });
 });

@@ -8,10 +8,8 @@ triggers:
   - phrase: "copilot pr review"
 routes_to:
   - "skill:copilot-config"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, engineering]
+packs: [meta]
 ---
 
 # Copilot Routing

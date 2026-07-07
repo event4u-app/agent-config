@@ -8,10 +8,8 @@ triggers:
   - keyword: "for brevity"
   - keyword: "rest follows the same pattern"
   - phrase: "similar pattern"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Output Discipline

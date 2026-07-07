@@ -11,6 +11,10 @@ complexity: lightweight
 > auto-disabled on hosts with a measured NULL lift, multi-vendor by
 > construction — every default flip evidence-gated.
 
+> **Program sequencing:** the token program's single critical path + tracking
+> table live in `road-to-token-proof-and-story.md` § Program tracking — this
+> roadmap links there, never copies the sequence.
+
 ## Goal
 
 Ship `discipline_profile: auto | off | essential | full` so consumers get the

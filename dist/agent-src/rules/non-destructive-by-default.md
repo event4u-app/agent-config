@@ -5,10 +5,8 @@ description: "Hard Floor: agent asks before prod-trunk commits/merges, deploys, 
 alwaysApply: true
 load_context:
   - ../contexts/authority/destructive-mechanics.md
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Non-Destructive by Default

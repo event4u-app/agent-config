@@ -33,8 +33,17 @@
  *   ./scripts-run src/scripts/check_quality_regression            # gate (inert w/o run data)
  *   ./scripts-run src/scripts/check_quality_regression --json
  *   ./scripts-run src/scripts/check_quality_regression --threshold 0.48
+ *   ./scripts-run src/scripts/check_quality_regression --as-flip-gate
  *
- * Exit codes: 0 ok / inert · 1 file error · 2 quality regression (win-rate < threshold).
+ * Flip-gate hardening (token-proof-and-story Phase 0):
+ *   - A report with `dry_run: true` is NEVER an unlock — exit 2 in every mode.
+ *     A mock report must not be indistinguishable from a pass in a script chain.
+ *   - `--as-flip-gate` (used by the falsification checklist / the thin/scoped
+ *     flip decision): "no report" and "no decisive pairs — inconclusive" are
+ *     NOT unlocks → exit 2. Without the flag the CI-inert path keeps exit 0.
+ *
+ * Exit codes: 0 ok / inert · 1 file error · 2 quality regression, dry-run
+ * report, or (under --as-flip-gate) missing/inconclusive report.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -166,16 +175,27 @@ export function gateVerdict(agg: QualityAggregate): 0 | 2 {
 
 interface RunReport {
   threshold?: number;
+  dry_run?: boolean;
   results?: PairResult[];
 }
 
 function main(argv: string[]): number {
   let asJson = false;
+  let asFlipGate = false;
   let threshold = DEFAULT_THRESHOLD;
+  let reportPath = RUN_REPORT;
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--json') asJson = true;
-    else if (a === '--threshold') {
+    else if (a === '--as-flip-gate') asFlipGate = true;
+    else if (a === '--report') {
+      const v = argv[(i += 1)];
+      if (!v) {
+        process.stderr.write('error: --report requires a path\n');
+        return 1;
+      }
+      reportPath = path.resolve(v);
+    } else if (a === '--threshold') {
       const v = Number(argv[(i += 1)]);
       if (!Number.isFinite(v) || v < 0 || v > 1) {
         process.stderr.write('error: --threshold must be in [0,1]\n');
@@ -183,7 +203,9 @@ function main(argv: string[]): number {
       }
       threshold = v;
     } else if (a === '-h' || a === '--help') {
-      process.stdout.write('usage: check_quality_regression [--json] [--threshold F]\n');
+      process.stdout.write(
+        'usage: check_quality_regression [--json] [--threshold F] [--as-flip-gate] [--report PATH]\n',
+      );
       return 0;
     } else {
       process.stderr.write(`error: unknown argument: ${a}\n`);
@@ -191,9 +213,17 @@ function main(argv: string[]): number {
     }
   }
 
-  if (!fs.existsSync(RUN_REPORT)) {
+  if (!fs.existsSync(reportPath)) {
+    if (asFlipGate) {
+      const msg =
+        `❌  flip gate: no quality-run report (${path.relative(REPO_ROOT, reportPath)}) — ` +
+        'a flip requires a real judge run. NOT an unlock.';
+      if (asJson) process.stdout.write(JSON.stringify({ verdict: 'no-data', flip_gate: true, unlock: false }, null, 2) + '\n');
+      else process.stdout.write(msg + '\n');
+      return 2;
+    }
     const msg =
-      `⚠️  no quality-run report (${path.relative(REPO_ROOT, RUN_REPORT)}) — ` +
+      `⚠️  no quality-run report (${path.relative(REPO_ROOT, reportPath)}) — ` +
       'gate inert. Produce it with a thin-vs-eager judge run (operator/cost gate).';
     if (asJson) process.stdout.write(JSON.stringify({ verdict: 'no-data', inert: true }, null, 2) + '\n');
     else process.stdout.write(msg + '\n');
@@ -202,17 +232,27 @@ function main(argv: string[]): number {
 
   let report: RunReport;
   try {
-    report = JSON.parse(fs.readFileSync(RUN_REPORT, 'utf-8')) as RunReport;
+    report = JSON.parse(fs.readFileSync(reportPath, 'utf-8')) as RunReport;
   } catch (e) {
-    process.stderr.write(`error: cannot parse ${path.relative(REPO_ROOT, RUN_REPORT)}: ${(e as Error).message}\n`);
+    process.stderr.write(`error: cannot parse ${path.relative(REPO_ROOT, reportPath)}: ${(e as Error).message}\n`);
     return 1;
   }
+
+  if (report.dry_run === true) {
+    const msg =
+      '❌  quality-run report is a DRY-RUN mock (`dry_run: true`) — a mock is never an unlock.\n' +
+      '   Re-run the judge live (bench_quality_run without --dry-run) or delete the mock report.';
+    if (asJson) process.stdout.write(JSON.stringify({ verdict: 'dry-run', unlock: false }, null, 2) + '\n');
+    else process.stdout.write(msg + '\n');
+    return 2;
+  }
+
   const results = Array.isArray(report.results) ? report.results : [];
   const thr = typeof report.threshold === 'number' ? report.threshold : threshold;
   const agg = aggregate(results, thr);
 
   if (asJson) {
-    process.stdout.write(JSON.stringify({ ...agg, threshold: thr }, null, 2) + '\n');
+    process.stdout.write(JSON.stringify({ ...agg, threshold: thr, flip_gate: asFlipGate }, null, 2) + '\n');
   } else {
     process.stdout.write(
       `quality run: ${agg.total} pairs · thin ${agg.thin_wins} / eager ${agg.eager_wins} / ` +
@@ -225,12 +265,18 @@ function main(argv: string[]): number {
     if (agg.verdict === 'regression') {
       process.stdout.write(`❌  quality regression: thin win-rate below ${(thr * 100).toFixed(0)}%.\n`);
     } else if (agg.verdict === 'no-data') {
-      process.stdout.write(`⚠️  no decisive pairs — inconclusive.\n`);
+      if (asFlipGate) {
+        process.stdout.write(`❌  flip gate: no decisive pairs — inconclusive is NOT an unlock.\n`);
+      } else {
+        process.stdout.write(`⚠️  no decisive pairs — inconclusive.\n`);
+      }
     } else {
       process.stdout.write(`✅  quality held: thin win-rate within tolerance.\n`);
     }
   }
-  return gateVerdict(agg);
+  const code = gateVerdict(agg);
+  if (code === 0 && asFlipGate && agg.verdict === 'no-data') return 2;
+  return code;
 }
 
 const _IS_MAIN =

@@ -8,10 +8,8 @@ triggers:
   - intent: "tool loop"
   - intent: "fresh chat"
   - keyword: "3-failure"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Context Hygiene

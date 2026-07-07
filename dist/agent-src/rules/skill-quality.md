@@ -6,10 +6,8 @@ triggers:
   - path_prefix: ".agent-src.uncondensed/skills/"
 routes_to:
   - "guideline:agent-infra/skill-quality-checklist"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Skill Quality

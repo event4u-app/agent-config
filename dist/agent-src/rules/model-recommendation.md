@@ -11,10 +11,8 @@ load_context:
   - ../contexts/model-recommendations.md
 routes_to:
   - "guideline:agent-infra/model-recommendation"
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
+packs: [meta]
 ---
 
 # Model Recommendation

@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**165 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**166 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -35,6 +35,7 @@ _Explore, plan, estimate, refine, and investigate before building. The "what sho
 - `feature-plan` — Interactively plan a feature — research, discuss, and create a structured feature document
 - `feature-refactor` — Refine and update an existing feature plan through interactive discussion
 - `feature-roadmap` — Generate implementation roadmap(s) from a feature plan and link them
+- `optimize-project` — Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale…
 - `project-analyze` — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 - `project-health` — Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 - `refine-ticket` — Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates…

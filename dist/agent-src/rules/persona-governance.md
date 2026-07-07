@@ -23,10 +23,8 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule documents the persona authoring tree (.agent-src.uncondensed/personas/) as the deprecation-path operand."
-workspaces:
-  - agent-config-maintainer
-packs:
-  - meta
+workspaces: [agent-config-maintainer]
+packs: [meta]
 ---
 
 # Persona Governance

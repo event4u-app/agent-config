@@ -7,10 +7,10 @@ triggers:
   - intent: "writing a diff"
   - intent: "reviewing a diff"
   - keyword: "drive-by"
-workspaces:
-  - engineering
-packs:
-  - engineering-base
+  - keyword: "rewrite"
+  - keyword: "fix"
+workspaces: [engineering]
+packs: [engineering-base]
 ---
 
 # Minimal Safe Diff
