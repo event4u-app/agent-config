@@ -83,15 +83,15 @@ retirement work. Output: a short findings note in
 Goal: a deterministic, user-safe way to own a block inside
 `~/.claude/settings.json`.
 
-- [ ] Implement atomic read→merge→write for the hooks section in the
+- [x] Implement atomic read→merge→write for the hooks section in the
       installer lib (`src/`): managed entries carry an identifying marker;
       merge never touches non-managed entries; write is atomic
       (temp file + rename) with a lockfile guard
-- [ ] `agent-config uninstall` / `global` removal path deletes exactly the
+- [x] `agent-config uninstall` / `global` removal path deletes exactly the
       managed entries and nothing else
-- [ ] Idempotency: re-running `agent-config global` twice produces zero diff
+- [x] Idempotency: re-running `agent-config global` twice produces zero diff
       in `settings.json`
-- [ ] Unit tests for merge, collision (user already has a hook on the same
+- [x] Unit tests for merge, collision (user already has a hook on the same
       event), removal, and corrupted-settings recovery
       <!-- carve-out: new-gate-verification -->
 
