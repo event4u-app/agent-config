@@ -22,8 +22,8 @@ afterEach(() => {
 });
 
 const CAPS_MEASURED: ags.HostCapabilities = {
-    lift_disabled_models: ['claude-sonnet-4-6'],
-    unknown_default: 'lift_enabled',
+    lift_disabled_models: ['claude-sonnet-4-6', 'gpt-5-mini'],
+    unknown_defaults: { anthropic: 'lift_enabled', default: 'lift_disabled' },
 };
 
 describe('load_host_capabilities', () => {
@@ -39,20 +39,37 @@ describe('load_host_capabilities', () => {
         );
         const caps = ags.load_host_capabilities(p);
         expect(caps.lift_disabled_models).toEqual(['claude-sonnet-4-6', 'plain-string-model']);
-        expect(caps.unknown_default).toBe('lift_enabled');
+        // legacy single-value key maps onto BOTH families (pre-P2 semantics)
+        expect(caps.unknown_defaults['default']).toBe('lift_enabled');
+        expect(caps.unknown_defaults['anthropic']).toBe('lift_enabled');
     });
 
-    it('missing file → fail-safe fallback (empty list, lift_enabled)', () => {
+    it('parses vendor-granular unknown_defaults (P2 shape)', () => {
+        const p = write_tmp_yaml(
+            [
+                'lift_disabled_models:',
+                '  - gpt-5-mini',
+                'unknown_defaults:',
+                '  anthropic: lift_enabled',
+                '  default: lift_disabled',
+            ].join('\n'),
+        );
+        const caps = ags.load_host_capabilities(p);
+        expect(caps.unknown_defaults).toEqual({ anthropic: 'lift_enabled', default: 'lift_disabled' });
+    });
+
+    it('missing file → fail-safe fallback mirroring the shipped yml', () => {
         const caps = ags.load_host_capabilities('/nonexistent/host-capabilities.yml');
         expect(caps.lift_disabled_models).toEqual([]);
-        expect(caps.unknown_default).toBe('lift_enabled');
+        expect(caps.unknown_defaults).toEqual({ anthropic: 'lift_enabled', default: 'lift_disabled' });
     });
 
     it('the shipped src/config/host-capabilities.yml loads and contains only measured entries', () => {
         const repo_root = path.resolve(__dirname, '..', '..', '..');
         const caps = ags.load_host_capabilities(path.join(repo_root, 'src', 'config', 'host-capabilities.yml'));
         expect(caps.lift_disabled_models).toContain('claude-sonnet-4-6');
-        expect(caps.unknown_default).toBe('lift_enabled');
+        expect(caps.lift_disabled_models).toContain('gpt-5-mini');
+        expect(caps.unknown_defaults).toEqual({ anthropic: 'lift_enabled', default: 'lift_disabled' });
         // Council lock: every entry carries measured/extrapolated provenance.
         const raw = fs.readFileSync(path.join(repo_root, 'src', 'config', 'host-capabilities.yml'), 'utf-8');
         const entry_count = caps.lift_disabled_models.length;
@@ -88,13 +105,26 @@ describe('resolve_discipline_profile', () => {
         ).toBe('off');
     });
 
-    it('auto: unknown or missing model id → essential (fail-safe lift_enabled)', () => {
+    it('auto: vendor-granular unknowns — unknown Claude → essential, unknown non-Claude / missing → off', () => {
+        // unmeasured Claude-family host keeps the fail-safe toward the one measured lift
+        expect(
+            ags.resolve_discipline_profile({ discipline_profile: 'auto' }, 'claude-haiku-9-9', CAPS_MEASURED),
+        ).toBe('essential');
+        // unmeasured non-Claude host defaults off (failed P2 replication)
         expect(
             ags.resolve_discipline_profile({ discipline_profile: 'auto' }, 'gpt-4o-mini', CAPS_MEASURED),
-        ).toBe('essential');
-        expect(ags.resolve_discipline_profile({ discipline_profile: 'auto' }, null, CAPS_MEASURED)).toBe(
-            'essential',
-        );
+        ).toBe('off');
+        expect(
+            ags.resolve_discipline_profile({ discipline_profile: 'auto' }, 'gemini-flash-3', CAPS_MEASURED),
+        ).toBe('off');
+        // missing model id → conservative off
+        expect(ags.resolve_discipline_profile({ discipline_profile: 'auto' }, null, CAPS_MEASURED)).toBe('off');
+    });
+
+    it('auto: measured NULL non-Claude host (gpt-5-mini) → off via the disable-list', () => {
+        expect(
+            ags.resolve_discipline_profile({ discipline_profile: 'auto' }, 'gpt-5-mini', CAPS_MEASURED),
+        ).toBe('off');
     });
 
     it('legacy rule_loading_tier maps when discipline_profile is absent', () => {
