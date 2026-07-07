@@ -46,6 +46,9 @@ const CONCENTRATION_TOP3_PCT = 0.3;
 const KNOWN_CONCENTRATION_BREACHES: Record<string, number> = {
     'language-and-tone.md': 4_174,
     'no-cheap-questions.md': 3_719,
+    // Retired by the concentration-cap recalibration in the budget-SoT PR
+    // (12% mis-fits a 9-rule kernel; direct-answers 12.7% < the recalibrated cap).
+    'direct-answers.md': 3_600,
 };
 const KNOWN_TOP3_CONCENTRATION_CEILING: number | null = 11_300;
 

@@ -43,14 +43,14 @@ THE SHORTEST REPLY THAT FULLY ANSWERS THE QUESTION IS THE RIGHT REPLY.
 LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 ```
 
-- Skip restating the question; skip "Let me…" intent announcements.
-- Skip explaining tool use — the call result speaks.
-- Skip post-hoc summary unless rechecking a decision.
+- Skip restating the question; skip "Let me…" announcements.
+- Skip explaining tool use — the result speaks.
+- Simple replies skip summary; **work replies** (multi-step change, roadmap/branch progress, created/updated PR) close with ONE end-summary, and a PR created this turn puts its raw URL as the **literal last line**.
 - Multi-step → bullets; one-true-answer → one sentence.
 
-Never overrides `user-interaction` (numbered options stay) or command-mandated steps.
+Never overrides `user-interaction` (numbered options) or command steps. Reply-close detail → [`reply-close-mechanics`](../contexts/communication/rules-auto/reply-close-mechanics.md).
 
-**Narration carve-out:** narration only when both `personal.play_by_play` AND `verbosity.intent_announcements` are `true`.
+**Narration carve-out:** only when both `personal.play_by_play` AND `verbosity.intent_announcements` are `true`.
 
 ## Emoji Scope — functional markers only
 
